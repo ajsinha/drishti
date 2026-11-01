@@ -17,7 +17,7 @@
 
 Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar and on the command line (`RUPAKA` is an alias). This guide is the tour of its pages and of who may do what: the menu, the rail, workspaces, the catalogue, items and their lifecycle, and, in sections 13 to 18, datasets, reports, the designer, the Model view, publishing and live reports and boards. The detail of each lives in a reference of its own (below); this guide shows you where things are and how they fit.
 
-**What a person can do today:** open BI, keep drafts in a personal workspace, share workspaces with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them and find what they may open in a catalogue. A **dataset** is parsed, validated and **queried**: tables from pack kinds through connectors, relationships, measures, row rules and masks, answered by an embedded DuckDB. A **report** is **drawn**: pages of visuals that query the dataset as the person looking, with cross-filtering, drill-down and drill-through; the **designer** builds one by dragging fields onto a canvas and the **Model view** draws a dataset's relationships. Datasets can be **live** (kept in memory as the source ticks), reports then redraw in place, and a **board** is a report page of live tiles (`layout: board`) with alert colours and a kiosk mode. Since 2.4.0 the designers share one shell, **BI Studio** (section 26): an Explorer of your items, open items as tabs, the Problems and Query dock, a Format pane generated from the format schemas, conditional formatting, **themes** and a theme designer. **Python** (phase 6) writes measures and visuals as typed items, run sandboxed on the console (never in the browser since 2.3.0) on the rows the person may see ([section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python); section 20 below). **Analyse** opens a dataset as a masked extract with Slice, SQL and Python cells and saves them as a **notebook** item (section 21); **BI → Transforms** prepares data in Python step by step, with a preview and a profile after every step ([section 34, its section 17](#17-data-prep-the-transform-editor-240)), and **BI → Python console** runs your own Python in the browser on a masked extract ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)). Reports can be **exported and subscribed to**, carry **alerts**, be **embedded** in another application and use **Vega-Lite** charts and Python visuals; AI helpers (describe a report, ask the data, explain a number, a designer copilot, a dataset helper, narrative summaries) are there when an administrator switches the AI layer on. Section 11 lists the little that is not built.
+**What a person can do today:** open BI, keep drafts in a personal workspace, share workspaces with roles, put typed items in them, publish them through versions (with an optional second-person review), certify them and find what they may open in a catalogue. A **dataset** is parsed, validated and **queried**: tables from pack kinds through connectors, relationships, measures, row rules and masks, answered by an embedded DuckDB. A **report** is **drawn**: pages of visuals that query the dataset as the person looking, with cross-filtering, drill-down and drill-through; the **designer** builds one by dragging fields onto a canvas and the **Model view** draws a dataset's relationships. Datasets can be **live** (kept in memory as the source ticks), reports then redraw in place, and a **board** is a report page of live tiles (`layout: board`) with alert colours and a kiosk mode. The designers share one shell, **BI Studio** (section 26): an Explorer of your items, open items as tabs, the Problems and Query dock, a Format pane generated from the format schemas, conditional formatting, **themes** and a theme designer. **Python** (phase 6) writes measures and visuals as typed items, run sandboxed on the console (never in the browser) on the rows the person may see ([section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python); section 20 below). **Analyse** opens a dataset as a masked extract with Slice, SQL and Python cells and saves them as a **notebook** item (section 21); **BI → Transforms** prepares data in Python step by step, with a preview and a profile after every step ([section 34, its section 17](#17-data-prep-the-transform-editor-240)), and **BI → Python console** runs your own Python in the browser on a masked extract ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)). Reports can be **exported and subscribed to**, carry **alerts**, be **embedded** in another application and use **Vega-Lite** charts and Python visuals; AI helpers (describe a report, ask the data, explain a number, a designer copilot, a dataset helper, narrative summaries) are there when an administrator switches the AI layer on. Section 11 lists the little that is not built.
 
 ## Start here
 
@@ -29,7 +29,7 @@ Rūpaka is Drishti's business-intelligence layer, called **BI** in the top bar a
 | Write or read a dataset (tables, relationships, measures, row rules, masks, live tables) | [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules) |
 | Write or read a report (visuals, filters, slicers, live visuals) | [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave) |
 | Put a wall of live tiles on a screen (a board page of a report) | [section 31, its section 23](#23-boards-report-pages-of-live-tiles) |
-| Follow a long question that runs in the background: the run card, confirming a large run, the Runs tab (`BI RUNS <GO>`), sharing, promoting and scheduling a run (2.6.7) | [section 28](#28-background-runs-long-bi-questions) |
+| Follow a long question that runs in the background: the run card, confirming a large run, the Runs tab (`BI RUNS <GO>`), sharing, promoting and scheduling a run | [section 28](#28-background-runs-long-bi-questions) |
 | Author in BI Studio: the Explorer, tabs, the Problems and Query dock, formatting, conditional formatting, themes, interactions, tooltip pages | section 26, [section 31, its section 5](#5-format) |
 | Prepare data in Python step by step; run your own Python on a masked extract in the browser | [section 34, its section 17](#17-data-prep-the-transform-editor-240), [USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console) |
 | Export a report or view as PDF, PNG, Excel or CSV; subscribe people by email | [section 33](#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding) |
@@ -65,11 +65,11 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
 17. [Publishing and governance (phase 4)](#17-publishing-and-governance-phase-4)
 18. [Live reports and boards (phase 5)](#18-live-reports-and-boards-phase-5)
 19. Export, subscriptions and alerts · 20. Python · 21. Analyse · 22. With AI (below)
-23. [Models and pack datasets: the model layer (wave W1)](#23-models-and-pack-datasets-the-model-layer-wave-w1)
-24. [The languages in the console (wave A, 2.2.0)](#24-the-languages-in-the-console-wave-a-220)
-25. [Live answers and standing queries (wave B, 2.3.0)](#25-live-answers-and-standing-queries-wave-b-230)
-26. [BI Studio: authoring as one product (wave C, 2.4.0)](#26-bi-studio-authoring-as-one-product-wave-c-240)
-27. [Field parameters in the wells, and statements (wave D, 2.6.0)](#27-field-parameters-in-the-wells-and-statements-wave-d-260)
+23. [Models and pack datasets: the model layer](#23-models-and-pack-datasets-the-model-layer-wave-w1)
+24. [The languages in the console](#24-the-languages-in-the-console-wave-a-220)
+25. [Live answers and standing queries](#25-live-answers-and-standing-queries-wave-b-230)
+26. [BI Studio: authoring as one product](#26-bi-studio-authoring-as-one-product-wave-c-240)
+27. [Field parameters in the wells, and statements](#27-field-parameters-in-the-wells-and-statements-wave-d-260)
 28. [Background runs: long BI questions](#28-background-runs-long-bi-questions)
 29. [AI in BI: report from words, ask the data, explain this number](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)
 30. [Datasets: the YAML, the expression language and the security rules](#30-datasets-the-yaml-the-expression-language-and-the-security-rules)
@@ -85,9 +85,9 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
     - [10. What is not built](#10-what-is-not-built)
     - [11. Composed and derived datasets](#11-composed-and-derived-datasets)
     - [12. Build a dataset in the browser: the wizard](#12-build-a-dataset-in-the-browser-the-wizard)
-    - [13. Model-layer datasets (`rachana: 2`, wave W1)](#13-model-layer-datasets-rachana-2-wave-w1)
-    - [14. Derivation: subset, filter, grain, derive, group (2.2, wave A)](#14-derivation-subset-filter-grain-derive-group-22-wave-a)
-    - [15. The dataset wizard, version 2 (wave A)](#15-the-dataset-wizard-version-2-wave-a)
+    - [13. Model-layer datasets (`rachana: 2`)](#13-model-layer-datasets-rachana-2-wave-w1)
+    - [14. Derivation: subset, filter, grain, derive, group](#14-derivation-subset-filter-grain-derive-group-22-wave-a)
+    - [15. The dataset wizard, version 2](#15-the-dataset-wizard-version-2-wave-a)
     - [16. A run's result as a dataset snapshot (`source: {run}`)](#16-a-runs-result-as-a-dataset-snapshot-source-run)
     - [17. Worked examples: the shipped models, row rules and the Model view](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view)
 31. [Reports: the YAML, the visuals and how they behave](#31-reports-the-yaml-the-visuals-and-how-they-behave)
@@ -108,11 +108,11 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
     - [15. A report in another web application](#15-a-report-in-another-web-application)
     - [16. Reports over several datasets](#16-reports-over-several-datasets)
     - [17. Expected values: `tests:`](#17-expected-values-tests)
-    - [18. A report on a model (wave W1)](#18-a-report-on-a-model-wave-w1)
-    - [19. Languages in the report designer (wave A)](#19-languages-in-the-report-designer-wave-a)
-    - [20. Report schema v2 in one report (2.4.0)](#20-report-schema-v2-in-one-report-240)
-    - [21. Field parameters in a well (2.6.0)](#21-field-parameters-in-a-well-260)
-    - [22. Statement pages: paper, page by page (2.6.0)](#22-statement-pages-paper-page-by-page-260)
+    - [18. A report on a model](#18-a-report-on-a-model-wave-w1)
+    - [19. Languages in the report designer](#19-languages-in-the-report-designer-wave-a)
+    - [20. Report schema v2 in one report](#20-report-schema-v2-in-one-report-240)
+    - [21. Field parameters in a well](#21-field-parameters-in-a-well-260)
+    - [22. Statement pages: paper, page by page](#22-statement-pages-paper-page-by-page-260)
     - [23. Boards: report pages of live tiles](#23-boards-report-pages-of-live-tiles)
     - [24. Statements: paginated reports, page-exact, one per reader](#24-statements-paginated-reports-page-exact-one-per-reader)
 32. [Publishing and governance: versions, review, certification, lineage, impact, environments](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments)
@@ -152,14 +152,14 @@ A good first hour: read sections 2 to 4 here (the menu, the powers, the rail), t
     - [14. Vega-Lite output](#14-vega-lite-output)
     - [15. Tests shipped with an item](#15-tests-shipped-with-an-item)
     - [16. Python in alerts and on boards](#16-python-in-alerts-and-on-boards)
-    - [Wave B (2.3.0): one runner on the console, the Py-node endpoint, columns](#wave-b-230-one-runner-on-the-console-the-py-node-endpoint-columns)
-    - [17. Data prep: the Transform editor (2.4.0)](#17-data-prep-the-transform-editor-240)
+    - [One runner on the console, the Py-node endpoint, columns](#wave-b-230-one-runner-on-the-console-the-py-node-endpoint-columns)
+    - [17. Data prep: the Transform editor](#17-data-prep-the-transform-editor-240)
 
 ## 1. What BI is, and is not
 
 **You can**
 
-* open BI from the top bar or with `BI <GO>`; keep drafts in a personal workspace and move them to a shared one; create typed items (`dataset`, `model`, `report`, `notebook`, `python`, `theme`; a `board` is stored as a report with board pages since 2.4.0) with a YAML body;
+* open BI from the top bar or with `BI <GO>`; keep drafts in a personal workspace and move them to a shared one; create typed items (`dataset`, `model`, `report`, `notebook`, `python`, `theme`; a `board` is stored as a report with board pages) with a YAML body;
 * open a **dataset**: its model, and a query preview with the server's row rules and masks; start a dataset from the packs' kinds (links across packs, relationships proposed from the data); see and edit its relationships as a diagram (section 13 and 16);
 * open a **report**: tabs, slicers, click a bar to filter the page, drill down, drill through, show the rows, open a trade in the terminal; **design** one by dragging fields onto a canvas, with the YAML beside it, real data, Check, undo and redo (sections 14 and 15);
 * publish versions, restore an old one, propose for review and approve (four-eyes); compare any two saved states; review with a diff, Check and a data preview; promote and certify; see lineage and what a dataset change breaks; move content between servers as a bundle (section 17);
@@ -202,7 +202,7 @@ missing. **A pack may not define a mnemonic named `BI` or `RUPAKA`** (or `FORM`,
 the same way.
 
 URLs: `/bi` (home), `/bi/catalogue`, `/bi/workspaces`, `/bi/w/<workspace>` (`me` is your personal one), `/bi/i/<item>`, `/bi/datasets` and `/bi/d/<dataset>` (phase 2),
-`/bi/r/<report>[/<page>]` (the viewer; `/bi/b/<board>` opens it since 2.4.0), `/bi/designer` and `/bi/design/<draft>` (the designer), `/bi/design/theme/<id>` (the theme designer), `/bi/models` (models), `/bi/m/<dataset>` (the Model view), `/bi/environments` (bundles), `/bi/explore` (Analyse), `/bi/transform` (Transforms) and `/pyconsole` (the Python console). Admin: `/admin/bi`.
+`/bi/r/<report>[/<page>]` (the viewer; `/bi/b/<board>` opens it), `/bi/designer` and `/bi/design/<draft>` (the designer), `/bi/design/theme/<id>` (the theme designer), `/bi/models` (models), `/bi/m/<dataset>` (the Model view), `/bi/environments` (bundles), `/bi/explore` (Analyse), `/bi/transform` (Transforms) and `/pyconsole` (the Python console). Admin: `/admin/bi`.
 
 ## 3. Who may do what: the four powers
 
@@ -232,13 +232,13 @@ wide canvas. The terminal's F-key footer is not shown (F1 opens help for BI).
 | Catalogue | search, filters and sort over what you may open | built |
 | My workspace | your personal workspace | built |
 | Workspaces | the workspaces you belong to; create one | built |
-| Models | the data models and the model designer | built (2.2.0) |
+| Models | the data models and the model designer | built |
 | Datasets | the datasets, their pages and the Model view | built (phases 2 and 3) |
 | Designer | your report drafts, a new report on a dataset, and the designer | built (phase 3) |
 | Environments | download a workspace as a bundle; import one with a dry run | built (phase 4) |
 | Analyse | open a dataset as your masked extract; Slice, SQL and Python cells; notebooks | `/bi/explore` ([USER_GUIDE.md](USER_GUIDE.md#analyse-slice-sql-and-python), section 21) |
-| Transforms | prepare data in Python step by step: inputs, snippets, a preview and a profile after each step | `/bi/transform`, 2.4.0 ([section 34, its section 17](#17-data-prep-the-transform-editor-240)) |
-| Python console | your own Python in the browser on a masked extract of a model; promote it to the server | `/pyconsole`, 2.4.0 ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)) |
+| Transforms | prepare data in Python step by step: inputs, snippets, a preview and a profile after each step | `/bi/transform` ([section 34, its section 17](#17-data-prep-the-transform-editor-240)) |
+| Python console | your own Python in the browser on a masked extract of a model; promote it to the server | `/pyconsole` ([USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)) |
 
 **Keys** (shown by `?`): `/` search the catalogue (from another BI page it takes you to the catalogue with the search focused),
 `g h` home, `g c` catalogue, `g w` my workspace, `?` the list, `Esc` closes it. Keys are ignored while you type in a field.
@@ -384,10 +384,10 @@ open item page says so on its next load (`404 DRS-9001`). A file that does not p
 as a problem, with the message, in *Admin, BI settings* and on *Health* (`bi.problems`); fixing the file clears it. A bad file that never parsed has no item, only the
 problem. Shipped items cannot be edited here: change the file. Details: [config/bi/README.md](../../config/bi/README.md).
 
-Drishti ships **ten models** in `models/` (`trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `desk-pnl-vs-exposure-py`, the live `live-trading` and `live-exposure`, `world-economics`, `region-economics` and `market-risk-var`) over one-table datasets in `datasets/`, **twelve reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure`, `python-desk-risk`, `pnl-vs-exposure`, `world-economics`, `region-economics`, `market-risk-var`, and the boards `desk-wall` and `python-wall`, which are reports with board pages since 2.4.0), **four Python items** (`desk-pnl-volatility`, `pnl-histogram`, `pnl-vega` and the Transform `pnl-vs-exposure`), one notebook and two themes, each commented and marked `sample: true` ([config/bi/README.md](../../config/bi/README.md)). The two map samples: `world-economics` (real World Bank data) and `region-economics` (Australian and US states: illustrative figures, rounded from public figures, not for reporting). A sample is hidden from the people who may not see sample packs
+Drishti ships **ten models** in `models/` (`trades-basic`, `trading-risk`, `trading-cashflows`, `counterparty-exposure`, `desk-pnl-vs-exposure-py`, the live `live-trading` and `live-exposure`, `world-economics`, `region-economics` and `market-risk-var`) over one-table datasets in `datasets/`, **twelve reports** (`trades-overview`, `counterparty-risk`, `cashflow-ladder`, `live-trading-desk`, `live-exposure`, `python-desk-risk`, `pnl-vs-exposure`, `world-economics`, `region-economics`, `market-risk-var`, and the boards `desk-wall` and `python-wall`, which are reports with board pages), **four Python items** (`desk-pnl-volatility`, `pnl-histogram`, `pnl-vega` and the Transform `pnl-vs-exposure`), one notebook and two themes, each commented and marked `sample: true` ([config/bi/README.md](../../config/bi/README.md)). The two map samples: `world-economics` (real World Bank data) and `region-economics` (Australian and US states: illustrative figures, rounded from public figures, not for reporting). A sample is hidden from the people who may not see sample packs
 (*Admin, Packs, Hide samples from business users* or *from everyone*), exactly as a sample pack is.
 
-**VaR in BI (2.9.0).** The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`)
+**VaR in BI.** The sample report **Market risk: VaR** (`config/bi/reports/market-risk-var.report.yaml`, model `market-risk-var`)
 reads the official end-of-day VaR the server publishes ([VAR_GUIDE.md section 19](VAR_GUIDE.md#19-official-end-of-day-results)), never a
 stored VaR record: the market-risk pack serves the published table as the read-only kind `var-official` (connector `var-results`). The
 dataset `market-risk-var-official` holds every result version; `market-risk-var-latest` keeps the latest version of each node and date
@@ -399,12 +399,12 @@ slicer over time (pick a window of dates in the toolbar; the demo has one date, 
 limit and limit use (over 90% in red). A node id opens the node in the terminal; `VAR NODE:<id> <GO>` opens the VaR explorer (a report
 cannot run a command, so the page says so).
 
-**Horizon, method and confidence (2.9.7).** Every official figure says what it is: the model has the fields `nodes.HORIZON` (`1D`) and
+**Horizon, method and confidence.** Every official figure says what it is: the model has the fields `nodes.HORIZON` (`1D`) and
 `nodes.METHOD` (empty for 1 day; a future 10-day official record says `SQRT10`, `SUM` or `FULL`), and the columns `CONFIDENCE` and
 `ES_CONFIDENCE` with the measures **VaR confidence** and **ES confidence** (`max()` of the node's row: 99% and 97.5% unless configured
 otherwise). Put `nodes.HORIZON` on a slicer or a table to keep a 1-day figure apart from a 10-day one. The official records are 1-day: a
 10-day or another-confidence figure of any scope is the engine's on demand, `VRES <scope>~horizon=10d~method=sum` or the VaR page's
-Horizon and Confidence ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). `HORIZON` and `METHOD` are published on every row since 2.9.7; a table
+Horizon and Confidence ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). `HORIZON` and `METHOD` are published on every row; a table
 written before keeps its columns (the lake writer adds none), so the latest dataset derives them (`derive: HORIZON: "'1D'"`, the truth
 for every official record so far).
 
@@ -418,8 +418,8 @@ endorsement: promoted
 pages: []
 ```
 
-**Exposure in BI (2.9.0).** The netting-set and counterparty records no longer store exposure (`EE_PEAK`, `PFE_PEAK` and the profile were
-retired): the exposure engine computes it, and its official end-of-day results are published to `risk-results/exposure-official-cpty`
+**Exposure in BI.** The netting-set and counterparty records store no exposure (no `EE_PEAK`, `PFE_PEAK` or profile
+fields): the exposure engine computes it, and its official end-of-day results are published to `risk-results/exposure-official-cpty`
 ([EXPOSURE_GUIDE.md section 20](EXPOSURE_GUIDE.md#20-official-end-of-day-results)). The counterparty-risk pack
 serves that table as the read-only kind `exposure-official-cpty` (command `XOFC`, connector `exposure-results`). The dataset
 `counterparty-exposure-official` holds every row (netting sets, counterparties and groups, every result version);
@@ -430,8 +430,8 @@ netting sets' computed peaks summed (a reporting sum of set peaks), and **Exposu
 counterparty's own peak 95% PFE (its sets netted path by path), never a sum of its sets' PFEs; over several counterparties it is a
 reporting sum of theirs. So the reports **Counterparty risk** and **Desk P&L vs counterparty exposure**, the Python Transform behind
 `desk-pnl-vs-exposure-py` and the notebook `pnl-vs-exposure-pandas` show computed figures. The live model `live-exposure` keeps only what the
-netting set still carries as it ticks (net MTM, collateral, limit, trades): its EE and PFE peak cards (and the *Desk wall* tiles) became
-**Collateral** and **Trades** (until 2.9.7 *Max utilisation*: the netting set's stored `UTILISATION` was dropped, its formula unknown to the
+netting set still carries as it ticks (net MTM, collateral, limit, trades): its cards (and the *Desk wall* tiles) are
+**Collateral** and **Trades** (no stored utilisation: its formula is unknown to the
 source, docs/architecture/COMPUTED_ATTRIBUTES.md decision 13), since the published results change once a day and a live dataset is not joined
 to that cached table.
 
@@ -452,8 +452,7 @@ to that cached table.
 console's `bi.enabled` (`DRISHTI_BI_ENABLED`). Each later phase has a group of its own: `drishti.bi.query.*` (the query engine, [section 30](#8-the-query)),
 `drishti.bi.report.*` ([section 31, its section 11](#11-settings)), `drishti.bi.governance.*` ([section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments)) and `drishti.bi.live.*` with the console's `bi.live.*` and `bi.board.rotate_seconds` ([section 31, its section 8](#238-settings)).
 
-**The proof of concept** (the phase 0 page `/bi/poc`, its routes and `bi.poc_enabled`) was removed in 2.2: the model layer replaced what it proved.
-Its findings were in RUPAKA_POC.md, since deleted (in git at tag v2.9.5).
+The model layer is the production design of what the phase 0 proof of concept showed.
 
 **The command line.** `drishti.py bi workspace list|get` and `drishti.py bi catalogue list|get|publish` talk to the API as the
 token's user ([CLI_GUIDE.md](CLI_GUIDE.md#bi-workspaces-and-the-catalogue-rupaka)):
@@ -501,19 +500,19 @@ time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, 
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
 ([section 31, its sections 3.1 and 3.2](#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [tutorial 10](../tutorials/10-first-bi-report.md); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
 
-**The long tail (wave A).** The measure language has **window functions** (`lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`: [section 30, its section 4.3](#43-window-functions)), badged in the Fields pane;
+**The long tail.** The measure language has **window functions** (`lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `cumulative`: [section 30, its section 4.3](#43-window-functions)), badged in the Fields pane;
 a query may ask for measures of **several unrelated fact tables** at once (each aggregated alone at the shared fields, then joined, no fan-out: [section 30 3.1](#31-several-unrelated-fact-tables-in-one-query)); the rollups of a **live table are kept by group** as rows change ([section 30 7.1](#71-live-tables-phase-5));
 a dataset's **refresh state and history survive a restart** and its page has **Refresh now** ([7.2](#72-scheduled-refresh)); a slicer can be **relative-date** (*Last 30 days*, *This quarter to date*, business-day aware: [section 31 6.1](#61-the-relative-date-slicer));
 a report has **tablet layouts** beside the phone ones ([14.1](#141-a-tablet)); reports and datasets declare **expected values** that Check runs as a chosen role and that stop a publish while they fail ([section 31 17](#17-expected-values-tests)); an **entity view** shows a Drishti view inline for the selected key ([3.4](#34-the-entity-view));
 and the sample *Region economics* drills from the world map to Australian and US regions (illustrative figures, labelled). Walk-throughs: [tutorials 10, 11 and 12](../tutorials/10-first-bi-report.md).
 
-**Several datasets (2.1).** Composed datasets (`from:` / `join:`) and derived datasets made by a Python Transform (both removed in 2.2: several facts are one model, a Transform feeds a Python dataset), per-visual datasets and links in reports, several extracts in an Analyse notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [section 30, its section 11](#11-composed-and-derived-datasets), [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built)).
+**Several datasets.** Several facts in one model (composed `from:` / `join:` and derived datasets are replaced: a Transform feeds a Python dataset), per-visual datasets and links in reports, several extracts in an Analyse notebook, impact and lineage across all of them (`DRS-9014` to `9017`, `9075`; [section 30, its section 11](#11-composed-and-derived-datasets), [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built)).
 
-**Governance, Python, AI and embedding (waves B to D).** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards had a **designer** of their own, folded into the report designer in 2.4.0 ([section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), [section 31, its section 11](#23-boards-report-pages-of-live-tiles)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi` with Graphic Walker, **Perspective charts** (drawn as Drishti's grid since 2.3.0) and the settings panel ([section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)). The designer copilot, the dataset helper and narrative summaries ([section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); charts in Excel exports, retries of alert email, webhook and text channels ([section 33](#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)). Measures that mix grains (`measure('MTM') / measure('Exposure')`) are worked out at each measure's own grain.
+**Governance, Python, AI and embedding.** A field renamed with the same meaning is recognised as a rename and the reports are rewritten with the dataset; a changed type or meaning is listed as an impact; every import is kept and can be **rolled back**; BI content travels **inside a pack archive**; lineage goes past the connector to the table or topic; a live table keeps a **history** of its measures; a board tile has alert **hysteresis**; boards are designed in the report designer ([section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments), [section 31, its section 11](#23-boards-report-pages-of-live-tiles)). **Vega-Lite** visuals, **Python** on boards and in alerts, tests shipped with a Python item, Calc's `drishti_bi` with Graphic Walker, **Perspective charts** (drawn as Drishti's grid) and the settings panel ([section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)). The designer copilot, the dataset helper and narrative summaries ([section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); charts in Excel exports, retries of alert email, webhook and text channels ([section 33](#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding)); `<drishti-about>` and `<drishti-search>` with React, Vue and Angular samples ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)). Measures that mix grains (`measure('MTM') / measure('Exposure')`) are worked out at each measure's own grain.
 
-**Waves A, B and C (2.2.0 to 2.4.0).** Datasets and data models rooted in packs, the Python-like expression language (DEL) and read-only Drishti SQL in one query plan (section 24, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)); calculations with filter context, time and balances, standing queries pushed from the server, and the servers computing every number (section 25); **BI Studio**, report schema v2 (typed formats, conditional formatting, themes, the interactions matrix, sync groups, tooltip pages, small multiples, the matrix at every level), **boards as a report layout**, Python data prep step by step with **BI → Transforms**, and the browser **Python console** (section 26, [section 34, its section 17](#17-data-prep-the-transform-editor-240), [USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)).
+**Models, languages, live BI and authoring.** Datasets and data models rooted in packs, the Python-like expression language (DEL) and read-only Drishti SQL in one query plan (section 24, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)); calculations with filter context, time and balances, standing queries pushed from the server, and the servers computing every number (section 25); **BI Studio**, report schema v2 (typed formats, conditional formatting, themes, the interactions matrix, sync groups, tooltip pages, small multiples, the matrix at every level), **boards as a report layout**, Python data prep step by step with **BI → Transforms**, and the browser **Python console** (section 26, [section 34, its section 17](#17-data-prep-the-transform-editor-240), [USER_GUIDE.md › Analyse: slice, SQL and Python, section 16](USER_GUIDE.md#16-the-browser-python-console)).
 
-**Not built (and not faked).** The consolidated list is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.15](../architecture/BI_DESIGN.md#2015-as-built-at-210-and-what-is-still-not-built): the Python Source interface and a pool of pre-forked Python children (the fork-server is warm since 2.4.0: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 12); a Data tab, Notes and million-row extracts in Analyse ([USER_GUIDE.md](USER_GUIDE.md#analyse-slice-sql-and-python) section 12); escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
+**Not built (and not faked).** The consolidated list is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.15](../architecture/BI_DESIGN.md#2015-as-built-at-210-and-what-is-still-not-built): the Python Source interface and a pool of pre-forked Python children (the fork-server is warm: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 12); a Data tab, Notes and million-row extracts in Analyse ([USER_GUIDE.md](USER_GUIDE.md#analyse-slice-sql-and-python) section 12); escalation of alerts; "what changed since your last visit" on Home; searching the catalogue by the fields a dataset uses.
 
 ## 12. Problems
 
@@ -561,9 +560,9 @@ columns, and the layers on disk) and a **query preview**: choose fields, measure
   (`POST /api/v1/bi/datasets/{id}/refresh`). Settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 * **API.** [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2). Problems: DRS-9010 to 9017 (the dataset, composed and derived datasets included) and 9020 to 9027 (the query) in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 
-**Several datasets in BI.** *(2.1; since 2.2 the composed and derived datasets below are gone: facts from several packs sit in one model with several fact tables, and a Transform feeds a Python dataset, [section 30, its section 11.5](#115-the-samples-as-converted-in-22).)* In 2.1 a dataset need not come from a connector: it may be **composed** of other datasets (`from:` and `join:`: each source is asked as the person reading, with *its own* row rules and masks, and the answers are joined, with measures of the dataset's own over the joined columns) or **derived** by a **Python Transform** that receives the sources' answers as masked pandas frames and returns the table. Either is used wherever a dataset is (reports, alerts, subscriptions, refresh, Analyse); its page lists **Built from other datasets** and the Model view draws the sources, the join and the table. A **report** may name a dataset per visual and link fields across datasets, so a slicer on one filters the visuals of another ([section 31, its section 16](#16-reports-over-several-datasets)); **Analyse** loads several extracts in one notebook and joins them in pandas or SQL, and promotes the join to a Transform. A join on a column a source masks for you is refused, and so is a YAML join that would repeat rows (`DRS-9015`: aggregate the many side by the key, swap the ends, or accept it with `allow-repeat: true` on the join, which Check then shows as a warning). The sample *Desk P&L vs counterparty exposure* is built both ways. Reference: [section 30, its section 11](#11-composed-and-derived-datasets); tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md).
+**Several datasets in BI.** *(Facts from several packs sit in one model with several fact tables, and a Transform feeds a Python dataset, [section 30, its section 11.5](#115-the-samples-as-converted-in-22); composed and derived datasets do not run.)* A dataset written in the older shape need not come from a connector: it may be **composed** of other datasets (`from:` and `join:`: each source is asked as the person reading, with *its own* row rules and masks, and the answers are joined, with measures of the dataset's own over the joined columns) or **derived** by a **Python Transform** that receives the sources' answers as masked pandas frames and returns the table. Either is used wherever a dataset is (reports, alerts, subscriptions, refresh, Analyse); its page lists **Built from other datasets** and the Model view draws the sources, the join and the table. A **report** may name a dataset per visual and link fields across datasets, so a slicer on one filters the visuals of another ([section 31, its section 16](#16-reports-over-several-datasets)); **Analyse** loads several extracts in one notebook and joins them in pandas or SQL, and promotes the join to a Transform. A join on a column a source masks for you is refused, and so is a YAML join that would repeat rows (`DRS-9015`: aggregate the many side by the key, swap the ends, or accept it with `allow-repeat: true` on the join, which Check then shows as a warning). The sample *Desk P&L vs counterparty exposure* is built both ways. Reference: [section 30, its section 11](#11-composed-and-derived-datasets); tutorials [10](../tutorials/10-first-bi-report.md) and [14](../tutorials/14-python-and-analyse.md).
 
-**Refresh and time (wave 3).** A dataset page has a **Refresh** section: the dataset's `refresh:` schedule (a clock such as `daily 06:00`, `business-days 07:30` by the pack's holiday calendar, a cron, or `after-load`), its status, the last and next refresh, the rows, the time taken and the failures; a failed refresh is retried
+**Refresh and time.** A dataset page has a **Refresh** section: the dataset's `refresh:` schedule (a clock such as `daily 06:00`, `business-days 07:30` by the pack's holiday calendar, a cron, or `after-load`), its status, the last and next refresh, the rows, the time taken and the failures; a failed refresh is retried
 by the shared retry policy. Measures may use `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year` and `running` over a date column. Reference: [section 30, its sections 4.1 and 7.2](#41-time-intelligence); walk-through: [tutorial 10](../tutorials/10-first-bi-report.md).
 
 
@@ -578,7 +577,7 @@ The toolbar holds the **business date** (empty: the latest the data has), **Book
 chips under the page tabs. Every visual has a header with its title and the buttons that fit it, and a line under it that says how many rows came back, the milliseconds the query took (or "from the cache")
 and the layer that answered (`columns`, `rollup`, `direct`, `live`); *masked* is added when the server masked a column for you.
 
-**Which date a report reads** (2.6.7 patch): as of a date, each table reads its latest business date on or before it, so a weekend, a
+**Which date a report reads**: as of a date, each table reads its latest business date on or before it, so a weekend, a
 holiday or a load not yet in never empties a visual. The line under the toolbar says the date the data is as of, and names each table's
 date when they differ (*Data as of: prices 2026-10-20, trades 2026-10-16 (asked 2026-10-21)*). A report can ask instead for one date all
 its tables hold (`as-of: aligned`), a fixed date, or a relative one such as `previous-month`: [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave) section 7.1.
@@ -627,7 +626,7 @@ its tables hold (`as-of: aligned`), a fixed date, or a relative one such as `pre
 The page asks the server for each visual's data **one query at a time, three at once** (the server allows three a person, and the page retries a refusal for busy); a visual that is refused shows the
 code and words in its frame with a Retry button while the others carry on. Nothing is drawn from the data except through the same dataset engine, so the limits and the cache of section 13 apply.
 
-**JSON, not Arrow, to the page (2.9.7, measured).** A visual's answer can come as Apache Arrow: `POST /bi/reports/{id}/query` with
+**JSON, not Arrow, to the page (measured).** A visual's answer can come as Apache Arrow: `POST /bi/reports/{id}/query` with
 `Accept: application/vnd.apache.arrow.stream` answers the same answer as an Arrow stream (rows as the record batch, repeated text as
 dictionaries, the rest in the schema's metadata), through the console too, for API clients and notebooks that read Arrow
 ([API_GUIDE.md](API_GUIDE.md#answers-as-arrow-the-accept-header)). The report page itself keeps asking JSON: measured on grids of
@@ -649,8 +648,8 @@ authors expect them: the canvas on the left, then **Filters**, **Visualizations*
 * **Fields.** The dataset's tables, their columns (a date opens into its parts: year, quarter, month, week, day), its measures and its hierarchies, with a search box. **Drag a field onto the canvas** and the best
   visual for it appears: a measure is a card, a column is a table; **drag another onto that visual** and it improves: a category with a measure becomes a bar, a date with a measure a line, two categories with a
   measure a matrix. Without a mouse, the field's button adds it to the selected visual (or makes a new one). A hierarchy added to a chart makes it drillable.
-* **Visualizations.** The 26 types the designer offers (`bar` to `button`; the rolling chart, the three 2.1 `perspective-*` types and the entity view are written in the YAML tab and `vega-lite` has a box for its specification: [section 31, its section 3](#3-the-visuals-and-their-wells)); choosing one changes the selected visual (its fields follow where they fit) or adds a new one. **Build** shows the wells of the selected visual: each takes fields or measures, with
-  chips you can remove or reorder and a select that adds without dragging; drill down along a hierarchy and drill through to a page are set here too. **Format** (since 2.4.0 generated from the format schemas,
+* **Visualizations.** The 26 types the designer offers (`bar` to `button`; the rolling chart, the three `perspective-*` types and the entity view are written in the YAML tab and `vega-lite` has a box for its specification: [section 31, its section 3](#3-the-visuals-and-their-wells)); choosing one changes the selected visual (its fields follow where they fit) or adds a new one. **Build** shows the wells of the selected visual: each takes fields or measures, with
+  chips you can remove or reorder and a select that adds without dragging; drill down along a hierarchy and drill through to a page are set here too. **Format** (generated from the format schemas,
   section 26): title and alt text, then the sections of the visual's family (title, frame, data labels, axes, legend, colours, small multiples, values, conditional formatting, matrix layout and subtotals, slicer), then
   its tooltip page, its interactions, whether other visuals filter it, most rows and sort. With no visual selected, Format is the **page** (title, move, delete, the fields it takes as a drill-through target, its
   layout and whether it is a tooltip page) and the **report** (title, description, theme, palette, business dates, links, bookmarks, the kiosk rotation of its board pages).
@@ -735,7 +734,7 @@ a connection of its own: the page uses the one channel the whole browser shares 
 **Pages of the sample:** *Desk* (cards, net MTM by desk, a rolling line, the worst trades, the latest changes), *Every trade* (a grid of all trades: Drishti's own grid of the server's answer), *Pivot* (a matrix by desk and currency, grouped and totalled by the server), *Chart* (a stacked column per desk, one series per currency). In a grid you can sort and scroll; the matrix and the chart are asked again on each
 tick, as every visual is. For a reader without the `raw` power the `TRADER_ID` column reads `•••`, in the cards, the tables and the grid alike.
 
-**A board.** Since 2.4.0 a board is a report whose pages have `layout: board` ([section 31, its section 23](#23-boards-report-pages-of-live-tiles)). Open **Desk wall** (`/bi/r/file:report:desk-wall`; the old `/bi/b/file:board:desk-wall` opens it too; from its item page: *Open the board*, which opens it in kiosk). Tabs switch its pages; tiles over live tables change in place; a tile whose number crosses a threshold gets an amber or red border and says "warning" or "critical" in the line
+**A board.** A board is a report whose pages have `layout: board` ([section 31, its section 23](#23-boards-report-pages-of-live-tiles)). Open **Desk wall** (`/bi/r/file:report:desk-wall`; the old `/bi/b/file:board:desk-wall` opens it too; from its item page: *Open the board*, which opens it in kiosk). Tabs switch its pages; tiles over live tables change in place; a tile whose number crosses a threshold gets an amber or red border and says "warning" or "critical" in the line
 under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the screen and turns the board pages by itself; `Esc` leaves. Keys: `k` kiosk, `p` pause. A phone shows the wall as one column.
 
 **Who may do what.** Opening needs the `bi` power and the right to read the report; each tile is its report's answer **to you** (your rows, your masks). A board is designed in the report designer (a page's *Layout: board*, the *tile* visual); publishing checks its tiles.
@@ -744,7 +743,7 @@ under it. **Kiosk** (button, `k`, or `?kiosk=1`) hides the menus, fills the scre
 ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 **Not built, and not faked.** Interaction between tiles; a history of every update of a live table (a bounded, sampled history of its measures is built: [section 30, its section 7.1](#71-live-tables-phase-5); the rolling chart's
-points live in the browser from the moment the page opened); live tables over arrays and in `direct` queries (boards travel in bundles and appear in lineage and impact since 2.4.0, as the reports they are). If a live table's feed is quiet, the page says **Stale** only when the source
+points live in the browser from the moment the page opened); live tables over arrays and in `direct` queries (boards travel in bundles and appear in lineage and impact, as the reports they are). If a live table's feed is quiet, the page says **Stale** only when the source
 that pushes has gone silent for 30 s: a source that changes rarely is quiet, not stale, when it does not push at all (its state then reads `pushes: false` and the table is read again every 30 s).
 
 ## 19. Export, subscriptions and alerts (phase 7)
@@ -759,7 +758,7 @@ delivery's status, retries with the shared retry policy, an audit trail. The lis
 (`above`, `below`, `between`, `outside`), moves too far (a percentage or an amount, against the previous look or the previous business day) or does not arrive by a time. It looks on a schedule, after a data load, or when a live table changes (after a quiet time).
 **Each person is judged on their own number**: the engine applies their row rules and masks; a masked number is never judged or shown. It stays quiet after firing until the number is back inside the limit (the *hysteresis*), and not again within the *cooldown*.
 It tells you in your inbox (the *Alerts* tab, and the bell), by email to your own address and in the chat bridges (a post with no number); there is a history, an audit trail, pause and resume. A board tile whose colour turns red can tell everyone who reads the board the same way (`notify:`, [section 31, its section 23](#notifications-a-tile-tells-people-when-it-turns-red)). The page is **Alerts** (`/alerts`), linked from **Reports** in the top bar;
-the reference is [section 33, its section 4](#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.alerts.measure.*`; code `DRS-9062`. Wave D adds retries of a failed alert delivery, webhook and text-message channels ([section 33, its section 6](#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([section 29.9](#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
+the reference is [section 33, its section 4](#4-alerts-on-numbers); walk-through: [tutorial 11](../tutorials/11-bi-that-runs-itself.md); settings `drishti.alerts.measure.*`; code `DRS-9062`. Alerts also have retries of a failed delivery, webhook and text-message channels ([section 33, its section 6](#6-webhooks-and-text-messages)) and, for subscriptions, a written summary ([section 29.9](#299-a-written-summary-at-the-top-of-a-subscriptions-email)). Not built: escalation.
 
 **Embedding.** `<drishti-report>` shows a published report, one page or one visual, in **another web application's** page (a Web Component, no iframe), masked whatever the user's roles, with slicers, cross-filter and live updates; the administrator lists the reports a host application may show (`report:<id>` or `report:*`) in Admin → Embedding. Reference: [section 33, its section 5](#5-embedding-a-report-in-another-web-application); developer guide: [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#drishti-report); walk-through: [tutorial 16](../tutorials/16-embed-drishti.md); scope `embed:report`.
 
@@ -768,7 +767,7 @@ the reference is [section 33, its section 4](#4-alerts-on-numbers); walk-through
 A **Python item** (kind `python`, or a file in `config/bi/python/`) is a function with a manifest: a **Measure** (a number per group: `compute(table, params)`) or a **Visual** (a chart: `render(table, params)`). It is stored,
 versioned, reviewed and published like any item; **Check the Python** on its page parses the source and lists every problem. A **dataset** declares a Python measure
 (`python:`, `inputs:`, `by:`: [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules) section 4.2), and a report's **`python` visual** (designer, group *Python*) shows it, or any item named in `format.python`
-([section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3.3). The code runs on the **console**, in a short-lived worker with no network, a scratch folder only and CPU, memory, time and output limits (never in the browser since 2.3.0: a 2.2 visual's `format.run: browser` runs there too).
+([section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3.3). The code runs on the **console**, in a short-lived worker with no network, a scratch folder only and CPU, memory, time and output limits (never in the browser: a 2.2 visual's `format.run: browser` runs there too).
 It only ever receives the rows the viewer may see, masked as the server masked them. The sample report **Desk P&L risk (Python)** shows a Python measure and a Python visual. Reference, the sandbox, the settings and the codes `DRS-9070` to `9074`:
 [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python); a short walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md).
 
@@ -782,7 +781,7 @@ The rail's **Analyse** (`/bi/explore`) opens a dataset as an **extract**: the ro
 
 **Save as a notebook** keeps the extract's definition and the cells as a BI item of kind `notebook` (versions, review and publishing like any item; *Open in Analyse* on its page reopens it, rebuilt for whoever
 opens it). **Promote** turns a Python cell into a Python Measure or Visual draft (or, for a cell that joins several extracts, a Python Transform draft) and a slice into a report draft; nothing is published. Slice and SQL totals are the *extract's*, not the dataset's: use a
-report for true totals. Reference: [USER_GUIDE.md](USER_GUIDE.md#analyse-slice-sql-and-python); walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md). Slice is worked out by the console and SQL is Drishti SQL run by the server (nothing runs in the browser since 2.3.0), and a slice or a SQL cell can be **promoted into a visual** of a report draft ([USER_GUIDE.md › Analyse: slice, SQL and Python, sections 13 and 14](USER_GUIDE.md#13-where-each-cell-runs-no-webassembly-in-bi)). Not built: a *Data* tab, *Notes*,
+report for true totals. Reference: [USER_GUIDE.md](USER_GUIDE.md#analyse-slice-sql-and-python); walk-through: [tutorial 14](../tutorials/14-python-and-analyse.md). Slice is worked out by the console and SQL is Drishti SQL run by the server (nothing runs in the browser), and a slice or a SQL cell can be **promoted into a visual** of a report draft ([USER_GUIDE.md › Analyse: slice, SQL and Python, sections 13 and 14](USER_GUIDE.md#13-where-each-cell-runs-no-webassembly-in-bi)). Not built: a *Data* tab, *Notes*,
 million-row extracts, scheduled notebooks (USER_GUIDE.md › Analyse: slice, SQL and Python, section 12).
 
 ## 22. With AI: describe a report, ask the data, explain a number (stage 2)
@@ -798,7 +797,7 @@ When your administrator has switched the AI layer on ([section 29](#29-ai-in-bi-
 The model is told the names, types and descriptions of the dataset and your words; **never a row**, a value, a measure's definition or a field masked for you (unless an administrator chose
 `aggregates`, which also lets it word *your own* masked results). It can choose a wrong query: that is why the query is shown. Reference, settings, codes and tests: [section 29](#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number).
 
-## 23. Models and pack datasets: the model layer (wave W1)
+## 23. Models and pack datasets: the model layer
 
 The model layer ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1)) splits what a version-1 dataset did in one file into two items: a **dataset** is one
 governed table (what one row is, its columns with roles and meanings, how it keeps time, its own security), and a **model** puts datasets in a star with
@@ -898,7 +897,7 @@ The designer's Fields pane reads the model as you see it (masked fields marked);
 model query, shown under **Query of the selected visual**. **Make it a model** writes the implicit model out as a draft model (the dataset as the fact, its
 pack dimensions with their relationships, the default measures) and moves the report onto it.
 
-**New dataset** (`/bi/datasets/new-layer`), for what a pack does not give: since wave A, the wizard of [section 24](#24-the-languages-in-the-console-wave-a-220)
+**New dataset** (`/bi/datasets/new-layer`), for what a pack does not give: the wizard of [section 24](#24-the-languages-in-the-console-wave-a-220)
 (the source, the columns kept, the rows kept, what one row is, worked-out columns, a grouping, a preview, save; or an SQL view over a model), its draft kept
 across a refresh, the server's Check beside each step, then *Open the dataset*, *Start a report on it* or *Use it in a new model*. Every kind of dataset
 answers queries: pack and narrowed datasets, connector queries, Python Transforms and other models' answers, each asked as the reader
@@ -936,9 +935,9 @@ The designer's start and a workspace's *New item* offer **Model or dataset** in 
 The Subscribe form's **When** is built from choices (every day, every business day, every week on a day, the last business day of the month, every hour) with the
 schedule text under *Advanced*.
 
-## 24. The languages in the console (wave A, 2.2.0)
+## 24. The languages in the console
 
-Wave A ([BI_DESIGN.md §12.2](../architecture/BI_DESIGN.md#wave-a--foundation-and-languages--220)) gives BI one expression language, DEL (Python-like,
+BI has one expression language, DEL (Python-like,
 [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)), and Drishti SQL over models. In the console that is five things.
 
 **1. One expression editor everywhere.** A model's measures, a report's own measures, the dataset wizard's filter and worked-out columns all use the
@@ -952,7 +951,7 @@ wins, add columns worked out from others (a formula or a Python column item), gr
 
 **3. The model designer, complete** (`/bi/md/<item>`):
 
-| Tab | New in wave A |
+| Tab | What it does |
 |---|---|
 | Measures | the formula is written in the expression editor; renaming a measure rewrites every `measure('…')` that names it |
 | **Fields** | each field's **display name**, **description**, **format**, **folder**, **hidden**, **sort by**, **data category** and **default summarisation**, and each measure's description, format, folder and hidden: written once in the model (`fields:`), inherited by every report, board and answer, never re-declared. **Perspectives**: a named field list for one audience (`perspectives:`) |
@@ -1001,13 +1000,13 @@ model). **Query of the selected visual** shows the question as a **model query (
 whether the plan is the visual's ([section 31 §19](#19-languages-in-the-report-designer-wave-a)).
 
 **5. Analyse on the server.** A SQL cell is Drishti SQL over the model the extract reads, run by the server as you (the default); *over the extract*
-stays selectable until wave B ([USER_GUIDE.md](USER_GUIDE.md#analyse-slice-sql-and-python)).
+stays selectable ([USER_GUIDE.md](USER_GUIDE.md#analyse-slice-sql-and-python)).
 
 The console calls behind these (same-origin, deciding no access): `GET/POST /bi/api/expr/*` and `/bi/api/sql*` (passed to the server),
 `POST /bi/model-api/contract` (`{id, doc}` to the changes, the version and the consumers), `POST /bi/model-api/report-measures` (a report's own
 measures and perspective from its YAML), `POST /bi/model-api/compose` with `base` (the text to patch), `POST /bi/explore/dsql` (a SQL cell).
 
-## 25. Live answers and standing queries (wave B, 2.3.0)
+## 25. Live answers and standing queries
 
 The design is [BI_DESIGN.md §4.5 and §4.6](../architecture/BI_DESIGN.md#46-standing-queries-and-incremental-maintenance); the endpoints are in
 [API_GUIDE.md](API_GUIDE.md#models-and-the-model-query-language-apiv1bi-wave-w1); the settings are `drishti.bi.mq.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
@@ -1123,7 +1122,7 @@ timings: {engineMillis=4.9, layer=columns, sourceOrJavaMillis=1.78}
       - SecureScan trade (pack.trading.trade@1.0.0)  rules: none  columns: [desk, mtm]   tier: java   layer: columns
 ```
 
-## 26. BI Studio: authoring as one product (wave C, 2.4.0)
+## 26. BI Studio: authoring as one product
 
 The designers share one shell, **BI Studio** (BI_DESIGN.md section 8.1): the report designer (and so the board designer, a report with board pages), the model designer and the theme designer.
 
@@ -1166,7 +1165,7 @@ From the command line a theme and a report are items like any other (`drishti.py
 ([section 31, its section 12](#2312-from-a-23-board-to-a-board-page)). The acceptance of the wave, a Power BI author's desk pack made without the YAML tab, is the browser test
 `drishti-console/tests/test_bi_studio_browser.py` and [section 31, its section 20](#20-report-schema-v2-in-one-report-240).
 
-## 27. Field parameters in the wells, and statements (wave D, 2.6.0)
+## 27. Field parameters in the wells, and statements
 
 **Field parameters in a visual's wells.** A model's field parameter (a choice of fields, such as *break down by desk or by portfolio*, or of measures,
 *show MTM or Notional*; the Calculations tab of the model designer makes one) can now be put in a visual's well. In the report designer's **Build**, each
@@ -1194,7 +1193,7 @@ YAML ([20-statements-and-field-parameters.md](../tutorials/20-statements-and-fie
 
 ## 28. Background runs: long BI questions
 
-Release 2.6.7. The design, with every rule and the API, is [BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267). This guide is what you see and what you do.
+The design, with every rule and the API, is [BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job-built-in-267). This guide is what you see and what you do.
 
 Every BI question (a report visual, a board tile, a model query, SQL) goes through one pipeline. The console waits about two seconds for
 the answer. When it comes in time, the visual is drawn exactly as before and nothing else happens. When it takes longer, the question
@@ -1415,7 +1414,7 @@ sg-1  accepted: the rollup is in the draft of trading (bi-model-...); review it 
 
 `bi runs estimate` gives the tier, the engine and the estimate and runs nothing. A large question without `--yes` is refused with its estimate
 and exit 2. `drishti.py bi mq FILE --async` and `drishti.py bi sql "…" --model M --async` ask as a run: the answer when it is done within
-`--wait` (2 s by default), else the run's id; `--yes` accepts a large one in advance. Without `--async` they behave as before 2.6.7.
+`--wait` (2 s by default), else the run's id; `--yes` accepts a large one in advance. Without `--async` they answer in the foreground.
 
 ### The Admin page for runs
 
@@ -1542,8 +1541,8 @@ QUESTION: notional by desk
 ```
 
 Each table is an alias of the model, described by its dataset and role; each field is `alias.COLUMN type`, with its description when the model gives one.
-(Until 2.3.0 a question asked **on a report over a model** sent the model's name and measures but not its fields; it now sends them, as a question asked
-of the model by name always did.)
+(A question asked **on a report over a model** sends the model's fields as well as its name and measures, as a question asked
+of the model by name does.)
 
 What is **not** in it, in either mode: a row, a value of a field, a measure's definition, a connector or a path, and any field **masked for the reader** (it is left out, so the model cannot be
 told it exists). The AI policy then masks `drishti.security.redact` fields and the extra patterns in the prompt as it does for every call. `BiAiTest` records the prompts and checks all of this.
@@ -1734,8 +1733,8 @@ tools itself (the MCP client exists; no BI hook uses it).
 
 ## 30. Datasets: the YAML, the expression language and the security rules
 
-Reference for the **dataset** of Drishti Rūpaka (BI), as built (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (step 1, [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) for the stored datasets, and [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live table); for the pages that show a dataset see this document sections 13 and 16; for the 2.1 datasets built from other datasets (composed and derived, removed in 2.2: several facts are now one model, a Transform is a Python dataset) see
-[section 11](#11-composed-and-derived-datasets); for the design see [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) sections 6 and 7, "20.2 Phase 2, as built" and "20.10 Several datasets, as built"; for the HTTP API see
+Reference for the **dataset** of Drishti Rūpaka (BI) (live tables are section 7.1; window functions 4.3; several facts 3.1). For the walk-through see [tutorial 10](../tutorials/10-first-bi-report.md) (step 1, [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) for the stored datasets, and [tutorial 12](../tutorials/12-live-bi-and-boards.md) for a live table); for the pages that show a dataset see this document sections 13 and 16; for datasets built from other datasets (composed and derived are replaced: several facts are one model, a Transform is a Python dataset) see
+[section 11](#11-composed-and-derived-datasets); for the design see [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) sections 6 and 7, 20.2 and 20.10; for the HTTP API see
 [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2); for the settings see
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibiquery--the-dataset-query-engine-phase-2).
 
@@ -1763,13 +1762,13 @@ security: { rows: [...], masked: [...] }   # section 6
 rollups: [ ... ]            # section 7
 refresh: "daily 06:00"      # when the layers are rebuilt on their own: a schedule or after-load (section 7.2)
 layout: { ... }             # where the Model view draws each table (written by the diagram; the language ignores it)
-from: { ... }               # 2.1 only, removed in 2.2 (DRS-9190): a composed dataset (section 11.1)
+from: { ... }               # not supported (DRS-9190): a composed dataset (section 11.1)
 join: [ ... ]               #   ... and how their answers are joined
-derived: { ... }            # 2.1 only, removed in 2.2 (DRS-9190): a derived dataset (section 11.2)
+derived: { ... }            # not supported (DRS-9190): a derived dataset (section 11.2)
 columns: { ... }            #   ... and the columns it returns, typed
 ```
 
-Unknown top-level keys are a warning. The shipped samples are **models** in `config/bi/models/` over datasets in `config/bi/datasets/` (since 2.2 a
+Unknown top-level keys are a warning. The shipped samples are **models** in `config/bi/models/` over datasets in `config/bi/datasets/` (a
 multi-table dataset is a model whose tables are datasets of their own: `trading-risk` reads `trading-risk-trades`, `trading-risk-netting-sets` and
 the rest), every one commented and in the packs' UPPER_SNAKE column names: `trades-basic` (one table), `trading-risk` (five tables across three packs, a row
 rule, masks, a rollup) and `trading-cashflows` (nested arrays as tables), which [section 17](#17-worked-examples-the-shipped-models-row-rules-and-the-model-view) reads, and the live `live-trading` and
@@ -1852,8 +1851,8 @@ measures:
   MTM: { expr: "sum(trades.MTM)" }   Trades: { expr: "count(trades)" }   Exposure (EE peak): { expr: "sum(set_exposure.PEAK_EE)" }   Netting sets: { expr: "count(netting_sets)" }
 ```
 
-`fields: [counterparties.SECTOR]`, `measures: [MTM, Trades, Exposure (EE peak), Netting sets]` (a real answer on the 2.8.0 demo lakes, when exposure was still stored
-on the netting set, so its figures and the two-part plan are from then; since 2.9.0 `Exposure (EE peak)` is a third fact, `set_exposure`, and the plan has three
+`fields: [counterparties.SECTOR]`, `measures: [MTM, Trades, Exposure (EE peak), Netting sets]` (a real answer on demo lakes where exposure was stored
+on the netting set, so its figures and the two-part plan are from then; `Exposure (EE peak)` is a third fact, `set_exposure`, and the plan has three
 parts the same way; first four sectors, with
 `options.explain: true` for the SQL; the table sources are shortened):
 
@@ -1892,7 +1891,7 @@ measures:
   Vol:        { python: desk-pnl-volatility, inputs: [trades.PNL_1D], by: [trades.DESK] }   # a PYTHON measure: run by the console's runner, shown by a python visual (4.2)
 ```
 
-The expression language is **DEL** (since 2.2.0): a safe, side-effect-free subset of **Python's expression syntax** extended with aggregation. It compiles
+The expression language is **DEL**: a safe, side-effect-free subset of **Python's expression syntax** extended with aggregation. It compiles
 to SQL on the server and is never run as code. **The full reference is [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)**: every function with its examples and edge cases,
 the problems with their fixes, and fifty-odd finance and risk recipes; the expression editor completes all of it in the designers. Names: `table.column`,
 `table.column.part` (a date part), `measure('Measure name')`, `user.<attribute>` (row rules only), and in a calculated column a bare column of its own table.
@@ -2247,7 +2246,7 @@ rollups:
   - { name: byDeskBook, table: trade, by: [DESK, PORTFOLIO, PRODUCT_TYPE, CURRENCY], measures: [Trades, Notional, MTM, PnL 1d, Worst trade, Best trade] }
 ```
 
-The Live trading desk sample (`config/bi/datasets/live-trading.dataset.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`, captured in 2.2 over the 750 demo trades of the time, whose columns were lower case; over the demo lakes the columns are `DESK` and the rest), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
+The Live trading desk sample (`config/bi/datasets/live-trading.dataset.yaml`) declares that. A bar of `Notional`, `MTM` and `Worst trade` by desk, with the demo ticker running (real answer, `?explain=true`, captured over 750 demo trades with lower-case columns; over the demo lakes the columns are `DESK` and the rest), reads 90 trades for `DESK-COMM` from the kept groups, not from the trades:
 
 ```text
 SELECT "trade"."desk" AS "trade.desk", (CAST(coalesce(sum(m0), 0) AS BIGINT)) AS "Trades", (sum(m1)) AS "Notional", (sum(m2)) AS "MTM", (min(m4)) AS "Worst trade"
@@ -2307,7 +2306,7 @@ tables:
         measures: [MTM, Losses, Trades]     # measures of this dataset that aggregate the live table (not Python, not window or time-intelligence measures)
 ```
 
-The model gains a table `history` with a `ts` column (when the sample was taken, a timestamp), one column for each `by` column (the live table's own type) and one `decimal` column for each sampled measure (named like the measure, with anything but letters, digits and underscores replaced by underscores), and one **generated measure** for each sampled measure, `<measure> history`, which adds up that column (`sum(history.MTM)`). So a line of the net MTM over time is `axis: [history.ts], values: [MTM history]`, with a second well field `history.desk` for a line per desk when `by: [desk]` is set. A real query against the sample (`live-trading`, sampled every 10 s) a minute after the first use, captured in 2.1 (since 2.2 the same question is a model query, `POST /api/v1/bi/mq`, and the dataset route answers `410 DRS-9150`):
+The model gains a table `history` with a `ts` column (when the sample was taken, a timestamp), one column for each `by` column (the live table's own type) and one `decimal` column for each sampled measure (named like the measure, with anything but letters, digits and underscores replaced by underscores), and one **generated measure** for each sampled measure, `<measure> history`, which adds up that column (`sum(history.MTM)`). So a line of the net MTM over time is `axis: [history.ts], values: [MTM history]`, with a second well field `history.desk` for a line per desk when `by: [desk]` is set. A real query against the sample (`live-trading`, sampled every 10 s) a minute after the first use, captured on an older dataset shape (the same question is now a model query, `POST /api/v1/bi/mq`, and the dataset route answers `410 DRS-9150`):
 
 ```
 POST /api/v1/bi/datasets/file:dataset:live-trading/query
@@ -2338,7 +2337,7 @@ A sample is stamped to the second.
 
 ### 8. The query
 
-Since 2.2 a dataset is asked through its model: `POST /api/v1/bi/mq` ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1) section 5); `POST /api/v1/bi/datasets/{id}/query` answers `410 DRS-9150` with the equivalent model query. What follows is the 2.1 body, whose fields, filters and limits the model query keeps:
+A dataset is asked through its model: `POST /api/v1/bi/mq` ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1) section 5); `POST /api/v1/bi/datasets/{id}/query` answers `410 DRS-9150` with the equivalent model query. What follows is the older body, whose fields, filters and limits the model query keeps:
 `POST /api/v1/bi/datasets/{id}/query` with the body of [API_GUIDE.md](API_GUIDE.md#datasets-and-the-query-engine-apiv1bi-phase-2): `fields`, `measures`, `filters` (`eq ne in not-in lt le gt ge between contains
 starts-with is-null not-null`; a filter whose field is a measure name filters the aggregate), `dates` (`from`, `to`; one date or a range, at most 400 days, at most 31 not-yet-built dates read per query),
 `orderBy`, `limit`, `layer` (`auto`, `columns`, `rollup`). Every name is checked against the model and quoted; **every value is a bound parameter**; a value of the wrong type for its column is refused
@@ -2388,7 +2387,7 @@ Validation never throws: it returns every problem with its code and the path of 
 
 ### 10. What is not built
 
-**A run's result promoted to a dataset snapshot is built (2.6.7)**: see [section 16](#16-a-runs-result-as-a-dataset-snapshot-source-run). A rollup a
+**A run's result promoted to a dataset snapshot is built**: see [section 16](#16-a-runs-result-as-a-dataset-snapshot-source-run). A rollup a
 repeated heavy question needs is suggested in Admin → BI → Runs and added to the model's draft when accepted (see [section 7](#7-modes-layers-and-rollups)).
 
 Marked so nothing is mistaken for working: a Python measure **inside a query** (a python visual runs it: 4.2);
@@ -2398,18 +2397,18 @@ a window function **in a filter**, with the measures of another fact, or **insid
 the **BI store as a configured connector** (a folder today; S3 by mounting it); **other engines** than DuckDB (the interface exists); **Delta native deletes/updates** are honoured only as far as the Delta connector
 honours them (the engine reads through the connector, not the files); **classification tags** and **per-entry export rules**. (Lineage and impact analysis are phase 4: [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).) Reports, the designer and the Model view (a dataset's tables and relationships as a diagram, with the `layout:` key) are built in phase 3: [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), this document sections 14 to 16.
 
-The list of what was not built for the 2.1 composed and derived datasets (removed in 2.2) was in DATASETS_2_1_COMPOSED_DERIVED.md, since deleted (in git at tag v2.9.5).
+Composed and derived datasets are not supported; their place is taken by models and Python datasets.
 
 ### 11. Composed and derived datasets
 
-> **Removed in 2.2.** Composed and derived datasets no longer run: a `from:` or `derived:` dataset parses with `DRS-9190`, and
+> **Not supported.** Composed and derived datasets do not run: a `from:` or `derived:` dataset parses with `DRS-9190`, and
 > `drishti.py bi migrate --models` (or the server, at start, for stored items) folds a composed one into the model that reads its sources and makes a
 > derived one a Python dataset (`source.python`) with a model of the old name ([BI_DESIGN.md 8.3.1](../architecture/BI_DESIGN.md#831-as-built-22-wave-a-task-6)).
-> What the 2.1 samples became is 11.5.
+> What the older samples became is 11.5.
 
-The 2.1 description (the YAML of 11.1 and 11.2, who saw what, lineage and the Model view, sections 11.1 to 11.4) was replaced by models with several fact tables ([3.1](#31-several-unrelated-fact-tables-in-one-query)) and Python datasets ([section 34, its section 13](#13-transforms-a-table-in-a-table-out)); it was deleted (DATASETS_2_1_COMPOSED_DERIVED.md, in git at tag v2.9.5).
+Models with several fact tables ([3.1](#31-several-unrelated-fact-tables-in-one-query)) and Python datasets ([section 34, its section 13](#13-transforms-a-table-in-a-table-out)) take the place of the older description (the YAML of 11.1 and 11.2, who saw what, lineage and the Model view, sections 11.1 to 11.4).
 
-#### 11.5 The samples (as converted in 2.2)
+#### 11.5 The samples, converted
 
 The 2.1 sample files (`counterparty-exposure.dataset.yaml`, the composed `desk-pnl-vs-exposure.dataset.yaml` and the derived
 `desk-pnl-vs-exposure-py.dataset.yaml`) were converted and deleted in 2.2. What ships now:
@@ -2427,7 +2426,7 @@ All are `sample: true`. A test compares the Python dataset with an independent j
 ### 12. Build a dataset in the browser: the wizard
 
 > **Version 1 tables.** This wizard writes the version 1 (`rachana: 1`) tables document. **New dataset** opens the version 2 wizard of
-> [section 15](#15-the-dataset-wizard-version-2-wave-a), which no longer points here; this one is reached at `/bi/datasets/new` (and **Edit in the
+> [section 15](#15-the-dataset-wizard-version-2-wave-a); this one is reached at `/bi/datasets/new` (and **Edit in the
 > wizard** on a version 1 dataset) until the version 1 datasets are migrated (`drishti.py bi migrate --models`).
 
 A business user builds a dataset without typing YAML: **Datasets → New dataset (guided)** (`/bi/datasets/new`). It is also opened by **My workspace → New item → dataset → Open the dataset wizard** (the same form has **Paste YAML**, for experts: a whole dataset document pasted and saved as a draft) (the workspace is passed along, so the draft is saved there) and by the designer's start page when no dataset exists, and **Edit in the wizard** on a dataset's page (`/bi/datasets/new?edit=<item id>`) opens a draft you may edit. It needs the `bi-author` power.
@@ -2436,7 +2435,7 @@ The wizard keeps the dataset as one document and writes the same YAML sections 1
 
 | Step | What you do | What it writes |
 |---|---|---|
-| 1 Source | one of four: **the packs' kinds**, **a connector** (choose it, then tick its kinds; the connector's name goes into each table's `source.connector`), **combine datasets** (a composed dataset, section 11.1) or **a Python Transform** (a derived dataset, section 11.2), the last two refused on save since 2.2 (`DRS-9190`); a name, a title, a description | `rachana`, `dataset`, `title`, `description`; for kinds the draft the server starts (`POST /model/start`), for the other two `from:`/`join:` or `derived:`/`columns:` |
+| 1 Source | one of four: **the packs' kinds**, **a connector** (choose it, then tick its kinds; the connector's name goes into each table's `source.connector`), **combine datasets** (a composed dataset, section 11.1) or **a Python Transform** (a derived dataset, section 11.2), the last two refused on save (`DRS-9190`); a name, a title, a description | `rachana`, `dataset`, `title`, `description`; for kinds the draft the server starts (`POST /model/start`), for the other two `from:`/`join:` or `derived:`/`columns:` |
 | 2 Tables and columns | tick the columns to keep, rename each (the column key), see and change its type, mark a key, describe it | `tables.<t>.columns` (shorthand `name: type` when nothing else is set; `path:` when the name differs from the source path); renaming a column follows it through relationships, measures and hierarchies |
 | 3 Relationships | what the packs declare, relationships the values suggest (with the match rate) and same-name-and-type columns, each with **Add**; edit the many side, the one side and the cardinality | `relationships:` |
 | 4 Measures | an aggregation (`sum`, `avg`, `min`, `max`, `count`, `distinct`) and a column, or a **formula** typed with a list of fields to pick from; a format and a description; **Check** runs the server's validation (`POST /datasets/validate`) on the whole draft | `measures:` |
@@ -2450,7 +2449,7 @@ After saving: **Open the Model view**, **Open the dataset page**, and (when you 
 
 The console's two helper calls (`POST /bi/wizard/yaml` writes a JSON document as YAML, key order kept; `POST /bi/wizard/parse` reads YAML into the document and says whether it is `tables`, `composed` or `derived`) are same-origin and decide no access; saving goes through the BI calls and the server decides. A text over 400,000 characters is refused (`413`), an unparsable one or a text that is not a mapping `422 DRS-9003`. Walk-through: [tutorial 10, step 13](../tutorials/10-first-bi-report.md#step-13--a-dataset-and-a-model-of-your-own-in-the-wizard).
 
-### 13. Model-layer datasets (`rachana: 2`, wave W1)
+### 13. Model-layer datasets (`rachana: 2`)
 
 Everything above describes the version-1 dataset, which is still read as written. Wave W1 adds the **model layer**
 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1) section 1): a dataset becomes **one table** (a source, a grain, columns with roles, meanings, units
@@ -2524,7 +2523,7 @@ and Check (`POST /bi/models/validate`) answers it valid with the base's columns 
 time, every layer's row rules under `security.rows`, `chain`), with Check's `problems`; the dataset page and the model designer show the resolved form. The
 draft is listed under *Your datasets* at once (`draft: true`); a model can use it once it is published.
 
-### 14. Derivation: subset, filter, grain, derive, group (2.2, wave A)
+### 14. Derivation: subset, filter, grain, derive, group
 
 A dataset that `extends` another narrows it with the derivation keys of [BI_DESIGN.md §3.1](../architecture/BI_DESIGN.md#31-yaml-the-structure-language).
 Each answers what the same arithmetic over the base answers, as the reader (the base's rules and masks first), and the plan shows each step above the
@@ -2542,7 +2541,7 @@ grain: { one-row-per: TRADE_ID, keep: latest by VALUATION_DATE }                
 derive:
   NOTIONAL_K: { expr: "NOTIONAL / 1000", type: decimal }                          # a DEL column, worked out for each row
   BOOK_NAME:  { expr: "related(PORTFOLIO.NAME)", type: string }                   # one hop along a pack reference (PORTFOLIO references the kind book)
-  BUCKET:     { python: notional-bucket, inputs: [NOTIONAL], type: string }       # a Python column (a transform item, until wave B's column interface)
+  BUCKET:     { python: notional-bucket, inputs: [NOTIONAL], type: string }       # a Python column
 ```
 
 ```yaml
@@ -2566,11 +2565,11 @@ security:
 |---|---|---|
 | `columns: [a, b]` | keeps those columns of the base | the base's grain keys stay (`DRS-9105`); a name the base lacks is `DRS-9105` |
 | `where:` | filters the base's rows | row scope DEL; not a security rule (rules are `security.rows`) |
-| `grain: { one-row-per, keep }` | one row per key within a business date: `keep: latest by <col>` or `earliest by <col>` | key and order columns exist (`DRS-9104`); never by a masked column (`DRS-9106`); no rollups of its own; not on a live dataset (wave B) |
+| `grain: { one-row-per, keep }` | one row per key within a business date: `keep: latest by <col>` or `earliest by <col>` | key and order columns exist (`DRS-9104`); never by a masked column (`DRS-9106`); no rollups of its own; not on a live dataset |
 | `derive: { x: { expr, type } }` | a column worked out per row | `type` is required; no aggregate (a measure); a column derived from a masked one is masked |
-| `derive: { x: { expr: "related(col.field)" } }` | the field of the row a pack reference points at, one hop (None when it points at nothing) | `col` has `references: <kind>` and the kind has `field` (`DRS-9101`); not in a grouped dataset (wave B) |
-| `derive: { x: { python, inputs, type } }` | a Python column: the base's rows (as the reader) go to the item as the frame `rows`; it returns the frame with `x` added | a `transform` item until wave B's `column` interface; the dataset is read by staging (no rollups); not live |
-| `group: { by, columns, grain }` | one row per `by` with the columns aggregated | the dataset's columns become `by` plus the grouped ones (`sum` and `count` add up across groups, `min`/`max` keep their aggregate, `avg` and `distinct` do not add); rules name `by` columns; no rollups; a dataset that is de-duplicated or grouped is not reshaped again (wave B) |
+| `derive: { x: { expr: "related(col.field)" } }` | the field of the row a pack reference points at, one hop (None when it points at nothing) | `col` has `references: <kind>` and the kind has `field` (`DRS-9101`); not in a grouped dataset |
+| `derive: { x: { python, inputs, type } }` | a Python column: the base's rows (as the reader) go to the item as the frame `rows`; it returns the frame with `x` added | a `column` item; the dataset is read by staging (no rollups); not live |
+| `group: { by, columns, grain }` | one row per `by` with the columns aggregated | the dataset's columns become `by` plus the grouped ones (`sum` and `count` add up across groups, `min`/`max` keep their aggregate, `avg` and `distinct` do not add); rules name `by` columns; no rollups; a dataset that is de-duplicated or grouped is not reshaped again |
 
 **Roots and lineage.** Check traces every dataset down its `extends` chain to its root (a pack kind and the connector that serves it, a connector query,
 a Python item, another model, a SQL view) and refuses one whose root cannot be traced (`DRS-9110`, for example a kind no enabled pack generates). Check of a
@@ -2584,7 +2583,7 @@ GET /api/v1/bi/lineage/lang-bucket-view@1
  "problems": []}
 ```
 
-### 15. The dataset wizard, version 2 (wave A)
+### 15. The dataset wizard, version 2
 
 **New dataset** (`/bi/datasets/new-layer`; *New dataset* on the Models page and in a workspace) makes a `rachana: 2` dataset without typing YAML, with
 the derivation keys of [section 14](#14-derivation-subset-filter-grain-derive-group-22-wave-a): a column subset, a row filter, an explicit grain
@@ -2694,7 +2693,7 @@ draft's implicit model asked with `shape: rows` (`POST /bi/api/mq`).
 
 ### 16. A run's result as a dataset snapshot (`source: {run}`)
 
-A finished BI run (a model query or a SQL statement, [BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 9.4](../architecture/BI_DESIGN.md#94-promoting-to-a-dataset-snapshot))
+A finished BI run (a model query or a SQL statement, [BI_DESIGN.md › BI runs: every BI query as a bounded, visible job, section 9.4](../architecture/BI_DESIGN.md#94-promoting-to-a-dataset-snapshot))
 can be **promoted**: its result is frozen as a snapshot and becomes a draft dataset you can build models and reports on.
 
 **Through the API** (the run object's `can.promote` is true when you ran it, hold `bi-author` and it is a finished model query or SQL
@@ -2738,15 +2737,15 @@ provenance: { run: "r-java-1-01JA…", computedAs: "ajsinha", signature: "…", 
 
 The tutorials teach BI in order ([tutorial 10](../tutorials/10-first-bi-report.md) to [14](../tutorials/14-python-and-analyse.md)). This page keeps the recipes they do not repeat: a stack with four people
 so row rules and masks can be seen at work, reading and querying the shipped models, changing a measure in a copy, seeing a wrong dataset refused, starting a model from the packs, and drawing a relationship in
-the Model view. Everything else that used to be in the BI tutorial is now a tutorial: reports and the designer are [tutorial 10](../tutorials/10-first-bi-report.md), subscriptions, alerts and export
+the Model view. Everything else is a tutorial: reports and the designer are [tutorial 10](../tutorials/10-first-bi-report.md), subscriptions, alerts and export
 [tutorial 11](../tutorials/11-bi-that-runs-itself.md), live BI and boards [tutorial 12](../tutorials/12-live-bi-and-boards.md), governance [tutorial 13](../tutorials/13-govern-bi.md), Python and Analyse
 [tutorial 14](../tutorials/14-python-and-analyse.md). The references are [section 30](#30-datasets-the-yaml-the-expression-language-and-the-security-rules), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del), [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models), [section 31](#31-reports-the-yaml-the-visuals-and-how-they-behave), [section 31, its section 23](#23-boards-report-pages-of-live-tiles) and [section 32](#32-publishing-and-governance-versions-review-certification-lineage-impact-environments).
 
 Every answer below was captured on a fresh clone over the **demo lakes** (`drishti.py lake demo`: sixty business days of the seven packs, 5,000 trades for
 each of ENDUR, CALYPSO and MUREX, 15,000 trade valuations a day). The demo lakes end on **today's** business date, so your dates differ from the ones
-here. The answers of `trades-basic` and `trading-risk` (with its two users) were rerun on the default lake of 2.9.2, ending 2026-10-26, with the
-official exposure the server publishes at start; the others were captured on the seven-day lakes of 2.5.0 (2026-10-07 to 2026-10-16), and a figure
-there may differ on yours. Some pictures are from the 2.2 demo data and show its lower-case column names; the
+here. The answers of `trades-basic` and `trading-risk` (with its two users) are from the default lake, ending 2026-10-26, with the
+official exposure the server publishes at start; the others from seven-day lakes (2026-10-07 to 2026-10-16), and a figure
+there may differ on yours. Some pictures show older demo data with lower-case column names; the
 steps are the same.
 
 | Sample model | What it teaches | Tables (aliases) |
@@ -3142,14 +3141,14 @@ tests:                         # optional: what a number should be (section 17)
 | `sample` | `true`: sample content, hidden from people who may not see samples (like sample packs) |
 | `dataset` | the dataset it reads. Found by catalogue id, by file name (`trades-basic` is `file:dataset:trades-basic`), by the dataset's own name or by its title; a draft dataset of your own works too. Not found: `DRS-9034` |
 | `theme` | a **theme item**'s name (`theme: corporate`, or `{ use: corporate }`; section 5.2), or a palette: `default` (the console's colours, following light, dark and high contrast), `colour-blind` (Okabe-Ito) or `mono`; optional `palette` and `background` (a `#rrggbb`, used by the contrast check) over the theme's |
-| `board` | the settings of the report's **board pages** (2.4.0): `rotate` (kiosk rotation) and `notify` (the tiles' notification defaults); [section 23](#23-boards-report-pages-of-live-tiles) |
+| `board` | the settings of the report's **board pages**: `rotate` (kiosk rotation) and `notify` (the tiles' notification defaults); [section 23](#23-boards-report-pages-of-live-tiles) |
 | `dates` | `from` and `to` (`yyyy-mm-dd`, inclusive) for every query; a person can pick a business date in the viewer's toolbar instead |
 | `filters`, `bookmarks`, `pages` | sections 4, 8 and below |
 | `layouts` | `phone: { <page id>: { order, hide, span } }` (640 px and narrower) and `tablet: { <page id>: { order, hide, span, wide } }` (1024 px and narrower): how a page is arranged. Without them a phone stacks the grid in reading order and a tablet keeps the grid (section 14) |
 | `tests` | expected values Check and publishing run (section 17) |
 
 A **page** has `id` (letters, digits, hyphen, underscore, up to 40; made from the title when missing), `title`, `filters`, `visuals`, and optionally `drillthrough: { fields: [table.column] }`, which makes it a
-**drill-through target** (section 8): it is left out of the page tabs and opened from a visual. At most 30 pages, 60 visuals a page. Since 2.4.0 a page may also have `layout: board` (a wall of tiles, [section 23](#23-boards-report-pages-of-live-tiles)),
+**drill-through target** (section 8): it is left out of the page tabs and opened from a visual. At most 30 pages, 60 visuals a page. A page may also have `layout: board` (a wall of tiles, [section 23](#23-boards-report-pages-of-live-tiles)),
 `tooltip: true` (a **tooltip page**, drawn over a hovered mark: section 8) and `interactions:` (how a selection on one visual acts on the others: section 8).
 
 A **visual**:
@@ -3166,15 +3165,15 @@ A **visual**:
 | `drillthrough` | `{ page, field }`: a click on a mark of `field` may open that page carrying the mark's value; the page must list the field under its own `drillthrough: fields` |
 | `format` | display settings, section 5 |
 | `text`, `src`, `alt`, `interacts`, `action` | the words of a text visual or button; an image's address (this site's `/static/...` or a `data:image/` URI, never another address) and its alt text (also a text alternative for any visual); `interacts: false` stops other visuals' selections from filtering this one; a button's `action: { navigate: <page> }` or `{ bookmark: <name> }` |
-| `tooltip` | (2.4.0) the id of a tooltip page drawn over this visual's hovered marks, filtered to the mark (section 8) |
-| `from`, `alert` | (2.4.0) a **tile**'s report and visual, and its colour rule ([section 23](#23-boards-report-pages-of-live-tiles)) |
+| `tooltip` | the id of a tooltip page drawn over this visual's hovered marks, filtered to the mark (section 8) |
+| `from`, `alert` | a **tile**'s report and visual, and its colour rule ([section 23](#23-boards-report-pages-of-live-tiles)) |
 
 The viewer's keyboard order is the picture's: visuals are read top to bottom, then left to right.
 
 ### 3. The visuals and their wells
 
 A **well** holds fields (`table.column`, or `table.column.year|quarter|month|week|day` for a date), measures (names of the dataset) or either, and takes a few items. Charts draw with ECharts
-(vendored); everything else is plain elements. Required wells must be filled. The designer's Visualizations pane offers the first 26 types below (`bar` to `button`, with `bubble`, `funnel`, `histogram`, `box` and `map` among the charts); `live-chart`, `perspective-grid`, `perspective-pivot` and `perspective-chart` (phase 5, wave C) are written in the YAML, and the designer's canvas shows a note for a Perspective visual (its page has no WebAssembly). `vega-lite` is in the designer's *Charts* with a box for its specification (JSON) under Format.
+(vendored); everything else is plain elements. Required wells must be filled. The designer's Visualizations pane offers the first 26 types below (`bar` to `button`, with `bubble`, `funnel`, `histogram`, `box` and `map` among the charts); `live-chart`, `perspective-grid`, `perspective-pivot` and `perspective-chart` are written in the YAML, and the designer's canvas shows a note for a Perspective visual (its page has no WebAssembly). `vega-lite` is in the designer's *Charts* with a box for its specification (JSON) under Format.
 
 | Type | Group | Wells (kind, how many) | What it draws |
 |---|---|---|---|
@@ -3202,15 +3201,15 @@ A **well** holds fields (`table.column`, or `table.column.year|quarter|month|wee
 | `slicer` | slicer | `field` (1, required) | section 6 |
 | `text`, `image`, `button` | static | none | `text`; `src` and `alt`; `text` and `action` |
 | `live-chart` | live | `values` measures (1 to 4, required) | a **rolling line**: each update of the live table adds a point per measure; `format: { window: 120 }` keeps the latest 5 to 1,000 points (section 13). The points live in the browser from the moment the page opened; for a line that is there when the page opens, chart the table's **history** instead: a `line` with `axis: [history.ts]` and `values: [MTM history]` ([section 30, its section 7.1](#71-live-tables-phase-5), the sample *Live trading desk* has one, *Net MTM and losses, last hour*) |
-| `perspective-grid` | perspective | `columns` fields of **one table** (required) | a 2.1 type, kept so old reports open: since 2.3.0 the table's rows in **Drishti's own grid** of the server's answer (no WebAssembly), masked for the reader and updated as the table changes (section 13) |
-| `perspective-pivot` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | a 2.1 type: since 2.3.0 drawn as Drishti's grid of the rows the server sends, **not pivoted in the browser**; for a pivot use a `matrix` (the server groups and totals) |
-| `perspective-chart` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | a 2.1 type: since 2.3.0 drawn as Drishti's grid of the rows the server sends (`format.plugin` and the settings panel are ignored); for a chart use `column`, `bar`, `line` or another chart type (section 13) |
+| `perspective-grid` | perspective | `columns` fields of **one table** (required) | a 2.1 type, kept so old reports open: the table's rows in **Drishti's own grid** of the server's answer (no WebAssembly), masked for the reader and updated as the table changes (section 13) |
+| `perspective-pivot` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | a 2.1 type: drawn as Drishti's grid of the rows the server sends, **not pivoted in the browser**; for a pivot use a `matrix` (the server groups and totals) |
+| `perspective-chart` | perspective | `rows` fields (required), `columns` fields, `values` fields (required) | a 2.1 type: drawn as Drishti's grid of the rows the server sends (`format.plugin` and the settings panel are ignored); for a chart use `column`, `bar`, `line` or another chart type (section 13) |
 | `vega-lite` | chart | `axis` fields, `legend` field (1), `values` measures: at least a field or a measure | a **Vega-Lite** specification written in `format.spec`, its data the rows of the wells (section 3.5) |
 | `python` | python | `columns` fields (any number), `values` one Python measure of the dataset | what a Python item returns for the rows this person may see: bars of a Python measure, or a chart or image (section 3.3) |
 
 
 | `entity-view` | entity | `key` (1, required): a field holding an entity's id | the Drishti view of the entity whose key is selected on the page (section 3.4) |
-| `tile` | board | none: `from: { report, visual, page }` | (2.4.0) a visual of another report on a board page, with its `alert:` colours ([section 23](#23-boards-report-pages-of-live-tiles)) |
+| `tile` | board | none: `from: { report, visual, page }` | a visual of another report on a board page, with its `alert:` colours ([section 23](#23-boards-report-pages-of-live-tiles)) |
 
 Reserved and **refused with `DRS-9033`** (not built): `shape`.
 
@@ -3373,10 +3372,10 @@ Rank by a column that is not masked (`counterparties.id`, not the masked name): 
 
 ### 5. Format
 
-`format` is **typed per visual family** (report schema v2, 2.4.0): one JSON Schema per family, written in YAML in the server
+`format` is **typed per visual family** (report schema v2): one JSON Schema per family, written in YAML in the server
 (`drishti-server/src/main/resources/bi/report/format/`: `chart` for bar, column, line, area and combo; `other-chart`; `card` for cards, KPIs and gauges; `table`; `matrix`;
-`slicer`; `static` for text, image, button and tile; `code` for python, vega-lite and the live and 2.1 types; `common` for what they share). The server checks every
-visual's format against its family: a wrong type or value of a key **new in 2.4.0** is `DRS-9032`, a wrong value of a key a 2.3 report could already hold is a
+`slicer`; `static` for text, image, button and tile; `code` for python, vega-lite, the live and the `perspective-*` types; `common` for what they share). The server checks every
+visual's format against its family: a wrong type or value of a key of the typed format is `DRS-9032`, a wrong value of a key an older report could already hold is a
 **warning** (the viewer ignores it, so a stored report never stops opening), and an unknown key, or a key of the family this type does not use, is a warning.
 `GET /api/v1/bi/reports/format-schemas` gives the schemas, resolved per family; the designer's **Format pane is generated from them** (a section per group,
 the right control for each key, its range and its hint), so whatever the pane offers the server accepts.
@@ -3394,7 +3393,7 @@ the right control for each key, its range and its hint), so whatever the pane of
 | `colour`, `seriesColours` | charts | one `#rrggbb` for a chart with one series (the designer offers the theme's colours); a colour per series (a measure's name or a legend value) or, for a pie, per category |
 | `multiples` | bar, column, line, area with a `split` field | `{ columns (1 to 6), max (2 to 24), sharedAxis }` (section 5.4) |
 | `period` | charts on a date axis | `auto`, `day`, `week`, `month`, `quarter`, `year` |
-| `numberFormat` | charts, cards, tables | `amount0`, `signed0`, `signed2`, `compact`, `pct` (a value of at most 1 is a fraction, a larger one already a percent), `share` (always a fraction of 1: `share_of` measures, 2.3.0); else the measure's own format from the dataset |
+| `numberFormat` | charts, cards, tables | `amount0`, `signed0`, `signed2`, `compact`, `pct` (a value of at most 1 is a fraction, a larger one already a percent), `share` (always a fraction of 1: `share_of` measures); else the measure's own format from the dataset |
 | `rules` | cards, kpis, gauges, tables, matrices, bar, column | conditional formatting (section 5.1) |
 | `conditional` | as `rules` | the 2.1 short form: `[{ measure, op: lt, le, gt, ge, eq or ne, value, colour }]` (the text colour) |
 | `dataBars` | table, matrix | measures to draw as bars in the cell |
@@ -3501,8 +3500,8 @@ A `slicer` visual lists the values of its field (from the dataset, under the rea
 
 * `format.mode: list` (the default: a checkbox list with a search box), `dropdown` (the shared multi-select) or `range` (two inputs, **From** and **To**, side by side, for a number or a date field; it fits a slicer two grid rows high, and a From after To shows a hint instead of asking for nothing). `relative-date` is a choice of **dates relative to the report's date** (section 6.1).
 * `format.scope: page` (the default) filters this page; `report` filters every page, so a choice made on one page holds on the others.
-* `format.syncGroup: <name>` (2.4.0, Power BI's sync slicers): the slicers of one group, on any pages, share **one choice**. Choosing on one sets the others; each filters its own page. The slicers of a group slice one field (else `DRS-9032`). A slicer of the group never narrows its own list by the group's choice.
-* `format.style: tiles` (2.4.0) draws a list slicer as buttons, pressed when chosen (a tile slicer).
+* `format.syncGroup: <name>` (Power BI's sync slicers): the slicers of one group, on any pages, share **one choice**. Choosing on one sets the others; each filters its own page. The slicers of a group slice one field (else `DRS-9032`). A slicer of the group never narrows its own list by the group's choice.
+* `format.style: tiles` draws a list slicer as buttons, pressed when chosen (a tile slicer).
 * A slicer never filters itself, and other slicers filter it. A visual a slicer cannot reach through the dataset's relationships answers `DRS-9020` and says so.
 
 ### 7. How a visual becomes a query
@@ -3526,7 +3525,7 @@ unless the visual depends on who is looking ([section 28](#the-same-answer-for-t
 
 A visual whose query is refused shows the server's code and words in its frame, with a Retry button, and the others carry on.
 
-#### 7.1 Which date a report reads: `as-of` (2.6.7 patch)
+#### 7.1 Which date a report reads: `as-of`
 
 "As of D" (a day in the time picker, or **Now**, which is the current business date) means: **each table at its latest business date on
 or before D**. Facts and dimensions alike, live or not, on a weekend or a holiday, and before today's load: a report never shows an
@@ -3562,10 +3561,10 @@ the filters in force are chips under it.
 
 * **Cross-filter and highlight.** Click a mark (or focus a chart, move with the arrows and press Enter) and the other visuals filter to it (or, for bar, column, line, area and combo charts, draw the highlighted
   part over the faded whole). Click it again, press Esc or use the visual's clear button to let go. Ctrl or Shift adds to the selection.
-* **Edit interactions** (2.4.0). A page's `interactions: { <source visual>: { <target visual>: filter | highlight | none } }` says, pair by pair, how a selection (or a slicer's choice) on one visual acts on another:
+* **Edit interactions**. A page's `interactions: { <source visual>: { <target visual>: filter | highlight | none } }` says, pair by pair, how a selection (or a slicer's choice) on one visual acts on another:
   `none` leaves the target alone, `highlight` highlights it where it can (else filters), `filter` filters it; a pair not listed follows the viewer's *Click a mark to* choice. In the designer: select the source visual,
   then Format, *Interactions* (a choice for each other visual), or **Edit on the canvas** (Filter, Highlight and None over each other visual, as in Power BI).
-* **Tooltip pages** (2.4.0). A page with `tooltip: true` is left out of the tabs; a visual with `tooltip: <page id>` opens it in a popover when the pointer rests on one of its marks (or rows), each of its visuals
+* **Tooltip pages**. A page with `tooltip: true` is left out of the tabs; a visual with `tooltip: <page id>` opens it in a popover when the pointer rests on one of its marks (or rows), each of its visuals
   asked under the page's state with the mark's value carried (as a drill-through carries it). It closes when the pointer leaves, and on Esc. In the designer: Format, *Tooltip*, **New tooltip page**, then put a few cards
   or a small chart on it.
 * **Drill down and up** along the visual's `hierarchy`: select a mark, press the drill-down button (or `d`); `u` goes up. The title shows the path.
@@ -3612,7 +3611,7 @@ N is 1 to 3,660. `default` applies until the person chooses (and in exports and 
 
 **One bad visual is one error card.** A visual whose own wells, filters or dataset have an error answers `422 DRS-9034` for itself; every other visual of the report is still queried and drawn, in the viewer as in the designer. A draft with errors can be saved; **Propose, Approve and Publish** refuse it with the errors listed (a bi-admin may force it, audited). **Check** in the designer lists the errors with a link to each visual.
 
-**In the designer (2.1.0).** A frozen (proposed) report opens read-only with a banner; two tabs on one draft are protected by the stale-save choices (`DRS-9007`); **+ Add visual** (beside the type list) and dragging a type from the palette onto the canvas make a new, empty visual of that type, while clicking a type with a visual selected converts it and asks first when wells would be dropped; the visual id follows the type (a made-up id such as `card-1`, `slicer-1` or `visual-3` becomes `<new type>-<n>`; an id you chose yourself is kept), and **everything that named the old id follows it** in the same step: the bookmarks' slicer choices, the phone and tablet layouts of that page (`order`, `hide`, `wide`, `span`) and the report's `tests:`; Undo brings the old id and its references back together (a board tile that names a visual by id is not rewritten: its Check names it); a new filter starts on the selected visual's field; the toolbar's **View** menu opens the report page on **my draft** or **as readers see it (published)**, greyed until the report has been published: that page shows a banner with the published version and a link back to the draft, and draws the published visuals with your own masks (`GET /bi/items/{id}/published`, `?as=published`); **Check** and **Save** answer beside their buttons; **Filters** can be hidden; double-click a page tab to rename it; the YAML tab refuses to be left while the YAML does not parse (fix it, or **Discard my YAML edits**); on a phone the toolbar shows icons and the **Canvas / Visuals / Fields / Filters** tabs reach the panes.
+**In the designer.** A frozen (proposed) report opens read-only with a banner; two tabs on one draft are protected by the stale-save choices (`DRS-9007`); **+ Add visual** (beside the type list) and dragging a type from the palette onto the canvas make a new, empty visual of that type, while clicking a type with a visual selected converts it and asks first when wells would be dropped; the visual id follows the type (a made-up id such as `card-1`, `slicer-1` or `visual-3` becomes `<new type>-<n>`; an id you chose yourself is kept), and **everything that named the old id follows it** in the same step: the bookmarks' slicer choices, the phone and tablet layouts of that page (`order`, `hide`, `wide`, `span`) and the report's `tests:`; Undo brings the old id and its references back together (a board tile that names a visual by id is not rewritten: its Check names it); a new filter starts on the selected visual's field; the toolbar's **View** menu opens the report page on **my draft** or **as readers see it (published)**, greyed until the report has been published: that page shows a banner with the published version and a link back to the draft, and draws the published visuals with your own masks (`GET /bi/items/{id}/published`, `?as=published`); **Check** and **Save** answer beside their buttons; **Filters** can be hidden; double-click a page tab to rename it; the YAML tab refuses to be left while the YAML does not parse (fix it, or **Discard my YAML edits**); on a phone the toolbar shows icons and the **Canvas / Visuals / Fields / Filters** tabs reach the panes.
 
 The parser never throws for a bad document: it returns every problem with its code and the path of the key, so a person sees all of them at once (`POST /api/v1/bi/reports/validate`, the designer's
 YAML tab and Check button, and the viewer when a report cannot be drawn).
@@ -3625,9 +3624,9 @@ YAML tab and Check button, and the viewer when a report cannot be drawn).
 | `DRS-9033` | reserved, not built: a visual type (`shape`) | `...type: the visual 'shape' is reserved and not built yet` |
 | `DRS-9034` | the dataset cannot be found or has errors, so the report cannot be drawn | `no dataset 'x' (a catalogue id, a file name such as trades-basic, or the dataset's name)` |
 | `DRS-9035` | a visual query names a page, a visual or a slicer the report lacks, or its state is not valid (a drill path past the last level, dates that are not dates) | `the hierarchy 'Desk and book' has 2 levels; there is nothing below trade.PORTFOLIO` |
-| `DRS-9036` | (2.4.0) a theme item is not valid, or (a warning) the report names a theme that cannot be found | `palette[1]: 'red' is not a colour (#rrggbb)` |
-| `DRS-9037` | (2.6.0) a well names `param.<name>` that is not a field parameter of the report's model, or a choice of it the well cannot take (section 21) | `pages[0].visuals[0].wells.values: the values well takes measures, and the field parameter 'breakdown' can be trade.DESK, trade.PORTFOLIO, fields: put it in a field well` (one problem per parameter and well, naming every choice that does not fit) |
-| `DRS-9038` | (2.6.0) a statement page or the report's `statement:` is not valid (section 22, [section 24.8](#248-checks-drs-9038)) | `statement.paper: paper is one of [A3, A4, A5, Legal, Letter], not 'B5'` |
+| `DRS-9036` | a theme item is not valid, or (a warning) the report names a theme that cannot be found | `palette[1]: 'red' is not a colour (#rrggbb)` |
+| `DRS-9037` | a well names `param.<name>` that is not a field parameter of the report's model, or a choice of it the well cannot take (section 21) | `pages[0].visuals[0].wells.values: the values well takes measures, and the field parameter 'breakdown' can be trade.DESK, trade.PORTFOLIO, fields: put it in a field well` (one problem per parameter and well, naming every choice that does not fit) |
+| `DRS-9038` | a statement page or the report's `statement:` is not valid (section 22, [section 24.8](#248-checks-drs-9038)) | `statement.paper: paper is one of [A3, A4, A5, Legal, Letter], not 'B5'` |
 
 Report schema v2 adds, among others: `pages[0].visuals[1].format.valueAxis.min: is a number, not 'low'` (`DRS-9032`), `pages[0].visuals[0].format.rules[2].apply: 'Notional' is not shown by this visual` (`DRS-9031`),
 `pages[1].visuals[0].format.syncGroup: the slicers of sync group 'ccy' share one choice, so they slice one field (trade.CURRENCY), not trade.DESK` (`DRS-9032`),
@@ -3652,7 +3651,7 @@ colour with a contrast ratio under 3 against the theme's background), `LAYOUT` (
 `drishti.bi.report.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtibireport--reports-phase-3)): `chart-rows` (500), `table-rows` (1000), `slicer-values` (1000), `show-rows` (1000),
 `top-candidates` (10000), `perspective-rows` (20000: the most rows a 2.1 `perspective-*` visual's grid is sent), `distribution-rows` (20000: the most members a histogram or box plot reads), `totals-max-rows` (2000: rows of one level of true totals), `python-rows` (10000: the most rows a python visual hands to Python), `python-packages`, `python-max-seconds` and `python-max-memory-mb` (what a Python manifest may list and ask for: [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 9). The query limits are `drishti.bi.query.*`; the live ones `drishti.bi.live.*`; the console's `bi.live.min_interval_ms` and `bi.live.stale_seconds` (section 13).
 
-**Never cut silently (2.3.0).** A visual whose rows reach its limit says so: its footer reads *first 500 of 2,340* (with *more than*
+**Never cut silently.** A visual whose rows reach its limit says so: its footer reads *first 500 of 2,340* (with *more than*
 past 50,000) and offers **Show all** (up to 5,000 rows, what one answer in JSON holds). A time series (a line, area, column or combo
 over a date axis) is asked again by period instead, week, then month, quarter and year, until the whole range fits, and its footer
 says *by week*; `format: { period: auto | day | week | month | quarter | year }` fixes the period (`day` never buckets). A model field
@@ -3673,14 +3672,14 @@ Built with several datasets (section 16): a visual's own `dataset:`, `links` acr
 
 Built in phase 6 (section 3.3): the `python` visual, run on the server in a sandboxed worker or in the browser.
 
-Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the sample live reports. (Phase 5 also drew Perspective grids, pivots and charts in the browser with WebAssembly; 2.3.0 replaced them with Drishti's own grid of the server's answer: section 13.)
+Built in phase 5 (section 13): visuals over live tables redraw in place with a live indicator, pause and resume, stale and disconnected states; the rolling chart; the sample live reports. Perspective visuals are drawn as Drishti's own grid of the server's answer (section 13).
 
 Built later: Vega-Lite visuals (3.5), the relative-date slicer (6.1), tablet layouts (14.1), expected values (17), the entity view (3.4) and *promote to visual* from Analyse ([USER_GUIDE.md](USER_GUIDE.md#14-promote-to-a-report-visual)).
 
-Built in 2.4.0 (report schema v2, section 20): the typed format per family with the generated Format pane (5), conditional formatting rules (5.1), theme items and the theme designer (5.2), small multiples (5.4),
+Report schema v2 (section 20): the typed format per family with the generated Format pane (5), conditional formatting rules (5.1), theme items and the theme designer (5.2), small multiples (5.4),
 the matrix at every level (5.5), sync groups and tile slicers (6), the interactions matrix and highlight for lines, areas and combos, tooltip pages (8), board pages ([section 23](#23-boards-report-pages-of-live-tiles)).
 
-Built in 2.6.0: field parameters in a visual's wells (section 21) and statement pages, paginated and page-exact, burst one per reader through subscriptions (section 22, [section 24](#24-statements-paginated-reports-page-exact-one-per-reader)).
+Field parameters in a visual's wells (section 21) and statement pages, paginated and page-exact, burst one per reader through subscriptions (section 22, [section 24](#24-statements-paginated-reports-page-exact-one-per-reader)).
 
 Not built, and not faked: a `perspective-*` visual over **several tables**; pivoting or charting in the browser (no BI page computes: use a `matrix` or a chart); a `shape` visual; the **entity view in the designer's canvas and in an embedded element** (it shows a note; the viewer shows the view); a python visual in a **subscription** (section 3.3; [section 34](#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 12; boards and alerts are built: [section 34, its section 16](#16-python-in-alerts-and-on-boards)); a **tile** map or a map service (nothing is fetched from outside; the shapes are the vendored files), regions **below the first level** (counties inside a state), a
 shape-file import, a **choropleth by a field that is not a country code or name**; a histogram with bands of your own (equal-width only), a box plot of **summary** data you already have (it summarises the members the query returns); true totals for a **table's subtotals by group** (a table has one total row); highlight for the charts other than bar, column, line, area and combo, and for tables and matrices (they are filtered); a matrix with **more than one column field**; capturing a bookmark's slicer choices from the page (they are
@@ -3732,13 +3731,13 @@ and keeps the latest `format.window` points (default 120). The points live **in 
 - { id: rolling, type: live-chart, title: Net MTM and losses, rolling, at: { x: 6, y: 2, w: 6, h: 5 }, wells: { values: [MTM, Losses] }, format: { window: 120 } }
 ```
 
-#### A report written for 2.1: `perspective-*` visuals
+#### `perspective-*` visuals
 
-Wave B made the servers compute every number and the browser only draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): no BI page loads
-WebAssembly any more, so Perspective (and its settings panel and saved views) is gone. A report written for 2.1 still opens: its `perspective-grid`,
-`perspective-pivot` and `perspective-chart` visuals are drawn as **Drishti's own grid of the rows the server sends** (masked for the reader, as before),
+The servers compute every number and the browser only draws ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): no BI page loads
+WebAssembly, so there is no Perspective settings panel or saved view. A report with `perspective-grid`,
+`perspective-pivot` and `perspective-chart` visuals opens with them drawn as **Drishti's own grid of the rows the server sends** (masked for the reader),
 under the strict policy. The rows are not pivoted or added up in the browser: for a pivot or a chart, change the visual's type in the designer (or the
-YAML) to a `matrix` (the server groups and totals) or a chart. The live desk sample did so in 2.3.0:
+YAML) to a `matrix` (the server groups and totals) or a chart. The live desk sample does so:
 
 ```yaml
 - id: desk-currency
@@ -3750,9 +3749,9 @@ YAML) to a `matrix` (the server groups and totals) or a chart. The live desk sam
   format: { stacked: true, labels: false }
 ```
 
-![The live desk's Chart page in 2.3.0: a stacked column per desk, one series per currency, worked out by the server](../tutorials/img/t12/15-chart-page.jpg)
+![The live desk's Chart page: a stacked column per desk, one series per currency, worked out by the server](../tutorials/img/t12/15-chart-page.jpg)
 
-The checks of a `perspective-*` visual are as before (one table, `format.aggregates` from the list), and `drishti.bi.report.perspective-rows` (20,000)
+The checks of a `perspective-*` visual: (one table, `format.aggregates` from the list), and `drishti.bi.report.perspective-rows` (20,000)
 still caps its rows; `format.view` and `format.plugin` are read and ignored.
 
 ### 14. Phone and tablet layouts
@@ -3814,9 +3813,9 @@ Subscribe) is listed there.
 
 ### 16. Reports over several datasets
 
-A report reads **one dataset** by default (`dataset:`). A visual may name **another** with its own `dataset:`, and the report's `links:` say which fields of different datasets mean the same, so a slicer or a click on one dataset's visual filters the visuals of another. Each visual's query is still run **as the reader** against its own dataset, with that dataset's row rules and masks. (To put the facts of several datasets in *one* table, put them in one model with several fact tables ([section 30 3.1](#31-several-unrelated-fact-tables-in-one-query)) or join them in a Python dataset; the 2.1 composed and derived datasets are gone: [section 30, its section 11](#11-composed-and-derived-datasets). The design is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built).)
+A report reads **one dataset** by default (`dataset:`). A visual may name **another** with its own `dataset:`, and the report's `links:` say which fields of different datasets mean the same, so a slicer or a click on one dataset's visual filters the visuals of another. Each visual's query is still run **as the reader** against its own dataset, with that dataset's row rules and masks. (To put the facts of several datasets in *one* table, put them in one model with several fact tables ([section 30 3.1](#31-several-unrelated-fact-tables-in-one-query)) or join them in a Python dataset; composed and derived datasets are gone: [section 30, its section 11](#11-composed-and-derived-datasets). The design is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built).)
 
-The YAML and the query below are the 2.1 shape (`rachana: 1`, `dataset:`), still read. Since 2.2 the shipped sample `pnl-vs-exposure` reads one model, `trading-risk@1`, which holds both facts, so it needs no link; a visual's own `dataset:` and the report's `links:` work as described.
+The YAML and the query below are the version 1 shape (`rachana: 1`, `dataset:`), still read. The shipped sample `pnl-vs-exposure` reads one model, `trading-risk@1`, which holds both facts, so it needs no link; a visual's own `dataset:` and the report's `links:` work as described.
 
 ```yaml
 report: pnl-vs-exposure
@@ -3894,7 +3893,7 @@ The designer's **Check** runs the report's tests (of the text on the screen, sav
 
 `drishti.bi.governance.refuse-failing-tests` (on) turns the publish gate off (a failing test then only shows in Check). A test that cannot run (a source down, a role the publisher lacks) counts as failing at publish. Exports and subscriptions do not run tests.
 
-### 18. A report on a model (wave W1)
+### 18. A report on a model
 
 With the model layer ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification-of-wave-w1) sections 3, 4 and 9.4; [section 23](#23-models-and-pack-datasets-the-model-layer-wave-w1))
 a report binds to **one model** with `model:` in place of `dataset:`:
@@ -3969,9 +3968,9 @@ rebind or delete those first (its page lists them under Used by; GET /api/v1/bi/
 a model query and live subscriptions, as far as the caller may read them (`hidden` counts the rest); the model's `describe` carries the same list as
 `usedBy`.
 
-### 19. Languages in the report designer (wave A)
+### 19. Languages in the report designer
 
-Wave A ([section 24](#24-the-languages-in-the-console-wave-a-220)) adds four things to a report on a model.
+The languages ([section 24](#24-the-languages-in-the-console-wave-a-220)) add four things to a report on a model.
 
 **The Fields pane inherits the model.** It is built from the model's description as you see it (`GET /api/v1/bi/models/{ref}/describe`), with the
 properties the model gives each field: its **display name** (*Trading desk* for `trade.DESK`; every visual's labels use it too), its **description**
@@ -4038,12 +4037,12 @@ checks it).
 
 ![The query panel of the selected visual with SQL chosen: the statement above (SELECT trade.DESK, MEASURE('Sum of MTM') ...) and Run as SQL](img/bi-languages/query-panel-sql.jpg)
 
-**Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)); a report saved before
-2.2.0 with the older syntax is refused (`DRS-9100`, with the DEL v2 text as the fix; stored items are converted when the server starts, and `drishti.py bi migrate --expressions` converts files).
+**Expressions are DEL v2.** Every formula the designer writes uses the Python-like syntax ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)); a report saved
+with the older syntax is refused (`DRS-9100`, with the DEL v2 text as the fix; stored items are converted when the server starts, and `drishti.py bi migrate --expressions` converts files).
 
-### 20. Report schema v2 in one report (2.4.0)
+### 20. Report schema v2 in one report
 
-The parity tasks of a Power BI author (items 6 to 8 and 13 of the 2.1 parity study, [BI_DESIGN.md section 11.1](../architecture/BI_DESIGN.md#111-the-21-studys-item-ids)) in one report on `trades-basic`, every part made in the designer (BI Studio) without
+The parity tasks of a Power BI author in one report on `trades-basic`, every part made in the designer (BI Studio) without
 the YAML tab; the YAML is what the designer writes:
 
 ```yaml
@@ -4092,9 +4091,9 @@ The browser test `drishti-console/tests/test_bi_studio_browser.py` builds this r
 coloured and with icons; the small multiples draw a chart per currency; a selection on the chart filters the card and not the matrix; the tooltip page opens over a bar,
 filtered to it; a currency chosen on page 1 holds on page 3.
 
-### 21. Field parameters in a well (2.6.0)
+### 21. Field parameters in a well
 
-A **field parameter** of a model (`parameters: { breakdown: { kind: field, fields: [...] } }`, since 2.3.0, [BI_GUIDE.md section 25](BI_GUIDE.md))
+A **field parameter** of a model (`parameters: { breakdown: { kind: field, fields: [...] } }` [BI_GUIDE.md section 25](BI_GUIDE.md))
 lets the **reader** choose what a visual draws: a well of a report on that model may name `param.<name>` instead of a field or a measure, and the parameter
 slicer above the page (*Parameters*) switches it. A field parameter's choices are fields (*break down by desk or by portfolio*) or measures (*show MTM or
 Notional*):
@@ -4141,7 +4140,7 @@ The server test `FieldParamsApiTest` switches a column chart from DESK to PORTFO
 lake's rows, keeps MTM masked for a reader without raw, and refuses each wrong well; the browser test `drishti-console/tests/test_bi_wave_d_browser.py` builds the
 visual in Build and switches it in the viewer.
 
-### 22. Statement pages: paper, page by page (2.6.0)
+### 22. Statement pages: paper, page by page
 
 A page with `layout: statement` is **paper**: its visuals (text, cards, tables, matrices) are bands laid out page by page on the paper the report's
 `statement:` sets (size, orientation, margins, a header and footer with page numbers and the run date), with page breaks, the column titles of a table on
@@ -4165,7 +4164,7 @@ pages:
 
 A **board** is a wall of tiles for a screen on the wall of a trading desk, a risk team or an operations room. Each tile is one visual of a report; the board lays them out, keeps them up to date as the data ticks, turns its pages by itself in **kiosk** mode, and colours a tile amber or red when its number crosses a threshold.
 
-**Since 2.4.0 a board is a report page** (item R7 of the 2.1 parity study, [BI_DESIGN.md section 11.1](../architecture/BI_DESIGN.md#111-the-21-studys-item-ids)): a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. The separate `board` kind is gone: stored boards became reports at the first start of 2.4.0, the shipped samples are reports (`config/bi/reports/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [section 30](#71-live-tables-phase-5); for the visuals see [section 31](#13-live-visuals); for the pages see this document section 18; for a walk-through with pictures see [tutorial 12](../tutorials/12-live-bi-and-boards.md).
+**A board is a report page**: a page with `layout: board` holds **tiles** (visuals of other reports, with their alert colours) beside the report's **own visuals**, which take the report's filters, slicers, cross-filter and drill like on any page. There is no separate `board` kind: a stored board item is converted to a report when the server starts, the shipped samples are reports (`config/bi/reports/desk-wall.report.yaml`, `python-wall.report.yaml`), and the old addresses (`/bi/b/<id>`, `/bi/design/board/<id>`) open the report viewer and the report designer (section 12). For the live tables behind tiles see [section 30](#71-live-tables-phase-5); for the visuals see [section 31](#13-live-visuals); for the pages see this document section 18; for a walk-through with pictures see [tutorial 12](../tutorials/12-live-bi-and-boards.md).
 
 
 #### 23.1 What a board is, and is not
@@ -4178,7 +4177,7 @@ A **board** is a wall of tiles for a screen on the wall of a trading desk, a ris
 * A board **sends nothing by itself**. Colouring a tile is what an `alert:` does; a tile tells people only when its alert says `notify:` (section 4, *Notifications*).
 
 
-Since 2.6.7 a tile asks with the inline wait like any report visual: a tile whose question takes longer shows the run card and is drawn
+A tile asks with the inline wait like any report visual: a tile whose question takes longer shows the run card and is drawn
 when its run finishes; live tiles stay streams and never become runs. See [section 28](#28-background-runs-long-bi-questions).
 
 #### 23.2 The file
@@ -4360,7 +4359,7 @@ The report's checks (`POST /api/v1/bi/reports/validate`, the designer's Check an
 | Method and path | Body, answer |
 |---|---|
 | `GET /api/v1/bi/reports/{id}` | the report (section 2) and, for a report with board pages, `tiles`: `"<page id>/<tile id>"` to `{report, reportTitle, page, type, live}` (`report` is null for a tile the caller cannot resolve) |
-| `GET /api/v1/bi/boards/{id}` | the board of a report with board pages (or of a 2.3 board): `{id, kind, title, status, valid, problems, board, tiles, mayEdit}`, `board` in the 2.3 shape (pages of tiles), for clients written against 2.3 |
+| `GET /api/v1/bi/boards/{id}` | the board of a report with board pages: `{id, kind, title, status, valid, problems, board, tiles, mayEdit}`, `board` as pages of tiles |
 | `GET /api/v1/bi/boards/reports` | authors; the reports a tile can name, with the visuals each offers: `[{id, title, draft, status, visuals: [{page, id, type, title}]}]` (published ones you may open, then your own drafts) |
 | `POST /api/v1/bi/boards/convert` | `{yaml}` of a 2.3 board; `{converted, yaml}`: the report with board pages it becomes (nothing is stored), or `{converted: false, problems}` |
 | `POST /api/v1/bi/boards/validate`, `/format` | a 2.3 board's YAML checked, or a 2.3 board model written as YAML (kept for files not converted) |
@@ -4399,18 +4398,18 @@ A board is designed in the **report designer** (BI Studio, [section 15](#15-the-
 
 From the command line a board is a report: `drishti.py bi item save` stores its YAML like any report ([CLI_GUIDE.md](CLI_GUIDE.md)).
 
-#### 23.12 From a 2.3 board to a board page
+#### 23.12 From a board item to a board page
 
-* **Stored boards** (items of kind `board`) are converted **at the first start of 2.4.0** (`drishti.bi.migrate.on-start`), after the expression and model steps: each becomes a report with board pages, **keeping its id**, so links, subscriptions, audit and history stay with it. The board text before is a saved state (*Restore* brings it back), the published text becomes the next published version, a draft stays a draft, and each change is audited (`bi-boards-migrated`). A board whose text does not parse is not changed: it is listed in Admin, BI settings (step `boards`) and on its item page. A bi-admin can run it again: `drishti.py bi migrate --boards [--dry-run]` (or `POST /api/v1/bi/migrate/boards`).
+* **Stored boards** (items of kind `board`) are converted **when the server starts** (`drishti.bi.migrate.on-start`), after the expression and model steps: each becomes a report with board pages, **keeping its id**, so links, subscriptions, audit and history stay with it. The board text before is a saved state (*Restore* brings it back), the published text becomes the next published version, a draft stays a draft, and each change is audited (`bi-boards-migrated`). A board whose text does not parse is not changed: it is listed in Admin, BI settings (step `boards`) and on its item page. A bi-admin can run it again: `drishti.py bi migrate --boards [--dry-run]` (or `POST /api/v1/bi/migrate/boards`).
 * **Board files** (`config/bi/boards/*.board.yaml`) are read as reports (`file:report:<name>`) with a line in the log, until you convert them: `drishti.py bi migrate --boards config/bi/boards --write` writes `config/bi/reports/<name>.report.yaml` and removes the board file (`--keep-old` keeps it). A report file of the same name wins over a board file.
 * **Old addresses** keep working: `/bi/b/<id>` opens `/bi/r/<id>` (`file:board:<name>` becomes `file:report:<name>`, `?kiosk=1` kept) and `/bi/design/board/<id>` opens the report designer. A client that creates an item of kind `board` gets a report with board pages back (an empty one for an empty body).
 
 What the converter writes for a tile:
 
 ```yaml
-# 2.3
+# a board item's tile
 - { id: net-mtm, report: live-trading-desk, visual: mtm, title: Net MTM, at: { x: 0, y: 0, w: 3, h: 3 }, alert: { on: MTM, warn: { op: lt, value: 0 } } }
-# 2.4.0
+# the board page's tile
 - id: net-mtm
   type: tile
   title: Net MTM
@@ -4423,14 +4422,14 @@ The board's `rotate:` and `notify:` move under the report's `board:`, its pages 
 
 ### 24. Statements: paginated reports, page-exact, one per reader
 
-A **statement** is a report page laid out on paper (2.6.0, [BI_DESIGN.md §12.2](../architecture/BI_DESIGN.md#122-the-three-waves), wave D server item 1 and console
+A **statement** is a report page laid out on paper ([BI_DESIGN.md §12.2](../architecture/BI_DESIGN.md#122-the-three-waves), server item 1 and console
 item 1): a monthly client statement, a desk's positions at month end, a regulatory schedule. Where a grid page is a screen that people slice, a statement page
 is **page-exact**: a paper size and orientation, margins, a header and a footer with the page number and the run date on every page, explicit and automatic
 page breaks, a table's column titles repeated on every page it runs onto, and groups of rows kept together. It is made as a **PDF** (and as an Excel
 workbook set to print on the same paper), and a subscription **bursts** it: one statement per recipient, each made **as that recipient**, with their own masks
 and row rules.
 
-As boards became a report layout in 2.4.0 ([section 23](#23-boards-report-pages-of-live-tiles)), a statement is a page with `layout: statement`; the report's `statement:` sets its paper.
+As a board is a report layout ([section 23](#23-boards-report-pages-of-live-tiles)), a statement is a page with `layout: statement`; the report's `statement:` sets its paper.
 Nothing new is stored: a statement is a report.
 
 
@@ -4666,7 +4665,7 @@ at the same time, each as the reader, within the query limits). A statement is a
 
 #### 24.10 Built and not built
 
-Built (2.6.0): statement pages and the `statement:` paper; the layout with automatic and explicit page breaks, repeated column titles, keep-together bands and
+Built: statement pages and the `statement:` paper; the layout with automatic and explicit page breaks, repeated column titles, keep-together bands and
 groups, headers and footers with page numbers, tokens; the period and parameters; page-exact PDF and Excel with its print setup; bursting through
 subscriptions, one statement per recipient made as them; the preview and file endpoints, `drishti.py bi statement`; the statement designer (the Paper tab,
 Format → Statement); the checks (`DRS-9038`).
@@ -4771,7 +4770,7 @@ POST /api/v1/bi/items/bi-f99d2f18d5/publish  { "note": "drop book", "force": tru
 A report in a list is named only if you could open it; the rest are counted ("2 more reports you cannot open"). Boards are not in the lineage (a board names reports, and a report that loses a visual a board uses is found when the board is read, [section 31, its section 10](#2310-built-and-not-built)) and notebooks are not run, so they have none.
 
 ```
-GET /api/v1/bi/items/bi-f99d2f18d5/lineage          (a workspace dataset of 2.1; captured in 2.1, before the model layer)
+GET /api/v1/bi/items/bi-f99d2f18d5/lineage          (a workspace dataset, before the model layer)
 { "item": { "title": "Trades model", "kind": "dataset", "endorsement": "certified", "publishedVersion": 1 },
   "upstream":   [ { "table": "trade", "kind": "trade", "packs": ["trading"], "connector": "trade-endur", "each": null, "mode": "cached" } ],
   "downstream": [ { "id": "bi-0ae16dad69", "title": "Trades report", "status": "published", "endorsement": "certified",
@@ -4853,7 +4852,7 @@ POST /api/v1/bi/items/bi-f99d2f18d5/publish  { "note": "drop book" }
 
 #### Renames
 
-Names are compared, but a renamed field or measure is **recognised as a rename** when the new name has the same meaning as the old one: a column with the same `path:` or the same `expr:` (and the same type) in the same table, or a measure with the same expression. A column declared without a `path:` (it reads the document field of its own name) has no meaning besides its name, so renaming it is a removal and an addition, as before. A recognised rename is still a removal for the reports that use the old name (they break until they are changed), but the impact now says *to what*, and offers to change them:
+Names are compared, but a renamed field or measure is **recognised as a rename** when the new name has the same meaning as the old one: a column with the same `path:` or the same `expr:` (and the same type) in the same table, or a measure with the same expression. A column declared without a `path:` (it reads the document field of its own name) has no meaning besides its name, so renaming it is a removal and an addition. A recognised rename is still a removal for the reports that use the old name (they break until they are changed), but the impact now says *to what*, and offers to change them:
 
 ```
 GET /api/v1/bi/items/bi-501131a408/impact          (the draft renames orders.book to orders.desk_book and Gross to Notional total)
@@ -4863,7 +4862,7 @@ GET /api/v1/bi/items/bi-501131a408/impact          (the draft renames orders.boo
                                                          "measure Gross [renamed to Notional total] (page main, visual n)" ] } ], ... }
 ```
 
-`renamable` is true when every published item that loses a name is a **stored report** (not a shipped file, not a composed or derived dataset) that loses only renamed names. Then *Publish and update the reports* (the dataset's page, under *Impact on reports*; `POST /items/{id}/publish` or `/approve` with `{"applyRenames": true}`) does it in one step, after every other check has passed: each such report gets its **published text rewritten** to the new names as its next published version, and its **draft** too (when the draft was the published text it moves with it; a draft with unsaved work of its own is rewritten separately), each as a saved state with origin `rename` and an event `rename` in its review record; then the dataset's new version is published. Without `applyRenames` the publish is refused as before (`DRS-9040`, now saying `[renamed to ...]`).
+`renamable` is true when every published item that loses a name is a **stored report** (not a shipped file, not a composed or derived dataset) that loses only renamed names. Then *Publish and update the reports* (the dataset's page, under *Impact on reports*; `POST /items/{id}/publish` or `/approve` with `{"applyRenames": true}`) does it in one step, after every other check has passed: each such report gets its **published text rewritten** to the new names as its next published version, and its **draft** too (when the draft was the published text it moves with it; a draft with unsaved work of its own is rewritten separately), each as a saved state with origin `rename` and an event `rename` in its review record; then the dataset's new version is published. Without `applyRenames` the publish is refused (`DRS-9040`, saying `[renamed to ...]`).
 
 ```
 POST /api/v1/bi/items/bi-501131a408/publish  { "note": "rename", "applyRenames": true }
@@ -5027,11 +5026,11 @@ Built: saved states for every save, restore, publish and import, the history lis
 
 ## 33. Distribution: scheduled reports, export, subscriptions, alerts and embedding
 
-Rūpaka phase 7 ([BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6](../architecture/BI_DESIGN.md#206-phase-7-part-1-as-built)). Part 1: two things leave Drishti as files and mail: an **export** (a BI report, a page, one
+Design: [BI_DESIGN.md section 20.6](../architecture/BI_DESIGN.md#206-phase-7-part-1-as-built). Two things leave Drishti as files and mail: an **export** (a BI report, a page, one
 visual, or a Sutra view, saved as PDF, a picture, an Excel workbook or CSV) and a **subscription** (the same content sent by email on a schedule, or after the day's data lands).
-Part 2 (section 4 here): **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
-Part 3 (section 5): a report **embedded** in another web application (`<drishti-report>`, with `<drishti-about>` and `<drishti-search>`), and the report's own phone layout ([section 31](#14-phone-and-tablet-layouts)).
-Wave D: charts in Excel exports (section 1), a written summary at the top of a subscription's email (section 2), retries of a failed alert delivery (section 4.6), and webhook and text-message channels for alerts and subscriptions (section 6).
+Section 4: **alerts** on a number, and notifications from a board tile, to the inbox, email and the chat bridges.
+Section 5: a report **embedded** in another web application (`<drishti-report>`, with `<drishti-about>` and `<drishti-search>`), and the report's own phone layout ([section 31](#14-phone-and-tablet-layouts)).
+Also: charts in Excel exports (section 1), a written summary at the top of a subscription's email (section 2), retries of a failed alert delivery (section 4.6), and webhook and text-message channels for alerts and subscriptions (section 6).
 The walk-throughs with pictures are [tutorial 11](../tutorials/11-bi-that-runs-itself.md) (export, subscribe and alerts); this is the reference.
 
 **One rule runs through all of it: the file or the mail is made for the person who gets it.** The numbers are asked of the data engine *as that person*, so their row rules and their
@@ -5301,7 +5300,7 @@ Ask the owner of the subscription, o
 * **Who may subscribe whom.** Anyone may subscribe **themselves**. Subscribing other people or a role needs a BI author (power `bi-author`) or an administrator (`DRS-9061` otherwise). The subscriber
   must be able to open the target themselves.
 
-#### Statements: one per recipient (2.6.0)
+#### Statements: one per recipient
 
 A subscription to a **statement page** (a page with `layout: statement`, [section 31, its section 24](#24-statements-paginated-reports-page-exact-one-per-reader)) in `pdf` or `xlsx` **bursts** it: each recipient gets
 their own statement, laid out page by page and made **as them**, so two recipients' statements differ only by their masks and row rules (and their name in
@@ -5742,7 +5741,7 @@ empty list everything the user's roles open. A host whose list names only entity
 
 **Live and tokens.** The report keeps its live stream while the page is visible and gives it back when hidden (and takes it again); a token renews in place on the open channel, so nothing redraws.
 
-**Not in the element.** Drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe (use the console for those). A 2.1 `perspective-*` visual is drawn there as in the viewer, Drishti's own grid of the server's answer (since 2.3.0 no BI page loads WebAssembly). Two elements of one report do not cross-filter each other.
+**Not in the element.** Drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe (use the console for those). A 2.1 `perspective-*` visual is drawn there as in the viewer, Drishti's own grid of the server's answer (no BI page loads WebAssembly). Two elements of one report do not cross-filter each other.
 The full list is in [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](../architecture/BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-as-built-phase-7-complete).
 
 **Also in the library (1.4.0).** `<drishti-about kind entity>` shows the *About this page* layers of a view (sources, lineage, the masks and rules that applied to the reader) in a panel of the host's own; the application needs the scope `embed:about`.
@@ -5752,7 +5751,7 @@ The full list is in [BI_DESIGN.md › Rūpaka: the original design and every pha
 
 ### 6. Webhooks and text messages
 
-*Wave D.* Alerts and subscriptions can also **post to a webhook** and **send a text**. Both are set up by an administrator (`drishti.notify.*`,
+Alerts and subscriptions can also **post to a webhook** and **send a text**. Both are set up by an administrator (`drishti.notify.*`,
 [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtinotify--webhooks-and-text-messages-for-alerts-and-subscriptions)); a person only picks from what exists. Nothing is on until it is defined.
 
 **Webhooks.** An administrator defines a webhook by a **name**, a URL and a secret (`drishti.notify.webhooks.<name>.*`) and lists the hosts webhooks may reach (`drishti.notify.webhook.allowed-hosts`, exact names or `*.suffix`; empty means
@@ -5800,9 +5799,9 @@ Both channels are in the history: an alert's `delivered` has `webhook:NAME` and 
 Drishti Rūpaka runs **typed Python** where the expression language and the visual catalogue stop: a **Measure** is a Python function that turns the rows of a group into a number
 (a desk's P&L volatility, a percentile no aggregate gives, a fitted slope), and a **Visual** is a Python function that turns rows into a chart (a histogram with your own bins, a
 regression plot). Authors do not paste scripts into a visual: a Python function is a **BI item** of its own, with a manifest, versions, review and publishing like a dataset or a
-report, and a report names it. It runs **sandboxed on the console** (since 2.3.0 never in the browser), always on **the rows the person looking may see**.
+report, and a report names it. It runs **sandboxed on the console** (never in the browser), always on **the rows the person looking may see**.
 
-A third interface, the **Transform**, turns the answers of several model queries into a table that a **Python dataset** publishes (section 13; the 2.1 *derived dataset* it replaced is gone): it is how Python joins models.
+A third interface, the **Transform**, turns the answers of several model queries into a table that a **Python dataset** publishes (section 13): it is how Python joins models.
 
 This is the reference. For a walk-through see [tutorial 14](../tutorials/14-python-and-analyse.md); the design is [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) section 13, what is built is its section 20.8.
 Python in the *terminal* (Calc) is a different thing: [USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view).
@@ -5821,7 +5820,7 @@ Python in the *terminal* (Calc) is a different thing: [USER_GUIDE.md](USER_GUIDE
 
 | | Python measure | Python visual |
 |---|---|---|
-| function | `compute(table, params)`, or `compute_groups(frame, by, params)` once over every group (2.3.0) | `render(table, params)` |
+| function | `compute(table, params)`, or `compute_groups(frame, by, params)` once over every group | `render(table, params)` |
 | called | once per group, with that group's rows | once, with all the rows handed over |
 | returns | one number (or `None`) | an ECharts option or a Vega-Lite specification (a dict, by `output:`), SVG text or PNG bytes |
 | drawn as | bars, one per group | the chart or image |
@@ -5844,7 +5843,7 @@ title: Desk P&L volatility
 interface: measure
 inputs: [pnl1d]                  # the columns the function reads, as the table names them
 packages: [pandas]
-target: server                   # 2.3.0: always the console (browser and both, from 2.2 items, run there too)
+target: server                   # always the console (browser and both run there too)
 timeout: 10                      # seconds
 memory: 256                      # megabytes
 params: { min_trades: 2 }
@@ -5895,7 +5894,7 @@ The body of a `python` item is YAML:
 | `entry` | no | the function's name: `compute` for a measure, `render` for a visual, `run` for a transform (a top-level function, or a method of a class `Transform`) |
 | `inputs` | measure: yes; transform: yes | a measure: the columns the function reads, as the table names them (`pnl1d`, not `trade.pnl1d`); a transform: the **datasets** it reads, in the order its function receives their frames (section 13) |
 | `packages` | no | what the source imports; each must be on the allow-list (`drishti.bi.report.python-packages`, console `bi.python.packages`) |
-| `target` | no | `server` (default). 2.3.0: `browser` and `both` (items of 2.2) are read and run on the console like `server` |
+| `target` | no | `server` (default). `browser` and `both` are read and run on the console like `server` |
 | `timeout` | no | seconds, 1 to `drishti.bi.report.python-max-seconds` (60); default 10 |
 | `memory` | no | megabytes the code may add to what Python needs to start, 32 to `python-max-memory-mb` (1024); default 256 |
 | `output` | visual | `echarts` (default), `vega-lite` (section 14), `svg` or `png`; a measure's output is `number`, a transform's `frame` |
@@ -5958,32 +5957,32 @@ refused**: the SQL engine cannot run Python, so the measure is shown by a python
 | `wells.columns` | the columns handed to a Python item named in `format.python` (any number of fields of one table) |
 | `format.python` | the item; required unless the values well holds a Python measure. With a measure item and no dataset measure, the groups are the columns that are not `inputs` |
 | `format.params` | overrides the item's `params` |
-| `format.run` | `auto` (default), `server` or `browser` (section 6): since 2.3.0 every value runs on the console; the key is read so 2.2 reports keep working |
+| `format.run` | `auto` (default), `server` or `browser` (section 6): every value runs on the console; the key is read so 2.2 reports keep working |
 
 The rows are the table's own rows (not grouped), under the page's slicers, filters and business date, at most `drishti.bi.report.python-rows` (10,000). The report **check** (`DRS-9030` to `9035`)
 refuses a python visual with neither an item nor a Python measure, with a values well that is not a Python measure, or without columns. In the designer the visual is under *Python*; its Format pane takes the item and the
-parameters (*Run on* is gone since 2.3.0); the canvas shows a placeholder, since Python runs when a report is opened, not while designing.
+parameters (*Run on* is gone); the canvas shows a placeholder, since Python runs when a report is opened, not while designing.
 
 ### 6. Where it runs
 
 | `format.run` | What happens |
 |---|---|
 | `server` | the console's runner (below) |
-| `browser` | (until 2.2) Pyodide in the page; since 2.3.0 the console's runner, as `server` |
-| `auto` | (the default) the console's runner; until 2.2 it fell back to the browser when the server could not run the item, and since 2.3.0 such a run answers `DRS-9074` |
+| `browser` | the console's runner, as `server` |
+| `auto` | (the default) the console's runner; a run the server cannot place answers `DRS-9074` |
 
 **Server.** The console starts a **worker subprocess per call** (`python -I core/pyrunner_worker.py`), at most `bi.python.workers` (2) at once; a call waits `bi.python.queue_seconds` (5) for a place,
 then `DRS-9074`. The worker reads the Arrow stream the server built for this person, runs the function, and writes a small JSON answer, size-limited. Nothing is kept between calls: no worker idles,
 and there is no state to leak between people. Nothing extra is deployed: it is the console's own Python, with `pandas`, `numpy` and `pyarrow` installed (`requirements.txt`).
 
-**The browser (until 2.2).** Release 2.2 could run a python visual in the page, in Calc's Pyodide worker. Wave B (2.3.0) made the servers compute and
+**The browser.** The servers compute and
 the browser only draw ([BI_DESIGN.md](../architecture/BI_DESIGN.md) principle P3): no report, board or Analyse page loads Pyodide or WebAssembly, and a visual
 that says `browser` runs on the console. Pyodide stays for **Calc** only ([USER_GUIDE.md](USER_GUIDE.md#calc-python-on-any-view)), Python you write yourself on a view.
 
-The picture below is from 2.2 and kept for readers of old reports; the line under each visual now always says the console ran it
+The line under each visual says the console ran it
 (`Python · desk-pnl-volatility v1 · server · 240 ms · 60 rows`).
 
-![2.2 only: the same report run in the browser](img/bi-python/report-browser.png)
+![The same report, an older picture: run in the browser](img/bi-python/report-browser.png)
 
 ### 7. The sandbox, exactly
 
@@ -6057,17 +6056,17 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 ### 11. Measured
 
 On the development machine (a laptop, Python 3.14, pandas 3, 60 rows): a **server call takes about 220 to 320 ms** (a process start and the `pandas` import dominate; the first is the slowest), 214 to 250 ms warm. The design target was
-under 50 ms: **not met** by these figures, taken when each call started a worker. Wave B's fork-server and 2.4.0's warm workers take the start off each call (section 17.7). (Until 2.2 a browser run took about 3.3 s on its first load, the interpreter, numpy and pandas; since 2.3.0 there is no browser run, and wave B's
-fork-server takes the worker start off each call: see the end of this guide.) The Chromium test ([test_bi_python_browser.py](../../drishti-console/tests/test_bi_python_browser.py)) checks the sample report's figures against a computation from the same trades.
+under 50 ms: **not met** by these figures, taken when each call started a worker. The fork-server and its warm workers take the start off each call (section 17.7; there is no browser run: the fork-server
+takes the worker start off each call, see the end of this guide). The Chromium test ([test_bi_python_browser.py](../../drishti-console/tests/test_bi_python_browser.py)) checks the sample report's figures against a computation from the same trades.
 
 ### 12. Built and not built
 
 Built: the Measure and Visual interfaces; Python items as BI items (versions, review, publish, shipped files, bundles); the manifest and its checks (server and console); Python measures in datasets; the
-`python` visual in reports and the designer; the sandboxed server runner with a pool; the shipped samples. (The browser target of 2.2, in Calc's Pyodide worker, was removed in 2.3.0.)
+`python` visual in reports and the designer; the sandboxed server runner with a pool; the shipped samples. There is no browser target.
 
-Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (2.2: `source.python`, each input a model query; [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2](../architecture/BI_DESIGN.md#12-sources)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
+Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (`source.python`, each input a model query; [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2](../architecture/BI_DESIGN.md#12-sources)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
 
-Built in 2.4.0 (section 17): a Transform's input may be a **pack kind read straight through a connector**, as the reader; the **Transform editor**
+Also built (section 17): a Transform's input may be a **pack kind read straight through a connector**, as the reader; the **Transform editor**
 (step by step, a preview and a profile after each step, a tested snippets library, no YAML to type); the **profile** of a frame (the editor, Analyse); **warm
 workers** (the fork-server starts with the console).
 
@@ -6080,7 +6079,7 @@ allow-list (add them to `bi.python.packages` and the server's `python-packages` 
 
 ### 13. Transforms: a table in, a table out
 
-The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more answers into **a table**, which a **Python dataset** publishes as its one table (2.2: `source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2](../architecture/BI_DESIGN.md#12-sources); before 2.2 a derived dataset, replaced; its description, DATASETS_2_1_COMPOSED_DERIVED.md, was deleted: in git at tag v2.9.5), with measures in a model over it. Use it where a join or a reshaping is easier in pandas than in the dataset language (a merge with a tolerance, a rank, a fitted column, a pivot), and you still want the result to be a dataset every report, alert and subscription can use. The design is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 13.1 and 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built).
+The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more answers into **a table**, which a **Python dataset** publishes as its one table (`source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2](../architecture/BI_DESIGN.md#12-sources)), with measures in a model over it. Use it where a join or a reshaping is easier in pandas than in the dataset language (a merge with a tolerance, a rank, a fitted column, a pivot), and you still want the result to be a dataset every report, alert and subscription can use. The design is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 13.1 and 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built).
 
 ```yaml
 rachana: 1
@@ -6105,7 +6104,7 @@ source: |
 | | |
 |---|---|
 | function | `run(*frames)`: one **pandas DataFrame** per input, in the order of `inputs`. A function that has a parameter named `params` receives the parameters (the manifest's `params` over the dataset's); or a class named `Transform` with a method `run(self, *frames)`, which finds the parameters in `self.params` |
-| frames | what the reader may see: each input is a model query asked **as the reader**, so row rules and masks are already applied and a masked column is null. Since 2.2 each column is named by the last part of its field or measure name (`counterparties.id` is `id`); the 2.1 derived dataset renamed them with `as` |
+| frames | what the reader may see: each input is a model query asked **as the reader**, so row rules and masks are already applied and a masked column is null. Each column is named by the last part of its field or measure name (`counterparties.id` is `id`) |
 | returns | a DataFrame: no more than `drishti.bi.transform.max-rows` rows; column names of letters, digits and underscore; no duplicate names. Anything else is `DRS-9071` |
 | column types | typed from the frame: `int` is `integer`, `float` and decimals are `decimal`, `bool` is `boolean`, dates and timestamps are `date` and `timestamp`, everything else `string` |
 | `inputs` (manifest) | the names of the Python dataset's inputs (2.1: datasets), not columns: the dataset's `source.inputs` must name the same in the same order (`DRS-9075` otherwise) |
@@ -6146,7 +6145,7 @@ What comes back from the worker is data, as with ECharts: `{"kind": "vega-lite",
 * **The data is inside the specification** (`data.values`). A `url` or a `loader` anywhere in it is refused, in the sandbox (`DRS-9073`: "a Vega-Lite specification may not load anything from a URL or name a loader") and again in the page. The page draws it with the vendored Vega, Vega-Lite, vega-embed and **vega-interpreter**
   ([VENDOR.md](../../drishti-console/web/static/vendor/VENDOR.md)): the interpreter walks the expression tree instead of compiling it to a function, so an expression such as `datum.MTM < 0` is evaluated **without `eval`** and the page keeps the strict content security policy (no `unsafe-eval`, no inline style: vega-embed is told not to write its own `<style>`). The loader refuses every URL, there is no actions menu, no editor link and no tooltip plug-in.
 * The page puts the theme's colours and the report's palette under whatever the specification's own `config` says, sizes the chart to its frame (`width` and `height` as `container`) and draws it on a canvas.
-* The size limit is `bi.python.max_output_bytes`. (`target: browser` items of 2.2 run on the console and answer the same.)
+* The size limit is `bi.python.max_output_bytes`. (`target: browser` items run on the console and answer the same.)
 * A **report** can also hold a Vega-Lite visual with **no Python at all**: `type: vega-lite` ([section 31](#35-vega-lite-visuals)).
 
 ### 15. Tests shipped with an item
@@ -6216,10 +6215,10 @@ PUT /api/v1/me/measure-alerts/Vol
 
 The reader is tested against the real runner ([ProcessMeasureRunnerTest](../../drishti-server/src/test/java/com/ash/drishti/server/bi/transform/ProcessMeasureRunnerTest.java)) and with a stand-in ([PythonAlertReaderTest](../../drishti-server/src/test/java/com/ash/drishti/server/alerts/measure/PythonAlertReaderTest.java): what the runner is handed, a masked column, a failing run).
 
-### Wave B (2.3.0): one runner on the console, the Py-node endpoint, columns
+### One runner on the console, the Py-node endpoint, columns
 
-* **No browser target.** Pyodide is no longer loaded by any BI page; `target: browser` and `both` run on the console. The visual's *Run on* setting is gone
-  from the designer.
+* **No browser target.** No BI page loads Pyodide; `target: browser` and `both` run on the console. The designer has no *Run on* setting
+  for a visual.
 * **The fork-server.** Each console runs one parent that imported pandas, numpy and pyarrow once and forks a child per call; the child gets its own session,
   limits, audit hook and scratch folder, exactly as a fresh process did (`bi.python.fork_server`, [OPERATIONS.md](../admin/OPERATIONS.md#bi-scale-wave-b)).
 * **The L4 result cache.** An answer is kept by the item's code, its parameters and the exact input bytes (`bi.python.cache_entries`, `cache_seconds`): the
@@ -6237,11 +6236,11 @@ def compute_groups(frame, by, params):
   (plan node `PyColumn`).
 * **The Py-node endpoint.** The server's planner places Python nodes on the console tier and calls `POST /internal/py/transform`, `/measure` and
   `/column` on the console with `X-Drishti-Runner-Token` ([API_GUIDE.md](API_GUIDE.md); `drishti.bi.transform.console-url` and `console-token` on the
-  server, the same `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` on the console). Without it the server runs `transform_cli.py` itself, as before.
+  server, the same `DRISHTI_BI_TRANSFORM_CONSOLE_TOKEN` on the console). Without it the server runs `transform_cli.py` itself.
 
-### 17. Data prep: the Transform editor (2.4.0)
+### 17. Data prep: the Transform editor
 
-Wave C ([BI_DESIGN.md section 12.2](../architecture/BI_DESIGN.md#wave-c--authoring-and-analysis--240); items P1, P2, P3, P5 and P6 of the 2.1 parity study, listed in [BI_DESIGN.md section 11.1](../architecture/BI_DESIGN.md#111-the-21-studys-item-ids)) makes the
+The Transform editor makes the
 Python path the data-prep tool a Power Query author expects, without a step language: **raw rows straight from a connector**, a **step-by-step run with a
 preview and a profile after every step**, a **tested snippets library** for the common reshapes, and **warm workers**. The steps are still lines of
 pandas, run in the same sandbox as every Python item (section 7), on the rows the person looking may see.
@@ -6262,14 +6261,14 @@ source:
       fields: [TRADE_ID, TRADE_DATE, PORTFOLIO, CURRENCY, QUANTITY, PRICE]   # optional: the kind's columns (default: all)
       where: [{ field: PORTFOLIO, op: in, values: [BOOK-FX-1] }]             # optional: filters, as a model query's
       limit: 50000                            # optional: at most this many rows
-    rates: { model: fx-rates@1, select: { fields: [rates.currency, rates.date, rates.rate], measures: [] }, shape: rows }   # a model query, as before
+    rates: { model: fx-rates@1, select: { fields: [rates.currency, rates.date, rates.rate], measures: [] }, shape: rows }   # a model query
 ```
 
 A kind input is the rows of the kind's pack-generated dataset (`pack.trading.trade`), asked through its implicit model **as the reader**: the kind's
 entitlements, their row rules and their masks apply exactly as in a report on it, and a masked column arrives masked. A role that may not read the kind
 gets no rows. Naming a connector reads the same kind through that connector instead of the one the pack routes it to; the input then asks only the fields
 it names (and the grain's keys), so **the connector must keep them as columns** (its `layout`), which every lake connector does for the promoted columns.
-Its answers are never put in the result cache (whose plan key does not name the connector); the Transform keeps its own result per reader as before.
+Its answers are never put in the result cache (whose plan key does not name the connector); the Transform keeps its own result per reader.
 
 The server checks the shape on validate and publish (`DRS-9108` with the path: `source.inputs.trades.colour`), a kind no pack declares is `DRS-9102`,
 a field the kind lacks `DRS-9108` with the kind's columns, a connector that is not running `DRS-9026`. The lineage of the dataset reaches the kind and the
@@ -6411,7 +6410,7 @@ See [CLI_GUIDE.md](CLI_GUIDE.md#bi-transform-a-transforms-inputs-as-you-and-the-
 
 #### 17.7 Warm workers
 
-Since wave B every call is a child of the fork-server, a parent that imported pandas, numpy and pyarrow once. In 2.4.0 the console **starts the
+Every call is a child of the fork-server, a parent that imported pandas, numpy and pyarrow once. The console **starts the
 fork-server when it starts** (`bi.python.warm`, default on), so the first call of the day, a report's python visual or a Transform's step run, does not pay
 for the interpreter and the imports either; `GET /bi/python/status` says `forkServer.warm` and `warmedMs`. Isolation is unchanged: one child per call,
 its own session, limits, audit hook and scratch folder.
@@ -6424,5 +6423,5 @@ The server's `drishti.bi.transform.max-input-rows` (50,000) caps an input, in th
 
 #### 17.9 Not built
 
-AI-written Transforms (P4, the AI release 2.9.0); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
+AI-written Transforms (P4); a precomputed run on refresh for configured roles (the rest of P6); parameters bound to a report (P7); an incremental
 mode (P8); promoting several Analyse cells as steps (P9); a drift warning when a Transform's columns change (P10); a Python-only Source (rows from an API).

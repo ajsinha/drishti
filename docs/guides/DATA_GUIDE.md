@@ -191,7 +191,7 @@ All paths are under `/api/v1`. Every call needs the caller from the bearer token
 
 Who: an administrator, or a personal API token with the `loads:write` scope whose user's roles open the kind. Success: `201` for a new
 record, `200` with `"duplicate": true` for an announcement seen before. In a Drishti\*net cluster a new `ready` load is passed on once to
-every other live member (2.9.7, PO-5): the answer then carries `forwardedTo` (the members' ids).
+every other live member (PO-5): the answer then carries `forwardedTo` (the members' ids).
 
 Request body (JSON):
 
@@ -245,7 +245,7 @@ different `rows` and it is a reload.
 A `ready` load that was recorded but could not be verified is **not** an error: it is `201` with `"verified": "not-found"` and a `warn`
 `verify` step, so your job can decide (the CLI exits 1). For example (the shape; a dated connector with no data for the date). On the
 demo lakes this does not happen for a date before the first business day: the check counts the kind's ids from the connectors' listing,
-which is the newest one, so `2026-10-05` (before the lakes begin) also reads `8 stress-scenario entities on 2026-10-05`, a known limit of 2.3.0:
+which is the newest one, so `2026-10-05` (before the lakes begin) also reads `8 stress-scenario entities on 2026-10-05`, a known limit:
 
 ```json
 {"status":"ready","verified":"not-found","entities":0,"alerts":0,"notices":1,
@@ -446,7 +446,7 @@ Admin → Packs → **Data loads** on a loaded pack's row (`/admin/packs/{pack}/
 ![One load's step results](img/loads/03-load-steps.jpg)
 
 * **Expectations settings** edits the override (roles, users, email, smoke, one row per expected kind) and can reset it to the pack's own.
-* **Announce a load** (2.9.7) tells Drishti a batch landed when no ETL can (a load re-run by hand, a test): kind (the pack's), business
+* **Announce a load** tells Drishti a batch landed when no ETL can (a load re-run by hand, a test): kind (the pack's), business
   date, status, and optionally rows, batch id and note. It makes the same `POST /api/v1/packs/{pack}/loads` an ETL makes, as you, with
   `source: console`, and is audited as `load-announced` besides the load's own record. From a terminal the same is
   `drishti.py data landed --pack P --kind K --date D`.
@@ -670,7 +670,7 @@ reset it afterwards.
 
 **Several kinds land together.** Announce each kind: the history, expectations and notices are per kind.
 
-**Several Drishti servers read the same lake.** Each server caches on its own. Since 2.9.7, in a Drishti\*net cluster, announce on any one
+**Several Drishti servers read the same lake.** Each server caches on its own. In a Drishti\*net cluster, announce on any one
 member: a `ready` load is passed on once to every other live member (signed, as you; the answer lists them in `forwardedTo`), each runs
 its own refresh, and a member that received it from a peer never passes it on again (decision PO-5). A member that does not answer is
 named in the server's log: announce on it by hand. Without a cluster, announce on each server (the call is cheap and idempotent).
@@ -683,7 +683,7 @@ there, Drishti simply has not been told. Until it is, expectations will (rightly
 
 ## 2. Data formats: JSON Lines is the standard
 
-Since 2.9.4, **JSON Lines (JSONL) is Drishti's data format**: one JSON object per line, UTF-8, in a `.jsonl` file (`.jsonl.gz` where
+**JSON Lines (JSONL) is Drishti's data format**: one JSON object per line, UTF-8, in a `.jsonl` file (`.jsonl.gz` where
 the repository gzips large files). Every generator writes it, every loader reads it, and every export and download offers it. This
 page says what that means for data coming in, data going out, and the files Drishti keeps.
 
@@ -703,7 +703,7 @@ page says what that means for data coming in, data going out, and the files Dris
 | **Document** | one entity, as its source holds it: `{"TRADE_ID": "1000015", "LEGS": [...], ...}` | `make_trades.py`, `bulk_trades.py`, `comswap_synth.py`, `note_synth.py`, every pack's `samples/<kind>.jsonl` | `lake build`, `build_demo_lakes.py`, `ingest_jsonl.py`, the file connector, the demo connector |
 | **Loader row** | `{"domain", "kind", "id", "date", "doc", "columns"}`: a document (`doc`, as JSON text) of a kind on a business date, with the fields its pack promotes | `make_data.py --jsonl`, `bulk_trades.py --jsonl` | the Java loaders (PostgreSQL, Cassandra, Iceberg, DuckDB, Redis, MongoDB, Aerospike, the file connector's `JsonlLoader`) |
 | **Lake row** | `{"domain", "kind", "table", "id", "date", "doc"}`: the same, naming the Delta table (`trade_endur`) | `make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake` | `tools/samplegen/load_rows.py` |
-| **Sutra test case** | `{"case": "<name>", "document": {...}}` | every generator of Sutra tests (`tests/<sutra>/cases.jsonl`, beside `expect.yaml`) | `sutra test`; the older one-`.json`-a-case folders still read in 2.9.4, with a warning |
+| **Sutra test case** | `{"case": "<name>", "document": {...}}` | every generator of Sutra tests (`tests/<sutra>/cases.jsonl`, beside `expect.yaml`) | `sutra test`; the older one-`.json`-a-case folders still read, with a warning |
 | **Catalogue entry** | `{"kind", "id", "title", "subtitle"}` | every pack generator (`samples/catalog.jsonl`; the `catalog.json` array of earlier releases is still read) | the demo connector, the pack tools |
 | **Staged lake row** | `{"id", "doc", "columns"}` | `lake build`'s staging (`<lake>/_drishti-lake/staging`), the official results' publishers | Drishti's Java lake writer (`LakeWriter`; the earlier `[id, doc, columns]` array a line still read) |
 | **Seal** | `{"key", "count", "hash"}` | the collaboration file store (`<collab dir>/seals.jsonl`) | the same store (the tab-separated `seals.log` of earlier releases still read, never rewritten) |
@@ -761,7 +761,7 @@ The compliance export's files are `.jsonl` (they were JSON Lines named `.ndjson`
 `<root>/risk-results/jsonl/<table>/<date>/<table>-v<table version>.jsonl`, one row a line, one file per commit (a restatement is a new
 file). The setting is `drishti.var.official.jsonl` and `drishti.ccr.exposure.official.jsonl`, on by default
 ([CONFIGURATION.md](../admin/CONFIGURATION.md)). In the content store the row lists are JSON Lines too: `var/official/<date>-membership-v<n>.jsonl`
-and `exposure/official/<date>-trades-v<n>.jsonl` (a header line, then a row a line). Records written before 2.9.4 keep their `.json`
+and `exposure/official/<date>-trades-v<n>.jsonl` (a header line, then a row a line). Records written as `.json` keep their `.json`
 and are read as they are: the store is append-only, nothing is rewritten. A single record or capture stays one JSON document.
 
 ### 5. What stays as it is, and the guard
@@ -779,17 +779,17 @@ entry point (server, console route, UI menu, command line) offers JSON Lines.
 
 ### 6. Arrow to the browser, where it pays
 
-JSON Lines is the data standard (above); **Apache Arrow** is the in-memory and wire format where it pays. Since 2.9.7 (implementation
-plan, 2.9.7 row 0) it reaches the browser too, for the answers it was measured to win on, and nowhere else.
+JSON Lines is the data standard (above); **Apache Arrow** is the in-memory and wire format where it pays:
+it reaches the browser too, for the answers it was measured to win on, and nowhere else.
 
 **Where Arrow is used.**
 
 | Path | Arrow | Since |
 |---|---|---|
-| Java to the Python compute workers | Arrow IPC files, memory-mapped | before 2.9.7 ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)) |
+| Java to the Python compute workers | Arrow IPC files, memory-mapped | built ([PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md)) |
 | BI answers to the console's Python, Explore and Perspective-era clients | `?format=arrow` on `POST /bi/reports/{id}/query` and `POST /bi/mq`: the raw rows | 2.1 |
-| **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | **2.9.7** |
-| **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | **2.9.7** |
+| **Any JSON answer of the two endpoints below, to any client that asks** | `Accept: application/vnd.apache.arrow.stream`: the JSON answer itself, its table as the record batch, the rest in the schema's metadata | built |
+| **The VaR explorer's contribution tables by position and by trade, in the browser** | read with Arrow JS (vendored) into typed columns | built |
 
 **Where it deliberately is not.** The **VaR hot files** stay Drishti's own layout (float32 position rows in hierarchy order, memory-mapped,
 float64 node totals): summing vectors runs near the machine's memory bandwidth, which Arrow's framing would not improve. **The lake** stays
@@ -848,7 +848,7 @@ format. It stays JSON (the report page was wired to Arrow on trial for the measu
 for API clients that read Arrow. **Search** draws its results on the server as HTML (at most 1,000 rows a search): no table reaches the
 browser as data, so there is nothing for Arrow to carry. The measurement says where the weight is: the 1,000-row page is 680 KB of HTML,
 while its rows would be 124 KB as JSON and 74 KB as Arrow (gzip 21 and 18 KB). The saving is in drawing the table in the browser, not in
-the format; that belongs with the client-side renderer (implementation plan, 2.9.7 row 2), where Arrow can carry the rows.
+the format; that belongs with the client-side renderer, where Arrow can carry the rows.
 
 Re-measure, one file at a time, from `drishti-console` (each starts its own scratch stack; the results are printed and added to the
 file named):
@@ -1019,7 +1019,7 @@ Each day sorted by `id` in files of disjoint id ranges, with small row groups, r
 
 #### With or without Unity Catalog
 
-| | Without Unity (today, the default) | With Unity (**2.9.6**, opt-in per connector; not built) |
+| | Without Unity (today, the default) | With Unity (opt-in per connector; not built) |
 |---|---|---|
 | How the table is found | its storage path (`root`, `domain`, `table.<kind>`) | its name, `catalog.schema.table` |
 | Credentials | storage credentials the server holds (keys, a role) | Unity Catalog's temporary credentials (credential vending) |
@@ -1034,7 +1034,7 @@ Each day sorted by `id` in files of disjoint id ranges, with small row groups, r
 - **REST catalogs** (`catalog: rest`, `uri`, `warehouse`, `credential` or `token`): Apache Polaris, Snowflake Open Catalog, AWS Glue's
   Iceberg REST endpoint, Databricks Unity Catalog, Nessie, Lakekeeper, Gravitino. A catalog that vends credentials supplies each table's
   own (`vended-credentials: true`, the default) ([section 4](../connectors/ICEBERG_CONNECTOR.md#4-catalogs-path-based-tables-and-rest-catalogs)).
-- **AWS Glue and S3 Tables** through their REST endpoints with SigV4 signing: built in 2.9.5, **not yet run on AWS** (no account was
+- **AWS Glue and S3 Tables** through their REST endpoints with SigV4 signing: built, **not yet run on AWS** (no account was
   available; the product owner runs `deploy/aws/iceberg/check-glue.sh`)
   ([section 19](../connectors/ICEBERG_CONNECTOR.md#19-aws-glue-s3-tables-and-the-iam-they-need-295),
   [CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws-295)).
@@ -1065,8 +1065,8 @@ data, step by step: [tutorial 29](../tutorials/29-var-on-iceberg.md)). Choose wh
          .partitionBy("business_date").save("s3://risk-lake/delta/trading/trade"))
   ```
 
-  **2.9.6** adds reading plain tables directly, driven by per-table configuration (planned).
-- **Delta through Unity Catalog's credential vending:** 2.9.6, opt-in (above).
+  Reading plain tables directly, driven by per-table configuration, is planned.
+- **Delta through Unity Catalog's credential vending:** opt-in, not built (above).
 - **Iceberg format version 3:** later.
 
 ### 6. Connector files, one per case

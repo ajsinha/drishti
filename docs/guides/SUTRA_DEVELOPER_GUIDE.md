@@ -21,7 +21,7 @@ next: how one Sutra is chosen among several (source system and product type), ho
 expandable row groups, dates and live data, controls, how inference and a Sutra share a screen, testing in CI, and the Build workbench. It ends with the mistakes everyone makes once, with their
 problem codes, and a checklist.
 
-Every Sutra on this page was previewed against the demo lakes of a fresh clone (`drishti.py lake demo`: the seven-day lakes of 2.5.0 ending 2026-10-16; the lakes hold sixty business days since 2.6.5), and every figure you are told to expect was read from
+Every Sutra on this page was previewed against the demo lakes of a fresh clone (`drishti.py lake demo`: captured on seven-day lakes ending 2026-10-16; the lakes hold sixty business days), and every figure you are told to expect was read from
 that preview. Figures that depend on the business date (a count of payments still to come) are marked as such; the sixty days of the demo lakes end on the day you build them.
 
 **What this guide does not repeat.** One place owns each topic and this guide links to it:
@@ -582,7 +582,7 @@ panels: []
 ```
 
 You should see `[Rates · Interest rate swap (fixed/float)] MX-20000001 with CP-MERIDIAN-RE` and the strip `Notional AUD 242,000,000 · Side Sell · Fixed rate 4.0829% · Maturity 2032-06-25 · Status
-AMENDED v2 · Source MUREX · Trader A. Shah · Portfolio BOOK-RATES-3` (the status was captured on the seven-day lakes of 2.5.0. On the sixty-day lakes of 2.6.5 `MX-20000001` is cancelled part-way through: on its last seven business days it reads `CANCELLED`, version 7; on an earlier date it reads `AMENDED`). `with`, `Trader` and `Portfolio` are links. `panels: []` is valid: a Sutra may have no panels. A booking carries no
+AMENDED v2 · Source MUREX · Trader A. Shah · Portfolio BOOK-RATES-3` (the status was captured on seven-day lakes. On the sixty-day lakes `MX-20000001` is cancelled part-way through: on its last seven business days it reads `CANCELLED`, version 7; on an earlier date it reads `AMENDED`). `with`, `Trader` and `Portfolio` are links. `panels: []` is valid: a Sutra may have no panels. A booking carries no
 mark-to-market: the trade's MTM, P&L and DV01 are market-risk's trade valuation (`TVAL TVAL-MX-20000001`), a page of its own.
 
 ### 4.2 The ticket, and legs side by side
@@ -1080,7 +1080,7 @@ All the problems of a file are reported at once. `sutra lint` (section 15) and t
 | no `rachana:` line | `DRS-2009 missing 'rachana: 1' (the Rachana language version) at the top` | add `rachana: 1` as the first key |
 | `rachana: 2` | `DRS-2009 'rachana: 2' is not a language version this server reads (it reads 1)` | `rachana: 1` |
 | `notes:` followed by a list | `DRS-2012 'notes' is plain text` | `notes: \|` and indented text |
-| `counterparty-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are no longer read (Sutras are YAML since 1.11): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
+| `counterparty-mine.v1.sutra.md` (an old Markdown Sutra) | `DRS-2004 Markdown Sutras are not read (Sutras are YAML): convert it with python3 tools/rachana/md_to_yaml.py … --delete` | run the converter |
 | `counterparty-mine.yaml` in a Sutra folder | `DRS-2004 a Sutra file is named <name>.v<N>.sutra.yaml; rename counterparty-mine.yaml` | `counterparty-mine.v1.sutra.yaml` |
 | `bind: "size($.NETTING_SETS, 'TRADES')"` | `DRS-2101 expression 'size($.NETTING_SETS, 'TRADES')': size takes 1 argument(s), got 2 at 0` | `sum($.NETTING_SETS, 'TRADES')` |
 | `bind: "round(@.TRADES)"` | `DRS-2101 expression 'round(@.TRADES)': unknown function 'round'; known: abs, coalesce, contains, days, first, flatten, fmt, group, last, link, lower, matches, matchesCase, max, min, nonblank, oneOf, size, startsWith, sum, today, upper, within at 0` | `fmt: amount0` does the rounding |
@@ -1167,7 +1167,7 @@ What to know, in the order you will meet it:
 - The title line still reads this entity; only the panel's data moves.
 - A missing link (the field is empty, or the entity does not exist) leaves the panel empty with a reason, not a broken view. If the linked document is slow, the other panels draw first.
 - A `line` with a `source` also refreshes live when the linked entity changes; other kinds refresh with the view.
-- `links` and `provenance` do not take `source`. **Sutra Next (2.7.0):** `source:` written as a mapping (`{ kind, id | where | search }`, read as `$src`, any enabled pack's kind), events (`emits:`, `@panel.event.field`, `waits:`, evaluated on the server per click) and child panels (`children:`: under the row, beside, below, as tabs) build master-detail screens across packs; see [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, sections 6 to 8](RACHANA_REFERENCE.md#6-sources-over-several-packs) and [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next), worked through on the trading pack's book desk (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`).
+- `links` and `provenance` do not take `source`. **Sutra Next:** `source:` written as a mapping (`{ kind, id | where | search }`, read as `$src`, any enabled pack's kind), events (`emits:`, `@panel.event.field`, `waits:`, evaluated on the server per click) and child panels (`children:`: under the row, beside, below, as tabs) build master-detail screens across packs; see [RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, sections 6 to 8](RACHANA_REFERENCE.md#6-sources-over-several-packs) and [RACHANA_REFERENCE: Events, sources and children](RACHANA_REFERENCE.md#events-sources-and-children-sutra-next), worked through on the trading pack's book desk (`/v/portfolio-trades/BOOK-RATES-2?sutra=book-desk`).
 - Entities of a pack that is not enabled cannot be read: `sutra test` needs the same `DRISHTI_PACKS` as the server (section 15).
 
 ## 11a. Fragments, events, children, refresh and forms

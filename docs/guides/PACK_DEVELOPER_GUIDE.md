@@ -48,7 +48,7 @@ Contents:
 10. [Part VII. Groupings and analytics, computed](#part-vii-groupings-and-analytics-computed) (its own guide, [GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)): LEIG, LEIC, SIC, ECG, CORR, the USEQ ratios and the PXH analytics computed instead of stored: each command, its contract, reconciliation, the derived connector, settings
 11. [Part VIII. Changing Drishti's code: the developer guide](#part-viii-changing-drishtis-code-the-developer-guide): for developers of Drishti itself: the repository, building and running from source, project rules, how a request travels, recipes, testing, debugging, pitfalls, releasing
 
-Parts II to IV were three companion guides (PACK_MODELLING_GUIDE.md, PACK_LIFECYCLE_GUIDE.md, PACK_GENERATORS_GUIDE.md) until 2.9.6;
+Parts II to IV were three companion guides (PACK_MODELLING_GUIDE.md, PACK_LIFECYCLE_GUIDE.md, PACK_GENERATORS_GUIDE.md);
 their sections keep their names, so their old anchors are the same here.
 
 ## What a pack is made of
@@ -166,7 +166,7 @@ into a pack, deploy it and roll it back (the rules are in [DATA_GUIDE.md](DATA_G
 [tutorial 6](../tutorials/06-design-a-screen.md) designs its screen.
 
 Each step says what to type and what you should see. The outputs are real: they were produced by running the steps on the
-finished pack on a 2.3.0 server. (Your ticking numbers may differ a little: the ticket's age walks up and down.)
+finished pack on a server. (Your ticking numbers may differ a little: the ticket's age walks up and down.)
 
 ### Step 1. Create the folders
 
@@ -1428,7 +1428,7 @@ routes:
 - **Fields.** `count`; `sum`, `avg`, `min`, `max` over an expression (values that are missing or not numbers are
   skipped); `distinct` (the sorted distinct values); `first` (the first member's value, members in id order).
 - **`where`** keeps only the members that count (the help-desk pack's `where: $.STATUS != 'Closed'`).
-- **Beyond grouping (2.9.2).** `median` is a field aggregate too; `also-group-by` puts a member in further groups (a region, an income
+- **Beyond grouping.** `median` is a field aggregate too; `also-group-by` puts a member in further groups (a region, an income
   group, `'ALL'`); `then` works fields out over the page (a ratio, a weighted average, `group(...)`); `sort` orders a list field;
   `tree` builds the group's own hierarchy from a parent column; `unlisted` keeps a page over everything to its figures; `search-fields`
   lets the type-ahead find a group by a page field. The gleif, us-equities and world-economy packs compute LEIG, LEIC, SIC and ECG this
@@ -2128,7 +2128,7 @@ masks `COUNTERPARTY_ID`); an entry that names no field of the loaded packs is lo
 
 ### Fragments and docstrings
 
-A Sutra's panels need not be written out. The **fragment library** (2.7.0, [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)) holds
+A Sutra's panels need not be written out. The **fragment library** ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#sutra-next-fragments-events-children-sources-layout-and-forms)) holds
 generic, parameterised panels named after what they show. They are the **Drishti UI kit** (`config/ui-kit/fragments`,
 `drishti.ui-kit.dir`): platform vocabulary the server and `sutra lint|test` always load, whatever packs are enabled, so every
 Sutra may use them exactly like a shared block, and a pack needs to extend nothing for them:
@@ -2154,7 +2154,7 @@ kit also holds icons, images, logos and the brand (`config/ui-kit/assets`, `bran
 kit](RACHANA_REFERENCE.md#3a-the-drishti-ui-kit)).
 
 **Your pack's own fragments are namespaced.** A fragment or block in your pack's `sutras/` is `<pack>/<name>@N`
-(`trading/deal-ticket@1`) and also answers to its plain name (`deal-ticket@1`) as before. Do not name one like a kit fragment: the
+(`trading/deal-ticket@1`) and also answers to its plain name (`deal-ticket@1`). Do not name one like a kit fragment: the
 kit's wins the plain name, yours answers only qualified, and loading warns (`DRS-2048 warning: pack trading's key-figure has the
 name of a Drishti UI kit fragment: the kit's wins; use trading/key-figure@1 for the pack's`).
 
@@ -2885,7 +2885,7 @@ python3 tools/packgen/banking/make_packs.py --check
 python3 tools/packgen/banking/make_sutras.py --check
 ```
 
-When everything is in step you see (run on 2.3.0):
+When everything is in step you see:
 
 ```text
 5 pack manifests up to date (71 Calc snippets)
@@ -3254,7 +3254,7 @@ regenerates the pages. `drishti.py contract check` (and `drishti-console/tests/t
 contract, a contract is invalid, or the samples and test data drift from it, so regenerating a pack's samples with new fields means
 updating its contracts in the same change.
 
-**Every pack guide ends with its data contracts and its data retrieval (2.9.1).** A generator that writes a pack's guide appends
+**Every pack guide ends with its data contracts and its data retrieval.** A generator that writes a pack's guide appends
 `guide_data.sections(pack_dir)` (`tools/packgen/common/guide_data.py`): *Data contracts*, every kind's contract with every column (type,
 key, presence, unit, example or values, link), and *Data retrieval*, where each kind's data comes from (an external source with its
 licence, internal-only flag and refresh script; a generator of synthetic data; or a Drishti engine), how it reaches the lake, checking
@@ -3276,7 +3276,7 @@ the server's exec jar (build the server first; `--jar`/`--java` to choose). Behi
 [CLI_GUIDE.md](CLI_GUIDE.md); shipping a finished pack by copying a versioned, checksummed bundle (`pack bundle`, `verify`, `deploy`,
 `rollback`) is in [OPERATIONALISING.md](OPERATIONALISING.md).
 
-Worked example, run as written on 2.3.0: 300 ENDUR trades on two business days (600 rows, with a `BUSINESS_DATE` added) and the 22
+Worked example, run as written: 300 ENDUR trades on two business days (600 rows, with a `BUSINESS_DATE` added) and the 22
 counterparties they name, taken from `data/testdata/` into a folder `jsonl/` (`trade.jsonl`, `counterparty.jsonl`).
 
 ```bash
@@ -3573,7 +3573,7 @@ You do not have to list `core`, `market-data` or `trading`: the packs that exten
 
 #### Retired example packs (examples/packs)
 
-Seven earlier packs moved to `examples/packs/` in 2.3.0. They are not shipped in the images and not tested by default (one test,
+Seven example packs live in `examples/packs/`. They are not shipped in the images and not tested by default (one test,
 `AllShippedPacksTest`, checks that each still loads on top of the seven), and they keep their own attribute names. They still load:
 name the folder in `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EXTRA_DIRS`) and the pack in `drishti.packs.enabled`. The shipped packs
 win a name, and a retired pack may extend them (`retail-banking` extends `core`, `climate-risk` extends `trading`).
@@ -3634,8 +3634,8 @@ Connector files:
   …
 ```
 
-(The table lines were captured on a clean clone of 2.5.0, on the seven-day lakes, with `--server` naming a port where nothing ran, so
-their row counts are left out; the summary line is from a sixty-day run of 2.6.5 that kept the test data's own dates: 943 s, about
+(The table lines were captured on a clean clone, on seven-day lakes, with `--server` naming a port where nothing ran, so
+their row counts are left out; the summary line is from a sixty-day run that kept the test data's own dates: 943 s, about
 3.4 GB on disk.) By default the sixty days are moved to end on today's business date, so every page opens on data; `--as-of data` keeps the test data's own dates.
 Start the server with the samples off so that every page reads the lakes: the run configuration **Drishti server (demo lakes)**, or
 `DRISHTI_DEMO_ENABLED=false` with the seven packs. Running `lake demo` again while a server runs is safe: it sends the data-load
@@ -4164,7 +4164,7 @@ pack is a card and the introduction folds behind *About this page*.
 
 ## Part VI. The funds and ETFs pack
 
-The `funds` pack (2.9.2) puts the **200 largest US mutual funds and ETFs** by net assets on the terminal, with their holdings, from SEC
+The `funds` pack puts the **200 largest US mutual funds and ETFs** by net assets on the terminal, with their holdings, from SEC
 public data (Form N-PORT, Form N-CEN, the prospectus risk/return summaries). It has its own complete guide,
 **[FUNDS_GUIDE.md](FUNDS_GUIDE.md)**: using it (the FUND page and its tabs, HELD, TRACK, the commands, the command line and the API), the
 data contract of every kind (`fund`, `fund-holder`, `index-funds`), and where the data comes from (the sources and their licences, how the
@@ -4173,7 +4173,7 @@ data contract of every kind (`fund`, `fund-holder`, `index-funds`), and where th
 ## Part VII. Groupings and analytics, computed
 
 LEIG, LEIC, SIC, ECG, CORR, an equity's beta (EQB), the USEQ ratios, FACT changes, IDX totals and the PXH analytics are computed from
-the fundamental data when asked (2.9.2), never stored. They have their own complete guide,
+the fundamental data when asked, never stored. They have their own complete guide,
 **[GROUPINGS_ANALYTICS_GUIDE.md](GROUPINGS_ANALYTICS_GUIDE.md)**: using them, the data contract of every computed kind, and how each is
 computed (the packs' `computed:` kinds and the correlation engine). The hands-on companion is
 [tutorial 27](../tutorials/27-groupings-and-analytics.md).
@@ -4224,7 +4224,7 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters` |
 | `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
-| `drishti-lakeload` | `lakeload` | The parallel lake loader (2.9.6): JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
+| `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is Rūpaka, the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
 | `drishti-it` | `it` | Repository-wide rules, as tests only. | `ArchitectureRulesTest`, `LicenseHeaderTest`, `SourceFileSizeTest`, `NoBlockingUnderSynchronizedTest` |
@@ -4313,7 +4313,7 @@ drishti-benchmarks                (inference)
 | `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [CLI_GUIDE.md](CLI_GUIDE.md)) |
 | `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
-| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras read before 1.11 to `*.sutra.yaml`) |
+| `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
 | `deploy/` | `server.Dockerfile`, `console.Dockerfile`, `compose.yaml`, `compose.data.yaml`, `lake-maintenance.yaml`, `grafana/` |
 | `config/license-header.txt` | The text of the copyright header that `license_headers.py` inserts |
 | `data/` | The **data folder** (`DRISHTI_DATA_DIR`): everything Drishti writes at run time, all git-ignored except `testdata/`: `delta/` (the demo lakes), `bi-store/` (BI columns and rollups), `connectors/` (`generated/` and `history/`), `identity/`, `feeds/`, `packs/` (`added.yaml`, installed archives), `loads/`, `governance/`, `collab/`, `reports/`, `qa/` (the QA profile), `build/` (tool output and staging), `drill/` (the drill's logs) |
@@ -4431,7 +4431,7 @@ tools' Python), boto3 for the Bedrock AI provider and, optionally, `brotli`. Wit
 
 For Calc (Python on a view, `Alt+C`), install its runtime once: `tools/fetch-pyodide.sh` (about 340 MB downloaded to
 `~/.cache/drishti/`, 53 MB kept; see [USER_GUIDE.md](USER_GUIDE.md#12-installing-the-python-runtime)). Without it the console runs
-as before, `GET /healthz` says `"pythonRuntime": "not installed: run tools/fetch-pyodide.sh"` and the Calc panel says how to install it.
+as usual, `GET /healthz` says `"pythonRuntime": "not installed: run tools/fetch-pyodide.sh"` and the Calc panel says how to install it.
 
 The console reads `drishti-console/config/application.yaml`, then `drishti-console/config/application.local.yaml` if present
 (git-ignored), then environment variables, then `--key=value` arguments:
@@ -4775,7 +4775,7 @@ names and values from a request never change the SQL's shape.
 The console uses Bootstrap, Bootstrap Icons, ECharts (and ECharts GL), CodeMirror (with its Python mode), Vega and Vega-Lite (the
 `vega-lite` visual and a Python visual's output) and Graphic Walker (Calc's `drishti_bi.walk`, in a sandboxed frame), copied under
 `drishti-console/web/static/vendor/`; `vendor/VENDOR.md` lists each library with its version, licence, size and whether the repository
-holds it. FINOS Perspective, DuckDB-Wasm and Apache Arrow JS were removed in 2.3.0 (wave B): **the servers compute every number and the
+holds it. No FINOS Perspective or DuckDB-Wasm: **the servers compute every number and the
 browser draws**, so no BI page loads WebAssembly (a 2.1 report's `perspective-*` visuals are drawn as Drishti's own grid of the server's
 answer). Pyodide, for Calc only, is installed by script, not committed (below). There is no npm, no build step and no CDN (ADR-006).
 The Content Security Policy in `drishti-console/core/app.py` is:
@@ -5664,7 +5664,7 @@ Habits that keep the suite fast and reliable:
   which the fork removes when it ends (`TestRun` closes the Spring test contexts first), so a run leaves nothing in `target/` but the
   build's output and never touches `./data`. A test names its folders `${drishti.test.dir}/...` in its properties, seeds a folder before
   its context starts with `TestRun.dir(name)`, and takes a temporary folder from `TestRun.temp(prefix)`; a test without Spring uses
-  JUnit's `@TempDir`. Never write under a bare `target/...` path: per-test folders there survive every run until `mvn clean` (2.7.0
+  JUnit's `@TempDir`. Never write under a bare `target/...` path: per-test folders there survive every run until `mvn clean` (
   found twelve million files, each content store importing the seals a shared collaboration folder had piled up); a Python test that runs `lake build` or `lake demo` sets `DRISHTI_DATA_DIR` or `DRISHTI_BI_STORE` to a temporary folder and
   passes `--server` (or `--no-signal`) so it never writes into the repository's `data/` or signals a real server.
 - Keep local test data small (a few thousand trades): a laptop is not a scale-test machine.

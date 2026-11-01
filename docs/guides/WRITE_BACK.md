@@ -44,7 +44,7 @@ correction kept beside the source, an owned record, or an amendment sent through
 - [2. Editing in the cells](#2-editing-in-the-cells)
 - [3. New records in a guided drawer](#3-new-records-in-a-guided-drawer)
 - [4. Drafts](#4-drafts)
-- [4a. Submitting a change (2.8.0 write-back)](#4a-submitting-a-change-280-write-back)
+- [4a. Submitting a change (write-back)](#4a-submitting-a-change-280-write-back)
 - [5. With the Sutra designer](#5-with-the-sutra-designer)
 - [6. The expressions](#6-the-expressions)
 - [7. Checking a form](#7-checking-a-form)
@@ -75,8 +75,8 @@ correction kept beside the source, an owned record, or an amendment sent through
     - [15. Tests](#15-tests)
     - [16. Decisions (product owner, 2026-10-19 and 2026-10-20)](#16-decisions-product-owner-2026-10-19-and-2026-10-20)
     - [17. Risks and open questions](#17-risks-and-open-questions)
-    - [18. 2.8.0: saving through connectors, triggers and viewers](#18-280-saving-through-connectors-triggers-and-viewers)
-    - [19. As built (2.8.0, 2026-10-25)](#19-as-built-280-2026-10-25)
+    - [18. saving through connectors, triggers and viewers](#18-280-saving-through-connectors-triggers-and-viewers)
+    - [19. Implementation](#19-as-built-280-2026-10-25)
 
 ## 1. A form beside the table
 
@@ -229,9 +229,9 @@ The page says **You have 2 drafts on this page**, with **Resume** (the form open
 **Discard** for each. Every save is checked again on the server with the same rules; a value for a field masked for the person, or a
 change to a field they may not edit, is refused; each save and discard is in the audit log.
 
-## 4a. Submitting a change (2.8.0 write-back)
+## 4a. Submitting a change (write-back)
 
-A form whose Sutra says where it goes, with `save:`, also has **Submit…** (2.8.0, [section 16](#16-the-design-and-its-reasons)). Its
+A form whose Sutra says where it goes, with `save:`, also has **Submit…** ([section 16](#16-the-design-and-its-reasons)). Its
 fields' `bind` are the record's fields the change writes:
 
 ```yaml
@@ -296,7 +296,7 @@ lookup's carried values (`counterparty.LIMIT`), numbers (`30_000_000` and `1e6` 
 `+ - * /`; `== != < <= > >=` (numbers as numbers, anything else as text, so ISO dates compare); `and or not`; brackets; `empty(x)`,
 `len(x)`, `abs(x)`, `min(a, b)`, `max(a, b)`. An empty value makes a sum or a comparison empty, and a rule that comes out empty holds:
 `required` says what is missing, not every rule. A rule that reads a lookup's carried value is checked in the browser only; the server
-checks it again when 2.8.0 writes.
+checks it again when it writes.
 
 ## 7. Checking a form
 
@@ -386,7 +386,7 @@ its commands, their problems and the on/off switch, and the open overlays. `dris
 ## 13. Writing to a source: `writes:`
 
 A connector says *how* to change a record in its system; the Sutra says *what* may change; the lane owner says *when* and in what order.
-In 2.8.0 the JDBC plugin writes; the file, Delta and Iceberg plugins never do (a lake is not written per edit), and the other plugins
+The JDBC plugin writes; the file, Delta and Iceberg plugins never do (a lake is not written per edit), and the other plugins
 are refused with *plugin … cannot write*. A command needs its concurrency guard and its idempotency clause:
 
 ```yaml
@@ -430,12 +430,12 @@ SHA-256 signature over its place and body. The log is kept `retention.keep` (7 y
 
 ## 16. The design and its reasons
 
-Status: **W1 to W7 built (2026-10-25) and released in 2.8.0 (2026-10-26): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
-decisions taken while building. Planned for 2.8.0 and shipped in it (decided 2026-10-19 as 2.7.0; moved to 2.8.0 on 2026-10-21; 2.7.0 is Sutra Next since 2026-10-22; AI is 2.9.0); decisions in section 16 (2026-10-19 and
+Status: **W1 to W7 built (2026-10-25) and built (2026-10-26): [section 19](#19-as-built-280-2026-10-25)** says what is built, what is not, and the
+decisions taken while building. Built; decisions in section 16 (2026-10-19 and
 2026-10-20). Related: [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built) (the one Drishti database: the edit log, lanes, overlays and owned data live in it;
-2.8.0 item 0), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
+), [BI_DESIGN.md](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase-as-built) (Sutra and the renderer), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti) (several servers),
 [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#21-genui-screens-composed-for-an-ai-agent-design-not-built) section 11 (write-back forms, deferred to this design), [BI_DESIGN.md](../architecture/BI_DESIGN.md) (review and proposals, reused
-here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **2.8.0 additions (2026-10-24):** forms
+here), [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) (connector files, where `writes:` lives). **Additions:** forms
 save through connectors, an applied change can trigger a point-in-time calculation in a reactive connector, and updated records and
 results are pushed to the people watching them: [section 18](#18-280-saving-through-connectors-triggers-and-viewers), with
 [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) and [VAR_GUIDE.md Part III](VAR_GUIDE.md#24-where-the-engine-lives).
@@ -914,7 +914,7 @@ Overlay and owned targets need the first and third levels only; a source target 
 - **Packs per user apply:** you can edit only kinds of the packs you are given.
 - **API tokens** need the explicit **`edit`** scope (chosen when the token is created); **no token has it by default**, and an existing
   write scope does not imply it. A token never exceeds its user's current roles.
-- **A fresh install or an upgrade behaves exactly as today: read-only.** Upgrading to 2.8.0 changes nothing until an administrator
+- **A fresh install or an upgrade is read-only.** Nothing changes until an administrator
   turns editing on.
 
 **Audit.**
@@ -939,18 +939,18 @@ Overlay and owned targets need the first and third levels only; a source target 
 
 | Phase | What | Accepted when |
 |---|---|---|
-| W0 | **The one Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built), 2.8.0 item 0): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
+| W0 | **The one Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)): one pool and `config/db/database.yaml` (planned), two complete schema files with a parity test, the schema version stamp, `drishti.py db copy` | a 2.6.5 data folder starts with its users and settings; SQLite → PostgreSQL → SQLite keeps every row; a mismatched stamp refuses to start and names `db copy` |
 | W1 | `edit:` in the Sutra schema and lint; Change API; the off-by-default switches and the roles (section 12); **the edit log on a single node with SQLite**: `drishti_edit_lane` and `drishti_edit_log` in both schema files, acknowledgement after commit, replay from `applied_seq`, the epoch checks (trivially one owner); lanes and handler; **owned** kinds and **overlays** as rows in the same transaction (corrections and notes first, section 16), overlays laid over the document at read time; version check; retention; inline edit and the pending bar | two users editing the same field: the second is conflicted with a diff, never silently overwritten; 100,000 concurrent changes over 1,000,000 entities on 64 lanes apply in per-entity order with no lost update (property test); a server killed after an acknowledgement applies the change once after restart; a fresh install is read-only |
 | W2 | Approval (four eyes), Review → Changes, history, CLI | a change needing approval cannot apply without it; self-approval refused |
 | W3 | **The cluster:** lane ownership by conditional UPDATE (the ring suggests), **fencing** by epoch on every append and apply, forwarding from any node, failover by lease; the **PostgreSQL** shared log, the **S3** log (lease by ETag, fences), the **edit primary** fallback, `edit.log: auto` and its rule, Admin → Edits (store, owners, warnings); the loader folding approved overlays into the next day's lake build (section 16) | the three cluster acceptance tests of section 15 pass on PostgreSQL and on S3; an approved overlay appears in the next lake build and in BI |
 | W4 | `SourcePlugin.write` and **connector `writes:`** (validated at load), **source commands through the outbox** (pending, sent, confirmed; resend by the new owner with the same change id): the one real-amendment pilot (one field of one kind on one connector, JDBC first); pending at source | a source command applied twice by a retry changes the source once; a command without a guard or idempotency clause is refused at load; a command pending when its owner dies is sent once by the new owner |
 | W5 | Form mode, bulk edit, phone, docs and a tutorial (UI, CLI, YAML) | a tutorial edits, approves and sees the change tick on another browser |
-| W6 | **Forms save through connectors** (section 18.1): Submit on a 2.7.0 form turns its draft into a change request; the review and confirm sheet; the `edit.applied` event (section 18.3) | a form's draft submitted from the book desk becomes a change request, is approved and applied, and the draft is closed with the change id |
+| W6 | **Forms save through connectors** (section 18.1): Submit on a form turns its draft into a change request; the review and confirm sheet; the `edit.applied` event (section 18.3) | a form's draft submitted from the book desk becomes a change request, is approved and applied, and the draft is closed with the change id |
 | W7 | **Triggers and viewers** (sections 18.3 to 18.6): reactive connectors subscribed to `edit.applied`; recompute status on the submitter's screen; the submitter's own impact; updated records and results pushed to every viewer, masked per viewer | an amended trade recomputes its book's VaR (step V5, [VAR_GUIDE.md section 30](VAR_GUIDE.md#30-the-design-record)); the submitter sees their impact, every viewer sees the new record and shared number within 2 s |
 
-Placement: **2.8.0** (product owner: 2.7.0 on 2026-10-19, 2.8.0 since 2026-10-21; 2.7.0 is Sutra Next), after 2.6.0 (statements, field parameters, the Cassandra connector, drishti-iceberg;
+Placement: after statements, field parameters, the Cassandra connector and drishti-iceberg (
 integration moved to the unscheduled list on 2026-10-20); AI (grounding, AI UI, GenUI, AI management)
-follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-10-20).
+follows; GenUI's write-back forms build on this. W0 comes first.
 
 ### 15. Tests
 
@@ -993,7 +993,7 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
 
 4. **One Drishti database** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#6-the-one-drishti-database-design-not-built)): the edit log, lanes, overlays and owned data live in the same database as
    identity; PostgreSQL long term, SQLite the default for one node; no migrations (two complete schema files, a parity test, a version
-   stamp, `drishti.py db copy`); its own file `config/db/database.yaml` (planned). Built first, as 2.8.0 item 0 (W0).
+   stamp, `drishti.py db copy`); its own file `config/db/database.yaml` (planned). Built first (W0).
 5. **A durable shared edit log replaces "replicated like user state"** (sections 7 and 11): `drishti_edit_lane` (ownership by
    conditional UPDATE; the ring only suggests) and `drishti_edit_log` (acknowledged only after commit; order by seq; replay from the
    last applied seq); every apply fenced by the epoch in the same transaction; any console to any server, forwarded to the owner.
@@ -1023,31 +1023,31 @@ follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-1
 6. **A source that cannot guard or de-duplicate** (no version, no change-id column, no idempotency key) cannot have a `writes:`
    command; such a source is edited through overlays only.
 7. **Open:** the pilot's kind, field and connector for W4. *Decided while building (2026-10-25): JDBC first, no shipped connector writes (section 19, decision 11).*
-8. **Open (2.8.0 additions, section 18):** should a change whose recompute fails stay applied (proposed: yes, the change is the record;
+8. **Open (additions, section 18):** should a change whose recompute fails stay applied (proposed: yes, the change is the record;
    the computation catches up) or be held until the recompute succeeds? *Decided while building (2026-10-25): it stays applied (section 19, decision 8).*
 9. **Open:** must a write-back that changes risk materially (an incremental VaR above a threshold) require a second approver, with the
    threshold read from the recompute (a pre-trade check), or is that a later feature? *Decided while building (2026-10-25): a later feature (decision 9).*
 10. **Open:** should the submitter's own impact (section 18.5) be kept with the change in the edit log for audit, or only shown? *Decided while building (2026-10-25): the compute audit only (decision 10).*
 
-### 18. 2.8.0: saving through connectors, triggers and viewers
+### 18. saving through connectors, triggers and viewers
 
 Added 2026-10-24 (product owner): **write-back saves via connectors**; **a saved change may trigger a point-in-time calculation** in a
 reactive connector ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors)); **updated records, and the results computed from them, are
-pushed to the people watching them**. Everything in this section is planned (2.8.0), on top of sections 1 to 17, which it does not
+pushed to the people watching them**. Everything in this section is planned, on top of sections 1 to 17, which it does not
 change. Three static mock-ups were made with it (kept outside the repository): the review and confirm sheet with its recompute status
 is the third.
 
 #### 18.1 From a form's draft to a saved change
 
-Since 2.7.0 a Sutra form saves **drafts only**, per person, through `/api/v1/drafts` (sections 1 to 4 of this document,
-[RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10](RACHANA_REFERENCE.md#10-forms-and-data-entry)). In 2.8.0 a form gains **Submit**:
+A Sutra form saves **drafts only**, per person, through `/api/v1/drafts` (sections 1 to 4 of this document,
+[RACHANA_REFERENCE.md › Sutra Next: fragments, events, children, sources, layout and forms, section 10](RACHANA_REFERENCE.md#10-forms-and-data-entry)). A form has **Submit**:
 
 ```yaml
 form:
   key: trade_id
   edit: beside
   new: drawer
-  save:                                   # planned (2.8.0): where a submitted form goes
+  save:                                   # planned: where a submitted form goes
     target: source                        # overlay | owned | source (section 5.1)
     command: amend-trade                  # edit: a command of the kind's connector's writes: (section 5.4)
     create: book-trade                    # new: a create command of the same connector
@@ -1058,14 +1058,14 @@ form:
 
 | Step | What happens |
 |---|---|
-| 1 | The person fills the form; the draft is kept as in 2.7.0. |
+| 1 | The person fills the form; the draft is kept. |
 | 2 | **Submit** opens the review and confirm sheet ([18.2](#182-the-review-and-confirm-sheet)). |
 | 3 | **Confirm** turns the draft into **one change request** (section 6): each changed field is an item (`path` from its `bind`, `from`, `to`), `basedOn` is the version the form was opened on, and the draft's id is kept on the request. |
-| 4 | The server checks the form's rules again as the authority (the `FormExpr` rules of 2.7.0), now **re-reading lookups** (a carried value such as a counterparty's limit is read again at apply time, as the 2.7.0 guide promised for the write). |
+| 4 | The server checks the form's rules again as the authority (the `FormExpr` rules), **re-reading lookups** (a carried value such as a counterparty's limit is read again at apply time). |
 | 5 | The request follows sections 7 to 12: lanes, version check, approval, apply, outbox. |
 | 6 | When the change is applied, the draft is closed with the change id; if it is refused or conflicted, the draft stays, marked with the reason, for the person to edit again. |
 
-**Save via connector.** For a `source` target the **connector is the writer**, through its `writes:` commands (section 5.4), as before;
+**Save via connector.** For a `source` target the **connector is the writer**, through its `writes:` commands (section 5.4);
 a new record uses a `create` command (an `INSERT`, a `POST`, a message), with the same required guard (for a create: *the key does not
 exist yet*) and idempotency clause. `overlay` and `owned` targets are written by the lane owner to the Drishti database (section 5.2).
 A reactive connector is **never** a write target: it computes; it may only be triggered (18.3).
@@ -1149,15 +1149,15 @@ three-way diff and *Take theirs*, *Edit again* or *Apply mine anyway* (the `over
 W6 and W7 in section 14. They depend on W1 (the edit log) and on [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#4-reactive-connectors) steps R1 to R4; the
 VaR use is step V5 of [VAR_GUIDE.md section 30](VAR_GUIDE.md#30-the-design-record).
 
-### 19. As built (2.8.0, 2026-10-25)
+### 19. Implementation
 
-W1 to W7 are built, and released in 2.8.0, in `drishti-server` (`com.ash.drishti.server.edit`), with the JDBC plugin's writes, the router's overlay
+W1 to W7 are built, and built, in `drishti-server` (`com.ash.drishti.server.edit`), with the JDBC plugin's writes, the router's overlay
 layer in `drishti-engine`, `form.save` in `drishti-rachana`, the console's Submit, Review → Changes and Admin → Edits, and
 `drishti.py change` / `edits`. The administrator's guide is [the section for administrators](#for-administrators-write-back-is-off-as-shipped); the author's is
 [section 4a](#4a-submitting-a-change-280-write-back); a worked example is
 [tutorial 24](../tutorials/24-correct-a-trade-and-approve-it.md).
 
-| Wave | Status | As built |
+| Wave | Status | Implementation |
 |---|---|---|
 | W1 | **built** | `drishti_edit_lane`, `drishti_edit_log` (and `drishti_edit_request`, `drishti_overlay`, `drishti_owned`, `drishti_edit_version`, `drishti_edit_cursor`) in both schema files (the parity test holds); `EditLog`: append fenced by the epoch and acknowledged after commit, ordered by seq, a retry with the same change id not appended twice, `Busy` past `max-lane-depth`; `Lanes`: `murmur3(key) mod P`, one virtual-thread worker per owned lane woken by an append, replay from `applied_seq`; `EditHandler`: re-checks at apply (the switch, the edit power, the kind, masks, the form's roles and read-only fields, restate and override roles), field-level conflict, the form's rules over the record as it is now, overlay or owned rows and the version in the apply's transaction; overlays laid over every document the router reads (`DocumentLayer`), *How this view was built* says *Edited here*; the Change API; the `edit` power and the `edit` token scope; off by default (`config/edit/`); retention (7 years) |
 | W2 | **built** | four-eyes approval (`drishti_edit_request`, compare-and-set decisions, never your own, the policy's approver roles), Review → Changes, a record's history (`GET /entities/{kind}/{id}/history`), `drishti.py change ...` |

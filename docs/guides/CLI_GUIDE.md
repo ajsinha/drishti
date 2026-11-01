@@ -265,7 +265,7 @@ drishti design propose my-design --server https://drishti.bank.example:18480 --t
 ```
 
 Without the scope the server answers `403 DRS-5002 this token lacks the scope design:write`. Rotate by making a new token
-and revoking the old one. A signed token (API_GUIDE "Minting a token for a script") works as before.
+and revoking the old one. A signed token (API_GUIDE "Minting a token for a script") works too.
 
 **Permissions follow the screens.** The command line asks the same endpoints the screens do, so it can do exactly what you
 could do there and nothing more:
@@ -609,10 +609,10 @@ config/packs/<pack>/
   tests/help-coverage.txt     <- optional: a floor of help coverage per Sutra (irs-fixfloat=0.9), never lowered
 ```
 
-Since 2.9.4 a Sutra's cases are **one file, `cases.jsonl`, one case a line** (`{"case": "<name>", "document": {...}}`;
+A Sutra's cases are **one file, `cases.jsonl`, one case a line** (`{"case": "<name>", "document": {...}}`;
 [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each case is reported by its name. A line that is not such an object is a failed case
-(`cases.jsonl:3: a case is one line {"case": ...`). **The older layout, one `<name>.json` file per case, is deprecated**: it is still read
-during 2.9.4, with `warning: <folder>: one .json file per case is deprecated (2.9.4) ...` on standard error, and will not be read in a
+(`cases.jsonl:3: a case is one line {"case": ...`). **The older layout, one `<name>.json` file per case, is deprecated**: it is still read,
+with `warning: <folder>: one .json file per case is deprecated ...` on standard error, and will not be read in a
 later release; `drishti.py convert` does not write cases, so convert a folder by hand or regenerate it. Other `.jsonl` files in the folder
 are plain documents, one a line (reported as `file.jsonl:1`, `file.jsonl:2`...). Without a `tests/<sutra>/` folder, a Sutra file is tested
 against the `.json` beside it with the same name (that is how the documented examples work). The trading pack's `tests/irs-fixfloat/expect.yaml`:
@@ -1671,7 +1671,7 @@ files: wrote 17,910 rows into 460 files under data/demo-files in 0 s
 files: wrote 200 rows into 1 files under data/demo-files in 1 s
 ```
 
-**The demo lakes with a source system in Iceberg (2.6.7).** `tools/build_demo_lakes.py` (the demo lakes from start to finish) takes
+**The demo lakes with a source system in Iceberg.** `tools/build_demo_lakes.py` (the demo lakes from start to finish) takes
 `--store <system>=delta|iceberg`, repeatable, with `all=` for every system; the default is every system in Delta:
 
 ```bash
@@ -1770,11 +1770,11 @@ options:
   --dates NAME          list the business dates a cache holds
 ```
 
-`server caches` (or `server caches list`) prints the memory and disk totals, then one line per cache (since 2.9.7 also VaR's,
+`server caches` (or `server caches list`) prints the memory and disk totals, then one line per cache (also VaR's,
 exposure's, BI's and pack access) with where it lives and its size against its limit, the same as **Admin → Caches**
 (`GET /api/v1/admin/caches`); `--json` prints the server's document. `server caches --dates var.hot-files` lists the business dates a
 cache holds (open or on disk, size, data versions, digest); `server caches purge var.hot-files --date 2026-09-29` purges one date only,
-and `--cluster` purges on every live member too (2.9.7). `server caches
+and `--cluster` purges on every live member too. `server caches
 purge NAME` drops one: for a Delta connector its entries in the shared memory caches, its document cache on disk, its id map files
 and the parsed Parquet footers; for a derived connector (`trade-pages`) its grouped pages, the latest date rebuilt from the lake at
 once while the old pages serve. `purge all` drops every cache. Everything purged is rebuilt from the data at the next read, so a
@@ -2050,7 +2050,7 @@ Date           Trade status  Trade version  Quantity  Price        Maturity date
 `⟲2` marks a day the store kept two versions of (the latest shown); `•••` is a field masked for you. Exit codes: 0; 1 when the server
 refused (the code and its message on standard error) or some days could not be read (`partial`); 2 for usage.
 
-### `compute`: reactive connectors (2.8.0)
+### `compute`: reactive connectors
 
 Asks a reactive connector for a computed kind as you, cancels one of your requests, sends an event to the triggers (administrators),
 lists your what-if sandboxes, and prints Admin's view of the reactive connectors ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)):
@@ -2072,7 +2072,7 @@ path-sum-java BOOK-FX~delay-ms=900  REFUSED  (req-mvncbpgc-b05a980336d9)
 Exit codes: 0 (`ready`, `computing` or `stale`); 1 when the answer is `failed` or `refused`, or the server said no; 2 for usage.
 [Tutorial 23](../tutorials/23-computed-panels.md) walks through them.
 
-### `var`: the VaR engine (2.8.0)
+### `var`: the VaR engine
 
 VaR of any scope as you see it, from the terminal (the API `/api/v1/var`; the user guide [VAR_GUIDE.md](VAR_GUIDE.md), the reference
 [TOOLS.md section 5.12](TOOLS.md#512-var)). Quote a scope for the shell; `--date` picks the business date, `--json` prints the answer:
@@ -2084,11 +2084,11 @@ drishti.py var parts 'DESK:RATES' --by position --top 10           standalone, c
 drishti.py var path 'DESK:RATES' --size 10                         the scenario days worst first, and what lost most on each
 drishti.py var history 'DESK:RATES'                                VaR history, exceptions, traffic light, Kupiec and Christoffersen
 drishti.py var tree --hierarchy LEGAL                              every node with its VaR, ES and limit use
-drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT, 2.9.7): each date's VaR, ES, source and gap, the worst scenarios
+drishti.py var matrix 'DESK:RATES' --days 20                       the scenario matrix (SMAT): each date's VaR, ES, source and gap, the worst scenarios
 drishti.py var matrix POS-BOOK-1~SEC-A --by trade                  a position's trades under the newest VaR scenario, across the dates
 drishti.py var matrix MX-30000121 --days 30 --csv > t.csv          the whole matrix as CSV (a gap's cells empty, never 0)
 drishti.py var status                                              settings, the tiered memory (hot files, open dates) and loaded dates
-drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready (2.9.6)
+drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready
 drishti.py var shards --drain                                      hand this member's shards over before it stops (administrators)
 drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk
 drishti.py var basket-delete hedges                                delete your own basket (captures of it are kept)
@@ -2097,7 +2097,7 @@ drishti.py var baskets --all --owner asha                          every person'
 drishti.py var capture 'BASKET:asha/hedges' --note 'before the unwind'
 drishti.py var compare CAP-20260930-7 now
 drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250   the Python engine: before and after hypothetical trades
-drishti.py var show BANK --horizon 10d                             2.9.7: the 10-day VaR by the default method (ten-day-method: sqrt10)
+drishti.py var show BANK --horizon 10d                             the 10-day VaR by the default method (ten-day-method: sqrt10)
 drishti.py var show BANK --horizon 10d --method sum                the sum of 10 consecutive days: 500 overlapping windows of 509
 drishti.py var show BANK --horizon 10d --method sqrt10             the 1-day figures × √10
 drishti.py var show BANK --confidence 95                           VaR at 95% (one of drishti.var.confidences), ES with --es-confidence
@@ -2106,15 +2106,15 @@ drishti.py var show BANK --stressed                                stressed VaR:
 drishti.py var show NODE:MGMT~BANK --stressed --horizon 10d --method sum   the same at 10 days; a node's 12-week average printed too
 ```
 
-`--horizon`, `--method`, `--confidence` and `--es-confidence` (2.9.7) read any answer through a lens: the headline then says
+`--horizon`, `--method`, `--confidence` and `--es-confidence` read any answer through a lens: the headline then says
 `horizon    10-day (sum)` and `VaR 99%   274,544,283 USD   (the 5th worst of 500 overlapping windows)` on the demo data; limit use is
 printed only when the lens is the limit's own (else *limit is for 1-day 99%: not comparable*), the backtest only at 1 day. `show`
-with `--window` keeps the 2.9.4 comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+with `--window` keeps the comparison ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
 
 Exit codes: 0; 1 when the server said no (the code and its message on standard error) or a what-if was refused or failed; 2 for usage.
 [Tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) walks through them with the demo data.
 
-### `exposure`: the exposure engine (2.9.0)
+### `exposure`: the exposure engine
 
 Exposure of any counterparty scope as you see it, from the terminal (the API `/api/v1/exposure`; the user guide
 [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md), the reference [TOOLS.md section 5.13](TOOLS.md#513-exposure)). Quote a scope for the shell;
@@ -2456,7 +2456,7 @@ $ drishti.py net check
 (exit 1)
 ```
 
-Members advertise only a real address (2.6.0, [OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
+Members advertise only a real address ([OPERATIONS.md › Drishti*net: running several servers as one, section 2](../admin/OPERATIONS.md#2-a-cluster-of-three)): `localhost`, `127.x.x.x`, `::1`,
 `0.0.0.0` and `::` are refused in `advertise-url` and in a seed's URL, and the message names this machine's address. `advertise-url` may be
 left out: the node then advertises this machine's primary IPv4 address with the server's port (Admin → Net → Members shows it as *detected*).
 
@@ -2529,7 +2529,7 @@ drishti.py bi migrate --expressions FILE|DIR... [--write] [--check]      convert
 drishti.py bi migrate --expressions [--dry-run]                          the same for the server's STORED items (bi-admin; audited, history kept)
 drishti.py bi migrate --models DIR [--dry-run] [--out D] [--keep-old] [--report F]   rachana: 1 datasets of a BI folder to datasets and models, reports rebound
 drishti.py bi migrate --models [--dry-run] [--report F]                  the same for the server's stored items (bi-admin)
-drishti.py bi migrate --boards FILE|DIR... [--write] [--keep-old]          2.3 boards to reports with board pages (2.4.0): writes reports/<name>.report.yaml, removes the board file
+drishti.py bi migrate --boards FILE|DIR... [--write] [--keep-old]          2.3 boards to reports with board pages: writes reports/<name>.report.yaml, removes the board file
 drishti.py bi migrate --boards [--dry-run]                              the same for the server's stored boards (bi-admin; the server does it at start too)
 drishti.py bi sql "SELECT ..." --model M [--explain] [--format table|json|csv|jsonl] [--file F]   Drishti SQL over a model
 ```
@@ -2591,7 +2591,7 @@ a table with its plan, its as-of date and the columns masked for you; `--json` p
 
 ### `bi transform`: a Transform's inputs as you, and the snippets
 
-(2.4.0) What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)). `input`
+What the Transform editor's inputs and snippets picker do ([BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17](BI_GUIDE.md#17-data-prep-the-transform-editor-240)). `input`
 asks the server, as the token's user, for each input of a Python dataset (`POST /api/v1/bi/python/input`: a model query, or a pack kind read through a
 connector) and prints its rows, what is masked for you and a short profile of every column; `snippets` and `snippet` read the console's library
 (`drishti-console/config/prep-snippets.yaml`, no server) and print the step a snippet makes, each value written as a literal.
@@ -2645,7 +2645,7 @@ fail  Close to 100 trades: expected 100 ± 1%, found 750
 3 passed, 1 failed
 ```
 
-### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs (2.6.7)
+### `bi runs`, `bi mq --async`, `bi sql --async`: BI runs
 
 `drishti.py bi runs list|get|submit|estimate|wait|result|cancel|rerun|export|share|unshare|promote|keep|schedule|schedules|storage|suggestions` does what the BI
 Runs tab does (sharing, schedules, CSV and Excel export, and for a bi-admin the rollup suggestions), as the token's user; `bi mq` and `bi sql` take `--async [--wait 2s] [--yes]`. Examples, exit codes and output: [BI_GUIDE.md section 28](BI_GUIDE.md#on-the-command-line)
@@ -2653,7 +2653,7 @@ and [TOOLS.md section 5.7](TOOLS.md#57-bi).
 
 ### `bi statement`
 
-A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader), 2.6.0) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
+A report's statement pages ([BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 24](BI_GUIDE.md#24-statements-paginated-reports-page-exact-one-per-reader)) made for the token's user, with their own masks and row rules: what the BI Studio's Paper
 tab previews and a subscription mails.
 
 ```

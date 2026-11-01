@@ -15,7 +15,7 @@
 -->
 # Funds and ETFs guide
 
-The `funds` pack (2.9.2) puts the **200 largest US mutual funds and ETFs** by net assets on the terminal, with their holdings, from
+The `funds` pack puts the **200 largest US mutual funds and ETFs** by net assets on the terminal, with their holdings, from
 SEC public data: what each fund holds and how much (Form N-PORT), who runs, holds and audits it (Form N-CEN), what it costs and how
 it did (the prospectus risk/return summary). The funds link to the rest of Drishti: a holding opens its company (`USEQ`), a company
 lists the funds that hold it (`HELD`), an index lists the funds that track it (`TRACK`), an LEI opens its GLEIF record (`LEI`).
@@ -147,7 +147,7 @@ Nasdaq-100 caps its largest members (its published method: a member over 24% is 
 and so does the tab (`FUND DIA`: active share 1.8%). The members are the us-equities pack's: what the index's tracking ETF (SPY, QQQ,
 DIA) reported holding in its newest N-PORT. An S&P 500 fund still shows an active share of about 5.3% rather than 0 (`FUND VOO`
 holds 493 of the 495 members) because 41 members have no share count the filings support (Alphabet, Meta, Berkshire Hathaway among
-them) and are left out of the weights; `FUND QQQ` shows 11.2% for the same reason (15 of its 99 members). Until 2.9.3 the members came
+them) and are left out of the weights; `FUND QQQ` shows 11.2% for the same reason (15 of its 99 members). Wikidata's member lists are
 from Wikidata, whose lists were out of date (QQQ then showed 26.75%).
 
 ## 5. Held by funds: HELD and the company page
