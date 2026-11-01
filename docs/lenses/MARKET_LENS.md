@@ -362,6 +362,138 @@ the latest day; list suspected bad days with their **VaR at stake** (section 5.1
 monthly task for methodology, a BI report, and the evidence for the stress window review (the stress window tool chooses the window; this checks its
 data). **Size** M.
 
+### 5.11 VaR at stake, jumps and two sources: the build design
+
+ML1's at-stake step, ML2 and ML3, with ML7's kept records for *Since* (ML11), as one build on the Quality landing (C). Mock-ups:
+[section 11.3](#113-quality-with-var-at-stake-jumps-and-two-sources-market-checks).
+
+**What it shows.** On the Quality landing: the tiles **Critical**, **Warnings**, **Clean**, **VaR at stake** (in place of today's note)
+and **Two sources** (items compared and agreeing); the exceptions worst first with **Since**, **Used by** (trades and desks),
+**MtM at stake** and **Component VaR at stake**; the opened exception's evidence (the moves against σ for a jump, the pillars of both
+sources for a disagreement), who uses it by desk, and what is at stake. A **Used by** panel on each market-data page (`CRV`, `FXV`,
+`CDS` …). Market shows the figures read-only; trade lists stay in Risk (decision 2).
+
+**One screen, three views.** The Quality landing has a view switch, **Exceptions · Impact · Checks**, over the same records and the
+same API:
+
+| View | Mock-up | What it draws |
+|---|---|---|
+| **Exceptions** (the default) | A | the tiles, the exceptions worst first with Since, Used by and the at-stake figures, and the opened exception's evidence, users and two sources |
+| **Impact** | B | every flagged item's component VaR at stake to scale, signed, and the usage matrix by desk; the evidence a click away |
+| **Checks** | C | a tab per check (jumps, two sources, stale, gaps, arbitrage), each with its own list and chart |
+
+The chosen view is kept in the address (`view=exceptions|impact|checks`) and remembered in the person's settings, beside the landing
+choice of the Market Home ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market)); the date and the check filters are shared
+by the three. The phone draws its own tiers (below) whatever view is chosen.
+
+**How it is built: Sutra panels on the Quality landing.** The landing keeps its bar, meta line and landing switch; its body becomes a
+Sutra-drawn view of a page kind, `market-quality`, whose id is the business date (`MDQ 2026-09-30` opens the same page), painted in place
+by the one renderer of every screen ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md)). Each view is one Sutra of that kind
+(`market-quality`, `market-quality-impact`, `market-quality-checks`), selected by the switch as `?sutra=` selects a Sutra
+([RACHANA_REFERENCE, events, sources and children](../guides/RACHANA_REFERENCE.md#events-sources-and-children-sutra-next)), so a bank
+tailors the panels, columns and thresholds shown in YAML. The opened exception is a Sutra Next child of the exceptions table. **VaR at
+stake is read from the engine by a panel:** a computed kind, `market-data-at-stake` (id the item, `params: { incremental }`), served by a
+reactive connector whose engine is Drishti's own Java engine calling the VaR engine's decomposition of `BANK`
+([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)); the At stake panel reads it with `source:` and
+shows *computing*, *ready* or *refused* as every computed panel does, and the incremental VaR is the same read with `incremental: true`
+on request. The acknowledgements (Accept as correct, Corrected, Proxied) are Sutra Next forms with write-back to the `owned` target
+(`save: { kind: market-data-quality, target: owned, reason: required }`, [WRITE_BACK.md section 4a](../guides/WRITE_BACK.md#4a-submitting-a-change-write-back)).
+
+| Part | Kind or fragment |
+|---|---|
+| Tiles (K2) | `metric` (the kit's `key-figure@1`) |
+| Exceptions (K3) | `row-picker@1` (a `table` that emits `open`) |
+| Jump evidence (K4) | `line` over the moves, with ±4σ and ±6σ as reference lines |
+| Used by (K5) | `ranked-bars@1` (`hbar`) by desk, `kv` for the counts and *unknown usage*, `links` to Risk |
+| At stake (K6) | `kv` and `metric` over the computed kind `market-data-at-stake` |
+| Two sources by pillar (K7) | `table` (both sources, the difference, the tolerance, the state, toned) |
+| Record actions (K8) | `kv` with the forms above |
+| Impact view (K9) | `hbar` (signed, toned) and `pivot` (item by desk, `heat`) |
+| Checks view (K10) | `tabs` over the checks, each a `table` and an `hbar` of the moves in σ |
+| Used by on item pages (K12) | the kit fragment `ranked-bars@1` added to the `CRV`, `FXV`, `CDS` … Sutras, reading `market-data-usage` with `source:` |
+
+No new panel kind is needed. One small addition is: **reference lines on `line` and `area`** (`markers:`, as `histogram` has), for
+±4σ and ±6σ on the jump evidence; until it exists, the thresholds are said under the chart. The new pack fragment is
+`quality-exception@1` (the opened exception's panels, used by the three views).
+
+**How each figure is computed.**
+
+| Figure | Rule |
+|---|---|
+| Move | m_t = x_t − x_{t−1} between consecutive business days that both hold real data, per item and **per pillar** (a curve's points, a surface's grid cells), in the natural unit: basis points for rates and spreads, log return for prices and levels, vol points for vols |
+| σ | the population standard deviation of the item's previous moves in the window (21 business days, today excluded), as the Market desk ranks moves; fewer than ten moves: *not checked*, counted as such |
+| Jump | z = \|m_t\| / σ; warning at z ≥ 4, critical at z ≥ 6 (decision 5); the item takes its worst pillar |
+| Suspected bad print | yesterday's pillar was a jump and today's move reverses it (opposite sign, \|m_t + m_{t−1}\| ≤ 25% of \|m_{t−1}\|): named on today's exception |
+| Two sources | d = a − b per pillar between the primary source (the one the batch used, `INTERNAL` by default) and the second, in the natural unit (relative for prices); agree when \|d\| ≤ τ, warning when τ < \|d\| ≤ 3τ, critical above, τ from the tolerance table by asset class and tenor; no second row: *single source*, never *agree*; a second row of an older date: *second source stale* |
+| Used by | the usage map (section 5.1): the trades whose rules match the item, rolled to their positions (a position's trades share an instrument and so their market data); unmatched trades counted as *unknown usage* |
+| MtM at stake | Σ \|MtM\| of the users (`trade-valuation`) |
+| Component VaR at stake | Σ of the users' positions' component VaR in `BANK` from one decomposition of the bank by position (cached with the VaR page's answers; [VAR_GUIDE section 18.3](../guides/VAR_GUIDE.md#183-decomposition-of-a-scope-into-parts)); signed: a negative sum means the users hedge the bank's tail; also as a share of VaR BANK |
+| VaR at stake tile | the largest component VaR at stake among **critical** items, with the item named (decision 1) |
+| Incremental VaR | on request only: VaR BANK − VaR of BANK without those positions (one more scope, exact) |
+| Since | the first date of the unbroken run of daily quality records holding the same exception (ML7) |
+
+A discount curve that every trade uses carries a large component VaR at stake whatever its error: the figure says how much of today's VaR
+rides on the item, not the size of the error, and the tile's note says so.
+
+**Data used.** The market-data contracts as they are (`ir-curve`, `credit-curve`, `fx-vol-surface`, `commodity-curve`,
+`inflation-curve` and the rest of the pack) and their history; `trade` (legs' `INDEX`, `DISCOUNT_INDEX`, currencies, underlyings),
+`trade-valuation`, `position`, `pnl-vector` and `scenario-pv` (the bank's decomposition), `var-official`; `calendar` (business days).
+Three additions, described here and created with the build:
+
+- **A `SOURCE` field on every market-data contract** (text, optional; absent reads as the primary source), added to the lake key so a
+  second load of the same contract can sit beside the first. Existing data stays valid unchanged.
+- **`market-data-usage`** (proposed mnemonic `MDU`, computed, never stored as truth): one row per item, date and position: `ITEM_KIND`,
+  `ITEM_ID`, `BUSINESS_DATE`, `POSITION_ID`, `TRADE_IDS`, `DESK`, `BOOK`, `RULE` (the rule that matched, or `BANK-MAP` when the bank's
+  pricing configuration supplied it), `PILLARS` (when sensitivities say which), `MTM`. The rules live in a pack configuration file
+  (proposed `usage-rules.yaml` of the market-data pack), one rule per kind as the table of section 5.1.
+- **`market-data-quality`** (proposed mnemonic `MDQ`, Drishti-owned, ML7): one immutable record per date and exception: `BUSINESS_DATE`,
+  `CHECK`, `ITEM_KIND`, `ITEM_ID`, `PILLAR`, `VALUE`, `REFERENCE` (σ, or the second source's value), `MEASURE` (z, or the difference),
+  `THRESHOLD`, `SEVERITY`, `FIRST_SEEN`, `BATCH_ID`; and a versioned acknowledgement: `ACK` (`ACCEPTED`, `CORRECTED`, `PROXIED`), `REASON`,
+  `CORRECTED_BY_BATCH`, `ACK_BY`, `ACK_AT`.
+
+The two new kinds get their contract files (status *planned*) once the contract schema accepts that status; until then this section is
+their description. On the demo, the decided synthetic second source is a second load with `SOURCE: VENDOR-B` and small, labelled
+differences, a few of them crafted beyond tolerance so the check shows something (decision 8).
+
+**Settings (proposed, in the edition's `quality:` block beside `stale-days`).**
+
+| Key | Default | Meaning |
+|---|---|---|
+| `quality.jump.warn-sigma` | `4` | a jump at or above this many σ is a warning |
+| `quality.jump.critical-sigma` | `6` | … critical |
+| `quality.jump.window-days` | `21` | business days of moves behind σ |
+| `quality.jump.min-moves` | `10` | fewer moves: not checked |
+| `quality.jump.revert-share` | `0.25` | how close to a full reversal counts as spike and revert |
+| `quality.two-source.primary` | `INTERNAL` | the source the batch used |
+| `quality.two-source.critical-multiple` | `3` | a difference above this many tolerances is critical |
+| `quality.two-source.tolerances` | a table by asset class and tenor (0.5 bp G10 OIS, 2 bp credit, 0.25 vol FX liquid, 0.1% equity closes …) | valuation control's policy |
+| `quality.at-stake.scope` | `BANK` | the scope whose components are summed |
+
+**Command, CLI and API (proposed; no existing word is reused).**
+
+- `MDQ [date]` lists the kept quality records with their acknowledgements; `<command> <id> USED` (for example `CRV CRV-CAD-GOVT USED`)
+  opens an item's Used by panel.
+- `drishti.py quality run --pack market-data --date` runs the checks and writes the day's records; `drishti.py quality at-stake <kind>
+  <id> [--incremental]` prints the at-stake figures.
+- `/api/home/market/quality` gains `jumps`, `twoSource`, `atStake` and `since`; `GET /api/home/market/usage/{kind}/{id}` answers Used
+  by (counts, desks, MtM, component VaR; never trade lists in Market); `POST /api/home/market/at-stake/{kind}/{id}/incremental` computes
+  the incremental VaR on request.
+
+**Phone.** The four tiles are **must**; the top five exceptions with severity and VaR at stake are **glance**; the evidence and Used by
+are **more**; acknowledging an exception is **desk** (it needs a reason and a batch).
+
+**Open questions for the product owner.**
+
+1. **Mock-up choice:** A (the Quality landing with Used by and VaR at stake, recommended), B (impact first) or C (a tab per check; its
+   Jumps tab fits as A's drill-down).
+
+   **Decided (product owner, 2026-11-01):** one screen; A is the default view, B and C are views on the same screen (the view switch
+   above), built as Sutra panels on the Quality landing.
+2. **Who sees VaR at stake in Market:** everyone in the lens (the figure is an aggregate, recommended), or only people whose role reads
+   VaR results elsewhere.
+3. **Pillars checked:** every pillar (recommended), or the headline fields only until ML7's records are in.
+4. **The demo's crafted disagreements:** a handful, each labelled in the second source's rows (recommended), or none beyond tolerance.
+
 ---
 
 ## 6. Data needed
@@ -483,8 +615,9 @@ section. ML1 (with ML2 to ML4) is the plan's market-data rows (VaR at stake and 
 
 ## 11. Mock-ups: the screens to build
 
-One mock-up file belongs to this lens: the three Market landings. It is copied into the repository, self-contained (system fonts,
-nothing from a CDN), with a screenshot beside it, under [`docs/lenses/mockups/market/`](mockups/market/). **The checklist below is the
+The three Market landings are copied into the repository, self-contained (system fonts, nothing from a CDN), with a screenshot beside
+it, under [`docs/lenses/mockups/market/`](mockups/market/); the lens menus under [`docs/lenses/mockups/menus/`](mockups/menus/A.html); the
+Quality landing's completion (VaR at stake, jumps, two sources) under [`docs/architecture/mockups/market-checks/`](../architecture/mockups/market-checks/A.html). **The checklist below is the
 source of truth at build time** ([README.md](README.md#mock-ups)): every panel is a row, its status checked against the code on
 2026-10-31 (`wip/drill-a`). **Built** cites the code or guide; **partly built** says what is missing; **not built** names the candidate
 row.
@@ -493,6 +626,7 @@ row.
 |---|---|---:|---:|---:|
 | [Market landings](#111-the-market-landings-market-landinghtml) (A Market desk, B Explorer, C Quality) | all three, 2026-10-29: A the default, B and C behind the landing switch; C with the checks the data supports | 16 | 3 | 2 |
 | [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 5 | 0 | 0 |
+| [Quality with VaR at stake, jumps and two sources](#113-quality-with-var-at-stake-jumps-and-two-sources-market-checks) (A the Quality landing completed, B impact first, C a tab per check; a phone variant) | one screen, 2026-11-01: A the default view, B and C views on the same screen | 0 | 2 | 11 |
 
 ### 11.1 The Market landings (`market-landing.html`)
 
@@ -564,6 +698,36 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 
 On a phone the subject menus are to fold into one menu named after the lens (option C's form): not built, moved to 2.9.9 with the phone display; until then a phone shows the same menus as icons. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+
+### 11.3 Quality with VaR at stake, jumps and two sources (`market-checks`)
+
+[Open option A](../architecture/mockups/market-checks/A.html) (options: [B](../architecture/mockups/market-checks/B.html) impact first,
+[C](../architecture/mockups/market-checks/C.html) a tab per check; the [phone](../architecture/mockups/market-checks/phone.html)). Self-contained
+HTML (system fonts, nothing from a CDN), dark by default and light with `#light`; the screenshot is taken when the option is picked. The
+ids are the demo's market data and VaR BANK is the guides' figure; the exceptions are crafted (the committed demo is clean), as the
+footer says. **Decided (product owner, 2026-11-01):** one screen; option A is the default view, B and C are views on the same screen
+(**Exceptions · Impact · Checks**). Design in [section 5.11](#511-var-at-stake-jumps-and-two-sources-the-build-design).
+
+**Why A opens first.** It completes the Quality landing that was chosen and built (C), filling its two empty places (the VaR at stake
+tile and the Impact card) and adding the two checks to the same list, so the market-data team keeps one place that answers *what needs me
+now and what does it cost*. B (the **Impact** view) answers the cost first for the reader who ranks by it; C (the **Checks** view) is
+thorough per check, its Jumps tab the drill-down of a jump.
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| K1 | Bar and header | `DRISHTI Market` with the subject menus (LX1); *Market data · quality*, `MDQ 2026-09-30`; the checks run with their thresholds; the landing switch; check filters; the second source named *synthetic, labelled* | the edition's `quality:` block | switch landing, filter | not built |
+| K1a | View switch | **Exceptions · Impact · Checks**; Exceptions the default | `view=` in the address, a Sutra per view of `market-quality`; the person's settings | switch: the same date and filters | not built |
+| K2 | Tiles | Critical 3, Warnings 5, Clean 96.9% of 260, **VaR at stake 2.94m** (CMDC-WTI, 2.6% of bank VaR), Two sources 211 / 214 | `/api/home/market/quality` (`atStake`, `twoSource`) | click: filter | not built (Critical, Warnings, Clean are built) |
+| K3 | Exceptions | item, pillar, check, detail, **Since**, severity, **Used by**, desks, **MtM at stake**, **Component VaR at stake**; the note on what the figure means | the checks; `market-data-quality` (Since); `market-data-usage` | click: its command | partly: item, check, detail and severity are built |
+| K4 | Jump evidence | the 21 moves and today's as bars against ±4σ and ±6σ; σ and z said; the spike-and-revert rule | history (`/api/v1/history/{kind}/{id}/series`) | hover a bar | not built |
+| K5 | Used by | trades and MtM by desk, component VaR in BANK; *unknown usage*; the link to Risk | `GET /api/home/market/usage/{kind}/{id}` | open in Drishti Risk | not built |
+| K6 | At stake | MtM, component VaR (leads), incremental VaR (Compute, on request), sensitivity at stake (needs sensitivities) | the engines; `POST …/at-stake/{kind}/{id}/incremental` | Compute | not built |
+| K7 | Two sources by pillar | both sources, the difference, the tolerance and the state per pillar; *the item takes its worst pillar* | the market-data contracts with `SOURCE`; the tolerance table | — | not built |
+| K8 | Record actions | Accept as correct…, Corrected: link the batch…, Proxied… | `market-data-quality` acknowledgements | each opens a form with a reason | not built (ML7) |
+| K9 | Impact view (option B) | every flagged item's component VaR at stake to scale, signed; the usage matrix by desk | the same | click a cell: Risk at that desk | not built |
+| K10 | Checks view (option C) | a tab per check; the Jumps tab: every pillar's move in σ against 4σ and 6σ, those over, spike and revert | the same | — | not built |
+| K11 | Phone | the four tiles (must), top five exceptions (glance), evidence and Used by (more), acknowledging (desk) | the same API, compact | tap an exception | not built |
+| K12 | Used by on item pages | the Used by panel on `CRV`, `FXV`, `CDS` … pages, opened by `<command> <id> USED` | the usage API | — | not built |
 
 ---
 

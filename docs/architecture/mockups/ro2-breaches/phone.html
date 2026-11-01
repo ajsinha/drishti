@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (ro2-breaches/phone.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/lenses/OVERSIGHT_LENS.md (section 11.2).
+  The product name in the bar comes from configuration ({{ PRODUCT }} in the templates); the mock-up shows the default.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Breaches and escalation: the phone (390 px)</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a; --violet:#b48cff;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --paper:#fbfaf7; --paper-ink:#1d2433; --paper-line:#d9d4c8; --paper-mut:#5c6578;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323; --violet:#6a3fc0;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px;color:var(--violet)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;display:inline-block}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.ok{border-color:var(--ok);color:var(--ok)} .btn.no{border-color:var(--bad);color:var(--bad)}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line)}
+.tabs span{font-size:12.5px;padding:6px 12px;color:var(--muted);border:1px solid transparent;border-bottom:none;border-radius:6px 6px 0 0}
+.tabs span.on{color:var(--ink);background:var(--panel);border-color:var(--line);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+td.w{white-space:normal}
+tr.sel td{background:var(--hl)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.use{display:inline-block;width:70px;height:7px;border-radius:4px;background:var(--panel2);vertical-align:middle;position:relative;overflow:hidden;margin-right:6px}
+.use i{position:absolute;left:0;top:0;bottom:0;background:var(--ok)} .use i.a{background:var(--warn)} .use i.r{background:var(--bad)}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:12px;align-items:start}
+.col{display:flex;flex-direction:column;gap:12px;min-width:0}
+.thread div{border-left:2px solid var(--line);padding:2px 0 6px 10px;font-size:12.5px;line-height:1.5}
+.thread b{font-weight:600} .thread span{color:var(--muted);font-size:11.5px}
+.chain{display:flex;gap:4px;align-items:center;flex-wrap:wrap;font-size:12px}
+.chain span{padding:3px 8px;border:1px solid var(--line);border-radius:12px;color:var(--muted)}
+.chain span.done{border-color:var(--ok);color:var(--ok)} .chain span.now{border-color:var(--amber);color:var(--amber);font-weight:600}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.phone{width:390px;margin:0 auto;padding:10px;display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);border-radius:22px;background:var(--bg)}
+.sec{font-size:11.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin:4px 0 -4px}
+.tier{font-size:10px;border:1px dashed var(--line);border-radius:3px;padding:0 4px;color:var(--muted);font-family:var(--mono);margin-left:6px;font-weight:400;letter-spacing:0;text-transform:none}
+.more{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 2px;border-bottom:1px dashed var(--line2)}
+.more span:last-child{color:var(--muted)}
+.big{display:block;text-align:center;padding:9px 0;font-size:13px}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Breaches and escalation: the phone (390 px)<span class="alt">phone variant</span></h1><p>Status and breaches are <b>must</b> (MOBILE_DISPLAY section 3); the decision waiting for this person is <b>glance</b> with full-width buttons, as on the CRO phone; the chart, why it moved and the thread are <b>more</b>; the limits table and timeline are <b>desk</b>. Same figures as A.</p></section>
+
+<div class="phone"><div class="bar" style="padding:6px 8px"><span class="brand">DRISHTI</span><div class="cmd" style="flex:1 1 120px;height:30px">BRCH</div></div><div class="sec">Open breaches <span class="tier">must</span></div><div class="card" style="padding:4px 10px"><div style="padding:6px 0;border-bottom:1px dashed var(--line2)"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">LL:LL-0001</b><b class="mono bad">108.4%</b></div><div class="note">BR-2026-0129 · day 7 · <span class="pill r">ESCALATED</span> · TLI-0419 decision</div></div><div style="padding:6px 0;border-bottom:1px dashed var(--line2)"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">BOOK-COMM-1 (LEGAL)</b><b class="mono bad">105.2%</b></div><div class="note">BR-2026-0141 · day 2 · <span class="pill a">EXPLAINED</span> · review by 10-01</div></div><div style="padding:6px 0;border-bottom:1px dashed var(--line2)"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">LL:LL-0009</b><b class="mono bad">104.0%</b></div><div class="note">BR-2026-0144 · day 0 · <span class="pill r">OPEN</span> · explain by 10-01 12:00</div></div></div><div class="sec">Waiting for you <span class="tier">glance</span></div><div class="card" style="padding:8px 10px"><div style="display:flex;justify-content:space-between"><b style="font-size:13px">TLI-0419 · LL:LL-0001</b><span class="mono">10.0m → 12.0m</span></div><div class="note">to 2026-10-31 · covers BR-2026-0129 · market risk recommends a 11.5m cap</div><div style="display:flex;gap:6px;margin-top:6px"><span class="btn ok big" style="flex:1">Approve</span><span class="btn big" style="flex:1">With conditions</span><span class="btn no big" style="flex:1">Reject</span></div><div class="note" style="margin-top:6px">A comment sheet opens on each button; four eyes: never your own request.</div></div><div class="sec">Near limits <span class="tier">glance</span></div><div class="card" style="padding:2px 10px"><div class="more"><span>BOOK-RATES-2 (LEGAL)</span><span class="warn mono">93.6%</span></div><div class="more"><span>DESK-STRUCT (LEGAL)</span><span class="warn mono">90.8%</span></div><div class="more"><span>LE-NY (LEGAL)</span><span class="warn mono">80.1%</span></div></div><div class="sec">More on this page <span class="tier">more</span></div><div class="card" style="padding:2px 10px"><div class="more"><span>BR-2026-0129: use over 20 days</span><span>›</span></div><div class="more"><span>Why it moved since detection</span><span>›</span></div><div class="more"><span>Thread</span><span>3 comments ›</span></div><div class="more"><span>Closed and withdrawn this week</span><span>2 ›</span></div></div><div class="sec">Open on desktop <span class="tier">desk</span></div><div class="card note" style="padding:8px 10px">The limits table and the breach timeline. <a href="#">Open on desktop ›</a></div></div>
+<footer>Mock-up. Real demo figures (2026-09-30, the var-limit test data and the VaRs the guides quote): BANK 112,041,646 of 150m (74.7%); BOOK-RATES-2 30,872,370 of 33.0m (93.6%); DESK-STRUCT 9,987,431 of 11.0m (90.8%); LE-NY 144,262,258 of 180.0m (80.1%); DESK-EQD 77.9%. Every demo VaR limit is 1-day 99%. The breaches, their VaRs, dates, people, comments and TLI-0419 are illustrative: the demo holds no breach record yet. Design, not built.</footer>
+</div>
+</body>
+</html>
