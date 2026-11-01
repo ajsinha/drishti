@@ -19,6 +19,7 @@ offers."""
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import quote
 
 import yaml
 
@@ -64,7 +65,42 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return edition.admin_page_shown(value)
     if kind == "pack":
         return value in {p.get("name") for p in (ctx.get("pack_switcher") or []) if p.get("active", True)}
+    if kind == "cmd":
+        return edition.typed_shown(value)
+    if kind == "route":
+        return _has_route(request, value)
     return True
+
+
+def _has_route(request, path: str) -> bool:
+    """Whether the server answers a page at ``path`` (a menu item for a page this build does not hold is not drawn)."""
+    paths = getattr(request.app.state, "menu_route_paths", None)
+    if paths is None:
+        paths = {str(getattr(r, "path", "") or "") for r in request.app.routes}
+        request.app.state.menu_route_paths = paths
+    return path in paths
+
+
+def _href(it: dict) -> str:
+    """An item's link: its ``href``; else its ``cmd`` run as typed (``/go?q=VAR BANK <GO>``); else its ``fill`` put in the command line for
+    the person to finish (``/t?cmd=EXP CPTY``, the top bar's script fills the line in place)."""
+    if it.get("href"):
+        return str(it["href"])
+    if it.get("cmd"):
+        return "/go?q=" + quote(f"{it['cmd']} <GO>")
+    if it.get("fill"):
+        return "/t?cmd=" + quote(str(it["fill"]))
+    return "#"
+
+
+def _menu_order(edition: Edition, menus: list) -> list:
+    """The top menus in the order drawn: an edition's (or a lens's) ``menus.top`` names them by id, in order, and a menu it does not name is
+    not drawn; without one, every menu of the file in its order except the subject menus (``subject: true``), which only a ``top`` draws."""
+    top = edition.menu("top")
+    if top is None:
+        return [m for m in menus if not m.get("subject")]
+    by_id = {str(m.get("id") or ""): m for m in menus}
+    return [by_id[i] for i in top if i in by_id]
 
 
 def _text(s, fill: dict) -> str:
@@ -101,12 +137,13 @@ def _lens_desc(lens) -> str:
 
 
 def top_bar(request, ctx: dict) -> list:
-    """The menus as the template draws them: ``[(label, icon, [(column title, [(href, icon, label, desc, match)])])]``."""
+    """The menus as the template draws them: ``[(label, icon, [(column title, [(href, icon, label, desc, match, cmd)])])]``; ``cmd`` is the
+    command shown beside an item's label (its ``cmd`` or ``fill``), blank for an item without one."""
     edition = _edition(request)
     g = request.app.state.templates.env.globals
     fill = {"product": ctx.get("PRODUCT") or g.get("PRODUCT", ""), "tutorials": g.get("TUTORIALS_WORD", "")}
     out = []
-    for menu in _spec(_console_dir(request)).get("menus") or []:
+    for menu in _menu_order(edition, _spec(_console_dir(request)).get("menus") or []):
         mid = str(menu.get("id") or "")
         columns = []
         for col in menu.get("columns") or []:
@@ -116,12 +153,13 @@ def top_bar(request, ctx: dict) -> list:
                     continue
                 if not edition.menu_shown(mid, str(it.get("id") or "")):
                     continue
-                items.append((it.get("href"), it.get("icon"), _text(it.get("label"), fill), _text(it.get("desc"), fill), it.get("match")))
+                items.append((_href(it), it.get("icon"), _text(it.get("label"), fill), _text(it.get("desc"), fill), it.get("match"),
+                              str(it.get("cmd") or it.get("fill") or "")))
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
                 for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)
                     items.append((link["href"], "box-arrow-left" if link["leave"] else "eye", link["label"],
                                   "Back to the full product" if link["leave"] else
-                                  _lens_desc(request.app.state.editions.lenses.get(link["name"])), None))
+                                  _lens_desc(request.app.state.editions.lenses.get(link["name"])), None, ""))
             if items:
                 columns.append((_text(col.get("title"), fill), items))
         if columns:

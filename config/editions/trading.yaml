@@ -67,6 +67,7 @@ bi:                                      # the trading and VaR datasets and mode
   models: [trading-risk, trading-cashflows, trades-basic, live-trading, market-risk-var]
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  top: [views, blotter, positions, risk, counterparties, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
   views: [terminal, search, functions, var, exposure, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]

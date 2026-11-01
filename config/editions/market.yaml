@@ -65,6 +65,7 @@ bi:                                      # the market-data pack ships no BI data
   models: [market-data]                  # VaR or exposure reports; an empty list would offer every BI item of the product
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  top: [views, curves, volatility, fx, credit, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
   views: [terminal, search, forms, functions, datamap, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]

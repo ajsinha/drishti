@@ -67,6 +67,7 @@ bi:                                      # BI datasets, models, reports and boar
   models: [market-risk-var, counterparty-exposure, live-exposure, trading-risk]
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
+  top: [views, var, exposure, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
   # the Views menu's items by id, in order (drishti-console/config/menus.yaml)
   views: [terminal, search, functions, datamap, var, exposure, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]  # the Help menu's items by id
