@@ -975,10 +975,11 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 - pattern: field LIMIT_ID; pattern ^VL-
 - link: field NODE_ID; kind risk-hierarchy
 - enum: field CURRENCY; values `USD`
+- enum: field HORIZON; values `1D`, `10D`
 
 **Notes**
 
-- JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
+- JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}
 
 ## VRES: VaR of a scope (computed) (`var-result`)
 

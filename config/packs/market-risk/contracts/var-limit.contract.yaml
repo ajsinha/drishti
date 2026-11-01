@@ -137,6 +137,11 @@ validation:
   field: CURRENCY
   values:
   - USD
+- rule: enum
+  field: HORIZON
+  values:
+  - 1D
+  - 10D
 notes:
-- 'JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}'
+- 'JSON Lines, one row per line (UTF-8). Example line: {"LIMIT_ID":"VL-LL~LL-0003","HIERARCHY":"LL","NODE_ID":"LL~LL-0003","LIMIT_VAR":4100000,"CURRENCY":"USD","HORIZON":"1D","CONFIDENCE":0.99,"BUSINESS_DATE":"2026-09-30","VALID_FROM":"2026-01-02","VALID_TO":null}'
 review: []
