@@ -32,6 +32,10 @@ import java.util.function.Function;
  */
 public final class SingleFlight<K> {
 
+    /** No call in flight. */
+    public SingleFlight() {
+    }
+
     private final ConcurrentHashMap<K, ReentrantLock> locks = new ConcurrentHashMap<>();
 
     /**

@@ -17,6 +17,69 @@
 
 ## Unreleased (2.9.7)
 
+- **The 2.9.8 screen mock-ups, ready for the build** ([IMPLEMENTATION_PLAN.md, 2.9.8 mock-ups](docs/architecture/IMPLEMENTATION_PLAN.md#298-mock-ups-the-screens-to-build)).
+  Documentation and mock-ups only. Three options each, self-contained HTML (system fonts, nothing from a CDN) with headless-Chrome
+  pictures, dark and light: the VaR Playground and a picture of each of its seven workbook tabs
+  ([VAR_PLAYGROUND.md section 16](docs/architecture/VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)); backtesting, the review and
+  sign-off of period statistics, the report and the pilot pack, and the stress window selection tool
+  ([REGULATORY_VAR_REPORTING.md section 8.3](docs/architecture/REGULATORY_VAR_REPORTING.md#83-mock-ups-the-screens-to-build)); the lens
+  menus, LX1 (section 11 of each built lens's document); the Data view (`DATA`, with its checklist in the plan). Option A of each is
+  recommended (chosen on the recommendation, product owner to review), and each has a build checklist: panel, contents, data,
+  interaction, status.
+- **The one comprehensive VaR document (Drill B, B8 / row 2d)** ([VAR_GUIDE.md](docs/guides/VAR_GUIDE.md)). Documentation only. The
+  guide now opens with **compute-first** (B5's statement): one table of input (scenario PVs preferred, `pnl-vector` the accepted
+  alternative, in the lake), computed (each trade's USD P&L by `P&L_USD(s) = PV(s)·FX_c(s) − PV(base)·FX_c(base)`, `ScenarioFx.pnlFromPv`,
+  the derived positions and every total, in memory and the hot file, **never written to Delta**), cache (the hot files, answers and
+  views: disposable, rebuilt from the lake) and the official record (captures in the content store and the append-only
+  `risk-results/var-official` table). New: the whole chain worked step by step with a hand-made EUR trade and the demo's figures (18.7);
+  stressed VaR as decided for B4, the stress window selection tool, period statistics and regulatory backtesting, each marked design, not
+  built (18.8 to 18.11); sharding's bit-equality and how to operate it folded into section 28 from VAR_SHARDING; section 31 as one table of
+  what is designed but not built (stressed VaR, the VaR Playground in 2.9.8, the stress window tool, full 10-day revaluation, VaR by risk
+  type and more); Part IV: the VaR-related regulatory reports of Canada and the US against what Drishti produces (32), the editions and
+  lenses that show VaR (33), the configuration keys by purpose with CONFIGURATION.md (34) and the measured 2.9.7 baseline (35). Stale
+  statements corrected: 10-day VaR is built (section 17, the design record, REGULATORY_VAR_REPORTING section 6), the official currencies'
+  default is USD only, VAR_SHARDING is released.
+- **Cluster hardening: readiness that means ready, the drain on stop, the rolling upgrade runner (Drill B, B3; CD1 to CD3)**
+  ([CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1](docs/architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades), OPERATIONS
+  sections 7.2, 15 and 18.9 to 18.10). **CD1:** `/actuator/health/readiness` is its own health group and is `DOWN` while the node joins
+  Drishti\*net, while an enabled engine's (VaR, exposure) newest business date is not open (the check opens it; a date that cannot open is
+  not waited for) or a VaR shard it owns of a date in use is not ready, and `OUT_OF_SERVICE` while drained; `/actuator/health` and
+  liveness never wait for it. Each gate is a setting (`drishti.node.readiness.enabled`, `.joining`, `.engines`, `.shards`). The container
+  health checks (Docker `HEALTHCHECK`, the ECS node task) now ask liveness, so a node opening its dates or drained is never restarted.
+  **CD2:** one drain before a stop: `POST /api/v1/admin/node/drain` (`GET /api/v1/admin/node` for the state; administrators; a personal API
+  token needs the new `node:drain` scope) drains Drishti\*net's forwarding and the VaR shards at once and reports `safeToStop` with each
+  part's state (`drishti.node.drain.settle-seconds`, 5); Admin → Net shows this node's readiness, what it waits for, and **Drain for a
+  stop** / **Undrain** (also on a single server). The stop hook `deploy/bin/drishti-node.sh` (`drain`, `undrain`, `status`, `wait-ready`,
+  `run`; PowerShell twin `deploy/bin/drishti-node.ps1`) is the entry of both server images and the `ExecStop` of the new systemd unit
+  template `deploy/systemd/drishti-server.service`; the ECS node task's `stopTimeout` is 120 s (Fargate's most) with the token from
+  Secrets Manager (`SECRET_DRAIN`, `DRISHTI_DRAIN_TOKEN`), and `compose.yaml` gives the server `stop_grace_period: 120s`. **CD3:**
+  `tools/rolling-upgrade.sh` (`tools/rolling.py`; Windows `tools/windows/rolling-upgrade.ps1`; inventory `deploy/rolling.example.yaml`)
+  upgrades a cluster one node at a time, consoles, BI and data-serving, coordinators, then owners zone by zone: drain, wait until safe to
+  stop, stop, upgrade, start, wait until ready, on VMs (shell commands) or ECS (a service update per node), with `--dry-run`, `--from` and
+  `--only`; any failure stops the run. Tests: `NodeReadinessTest`, `NodeApiTest`, `VarShardSingleNodeTest` and `VarShardClusterTest` (a
+  drained owner hands its shards over, every answer unchanged, and is safe to stop), `tools/test_rolling.py`, `test_admin_net.py`.
+- **The 2.9.7 baseline benchmark with profiling (Drill B, B1)** ([BENCHMARK_2_9_7.md](docs/architecture/BENCHMARK_2_9_7.md), [`tools/bench/results/2.9.7-baseline.jsonl`](tools/bench/results/2.9.7-baseline.jsonl)): 200,000 positions and 1,500 portfolios, one server against a three-node sharded cluster, 50, 100 and 200 users of the VaR and trades mixes, Java 21 and 25, G1 and generational ZGC, JFR, heap histograms, NMT and GC logs, the Python path against the Java loader (68 s against 7.7 s; the Python path needs `DRISHTI_LAKE_HEAP` above 1 GB). No product code changed. The profile finds the server CPU-bound at about 30 requests a second by the parts path (`VarViews.positionSize`: about 60% of CPU, 93% of allocation) and puts it before D1; the first open is single-threaded and read-bound (D8); a sharding bug is reported (a lake without `scenario-pv` is never cut). Harness: `tools/bench/vargen.py`, `var_bench.py` and `jfr_summary.py` (new), `users.py --var-share` and several servers, `report.py` skips other benchmarks' lines, `VarTierBenchmark` takes its histogram in process (an external `jcmd` hung on Java 25); TOOLS.md lists them.
+- **Plan: themed releases 2.9.8 to 2.9.14 and release rules; decisions of 2026-10-31 recorded; VaR Playground designed**
+  ([IMPLEMENTATION_PLAN.md](docs/architecture/IMPLEMENTATION_PLAN.md), [VAR_PLAYGROUND.md](docs/architecture/VAR_PLAYGROUND.md)). The
+  release rules (one theme per release, at most two large items, Drill A for features and Drill B for hardening, docs and screenshots
+  with a benchmark when performance changes, design one release ahead, scope frozen at the start, a quick pre-check before every full
+  drill, no builders during a drill or benchmark, never a big documentation restructure with features, every metric with its playground,
+  decks enhanced and docs shipped with every release). The themed releases: 2.9.8 market-risk regulatory foundation and debugging
+  (planned: regulatory VaR phase 1, the playground frame and the VaR Playground, the stress-window tool, the lens menus); 2.9.9 oversight
+  and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA
+  family; 2.9.14 advanced and executive (proposed); every candidate row (cluster, oversight, cubes, CRO, CIO, lenses) placed or marked
+  unscheduled, and no later release name remains. 2.9.7 Drill B listed exactly (benchmark with profiling, the diet, cluster hardening
+  CD1 to CD3, stressed VaR, compute-first, the .zip, .gz and .tar.gz loaders, soak and hardening, 2d, 2e, 2g, 2f, the after-benchmark,
+  the decks, the release); what Drill A delivered marked built. **Decided (product owner, 2026-10-31)** and written into each document:
+  CLUSTER_DEPLOYMENT PO-C1 to PO-C10; OVERSIGHT_LENS's thirteen decisions; the Risk, Trading, Market and World lens decisions (stress
+  stays hidden in Risk); COMPUTED_ATTRIBUTES section 10's defaults with one live rule (status and maturity) for every figure;
+  MOBILE_DISPLAY section 11 (four tiers, charts glance, caps, pins later, tablets as proposed; the build in 2.9.9);
+  REGULATORY_VAR_REPORTING 8.2.9 (the demo stress window 2008-07-01 to 2009-06-30, generated demo P&L, fiscal year end October 31,
+  xlsx, csv and PDF with XBRL later); the cube documents' layout and release decisions. The VaR Playground's design: up to 500 positions
+  from the VaR screen's scope with a Rest of scope column, a version-controlled template, the tabs Main, Config, Data, FX, PnL, Explain
+  and Provenance with the engine's formulas (`ScenarioFx.pnlFromPv`), check cells to the cent, one file for Excel, LibreOffice and
+  Google Sheets, and the drill tests. `config/runs/runs.yaml`'s comment no longer names an old release (CONFIGURATION regenerated).
+- **F9's raw JSON drawer: Tree / Raw and Copy** (product owner, 2026-10-31): a switch shows the record as plain JSON text beside the foldable tree, and a Copy button puts the JSON on the clipboard (on plain http too); [USER_GUIDE.md › F9 · Raw JSON](docs/guides/USER_GUIDE.md#f9--raw-json).
 - **The CIO lens, designed (not built)** ([CIO_LENS.md](docs/lenses/CIO_LENS.md)): the Chief Information Officer's read-only executive
   view of the platform and the risk data behind the numbers: the feeds against their service levels with a 7am-ready forecast, data
   quality per dataset with owners and a history, a BCBS 239 scorecard (eleven principles, each with its evidence, principle by principle

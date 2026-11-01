@@ -21,6 +21,7 @@ package com.ash.drishti.api.compute;
  */
 public class EngineException extends Exception {
 
+    /** A failed computation, saying why. */
     public EngineException(String message) {
         super(message);
     }

@@ -34,6 +34,7 @@ public interface SqlTarget {
     /** Work on one connection of the source's own pool. */
     @FunctionalInterface
     interface Work<T> {
+        /** The work, on {@code connection} (returned to the pool afterwards). */
         T run(Connection connection) throws Exception;
     }
 

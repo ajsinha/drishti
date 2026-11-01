@@ -25,6 +25,7 @@ import java.util.function.Consumer;
  */
 public interface SourcePlugin extends AutoCloseable {
 
+    /** What the plugin is: its name, version and the kinds it serves. */
     PluginManifest manifest();
 
     /** Called once before any other method. */
@@ -345,11 +346,11 @@ public interface SourcePlugin extends AutoCloseable {
      */
     record FieldNote(String means, String formula, String origin) {}
 
+    /** What {@code field} of {@code kind} means, when the source can say (a computed field's formula); empty by default. */
     default Optional<FieldNote> describeField(String kind, String field) {
         return Optional.empty();
     }
 
-    /** Human-readable health; {@code "UP"} when healthy. */
     /**
      * What the source holds for a kind, newest business date first: the date and how many entities it has (at most
      * {@code maxDates} dates). Empty when the source cannot say. Used by Admin → Packs → Data source → Test connection;
@@ -359,10 +360,12 @@ public interface SourcePlugin extends AutoCloseable {
         return java.util.Map.of();
     }
 
+    /** Human-readable health; {@code "UP"} when healthy (shown on Admin and in Health). */
     default String health() {
         return "UP";
     }
 
+    /** Releases the source's connections and threads; nothing by default. */
     @Override
     default void close() {}
 

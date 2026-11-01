@@ -29,7 +29,7 @@ FIS, SunGard and Adaptiv in capability and in visualisation.
 the `position-sensitivity` contract this document adopts), [RISK_LENS.md](RISK_LENS.md) and [TRADING_LENS.md](TRADING_LENS.md) (the
 lenses the cube serves), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, never store; the modelling defaults
 of its section 10, confirmed by the product owner on 2026-10-31), [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md)
-(2.9.8 and 2.9.9), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md) (sharding), and the contracts [FRTB.md](../contracts/FRTB.md),
+(2.9.8 and 2.9.10), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md) (sharding), and the contracts [FRTB.md](../contracts/FRTB.md),
 [STR.md](../contracts/STR.md) and [PNL.md](../contracts/PNL.md).
 
 ## Contents
@@ -98,7 +98,7 @@ maps, ladders, a time-travel slider, provenance on every cell) that a vendor cub
 | **Market risk manager near the desks** | morning VaR by desk × risk class, the tail scenarios, sensitivity ladders against limits, what changed | Drishti Risk ([RISK_LENS.md](RISK_LENS.md)) |
 | **Second-line oversight** | bank-wide pivots, limit utilisation of every kind, why VaR moved, data trust | the proposed Oversight lens ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md)) |
 | **Desk head and trader** | my books by product and currency, my VaR contribution, "what does this trade do" | Drishti Trading ([TRADING_LENS.md](TRADING_LENS.md)) |
-| **Regulatory capital team** | FRTB SA by risk class and correlation scenario, IMA ES by liquidity horizon, PLA and backtesting by desk | none today; 2.9.8 and 2.9.9 build the reporting chain |
+| **Regulatory capital team** | FRTB SA by risk class and correlation scenario, IMA ES by liquidity horizon, PLA and backtesting by desk | none today; 2.9.8 and 2.9.10 build the reporting chain, 2.9.12 FRTB SA, 2.9.14 IMA |
 | **Product control** | hypothetical and actual P&L against the risk-theoretical P&L, restatements, corrections | none today |
 | **Model validation** | the scenario set, proxies, NMRF, PLA statistics, the provenance of every number | none today |
 
@@ -425,7 +425,7 @@ see only in aggregate shows the aggregate and says drill is not allowed; **stale
 |---|---|---|---|---|---|---|---|
 | C1 | Grid chip | **Grid: BANK-IR-TENOR** beside the lens controls | `sensitivity-buckets.yaml` ([§7.10](#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) | click: choose FRTB-GIRR, SIMM or the bank's grids | POC (the bank's grid); FRTB grids with MC5 | desk | [ ] |
 | C2 | Sensitivity ladder | rows USD, EUR, GBP, CAD; columns 0-2Y, 2-5Y, 5-10Y, 10Y+; each cell "<DV01>k · <use>%" with a 100 × 8 px centre-zero bar (long right, short left), white ticks at both limits, green under the warning level, amber from it, red over; a **near** badge (amber) at the warning level, **breach** (red) over 100% | `GET /api/v1/cube/mr/sensitivities?grid=…` from `position-sensitivity` ([§7.9](#79-d8-position-sensitivity-sens-new)); limits from `risk-limit` ([§7.7](#77-d6-risk-limit-new-one-limit-table-for-every-measure)) | click a bucket: its positions; **brush** across buckets to sum them ("USD 2–10Y: −1,160k"); switch grid | POC (synthetic DV01 and DV01 limits) | must (the scope's worst three buckets), more (the ladder) | [ ] |
-| C3 | What-if side by side | columns Scope, Before, After, Incremental (decrease green, increase red); rows the visible desks and BANK; a cell whose change is material outlined blue; the tray under it listing each hypothetical trade with its method (copy, price) and its standalone, incremental and component VaR | `POST /api/v1/var/what-if` per visible scope (built); pricing of new terms later ([§7.16](#716-d15-predeal-request-and-predeal-result-new)) | `W` or **+ What-if trade**: copy and scale a booked trade; remove one; "show only changed" | POC (copy method); 3.0 (QLRisk pricing, delta-gamma) | desk | [ ] |
+| C3 | What-if side by side | columns Scope, Before, After, Incremental (decrease green, increase red); rows the visible desks and BANK; a cell whose change is material outlined blue; the tray under it listing each hypothetical trade with its method (copy, price) and its standalone, incremental and component VaR | `POST /api/v1/var/what-if` per visible scope (built); pricing of new terms later ([§7.16](#716-d15-predeal-request-and-predeal-result-new)) | `W` or **+ What-if trade**: copy and scale a booked trade; remove one; "show only changed" | POC (copy method); 2.9.14 (QLRisk pricing, delta-gamma) | desk | [ ] |
 | C4 | Explain the move (intraday) | "DESK:RATES · 09-30 06:00 → 11:02": the morning VaR, one line per intraday batch with its source (Kafka, files) and trade count, the current VaR | `GET /api/v1/cube/mr/explain?from=<batch>&to=<batch>` | click a batch: highlight its trades | POC | more | [ ] |
 | C5 | Time-travel slider | as A4 | as A4 | as A4 | POC | more | [ ] |
 
@@ -439,38 +439,38 @@ Query later), the embed of a saved view, the phone layout of section 6.5, the SB
 ### Data needed: the complete list
 
 **Every dataset the MR Cube reads, in one table.** A row is needed from the phase in its *Phase* column onward. POC is the proof of
-concept of [section 12](#12-lens-design-and-proof-of-concept-poc); 2.9.8, 2.9.9 and 3.0 are the **proposed** releases of
-[section 13](#13-phases-proposed). *State*: **existing** (a contract and demo data today), **extended** (existing, with optional fields
+concept of [section 12](#12-lens-design-and-proof-of-concept-poc); 2.9.8 (planned), 2.9.12 and 2.9.14 (proposed) are the releases of
+[section 13](#13-phases-proposed), from the plan's themed releases (product owner, 2026-10-31); *unscheduled* rows wait for the product owner. *State*: **existing** (a contract and demo data today), **extended** (existing, with optional fields
 added), **new**. *Demo or POC* says how the demo gets the data: an existing demo dataset; a **new generator** (a script under
 `tools/packgen/`, writing JSON Lines to `data/testdata/<domain>/<kind>/*.jsonl.gz`, loaded by `tools/build_demo_lakes.py` into Delta, read
 by the Delta connector, tested with the demo switched off); shipped **configuration** from a public text; or **bank only**.
 
 | # | Dataset | What it is; needed by | Phase | Typical source in a bank | Grain, frequency | State | Demo or POC gets it from | §7 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Trades (`trade`) | booking attributes as dimensions, drill to the trade; `FRTB_DESK`, `RRAO_CLASS` later | POC | Endur, Murex, Calypso | trade × date; daily, intraday amendments | existing; extended 2.9.9 | existing demo (`tools/packgen/trades/make_trades.py`, `data/testdata/trades`) | [7.2](#72-d1-trade-trd-existing-read-as-dimensions) |
+| 1 | Trades (`trade`) | booking attributes as dimensions, drill to the trade; `FRTB_DESK`, `RRAO_CLASS` later | POC | Endur, Murex, Calypso | trade × date; daily, intraday amendments | existing; extended 2.9.12 | existing demo (`tools/packgen/trades/make_trades.py`, `data/testdata/trades`) | [7.2](#72-d1-trade-trd-existing-read-as-dimensions) |
 | 2 | Positions (`position`) | the position grain, market value for marginal VaR | POC | derived by Drishti | position × date, at load | existing | derived from the vectors | [7.3](#73-d2-position-pos-existing-derived-by-drishti) |
 | 3 | Scenario P&L vectors (`pnl-vector`, `scenario-pv`, `fx-scenario`) | VaR, ES, components, histogram, explain, time travel | POC | the risk engine of the booking system or the bank's pricing grid | trade or position × date × set; daily, intraday files or Kafka | existing; extended (`RISK_CLASS_VECTORS`) 2.9.9 | existing demo (`tools/packgen/var/make_var_data.py`); the POC adds per-class vectors from the same factor model | [7.4](#74-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
-| 4 | Scenario sets (`scenario-set`), the stress set included | the scenario days; the Normal / Stressed lens | POC (normal); 2.9.8 (stressed, from 2.9.7 row 2c) | the risk engine | set × date; daily, the stress set weekly | existing; extended (`PURPOSE`) | existing demo; the stress set from 2.9.7 row 2c's generator | [7.5](#75-d4-scenario-set-sset-existing-extended) |
+| 4 | Scenario sets (`scenario-set`), the stress set included | the scenario days; the Normal / Stressed lens | POC (normal); 2.9.12 (stressed, from 2.9.7 row 2c) | the risk engine | set × date; daily, the stress set weekly | existing; extended (`PURPOSE`) | existing demo; the stress set from 2.9.7 row 2c's generator | [7.5](#75-d4-scenario-set-sset-existing-extended) |
 | 5 | Hierarchies (`risk-hierarchy`) and VaR limits (`var-limit`) | rows of the pivot (MGMT, LEGAL, limit letters), limit bars | POC | the bank's hierarchy and limit systems | node × date; daily | existing | existing demo | [7.6](#76-d5-risk-hierarchy-and-var-limit-existing) |
-| 6 | Limits of every measure (`risk-limit`) | ladder limits (DV01, CS01, vega), stress, ES and capital limits | POC (DV01 only); 2.9.8 (all) | the limit system | limit × date; daily, on change | new | **new generator** `tools/packgen/var/make_risk_limits.py` → `data/testdata/market-risk/risk-limit/` | [7.7](#77-d6-risk-limit-new-one-limit-table-for-every-measure) |
-| 7 | Market data: rate, credit, inflation, FX forward, equity and commodity curves; vol surfaces and cubes | factor moves for explain's overlay; QLRisk pricing | 2.9.9 (explain overlay); 3.0 (pricing) | the market-data system (Bloomberg, Refinitiv, Markit through an in-house builder) | curve × date; end of day | existing | existing demo (`data/testdata/market-data/`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
+| 6 | Limits of every measure (`risk-limit`) | ladder limits (DV01, CS01, vega), stress, ES and capital limits | POC (DV01 only); 2.9.12 (all) | the limit system | limit × date; daily, on change | new | **new generator** `tools/packgen/var/make_risk_limits.py` → `data/testdata/market-risk/risk-limit/` | [7.7](#77-d6-risk-limit-new-one-limit-table-for-every-measure) |
+| 7 | Market data: rate, credit, inflation, FX forward, equity and commodity curves; vol surfaces and cubes | factor moves for explain's overlay; QLRisk pricing | 2.9.12 (explain overlay); 2.9.14 (pricing) | the market-data system (Bloomberg, Refinitiv, Markit through an in-house builder) | curve × date; end of day | existing | existing demo (`data/testdata/market-data/`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
 | 8 | FX rates (`fx-spot`, `fx-scenario`) | the reporting currency; sensitivities summed in USD | POC | market data; the risk engine for scenario FX | currency × date | existing | existing demo | [7.4](#74-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
-| 9 | Position sensitivities (`position-sensitivity`) | ladders, heat map, SBM, explain overlay, SIMM (CCR cube) | POC (synthetic); 2.9.8 | the same engine and run as the scenario PVs | position × date × batch; daily, intraday | new | **new generator** `tools/packgen/var/sensitivities.py`, from `factors.py`'s loadings so the first-order P&L matches the vectors → `data/testdata/market-risk/position-sensitivity/` | [7.9](#79-d8-position-sensitivity-sens-new) |
-| 10 | Factor dictionary (`risk-factor`) and bucket grids (`sensitivity-buckets.yaml`) | factor parts and bucket grids for ladders and SBM; liquidity horizons and modellability for IMA | POC (names, grids); 3.0 (IMA attributes) | the FRTB engine or the market-data system | factor, slowly changing | new | **new generator** `tools/packgen/var/risk_factors.py` (the demo's forty-odd factors and their curve points) → `data/testdata/market-risk/risk-factor/`; the grids as pack configuration | [7.10](#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new) |
-| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | 2.9.9 | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | new | **configuration** shipped from the public text (`config/packs/market-risk/frtb/*.yaml`, BCBS first) | [8.3](#83-frtb-standardised-approach-mc5-to-mc7) |
-| 12 | Issuers and ratings (`issuer`, `credit-curve`, the counterparty's `RATING`) | heat map by issuer, DRC credit quality, concentration | 2.9.9 | the security master and the credit system | issuer × date | existing | existing demo (`data/testdata/core/issuer`, `data/testdata/market-data/credit-curve`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
+| 9 | Position sensitivities (`position-sensitivity`) | ladders, heat map, SBM, explain overlay, SIMM (CCR cube) | POC (synthetic); 2.9.12 | the same engine and run as the scenario PVs | position × date × batch; daily, intraday | new | **new generator** `tools/packgen/var/sensitivities.py`, from `factors.py`'s loadings so the first-order P&L matches the vectors → `data/testdata/market-risk/position-sensitivity/` | [7.9](#79-d8-position-sensitivity-sens-new) |
+| 10 | Factor dictionary (`risk-factor`) and bucket grids (`sensitivity-buckets.yaml`) | factor parts and bucket grids for ladders and SBM; liquidity horizons and modellability for IMA | POC (names, grids); 2.9.14 (IMA attributes) | the FRTB engine or the market-data system | factor, slowly changing | new | **new generator** `tools/packgen/var/risk_factors.py` (the demo's forty-odd factors and their curve points) → `data/testdata/market-risk/risk-factor/`; the grids as pack configuration | [7.10](#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new) |
+| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | 2.9.12 | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | new | **configuration** shipped from the public text (`config/packs/market-risk/frtb/*.yaml`, BCBS first) | [8.3](#83-frtb-standardised-approach-mc5-to-mc7) |
+| 12 | Issuers and ratings (`issuer`, `credit-curve`, the counterparty's `RATING`) | heat map by issuer, DRC credit quality, concentration | 2.9.12 | the security master and the credit system | issuer × date | existing | existing demo (`data/testdata/core/issuer`, `data/testdata/market-data/credit-curve`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
 | 13 | Calendars (`calendar`) | business days for the time-travel slider, the 10-day windows, backtesting's 250 days | POC | the bank's calendar service | calendar, yearly | existing | existing demo (`data/testdata/core/calendar`) | — |
-| 14 | IMA P&L vectors (`ima-pnl-vector`) | ES by liquidity horizon, stressed calibration, IMCC | 3.0 | the FRTB IMA engine | position × date × subset; daily, stressed weekly | new | **new generator** `tools/packgen/var/ima_vectors.py` (the factor model with factor groups switched off per subset) | [7.11](#711-d10-ima-pnl-vector-new-pl-vectors-per-risk-class-and-liquidity-horizon) |
-| 15 | Actual, hypothetical and risk-theoretical P&L (`desk-pnl`) | backtesting, PLA, desk zones | 2.9.8 (backtesting, its row 3); 3.0 (PLA) | product control and the front office | desk (or trade) × date; T+1 | new | **new generator** `tools/packgen/var/desk_pnl.py` (hypothetical from the business date's own move, actual with noise and fees) | [7.12](#712-d11-desk-pnl-new-actual-hypothetical-and-risk-theoretical-pl) |
-| 16 | Stress scenarios and stress P&L (`stress-scenario`, `scenario-pnl`) | stress P&L per cell, the worst scenario | 2.9.9 | the stress engine | scenario × date; trade × scenario × date | existing (extended); `scenario-pnl` new | existing `stress-scenario`; **new generator** `tools/packgen/var/scenario_pnl.py` (shocks × the factor loadings) | [7.13](#713-d12-stress-scenario-extended-and-scenario-pnl-new) |
-| 17 | DRC and RRAO inputs (`default-risk`, `residual-risk`) | DRC, RRAO | 2.9.9 | the FRTB engine; the booking system's classification | trade × obligor × date | new | **new generator** `tools/packgen/var/frtb_inputs.py` (from the credit and equity trades and the issuer master) | [7.14](#714-d13-default-risk-and-residual-risk-new-frtbmd-proposals) |
-| 18 | Corrections (`cube-correction`) | data corrections inside the cube | 2.9.9 | Drishti (write-back) | correction | new (Drishti-owned) | made in the demo through write-back (the demo script seeds one) | [7.15](#715-d14-cube-correction-new-data-corrections-drishti-owned) |
-| 19 | Pre-deal requests and results | what-if per cell; pricing of new terms | POC (copy method, built); 3.0 (pricing) | Drishti, per request | request | new (Drishti-owned, computed) | made at run time | [7.16](#716-d15-predeal-request-and-predeal-result-new) |
+| 14 | IMA P&L vectors (`ima-pnl-vector`) | ES by liquidity horizon, stressed calibration, IMCC | 2.9.14 | the FRTB IMA engine | position × date × subset; daily, stressed weekly | new | **new generator** `tools/packgen/var/ima_vectors.py` (the factor model with factor groups switched off per subset) | [7.11](#711-d10-ima-pnl-vector-new-pl-vectors-per-risk-class-and-liquidity-horizon) |
+| 15 | Actual, hypothetical and risk-theoretical P&L (`desk-pnl`) | backtesting, PLA, desk zones | 2.9.8 (backtesting, its row 3); 2.9.14 (PLA) | product control and the front office | desk (or trade) × date; T+1 | new | **new generator** `tools/packgen/var/desk_pnl.py` (hypothetical from the business date's own move, actual with noise and fees) | [7.12](#712-d11-desk-pnl-new-actual-hypothetical-and-risk-theoretical-pl) |
+| 16 | Stress scenarios and stress P&L (`stress-scenario`, `scenario-pnl`) | stress P&L per cell, the worst scenario | unscheduled (the stress engine, RO9) | the stress engine | scenario × date; trade × scenario × date | existing (extended); `scenario-pnl` new | existing `stress-scenario`; **new generator** `tools/packgen/var/scenario_pnl.py` (shocks × the factor loadings) | [7.13](#713-d12-stress-scenario-extended-and-scenario-pnl-new) |
+| 17 | DRC and RRAO inputs (`default-risk`, `residual-risk`) | DRC, RRAO | 2.9.12 | the FRTB engine; the booking system's classification | trade × obligor × date | new | **new generator** `tools/packgen/var/frtb_inputs.py` (from the credit and equity trades and the issuer master) | [7.14](#714-d13-default-risk-and-residual-risk-new-frtbmd-proposals) |
+| 18 | Corrections (`cube-correction`) | data corrections inside the cube | unscheduled (MC11) | Drishti (write-back) | correction | new (Drishti-owned) | made in the demo through write-back (the demo script seeds one) | [7.15](#715-d14-cube-correction-new-data-corrections-drishti-owned) |
+| 19 | Pre-deal requests and results | what-if per cell; pricing of new terms | POC (copy method, built); 2.9.14 (pricing) | Drishti, per request | request | new (Drishti-owned, computed) | made at run time | [7.16](#716-d15-predeal-request-and-predeal-result-new) |
 | 20 | Official captures and the intraday batch list (`var-official`, the batches on the vectors) | sparklines, explain between dates, the time-travel slider | POC | Drishti (official runs); the risk engine (batches) | node × date; batch | existing | existing demo (the demo's official captures and intraday batches) | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 
-**Count by the first phase each row is needed in:** POC **12** (rows 1 to 6, 8 to 10, 13, 19, 20); proposed 2.9.8 **1** (row 15; rows 4
-and 6 widen there to stressed sets and the full limit table); proposed 2.9.9 **6** (rows 7, 11, 12, 16, 17, 18); proposed 3.0 **1** (row
-14). **New generators: 8**, all under `tools/packgen/var/`, all writing JSON Lines: `make_risk_limits.py`, `sensitivities.py`,
+**Count by the first phase each row is needed in:** POC **12** (rows 1 to 6, 8 to 10, 13, 19, 20); planned 2.9.8 **1** (row 15);
+proposed 2.9.12 **4** (rows 7, 11, 12, 17; rows 4 and 6 widen there to stressed sets and the full limit table); proposed 2.9.14 **1** (row
+14); unscheduled **2** (rows 16 and 18). **New generators: 8**, all under `tools/packgen/var/`, all writing JSON Lines: `make_risk_limits.py`, `sensitivities.py`,
 `risk_factors.py`, `ima_vectors.py`, `desk_pnl.py`, `scenario_pnl.py`, `frtb_inputs.py`, and per-class vectors added to
 `make_var_data.py`. **In production every input is the bank's**: Drishti never invents a bank's number, and the demo's synthetic data is
 labelled as such.
@@ -582,7 +582,7 @@ NaN, a failed row counted never zero, one full run per date and source, one form
 
 | New field | Type | Unit | Req. | Meaning |
 |---|---|---|---|---|
-| `RISK_CLASS_VECTORS` | record list | USD | optional | the same vector split by FRTB risk class (`RISK_CLASS`, `PNL`), when the source runs partial revaluations; enables "VaR by risk type" (2.9.9 G6) without a second table; the split need not add up to `PNL` (cross effects), the residual is reported |
+| `RISK_CLASS_VECTORS` | record list | USD | optional | the same vector split by FRTB risk class (`RISK_CLASS`, `PNL`), when the source runs partial revaluations; enables "VaR by risk type" (2.9.10 G6) without a second table; the split need not add up to `PNL` (cross effects), the residual is reported |
 | `FRTB_DESK` | id | | optional | the regulatory desk (as on the trade) |
 | `PROXY_REASON` | text | | optional | why `STATUS` is `proxied` (`NO_HISTORY`, `PROXY_CURVE`, `STALE_DATA`); counted per reason on the data-trust card |
 
@@ -1232,16 +1232,19 @@ branches would build the core twice or merge it across branches.
 
 ## 13. Phases (proposed)
 
-Every release below is a **proposal** for the product owner, not a commitment. The rows are in the plan's "Risk cubes" section.
+Releases follow the plan's themed releases (product owner, 2026-10-31): 2.9.8 market-risk regulatory foundation; 2.9.9 oversight and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA family; 2.9.14 advanced and executive. 2.9.8 is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "Risk cubes" section. The shared core (MC2) is built
+with the CCR cube in 2.9.11, so the POC's order (P1: core, MR, then CCR, one branch) becomes core and CCR in 2.9.11, then MR in 2.9.12, on
+the same branch.
 
-| Phase | Rows | Proposed release | Depends on |
+| Phase | Rows | Release | Depends on |
 |---|---|---|---|
-| 1. Sensitivities in the lake | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums) | 2.9.8 (proposed) | none; RO15's design |
-| 1. The pivot | MC2 (the cube core: pivot with non-additive totals, drill, saved views, provenance per cell, export), MC3 (ladders and heat map), MC4 (sparklines, limit bars, waterfall, histogram) | 2.9.8 (proposed) | MC1 for sensitivity measures; the VaR engine (built) |
-| 2. FRTB SA | MC5 (SBM delta, vega, curvature, three scenarios), MC6 (DRC), MC7 (RRAO) | 2.9.9 (proposed) | MC1; `default-risk`, `residual-risk` |
-| 2. Corrections, explain | MC11 (corrections), MC12 (explain the move: RO1 plus the factor overlay) | 2.9.9 (proposed) | write-back (built); RO1 |
-| 3. FRTB IMA | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones) | 3.0 (proposed) | 2.9.8's P&L feed and backtesting; 2.9.7 row 2c (stressed VaR); `ima-pnl-vector` from the bank |
-| 3. Pre-deal pricing | MC13 (QLRisk pricing and delta-gamma, shared with CC8) | 3.0 (proposed) | QLRisk's API declared stable |
+| 1. The shared core | MC2 (the cube core: pivot with non-additive totals, drill, saved views, provenance per cell, export), with the CCR cube core | 2.9.11 (proposed) | the VaR engine (built) |
+| 2. Sensitivities in the lake | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums), first in its release | 2.9.12 (proposed) | none; RO15's design |
+| 2. The MR pivot | MC3 (ladders and heat map), MC4 (sparklines, limit bars, waterfall, histogram), MC12 (explain the move: RO1 plus the factor overlay) | 2.9.12 (proposed) | MC1 for sensitivity measures; MC2; RO1 (2.9.9) |
+| 2. FRTB SA | MC5 (SBM delta, vega, curvature, three scenarios), MC6 (DRC), MC7 (RRAO), each with its playground | 2.9.12 (proposed) | MC1; `default-risk`, `residual-risk` |
+| 3. FRTB IMA | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones), each with its playground | 2.9.14 (proposed) | 2.9.8's P&L feed and backtesting; 2.9.7 row 2c (stressed VaR); `ima-pnl-vector` from the bank |
+| 3. Pre-deal pricing | MC13 (QLRisk pricing and delta-gamma, shared with CC12) | 2.9.14 (proposed) | QLRisk's API declared stable |
+| Unscheduled | MC11 (corrections in the cube) | unscheduled | write-back (built) |
 
 ---
 
@@ -1265,8 +1268,8 @@ Every release below is a **proposal** for the product owner, not a commitment. T
 
 1. **One lens, two documents, one core.** The MR Cube and CCR Cube as two lenses sharing one cube core (recommended), or one "Risk Cube"
    lens with an MR and a CCR tab.
-2. **The default layout.** A (pivot first) as the landing with B and C as tabs (recommended), or one of B or C first; after the
-   mock-ups.
+2. **The default layout.** **Decided (product owner, 2026-10-31): A (pivot first) is the landing, B and C its tabs.** Options were: A as
+   the landing with B and C as tabs (recommended), or one of B or C first; after the mock-ups.
 3. **10-day P&L for IMA.** From the bank's 10-day vectors (recommended where the engine provides them), or Drishti's overlapping sum of
    1-day vectors (built for VaR, section 18.6 of VAR_GUIDE) labelled.
 4. **IMA grain.** Position-level `ima-pnl-vector` subsets for drill-through (recommended for banks that can produce them), or desk-level
@@ -1276,8 +1279,9 @@ Every release below is a **proposal** for the product owner, not a commitment. T
    (large; a product of its own).
 7. **Corrections in the official run.** Approved corrections included by default with the list on the run (recommended), or excluded
    unless the run is restated.
-8. **Release placement.** Sensitivities and the pivot proposed for 2.9.8 beside regulatory reporting phase 1 (recommended: the pivot
-   serves the reports), or after 2.9.8; FRTB SA 2.9.9; IMA and pre-deal 3.0.
+8. **Release placement.** **Decided (product owner, 2026-10-31), by the themed release plan:** the shared core with the CCR cube in
+   2.9.11; sensitivities first, then the MR pivot and FRTB SA in 2.9.12; IMA and pre-deal pricing in 2.9.14 (section 13). The earlier
+   options (sensitivities and the pivot in 2.9.8 beside regulatory reporting phase 1, FRTB SA next) are superseded.
 9. **Command word.** **Decided (product owner, 2026-10-31): `MCUBE`** (the CCR cube is `CCUBE`); checked against every pack's mnemonics at build.
 10. **The `position-sensitivity` contract.** Adopt OVERSIGHT_LENS decision 9 as this cube's input (recommended), retiring
     `frtb-sensitivity` when MC5 lands.

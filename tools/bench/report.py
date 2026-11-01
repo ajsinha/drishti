@@ -123,8 +123,11 @@ class Report:
         self.target = target
         self.by = defaultdict(list)                     # (store, measure) -> records
         self.failed = defaultdict(list)
+        self.skipped = 0                                # lines of other benchmarks (the VaR benchmark, var_bench.py: no store)
         for r in rows:
-            if r.get("measure") == "failed":
+            if "store" not in r:
+                self.skipped += 1
+            elif r.get("measure") == "failed":
                 self.failed[r["store"]].append(r)
             else:
                 self.by[(r["store"], r["measure"])].append(r)
@@ -308,6 +311,9 @@ class Report:
                     self.w(f"- {STORE_NAME.get(s, s)}, {r['trades_per_day']:,} trades a day ({r['run']}): exit {r.get('exit')}"
                            + (f" — {r['why']}" if r.get("why") else ""))
             self.w()
+        if self.skipped:
+            self.w(f"{self.skipped:,} lines without a store skipped (another benchmark's measures: the VaR benchmark's are read in "
+                   "docs/architecture/BENCHMARK_2_9_7.md)")
         return "\n".join(self.out)
 
 

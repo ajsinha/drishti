@@ -322,15 +322,20 @@ public final class ReactiveConnector implements AutoCloseable {
             boolean kept = cache.put(entry);
             long ms = (System.nanoTime() - t0) / 1_000_000;
             latencyMs.merge(p.kind().name(), ms, (a, b) -> (a * 7 + b) / 8);
+            // audited before anyone is answered: a requester that has its answer finds the computation in the audit trail
+            Object hash = doc.get("STAMP") instanceof Map<?, ?> s ? s.get("resultHash") : null;
+            try {
+                host().audit(ask.viewer().user(), "compute.answer", name + "/" + p.kind().name() + "/" + p.ref().id(),
+                        "request " + f.id + (f.waiters.size() > 1 ? " (+" + (f.waiters.size() - 1) + " joined)" : "") + ", params " + p.params()
+                                + ", pin " + p.pin() + ", signature " + p.signature() + ", " + ms + " ms, hash " + hash
+                                + (trigger == null ? "" : ", trigger " + trigger.id()));
+            } catch (RuntimeException e) {                       // the answer is good: an audit store that refuses it does not fail it
+                LOG.warn("reactive: {} could not audit request {}", name, f.id, e);
+            }
             f.done.complete(entry);
             for (String w : f.waiters) {
                 hub.events().publish(w, "done", Map.of("state", kept ? Answer.READY : Answer.STALE, "ms", ms, "stamp", doc.get("STAMP")));
             }
-            Object hash = doc.get("STAMP") instanceof Map<?, ?> s ? s.get("resultHash") : null;
-            host().audit(ask.viewer().user(), "compute.answer", name + "/" + p.kind().name() + "/" + p.ref().id(),
-                    "request " + f.id + (f.waiters.size() > 1 ? " (+" + (f.waiters.size() - 1) + " joined)" : "") + ", params " + p.params()
-                            + ", pin " + p.pin() + ", signature " + p.signature() + ", " + ms + " ms, hash " + hash
-                            + (trigger == null ? "" : ", trigger " + trigger.id()));
             if (!kept) {
                 LOG.debug("reactive: {} dropped a late result for {} (an older watermark than the one shown)", name, p.base());
             }
@@ -340,11 +345,15 @@ public final class ReactiveConnector implements AutoCloseable {
             if (!(c instanceof ComputeException)) {
                 LOG.warn("reactive: {} failed computing {} for {} (request {})", name, p.kind().name(), p.ref().id(), f.id, c);
             }
+            try {
+                host().audit(ask.viewer().user(), "compute.failed", name + "/" + p.kind().name() + "/" + p.ref().id(), "request " + f.id + ": " + words(c));
+            } catch (RuntimeException a) {                       // the requesters still hear of the failure
+                LOG.warn("reactive: {} could not audit request {}", name, f.id, a);
+            }
             f.done.completeExceptionally(c);
             for (String w : f.waiters) {
                 hub.events().publish(w, "failed", Map.of("message", words(c)));
             }
-            host().audit(ask.viewer().user(), "compute.failed", name + "/" + p.kind().name() + "/" + p.ref().id(), "request " + f.id + ": " + words(c));
         } finally {
             flights.remove(f.key, f);
             AtomicInteger n = inflight.get(f.user);

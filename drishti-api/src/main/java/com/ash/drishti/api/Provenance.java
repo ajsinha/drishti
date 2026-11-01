@@ -33,6 +33,7 @@ public record Provenance(String source, long generation, Instant fetchedAt, bool
         this(source, generation, fetchedAt, live, null);
     }
 
+    /** This provenance for business date {@code date}. */
     public Provenance withBusinessDate(LocalDate date) {
         return new Provenance(source, generation, fetchedAt, live, date);
     }

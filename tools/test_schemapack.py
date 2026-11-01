@@ -37,6 +37,24 @@ FIX = ROOT / "docs" / "guides" / "examples" / "schemas"
 HAVE_JAR = bool(os.environ.get("DRISHTI_JAR") or glob.glob(str(ROOT / "drishti-server/target/drishti-server-*-exec.jar")))
 
 
+_DATA: dict = {}
+
+
+def setUpModule():
+    """These tests run with a scratch data folder (DRISHTI_DATA_DIR): whatever they start writes nothing to the repository's data/."""
+    _DATA["was"] = os.environ.get("DRISHTI_DATA_DIR")
+    _DATA["tmp"] = tempfile.TemporaryDirectory(prefix="drishti-test-data-")
+    os.environ["DRISHTI_DATA_DIR"] = _DATA["tmp"].name
+
+
+def tearDownModule():
+    if _DATA.get("was") is None:
+        os.environ.pop("DRISHTI_DATA_DIR", None)
+    else:
+        os.environ["DRISHTI_DATA_DIR"] = _DATA["was"]
+    _DATA.pop("tmp").cleanup()
+
+
 def run(*argv):
     out, err = io.StringIO(), io.StringIO()
     with contextlib.redirect_stdout(out), contextlib.redirect_stderr(err):

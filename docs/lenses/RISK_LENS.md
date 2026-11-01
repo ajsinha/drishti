@@ -30,7 +30,7 @@ landings), [EDITIONS.md](../admin/EDITIONS.md) (how to run it), the edition file
 [`config/editions/risk.yaml`](../../config/editions/risk.yaml), [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built),
 [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine as built),
 [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store),
-[REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (2.9.8 and 2.9.9) and the contracts [STR.md](../contracts/STR.md)
+[REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (2.9.8 and 2.9.10) and the contracts [STR.md](../contracts/STR.md)
 (stress), [FRTB.md](../contracts/FRTB.md) (sensitivities) and [LIM.md](../contracts/LIM.md) (credit limits). The sibling lens documents:
 [TRADING_LENS.md](TRADING_LENS.md), [MARKET_LENS.md](MARKET_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
@@ -436,37 +436,58 @@ oversight work is the **why it moved** answer (RL4) and, later, a read-only view
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
 section; where a 2.9.7 to 2.9.9 row builds the engine, the RL row is only the lens's part.
 
-| Order | Row | Why here | Size | Depends on |
-|---|---|---|---|---|
-| 1 | **RL2** horizon and confidence on the landings; **RL13** `SMAT` in the lens | Follow the 2.9.7 features at once | S each | 2b and the scenario matrix: merged in 2.9.7 |
-| 2 | **RL1** stressed VaR on the landings | Follows row 2c in Drill B | S | 2c |
-| 3 | **RL11** recents and the capture time | Small; closes the landings' left-outs | S | — |
-| 4 | **RL9** credit limits on computed PFE (data) | The desk's exposure card reads near zero today | S | — |
-| 5 | **RL4** why it moved | The morning meeting's first question | S | RO1 |
-| 6 | **RL3** backtesting on the bank's P&L | Follows 2.9.8 | S | 2.9.8 rows 3, 4 |
-| 7 | **RL12** intraday limit alerts | Turns intraday VaR into a control | S to M | — |
-| 8 | **RL6** exposure on the VaR hierarchy | The map's main left-out; shared with TL2 | M | exposure allocation |
-| 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded |
-| 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities |
-| 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data |
-| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — |
+
+**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+
+| Order | Row | Why here | Size | Depends on | Release |
+|---|---|---|---|---|---|
+| 1 | **RL2** horizon and confidence on the landings; **RL13** `SMAT` in the lens | Follow the 2.9.7 features at once | S each | 2b and the scenario matrix: merged in 2.9.7 | RL2 proposed 2.9.9; RL13 built (2.9.7) |
+| 2 | **RL1** stressed VaR on the landings | Follows row 2c in Drill B | S | 2c | proposed 2.9.9 |
+| 3 | **RL11** recents and the capture time | Small; closes the landings' left-outs | S | — | proposed 2.9.9 |
+| 4 | **RL9** credit limits on computed PFE (data) | The desk's exposure card reads near zero today | S | — | proposed 2.9.11 |
+| 5 | **RL4** why it moved | The morning meeting's first question | S | RO1 | proposed 2.9.9 |
+| 6 | **RL3** backtesting on the bank's P&L | Follows 2.9.8 | S | 2.9.8 rows 3, 4 | proposed 2.9.9 |
+| 7 | **RL12** intraday limit alerts | Turns intraday VaR into a control | S to M | — | proposed 2.9.9 |
+| 8 | **RL6** exposure on the VaR hierarchy | The map's main left-out; shared with TL2 | M | exposure allocation | proposed 2.9.11 |
+| 9 | **RL10** World context on the counterparty page | Cheap context, internal only | S to M | World packs loaded | unscheduled |
+| 10 | **RL5** sensitivities | The largest; needs the bank's data | L | per-trade sensitivities | proposed 2.9.12 |
+| 11 | **RL7** stress (by decision); **RL8** liquidity and climate | Engines and data first | S to L | RO9, RO10, data | RL7 closed: kept hidden (decided); RL8 proposed 2.9.14 |
+| 12 | **RL14** the landings' mock-up remainders; **RL15** the horizon picker as drawn; **LX1** subject menus | Close what the mock-ups showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | RL14 proposed 2.9.9; RL15 proposed 2.9.9; LX1 planned 2.9.8 |
 
 ---
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+
 1. **The split.** Risk stays the engines' lens; governance goes to a separate Oversight lens after RO1 and RO2 (recommended, as the
    oversight analysis), or Risk gains a fourth landing for oversight.
+
+   **Decided (product owner, 2026-10-31):** Risk stays the engines' lens; governance goes to the separate Oversight lens after RO1 and RO2.
 2. **Stress in Risk (RL7).** Keep hidden until the stress engine (recommended), show the stored and derived results read-only, or build the
    engine first.
+
+   **Decided (product owner, 2026-10-31):** keep stress hidden in Risk until the stress engine (RO9, unscheduled); RL7 is closed by this decision.
 3. **Exposure on the VaR hierarchy (RL6).** Allocated EE and EPE (recommended: adds up), the standalone `DESK:` scope, or leave it out.
+
+   **Decided (product owner, 2026-10-31):** allocated EE and EPE (Euler allocation, adds up), with the CCR cube's allocated exposure (CC2), proposed 2.9.11.
 4. **Sensitivities first or VaR by risk type first.** RL5 (needs the bank's per-trade sensitivities) or G6 VaR by risk type (2.9.9 row 3,
    needs factor tags on the vectors).
+
+   **Decided (product owner, 2026-10-31):** VaR by risk type (G6) first, with the regulatory reports (proposed 2.9.10); position sensitivities follow in 2.9.12 (proposed; RL5 with them).
 5. **Credit limits on the demo (RL9).** Regenerate them from the computed PFE now, or wait for the LIM wave.
+
+   **Decided (product owner, 2026-10-31):** regenerate the demo credit limits from the computed PFE (as the cube POC decided), with the CCR cube (proposed 2.9.11).
 6. **Climate (RL8).** Scope it (transition scenarios, physical concentration, financed emissions) or keep it a named future line.
+
+   **Decided (product owner, 2026-10-31):** climate stays a named future line, out of scope as a computed measure; the CRO lens shows it only as an optional supplied-input tile, off by default (proposed 2.9.14).
 7. **World context in Risk (RL10).** A context panel on the counterparty page, internal only (recommended), or none.
+
+   **Decided (product owner, 2026-10-31):** a context panel on the counterparty page, internal only (unscheduled).
 8. **One near-limit threshold.** The explorer's 75% and 90%, Trading's 80% and the proposed catalogue's `WARNING_AT`: one per limit with a
    site default (as the oversight analysis's decision 8).
+
+   **Decided (product owner, 2026-10-31):** one per limit (its own warning level) with a site default of 80%, configurable, as the oversight analysis's decision 8.
 
 ---
 
@@ -512,7 +533,8 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 | [Risk landings](#111-the-risk-landings-risk-landinghtml) (A Risk desk, B Command first, C Risk map) | all three, 2026-10-29; A the default | 13 | 7 | 1 |
 | [Scenario matrix](#112-the-scenario-matrix-scenario-matrix-bhtml) | option B (matrix with a chart of the selected scenario), 2026-10-31 | 14 | 0 | 0 |
 | [VaR horizon picker](#113-the-var-horizon-picker-var-horizon-pickerhtml) | the one design shown (its alternatives for small spaces considered), 2026-10-30 | 11 | 2 | 1 |
-| **Total** | | **38** | **9** | **2** |
+| [Lens menus (LX1)](#114-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 3 |
+| **Total** | | **38** | **9** | **5** |
 
 ### 11.1 The Risk landings (`risk-landing.html`)
 
@@ -590,7 +612,7 @@ the trade, position, `PNLV`, `SPV` and VaR pages. Click a row, or move with the 
 follow. The segmented switches, the chips and the sort redraw in place; Export downloads CSV or Arrow. **States.** *Loading:* `loading…`
 in the meta line. *Error and gaps:* a date with no values shows its DRS code in red in the column header, the reason in its tooltip, `—`
 in its cells; a notice above the matrix counts them; never blank, never zero. *Empty:* with no id, a form asks for a trade, position or
-VaR scope and the number of dates. **Phone** (640 px and below): the glance form: the selected scenario's line against −VaR, the tail
+VaR scope and the number of dates. **Phone** (640 px and below): the glance form: the chart (the selected date's scenarios, or the scenario across the dates), the tail
 count, a scenario picker and the details; the matrix on a larger screen (the mock-up's footer asked exactly this).
 
 | # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
@@ -651,6 +673,26 @@ backtest tile says *backtesting is 1-day*. **Phone:** the controls are full widt
 
 1. **The segmented Horizon control** on a desktop (H1), and the menu's one line per entry (H12) (RL15).
 2. **The "vs √10" tile** at the 10-day sum (H7) (RL15).
+
+### 11.4 The lens menus (LX1, `menus/A.html`)
+
+![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
+
+[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
+[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
+four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
+(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+
+**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · VaR · Exposure · BI · Admin · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of R1) |
+| X2 | VaR menu | groups Value at risk, Check and report: VaR explorer `VAR`; VaR results `VRES`; Official records `VOFF`; What-if `VWIF`; Scenario matrix `SMAT`; Hierarchies and limit letters `HIER`; VaR Playground `PLAY`; Backtesting `VBT`; Stress window `SWIN` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X3 | Exposure menu | Exposure explorer `EXP`; A counterparty `EXP`; A netting set `EXP`; Pre-deal check `XWIF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+
+On a phone the subject menus fold into one menu named after the lens (option C's form). The items marked *new* on the mock-up (VaR
+Playground, Backtesting, Stress window) appear when their screens are built (2.9.8 rows 4, 8 and 9).
 
 ---
 

@@ -65,8 +65,11 @@ public final class ProxySettings {
         NONE("none"),
         /** The connector says {@code proxy: none} (or {@code proxy.enabled: false}): direct, whatever the site default says. */
         DISABLED("disabled by the connector"),
+        /** The connector's own {@code proxy:} block. */
         CONNECTOR("connector"),
+        /** The site default ({@code drishti.proxy}). */
         SITE("site default"),
+        /** The {@code HTTPS_PROXY} / {@code HTTP_PROXY} environment variables. */
         ENVIRONMENT("environment");
 
         private final String label;
@@ -75,6 +78,7 @@ public final class ProxySettings {
             this.label = label;
         }
 
+        /** The source as a message says it ({@code site default}). */
         public String label() {
             return label;
         }
@@ -104,6 +108,7 @@ public final class ProxySettings {
         }
     }
 
+    /** No proxy: connections go direct. */
     public static ProxySettings none() {
         return NONE;
     }
@@ -113,6 +118,7 @@ public final class ProxySettings {
         return resolve(settings, targetUrl, System::getenv);
     }
 
+    /** The proxy for a connector whose target is {@code targetUrl}, reading environment variables through {@code env}. */
     public static ProxySettings resolve(Map<String, String> settings, String targetUrl, Function<String, String> env) {
         String bare = settings.get("proxy");
         if (bare != null && !bare.isBlank()) {
@@ -256,6 +262,7 @@ public final class ProxySettings {
 
     // -- what it says ----------------------------------------------------------------------------------------------
 
+    /** Where the effective proxy came from. */
     public Source source() {
         return source;
     }
@@ -270,14 +277,17 @@ public final class ProxySettings {
         return source != Source.NONE;
     }
 
+    /** The proxy's host, or null when there is none. */
     public String host() {
         return host;
     }
 
+    /** The proxy's port. */
     public int port() {
         return port;
     }
 
+    /** The proxy's user name, or null without credentials. */
     public String username() {
         return username;
     }
@@ -287,10 +297,12 @@ public final class ProxySettings {
         return password;
     }
 
+    /** Whether the proxy is given a user name and password. */
     public boolean hasCredentials() {
         return username != null;
     }
 
+    /** The hosts that go direct. */
     public NoProxy noProxy() {
         return noProxy;
     }
@@ -352,6 +364,7 @@ public final class ProxySettings {
         return h != null && bypasses(h) ? health + " (proxy " + host + ":" + port + " not used for " + h + ": no-proxy)" : annotate(health);
     }
 
+    /** The source, host and port and the user, the password masked. */
     @Override
     public String toString() {
         return active() ? "ProxySettings[" + source.label() + ", " + host + ":" + port + (username == null ? "" : ", user=" + username + ", password=***") + "]"

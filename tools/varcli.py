@@ -16,12 +16,13 @@
 it: a scope's headline (show), its ranked P&L path (path), history and backtest (history), contributions (parts), the hierarchy
 (tree), a trade's, position's or node's scenario matrix over its last N business dates (matrix, 2.9.7), the engine's state and
 tiers (status), the shards across Drishti*net (shards: the date's shard map, owners, members; --drain), captures
-(capture, captures, compare), baskets (basket, baskets), the official end-of-day
+(capture, captures, compare), baskets (basket, baskets; basket-delete: yours, or with --owner anyone's for an administrator; baskets --all: everyone's, administrators), the official end-of-day
 record (official), a reload (administrators) and a what-if through the Python engine (whatif: hypothetical trades from a JSON file).
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
 the currency move is part of the risk (VAR_GUIDE.md section 15.10). Every answer of a scope, the tree and a capture through a lens
 (2.9.7, section 18.6): --horizon 10d with --method sqrt10 or sum (none: the setting's), --confidence and --es-confidence from the
-configured lists (0.95 or 95). Exit codes: 0, 1 (the server said no), 2 (usage)."""
+configured lists (0.95 or 95), and --stressed (section 18.8: stressed VaR, the scope on the date's stress scenario set, in USD).
+Exit codes: 0, 1 (the server said no), 2 (usage)."""
 from __future__ import annotations
 
 import json
@@ -31,11 +32,13 @@ import urllib.parse
 EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30\n"
           "  drishti.py var show BANK --ccy EUR\n"
           "  drishti.py var show BANK --horizon 10d --method sum\n  drishti.py var show BANK --confidence 95\n"
+          "  drishti.py var show BANK --stressed\n  drishti.py var show BANK --stressed --horizon 10d --method sum\n"
           "  drishti.py var parts 'DESK:RATES' --by position --top 10\n  drishti.py var path 'DESK:RATES' --size 10\n"
           "  drishti.py var history 'DESK:RATES'\n  drishti.py var tree --hierarchy LEGAL\n  drishti.py var status\n"
           "  drishti.py var matrix 'DESK:RATES' --days 20 --csv > rates.csv\n  drishti.py var matrix POS-BOOK-1~SEC-A --by trade\n"
           "  drishti.py var shards --date 2026-09-30\n"
           "  drishti.py var basket rates-hedges \"WHERE:'hedge' in TAGS\" --title 'Rates hedges'\n"
+          "  drishti.py var basket-delete rates-hedges\n  drishti.py var basket-delete old-unwind --owner asha --reason 'left the desk'\n"
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
           "  drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250")
 
@@ -66,6 +69,10 @@ def render_headline(h: dict, say) -> None:
     say(f"  ES {(h.get('esConfidence') or 0) * 100:g}%   {money(h.get('es'))} {cur}   (mean of the {h.get('esCount')} worst)")
     if h.get("override"):
         say("  asked     " + str(h["override"].get("note") or ""))
+    avg = h.get("stressAverage")
+    if avg:                                                             # stressed VaR (VAR_GUIDE.md section 18.8): its 12-week average
+        say(f"  {avg.get('weeks')}-week avg " + (f"{money(avg.get('average'))} {cur}   ({avg.get('note')})" if avg.get("average") is not None
+                                                 else str(avg.get("note") or "")))
     if h.get("limit") is not None:
         say(f"  limit      {money(h.get('limit'))} {cur}   " + (f"use {100 * (h.get('limitUse') or 0):.1f}%" if h.get("limitComparable") is not False
                                                               else str(h.get("limitNote") or "not comparable")))
@@ -96,9 +103,17 @@ def render_headline(h: dict, say) -> None:
         say(f"  warning: {w}")
 
 
+def shown_line(c: dict) -> str:
+    """The rows-shown line of a capped answer: '5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567'."""
+    total = int(c.get("total") or 0)
+    shown = int(c.get("shown") if c.get("shown") is not None else len(c.get("rows") or []))
+    what = {"position": "positions", "trade": "trades"}.get(c.get("by"), "parts")
+    return f"{shown:,} of {total:,} {what} shown (the largest by gross size); totals are over all {total:,}"
+
+
 def render_parts(c: dict, top: int, say) -> None:
     say(f"{c.get('canonical')}  by {c.get('by')}  VaR {money(c.get('var'))}  ES {money(c.get('es'))} {c.get('currency') or 'USD'}  "
-        f"sum of components {money(c.get('sumComponent'))}" + (f"  ({c.get('total')} parts, the largest shown)" if c.get("truncated") else ""))
+        f"sum of components {money(c.get('sumComponent'))}" + (f"  ({shown_line(c)})" if c.get("truncated") else ""))
     rows = [["Part", "Standalone VaR", "Component VaR", "% of VaR", "Incremental VaR", "Component ES"]]
     for r in (c.get("rows") or [])[:top]:
         rows.append([str(r.get("label") or r.get("key")), money(r.get("standaloneVar")), money(r.get("componentVar")),
@@ -302,7 +317,7 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
 
 
 def register(groups, srv, ctx: dict) -> None:
-    """Adds ``var show|parts|path|history|tree|status|shards|capture|captures|compare|basket|baskets|official|reload|whatif``."""
+    """Adds ``var show|parts|path|history|tree|status|shards|capture|captures|compare|basket|baskets|basket-delete|official|reload|whatif``."""
     import argparse
 
     Api, CliError, say_json = ctx["Api"], ctx["CliError"], ctx["say_json"]
@@ -316,10 +331,12 @@ def register(groups, srv, ctx: dict) -> None:
         return params
 
     def lensed(a, params: dict) -> dict:
-        """The lens's parameters (2.9.7): horizon, method, confidence, esConfidence."""
+        """The lens's parameters: horizon, method, confidence, esConfidence, and set=stressed (--stressed)."""
         for k, f in (("horizon", "horizon"), ("method", "method"), ("confidence", "confidence"), ("esConfidence", "es_confidence")):
             if getattr(a, f, None) is not None:
                 params[k] = getattr(a, f)
+        if getattr(a, "stressed", False):
+            params["set"] = "stressed"
         return params
 
     def cmd(a, extra) -> int:
@@ -329,6 +346,9 @@ def register(groups, srv, ctx: dict) -> None:
         c = a.var_cmd
         if c == "show":
             q = {"scope": a.scope}
+            if a.window is not None and a.stressed:
+                print("--window recomputes the normal set's VaR: not with --stressed", file=sys.stderr)
+                return 2
             if a.window is not None:                                 # 2.9.4: the newest N scenarios, to compare (1-day, never official)
                 for k, v in (("window", a.window), ("confidence", a.confidence), ("es-confidence", a.es_confidence)):
                     if v is not None:
@@ -418,7 +438,16 @@ def register(groups, srv, ctx: dict) -> None:
                     "sharedWith": a.share or []}
             say_json(api.json("POST", "/api/v1/var/baskets", body))
         elif c == "baskets":
-            say_json(api.json("GET", "/api/v1/var/baskets"))
+            if a.all or a.owner:                                # every person's (administrators), optionally one owner's
+                say_json(api.json("GET", "/api/v1/var/admin/baskets" + ("?" + enc({"owner": a.owner}) if a.owner else "")))
+            else:
+                say_json(api.json("GET", "/api/v1/var/baskets"))
+        elif c == "basket-delete":
+            q = urllib.parse.quote
+            params = {k: v for k, v in (("reason", a.reason), ("version", a.version)) if v is not None and v != ""}
+            path = f"/api/v1/var/baskets/{q(a.owner, safe='')}/{q(a.name, safe='')}" if a.owner else f"/api/v1/var/baskets/{q(a.name, safe='')}"
+            api.json("DELETE", path + ("?" + enc(params) if params else ""))
+            print(f"deleted the basket {(a.owner + '/') if a.owner else ''}{a.name}")
         elif c == "official":
             say_json(api.json("POST" if a.capture else "GET", "/api/v1/var/official?" + enc(dated(a, {}))))
         elif c == "reload":
@@ -468,6 +497,8 @@ def register(groups, srv, ctx: dict) -> None:
         if confidences:
             s.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (one of drishti.var.confidences: 0.95, 95)")
             s.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence (one of drishti.var.es-confidences)")
+        s.add_argument("--stressed", action="store_true", help="stressed VaR: the scope on the date's stress scenario set (today's positions "
+                       "under a 12-month stress window), in USD; a date without one says so")
 
     sh = scoped("show", "a scope's headline: VaR, ES, limit, parts, backtest, provenance")
     sh.add_argument("--window", metavar="N", help="VaR and ES on the newest N scenarios (250: one year), to compare; never official")
@@ -520,7 +551,15 @@ def register(groups, srv, ctx: dict) -> None:
     bk.add_argument("--title")
     bk.add_argument("--description")
     bk.add_argument("--share", action="append", metavar="USER|role:NAME")
-    sub.add_parser("baskets", help="the baskets you may read", parents=[srv])
+    bl = sub.add_parser("baskets", help="the baskets you may read; --all: every person's (administrators)", parents=[srv])
+    bl.add_argument("--all", action="store_true", help="every person's baskets with owner, scope, sharing, dates and size (administrators)")
+    bl.add_argument("--owner", help="with --all: only the baskets whose owner contains this")
+    bd = sub.add_parser("basket-delete", help="delete a saved basket: yours, or with --owner anyone's (administrators); captures of it are kept",
+                        parents=[srv])
+    bd.add_argument("name", help="the basket's name (its id after the owner: rates-hedges in BASKET:asha/rates-hedges)")
+    bd.add_argument("--owner", help="the owner's user name, to delete someone else's basket (administrators)")
+    bd.add_argument("--reason", help="why (administrators): written to the audit log and sent to the owner's inbox")
+    bd.add_argument("--version", type=int, help="the basket's version you saw: refused (409) when it changed since")
     of = sub.add_parser("official", help="the date's official end-of-day record (--capture: take it now; administrators)", parents=[srv])
     of.add_argument("--date", metavar="YYYY-MM-DD")
     of.add_argument("--capture", action="store_true")

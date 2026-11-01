@@ -527,6 +527,7 @@ final class VarMatrix {
         java.util.Set<LocalDate> open = svc.openDates();
         List<Map<String, Object>> meta = new ArrayList<>();
         Map<String, Map<String, Object>> rows = new LinkedHashMap<>();
+        int[] shownOf = {0, 0};                                          // the rows shown and all the trades, when max-parts cut them
         for (LocalDate d : dates) {
             String source = open.contains(d) || d.equals(t.anchor().date().date()) ? "open" : "engine";
             Map<String, Object> m = new LinkedHashMap<>();
@@ -553,7 +554,12 @@ final class VarMatrix {
             m.put("gap", null);
             m.put("total", round2(s.vector()[j]));
             m.put("rank", rankOf(calc.measures(s.vector()).order(), j));
-            for (VarViews.Part pt : views.parts(s, "trade", p)) {
+            VarViews.Parts ps = views.partsOf(s, "trade", p);          // more trades than max-parts: the largest, and the answer says so
+            if (ps.truncated() && ps.total() > shownOf[1]) {
+                shownOf[0] = ps.list().size();
+                shownOf[1] = ps.total();
+            }
+            for (VarViews.Part pt : ps.list()) {
                 Map<String, Object> r = rows.computeIfAbsent(pt.key(), k -> {
                     Map<String, Object> x = new LinkedHashMap<>();
                     x.put("trade", pt.key());
@@ -578,6 +584,11 @@ final class VarMatrix {
         }
         out.put("dates", meta);
         out.put("rows", list);
+        out.put("truncated", shownOf[1] > 0);
+        if (shownOf[1] > 0) {
+            out.put("shown", shownOf[0]);
+            out.put("total", shownOf[1]);
+        }
         return out;
     }
 

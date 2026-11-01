@@ -88,6 +88,7 @@ menus:
           - { id: users, href: /admin/users, icon: people, label: Users, desc: "Accounts, roles and packs per person", match: /admin/users, requires: [admin, admin-page:users] }
           - { id: roles, href: /admin/roles, icon: shield-lock, label: Roles, desc: What each role opens and may do, match: /admin/roles, requires: [admin, admin-page:roles] }
           - { id: audit, href: /admin/audit, icon: journal-text, label: Audit log, desc: "Every sign-in and change, by whom", match: /admin/audit, requires: [admin, admin-page:audit] }
+          - { id: scopes, href: /admin/scopes, icon: basket, label: Ad-hoc scopes, desc: "Everyone's saved VaR baskets: filter by owner, delete with a reason", match: /admin/scopes, requires: [admin, admin-page:scopes, word:VAR] }
       - title: Operations
         items:
           - { id: packs, href: /admin/packs, icon: box-seam, label: Packs, desc: "Switch domain packs on and off; deploy archives; the connectors each uses", match: /admin/packs, requires: [admin, admin-page:packs] }

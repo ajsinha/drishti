@@ -29,4 +29,9 @@
   <description>Plugin SPI and data model (no Spring)</description>
   <dependencies>
   </dependencies>
+  <properties>
+    <!-- the API reference (the parent's profile api-docs): all of the plugin SPI -->
+    <drishti.apidocs.skip>false</drishti.apidocs.skip>
+    <drishti.apidocs.packages>com.ash.drishti.api</drishti.apidocs.packages>
+  </properties>
 </project>

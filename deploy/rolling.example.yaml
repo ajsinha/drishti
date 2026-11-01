@@ -1,0 +1,58 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The rolling upgrade runner's inventory (CD3, docs/architecture/CLUSTER_DEPLOYMENT.md section 10.1): copy, fill in, then
+#   tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run      (every step printed, nothing called)
+#   tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7
+# Order: consoles, BI and data-serving, coordinators, then owners one zone at a time. Each node: drain, wait until safe to stop, stop,
+# upgrade, start, wait until ready; any failure stops the run (resume with --from <node>).
+# The token: an administrator's personal API token with the node:drain scope, in DRISHTI_DRAIN_TOKEN or --token-file.
+
+platform: vm                         # vm: the commands below; ecs: aws ecs update-service per node (the ecs: block)
+
+waits:                               # seconds
+  drain: 600                         # for safeToStop after the drain (a shard's next owner builds it from the lake first)
+  ready: 1800                        # for readiness after the start (joined, newest dates open, owned shards ready)
+  console-drain: 30                  # for a console's connections to close once it is out of the load balancer
+
+zones: [az-a, az-b]                  # the owners' zones in upgrade order (else by name)
+
+commands:                            # {node} {host} {url} {version} {role} {zone} are filled in; run by the shell, as written
+  stop: ssh {host} sudo systemctl stop drishti-server           # the unit's ExecStop drains again (a no-op: already drained)
+  upgrade: ssh {host} sudo /opt/drishti/bin/install-release.sh {version}   # your own install step: the new jar in place
+  start: ssh {host} sudo systemctl start drishti-server
+  console-stop: ssh {host} sudo systemctl stop drishti-console
+  console-upgrade: ssh {host} sudo /opt/drishti/bin/install-console.sh {version}
+  console-start: ssh {host} sudo systemctl start drishti-console
+  # deregister: aws elbv2 deregister-targets --target-group-arn arn:aws:elasticloadbalancing:... --targets Id={host},Port=17480
+  # register: aws elbv2 register-targets --target-group-arn arn:aws:elasticloadbalancing:... --targets Id={host},Port=17480
+
+# ecs:                               # platform: ecs (deploy/aws/ecs/register.sh registers the new task definitions first)
+#   cluster: drishti-prod
+#   region: eu-west-2
+#   service: "{node}"                 # the node's service (deploy/aws/ecs/templates/node-service.json)
+#   task-definition: "drishti-prod-{node}"
+#   console-service: "drishti-prod-{node}"
+#   console-task-definition: "drishti-prod-console"
+
+nodes:                               # url: the node's real address (never localhost): the server's port, or the console's
+  - {name: console-1, role: console, host: 10.0.1.11, url: "http://10.0.1.11:17480"}
+  - {name: console-2, role: console, host: 10.0.1.12, url: "http://10.0.1.12:17480"}
+  - {name: bi-1, role: bi, host: 10.0.2.21, url: "http://10.0.2.21:18480"}
+  - {name: coord-1, role: coordinator, host: 10.0.2.11, url: "http://10.0.2.11:18480"}
+  - {name: coord-2, role: coordinator, host: 10.0.2.12, url: "http://10.0.2.12:18480"}
+  - {name: var-1, role: owner, zone: az-a, host: 10.0.3.11, url: "http://10.0.3.11:18480"}
+  - {name: var-2, role: owner, zone: az-a, host: 10.0.3.12, url: "http://10.0.3.12:18480"}
+  - {name: var-3, role: owner, zone: az-b, host: 10.0.4.11, url: "http://10.0.4.11:18480"}
+  - {name: var-4, role: owner, zone: az-b, host: 10.0.4.12, url: "http://10.0.4.12:18480"}

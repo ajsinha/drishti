@@ -79,6 +79,14 @@ public class HealthController {
         this.disk = d;
     }
 
+    /** The platform alerts (OPERATIONS.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
+    private com.ash.drishti.server.metrics.PlatformAlerts alerts;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void alerts(com.ash.drishti.server.metrics.PlatformAlerts a) {
+        this.alerts = a;
+    }
+
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     void activity(RequestActivity a) {
         this.activity = a;
@@ -183,6 +191,9 @@ public class HealthController {
             if ("red".equals(d.get("state")) && "OK".equals(out.get("status"))) {
                 out.put("status", "DEGRADED");
             }
+        }
+        if (alerts != null) {
+            out.put("alerts", alerts.summary());                        // the platform alerts open on this member, and whether the rules were read
         }
         out.put("tmp", com.ash.drishti.common.TempFiles.info());
         out.put("externalLib", com.ash.drishti.common.ExternalLib.info());

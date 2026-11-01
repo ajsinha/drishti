@@ -164,7 +164,7 @@ def _row_href(r: dict) -> str:
     """Where a row goes: a share through its link (which checks the right to open), anything else to the entity it is about."""
     if str(r.get("type", "")).startswith("load"):          # a data-load notice: threadId carries the pack; the page is for administrators
         return f"/admin/packs/{quote(r['threadId'], safe='')}/loads" if r.get("access") and r.get("threadId") else ""
-    if r.get("type") == "alert":                            # an alert on a number: the id is the console path it opens (made by the server, never a full URL)
+    if r.get("type") in ("alert", "notice"):                # an alert on a number, or a notice (a basket of yours an administrator deleted): the id is the console path it opens (made by the server, never a full URL)
         path = str(r.get("id") or "")
         return path if path.startswith("/") and not path.startswith("//") else ""
     if r.get("type") == "bi-run":                           # a BI run finished, failed or was started again (BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 3.5): id is the run

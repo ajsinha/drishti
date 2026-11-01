@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (var-playground/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/architecture/VAR_PLAYGROUND.md (section 16).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VaR Playground: option B, three panes with the position list (a scope over 500)</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:520px;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+
+.sheet{border:1px solid var(--line);border-radius:6px;overflow:hidden;background:var(--panel)}
+.fbar{display:flex;gap:0;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:12.5px}
+.fbar .nm{padding:5px 10px;border-right:1px solid var(--line);color:var(--muted);min-width:70px}
+.fbar .fx{padding:5px 10px;color:var(--muted);border-right:1px solid var(--line)} .fbar .f{padding:5px 10px;color:var(--ink);white-space:nowrap;overflow:hidden}
+.grid td,.grid th{padding:3px 5px;border-right:1px solid var(--line2);font-size:11px}
+.grid th.cl{background:var(--bg2);color:var(--faint);font-family:var(--mono);font-size:11px;text-align:center;font-weight:400}
+.grid td.rn{background:var(--bg2);color:var(--faint);font-size:11px;text-align:right;width:34px}
+.grid td.h{font-family:var(--sans);color:var(--muted);text-align:left;background:var(--panel2)}
+.grid tr.hdr td{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid td.inp{background:var(--amber-t)}
+.grid td.sel{outline:2px solid var(--link);outline-offset:-2px;background:var(--hl)}
+.grid tr.vrow td{box-shadow:inset 0 1px 0 var(--warn),inset 0 -1px 0 var(--warn)}
+.grid tr.gap td{color:var(--faint);text-align:center;font-family:var(--sans);padding:1px}
+.grid tr.res td{background:var(--panel2);font-weight:600}
+.grid td.port{background:var(--hl)}
+.mk{display:inline-block;min-width:14px;font-size:10.5px;font-weight:700;border-radius:3px;padding:0 3px;font-family:var(--sans)}
+.mk.v{background:var(--warn);color:#14100a} .mk.e{background:var(--panel2);color:var(--warn);border:1px solid var(--warn)}
+.grid td.rest{position:sticky;right:0;background:#3a3222!important;box-shadow:-2px 0 0 var(--amber)} html.light .grid td.rest{background:#f3e3c4!important}
+.explain{display:flex;flex-direction:column;gap:10px}
+.explain .head1{font-size:12px;color:var(--muted)} .explain .big{font-family:var(--mono);font-size:24px;color:var(--amber)}
+.step{border-left:2px solid var(--line);padding:2px 0 2px 10px} .step.cur{border-left-color:var(--link)}
+.step h4{margin:0 0 3px;font-size:12.5px} .step .f{font-family:var(--mono);font-size:12px;color:var(--ink);line-height:1.55}
+.step .w{font-size:12px;color:var(--muted);line-height:1.45}
+.chk{font-size:12px;padding:6px 10px;border-radius:6px;background:var(--ok-t);color:var(--ok);font-weight:600}
+.banner{padding:7px 12px;border-radius:6px;background:var(--amber-t);border:1px solid var(--amber);font-size:12.5px}
+.plist td{font-size:12px}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>VaR Playground: option B, three panes with the position list (a scope over 500)<span class="alt">alternative</span></h1><p>From the VaR screen at BANK: a position list on the left (ranked by component VaR, tick to keep as a column), the grid in the middle with the pinned Rest of scope column, the explanation on the right. The same screen serves one position or five hundred.</p></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">PLAY VAR DESK:DESK-RATES-NY, VAR BANK …  then &lt;GO&gt;</div><div class="menus"><span class="on">Views</span><span class="">BI</span><span class="">Build</span><span class="">Admin</span><span class="">Help</span></div></div>
+<div class="head"><h2>VaR Playground</h2><span class="crumb">BANK</span><span class="meta">2026-09-30 · USD · 1-day 99% · 509 scenarios · from the VaR screen</span></div>
+<div class="banner"><b>500 of 18,412 positions shown</b>, the largest by |component VaR|; the other 17,912 are combined in one <b>Rest of scope</b> column (their P&amp;L summed, in USD). The portfolio P&amp;L is still the scope's, so the sheet's VaR equals the screen's: <b>112,041,646.00</b>. Incremental VaR for the top 50 only.</div>
+<div class="ctrls"><span class="pick"><b>Horizon</b>1-day ▾</span><span class="pick"><b>Confidence</b>99% ▾</span>
+<span class="pick"><b>ES</b>97.5% ▾</span><span class="pick"><b>Currency</b>USD ▾</span><span class="seg"><span class="on">Normal</span><span>Stressed</span></span>
+<span class="seg"><span class="on">P&amp;L</span><span>Scenario PV</span><span>FX</span></span><span class="pick"><b>Columns</b>500 ▾</span>
+<span style="margin-left:auto"></span><span class="btn">Open in SMAT</span><span class="btn">Copy formulas</span><span class="btn p">Export to Excel (1.2 MB)</span></div>
+<div style="display:grid;grid-template-columns:210px minmax(0,1fr) 340px;gap:12px;align-items:start">
+<div class="card"><h3>Positions <span>by |component VaR|</span></h3><table class="plist"><tr><th class="l">Position · component VaR</th></tr><tr><td class="l">☑ POS-20117 <span class="muted">15.7m</span></td></tr><tr><td class="l">☑ POS-31842 <span class="muted">13.0m</span></td></tr><tr><td class="l">☑ POS-10442 <span class="muted">7.1m</span></td></tr><tr><td class="l">☑ POS-44120 <span class="muted">6.9m</span></td></tr><tr><td class="l">☑ POS-27735 <span class="muted">6.0m</span></td></tr><tr><td class="l">☑ POS-38006 <span class="muted">5.9m</span></td></tr><tr><td class="l muted">☑ 494 more (ranked 7 to 500)</td></tr><tr><td class="l muted">☐ 17,912 in Rest of scope</td></tr></table>
+<div class="note" style="margin-top:8px">Untick a position to move it into Rest of scope; add one by id. Up to 500 columns (<span class="mono">drishti.var.playground.max-positions</span>).</div></div>
+<div class="sheet"><div class="fbar"><span class="nm">C104</span><span class="fx">fx</span><span class="f">=Data!B104 - Config!D2</span></div>
+<div style="overflow:auto"><table class="grid"><tr><th class="cl"></th><th class="cl">A</th><th class="cl">B</th><th class="cl">C</th><th class="cl">D</th><th class="cl">E</th><th class="cl">F</th><th class="cl">G</th><th class="cl">H</th><th class="cl">I</th><th class="cl">J</th><th class="cl">K</th><th class="cl">L</th><th class="cl">M</th></tr><tr class="hdr"><td class="rn">1</td><td class="h">Position</td><td class="">POS-20117</td><td class="">POS-31842</td><td class="">POS-10442</td><td class="">POS-44120</td><td class="">POS-27735</td><td class="">POS-38006</td><td class="">494 more</td><td class="rest">Rest of scope</td><td>Portfolio</td><td>Rank</td><td class="l">Mark</td></tr><tr><td class="rn">2</td><td class="h">Kind</td><td class="inp">position</td><td class="inp">position</td><td class="inp">position</td><td class="inp">position</td><td class="inp">position</td><td class="inp">position</td><td class="inp">shown</td><td class="inp rest">rest</td><td></td><td></td><td></td></tr><tr><td class="rn">3</td><td class="h">Currency</td><td class="inp">USD</td><td class="inp">EUR</td><td class="inp">USD</td><td class="inp">GBP</td><td class="inp">USD</td><td class="inp">CAD</td><td class="inp">USD</td><td class="inp rest">USD</td><td></td><td></td><td></td></tr><tr><td class="rn">4</td><td class="h">Base PV</td><td class="inp">412,500,000.00</td><td class="inp">-188,204,000.00</td><td class="inp">12,004,113.00</td><td class="inp">96,310,000.00</td><td class="inp"><span class="muted">n/a</span></td><td class="inp">141,002,000.00</td><td class="inp"><span class="muted">n/a</span></td><td class="inp rest"><span class="muted">n/a</span></td><td></td><td></td><td></td></tr><tr><td class="rn">5</td><td class="h">Base FX (USD per unit)</td><td class="inp">1</td><td class="inp">1.0835</td><td class="inp">1</td><td class="inp">1.2994</td><td class="inp">1</td><td class="inp">0.7381</td><td class="inp">1</td><td class="inp rest">1</td><td></td><td></td><td></td></tr><tr><td class="rn">6</td><td class="h">Input form</td><td class="inp">PV</td><td class="inp">PV</td><td class="inp">PV</td><td class="inp">PV</td><td class="inp">PnL</td><td class="inp">PV</td><td class="inp">PnL</td><td class="inp rest">PnL</td><td></td><td></td><td></td></tr><tr class=""><td class="rn">7</td><td class="h">1 · 2024-10-18</td><td class="">13,792,369.53</td><td class="">12,074,722.14</td><td class="">6,851,388.31</td><td class="">4,247,216.09</td><td class="">1,655,954.54</td><td class="">1,958,887.85</td><td class="">17,303,078.11</td><td class="rest neg">-10,278,693.68</td><td class="port ">47,604,922.89</td><td>444</td><td class="l"></td></tr><tr class=""><td class="rn">8</td><td class="h">2 · 2024-10-21</td><td class="">1,551,618.67</td><td class="">6,755,799.54</td><td class="neg">-1,211,691.42</td><td class="">2,616,511.57</td><td class="neg">-4,348,124.30</td><td class="">731,362.91</td><td class="">18,579,826.25</td><td class="rest neg">-4,803,771.11</td><td class="port ">19,871,532.11</td><td>339</td><td class="l"></td></tr><tr class=""><td class="rn">9</td><td class="h">3 · 2024-10-22</td><td class="neg">-1,282,693.02</td><td class="">2,025,981.17</td><td class="neg">-4,510,349.53</td><td class="neg">-1,362,554.31</td><td class="neg">-3,351,528.70</td><td class="">3,582,993.48</td><td class="neg">-6,530,980.99</td><td class="rest neg">-10,589,082.21</td><td class="port neg">-22,018,214.11</td><td>152</td><td class="l"></td></tr><tr class=""><td class="rn">10</td><td class="h">4 · 2024-10-23</td><td class="neg">-881,018.31</td><td class="">3,075,534.30</td><td class="">385,937.58</td><td class="neg">-2,017,414.10</td><td class="">3,914,255.00</td><td class="">986,362.60</td><td class="">20,320,527.19</td><td class="rest ">7,345,199.40</td><td class="port ">33,129,383.65</td><td>389</td><td class="l"></td></tr><tr class=""><td class="rn">11</td><td class="h">5 · 2024-10-24</td><td class="">10,919,460.54</td><td class="">4,395,477.09</td><td class="">3,486,501.95</td><td class="">1,401,833.91</td><td class="">233,245.84</td><td class="">6,116,604.07</td><td class="">5,550,874.98</td><td class="rest ">6,898,966.14</td><td class="port ">39,002,964.52</td><td>419</td><td class="l"></td></tr><tr class=""><td class="rn">12</td><td class="h">6 · 2024-10-25</td><td class="">7,147,360.40</td><td class="">7,251,582.54</td><td class="">1,825,829.95</td><td class="">7,687,677.45</td><td class="">4,619,167.92</td><td class="">2,444,583.78</td><td class="">37,116,488.09</td><td class="rest ">11,576,376.80</td><td class="port ">79,669,066.93</td><td>491</td><td class="l"></td></tr><tr class="gap"><td class="rn">⋮</td><td colspan="13">⋮</td></tr><tr class=""><td class="rn">102</td><td class="h">96 · 2025-02-28</td><td class="">7,919,363.38</td><td class="">7,570,887.80</td><td class="neg">-883,934.04</td><td class="">74,004.83</td><td class="">362,320.01</td><td class="neg">-1,152,665.32</td><td class="">2,884,639.26</td><td class="rest ">2,231,623.72</td><td class="port ">19,006,239.63</td><td>336</td><td class="l"></td></tr><tr class=""><td class="rn">103</td><td class="h">97 · 2025-03-03</td><td class="">7,289,569.29</td><td class="">7,446,891.52</td><td class="">4,164,885.15</td><td class="">2,015,818.76</td><td class="">3,425,511.06</td><td class="neg">-426,990.70</td><td class="">16,976,020.90</td><td class="rest ">6,759,223.81</td><td class="port ">47,650,929.77</td><td>445</td><td class="l"></td></tr><tr class="vrow"><td class="rn">104</td><td class="h">98 · 2025-03-04</td><td class="sel neg">-12,092,812.43</td><td class="neg">-13,777,316.64</td><td class="neg">-12,453,157.38</td><td class="neg">-5,579,473.44</td><td class="neg">-7,885,499.57</td><td class="neg">-4,994,657.71</td><td class="neg">-43,646,252.48</td><td class="rest neg">-11,612,476.34</td><td class="port neg">-112,041,646.00</td><td>6</td><td class="l"><span class="mk v">V</span></td></tr><tr class=""><td class="rn">105</td><td class="h">99 · 2025-03-05</td><td class="">17,546,329.76</td><td class="">9,168,646.13</td><td class="">7,104,744.97</td><td class="">6,612,803.94</td><td class="">5,945,710.77</td><td class="">7,264,026.44</td><td class="">52,941,490.29</td><td class="rest ">24,305,874.93</td><td class="port ">130,889,627.22</td><td>507</td><td class="l"></td></tr><tr class=""><td class="rn">106</td><td class="h">100 · 2025-03-06</td><td class="neg">-3,028,810.36</td><td class="neg">-4,253,664.37</td><td class="neg">-4,605,831.04</td><td class="neg">-2,061,135.95</td><td class="">989,320.93</td><td class="neg">-2,464,776.41</td><td class="neg">-17,684,737.60</td><td class="rest ">2,156,911.23</td><td class="port neg">-30,952,723.56</td><td>122</td><td class="l"></td></tr><tr class="gap"><td class="rn">⋮</td><td colspan="13">⋮</td></tr><tr class=""><td class="rn">513</td><td class="h">507 · 2026-09-28</td><td class="">9,229,565.67</td><td class="">7,091,035.69</td><td class="">1,121,743.24</td><td class="">334,311.48</td><td class="">2,917.04</td><td class="">2,217,606.41</td><td class="">17,282,549.21</td><td class="rest neg">-3,481,708.38</td><td class="port ">33,798,020.36</td><td>390</td><td class="l"></td></tr><tr class=""><td class="rn">514</td><td class="h">508 · 2026-09-29</td><td class="neg">-637,447.16</td><td class="neg">-354,631.84</td><td class="">149,568.26</td><td class="neg">-252,311.89</td><td class="neg">-3,195,448.49</td><td class="neg">-1,163,401.54</td><td class="neg">-10,937,793.11</td><td class="rest neg">-1,294,025.91</td><td class="port neg">-17,685,491.69</td><td>175</td><td class="l"></td></tr><tr class=""><td class="rn">515</td><td class="h">509 · 2026-09-30</td><td class="">3,321,319.24</td><td class="neg">-1,191,882.97</td><td class="">2,894,783.29</td><td class="neg">-3,967,063.45</td><td class="">2,155,718.61</td><td class="">117,457.13</td><td class="neg">-12,416,244.00</td><td class="rest neg">-2,121,598.33</td><td class="port neg">-11,207,510.49</td><td>198</td><td class="l"></td></tr>
+<tr class="gap"><td class="rn">⋮</td><td colspan="13"></td></tr><tr class="res"><td class="rn">518</td><td class="h">Standalone VaR 99%</td><td class="">18,360,864.93</td><td class="">13,777,316.64</td><td class="">11,589,803.73</td><td class="">9,328,088.03</td><td class="">9,012,634.54</td><td class="">7,659,231.67</td><td class="">46,319,968.12</td><td class="rest">16,868,664.95</td><td></td><td></td><td></td></tr><tr class="res"><td class="rn">519</td><td class="h">Component VaR</td><td class="">15,665,434.39</td><td class="">13,023,916.82</td><td class="">7,116,714.35</td><td class="">6,895,109.88</td><td class="">6,034,482.20</td><td class="">5,907,891.10</td><td class="">46,659,983.07</td><td class="rest">10,738,114.20</td><td></td><td></td><td></td></tr><tr class="res"><td class="rn">520</td><td class="h">% of VaR</td><td class="">14.0%</td><td class="">11.6%</td><td class="">6.4%</td><td class="">6.2%</td><td class="">5.4%</td><td class="">5.3%</td><td class="">41.6%</td><td class="rest">9.6%</td><td></td><td></td><td></td></tr><tr class="res"><td class="rn">521</td><td class="h">Incremental VaR</td><td class="">13,574,933.06</td><td class="">13,777,316.64</td><td class="">12,453,157.38</td><td class="">5,579,473.44</td><td class="">7,885,499.57</td><td class="">4,994,657.71</td><td class="">43,646,252.48</td><td class="rest">11,612,476.34</td><td></td><td></td><td></td></tr><tr class="res"><td class="rn">522</td><td class="h">Component ES 97.5%</td><td class="">16,913,067.03</td><td class="">13,180,851.37</td><td class="">9,775,135.60</td><td class="">7,289,349.01</td><td class="">7,683,730.03</td><td class="">6,461,425.92</td><td class="">49,296,834.16</td><td class="rest">11,623,211.55</td><td></td><td></td><td></td></tr></table></div></div>
+<div class="card">
+<div class="explain">
+  <div><div class="head1">VaR 99%, 1-day · BANK</div><div class="big">112,041,646.00 USD</div>
+  <div class="head1">ES 97.5% 122,223,604.68 · diversification 20,874,926.62</div></div>
+  <div class="step cur"><h4>1. The selected cell: POS-20117, scenario 98 (2025-03-04)</h4>
+    <div class="f">P&amp;L(s) = PV(s) × FX(s) − PV(base) × FX(base)<br>= 400,407,187.57 × 1.000000 − (412,500,000.00 × 1.0000)<br>= <b>-12,092,812.43</b> USD</div><div class="w">Currency USD; FX is USD per unit, scenario rate 1.</div></div>
+  <div class="step"><h4>2. Portfolio P&amp;L, the sum across the row</h4>
+    <div class="f">v(98) = Σ positions = -112,041,646.00</div></div>
+  <div class="step"><h4>3. Ranked worst first</h4>
+    <div class="f">k = ⌈509 × (1 − 0.99)⌉ = ⌈5.09⌉ = 6</div>
+    <div class="w">Rank 6 is scenario 98, 2025-03-04 (marked V); ties broken by index.</div></div>
+  <div class="step"><h4>4. VaR = −(the 6th worst)</h4>
+    <div class="f">VaR = −(-112,041,646.00) = <b>112,041,646.00</b></div></div>
+  <div class="step"><h4>5. ES 97.5% = mean of the 13 worst</h4>
+    <div class="f">k_ES = ⌈509 × 0.025⌉ = 13; ES = 122,223,604.68</div><div class="w">The tail rows are marked E.</div></div>
+  <div class="step"><h4>6. Component VaR of POS-20117</h4>
+    <div class="f">window: ranks 4 to 8 (component-window 5)<br>scale c = VaR / S = 1.009229<br>
+    component = −c × mean over the window = <b>15,665,434.39</b> (14.0% of VaR)</div></div>
+  <div class="step"><h4>7. 10-day</h4>
+    <div class="f">√10: 112,041,646.00 × 3.162278 = 354,306,794.15<br>
+    sum of 10 consecutive days: 500 windows, k = 5: 274,544,283.00</div></div>
+  <div class="step"><h4>8. Every confidence (the same ranked vector)</h4>
+    <div class="f">95% (26th) 68,355,411.00 · 97.5% (13th) 90,115,041.58<br>99% (6th) 112,041,646.00 · 99.5% (3rd) 126,237,253.98</div></div>
+  <div class="chk">✓ Σ component VaR = VaR to the cent · sheet = engine (112,041,646.00)</div>
+</div></div>
+</div>
+<footer>Mock-up. Figures are the demo's on 2026-09-30 where the guides quote them (VaR BANK 1-day 99% 112,041,646 USD; stressed VaR 213,637,794); the rest are illustrative. Design, not built.</footer>
+</div>
+</body>
+</html>

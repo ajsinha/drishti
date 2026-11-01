@@ -995,6 +995,11 @@ Tolerance and causes, per attribute (proposal):
 
 These are choices, not facts. Each has a default in a contract; the product owner confirms or changes it.
 
+**Decided (product owner, 2026-10-31):** every default below is confirmed as written, with one choice made where the table offered
+two: **one live rule for every figure, status AND maturity** (a trade counts as live while its status is live and its maturity has
+not passed), as VaR already does; the netting sets, exposure, collateral and every other engine are to follow it (not yet built for the netting sets). Changing any default later is
+a decision recorded here.
+
 | Choice | Default in the contracts | Options | Affects |
 |---|---|---|---|
 | PFE quantile | 95% and 99% computed; limits use 95% (EXPOSURE_GUIDE.md section 18.1 `limit-confidence`) | any q in (0.5, 1) | EXP, LIM, GRP |
@@ -1002,7 +1007,7 @@ These are choices, not facts. Each has a default in a contract; the product owne
 | Collateral model on paths | `lagged` (look-back by MPOR) | `current`, `none` | EXP, CVA, LIM |
 | Haircut basis for exposure | contractual (CSA) | supervisory (CRE22) | NSET, EXP, MC |
 | Partial netting sets (a desk's share) | collateral not apportioned (`partial-collateral: none`) | `pro-rata-positive-mtm` | NSET, EXP |
-| **Live** and matured trades | status only (netting sets today) or status and maturity (VaR today) | either, one for all | every figure |
+| **Live** and matured trades | **decided (2026-10-31): status AND maturity, one rule for every figure** (the netting sets still read status only until a build applies the rule) | — | every figure |
 | CVA mode and averaging | unilateral; EE at period end (`ee-point: end`) | bilateral; `mid` | CVA |
 | CVA discounting and PD source | DF from the USD OIS curve; survival points | hazard, spread-implied | CVA |
 | LGD | 1 − market recovery of the counterparty's curve | regulatory LGD by type | CVA, WWR |

@@ -45,6 +45,7 @@ public final class HistoryReads {
 
     private HistoryReads() {}
 
+    /** The history {@code r} asks for, read one dated fetch per date (see the class comment). */
     public static HistoryRead perDay(SourcePlugin source, HistoryRequest r) {
         long deadline = System.nanoTime() + r.budget().toNanos();
         List<LocalDate> dates = dates(source, r);

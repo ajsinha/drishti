@@ -72,6 +72,15 @@ final class VarLoader {
         this.hierarchies = hierarchies;
     }
 
+    /** How the vector files of a load decode: several at once, delivered in file order ({@code drishti.var.read}, VAR_GUIDE.md 27a.6). */
+    private volatile com.ash.drishti.api.VectorReads.Options reads = VarReadProperties.defaults().options();
+
+    /** Sets how a load's vector files decode ({@link com.ash.drishti.api.VectorReads.Options#serial()}: one after the other). */
+    VarLoader reads(com.ash.drishti.api.VectorReads.Options options) {
+        this.reads = options == null ? com.ash.drishti.api.VectorReads.Options.serial() : options;
+        return this;
+    }
+
     /** The hierarchies a load builds now (the setting, a pack's block, or MGMT and LEGAL from the rows). */
     Hierarchies hierarchies() {
         return hierarchies.get();
@@ -113,8 +122,7 @@ final class VarLoader {
         AsOf asOf = AsOf.of(date);
         java.util.SortedMap<List<String>, Long> out = com.ash.drishti.compute.shard.ShardMap.counts();
         for (String kind : kinds) {
-            String v = router.dataVersion(kind, asOf).orElse("");
-            if (v.isEmpty() || v.equals("none")) {
+            if (holdsNothing(router.dataVersion(kind, asOf).orElse(""))) {
                 continue;                                              // no connector holds the kind on the date
             }
             if (!router.columnar(kind).containsAll(key)) {
@@ -137,10 +145,27 @@ final class VarLoader {
         return java.util.Optional.of(out);
     }
 
+    /**
+     * True when a kind's data version says no connector holds it: none at all, or each source's part {@code <source>=none} (the router
+     * names the source: {@code risk-store=none} is a connector without the table), so a lake without a {@code scenario-pv} table is sharded
+     * on its P&amp;L vectors alone.
+     */
+    static boolean holdsNothing(String version) {
+        if (version == null || version.isEmpty()) {
+            return true;
+        }
+        for (String part : version.split("\\|")) {
+            if (!part.equals("none") && !part.endsWith("=none")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     /** The scenarios a date's vectors keep: its scenario set's length, or the scenario window (0 when the date has no set). */
     int width(LocalDate date) {
         try {
-            DataNode set = documents(props.kinds().scenarioSet(), AsOf.of(date)).values().stream().findFirst().orElse(null);
+            DataNode set = sets(date, AsOf.of(date)).normal().values().stream().findFirst().orElse(null);
             DataNode sd = set == null ? null : set.get("SCENARIO_DATES");
             int n = sd == null ? 0 : sd.size();
             return props.window() > 0 ? Math.min(n, props.window()) : n;
@@ -187,6 +212,11 @@ final class VarLoader {
      * shard) its place in its shard map. A hot file built from other inputs is not reopened.
      */
     private String digest(LocalDate date, Map<String, String> versions, Hierarchies hs, PositionRules pr, VarShardScope shard) {
+        return digest(date, versions, hs, pr, shard, null);
+    }
+
+    /** The same for the date's stress scenario set ({@code stressSet}: its id; null: the normal set). */
+    private String digest(LocalDate date, Map<String, String> versions, Hierarchies hs, PositionRules pr, VarShardScope shard, String stressSet) {
         VarProperties.Kinds k = props.kinds();
         String trades = version(date);
         // a date with scenario PVs converts them with the date's FX: its hot file is built from those versions too
@@ -198,8 +228,8 @@ final class VarLoader {
         // the hierarchies' configuration (2.9.5) and their limits' version: a file built under another is not reopened
         String hierKey = versions.get(k.hierarchy()) + props.rootNamesKey() + hs.digest()
                 + (hs.limitKinds().isEmpty() ? "" : "|limits=" + versions.getOrDefault(k.limit(), ""));
-        return VarTier.digest(date, inputsKey, hierKey, versions.get(k.scenarioSet()) + (props.window() > 0 ? "|window=" + props.window() : ""),
-                pr.digest());
+        String setKey = versions.get(k.scenarioSet()) + (stressSet != null ? "|stress=" + stressSet : props.window() > 0 ? "|window=" + props.window() : "");
+        return VarTier.digest(date, inputsKey, hierKey, setKey, pr.digest());
     }
 
     /**
@@ -220,6 +250,28 @@ final class VarLoader {
     }
 
     private VarDate load(LocalDate date, VarShardScope shard) {
+        return load(date, shard, false);
+    }
+
+    /**
+     * The date's <b>stress scenario set</b> (stressed VaR, VAR_GUIDE.md section 18.8): its trades' rows of that set only, built as a book of
+     * their own (its own hot file, {@code <date>-STRESS}), the set used whole (the scenario window is the normal set's), the morning run
+     * alone, in USD. A date without a stress set is answered in words ({@code DRS-1001}), never with zeros.
+     */
+    VarDate loadStress(LocalDate date) {
+        return load(date, null, true);
+    }
+
+    /** The hot-file folder label of a date's stress-set book ({@code <date>-STRESS}). */
+    static final String STRESS_FOLDER = "STRESS";
+
+    /** The key of {@link VarDate#versions()} that marks a date of the stress scenario set (its id). */
+    static final String STRESS_SET = "stressSet";
+    /** The keys of {@link VarDate#versions()} with the stress set's own description and its synthetic mark (the demo's set). */
+    static final String STRESS_ABOUT = "stressSetDescription";
+    static final String STRESS_SYNTHETIC = "stressSetSynthetic";
+
+    private VarDate load(LocalDate date, VarShardScope shard, boolean stress) {
         long t0 = System.nanoTime();
         VarProperties.Kinds k = props.kinds();
         AsOf asOf = AsOf.of(date);
@@ -228,46 +280,44 @@ final class VarLoader {
         // a column hierarchy whose level column a source does not keep is skipped, said (DRS-5211 as a warning); the rest load (2.9.5)
         Hierarchies hs = effective(date, hierarchies.get());
         String trades = version(date);
-        String digest = tier.mapped() ? digest(date, versions, hs, pr, shard) : "";
+        Sets sets = sets(date, asOf);
+        DataNode set = stress ? sets.stress(date) : sets.normal(date);
+        String setId = text(set, "SCENARIO_SET_ID");
+        String folder = stress ? STRESS_FOLDER : VarDate.USD;
+        String digest = tier.mapped() ? digest(date, versions, hs, pr, shard, stress ? setId : null) : "";
         java.util.Optional<java.nio.file.Path> hot = !tier.mapped() ? java.util.Optional.empty()
-                : shard == null ? tier.existing(date, digest) : tier.existing(date, VarDate.USD, shard.index(), digest);
+                : shard == null ? tier.existing(date, folder, digest) : tier.existing(date, VarDate.USD, shard.index(), digest);
         if (hot.isPresent()) {
-            VarDate reopened = reopen(date, hot.get(), versions, t0, shard == null);
+            VarDate reopened = reopen(date, hot.get(), versions, t0, shard == null && !stress);
             if (reopened != null) {
-                return reopened;
+                return stress ? stressDate(reopened, set) : reopened;
             }
         }
-        Map<String, DataNode> sets = documents(k.scenarioSet(), asOf);
-        DataNode set = sets.values().stream().findFirst().orElse(null);
-        if (set == null) {
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no scenario set for " + date + " (kind " + k.scenarioSet() + ")");
-        }
-        if (sets.size() > 1) {
-            throw inconsistent(date, sets.size() + " scenario sets (" + String.join(", ", sets.keySet()) + "): one per date");
-        }
-        String setId = text(set, "SCENARIO_SET_ID");
         List<LocalDate> fullSet = scenarioDates(date, setId, set);
         // the scenario window (drishti.var.scenario-window, VAR_GUIDE.md section 18.5): the newest N scenarios of the set, every row cut
-        // to them at load (P&L vectors and scenario PVs alike); a set shorter than N is used whole (said in the provenance)
-        List<LocalDate> scenarioDates = window(fullSet);
+        // to them at load (P&L vectors and scenario PVs alike); a set shorter than N is used whole (said in the provenance). The stress set
+        // is the stress window itself: used whole
+        List<LocalDate> scenarioDates = stress ? fullSet : window(fullSet);
+        String fxSet = stress ? setId : null;
         long budget = props.memoryBudgetMb() * 1024 * 1024;
         if (shard != null && !tier.mapped()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a sharded date needs the tiered memory (drishti.var.tier.mode: mapped)");
         }
         VarBook.Builder b = tier.mapped() ? new VarBook.Builder(date, setId, scenarioDates, budget,
-                shard == null ? tier.target(date, digest) : tier.target(date, VarDate.USD, shard.index(), digest))
+                shard == null ? tier.target(date, folder, digest) : tier.target(date, VarDate.USD, shard.index(), digest))
                 : new VarBook.Builder(date, setId, scenarioDates, props.rowsPerChunk(), budget);
         if (shard != null) {
             b.range(shard.json(digest));
         }
         // the build sums every node's PVs per trade currency too (VAR_GUIDE.md section 15.11): the date's FX, read only when a trade needs it
-        b.currencyRates(c -> fx(date, scenarioDates).rates(c).orElse(null));
+        b.currencyRates(c -> fx(date, scenarioDates, fxSet).rates(c).orElse(null));
         Map<String, Double> limits = limits(asOf, hs);
         // the column hierarchies' cells and nodes (2.9.5); their roots named as the risk-hierarchy roots are (drishti.var.root-name(s))
         b.columnHierarchies(hs.specs().stream().map(s -> s.columns() ? s.withRootName(props.rootName(s.id(), null, s.rootName())) : s).toList(),
                 limits);
         try {
-            VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates, fullSet.size(), hs, shard);
+            VarIntake intake = intake(date, asOf, b, pr, setId, scenarioDates, fullSet.size(), hs, shard, stress ? keepOnly(setId)
+                    : keepNormal(sets.stressIds()), fxSet);
             List<LocalDate> days = scenarioDates;
             VarIntake.Summary sum = intake.summary();
             long tVectors = System.nanoTime();
@@ -298,6 +348,9 @@ final class VarLoader {
                     versions, List.of(), VarDate.USD, intake.fx());
             if (shard != null) {
                 return vd;                                             // a shard: the morning run only
+            }
+            if (stress) {
+                return stressDate(vd, set);                            // the stress set: the morning run only
             }
             unknownLimits(date, unknownLimits);
             return withIntraday(vd, intake, days);
@@ -348,21 +401,26 @@ final class VarLoader {
     }
 
     private VarIntake intake(LocalDate date, AsOf asOf, VarBook.Builder b, PositionRules pr, String setId, List<LocalDate> scenarioDates,
-            int setLength, Hierarchies hs, VarShardScope shard) {
+            int setLength, Hierarchies hs, VarShardScope shard, java.util.function.Predicate<String> keep, String fxSet) {
         VarProperties.Kinds k = props.kinds();
         List<String> levels = hs.levelColumns();
         List<String> columns = VarIntake.columns(router.columnar(k.vector()), pr, List.of(), levels);
         List<String> pvColumns = VarIntake.columns(router.columnar(k.scenarioPv()), pr, VarIntake.PV_COLUMNS, levels);
         String unmarked = unmarked(columns, pvColumns);
+        if (fxSet != null) {
+            sayable(columns, pvColumns, setId);                       // the stress set's rows must be told from the normal set's
+        }
         VarIntake intake = new VarIntake(b, pr, date, columns.subList(1, columns.size())).scenarioSet(setId)
-                .inputs(new VarInputs(props::input)).setLength(setLength).pnlFx(() -> fx(date, scenarioDates)).levels(levels);
+                .inputs(new VarInputs(props::input)).setLength(setLength).pnlFx(() -> fx(date, scenarioDates, fxSet)).levels(levels);
         boolean read;
         boolean readPv;
         try {
             com.ash.drishti.api.KeyRange range = shard == null ? null : shard.range();
-            read = router.vectors(k.vector(), "PNL", columns, asOf, range, shardRows(shard, columns, intake::row));
-            intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, scenarioDates), scenarioDates);
-            readPv = router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, range, shardRows(shard, pvColumns, intake::row));
+            read = router.vectors(k.vector(), "PNL", columns, asOf, range, com.ash.drishti.api.VectorReads.parallel(
+                    ofSet(columns, keep, shardRows(shard, columns, intake::row)), reads));
+            intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, scenarioDates, fxSet), scenarioDates);
+            readPv = router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, range, com.ash.drishti.api.VectorReads.parallel(
+                    ofSet(pvColumns, keep, shardRows(shard, pvColumns, intake::row)), reads));
         } catch (com.ash.drishti.compute.vector.VectorStore.BudgetExceeded e) {
             throw new DrishtiException(ErrorCode.VAR_CAPACITY, e.getMessage() + ": the engine has no room for this date now; raise "
                     + "drishti.var.memory-budget-mb or the server's heap, or keep fewer dates loaded (drishti.var.hot-dates)");
@@ -410,6 +468,124 @@ final class VarLoader {
                 to.row(id, values, len, row);
             }
         };
+    }
+
+    // ------------------------------------------------------------------------------------------------------- the scenario sets
+
+    /**
+     * A date's scenario sets (VAR_GUIDE.md section 18.8): its normal set (one, as before) and its stress set (none or one), told apart by
+     * the set's {@code SET_TYPE} or its id ({@code drishti.var.stress.id-prefix}).
+     */
+    record Sets(Map<String, DataNode> normal, Map<String, DataNode> stress, String kind) {
+
+        /** The date's normal set; none or two refuse the date as before ({@code DRS-1001}, {@code DRS-5203}). */
+        DataNode normal(LocalDate date) {
+            if (normal.isEmpty()) {
+                throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no scenario set for " + date + " (kind " + kind + ")"
+                        + (stress.isEmpty() ? "" : ": only the stress set " + String.join(", ", stress.keySet())));
+            }
+            if (normal.size() > 1) {
+                throw inconsistent(date, normal.size() + " scenario sets (" + String.join(", ", normal.keySet()) + "): one per date");
+            }
+            return normal.values().iterator().next();
+        }
+
+        /** The date's stress set; none is said in words ({@code DRS-1001}: stressed VaR is not available on the date, never zero). */
+        DataNode stress(LocalDate date) {
+            if (stress.isEmpty()) {
+                throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no stress scenario set on " + date + ": stressed VaR is not "
+                        + "available for this date (a stress set is a scenario set with SET_TYPE STRESS, VAR_GUIDE.md section 18.8)");
+            }
+            if (stress.size() > 1) {
+                throw inconsistent(date, stress.size() + " stress scenario sets (" + String.join(", ", stress.keySet()) + "): one per date");
+            }
+            return stress.values().iterator().next();
+        }
+
+        /** The ids of the date's stress sets: their rows are left out of the normal set's book. */
+        java.util.Set<String> stressIds() {
+            java.util.Set<String> out = new java.util.HashSet<>();
+            stress.values().forEach(d -> out.add(text(d, "SCENARIO_SET_ID")));
+            return out;
+        }
+    }
+
+    /** A date's scenario sets, the normal and the stress ones apart. */
+    Sets sets(LocalDate date, AsOf asOf) {
+        Map<String, DataNode> normal = new LinkedHashMap<>();
+        Map<String, DataNode> stress = new LinkedHashMap<>();
+        documents(props.kinds().scenarioSet(), asOf).forEach((id, d) -> {
+            boolean s = props.stress().isStress(text(d, "SET_TYPE"), text(d, "SCENARIO_SET_ID"));
+            (s ? stress : normal).put(id, d);
+        });
+        return new Sets(normal, stress, props.kinds().scenarioSet());
+    }
+
+    /** The ids of a date's stress sets (none when it has none, or its sets cannot be read). */
+    java.util.Set<String> stressIds(LocalDate date) {
+        try {
+            return sets(date, AsOf.of(date)).stressIds();
+        } catch (RuntimeException e) {
+            return java.util.Set.of();
+        }
+    }
+
+    /** The rows of the normal set: every row but those of a stress set (a row of another set still reaches the one-run check). */
+    static java.util.function.Predicate<String> keepNormal(java.util.Set<String> stressIds) {
+        return set -> set == null || !stressIds.contains(set);
+    }
+
+    /** The rows of one set only. */
+    static java.util.function.Predicate<String> keepOnly(String setId) {
+        return setId::equals;
+    }
+
+    /** A sink that passes on the rows whose {@code SCENARIO_SET_ID} (a column of {@code columns}) {@code keep} takes. */
+    static com.ash.drishti.api.VectorSink ofSet(List<String> columns, java.util.function.Predicate<String> keep, com.ash.drishti.api.VectorSink to) {
+        int at = columns.indexOf("SCENARIO_SET_ID");
+        if (at < 0) {
+            return to;                                                 // the connector does not keep it: every row (the normal set's load)
+        }
+        return (id, values, len, row) -> {
+            if (keep.test(at < row.length ? row[at] : null)) {
+                to.row(id, values, len, row);
+            }
+        };
+    }
+
+    /** Refuses a stress set's load when a source of the trades does not keep {@code SCENARIO_SET_ID}: its rows could not be told apart. */
+    private void sayable(List<String> columns, List<String> pvColumns, String setId) {
+        VarProperties.Kinds k = props.kinds();
+        List<String> missing = new ArrayList<>();
+        if (!router.columnar(k.vector()).isEmpty() && !columns.contains("SCENARIO_SET_ID")) {
+            missing.add("layout." + k.vector() + ".columns");
+        }
+        if (!router.columnar(k.scenarioPv()).isEmpty() && !pvColumns.contains("SCENARIO_SET_ID")) {
+            missing.add("layout." + k.scenarioPv() + ".columns");
+        }
+        if (!missing.isEmpty()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the stress set " + setId + " cannot be read: the connector does not promote "
+                    + "SCENARIO_SET_ID (" + String.join(", ", missing) + "), so its rows cannot be told from the normal set's");
+        }
+    }
+
+    /**
+     * A date built from its stress set, marked as such (its version names the set, so no cache takes it for the normal set's), with what
+     * the set says of itself ({@code DESCRIPTION}, {@code SYNTHETIC}) for the answers.
+     */
+    private static VarDate stressDate(VarDate vd, DataNode set) {
+        String setId = text(set, "SCENARIO_SET_ID");
+        Map<String, String> v = new LinkedHashMap<>(vd.versions());
+        v.put(STRESS_SET, setId);
+        String about = text(set, "DESCRIPTION");
+        if (about != null) {
+            v.put(STRESS_ABOUT, about);
+        }
+        if ("true".equalsIgnoreCase(String.valueOf(text(set, "SYNTHETIC")))) {
+            v.put(STRESS_SYNTHETIC, "true");
+        }
+        return new VarDate(vd.date(), vd.book(), vd.portfolios(), vd.version() + "|set=" + setId, vd.loadedAt(), vd.loadMs(), vd.vectorMs(),
+                vd.intake(), v, vd.warnings(), vd.currency(), vd.fx(), null);
     }
 
     /** Per business date, the column hierarchies skipped on it and why (2.9.5). */
@@ -499,7 +675,8 @@ final class VarLoader {
         static final LimitBasis DEFAULT = new LimitBasis(1, 0.99);
 
         boolean matches(com.ash.drishti.compute.var.VarLens lens) {
-            return lens.days() == days && Math.abs(lens.confidence() - confidence) < 1e-9;
+            // a VaR limit is set against VaR on the normal scenario set: stressed VaR is never compared with it
+            return !lens.stressed() && lens.days() == days && Math.abs(lens.confidence() - confidence) < 1e-9;
         }
 
         /** {@code 1-day 99%}. */
@@ -811,10 +988,13 @@ final class VarLoader {
                 .levels(levels)
                 .inputs(in).setLength(morningRun == null || morningRun.setLength() <= 0 ? days.size() : morningRun.setLength())
                 .pnlFx(() -> fx(date, days));
+        java.util.function.Predicate<String> normal = keepNormal(stressIds(date));     // the stress set's rows are never the normal set's
         try {
-            router.vectors(k.vector(), "PNL", columns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
+            router.vectors(k.vector(), "PNL", columns, asOf, com.ash.drishti.api.VectorReads.parallel(ofSet(columns, normal, intake::row),
+                    reads));
             intake.scenarioPvs(pvColumns.subList(1, pvColumns.size()), () -> fx(date, days), days);
-            router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, (id, values, len, row) -> intake.row(id, values, len, row));
+            router.vectors(k.scenarioPv(), SCENARIO_PV, pvColumns, asOf, com.ash.drishti.api.VectorReads.parallel(ofSet(pvColumns, normal,
+                    intake::row), reads));
         } catch (DrishtiException e) {
             throw e;
         } catch (Exception e) {
@@ -841,20 +1021,34 @@ final class VarLoader {
      * USD). Kept per date and input versions.
      */
     com.ash.drishti.compute.var.ScenarioFx fx(LocalDate date, List<LocalDate> scenarioDates) {
+        return fx(date, scenarioDates, null);
+    }
+
+    /**
+     * The same for a scenario set: {@code stressSet} the date's stress set (its own supplied scenario FX only), or null for the normal set
+     * (the stress set's supplied rows left out). The stress days' FX is never derived from a history the lake does not hold: a currency
+     * the stress set's batch did not supply is refused for its trades ({@code DRS-5207}), as for the normal set.
+     */
+    com.ash.drishti.compute.var.ScenarioFx fx(LocalDate date, List<LocalDate> scenarioDates, String stressSet) {
         VarProperties.Kinds k = props.kinds();
         AsOf asOf = AsOf.of(date);
         String key = date + "|" + router.dataVersion(k.fxScenario(), asOf).orElse("") + "|" + router.dataVersion(k.fxSpot(), asOf).orElse("")
-                + "|" + scenarioDates.size() + "|" + scenarioDates.get(scenarioDates.size() - 1);
+                + "|" + scenarioDates.size() + "|" + scenarioDates.get(scenarioDates.size() - 1) + "|" + stressSet;
         com.ash.drishti.compute.var.ScenarioFx hit = fxCache.get(key);
         if (hit != null) {
             return hit;
         }
+        java.util.Set<String> stressIds = stressSet == null ? stressIds(date) : java.util.Set.of();
         List<com.ash.drishti.compute.var.ScenarioFx.Rates> supplied = new ArrayList<>();
         for (DataNode d : optional(k.fxScenario(), asOf).values()) {
             String ccy = text(d, "CURRENCY");
             DataNode rs = d.get("RATES");
             if (ccy == null || rs == null || rs.isMissing() || rs.isNull()) {
                 continue;
+            }
+            String sid = text(d, "SCENARIO_SET_ID");
+            if (stressSet != null ? !stressSet.equals(sid) : sid != null && stressIds.contains(sid)) {
+                continue;                                              // another set's scenario FX
             }
             int skip = Math.max(0, rs.size() - scenarioDates.size());   // a scenario window: the set's newest scenarios
             double[] r = new double[rs.size() - skip];
@@ -946,14 +1140,7 @@ final class VarLoader {
      * by id); checked as a load checks it (one set, in date order, before the date), else {@code DRS-5203}; none: {@code DRS-1001}.
      */
     ScenarioSet scenarioSet(LocalDate date) {
-        Map<String, DataNode> sets = documents(props.kinds().scenarioSet(), AsOf.of(date));
-        DataNode set = sets.values().stream().findFirst().orElse(null);
-        if (set == null) {
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no scenario set for " + date + " (kind " + props.kinds().scenarioSet() + ")");
-        }
-        if (sets.size() > 1) {
-            throw inconsistent(date, sets.size() + " scenario sets (" + String.join(", ", sets.keySet()) + "): one per date");
-        }
+        DataNode set = sets(date, AsOf.of(date)).normal(date);                 // the normal set (a stress set beside it is its own)
         String id = text(set, "SCENARIO_SET_ID");
         List<LocalDate> full = scenarioDates(date, id, set);
         return new ScenarioSet(id, full, window(full));

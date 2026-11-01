@@ -40,7 +40,7 @@ engine:                            # the run engine: a second DuckDB instance fo
   max-spill: 20GB  # the most it may spill to disk
   max-read-rows: 5000000000        # past it, and no split or external engine: DRS-9086
   prefer-external-above-seconds: 0 # 0: never prefer an external engine while local fits
-engines: {}                        # external engines (3.0 groundwork): athena: {...}, trino: {...}, spark: {...}
+engines: {}                        # external engines (groundwork for a later release): athena: {...}, trino: {...}, spark: {...}
 estimate:
   low-factor: 0.5                  # the range before 20 runs of history narrow it
   high-factor: 2.0  # the high end of the estimate's range, as a factor of the point estimate

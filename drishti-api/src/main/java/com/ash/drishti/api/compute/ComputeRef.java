@@ -31,6 +31,7 @@ import java.util.TreeMap;
  */
 public record ComputeRef(String id, Map<String, String> params) {
 
+    /** The separator between the id and each parameter ({@code ~}). */
     public static final char SEP = '~';
 
     public ComputeRef {

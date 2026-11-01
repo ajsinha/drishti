@@ -84,6 +84,19 @@ secret: ${DRISHTI_NET_SECRET}
         {% else %}<button type="button" class="btn-pill" data-action="leave" data-confirm="Leave the cluster? Peers drop this node at once and it serves them nothing until it rejoins.">Leave</button>{% endif %}
       </div>
       {% endif %}
+      {% if stop %}
+      {% set rd = (stop.get('readiness') if stop.get is defined else none) or {} %}
+      <div class="net-actions" data-stop-drain>
+        <span class="net-chip {{ 'net-on' if rd.get('status') == 'UP' else 'net-warn' }}" title="GET /actuator/health/readiness: what load balancers and the rolling upgrade see">Readiness {{ rd.get('status') or 'unknown' }}</span>
+        {% if stop.drained %}
+        <span class="net-chip {{ 'net-on' if stop.safeToStop else 'net-warn' }}" data-safe-to-stop>{{ 'Safe to stop' if stop.safeToStop else 'Handing work over' }}</span>
+        <button type="button" class="btn-pill" data-action="stop-undrain" title="Take forwarded work and shards again (the stop is not happening)">Undrain</button>
+        {% else %}
+        <button type="button" class="btn-pill" data-action="stop-drain" data-confirm="Drain this server for a stop? Forwarded work and its VaR shards go to other members and its readiness turns OUT_OF_SERVICE; stop it once it says Safe to stop. A restart takes work again." title="Before stopping or upgrading this server: hands everything over, then says Safe to stop">Drain for a stop</button>
+        {% endif %}
+        {% for name, lines in (rd.get("waitingFor") or {}).items() %}{% for line in lines %}<span class="text-muted-d net-wait">{{ line }}</span>{% endfor %}{% endfor %}
+      </div>
+      {% endif %}
     </div>
 
     <form class="net-seed" data-seed-form>

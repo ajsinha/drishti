@@ -18,6 +18,7 @@ package com.ash.drishti.server.var;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.within;
 import static org.hamcrest.Matchers.containsString;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -101,6 +102,7 @@ class VarApiTest {
     @Autowired VarOfficial official;
     @Autowired VarFigures figures;
     @Autowired VarService service;
+    @Autowired com.ash.drishti.identity.AuditLog audit;
     @Autowired com.ash.drishti.packs.ConnectorFiles connectors;
     @Autowired com.ash.drishti.server.connectors.ConnectorManager manager;
     final ObjectMapper json = new ObjectMapper();
@@ -619,6 +621,70 @@ class VarApiTest {
                 .content("{\"scope\": \"DESK:DESK-X\", \"items\": [{\"copyOf\": \"T1\", \"factor\": -1}]}"))
                 .andExpect(status().is(503)).andExpect(jsonPath("$.code").value("DRS-5205"))
                 .andExpect(jsonPath("$.detail").value(containsString("Python VaR engine")));
+    }
+
+    @Test
+    @Order(12)
+    void ownersDeleteTheirBasketsAndAdministratorsAnyonesWithCapturesKept() throws Exception {
+        String rita = as("rita", "risk");
+        String ola = as("ola", "risk");
+        String ada = as("ada", "admin");
+        String prev = PREV.toString();
+        for (String n : new String[] {"mine", "shared", "kept"}) {
+            mvc.perform(post("/api/v1/var/baskets").header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\":\"" + n + "\",\"scope\":\"TRD:T1,T2\",\"sharedWith\":[\"ola\"]}")).andExpect(status().isOk());
+        }
+        JsonNode cap = json.readTree(mvc.perform(post("/api/v1/var/captures").param("asOf", prev).header("Authorization", rita)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"scope\":\"BASKET:rita/shared\",\"note\":\"kept\"}"))
+                .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString());
+
+        // the administrators' list: every person's, with owner, scope, sharing, dates and size; filtered by owner
+        mvc.perform(get("/api/v1/var/admin/baskets").header("Authorization", rita)).andExpect(status().isForbidden());
+        JsonNode all = json.readTree(mvc.perform(get("/api/v1/var/admin/baskets").param("owner", "RIT").header("Authorization", ada))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(all.findValuesAsText("id")).contains("rita/mine", "rita/shared", "rita/kept");
+        assertThat(all.get(0).get("bytes").asInt()).isPositive();
+        assertThat(all.get(0).get("sharedWith").toString()).contains("ola");
+        assertThat(json.readTree(mvc.perform(get("/api/v1/var/admin/baskets").param("owner", "nobody").header("Authorization", ada))
+                .andReturn().getResponse().getContentAsString())).isEmpty();
+
+        // someone else (even one it is shared with) cannot delete it: 404, as if there were none
+        mvc.perform(delete("/api/v1/var/baskets/rita/mine").header("Authorization", ola)).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/var/baskets/mine").header("Authorization", ola)).andExpect(status().isNotFound());
+        // the owner deletes their own, by owner/name or by name
+        mvc.perform(delete("/api/v1/var/baskets/rita/mine").header("Authorization", rita)).andExpect(status().isNoContent());
+        mvc.perform(delete("/api/v1/var/baskets/rita/mine").header("Authorization", rita)).andExpect(status().isNotFound());
+        mvc.perform(delete("/api/v1/var/baskets/kept").param("version", "7").header("Authorization", rita)).andExpect(status().isConflict());
+        mvc.perform(delete("/api/v1/var/baskets/kept").param("version", "1").header("Authorization", rita)).andExpect(status().isNoContent());
+        // an administrator deletes anyone's, with a reason; the owner is told in their inbox
+        mvc.perform(delete("/api/v1/var/baskets/rita/shared").param("reason", "left the desk").header("Authorization", ada))
+                .andExpect(status().isNoContent());
+        mvc.perform(get("/api/v1/var/baskets/rita/shared").header("Authorization", ola)).andExpect(status().isNotFound());   // the shared lose it
+        assertThat(json.readTree(mvc.perform(get("/api/v1/var/baskets").header("Authorization", ola)).andReturn().getResponse()
+                .getContentAsString()).findValuesAsText("id")).doesNotContain("rita/mine", "rita/shared", "rita/kept");
+
+        var events = audit.recent(50, "rita/shared");
+        assertThat(events).anySatisfy(e -> {
+            assertThat(e.action()).isEqualTo("var-basket-delete");
+            assertThat(e.actor()).isEqualTo("ada");
+            assertThat(e.detail()).startsWith("deleted by administrator ada").contains("reason=left the desk").contains("sharedWith=[ola]");
+        });
+        assertThat(audit.recent(50, "rita/mine")).anySatisfy(e -> assertThat(e.detail()).startsWith("deleted by its owner"));
+        JsonNode inbox = json.readTree(mvc.perform(get("/api/v1/me/inbox").param("type", "notice").header("Authorization", rita))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(inbox.get(0).get("title").asText()).contains("rita/shared").contains("administrator ada").contains("left the desk");
+        assertThat(inbox.get(0).get("id").asText()).isEqualTo("/var");
+
+        // the capture of the deleted basket still opens, with its scope and members, and says the basket is gone
+        JsonNode again = json.readTree(mvc.perform(get("/api/v1/var/captures/" + cap.get("id").asText()).header("Authorization", rita))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(again.get("var").asDouble()).isEqualTo(cap.get("var").asDouble());
+        assertThat(again.get("deletedBaskets").toString()).contains("rita/shared");
+        assertThat(again.get("basketNotice").asText()).contains("no longer exists");
+        // and the scope itself says so in words
+        JsonNode gone = json.readTree(mvc.perform(get("/api/v1/var/scope").param("scope", "BASKET:rita/shared").param("asOf", prev)
+                .header("Authorization", rita)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(gone.at("/provenance/notices").toString()).contains("it was deleted");
     }
 
     private JsonNode hints(String q, String asOf, String auth) throws Exception {

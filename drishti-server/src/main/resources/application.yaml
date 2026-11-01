@@ -102,6 +102,12 @@ management:
     health:
       probes:
         enabled: true  # /actuator/health/liveness and /actuator/health/readiness for Kubernetes probes
+      group:
+        readiness:
+          # readiness that means ready (CD1, CLUSTER_DEPLOYMENT.md section 9.1): Spring's own state and this node's (drishti.node.readiness):
+          # DOWN while joining, while an engine's newest date opens or an owned shard is not ready; OUT_OF_SERVICE while drained. Only
+          # here: /actuator/health itself and liveness never wait for it
+          include: readinessState,nodeReadiness
 
 drishti:
   # The edition (docs/admin/EDITIONS.md): blank is the full Drishti; risk is Drishti Risk. It names
@@ -132,6 +138,15 @@ drishti:
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
+  metrics:                           # the platform metrics and alerts (docs/admin/OPERATIONS.md section 13.6; RESOURCES_AND_SCALE.md 8.3, 8.5)
+    enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
+    sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
+    disk-interval: 60s               # how often the disk folders are measured for the gauges (a folder's size walks its files)
+    alerts:
+      enabled: ${DRISHTI_ALERTS_ENABLED:true}  # evaluate the platform alert rules (Admin -> Health, Alerts; GET /api/v1/admin/alerts)
+      file: ${DRISHTI_ALERTS_FILE:./config/alerts/platform-alerts.yaml}  # the rules: metric, threshold, how long, severity (a missing file: no rules, and Health says so)
+      notify-roles: admin            # the roles told in their inbox (and the bell) when an alert opens, comma-separated; blank: nobody
+      keep: 200                      # alerts opened and closed kept for the page, newest first (in memory: a restart starts afresh)
   store:
     # The content store (docs/architecture/DATA_ARCHITECTURE.md): user content every node of a cluster can reach. Its settings are in their own file.
     file: ${DRISHTI_STORE_FILE:./config/store/store.yaml}
@@ -167,6 +182,15 @@ drishti:
     dir: ${DRISHTI_NET_DIR:./config/net}     # created on first write; ready-made files in config/net.examples/
     watch: ${DRISHTI_NET_WATCH:auto}         # auto (file events, polling as a fallback) | poll | off
     poll: 5s  # how often the folder is looked at when polling (and, with file events, at least this often anyway)
+  node:
+    # This server as one node of a cluster (CLUSTER_DEPLOYMENT.md sections 4.6, 9.1 and 10.1; CD1 and CD2, 2.9.7)
+    readiness:                       # 2.9.7: what /actuator/health/readiness waits for (liveness and /actuator/health never wait)
+      enabled: true                  # false: readiness is Spring's alone (up once started)
+      joining: true                  # DOWN while this node joins Drishti*net (its peers' digests not had yet; at most join-grace)
+      engines: true                  # DOWN while an enabled engine's (VaR, exposure) newest date is not open here; the check opens it
+      shards: true                   # DOWN while a VaR shard this member owns of a date in use is not ready here
+    drain:                           # 2.9.7: the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Net "Drain for a stop", the stop hooks
+      settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip)
   sources:
     # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
     # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
@@ -302,10 +326,11 @@ drishti:
     # token-read-posts, a scope or token-never (TokenScopeGuardTest fails the build otherwise).
     token-scopes:
       "[risk:write]":
-        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only; the bank's data is never changed."
+        description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
           - DELETE /api/v1/var/baskets/*/*
+          - DELETE /api/v1/var/baskets/*
           - POST /api/v1/var/captures
           - POST /api/v1/exposure/captures
           - POST /api/v1/compute/sandboxes
@@ -406,6 +431,10 @@ drishti:
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
         allow:
           - POST /api/v1/packs/*/loads
+      "[node:drain]":
+        description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_DEPLOYMENT.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
+        allow:
+          - POST /api/v1/admin/node/drain
       "[ai:use]":
         description: "Call the configured models and MCP tools through the AI policy (chat, MCP tool calls, and the BI hooks: report from words, ask the data, explain this number). Admin pages stay closed."
         allow:
@@ -670,6 +699,10 @@ drishti:
     confidences: [0.95, 0.975, 0.99, 0.995]   # the VaR confidences offered on the VaR page, in commands and the API (the default is always offered)
     es-confidences: [0.95, 0.975, 0.99]       # the ES confidences offered the same way (es-confidence is always offered)
     ten-day-method: ${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}   # 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days)
+    stress:                          # stressed VaR: VaR and ES on the date's stress scenario set (docs/guides/VAR_GUIDE.md section 18.8)
+      enabled: ${DRISHTI_VAR_STRESS_ENABLED:true}   # offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart)
+      id-prefix: HS-STRESS-          # a scenario set is the stress set when its SET_TYPE is STRESS, or (no SET_TYPE) its id starts with this
+      average-weeks: 12              # the stressed VaR average over the official records: this many weeks to the date
     scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
@@ -678,13 +711,16 @@ drishti:
     hot-dates: 2                     # business dates kept loaded (the newest)
     view-cache-mb: 64                # 2.9.7: most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date
     load-threads: 2                  # 2.9.7: threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool
+    read:                            # how a date's first open decodes its vectors from the lake (docs/guides/VAR_GUIDE.md section 27a.6)
+      threads: ${DRISHTI_VAR_READ_THREADS:0}   # files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread)
+      buffer-mb: 64                  # most decoded rows waiting for one load, in MB (never above a thirty-second of the heap)
     version-check: ${DRISHTI_VAR_VERSION_CHECK:30s}   # 2.9.7: an open date compares its lake version this often on a request; moved: reloaded in the background (0: off)
     history-days: 250                # history and backtest window
     component-scale-to-var: true     # components scaled to add up to the VaR exactly (false: to the smoothed VaR)
     parallel-rows: 4096              # the fewest rows a sum splits across threads
     rows-per-chunk: 65536            # rows per chunk of the in-memory vector store
     histogram-bins: 42               # bins of the P&L distribution sent to the screen
-    max-parts: 5000                  # most parts a contribution table computes at once (more: the largest by gross size, and said)
+    max-parts: 5000                  # most rows a contribution table lists (more: the largest by gross size, and said); totals are over all
     path-page: 60                    # rows of the ranked P&L path per page
     smat:
       max-days: ${DRISHTI_VAR_SMAT_MAX_DAYS:60}   # 2.9.7: the most business dates a scenario matrix (SMAT <id> N, GET /api/v1/var/matrix) reads

@@ -48,9 +48,12 @@ ENGINE_FIGURES = {"VAR_99", "ES_975", "COMPONENT_VAR", "BOOK_VAR", "PCT_OF_BOOK_
                   "TOP_CONTRIBUTORS"}
 
 
-def docs(kind: str) -> list[dict]:
+def docs(kind: str, stress: bool = False) -> list[dict]:
+    """A kind's documents of the normal scenario set, or (``stress``) of the stress set (its files start with ``stress-``)."""
     out = []
     for f in sorted((TD / kind).glob("*.jsonl.gz")):
+        if f.name.startswith("stress-") != stress:
+            continue
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             out += [json.loads(line) for line in fh if line.strip()]
     return out

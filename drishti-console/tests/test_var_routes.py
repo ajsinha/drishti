@@ -225,3 +225,84 @@ def test_the_page_has_the_lens_pickers_and_keeps_the_lens_of_its_link(client, ba
     assert client.get("/api/var/hints?q=x&horizon=10d").status_code == 200 and "horizon" not in seen[-1][3]   # the tray's hints stay 1-day
     assert client.post("/api/var/captures", json={"scope": "BANK", "horizon": "10d", "method": "sum"}).status_code == 200
     assert seen[-1][2]["horizon"] == "10d"                                    # a capture through the page's lens
+
+
+def test_stressed_var_in_a_command_the_page_and_every_answer(client, backend, monkeypatch):
+    """Stressed VaR (docs/guides/VAR_GUIDE.md section 18.8): ``SVAR`` in a command, ``set=stressed`` in the link, the Normal / Stressed
+    picker beside the Horizon, and ``set`` passed to every answer that takes a lens."""
+    assert var_command("VAR BANK SVAR".split(), "asha") == "/var?scope=BANK&set=stressed"
+    assert var_command("VAR BANK SVAR 10D SUM".split(), "asha") == "/var?scope=BANK&h=10d&m=sum&set=stressed"
+    assert var_command("VAR DESK DESK-RATES 10D SQRT SVAR".split(), "asha") == "/var?scope=DESK%3ADESK-RATES&h=10d&m=sqrt10&set=stressed"
+    from routes.var_routes import var_suggestions
+    assert "VAR BANK SVAR" in [s["complete"] for s in var_suggestions("VAR BANK")]
+    html = client.get("/var?scope=BANK&set=stressed").text
+    assert 'data-set="stressed"' in html and 'aria-label="Normal or stressed VaR"' in html and '<option value="stressed" selected>' in html
+    assert 'data-set=""' in client.get("/var?scope=BANK&set=crisis").text                  # not a set: Normal
+    seen = []
+
+    async def var(verb, path, ident, /, body=None, raw=False, **params):
+        seen.append(params)
+        return {"ok": 1}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    for url in ("/api/var/scope", "/api/var/scope/path", "/api/var/scope/history", "/api/var/scope/contributions", "/api/var/tree"):
+        assert client.get(url + "?scope=BANK&set=stressed").status_code == 200
+        assert seen[-1].get("set") == "stressed", url
+
+
+def test_deleting_a_basket_goes_to_the_engine_with_its_reason_and_version(client, backend, monkeypatch):
+    """Delete on a saved basket (VAR_GUIDE.md section 3.5): the console passes DELETE /baskets/<owner>/<name> on as the user, with the
+    optional reason and the version the dialog showed; the engine decides who may (the owner, or an administrator) and says no in words."""
+    from core.backend import BackendError
+    seen = []
+
+    async def var(method, path, ident, /, body=None, raw=False, **params):
+        seen.append((method, path, params))
+        if path.endswith("/nobody/gone"):
+            raise BackendError(404, "DRS-1003", "no basket nobody/gone of yours")
+        return None
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    r = client.delete("/api/var/baskets/rita/rates-hedges?reason=left%20the%20desk&version=2")
+    assert r.status_code == 204
+    assert seen[-1] == ("DELETE", "/baskets/rita/rates-hedges", {"reason": "left the desk", "version": "2"})
+    assert client.delete("/api/var/baskets/rita/x").status_code == 204 and seen[-1][2] == {}
+    r = client.delete("/api/var/baskets/nobody/gone")
+    assert r.status_code == 404 and "of yours" in r.json()["detail"]
+
+
+def test_the_var_page_offers_delete_through_the_confirm_dialog(client):
+    page = client.get("/var?scope=BANK").text
+    assert "/static/js/scope-delete.js" in page and 'data-admin="true"' in page          # the test console's user is an administrator
+    js = client.get("/static/js/var-explorer.js").text
+    assert "DrishtiScopeDelete.ask" in js and "b.owner === S.user || S.admin" in js
+    sd = client.get("/static/js/scope-delete.js").text
+    assert "showModal" in sd and "version" in sd and "reason" in sd
+
+
+def test_admin_ad_hoc_scopes_lists_every_persons_baskets_with_delete(client, backend, monkeypatch):
+    """Admin -> Ad-hoc scopes: every person's baskets from GET /admin/baskets (filtered by owner), each row with Delete; in the tabs."""
+    seen = []
+
+    async def var(method, path, ident, /, body=None, raw=False, **params):
+        seen.append((method, path, params))
+        return [{"id": "rita/unwind", "owner": "rita", "name": "Unwind candidates", "type": "BASKET", "scope": "TRD:T1,T2",
+                 "sharedWith": ["ola", "role:risk"], "createdAt": "2026-10-01T09:00:00Z", "updatedAt": "2026-10-02T09:00:00Z",
+                 "version": 3, "bytes": 312}]
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    page = client.get("/admin/scopes?owner=rit")
+    assert page.status_code == 200
+    assert seen[-1] == ("GET", "/admin/baskets", {"owner": "rit"})
+    html = page.text
+    assert 'data-basket="rita/unwind"' in html and 'data-version="3"' in html and 'data-shared="ola,role:risk"' in html
+    assert "Unwind candidates" in html and "ola, role:risk" in html and "312 B" in html and "data-scope-delete" in html
+    assert "/static/js/scope-delete.js" in html and "/static/js/admin-scopes.js" in html
+    assert 'href="/admin/scopes"' in client.get("/admin/users").text
+
+
+def test_admin_ad_hoc_scopes_says_when_the_engine_is_off(client, backend, monkeypatch):
+    from core.backend import BackendError
+
+    async def var(method, path, ident, /, body=None, raw=False, **params):
+        raise BackendError(503, "DRS-5205", "the VaR engine is off")
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    page = client.get("/admin/scopes")
+    assert page.status_code == 200 and "the VaR engine is off" in page.text

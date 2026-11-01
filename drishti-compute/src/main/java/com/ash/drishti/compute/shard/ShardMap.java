@@ -91,6 +91,7 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
             return range();
         }
 
+        /** The shard as Admin and the API show it: its id, index, range, rows and bytes. */
         public Map<String, Object> describe() {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("shard", id());
@@ -206,10 +207,12 @@ public record ShardMap(LocalDate date, String version, List<String> key, List<Sh
         return at;
     }
 
+    /** The shard at {@code index}, in key order. */
     public Shard shard(int index) {
         return shards.get(index);
     }
 
+    /** The number of shards the date was cut into. */
     public int size() {
         return shards.size();
     }

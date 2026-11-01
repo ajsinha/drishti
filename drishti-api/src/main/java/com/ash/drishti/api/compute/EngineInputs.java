@@ -29,10 +29,12 @@ import java.util.Set;
  */
 public final class EngineInputs {
 
+    /** No inputs. */
     public static final EngineInputs NONE = new EngineInputs(Map.of());
 
     private final Map<String, List<DataNode>> inputs;
 
+    /** The inputs by name, each a list of documents. */
     public EngineInputs(Map<String, List<DataNode>> inputs) {
         Map<String, List<DataNode>> m = new LinkedHashMap<>();
         if (inputs != null) {

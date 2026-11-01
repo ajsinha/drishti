@@ -1,0 +1,272 @@
+{
+ "rule": "docs/guides/DATA_GUIDE.md section 2.7 (Archives)",
+ "defaults": {
+  "max_mb": 102400,
+  "max_ratio": 200,
+  "max_members": 100000,
+  "floor_bytes": 1048576
+ },
+ "cases": [
+  {
+   "case": "a tarball without folders is one dataset named after it",
+   "file": "trade.tar.gz",
+   "expect": {
+    "datasets": {
+     "trade": {
+      "rows": 6,
+      "members": [
+       "a.jsonl",
+       "b.jsonl.gz",
+       "c.ndjson"
+      ]
+     }
+    },
+    "notes": 1
+   }
+  },
+  {
+   "case": "the same as .tgz",
+   "file": "trade.tgz",
+   "expect": {
+    "datasets": {
+     "trade": {
+      "rows": 6,
+      "members": [
+       "a.jsonl",
+       "b.jsonl.gz",
+       "c.ndjson"
+      ]
+     }
+    },
+    "notes": 1
+   }
+  },
+  {
+   "case": "a plain tar written from ./",
+   "file": "trade.tar",
+   "expect": {
+    "datasets": {
+     "trade": {
+      "rows": 6,
+      "members": [
+       "a.jsonl",
+       "b.jsonl.gz",
+       "c.ndjson"
+      ]
+     }
+    },
+    "notes": 1
+   }
+  },
+  {
+   "case": "the same as .zip",
+   "file": "trade.zip",
+   "expect": {
+    "datasets": {
+     "trade": {
+      "rows": 6,
+      "members": [
+       "a.jsonl",
+       "b.jsonl.gz",
+       "c.ndjson"
+      ]
+     }
+    },
+    "notes": 1
+   }
+  },
+  {
+   "case": "--dataset names the dataset",
+   "file": "book.zip",
+   "dataset": "trade",
+   "expect": {
+    "datasets": {
+     "trade": {
+      "rows": 6,
+      "members": [
+       "a.jsonl",
+       "b.jsonl.gz",
+       "c.ndjson"
+      ]
+     }
+    },
+    "notes": 1
+   }
+  },
+  {
+   "case": "without --dataset it is named after the file",
+   "file": "book.zip",
+   "expect": {
+    "datasets": {
+     "book": {
+      "rows": 6,
+      "members": [
+       "a.jsonl",
+       "b.jsonl.gz",
+       "c.ndjson"
+      ]
+     }
+    },
+    "notes": 1
+   }
+  },
+  {
+   "case": "folders are datasets",
+   "file": "bundle.tar.gz",
+   "configured": [
+    "trade",
+    "position"
+   ],
+   "expect": {
+    "datasets": {
+     "position": {
+      "rows": 3,
+      "members": [
+       "position/p1.jsonl"
+      ]
+     },
+     "trade": {
+      "rows": 4,
+      "members": [
+       "trade/t1.jsonl",
+       "trade/t2.jsonl.gz"
+      ]
+     }
+    },
+    "notes": 4
+   }
+  },
+  {
+   "case": "folders are datasets, zip",
+   "file": "bundle.zip",
+   "configured": [
+    "trade",
+    "position"
+   ],
+   "expect": {
+    "datasets": {
+     "position": {
+      "rows": 3,
+      "members": [
+       "position/p1.jsonl"
+      ]
+     },
+     "trade": {
+      "rows": 4,
+      "members": [
+       "trade/t1.jsonl",
+       "trade/t2.jsonl.gz"
+      ]
+     }
+    },
+    "notes": 4
+   }
+  },
+  {
+   "case": "loose files and folders",
+   "file": "mixed.tar.gz",
+   "refused": "mixed"
+  },
+  {
+   "case": "two levels of folders",
+   "file": "deep.zip",
+   "refused": "one level deep"
+  },
+  {
+   "case": "folders no dataset is configured for, all listed",
+   "file": "unknown.tar.gz",
+   "configured": [
+    "trade",
+    "position"
+   ],
+   "refused": "mystery, other"
+  },
+  {
+   "case": "a .. in a member's path",
+   "file": "slip.zip",
+   "refused": "unsafe"
+  },
+  {
+   "case": "an absolute member path",
+   "file": "slip.tar",
+   "refused": "unsafe"
+  },
+  {
+   "case": "a link member",
+   "file": "link.tar.gz",
+   "refused": "a link"
+  },
+  {
+   "case": "an archive inside the archive",
+   "file": "nested.zip",
+   "refused": "one level deep"
+  },
+  {
+   "case": "the ratio cap",
+   "file": "bomb.zip",
+   "limits": {
+    "max_ratio": 2
+   },
+   "refused": "max-ratio"
+  },
+  {
+   "case": "the size cap",
+   "file": "bomb.zip",
+   "limits": {
+    "max_mb": 1
+   },
+   "refused": "max-mb"
+  },
+  {
+   "case": "within the caps, blank lines are no rows",
+   "file": "bomb.zip",
+   "expect": {
+    "datasets": {
+     "bomb": {
+      "rows": 0,
+      "members": [
+       "big.jsonl"
+      ]
+     }
+    },
+    "notes": 0
+   }
+  },
+  {
+   "case": "a compressed member held to the caps as it is read",
+   "file": "gzbomb.tar",
+   "limits": {
+    "max_ratio": 2
+   },
+   "refused": "zip bomb"
+  },
+  {
+   "case": "the members cap",
+   "file": "bundle.zip",
+   "configured": [
+    "trade",
+    "position"
+   ],
+   "limits": {
+    "max_members": 3
+   },
+   "refused": "max-members"
+  },
+  {
+   "case": "no JSON Lines member",
+   "file": "empty.zip",
+   "refused": "no JSON Lines member"
+  },
+  {
+   "case": "--dataset with folders",
+   "file": "bundle.zip",
+   "dataset": "trade",
+   "refused": "has folders"
+  },
+  {
+   "case": "a folder name that cannot name a table",
+   "file": "badname.zip",
+   "refused": "cannot name a table"
+  }
+ ]
+}

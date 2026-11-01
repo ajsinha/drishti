@@ -16,7 +16,7 @@
 # Regulatory reporting that needs VaR or ES: Canada and the US
 
 **Status: analysis, not started.** Nothing here is built. It is a candidate in the
-[implementation plan](IMPLEMENTATION_PLAN.md#298-regulatory-var-reporting-phase-1-product-owner-2026-10-30-not-started). Every regulatory statement
+[implementation plan](IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned). Every regulatory statement
 links its source; every "Drishti today" statement cites the document, setting or class it was read from on 2026-10-30 (develop at
 895e8612d). Where a source could not be opened or a fact could not be confirmed, the text says so.
 
@@ -25,7 +25,9 @@ shortfall (ES), what a bank must build and report, and what Drishti covers and s
 
 **Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (compute,
 do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md), and the proposed contracts [FRTB.md](../contracts/FRTB.md) (standardised
-approach) and [PNL.md](../contracts/PNL.md) (P&L explain).
+approach) and [PNL.md](../contracts/PNL.md) (P&L explain). The VaR part of this analysis, against what Drishti produces, is summarised
+in the one VaR document, [VAR_GUIDE.md section 32](../guides/VAR_GUIDE.md#32-regulatory-reporting-that-needs-var-canada-and-the-us);
+this document keeps the full analysis, its sources and the reports beyond VaR.
 
 **Not legal advice.** Which reports apply to which entity, and how a figure is defined for a filing, is for the bank's regulatory
 reporting and legal teams to decide. This document maps the reports to computations so that Drishti can produce the numbers.
@@ -42,6 +44,7 @@ reporting and legal teams to decide. This document maps the reports to computati
 8. [A proposed roadmap](#8-a-proposed-roadmap)
    - 8.1 [The report-definition framework](#81-the-report-definition-framework-298)
    - 8.2 [Phase 1 design](#82-phase-1-design-298)
+   - 8.3 [Mock-ups: the screens to build](#83-mock-ups-the-screens-to-build)
 9. [Data the bank must supply](#9-data-the-bank-must-supply)
 10. [Risks and open questions for the product owner](#10-risks-and-open-questions-for-the-product-owner)
 11. [Glossary](#11-glossary)
@@ -243,8 +246,8 @@ Built: no pill; **partly** and **not built** say so. Evidence is the document se
 | Building block | Drishti today | Evidence |
 |---|---|---|
 | VaR 99% 1-day, any scope | **Built.** Historical simulation over the date's scenario set (509 in the test data; `scenario-window` cuts to the newest N, 250 the regulatory minimum); 99% by default (`drishti.var.confidence`), any confidence per request; the bank, a desk, a book, a position, a trade, any hierarchy node, stored portfolios, ad-hoc trade sets | [VAR_GUIDE §18.1, §18.5, §5](../guides/VAR_GUIDE.md#181-var) |
-| VaR 10-day | **Not built.** "no √10 scaling anywhere (10-day VaR is not built; the screens say *1 day*)"; `HORIZON_DAYS` is 1 | [VAR_GUIDE §17](../guides/VAR_GUIDE.md#17-conventions-specific-to-var), §15.3 |
-| Stressed VaR | **Not built** as a regulatory figure: a stressed set `SVAR-250` is designed, not built (open question 6). **Partly:** the Python what-if reports a *stressed window* (the largest VaR over every run of consecutive scenario days inside the date's set), which cannot reach a 2007-09 or 2020 period | [VAR_GUIDE §8.2, §18.3, §31](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
+| VaR 10-day | **Built since this analysis (2.9.7, row 2b):** √10 and the sum of overlapping 10-day windows from the 1-day set, at any offered confidence, on request; official records stay 1-day (`HORIZON` `1D`); full 10-day revaluation is a designed slot | [VAR_GUIDE §18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297) |
+| Stressed VaR | **Built:** VaR and ES of any scope on the date's stress scenario set (today's positions revalued under a 12-month stress period's moves, sent by the pricing system as a second scenario set), 1-day and 10-day (√10 and the overlapping sum), any offered confidence; official records carry each node's `SVAR`, `SES` and `STRESS_SET_ID`; the 12-week average from the official records. **Not built:** choosing the stress window over a long history (2.9.8). The Python what-if's *stressed window* is a different analysis (inside the date's normal set) | [VAR_GUIDE §18.8](../guides/VAR_GUIDE.md#188-stressed-var) |
 | ES 97.5% | **Built** at 1 day: mean of the 13 worst of 509, any scope, component ES adding to the scope's ES | [VAR_GUIDE §18.2, §18.3](../guides/VAR_GUIDE.md#182-es) |
 | ES with liquidity horizons; stressed ES calibration | **Not built** ("FRTB's liquidity horizons or stressed calibration" are named as not built) | [VAR_GUIDE §1](../guides/VAR_GUIDE.md#1-the-question-var-answers) |
 | Backtesting, bank and node level | **Partly built.** Official mode: each official date's VaR against the next day's hypothetical P&L, per node of every hierarchy (bank, division, desk, book, legal entity, limit letters); exceptions over up to 250 days (`EXCEPTIONS_250`), the Basel light (0–4 green, 5–9 amber, 10+ red), Kupiec and Christoffersen (`Backtest.of`, `drishti-compute/.../var/Backtest.java`). The hypothetical P&L is **derived** (`HYPO_PNL`: the node's P&L under the newest scenario day); a bank's own hypothetical P&L table is planned. **Not built:** actual P&L, separate actual and hypothetical counts, the 97.5% desk test, ES backtests | [VAR_GUIDE §7, §18.4, §19](../guides/VAR_GUIDE.md#7-history-and-backtesting) |
@@ -261,7 +264,7 @@ Built: no pill; **partly** and **not built** say so. Evidence is the document se
 | Comprehensive P&L attribution (Volcker) | **Not built.** P&L explain is a proposed contract (actual = ΔMtM + cash; explained by sensitivities; new, amended, ended trades; fees; unexplained); a stored `pnl-explain` kind exists | [PNL.md §1](../contracts/PNL.md#1-summary) |
 | Positions | **Built** as VaR positions derived from trades by configurable rules | [VAR_GUIDE §4](../guides/VAR_GUIDE.md#4-positions-derived-never-delivered) |
 | Transaction volumes | **Not built** (trades and counterparties are held; no volume measure by counterparty type) | — |
-| Reporting currency | **Built**: five currencies built ahead (USD, EUR, CAD, JPY, GBP); official records in `drishti.var.official.currencies` (default USD and EUR: **add CAD** for Canadian reports) | [VAR_GUIDE §15.10, §15.11, §12](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) |
+| Reporting currency | **Built**: five currencies built ahead (USD, EUR, CAD, JPY, GBP); official records in `drishti.var.official.currencies` (default USD only: **add CAD** for Canadian reports) | [VAR_GUIDE §15.10, §15.11, §12](../guides/VAR_GUIDE.md#1510-reporting-currency-as-built-294) |
 | Retention and reproducibility | **Built.** Official captures of every node, each with its inputs' versions and batch ids, the position rules' digest, the membership record, result versions on restatement; append-only Delta or Iceberg table kept 7 years; recomputable from the same vectors and engine version | [VAR_GUIDE §19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 | The report layer | **Built:** BI datasets and reports over the published table, exports to PDF, PNG, Excel and CSV, subscriptions, paginated reports; the published table itself for downstream systems | [BI_GUIDE.md](../guides/BI_GUIDE.md), [BI_GUIDE.md](../guides/BI_GUIDE.md#33-distribution-scheduled-reports-export-subscriptions-alerts-and-embedding), [BI_GUIDE.md](../guides/BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) |
 | Intraday, sharding | **Built** (intraday updates from files and Kafka; VaR sharded across servers). Not required by any report; useful for the daily limit metric | [VAR_GUIDE §8.4, §28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet-as-built-296) |
@@ -280,7 +283,7 @@ contract per new input kind. Sizes: **S** days, **M** one to three weeks, **L** 
 | # | Gap | Design sketch | Size | Depends on |
 |---|---|---|---|---|
 | G1 | **10-day VaR** | Two ways, both configurable per scenario set: (a) a 10-day scenario set delivered by the upstream engine (`HORIZON_DAYS: 10`, overlapping 10-day moves), loaded as a second set on the date; (b) √10 × the 1-day figure, labelled *scaled*, allowed by §217.205(b)(1) if justified. Official records gain `VAR_10D` and its method | S (scaling), M (second set) | Several scenario sets per date (VAR_GUIDE open question 6); the bank's choice of method |
-| G2 | **Stressed VaR** | A stressed set (`SVAR-250`): the upstream engine revalues today's trades over the bank's chosen 12-month stress window; the engine computes VaR on it like any set; computed at least weekly (US) and published with its window dates. The what-if *stressed window* stays an analysis tool | M | G1's several sets; upstream P&L vectors over the stress window; the window chosen and justified by the bank |
+| G2 | **Stressed VaR** | **Built** ([VAR_GUIDE §18.8](../guides/VAR_GUIDE.md#188-stressed-var)): a stress set of the date (`SET_TYPE: STRESS`, e.g. `HS-STRESS-2008`): the upstream engine revalues today's trades over the bank's chosen 12-month stress window; the engine computes VaR on it like any set, daily with the official record (`SVAR`, `SES`, `STRESS_SET_ID`), with the 12-week average. The what-if *stressed window* stays an analysis tool | M | G1's several sets; upstream P&L vectors over the stress window; the window chosen and justified by the bank |
 | G3 | **Actual and hypothetical P&L feed** | A new fundamental kind `daily-pnl` (per trade or per desk and date: `APL`, `HPL`, fees, commissions, reserves, net interest, intraday, with the definitions as columns so each rule's exclusions can be applied); a data contract like `pnl-vector`'s; positions and nodes sum it | M | Product control's daily P&L; desk mapping |
 | G4 | **Backtesting engine for regulation** | Extend `Backtest` to run per node, per confidence (99% and 97.5%), per P&L type (APL, HPL) with exceptions counted separately and the larger taken (OSFI) or both reported (US re-proposal); zone and multiplier tables as pack configuration (US 3.00–4.00; OSFI plus factor 1.50–2.00; the re-proposal's 1.5–2); unavailable P&L or VaR counted as an exception (OSFI) | M | G3 |
 | G5 | **Period statistics** | A derived computation over the published official rows: per node and period (quarter, fiscal year with the bank's year end), high, low, mean, period end; rolling 60-business-day average of VaR (and of IMCC later), 12-week average of stressed VaR; the capital figure max(latest, multiplier × average). Computed when asked from official records, never stored beyond the official capture | S | Official history (built); G1, G2 for the US figures |
@@ -298,14 +301,16 @@ contract per new input kind. Sizes: **S** days, **M** one to three weeks, **L** 
 ## 8. A proposed roadmap
 
 Ordered by value and dependency. **Phase 1 is release 2.9.8** (product owner, 2026-10-30), with the report-definition framework of
-section 8.1 and one pilot pack; phase 2 follows in 2.9.9; phases 3a and 3b after that.
+section 8.1 and one pilot pack. In the themed release plan (product owner, 2026-10-31) phase 2 is proposed for 2.9.10 (regulatory
+reporting), phase 3a for 2.9.12 (sensitivities and market-risk capital) and phase 3b for 2.9.14; stressed VaR (G2) moved into 2.9.7
+Drill B.
 
 | Phase | When | Builds | Unlocks |
 |---|---|---|---|
-| **1. The measures** | 2.9.8 | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
-| **2. The report packs** | 2.9.9 | G6 VaR by risk type; G7 the packs: Canada MD&A table and Pillar 3 MR1/MR2 shells, US FFIEC 102 and §217.212 tables; G8 Volcker metrics | Canada MD&A; FFIEC 102; §217.212; Volcker's five metrics |
-| **3a. FRTB standardised** | after that | G9 SBM, SA DRC, RRAO | BCAR 90.010 sections B and C; Pillar 3 MR1; the US re-proposal's standardised approach if adopted |
-| **3b. FRTB internal models** | after that, only for a bank seeking approval | G10 ES with liquidity horizons, G11 stressed calibration, G12 PLA, G13 RFET and SES, G14 DRC | BCAR 90.010 section A; Pillar 3 MR2; OSFI IMA approval tests; the US re-proposal's models-based approach |
+| **1. The measures** | 2.9.8 (G1 and G2 in 2.9.7) | G1 10-day VaR, G2 stressed VaR, G3 the actual and hypothetical P&L feed, G4 the regulatory backtesting engine, G5 period statistics, G15 CAD records | The figures behind US subpart F, FFIEC 102 and §217.212; the bank-wide and desk backtests both countries use; the MD&A's year-end, average, high and low |
+| **2. The report packs** | 2.9.10 (proposed) | G6 VaR by risk type; G7 the packs: Canada MD&A table and Pillar 3 MR1/MR2 shells, US FFIEC 102 and §217.212 tables; G8 Volcker metrics | Canada MD&A; FFIEC 102; §217.212; Volcker's five metrics |
+| **3a. FRTB standardised** | 2.9.12 (proposed) | G9 SBM, SA DRC, RRAO | BCAR 90.010 sections B and C; Pillar 3 MR1; the US re-proposal's standardised approach if adopted |
+| **3b. FRTB internal models** | 2.9.14 (proposed), only for a bank seeking approval | G10 ES with liquidity horizons, G11 stressed calibration, G12 PLA, G13 RFET and SES, G14 DRC | BCAR 90.010 section A; Pillar 3 MR2; OSFI IMA approval tests; the US re-proposal's models-based approach |
 
 **Why 3a before 3b.** In Canada every bank reports the SA, and an IMA bank must also compute it (CAR 9.5, BCAR 90.010); the US
 re-proposal makes a standardised approach the fallback for every firm. The SA serves every client; the IMA serves only banks that apply
@@ -382,7 +387,9 @@ its lineage. Names below are proposals; the build may refine them, and this sect
 | Official capture | `var-official` rows gain `VAR_10D`, `SVAR_1D`, `SVAR_10D` (and ES for each); old rows read as null; the capture records the stress window and the 10-day method |
 | Capacity | the 1,518 values a position already sized in the capacity model and both VaR decks |
 
-**Built in 2.9.7 (row 2b), the derived half of G1:** the 10-day VaR on demand from the 1-day vectors, by √10 or by the sum of 10 consecutive 1-day scenario P&Ls (N − 9 overlapping windows: 509 give 500, not 509: the windows need the 9 days before the set's first); chosen per answer, not stored; official records stay 1-day and carry `HORIZON` and `METHOD`. The second vector set (a source's own 10-day P&Ls, `HORIZON: 10D`, method `FULL`) and stressed VaR (G2) remain as designed above ([VAR_GUIDE.md section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+**Built in 2.9.7 (row 2b), the derived half of G1:** the 10-day VaR on demand from the 1-day vectors, by √10 or by the sum of 10 consecutive 1-day scenario P&Ls (N − 9 overlapping windows: 509 give 500, not 509: the windows need the 9 days before the set's first); chosen per answer, not stored; official records stay 1-day and carry `HORIZON` and `METHOD`. The second vector set (a source's own 10-day P&Ls, `HORIZON: 10D`, method `FULL`) remains as designed above; stressed VaR (G2) is built
+([VAR_GUIDE.md section 18.8](../guides/VAR_GUIDE.md#188-stressed-var)), 1-day and 10-day on the stress set, with `SVAR` and `SES` on every
+official record of a date with a stress set ([VAR_GUIDE.md section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
 
 #### 8.2.3 The P&L feed (G3)
 
@@ -438,11 +445,96 @@ passes, every cell drills to its official capture, sign-off is recorded, and the
 
 #### 8.2.9 Decisions for the product owner before the build
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted; the choices are under each question.
+
 1. The stress window for the demo data (a 12-month period inside the scenario history) and its refresh frequency.
-2. ~~10-day method~~ **Decided (product owner, 2026-10-30):** √10 and the 10-day sum of 1-day P&Ls, both selectable on screen, built in 2.9.7; full 10-day revaluation later as a second vector set. Stressed VaR is left out for now.
+   **Decided (product owner, 2026-10-31):** 2008-07-01 to 2009-06-30, a synthetic 2008-like set from the test-data generators, labelled
+   synthetic; refreshed weekly, as the configuration above. Choosing the window over a long history is the stress-window selection tool
+   (2.9.8 row 8).
+2. ~~10-day method~~ **Decided (product owner, 2026-10-30):** √10 and the 10-day sum of 1-day P&Ls, both selectable on screen, built in 2.9.7; full 10-day revaluation later as a second vector set. Stressed VaR, left out then, was brought into 2.9.7 Drill B (row 2c, product owner 2026-10-31).
 3. The demo's `desk-pnl`: generated alongside the test data (actual = hypothetical + noise and fees), with real bank feeds later.
+   **Decided (product owner, 2026-10-31):** generated demo desk P&L, as described; the bank's feed through the same contract later.
 4. The fiscal year end of the demo (October 31, as Canadian banks, or December 31).
+   **Decided (product owner, 2026-10-31):** October 31.
 5. Outputs in 2.9.8: xlsx, csv and PDF, with XBRL left for a later release.
+   **Decided (product owner, 2026-10-31):** xlsx, csv and PDF in 2.9.8; XBRL or a regulator's electronic format later, per report.
+
+### 8.3 Mock-ups: the screens to build
+
+Three of phase 1's screens are mocked up, each with three options, under [`mockups/`](mockups/backtesting/A.html): self-contained HTML
+pages (system fonts, everything inline, nothing from a CDN) with a headless-Chrome screenshot beside each, 1600 px wide, dark by default
+(`#light` at the end of the address, and an `A-light.png`, for the light theme). Figures are the demo's on 2026-09-30 where the guides
+quote them (VaR BANK 112,041,646; stressed VaR 213,637,794); the rest are illustrative. **The checklists are the source of truth at build
+time**: a panel is done when its row says built. The VaR Playground's mock-ups are in
+[VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build); the stress window tool's design is in
+[VAR_GUIDE.md section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window-design-not-built-298-row-8).
+
+| Screen (plan row) | Options | Recommended |
+|---|---|---|
+| Backtesting (2.9.8 row 4) | [A](mockups/backtesting/A.html) one large chart with the zone card and the desk table · [B](mockups/backtesting/B.html) small multiples · [C](mockups/backtesting/C.html) the zone over time and an exceptions calendar | **A** (chosen on the recommendation, product owner to review) |
+| Period statistics, the report framework and the pilot pack: review and sign-off (rows 5, 6, 7) | [A](mockups/report-signoff/A.html) the report with checks, lineage and sign-off beside it · [B](mockups/report-signoff/B.html) a stepper through the workflow · [C](mockups/report-signoff/C.html) the report as the document it becomes | **A** (chosen on the recommendation, product owner to review) |
+| Stress window selection (row 8) | [A](mockups/stress-window/A.html) the long history with the worst and current windows marked · [B](mockups/stress-window/B.html) a heat map by the month a window starts · [C](mockups/stress-window/C.html) compare first | **A** (chosen on the recommendation, product owner to review) |
+
+#### 8.3.1 Backtesting (option A)
+
+![Backtesting, option A](mockups/backtesting/A.png)
+
+**Why A.** The regulatory question is one scope at a time (the bank, then each desk), and A answers it on one screen: the chart a
+supervisor recognises (P&L bars against the VaR line, exceptions marked, hypothetical P&L as a thin line), the zone and the multiplier
+beside it with both counts (actual and hypothetical, 99% and 97.5%), every desk in a table with its own small chart, and the exceptions
+with the desks that drove them. B is a good committee glance but each chart is too small to read; C leads with the count over time,
+which is useful but secondary, and moves the chart to the bottom. A's desk table already carries B's small charts.
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| B1 | Header and scope | *Backtesting*, the command, the source line; scope chips BANK and every desk, window, hierarchy, 99% or 97.5% | the backtest kind of section 8.2.4, computed on demand | pick a scope: every panel redraws | not built (2.9.8 row 4) |
+| B2 | Chart | 250 business days: actual P&L bars (gain, loss), hypothetical P&L line, −VaR 99% (the official record of the day before) and −VaR 97.5% lines, actual exceptions ▲ in red, hypothetical exceptions ◯; month ticks; the legend | official records, the desk P&L feed | hover a day: its figures; click: that date's VaR | not built |
+| B3 | Zone card | three lamps and the zone; counts at 99% (actual, hypothetical, each with its zone) and 97.5% (expected 6.25); the multiplier (3.40 at 5 exceptions) with the rule named; VaR today; the zone and multiplier configuration | the backtesting configuration (zones, the US multiplier table) | — | not built |
+| B4 | Bank and desks | per scope: VaR 99%, the four counts, zone, multiplier and a 250-day small chart; the selected scope highlighted | the same, per node of the hierarchy | click a row: draw its chart | not built |
+| B5 | Exceptions | date, VaR of the day before, actual, hypothetical, which exceeded, the excess, the desks that drove it, a link to that day's VaR | the same; the desks' P&L of the day | open the VaR of the day before | not built |
+| B6 | Export | *Open the backtesting chart report* (the pilot pack's report), *Export xlsx* | the report framework | — | not built |
+
+**Left out of the mock-up, for the build:** Kupiec and Christoffersen (already on the VaR page for the risk-theoretical backtest) as a
+second line of the zone card; the phone form (the zone card only, as a glance).
+
+#### 8.3.2 Review and sign-off: period statistics, the report and the pilot pack (option A)
+
+![Report review and sign-off, option A](mockups/report-signoff/A.png)
+
+**Why A.** Everything the checker must look at before approving is on one screen: the report as it will be filed, the period
+statistics it was built from, the checks, the lineage of any cell, and the sign-off chain with the approve action. A stepper (B) suits
+an occasional user but hides the pack and the statistics a step away; the document view (C) is closest to the filed output but pushes
+the checks and the sign-off to the edges. The document view can be A's PDF preview.
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| S1 | Header | the report command, the run version and freeze time, *read from the official records, never recomputed*, the preview note before the period end | the report generator (section 8.2.6) | — | not built (2.9.8 row 6) |
+| S2 | Pilot pack | the two reports (annual-report-var, var-backtesting-chart), period FY2026 (year end October 31), run, state (with the maker or checker) | report definitions in configuration | open a report's run | not built (row 7) |
+| S3 | Period statistics | period end 112.04m, average 98.73m, high 131.41m (with its date), low 74.20m, the 60-day average, the 12-week stressed VaR average with the latest | period statistics (section 8.2.5) over the official records | click: the official records behind it | not built (row 5) |
+| S4 | The report table | 1-day 99% VaR by risk type (IR, FX, EQ, CMD, CS), diversification and total; period end, average, high, low, last year's period end, movement (⚑ over 10%); n/m for diversification's high and low, with the footnote; the count of official records used | the definition's rows and columns | click a cell: its lineage (S8) | not built |
+| S5 | Narrative | the facts pre-filled (averages, period end, the driver, exceptions and dates); the text the maker's | the generator's facts | edit in review | not built |
+| S6 | Sign-off | the chain: generated, checks, maker (with the comment), checker (now), CRO, file; a comment box; *Approve as checker*, *Send back to the maker*; xlsx, csv and PDF released after the last approval | the sign-off record (section 8.2.6) | approve or send back; files when signed | not built |
+| S7 | Checks | seven checks with pass or note and the evidence (totals against the official VaR of every date, the period end against the VaR page, rows summing to the total, no missing record, the same total as the backtesting report, a movement needing a note, the backtest's exceptions) | the definition's checks | a failed check blocks sign-off | not built |
+| S8 | Lineage | the selected cell, its official record, the filter, data versions, code, the definition and its revision, the run | the frozen run's lineage | open the VaR page of the date or the record | not built |
+
+#### 8.3.3 Stress window selection (option A)
+
+![Stress window selection, option A](mockups/stress-window/A.png)
+
+**Why A.** The decision is *which period is worst for today's portfolio*, and the long history answers it at a glance: every 250-day
+window since 2007 valued as today's stressed VaR, the worst and the configured window marked, with the other crises (2011, 2020, 2022)
+visible as candidates. The table, the desks and the comparison sit under it, with the one action (freeze and propose for sign-off). The
+heat map (B) is compact but monthly starts hide the exact worst day; compare-first (C) suits the approver, and its two cards can be the
+sign-off view of the frozen analysis.
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| W1 | Header and controls | the positions date, the history (2007 to today, synthetic on the demo), the window length; scope chips BANK and the desks; hierarchy; *Export xlsx*; **Freeze and propose for sign-off** | node-level long-history P&L series (2.9.8 row 8) | pick a node | not built (2.9.8 row 8) |
+| W2 | Alert | the worst window exceeds the current one by 7.2% against a 5% threshold, raised by the monthly analysis | a proposed threshold setting | open the comparison | not built |
+| W3 | History chart | stressed VaR of today's portfolio for every window start (weekly); the worst (2008-09-15, 228.91m) and current (2008-07-01, 213.64m) marked; candidates 3 to 5 labelled; today's VaR as a reference line | the rolling 250-day VaR | hover: the window and its VaR; click: select it | not built |
+| W4 | Top candidates | five non-overlapping windows with stressed VaR, the change against the current, the worst and current tagged, what each holds | the same | select a candidate to compare | not built |
+| W5 | By desk | per node: VaR in the current window, its own worst window and when it starts, the gap | the same per node | open the node | not built |
+| W6 | Current against proposed | window, stressed VaR 1-day and 10-day √10, scenarios, the worst day in each, who approved the current one; the freeze rule | the frozen analysis and the sign-off record (section 8.2.6) | freeze and propose | not built |
 
 ## 9. Data the bank must supply
 

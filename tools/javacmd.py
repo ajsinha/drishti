@@ -23,10 +23,16 @@ The folder: ``tmp`` when given (a test stack passes a folder under its own tmp_p
 stale native copies from that base at start. The folder is made if absent (Java warns and the libraries fail on a missing one).
 A ``-Djava.io.tmpdir=`` already in the arguments wins. Standard library only: the console tests load it through ``java_launch.py``.
 
+The ``sutra`` command line (``cli_tmp``) is the exception: it writes nothing under the data folder, so its JVM gets ``DRISHTI_TMP_DIR``
+when set, else a fresh folder in the system temp folder, removed when the command ends.
+
 tests/test_java_launch_guard.py (drishti-console) fails when a file under drishti-console/tests or tools starts java without it."""
 from __future__ import annotations
 
+import contextlib
 import os
+import shutil
+import tempfile
 from pathlib import Path
 
 FLAG = "-Djava.io.tmpdir="
@@ -93,3 +99,20 @@ def java_cmd(java, args, tmp=None, cwd=None, env=None) -> list:
     if any(a.startswith(FLAG) for a in args):
         return [str(java), *compact, *cache, *args]
     return [str(java), tmp_flag(tmp, cwd, env), *compact, *cache, *args]
+
+
+@contextlib.contextmanager
+def cli_tmp(env=None):
+    """The JVM temp folder of one ``sutra`` command: ``DRISHTI_TMP_DIR`` when set, else a fresh folder in the system temp folder,
+    removed afterwards. Never ``<data dir>/tmp/server``: the command line writes nothing under the site's data folder."""
+    env = os.environ if env is None else env
+    given = (env.get("DRISHTI_TMP_DIR") or "").strip()
+    if given:
+        Path(given).mkdir(parents=True, exist_ok=True)
+        yield Path(given)
+        return
+    folder = Path(tempfile.mkdtemp(prefix="drishti-sutra-"))
+    try:
+        yield folder
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)

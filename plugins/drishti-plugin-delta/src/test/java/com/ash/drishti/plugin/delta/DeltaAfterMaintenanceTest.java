@@ -52,8 +52,10 @@ class DeltaAfterMaintenanceTest {
         Path config = root.resolve("maintenance.yaml");
         Files.writeString(config, "lakes:\n  - root: " + root + "\n    compact: true\n    checkpoint: true\n    vacuum-hours: 0\n");
         // the test writes its own table (not through lake build), so the ownership rule needs --force-foreign to maintain it
-        Process p = new ProcessBuilder("uv", "run", "-q", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python",
-                "tools/lake/maintain.py", "--config", config.toString(), "--once", "--force-foreign").directory(Path.of("../..").toFile()).inheritIO().start();
+        ProcessBuilder pb = new ProcessBuilder("uv", "run", "-q", "--with", "deltalake", "--with", "pyarrow", "--with", "pyyaml", "python",
+                "tools/lake/maintain.py", "--config", config.toString(), "--once", "--force-foreign").directory(Path.of("../..").toFile()).inheritIO();
+        pb.environment().put("DRISHTI_DATA_DIR", root.resolve("data").toString());   // its history in the test's folder, not the site's
+        Process p = pb.start();
         assertThat(p.waitFor(5, TimeUnit.MINUTES) && p.exitValue() == 0).as("maintenance ran").isTrue();
         assertThat(Files.list(root.resolve("desk/trade/_delta_log")).anyMatch(f -> f.toString().endsWith(".checkpoint.parquet"))).isTrue();
         for (String engine : new String[] {"native", "hadoop"}) {                  // both engines read the checkpoint

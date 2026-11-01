@@ -84,6 +84,65 @@ class VarShardSingleNodeTest {
     }
 
     @Autowired VarService svc;
+    @Autowired com.ash.drishti.server.node.NodeReadiness readiness;
+    @Autowired com.ash.drishti.server.node.NodeDrain drain;
+
+    /**
+     * Readiness that means ready (CD1) and the drain before a stop (CD2) on a sharded server: readiness opens the newest date itself and is
+     * DOWN until it is open; a shard this member owns that is not ready keeps it DOWN, naming the shard, until the rebalancing round has
+     * built it again; drained, it is OUT_OF_SERVICE, and the only owner of its shards is never safe to stop (nobody takes them over).
+     */
+    @Test
+    void readinessWaitsForTheNewestDateAndOwnedShardsAndTheDrainMakesItOutOfService() throws Exception {
+        svc.reload(DAY);
+        org.springframework.boot.actuate.health.Status first = readiness.status();
+        if (first != org.springframework.boot.actuate.health.Status.UP) {
+            assertThat(first).isEqualTo(org.springframework.boot.actuate.health.Status.DOWN);
+            assertThat(String.valueOf(readiness.waiting())).contains("the newest business date " + DAY);
+        }
+        awaitUp();
+        assertThat(svc.open(DAY)).as("opened by the readiness check").isTrue();
+
+        VarShards shards = svc.shards();
+        svc.reload(DAY);                                                // nothing here reads its books now
+        VarShardBooks.Key k = shards.books().keys().stream().filter(x -> x.ccy().equals(VarDate.USD)).findFirst().orElseThrow();
+        shards.books().release(k, false);
+        shards.wire((d, b) -> false, () -> java.util.Set.of(DAY));     // the date in use (open on a member) without opening it here
+        try {
+            assertThat(String.valueOf(readiness.waiting().get("var-shards"))).contains("S" + k.index() + " of " + DAY);
+            assertThat(readiness.status()).isEqualTo(org.springframework.boot.actuate.health.Status.DOWN);
+            long until = System.nanoTime() + java.util.concurrent.TimeUnit.SECONDS.toNanos(20);
+            do {                                                        // owned and not held: built again (a tick the scheduler holds skips)
+                shards.tick();
+            } while (readiness.waiting().get("var-shards") != null && System.nanoTime() < until && sleep(50));
+            assertThat(readiness.waiting().get("var-shards")).isNull();
+        } finally {
+            svc.shards(shards);                                         // wired to the service's own dates again
+        }
+        awaitUp();
+
+        try {
+            java.util.Map<String, Object> s = drain.drain(true);
+            assertThat(readiness.status()).isEqualTo(org.springframework.boot.actuate.health.Status.OUT_OF_SERVICE);
+            assertThat(shards.draining()).isTrue();
+            assertThat(s.get("safeToStop")).as("the only owner: its shards have nowhere to go").isEqualTo(false);
+            assertThat(String.valueOf(s.get("parts"))).contains("var-shards").contains("still held");
+            assertThat(readiness.waiting()).as("a drained member owns no shard").isEmpty();
+        } finally {
+            drain.drain(false);
+        }
+        assertThat(shards.draining()).isFalse();
+        awaitUp();
+    }
+
+    private void awaitUp() throws InterruptedException {
+        long end = System.currentTimeMillis() + 60_000;
+        while (readiness.status() != org.springframework.boot.actuate.health.Status.UP && System.currentTimeMillis() < end) {
+            Thread.sleep(50);
+        }
+        assertThat(readiness.waiting()).isEmpty();
+        assertThat(readiness.status()).isEqualTo(org.springframework.boot.actuate.health.Status.UP);
+    }
 
     @Test
     void theDatePutTogetherFromItsShardsIsTheWholeDate() {
@@ -147,5 +206,15 @@ class VarShardSingleNodeTest {
         assertThat(shards.releaseIdle(java.util.Set.of(), java.util.Set.of())).isEqualTo(2);
         assertThat(shards.books().keys()).isEmpty();
         assertThat(svc.date(DAY).book().sharded()).as("opened again from the shards' files").isTrue();
+    }
+
+    private static boolean sleep(long ms) {
+        try {
+            Thread.sleep(ms);
+            return true;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return false;
+        }
     }
 }

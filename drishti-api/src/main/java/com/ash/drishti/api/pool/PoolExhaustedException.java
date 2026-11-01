@@ -18,6 +18,7 @@ package com.ash.drishti.api.pool;
 /** No connection became free within the pool's connection timeout. The message says how busy the pool is. */
 public final class PoolExhaustedException extends Exception {
 
+    /** No connection became free in time; {@code message} says how busy the pool is. */
     public PoolExhaustedException(String message) {
         super(message);
     }

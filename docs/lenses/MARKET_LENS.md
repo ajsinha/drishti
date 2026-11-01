@@ -28,7 +28,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 [`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
 (every kind and field), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
-[2.9.9 rows 1 and 2](../architecture/IMPLEMENTATION_PLAN.md#299-moved-from-298-on-2026-10-30-candidates-not-started). The sibling lens
+[2.9.9 rows 1 and 2](../architecture/IMPLEMENTATION_PLAN.md#299-oversight-and-mobile-proposed). The sibling lens
 documents: [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
 ## Contents
@@ -401,36 +401,59 @@ Section 9, decision 2.
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
 section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buildable steps.
 
-| Order | Row | Why here | Size | Depends on |
-|---|---|---|---|---|
-| 1 | **ML2** σ-jump check | Small; the desk computes it already | S | — |
-| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; 2.9.9 row 1 |
-| 3 | **ML8** completeness against an expected list | Missing is worse than stale | S | — |
-| 4 | **ML4** grid calendar and smile checks | 2.9.9 row 2 | M | — |
-| 5 | **ML7** quality results kept and acknowledged | Turns checks into a control with an audit trail | M | — |
-| 6 | **ML6** market-data BI; **ML5** curve moves decomposed | Reports and the P&L explain's input | S each | ML7 for the quality dataset |
-| 7 | **ML9** the proxy list | Needs ML1 | S | ML1 |
-| 8 | **ML3** two sources and IPV | Needs a second source | M | data |
-| 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 |
-| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 |
+
+**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+
+| Order | Row | Why here | Size | Depends on | Release |
+|---|---|---|---|---|---|
+| 1 | **ML2** σ-jump check | Small; the desk computes it already | S | — | proposed 2.9.9 |
+| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; 2.9.9 row 1 | proposed 2.9.9 |
+| 3 | **ML8** completeness against an expected list | Missing is worse than stale | S | — | unscheduled |
+| 4 | **ML4** grid calendar and smile checks | 2.9.9 row 2 | M | — | proposed 2.9.9 |
+| 5 | **ML7** quality results kept and acknowledged | Turns checks into a control with an audit trail | M | — | proposed 2.9.9 |
+| 6 | **ML6** market-data BI; **ML5** curve moves decomposed | Reports and the P&L explain's input | S each | ML7 for the quality dataset | ML6 unscheduled; ML5 unscheduled |
+| 7 | **ML9** the proxy list | Needs ML1 | S | ML1 | unscheduled |
+| 8 | **ML3** two sources and IPV | Needs a second source | M | data | proposed 2.9.9 |
+| 9 | **ML10** the historical-day check | Methodology's monthly review; feeds the stress window work | M | ML1, ML2 | unscheduled |
+| 10 | **ML11** since when each exception has stood; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | ML7 | ML11 proposed 2.9.9; LX1 planned 2.9.8 |
 
 ---
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+
 1. **VaR at stake: which figure leads** the tile: the component VaR at stake (recommended: adds up, cheap), the incremental VaR, or the
    MtM at stake.
+
+   **Decided (product owner, 2026-10-31):** the component VaR at stake leads the tile (adds up, cheap).
 2. **VaR figures inside Market.** Show ML1's at-stake numbers in Market while trades and VaR stay hidden (recommended), or link to Risk
    only.
+
+   **Decided (product owner, 2026-10-31):** Market shows ML1's VaR at stake read-only while trades and VaR stay hidden (proposed 2.9.9).
 3. **The proxy list (ML9).** In Market (read-only card) or in Risk with a link.
+
+   **Decided (product owner, 2026-10-31):** in Market, as a read-only card (ML9, unscheduled).
 4. **Usage rules (ML1).** Drishti's configured rules now, the bank's pricing configuration when available (recommended), or wait for the
    bank's map.
+
+   **Decided (product owner, 2026-10-31):** Drishti's configured rules now, the bank's pricing configuration when available.
 5. **Jump thresholds.** 4σ warning and 6σ critical by default (proposed), or the desk's 3σ.
+
+   **Decided (product owner, 2026-10-31):** 4σ warning and 6σ critical by default, configurable.
 6. **Core's `CAL` and `ISS` in Market.** Show the holiday calendars and issuers (the checks use calendars), or keep them hidden.
+
+   **Decided (product owner, 2026-10-31):** show the holiday calendars and issuers in Market (the checks use calendars).
 7. **Quality records (ML7).** An official end-of-day quality record per date (recommended), or checks on open only.
+
+   **Decided (product owner, 2026-10-31):** an official end-of-day quality record per date (ML7, proposed 2.9.9).
 8. **A second source for the demo (ML3).** A synthetic second source with small, labelled differences so the check shows something, or
    none until a bank provides one.
+
+   **Decided (product owner, 2026-10-31):** a synthetic second source with small, labelled differences on the demo, so the two-source check shows something (proposed 2.9.9).
 9. **Source and licence per item.** Show each item's source and licence on its page as the public-data packs do (recommended), or not.
+
+   **Decided (product owner, 2026-10-31):** show each item's source and licence on its page, as the public-data packs do.
 
 ---
 
@@ -472,6 +495,7 @@ row.
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
 | [Market landings](#111-the-market-landings-market-landinghtml) (A Market desk, B Explorer, C Quality) | all three, 2026-10-29: A the default, B and C behind the landing switch; C with the checks the data supports | 15 | 4 | 2 |
+| [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 5 |
 
 ### 11.1 The Market landings (`market-landing.html`)
 
@@ -523,6 +547,27 @@ below): one column ([`market-landing.css`](../../drishti-console/web/static/css/
 3. **Two sources disagreeing** (M14; ML3).
 4. **VaR at stake and the Impact card** (M18, M20; ML1).
 5. **Since: how long each exception has stood** (M19; ML11, after ML7).
+
+### 11.2 The lens menus (LX1, `menus/A.html`)
+
+![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
+
+[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
+[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
+four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
+(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+
+**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| X1 | Bar | `DRISHTI Market`; the command line; menus **Views · Curves · Volatility · FX · Credit · BI · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of M1) |
+| X2 | Curves menu | Curves `CRV`; Repo `REPO`; Fixings `FIX`; Inflation `INF` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X4 | FX menu | Spot `FX`; Forwards `FXF`; Volatility `FXV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+
+On a phone the subject menus fold into one menu named after the lens (option C's form).
 
 ---
 

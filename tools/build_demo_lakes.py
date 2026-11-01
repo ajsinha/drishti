@@ -18,7 +18,9 @@
    (default: the date of your newest ENDUR file when ``--endur-dir`` is given, else today's business date), and the connector files
    pointed at the lake. No pack's data is served by the demo connector: start the server with it off.
 2. With ``--endur-dir``: the synthetic ENDUR trades are replaced by your files, one ``YYYY-MM-DD.jsonl`` (or ``.json``, ``.gz``)
-   per business date, each loaded with ``drishti.py lake build`` exactly as the Windows QA guide's step 3.2 does.
+   per business date, or one archive per business date (``YYYY-MM-DD.zip``, ``.tar.gz``, ``.tgz``, ``.tar``: its JSON Lines, in name
+   order, without folders; docs/guides/DATA_GUIDE.md section 2.7), each loaded with ``drishti.py lake build`` exactly as the Windows
+   QA guide's step 3.2 does.
 3. A summary: the tables, the dates, your files and what to start next.
 
 Examples::
@@ -86,7 +88,7 @@ DRISHTI = ROOT / "tools" / "drishti.py"
 STORES_PY = ROOT / "tools" / "lake" / "stores.py"
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import stores  # noqa: E402  (tools/lake/stores.py: Delta or Iceberg per source system)
-DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})\.(jsonl|json)(\.gz)?$")
+DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})\.(?:(?:jsonl|json)(?:\.gz)?|zip|tar\.gz|tgz|tar)$", re.I)
 
 
 def endur_files(folder: Path) -> list[tuple[str, Path]]:
@@ -192,13 +194,19 @@ def server_said(out: str) -> str:
 
 
 def first_trade(path: Path) -> str | None:
-    """The first TRADE_ID in one of your files (its first megabyte), for the closing lines' example command."""
+    """The first TRADE_ID in one of your files (its first megabyte; an archive's first member), for the closing lines' example command."""
     try:
+        import archives
+        if archives.is_archive(path.name):
+            plan = archives.plan(path)
+            with archives.Archive(plan) as a, a.open(plan.members()[0]) as f:
+                m = TRADE_ID.search(f.read(1 << 20))
+            return m.group(1).decode() if m else None
         opener = gzip.open if path.name.endswith(".gz") else open
         with opener(path, "rb") as f:
             m = TRADE_ID.search(f.read(1 << 20))
         return m.group(1).decode() if m else None
-    except (OSError, EOFError):
+    except (OSError, EOFError, ValueError, IndexError):
         return None
 
 
@@ -225,7 +233,8 @@ def tell(server: str, token: str | None, pack: str, kind: str, day: str, dry: bo
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
                                  epilog=__doc__.split("\n\n", 1)[1])
-    ap.add_argument("--endur-dir", type=Path, help="a folder of your ENDUR files, one per business date, named YYYY-MM-DD.jsonl")
+    ap.add_argument("--endur-dir", type=Path, help="a folder of your ENDUR files, one per business date, named YYYY-MM-DD.jsonl "
+                                                       "(or .json, .gz, or an archive: .zip, .tar.gz, .tgz, .tar)")
     ap.add_argument("--source-dir", type=Path, help="the same for the system --system names (the same as --endur-dir with --system endur)")
     ap.add_argument("--system", default="endur", choices=("endur", "calypso", "murex"),
                     help="whose files --source-dir holds: they go into trading/trade_<system> through connector trade-<system> (default endur)")
@@ -274,7 +283,7 @@ def main(argv: list[str] | None = None) -> int:
             ap.error(f"{'--endur-dir' if a.endur_dir else '--source-dir'} {folder} is not a folder")
         files = endur_files(folder)
         if not files:
-            ap.error(f"no file named YYYY-MM-DD.jsonl (or .json, .gz) in {folder}")
+            ap.error(f"no file named YYYY-MM-DD.jsonl (or .json, .gz, .zip, .tar.gz, .tgz, .tar) in {folder}")
     if a.token_file and not a.server:
         ap.error("--token-file goes with --server")
     token = None

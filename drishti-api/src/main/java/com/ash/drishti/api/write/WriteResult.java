@@ -26,26 +26,40 @@ package com.ash.drishti.api.write;
  */
 public record WriteResult(Status status, String reason) {
 
+    /** What became of the command. */
     public enum Status {
-        APPLIED, ALREADY, CONFLICTED, REFUSED, SENT
+        /** The guard held and the write was made. */
+        APPLIED,
+        /** The source already holds this change id: a resend, nothing written. */
+        ALREADY,
+        /** The guard failed: the record moved at the source. */
+        CONFLICTED,
+        /** The source said no, with its reason. */
+        REFUSED,
+        /** Sent; the confirmation comes later (an ack topic or the next load). */
+        SENT
     }
 
     public WriteResult {
         reason = reason == null ? "" : reason;
     }
 
+    /** The write was made. */
     public static WriteResult applied() {
         return new WriteResult(Status.APPLIED, "");
     }
 
+    /** A resend: the source already holds the change. */
     public static WriteResult already() {
         return new WriteResult(Status.ALREADY, "the source already holds this change");
     }
 
+    /** The record moved at the source, {@code why}. */
     public static WriteResult conflicted(String why) {
         return new WriteResult(Status.CONFLICTED, why);
     }
 
+    /** The source said no, {@code why}. */
     public static WriteResult refused(String why) {
         return new WriteResult(Status.REFUSED, why);
     }

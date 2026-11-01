@@ -24,7 +24,7 @@ idea?" The short answer is in [section 5.1](#51-the-answer-yes-a-separate-lens-b
 built after the two features that give it something of its own to show (the VaR change explanation and the breach workflow).
 
 **Read with:** [VAR_GUIDE.md](../guides/VAR_GUIDE.md) (the VaR engine as built), [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md)
-(backtesting, the P&L feed and the report framework with sign-off, 2.9.8 and 2.9.9), [EDITIONS.md](../admin/EDITIONS.md#13-the-design-as-built) (how an edition or a lens
+(backtesting, the P&L feed and the report framework with sign-off, 2.9.8; the report packs, 2.9.10), [EDITIONS.md](../admin/EDITIONS.md#13-the-design-as-built) (how an edition or a lens
 is defined), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, do not store), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md),
 and the contracts [STR.md](../contracts/STR.md) (stress and the proposed limit table), [FRTB.md](../contracts/FRTB.md) (sensitivities) and
 [PNL.md](../contracts/PNL.md) (P&L explain). The proposed risk cubes, which adopt section 7's `position-sensitivity` contract and
@@ -131,7 +131,7 @@ business risk managers.
 | Confidence chosen on screen (a picker, 99% default) | **Planned** (2.9.7 row 2b) | IMPLEMENTATION_PLAN 2.9.7 |
 | 10-day VaR (√10 and the 10-day sum) | **Planned** (2.9.7 row 2b) | the guide says 10-day is not built ([VAR_GUIDE section 1](../guides/VAR_GUIDE.md#1-the-question-var-answers)) |
 | Stressed VaR, 1-day and 10-day, official `SVAR`, 12-week average | **Planned** (2.9.7 row 2c) | |
-| VaR by risk type (IR, credit spread, equity, FX, commodity) | **Not built**, designed | REGULATORY_VAR_REPORTING G6, 2.9.9 row 3 |
+| VaR by risk type (IR, credit spread, equity, FX, commodity) | **Not built**, designed | REGULATORY_VAR_REPORTING G6, 2.9.10 row 1 |
 | FRTB standardised and internal models | **Not built**; FRTB SA contract proposed | [FRTB.md](../contracts/FRTB.md); REGULATORY_VAR_REPORTING phases 3a, 3b |
 | Several hierarchies (management, legal entity, limit letters, any configured) | **Built** | [VAR_GUIDE section 15.14](../guides/VAR_GUIDE.md#1514-hierarchies-from-the-rows-or-from-the-trades-columns-as-built-295) |
 | Exposure (EPE, PFE) for counterparty limits | **Built** (credit risk's measure; oversight of market risk reads it for concentration) | [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) |
@@ -229,7 +229,7 @@ are in [section 4.1](#41-ro1-var-change-explanation).
 | A daily risk report | **Partly**: the sample report *Market risk: VaR* | A defined daily report: appetite, limits of every type, breaches with commentary, VaR change explained, backtest, data trust |
 | Report definitions, checks, freeze, lineage, maker-checker sign-off | **Planned** (2.9.8 row 6) | [REGULATORY_VAR_REPORTING section 8.2.6](../architecture/REGULATORY_VAR_REPORTING.md#826-the-report-definition-framework) |
 | Board and risk-committee pack (PDF, house style) | **Planned** (2.9.9 row 3) | |
-| Regulatory reports (BCAR, Pillar 3, FFIEC 102, Volcker) | **Planned** (2.9.9 row 3) | [REGULATORY_VAR_REPORTING section 7](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
+| Regulatory reports (BCAR, Pillar 3, FFIEC 102, Volcker) | **Proposed** (2.9.10 row 1) | [REGULATORY_VAR_REPORTING section 7](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
 | Who saw and did what | **Built**: entitlements, audit entries per answer and capture | [VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit) |
 
 ---
@@ -639,20 +639,20 @@ Mock-ups first, the product owner picks, then the build (the house rule); none e
 
 ## 6. A roadmap
 
-Ordered by value and dependency. Releases are named only where the current plan already has a place; the rest are candidates.
+Ordered by value and dependency. Releases follow the plan's themed releases 2.9.8 to 2.9.14 (product owner, 2026-10-31); each is **proposed** until that release starts, and a row without one is unscheduled.
 
 | Order | Rows | Why here | Release |
 |---|---|---|---|
-| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | candidate for 2.9.9 |
-| 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the 2.9.8 sign-off record | candidate for 2.9.9, after 2.9.8's sign-off |
-| 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what 2.9.8 and 2.9.9 row 1 produce | candidates with 2.9.9 |
-| 4 | **RO11** the daily report and committee pack | On the 2.9.8 framework; the board pack is 2.9.9 row 3 | the board pack in 2.9.9; the daily report a candidate beside it |
-| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | candidates after 2.9.9 |
-| 6 | **RO7** the RNIV register | Small; uses the sign-off record | candidate for 2.9.9 or after |
-| 7 | **RO12** the Oversight lens: **mock-ups first, before any build** (none exists yet: section 11) | Once RO1 and RO2 exist | candidate after RO1 and RO2 |
-| 8 | **RO8** concentration | Needs RO15 and reference data on positions | candidate |
-| 9 | **RO9** the stress engine and limits, then reverse stress | The largest; STR.md's inputs | candidate |
-| 10 | **RO10** liquidity | Needs volume and bid-offer data | candidate |
+| 1 | **RO1** VaR change explanation | The most-asked question; needs nothing new from the bank; cheap | proposed 2.9.9 (oversight and mobile; decided, 2026-10-31) |
+| 2 | **RO2** breaches and escalation (VaR limits first) | Turns "what breached" into a record; reuses the 2.9.8 sign-off record | proposed 2.9.9, after 2.9.8's sign-off (decided, 2026-10-31) |
+| 3 | **RO13** data trust, **RO14** model performance | Mostly reads of what 2.9.8 and 2.9.9 row 1 produce | RO13 proposed 2.9.10 (with the first CIO rows, the data-trust feeds); RO14 unscheduled |
+| 4 | **RO11** the daily report and committee pack | On the 2.9.8 framework; the board pack is 2.9.9 row 3 | the board pack proposed 2.9.9; the daily report and the committee pack proposed 2.9.10 (regulatory reporting) |
+| 5 | **RO15** position sensitivities (contract, loader, ladders), **RO3** the limit catalogue, then **RO4** sensitivity limits, **RO5** stop-loss, **RO6** position and notional | RO15 and the catalogue first: RO4 and RO8 need the sensitivities | RO15 proposed 2.9.12 (first in it, with the factor dictionary); RO3 proposed 2.9.10 (the CRO decision queue needs it); RO4 proposed 2.9.12; RO5, RO6 unscheduled |
+| 6 | **RO7** the RNIV register | Small; uses the sign-off record | unscheduled |
+| 7 | **RO12** the Oversight lens: **mock-ups first, before any build** (none exists yet: section 11) | Once RO1 and RO2 exist | unscheduled (after 2.9.9's RO1 and RO2; a separate lens, decided) |
+| 8 | **RO8** concentration | Needs RO15 and reference data on positions | unscheduled (after 2.9.12's RO15) |
+| 9 | **RO9** the stress engine and limits, then reverse stress | The largest; STR.md's inputs | unscheduled |
+| 10 | **RO10** liquidity | Needs volume and bid-offer data | proposed 2.9.14 (liquidity, capital and climate) |
 
 The rows are in the plan's [Risk oversight (candidates)](../architecture/IMPLEMENTATION_PLAN.md#risk-oversight-candidates-not-started) section, marked not
 started.
@@ -829,28 +829,56 @@ position whole; each refusal; the proxied share; overlapping buckets in a grid r
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question.
+
 1. **The lens.** A separate Drishti Oversight lens (recommended), built after RO1 and RO2; or a fourth landing inside Drishti Risk now.
+
+   **Decided (product owner, 2026-10-31):** a separate Drishti Oversight lens, built after RO1 and RO2.
 2. **First build.** RO1 (VaR change explanation) and RO2 (breaches, VaR limits first) as 2.9.9 candidates beside the board pack; or after
    2.9.9.
+
+   **Decided (product owner, 2026-10-31):** RO1 and RO2 in 2.9.9 (oversight and mobile), beside the board pack.
 3. **The explanation's order.** The default sequence of section 4.1 (restatement, hierarchy, trades out, window roll, market, trades in);
    the Shapley variant on request only.
+
+   **Decided (product owner, 2026-10-31):** the default sequence of section 4.1; the Shapley variant on request only.
 4. **Temporary limits.** (a) recorded in Drishti, applied by the bank's limit system; or (b) a Drishti-owned overlay used the same day.
+
+   **Decided (product owner, 2026-10-31):** (a): recorded in Drishti, applied by the bank's limit system.
 5. **One limit table.** `risk-limit` for every measure with `var-limit` read as its VaR rows (STR.md open question 4); or `var-limit`
    kept separate.
+
+   **Decided (product owner, 2026-10-31):** one `risk-limit` table for every measure, `var-limit` read as its VaR rows.
 6. **Counterparty risk in the lens.** Read exposure for concentration (recommended), or leave counterparty risk to a credit-risk lens.
+
+   **Decided (product owner, 2026-10-31):** counterparty exposure read-only in the lens (for concentration).
 7. **The governance feature.** A new feature flag and powers (`breach.*`, `limit.temporary`, `rniv.*`, `report.sign`) on the 2.9.8 sign-off
    record; or reuse write-back's approval policy.
+
+   **Decided (product owner, 2026-10-31):** reuse write-back's approval policy.
 8. **One near-limit threshold.** Unify the explorer's 75%/90%, Trading's 80% and the catalogue's `WARNING_AT` into the limit's own
    warning level with a site default.
+
+   **Decided (product owner, 2026-10-31):** one near-limit threshold: the limit's own warning level, site default 80%, configurable.
 9. **Sensitivities contract** ([section 7.3](#73-a-proposed-data-contract-position-sensitivity)). A new `position-sensitivity` kind
    (recommended), which also becomes FRTB.md's proposed per-trade `sensitivity` input and lets `frtb-sensitivity` retire; or extend
    `frtb-sensitivity`.
+
+   **Decided (product owner, 2026-10-31):** a new `position-sensitivity` kind (it becomes FRTB.md's per-trade `sensitivity` input; `frtb-sensitivity` retires).
 10. **The risk-factor naming standard.** Drishti's (FRTB.md's factor fields, recommended) with a mapping from the bank's names; or the
     bank's names as delivered, mapped at load.
+
+   **Decided (product owner, 2026-10-31):** Drishti's factor naming standard with a mapping from the bank's names.
 11. **Whose buckets.** The bank's own limit buckets as configuration beside the FRTB buckets (recommended: both, each limit naming its
     grid); or FRTB buckets only.
+
+   **Decided (product owner, 2026-10-31):** both: the FRTB buckets and the bank's own limit grids, each limit naming its grid.
 12. **Shared command lists.** Allow an edition file to extend another (`extends: risk`) to stop lists drifting; or keep each file whole.
+
+   **Decided (product owner, 2026-10-31):** yes: an edition file may extend another (`extends:`).
 13. **Mock-ups.** Two or three variants of the Appetite, Breaches and Explorer or Risk map landings when the lens is scheduled.
+
+   **Decided (product owner, 2026-10-31):** two or three variants of each landing when the lens is scheduled, before any build.
 
 ---
 

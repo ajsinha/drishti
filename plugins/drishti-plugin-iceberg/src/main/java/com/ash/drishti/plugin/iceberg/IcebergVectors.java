@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.api.VectorReads;
 import com.ash.drishti.api.VectorSink;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
 import com.ash.drishti.plugin.iceberg.KindTable.Layout;
@@ -40,7 +41,8 @@ final class IcebergVectors {
 
     /**
      * Streams the day's rows with the vector {@code column} and the {@code textColumns} (physical names) to {@code sink}, file by file
-     * in file order: one buffer, reused for every row, so a date of millions of vectors is never held here.
+     * in file order: one buffer a file, reused for every row, so a date of millions of vectors is never held here; several files decode
+     * at once when {@code sink} came from {@link VectorReads#parallel}.
      */
     static void vectors(KindTable t, Layout l, Day day, String column, List<String> textColumns, VectorSink sink) {
         vectors(t, l, day, column, textColumns, f -> true, sink);
@@ -51,20 +53,19 @@ final class IcebergVectors {
             VectorSink sink) {
         List<String> cols = new ArrayList<>(List.of(IcebergLayout.ID, column));
         cols.addAll(textColumns);
-        double[][] buf = {new double[512]};
-        String[] texts = new String[textColumns.size()];
-        for (int f = 0; f < day.files().size(); f++) {
-            if (!keep.test(f)) {
-                continue;
-            }
+        int[] files = java.util.stream.IntStream.range(0, day.files().size()).filter(keep).toArray();
+        // file by file in file order; several files decode at once when the reader asked for it (VectorReads, VAR_GUIDE.md 27a.6)
+        VectorReads.inFileOrder(files, sink, (f, to) -> {
+            double[][] buf = {new double[512]};
+            String[] texts = new String[textColumns.size()];
             t.scan(l, day, f, cols, null, r -> {
                 for (int c = 0; c < texts.length; c++) {
                     texts[c] = text(r[c + 2]);
                 }
                 String id = r[0] == null ? "" : r[0].toString();
-                sink.row(id, buf[0], copy(r[1], buf), texts);
+                to.row(id, buf[0], copy(r[1], buf), texts);
             });
-        }
+        });
     }
 
     /** One entity's vector columns in one file of the day (its document's markers are put back with them); empty when none. */

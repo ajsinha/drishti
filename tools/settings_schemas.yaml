@@ -311,6 +311,8 @@ env:
   - { name: DRISHTI_DELTA_ROOT, by: packs, default: "./data/delta", sets: "every pack's delta connectors' root", meaning: "Root of every pack's Delta Lake connector" }
   - { name: DRISHTI_DELTA_ENGINE, by: packs, default: native, sets: "delta engine", meaning: "native, hadoop or auto, for every Delta connector without its own engine" }
   - { name: DRISHTI_LAKE_ENABLED, by: packs, default: "true", sets: "the packs' data connectors", meaning: "false switches every pack's data connector off (the demo samples still answer)" }
+  - { name: DRISHTI_CONSOLE_RELAY_KEY, by: console, default: ~, sets: "the live-channel relay key", meaning: "Signs the relay messages between the console's workers and, with live.relay.across_hosts, between consoles: the same secret on every console (the launcher makes one for its own workers when it is not set; CLUSTER_DEPLOYMENT.md section 9.4)" }
+  - { name: DRISHTI_CONSOLE_RELAY_KEY_MADE, by: console, default: ~, sets: "(set by the launcher)", meaning: "Set by run_drishti_web.py when it made the relay key itself: the relay then stays on this host" }
   - { name: DRISHTI_ALLOW_INSECURE_TLS, by: server, default: ~, sets: "tls.insecure-trust-all", meaning: "Must be true for a connector to run with tls.insecure-trust-all: true (development only)" }
   - { name: DRISHTI_CCR_DERIVED_ENABLED, by: packs, default: "true", sets: "counterparty-risk's derived connector", meaning: "The counterparty-risk pack's derived kinds (netting-set and counterparty totals) on or off" }
   - { name: DRISHTI_MR_DERIVED_ENABLED, by: packs, default: "true", sets: "market-risk's derived connector", meaning: "The market-risk pack's derived kinds on or off" }
@@ -363,10 +365,16 @@ env:
   - { name: DRISHTI_REDIS_PASSWORD, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's password (secret)" }
   - { name: DRISHTI_SERVER, by: tools, default: ~, sets: "drishti.py", meaning: "The server the command line talks to" }
   - { name: DRISHTI_TOKEN, by: tools, default: ~, sets: "drishti.py", meaning: "A personal API token for the command line and tools (secret)" }
+  - { name: DRISHTI_DRAIN_TOKEN, by: tools, default: ~, sets: "rolling.py, deploy/bin/drishti-node.sh", meaning: "An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI_DRAIN_TOKEN_FILE, else DRISHTI_TOKEN)" }
+  - { name: DRISHTI_DRAIN_WAIT, by: tools, default: "90", sets: "deploy/bin/drishti-node.sh", meaning: "Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop)" }
+  - { name: DRISHTI_NODE_URL, by: tools, default: "http://localhost:18480", sets: "deploy/bin/drishti-node.sh", meaning: "The server the stop hook drains and checks" }
   - { name: DRISHTI_HEARTBEAT_SECONDS, by: tools, default: "30", sets: "build_demo_lakes.py", meaning: "How often a long lake build prints that it is alive" }
   - { name: DRISHTI_LAKE_LOADER_HEAP, by: tools, default: ~, sets: "lake load", meaning: "The Java lake loader's heap" }
   - { name: DRISHTI_LAKE_CLASSPATH, by: tools, default: ~, sets: "lake load", meaning: "The class path of the Java lake loader" }
   - { name: DRISHTI_LAKE_HEAP, by: tools, default: ~, sets: "lake build", meaning: "The Java lake writer's heap" }
+  - { name: DRISHTI_ARCHIVE_MAX_MB, by: tools, default: "102400", sets: "the loaders' archives (lake build, lake load, load_rows.py, convert; the Java loader's source.archive.max-mb)", meaning: "The most an archive (.zip, .tar.gz, .tgz, .tar) may expand to, in MB: its entries' declared sizes, and what it expands to as it is read (DATA_GUIDE.md section 2.7)" }
+  - { name: DRISHTI_ARCHIVE_MAX_RATIO, by: tools, default: "200", sets: "the loaders' archives (source.archive.max-ratio)", meaning: "The most an archive may expand to, as a multiple of its own size (at least 1 MB is always allowed): the zip-bomb guard" }
+  - { name: DRISHTI_ARCHIVE_MAX_MEMBERS, by: tools, default: "100000", sets: "the loaders' archives (source.archive.max-members)", meaning: "The most entries an archive may hold" }
   - { name: DRISHTI_LOADER_HEAP, by: tools, default: ~, sets: "store loaders", meaning: "The heap of the Java store loaders (Iceberg, ...)" }
   - { name: DRISHTI_ICEBERG_CLASSPATH, by: tools, default: ~, sets: "Iceberg loader", meaning: "The class path of the Iceberg loader" }
   - { name: DRISHTI_TOOLS_CACHE, by: tools, default: ~, sets: "tools", meaning: "Where tools keep downloads (the MinIO binary, ...)" }

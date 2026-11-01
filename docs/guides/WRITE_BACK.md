@@ -949,7 +949,7 @@ Overlay and owned targets need the first and third levels only; a source target 
 | W7 | **Triggers and viewers** (sections 18.3 to 18.6): reactive connectors subscribed to `edit.applied`; recompute status on the submitter's screen; the submitter's own impact; updated records and results pushed to every viewer, masked per viewer | an amended trade recomputes its book's VaR (step V5, [VAR_GUIDE.md section 30](VAR_GUIDE.md#30-the-design-record)); the submitter sees their impact, every viewer sees the new record and shared number within 2 s |
 
 Placement: **2.8.0** (product owner: 2.7.0 on 2026-10-19, 2.8.0 since 2026-10-21; 2.7.0 is Sutra Next), after 2.6.0 (statements, field parameters, the Cassandra connector, drishti-iceberg;
-integration moved after 3.0.0 on 2026-10-20); AI (grounding, AI UI, GenUI, AI management)
+integration moved to the unscheduled list on 2026-10-20); AI (grounding, AI UI, GenUI, AI management)
 follows as 2.9.0; GenUI's write-back forms build on this. W0 comes first (2026-10-20).
 
 ### 15. Tests

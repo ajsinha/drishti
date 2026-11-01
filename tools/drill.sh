@@ -23,7 +23,7 @@
 #   tools/drill.sh --no-push  verify only: no push, no merge (the timing of each stage is printed either way)
 #   DRILL_MVN_ARGS="..."      extra Maven arguments for both Java runs (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
 #
-# Full drill: licence check; Java 21 full verify (it builds the jar the console tests start); then, at the same time and each
+# Full drill: licence check; Java 21 full verify with the API references' Javadoc and doclint (it builds the jar the console tests start); then, at the same time and each
 # with its own log under <data>/drill/: the Java 25 forward-compatibility verify (in a copy of the committed tree, so it
 # cannot touch the jar the console tests run), the console tests on pytest-xdist workers, and the Python tool tests (the
 # generated-content checks included). Every test that ran before still runs; only the waiting is shared.
@@ -107,6 +107,10 @@ python_tool_tests() {
   python3 -m unittest -q tools/test_contracts.py        # the data contract of every command: valid, current with its pack and data, pages current
   python3 tools/testdata/make_testdata.py --check     # the committed test data (data/testdata) is what its generator writes
   python3 tools/settings_catalogue.py --check         # CONFIGURATION.md's every setting: each key has a meaning, every variable indexed, current
+  python3 -m unittest -q tools/test_api_docs.py        # the API references' checks
+  # the API references (Help -> Developer): every public Python function, class and method has a docstring and type hints; in the full
+  # drill also every public Java type and member of the Javadoc the Java 21 verify built (-P api-docs, doclint on) has a comment
+  if [[ "$MODE" == docs ]]; then python3 tools/api_docs.py check-python; else python3 tools/api_docs.py check; fi
   python3 -m unittest -q tools/testdata/test_testdata.py
   if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
     # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
@@ -181,6 +185,52 @@ drill_cleanup() {
 }
 trap drill_cleanup EXIT
 
+# The tests keep the repository's config/ as they found it: each writes connector files, packs and settings to its own scratch
+# folder. What is under config/ (untracked or git-ignored) before the tests is listed; a file that appears there during the run
+# fails the drill with its name.
+config_files() { git status --porcelain --ignored --untracked-files=all -- config/ | sort; }
+CONFIG_BEFORE=$(config_files)
+config_unchanged() {
+  local added; added=$(comm -13 <(printf '%s\n' "$CONFIG_BEFORE") <(config_files) | sed -E 's/^(\?\?|!!) //')
+  [[ -z "$added" ]] && return 0
+  echo "drill: FAILED: the tests left these files under config/ (a test writes to its own scratch folder):" >&2
+  printf '%s\n' "$added" | sed 's/^/  /' >&2
+  return 1
+}
+
+# The same for the data folder: no test writes to it (the sutra command line, too, writes to a scratch folder of its own). Every
+# file under it (name, time, size) is listed before the tests; one added or changed during the run fails the drill with its name.
+# Not compared: the drill's own logs (drill/), Maven's temp folder (tmp/maven), the committed test data (testdata/) and the
+# local cluster's other nodes (stack/). A server running with this folder as its working folder (your own stack) writes here
+# while the tests run, so then the changes are listed as a warning, not failed: the drill cannot tell its files from the tests'.
+data_files() {
+  [[ -d "$DATA" ]] || return 0
+  find "$DATA" \( -path "$DATA/drill" -o -path "$DATA/tmp/maven" -o -path "$DATA/testdata" -o -path "$DATA/stack" \) -prune \
+    -o -type f -printf '%P\t%T@\t%s\n' 2>/dev/null | sort
+}
+servers_here() {   # java processes whose working folder is this repository (a server started from the IDE or by drishti-stack)
+  local here p; here=$(pwd -P)
+  for p in /proc/[0-9]*; do
+    [[ "$(readlink "$p/cwd" 2>/dev/null)" == "$here" && "$(cat "$p/comm" 2>/dev/null)" == java ]] && echo "${p#/proc/}"
+  done
+  return 0
+}
+DATA_BEFORE=$(data_files)
+SERVERS_HERE=$(servers_here | tr '\n' ' ')
+data_unchanged() {
+  local changed; changed=$(comm -13 <(printf '%s\n' "$DATA_BEFORE") <(data_files) | cut -f1 | grep -v '^$' || true)
+  [[ -z "$changed" ]] && return 0
+  if [[ -n "${SERVERS_HERE// /}" ]]; then
+    echo "drill: warning: files under $DATA/ changed during the tests, while a server ran from this folder (pid $SERVERS_HERE);" \
+         "these are its files or a test's:" >&2
+    printf '%s\n' "$changed" | head -n 30 | sed "s|^|  $DATA/|" >&2
+    return 0
+  fi
+  echo "drill: FAILED: the tests wrote these files under $DATA/ (a test writes to its own scratch folder):" >&2
+  printf '%s\n' "$changed" | sed "s|^|  $DATA/|" >&2
+  return 1
+}
+
 t=$SECONDS
 python3 tools/license_headers.py
 stage_done "licence headers" $t
@@ -190,6 +240,7 @@ if [[ "$MODE" == docs ]]; then
   start_job tools python_tool_tests
   start_job console console_tests drishti-console/tests/test_docs_*.py drishti-console/tests/test_help*.py drishti-console/tests/test_guide_images.py drishti-console/tests/test_examples.py
   rc=0; wait_job console || rc=1; wait_job tools || rc=1
+  config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (docs mode)" >&2; exit 1; }
   stage_done "docs console tests | tool tests" $t
 else
@@ -197,8 +248,9 @@ else
   JAVA21_HOME="${JAVA21_HOME:-/usr/lib/jvm/java-21-openjdk-amd64}"
   [[ -x "$JAVA21_HOME/bin/java" ]] || { echo "drill: no JDK 21 at $JAVA21_HOME (set JAVA21_HOME)" >&2; exit 1; }
   t=$SECONDS
-  # clean first: what an earlier build or an interrupted test run left in target/ is never built on or read by this one
-  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean verify ${DRILL_MVN_ARGS:-}
+  # clean first: what an earlier build or an interrupted test run left in target/ is never built on or read by this one; -P api-docs runs
+  # Javadoc with doclint on the documented modules right after each compiles (a broken link fails here; a few seconds)
+  JAVA_HOME="$JAVA21_HOME" ./mvnw -q -o clean verify -P api-docs ${DRILL_MVN_ARGS:-}
   stage_done "Java 21 verify" $t
   # Java 21 and newer are supported: the same tests again on Java 25, so a library that breaks on a newer JVM (Hadoop and the
   # removed Security Manager, Unsafe memory access) fails the drill.
@@ -213,6 +265,7 @@ else
   wait_job console || rc=1
   wait_job tools || rc=1
   [[ -z "${PID[java25]:-}" ]] || wait_job java25 || rc=1
+  config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
   stage_done "Java 25 | console | tool tests" $t
 fi

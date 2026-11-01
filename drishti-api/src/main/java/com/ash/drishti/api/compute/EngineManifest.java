@@ -36,6 +36,7 @@ public record EngineManifest(String name, String version, List<String> kinds, Se
         incremental = incremental == null ? Set.of() : Set.copyOf(incremental);
     }
 
+    /** An engine that updates nothing incrementally. */
     public EngineManifest(String name, String version, List<String> kinds) {
         this(name, version, kinds, Set.of());
     }

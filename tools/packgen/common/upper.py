@@ -98,7 +98,7 @@ def expr(e: str) -> str:
 _RPATH = re.compile(r"([$@])((?:\.(?:[A-Za-z_]\w*|\*)|\[[^\]]*\])+)")
 
 
-def rachana(e):
+def rachana(e: object) -> object:
     """A Rachana-EL expression or a ${...} template: the names on its $. and @. paths renamed (functions, controls and quoted
     text are not paths, so they stay)."""
     if not isinstance(e, str) or ("$" not in e and "@" not in e):
@@ -115,7 +115,7 @@ def rachana(e):
 WALK_GRAMMAR = {"step", "places", "min", "max", "scale", "shape", "jitter", "mode", "with", "path", "set", "expr", "append", "every", "keep"}
 
 
-def keys(o):
+def keys(o: object) -> object:
     """Every key of a JSON value in UPPER_SNAKE (no _meta handling: for plain nested data)."""
     if isinstance(o, dict):
         return {name(k): keys(v) for k, v in o.items()}
@@ -192,7 +192,8 @@ def _opt(k: str, v):
     return rachana(v)
 
 
-def pivot(pv):
+def pivot(pv: object) -> object:
+    """A pivot's options with the fields they name in UPPER_SNAKE (the heat map's settings kept)."""
     if not isinstance(pv, dict):
         return pv
 
@@ -206,7 +207,9 @@ def pivot(pv):
     return {k: ([f(x) for x in v] if isinstance(v, list) and k != "heat" else v) for k, v in pv.items()}
 
 
-def panel(p):
+def panel(p: object) -> object:
+    """A taxonomy panel (tools/packgen/banking/risk_model.py) in the names its documents carry: rows, columns, axes, series, options and
+    pivot renamed; a panel reading another kind's record keeps that record's names."""
     if isinstance(p.opts.get("source"), dict):
         # a panel reading another kind's record ($src: a derived or computed page) keeps its names as written: that record's own names
         # (group() rows are label, value, count), and its $. paths are already the page's UPPER_SNAKE names
@@ -217,7 +220,7 @@ def panel(p):
         opts={k: _opt(k, v) for k, v in p.opts.items()}, pivot=pivot(p.pivot))
 
 
-def kind(k):
+def kind(k: object) -> object:
     """A taxonomy Kind (tools/packgen/banking/risk_model.py) in the names its documents carry."""
     return dataclasses.replace(
         k, id_field=name(k.id_field), strip=[(s[0], rachana(s[1]), *s[2:]) for s in k.strip], panels=[panel(p) for p in k.panels],

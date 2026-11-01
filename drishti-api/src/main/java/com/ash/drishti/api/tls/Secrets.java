@@ -40,6 +40,7 @@ public final class Secrets {
         return get(settings, key, System::getenv);
     }
 
+    /** As {@link #get(Map, String)}, reading environment variables through {@code env}. */
     public static String get(Map<String, String> settings, String key, Function<String, String> env) {
         String v = settings.get(key);
         return v == null || v.isBlank() ? null : expand(v.strip(), env, key);
@@ -50,6 +51,7 @@ public final class Secrets {
         return secret(settings, key, System::getenv);
     }
 
+    /** As {@link #secret(Map, String)}, reading environment variables through {@code env}. */
     public static String secret(Map<String, String> settings, String key, Function<String, String> env) {
         return secret(k -> get(settings, k, env), "", key);
     }

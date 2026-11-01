@@ -136,6 +136,22 @@ public final class NativeEngine implements Engine, AutoCloseable {
         return uses;
     }
 
+    /** The uncompressed bytes of each row group of a Parquet data file, in file order (from its footer, which is cached). */
+    public long[] rowGroups(FileStatus file) throws IOException {
+        return ParquetBatches.rowGroups(io, file);
+    }
+
+    /**
+     * The row groups {@code [from, to)} of a Parquet data file as column batches of {@code schema}'s columns only, in file order, as
+     * {@link #getParquetHandler()} reads the whole file: parts of one file may be read on several threads at once and put back in order
+     * (VAR_GUIDE.md section 27a.6).
+     */
+    public io.delta.kernel.utils.CloseableIterator<io.delta.kernel.data.ColumnarBatch> readRowGroups(FileStatus file,
+            io.delta.kernel.types.StructType schema, int from, int to) {
+        return new ParquetBatches(io, file, schema, java.util.Optional.empty(),
+                io.getConf(NativeParquetHandler.BATCH_SIZE).map(Integer::valueOf).orElse(1024), from, to);
+    }
+
     /** Listing and reading for {@code path} (the connector lists a lake's tables with it). */
     public Storage storage(String path) {
         return io.storage(path);

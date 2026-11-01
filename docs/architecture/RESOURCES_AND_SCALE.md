@@ -626,13 +626,16 @@ console CPU per page (JFR `jdk.ExecutionSample` in Jackson; `py-spy` in `json`) 
 
 ### 6.3 Cold loads (D8)
 
-**Today.** A VaR date's first load reads the lake's Parquet (decoded at roughly 0.5 to 1 GB/s a core, VAR_GUIDE 27.4), streams rows
-through `VarIntake` to the spill, sorts, sums and writes the hot file: about 10 to 12 s a million trades after the read (VAR_GUIDE 27.3).
-The lake loader parses about 30,000 rows a second a thread and writes 24,500 ([PARALLEL_LOADER.md section 11](PARALLEL_LOADER.md#11-measured-and-the-23m-estimate)).
-**Proposal (after the profile).** Decode a large file's row groups in parallel (whether the engine's reads do so today is the first thing the profile answers), read
-only the columns the engine uses (the vector and the 17 trade texts; never `doc`), and keep the sort's keys as int codes (D1's
-dictionaries) instead of strings. **Measure:** the first open of a 200K date, wall and CPU, split into read, intake, sort, aggregate and
-write by JFR; the target is the read at the disk's or S3's speed.
+**Built.** A VaR date's first load reads the lake's Parquet, streams rows through `VarIntake` to the spill, sorts, sums and writes the hot
+file. The read decodes on several threads: the date's files, cut into runs of whole row groups on the Delta connector's native engine
+(whole files on the Hadoop engine and on Iceberg), decode `drishti.var.read.threads` at once (half the cores, at most 8) and reach the
+load in file order, so the date is the same to the bit; the decoded rows waiting are bounded by `drishti.var.read.buffer-mb` (64 MB,
+at most a thirty-second of the heap). Only the columns the engine uses are read (the id, the vector and the trade's texts; never `doc`).
+The algorithm, the settings and the cost: [VAR_GUIDE.md section 27a.6](../guides/VAR_GUIDE.md#27a6-a-dates-first-open).
+**Measured** at 50,000 positions (one workstation): first open 2.6 s to 1.8 s, the read 1.5 s to 0.8 s. The read is now bound by the
+load's own thread (intake and spill), not the decode. **Not built:** the sort's keys as int codes (D1's dictionaries); the intake on
+more than one thread. **Measure:** the first open of a 200K date, wall and CPU, split into read, intake, sort, aggregate and write by JFR
+(the decode threads are `drishti-vector-read-*`).
 
 ### 6.4 Logging (D9)
 
@@ -866,8 +869,11 @@ gains a `disk` section with the same numbers.
 
 ### 8.3 Metrics to export
 
-Prometheus at `/actuator/prometheus` (as today; PERFORMANCE.md, *Server metrics*). Proposed names (Micrometer gauges and counters,
-bounded tags):
+Prometheus at `/actuator/prometheus` (PERFORMANCE.md, *Server metrics*). The names (Micrometer gauges and counters, bounded tags), **built**
+([14.26](#1426-the-platform-metrics-and-alerts-and-po-11-the-relay-across-hosts)) except `drishti_cache_evictions_total`,
+`drishti_var_skeleton_bytes` (D1), `drishti_hot_files` and `drishti_hot_file_bytes` (read `drishti_cache_entries` and
+`drishti_cache_bytes{cache="var.hot-files"}`) and the `drishti_pool_*` gauges (6.6); the full list as built is
+[OPERATIONS.md section 13.6](../admin/OPERATIONS.md#136-platform-metrics-and-alerts):
 
 | Metric | Tags | Meaning |
 |---|---|---|
@@ -905,6 +911,9 @@ only, the extras: experimental CPU-time sampling (`jdk.CPUTimeSample`, Linux) an
 hold on 21.
 
 ### 8.5 Alerts
+
+Built as the platform alert rules ([14.26](#1426-the-platform-metrics-and-alerts-and-po-11-the-relay-across-hosts), `config/alerts/platform-alerts.yaml`),
+except the last two rows and the cache rule's hit-rate condition (the rule is the share of the limit alone).
 
 | Alert | When | To |
 |---|---|---|
@@ -955,14 +964,13 @@ copying it is fine. Its own store and assembly (`ExposureShardBooks`, `ExposureS
 
 ### 9.4 Console scale, and the sticky-session gap
 
-**Today.** The console is stateless except for live channels: `CHANNELS` (`drishti-console/routes/api_routes.py:335`) holds each open
-channel in the worker that opened it; `core/channel_relay.py` (lines 15-40) forwards a channel's calls to that worker **on the same host**
-(signed with `DRISHTI_CONSOLE_RELAY_KEY`). Behind a load balancer across hosts, a channel's `POST /channel/{cid}` must reach the host that
-holds it: sticky sessions (IMPLEMENTATION_PLAN's known gaps; [DATA_ARCHITECTURE.md](DATA_ARCHITECTURE.md#1-live-updates)).
-**Proposal, in two steps.** (1) The channel id carries the holding host's address as well as its port (today: the worker's loopback
-port), and the relay forwards across hosts over the same signed call: no stickiness needed, one extra hop for a misrouted call. (2) With
-the renderer, the browser's live stream goes through the console as a pass-through to the server's own SSE (`/views/{kind}/{id}/stream`),
-so the console holds no channel state at all. **Test:** two console hosts behind a round-robin balancer, 100 tabs, every tick delivered.
+The console is stateless except for live channels: `CHANNELS` (`drishti-console/routes/api_routes.py`) holds each open channel in the
+worker that opened it. **The relay (PO-11, built, [14.26](#1426-the-platform-metrics-and-alerts-and-po-11-the-relay-across-hosts)):** the
+channel id names the holding worker's host and relay port, and `core/channel_relay.py` passes a channel's calls to it, within one host or
+across hosts (`live.relay.across_hosts`), signed with `DRISHTI_CONSOLE_RELAY_KEY`: no stickiness, one extra hop for a call that reaches
+another console ([CLUSTER_DEPLOYMENT.md section 9.4](CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)). **Next, with the renderer:**
+the browser's live stream goes through the console as a pass-through to the server's own SSE (`/views/{kind}/{id}/stream`), so the
+console holds no channel state at all.
 
 ### 9.5 Capacity tables
 
@@ -1002,6 +1010,8 @@ each member runs its own refresh. The loader's job keeps one call.
 
 ## 10. Benchmark, profiling and soak method
 
+**Measured: the baseline (B1, 2026-10-31)** is [BENCHMARK_2_9_7.md](BENCHMARK_2_9_7.md): 200,000 positions and 1,500 portfolios, one server and a three-node sharded cluster, 50, 100 and 200 users, Java 21 and 25, G1 and ZGC, the loaders, the "before" figures of 10.3 and a 2.3M extrapolation. Its profile puts a path outside D1 to D10 first: the parts of a scope (`VarViews.positionSize`), about 60% of the CPU and 93% of the allocation under load.
+
 ### 10.1 The 200K benchmark with the concurrency test
 
 The plan's item 3 (IMPLEMENTATION_PLAN 2.9.7): 200,000 positions and 1,500 portfolios locally, single server against a three-node
@@ -1028,6 +1038,7 @@ recordings are kept beside the results (`tools/bench/results/`), never committed
 | D6 | console CPU per page; pages a second at p95 ≤ 300 ms | 2 × or better |
 | D7 | bytes and CPU per page | no page larger or slower than before |
 | D8 | first open of a 200K date, split by stage | the read at disk speed; total ≥ 30% faster |
+| Scopes | requests a second under the concurrency test; the bank minus a desk and a 50,000-position basket, alone and under load; allocation per request | CPU no longer bound by scope membership; basket p95 ≤ 150 ms warm (with D1) |
 | D9 | log bytes an hour; CPU in logging | ≤ 10 MB an hour at rest, under 1% CPU |
 | D10 | pinned events on 21; requests a second 21 against 25 | no pinned event on a request path; 21 within 10% of 25 |
 | GC | p99 node and basket under 200 users; GC CPU | the chosen collector's p99 ≤ the other's |
@@ -1091,7 +1102,7 @@ fixed order slows node or scope VaR by no more than 5% in a micro-benchmark (met
 | PO-8 | The collector per role (5.5): generational ZGC on owners and coordinators, G1 elsewhere | yes, confirmed by the benchmark; fix the Docker image's missing `-XX:+ZGenerational` on 21 now | yes; the images fixed (14.18) |
 | PO-9 | The version watch (4.4): bound an engine's staleness without a signal to 30 s | yes | yes, 30 s; built (14.16) |
 | PO-10 | `keep-on-shutdown` in production: keep hot files across restarts (fast restart) now that disk is bounded | yes once O5 is built; stays false by default for workstations | yes: the server images keep hot files (14.24); false for workstations |
-| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order | both, in that order; not built in step 3 (the console's relay, 9.4) |
+| PO-11 | The console across hosts: the cross-host relay now, the stateless console with the renderer (9.4) | both, in that order | both, in that order; the relay built (14.26), the stateless console with the renderer |
 
 ---
 
@@ -1258,7 +1269,7 @@ CLI `server caches [--dates NAME] [purge NAME [--date D] [--cluster]]`.
 **Tests.** `CacheAdminTest` (every new row and the totals; purge a date of VaR and of a Delta connector; last purge by whom and which
 date; the dates; a bad date; the cluster scope with no peers); `test_admin.py` (the page's totals, sizes, hit rate, last purge, purge a
 date with the cluster scope, the drill-down). **Remains:** the console's own caches are not on the page (section 8.1's "Console"
-section); Prometheus gauges per cache (8.3) are not exported.
+section). The Prometheus gauges per cache (8.3) are in 14.26.
 
 ### 14.13 O3: reload one date
 
@@ -1283,8 +1294,8 @@ shard cluster tests' harness could host it) and a browser test of the dialog.
 **Done.** `GET /api/v1/admin/health` carries `disk` (`DiskBudget.describe`: the disk's total and free space, the guard, a state, and
 every registered folder with its size, cap, state and oldest item); red makes the overall status `DEGRADED`. The console's Health page
 draws a **Disk** section (free against the guard, one row per folder). **Tests.** `HealthApiTest.reportsTheDiskFoldersAndTheGuard`;
-`test_admin.py` (the section, amber and red). **Remains:** an alert to the `admin` role on each change to red (the state is visible,
-and the guard's refusal names itself, but no notice is sent); the pools' table (6.6).
+`test_admin.py` (the section, amber and red). The alert to the `admin` role on red is the rules `disk-folder-at-cap` and
+`disk-free-under-guard` (14.26). **Remains:** the pools' table (6.6).
 
 ### 14.16 O9: the version watch (PO-9)
 
@@ -1453,10 +1464,19 @@ after unmap under 32 threads, a format-3 file opens) and `ShardAssemblyTest`, th
 heap histogram at 100K before (117 MB, two dates, after D2) and after (expected under 30 MB). The `String` ids are 37 MB of today's 117.
 **D4 (releases with the date):** built as direct releases rather than one `DateLifecycle` hook: views (A2), shard books (A3), id maps
 (A4), the small maps (A6), the version watch's state and the intraday locks with their date; the soak test (O8) checks the counts.
-**D8 (cold loads): not changed.** No profile-guided change was made without a measured gain at 100K (the first open measured
-1.0-1.2 s of sort, aggregates and hot file at 100K, generate and spill 0.3-0.8 s, `VarTierBenchmark`): left for the benchmark's JFR
-split (step 2/4).
+**D8 (cold loads): built.** The read of a date's first open decodes its files (or runs of their row groups) on several threads and
+hands the rows to the load in file order, bounded in memory; the same book to the bit (section 6.3, VAR_GUIDE.md section 27a.6).
 **D6, D7** are the renderer's (2.9.7 items 1 and 2), outside this step.
+
+### 14.23a Scope membership, parts and totals
+
+**Done.** A position is one run of ordinals: whether a scope holds it whole is one bit scan with nothing allocated, and its trades in the
+scope are the scope's runs within it. The totals of a scope's parts (count, Σ standalone VaR, Σ component VaR, diversification) are over
+every part; each whole position's standalone VaR is computed once per book and lens and kept in the cache `var.standalones` (8 bytes a
+position and lens, in the `small` pool, 64 MB at most, released with its book); `max-parts` limits only the rows listed. The design, the
+algorithms and the cost per request: [VAR_GUIDE.md section 27a](../guides/VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).
+**Test.** `PositionMembersTest`, `VarPartsLargestTest`, `VarHeadlinePartsTest`, `VarMathTest`. **Remains:** per-shard partial sums of the
+standalone values in a sharded cluster (design, VAR_GUIDE 27a); the after-benchmark's figures (B12).
 
 ### 14.24 PO-10: hot files kept across restarts in production
 
@@ -1504,6 +1524,18 @@ cannot be read; jitter within ±10% and spread; the minimum; a failed delete ret
 within `refresh-seconds` either and after it always the new one; as of the earlier versions their own documents; also the TTL's
 minimum refused at start. **Remains:** nothing for the folder: only maps genuinely in use can hold it above the cap, which Admin →
 Caches shows as `idMapsInUseOverCap` (a warning to raise the cap). Sizing and use: [OPERATIONS.md section 12.3](../admin/OPERATIONS.md#123-sizing-caches-and-disk-per-connector).
+
+### 14.26 The platform metrics and alerts, and PO-11: the relay across hosts
+
+**Done.** `PlatformMetrics` (`server/metrics`) samples Admin → Caches, the memory budget, the disk budget, the sources' health and
+freshness, the expectations and the loads every `drishti.metrics.sample-interval` (the disk every `disk-interval`) into the 8.3 gauges;
+`PlatformAlerts` evaluates `config/alerts/platform-alerts.yaml` against the registry (8.5, without Prometheus), tells `notify-roles` in the
+inbox, and lists the open alerts on Health and at `GET /api/v1/admin/alerts`; `deploy/prometheus/drishti-alerts.yaml` has the same rules
+in PromQL. The view timer publishes its p95. **PO-11:** channel ids `<random>~<host>.<port>`, the relay on `live.relay.bind` and
+`live.relay.port` + n, HMAC-signed messages and answers with a time window and replay refusal (9.4). **Tests.** `PlatformAlertsTest`,
+`PlatformMetricsTest`, `PlatformMetricsApiTest`; `test_channel_relay_hosts.py` (two real consoles: a change posted to one reaches the
+channel the other holds), `test_health_alerts.py`. **Remains:** the 8.3 names listed there as not built; `platform-metric`, the history
+the CIO lens keeps (CIO4); the stateless console.
 
 ---
 

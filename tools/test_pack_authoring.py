@@ -19,6 +19,7 @@ import contextlib
 import csv
 import io
 import json
+import os
 import pathlib
 import sys
 import tempfile
@@ -71,6 +72,24 @@ def make_pack(root: pathlib.Path, version="1.0.0", sutras=("irs", "fra"), mnemon
         (root / f"sutras/trade/trade-{s}.v1.sutra.yaml").write_text(SUTRA % (f"trade-{s}", s, s.upper(), priority))
     (root / "config/about.yaml").write_text(ABOUT)
     return root
+
+
+_DATA: dict = {}
+
+
+def setUpModule():
+    """These tests run with a scratch data folder (DRISHTI_DATA_DIR): whatever they start writes nothing to the repository's data/."""
+    _DATA["was"] = os.environ.get("DRISHTI_DATA_DIR")
+    _DATA["tmp"] = tempfile.TemporaryDirectory(prefix="drishti-test-data-")
+    os.environ["DRISHTI_DATA_DIR"] = _DATA["tmp"].name
+
+
+def tearDownModule():
+    if _DATA.get("was") is None:
+        os.environ.pop("DRISHTI_DATA_DIR", None)
+    else:
+        os.environ["DRISHTI_DATA_DIR"] = _DATA["was"]
+    _DATA.pop("tmp").cleanup()
 
 
 def run(*argv):

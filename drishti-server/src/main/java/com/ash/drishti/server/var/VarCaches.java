@@ -33,6 +33,7 @@ public final class VarCaches implements CacheReport.Owner {
     static final String HOT = "var.hot-files";
     static final String VIEWS = "var.views";
     static final String SHARDS = "var.shard-books";
+    static final String STANDALONES = "var.standalones";
 
     private final VarService svc;
 
@@ -46,6 +47,7 @@ public final class VarCaches implements CacheReport.Owner {
     public void join(com.ash.drishti.server.caches.MemoryBudget b) {
         b.join("engine.answers", com.ash.drishti.server.caches.MemoryBudget.of("var.answers", svc.answers(), VarService.ANSWERS_BYTES));
         b.join("small", com.ash.drishti.server.caches.MemoryBudget.of("var.views", svc.access().cache(), (long) svc.props().viewCacheMb() << 20));
+        b.join("small", com.ash.drishti.server.caches.MemoryBudget.of(STANDALONES, svc.partTotals().cache(), VarPartTotals.OWN_LIMIT));
     }
 
     @Override
@@ -76,6 +78,8 @@ public final class VarCaches implements CacheReport.Owner {
                 true, Map.of("open", t.get("open"), "built", t.get("built"), "reopened", t.get("reopened"))));
         out.add(CacheReport.of(VIEWS, "var", "Viewers' views per date, version, currency and role set", "heap", svc.access().cache(),
                 (long) svc.props().viewCacheMb() << 20, null, 3600L, "data-version", true));
+        out.add(CacheReport.of(STANDALONES, "var", "Each open book's whole positions' standalone VaRs, per lens (the totals over every part)",
+                "heap", svc.partTotals().cache(), VarPartTotals.OWN_LIMIT, null, 3600L, "the book (released with it)", true));
         VarShards sh = svc.shards();
         if (sh != null && sh.on()) {
             List<VarShardBooks.Key> keys = sh.books().keys();
@@ -100,6 +104,10 @@ public final class VarCaches implements CacheReport.Owner {
         if (all || VIEWS.equals(name)) {
             svc.access().forget(date);
             done.add(VIEWS);
+        }
+        if (all || STANDALONES.equals(name)) {
+            svc.partTotals().cache().invalidateAll();                    // per book, not per date: all of them (each is made again on use)
+            done.add(STANDALONES);
         }
         if (all || DATES.equals(name) || HOT.equals(name)) {
             if (date == null) {

@@ -36,21 +36,42 @@ import java.util.stream.Stream;
  * The input of a load: the files that {@code source.files} names (a file, a folder, or a glob in the last segments: {@code /data/pv/*.jsonl.gz},
  * {@code C:\pv\cob-*.jsonl}, {@code s3://bucket/pv/*.jsonl.zst}), each cut into {@link Split}s that readers take in parallel. A compressed
  * file (gzip or zstd, known by its first bytes) is one split, decompressed as a stream by one reader; an uncompressed file larger than
- * {@code split-mb} is cut into byte ranges, each read on its own (ranged GETs on S3), a line belonging to the range it starts in.
+ * {@code split-mb} is cut into byte ranges, each read on its own (ranged GETs on S3), a line belonging to the range it starts in. An
+ * archive ({@code .zip}, {@code .tar.gz}, {@code .tgz}, {@code .tar}) is listed here as a file; {@link DatasetLoads} turns it into its
+ * members by the archive rule ({@link Archives}), each member one split, an archive's members read by one reader in one pass.
  */
 final class Inputs {
 
     /** How a file is compressed (read from its first bytes, as lake build does). */
     enum Compression { NONE, GZIP, ZSTD }
 
-    /** One input file. */
-    record InputFile(String path, String name, long size, Compression compression) {}
+    /**
+     * One input file; an archive's member has {@code member} and {@code plan} (its archive's), its path {@code <archive>!/<member>},
+     * its name the label rejects give ({@code trade.zip!/trade/a.jsonl}). Members are read through their archive ({@link Archives#read}).
+     */
+    record InputFile(String path, String name, long size, Compression compression, Archives.Member member, Archives.Plan plan) {
+
+        InputFile(String path, String name, long size, Compression compression) {
+            this(path, name, size, compression, null, null);
+        }
+
+        boolean isArchive() {
+            return member == null && Archives.isArchive(name);
+        }
+
+        /** An archive's member as an input file (compressed by its own name: .gz, .zst). */
+        static InputFile of(Archives.Plan plan, Archives.Member m) {
+            String n = m.name().toLowerCase(Locale.ROOT);
+            Compression c = n.endsWith(".gz") ? Compression.GZIP : n.endsWith(".zst") ? Compression.ZSTD : Compression.NONE;
+            return new InputFile(plan.archive() + "!/" + m.name(), m.label(), m.size(), c, m, plan);
+        }
+    }
 
     /** A part of a file one reader reads: bytes {@code [start, end)} of it ({@code index} counts from 0 within the file). */
     record Split(int id, InputFile file, long start, long end, int index, int of) {}
 
-    /** The suffixes a folder is read for (lake build's, and .zst). */
-    static final List<String> SUFFIXES = List.of(".jsonl", ".ndjson", ".json", ".gz", ".zst");
+    /** The suffixes a folder is read for (lake build's, .zst, and the archives: .zip, .tgz, .tar; .tar.gz is a .gz). */
+    static final List<String> SUFFIXES = List.of(".jsonl", ".ndjson", ".json", ".gz", ".zst", ".zip", ".tgz", ".tar");
 
     private Inputs() {}
 
@@ -74,7 +95,7 @@ final class Inputs {
     static List<Split> splits(List<InputFile> files, long splitBytes) {
         List<Split> out = new ArrayList<>();
         for (InputFile f : files) {
-            int parts = f.compression() != Compression.NONE || f.size() <= splitBytes ? 1 : (int) Math.min(Integer.MAX_VALUE, (f.size() + splitBytes - 1) / splitBytes);
+            int parts = f.compression() != Compression.NONE || f.member() != null || f.size() <= splitBytes ? 1 : (int) Math.min(Integer.MAX_VALUE, (f.size() + splitBytes - 1) / splitBytes);
             long step = parts == 1 ? f.size() : (f.size() + parts - 1) / parts;
             for (int i = 0; i < parts; i++) {
                 long start = i * step;

@@ -185,6 +185,11 @@ body.terminal { font-size: 14px; }
 .raw-x { margin-left: auto; background: none; border: 0; color: var(--d-muted); font-size: 1.4rem; line-height: 1; }
 .raw pre, .raw .raw-tree { flex: 1; overflow: auto; margin: 0; padding: .9rem; font-size: .8rem; color: var(--d-ink); }
 .raw .raw-full { margin-left: auto; font-size: .75rem; } .raw .raw-full + .raw-x { margin-left: .3rem; }
+.raw .raw-mode { display: inline-flex; gap: .2rem; } .raw .raw-mode .fk, .raw .raw-copy { font-size: .75rem; }
+.raw .raw-mode .fk[aria-pressed="true"] { background: var(--d-accent-tint); border-color: var(--d-accent); color: var(--d-accent-strong); }
+.raw .raw-copied { font-size: .75rem; color: var(--d-muted); }
+.raw .raw-text { white-space: pre; }
+@media (max-width: 600px) { .raw header { flex-wrap: wrap; } }
 /* Raw document viewer (raw-viewer.js): a JSON tree in a dialog; every colour is a theme token */
 .raw-dlg { width: min(900px, 94vw); height: min(80vh, 760px); border: 1px solid var(--d-border); border-radius: 10px; background: var(--d-surface);
   color: var(--d-ink); padding: 0; flex-direction: column; box-shadow: var(--d-shadow); }
@@ -309,6 +314,11 @@ kbd { background: var(--d-surface-2); color: var(--d-ink); border: 1px solid var
 .adm-dialog form { display: flex; flex-direction: column; gap: .5rem; }
 .adm-dialog label { display: flex; flex-direction: column; gap: .2rem; color: var(--d-muted); font-size: .85rem; }
 .adm-dialog .studio-in { width: 100%; }
+/* deleting a saved VaR basket (scope-delete.js, on the VaR explorer and Admin -> Ad-hoc scopes) */
+.sd-dialog p { margin: 0 0 .5rem; }
+.sd-dialog .sd-reason { margin: .3rem 0 .4rem; }
+.sd-danger { background: var(--d-bad); border-color: var(--d-bad); color: #fff; }
+.sd-danger:hover, .sd-danger:focus-visible { filter: brightness(1.1); }
 .adm-dialog fieldset { border: 1px solid var(--d-border); border-radius: 6px; padding: .4rem .7rem; }
 .adm-dialog legend { font-size: .85rem; color: var(--d-muted); float: none; width: auto; margin: 0; padding: 0 .3rem; }
 .chk { flex-direction: row !important; align-items: center; gap: .45rem !important; color: var(--d-ink) !important; display: inline-flex !important; margin-right: .9rem; }

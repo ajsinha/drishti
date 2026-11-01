@@ -151,4 +151,9 @@
       </plugin>
     </plugins>
   </build>
+  <properties>
+    <!-- the API reference (the parent's profile api-docs): ShardedMeasure, what a measure brings to the sharding machinery -->
+    <drishti.apidocs.skip>false</drishti.apidocs.skip>
+    <drishti.apidocs.packages>com.ash.drishti.server.shard</drishti.apidocs.packages>
+  </properties>
 </project>

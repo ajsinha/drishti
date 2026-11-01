@@ -27,6 +27,7 @@ public final class UnreadableData extends RuntimeException {
 
     private static final long serialVersionUID = 1L;
 
+    /** Data that cannot be read, saying why. */
     public UnreadableData(String message, Throwable cause) {
         super(message, cause);
     }

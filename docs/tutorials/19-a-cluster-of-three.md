@@ -283,6 +283,28 @@ no refused calls.
 nodes see it within a gossip round; requests for data it shares with another node go to that node. **Undrain** brings it back. Drain before
 maintenance; then stop it, and it leaves the cluster cleanly.
 
+**Drain for a stop** (2.9.7) is the drain to use before stopping or upgrading a node: on the same card, it hands over forwarded work **and**
+the node's VaR shards, turns its readiness `OUT_OF_SERVICE`, and says **Safe to stop** once everything has gone to the other nodes. The card
+also shows the node's **Readiness** and, while it is not ready, what it waits for (joining, its newest dates opening, its shards being built).
+
+```bash
+# the same from a terminal (an administrator's API token with the node:drain scope; with sign-in off none is needed)
+DRISHTI_NODE_URL=http://$IP:18783 DRISHTI_DRAIN_TOKEN=drk_... deploy/bin/drishti-node.sh drain    # waits for safe to stop
+DRISHTI_NODE_URL=http://$IP:18783 deploy/bin/drishti-node.sh undrain                              # or restart it: it takes work again
+curl -s http://$IP:18783/actuator/health/readiness                                                # {"status":"OUT_OF_SERVICE"} while drained
+```
+
+```yaml
+# application.yaml (or the environment): what readiness waits for, and how long the forwarding needs to settle after a drain
+drishti:
+  node:
+    readiness: { joining: true, engines: true, shards: true }
+    drain: { settle-seconds: 5 }
+```
+
+The servers' Docker and ECS images and the systemd unit run this drain by themselves on a stop; a whole cluster is upgraded one node at a
+time with `tools/rolling-upgrade.sh` ([OPERATIONS.md, upgrades](../admin/OPERATIONS.md#15-upgrades-and-rollback)).
+
 Now stop node a, the one the console was given. Within `fail_after` failed requests or health checks the console sets a aside and moves your
 session to another server: a read that failed is retried once there, a write is never repeated (it fails with an error naming the server, and you check and make it again). The
 open page carries on, its live view ticking on through the new server with no reload, and you stay signed in (your sign-in session is copied

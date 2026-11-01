@@ -34,11 +34,11 @@ handbook stays the reference for one server and its console.
 6. [Environment variables](#6-environment-variables)
 7. [Running as services (systemd)](#7-running-as-services-systemd)
 8. [TLS and the reverse proxy](#8-tls-and-the-reverse-proxy)
-9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Pack registry keys](#9c-pack-registry-keys)
+9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Deleting people's VaR baskets](#9b-2-deleting-peoples-var-baskets) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
 12. [Memory and caches](#12-memory-and-caches) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
-13. [Monitoring](#13-monitoring)
+13. [Monitoring](#13-monitoring) · [Platform metrics and alerts](#136-platform-metrics-and-alerts)
 14. [Logs](#14-logs)
 15. [Upgrades and rollback](#15-upgrades-and-rollback)
 16. [Capacity](#16-capacity)
@@ -101,7 +101,10 @@ Things worth knowing before you plan an installation:
 
 - **Both processes keep no session state in memory that matters.** The console's sign-in session is a signed
   cookie, so any console instance can serve any user. You can run several of each behind a load balancer, as long
-  as the server instances share the same `data/` directories (users, governance) and the same Sutra directories.
+  as the server instances share the same `data/` directories (users, governance) and the same Sutra directories. Consoles on
+  several hosts relay live-channel calls to each other (`DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY` for
+  all, ports 17490 to 17493 open between them), so the load balancer needs no sticky sessions
+  ([CLUSTER_DEPLOYMENT.md section 9.4](../architecture/CLUSTER_DEPLOYMENT.md#94-sticky-sessions-and-the-relay)).
 - **The server's working directory matters.** Every relative path in its configuration (`./config/packs`, `./sutras`,
   `./data/...`, `./application.local.yaml`) is resolved from the directory you start it in. Start it from the
   installation directory, or set the paths to absolute values.
@@ -720,7 +723,8 @@ Both processes may read the same file: each ignores the other's variables.
 
 ### 7.2 The server
 
-`/etc/systemd/system/drishti-server.service`:
+`/etc/systemd/system/drishti-server.service` (the same file is in the repository as `deploy/systemd/drishti-server.service`; copy
+`deploy/bin/drishti-node.sh` to `/opt/drishti/bin/` beside it):
 
 ```ini
 [Unit]
@@ -734,10 +738,12 @@ WorkingDirectory=/opt/drishti
 EnvironmentFile=/etc/drishti/drishti.env
 Environment=JAVA_TOOL_OPTIONS=-Xmx4g -XX:+UseZGC -XX:+ZGenerational -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps
 Environment=MALLOC_ARENA_MAX=2
+Environment=DRISHTI_DRAIN_WAIT=240
 ExecStartPre=/usr/bin/mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps
 ExecStart=/usr/lib/jvm/java-21-openjdk-amd64/bin/java -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar /opt/drishti/drishti-server.jar
+ExecStop=-/opt/drishti/bin/drishti-node.sh drain
 SuccessExitStatus=143
-TimeoutStopSec=45
+TimeoutStopSec=300
 Restart=on-failure
 RestartSec=5
 
@@ -745,9 +751,15 @@ RestartSec=5
 WantedBy=multi-user.target
 ```
 
+- **The stop drains first** (2.9.7): `ExecStop` runs `drishti-node.sh drain`, which drains the node (forwarded work and VaR shards go to
+  other members of a cluster, readiness turns `OUT_OF_SERVICE`) and waits until it is safe to stop, at most `DRISHTI_DRAIN_WAIT` seconds;
+  systemd then sends SIGTERM. It needs `DRISHTI_DRAIN_TOKEN=drk_...` in `/etc/drishti/drishti.env`: a personal API token of an
+  administrator with only the `node:drain` scope (My account → API tokens). Without it, or on a single server, the stop goes on at once
+  (the `-` lets a refused drain pass). `TimeoutStopSec` covers the drain and the graceful shutdown together
+  ([18.10](#10-drain-maintenance-and-a-node-leaving)).
 - `WorkingDirectory` matters: `./config/packs`, `./data`, `./sutras` and `./application.local.yaml` are found from it.
 - The server shuts down gracefully (`server.shutdown: graceful`): it stops taking requests and lets running ones
-  finish, for up to 30 seconds; `TimeoutStopSec=45` gives it that time. Exit code 143 is a normal stop on SIGTERM.
+  finish, for up to 30 seconds; `TimeoutStopSec=300` gives the drain (240 s) and that time. Exit code 143 is a normal stop on SIGTERM.
 - Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling.
 - `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` keep the server's resident memory near
   `-Xmx` plus 0.4 GB over days (two glibc malloc arenas instead of one per busy thread, direct buffers capped, freed native memory given
@@ -789,7 +801,10 @@ systemctl status drishti-server --no-pager | head -3
 curl -s localhost:18480/actuator/health/readiness
 ```
 
-You should see `Active: active (running)` and `{"status":"UP"}`. Follow the logs with
+You should see `Active: active (running)` and `{"status":"UP"}`. Readiness means ready (2.9.7): it is `DOWN` (`503`) while the VaR or
+exposure engine opens its newest business date (the check opens it), while the node joins a cluster, or while a VaR shard it owns is not
+built yet, and `OUT_OF_SERVICE` while it is drained; `/actuator/health/liveness` and `/actuator/health` say whether the process is up.
+`deploy/bin/drishti-node.sh wait-ready` waits for it. Follow the logs with
 `journalctl -u drishti-server -f` (section 14).
 
 The lake maintenance job can run as a third unit; see section 11.3.
@@ -1187,6 +1202,32 @@ you configure, so decide what may leave the server:
 - The question text is written to the access log (action `ask`) unless `log-questions: false`; answers are not stored unless
   `log-answers: true`. An endpoint that you do not control sees every question and the material around it.
 - The key is read from `DRISHTI_ASK_KEY` only. If the endpoint is down the drawer says so (`DRS-4008`) and everything else in it works.
+
+## 9b-2. Deleting people's VaR baskets
+
+A VaR **basket** is an ad-hoc scope a person saved by name in the VaR explorer (*Construct your basket*, [VAR_GUIDE.md section
+3.5](../guides/VAR_GUIDE.md#35-construct-your-basket)); it is kept in the content store at `var/baskets/<owner>/<name>.json`, private to
+its owner unless shared read-only. Its owner deletes their own; an **administrator** (a role with `admin: true`) may delete anyone's,
+at any time:
+
+- **Admin → Ad-hoc scopes** (`/admin/scopes`, a page of the Risk and Trading editions, page id `scopes` in `admin.pages`, shown where the
+  `VAR` word is on) lists every person's baskets: owner, name, scope, whom it is shared with, created, updated and stored size; **Filter
+  by owner** keeps the owners that contain the text. **Delete** opens a confirm dialog naming the basket, its owner and whom it is
+  shared with, with an optional **reason**. The VaR explorer's *Ad-hoc scopes* list offers **Delete** on every basket to an administrator
+  as well.
+- The command line: `drishti.py var baskets --all [--owner <text>]` lists them; `drishti.py var basket-delete <name> --owner <user>
+  --reason <text>` deletes one. The API: `GET /api/v1/var/admin/baskets?owner=` and `DELETE /api/v1/var/baskets/<owner>/<name>?reason=`
+  ([API_GUIDE.md](../guides/API_GUIDE.md)); a personal token needs the scope `risk:write`.
+- **Audit.** Every delete is one entry, action `var-basket-delete`, subject `<owner>/<name>`, actor the person who deleted it, detail
+  *deleted by its owner* or *deleted by administrator `<user>`*, then the version, whom it was shared with and `reason=<text>` when one
+  was given (Admin → Audit log, filter by `<owner>/<name>`).
+- **The owner is told.** When an administrator deletes someone's basket, its owner gets an inbox row (and the bell): *Your VaR basket
+  "…" (BASKET:…) was deleted by administrator … : reason*, opening the VaR explorer. Nothing is sent when owners delete their own.
+- **What is kept.** Captures taken of the basket are not touched: each keeps the scope text and members it was taken with, still opens,
+  and says the basket no longer exists. Official end-of-day records never name a basket. The people it was shared with lose it at once.
+- **No unseen deletes.** The dialog sends the version it showed; a basket its owner changed in the meantime is refused (`409 DRS-5007`)
+  and the dialog says to look again. Drishti has no undelete: a basket comes back when someone saves it again (the scope text is in the
+  audit entry of its last save, `var-basket-save`) or from a backup of the content store ([section 10](#10-backups-and-restore)).
 
 ## 9c-0. Shipping packs, Sutras and data by copying
 
@@ -1899,6 +1940,83 @@ frames per second, and JVM heap used.
 | A connection held too long | `increase(drishti_db_pool_leaks[1h]) > 0`, or the log line `connection leak suspected` | the stack in that line names the code |
 | Message state store full | a health `UP (state store over its budget: …)`, or `evicted` rising in Admin → Caches | raise `state.max-gb` and the disk |
 
+### 13.6 Platform metrics and alerts
+
+Every server samples the state of its caches, memory budget, disk, sources, feeds and loads every `drishti.metrics.sample-interval`
+(15 s; the disk every `disk-interval`, 60 s) into named gauges, exported with the rest on `/actuator/prometheus`, and evaluates its
+**platform alert rules** against them, with or without Prometheus. The CIO lens reads the same names.
+
+**The metrics** (Prometheus names; one series per cache, pool, folder, source, pack or state the server has):
+
+| Metric | Labels | Meaning |
+|---|---|---|
+| `drishti_cache_bytes`, `drishti_cache_limit_bytes`, `drishti_cache_entries` | `cache`, `owner`, `where` | each cache of Admin → Caches: its size, limit and entries (`var.dates` entries are the VaR dates open, `var.shard-books` the shard books held) |
+| `drishti_cache_hits_total`, `drishti_cache_misses_total` | `cache` | a cache's hits and misses since it was made or purged (the caches that count them) |
+| `drishti_memory_budget_bytes`, `drishti_memory_budget_used_bytes` | `pool` (`all`: the whole) | the one cache budget and what each pool holds ([12](#12-memory-and-caches)) |
+| `drishti_memory_budget_squeezes_total` | | times the heap after a collection passed `squeeze-at` and the low-priority pools were halved |
+| `drishti_disk_folder_bytes`, `drishti_disk_folder_limit_bytes` | `folder` | each folder of Admin → Health → Disk and its cap (a folder without a cap has no limit series) |
+| `drishti_disk_free_bytes`, `drishti_disk_guard_bytes` | | free space on the data folder's disk, and the free space every write must leave |
+| `drishti_mapped_files`, `drishti_mapped_deleted_files`, `drishti_open_deleted_files` | | (Linux) memory mappings of files, those of deleted files, descriptors open on deleted files |
+| `drishti_direct_max_bytes` | | the direct-memory limit, against which `jvm_buffer_memory_used_bytes{id="direct"}` is held |
+| `drishti_source_up`, `drishti_source_stale`, `drishti_source_update_age_seconds` | `source` | 1 while a connector serves (0 down); 1 when it is behind its `stale-after`; seconds since it last received data |
+| `drishti_feeds_attention` | `state` (`late`, `missing`, `failed`) | expected loads that need attention now ([DATA_GUIDE section 9](../guides/DATA_GUIDE.md#9-the-data-loads-page)) |
+| `drishti_loads_ready_total`, `drishti_loads_last_ready_age_seconds` | `pack` | loads that finished ready; seconds since a pack's last ready load |
+| `drishti_alerts_open` | `severity` | platform alerts open now on this server |
+| `drishti_view_seconds` | `quantile` (`0.5`, `0.95`, `0.99`) | a page's build time (the p50 and p95 the CIO lens shows) |
+
+Availability, requests and errors are Spring's `http_server_requests_seconds_count` (`outcome="SERVER_ERROR"` for errors) and the members
+`drishti_net_members{state}`; the heap is `jvm_memory_used_bytes{area="heap"}` and, after a collection, `jvm_gc_live_data_size_bytes`.
+
+**The rules** are in `config/alerts/platform-alerts.yaml` (`drishti.metrics.alerts.file`; read again when it changes). Each names a metric
+(Micrometer's name, with dots), optionally its `tags`, a second metric to `divide-by`, `aggregate` (`each`, `sum`, `max`), `function`
+(`value`, or `increase` over `window` for a counter), `above` or `below`, `for`, `severity` (`info`, `warn`, `critical`) and a `summary`
+line with `{value}`, `{threshold}` and the labels in braces. As shipped:
+
+| Rule | When | Severity |
+|---|---|---|
+| `cache-near-limit` | a cache above 95% of its limit for an hour | warn |
+| `memory-budget-squeezed` | the budget squeezed more than 3 times in an hour | warn |
+| `heap-after-gc-high` | the heap after a collection above 85% of its maximum for 10 minutes | warn |
+| `direct-memory-high` | direct memory above 80% of its limit | critical |
+| `disk-folder-near-cap`, `disk-folder-at-cap` | a folder at 80% of its cap; at the cap | warn; critical |
+| `disk-free-near-guard`, `disk-free-under-guard` | free disk under twice the guard; under the guard (new dates refused, `DRS-5218`) | warn; critical |
+| `mapped-deleted-files` | more than 100 deleted files still mapped | warn |
+| `source-down`, `source-stale` | a source down for 5 minutes; behind its `stale-after` for 5 minutes | critical; warn |
+| `feeds-need-attention` | an expected load late, missing or failed | warn |
+| `views-slow`, `live-late` | pages above 150 ms at the 99th percentile, live updates above 40 ms, for 5 minutes | warn |
+| `server-errors` | more than 10 server errors in 5 minutes | warn |
+| `db-pool-waiting` | callers waiting for a database connection for 2 minutes | warn |
+| `member-suspect` | a Drishti\*net member not answering for 2 minutes | warn |
+
+**When one opens** the server logs it (`platform alert … opened`), counts it in `drishti_alerts_open`, and tells every enabled user with a
+role in `drishti.metrics.alerts.notify-roles` (`admin`) in their inbox and bell, a line that opens **Admin → Health → Alerts**; it closes when
+the value is back within the threshold (or the series is gone) and is kept with the recent ones (`keep`, 200, in memory). Each member of a
+cluster evaluates its own metrics and its alerts name it. **Admin → Health** lists the open alerts, most severe first, and says when the
+rules file is missing or a rule cannot be read; `GET /api/v1/admin/alerts` (administrators) has the rules, the open and the recent alerts:
+
+```bash
+curl -s -H "Authorization: Bearer $ADMIN_TOKEN" localhost:18480/api/v1/admin/alerts | python3 -m json.tool | head -30
+```
+
+```json
+{
+    "enabled": true, "member": "drishti-node2", "file": "./config/alerts/platform-alerts.yaml", "found": true, "problems": [],
+    "evaluatedAt": "2026-10-31T09:15:00Z",
+    "rules": [ { "name": "cache-near-limit", "metric": "drishti.cache.bytes", "divideBy": "drishti.cache.limit.bytes",
+                 "condition": "above 95.0%", "for": "PT1H", "severity": "warn", ... }, ... ],
+    "open": [ { "rule": "disk-free-near-guard", "tags": {}, "severity": "warn", "member": "drishti-node2",
+                "summary": "free disk is 1.6 times the guard: builds will soon be refused (DRS-5218)", "value": 1.6, "threshold": 2.0,
+                "openedAt": "2026-10-31T09:14:45Z", "closedAt": null } ],
+    "recent": []
+}
+```
+
+**With Prometheus and Alertmanager** load `deploy/prometheus/drishti-alerts.yaml` (`rule_files:`): the same rules in PromQL, plus the
+server not answering the scrape. Alerting from Prometheus as well as in the product is safe (the server's own alerts reach only its
+inbox); a site that wants one channel sets `notify-roles` blank and keeps Health's list.
+
+Settings: `drishti.metrics.*` ([CONFIGURATION.md](CONFIGURATION.md)); `drishti.metrics.enabled: false` stops the sampling and the rules.
+
 ### Connection pools in the monitoring
 
 Admin → Health has a *Connection pool* column for each connector (*in use / size, idle, waiting, longest borrow*), the identity database's pool below the
@@ -2032,6 +2150,21 @@ User actions (sign-ins, user changes, cache purges, Sutra approvals) are not in 
    curl -s localhost:18480/actuator/health/readiness
    ```
    You should see the new `version`, and `{"status":"UP"}`. Then check **Admin → Health** shows `OK` and open a view.
+
+**A cluster without downtime** (2.9.7): upgrade one node at a time with the rolling upgrade runner, which drains each node, waits until it
+is safe to stop, stops, upgrades and starts it and waits until it is ready before the next: consoles, then BI and data-serving members,
+then coordinators, then the shard owners one zone at a time.
+
+```bash
+cp deploy/rolling.example.yaml my-cluster.yaml          # the nodes (role, zone, url) and your stop, upgrade and start commands
+export DRISHTI_DRAIN_TOKEN=drk_...                      # an administrator's personal API token with the node:drain scope
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7 --dry-run   # every step, nothing called
+tools/rolling-upgrade.sh --inventory my-cluster.yaml --version 2.9.7
+```
+
+On Windows: `tools\windows\rolling-upgrade.ps1 -Inventory my-cluster.yaml -Version 2.9.7 -DryRun`. On ECS (`platform: ecs`) each node
+is one service update to its new task definition. A step that fails stops the run and says how to resume (`--from <node>`). The design,
+the order and the timings: [CLUSTER_DEPLOYMENT.md section 10.1](../architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades).
 
 With Docker: build the new images with the new tag, change the `image:` tags in your compose file, and run
 `docker compose --env-file deploy/.env -f deploy/docker/compose.yaml up -d`; the named volumes are kept.
@@ -2707,6 +2840,7 @@ selects its arc. It redraws with the table every 5 seconds: a member that joins 
 | **Add a seed** | `host:port` or an address, saved as `peers/<host>-<port>.yaml` and tried at once | `POST /api/v1/net/seeds` | `net-seed-added` |
 | **Remove** (a dead or left member) | Takes it out of the table; an alive one is refused, since the next round would bring it back | `DELETE /api/v1/net/members/{id}` | `net-member-removed` |
 | **Drain** / **Undrain** | This node takes no forwarded work, and tells its peers; its own users are served as before | `POST /api/v1/net/drain`, `/undrain` | `net-drain`, `net-undrain` |
+| **Drain for a stop** / **Undrain** (2.9.7) | Before stopping or upgrading this server: forwarded work **and** its VaR shards go to other members, readiness turns `OUT_OF_SERVICE`; the card then says **Handing work over** or **Safe to stop**. Beside it, this node's **Readiness** and what it waits for. Shown on a single server too | `POST /api/v1/admin/node/drain` `{"on": true\|false}`, `GET /api/v1/admin/node` | `node-drain`, `node-undrain` |
 | **Leave** / **Rejoin** | Gossips `left` and serves its peers nothing, without switching the cluster off; Rejoin comes back with a higher incarnation | `POST /api/v1/net/leave`, `/rejoin` | `net-leave`, `net-rejoin` |
 
 **Capability map.** For each kind: its mnemonic and pack (with the newest version in the cluster), the nodes that render it (the pack's version on
@@ -2738,9 +2872,24 @@ Every action and every save is in the audit log with the node it was made on.
 
 ### 10. Drain, maintenance and a node leaving
 
-**Maintenance of one node** (an upgrade, a restart, a new disk): **Drain** it first. It keeps gossiping and keeps serving its own users, but
-its peers stop sending it forwarded work, and a forwarded request that reaches it is answered `503` so the caller tries the next peer. When it
-is back, **Undrain**.
+**Maintenance of one node** (an upgrade, a restart, a new disk): **Drain for a stop** first (Admin → Net, `deploy/bin/drishti-node.sh drain`,
+or `POST /api/v1/admin/node/drain`; 2.9.7). Its peers stop sending it forwarded work (a forwarded request that reaches it is answered `503`
+so the caller tries the next peer), its VaR shards are built by their next owners and then released here, and its readiness turns
+`OUT_OF_SERVICE` so a load balancer stops sending it users. Stop it once `GET /api/v1/admin/node` (or the card) says `safeToStop`; a restart
+takes work again by itself. The stop hooks of the server images and of the systemd unit ([7.2](#72-the-server)) run the same drain on a
+stop, and the rolling upgrade runner runs it for every node ([15](#15-upgrades-and-rollback)). Net's own **Drain** stops only forwarded work,
+for maintenance that keeps the node running; **Undrain** after either.
+
+| Where | The drain before a stop | How long it may wait |
+|---|---|---|
+| systemd (`deploy/systemd/drishti-server.service`) | `ExecStop=-/opt/drishti/bin/drishti-node.sh drain` | `DRISHTI_DRAIN_WAIT` (240 s), within `TimeoutStopSec` (300 s) |
+| Docker (`deploy/docker/server.Dockerfile`) | the entry point `drishti-node.sh run java …`: on `docker stop` | 90 s; `stop_grace_period: 120s` in `compose.yaml` (or `docker stop -t 120`) |
+| ECS (`deploy/docker/ecs/`) | the same entry point, on the task's SIGTERM | 90 s within the task's `stopTimeout` of **120 s, Fargate's most**: a shard rebuild can take longer, so drain before the stop (the rolling runner does) |
+| Windows | `deploy\bin\drishti-node.ps1 drain -Wait 240`, before stopping the process | `-Wait` |
+
+The token: `DRISHTI_DRAIN_TOKEN` (or `DRISHTI_DRAIN_TOKEN_FILE`), an administrator's personal API token with the `node:drain` scope; with
+sign-in off none is needed. A drain that is refused, or not safe within its wait, never holds the stop: the shards' replicas answer and
+their next owners build them, as with a crash.
 
 **Taking a node out for a while:** **Leave**. Its peers mark it `left` at once and send it nothing; **Rejoin** brings it back. To take it out
 for good, set `enabled: false` in its node.yaml (it leaves cleanly) or stop the server (the same); after `forget-after` the others forget it,
@@ -2762,9 +2911,9 @@ For the operator:
   front node) sets `drishti.var.sharding.coordinator-only: true`.
 - **A node joining or leaving** moves only its shards, once the membership has been the same for `stable-seconds` (30); a new owner builds
   its shards from the lake and announces them; the old owner keeps serving until the new one has been ready for `grace-seconds` (30).
-- **Before stopping a member** (maintenance, a scale-in): `drishti.py var shards --drain`, then wait for `safeToStop: true` in
-  `drishti.py var shards --json`, then stop it. Net's own **Drain** (above) also takes the member out of the shards' owners, but does not
-  wait for the handover: use the VaR drain first.
+- **Before stopping a member** (maintenance, a scale-in): **Drain for a stop** (above, 2.9.7) drains its shards and its forwarding
+  together and says `safeToStop` once its shards' next owners have built them; `drishti.py var shards --drain` still drains the shards
+  alone. A member that owns shards is not ready (readiness `DOWN`) until the shards it owns of the dates in use are built.
 - **Both owners of a shard down** before the membership settles: a scope that needs the shard's rows answers `503 DRS-5215`; node figures
   still answer; after `stable-seconds` other members own the shard and build it. Keep `replicas: 2` or more in production, and spread
   them over zones with `zone-tag`.

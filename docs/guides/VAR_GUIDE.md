@@ -19,9 +19,17 @@ Built in 2.8.0. This is the one reference for Drishti's value at risk: what ever
 screen by screen, positions, portfolios and any set of trades, captures, history and backtesting, what-if and VaR as a kind, who sees
 what, the command line, the API and the settings (Part I); the data contract: every input column, formula, answer, error code, the
 official results, retention and the change table (Part II); how the engine holds a bank's vectors in memory and on local disk, its
-sizing and benchmark, and what is still planned (Part III). The hands-on walk-through is
+sizing and benchmark, sharding, and what is still planned (Part III); and what sits around the engine: the VaR-related regulatory
+reports of Canada and the US, the lenses and editions that show VaR, the configuration keys and the measured performance (Part IV).
+Since 2.9.7 (implementation plan row 2d) it is **the one complete document on VaR**: methodology, the calculation worked step by step,
+Drishti's implementation and the regulatory side; other documents link here. Anything described that is not in the code says
+**design, not built** and names the plan row that will build it. The hands-on walk-through is
 [tutorial 25](../tutorials/25-var-from-the-bank-to-a-trade.md) (twelve steps on the test data). In the console, **F1** on the explorer
 (or its **?**) opens this guide.
+
+**Start here:** [Input, computed, cache and the official record](#input-computed-cache-and-the-official-record-compute-first) says in
+one table what Drishti receives, what it computes, what it keeps only as a cache and what it records officially. The rest of the guide
+keeps to those four words.
 
 **Related documents:** [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (the regulatory reports that need VaR) and [OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md) (what market risk oversight needs, why VaR moved, the proposed Oversight lens). For the proposed market risk cube on this engine (a pivot with correct non-additive totals, sensitivities, FRTB SA and IMA, pre-deal pricing, every data contract), see the design: [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md).
 
@@ -72,10 +80,64 @@ fat-tailed factor market), not prices.
 25. [One business date in memory](#25-one-business-date-in-memory)
 26. [The tiered memory and the hot file](#26-the-tiered-memory-and-the-hot-file)
 27. [Sizes, performance and the benchmark](#27-sizes-performance-and-the-benchmark)
+27a. [How scopes, parts and totals are computed (and why it scales)](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)
 28. [Sharding across Drishti\*net (as built, 2.9.6)](#28-sharding-across-drishtinet-as-built-296)
 29. [The P&L vector in the lake](#29-the-pl-vector-in-the-lake)
 30. [The design record](#30-the-design-record)
-31. [Open items](#31-open-items)
+31. [Open items: designed, not built](#31-open-items-designed-not-built)
+
+**Part IV · Around the engine**
+
+32. [Regulatory reporting that needs VaR: Canada and the US](#32-regulatory-reporting-that-needs-var-canada-and-the-us)
+33. [Where VaR is shown: editions and lenses](#33-where-var-is-shown-editions-and-lenses)
+34. [Configuration keys](#34-configuration-keys)
+35. [Measured performance](#35-measured-performance)
+
+## Input, computed, cache and the official record (compute-first)
+
+**The rule (product owner, 2026-10-31, implementation plan row B5): VaR is computed, not stored.** Drishti receives each trade's scenario
+revaluations, computes everything else in memory when a date loads or a question arrives, keeps a disposable copy on local disk so a date
+reopens fast, and writes only the **official record**. Four kinds of data, never confused:
+
+| Kind | What | Where it lives | Who writes it | How long |
+|---|---|---|---|---|
+| **Input** | the sources' **scenario PVs** (`scenario-pv`, the preferred form) or **P&L vectors** (`pnl-vector`, the accepted alternative); the scenario set (`scenario-set`); hierarchies (`risk-hierarchy`); limits (`var-limit`); stored portfolios (`portfolio`); supplied scenario FX (`fx-scenario`); the trades; FX history (`fx-spot`, read, not watched) | the lake: Delta or Iceberg tables, `risk/...` and the packs' own ([section 15.1](#151-where-they-live)) | the bank's batch through the lake tools and loaders; an intraday batch from files or a Kafka window, appended **as received** (scenario PVs stay scenario PVs, `RUN_KIND: INTRADAY`, [section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) | the lake's own retention |
+| **Computed** | each scenario-PV trade's **USD P&L** (the conversion below); the **derived positions** ([section 4](#4-positions-derived-never-delivered)); every node's and scope's vector (the totals); VaR, ES, components, contributions, diversification, the 10-day lenses, the books in other reporting currencies, the intraday layer | the server's memory: the heap and the memory-mapped hot file | the engine (`VarIntake`, `VarLoader`, `VarBook`, `VarCalc`) | while the date is open; **never written to Delta or Iceberg** |
+| **Cache** | the **hot file** of a date (and of each reporting currency and each shard): float32 position rows, float64 node aggregates, columns, ids ([section 26.3](#263-the-hot-file)); the answers in the shared cache budget; the viewers' views | local disk under `drishti.var.tier.dir` (`./data/var/hot`, under the data folder) and memory; Admin → Caches shows and purges them (`VarCaches`) | the engine | disposable: deleted at shutdown unless `drishti.var.tier.keep-on-shutdown`, trimmed by `drishti.var.tier.disk-dates` and `drishti.var.tier.max-disk-gb`, rebuilt from the lake; its digest holds the inputs' versions, so a stale file is never read |
+| **Official record** | the official end-of-day capture of every node of every hierarchy, the date's record and membership; the captures people make ([section 6](#6-captures-and-compare)); the published rows | the content store (`var/official/…`, `var/captures/…`) and the append-only table `risk-results/var-official` (Delta or Iceberg) with its JSON Lines ([section 19](#19-official-end-of-day-results)) | `VarOfficial` after a complete load, an administrator, a person's **Capture** | 7 years; immutable; a restatement adds a result version |
+
+**Scenario PVs are the preferred input.** A pricing system's natural output is the trade revalued under each scenario and its base value,
+in the trade's own currency. Drishti does the subtraction and the currency conversion itself, at load (`VarIntake`, `ScenarioFx.pnlFromPv`;
+[section 15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)), for a trade in currency `c` with `FX_c` in
+USD per unit of `c`:
+
+```
+P&L_USD(s) = PV(s) × FX_c(s) − PV(base) × FX_c(base)          s = 0 … N − 1, the scenario set's order
+```
+
+The scenario FX is the batch's own (`fx-scenario`) when sent, else derived from the FX history of each scenario day. A source that already
+computes P&L sends **P&L vectors** instead (`pnl-vector`, [section 15.2](#152-pnl-vector-one-pl-vector-per-trade-as-built)); both forms
+may sit side by side on one date (a trade in one form only), and nothing downstream knows which form a trade came in.
+
+**Computed in memory and in the hot file, never written to Delta.** The derived P&L of a scenario-PV trade, the derived positions and every
+total (a node's or a scope's vector) exist only in the server's memory and in the hot file, its disposable local copy. No table of derived
+P&L, positions or totals exists in the lake, and nothing the engine computes is written back as an input: the positions are served as the
+`position` kind by the `var-positions` connector with no figure stored on them, computed as their page opens. The only VaR figures that
+reach a lake table are the **official record's** published rows (`risk-results/var-official`: one row per node and capture, VaR, ES and
+their companions, no vectors), which no engine reads back. A capture keeps its scope's vector in the content store, as part of the record,
+so that it reopens exactly as it was.
+
+**Where this is tested.** `VarComputeFirstTest` runs the demo on **scenario PVs alone**: every one of its 8,233 P&L vectors, sent instead
+as the scenario PVs a pricing system would send for it (the trade's value today and under each scenario), goes through the engine's own
+conversion (`ScenarioFx.pnlFromPv`) and gives back its stored vector **exactly** in USD; the date built that way (those PVs and the
+1,339 Endur trades' scenario PVs) has every one of its 88 nodes' vectors equal to the bit to the date built from the stored vectors, and
+the bank's VaR 112,041,646 and ES 160,143,809. Sent in each trade's own currency at the batch's scenario FX, the PVs give back the stored
+P&L to within 6e-8 USD (4e-16 of the trade's value) and every node's VaR to the cent. `VarComputeFirstGuardTest` checks that the engine's
+code has exactly two lake writers, neither writing a derived figure: `VarPublisher` (the official record's published rows: scalar
+figures per node, no vector) and `VarPvStream` (the PV topic's intraday records appended as received, an input in its own form); and
+`VarStressApiTest` that loading a date's normal and stress sets, computing every node and capturing the official record leave every input
+table's files as they were. `VarTestDataPrecisionTest` converts the demo's 1,339 scenario-PV trades as the intake does; `ScenarioFxTest`
+covers the conversion and the cross through USD.
 
 ## Part I · Using VaR
 
@@ -274,6 +336,14 @@ tile says *limit is for 1-day 99%: not comparable* (the tree's limit column *n/c
 the link (`?h=10d&m=sum&q=0.99&esq=0.975`) and the command (`VAR BANK 10D SUM`), and the person's settings remember it for the next visit.
 On a phone the controls are full width. How each is computed: [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297).
 
+**Normal or Stressed.** The **Scenarios** picker beside Horizon: *Normal* (the date's own scenarios) or *Stressed* (today's positions
+under the date's 12-month stress period, [section 18.8](#188-stressed-var)). Stressed redraws every panel from the stress set, in USD:
+the tiles read *Stressed VaR 99% · 1 day · USD*, the third tile shows the **12-week average** of the node's official stressed VaR, the
+method strip names the stress set (*HS-STRESS-2008 · 2008-07-01 … 2009-06-30 · synthetic*), limit use is not shown (a limit is set
+against normal VaR) and the history replays the stress days with no backtest. Horizon and Confidence apply to either. The choice goes
+into the link (`&set=stressed`) and the command (`VAR BANK SVAR 10D SUM`), and the person's settings remember it. A date without a stress
+set says so in place of the figures.
+
 ### 3.2 The screen
 
 Three columns, as the approved mock-up:
@@ -397,6 +467,18 @@ The state reads **unsaved basket** until you save, then **saved basket · \<owne
 `VAR SCOPE <name>`, a link) loads its parts back into the tray, so you can edit it and save under the same name (a new version) or a new
 one. While the explorer shows the tray's unsaved scope, it follows every change you make.
 
+**Deleting a basket.** Each basket you own has **Delete** in the explorer's *Ad-hoc scopes* list (shown as you point at its row or move
+to it with Tab; an administrator sees it on every basket listed). It asks first, in a dialog that names the basket, its owner and whom
+it is shared with (they lose it too); **Keep it** or **Esc** keeps it, **Delete basket** deletes it. The list refreshes at once, and
+when the explorer was showing that basket it says it was deleted (the scope now matches nothing: *no such basket you may read: it was
+deleted, or it is not shared with you*). What you had in the tray stays there as an unsaved basket, so you can save it again. Captures
+taken of the basket are kept: each still opens with the scope and members it was taken with, and says the basket no longer exists.
+Official end-of-day records never name a basket. A basket changed by its owner after you opened the dialog is not deleted unseen: the
+dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in **Admin → Ad-hoc scopes** (every owner's,
+filtered by owner, **Delete** with an optional reason that goes to the audit log and to the owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)).
+CLI: `drishti.py var basket-delete <name>` (yours), `--owner <user> --reason <text>` (an administrator, anyone's). API:
+`DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+
 ![Construct your basket: a book's position added from its row, a portfolio from the hints, the FX desk from the tree, a trade taken away; the selection's VaR, the sum of the parts and the diversification, live](img/var/06-basket.jpg)
 
 ![VAR TRD 10000000: not a live trade on the date, said in words; the tiles say no trades instead of a VaR of 0](img/var/13-not-live.jpg)
@@ -516,8 +598,22 @@ above the matrix counts them.
 | **Sort** | worst on the newest date (default), worst on any one date, or by scenario day |
 | **Export CSV · Arrow** | the whole matrix (every row, every date), as you see it: CSV with the summary rows, each date's source and its gap (a gap's cells empty, never 0); or the Arrow IPC stream (the rows a record batch, the rest in its metadata) for Python, R or DuckDB |
 
-**Select a row** (click it, or move with the arrow keys; on a phone pick it from the list) and the right-hand panel charts that scenario
-across the dates against **−VaR** (dashed), with the points beyond VaR marked, and the selected cell's details: its P&L and rank that
+**The chart** (the right-hand panel) has two views and four types:
+
+| Control | Does |
+|---|---|
+| **Scenarios** (default) | the selected date's column: every scenario day (509 for HS-509) in the order of its date, oldest first, whatever the matrix's sort; the value in the switch's terms (scenario P&L, scenario PV or the change); the date's ES tail marked as diamonds (the VaR scenario the larger one); the selected scenario larger, on a dotted guide; the x axis in months (`Jan 25`, `Apr 25`; years when months do not fit). Click a point (or near it) to select that scenario: its row is selected and scrolled to in the matrix. The title says what it is: *Credit trading on 2026-10-28: scenario PV by scenario day*. Select a cell of another date to chart that date |
+| **Across dates** | the selected row (a scenario, or a trade **By trade**, where it is the only view) across the business dates, the selected date's label highlighted; points beyond VaR are diamonds. It needs two or more dates: with one date open it writes the value beside its point and the reference beside its line, and says *Only 1 date is open; the chart needs two or more (20 asked)* |
+| **Line** · **Dots** · **Area** · **Bars** | the chart type, for both views; one click switches, remembered in this browser. Area fills to the zero line for a P&L or a change and to the floor of the axis for a PV; Bars are one per point (thin with 509 scenario days) |
+
+| Values | Reference line (dashed) | Also drawn |
+|---|---|---|
+| **P&L** | **−VaR** | the zero line; the axis includes zero |
+| **PV** | **PV at VaR**: the date's base PV less its VaR (the scenario PV at the VaR loss) | the **base PV** (solid); the axis keeps the range of the PVs, not zero |
+| **Change vs day before** | none | the zero line |
+
+The legend under the chart names exactly what is drawn (the type's mark, the reference when there is one, the base PV in PV, the
+diamonds), and every point's tooltip gives its date, value and reference. Next to the chart, the selected cell's details: its P&L and rank that
 day (*2nd worst of 509*), the scenario PV against the base PV, the FX used, whether it is in that day's tail, the **days in the tail** (of
 the dates with values) and the **source**: the batch id and data version, linked to the record (a trade's P&L vector or scenario PV, a
 node's VaR page or its official capture) as of that date.
@@ -546,7 +642,7 @@ horizon and confidence pickers can pass theirs. Only the 1-day horizon is comput
 more than about 4,000 cells travels as Arrow (the browser reads its columns as typed arrays), a small one as JSON
 ([DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)).
 
-**On a phone** the page is the glance form: the selected scenario's line against −VaR, how many of the dates it is in the tail, a
+**On a phone** the page is the glance form: the chart (both views, every type), how many of the dates it is in the tail, a
 scenario picker and the details; the full matrix is on a larger screen. Nothing scrolls sideways.
 
 ![The scenario matrix on a 390 px phone: the glance form](../tutorials/img/t25/21-scenario-matrix-phone.jpg)
@@ -1256,7 +1352,7 @@ entitlement)*, the bank's 9,572 trades less the desk's 1,487 (8,085 outside), an
 | History | the official node history only for a viewer at full `positions` level; others get the replay, with a note. The official captures and records likewise |
 | Cache | answers are keyed by the view's signature, so two viewers with different rights never share one |
 | Masks | as built (open question 11): a contribution row's attribute the viewer sees masked reads `•••` (`drishti.security.redact`, the platform's masks: `COUNTERPARTY` in trade rows); `CPTY:` is refused to a viewer who sees the counterparty masked; the page figures ([section 3.7](#37-the-portfolio-and-position-pages)) are computed as the viewer |
-| Tokens | writes (`POST /baskets`, `DELETE /baskets/*/*`, `POST /captures`) need the token scope `risk:write`; `POST /reload` and `POST /official` are never open to a token |
+| Tokens | writes (`POST /baskets`, `DELETE /baskets/*/*`, `DELETE /baskets/*`, `POST /captures`) need the token scope `risk:write` (an administrator's token deletes anyone's basket, as its user may); `POST /reload` and `POST /official` are never open to a token |
 
 The per-node levels are kept in Drishti (`drishti.var.access`), not read from the bank's entitlement system (decided, [section 23.2](#232-the-designs-questions-and-their-decisions)).
 
@@ -1266,7 +1362,8 @@ The per-node levels are kept in Drishti (`drishti.var.access`), not read from th
 |---|---|---|---|
 | `var-view` | every headline (`GET /scope`, `/scopes/{scope}`; also inside a capture, a compare with now, a page's figures and an official capture, as `drishti`) | the canonical scope | `date=<d> version=<stamp> view=<all or restricted> var=<n> es=<n> trades=<n> hidden=<n> members=<digest> ms=<n>` |
 | `var-capture` | `POST /captures` | the canonical scope | the same, then `capture=<id>` |
-| `var-basket-save`, `var-basket-delete` | `POST /baskets`, `DELETE /baskets/{owner}/{name}` | `<owner>/<name>` | `version=<n> scope=<text> sharedWith=[…]`; *deleted by its owner* |
+| `var-basket-save` | `POST /baskets` | `<owner>/<name>` | `version=<n> scope=<text> sharedWith=[…]` |
+| `var-basket-delete` | `DELETE /baskets/{owner}/{name}`, `DELETE /baskets/{name}` (the deleter is the actor) | `<owner>/<name>` | *deleted by its owner* or *deleted by administrator <user>*, then `version=<n> sharedWith=[…]` and `reason=<text>` when one was given |
 | `var-reload` | `POST /reload`; the data-load signal (as `drishti`) | `all dates`, or the date | *an administrator's reload*; *the data-load signal of <kind>* |
 | `var-official` | an official capture run (as `drishti`) | the business date | `resultVersion=<n> nodes=<n> trades=<n> inputs={…}` |
 
@@ -1292,6 +1389,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | 2.9.4: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)) |
 | `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | 2.9.7, on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
+| `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | 2.9.7: the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat-297)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
@@ -1303,7 +1401,7 @@ $ drishti.py var show 'BANK - DESK:CREDIT'
 VAR BANK - DESK:CREDIT  ·  BANK - DESK:CREDIT  ·  adhoc  ·  2026-09-30
   VaR 99%   76,605,857 USD   (the 6th worst of 509)
   ES 97.5%   76,775,085 USD   (mean of the 13 worst)
-  parts      5000 position   standalone sum 2,592,856,066   diversification 2,516,250,209
+  parts      7050 position   standalone sum …   diversification …
   backtest   green  4 exceptions in 249 days   Kupiec p 0.377   Christoffersen p 0.717
   8629 trades in 7050 positions
   pnl-vector and scenario-pv (1339 trades from scenario PVs) · batch B-2026-09-30-01 of 2026-09-30 · data version risk-store=45b0c2684ba974e6|scenario-pv:risk-store=f553206cd6f510f0
@@ -1312,7 +1410,7 @@ VAR BANK - DESK:CREDIT  ·  BANK - DESK:CREDIT  ·  adhoc  ·  2026-09-30
   warning: 9 positions had trades under two nodes of a hierarchy built from columns and are split, one part per node (<position>@<value>)
 ```
 
-(*5000 position*: an ad-hoc scope's parts are its positions, at most `max-parts`, the largest by gross size.) A bad scope is refused in
+(*7050 position*: an ad-hoc scope's parts are its positions, all of them; the standalone sum and the diversification are over every one, [section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).) A bad scope is refused in
 words: `drishti.py var show 'DESK:('` answers *the server said 400 DRS-5001: DRS-5001 DESK: names nothing*. The tree of the Legal
 hierarchy (`drishti.py var tree --hierarchy LEGAL`, the first rows):
 
@@ -1342,6 +1440,7 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 |---|---|---|
 | `GET /scope` | `scope`, `asOf`, `ccy` | the headline ([section 11.2](#112-the-headline-get-scope-and-its-provenance)); `ccy` (here and on `/scopes`, `/scope/path`, `/scope/history`, `/scope/contributions`, `/hints`, `/tree`, `/what-if`, `/captures` and `/official`): the reporting currency, USD by default, said in every answer's `currency` ([section 15.10](#1510-reporting-currency-as-built-294)) |
 | every answer of a scope, `/tree`, `POST /captures` (body) | `horizon` (`1d`, `10d`), `method` (`sqrt10`, `sum`; none: `ten-day-method`), `confidence`, `esConfidence` (fractions or percentages, from the configured lists) | 2.9.7: the answer through that lens, named in `horizon`, `method`, `confidence`, `esConfidence` and `lens`; limit use only when comparable (`limitComparable`, `limitNote`); `backtest.applicable: false` at 10 days ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)); not offered: `400` |
+| every answer of a scope, `/tree`, `POST /captures` (body `"set"`) | `set` (`normal`, `stressed`) | stressed VaR ([section 18.8](#188-stressed-var)): the scope on the date's stress scenario set, in USD, with the same `horizon`, `method` and confidences; the answer says `set` (`NORMAL`, `STRESSED`), `lens.stressSet` and, stressed, `stressAverage` (the 12-week average of a node's official stressed VaR); no limit use; `backtest.applicable: false`; no stress set on the date: `404` in words; another `ccy`, `window` or `es-confidence`: `400` |
 | `GET /scopes/{scope}` | `{scope}` in the path (no slash), `asOf` | the same |
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path ([section 11.3](#113-path-and-contributions)) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest ([section 11.4](#114-history-the-tree-and-the-status)) |
@@ -1356,7 +1455,9 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /official` | `asOf` | a date's official end-of-day record ([section 19](#19-official-end-of-day-results)), for a viewer who sees every node (`403` otherwise; `404` when the date has none) |
 | `POST /official` | `asOf` | administrators only: captures the date officially now: `{businessDate, status: captured, restated, unchanged or skipped, reason, resultVersion, nodes, published, publishError}` |
 | `GET /baskets`, `POST /baskets` | body `{name, title, description, scope, sharedWith}` | baskets ([section 5.8](#58-baskets)) |
-| `GET /baskets/{owner}/{name}`, `DELETE /baskets/{owner}/{name}` | | one basket; delete one's own (`204`) |
+| `GET /baskets/{owner}/{name}` | | one basket you may read |
+| `DELETE /baskets/{owner}/{name}`, `DELETE /baskets/{name}` (your own) | `reason`, `version` (optional; query or body) | deletes a basket (`204`): its owner their own, an administrator anyone's; anyone else `404`; `409 DRS-5007` when `version` is not the basket's now ([section 3.5](#35-construct-your-basket)) |
+| `GET /admin/baskets` | `owner` (optional, contained, any case) | administrators: every person's baskets with `owner`, `scope`, `sharedWith`, `createdAt`, `updatedAt`, `version`, `bytes` |
 | `POST /captures` | body `{scope, note}`, `asOf` | `201` `{id, capturedAt, var, es, memberCount}` ([section 6](#6-captures-and-compare)) |
 | `GET /captures` | `scope` (optional, compared in canonical form) | the captures the caller may read, newest first |
 | `GET /captures/{id}`, `GET /captures/{id}/csv`, `/jsonl` | `part` (`components`, else the vector) | one capture; CSV; JSON Lines (the CSV's rows, one a line) |
@@ -1378,7 +1479,12 @@ POST /api/v1/var/official?asOf=2026-09-30                   an administrator's o
 **`by` and truncation (as built, decided 2026-10-25, open question 9).** `by=node` lists a node's child nodes; on a scope that is not a
 node, or a node without children, it answers `400 DRS-5001` with the reason. When a scope has more positions or trades than
 `max-parts`, the largest `max-parts` by gross size are computed (a position's absolute market value when the scope holds it whole, else
-its trades' absolute PV, else their absolute quantities), kept in their order; the answer says `truncated: true` and `total`.
+its trades' absolute PV, else their absolute quantities), kept in their order; the answer says `truncated: true`, `total` and
+`shown`. **`max-parts` limits only the rows listed, never a total.** `sumStandalone`, `sumComponent` and `diversification`
+(of the contribution table and of the headline) are always over **every** part of the scope: when the rows are cut, the server sums
+them in one pass over all the scope's positions (or trades), each part's vector made as the listed rows' are, through the answer's lens.
+The headline's `children` is likewise the number of all the parts. How, and what it costs:
+[section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).
 
 **The computed kinds:** `POST /api/v1/compute/var-engine/var-result` and `/api/v1/compute/var-whatif/var-whatif` (`{id, params, asOf,
 wait}`), or `GET /api/v1/views/var-result/DESK:RATES`. For example, with a token in `DRISHTI_TOKEN`:
@@ -1420,11 +1526,11 @@ The last answers:
 | `k`, `esCount` | integer | the VaR rank (6) and the ES count (13) |
 | `scenarios` | integer | N |
 | `confidence`, `esConfidence` | number | 0.99, 0.975 |
-| `children`, `childKind` | integer, string | the number of default parts and their kind (`division`, `desk`, `book`, `position`, `trade`, `part` for a basket or ad-hoc union of two terms or more; empty for an aggregate-only viewer below a node) |
+| `children`, `childKind` | integer, string | the number of default parts (all of them, never cut by `max-parts`) and their kind (`division`, `desk`, `book`, `position`, `trade`, `part` for a basket or ad-hoc union of two terms or more; empty for an aggregate-only viewer below a node) |
 | `trades`, `empty` | integer, boolean | the trades counted; `true` when none (the VaR of 0 is then no figure: the screens say **No trades**) |
 | `terms` | list | a basket or ad-hoc scope only: its top-level parts `[{op: "+" or "-", scope, word}]` (a saved basket's from its definition), which the basket tray loads |
 | `basket` | object | a saved basket only: `{id, name, owner, scope, sharedWith, version}` |
-| `sumStandalone` | integer or null | Σ standalone VaR of the parts |
+| `sumStandalone` | integer or null | Σ standalone VaR of every default part ([section 11.1](#111-the-endpoints): never cut by `max-parts`) |
 | `diversification` | integer or null | `sumStandalone − var` (two parts or more) |
 | `limit`, `limitUse` | integer, number, or null | the node's or the portfolio's VaR limit (its `var-limit` row, 2.9.7); `var / limit` |
 | `backtest` | object | `{days, exceptions, light, kupiecLr, kupiecPValue, christoffersenLr, christoffersenPValue}` ([section 18.4](#184-history-and-backtest)) |
@@ -1468,7 +1574,7 @@ bins from the smallest to the largest value, bin *i* = [edges[i], edges[i+1]), t
 default part that lost most on that scenario); `computeMs`.
 
 **`GET /scope/contributions`:** `canonical`; `by` (the parts' kind); `var`, `es`; `sumStandalone`, `sumComponent`, `diversification`;
-`truncated` (boolean), `total` (the parts there were); with `scenario`: `scenario`, `scenarioPnl`, `scenarioRank`; `rows`; `computeMs`.
+`truncated` (boolean), `total` (the parts there were), `shown` (the rows listed; the three sums are over all `total` parts); with `scenario`: `scenario`, `scenarioPnl`, `scenarioRank`; `rows`; `computeMs`.
 Rows are sorted by `componentVar` descending, or by `scenarioPnl` ascending when a scenario is given.
 
 | Row field | Type | Meaning |
@@ -1525,7 +1631,7 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.hot-dates` | `2` | 2 | business dates kept open |
 | `drishti.var.history-days` | `250` | 250 (1 or less) | history and backtest window |
 | `drishti.var.histogram-bins` | `42` | 42 (below 5) | bins of the P&L histogram |
-| `drishti.var.max-parts` | `5000` | 5,000 | most parts a contribution table computes; more: the largest by gross size ([section 11.1](#111-the-endpoints)) |
+| `drishti.var.max-parts` | `5000` | 5,000 | most rows a contribution table lists; more: the largest by gross size, and said; every total is over all the parts ([section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)) |
 | `drishti.var.path-page` | `60` | 60 | rows per page of the ranked P&L path |
 | `drishti.var.smat.max-days` | `${DRISHTI_VAR_SMAT_MAX_DAYS:60}` | 60 | 2.9.7: the most business dates one scenario matrix reads ([section 3.9](#39-the-scenario-matrix-smat-297)); more asked: this many, and the answer says so |
 | `drishti.var.kinds.vector`, `.position`, `.hierarchy`, `.scenario-set`, `.portfolio` | the market-risk kinds | `pnl-vector`, `position`, `risk-hierarchy`, `scenario-set`, `portfolio` | the kinds read (and `position`: the kind the derived positions are served as) |
@@ -1811,13 +1917,14 @@ rejected (`DRS-5201`, counted and listed in the provenance); otherwise it gets i
 
 ### 15.3 `scenario-set`: the scenario days (AS BUILT)
 
-**Grain:** one row per scenario set and business date. **Key:** `SCENARIO_SET_ID` (with `business_date`). **Row count:** 1 per date.
-A date with two scenario sets is not loaded (`DRS-5203`; several sets per date are open question 6), nor one whose `SCENARIO_DATES` are
-not strictly increasing or not all before the business date.
+**Grain:** one row per scenario set and business date. **Key:** `SCENARIO_SET_ID` (with `business_date`). **Row count:** 1 per date, or 2
+when the batch sends a **stress set** for stressed VaR (`SET_TYPE: STRESS`, [section 18.8](#188-stressed-var)). A date with two normal sets
+is not loaded (`DRS-5203`), nor one whose `SCENARIO_DATES` are not strictly increasing or not all before the business date; two stress
+sets refuse the stress set alone.
 
 | Column | JSON | Delta | Req. | Engine | Meaning | Example |
 |---|---|---|---|---|---|---|
-| `SCENARIO_SET_ID` | id | `id` STRING | required | R | the set; stamped on every answer (`SVAR-250` would be a stressed set, not built) | `HS-509` |
+| `SCENARIO_SET_ID` | id | `id` STRING | required | R | the set; stamped on every answer; the stress set's rows in every input table carry its own | `HS-509`, `HS-STRESS-2008` |
 | `BUSINESS_DATE` | date | `business_date` DATE | required | R | the date whose vectors the set orders | `2026-09-30` |
 | `SCENARIO_DATES` | date list | doc | required | R | the N scenario days, oldest first, strictly increasing; index *i* of every vector | `["2024-09-17", …, "2026-09-29"]` (509) |
 | `SCENARIO_COUNT` | integer | doc | required | – | N = length of `SCENARIO_DATES` | `509` |
@@ -1827,7 +1934,9 @@ not strictly increasing or not all before the business date.
 | `REVALUATION` | text | doc | optional | – | `full` or `sensitivities` (Taylor), as the batch did it | `full` |
 | `WEIGHTS` | number list | doc | optional | – | age weights for a weighted method (not used: equal weights) | `null` |
 | `SOURCE_BATCH` | id | doc | optional | – | the batch that produced the set and its vectors | `B-2026-09-30-01` |
-| `DESCRIPTION` | text | doc | optional | – | | `Historical simulation, 509 business days, equal weights` |
+| `DESCRIPTION` | text | doc | optional | – | shown with a stressed answer | `Historical simulation, 509 business days, equal weights` |
+| `SET_TYPE` | text | doc | optional | R | `STRESS` for the date's stress set; absent (or `HISTORICAL`) for the normal set; a set without it is the stress set when its id starts with `drishti.var.stress.id-prefix` | `STRESS` |
+| `SYNTHETIC` | boolean | doc | optional | R | the set's moves are synthetic, not market history (the demo's stress set): every stressed answer says so | `true` |
 
 Scenario days are business days of the USNY calendar (`tools/packgen/var/make_var_data.py`, `business_days`). The set is itself dated,
 so the meaning of index *i* is never ambiguous: each date moves the window by one day (the oldest scenario day drops out, the newest
@@ -2413,7 +2522,7 @@ Positions link to trades (`graph.fields.TRADE_IDS` → `trade`); the explorer li
 | Confidence | VaR 99% (`drishti.var.confidence`), ES 97.5% (`drishti.var.es-confidence`); a value outside (0.5, 1) falls back to the default |
 | Rank rule | `kth-worst`: k = ⌈N (1 − α) − 10⁻⁹⌉, clamped to [1, N]. N = 509: k = 6 at 99% (509 × 0.01 = 5.09 → 6), 13 at 97.5% (12.725 → 13) |
 | Ties | scenarios with equal P&L are ordered by index, the older scenario first (the same rule in `VarMath.order` and `varmath.order`) |
-| Horizon | 1 day; no √10 scaling anywhere (10-day VaR is not built; the screens say *1 day*) |
+| Horizon | the inputs are 1-day (`HORIZON_DAYS` 1); 10-day VaR is computed from them on request, by √10 or the sum of overlapping 10-day windows (2.9.7, [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)); official records stay 1-day (`HORIZON` `1D`) |
 | Quantity | positive long, negative short; `DIRECTION` says the same in words |
 | Ids | case: the ids of `POS`, `TRD` and `CPTY` are kept as written and matched exactly, else ignoring case (a booking system's ids are text and may be lower case; two ids that differ only in case are ambiguous and match neither); the other words' arguments are upper case, except basket names and capture ids ([section 5.2](#52-the-grammar)) |
 
@@ -2598,6 +2707,312 @@ section of the same hot file (as `CTOT` and `CELL` were added), summed exactly a
 `HORIZON` (`1D`) and `METHOD` (null) so a future 10-day official record is never mistaken for a 1-day one
 ([REGULATORY_VAR_REPORTING.md section 8.2.2](../architecture/REGULATORY_VAR_REPORTING.md)).
 
+### 18.7 The whole chain, step by step
+
+Historical simulation in Drishti is seven steps, from what the sources send to the figure of record. Each step names the section that
+gives it in full; the ten-scenario example of [section 2.1](#21-by-hand-ten-scenarios) works steps 3 to 5 by hand.
+
+| Step | What happens | Formula | Where |
+|---|---|---|---|
+| 1. **Intake** | each trade's scenario PVs become a USD P&L vector (a P&L vector is taken as sent); its USD value today becomes its `PV` | `P&L_USD(s) = PV(s)·FX_c(s) − PV(base)·FX_c(base)` | `VarIntake`, `ScenarioFx.pnlFromPv`; [15.9](#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294) |
+| 2. **Window** | every vector cut to the newest N scenarios when `drishti.var.scenario-window` is a number | `v ← v[len − N … len − 1]` | [18.5](#185-the-scenario-window-and-the-confidences-as-built-294) |
+| 3. **Positions and totals** | trades summed into derived positions, positions into the nodes of every hierarchy (float64 aggregates in the hot file), any other scope summed by the planner from rows and aggregates | `v_scope(s) = Σ_{t ∈ scope} v_t(s)` | [4](#4-positions-derived-never-delivered), [25](#25-one-business-date-in-memory), [26.4](#264-how-a-sum-reads-it) |
+| 4. **Rank** | the scope's vector sorted worst first (ties: the older scenario first); k from the confidence | `k = ⌈N·(1 − α)⌉`, `VaR = −v[o[k−1]]`, `ES = −mean of the k_ES worst` | [18.1](#181-var), [18.2](#182-es) |
+| 5. **Decompose** | components on the tail around rank k (scaled to add up to VaR), component ES on the ES tail, standalone, incremental, marginal, diversification | the table of [18.3](#183-decomposition-of-a-scope-into-parts) | `VarCalc`, `VarMath` |
+| 6. **Lens and currency** | 10-day by √10 or the windowed sum, another confidence, another reporting currency | `v_10d = √10·v` or `w_i = Σ_{j=i..i+9} v_j`; `P&L_r(s) = (p + P&L_USD(s))/FX_r(s) − p/FX_r(base)` | [18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297), [15.10](#1510-reporting-currency-as-built-294) |
+| 7. **Record** | after a complete load, every node captured officially and the rows published | | [19](#19-official-end-of-day-results) |
+
+**Step 1 by hand** (a hand-made example, not the test data). A EUR swap with a base PV of 1,000,000 EUR and today's EUR rate 1.0800 USD
+is worth 1,080,000 USD: its `PV`. Under scenario *s* the pricing system revalues it at 990,000 EUR and the scenario's EUR rate is 1.0700:
+
+```
+P&L_USD(s) = 990,000 × 1.0700 − 1,000,000 × 1.0800 = 1,059,300 − 1,080,000 = −20,700 USD
+```
+
+Of the loss, 10,800 USD is the swap's own move (−10,000 EUR at 1.08) and 9,900 USD the euro's move on what it is then worth (990,000 ×
+−0.01): the currency is part of the risk. A USD trade's P&L is simply `PV(s) − PV(base)`.
+
+**Steps 3 to 6 on the test data** (the bank on 2026-09-30, 509 scenarios; `VarTestDataPrecisionTest` and [section 2.2](#22-on-the-test-data)):
+the bank's vector is the sum of 7,993 positions; at 99% k = ⌈509 × 0.01⌉ = 6, so the 1-day VaR is minus the 6th worst P&L,
+**112,041,646**; ES at 97.5% is minus the mean of the 13 worst, **160,143,809**; at 95% k = 26 and VaR is **68,355,411**; the 10-day
+VaR is **354,306,794** by √10 and **274,544,283** by the sum of the 500 overlapping windows.
+
+### 18.8 Stressed VaR
+
+**What it is, in plain words.** Stressed VaR is the same historical simulation as VaR, run on **today's positions** with the market
+moves of a **fixed 12-month stress period** (a year in which markets were very bad, such as 2008-07 to 2009-06) instead of the moves
+of the last one or two years. It answers *what would today's book lose on a bad day if the worst year we know came back?* It is **not**
+the value of the positions as they were in that period: the trades are today's, their sizes and sensitivities are today's, and only the
+market moves are taken from the stress period. A bond bought last month has a stressed P&L for 2008-10-10 although it did not exist then:
+it is today's bond, revalued as if rates had moved on today's curve as they did on that day.
+
+**A small worked example** (made by hand, not the test data). A book holds one 10-year bond worth **10,000,000 USD today**. The pricing
+system takes the yield move of each day of the stress period, applies it to today's curve and reprices today's bond:
+
+| Stress day | The day's move (applied to today's curve) | Today's bond repriced, PV(s) | P&L(s) = PV(s) − PV(base) |
+|---|---|---:|---:|
+| 2008-09-15 | yield +31 bp | 9,744,000 | −256,000 |
+| 2008-10-10 | yield +22 bp | 9,817,000 | −183,000 |
+| 2008-11-20 | yield −18 bp | 10,151,000 | +151,000 |
+| … 247 more days | | | |
+
+With **250 stress days** at 99%, the rank is k = ⌈250 × 0.01⌉ = 3: the stressed VaR is minus the **3rd worst** of the 250 P&Ls; stressed
+ES at 97.5% is minus the mean of the k_ES = ⌈250 × 0.025⌉ = **7 worst**. If the seven worst P&Ls are −256,000, −241,000, −233,000,
+−205,000, −198,000, −190,000 and −183,000, the stressed VaR is **233,000** and the stressed ES is (256 + 241 + 233 + 205 + 198 + 190 +
+183) / 7 × 1,000 = **215,143**. The book's normal VaR on its 509 recent days might be 90,000: the stress period's moves are larger.
+
+**The second scenario set: what the pricing system sends.** The stress set is a **second scenario set of the business date**, fed
+through the same feed and the same contracts as the normal set ([section 15](#15-inputs-from-upstream-engines)):
+
+| Input | The normal set | The stress set |
+|---|---|---|
+| `scenario-set` | one row, e.g. `HS-509`: the date's recent days | one more row, its own `SCENARIO_SET_ID` (`HS-STRESS-2008`), **`SET_TYPE: STRESS`**, `SCENARIO_DATES` the stress period's days in date order; optionally `SYNTHETIC: true` and a `DESCRIPTION` |
+| `scenario-pv` (preferred) | each trade's (or position's) PVs under the normal scenarios, in its own currency, with its base PV | the same trade's PVs under the **stress** scenarios, the **same base PV** (one valuation today), `SCENARIO_SET_ID` the stress set's |
+| `pnl-vector` (accepted) | each trade's P&L vector in USD | its P&L vector under the stress scenarios, `SCENARIO_SET_ID` the stress set's |
+| `fx-scenario` | each currency's rate today and under each normal scenario | each currency's rates under each **stress** scenario, `SCENARIO_SET_ID` the stress set's |
+
+The rows sit in the same tables: the engine tells them apart by `SCENARIO_SET_ID` (so the connector must promote that column, as the
+market-risk pack does), and a set is the stress set when its `SET_TYPE` is `STRESS` or, when it does not say, when its id starts with
+`drishti.var.stress.id-prefix` (`HS-STRESS-`). The normal set's book never sees a stress row, and the stress book never sees a normal row.
+The P&L is derived exactly as for the normal set ([Input, computed, cache and the official record](#input-computed-cache-and-the-official-record-compute-first)):
+
+```
+P&L_USD(s) = PV(s) × FX_c(s) − PV(base) × FX_c(base)          s = each stress day, in the stress set's order
+```
+
+with `FX_c(s)` the stress set's own supplied scenario FX (`fx-scenario` rows of that set). The FX of a stress day is never taken from the
+normal set; when a currency's stress rates are not supplied and the FX history does not reach the stress period, that currency's trades
+are refused for the stress set (`DRS-5207`), never valued at zero. A date has at most one stress set; two refuse the stress set's load
+(`DRS-5203`) and leave the normal set as it is.
+
+**What is the same as normal VaR.** The engine, every rule and every screen:
+
+- the historical simulation itself: the rank rule, VaR at the chosen confidence (99% by default; any offered one), ES, the components
+  and contributions, diversification, incremental and marginal VaR ([sections 18.1 to 18.3](#181-var));
+- 1-day and 10-day, by √10 and by the sum of 10 consecutive days (250 stress days give **241** overlapping windows; [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297));
+- the positions the rules derive, every hierarchy and its nodes, ad-hoc scopes (`BANK - DESK:CREDIT`, `WHERE:`…), portfolios and
+  baskets, the totals over every position of a scope ([section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales));
+- entitlements, the P&L path, the contributions table, captures and the provenance; computed in memory and in its own hot file, never
+  written to the lake (compute-first).
+
+**What differs.**
+
+| | Normal VaR | Stressed VaR |
+|---|---|---|
+| The scenario days | the date's recent history (509 in the demo), cut to `drishti.var.scenario-window` when set | the stress period, **used whole** (about 250 days); the scenario window does not apply |
+| Choosing the period | rolls forward every day | **fixed**, reviewed periodically: the period that is worst for today's portfolio. The stress window selection tool ([section 18.9](#189-choosing-the-stress-window-design-not-built-298-row-8)) is planned for 2.9.8; until then the stress set's days are what the pricing system's batch sends, chosen by the bank and recorded on every answer and record (`STRESS_SET_ID`) |
+| Proxies | not needed: every risk factor existed | a risk factor that did not exist in the stress period (a newer index, a currency, a curve) needs a **proxy**: that is the pricing system's job when it revalues today's trades; Drishti records which scenario set was used |
+| Reporting currency | any currency with scenario FX | **USD** (the stress set's own currency); a request in another currency is refused in words |
+| Limits | limit use when the limit's horizon and confidence match | **no limit use**: a VaR limit is set against normal VaR (*limit is for 1-day 99% VaR: stressed VaR is not compared with it*) |
+| Backtesting | exceptions and the Basel light | **not backtested** (the history panel replays today's members over the stress days and says so) |
+| Intraday updates | applied to the morning run | the stress set is the **morning run**; intraday batches update the normal set |
+| The capital use | VaR's 60-business-day average | the capital rule takes the **larger of the previous day's stressed VaR and a multiplier × its average over the last 12 weeks (about 60 business days)**; Drishti gives the average from the official records (below) |
+
+**The 12-week average.** Every official end-of-day record ([section 19](#19-official-end-of-day-results)) of a date with a stress set
+carries each node's stressed VaR and ES beside its VaR and ES, at the configured horizon and confidences (`svar`, `ses`, `stressSet`;
+published as `SVAR`, `SES` and `STRESS_SET_ID`). A stressed answer of a node gives `stressAverage`: the mean of the node's official
+stressed VaR over the `drishti.var.stress.average-weeks` weeks (12) ending on the date, how many official records it is the mean of, their
+dates, and the official dates in the period **without** a stressed VaR (named, never counted as zero). A scope that is not a node has no
+official record and says so. A date without a stress set records none (`stressSet: null` and a `stressNote` saying why).
+
+**A date without a stress set** answers in words, never with zeros: *no stress scenario set on 2026-09-29: stressed VaR is not available for
+this date* (`404`, `DRS-1001`); its normal VaR is unaffected.
+
+**Choosing Normal or Stressed.**
+
+| Where | How |
+|---|---|
+| The VaR page | **Scenarios: Normal / Stressed**, beside Horizon, Confidence and ES; every panel follows; the tiles read *Stressed VaR 99% · 1 day · USD*, the third tile the 12-week average; the method strip names the stress set (*HS-STRESS-2008 · 2008-07-01 … 2009-06-30 · synthetic*); the link keeps it (`&set=stressed`) and the person's settings remember it (`varView.set`) |
+| Commands | `VAR BANK SVAR`, `VAR BANK SVAR 10D`, `VAR BANK SVAR 10D SUM`, `VAR DESK DESK-RATES SVAR 10D SQRT 97.5`; the type-ahead offers them once a scope is typed |
+| The API | `set=stressed` on `/scope`, `/scopes/{scope}`, `/scope/path`, `/scope/history`, `/scope/contributions`, `/tree` and a capture's body (`"set": "stressed"`); every answer says `set` (`NORMAL` or `STRESSED`) and, stressed, `lens.stressSet` (its id, first and last day, scenario count, description, `synthetic`). `window` and `es-confidence` (the per-request recomputes of [section 18.5](#185-the-scenario-window-and-the-confidences-as-built-294)) are for the normal set and are refused with `set=stressed` |
+| The CLI | `drishti.py var show BANK --stressed`, `--stressed --horizon 10d --method sum`; `parts`, `path`, `history`, `tree` take `--stressed` too |
+| VRES | `VRES BANK~set=stressed` (`SET` in the result) |
+
+**Configuration** ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivarstress)):
+
+| Key | Default | What it does |
+|---|---|---|
+| `drishti.var.stress.enabled` (`DRISHTI_VAR_STRESS_ENABLED`) | `true` | offers Normal / Stressed; off, a stressed request is refused in words (the stress set's rows are still kept out of the normal set) |
+| `drishti.var.stress.id-prefix` | `HS-STRESS-` | a scenario set without `SET_TYPE` is the stress set when its id starts with this |
+| `drishti.var.stress.average-weeks` | `12` | the period of the stressed VaR average over the official records |
+
+**Where it lives.** The stress set's book is loaded when stressed VaR is first asked of a date open on the server (`VarLoader.loadStress`,
+`VarService.stressed`), kept while the date is open and dropped with it; with the tiered memory it has its own hot file
+(`<data>/var/hot/<date>-STRESS/`, its digest naming the stress set), so a date's normal and stressed books are never confused. On a
+sharded cluster ([section 28](#28-sharding-across-drishtinet-as-built-296)) the stress set (about half the width of the normal set) is
+loaded whole by the member that answers; its sums follow the same fixed reduction order, so every member gives the same figures.
+
+**The demo's stress set** is **synthetic**: `HS-STRESS-2008`, the **250 business days of 2008-07-01 to 2009-06-30** (the New York
+calendar), made by the test-data generator `tools/packgen/var/stress.py` (run by `make_var_data.py`): every demo trade revalued, keeping
+its size and factor loadings, under 2008-like moves of the same forty factors as the normal set: Student-t shocks with GARCH clustering
+at 2.2 times the normal set's volatility, correlations raised, an acute episode from 2008-09-15 to 2008-11-28 at 1.5 times that, and six
+crash days on which everything falls (2008-09-15, 2008-09-29, 2008-10-09, 2008-10-15, 2008-12-01, 2009-01-20). The moves are **not market
+history**: the set says so (`SYNTHETIC: true`, its description) and so does every stressed answer. Its rows are in their own files beside
+the normal set's (`data/testdata/market-risk/<kind>/stress-cob-2026-09-30…`).
+
+**Worked figures on the demo data** (the bank, 2026-09-30, USD; `VarComputeFirstTest`):
+
+| Lens | Normal VaR (509 days) | Stressed VaR (250 stress days) | rank (stressed) | Stressed ES (97.5%) |
+|---|---:|---:|---|---:|
+| 1-day, 99% | 112,041,646 | **213,637,794** | 3rd worst of 250 | 222,810,303 (mean of 7) |
+| 10-day √10, 99% | 354,306,794 | **675,582,023** | 3rd worst of 250 (× √10) | 704,588,045 |
+| 10-day sum, 99% | 274,544,283 | **293,280,315** | 3rd worst of 241 windows | 282,705,323 |
+| 1-day, 95% | 68,355,411 | **147,807,462** | 13th worst of 250 | 222,810,303 |
+
+The stressed 1-day VaR is 1.9 times the normal one. Note that with 250 days, ES at 97.5% (the mean of the 7 worst) is close to VaR at
+99% (the 3rd worst) and may fall either side of it, as it does for a normal distribution (2.34 σ against 2.33 σ).
+
+**Not to be confused with** the Python what-if's **stressed window** ([section 8.2](#82-var-whatif-the-python-engine)): the largest VaR
+over every run of `stress-window` consecutive days **inside the date's own (normal) scenario set**, an analysis of the recent history
+that cannot reach a 2008 or 2020 period unless that set holds it. Stressed VaR uses a separate scenario set of the stress period, sent by
+the pricing system.
+
+**Tested:** `VarStressApiTest` (the normal and stressed answers each from their own set's rows, for the bank and every node; 10-day by √10
+and by the 21 windows of 30 stress days; no limit use and no backtest; a date without a stress set answers `404` in words; another
+currency and an unknown set refused; the stress book's own hot file; the official record's `svar`, `ses` and the 12-week average; no
+input table changed by any of it), `VarComputeFirstTest` (the demo figures above), `test_stress_data.py` (the committed stress set:
+250 days, every trade once in its own form, its base PV and FX), the console's `test_var_routes.py` (`SVAR`, `set=stressed`, the picker).
+
+### 18.9 Choosing the stress window (design, not built: 2.9.8 row 8)
+
+Which 12-month period is worst for **today's** portfolio, so the stress set of section 18.8 uses the right one (product owner,
+2026-10-31): long-history P&L series per node (for example 2007 to today, from the source or a monthly batch), a rolling 250-day VaR
+across every window, the top candidates by bank and desk against the window in use, and an alert when another window overtakes it by a
+threshold. The analysis is frozen with its inputs and the chosen window approved through 2.9.8's sign-off framework, then used by
+stressed VaR; a position-level full run may follow, monthly, if needed. Its design is in the
+[implementation plan, 2.9.8](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned); its
+screen's mock-ups and build checklist are in
+[REGULATORY_VAR_REPORTING.md section 8.3.3](../architecture/REGULATORY_VAR_REPORTING.md#833-stress-window-selection-option-a).
+
+### 18.10 Period statistics (design, not built: 2.9.8 row 5)
+
+The reports of [section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us) need figures over a period, not a day: **high,
+low, average and period end** over a quarter or a fiscal year, the **60-business-day average** of VaR and the **12-week average** of
+stressed VaR that the US capital formula takes (`max(latest, multiplier × average)`). They will be computed on request from the official
+records ([section 19](#19-official-end-of-day-results)), never stored beyond the records themselves; a missing official date inside the
+period is named, never skipped. Today the official records are kept per node and date and BI's sample report charts them over time, but
+no period statistic is defined ([REGULATORY_VAR_REPORTING.md section 8.2.5](../architecture/REGULATORY_VAR_REPORTING.md#825-period-statistics-g5)).
+
+### 18.11 Backtesting for regulation (design, not built: 2.9.8 row 4)
+
+What is built is in [section 7](#7-history-and-backtesting) and [section 18.4](#184-history-and-backtest): exceptions of each official
+VaR against the next day's derived hypothetical P&L, the Basel light, Kupiec and Christoffersen. The derived `HYPO_PNL` is the risk
+model's own P&L (closest to a risk-theoretical P&L), not the bank's. 2.9.8 adds the bank's **actual and hypothetical P&L** as an input
+(G3), the backtest at 99% and 97.5% against each, the zone and the **capital multiplier** (US 3.00 to 4.00), and the backtesting chart,
+computed on demand from the official captures and never stored
+([REGULATORY_VAR_REPORTING.md section 8.2.4](../architecture/REGULATORY_VAR_REPORTING.md#824-the-backtesting-engine-g4)). ES backtests
+(Acerbi–Székely) stay open.
+
+### 18.12 Delta-gamma-vega VaR, on request (design, not built: parked)
+
+**What it is.** Full-revaluation VaR (everything above) takes each position's scenario P&L from the pricing system: the position
+revalued under each historical day's market. **Delta-gamma-vega (DGV) VaR** approximates the same scenario P&L from the position's
+**sensitivities** instead, by a second-order Taylor expansion around today's market, and then applies exactly the same percentile, ES,
+confidences and 10-day forms (sections 18.1, 18.2, 18.6). Drishti computes both and shows them side by side, so the difference is visible.
+
+**The formula.** For position *p* and scenario day *s*, with risk factors *i* (rates, spreads, FX rates, equity and commodity prices)
+and volatilities *k*:
+
+```
+P&L_DGV(p, s) =  Σᵢ δᵢ(p) · Δxᵢ(s)              delta: first-order sensitivity × the factor's move
+              + ½ Σᵢ Γᵢ(p) · Δxᵢ(s)²            gamma: curvature, the second-order term
+              +  Σₖ νₖ(p) · Δσₖ(s)              vega: sensitivity to the volatility × the volatility's move
+```
+
+Δx(s) is the move of each factor on historical day *s* (an absolute move for rates and spreads, a relative move for prices and FX rates,
+as the factor dictionary states per factor), applied to today's level, exactly as the historical scenarios of full revaluation are built.
+The sum over a scope's positions gives the scope's DGV P&L vector; VaR is its *k*-th worst value, ES the mean of its tail, by the same
+rules and tie-breaks as section 18.1. Cross-gammas (Γᵢⱼ between two different factors) are used when the source supplies them and
+taken as zero otherwise; the answer says which.
+
+**On request, never ahead.** DGV VaR is computed only when someone presses **Compute DGV VaR** on the VaR screen (or asks the API or
+the command line for it): a point-in-time answer for the scope, date, currency and lens on screen. Nothing is computed in advance, on a
+schedule or for the official run. The answer is kept until the date's data version changes, so asking again is instant.
+
+**What the screen shows.**
+
+| Panel | Contents |
+|---|---|
+| Side by side | full-revaluation VaR and DGV VaR, ES, every confidence, 1-day and the two 10-day forms, and the difference (amount and percent) |
+| By risk class | DGV VaR of the delta, gamma and vega terms and of each risk class (rates, credit, FX, equity, commodity, volatility), standalone and as contribution |
+| By position | each position's full-revaluation and DGV P&L on the VaR scenario and their difference, largest gaps first (at most 500 rows, "N of M shown") |
+| Provenance | the input set (its name, owner and version), the scenario set, whether cross-gammas were supplied, positions without sensitivities (left out and named, never zero) |
+
+**Reading the difference.** A small gap means the book is close to linear-quadratic in its factors over the scenario moves. A large
+gap points to what the expansion cannot see: options far from the money or near a barrier, large moves where higher orders matter,
+jumps and defaults, cross-gammas not supplied, a factor that moves a position but is missing from its sensitivities, or stale
+sensitivities. The by-position panel names where the gap comes from.
+
+**Inputs, given on the screen.** DGV needs two inputs that scenario PVs do not carry: each position's **sensitivities** and each
+factor's **move on each scenario day**. Neither changes the PV contract or the lake: both are given in the DGV panel, as an **input set**.
+
+| Step | What happens |
+|---|---|
+| **Download template** | a CSV or xlsx pre-filled with the scope's position ids, the factor ids of the factor dictionary and the scenario dates, ready to fill |
+| **Upload or paste** | the filled sensitivities and factor shocks (CSV, JSON Lines or xlsx), checked before anything is computed: unknown positions, factors without shocks and scenario dates outside the set are listed; a position without sensitivities is left out and named, never taken as zero |
+| **Use demo inputs** | on the demo, both generated on the fly from the demo's own 40-factor model, consistently with its scenario P&L |
+| **Keep it** | the input set is saved in the content store under its owner (for example *DGV inputs, 2026-10-30, Rates book*), reusable, shareable and deletable like a basket; it is never written to the lake |
+
+| Input | One row per | Fields |
+|---|---|---|
+| Sensitivities | position and risk factor | the position id, the factor id, `DELTA`, `GAMMA`, `VEGA` (by the factor's vega bucket), the currency and units of each |
+| Factor shocks | factor and scenario day | the factor id, the scenario date, the move and whether it is absolute or relative |
+
+The computation uses the input set chosen when the button is pressed; the answer names the set and its version in its provenance.
+
+**Cost.** Positions × factors per position × scenarios multiply-adds, on vectors: at 2.3 million positions, about ten factors each and
+509 scenarios, about 12 billion operations, a few seconds on one server (estimate); no pricing call is made.
+
+**Uses.** A check on full revaluation (a gap is a question for the pricing or the data); the risk-theoretical P&L that P&L attribution
+and backtesting compare against; VaR by risk class and by Greek; quick what-if (change a delta and see VaR move).
+
+**Its playground.** The VaR Playground's workbook gains a **Sensitivities** tab: each position's deltas, gammas and vegas, the factor
+shocks per scenario day, and every DGV P&L cell written as the expansion above in formulas, with a check cell against the engine's DGV
+VaR to the cent ([VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md)).
+
+### 18.13 Statistical factor VaR, estimated from scenario P&L (design, not built: parked)
+
+**What it is.** A **statistical estimation** that needs no input beyond the scenario PVs and P&L vectors Drishti already holds. It finds
+the few common drivers behind the scope's scenario P&L and expresses every position through them, the way delta-gamma-vega VaR
+(section 18.12) expresses positions through named market factors. The drivers are statistical, not named market factors, and the screen
+says so on every panel: **"Statistical estimation from scenario P&L: the drivers are not market risk factors."**
+
+**The method.**
+
+1. The scope's positions' scenario P&L form a matrix *X* (positions × scenario days), each position's vector centred on its mean.
+2. Its principal components give *K* drivers *fₖ(s)* (scenario-day series) and each position's loadings *βₖ(p)*, with *K* the smallest
+   number that explains a configured share of the variance (proposed: 95%, at most 10 drivers, both settings), computed by a randomised partial decomposition so the cost grows with positions × days × *K*.
+3. Each position is fitted on its drivers with a curvature term, by least squares:
+   `P&L(p, s) ≈ Σₖ βₖ(p)·fₖ(s) + ½ Σₖ γₖ(p)·fₖ(s)²`; the fit's R² per position is kept.
+4. The fitted P&L summed over the scope gives the **factor VaR** and ES by the rules of sections 18.1 and 18.2, beside full VaR.
+
+**On request, never ahead.** Computed only when someone presses **Estimate factor VaR** on the VaR screen (or asks the API or the
+command line): a point-in-time answer for the scope, date, currency and lens on screen, kept until the date's data version changes.
+
+**What the screen shows.**
+
+| Panel | Contents |
+|---|---|
+| Banner | *Statistical estimation from scenario P&L: the drivers are not market risk factors* |
+| Side by side | full VaR and factor VaR, ES, the confidences, 1-day and the two 10-day forms, the difference |
+| Drivers | each driver's share of variance, its VaR alone, its contribution, its scenario-day series (chart), and the positions' attributes that load most on it (asset class, currency, desk) as a hint of what it resembles, never as its name |
+| Positions | each position's loadings, curvature and R²; the least well explained first (a low R² marks a position the drivers do not capture: idiosyncratic or strongly non-linear) |
+| Concentration | how much of the scope's variance the first driver carries, and the positions that dominate it |
+| Provenance | the scenario set, the variance share and number of drivers, the positions included and any left out (no vector), the method's settings |
+
+**What it is for, and what it is not.** It is good for **concentration** (how much of the risk is one common driver), for finding
+**non-linear or idiosyncratic positions** (low R²), and for **decomposing VaR** into a few drivers without any extra data. It is fitted on
+the same scenarios it explains, so it is **not an independent check** of full revaluation, its drivers have no market names, and it is
+not a regulatory VaR. Statistical factor models of this kind (principal components of returns or P&L) are a common tool in risk
+analysis for concentration and decomposition, used beside, not instead of, the full-revaluation figure.
+
+**Cost.** Positions × scenario days × drivers for the decomposition and the fit: at 2.3 million positions, 509 days and 10 drivers,
+about 12 billion operations, seconds on one server (estimate).
+
+**Its playground.** The VaR Playground's workbook gains a **Factors** tab: the drivers' series as data (the decomposition itself is not
+a spreadsheet formula), each position's loadings and curvature as data, and every fitted P&L cell, the factor VaR and the R² as formulas,
+with a check cell against the engine's factor VaR to the cent.
+
 ## 19. Official end-of-day results
 
 **Official end-of-day captures (as built).** When a date's inputs are complete (the date loads as one run, with trades and hierarchy
@@ -2611,7 +3026,7 @@ next **result version**, the earlier captures kept. Kept 7 years, like the vecto
 every version, and nothing deletes them. `VarOfficialStore` serves the node history from them.
 
 **In other reporting currencies (2.9.4).** The record above is the USD one, and the only one published. Each other currency of
-`drishti.var.official.currencies` (`[USD, EUR]`) is captured in the same run, from the date's book in that currency, under
+`drishti.var.official.currencies` (default `[USD]`; for example `[USD, EUR]`) is captured in the same run, from the date's book in that currency, under
 `var/official/<CCY>/<date>.json` with its own result versions; every capture and record says its `currency`
 ([section 15.10](#1510-reporting-currency-as-built-294)).
 
@@ -2694,6 +3109,8 @@ is recorded in the date's record (`publishError`, naming the format and the tabl
 | `TRADE_COUNT`, `POSITION_COUNT` | BIGINT | the members counted |
 | `EXCEPTIONS_250`, `TRAFFIC_LIGHT` | BIGINT, STRING | backtest exceptions over the official history (up to 250 days), and the Basel zone |
 | `HORIZON`, `METHOD` | STRING | 2.9.7 (contract 1.4): `1D` and null: official records are 1-day at `CONFIDENCE`; a future 10-day record says `10D` and `SQRT10`, `SUM` or `FULL` ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)). A table written before 2.9.7 keeps its columns (the lake writer adds none): the rows' `doc` carries them |
+
+| `SVAR`, `SES`, `STRESS_SET_ID` | DOUBLE, DOUBLE, STRING | contract 1.5: the node's stressed VaR and ES at `CONFIDENCE`, `ES_CONFIDENCE` and `HORIZON` on the date's stress set, and that set's id; null when the date has none, never zero ([section 18.8](#188-stressed-var)). A table written before keeps its columns: the rows' `doc` carries them |
 
 No vectors and no trade or position rows are published; the capture itself keeps the node's vector for audit.
 
@@ -2954,7 +3371,7 @@ recommended defaults unless the product owner said otherwise):
 | Engine 4 and data model 6. Precision of the hot cache: float64 everywhere (8.1 GB a day for 2 million positions) or float32 with float64 sums? | V0 to V3: **float64** in the lake, in memory and in sums; part 2 (approved 2026-10-25): **float32 position rows in the hot file, float64 aggregates and sums**, the lake float64 ([section 26.6](#266-precision-float32-rows-float64-sums)) |
 | Engine 5. A per-risk-class vector (`PNL_BY_RISK_CLASS`) in 2.8.0? | **not in 2.8.0** |
 | Engine 6 and data model 3 and 4. Retention of vectors and official numbers; the reproducibility horizon | **7 years** of vectors and their time travel, and of official captures (product owner, 2026-10-25) |
-| Engine 7. 10-day vectors from the batch, or √10 scaling? | not built; the screens say *1 day* |
+| Engine 7. 10-day vectors from the batch, or √10 scaling? | decided 2026-10-30: both √10 and the 10-day sum from the 1-day set, computed on request (built in 2.9.7, section 18.6); 10-day vectors from the batch stay a designed slot (full revaluation) |
 | Engine 8 and data model 2. Who produces vectors (and positions) in production? | **the bank's batch** produces the vectors; Drishti loads them and **derives the positions itself** (product owner, 2026-10-25) |
 | Engine 9. Entitlement source: Drishti or the bank's system? | **in Drishti** (`drishti.var.access`) |
 | Engine 10 and data model 8. Committed demo data size (about 200 positions over 60 days, about 21 MB) | **15.7 MB** from part 1: one business date of vectors for every live trade (9,572); 3.5 MB before (1,673 trades and 250 days of node figures) |
@@ -3430,6 +3847,142 @@ visible job ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-que
 what-if of one vanilla trade priced over 509 scenarios 3 s (QLRisk to be measured), of 100 trades 60 s with progress; an applied
 write-back reflected in the shared VaR on every watcher's screen 2 s after the change applies.
 
+## 27a. How scopes, parts and totals are computed (and why it scales)
+
+A VaR answer about a scope (a node, a portfolio, a basket, an ad-hoc expression) needs three things: **which trades the scope holds**,
+**the scope's own vector** (VaR and ES), and, for the headline and the contribution table, **the scope's parts** (its child nodes, its
+positions or its trades) with their figures and totals. This section says how each is computed, what it costs per request, and why the
+cost does not grow with the size of the date.
+
+### 27a.1 Scope membership: ordinals, sets and position runs
+
+**Ordinals.** A business date's trades are numbered 0 to N − 1 (their *ordinals*), sorted by the hierarchy's cells and position
+([section 25](#25-one-business-date-in-memory)), so **a position's trades are one contiguous run** `[from, to)`. Trades an intraday batch
+adds come after the morning's ordinals and are listed with their position.
+
+**A scope is a set of ordinals**: one bit a trade (N ÷ 8 bytes: 25 KB at 200,000 trades, 290 KB at 2.3M). Union, difference and
+intersection are word-by-word operations on the bits; a node is one run.
+
+**Is a position whole in the scope?** The scope holds the position whole exactly when the first ordinal at or after `from` that is *not*
+in the scope is at `to` or beyond (`nextClearBit(from) ≥ to`). That is a scan of the position's own bits, (to − from) ÷ 64 words, and
+nothing is allocated. **Which of its trades does the scope hold?** The scope's runs within `[from, to)`. A position with trades added
+during the day is walked as its run plus its added trades, the cancelled skipped.
+
+*Example.* Position P holds ordinals 120 to 123 (`[120, 124)`). Scope A holds 100 to 130: the first ordinal from 120 not in A is 130,
+130 ≥ 124, so A holds P whole. Scope B holds 120, 121 and 123: the first ordinal from 120 not in B is 122 < 124, so B holds P in part, and
+its trades in B are the runs `[120, 122)` and `[123, 124)`.
+
+**Cost.** Per position: its own trades ÷ 64 words, whatever the date's size. Per scope: the scope's positions.
+
+### 27a.2 The headline and the contribution table
+
+**The headline** (`GET /api/v1/var/scope`) answers the scope's VaR and ES from the scope's own vector (the aggregates and the planned sum
+of [section 25](#25-one-business-date-in-memory)), and three figures about its default parts: `children` (how many), `sumStandalone`
+(Σ standalone VaR) and `diversification` (`sumStandalone − var`, with two parts or more). For a node the default parts are its child nodes
+(their aggregates). For a scope whose default parts are positions (a leaf node, a portfolio, a basket, an ad-hoc scope) or trades (a
+position), **the headline builds no list of parts**: it counts them and sums their standalone VaR in one pass (27a.3).
+
+**The contribution table** (`GET /api/v1/var/scope/contributions`) lists rows: each part's standalone VaR and ES, component VaR and ES,
+incremental and marginal VaR. It lists at most `max-parts` rows (27a.4); its totals `sumStandalone`, `sumComponent` and `diversification`
+are over **every** part.
+
+### 27a.3 Totals over every part
+
+**Σ standalone VaR.** A whole position's standalone VaR does not depend on the scope that holds it, so it is computed once per book (a
+date, a currency, an intraday snapshot) and lens (horizon, 10-day method, confidence, rank rule), the first time a scope holds the
+position, and kept. A scope's sum is then one pass over its positions in ordinal order: the kept value for each position it holds whole,
+and, for a position it holds in part, the VaR of the sum of its trades in the scope, computed on the fly. Positions missing from the cache
+are computed in parallel on the engine's sum threads when there are 256 or more.
+
+- **Memory:** 8 bytes a position and lens: 1.6 MB at 200,000 positions, 18 MB at 2.3M. The cache (`var.standalones` in Admin → Caches)
+  is weighed in bytes, joins the one cache budget (the `small` pool, 64 MB at most), and is released with its book (a reloaded or evicted
+  date) or after an hour unused; a purge empties it.
+- **Intraday:** each intraday snapshot is a book of its own, so its positions' values are computed again on first use (positions a batch
+  did not touch could carry over: design, not built).
+- **A standalone VaR** needs only the scope's worst values: the k worst (k = 6 for 99% of 509 scenarios) are kept in a buffer of k while
+  the vector is read once, O(S × k) for S scenarios, with exactly the value a full sort of the scenarios gives.
+
+**Σ component VaR** needs no pass at all. The parts partition the scope, so their components add up to the scope's own component: minus the
+mean of the scope's P&L over its tail scenarios (the scenarios around the VaR rank), times the components' scale; with
+`component-scale-to-var` (the default) it is the scope's VaR.
+
+**Diversification** is `sumStandalone − var`.
+
+*Example.* A basket of three positions with standalone VaRs of 100, 80 and 50 and a VaR of 170: `sumStandalone` 230,
+`diversification` 60, `sumComponent` 170. With `max-parts: 2` the table lists the two largest positions by gross size and says
+`truncated: true`, `total: 3`, `shown: 2`; the three totals stay 230, 170 and 60.
+
+### 27a.4 `max-parts`: a display limit
+
+`drishti.var.max-parts` (5,000) limits only the rows a contribution table lists and the parts other views list. When a scope has more
+positions or trades, the rows are the largest by gross size (a position's absolute market value when the scope holds it whole, else its
+trades' absolute PV, else their absolute quantities; ties to the first), kept in ordinal order, chosen with a heap of `max-parts` entries:
+O(P log max-parts) for P parts. The answer says `truncated`, `total` (all the parts) and `shown` (the rows listed). No total depends on it.
+Wherever rows are limited, the count is said in words with the real numbers: the explorer's contributions show **"5,000 of 18,567
+positions shown (the largest by gross size); totals are over all 18,567"** above the table; the scenario matrix by trade says the same
+beside its size; `varcli` prints it after the header; a capture keeps `componentsTruncated`, `componentsTotal` and `componentsShown`, and
+its components CSV starts with the same line as a comment; the `var-result` kind carries `CHILDREN_TOTAL`, `CHILDREN_TRUNCATED` and
+`CHILDREN_NOTE`.
+
+### 27a.5 In a sharded cluster
+
+A scope's vector is summed shard by shard: each shard's part by the member holding its rows (here or an owner), the partial vectors added
+in shard order, so the answer is bit-equal to one server's ([section 28](#28-sharding-across-drishtinet-as-built-296)). The totals over the
+parts are computed by the member answering, from each position's vector (read from its own shards, else from an owner), and cached as on
+one server. **Design, not built:** each owner returns its shard's partial Σ standalone over the scope's whole positions from its own cache
+(the sums are additive across shards; added in shard order they are the same on every member).
+
+### 27a.6 A date's first open
+
+A date's first open reads its vectors from the lake, then sorts, sums and writes the hot file (section 26). The read is Parquet decoding
+(the vector column's record assembly and `BYTE_STREAM_SPLIT` values), and it decodes on several threads at once while the load takes the
+rows in order:
+
+1. **Pieces.** The connector lists the date's data files (only those a shard's key range may hold, section 28) in file order. The Delta
+   connector on its native engine (the default) cuts each file into runs of whole row groups of about the buffer's share (below), from the
+   file's footer (cached); on the Hadoop engine, and on Iceberg, a piece is a whole data file. Only the columns the load uses are read: the
+   id, the vector and the trade's text columns, never the stored document.
+2. **Decode.** Up to `drishti.var.read.threads` pieces decode at once, each on a thread of its own (`drishti-vector-read-*`, a pool per
+   load that ends with it), into chunks of copied rows: the ids, the texts and the values, each value copied as decoded (a `float` widened
+   to a `double` exactly, a missing element NaN, a row without a vector kept as one).
+3. **In order.** The load's own thread replays the chunks to the intake: every row of the first piece, then the second, and so on. The
+   intake, the spill and the build see exactly the rows one thread reading the files would give, in the same order, so the book, its
+   aggregates, its hot file and every answer are the same to the bit (`VarParallelReadTest`, `DeltaParallelVectorsTest`,
+   `IcebergParallelVectorsTest`).
+4. **Bounded.** At most `threads` pieces are in flight, each with at most three chunks queued and one being filled; a decode whose queue is
+   full waits for the load. The decoded rows waiting take at most `drishti.var.read.buffer-mb` (64 MB, never more than a thirty-second of
+   the heap), outside the date's memory budget and the cache pools, and are gone when the read ends.
+5. **Failure.** A piece that cannot be read fails the load with its error (`DRS-1003`, the source failed), as one thread would: the rows
+   before it were given in order, nothing after it is, the other decodes stop at their next chunk and the half-built date is discarded.
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.var.read.threads` | 0: half the cores, at most 8 | pieces decoded at once for one load; 1 reads on the load's own thread |
+| `drishti.var.read.buffer-mb` | 64 | decoded rows waiting for one load, at most |
+
+**Cost.** CPU is unchanged (the same decode, spread over threads, plus one copy of each row into a chunk, about 4 KB a 509-value row);
+wall time for the read falls with the threads until the load's own thread, which takes the rows into the intake and the spill, is the
+limit. Measured at 50,000 positions (one workstation, 24 hardware threads, two data files of 25 row groups, `-Xmx4g`): the first open fell
+from 2.6 s to 1.8 s, the read from 1.5 s to 0.8 s; what remains is the intake on the load's thread and the sort, sums and hot file after
+the read. A date of more positions has more row groups, and the read keeps every thread busy up to `threads`; memory beyond the
+buffer does not grow with the date. Several dates loading at once (`drishti.var.load-threads`, 2) each have their own decoders.
+
+### 27a.7 Cost per request
+
+P is the scope's positions, T its trades, S the scenarios (509), N the date's trades.
+
+| Answer | Work | Measured, 50,000 positions (one workstation, one user) | 2.3M positions (**extrapolated**) |
+|---|---|---|---|
+| The headline of a node (its child nodes) | the scope's vector + one aggregate a child | 3 ms (a desk) | a few ms (the baseline: 8 ms at 200,000) |
+| The headline of a scope of positions (the bank minus a desk: 48,000 positions) | one pass over P positions, a cached value each; the first request of a book and lens computes the missing values, O(P × S) on the sum threads | 10.6 ms (first request 127 ms) | about 0.5 s (first request of a date and lens: several seconds) |
+| The headline of a basket of 20,000 positions | the same, P = 20,000 | 17.7 ms (first request 40 ms) | about 45 ms for a basket of 50,000 |
+| Contributions by position of the same basket (5,000 rows listed) | the totals as above + the ranking O(P log max-parts) + each listed row's vector and figures, O(max-parts × S) | 186 ms | the rows dominate: about the same for 5,000 rows, plus the pass over P |
+| Contributions by position of a desk (2,000 positions, all listed) | O(P × S) | 69 ms | grows with the desk's positions, not the date's |
+
+The 50,000-position figures are one user's medians of 15 requests on one workstation (Java 21, `-Xmx4g`), warm; the 2.3M column is
+**extrapolated**, linear in the scope's positions. Scope membership itself adds nothing that grows with the date: a position costs its
+own trades.
+
 ## 28. Sharding across Drishti\*net (as built, 2.9.6)
 
 Deploying a sharded cluster (owners and coordinators per role, shard sizes, zones, drains, failure timings): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
@@ -3460,6 +4013,28 @@ the settings and the tests are in [VAR_SHARDING.md](../architecture/VAR_SHARDING
 Measured equal to one server **to the cent** (VaR, ES, contributions, the P&L path, the tree, intraday, the official record) on three
 members in USD and EUR, on Delta and Iceberg inputs (`VarShardClusterTest`, VAR_SHARDING.md section 12). `GET /api/v1/var/shards?asOf=`
 and `drishti.py var shards` show the map, the owners and who is ready.
+
+**Bit-equality, and why.** Every member sums the same rows in the same fixed order: a shard's partial is summed in row order, the partials
+are added in shard order, and VaR and ES are taken once from the total. Each book's float64 aggregate is the one its shard's owner summed
+and sent in the skeleton, and every node's is summed from them bottom-up exactly as one server sums it, so the bank's VaR is the same
+bits on every member. A book (or, with a hierarchy built from columns, a position) under
+two shards would break this, so such a date is refused (`422 DRS-5217`) rather than answered differently from one server.
+
+**Operating it** (the full reference is [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) sections 7 to 11):
+
+| Task | How |
+|---|---|
+| switch it on | the market-risk pack's `sharding:` block (`enabled`, `key: [LEGAL_ENTITY, DESK]`, `kinds: [scenario-pv, pnl-vector]`, `target-shard-mb`, `replicas`), or the same keys under `drishti.var.sharding.*`, which win; needs `drishti.var.tier.mode: mapped` (the default) |
+| tune the hand-over | `drishti.var.sharding.stable-seconds` (members unchanged this long before shards move, 30), `grace-seconds` (a new owner ready this long before the old one releases, 30), `rebalance-seconds` (2), `release-after-seconds` (a shard book of a date nobody has open released, 900) |
+| place members | `coordinator-only` (puts dates together and coordinates, owns no shard), `zone-tag` (a second owner in another zone), `pins` (tests) |
+| stop a member safely | `drishti.py var shards --drain` (or `POST /api/v1/var/shards/drain`), then wait for `"safeToStop": true` on `GET /api/v1/var/shards`; give a Fargate task's `stopTimeout` the time to build its largest shard plus `grace-seconds` |
+| an owner dies | its replica answers; after `stable-seconds` a new owner builds the shard from the lake (never from a peer) |
+| every owner of a shard down | a scope that needs it answers `503 DRS-5215`, never a partial VaR; node figures keep answering from the skeletons |
+| a load lands between members | `409 DRS-5216`, the next member asked; the date is put together again at the new version and swapped in whole, never dropped |
+| intraday | each member reads the day's batches from the lake on its own load signal; `provenance.intraday.batches` lists them in one order on every member |
+
+The shard books are hot files too: caches, rebuilt from the lake, under the same disk budget ([section 26](#26-the-tiered-memory-and-the-hot-file)).
+What sharding costs and gives on one machine was measured in 2.9.7 ([section 35](#35-measured-performance)).
 
 ## 29. The P&L vector in the lake
 
@@ -3631,18 +4206,122 @@ never share a cached result); intraday (incremental equals full recompute); the 
   place with the paint time, the tabs, an ad-hoc basket saved and captured, the portfolio and position pages, a phone), with the demo
   connector off.
 
-## 31. Open items
+## 31. Open items: designed, not built
 
-Still planned or parked after 2.8.0, each described above:
+Everything in this list is **design, not built** on develop (2026-10-31); the plan row that builds it is named where one exists.
 
-- what-if **pricing** of amended or new trades over the scenarios through QLRisk, only when its API is declared stable, with the reprice
-  check, *Book via write-back…* and the QuantLib-Java alternative (V4, [section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294));
-- **intraday** recomputes from write-backs and feeds, the intraday layer and per-event impacts (V5, section 8.4);
-- the full 1 M × 50 benchmark on a real server, sharded (sharding built in 2.9.6; V6, [section 28](#28-sharding-across-drishtinet-as-built-296), [section 27.3](#273-the-tiered-store-measured-and-extrapolated-as-built-280));
-- the lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` +
-  ZSTD (open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built));
-- several scenario sets on one date and a stressed set `SVAR-250` (open question 6); age-weighted and filtered methods; 10-day VaR; ES
-  backtests; a bank's own hypothetical P&L table;
-- the batch's due time and completeness rule (open question 4); the load checks still not made ([section 20.3](#203-what-the-load-checks-as-built));
-- an optional *risk position* grouping for viewing; cubes and the overnight precomputation ([section 30](#30-the-design-record));
-- the common risk lake for every risk pack ([section 15.1](#151-where-they-live)); the scope words `GROUP:` and `NSET:` (parked).
+| Item | Status and where it is described |
+|---|---|
+| Sharding the stress set (today it is loaded whole by the member that answers) and stressed VaR in other reporting currencies | [section 18.8](#188-stressed-var), no row |
+| Stressed VaR fields in the BI model of the official records (`SVAR`, `SES` are published; the BI datasets do not read them yet) | [section 18.8](#188-stressed-var), no row |
+| **The VaR Playground** (1 to 500 positions of the VaR screen's scope in a grid with a tall explanation, and a workbook with live formulas equal to the engine to the cent) | 2.9.8 row 9; design and mock-ups in [VAR_PLAYGROUND.md](../architecture/VAR_PLAYGROUND.md) |
+| **The stress window selection tool** | 2.9.8 row 8 ([section 18.9](#189-choosing-the-stress-window-design-not-built-298-row-8)) |
+| **Backtesting for regulation** (the bank's actual and hypothetical P&L, 99% and 97.5%, zones and the multiplier, the chart) | 2.9.8 rows 3 and 4 ([section 18.11](#1811-backtesting-for-regulation-design-not-built-298-row-4)) |
+| **Delta-gamma-vega VaR on request** (sensitivities × factor shocks, beside full revaluation, by risk class and position, its playground tab) | parked ([section 18.12](#1812-delta-gamma-vega-var-on-request-design-not-built-parked)) |
+| **Statistical factor VaR on request** (drivers estimated from scenario P&L, labelled a statistical estimation, beside full VaR, its Factors tab) | parked ([section 18.13](#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked)) |
+| **Period statistics** (high, low, average, period end, 60-day and 12-week averages) | 2.9.8 row 5 ([section 18.10](#1810-period-statistics-design-not-built-298-row-5)) |
+| The regulatory report packs (MD&A table, Pillar 3 MR1 and MR2, FFIEC 102, §217.212, Volcker) | 2.9.8 (the framework and pilot pack), 2.9.10 (the reports) ([section 32](#32-regulatory-reporting-that-needs-var-canada-and-the-us)) |
+| Full 10-day revaluation (a second vector set, `HORIZON: 10D`, method `full`) | a slot designed in [section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297), no row |
+| VaR by risk type (`PNL_BY_RISK_CLASS` vectors and the diversification line) | gap G6 of [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md#7-gaps-and-what-to-build) |
+| What-if **pricing** of amended or new trades over the scenarios through QLRisk, only when its API is declared stable, with the reprice check, *Book via write-back…* and the QuantLib-Java alternative | V4, [section 8.4](#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294); QLRisk pre-deal is proposed for 2.9.14 |
+| Intraday recomputes from **write-backs** and per-event impacts (the intraday updates from files and Kafka are built, 2.9.4) | V5, section 8.4 |
+| The full 1 M × 50 benchmark on a real server; the 2.3M-position figures are extrapolated | V6, [section 27.3](#273-the-tiered-store-measured-and-extrapolated-as-built-280), [section 35](#35-measured-performance) |
+| The lake layout at bank scale: the sort by hierarchy, the partition by scenario set, file and row-group sizes, `BYTE_STREAM_SPLIT` + ZSTD | open question 7, [section 29.2](#292-the-layout-the-design-chose-and-what-is-built) |
+| Age-weighted and filtered methods; ES backtests (Acerbi–Székely) | [section 18.3](#183-decomposition-of-a-scope-into-parts), [section 18.4](#184-history-and-backtest) |
+| The batch's due time and completeness rule; the load checks still not made | open question 4, [section 20.3](#203-what-the-load-checks-as-built) |
+| An optional *risk position* grouping for viewing; cubes and the overnight precomputation | [section 30](#30-the-design-record); the market risk cube in [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) |
+| The common risk lake for every risk pack; the scope words `GROUP:` and `NSET:` | parked, [section 15.1](#151-where-they-live) |
+
+Built since this list was first written: stressed VaR (section 18.8), the compute-first test (the demo run on scenario PVs alone), 10-day
+VaR and the confidence pickers (section 18.6), the scenario matrix `SMAT` (section 3.9), intraday updates from files and Kafka (section
+8.4), sharding (section 28).
+
+## Part IV · Around the engine
+
+## 32. Regulatory reporting that needs VaR: Canada and the US
+
+The analysis, report by report, with every source and the gaps G1 to G15, is
+[REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md) (read 2026-10-30); it also covers what lies beyond VaR (FRTB's
+standardised approach, DRC, the P&L attribution test, risk-factor eligibility). This section is the VaR part of it, against what Drishti
+produces.
+
+**The regimes.** **Canada** runs FRTB (OSFI's CAR chapter 9, in force since 1 November 2023 for October year-ends); every bank computes
+the standardised approach and internal models need OSFI's approval, so VaR's regulatory role there is the internal-model backtests and the
+MR2 exception count (internal-model banks only) and, for every listed bank, the **annual report's trading VaR table**. The **US** runs
+Basel 2.5 (12 CFR 217 subpart F) wherever trading assets plus liabilities reach $1 billion or 10% of total assets: **10-day 99% VaR and
+stressed VaR**, each as max(latest, multiplier × average), the multiplier 3 to 4 from 1-day backtesting; the FRTB-style re-proposal of
+March 2026 is not final.
+
+| Report | Who | The VaR figures it needs | Drishti today |
+|---|---|---|---|
+| Annual report MD&A, trading VaR (Canada) | every listed bank | 1-day 99% VaR by risk type, diversification, total; year-end, average, high, low | 1-day 99% VaR of every node, diversification per node, every official figure kept 7 years: **built**; by risk type and the period statistics: **not built** (G6, G5) |
+| Pillar 3 MR2 and the internal-model tests (Canada) | internal-model banks only | backtesting exceptions against 1-day 99% VaR (bank-wide; desks at 99% and 97.5%), actual and hypothetical P&L | the backtest against the derived hypothetical P&L: **partly built** (section 7); the bank's P&L and regulatory backtesting: 2.9.8 |
+| Market risk rule, subpart F (US) | trading ≥ $1 billion or 10% | 10-day 99% VaR, 60-day average; stressed VaR weekly, 12-week average; multiplier from 1-day backtesting | 10-day VaR: **built** (√10 and the overlapping sum, section 18.6); stressed VaR: **B4**; averages and multiplier: 2.9.8 |
+| FFIEC 102 (US, public) | the same filers | VaR and stressed VaR, latest and average | the figures as above; the report pack: 2.9.10 |
+| §217.212 disclosures (US) | the same, with an exemption for subsidiaries disclosing at home | high, low, mean and period-end VaR and stressed VaR, by risk category; VaR against actual results | period statistics, risk categories and the P&L feed: 2.9.8 and G6 |
+| Volcker metrics (US) | significant trading ($20 billion, combined US operations) | 1-day 99% VaR per trading desk, with limits and usage | VaR per desk and VaR limits with their use: **built** (`var-limit`, section 15.15); the other metrics (P&L attribution, positions, volumes, a limit catalogue): not built (G8) |
+| FR Y-9C HC-R item 27 (US) | holding companies covered by the rule | market-risk RWA (capital × 12.5), not a VaR | depends on the capital figure above |
+
+**What Drishti contributes to every one of them** (built): the figures computed from trade-grain inputs for any node, legal entity or desk;
+the official end-of-day record of every node with its inputs' versions, its membership and its result versions, kept 7 years and
+recomputable ([section 19](#19-official-end-of-day-results)); the published table and BI's reports over it; the reporting currency
+(Canadian reports need CAD in `drishti.var.official.currencies`, whose default is USD only: G15). The bank still files; Drishti produces
+the figures and, from 2.9.8, the report definitions with maker-checker sign-off.
+
+## 33. Where VaR is shown: editions and lenses
+
+| Where | Status | What it shows of VaR |
+|---|---|---|
+| **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kinds `VRES` and `VWIF`; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
+| **Drishti Risk** (edition `risk`, risk managers) | built (2.9.6) | the same engine and commands (`VAR`, `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([EDITIONS.md](../admin/EDITIONS.md#7-drishti-risks-home-three-landings), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
+| **Drishti Trading** (edition `trading`, traders and desk heads) | built (2.9.7) | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/TRADING_LENS.md#44-the-new-trade-check-as-built)); no `SPV`, `FXS`, `SSET` or `VOFF` |
+| **Drishti Market** and **Drishti World** | built (2.9.7) | no VaR (`VAR` and `SMAT` off) |
+| A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md)) |
+| **Oversight**, **CRO** and **CIO** lenses; the **market risk cube** | design, not built | why VaR moved, breaches and escalation, the committee pack ([OVERSIGHT_LENS.md](../lenses/OVERSIGHT_LENS.md)); the CRO's VaR against risk appetite ([CRO_LENS.md](../lenses/CRO_LENS.md)); the CIO's view of whether the risk data behind VaR is on time and trustworthy: the 7am risk-ready time, official captures, the hot files' disk ([CIO_LENS.md](../lenses/CIO_LENS.md)); a pivot with correct non-additive VaR totals ([MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md)) |
+
+Under every edition the engine is the same: any scope, any currency, intraday, official records, the what-if, the API and the CLI. The
+lens gaps that concern VaR (stressed VaR on the landings, horizon and confidence there, backtesting on the bank's P&L, why it moved) are
+listed in [RISK_LENS.md section 5](../lenses/RISK_LENS.md#5-gaps-with-design-sketches) and
+[TRADING_LENS.md section 5](../lenses/TRADING_LENS.md#5-gaps-with-design-sketches).
+
+## 34. Configuration keys
+
+Every key is in the one configuration document, [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine) (generated and
+checked; also in the console under Help → Configuration); [section 12](#12-settings) of this guide explains each with its effect on
+the figures. By purpose:
+
+| Purpose | Keys |
+|---|---|
+| the measures | `drishti.var.confidence`, `drishti.var.es-confidence`, `drishti.var.confidences`, `drishti.var.es-confidences`, `drishti.var.ten-day-method`, `drishti.var.scenario-window`, `drishti.var.rank-rule`, `drishti.var.component-window`, `drishti.var.component-scale-to-var` |
+| stressed VaR | `drishti.var.stress.enabled`, `drishti.var.stress.id-prefix`, `drishti.var.stress.average-weeks` ([section 18.8](#188-stressed-var)) |
+| history and backtest | `drishti.var.history-days` |
+| memory, the hot file and its disk (the cache) | `drishti.var.tier.mode`, `drishti.var.tier.dir`, `drishti.var.tier.disk-dates`, `drishti.var.tier.max-disk-gb`, `drishti.var.tier.keep-on-shutdown`, `drishti.var.memory-budget-mb`, `drishti.var.hot-dates`, `drishti.var.threads`, `drishti.var.load-threads`, `drishti.var.view-cache-mb`, `drishti.memory.cache-share` |
+| reporting currencies | `drishti.var.currencies`, `drishti.var.currency-retention-dates` |
+| the official record | `drishti.var.official.enabled`, `drishti.var.official.format`, `drishti.var.official.root`, `drishti.var.official.currencies` |
+| intraday | `drishti.var.intraday.kafka.window`, `drishti.var.intraday.kafka.max-trades`, `drishti.var.version-check` |
+| the scenario matrix | `drishti.var.smat.max-days` |
+| sharding | the pack's `sharding:` block and `drishti.var.sharding.*` ([section 28](#28-sharding-across-drishtinet-as-built-296)) |
+| who sees what | `drishti.var.access` ([section 9](#9-who-sees-what-entitlements-and-audit)) |
+| positions | the market-risk pack's `positions:` rules ([section 4](#4-positions-derived-never-delivered)) |
+
+## 35. Measured performance
+
+The latest measurement is the 2.9.7 baseline, [BENCHMARK_2_9_7.md](../architecture/BENCHMARK_2_9_7.md) (Drill B row B1, develop at
+fa89c7e93, one workstation: 24 hardware threads, 61 GB; 200,000 positions × 509 scenarios on two dates, 1,500 portfolios); the store alone
+is [section 27](#27-sizes-performance-and-the-benchmark). In short:
+
+| Measure | Single server (`-Xmx8g`) | Three-node sharded cluster (`-Xmx4g` each, same machine) |
+|---|---|---|
+| a date's first open | 7.1 s | 16.4 s |
+| heap after GC, two dates open | 866 MB | 1,034 / 831 / 517 MB |
+| hot file a date | 557 MB | the same rows, split into 7 shards |
+| a VaR node, alone | 8 ms | |
+| the bank minus a desk; a 50,000-position basket, alone | 0.63 s; 0.45 s | |
+| throughput under load (50 to 200 users, half VaR, half trades) | about 30 requests a second, CPU-bound | 26 to 30 |
+| the bank's VaR | 12,658,051 (2026-09-30) | the same, bit-equal |
+
+**Where the time goes.** Under load most of the CPU and allocation is scope membership and the ranking of a scope's parts; a date's
+first open is mostly Parquet decoding. Both are optimised (scope membership and parts: [section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales));
+the after figures are the after-benchmark's (Drill B row B12). **Extrapolated, not measured**, to 2.3M
+positions: about 5.2 GB of heap for two dates, a 6.4 GB hot file a date, a VaR node still 8 ms
+([BENCHMARK_2_9_7.md section 9](../architecture/BENCHMARK_2_9_7.md#9-extrapolated-to-23m-positions)). The "after" figures are B12's.

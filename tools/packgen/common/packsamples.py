@@ -45,6 +45,7 @@ def part_mb(argv: list[str]) -> float:
 
 
 def line(doc: dict) -> str:
+    """One document as one compact JSON line (no trailing newline)."""
     return json.dumps(doc, ensure_ascii=False, separators=(",", ":"))
 
 
@@ -131,6 +132,7 @@ def write(samples_dir: Path, docs: dict[str, dict[str, dict]], catalog: list[dic
 
 
 def kind_files(samples_dir: Path, kind: str) -> list[Path]:
+    """The sample files of ``kind``: ``<kind>.jsonl``, else its parts ``<kind>.part-NNN.jsonl`` in order."""
     one = samples_dir / f"{kind}.jsonl"
     if one.is_file():
         return [one]

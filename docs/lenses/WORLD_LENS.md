@@ -397,33 +397,52 @@ the World landings themselves are not Sutras and cannot be embedded until a "hom
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
 section.
 
-| Order | Row | Why here | Size | Depends on |
-|---|---|---|---|---|
-| 1 | **WL2** G7 and G20 as groups | Removes lists from a script; a clean data fix | S | — |
-| 2 | **WL3** elections as date windows | Restores the mock-up's tile honestly | S | — |
-| 3 | **WL1** FX (ECB) and index levels | The two tiles the mock-up wanted | S | decision 1 |
-| 4 | **WL4** the change feed | Unlocks WL5, WL6, WL7 | M | — |
-| 5 | **WL5**, **WL6** since yesterday; GLEIF, sectors, IMF revisions | The "what changed" questions | S each | WL4 |
-| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 |
-| 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — |
-| 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — |
-| 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 |
-| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — |
+
+**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+
+| Order | Row | Why here | Size | Depends on | Release |
+|---|---|---|---|---|---|
+| 1 | **WL2** G7 and G20 as groups | Removes lists from a script; a clean data fix | S | — | unscheduled |
+| 2 | **WL3** elections as date windows | Restores the mock-up's tile honestly | S | — | unscheduled |
+| 3 | **WL1** FX (ECB) and index levels | The two tiles the mock-up wanted | S | decision 1 | unscheduled |
+| 4 | **WL4** the change feed | Unlocks WL5, WL6, WL7 | M | — | unscheduled |
+| 5 | **WL5**, **WL6** since yesterday; GLEIF, sectors, IMF revisions | The "what changed" questions | S each | WL4 | WL5 unscheduled; WL6 unscheduled |
+| 6 | **WL12** external-showing switch | Before any external demo | S | decision 2 | proposed 2.9.9 |
+| 7 | **WL10** coverage list; **WL9** news relevance | Personalises the desk | S; S to M | — | WL10 unscheduled; WL9 unscheduled |
+| 8 | **WL8** BI datasets; **WL11** freshness and schedule | Reports and operations | S each | — | WL8 unscheduled; WL11 unscheduled |
+| 9 | **WL7** fund holdings over quarters | Large downloads | M | WL4 | unscheduled |
+| 10 | **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)); its other gaps are WL1 to WL4 and WL6 | S | — | planned 2.9.8 |
 
 ---
 
 ## 9. Decisions for the product owner
 
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+
 1. **Index levels (WL1).** Add index tickers to the Yahoo snapshot, internal only (recommended), show SPY as a stand-in, or leave levels out.
+
+   **Decided (product owner, 2026-10-31):** add index tickers to the Yahoo snapshot, internal only.
 2. **External showing (WL12).** A switch that hides internal-only sources, or a separate build without them (`--no-imf`), before any client
    demo; either way the legal decision comes first.
+
+   **Decided (product owner, 2026-10-31):** yes: the external-showing switch that hides internal-only sources (WL12, proposed 2.9.9); the legal decision still comes first.
 3. **Where official FX lives (WL1).** A small World kind fed by the same parser (recommended: World stays independent of the bank's
    market data), or let World read the market-data pack's public documents.
+
+   **Decided (product owner, 2026-10-31):** a small World kind fed by the same parser; World stays independent of the bank's market data.
 4. **Emerging markets (WL2).** The World Bank income groups as the public stand-in (recommended), or the IMF's list, internal only.
+
+   **Decided (product owner, 2026-10-31):** the World Bank income groups as the public stand-in.
 5. **Change-feed retention (WL4).** How many table versions the public lakes keep (it decides how far back "what changed" can see).
+
+   **Decided (product owner, 2026-10-31):** retention follows the lake's own version retention (vacuum and snapshot expiry, section 5.4); the feed says how far back it can see.
 6. **Context in the bank's lenses.** A World context panel on the counterparty page in Risk (recommended, internal only), or keep World
    fully separate.
+
+   **Decided (product owner, 2026-10-31):** a World context panel on the counterparty page in Risk, internal only (RL10, unscheduled).
 7. **Fund quarters (WL7).** Keep each quarter's N-PORT (about 450 MB a quarter in the data folder), or newest only.
+
+   **Decided (product owner, 2026-10-31):** keep each quarter's N-PORT as a table version or dated partition (section 5.7's design).
 
 ---
 
@@ -462,6 +481,7 @@ row.
 | Mock-up | Chosen | Built | Partly built | Not built |
 |---|---|---:|---:|---:|
 | [World landings](#111-the-world-landings-world-landinghtml) (A World desk, B Explorer, C World map) | all three, 2026-10-29: A the default, B and C behind the landing switch | 12 | 4 | 3 |
+| [Lens menus (LX1)](#112-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 0 | 0 | 4 |
 
 ### 11.1 The World landings (`world-landing.html`)
 
@@ -511,6 +531,26 @@ mock-up drew no phone form.
 3. **Elections in the next 90 days** (W7; WL3).
 4. **G7, G20 and emerging markets as groups**, and the `ECG G7` chip (W11, W14; WL2).
 5. **What changed, counted**: revised forecasts, sector changes, new entities, parent changes (W18; WL4, WL6).
+
+### 11.2 The lens menus (LX1, `menus/A.html`)
+
+![The lens menus, option A: subject menus in the bar](mockups/menus/A.png)
+
+[Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
+[C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
+four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
+(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+
+**Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| X1 | Bar | `DRISHTI World`; the command line; menus **Views · Economies · Markets · Companies · BI · Help** | the edition's top menus by id, in order (proposed `menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | not built: today the top menus are Views, BI, Build, Admin, Help for every edition (LX1, replaces the menus part of W1) |
+| X2 | Economies menu | A country `ECON`; Indicators `MACRO`; IMF forecasts `FCST`; Regions `REGE` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X3 | Markets menu | News `NEWS`; Quotes `QUOTE`; Indices `IDX` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+| X4 | Companies menu | US equities `USEQ`; Filings `EDGAR`; Legal entities `LEIC`; Funds and ETFs `FUND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its items drawn from the edition's command words | click an item: its page or command | not built (LX1) |
+
+On a phone the subject menus fold into one menu named after the lens (option C's form).
 
 ---
 

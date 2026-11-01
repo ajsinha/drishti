@@ -37,13 +37,14 @@ class ComputeError(Exception):
     """A refusal in words, shown to the person who asked (no traceback, no internals)."""
 
 
-def register_cache(cache) -> Any:
+def register_cache(cache: Any) -> Any:
     """Registers an object with ``clear()`` (a dict, an lru_cache'd function) to be cleared between requests on a warm worker."""
     _CACHES.append(cache)
     return cache
 
 
 def clear_caches() -> None:
+    """Clears every registered cache (the worker calls it between requests)."""
     for c in _CACHES:
         clear = getattr(c, "cache_clear", None) or getattr(c, "clear", None)
         if clear is not None:
@@ -65,7 +66,8 @@ class Request:
     scratch: str
     chunk: dict | None = None
 
-    def param(self, name: str, default=None):
+    def param(self, name: str, default: Any = None) -> Any:
+        """The parameter ``name`` of the request, or ``default``."""
         return self.params.get(name, default)
 
 
@@ -78,9 +80,11 @@ class Inputs:
         self._open: list[arrow.Table] = []
 
     def names(self) -> list[str]:
+        """The inputs' names, sorted."""
         return sorted(self._files)
 
     def path(self, name: str) -> str:
+        """The Arrow file of input ``name``; a :class:`ComputeError` naming the inputs there are when it has none."""
         if name not in self._files:
             raise ComputeError(f"the request has no input '{name}' (inputs: {', '.join(self.names()) or 'none'})")
         return os.path.join(self._scratch, self._files[name])
@@ -91,12 +95,13 @@ class Inputs:
         self._open.append(t)
         return t
 
-    def arrow(self, name: str):
+    def arrow(self, name: str) -> Any:
         """The input as a ``pyarrow.Table``, memory-mapped (the environment must have pyarrow)."""
         import pyarrow as pa  # noqa: WPS433 (optional dependency)
         return pa.ipc.open_stream(pa.memory_map(self.path(name))).read_all()
 
     def close(self) -> None:
+        """Releases the tables :meth:`table` opened (the worker calls it after the request)."""
         for t in self._open:
             t.close()
         self._open.clear()
@@ -109,9 +114,11 @@ class Progress:
         self._send = send
 
     def partial(self, data: dict) -> None:
+        """Sends a partial result (JSON values) to the person waiting."""
         self._send(dict(data))
 
-    def fraction(self, done: int, of: int, **extra) -> None:
+    def fraction(self, done: int, of: int, **extra: Any) -> None:
+        """Says ``done`` of ``of`` steps are done, with anything ``extra`` (an estimate so far)."""
         self._send({"done": done, "of": of, **extra})
 
 
@@ -132,7 +139,9 @@ class Engine:
     version: str = "0"
 
     def compute(self, req: Request, inputs: Inputs, progress: Progress) -> Result:  # pragma: no cover - the contract
+        """Computes ``req.kind`` for ``req`` from ``inputs``, reporting through ``progress``; raise :class:`ComputeError` to refuse in words."""
         raise NotImplementedError
 
-    def incremental(self, req: Request, previous, events, inputs: Inputs):  # optional (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2)
+    def incremental(self, req: Request, previous: Result, events: list, inputs: Inputs) -> Result | None:  # optional (DATA_ARCHITECTURE.md › Reactive connectors, section 10.2)
+        """The ``previous`` answer updated from ``events``, or None to compute it again in full (the default)."""
         return None

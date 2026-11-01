@@ -192,6 +192,43 @@ final class VarOfficialStore {
         return h;
     }
 
+    /**
+     * The average of a node's official stressed VaR over the {@code weeks} weeks to {@code upTo} (VAR_GUIDE.md section 18.8: the US capital
+     * rule's 12-week average): the official dates in the period with a stressed VaR, their mean, and the official dates in it without one
+     * (named, never counted as zero). {@code average} is null when no record in the period has one.
+     */
+    Map<String, Object> stressAverage(String node, LocalDate upTo, int weeks) {
+        LocalDate from = upTo.minusWeeks(weeks).plusDays(1);
+        List<String> used = new ArrayList<>();
+        List<String> without = new ArrayList<>();
+        double sum = 0;
+        for (LocalDate d : dates(VarDate.USD).subSet(from, true, upTo, true)) {
+            Object n = index(d, VarDate.USD).map(m -> m.get("nodes")).orElse(null);
+            if (n instanceof Map<?, ?> nodes && nodes.get(node) instanceof Map<?, ?> f) {
+                double v = num(f.get("svar"));
+                if (Double.isFinite(v)) {
+                    used.add(d.toString());
+                    sum += v;
+                } else {
+                    without.add(d.toString());
+                }
+            }
+        }
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("weeks", weeks);
+        m.put("from", from.toString());
+        m.put("to", upTo.toString());
+        m.put("records", used.size());
+        m.put("average", used.isEmpty() ? null : sum / used.size());
+        m.put("dates", used);
+        m.put("withoutStressedVar", without);
+        m.put("note", used.isEmpty() ? "no official stressed VaR of this node in the " + weeks + " weeks to " + upTo
+                : "the mean of the official stressed VaR of " + used.size() + " business date" + (used.size() == 1 ? "" : "s") + " in the "
+                + weeks + " weeks to " + upTo + (without.isEmpty() ? "" : "; " + without.size() + " official date" + (without.size() == 1 ? "" : "s")
+                + " without one left out"));
+        return m;
+    }
+
     /** The capture ids of a node over its official dates, newest first (the captures list of a node scope). */
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> captures(String node) {

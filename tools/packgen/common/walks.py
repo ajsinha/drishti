@@ -62,6 +62,7 @@ def ir_curve(d: dict) -> dict:
 
 
 def fx_spot(d: dict) -> dict:
+    """The mid walks, bid and ask with it; the day's change and today's history point follow."""
     mid = d["mid"]
     places = 3 if mid >= 20 else 5          # the smallest step worth drawing
     return {"mid": {"step": max(sig1(mid * 0.0006), 10 ** -places), "places": 5, "with": [{"path": "bid", "places": 5}, {"path": "ask", "places": 5}]},
@@ -75,6 +76,7 @@ def _day_bar(price: str) -> list[dict]:
 
 
 def equity(d: dict) -> dict:
+    """The price walks; the day's change, today's history point, the market value and today's bar follow it."""
     px = d["price"]
     shares_fx = d["marketCap"] / px if px else 0           # shares outstanding x the currency's rate to USD
     return {"price": {"step": max(sig1(px * 0.0008), 0.01), "places": 2, "min": 0.01},
@@ -83,24 +85,28 @@ def equity(d: dict) -> dict:
 
 
 def equity_index(d: dict) -> dict:
+    """The level walks; the day's change and today's history point follow it."""
     lvl = d["level"]
     return {"level": {"step": max(sig1(lvl * 0.00015), 0.01), "places": 2, "min": 1},
             "derive": [_derive("change1d", "level / history.-2.close - 1", 5), _derive("history.-1.close", "$.level", 2)]}
 
 
 def commodity(d: dict) -> dict:
+    """The front price walks; today's bar follows it."""
     return {"front": {"step": max(sig1(d["front"] * 0.0007), 0.005), "places": 3, "min": 0.01},
             "derive": [_derive("ohlc.-1.close", "$.front", 2), _derive("ohlc.-1.high", "max(high, $.front)", 2),
                        _derive("ohlc.-1.low", "min(low, $.front)", 2), _derive("ohlc.-1.volume", "volume + abs(noise(volume * 0.0004))")]}
 
 
 def commodity_curve(d: dict) -> dict:
+    """The whole curve moves with the front (a little jitter per point); the front, the roll and the shape are recomputed."""
     return {"front": {"step": max(sig1(d["front"] * 0.0007), 0.005), "places": 3, "min": 0.01, "jitter": 0.2, "with": ["points.*.price"]},
             "derive": [_derive("front", "points.0.price", 3), _derive("roll", "(points.1.price / points.0.price - 1) * 100", 2),
                        _derive("shape", "points.1.price < points.0.price ? 'backwardation' : 'contango'")]}
 
 
 def credit_curve(d: dict) -> dict:
+    """The spreads move together with the 5-year spread; hazard rates, survival, the 5-year spread and the 1-year PD follow them."""
     s5 = d["spread5y"]
     derive = [_derive("points.*.spread", "max(spread, 0.5)", 1), _derive("points.*.hazard", "spread / 10000 / (1 - $.recovery)", 6),
               _derive("points.*.survival", "exp(-hazard * tenor(tenor))", 6)]
@@ -113,6 +119,7 @@ def credit_curve(d: dict) -> dict:
 
 
 def bond(d: dict) -> dict:
+    """The price walks; the yield and the Z-spread follow it through the modified duration."""
     px = d["price"]
     dur = d.get("modDuration") or 5
     z0 = d["zSpread"]
@@ -185,6 +192,7 @@ def netting_set(d: dict) -> dict:
 
 
 def book(d: dict) -> dict:
+    """Each listed top trade walks; the book's MTM is their sum plus the trades not listed, which stay put."""
     rows = d["topTrades"]
     hidden = d["mtm"] - sum(r["mtm"] for r in rows)
     walk: dict = dict(_rows_walk(rows, "topTrades"))
@@ -201,6 +209,7 @@ def key_risk_indicator(d: dict) -> dict:
 
 
 def card_account(d: dict) -> dict:
+    """The balance walks (never below zero); the utilisation follows it."""
     return {"balance": {"step": 12.0, "places": 2, "min": 0}, "derive": [_derive("utilisation", "$.balance / $.limit", 3)]}
 
 

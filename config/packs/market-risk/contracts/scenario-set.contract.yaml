@@ -17,13 +17,13 @@
 kind: scenario-set
 mnemonic: SSET
 pack: market-risk
-version: '1.0'
+version: '1.1'
 class: input
 status: active
 title: Scenario set
-description: 'The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i].'
+description: 'The historical scenario days of a business date, oldest first: index i of every P&L vector, scenario-PV vector and FX scenario of the date is SCENARIO_DATES[i]. A date has one normal set and may have one stress set (SET_TYPE STRESS, for stressed VaR: today''s trades revalued under the moves of a 12-month stress period, VAR_GUIDE.md section 18.8), whose rows carry its own SCENARIO_SET_ID in the same tables.'
 source: Synthetic sample data (tools/packgen/banking)
-grain: One row per scenario set per BUSINESS_DATE, keyed by SCENARIO_SET_ID.
+grain: One row per scenario set per BUSINESS_DATE (the normal set, and the stress set when the batch sends one), keyed by SCENARIO_SET_ID.
 key:
 - SCENARIO_SET_ID
 id-pattern:
@@ -54,7 +54,8 @@ fields:
 - name: SCENARIO_DATES
   type: date list
   presence: required
-  description: 'The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i.'
+  description: 'The historical days whose moves make the scenarios, oldest first: position i of every P&L vector is day i. A stress
+    set''s days are those of its stress period (2008-07-01 to 2009-06-30 in the demo).'
 - name: SCENARIO_COUNT
   type: integer
   presence: required
@@ -94,6 +95,18 @@ fields:
   presence: required
   description: 'A description of the set in words.'
   example: Historical simulation, 509 business days, equal weights
+- name: SET_TYPE
+  type: text
+  presence: optional
+  description: 'STRESS for the date''s stress scenario set (stressed VaR, VAR_GUIDE.md section 18.8); absent or HISTORICAL for the normal
+    set. A set that does not say is the stress set when its id starts with drishti.var.stress.id-prefix (HS-STRESS-).'
+  enum: [HISTORICAL, STRESS]
+  example: STRESS
+- name: SYNTHETIC
+  type: boolean
+  presence: optional
+  description: 'True when the set''s moves are synthetic rather than market history (the demo''s stress set): every stressed answer says so.'
+  example: true
 links: []
 validation:
 - rule: required
@@ -118,6 +131,11 @@ validation:
 - rule: range
   field: SCENARIO_COUNT
   min: 0
+- rule: enum
+  field: SET_TYPE
+  values:
+  - HISTORICAL
+  - STRESS
 notes: []
 review:
 - 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/market-risk/scenario-set/cob-2026-09-30.jsonl.gz)):

@@ -70,10 +70,21 @@ class VarTestDataPrecisionTest {
         return p;
     }
 
+    /** The documents of a folder of the normal scenario set (the stress set's files, {@code stress-...}, are read by {@link #stressLines}). */
     static void lines(Path folder, Consumer<JsonNode> each) throws IOException {
+        lines(folder, false, each);
+    }
+
+    /** The documents of a folder of the stress scenario set (VAR_GUIDE.md section 18.8: its own files, {@code stress-...}). */
+    static void stressLines(Path folder, Consumer<JsonNode> each) throws IOException {
+        lines(folder, true, each);
+    }
+
+    static void lines(Path folder, boolean stress, Consumer<JsonNode> each) throws IOException {
         List<Path> files;
         try (Stream<Path> s = Files.list(folder)) {
-            files = s.filter(f -> f.getFileName().toString().endsWith(".jsonl.gz")).sorted().toList();
+            files = s.filter(f -> f.getFileName().toString().endsWith(".jsonl.gz") && f.getFileName().toString().startsWith("stress-") == stress)
+                    .sorted().toList();
         }
         for (Path f : files) {
             try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(f)), StandardCharsets.UTF_8))) {
@@ -93,8 +104,13 @@ class VarTestDataPrecisionTest {
 
     /** The supplied scenario FX of the test data (fx-scenario), every currency against USD. */
     static ScenarioFx fx(Path data, int width) throws IOException {
+        return fx(data, width, false);
+    }
+
+    /** The same of the normal set, or ({@code stress}) of the stress set (VAR_GUIDE.md section 18.8). */
+    static ScenarioFx fx(Path data, int width, boolean stress) throws IOException {
         List<ScenarioFx.Rates> rates = new ArrayList<>();
-        lines(data.resolve("fx-scenario"), n -> {
+        lines(data.resolve("fx-scenario"), stress, n -> {
             double[] r = new double[n.path("RATES").size()];
             for (int j = 0; j < r.length; j++) {
                 r[j] = n.path("RATES").get(j).asDouble();
@@ -106,9 +122,14 @@ class VarTestDataPrecisionTest {
 
     @SuppressWarnings("unchecked")
     static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale) throws IOException {
-        ScenarioFx fx = fx(data, b.width());
+        fill(b, data, rules, scale, false);
+    }
+
+    /** The same from the normal set's files, or ({@code stress}) from the stress set's. */
+    static void fill(VarBook.Builder b, Path data, PositionRules rules, double scale, boolean stress) throws IOException {
+        ScenarioFx fx = fx(data, b.width(), stress);
         b.currencyRates(c -> fx.rates(c).orElse(null));                // the per-trade-currency totals (VAR_GUIDE.md section 15.11)
-        lines(data.resolve("scenario-pv"), n -> {
+        lines(data.resolve("scenario-pv"), stress, n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
                 return;
             }
@@ -125,7 +146,7 @@ class VarTestDataPrecisionTest {
             }
             add(b, n, rules, v, n.path("BASE_PV").asDouble() * r.base(), text(n, "CURRENCY"));
         });
-        lines(data.resolve("pnl-vector"), n -> {
+        lines(data.resolve("pnl-vector"), stress, n -> {
             if (!rules.live(text(n, "TRADE_STATUS"))) {
                 return;
             }

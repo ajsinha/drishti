@@ -525,6 +525,23 @@ async def audit(request: Request, subject: str = "", limit: int = 200):
     return render(request, "admin/audit.html", events=events, subject=subject)
 
 
+@router.get("/scopes")
+async def scopes(request: Request, owner: str = ""):
+    """Every person's saved VaR baskets (their ad-hoc scopes kept by name), filtered by owner, each with Delete and an optional reason
+    (docs/guides/VAR_GUIDE.md section 3.5). Deleting goes through /api/var/baskets/<owner>/<name>, which the server allows an administrator."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    rows, error = [], None
+    try:
+        rows = await request.app.state.backend.var("GET", "/admin/baskets", me, owner=owner.strip())
+    except BackendError as e:
+        if e.status in (401, 403):
+            return render(request, "admin/forbidden.html", status_code=e.status, error=e)
+        error = e                               # the VaR engine is off or unreachable: said on the page
+    return render(request, "admin/scopes.html", rows=rows, owner=owner, error=error, viewer=me.user)
+
+
 HEALTH_WAIT_SECONDS = 30.0
 
 
@@ -547,10 +564,10 @@ async def health(request: Request, partial: int = 0):
         connectors = {c.get("name") for c in items or [] if isinstance(c, dict)}
     except BackendError:
         connectors = set()
-    from core import external_lib, tmpdir
+    from core import channel_relay, external_lib, tmpdir
 
     return render(request, "admin/_health_body.html" if partial else "admin/health.html", h=data, connectors=connectors, console_tmp=tmpdir.info(), console_ext=external_lib.info(),
-                  watch=request.app.state.backend_watch.snapshot(),
+                  watch=request.app.state.backend_watch.snapshot(), relay=channel_relay.stats(),
                   console_cluster=(request.app.state.cluster.snapshot() if getattr(request.app.state, "cluster", None) is not None else None))
 
 

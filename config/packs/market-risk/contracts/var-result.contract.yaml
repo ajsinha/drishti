@@ -17,7 +17,7 @@
 kind: var-result
 mnemonic: VRES
 pack: market-risk
-version: '1.1'
+version: '1.2'
 class: computed
 status: active
 title: VaR of a scope (computed)
@@ -101,6 +101,13 @@ fields:
   description: 'How a 10-day figure is made (2.9.7): SQRT10 (the 1-day figures × √10) or SUM (each scenario the sum of 10 consecutive
     1-day scenario P&Ls, 509 scenarios giving 500 overlapping windows; then SCENARIOS is the windows and PNL the windows'' sums); empty at 1 day.'
   enum: [SQRT10, SUM]
+- name: SET
+  type: text
+  presence: optional
+  description: 'The scenario set of every figure (VAR_GUIDE.md section 18.8): NORMAL, or STRESSED with the parameter set=stressed (VRES
+    BANK~set=stressed): the scope on the date''s stress scenario set, in USD; a date without one is refused in words.'
+  enum: [NORMAL, STRESSED]
+  example: NORMAL
 - name: K
   type: integer
   presence: required
@@ -141,6 +148,18 @@ fields:
   presence: required
   description: The default parts (VAR_GUIDE.md section 11.3) with KEY, SCOPE, LABEL, KIND, STANDALONE_VAR, COMPONENT_VAR, COMPONENT_ES,
     INCREMENTAL_VAR, PCT.
+- name: CHILDREN_TOTAL
+  type: integer
+  presence: optional
+  description: 'How many default parts the scope has; SUM_STANDALONE and DIVERSIFICATION are over all of them.'
+- name: CHILDREN_TRUNCATED
+  type: boolean
+  presence: optional
+  description: 'True when CHILDREN lists only the largest drishti.var.max-parts parts by gross size (CHILDREN_NOTE says how many).'
+- name: CHILDREN_NOTE
+  type: text
+  presence: optional
+  description: 'When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567".'
 - name: WORST
   type: record list
   presence: required

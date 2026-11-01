@@ -89,6 +89,7 @@ public final class VarService implements AutoCloseable {
     private final VarOfficialStore official;
     private final AuditLog audit;
     private final ParallelSums sums;
+    private final VarPartTotals partTotals = new VarPartTotals();
     private final VarCalc calc;
     private final Map<LocalDate, CompletableFuture<VarDate>> dates = new ConcurrentHashMap<>();
     /** The dates in other reporting currencies, built from the USD date when first asked: {@code <date>|<CCY>|<version>}. */
@@ -248,6 +249,11 @@ public final class VarService implements AutoCloseable {
         return sums;
     }
 
+    /** The totals over every part of a scope, with each book's whole positions' standalone VaRs cached (2.9.7, B2). */
+    VarPartTotals partTotals() {
+        return partTotals;
+    }
+
     // ---------------------------------------------------------------------------------------------------------------------- dates
 
     /** The date a request reads: the one asked when it has vectors, else the newest on or before it. */
@@ -338,6 +344,18 @@ public final class VarService implements AutoCloseable {
             });
         }
         return Optional.empty();
+    }
+
+    /** True when the date is loaded here and answering (readiness, CD1). */
+    boolean open(LocalDate d) {
+        CompletableFuture<VarDate> f = dates.get(d);
+        return f != null && f.isDone() && !f.isCompletedExceptionally();
+    }
+
+    /** True when the date was refused at its data version now: the date before answers (readiness does not wait for it, CD1). */
+    boolean refusedNow(LocalDate d) {
+        String[] r = refused.get(d);
+        return r != null && r[0].equals(loader.version(d));
     }
 
     private VarDate load(LocalDate d, int depth) {
@@ -669,7 +687,7 @@ public final class VarService implements AutoCloseable {
         }
     }
 
-    /** The date's books in other currencies leave memory with it (or with a new version of its inputs). */
+    /** The date's books in other currencies, and its stress set's book, leave memory with it (or with a new version of its inputs). */
     private void retireCurrencies(LocalDate d) {
         layered.keySet().removeIf(k -> d == null || k.startsWith(d + "|"));        // they share the morning books retired below
         for (String k : new ArrayList<>(inCurrency.keySet())) {
@@ -677,6 +695,62 @@ public final class VarService implements AutoCloseable {
                 retire(inCurrency.remove(k), false);
             }
         }
+        for (LocalDate s : new ArrayList<>(stressDates.keySet())) {
+            if (d == null || s.equals(d)) {
+                retire(stressDates.remove(s), false);
+            }
+        }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------- stressed VaR
+
+    /** The dates' stress-set books (VAR_GUIDE.md section 18.8), loaded when stressed VaR is first asked of a date open here. */
+    private final Map<LocalDate, CompletableFuture<VarDate>> stressDates = new ConcurrentHashMap<>();
+
+    /**
+     * The stress scenario set's book of the date a request reads (the date asked, or the newest before it, as the normal set's): loaded
+     * when first asked and kept while the date is open (it leaves with it, and with a new version of its inputs). A date without a stress
+     * set is answered in words ({@code DRS-1001}), never with zeros; stressed VaR switched off: {@code 400}.
+     */
+    VarDate stressed(LocalDate asked) {
+        if (!props.stress().enabled()) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "stressed VaR is switched off on this server (drishti.var.stress.enabled)");
+        }
+        VarDate normal = live(asked);
+        LocalDate d = normal.date();
+        String expected = normal.version() + "|set=";
+        CompletableFuture<VarDate> f = stressDates.get(d);
+        if (f != null && f.isDone() && !f.isCompletedExceptionally() && !f.join().version().startsWith(expected)) {
+            if (stressDates.remove(d, f)) {
+                retire(f, false);                                      // built from older inputs: read again
+            }
+        }
+        f = stressDates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.loadStress(x), loads));
+        VarDate vd;
+        try {
+            vd = f.join();
+        } catch (java.util.concurrent.CompletionException e) {
+            stressDates.remove(d, f);                                  // asked again, tried again
+            if (e.getCause() instanceof DrishtiException de) {
+                throw de;
+            }
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, "the stress set of " + d + " could not be loaded: " + e.getCause());
+        }
+        for (LocalDate s : new ArrayList<>(stressDates.keySet())) {    // only the open dates keep their stress books
+            if (!dates.containsKey(s)) {
+                retire(stressDates.remove(s), false);
+            }
+        }
+        for (String w : normal.warnings()) {
+            vd = vd.warned(w);
+        }
+        return vd;
+    }
+
+    /** True when the date's stress set's book is loaded here. */
+    boolean stressedOpen(LocalDate d) {
+        CompletableFuture<VarDate> f = stressDates.get(d);
+        return f != null && f.isDone() && !f.isCompletedExceptionally();
     }
 
     /** Drops every loaded date (an administrator's reload). */
@@ -891,7 +965,13 @@ public final class VarService implements AutoCloseable {
      * and cached beside it, so a 10-day sum is always the windowed sum of the same summed 1-day vector.
      */
     Scoped scoped(Principal p, String scope, LocalDate asked, String ccy, com.ash.drishti.compute.var.VarLens lens) {
-        Scoped base = scoped1d(p, scope, asked, ccy);
+        boolean stressed = lens != null && lens.stressed();
+        if (stressed && !VarDate.USD.equals(VarCurrencies.normalise(ccy))) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "stressed VaR is answered in USD, the stress set's own currency (asked: "
+                    + VarCurrencies.normalise(ccy) + ")");
+        }
+        // stressed VaR (VAR_GUIDE.md section 18.8): the same scope on the date's stress-set book, then the same lens on its 1-day vector
+        Scoped base = stressed ? scoped1d(p, scope, stressed(asked)) : scoped1d(p, scope, asked, ccy);
         com.ash.drishti.compute.var.VarLens dflt = props.defaultLens();
         if (lens == null || lens.equals(dflt)) {
             return base.lens() == null ? new Scoped(base.date(), base.view(), base.res(), base.set(), base.hidden(), base.vector(), base.measures(),
@@ -911,8 +991,11 @@ public final class VarService implements AutoCloseable {
     }
 
     private Scoped scoped1d(Principal p, String scope, LocalDate asked, String ccy) {
+        return scoped1d(p, scope, date(asked, ccy));
+    }
+
+    private Scoped scoped1d(Principal p, String scope, VarDate d) {
         long t0 = System.nanoTime();
-        VarDate d = date(asked, ccy);
         VarAccess.View view = access.view(p, d);
         ScopeResolver.Resolution res;
         ScopeExpr parsed;

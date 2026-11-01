@@ -85,12 +85,16 @@ final class VarCaptures {
         c.put("esConfidence", head.get("esConfidence"));
         c.put("horizon", head.get("horizon"));
         c.put("method", head.get("method"));
+        c.put("set", head.get("set"));                                 // NORMAL or STRESSED (VAR_GUIDE.md section 18.8)
         c.put("lens", views.lens(s).label());
         c.put("limit", head.get("limit"));
         c.put("sumStandalone", head.get("sumStandalone"));
         c.put("diversification", head.get("diversification"));
         c.put("components", contrib.get("rows"));
         c.put("componentsBy", contrib.get("by"));
+        c.put("componentsTruncated", contrib.get("truncated"));           // max-parts lists the largest; the sums are over all of them
+        c.put("componentsTotal", contrib.get("total"));
+        c.put("componentsShown", contrib.get("shown"));
         c.put("worst", path.get("worst"));
         long[] vector = new long[s.vector().length];
         for (int j = 0; j < vector.length; j++) {
@@ -115,14 +119,37 @@ final class VarCaptures {
         out.put("es", c.get("es"));
         out.put("horizon", c.get("horizon"));
         out.put("method", c.get("method"));
+        out.put("set", c.get("set"));
         out.put("confidence", c.get("confidence"));
         out.put("memberCount", members.size());
         return out;
     }
 
-    /** A capture exactly as it was written (the full vector and members included). */
+    /**
+     * A capture exactly as it was written (the full vector and members included). A capture of a basket deleted since still opens with
+     * its own scope text and members, and says so: {@code deletedBaskets} lists the baskets it names that no longer exist, and
+     * {@code basketNotice} says it in words.
+     */
     Map<String, Object> get(Principal p, String id) {
-        return svc.saved().capture(p, id).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no capture " + id + " you may read"));
+        Map<String, Object> c = svc.saved().capture(p, id).orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no capture " + id + " you may read"));
+        List<String> gone = new ArrayList<>();
+        try {
+            Object text = c.get("canonical") != null ? c.get("canonical") : c.get("scope");
+            for (com.ash.drishti.compute.var.ScopeExpr.Ref r : com.ash.drishti.compute.var.ScopeExpr.parse(String.valueOf(text), svc.words().keySet()).refs()) {
+                if (r.word().equals("BASKET") && !svc.saved().basketExists(r.arg()) && !gone.contains(r.arg())) {
+                    gone.add(r.arg());
+                }
+            }
+        } catch (IllegalArgumentException e) {
+            // a scope the grammar of today no longer reads: the capture is shown as stored
+        }
+        if (!gone.isEmpty()) {
+            c.put("deletedBaskets", gone);
+            c.put("basketNotice", (gone.size() == 1 ? "the basket BASKET:" + gone.get(0) + " no longer exists" : "the baskets "
+                    + String.join(", ", gone.stream().map(g -> "BASKET:" + g).toList()) + " no longer exist")
+                    + ": this capture keeps the scope and members it was taken with");
+        }
+        return c;
     }
 
     List<Map<String, Object>> list(Principal p, String scope) {
@@ -219,7 +246,7 @@ final class VarCaptures {
         try {
             com.ash.drishti.compute.var.VarLens l = svc.props().lens(h == null ? null : String.valueOf(h), m == null ? null : String.valueOf(m),
                     c.get("confidence") instanceof Number n ? n.doubleValue() : null,
-                    c.get("esConfidence") instanceof Number n ? n.doubleValue() : null);
+                    c.get("esConfidence") instanceof Number n ? n.doubleValue() : null, c.get("set") == null ? null : String.valueOf(c.get("set")));
             return l.equals(svc.props().defaultLens()) ? null : l;
         } catch (IllegalArgumentException e) {
             return null;                                              // a confidence no longer offered: compared at the default
@@ -236,12 +263,20 @@ final class VarCaptures {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("currency", currency(c));
         for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "memberCount", "dataVersion",
-                "horizon", "method", "confidence", "esConfidence")) {
+                "horizon", "method", "set", "confidence", "esConfidence")) {
             if (c.containsKey(f)) {
                 m.put(f, c.get(f));
             }
         }
         return m;
+    }
+
+    /** "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". */
+    static String shownLine(Object shown, Object total, Object by) {
+        long t = total instanceof Number n ? n.longValue() : 0;
+        long sh = shown instanceof Number n ? n.longValue() : 0;
+        String what = "position".equals(by) ? "positions" : "trade".equals(by) ? "trades" : "parts";
+        return String.format(java.util.Locale.ROOT, "%,d of %,d %s shown (the largest by gross size); totals are over all %,d", sh, t, what, t);
     }
 
     private static double num(Object o) {
@@ -254,11 +289,14 @@ final class VarCaptures {
         Map<String, Object> c = get(p, id);
         StringBuilder sb = new StringBuilder();
         for (String f : List.of("id", "scope", "label", "businessDate", "capturedAt", "owner", "note", "var", "es", "dataVersion", "scenarioSet",
-                "horizon", "method", "confidence", "esConfidence")) {
+                "horizon", "method", "set", "confidence", "esConfidence")) {
             sb.append("# ").append(f).append(": ").append(String.valueOf(c.get(f)).replace('\n', ' ')).append('\n');
         }
         sb.append("# currency: ").append(currency(c)).append('\n');
         if ("components".equals(part)) {
+            if (Boolean.TRUE.equals(c.get("componentsTruncated"))) {
+                sb.append("# components: ").append(shownLine(c.get("componentsShown"), c.get("componentsTotal"), c.get("componentsBy"))).append('\n');
+            }
             sb.append("key,label,standalone_var,component_var,component_es,pct_of_var,incremental_var\n");
             for (Map<String, Object> r : (List<Map<String, Object>>) c.getOrDefault("components", List.of())) {
                 sb.append(cell(r.get("key"))).append(',').append(cell(r.get("label"))).append(',').append(r.get("standaloneVar")).append(',')

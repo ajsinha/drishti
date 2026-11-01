@@ -39,6 +39,10 @@ import java.util.concurrent.locks.ReentrantLock;
  * <p>In every reporting currency of {@code drishti.var.official.currencies} (2.9.4): USD always, first, and the only one published; each
  * other currency is captured the same way from the date's book in that currency, kept in the content store under its own records.
  *
+ * <p>When the date has a stress scenario set (VAR_GUIDE.md section 18.8), the USD record carries each node's <b>stressed VaR and ES</b>
+ * beside its VaR and ES ({@code svar}, {@code ses}; published as {@code SVAR}, {@code SES} and {@code STRESS_SET_ID}), at the same
+ * configured horizon and confidences; a date without one records none and says why ({@code stressNote}), never a zero.
+ *
  * <p>Idempotent: a date already captured from the same inputs is not captured again; a restated date (an input's version or batch
  * changed) is captured anew with the next result version, the earlier captures kept. One capture runs at a time (a lock, never
  * {@code synchronized}: it reads the lake and writes the content store and the published table).
@@ -208,12 +212,24 @@ final class VarOfficial implements AutoCloseable {
         }
         long version = prev == null ? 1 : ((Number) prev.get("resultVersion")).longValue() + 1;
         String computedAt = Instant.now().toString();
+        // stressed VaR beside VaR (VAR_GUIDE.md section 18.8): the USD record, when the date has a stress set
+        com.ash.drishti.compute.var.VarLens stressLens = null;
+        String stressSet = null;
+        String stressNote = null;
+        if (VarDate.USD.equals(ccy) && svc.props().stress().enabled()) {
+            try {
+                stressSet = svc.stressed(date).book().scenarioSet();
+                stressLens = svc.props().defaultLens().withStressed(true);
+            } catch (DrishtiException e) {
+                stressNote = e.getMessage();
+            }
+        }
         String membership = VarOfficialStore.membershipKey(date, version, ccy);
         store.putMembership(date, version, membership(d, version), ccy);
         Map<String, Object> nodes = new LinkedHashMap<>();
         List<Map<String, Object>> rows = new ArrayList<>();
         for (VarBook.Node n : ordered(b)) {
-            Map<String, Object> f = node(d, n, version, membership, computedAt, inputs);
+            Map<String, Object> f = node(d, n, version, membership, computedAt, inputs, stressLens);
             nodes.put(n.id(), f);
             rows.add(row(d, n, f, version, computedAt, inputs));
         }
@@ -229,6 +245,12 @@ final class VarOfficial implements AutoCloseable {
         index.put("confidence", svc.props().confidence());
         index.put("esConfidence", svc.props().esConfidence());
         index.put("inputs", inputs);
+        if (VarDate.USD.equals(ccy)) {
+            index.put("stressSet", stressSet);                         // the stress set the svar figures are of, or null and why
+            if (stressNote != null) {
+                index.put("stressNote", stressNote);
+            }
+        }
         index.put("positionRules", d.intake().rules());
         index.put("membership", membership);
         index.put("nodes", nodes);
@@ -293,7 +315,8 @@ final class VarOfficial implements AutoCloseable {
     }
 
     /** One node's official capture written, and its figures for the date's record. */
-    private Map<String, Object> node(VarDate d, VarBook.Node n, long version, String membership, String computedAt, Map<String, Object> inputs) {
+    private Map<String, Object> node(VarDate d, VarBook.Node n, long version, String membership, String computedAt, Map<String, Object> inputs,
+            com.ash.drishti.compute.var.VarLens stressLens) {
         LocalDate date = d.date();
         String ccy = d.currency();
         String scope = "NODE:" + n.id();
@@ -333,6 +356,12 @@ final class VarOfficial implements AutoCloseable {
             c.put(f, head.get(f));
         }
         c.put("hypoPnl", Math.round(hypo));
+        VarService.Scoped st = stressLens == null ? null : svc.scoped(null, scope, date, ccy, stressLens);
+        if (st != null) {                                              // stressed VaR and ES of the node, on the date's stress set
+            c.put("svar", st.measures().var());
+            c.put("ses", st.measures().es());
+            c.put("stressSet", st.date().book().scenarioSet());
+        }
         c.put("components", rows.subList(0, Math.min(rows.size(), COMPONENTS)));
         c.put("componentsBy", contrib.get("by"));
         c.put("componentCount", rows.size());
@@ -370,6 +399,11 @@ final class VarOfficial implements AutoCloseable {
         f.put("positions", ((Map<?, ?>) head.get("provenance")).get("positions"));
         f.put("exceptions250", bt.exceptions());
         f.put("light", bt.light());
+        if (st != null) {
+            f.put("svar", st.measures().var());
+            f.put("ses", st.measures().es());
+            f.put("stressSet", st.date().book().scenarioSet());
+        }
         return f;
     }
 
@@ -396,6 +430,9 @@ final class VarOfficial implements AutoCloseable {
         r.put("ES_CONFIDENCE", svc.props().esConfidence());
         r.put("HORIZON", "1D");                                         // 2.9.7: official records are 1-day; a 10-day one would say 10D
         r.put("METHOD", null);                                          // and its method (SQRT10, SUM; FULL for a full revaluation)
+        r.put("SVAR", f.get("svar"));                                   // stressed VaR and ES on the date's stress set (null: none)
+        r.put("SES", f.get("ses"));
+        r.put("STRESS_SET_ID", f.get("stressSet"));
         r.put("SCENARIO_SET_ID", d.book().scenarioSet());
         r.put("SCENARIO_WINDOW", (long) d.book().width());             // the newest N scenarios used (drishti.var.scenario-window)
         r.put("STANDALONE_SUM", f.get("sumStandalone"));

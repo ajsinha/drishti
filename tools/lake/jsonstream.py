@@ -20,7 +20,9 @@ A file is read as a stream of documents:
   text (never the whole file); a nested array inside a document stays inside that document;
 * JSON Lines: one document per line (blank lines skipped);
 * either of them gzip-compressed (``.gz``, or any file starting with the gzip magic bytes);
-* a folder: its ``*.json``, ``*.jsonl``, ``*.ndjson`` and ``*.gz`` files, sorted by name (``recursive`` for subfolders).
+* a folder: its ``*.json``, ``*.jsonl``, ``*.ndjson`` and ``*.gz`` files and its archives, sorted by name (``recursive`` for subfolders);
+* an archive (``.zip``, ``.tar.gz``, ``.tgz``, ``.tar``): its JSON Lines members in name order, by the archive rule of
+  docs/guides/DATA_GUIDE.md section 2.7 (``archives.py``); one table is read, so its folders, if any, must all be that table's.
 
 The format is decided from the content, not the name: the first character that is not blank is ``[`` for an array. A single JSON
 object spread over several lines (one document, pretty-printed) is read as one document.
@@ -36,10 +38,14 @@ import gzip
 import io
 import json
 import pathlib
+import sys
 from dataclasses import dataclass
 from typing import Iterator
 
-SUFFIXES = (".json", ".jsonl", ".ndjson", ".gz")
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+import archives  # noqa: E402
+
+SUFFIXES = (".json", ".jsonl", ".ndjson", ".gz", ".zip", ".tgz", ".tar")
 CHUNK = 1 << 20                     # characters read at a time
 _WS = " \t\r\n"
 
@@ -51,10 +57,16 @@ class Bad:
     reason: str
 
 
-def input_files(inputs, recursive: bool = False) -> list[pathlib.Path]:
+def _key(f) -> str:
+    return f"{f.archive.absolute()}!/{f.name}" if isinstance(f, archives.Member) else str(f.absolute())
+
+
+def input_files(inputs, recursive: bool = False, table: str | None = None, limits: archives.Limits | None = None) -> list:
     """The files named by ``inputs`` (files or folders), in one deterministic order: sorted by absolute path (as text), whatever the
-    order of the inputs, so "the last one read" means the same in the Python path and the Java loader (TOOLS.md section 4.13)."""
-    out: list[pathlib.Path] = []
+    order of the inputs, so "the last one read" means the same in the Python path and the Java loader (TOOLS.md section 4.13). An
+    archive gives its JSON Lines members (``archives.Member``, its members after the archive's path, in name order); every archive is
+    checked before any is read. ``table``: the one table being loaded, the only folder name an archive may hold."""
+    out: list = []
     for i in inputs if isinstance(inputs, (list, tuple)) else [inputs]:
         p = pathlib.Path(i)
         if p.is_dir():
@@ -64,7 +76,19 @@ def input_files(inputs, recursive: bool = False) -> list[pathlib.Path]:
             out.append(p)
         else:
             raise FileNotFoundError(str(p))
-    return sorted(out, key=lambda f: str(f.absolute()))
+    expanded: list = []
+    for f in out:
+        if not archives.is_archive(f.name):
+            expanded.append(f)
+            continue
+        plan = archives.plan(f, limits=limits)
+        if plan.folders:
+            if not table:
+                raise archives.ArchiveError(f"{f.name}: its folders ({', '.join(plan.datasets)}) are datasets, and this load writes one table: "
+                                            "load it with load_rows.py or the Java loader's datasets:, or an archive without folders")
+            plan.require([table])
+        expanded += plan.members()
+    return sorted(expanded, key=_key)
 
 
 class _Counted(io.RawIOBase):
@@ -86,12 +110,34 @@ class _Counted(io.RawIOBase):
         super().close()
 
 
+class _Closing(io.RawIOBase):
+    """A member's stream that closes its archive with it."""
+
+    def __init__(self, raw, archive):
+        self.raw, self.archive = raw, archive
+
+    def readable(self):
+        return True
+
+    def readinto(self, b):
+        return self.raw.readinto(b)
+
+    def close(self):
+        try:
+            self.raw.close()
+            self.archive.__exit__(None, None, None)
+        finally:
+            super().close()
+
+
 class Reader:
     """One file's documents. ``bytes_read`` and ``size`` (on disk) give the progress while iterating."""
 
-    def __init__(self, path: pathlib.Path, chunk: int = CHUNK):
-        self.path, self.chunk = pathlib.Path(path), chunk
-        self.size = self.path.stat().st_size
+    def __init__(self, path, chunk: int = CHUNK):
+        self.member = path if isinstance(path, archives.Member) else None
+        self.path, self.chunk = (path.archive if self.member else pathlib.Path(path)), chunk
+        self.size = self.member.size if self.member else self.path.stat().st_size
+        self.label = self.member.label if self.member else self.path.name
         self._counted: _Counted | None = None
 
     @property
@@ -99,6 +145,12 @@ class Reader:
         return self._counted.count if self._counted else 0
 
     def _open(self):
+        if self.member:                                          # an archive's member: the archive rule's reader, held to its caps
+            plan = archives.Plan(self.member.archive, {self.member.dataset: [self.member]}, False, size=self.path.stat().st_size,
+                                 kind=archives._kind(self.member.archive))
+            arch = archives.Archive(plan).__enter__()
+            self._counted = _Counted(_Closing(arch.open(self.member), arch))
+            return io.TextIOWrapper(io.BufferedReader(self._counted, 1 << 16), encoding="utf-8-sig", errors="strict", newline="")
         raw = open(self.path, "rb")
         gz = raw.read(2) == b"\x1f\x8b"
         raw.seek(0)
@@ -120,7 +172,7 @@ class Reader:
     # --------------------------------------------------------------------------------------------- JSON Lines
 
     def _lines(self, fh, head: str):
-        name = self.path.name
+        name = self.label
         pending = head
         n = 0
         while True:
@@ -147,7 +199,7 @@ class Reader:
 
     def _single(self, fh, start: str):
         text = start + fh.read()
-        where = f"{self.path.name}:1"
+        where = f"{self.label}:1"
         try:
             doc = json.loads(text)
         except ValueError as e:
@@ -159,7 +211,7 @@ class Reader:
 
     def _array(self, fh, head: str):
         dec = json.JSONDecoder()
-        name = self.path.name
+        name = self.label
         buf = head
         pos = buf.index("[") + 1
         eof = False

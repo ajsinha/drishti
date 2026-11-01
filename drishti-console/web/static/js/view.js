@@ -249,19 +249,45 @@
     if (!raw || !view) { return; }
     if (!raw.hidden) { raw.hidden = true; return; }
     raw.hidden = false;
-    var body = raw.querySelector('[data-raw-body]'), meta = raw.querySelector('[data-raw-meta]');
+    var body = raw.querySelector('[data-raw-body]'), meta = raw.querySelector('[data-raw-meta]'), text = raw.querySelector('[data-raw-text]');
     body.textContent = 'Loading…';
+    rawJson = null;
+    if (text) { text.textContent = ''; }
     fetch('/api/raw/' + encodeURIComponent(view.dataset.kind) + '/' + encodeURIComponent(view.dataset.id))
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d.provenance) { meta.textContent = d.provenance.source + ' · gen ' + d.provenance.generation; }
         var data = d.data !== undefined ? d.data : d;
+        rawJson = JSON.stringify(data, null, 2);              // what Copy copies and Raw shows: the record as the server sent it
+        if (text) { text.textContent = rawJson; }
         // the same structured tree as the Raw document viewer (raw-viewer.js); plain text where it is not loaded
         if (window.DrishtiRaw) { window.DrishtiRaw.render(body, data); } else { body.textContent = JSON.stringify(data, null, 2); }
       })
       .catch(function (e) { body.textContent = 'Could not load: ' + e; });
   }
   if (raw) { raw.querySelector('[data-raw-close]').addEventListener('click', toggleRaw); }
+  var rawJson = null;
+  if (raw) {   // F9: show the record as a tree or as plain JSON text, and copy it
+    raw.querySelectorAll('[data-raw-mode]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var asText = b.getAttribute('data-raw-mode') === 'text';
+        raw.querySelectorAll('[data-raw-mode]').forEach(function (o) { o.setAttribute('aria-pressed', String(o === b)); });
+        raw.querySelector('[data-raw-body]').hidden = asText;
+        var t = raw.querySelector('[data-raw-text]');
+        if (t) { t.hidden = !asText; }
+      });
+    });
+    var copyBtn = raw.querySelector('[data-raw-copy]'), copied = raw.querySelector('[data-raw-copied]');
+    if (copyBtn) {
+      copyBtn.addEventListener('click', function () {
+        if (rawJson === null) { return; }
+        var say = function (m) { if (copied) { copied.textContent = m; setTimeout(function () { copied.textContent = ''; }, 2000); } };
+        var copy = window.DrishtiRaw && window.DrishtiRaw.copyText ? window.DrishtiRaw.copyText(rawJson)
+          : (navigator.clipboard ? navigator.clipboard.writeText(rawJson) : Promise.reject(new Error('no clipboard')));
+        copy.then(function () { say('Copied'); }, function () { say('Could not copy'); });
+      });
+    }
+  }
   var rawFull = raw && raw.querySelector('[data-raw-full]');
   if (rawFull) {   // F9's drawer opens the full viewer: search, copy, download
     rawFull.addEventListener('click', function () {

@@ -4189,6 +4189,8 @@ If you only want to run Drishti, read [GETTING_STARTED.md](GETTING_STARTED.md); 
 [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm). For the design and its reasons, read [ARCHITECTURE.md](../architecture/ARCHITECTURE.md), the BI model
 architecture [BI_DESIGN.md section 14](../architecture/BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6) and the [decision records](../architecture/adr/README.md).
 
+The API references are at **Help → Developer**, generated from the code: the Javadoc of the [plugin and connector SPI](/help/reference/latest/java/drishti-api/index.html) and the [shard machinery](/help/reference/latest/java/drishti-compute/index.html) with [`ShardedMeasure`](/help/reference/latest/java/drishti-server/com/ash/drishti/server/shard/ShardedMeasure.html), and the Python references of the [compute worker SDK](/help/reference/latest/python/drishti_compute/engine.html), [BI Python items](/help/reference/latest/python/core/python_items.html), [`drishti.py`](/help/reference/latest/python/drishti.html) and [`drishti_client`](/help/reference/latest/python/drishti_client.html), the pack generator helpers ([`readme`](/help/reference/latest/python/readme.html), [`packsamples`](/help/reference/latest/python/packsamples.html), [`upper`](/help/reference/latest/python/upper.html), [`walks`](/help/reference/latest/python/walks.html)) and the test-data helpers ([`samplegen`](/help/reference/latest/python/samplegen/dates.html)). What you add to these surfaces is documented as you write it: the drill fails on a public Java member without a comment, a broken `{@link}`, or a public Python function without a docstring and type hints (`python3 tools/api_docs.py check`; [Tools](TOOLS.md#api-references)).
+
 ---
 
 ### 1. The repository
@@ -4529,11 +4531,20 @@ refused, with the files that are not documentation listed.
      worker processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a `spawn`
      pool.) `tools/lake/test_build.py` is not in the list: run it by hand
      (`cd tools/lake && ../../drishti-console/.venv/bin/python -m unittest test_build`).
-5. Pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to `develop`. It prints
+5. Checks that the tests left the repository's `config/` folder as they found it: a file under `config/` (untracked or git-ignored,
+   connector files included) that was not there before the tests fails the drill, with its name. Every test writes connector files,
+   packs and settings to its own scratch folder (`@TempDir`, pytest's `tmp_path`, `--connectors-dir`, `DRISHTI_CONNECTORS_DIR`).
+   The same for the data folder (`DRISHTI_DATA_DIR`, else `data/`): every file under it (name, time and size) is listed before the
+   tests, and one added or changed during them fails the drill with its name. Not compared: the drill's own logs (`drill/`),
+   Maven's temp folder (`tmp/maven`), the committed test data (`testdata/`) and the local cluster's other nodes (`stack/`). The
+   `sutra` command line writes nothing there either: it runs with a scratch data folder of its own. When a server is running with
+   the repository as its working folder (your own stack), it writes to `data/` while the tests run, so the drill then lists the
+   changed files as a warning instead of failing: it cannot tell the server's files from a test's.
+6. Pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to `develop`. It prints
    `drilled (full): <the last commit>`.
 
 **Docs mode** runs the licence check, the documentation console tests (`test_docs_*.py`, `test_help*.py`, `test_guide_images.py`,
-`test_examples.py`) and the Python tool tests, concurrently, then the same push and merge. No Java build, no browser tests.
+`test_examples.py`) and the Python tool tests, concurrently, then the same `config/` and data folder checks, push and merge. No Java build, no browser tests.
 
 The drill removes its own temporary files on exit. The console suite needs `pytest-xdist` (in `requirements-test.txt`). The inotify
 watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode: that is the

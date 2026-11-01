@@ -15,8 +15,8 @@
 -->
 # Phone display: what goes to a phone, configured
 
-**Status: design, not built (2.9.7 candidate, product owner 2026-10-30).** No code yet. The decisions for the product owner are in
-[section 11](#11-decisions-for-the-product-owner).
+**Status: design, not built; decided (product owner, 2026-10-31); the build is proposed for 2.9.9 (oversight and mobile).** Designed in
+2.9.7; no code yet. The decisions, all taken as recommended, are in [section 11](#11-decisions-for-the-product-owner).
 
 **The request (product owner):** "Let us see if mobile display can be optimized. Not all panels need to go to mobile; it makes the
 display very dense and hard to handle. Propose a configurable design which allows must-have displays to go to mobile so things load
@@ -235,9 +235,13 @@ Mock-ups first: two or three phone mock-ups of one heavy page (the netting set) 
 
 ## 11. Decisions for the product owner
 
-1. **The four tiers** (must, glance, more, desk), or three (drop desk and treat it as more)?
-2. **The kind defaults** in section 4: tables glance and charts glance, or charts more by default?
-3. **Who may cap:** site and edition caps (`max:`) as proposed, or Sutra authors only?
-4. **Person pins** in the first build, or later?
-5. **Tablet** as proposed (desk panels behind *More on this page*), or tablet treated as desktop?
-6. **Release:** in 2.9.7, or with the client-side renderer (which renders the same ViewModel elsewhere and benefits from the same tiers)?
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations").
+
+| # | Question | Decided (product owner, 2026-10-31) |
+|---|---|---|
+| 1 | **The four tiers** (must, glance, more, desk), or three (drop desk and treat it as more)? | four tiers: must, glance, more, desk |
+| 2 | **The kind defaults** in section 4: tables glance and charts glance, or charts more by default? | charts glance (as tables) |
+| 3 | **Who may cap:** site and edition caps (`max:`) as proposed, or Sutra authors only? | yes: site and edition caps (`max:`) as proposed |
+| 4 | **Person pins** in the first build, or later? | later, not in the first build |
+| 5 | **Tablet** as proposed (desk panels behind *More on this page*), or tablet treated as desktop? | tablets as proposed |
+| 6 | **Release:** in 2.9.7, or with the client-side renderer? | designed in 2.9.7; first placed in 2.9.8, then the build moved to **2.9.9** (oversight and mobile) by the themed release plan |

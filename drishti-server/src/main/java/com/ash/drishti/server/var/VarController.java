@@ -54,7 +54,8 @@ import org.springframework.web.bind.annotation.RestController;
  *   POST /api/v1/var/what-if {scope, items}             a pre-deal what-if: copies of booked trades scaled, before and after (Python)
  *   GET  /api/v1/var/tree?hierarchy=MGMT                 every node with its figures; the stored portfolios
  *   GET  /api/v1/var/status                              what is loaded, the settings
- *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}
+ *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}, DELETE /api/v1/var/baskets/{name} (your own)
+ *   GET  /api/v1/var/admin/baskets?owner=                every person's baskets (administrators; they may delete any)
  *   POST /api/v1/var/captures {scope, note, ccy}; GET /api/v1/var/captures?scope=; GET /api/v1/var/captures/{id}[/csv]; GET /api/v1/var/compare?a=&amp;b=
  *   GET  /api/v1/var/official?asOf=&amp;ccy=               a date's official end-of-day record; POST runs it (administrators)
  * </pre>
@@ -62,7 +63,9 @@ import org.springframework.web.bind.annotation.RestController;
  * <p>The answers of a scope (headline, path, history, contributions, currencies) and the tree take a lens (2.9.7, VAR_GUIDE.md section
  * 18.6): {@code horizon} ({@code 1d}, the default, or {@code 10d}), {@code method} ({@code sqrt10} or {@code sum}; 10-day only, none: the
  * setting {@code drishti.var.ten-day-method}), {@code confidence} and {@code esConfidence} (from {@code drishti.var.confidences} and
- * {@code es-confidences}, as fractions or percentages); every answer names them ({@code lens}). Official records stay 1-day.
+ * {@code es-confidences}, as fractions or percentages); every answer names them ({@code lens}). Official records stay 1-day. A lens may
+ * also name the scenario set, {@code set=stressed} (VAR_GUIDE.md section 18.8): the scope on the date's stress scenario set, in USD; a date
+ * without one answers {@code 404} in words.
  *
  * <p>Every answer of a scope, the tree, the hints, a capture, the what-if ({@code "ccy"} in its body) and the official record take a
  * reporting currency, {@code ccy=EUR} (VAR_GUIDE.md section 15.10; none: USD), and say it in {@code currency}: the vectors are converted
@@ -78,14 +81,18 @@ public class VarController {
     private final VarOfficial official;
     private final VarWhatIf whatIf;
     private final Entitlements entitlements;
+    private final VarBasketDelete baskets;
 
-    VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements) {
+    VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxService> inbox,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxHub> hub) {
         this.svc = svc;
         this.official = official;
         this.views = views;
         this.captures = new VarCaptures(svc, views);
         this.whatIf = new VarWhatIf(svc);
         this.entitlements = entitlements;
+        this.baskets = new VarBasketDelete(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
     }
 
     private static LocalDate date(AsOf asOf) {
@@ -102,12 +109,22 @@ public class VarController {
     /**
      * The lens a request asks for (2.9.7): null when it names none (the default lens); a 400 in words when it is not offered.
      */
-    private com.ash.drishti.compute.var.VarLens lens(String horizon, String method, Double confidence, Double esConfidence) {
-        if (horizon == null && method == null && confidence == null && esConfidence == null) {
+    private com.ash.drishti.compute.var.VarLens lens(String horizon, String method, Double confidence, Double esConfidence, String set) {
+        if (horizon == null && method == null && confidence == null && esConfidence == null && set == null) {
             return null;
         }
         try {
-            return svc.props().lens(horizon, method, confidence, esConfidence);
+            return svc.props().lens(horizon, method, confidence, esConfidence, set);
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    /** A set's word checked ({@code normal} or {@code stressed}), a 400 in words otherwise. */
+    private static String set(String set) {
+        try {
+            VarProperties.stressed(set);
+            return set;
         } catch (IllegalArgumentException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
         }
@@ -131,10 +148,14 @@ public class VarController {
     public Map<String, Object> headline(@RequestParam String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) String window, @RequestParam(required = false) Double confidence,
             @RequestParam(name = "es-confidence", required = false) Double esConfidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
-            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        if (window == null && esConfidence == null && (offered(confidence) || horizon != null || method != null || esq != null)) {
-            return views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
+        if (set != null && VarProperties.stressed(set(set)) && (window != null || esConfidence != null)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "window and es-confidence recompute the normal set's VaR; stressed VaR takes "
+                    + "confidence and esConfidence from the offered lists");
+        }
+        if (window == null && esConfidence == null && (offered(confidence) || horizon != null || method != null || esq != null || set != null)) {
+            return views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
         }
         Map<String, Object> h = views.headline(p, scope(scope), date(asOf), ccy);
         try {
@@ -150,25 +171,25 @@ public class VarController {
     @GetMapping("/scopes/{scope}")
     public Map<String, Object> headlinePath(@PathVariable String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
-            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
+        return views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
     }
 
     @GetMapping("/scope/path")
     public Map<String, Object> path(@RequestParam String scope, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int size,
             @RequestParam(required = false) String ccy, @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
-            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq));
+        return views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set));
     }
 
     @GetMapping("/scope/history")
     public Map<String, Object> history(@RequestParam String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
-            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.history(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
+        return views.history(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
     }
 
     /**
@@ -179,11 +200,11 @@ public class VarController {
     public ResponseEntity<Object> contributions(@RequestParam String scope, @RequestParam(required = false) String by,
             @RequestParam(required = false) String scenario, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
-            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p,
             @org.springframework.web.bind.annotation.RequestHeader(value = org.springframework.http.HttpHeaders.ACCEPT, required = false) String accept) {
         return ArrowAnswers.negotiate(accept, views.contributions(p, scope(scope), date(asOf), by, scenario, ccy,
-                lens(horizon, method, confidence, esq)), "records", "rows");
+                lens(horizon, method, confidence, esq, set)), "records", "rows");
     }
 
     /**
@@ -193,9 +214,9 @@ public class VarController {
     @GetMapping("/scope/currencies")
     public Map<String, Object> inCurrencies(@RequestParam String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
-            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.inCurrencies(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq));
+        return views.inCurrencies(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
     }
 
     /** The reporting currencies a page offers: the listed ones, and every currency with scenario FX on the date ("More…"). */
@@ -236,9 +257,9 @@ public class VarController {
     @GetMapping("/tree")
     public Map<String, Object> tree(@RequestParam(required = false) String hierarchy, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
-            @RequestParam(name = "esConfidence", required = false) Double esq, AsOf asOf,
+            @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq));
+        return views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq, set));
     }
 
     @GetMapping("/status")
@@ -362,13 +383,35 @@ public class VarController {
                 .orElseThrow(() -> new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no basket " + owner + "/" + name + " you may read"));
     }
 
+    /**
+     * Deletes a basket: its owner deletes their own, an administrator anyone's (VAR_GUIDE.md section 3.5). Someone else's basket is
+     * {@code 404} to anyone else, as if it did not exist. {@code reason} (optional, query or body) goes into the audit entry and, when an
+     * administrator deletes it, into the owner's inbox; {@code version} (optional) is the version the asker saw: a basket changed since
+     * is {@code 409}. Captures that used it keep their scope and members and still open.
+     */
     @DeleteMapping("/baskets/{owner}/{name}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteBasket(@PathVariable String owner, @PathVariable String name, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        if (!owner.equals(com.ash.drishti.identity.content.ContentDocs.name(p.user())) || !svc.saved().deleteBasket(p, name)) {
-            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no basket " + owner + "/" + name + " of yours");
-        }
-        svc.audit(p.user(), "var-basket-delete", owner + "/" + name, "deleted by its owner");
+    public void deleteBasket(@PathVariable String owner, @PathVariable String name, @RequestParam(required = false) String reason,
+            @RequestParam(required = false) Integer version, @RequestBody(required = false) Map<String, Object> body,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        baskets.delete(p, owner, name, reason != null ? reason : body == null ? null : str(body.get("reason")),
+                version != null ? version : body == null || num(body.get("version")) == null ? null : num(body.get("version")).intValue());
+    }
+
+    /** Deletes one of the caller's own baskets by its name (the CLI's {@code var basket-delete NAME}). */
+    @DeleteMapping("/baskets/{name}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteOwnBasket(@PathVariable String name, @RequestParam(required = false) String reason,
+            @RequestParam(required = false) Integer version, @RequestBody(required = false) Map<String, Object> body,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        deleteBasket(com.ash.drishti.identity.content.ContentDocs.name(p.user()), name, reason, version, body, p);
+    }
+
+    /** Every person's baskets, administrators only: owner, name, scope, shared with, created, updated, size; {@code owner} filters. */
+    @GetMapping("/admin/baskets")
+    public List<Map<String, Object>> allBaskets(@RequestParam(required = false) String owner, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        return svc.saved().allBaskets(owner);
     }
 
     // ------------------------------------------------------------------------------------------------------------------- captures
@@ -380,7 +423,7 @@ public class VarController {
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         Object c = body.get("ccy") != null ? body.get("ccy") : ccy;
         com.ash.drishti.compute.var.VarLens l = lens(str(body.get("horizon")), str(body.get("method")), num(body.get("confidence")),
-                num(body.get("esConfidence")));
+                num(body.get("esConfidence")), str(body.get("set")));
         return captures.capture(p, scope((String) body.get("scope")), date(asOf), body.get("note") == null ? null : String.valueOf(body.get("note")),
                 c == null ? null : String.valueOf(c), l);
     }

@@ -26,10 +26,12 @@ public interface ArrowScan extends AutoCloseable {
     /** The next batch, or null when there are no more. */
     ColumnBatch next() throws Exception;
 
+    /** What the caller should show once the scan is done (a day with unreadable lines); empty by default. */
     default List<String> warnings() {
         return List.of();
     }
 
+    /** Releases what the scan holds (files, connections); nothing by default. */
     @Override
     default void close() {
     }

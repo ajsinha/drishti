@@ -22,7 +22,8 @@
    Ad-hoc scopes and baskets are one thing: "Construct your basket" (var-basket.js), a strip at the top of this page whenever it
    shows an ad-hoc scope or a basket (or the tray holds parts): hints as you type, + / − chips, a rule, "+ basket" on every row of the
    tree and the contributions, the selection's VaR live, a pre-deal what-if, Save (a basket, private or shared read-only) and Open.
-   Opening a basket loads its parts back into the tray. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
+   Opening a basket loads its parts back into the tray; "Delete" on a saved basket of yours (on every one for an administrator) asks in
+   a dialog (scope-delete.js), then refreshes the list and says so. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
    another capture or with now, and exports as CSV.
 
    The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
@@ -46,9 +47,12 @@
   function storedCcy() { try { return sessionStorage.getItem(CCY_KEY) || ""; } catch (e) { return ""; } }
   var S = { scope: root.dataset.scope || "BANK", hierarchy: root.dataset.hierarchy || "MGMT", tab: "path", by: "child", page: 0,
             asOf: params.get("asOf") || "", tree: null, expanded: {}, children: {}, head: null, seq: 0, user: root.dataset.user || "",
+            admin: root.dataset.admin === "true",            // an administrator: Delete on every basket listed (the server checks again)
             ccy: (root.dataset.ccy || params.get("ccy") || storedCcy() || "USD").toUpperCase(),
             // the lens (2.9.7): "" is the default (1-day; the setting's 10-day method; the configured confidences)
-            h: root.dataset.h || "", m: root.dataset.m || "", q: root.dataset.q || "", esq: root.dataset.esq || "", lensStatus: null };
+            h: root.dataset.h || "", m: root.dataset.m || "", q: root.dataset.q || "", esq: root.dataset.esq || "", lensStatus: null,
+            // Normal or Stressed (VAR_GUIDE.md section 18.8): "" the date's own scenarios, "stressed" its stress scenario set (in USD)
+            set: root.dataset.set === "stressed" ? "stressed" : "" };
   if (S.h !== "10d") { S.h = ""; S.m = ""; }
   var B = window.VarBasket || null;
   var cache = new Map();
@@ -86,6 +90,7 @@
     if (S.h === "10d") { o.horizon = "10d"; if (S.m) o.method = S.m; }
     if (S.q) o.confidence = S.q;
     if (S.esq) o.esConfidence = S.esq;
+    if (S.set === "stressed") o.set = "stressed";
     return o;
   }
 
@@ -94,7 +99,8 @@
     Object.keys(q || {}).forEach(function (k) { if (q[k] !== undefined && q[k] !== null && q[k] !== "") p.set(k, q[k]); });
     if (LENS_PATHS[path]) { var lp = lensParams(); Object.keys(lp).forEach(function (k) { if (!p.has(k)) p.set(k, lp[k]); }); }
     if (S.asOf) p.set("asOf", S.asOf);
-    if (S.ccy && S.ccy !== "USD" && !p.has("ccy")) p.set("ccy", S.ccy);
+    // stressed VaR is in USD, the stress set's own currency: the page's currency is not sent with it
+    if (S.ccy && S.ccy !== "USD" && !p.has("ccy") && !(S.set === "stressed" && LENS_PATHS[path])) p.set("ccy", S.ccy);
     var key = path + "?" + p.toString();
     if (!fresh && cache.has(key)) return cache.get(key);
     var table = tableOf(path, q);
@@ -167,7 +173,7 @@
   }
   /** The lens as the command says it (2.9.7): " 10D SUM 97.5 ES 95"; nothing for the default. */
   function lensWords() {
-    var w = "";
+    var w = S.set === "stressed" ? " SVAR" : "";
     if (S.h === "10d") w += " 10D" + (S.m === "sum" ? " SUM" : S.m === "sqrt10" ? " SQRT" : "");
     if (S.q) w += " " + pctWord(S.q);
     if (S.esq) w += " ES " + pctWord(S.esq);
@@ -176,7 +182,7 @@
   function pctWord(f) { return String(Math.round(Number(f) * 10000) / 100); }
   /** The link's lens: h, m, q, esq (the default ones left out). */
   function lensLink(u) {
-    [["h", S.h], ["m", S.h === "10d" ? S.m : ""], ["q", S.q], ["esq", S.esq]].forEach(function (x) {
+    [["h", S.h], ["m", S.h === "10d" ? S.m : ""], ["q", S.q], ["esq", S.esq], ["set", S.set]].forEach(function (x) {
       if (x[1]) u.searchParams.set(x[0], x[1]); else u.searchParams.delete(x[0]);
     });
     return u;
@@ -294,11 +300,11 @@
     $("[data-vx-var-legend]").textContent = "VaR " + conf + "% (" + ordinal(d.k) + " worst)";
     $("[data-vx-es-legend]").textContent = "ES " + esc + "% (mean of worst " + d.esCount + ")";
     var bt = d.backtest || {}, u = d.limitUse, cur = d.currency || "USD";
-    var days = ln.horizon === "10D" ? "10 days" : "1 day";
+    var days = ln.horizon === "10D" ? "10 days" : "1 day", stressed = ln.set === "STRESSED", avg = d.stressAverage || {};
     var tiles = [
-      ["VaR " + conf + "% · " + days + " · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute"
+      [(stressed ? "Stressed VaR " : "VaR ") + conf + "% · " + days + " · " + cur, d.empty ? "—" : C.money(d["var"]), d.empty ? "no trades: nothing to compute"
         : sq ? "1-day × √10 (3.162) · " + ordinal(d.k) + " worst of " + d.scenarios : ordinal(d.k) + " worst of " + d.scenarios + (sum ? " overlapping windows" : ""), null],
-      ["ES " + esc + "% · " + (ln.horizon === "10D" ? "10 days · " : "") + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades"
+      [(stressed ? "Stressed ES " : "ES ") + esc + "% · " + (ln.horizon === "10D" ? "10 days · " : "") + cur, d.empty ? "—" : C.money(d.es), d.empty ? "no trades"
         : sq ? "1-day ES × √10" : "mean of worst " + d.esCount + (sum ? " windows" : ""), null],
       ["Sum of standalone VaR", d.sumStandalone === null ? "—" : C.money(d.sumStandalone), d.childKind ? d.children + " " + d.childKind + (d.children === 1 ? "" : "s") : (d.children ? d.children + " parts" : "no parts"), null],
       ["Diversification", d.diversification === null ? "—" : "−" + C.money(d.diversification),
@@ -306,7 +312,10 @@
       d.limitComparable === false
         ? ["Limit utilisation", "—", d.limitNote || "limit not comparable", "nc"]
         : ["Limit utilisation", u === null || u === undefined ? "—" : (u * 100).toFixed(0) + "%", d.limit ? "limit " + C.money(d.limit) + (cur !== "USD" ? " " + cur + " (set in USD, at today's rate)" : "") : "no limit set", u === null || u === undefined ? null : utilClass(u)],
-      bt.applicable === false
+      stressed
+        ? ["Stressed VaR · " + (avg.weeks || 12) + "-week average", avg.average === null || avg.average === undefined ? "—" : C.money(avg.average),
+           avg.records ? "mean of " + avg.records + " official record" + (avg.records === 1 ? "" : "s") : (avg.note || "no official records"), null]
+        : bt.applicable === false
         ? ["Backtest exceptions", "—", "backtesting is 1-day: not shown at 10 days", null]
         : ["Backtest exceptions (" + (bt.days || 0) + " d)", String(bt.exceptions === undefined ? "—" : bt.exceptions), (bt.light || "") + " zone · Basel", "light-" + (bt.light || "")]
     ];
@@ -318,7 +327,7 @@
       tile.dataset.tile = String(i);
       tile.appendChild(h("div", "l", x[0]));
       var v = h("div", "v mono" + (x[3] && i === 4 && x[3] !== "nc" ? " " + x[3] : ""));
-      if (i === 5 && bt.applicable !== false) { v.appendChild(h("span", "vx-light " + (bt.light || ""))); }
+      if (i === 5 && bt.applicable !== false && !stressed) { v.appendChild(h("span", "vx-light " + (bt.light || ""))); }
       v.appendChild(document.createTextNode(x[1]));
       tile.appendChild(v);
       tile.appendChild(h("div", "s mono" + (x[3] === "nc" ? " vx-nc" : ""), x[2]));
@@ -338,7 +347,14 @@
   function renderMethod(d) {
     var el = $("[data-vx-method]"), ln = d.lens || {};
     el.textContent = "";
-    root.dataset.lens = (ln.horizon || "1D") + (ln.method ? "-" + ln.method : "") + "|" + d.confidence + "|" + d.esConfidence;
+    root.dataset.lens = (ln.set === "STRESSED" ? "S|" : "") + (ln.horizon || "1D") + (ln.method ? "-" + ln.method : "") + "|" + d.confidence + "|" + d.esConfidence;
+    if (ln.set === "STRESSED" && ln.stressSet) {                    // which stress set: its id, its days, synthetic when it says so
+      var ss = ln.stressSet;
+      el.appendChild(h("b", null, "Stressed"));
+      el.appendChild(document.createTextNode(" "));
+      el.appendChild(h("span", "vx-pill", ss.id + " · " + ss.from + " … " + ss.to + (ss.synthetic ? " · synthetic" : "")));
+      el.appendChild(document.createTextNode(" "));
+    }
     el.appendChild(h("b", null, "Horizon"));
     el.appendChild(document.createTextNode(" " + (ln.horizon === "10D" ? "10-day" : "1-day") + " "));
     if (ln.method) el.appendChild(h("span", "vx-pill", ln.method === "SUM" ? "sum of days" : "√10"));
@@ -577,9 +593,25 @@
     });
   }
 
+  /**
+   * The rows-shown line of a capped answer: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567".
+   * Empty when every part is listed.
+   */
+  function shownLine(d) {
+    var shown = d.shown !== undefined && d.shown !== null ? d.shown : (d.rows || []).length;
+    if (!d.truncated || !d.total || shown >= d.total) return "";
+    var what = { position: "positions", trade: "trades" }[d.by] || "parts";
+    return int(shown) + " of " + int(d.total) + " " + what + " shown (the largest by gross size); totals are over all " + int(d.total) + ".";
+  }
+
   function renderContrib(d) {
     var tb = $("[data-vx-ctable] tbody");
     tb.textContent = "";
+    var shownEl = $("[data-vx-ctable-shown]");
+    if (shownEl) {
+      shownEl.textContent = shownLine(d);
+      shownEl.hidden = !shownEl.textContent;
+    }
     if (!d.rows.length) {
       var tr = document.createElement("tr");
       cell(tr, S.head && S.head.kind === "trade" ? "A trade has no parts: its P&L path is its own vector." :
@@ -624,7 +656,7 @@
     cell(t, "diversification −" + C.money(d.diversification), "vx-note").colSpan = 3;
     tb.appendChild(t);
     $("[data-vx-ctable-note]").textContent = "Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row."
-      + (d.truncated ? " Only the first parts are shown." : "") + (d.by === "part" ? " The parts are the basket's, each alone in the standalone "
+      + (d.truncated ? " " + shownLine(d) : "") + (d.by === "part" ? " The parts are the basket's, each alone in the standalone "
       + "column; a trade in two parts counts once, in the first." : "") + " Click a row to drill in; + basket adds it to your basket.";
   }
 
@@ -708,6 +740,12 @@
     api("captures/" + encodeURIComponent(id), {}, true).then(function (c) {
       box.textContent = "";
       box.appendChild(h("h3", null, c.id + " · " + c.label + " · as captured " + String(c.capturedAt).slice(0, 19).replace("T", " ")));
+      if (c.basketNotice) {                              // a capture of a basket deleted since: it keeps its scope and members
+        var gone = h("p", "vx-note vx-gone", c.basketNotice.charAt(0).toUpperCase() + c.basketNotice.slice(1) + ".");
+        gone.setAttribute("role", "status");
+        gone.dataset.vxBasketGone = "";
+        box.appendChild(gone);
+      }
       var dl = h("dl", "vx-capdl");
       [["Business date", c.businessDate], ["Horizon", c.lens || "1-day"], ["VaR", int(c["var"]) + (c.confidence ? " at " + pctWord(c.confidence) + "%" : "")],
         ["ES", int(c.es)], ["Members", int(c.memberCount) + " trades"],
@@ -857,7 +895,7 @@
     document.dispatchEvent(new CustomEvent("var:currency", { detail: { ccy: c } }));
   }
   // ---------------------------------------------------------------------------------------------------------------- the lens (2.9.7)
-  function lensState() { return { h: S.h, m: S.m, q: S.q, esq: S.esq }; }
+  function lensState() { return { h: S.h, m: S.m, q: S.q, esq: S.esq, set: S.set }; }
 
   function confOption(f, isDefault) {
     var o = document.createElement("option");
@@ -887,6 +925,7 @@
     if (!ln) return;
     var hz = $("[data-vx-horizon]");
     hz.value = ln.horizon === "10D" ? "10d:" + (ln.method === "SUM" ? "sum" : "sqrt10") : "1d";
+    $("[data-vx-scenarios]").value = ln.set === "STRESSED" ? "stressed" : "";
   }
 
   /** A new lens: every panel again, the link and the command, and the person's settings (varView) for the next visit. */
@@ -896,7 +935,8 @@
     var u = lensLink(new URL(location.href));
     history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
     fetch("/api/settings", { method: "PATCH", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" },
-      body: JSON.stringify({ varView: { h: S.h || "1d", m: S.m || null, q: S.q ? Number(S.q) : null, esq: S.esq ? Number(S.esq) : null } })
+      body: JSON.stringify({ varView: { h: S.h || "1d", m: S.m || null, q: S.q ? Number(S.q) : null, esq: S.esq ? Number(S.esq) : null,
+                                        set: S.set || "normal" } })
     }).catch(function () { /* the link still carries it */ });
     S.children = {};
     S.tree = null;
@@ -909,6 +949,7 @@
     setLens({ h: v[0] === "10d" ? "10d" : "", m: v[1] || "" });
   });
   $("[data-vx-conf]").addEventListener("change", function (ev) { setLens({ q: ev.target.value }); });
+  $("[data-vx-scenarios]").addEventListener("change", function (ev) { setLens({ set: ev.target.value === "stressed" ? "stressed" : "" }); });
   $("[data-vx-esconf]").addEventListener("change", function (ev) { setLens({ esq: ev.target.value }); });
 
   $("[data-vx-ccy]").addEventListener("change", function (ev) {
@@ -1063,11 +1104,42 @@
     api("baskets", {}, true).then(function (bs) {
       S.baskets = bs;
       bs.forEach(function (b) {
-        t.appendChild(treeRow("★ " + b.name + (b.owner !== S.user ? " (" + b.owner + ")" : ""), "BASKET:" + b.id, 0, null, null, null, { adhoc: true }));
+        var row = treeRow("★ " + b.name + (b.owner !== S.user ? " (" + b.owner + ")" : ""), "BASKET:" + b.id, 0, null, null, null, { adhoc: true });
+        if (b.owner === S.user || S.admin) row.querySelector(".nm").appendChild(deleteButton(b));
+        t.appendChild(row);
       });
       markTree();
     }).catch(function () { /* no baskets listed */ });
     markTree();
+  }
+
+  /** "Delete" on a saved basket the viewer owns (an administrator: on every basket listed): a confirm dialog (scope-delete.js). */
+  function deleteButton(b) {
+    var x = h("button", "vx-add vx-del", "Delete");
+    x.type = "button";
+    x.dataset.vxDelete = b.id;
+    x.title = "Delete the basket " + b.id;
+    x.setAttribute("aria-label", "Delete the basket " + b.name);
+    x.addEventListener("keydown", function (ev) { ev.stopPropagation(); });
+    x.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      if (!window.DrishtiScopeDelete) return;
+      window.DrishtiScopeDelete.ask(b, { admin: S.admin, me: S.user }).then(function (deleted) {
+        if (!deleted) return;
+        cache.clear();
+        if (B && B.state.saved === b.id) B.state.saved = null;          // the tray keeps its parts, as an unsaved basket
+        var n = $("[data-vx-notice]");
+        n.hidden = false;
+        n.dataset.vxDeleted = b.id;
+        n.textContent = "The basket " + b.name + " (BASKET:" + b.id + ") was deleted. Its captures are kept.";
+        renderAdhoc();
+        if (S.scope === "BASKET:" + b.id) {
+          n.textContent += " It no longer exists, so this view has nothing to compute: pick another scope.";
+          select(S.scope, { noPush: true });
+        }
+      });
+    });
+    return x;
   }
 
   // ---------------------------------------------------------------------------------------------------------------- the basket tray
@@ -1185,6 +1257,7 @@
     lensLink(u);                                       // 2.9.7: the lens chosen last (the person's settings) goes into the link too
     history.replaceState({ scope: S.scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
     $("[data-vx-horizon]").value = S.h === "10d" ? "10d:" + (S.m || "sqrt10") : "1d";
+    $("[data-vx-scenarios]").value = S.set;
   })();
   loadPicker(false);
   loadLensPicker();

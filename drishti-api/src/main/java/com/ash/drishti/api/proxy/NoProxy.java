@@ -40,6 +40,7 @@ public final class NoProxy {
     private final List<Cidr> blocks = new ArrayList<>();
     private final boolean all;
 
+    /** The hosts in {@code entries} (names, suffixes, addresses, CIDR blocks or {@code *}) go direct. */
     public NoProxy(List<String> entries) {
         this.entries = List.copyOf(entries);
         boolean everything = false;
@@ -79,6 +80,7 @@ public final class NoProxy {
         return out;
     }
 
+    /** The entries as given. */
     public List<String> entries() {
         return entries;
     }

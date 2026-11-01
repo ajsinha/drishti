@@ -272,12 +272,23 @@ link keeps it (`&h=10d&m=sum&q=0.95`), and the next VaR page you open remembers 
 and confidence (1-day 99%), otherwise the tile says *limit is for 1-day 99%: not comparable*; **backtest exceptions** only at 1 day.
 Type it too: `VAR BANK 10D`, `VAR BANK 10D SUM`, `VAR BANK 10D SQRT`, `VAR BANK 95`, `VAR BANK 10D SUM 97.5`, `VAR BANK ES 95`; the
 type-ahead offers them once a scope is typed. Official end-of-day records stay 1-day at 99% ([VAR_GUIDE.md section 18.6](VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen-as-built-297)).
+**Stressed VaR.** The **Scenarios** picker beside Horizon chooses *Normal* or *Stressed*: stressed VaR is today's positions revalued
+under the market moves of a 12-month stress period (in the demo, a synthetic 2008-07-01 to 2009-06-30, said on the page), in USD. Every
+panel follows; the third tile shows the 12-week average of the node's official stressed VaR; limit use and backtest exceptions are not
+shown for it. Horizon and Confidence work the same. The link keeps it (`&set=stressed`); type `VAR BANK SVAR` or `VAR BANK SVAR 10D SUM`.
+A date without a stress set says so ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#188-stressed-var)).
 **The scenario matrix (2.9.7).** `SMAT <trade, position or VaR scope> [N] <GO>` (`SMAT DESK RATES 20`, `SMAT POS <position>`,
 `SMAT TRD <trade> 30`) shows one trade, position or node across its last N business dates (20 by default, at most 60): the scenarios
 down, by historical day, the dates across, each cell its scenario P&L. Each date's VaR scenario and ES tail are outlined and marked **V**
 and **E**; the foot of the table keeps each date's VaR (with its rank), ES and base PV. Switch to **PV** (base PV plus the P&L) or
-**Change vs day before**, show **Only tail scenarios**, sort by the worst on any date, or, for a position, see it **By trade**. Click a
-row to chart it across the dates against −VaR, with the cell's rank that day, its PV, the FX used, its days in the tail and where the
+**Change vs day before**, show **Only tail scenarios**, sort by the worst on any date, or, for a position, see it **By trade**. The chart
+beside the matrix has two views: **Scenarios** (the default) charts the selected date's column, every scenario day in the order of its
+date, in the values shown (scenario P&L, scenario PV or the change), with the tail marked and the selected scenario larger (click a point
+to select that scenario in the matrix); **Across dates** charts the selected row across the business dates (it needs two or more dates
+open: with one it shows the value and says so). The reference line follows the values: **−VaR** for the P&L, **PV at VaR** (base PV less
+VaR) and the base PV for the PV, none for the change; the legend names what is drawn. **Line · Dots · Area · Bars** switches the chart
+type for both views (your choice is remembered in this browser); points beyond VaR or in the tail are diamonds, never colour alone. The matrix and the chart fill the window's height, and follow it when the window is resized. The
+details give the cell's rank that day, its PV, the FX used, its days in the tail and where the
 numbers came from (open in memory, read from the lake by id, the official capture, or the engine), linked to the record. A date with no
 values says why in its column header (`DRS-5203`, refused) and never shows zeros. **Export CSV · Arrow** downloads the whole matrix. A
 **Scenario matrix** link opens it from a trade, a position, a P&L vector (`PNLV`), a scenario PV (`SPV`) and the VaR page; on a phone it
@@ -288,6 +299,17 @@ is the selected scenario's line and its tail count. It is part of Drishti Risk a
 of any mix of portfolios, trades and counterparties; type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if,
 **Save basket and open VaR**. It is on the VaR page only (2.9.4: no longer in the top bar); what it holds stays in your browser, so it is
 there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
+
+**Deleting your ad-hoc scopes.** The baskets you saved are listed under *Ad-hoc scopes* on the VaR page as `★ name`. Point at one (or
+Tab to it) and press **Delete**: a dialog names the basket and whom you shared it with (they lose it too) and asks first; **Keep it** or
+**Esc** keeps it. The list refreshes at once; a view of the basket that was open says it was deleted. Captures you took of it are kept and
+still open, saying the basket no longer exists. You can delete only your own; an administrator may delete anyone's (you get a notice in
+your inbox saying who and why). On the command line: `drishti.py var basket-delete <name>`.
+
+**Many positions in one scope.** The **Contributions** tab lists at most `drishti.var.max-parts` rows (5,000): when a scope has more
+positions or trades, it lists the largest by gross size and says so above the table, for example *5,000 of 18,567 positions shown (the
+largest by gross size); totals are over all 18,567*. The **Total** row, the sum of standalone VaRs and the diversification are always
+over every position ([VAR_GUIDE.md section 27a](VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)).
 
 **One year or two; 99% or 95% (2.9.4).** The page's labels say the confidence the figures are at (*VaR 95% · 1 day* when the
 server is set to 95%), and *How this number was built* says the scenario window (*newest 250 of 509 scenarios*);
@@ -1473,7 +1495,7 @@ The keys a view offers are also buttons along the bottom of the screen, so you c
 Press `F9` in `TRD MX-20000001`. A drawer opens on the right with the full document, starting
 `{"SOURCE_SYSTEM": "MUREX", "SOURCE_UPDATE_TIME": "2026-10-07T18:30:00Z", "TRADE_DATE": "2025-07-25", …, "TRADE_ID": "MX-20000001", …}`, and its
 source (`trade-murex`) and generation, as the same foldable tree as the Raw document viewer (see [A number over time](#a-number-over-time));
-**Search · copy · download** at its top opens that viewer. Press `Esc` to close it. If your role does not have raw access, fields such as `TRADER_ID` read `•••`, here
+**Tree** and **Raw** at its top switch between that tree and the document as plain JSON text (as the server sent it, indented, ready to paste anywhere); **Copy** puts the JSON on the clipboard and says *Copied*; **Search · copy · download** opens the full viewer. Press `Esc` to close it. If your role does not have raw access, fields such as `TRADER_ID` read `•••`, here
 and everywhere else
 (see [Masked fields](#masked-fields)).
 
@@ -2352,6 +2374,7 @@ between them without the menu.
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
 | Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
 | BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |
+| Ad-hoc scopes | `/admin/scopes` | Every person's saved VaR baskets (owner, name, scope, shared with, dates, size), filtered by owner; **Delete** any of them with an optional reason, audited and told to the owner ([OPERATIONS.md section 9b-2](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)) |
 | Audit log | `/admin/audit` | Sign-ins, failures, lockouts, user, role and pack changes, Sutra proposals and approvals, cache purges |
 | Health | `/admin/health` | Every connector and pack: up or down, reads, timings. Refreshes every 5 seconds |
 | Caches | `/admin/caches` | Every cache with where it lives and its size against its limit (2.9.7); **Purge** one, **Purge a date**, or **Purge all**, on this server or the whole cluster (safe at any time) |
@@ -2541,6 +2564,7 @@ Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANA
   document and each pack's guides, with search (`/help/search?q=`). On a page, `F1` opens the guide for that page
   (`/help/context/<page>`: Build opens the screen designer guide, BI the BI guide, Admin the users and roles guide, Workspaces, Monitors, Alerts and the inbox their own guides); on a view, `F1` opens [About this page](#about-this-page).
 - The **?** in each panel header explains that panel kind.
+- *Help → Developer* (`/help/developer`) gathers the programming references: the server's REST API (OpenAPI), the renderer's TypeScript API, and the Java and Python API references generated from the code (the plugin and connector SPI, the shard machinery, the compute worker SDK, BI Python items, `drishti.py` and its client library, the pack and test-data generator helpers). When the console has none built, the page says how to build them.
 - **About** (`/about`) is the product page (features, measured performance, competitive analysis, licence); loaded Sutras and source health are in *Admin → Health* (`/admin/health`).
 
 ## On a phone

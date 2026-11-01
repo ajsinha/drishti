@@ -516,7 +516,8 @@ final class DeltaTable {
     /**
      * The date's rows with one vector column ({@code list<double>}, or {@code list<float>}: exposure paths may be float32,
      * EXPOSURE_GUIDE.md section 15.3) and some text columns, streamed to {@code sink} batch by batch (VAR_GUIDE.md section 29.3): one
-     * buffer per read, reused for every row, so a date of millions of vectors is never held here. A float32 element is widened to a
+     * buffer a file, reused for every row, so a date of millions of vectors is never held here; several files decode at once when
+     * {@code sink} came from {@link com.ash.drishti.api.VectorReads#parallel}, delivered in file order. A float32 element is widened to a
      * double exactly. Read as stored (no deletion vectors: the vector tables are written without them); partition values come from the log.
      */
     void vectors(Layout layout, LocalDate date, String vectorColumn, List<String> textColumns, com.ash.drishti.api.VectorSink sink) {
@@ -534,30 +535,103 @@ final class DeltaTable {
                     : layout.schema().get(c).getDataType();
             schema = schema.add(c, have != null && isScalar(have) ? have : StringType.STRING);
         }
+        StructType read = schema;
+        List<Piece> pieces = pieces(files, sink);
+        int[] order = new int[pieces.size()];
+        for (int i = 0; i < order.length; i++) {
+            order[i] = i;
+        }
+        // piece by piece in file order; several decode at once when the reader asked for it (VectorReads, VAR_GUIDE.md 27a.6)
+        com.ash.drishti.api.VectorReads.inFileOrder(order, sink, (i, to) -> fileVectors(pieces.get(i), read, textColumns, to));
+    }
+
+    /** A file, or the row groups {@code [from, to)} of one: what one decoding thread reads. */
+    record Piece(Row file, int from, int to) {
+        static final int WHOLE = Integer.MAX_VALUE;
+    }
+
+    /**
+     * The files cut into pieces for {@code sink}'s decoding threads: whole files on one thread or another engine than the native one;
+     * else each file's row groups in runs of about {@link com.ash.drishti.api.VectorReads#partBytes} uncompressed bytes (at least one
+     * group), so a date of a few large files still decodes on every thread and a piece decodes whole while the ones before it are taken.
+     * A file whose footer cannot be read is one piece: its read says what is wrong.
+     */
+    List<Piece> pieces(List<Row> files, com.ash.drishti.api.VectorSink sink) {
+        List<Piece> whole = files.stream().map(f -> new Piece(f, 0, Piece.WHOLE)).toList();
+        if (com.ash.drishti.api.VectorReads.threads(sink) <= 1 || !(engine instanceof com.ash.drishti.deltalake.NativeEngine ne)) {
+            return whole;
+        }
+        long part = com.ash.drishti.api.VectorReads.partBytes(sink);
+        List<Piece> out = new ArrayList<>();
+        for (int i = 0; i < files.size(); i++) {
+            long[] groups;
+            try {
+                groups = ne.rowGroups(InternalScanFileUtils.getAddFileStatus(files.get(i)));
+            } catch (IOException | RuntimeException e) {
+                groups = new long[0];
+            }
+            if (groups.length <= 1 || java.util.Arrays.stream(groups).sum() <= part) {
+                out.add(whole.get(i));
+                continue;
+            }
+            int from = 0;
+            long bytes = 0;
+            for (int g = 0; g < groups.length; g++) {
+                if (g > from && bytes + groups[g] > part) {
+                    out.add(new Piece(files.get(i), from, g));
+                    from = g;
+                    bytes = 0;
+                }
+                bytes += groups[g];
+            }
+            out.add(new Piece(files.get(i), from, groups.length));
+        }
+        return out;
+    }
+
+    /** One piece's rows into {@code sink}: buffers of its own, so pieces may decode on several threads at once. */
+    private void fileVectors(Piece piece, StructType read, List<String> textColumns, com.ash.drishti.api.VectorSink sink) {
+        Row file = piece.file();
         double[][] buf = {new double[512]};
         String[] texts = new String[textColumns.size()];
-        StructType read = schema;
-        for (Row file : files) {
-            Map<String, String> partition = InternalScanFileUtils.getPartitionValues(file);
-            raw(file, read, Optional.empty(), batch -> {
-                int n = batch.getSize();
-                io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
-                io.delta.kernel.data.ColumnVector vec = batch.getColumnVector(1);
-                for (int r = 0; r < n; r++) {
-                    for (int c = 0; c < texts.length; c++) {
-                        String fixed = partition.get(textColumns.get(c));
-                        io.delta.kernel.data.ColumnVector tv = batch.getColumnVector(c + 2);
-                        texts[c] = fixed != null ? fixed : tv.isNullAt(r) ? null : text(tv, r);
-                    }
-                    String id = idv.isNullAt(r) ? "" : idv.getString(r);
-                    if (vec.isNullAt(r)) {
-                        sink.row(id, buf[0], -1, texts);
-                        continue;
-                    }
-                    int len = copy(vec.getArray(r), buf);
-                    sink.row(id, buf[0], len, texts);
+        Map<String, String> partition = InternalScanFileUtils.getPartitionValues(file);
+        String[] fixed = new String[texts.length];
+        for (int c = 0; c < texts.length; c++) {
+            fixed[c] = partition.get(textColumns.get(c));
+        }
+        java.util.function.Consumer<ColumnarBatch> each = batch -> {
+            int n = batch.getSize();
+            io.delta.kernel.data.ColumnVector idv = batch.getColumnVector(0);
+            io.delta.kernel.data.ColumnVector vec = batch.getColumnVector(1);
+            io.delta.kernel.data.ColumnVector[] tvs = new io.delta.kernel.data.ColumnVector[texts.length];
+            for (int c = 0; c < texts.length; c++) {
+                tvs[c] = batch.getColumnVector(c + 2);
+            }
+            for (int r = 0; r < n; r++) {
+                for (int c = 0; c < texts.length; c++) {
+                    texts[c] = fixed[c] != null ? fixed[c] : tvs[c].isNullAt(r) ? null : text(tvs[c], r);
                 }
-            });
+                String id = idv.isNullAt(r) ? "" : idv.getString(r);
+                if (vec.isNullAt(r)) {
+                    sink.row(id, buf[0], -1, texts);
+                    continue;
+                }
+                int len = copy(vec.getArray(r), buf);
+                sink.row(id, buf[0], len, texts);
+            }
+        };
+        if (piece.to() == Piece.WHOLE) {
+            raw(file, read, Optional.empty(), each);
+            return;
+        }
+        com.ash.drishti.deltalake.NativeEngine ne = (com.ash.drishti.deltalake.NativeEngine) engine;
+        try (CloseableIterator<ColumnarBatch> batches = ne.readRowGroups(InternalScanFileUtils.getAddFileStatus(file), read, piece.from(),
+                piece.to())) {
+            while (batches.hasNext()) {
+                each.accept(batches.next());
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 

@@ -126,16 +126,20 @@ class Calendar:
 
     @staticmethod
     def of(*centers: str) -> "Calendar":
+        """The calendar of these centres joined (``Calendar.of("USNY", "GBLO")``)."""
         return Calendar(tuple(centers))
 
     @property
     def name(self) -> str:
+        """The centres joined by ``+``."""
         return "+".join(self.centers)
 
     def is_business_day(self, d: date) -> bool:
+        """A weekday that is a holiday in none of the centres."""
         return d.weekday() < 5 and not any(d in _holidays(c, d.year) for c in self.centers)
 
     def adjust(self, d: date, convention: str = "MODFOLLOWING") -> date:
+        """``d`` moved to a business day by ``convention``: MODFOLLOWING, PRECEDING or NONE (anything else: following)."""
         if convention == "NONE" or self.is_business_day(d):
             return d
         step = -1 if convention == "PRECEDING" else 1
@@ -149,6 +153,7 @@ class Calendar:
         return out
 
     def add_business_days(self, d: date, n: int) -> date:
+        """``n`` business days after ``d`` (before it when negative)."""
         step = 1 if n >= 0 else -1
         out, left = d, abs(n)
         while left:
@@ -159,6 +164,7 @@ class Calendar:
 
 
 def add_months(d: date, months: int, eom: bool = False) -> date:
+    """``months`` calendar months after ``d``, the day clipped to the month's end (``eom``: a month-end stays a month-end)."""
     y, m = divmod(d.month - 1 + months, 12)
     y, m = d.year + y, m + 1
     last = _cal.monthrange(y, m)[1]
@@ -166,6 +172,7 @@ def add_months(d: date, months: int, eom: bool = False) -> date:
 
 
 def add_tenor(d: date, tenor: str) -> date:
+    """``d`` plus a tenor: ``3D``, ``2W``, ``6M``, ``10Y`` (unadjusted)."""
     n, unit = int(tenor[:-1] or 0), tenor[-1].upper()
     if unit == "D":
         return d + timedelta(days=n)
@@ -179,6 +186,7 @@ def add_tenor(d: date, tenor: str) -> date:
 
 
 def tenor_years(tenor: str) -> float:
+    """A tenor in years (``ON`` one day; days and weeks over 365, months over 12)."""
     if tenor in ("ON", "O/N"):
         return 1 / 365
     n, unit = int(tenor[:-1]), tenor[-1].upper()
@@ -205,6 +213,7 @@ def schedule(start: date, end: date, frequency: str, cal: Calendar, convention: 
 
 
 def year_fraction(a: date, b: date, basis: str) -> float:
+    """The year fraction from ``a`` to ``b`` by day-count ``basis`` (ACT/360, ACT/365F, 30/360, 30E/360, ACT/ACT)."""
     if basis == "ACT/360":
         return (b - a).days / 360
     if basis in ("ACT/365F", "ACT/365"):
@@ -227,4 +236,5 @@ def year_fraction(a: date, b: date, basis: str) -> float:
 
 
 def iso(d: date) -> str:
+    """``YYYY-MM-DD``."""
     return d.isoformat()

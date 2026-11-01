@@ -316,5 +316,5 @@
       .catch(function (e) { if (state === mine) { say('Could not load the document: ' + e); } });
   }
 
-  window.DrishtiRaw = { open: open, render: render, resolve: resolve, fileName: fileName };
+  window.DrishtiRaw = { open: open, render: render, resolve: resolve, fileName: fileName, copyText: copyText };
 })();

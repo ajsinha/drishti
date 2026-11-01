@@ -31,6 +31,7 @@ public record PluginManifest(String name, String version, Set<String> kinds, Sou
         kinds = Set.copyOf(kinds);
     }
 
+    /** Whether the plugin serves {@code kind}. */
     public boolean serves(String kind) {
         return kinds.isEmpty() || kinds.contains(kind);
     }

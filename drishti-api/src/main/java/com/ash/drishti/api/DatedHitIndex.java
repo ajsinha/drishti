@@ -74,12 +74,14 @@ public final class DatedHitIndex {
     /** Reads the ids of one kind on one business day (a table query, a folder listing). */
     @FunctionalInterface
     public interface DayLoader {
+        /** The ids of {@code kind} on {@code day}, with their titles. */
         List<EntityHit> load(String kind, LocalDate day) throws Exception;
     }
 
     /** The version of the source a day was read from (a load time, a table version); null when unknown. */
     @FunctionalInterface
     public interface Watermark {
+        /** The source version {@code kind}'s {@code day} was read from, or null when unknown. */
         String of(String kind, LocalDate day);
     }
 
@@ -128,6 +130,8 @@ public final class DatedHitIndex {
     }
 
     /**
+     * An index with a disk tier: closed days may move to memory-mapped files under {@code root}.
+     *
      * @param namespace names this connector's folder under {@code root}; null with a null {@code root} for no disk tier
      * @param root the index folder ({@link #defaultRoot()})
      * @param watermark the source version of a day, so a restart can reuse a file; null never reuses
@@ -807,6 +811,7 @@ public final class DatedHitIndex {
         return out;
     }
 
+    /** How far the current (or last) admin reload is. */
     public ReloadProgress reloadProgress() {
         return progress;
     }
@@ -981,6 +986,7 @@ public final class DatedHitIndex {
         }
     }
 
+    /** The automatic check's state, for Health and Admin. */
     public AutoCheck autoCheckInfo() {
         long min = shortestInterval();
         Instant next = null;
@@ -1045,6 +1051,7 @@ public final class DatedHitIndex {
         return m;
     }
 
+    /** What the index holds now: kinds, days, ids, memory and disk. */
     public Stats stats() {
         int ids = 0;
         int days = 0;

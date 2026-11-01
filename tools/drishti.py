@@ -45,12 +45,15 @@ import urllib.error
 import urllib.parse
 import urllib.request
 
-from javacmd import java_cmd
+from javacmd import cli_tmp, java_cmd
 
 TOOLS = pathlib.Path(__file__).resolve().parent
 ROOT = TOOLS.parent
 DEFAULT_SERVER = "http://localhost:18480"
 LOADERS = ("delta", "files", "postgres", "duckdb", "iceberg", "mongodb", "redis", "aerospike", "cassandra")
+# the reusable parts, documented in the Python API reference (Help -> Developer; tools/api_docs.py checks each has a docstring and type
+# hints); the cmd_* functions are the command line's own handlers
+__all__ = ["CliError", "ApiError", "Api", "find_jar", "find_java", "run_java", "build_parser", "main"]
 
 
 class CliError(Exception):
@@ -99,6 +102,7 @@ def say_json(obj) -> None:
 
 
 def find_jar(explicit: str | None = None) -> str:
+    """The server's exec jar: ``explicit``, else ``DRISHTI_JAR``, else the newest ``drishti-server/target/drishti-server-*-exec.jar``."""
     jar = explicit or os.environ.get("DRISHTI_JAR")
     if jar:
         if not os.path.isfile(jar):
@@ -111,6 +115,7 @@ def find_jar(explicit: str | None = None) -> str:
 
 
 def find_java(explicit: str | None = None) -> str:
+    """The ``java`` to run: ``explicit``, else ``$JAVA_HOME/bin/java``, else a JDK 21 at its usual place, else ``java`` on the PATH."""
     if explicit:
         return explicit
     for home in (os.environ.get("JAVA_HOME"), "/usr/lib/jvm/java-21-openjdk-amd64"):
@@ -119,13 +124,15 @@ def find_java(explicit: str | None = None) -> str:
     return shutil.which("java") or "java"
 
 
-def run_java(a, args: list[str], capture: bool = False) -> subprocess.CompletedProcess:
+def run_java(a: argparse.Namespace, args: list[str], capture: bool = False) -> subprocess.CompletedProcess:
     """`java -jar <exec jar> sutra <args>` from the repository root (paths in `args` must already be absolute)."""
-    cmd = java_cmd(find_java(getattr(a, "java", None)), ["-jar", find_jar(getattr(a, "jar", None)), "sutra", *args], cwd=ROOT)   # -Djava.io.tmpdir=<data dir>/tmp/server
-    try:
-        return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
-    except FileNotFoundError as e:
-        raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
+    java, jar = find_java(getattr(a, "java", None)), find_jar(getattr(a, "jar", None))
+    with cli_tmp() as tmp:   # a temp folder outside the data folder: the command writes nothing to the site
+        cmd = java_cmd(java, ["-jar", jar, "sutra", *args], tmp=tmp)
+        try:
+            return subprocess.run(cmd, cwd=ROOT, text=True, capture_output=capture)
+        except FileNotFoundError as e:
+            raise CliError(f"cannot run {cmd[0]}: {e.strerror}; pass --java or set JAVA_HOME") from None
 
 
 NOISE = re.compile(r"^(Standard Commons Logging|\d{4}-\d\d-\d\dT\S+\s+(WARN|INFO|DEBUG|TRACE)\s)")
@@ -145,6 +152,9 @@ def absolute(p) -> str:
 # ------------------------------------------------------------------------------------------------ REST client
 
 class ApiError(CliError):
+    """The server answered with an error: ``status``, its ``DRS-`` code and detail, with a hint for 401 and 403; ``body`` is the whole
+    problem document when it was JSON."""
+
     HINTS = {401: " (no or bad token: set DRISHTI_TOKEN or --token-file)",
              403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve, packs:admin, loads:write, bi:write, bi:approve or bi:admin, see CLI_GUIDE)"}
 
@@ -160,7 +170,9 @@ class Api:
         self.base, self.token, self.user, self.timeout = base.rstrip("/"), token, user, timeout
 
     @classmethod
-    def from_args(cls, a) -> "Api":
+    def from_args(cls, a: argparse.Namespace) -> "Api":
+        """A client from the command line's ``--server``, ``--token-file``, ``--user`` and ``--timeout``, else ``DRISHTI_SERVER``,
+        ``DRISHTI_TOKEN`` and ``DRISHTI_USER``."""
         token = None
         if getattr(a, "token_file", None):
             try:
@@ -171,8 +183,10 @@ class Api:
         return cls(getattr(a, "server", None) or os.environ.get("DRISHTI_SERVER") or DEFAULT_SERVER, token,
                    getattr(a, "user", None) or os.environ.get("DRISHTI_USER"), getattr(a, "timeout", 60))
 
-    def request(self, method: str, path: str, body=None, data: bytes | None = None, ctype: str | None = None,
+    def request(self, method: str, path: str, body: object = None, data: bytes | None = None, ctype: str | None = None,
                 extra: dict | None = None) -> tuple[int, bytes]:
+        """One call: ``body`` sent as JSON (or ``data`` as ``ctype``), ``extra`` headers added; the status and the raw answer.
+        Raises :class:`ApiError` for an error answer and :class:`CliError` when the server cannot be reached."""
         headers = {"Accept": "application/json, application/zip;q=0.9"}
         if self.token:
             headers["Authorization"] = "Bearer " + self.token
@@ -206,7 +220,8 @@ class Api:
         except OSError as e:
             raise CliError(f"cannot reach {self.base}: {e}", 1) from None
 
-    def json(self, method: str, path: str, body=None, **kw):
+    def json(self, method: str, path: str, body: object = None, **kw: object) -> object:
+        """One call (as :meth:`request`), its answer parsed as JSON; ``{}`` for an empty answer."""
         _, raw = self.request(method, path, body, **kw)
         return json.loads(raw) if raw.strip() else {}
 
@@ -1057,6 +1072,7 @@ SUTRA_EXAMPLES = ("examples:\n  drishti.py sutra lint config/packs/market-risk -
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """The whole command line: every group, command and option (``drishti.py --help``)."""
     ap = argparse.ArgumentParser(prog="drishti.py", description=__doc__.split("\n\n")[0], epilog=__doc__.split("\n\n", 1)[1],
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     groups = ap.add_subparsers(dest="group", metavar="GROUP", required=True)
@@ -1386,7 +1402,8 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
-def main(argv=None) -> int:
+def main(argv: list[str] | None = None) -> int:
+    """Runs one command (``argv``, else the process's arguments); the exit code: 0 ok, 1 problems found, 2 usage."""
     try:
         ap = build_parser()
         a, extra = ap.parse_known_args(argv)

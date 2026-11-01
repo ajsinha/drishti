@@ -87,5 +87,8 @@
   </build>
   <properties>
     <compute.excluded.groups>load</compute.excluded.groups>
+    <!-- the API reference (the parent's profile api-docs): the measure-agnostic shard machinery and the peers' fan-out -->
+    <drishti.apidocs.skip>false</drishti.apidocs.skip>
+    <drishti.apidocs.packages>com.ash.drishti.compute.shard:com.ash.drishti.compute.cluster</drishti.apidocs.packages>
   </properties>
 </project>

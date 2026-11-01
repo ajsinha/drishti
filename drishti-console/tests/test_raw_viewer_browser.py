@@ -16,6 +16,7 @@
 document link opens the JSON on the same page, not in a new tab: a tree with the metric's path highlighted, search, copy, a download
 named <kind>-<id>-<date>.json, masked values as the server sent them, Escape back to the link, every theme's tokens, and a phone at full
 screen. F9's drawer draws the same tree. The console runs in-process against a stand-in server; skipped without Playwright's Chromium."""
+import json
 import os
 import threading
 import time
@@ -175,6 +176,27 @@ def test_f9_draws_the_same_tree_and_opens_the_viewer(url, browser):
         pg.click("#rawDrawer [data-raw-full]")
         pg.wait_for_selector('.raw-dlg[data-rv-ready="1"]')
         assert pg.evaluate("document.getElementById('rawDrawer').hidden") is True
+        assert not errors, errors
+    finally:
+        ctx.close()
+
+
+def test_f9_shows_the_raw_json_as_text_and_copies_it(url, browser):
+    ctx, pg, errors = _page(browser, "light")
+    try:
+        ctx.grant_permissions(["clipboard-read", "clipboard-write"], origin=url)
+        pg.goto(url + VIEW)
+        pg.keyboard.press("F9")
+        pg.wait_for_selector('#rawDrawer [data-jp="$.SLOPE_2S_10S"]')
+        assert pg.get_attribute("#rawDrawer [data-raw-mode='tree']", "aria-pressed") == "true"
+        pg.click("#rawDrawer [data-raw-mode='text']")                       # Raw: the record as plain JSON text
+        assert pg.is_hidden("#rawDrawer [data-raw-body]") and pg.is_visible("#rawDrawer [data-raw-text]")
+        assert json.loads(pg.inner_text("#rawDrawer [data-raw-text]"))["SLOPE_2S_10S"] == 42.5
+        pg.click("#rawDrawer [data-raw-copy]")
+        pg.wait_for_selector("#rawDrawer [data-raw-copied]:has-text('Copied')")      # the page's CSP refuses wait_for_function's eval
+        assert json.loads(pg.evaluate("navigator.clipboard.readText()"))["SLOPE_2S_10S"] == 42.5
+        pg.click("#rawDrawer [data-raw-mode='tree']")
+        assert pg.is_visible("#rawDrawer [data-raw-body]") and pg.is_hidden("#rawDrawer [data-raw-text]")
         assert not errors, errors
     finally:
         ctx.close()

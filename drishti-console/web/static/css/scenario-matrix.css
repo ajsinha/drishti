@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The scenario matrix (terminal/smat.html, scenario-matrix.js), after the approved mock-up scenario-matrix-B: the matrix on the left, the
-   selected scenario's chart and details on the right; the theme's tokens for every colour (tokens.css), so every theme reads; the tail
+   chart (the selected date's scenarios, or the selected scenario across the dates; Line, Dots, Area or Bars) and details on the right; the theme's tokens for every colour (tokens.css), so every theme reads; the tail
    outlined and marked (V, E), never colour alone. On a phone the glance form: the chart and the tail count, no sideways scroll. */
 .sm { padding: 10px 14px 18px; color: var(--d-ink); font-size: 13px; max-width: 1480px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
 .sm .mono, .sm-table td, .sm-kv dd { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
@@ -45,7 +45,7 @@
 .sm-card { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 10px; min-width: 0; }
 .sm-card h2 { margin: 0 0 8px; font-size: 13.5px; font-weight: 600; }
 .sm-card h2 span, .sm-sub { color: var(--d-muted); font-weight: 400; font-size: 12px; margin-left: 6px; }
-.sm-scroll { overflow: auto; max-height: 560px; border: 1px solid var(--d-border); border-radius: 4px; }
+.sm-scroll { overflow: auto; max-height: 560px; min-height: 320px; border: 1px solid var(--d-border); border-radius: 4px; }
 .sm-table { border-collapse: separate; border-spacing: 0; font-size: 12px; width: 100%; }
 .sm-table th, .sm-table td { height: 26px; padding: 0 7px; white-space: nowrap; text-align: right; border-bottom: 1px solid var(--d-border); }
 .sm-table thead th { position: sticky; top: 0; z-index: 2; background: var(--d-surface-2); color: var(--d-muted); font-weight: 500; height: 34px; vertical-align: bottom; }
@@ -67,7 +67,7 @@
 .sm-table td.sm-var { box-shadow: inset 0 0 0 2px var(--d-warn), inset 0 0 0 4px var(--d-surface); }
 .sm-table td .mk, .sm-legend .mk { font: 700 9px var(--d-font-sans); color: var(--d-warn); margin-left: 3px; vertical-align: super; }
 .sm-table td.sm-sel { outline: 2px solid var(--d-link); outline-offset: -2px; }
-.sm-table tr.sm-pick .sm-first { color: var(--d-link); font-weight: 600; }
+.sm-table tr.sm-selrow .sm-first { color: var(--d-link); font-weight: 600; box-shadow: inset 3px 0 0 var(--d-link); }
 .sm-table tbody tr[data-key] { cursor: pointer; }
 .sm-table tbody tr[data-key]:hover .sm-first { color: var(--d-link); }
 .sm-table tr.sm-pad td { padding: 0; border: 0; }
@@ -81,17 +81,37 @@
 .sm-pick { display: none; gap: 6px; align-items: center; font-size: 12px; color: var(--d-muted); margin-bottom: 6px; }
 .sm-pick select { background: var(--d-bg); color: var(--d-ink); border: 1px solid var(--d-border); border-radius: 3px; font: 12px var(--d-font-mono); max-width: 100%; }
 .sm-chart { min-height: 120px; }
-.sm-svg { width: 100%; height: auto; max-height: 240px; display: block; }
+.sm-svg { width: 100%; height: auto; display: block; }
 .sm-grid-line { stroke: var(--d-border); stroke-width: 1; }
 .sm-zero { stroke: var(--d-muted); stroke-width: 1; stroke-dasharray: 2 3; }
 .sm-axis { fill: var(--d-muted); font: 10px var(--d-font-mono); }
-.sm-line { fill: none; stroke: var(--d-neg); stroke-width: 2.4; }
+.sm-xlabel-sel { fill: var(--d-link); font-weight: 600; }
+.sm-selguide { stroke: var(--d-link); stroke-width: 1; stroke-dasharray: 1 3; opacity: .7; }
+.sm-line { fill: none; stroke: var(--d-neg); stroke-width: 2.4; stroke-linejoin: round; }
+.sm-area { fill: color-mix(in srgb, var(--d-neg) 22%, transparent); stroke: none; }
+.sm-bar { fill: color-mix(in srgb, var(--d-neg) 70%, transparent); }
+.sm-bar.sm-beyond { fill: var(--d-bad); }
+.sm-bar-sel { stroke: var(--d-link); stroke-width: 2; }
 .sm-varline { fill: none; stroke: var(--d-accent); stroke-width: 2; stroke-dasharray: 5 4; }
 .sm-dot { fill: var(--d-neg); }
-.sm-dot.sm-beyond { fill: var(--d-bad); stroke: var(--d-ink); stroke-width: 1; }
+.sm-dot.sm-beyond { fill: var(--d-bad); stroke: var(--d-ink); stroke-width: 1.2; }
 .sm-dot-sel { fill: var(--d-link); }
+.sm-dot-sel.sm-beyond { stroke: var(--d-link); stroke-width: 2; }
+.sm-val { fill: var(--d-ink); font: 600 11.5px var(--d-font-mono); }
+.sm-val-ref { fill: var(--d-accent); font-weight: 500; }
+.sm-chart-ctrls { display: flex; flex-wrap: wrap; gap: 6px 8px; margin: 0 0 6px; }
+.sm-chart-ctrls .sm-segb { padding: 3px 10px; font-size: 12px; }
+.sm-hit { fill: transparent; cursor: crosshair; }
+.sm-svg-scen .sm-dot, .sm-svg-scen .sm-bar { cursor: pointer; }
+.sm-baseline { fill: none; stroke: var(--d-muted); stroke-width: 1.4; }
+.sm-dot.sm-varpt { stroke-width: 1.6; }
 .sm-key { display: inline-block; width: 16px; height: 0; vertical-align: middle; border-top: 2.4px solid var(--d-neg); }
+.sm-key-dots { width: 7px; height: 7px; border: 0; border-radius: 50%; background: var(--d-neg); }
+.sm-key-area { height: 9px; border-top-width: 2.4px; background: color-mix(in srgb, var(--d-neg) 22%, transparent); }
+.sm-key-bars { width: 8px; height: 11px; border: 0; background: color-mix(in srgb, var(--d-neg) 70%, transparent); }
 .sm-key-var { border-top: 2px dashed var(--d-accent); }
+.sm-key-base { border-top: 1.4px solid var(--d-muted); }
+.sm-key-beyond { display: inline-block; width: 7px; height: 7px; vertical-align: middle; transform: rotate(45deg); background: var(--d-bad); border: 1px solid var(--d-ink); margin: 0 2px; }
 .sm-kv { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 12px; font-size: 12.5px; margin: 10px 0 0; }
 .sm-kv dt { color: var(--d-muted); }
 .sm-kv dd { margin: 0; overflow-wrap: anywhere; }

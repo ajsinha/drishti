@@ -9,6 +9,8 @@ COPY drishti-server/target/drishti-server-*-exec.jar app.jar
 COPY config/packs/ config/packs/
 COPY config/editions/ /opt/drishti/config/editions/
 COPY config/ui-kit/ config/ui-kit/
+COPY config/alerts/ config/alerts/
+COPY --chmod=0555 deploy/bin/drishti-node.sh /opt/drishti/bin/drishti-node.sh
 # the server's temp base (<data dir>/tmp/server), made here so the JVM's temp folder exists from its first start
 RUN mkdir -p /opt/drishti/data/tmp/server && chown -R drishti /opt/drishti/data
 USER drishti
@@ -22,7 +24,10 @@ ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseZGC -XX:MaxDirectMemorySi
     DRISHTI_VAR_KEEP_HOT_FILES=true \
     DRISHTI_EXPOSURE_KEEP_HOT_FILES=true
 # the hot files are kept across restarts (PO-10, 2.9.7): the disk is bounded (drishti.var.tier.max-disk-gb, the free-space guard)
-HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:18480/actuator/health/readiness || exit 1
+# the container's health is liveness (a restart decision); readiness (CD1: DOWN while a date opens or a shard builds, OUT_OF_SERVICE while
+# drained) is for routing: load balancers and the rolling upgrade runner (CLUSTER_DEPLOYMENT.md section 9.1)
+HEALTHCHECK --interval=15s --timeout=3s CMD wget -qO- http://localhost:18480/actuator/health/liveness || exit 1
 # -XX:+UseCompactObjectHeaders exists from Java 25 (Java 21 refuses to start with it), so the entrypoint adds it only there; the rotated
-# GC log (5 x 20 MB) goes to data/logs, made first (the data folder is a volume, and the JVM does not start when the log's folder is missing)
-ENTRYPOINT ["sh", "-c", "mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps; v=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p'); if [ \"$v\" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi; exec java \"$@\" -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar app.jar"]
+# GC log (5 x 20 MB) goes to data/logs, made first (the data folder is a volume, and the JVM does not start when the log's folder is missing);
+# drishti-node.sh run is the stop hook (CD2): on docker stop the node drains first (give it time: docker stop -t 120), then Java stops
+ENTRYPOINT ["sh", "-c", "mkdir -p /opt/drishti/data/logs /opt/drishti/data/dumps; v=$(java -XshowSettings:properties -version 2>&1 | sed -n 's/.*java.specification.version = //p'); if [ \"$v\" -ge 25 ]; then set -- -XX:+UseCompactObjectHeaders; else set -- -XX:+ZGenerational; fi; exec /opt/drishti/bin/drishti-node.sh run java \"$@\" -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -jar app.jar"]

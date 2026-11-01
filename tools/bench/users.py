@@ -18,6 +18,12 @@ the given seconds over a mix of 80 % single trades (a random system and date), 1
 5 % searches of one counterparty's trades, and the result is one JSON line: requests a second and, per kind of request, p50/p95/p99
 and failures (an HTTP error, a timeout, a page saying DRS-1004, a page that sent the user to sign in again).
 
+With --var-share (0 by default) that share of the requests are VaR questions (RESOURCES_AND_SCALE.md section 10.1, the 2.9.7 benchmark)
+on a lake made by tools/bench/vargen.py: 60 % a node (the bank, a legal entity, a division, a desk or a book), 20 % the bank minus a
+desk, 10 % a stored basket of 50,000 positions (``PORT:PF-BASKET-BIG-nn``), 10 % a desk's contributions by position or a node's P&L
+path; each kind its own line (var-node, var-bank-minus-desk, var-basket, var-contrib, var-path). ``--server`` may name several servers
+(comma separated): user n asks server n mod k (a cluster's members side by side).
+
 With --history-share (0.15 in tools/bench/net_soak.py, 0 by default here) that share of the requests are histories
 (DATA_ARCHITECTURE.md): ``/api/v1/history/{kind}/{id}`` (the console's ``/v/{kind}/{id}/history``) of a trade of any system (four in five),
 a counterparty, or one of --equities, with days=30, days=60, range=3M, diff=true or, now and then, knownAt=now; the rest keep the mix
@@ -68,7 +74,36 @@ def history_pick(r: random.Random, a) -> tuple:
     return kind, ident, {k: now if v == "now" else v for k, v in params.items()}
 
 
+def var_pick(r: random.Random, a) -> tuple:
+    """A VaR question of the 2.9.7 mix: (label, path and query)."""
+    x, date = r.random(), r.choice(a.var_dates)
+    desk = f"DESK-{r.randrange(a.var_desks):03d}"
+
+    def node() -> str:
+        y = r.random()
+        if y < 0.05:
+            return "BANK"
+        if y < 0.15:
+            return f"LE:LE-{r.randrange(a.var_les):02d}" if r.random() < 0.5 else f"DIV:DIV-{r.randrange(a.var_divisions):02d}"
+        if y < 0.50:
+            return f"DESK:DESK-{r.randrange(a.var_desks):03d}"
+        return f"BOOK:BOOK-{r.randrange(a.var_desks):03d}-{r.randrange(a.var_books_per_desk)}"
+    if x < 0.60:
+        return "var-node", "/api/v1/var/scope?" + urlencode({"scope": node(), "asOf": date})
+    if x < 0.80:
+        return "var-bank-minus-desk", "/api/v1/var/scope?" + urlencode({"scope": f"BANK - DESK:{desk}", "asOf": date})
+    if x < 0.90:
+        return "var-basket", "/api/v1/var/scope?" + urlencode({"scope": f"PORT:PF-BASKET-BIG-{r.randrange(a.var_big_baskets):02d}", "asOf": date})
+    if r.random() < 0.5:
+        return "var-contrib", "/api/v1/var/scope/contributions?" + urlencode({"scope": f"DESK:{desk}", "by": "position", "asOf": date})
+    return "var-path", "/api/v1/var/scope/path?" + urlencode({"scope": node(), "page": 0, "size": 60, "asOf": date})
+
+
 def pick(r: random.Random, a):
+    var_share = getattr(a, "var_share", 0.0) or 0.0
+    if var_share and r.random() < var_share:
+        label, url = var_pick(r, a)
+        return label, url, None
     share = getattr(a, "history_share", 0.0) or 0.0
     if share and r.random() < share:
         return "history", history_pick(r, a), None
@@ -84,10 +119,15 @@ def pick(r: random.Random, a):
 
 async def user(n: int, client, stats: dict, stop: float, a) -> None:
     r = random.Random(n * 7919 + int(time.time()))
+    if isinstance(client, list):                       # several servers: user n asks server n mod k
+        client = client[n % len(client)]
     while time.time() < stop:
         label, ent, date = pick(r, a)
         cp = f"CP-{r.randrange(a.counterparties):05d}"
-        url, headers = request_of(label, ent, date, cp, a)
+        if label.startswith("var-"):
+            url, headers = ent, {}
+        else:
+            url, headers = request_of(label, ent, date, cp, a)
         t = time.time()
         try:
             resp = await client.get(url, headers=headers)
@@ -133,18 +173,22 @@ def summary(stats: dict, elapsed: float, a) -> dict:
 
 async def run(a) -> dict:
     import httpx
-    base = a.console or a.server
+    bases = [a.console] if a.console else [b.strip() for b in a.server.split(",") if b.strip()]
     headers = {}
     if a.server:
         headers["Authorization"] = "Bearer " + open(a.token_file, encoding="utf-8").read().strip()
     limits = httpx.Limits(max_connections=a.users + 10, max_keepalive_connections=a.users + 10)
-    async with httpx.AsyncClient(base_url=base, timeout=60, limits=limits, headers=headers, follow_redirects=True) as client:
+    clients = [httpx.AsyncClient(base_url=b, timeout=60, limits=limits, headers=headers, follow_redirects=True) for b in bases]
+    try:
         if a.console:
-            await client.post("/login", data={"user": a.user, "password": a.password})
+            await clients[0].post("/login", data={"user": a.user, "password": a.password})
         stats: dict = {}
         t0 = time.time()
-        await asyncio.gather(*(user(i, client, stats, t0 + a.seconds, a) for i in range(a.users)))
+        await asyncio.gather(*(user(i, clients if len(clients) > 1 else clients[0], stats, t0 + a.seconds, a) for i in range(a.users)))
         elapsed = time.time() - t0
+    finally:
+        for c in clients:
+            await c.aclose()
     return summary(stats, elapsed, a)
 
 
@@ -163,10 +207,20 @@ def main(argv=None) -> int:
     ap.add_argument("--dates", default="2026-10-07,2026-10-08,2026-10-09,2026-10-13,2026-10-14,2026-10-15,2026-10-16")
     ap.add_argument("--history-share", type=float, default=0.0, help="the share of requests that ask a history (0.15 in the Drishti*net soak)")
     ap.add_argument("--equities", default="", help="equity ids whose history may be asked (comma separated; none: trades and counterparties)")
+    ap.add_argument("--var-share", type=float, default=0.0, help="the share of requests that are VaR questions (vargen.py's lake)")
+    ap.add_argument("--var-dates", default="2026-09-29,2026-09-30", help="the business dates the VaR questions ask")
+    ap.add_argument("--var-les", type=int, default=4)
+    ap.add_argument("--var-divisions", type=int, default=5)
+    ap.add_argument("--var-desks", type=int, default=100)
+    ap.add_argument("--var-books-per-desk", type=int, default=10)
+    ap.add_argument("--var-big-baskets", type=int, default=10)
     ap.add_argument("--fail-bucket", type=float, default=10, help="seconds per bucket of failedBuckets")
     a = ap.parse_args(argv)
     a.dates = [d.strip() for d in a.dates.split(",") if d.strip()]
     a.equities = [e.strip() for e in a.equities.split(",") if e.strip()]
+    a.var_dates = [d.strip() for d in a.var_dates.split(",") if d.strip()]
+    if not 0 <= a.var_share <= 1:
+        ap.error("--var-share is a share: 0 to 1")
     if not 0 <= a.history_share <= 1:
         ap.error("--history-share is a share: 0 to 1")
     if a.server and not a.token_file:

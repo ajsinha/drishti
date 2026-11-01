@@ -1983,6 +1983,9 @@ drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data
                                                        one line {"id": "SOFR-HISTORY", "rows": [...]}: the file connector's reading of a
                                                        CSV feed file, so FIX SOFR-HISTORY opens the same document
 drishti.py convert big.json --out -                    to standard output
+drishti.py convert trade.tar.gz                        trade.jsonl: an archive's JSON Lines, its members in name order
+drishti.py convert book.zip --dataset trade            trade.jsonl: the archive's one dataset, named
+drishti.py convert bundle.zip                          bundle/trade.jsonl, bundle/position.jsonl: one file per folder (each a dataset)
 ```
 
 | Option | Does |
@@ -1990,6 +1993,11 @@ drishti.py convert big.json --out -                    to standard output
 | `--out FILE` | where to write (default: the input's name with `.jsonl`; a folder: `<folder>.jsonl` beside it; `-`: standard output) |
 | `--rows-document` | a CSV file becomes one line, `{"id": <file name>, "rows": [...]}`, as the file connector serves a CSV feed file |
 | `--force` | replace an existing output file |
+| `--dataset NAME` | an archive without folders: the name of its one dataset, so of the output (default: the archive's name, `trade.tar.gz` → `trade.jsonl`) |
+
+An archive (`.zip`, `.tar.gz`, `.tgz`, `.tar`) is read by the loaders' archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)):
+without folders, its JSON Lines members become one file; with folders one level deep, one file per folder in the folder `--out` names
+(default: the archive's name beside it); other members are skipped with a note, and an unsafe or mixed archive is refused.
 
 `drishti.py convert data/feeds/fixing/SOFR-HISTORY.csv --rows-document --out data/feeds/fixing.jsonl` prints
 `data/feeds/fixing.jsonl: 1 lines from data/feeds/fixing/SOFR-HISTORY.csv`. A line that cannot be read stops the run and names it
@@ -2083,6 +2091,9 @@ drishti.py var status                                              settings, the
 drishti.py var shards --date 2026-09-30                            VaR sharding: the date's shard map, owners, members ready (2.9.6)
 drishti.py var shards --drain                                      hand this member's shards over before it stops (administrators)
 drishti.py var basket hedges "WHERE:'hedge' in TAGS" --share role:market-risk
+drishti.py var basket-delete hedges                                delete your own basket (captures of it are kept)
+drishti.py var basket-delete unwind --owner asha --reason 'left the desk'   an administrator deletes anyone's, audited, the owner told
+drishti.py var baskets --all --owner asha                          every person's baskets (administrators), filtered by owner
 drishti.py var capture 'BASKET:asha/hedges' --note 'before the unwind'
 drishti.py var compare CAP-20260930-7 now
 drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250   the Python engine: before and after hypothetical trades
@@ -2091,6 +2102,8 @@ drishti.py var show BANK --horizon 10d --method sum                the sum of 10
 drishti.py var show BANK --horizon 10d --method sqrt10             the 1-day figures × √10
 drishti.py var show BANK --confidence 95                           VaR at 95% (one of drishti.var.confidences), ES with --es-confidence
 drishti.py var parts DESK:RATES --horizon 10d --method sum         parts, path, history, tree and capture take the same lens
+drishti.py var show BANK --stressed                                stressed VaR: the date's stress scenario set, in USD (213,637,794 on the demo)
+drishti.py var show NODE:MGMT~BANK --stressed --horizon 10d --method sum   the same at 10 days; a node's 12-week average printed too
 ```
 
 `--horizon`, `--method`, `--confidence` and `--es-confidence` (2.9.7) read any answer through a lens: the headline then says
@@ -3298,6 +3311,12 @@ environment `DRISHTI_JAR=...` (the tests that run `sutra lint` are skipped witho
 
 ## 15. The headless Sutra tool
 
-`sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
+`sutra lint|test|preview|shape|design` is the Java tool behind `drishti.py sutra` (section 4): it needs no running server and is what CI runs.
+It writes nothing to the site it runs in, even from the repository folder beside a running server: the engine starts with a scratch data
+folder made for the command and deleted after it (identity database, content store, caches, derived pages, temp files; its JVM temp
+folder is `DRISHTI_TMP_DIR`, else a fresh folder in the system temp folder), the packs' connector templates are read in memory (nothing
+in `config/connectors/`), and the official VaR and exposure captures, the demo ticker, hot reload, compute workers, write-back and
+Drishti*net are off. The site's lakes (`DRISHTI_DELTA_ROOT`, `DRISHTI_ICEBERG_ROOT`, `DRISHTI_FILES_ROOT`, `DRISHTI_FEEDS`, each
+defaulting under `DRISHTI_DATA_DIR` or `data/`) and its added and installed packs are still read. The `tests/<sutra>/` convention, `expect.yaml`, the exit codes and
 CI wiring are section 15 of the [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#15-testing-expectyaml-sutra-linttestpreview-ci); the workbench's own use of the same command is in
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#26-the-command-line-and-ci). This section replaces the former `SUTRA_CLI.md`.

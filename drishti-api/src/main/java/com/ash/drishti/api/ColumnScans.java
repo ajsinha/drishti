@@ -35,6 +35,7 @@ public final class ColumnScans {
 
     private ColumnScans() {}
 
+    /** A scan of {@code r} over the source's columns, or empty when the source cannot answer every requested path as a column. */
     public static Optional<ArrowScan> over(SourcePlugin source, ScanRequest r) {
         if (!source.columnar(r.kind()).containsAll(r.paths())) {
             return Optional.empty();

@@ -42,20 +42,21 @@ import org.springframework.context.event.EventListener;
  * figures the position, portfolio and desk pages show.
  */
 @Configuration
-@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class})
+@EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class})
 public class VarConfiguration {
 
     @Bean(destroyMethod = "close")
     public VarService varService(VarProperties props, VarShardingProperties sharding, SourceRouter router, Entitlements entitlements,
             ContentStore store, ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs,
             ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests,
-            ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk) {
+            ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk, VarReadProperties reads) {
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         com.ash.drishti.compute.var.VarBook.positionCacheBytes(props.memoryBudgetMb() * 1024 * 1024 / 4);   // heap tier: a quarter of a date's budget
         VarAccess access = new VarAccess(props, entitlements);
         java.util.function.Supplier<Hierarchies> hierarchies = Hierarchies.of(props, packs::getIfAvailable);   // a bad setting refuses the start
         VarLoader loader = new VarLoader(router, props, sums, rules(props, packs), new VarTier(props.tier()).start().budget(disk.getIfAvailable()),
                 hierarchies);
+        loader.reads(reads.options());                                  // a first open's files decoded several at once (VAR_GUIDE.md 27a.6)
         VarService svc = new VarService(props, loader, access, new VarSaved(store, access::seesAll), new VarOfficialStore(store),
                 audit.getIfAvailable(), sums);
         svc.saved().words(() -> svc.words().keySet());
@@ -65,6 +66,24 @@ public class VarConfiguration {
                 sums).start());
         VarPositions.install(new VarPositions(svc));
         return svc;
+    }
+
+    /** Readiness waits for the VaR engine's newest date (CD1, drishti.node.readiness.engines). */
+    @Bean
+    com.ash.drishti.server.node.ReadinessGate varNewestDateReady(VarService svc) {
+        return VarNodeParts.newestDate(svc);
+    }
+
+    /** Readiness waits for the VaR shards this member owns (CD1, drishti.node.readiness.shards). */
+    @Bean
+    com.ash.drishti.server.node.ReadinessGate varShardsReady(VarService svc) {
+        return VarNodeParts.shards(svc);
+    }
+
+    /** The VaR shards in the drain before a stop (CD2). */
+    @Bean
+    com.ash.drishti.server.node.Drainable varShardsDrain(VarService svc) {
+        return VarNodeParts.drain(svc);
     }
 
     /** The VaR engine's caches in Admin, Caches (2.9.7). */

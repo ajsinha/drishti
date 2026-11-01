@@ -17,7 +17,7 @@
   ],
   "containerDefinitions": [
     { "name": "server", "image": "${ECR_REGISTRY}/drishti-server-ecs:${DRISHTI_VERSION}",
-      "cpu": ${SERVER_CPU}, "memory": ${SERVER_MEMORY}, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 60,
+      "cpu": ${SERVER_CPU}, "memory": ${SERVER_MEMORY}, "essential": true, "readonlyRootFilesystem": true, "stopTimeout": 120,
       "portMappings": [{ "containerPort": 18480, "protocol": "tcp" }],
       "mountPoints": [
         { "sourceVolume": "data", "containerPath": "/opt/drishti/data" },
@@ -37,8 +37,9 @@
         { "name": "DRISHTI_TOKEN_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_TOKEN}" },
         { "name": "DRISHTI_NET_SECRET", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_NET}" },
         { "name": "DRISHTI_SEED_USERNAME", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_ADMIN}:username::" },
-        { "name": "DRISHTI_SEED_PASSWORD", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_ADMIN}:password::" } ],
-      "healthCheck": { "command": ["CMD-SHELL", "curl -fsS --max-time 3 http://$(hostname -I | awk '{print $1}'):18480/actuator/health/readiness"],
+        { "name": "DRISHTI_SEED_PASSWORD", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_ADMIN}:password::" },
+        { "name": "DRISHTI_DRAIN_TOKEN", "valueFrom": "arn:aws:secretsmanager:${AWS_REGION}:${AWS_ACCOUNT_ID}:secret:${SECRET_DRAIN}" } ],
+      "healthCheck": { "command": ["CMD-SHELL", "curl -fsS --max-time 3 http://$(hostname -I | awk '{print $1}'):18480/actuator/health/liveness"],
                        "interval": 15, "timeout": 5, "retries": 4, "startPeriod": 180 },
       "logConfiguration": { "logDriver": "awslogs", "options": { "awslogs-group": "/drishti/${DRISHTI_ENV}", "awslogs-region": "${AWS_REGION}",
                                                                  "awslogs-stream-prefix": "${NODE}" } } },

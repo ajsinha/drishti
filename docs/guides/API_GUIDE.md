@@ -51,6 +51,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Connectors (`/api/v1/admin/connectors`)](#connectors-apiv1adminconnectors)
    - [Administration: Artifacts (`/api/v1/admin/artifacts`)](#administration-artifacts-apiv1adminartifacts)
    - [Data loads: telling Drishti a batch landed](#data-loads-telling-drishti-a-batch-landed)
+   - [Administration: node readiness and the drain before a stop (2.9.7)](#administration-node-readiness-and-the-drain-before-a-stop-297)
    - [Administration: health and caches](#administration-health-and-caches)
    - [Drishti*net (`/api/v1/net`)](#drishtinet-apiv1net)
    - [Outside /api/v1: OpenAPI and actuator](#outside-apiv1-openapi-and-actuator)
@@ -202,6 +203,7 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 | `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |
 | `bi:admin` | change a workspace and the BI settings | the workspace admin role or `bi-admin` |
 | `ai:use`, `ai:admin` | call the configured models and MCP tools; send a test call to a model | the admin role for `ai:admin` |
+| `node:drain` | drain a server before it stops and take it back (the stop hooks and the rolling upgrade runner) | the admin role |
 
 Send it in the `Authorization` header:
 
@@ -1750,11 +1752,27 @@ that did not come. Everything about it (every field, the idempotency rules, the 
 Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and `data-load-config-reset`. `GET /admin/health` lists
 `dataLate` and is `DEGRADED` while it is not empty.
 
+### Administration: node readiness and the drain before a stop (2.9.7)
+
+This server as a node of a cluster ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#91-health-endpoints), `CD1` and `CD2`).
+Administrators; a personal token needs the `node:drain` scope for the `POST`.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/node` | `{node, drained, since, safeToStop, parts: [{name (net, var-shards), draining, detail, safeToStop}], readiness: {status (UP, DOWN, OUT_OF_SERVICE), enabled, waitingFor: {gate: [line]}}}`: what `/actuator/health/readiness` waits for (joining, an engine's newest date opening, an owned VaR shard not ready) and the drain's state |
+| `POST` | `/admin/node/drain` | body `{"on": true}` (no body: on) drains Drishti\*net's forwarding and the VaR shards at once and turns readiness `OUT_OF_SERVICE`; `safeToStop` once every part has handed its work over (the forwarding after `drishti.node.drain.settle-seconds`, the shards once none is held here). `{"on": false}` takes the node back (a restart does too). The same answer as the `GET`. Audited as `node-drain`, `node-undrain`. The stop hooks (`deploy/bin/drishti-node.sh`) and the rolling upgrade runner (`tools/rolling.py`) call it |
+
+```bash
+curl -s -X POST -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" -H 'Content-Type: application/json' -d '{"on":true}' $B/admin/node/drain | jq '{drained, safeToStop}'
+until curl -s -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" $B/admin/node | jq -e .safeToStop >/dev/null; do sleep 5; done
+```
+
 ### Administration: health and caches
 
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including (2.9.7) `disk` (`{path, totalBytes, freeBytes, guardBytes, state (ok, amber, red), folders: [{name, path, usedBytes, limitBytes, state, oldest}]}`; red makes the status `DEGRADED`), `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). Cheap enough to poll every few seconds |
+| `GET` | `/admin/alerts` | admin. The platform alert rules (from `config/alerts/platform-alerts.yaml`, with any rule that could not be read and why), the open alerts (rule, severity, value, threshold, since) and the recent closed ones; the same alerts appear on Admin → Health and in administrators' inboxes ([OPERATIONS.md](../admin/OPERATIONS.md)) |
 | `GET` | `/admin/caches` | admin. 2.9.7: `{memory, disk, caches}`. `memory`: the cache budget (`budgetBytes`, `usedBytes`, `cacheShare`, `pools`) and the heap (`heapMaxBytes`, `heapUsedBytes`); `disk`: `freeBytes`, `guardBytes`, `state` and each folder's `usedBytes` against `limitBytes`; `caches`: one row each, `{name, owner, type, where (heap, mapped, disk), path, sizeBytes, limitBytes, entries, limitEntries, ttlSeconds, oldestAgeSeconds, hits, misses, freshness, dates, lastPurge {at, by, date}, stats}` (a value it cannot say is null): `engine`, `history`, `memory-budget`, every connector that caches, `var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`, `exposure.answers`, `exposure.trade-paths`, `exposure.dates`, `exposure.hot-files`, `exposure.views`, `bi.results`, `bi.layers`, `security.pack-access`, `connectors.id-maps`. Before 2.9.7 the answer was the list of `{name, type, stats}` alone |
 | `GET` | `/admin/caches/{name}/dates` | admin, 2.9.7. The business dates a cache holds, newest first: `{date, state (open, disk, held), sizeBytes, entries or files, versions, digest, builtAt, lastUsedAt}` (what the cache can say); `[]` for a cache without dates; `404 DRS-5004` for no such cache |
 | `GET` | `/admin/connectors/{name}/index` | admin. The connector's multi-day type-ahead index: `{enabled, reload: {running, trigger, total, done, current, startedAt, finishedAt, error}, auto: {enabled, everySeconds, lastCheck, nextCheck, lastChange, lastChangeWhat}, days: [{kind, date, ids, tier (heap, disk, none), bytes, builtAt, building, lastError}]}`; `enabled` is false when the connector keeps one day. `404 DRS-5033` for no such running connector |
@@ -1907,7 +1925,7 @@ them on your monitoring network in production.
 | `/api/docs` | the OpenAPI 3 document (JSON) for every endpoint |
 | `/api/docs/ui` | Swagger UI (redirects to the UI page) |
 | `/public/about` | no sign-in needed: `{product, version, notice, signIn: {required, password, singleSignOn}}`, what the console's sign-in page shows |
-| `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness` |
+| `/actuator/health` | `{"status":"UP","groups":["liveness","readiness"]}`; probes at `/actuator/health/liveness` and `/actuator/health/readiness`. 2.9.7: readiness is its own group and means ready: `DOWN` (`503`) while the node joins Drishti\*net, while an engine's newest date opens or a VaR shard it owns is not ready, `OUT_OF_SERVICE` (`503`) while drained; `/actuator/health` and liveness never wait for it ([node readiness](#administration-node-readiness-and-the-drain-before-a-stop-297)) |
 | `/actuator/info` | build information |
 | `/actuator/metrics` · `/actuator/metrics/{name}` | Micrometer metrics |
 | `/actuator/prometheus` | the same in Prometheus text format |
@@ -3078,6 +3096,14 @@ A currency with no scenario FX on the date answers `422 DRS-5207`; a `ccy` that 
 scenario PVs are converted to USD when the date loads; a failed scenario rejects its trade (`DRS-5206` in `provenance.rejections`), and
 `provenance.fx` says where each currency's rates came from ([section 15.9](VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency-as-built-294)).
 
+**Stressed VaR.** The same answers, `/tree` and a capture's body take `set=stressed` (`set=normal` is the default): the scope on the
+date's stress scenario set (today's positions under a 12-month stress period's moves), in USD, with any horizon and offered confidence;
+the answer says `set` (`NORMAL` or `STRESSED`) and `lens.stressSet` (`id`, `from`, `to`, `scenarios`, `description`, `synthetic`), and a
+node's `stressAverage` (the mean of its official stressed VaR over `drishti.var.stress.average-weeks`, 12). No limit use, no backtest.
+A date without a stress set answers `404` (*no stress scenario set on …*); `ccy` other than USD, `window` or `es-confidence` with it,
+or a `set` that is neither, answer `400`. `GET /api/v1/var/scope?scope=BANK&set=stressed` answers `var` 213,637,794, `k` 3,
+`scenarios` 250 on the demo data of 2026-09-30 ([VAR_GUIDE.md section 18.8](VAR_GUIDE.md#188-stressed-var)).
+
 **Horizon and confidence (2.9.7).** The answers of a scope (`/scope`, `/scopes/{scope}`, `/scope/path`, `/scope/history`,
 `/scope/contributions`, `/scope/currencies`), `/tree` and `POST /captures` (in the body) take a lens: `horizon` (`1d`, the default, or
 `10d`), `method` (`sqrt10`: the 1-day × √10; `sum`: each scenario the sum of 10 consecutive 1-day P&Ls, N − 9 overlapping windows;
@@ -3098,17 +3124,20 @@ the list without a lens) stays the 2.9.4 comparison (`override`). For example
 | `GET /api/v1/var/scopes/{scope}` | the same for a simple scope in the path (`/var/scopes/DESK:RATES`); a scope with a slash uses `?scope=` |
 | `GET /api/v1/var/scope/path?scope=&page=&size=` | the P&L vector: histogram, worst 25, series and a page of the ranked scenarios |
 | `GET /api/v1/var/scope/history?scope=` | VaR, ES and hypothetical P&L over 250 days, the exceptions and the Basel traffic light |
-| `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node` (a node's child nodes; `400` on a scope without any), `part` (a basket's or an ad-hoc union's terms, the default for two terms or more), `position`, `trade`, `desk` or `book` (an aggregate-only viewer gets no position or trade level). Over `drishti.var.max-parts` the largest by gross size are kept (`truncated`, `total`); a masked field reads `•••` in the rows. `Accept: application/vnd.apache.arrow.stream` (2.9.7) answers it as Arrow, the rows the record batch ([Answers as Arrow](#answers-as-arrow-the-accept-header)) |
+| `GET /api/v1/var/scope/contributions?scope=&by=&scenario=` | standalone, component, incremental and marginal VaR of the parts; `by` is `child` (the default: child nodes, else positions, else trades), `node` (a node's child nodes; `400` on a scope without any), `part` (a basket's or an ad-hoc union's terms, the default for two terms or more), `position`, `trade`, `desk` or `book` (an aggregate-only viewer gets no position or trade level). Over `drishti.var.max-parts` the rows are the largest by gross size (`truncated`, `total`, `shown`); `sumStandalone`, `sumComponent` and `diversification` are over every part ([VAR_GUIDE.md section 27a](VAR_GUIDE.md#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)); a masked field reads `•••` in the rows. `Accept: application/vnd.apache.arrow.stream` (2.9.7) answers it as Arrow, the rows the record batch ([Answers as Arrow](#answers-as-arrow-the-accept-header)) |
 | `GET /api/v1/var/tree?hierarchy=` | every node of the hierarchy (default `MGMT`) with its figures, and the stored portfolios |
 | `GET /api/v1/var/status` | the settings (confidence, rank rule, memory budget, hot dates, kinds, the position rules, the official captures), the tiered memory (`tier`: mode, how this JVM maps and unmaps, the hot files on disk and their bytes, the dates open, builds and reopenings) and the dates loaded (each with its tier, hot file, vector and aggregate bytes, rejected and left-out rows and batch ids, and any date refused) |
 | `POST /api/v1/var/reload` | administrators: drops the loaded dates so the next request maps the date's hot file again (the same inputs) or reads the lake (after a load). 2.9.7: `?date=YYYY-MM-DD` drops that business date only (its answers, views, currencies and shard state), the others stay open; `{reloaded, date}`; `400 DRS-5001` for a bad date |
 | `GET /api/v1/var/shards?asOf=` | 2.9.6, VaR sharding across Drishti*net ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md)): the settings, the members (owner, in the owners' view, draining, zone, the shards each announces ready), the shard books held here, and the date's shard map with each shard's range, rows, owners and the members ready for it; `{"enabled": false}` when off |
-| `POST /api/v1/var/shards/drain {on}` | 2.9.6, administrators: drain this member (its shards go to other owners before it stops; `safeToStop` in `GET /api/v1/var/shards` once it holds none) or take it back. Never open to a personal API token (`token-never`, like `/var/reload`): a session signed in as an administrator (the console, `drishti.py var shards --drain`, a task's stop hook) |
+| `POST /api/v1/var/shards/drain {on}` | 2.9.6, administrators: drain this member's shards alone (they go to other owners before it stops; `safeToStop` in `GET /api/v1/var/shards` once it holds none) or take it back. Never open to a personal API token (`token-never`, like `/var/reload`): a session signed in as an administrator (the console, `drishti.py var shards --drain`). 2.9.7: before a stop, `POST /api/v1/admin/node/drain` drains the shards and the forwarding together (scope `node:drain`; the stop hooks use it) |
 | `POST /api/v1/var/partial`, `GET /api/v1/var/shards/skeleton` | 2.9.6, members only (signed with the cluster key, one hop; else `401 DRS-5051`): a shard's part of a set summed by an owner (as the caller), a shard's skeleton. `POST /partial` reads data but is in `token-never`, not `token-read-posts`: it is the members' own channel, made with the caller's on-behalf-of token (the owner applies their rights again), like `/compute/peer/**` |
 | `GET /api/v1/var/hints?q=&limit=` | the basket tray's type-ahead: portfolios, the caller's baskets, desks, books, legal entities, divisions, counterparties, positions and trades matching `q`, each `{type, id, name, scope, trades, var}` as the caller (a typed `WORD:id` as written, with a `notice` when it matches nothing) |
 | `POST /api/v1/var/what-if` | the pre-deal what-if: `{scope, items: [{copyOf, factor, label}]}`, copies of booked trades scaled, added to the scope; `{before, after, change, items}` by the Python VaR engine (`503 DRS-5205` without it) |
 | `GET /api/v1/var/baskets`, `POST /api/v1/var/baskets` | the caller's baskets and those shared with them; save one `{name, title, scope, sharedWith}` |
-| `GET /api/v1/var/baskets/{owner}/{name}`, `DELETE …/{owner}/{name}` | one basket; delete one of the caller's own (`204`) |
+| `GET /api/v1/var/baskets/{owner}/{name}` | one basket the caller may read (theirs, or shared with them or one of their roles) |
+| `DELETE /api/v1/var/baskets/{owner}/{name}?reason=&version=` | deletes a basket (`204`): its owner deletes their own, an administrator anyone's; to anyone else it is `404`, as if there were none. `reason` (optional, at most 500 characters; also accepted in a JSON body) goes into the audit entry and, when an administrator deletes it, into the owner's inbox; `version` (optional) is the version the caller saw: a basket changed since is `409 DRS-5007`. Audited as `var-basket-delete` on `<owner>/<name>`: "deleted by its owner" or "deleted by administrator `<user>`", with the version, whom it was shared with and the reason. Captures of it keep their scope and members; the people it was shared with lose it ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)) |
+| `DELETE /api/v1/var/baskets/{name}?reason=&version=` | deletes one of the caller's own baskets by its name (`drishti.py var basket-delete NAME`), as above |
+| `GET /api/v1/var/admin/baskets?owner=` | administrators (`403` otherwise): every person's baskets, each `{id, owner, name, description, type, scope, sharedWith, createdAt, updatedAt, version, bytes}`; `owner` keeps the owners that contain it (any case). Admin → Ad-hoc scopes reads it |
 | `POST /api/v1/var/captures` | `{scope, note}`: captures the scope's VaR now as an immutable record (`201`) |
 | `GET /api/v1/var/captures?scope=`, `GET /api/v1/var/captures/{id}` | the captures (of one scope); one capture with its figures |
 | `GET /api/v1/var/captures/{id}/csv?part=` | a capture as CSV: its provenance as `#` lines, then the vector by scenario date, or its components with `part=components` |
@@ -3138,7 +3167,7 @@ curl -s -X POST $B/compute/var-whatif/var-whatif -H 'Content-Type: application/j
 ```
 
 The same answers are `GET /api/v1/views/var-result/DESK:RATES` (a `~` inside a node id is written `%7E`), and on the command line
-`drishti.py var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|official|reload|whatif`
+`drishti.py var show|parts|path|history|tree|status|capture|captures|compare|basket|baskets|basket-delete|official|reload|whatif`
 ([TOOLS.md](TOOLS.md)).
 
 The official captures are also appended to `${DRISHTI_DELTA_ROOT}/risk-results/var-official/` (Delta, append-only, a row per node and
@@ -3426,6 +3455,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, **Load data** (`POST /admin/packs/{name}/data`), the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
 | `ai:use` | `POST /ai/chat`, `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) and the BI hooks `POST /bi/ai/draft`, `/bi/ai/ask`, `/bi/ai/explain`, `/bi/ai/suggest`, `/bi/ai/explain-checks`, `/bi/ai/dataset-helper` ([BI with AI](#bi-with-ai-apiv1biai)) | any signed-in user, under the AI policy (and the BI power each hook needs) |
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
+| `node:drain` | `POST /admin/node/drain` (2.9.7: the drain before a stop, [node readiness and drain](#administration-node-readiness-and-the-drain-before-a-stop-297)); give the stop hooks' token this scope alone | `admin` |
 | `edit` | Write-back ([changes](#write-back-changes-280)): `POST /changes`, `POST /changes/{id}/approve`, `/reject` and `/withdraw`. No token has it unless chosen; another write scope never implies it; Admin → Edits' switches are never open to a token | the `edit` power (and, to approve, an approver role, never your own change), the field's roles; editing must be on |
 
 There is no `admin` scope and no `data:admin`: the server has no data-loading endpoint (data is loaded by your ETL, or staged by

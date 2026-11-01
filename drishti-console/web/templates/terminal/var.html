@@ -28,8 +28,9 @@
 {% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-ccy="{{ ccy }}"
-     data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}">
+<div class="vx" data-var data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-admin="{{ 'true' if admin else '' }}" data-ccy="{{ ccy }}"
+     data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}"
+     data-set="{{ lens.set if lens and lens.set else '' }}">
   <div class="vx-status" aria-live="polite">
     <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
     <span>Business date <b class="mono" data-vx-date>…</b></span>
@@ -43,6 +44,13 @@
       <span>Reporting currency</span>
       <select class="vx-select vx-ccy-select" data-vx-ccy aria-label="Reporting currency">
         <option value="{{ ccy or 'USD' }}">{{ ccy or 'USD' }}</option>
+      </select>
+    </label>
+    <label class="vx-ccy vx-lens" title="Normal: the date's own scenarios. Stressed: today's positions revalued under the moves of a 12-month stress period (the date's stress scenario set), in USD; every panel follows">
+      <span>Scenarios</span>
+      <select class="vx-select vx-ccy-select" data-vx-scenarios aria-label="Normal or stressed VaR">
+        <option value="">Normal</option>
+        <option value="stressed"{% if lens and lens.set == 'stressed' %} selected{% endif %}>Stressed</option>
       </select>
     </label>
     <label class="vx-ccy vx-lens" title="The horizon: 1 day, or 10 days from the same 1-day scenarios (the 1-day figures × √10, or each scenario the sum of 10 consecutive days); every panel follows">
@@ -119,6 +127,7 @@
               <button type="button" class="vx-segb" data-by="trade" aria-pressed="false">By trade</button>
             </span>
           </div>
+          <p class="vx-note vx-shown" data-vx-ctable-shown hidden></p>
           <div class="vx-scroll"><table class="vx-table" data-vx-ctable><thead><tr><th>Scope</th><th>Trade currency</th><th class="n">Standalone VaR</th><th class="n">Component VaR</th><th class="n">% of total</th><th class="bar"></th><th class="n">Marginal (per 1m)</th><th class="n">Incremental VaR</th></tr></thead><tbody></tbody></table></div>
           <p class="vx-note" data-vx-ctable-note>Component VaR adds up to the scope's VaR (Euler, on the VaR scenario's neighbourhood). Incremental VaR = the scope's VaR minus its VaR without the row. Click a row to drill in; + basket adds it to your basket.</p>
         </div>
@@ -150,4 +159,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

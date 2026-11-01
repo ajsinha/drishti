@@ -112,7 +112,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `view` | `view get`, `view explain` | [5.8](#58-view-and-completion) |
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
-| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var official`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
+| `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var reload`, `var intraday`, `var convert`, `var whatif` | [5.12](#512-var) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -127,7 +127,8 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 ## 4. lake build: a large JSON export into a Delta lake
 
 `drishti.py lake build` reads an export of any size (a JSON array, pretty-printed or on one line, JSON Lines, either gzipped, one
-file or a folder of them) **as a stream**, and writes it as a Delta table the Delta connector reads:
+file or a folder of them, or a `.zip`, `.tar.gz`, `.tgz` or `.tar` archive of them) **as a stream**, and writes it as a Delta table
+the Delta connector reads:
 
 * one row per document: `id` (`--key`, a dotted path), `doc` (the **whole** document as JSON: nested arrays such as `LEGS[]` and
   `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (`--date FIELD`, or `--as-of DATE` for a snapshot);
@@ -140,6 +141,13 @@ file or a folder of them) **as a stream**, and writes it as a Delta table the De
 Memory stays flat: documents are decoded one at a time, staged on disk per business date and partition, and written in batches
 bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). The staged rows, and the Java writer's own temporary
 files, go in a folder beside the lake (never the system temp folder), removed when the run ends. Section 12 has the numbers.
+
+**Archives.** An archive is read in place, its JSON Lines members in name order, by the rule every loader shares
+([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
+table, so an archive's folders, if it has any, must all be that table's name (`--table`, else the kind), and any other folder is
+refused and named; unsafe names, links, nested archives and zip bombs are refused before a row is read. A reject names its member:
+`trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes one archive per business date the same way
+(`2026-10-28.zip`), and `tools/samplegen/load_rows.py --rows` an archive of lake rows, a folder per table.
 
 ### 4.1 Look first: lake scan
 
@@ -698,7 +706,7 @@ java -Xmx8g "-Djava.io.tmpdir=C:\drishti\data\tmp\server" "-Dloader.main=com.ash
 ```
 
 Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file), `--summary FILE`, `--progress FILE`, `--dry-run`
-(read and count only), `--no-lock`, `--no-run-log`, `--json` (the summary on standard output), `-q`. Exit codes as section 4.6: `0`,
+(read and count only), `--dataset NAME` (`source.dataset`), `--no-lock`, `--no-run-log`, `--json` (the summary on standard output), `-q`. Exit codes as section 4.6: `0`,
 `2` (rejects), `1` (failed: no date that was not committed changed), `3` (locked). A local lake gets the run log and summary under
 `<lake>/_drishti-lake` and the lock of section 4.6.
 
@@ -706,7 +714,11 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 
 | Key | Default | Meaning |
 |---|---|---|
-| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several |
+| `source.files` | (required) | a file, a folder (its `*.jsonl`, `*.ndjson`, `*.json`, `*.gz`, `*.zst` and archives `*.zip`, `*.tar.gz`, `*.tgz`, `*.tar`), or a glob (`/data/pv/*.jsonl.gz`, `C:\pv\cob-*.jsonl`, `**` for any depth; on S3 in the last segment: `s3://bucket/pv/2026-10-28/*.jsonl.gz`); a list for several. An archive is read in place by the archive rule ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): its JSON Lines members in name order, one reader taking the archive in one pass |
+| `source.dataset` | the archive's name | an archive without folders is one dataset named after the file (`trade.tar.gz` → `trade`); this names it instead (`--dataset NAME`) |
+| `source.archive.max-mb`, `max-ratio`, `max-members` | `DRISHTI_ARCHIVE_MAX_MB` (102,400), `_MAX_RATIO` (200), `_MAX_MEMBERS` (100,000) | the zip-bomb caps: an archive's declared and expanded sizes at most this many MB and this many times its own size (1 MB always allowed), at most this many entries |
+| `source.archive.validate` | `rows` | with several datasets: `rows` reads and checks every dataset (a dry run) before the first commit, so one that would fail stops the run with nothing loaded; `structure` checks the archives' listing only |
+| `datasets` | none | the datasets an archive's folders may hold, each loaded into its own table `<lake>/<domain>/<name>` (its `target.kind` the name): a list (`[trade, position]`) or a mapping of name to its own `source:`, `target:` and `rejects:` keys over the file's. A folder (or a folderless archive's name) not listed is refused, every one named; without `datasets:` an archive's folders must all be the one table's. Each dataset's summary, manifest, progress and rejects files get its name (`summary-trade.json`); `report.summary` is the run's, every dataset in it; the run prints each dataset's rows, files and version |
 | `source.recursive` | `false` | a folder's subfolders too |
 | `source.storage-options` | none | S3: `region`, `endpoint`, `path-style`, `read-block-kb`, `tls.*`, `proxy.*`. Credentials only from the AWS default chain (environment, profile, instance or task role); a key here is refused |
 | `source.format` | `jsonl` | JSON Lines (the data standard); `.gz` and `.zst` decompressed as streams, multi-member gzip included |
@@ -789,6 +801,30 @@ memory: {budget-mb: 8192, spill-dir: /scratch}
 **A REST catalog** (AWS Glue's Iceberg endpoint): add `target.iceberg: {catalog: rest, uri: 'https://glue.us-east-1.amazonaws.com/iceberg',
 warehouse: '<account id>', catalog.rest.signing-name: glue}` (the domain is the namespace).
 
+**An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/…jsonl.gz` and `position/…jsonl`; each folder its own table,
+every dataset read and checked before the first commit; a folder not listed under `datasets:` refuses the run):
+
+```yaml
+source:
+  files: /landing/2026-10-28/bundle.tar.gz
+  id: id
+  date: BUSINESS_DATE
+target:
+  lake: /var/lib/drishti/delta
+  domain: trading
+datasets:
+  trade: {}                               # trading/trade
+  position: {source: {id: POSITION_ID}}   # trading/position, its own id field
+```
+
+It ends with a line per dataset:
+
+```
+datasets: 2
+  position             3 rows  1 file  version 0  (ok)
+  trade                4 rows  2 files  versions 0 to 1  (ok)
+```
+
 **On Windows** (`C:\drishti\load-pv.yaml`; paths in single quotes keep their backslashes):
 
 ```yaml
@@ -827,8 +863,9 @@ load manifest: /scratch/demo/lake/_drishti-lake/runs/20261028T085451-1591296.man
 (The scratch folder's path shortened to `/scratch`; the line now says `1 file(s)`.)
 
 The tests: `./mvnw -o -q -pl drishti-lakeload test` (equality with the Python path on both formats, through the connectors; one commit a
-date; a stopped load; S3 on S3Mock; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads, a tiny budget: identical tables;
-the 10K throughput) and `python3 -m pytest tools/lake/test_javaload.py`.
+date; a stopped load; S3 on S3Mock, a zip and a .tgz on S3 included; gz, multi-member gz, many gz, zstd, byte ranges, 1 vs many threads,
+a tiny budget: identical tables; the 10K throughput; `ArchivesTest`: the shared archive cases, datasets, refusals) and
+`python3 -m pytest tools/lake/test_javaload.py tools/lake/test_archives.py`.
 
 ## 5. The other `drishti.py` groups
 
@@ -1241,7 +1278,7 @@ picks the business date (default the newest with vectors); `--json` prints the s
   date's shard map with each shard's range, owners and the members ready for it ([VAR_SHARDING.md](../architecture/VAR_SHARDING.md));
   `--drain` / `--undrain` (administrators) hand this member's shards over before it stops, or take shards again.
 - `var capture SCOPE [--note TEXT]`, `var captures [--scope SCOPE]`, `var compare A [B|now]`: captures (writing needs `risk:write`).
-- `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets.
+- `var basket NAME SCOPE [--title] [--description] [--share USER|role:NAME ...]`, `var baskets`: saved baskets; `var baskets --all [--owner TEXT]`: every person's (administrators). `var basket-delete NAME [--owner USER] [--reason TEXT] [--version N]`: deletes your basket, or with `--owner` anyone's (administrators; the reason goes to the audit log and the owner's inbox); captures of it are kept ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 - `var official [--date] [--capture]`: a date's official end-of-day record; `--capture` takes it now (administrators).
 - `var reload [--date D]`: drops the loaded dates (administrators); with `--date` only that business date (2.9.7).
 - `var intraday [--date D]`: each loaded date's intraday layer (2.9.4: updates, trades, batches, what was ignored or refused); `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` appends an intraday batch to the lake (`lake build --mode append`) and raises its data-load signal ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes-what-if-planned-intraday-updates-as-built-in-294)); a file mixing scenario PVs and P&L vectors is routed by each record's `VALUE_TYPE`.
@@ -1433,7 +1470,7 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 and 25), the console and tool tests in parallel, then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
+| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 with the API references' Javadoc and doclint, and 25), the console and tool tests in parallel, a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning), then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |
 | `tools/elements_sheet.py` | builds the `<drishti-view>` and report stylesheets from the console's CSS (run it when `bi.css` or the report CSS changes) |
 | `tools/render_sheet.py` | builds the client-side renderer's sheet (`static/render/<version>/drishti-render.css`) from the console's CSS and writes its `integrity.json`; `--check` says whether either is stale (CLIENT_RENDERER.md section 13). A released version's folder never changes: a change means a new version folder |
@@ -1445,14 +1482,20 @@ of Parquet.
 | `tools/maps/build_regions.py` | builds the vendored region maps from Natural Earth |
 | `tools/packreg/packreg.py` | the signed pack registry behind `pack publish`, `pack keygen` and `pack install` |
 | `tools/bench/trades.py` | synthetic trades of the real ENDUR, CALYPSO and MUREX shapes at scale (`--min`/`--max` a day per system, `--days`, `--counterparties`, with netting sets), trades repeat across days and change like a full daily dump (about 5 % amended a day, a few cancelled), loaded day by day through `lake build`; `--parallel` loads a day's tables side by side, `--order random` loads the days in a shuffled order, `--skip`/`--start` resume a run; writes only under `--lake` and `--tmp`; `--dry-run` says the days and counts ([SCALE_BENCHMARK.md section 9](../admin/SCALE_BENCHMARK.md)) |
-| `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches, and with `--history-share` that share of histories (30 and 60 days, 3M, DIFF, now and then *known at*; `--equities` adds equities); one JSON line with requests a second, p50/p95/p99 and failures per kind of request, and the failures per 10 s (`failedBuckets`) |
+| `tools/bench/users.py` | simultaneous users against a server's API (`--server`, `--token-file`) or a console's pages (`--console`, `--user`, `--password`) for `--seconds`: a mix of single trades, counterparty pages, netting sets and searches, and with `--history-share` that share of histories (30 and 60 days, 3M, DIFF, now and then *known at*; `--equities` adds equities); one JSON line with requests a second, p50/p95/p99 and failures per kind of request, and the failures per 10 s (`failedBuckets`); with `--var-share` that share of VaR questions of the 2.9.7 mix (60% nodes, 20% the bank minus a desk, 10% 50,000-position baskets, 10% contributions and P&L paths) on a `vargen.py` lake; `--server` may name several servers (user n asks server n mod k) |
+| `tools/bench/vargen.py` | synthetic VaR inputs at benchmark size (`--positions`, `--portfolios`, `--dates`): P&L vectors of 509 scenarios from a 40-factor model, the scenario set, the MGMT and LEGAL hierarchies, HIERARCHY, RULE and BASKET portfolios (`--big-baskets` of `--basket-size` positions) and limits, as JSON Lines outside the repository ([BENCHMARK_2_9_7.md](../architecture/BENCHMARK_2_9_7.md)) |
+| `tools/bench/var_bench.py` | the 2.9.7 VaR benchmark with profiling: `load` times each kind into a lake with the Python path or the Java loader (peak memory of the loader's process tree); `run` starts one server or a three-node sharded cluster (`--mode`, `--java 21/25`, `--gc g1/zgc`, ports from 19480) with JFR, GC logs and NMT, takes heap histograms after a full GC at start, with one and two dates open, warm and at the end, times each date's first open under its own recording, measures log bytes at rest and under load, runs `users.py` at each `--users` level and records swap activity; one JSON line per measure ([BENCHMARK_2_9_7.md](../architecture/BENCHMARK_2_9_7.md)) |
+| `tools/bench/jfr_summary.py` | what a benchmark's JFR recordings say: `stages` splits a VaR date's first open into read, intake, sort, aggregate and write from its CPU samples; `views` writes the JDK's views (allocation by class and site, survivors, hot methods, GC pauses and CPU, pinned threads, contention) and counts pinned events and GC pauses |
 | `tools/bench/net_soak.py` (with `tools/bench/soak_check.py`) | the Drishti\*net soak on real processes: three servers (each with only the packs and connectors its lake holds, the others off by connector file), a console, `users.py` load, a shard and the seed killed and restarted, every answer (views, searches, about 140 distinct histories with ten ranges as administrator and as viewer, whose `PRICE` or `NAME` must read masked on every row and in every diff) checked against one server holding all the data; samples memory, heap, open files and threads every minute (the console with all its worker processes, summed and one by one) and ends with a verdict (no wrong answers: each one kept with its time, request and the rule that failed, the first 200 with `partial`, `problems` and a compact diff; errors only in kill windows, p95/p99 per action, memory flat after warm-up: the slope in the steady spans outside the kill windows and `--settle` seconds after each, the whole-run slope reported beside it), exit `0` only when it passes ([CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 17.1](../architecture/CLUSTER_DEPLOYMENT.md#171-the-soak-with-history-queries-and-long-runs-265)) |
 | `tools/bench/scale.sh`, `tools/bench/pinning.sh` | the scale benchmark per store and size, and the virtual-thread pinning comparison (Java 21 / 25); they start and stop their own servers by process id |
 | `tools/windows/start-server.ps1`, `tools/windows/start-console.ps1`, `tools/windows/load-delta.ps1` | starting the server and console, and loading the demo lake, on Windows |
+| `tools/rolling-upgrade.sh` (`tools/rolling.py`; Windows `tools/windows/rolling-upgrade.ps1`) | 2.9.7, the rolling upgrade runner (CD3): a cluster upgraded one node at a time from an inventory (`deploy/rolling.example.yaml`), consoles, BI and data-serving, coordinators, then owners zone by zone; each drained, waited for until safe to stop, stopped, upgraded, started and waited for until ready, on VMs or ECS; `--dry-run`, `--from`, `--only` ([CLUSTER_DEPLOYMENT.md section 10.1](../architecture/CLUSTER_DEPLOYMENT.md#101-rolling-upgrades)) |
+| `deploy/bin/drishti-node.sh` (`deploy/bin/drishti-node.ps1`) | 2.9.7, one server's drain before a stop and its readiness (CD1, CD2): `drain [--wait S]`, `undrain`, `status`, `wait-ready`, and `run COMMAND` (the server images' entry: drains on SIGTERM, then passes it on); the systemd unit's `ExecStop` ([OPERATIONS.md section 7.2](../admin/OPERATIONS.md#72-the-server)) |
 | `tools/windows/publicdata-funds.ps1`, `publicdata-gleif.ps1`, `publicdata-market-data.ps1`, `publicdata-news-and-markets.ps1`, `publicdata-us-equities.ps1`, `publicdata-world-economy.ps1` | the public-data refreshes of those packs on Windows: each runs `tools/publicdata/<pack>.py` with the console's Python (`status`, or `refresh` with the same options) |
 | `tools/smoke.py` | the engine of `drishti.py server smoke` |
 | `tools/javacmd.py` | `java_cmd()`: the one helper every Python launcher of a JVM uses, so each java it starts gets `-Djava.io.tmpdir=` (native libraries unpack in Drishti's own temp folder, not `/tmp`); a guard test fails on a tool that starts java without it ([CONFIGURATION.md](../admin/CONFIGURATION.md)) |
 | `tools/settings_catalogue.py`, `tools/settings_sources.py` | the one configuration document: `settings_catalogue.py` writes every setting of every kind into [CONFIGURATION.md](../admin/CONFIGURATION.md) (and the console's Help → Configuration) from the files themselves, with `tools/settings_schemas.yaml` for the content files; `--check` (in the drill) fails when the document is not current or a key has no meaning; `settings_sources.py` holds its readers (a commented YAML's keys and comments, the connector settings catalogue, the shared `tls.*` and `proxy.*` specs) |
+| `tools/api_docs.py` (with `tools/api_docs.yaml`) | the Java and Python API references **Help → Developer** serves, generated at build time and never committed (see [API references](#api-references) below): `check-java`, `check-python` and `check` (in the drill), `build [--maven] [--out DIR]`, `zip [--to FILE]` |
 
 ```
 $ python3 tools/license_headers.py
@@ -1471,6 +1514,31 @@ python3 tools/bench/net_soak.py --work ~/drishti-scale-test/net-2h --users 20 --
 
 It prints the latency and error table (one line per action, `history` its own) and the verdict, and keeps them in
 `<work>/soak-report.txt` beside the full `<work>/soak.json` (the per-minute samples are its `resources`).
+
+### API references
+
+The Java and Python API references are built from the code and served by the console at **Help → Developer** (`/help/developer`),
+beside the server's REST API (OpenAPI) and the renderer's TypeScript API. `tools/api_docs.yaml` lists what is documented: the Java modules
+`drishti-api` (the plugin and connector SPI), `drishti-compute` (the shard machinery) and `drishti-server` (`ShardedMeasure`), each naming
+its packages in its `pom.xml` (`drishti.apidocs.packages`), and the Python surfaces (the compute worker SDK, BI Python items, `drishti.py`
+and its client library, the pack and test-data generator helpers).
+
+```bash
+./mvnw -o -P api-docs -pl drishti-api,drishti-compute,drishti-server -am process-classes   # Javadoc with doclint, into <module>/target/reports/apidocs
+python3 tools/api_docs.py check            # every public Java member and Python function, class and method documented (exit 1 naming them)
+python3 tools/api_docs.py build --maven    # both references into drishti-console/web/apidocs/<version>/ (the Maven step included)
+python3 tools/api_docs.py zip              # drishti-console/web/apidocs/drishti-api-reference-<version>.zip, for the GitHub release
+```
+
+* **Doclint**: the `api-docs` profile runs Javadoc right after a documented module compiles, with `-Xdoclint:all,-missing` and warnings
+  failing the build, so a broken `{@link}`, bad HTML or a malformed tag stops it there. It adds a few seconds to a build. The drill's
+  Java 21 verify runs with the profile.
+* **Undocumented members**: `check-java` reads the built Javadoc and names each public or protected type, member or package without a
+  comment; `check-python` reads each Python module without importing it and names each public function, class or method without a
+  docstring or a type hint on a parameter or the return (a module's `__all__` says what is public).
+* **Output**: one folder per version under `help.api_docs_dir` (default `drishti-console/web/apidocs`, never committed), with `index.html`,
+  `manifest.json`, `java/<module>/` and `python/`; self-contained (scripts, styles and the search index are files beside the pages). pdoc
+  runs from the interpreter when it has it, else through `uv` at the version `tools/api_docs.yaml` pins.
 
 ## 10. The tools in the console
 

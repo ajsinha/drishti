@@ -217,6 +217,8 @@ the 13 worst (509 × 2.5% = 12.7, rounded up): 75,377,415. Click a row in the UI
 ## Step 4 · Contributions: who makes the VaR
 
 **In the UI.** The **Contributions** tab of the desk: its three books, their standalone, component, incremental and marginal VaR.
+A scope with more positions than `drishti.var.max-parts` (5,000) lists the largest by gross size and says so above the table
+(*5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567*); the **Total** row is over all of them.
 
 ![The rates desk's three books: components adding up to the desk's VaR](img/t25/05-contributions.jpg)
 
@@ -796,7 +798,11 @@ matrix** in its header strip; a trade's, position's, `PNLV` or `SPV` page has th
 - The **foot** keeps each date's **VaR 99% 1-day (rank #6)**, **ES 97.5% 1-day** and **base PV**.
 - Each date's **VaR scenario** is outlined twice and marked **V**; the rest of its **ES tail** (the 13 worst) is outlined and marked **E**.
   The rows open sorted by the worst on the newest date, so the tail is at the top; **Only tail scenarios** keeps just those.
-- **Click a row**: the right-hand panel charts it across the dates against **−VaR** (dashed), and lists the cell's P&L and its rank that
+- The right-hand chart, **Scenarios**, shows the selected date's 509 scenario days in the order of their dates against **−VaR**
+  (dashed), the tail as diamonds; click a point to select that scenario in the matrix. **Across dates** charts the selected row across
+  the five dates instead; **Line · Dots · Area · Bars** switches the type (remembered). With **PV** the reference is the **PV at VaR**
+  (base PV less VaR) beside the base PV.
+- **Click a cell**: its row and date are selected, and the panel lists the cell's P&L and its rank that
   day, its scenario PV against the base PV, the FX used, its days in the tail and the source (batch and data version, linked).
 - **PV** shows base PV plus the P&L; **Change vs day before** each cell less the date before. **Export CSV · Arrow** downloads it all.
 - Open a position (`SMAT POS POS-BOOK-EQD-2~SEC-WARRANT-USD-01`) and **By trade** shows its nine trades under the selected scenario.
