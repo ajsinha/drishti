@@ -1,0 +1,755 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The single-node capacity planner (docs/architecture/RESOURCES_AND_SCALE.md 9.7): ONE file read by three evaluators that must agree.
+#   tools/sizing_planner.py   writes docs/architecture/Drishti-Sizing-Planner.xlsx and the server's template (capacity/template/)
+#   the server                GET /api/v1/admin/capacity serves this file as JSON; capacity.xlsx fills the template's Inputs
+#   the console               static/js/capacity.js evaluates the expressions as you type (Admin -> Capacity)
+# Expressions are a small Excel subset over the names below: + - * / ^ & (text), comparisons (= <> < > <= >=), IF, MAX, MIN, CEILING,
+# INT, ROUND, AND, OR, CHAR. MB is BytesPerMB (1,024 x 1,024 bytes); GB is 1,024 MB. After a change run
+# python3 tools/sizing_planner.py (the workbook, the template and the test vectors follow); --check says when they drift.
+#
+#   inputs        what a planner types (group, label, default, unit, kind int|dec|text, choices, hint)
+#   coefficients  every constant (value, unit, status measured|formula|calibrated|estimate, source)
+#   results       bands of result lines (name, label, expression, unit, why); the band with settings: true is followed by the settings
+#   settings      the configuration keys (key, expression, unit, env, envSource docs|relaxed, why, condition)
+#   jvm           the JVM arguments (flag, expression, condition in words, why, source documented|suggested)
+#   warnings      a sentence, or OK
+#   calibration   the 1,000,000-position benchmark against what it measured, whatever the inputs
+#   examples      the Explain tab's two shapes and the figures it states (checked by the tests of all three evaluators)
+
+version: 1
+settingsFile: "./application.local.yaml (the server's working directory)"
+settingOff: "(exposure off: leave it out)"
+
+inputs:
+  - {name: "Positions", group: "VaR", label: "Positions a business date", default: 300000, unit: "positions", kind: "int",
+     hint: "How many positions one business date holds. Default: the production shape, OTC trades, one trade a position, so positions = trades."}
+  - {name: "Trades", group: "VaR", label: "Trades a business date", default: 300000, unit: "trades", kind: "int",
+     hint: "How many trades those positions are made of. Default: production, about 300,000 trades."}
+  - {name: "TradesPerFungible", group: "VaR", label: "Trades per position, of positions that hold several", default: 2, unit: "trades", kind: "dec",
+     hint: "Only used when trades exceed positions: how many trades a shared (fungible) position holds on average."}
+  - {name: "Portfolios", group: "VaR", label: "Portfolios", default: 4500, unit: "portfolios", kind: "int",
+     hint: "Stored portfolios: baskets, rule portfolios, desk and book portfolios. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 15,000 (desks and books grow with the positions: a desk holds 2,000 positions at both benchmark sizes, BENCHMARK.md 3)."}
+  - {name: "BasketMembers", group: "VaR", label: "Basket members", default: 600000, unit: "members", kind: "int",
+     hint: "Positions named by all the baskets together. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 2,000,000."}
+  - {name: "Nodes", group: "VaR", label: "Hierarchy nodes", default: 8107, unit: "nodes", kind: "int",
+     hint: "Nodes of every risk hierarchy (bank, legal entities, divisions, desks, limit letters...). Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 27,024."}
+  - {name: "BooksCells", group: "VaR", label: "Books and cells", default: 39000, unit: "books + cells", kind: "int",
+     hint: "Trading books plus the cells of column hierarchies. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 130,000."}
+  - {name: "Scenarios", group: "VaR", label: "Scenarios", default: 509, unit: "scenarios", kind: "int",
+     hint: "Scenario days in a P&L vector (509: two years of history plus the base)."}
+  - {name: "TradeCcysPerNode", group: "VaR", label: "Trade currencies per node", default: 1, unit: "currencies", kind: "dec",
+     hint: "On average, how many trade currencies a node's trades are in."}
+  - {name: "LakeYears", group: "VaR", label: "Years of business dates kept in the lake", default: 1, unit: "years", kind: "dec",
+     hint: "How much history the lake keeps (the bank's rule is often 7 years)."}
+  - {name: "HotDates", group: "VaR", label: "Dates in memory (hot-dates)", default: 10, unit: "dates", kind: "int",
+     hint: "Business dates kept open at once; the least recently used one leaves first."}
+  - {name: "PinnedMem", group: "VaR", label: "Pinned dates kept in memory", default: 0, unit: "dates", kind: "int",
+     hint: "Dates that must always stay open (a month-end the desks compare with, an audit date)."}
+  - {name: "PinnedDisk", group: "VaR", label: "Pinned dates kept on disk", default: 0, unit: "dates", kind: "int",
+     hint: "Dates whose hot file is always kept on local disk, so they open in a second (month-ends, year-ends)."}
+  - {name: "CcysAhead", group: "VaR", label: "Reporting currencies built ahead (besides USD)", default: 0, unit: "currencies", kind: "int",
+     hint: "Each one is a whole extra book a date (the shipped setting builds 4: EUR, CAD, JPY, GBP)."}
+  - {name: "StressOn", group: "VaR", label: "Stress set on (1) or off (0)", default: 0, unit: "0 or 1", kind: "int", choices: [0, 1],
+     hint: "1 when stressed VaR is used: the stress set is a book of its own a date."}
+  - {name: "IntradayBatches", group: "VaR", label: "Intraday batches a day", default: 10, unit: "batches", kind: "int",
+     hint: "Intraday batches applied to today's date. Default 10 (hourly over the trading day): assumed, confirm the batch count."}
+  - {name: "UpdatesPerBatch", group: "VaR", label: "Updates per intraday batch", default: 11700, unit: "trades", kind: "int",
+     hint: "Trades amended, added or cancelled in one batch. Default: 39% of the 300,000 trades a day (117,000) over the 10 batches."}
+  - {name: "ExposureOn", group: "Exposure", label: "Exposure on (1) or off (0)", default: 0, unit: "0 or 1", kind: "int", choices: [0, 1],
+     hint: "1 when the counterparty exposure engine serves dates on this server."}
+  - {name: "NettingSets", group: "Exposure", label: "Netting sets", default: 10000, unit: "sets", kind: "int",
+     hint: "Netting sets a business date."}
+  - {name: "ExpTrades", group: "Exposure", label: "Exposure trades", default: 100000, unit: "trades", kind: "int",
+     hint: "Trades with simulated paths a business date."}
+  - {name: "Paths", group: "Exposure", label: "Paths", default: 200, unit: "paths", kind: "int",
+     hint: "Monte Carlo paths a trade."}
+  - {name: "TimeSteps", group: "Exposure", label: "Time steps", default: 24, unit: "grid dates", kind: "int",
+     hint: "Grid dates of a path."}
+  - {name: "ExpHotDates", group: "Exposure", label: "Exposure dates in memory", default: 10, unit: "dates", kind: "int",
+     hint: "drishti.ccr.exposure.hot-dates: exposure dates kept open."}
+  - {name: "TradeRowsPerDay", group: "Trades and BI", label: "Trade and BI rows a day", default: 300000, unit: "rows", kind: "int",
+     hint: "Trade rows loaded a business date, all trade systems together. Default: the same 300,000 production trades, served as trades too."}
+  - {name: "TradeDaysKept", group: "Trades and BI", label: "Days of trade rows kept", default: 252, unit: "days", kind: "int",
+     hint: "Business days of trades kept in the lake (252 is a year)."}
+  - {name: "TradeConnectors", group: "Trades and BI", label: "Trade connectors", default: 3, unit: "connectors", kind: "int",
+     hint: "Trade systems read through their own connector (for example ENDUR, CALYPSO, MUREX)."}
+  - {name: "Users", group: "Users", label: "Concurrent users", default: 50, unit: "users", kind: "int",
+     hint: "People (or programs) asking questions at the same moment at the busiest time."}
+  - {name: "PeakRps", group: "Users", label: "Peak requests a second wanted", default: 100, unit: "requests/s", kind: "dec",
+     hint: "Requests a second the server must answer at the peak."}
+  - {name: "VarShare", group: "Users", label: "Share of VaR questions", default: 0.5, unit: "share", kind: "dec",
+     hint: "Of those requests, the share that are VaR questions (the rest are trades, searches, pages)."}
+  - {name: "JavaVersion", group: "Machine", label: "Java version (21 or 25)", default: 21, unit: "21 or 25", kind: "int", choices: [21, 25],
+     hint: "The Java the server runs on; 25 adds compact object headers."}
+  - {name: "LoadThreads", group: "Machine", label: "Load threads (drishti.var.load-threads)", default: 2, unit: "threads", kind: "int",
+     hint: "Dates that may load from the lake at the same time."}
+  - {name: "Collector", group: "Machine", label: "Garbage collector: auto, G1 or ZGC", default: "auto", unit: "text", kind: "text", choices: ["auto", "G1", "ZGC"],
+     hint: "auto follows the documented rule: generational ZGC from 16 GB of heap, G1 below."}
+  - {name: "DataFolder", group: "Machine", label: "Data folder", default: "/opt/drishti/data", unit: "path", kind: "text",
+     hint: "Where Drishti keeps everything it writes (dumps, logs and temporary files go under it)."}
+  - {name: "ServerJar", group: "Machine", label: "Server jar", default: "drishti-server-{VERSION}-exec.jar", unit: "file", kind: "text",
+     hint: "The server's jar, as the command line starts it."}
+
+coefficients:
+  - {name: "BytesPerMB", value: 1048576, unit: "bytes", status: "formula",
+     source: "1 MB = 1,024 × 1,024 bytes, as the JVM and Admin → Caches count it; 1 GB = 1,024 MB."}
+  - {name: "Scale1M", value: 1000000, unit: "positions", status: "formula",
+     source: "The size every per-million coefficient refers to."}
+  - {name: "BusinessDaysYear", value: 252, unit: "days", status: "formula",
+     source: "Business days a year."}
+  - {name: "BytesPerRun", value: 8, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_book: 8·R, node members kept as runs."}
+  - {name: "RunsPerNode", value: 9.7, unit: "runs", status: "estimate",
+     source: "VAR_GUIDE.md 27.1 worked example: about 2 MB of runs at 27,024 nodes (about 9.7 runs a node)."}
+  - {name: "BytesPerNamedRow", value: 150, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_book: ~150·(B + K + N), names, book and cell runs, nodes and their book lists."}
+  - {name: "BytesPerAggIndexRow", value: 64, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_book: 64·A, the index of the aggregates (A = B + K + N, the rows mapped from the hot file)."}
+  - {name: "BytesPerTradeCols", value: 108, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_book: 108·T, code and number columns of a trade, positionOf, its id index."}
+  - {name: "BytesPerPositionCols", value: 136, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_book: 136·P, a position's columns, run and id index."}
+  - {name: "BytesPerId", value: 72, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_book: 72·(2T + 3P), trade and position ids and the high-cardinality dictionaries."}
+  - {name: "BytesPerCtotValue", value: 8, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_book: 8·(S + 1)·N·C, every node's per-trade-currency totals (float64)."}
+  - {name: "BytesPerPortfolio", value: 1000, unit: "bytes", status: "estimate",
+     source: "VAR_GUIDE.md 27.1: the portfolio definitions are about 30 MB at 15,000 portfolios and 2 million basket members; half given to the portfolios."}
+  - {name: "BytesPerBasketMember", value: 7.5, unit: "bytes", status: "estimate",
+     source: "The other half of those 30 MB, given to the basket members."}
+  - {name: "BookHeapCalibration", value: 0.9707, unit: "factor", status: "calibrated",
+     source: "The final 1,000,000-position users run (tools/bench/results/2.9.10-1m.jsonl; Java 21, G1, 6 GB heap): heap after GC 769 MB at start, 1,352 MB with one date, 2,213 MB with two: 722 MB a date on average (0.72 GB, VAR_GUIDE.md 27.1, BENCHMARK.md 4.8), against 743.8 MB by the H_book formula. Every date is counted at the average (the first date measured less, 583 MB): the safe side. An earlier run that night measured 740 / 1,602 / 2,186 MB; before node members were runs and the aggregates were mapped, a date held about 3.2 GB at this size."}
+  - {name: "FirstOpenOnceMB", value: 0, unit: "MB at 1M positions", status: "calibrated",
+     source: "The users run shows no one-time heap of the first open beyond the average date (one date +583 MB, two +1,444 MB); kept as a coefficient to tune (the earlier run suggested 278 MB)."}
+  - {name: "ProtectedAlways", value: 2, unit: "dates", status: "formula",
+     source: "VAR_GUIDE.md 26.8: the date just used and the newest business date always stay open, on top of the pinned ones."}
+  - {name: "IntradayLayerMB", value: 5, unit: "MB", status: "formula",
+     source: "VAR_GUIDE.md 27.1, H_date: about 5 MB and the updates per intraday layer."}
+  - {name: "IntradayTradeCopies", value: 3, unit: "vectors", status: "formula",
+     source: "VarIntraday: each trade a layer changed keeps three float64 vectors of the scenarios (its difference from the morning, its current P&L, its current USD P&L); only the trade's latest P&L is kept, never the batches."}
+  - {name: "IntradayTradeOverheadB", value: 400, unit: "bytes", status: "estimate",
+     source: "VarIntraday: per changed trade its map entries, value today and texts."}
+  - {name: "IntradayDistinctShare", value: 1.0, unit: "share", status: "estimate",
+     source: "Share of the day's updates that are trades not updated earlier that day (1: every update a different trade, the most heap)."}
+  - {name: "IntradayAggShare", value: 1.0, unit: "share", status: "estimate",
+     source: "VarIntraday: share of the books and nodes whose aggregate a layer re-holds (float64 vectors); with updates spread over the bank, all of them."}
+  - {name: "IntradayUpdateOverheadB", value: 500, unit: "bytes", status: "estimate",
+     source: "VarIntraday.Update: an update in flight holds its P&L and USD P&L (2 float64 vectors) plus its texts and numbers."}
+  - {name: "IntradayJsonBytesPerValue", value: 12, unit: "bytes", status: "estimate",
+     source: "A batch file in JSON Lines: about 12 characters a scenario value, under tmp while lake build appends it."}
+  - {name: "BaseFixedMB", value: 128, unit: "MB", status: "formula",
+     source: "BENCHMARK.md 4.8: the fitted heap at start, 128 MB plus a share per position."}
+  - {name: "BasePerPositionB", value: 605.0, unit: "bytes", status: "calibrated",
+     source: "The users run: 769 MB of heap after GC at start at 1,000,000 positions; minus the 64 MB footer cache (below) and 128 MB, 577 MB over 1,000,000 positions (lake footers' residue, the entity index of the P&L rows). The earlier run: 740 MB."}
+  - {name: "BaseTradeRows", value: 20000, unit: "rows a day", status: "calibrated",
+     source: "The measured start heap already holds the benchmark's trades (20,000 a day over 2 days, 2,000 counterparties); only rows above it are added."}
+  - {name: "FooterCacheDefaultMB", value: 64, unit: "MB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.5: -Ddrishti.parquet.footer-cache-mb, 64 MB by default."}
+  - {name: "FooterBytesPerChunk", value: 700, unit: "bytes", status: "measured",
+     source: "RESOURCES_AND_SCALE.md 3.5: about 700 bytes a column chunk of a Parquet footer."}
+  - {name: "RowsPerRowGroup", value: 128000, unit: "rows", status: "estimate",
+     source: "Rows in one Parquet row group of a trade table."}
+  - {name: "ColumnsPerTable", value: 60, unit: "columns", status: "estimate",
+     source: "Columns of a trade table's Parquet files (each a column chunk in the footer)."}
+  - {name: "SearchIndexCapMB", value: 600, unit: "MB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.5, CONFIGURATION.md: the type-ahead index's index.max-memory, 600 MB."}
+  - {name: "SearchBytesPerRow", value: 200, unit: "bytes", status: "estimate",
+     source: "Heap of the type-ahead index a trade row of the kept day."}
+  - {name: "BiQueryCacheMB", value: 64, unit: "MB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.3: drishti.bi.query.cache-max-bytes, 64 MB."}
+  - {name: "BiPlanAnswersMB", value: 50, unit: "MB", status: "estimate",
+     source: "RESOURCES_AND_SCALE.md 3.3: plan answers, 2,000 entries (drishti.bi.plan.cache-entries), about 25 KB each."}
+  - {name: "HistoryCacheMB", value: 256, unit: "MB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.4, CONFIGURATION.md: drishti.history.cache-mb, 256 MB."}
+  - {name: "VarAnswersMB", value: 32, unit: "MB", status: "estimate",
+     source: "RESOURCES_AND_SCALE.md 3.1: the VaR answers, 512 entries, about 64 KB each."}
+  - {name: "TradeCacheBytesPerRow", value: 1300, unit: "bytes", status: "estimate",
+     source: "BENCHMARK.md 8.2 and 8.4: 1.2 to 1.8 GB of heap after GC with 1.16 million trades on the latest day and 50 users."}
+  - {name: "PerLoadMBAt1M", value: 1600, unit: "MB", status: "formula",
+     source: "VarProperties.PER_LOAD_BYTES: the heap one load holds while it builds a date (its aggregates and currency totals), 1.6 GB at 1,000,000 positions, scaled by positions."}
+  - {name: "ReadBufferMB", value: 64, unit: "MB", status: "formula",
+     source: "VAR_GUIDE.md 27a.6: drishti.var.read.buffer-mb, decoded rows waiting for one load."}
+  - {name: "PerUserMB", value: 2.466, unit: "MB", status: "measured",
+     source: "PER-USER WORKING MEMORY. The 1,000,000-position users run (6 GB heap, Java 21, G1): heap after GC 2,336.2 MB warm at 50 users against 2,212.9 MB with two dates open, (2,336.2 − 2,212.9) ÷ 50; 2,355 MB at the end after 200 users."}
+  - {name: "LiveShare", value: 0.61, unit: "share", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 9.5 and BENCHMARK.md 11: the heap needed is the heap after collection ÷ 0.61 (39% headroom for the collector)."}
+  - {name: "Java25HeapFactor", value: 0.977, unit: "factor", status: "measured",
+     source: "BENCHMARK.md 4.4: Java 25 with compact object headers, 7,335 MB against 7,505 MB at 1,000,000 positions."}
+  - {name: "CompressedOopsMaxGB", value: 31, unit: "GB", status: "formula",
+     source: "Java: compressed object references work up to a heap just under 32 GB; 31g is the safe largest."}
+  - {name: "AlignedOopsMaxGB", value: 64, unit: "GB", status: "formula",
+     source: "Java: with -XX:ObjectAlignmentInBytes=16 compressed references reach 64 GB (objects pad to 16 bytes)."}
+  - {name: "ZgcFromGB", value: 16, unit: "GB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 5.5, PERFORMANCE.md (JVM settings): generational ZGC for large single servers (16 to 36 GB), G1 for small ones."}
+  - {name: "OpenHeapStepMB", value: 64, unit: "MB", status: "formula",
+     source: "drishti.var.open-heap-mb is rounded up to a multiple of this."}
+  - {name: "ZgcSoftMaxShare", value: 0.8, unit: "share", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 5.5: -XX:SoftMaxHeapSize = 0.8 × -Xmx with ZGC (planned in the docs)."}
+  - {name: "ExpShardLoadMB", value: 8192, unit: "MB", status: "estimate",
+     source: "BENCHMARK.md 6: past about 8 GB of value matrices an exposure date's load should be sharded."}
+  - {name: "SingleNodeRamGB", value: 512, unit: "GB", status: "estimate",
+     source: "Past about 512 GB of RAM one server is the wrong shape: plan a cluster."}
+  - {name: "OpenHeapMargin", value: 0.1, unit: "share", status: "estimate",
+     source: "Room in drishti.var.open-heap-mb above the dates in memory, so the safety net does not close a date for a few MB."}
+  - {name: "NetShare", value: 0.4, unit: "share", status: "formula",
+     source: "OpenDates.automaticNet: the automatic safety net is 0.4 × the heap − 512 MB − load-threads × 1.6 GB."}
+  - {name: "NetReserveMB", value: 512, unit: "MB", status: "formula",
+     source: "OpenDates.automaticNet: the 512 MB of that formula."}
+  - {name: "NetLoadMB", value: 1600, unit: "MB", status: "formula",
+     source: "OpenDates.automaticNet: the per-load 1.6 GB of that formula (not scaled by positions)."}
+  - {name: "NetFloorShare", value: 0.1, unit: "share", status: "formula",
+     source: "OpenDates.automaticNet: at least a tenth of the heap."}
+  - {name: "NetGraceSeconds", value: 120, unit: "seconds", status: "formula",
+     source: "-Ddrishti.open-dates.net-grace-seconds: the safety net never closes a date read in the last 120 s."}
+  - {name: "ExpOpenBytesPerTrade", value: 1720, unit: "bytes", status: "measured",
+     source: "BENCHMARK.md 6: an open exposure date, 172 MB of heap at 100,000 trades (matrices mapped)."}
+  - {name: "ExpLoadBytesPerValue", value: 8, unit: "bytes", status: "measured",
+     source: "BENCHMARK.md 6: while loading, every set's value matrix in float64 (sets × paths × steps × 8): 380 MB at 9,901 sets, 200 paths, 24 steps."}
+  - {name: "ExpPathsCacheMB", value: 256, unit: "MB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.2: the exposure trade-paths cache, 256 MB."}
+  - {name: "ExpHotBytesPerValue", value: 6, unit: "bytes", status: "formula",
+     source: "EXPOSURE_GUIDE.md 27.2: V in float32 (4 bytes) and E on the primary dates, half the grid (2 bytes a value)."}
+  - {name: "ExpHotBytesPerTrade", value: 1256, unit: "bytes", status: "calibrated",
+     source: "BENCHMARK.md 6: the hot file of 100,000 trades was 410.8 MB; minus the matrices' 285 MB, 1,256 bytes a trade."}
+  - {name: "ExpPathBytes", value: 4, unit: "bytes", status: "formula",
+     source: "EXPOSURE_GUIDE.md 27.2: trade paths in the lake, float32."}
+  - {name: "ExpPathDaysKept", value: 20, unit: "days", status: "formula",
+     source: "EXPOSURE_GUIDE.md 27.3: trade paths kept at full resolution for 20 business days."}
+  - {name: "ExpDiskDates", value: 60, unit: "files", status: "formula",
+     source: "CONFIGURATION.md: the exposure tier's disk-dates, 60 (the retention may keep more)."}
+  - {name: "HotRowBytes", value: 4, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 26.3: position and trade rows in float32."}
+  - {name: "AggBytes", value: 8, unit: "bytes", status: "formula",
+     source: "VAR_GUIDE.md 26.3: aggregates and currency totals in float64."}
+  - {name: "HotSmallBytesPerTrade", value: 354, unit: "bytes", status: "calibrated",
+     source: "BENCHMARK.md 3: the hot file measured 3.14 GB a date at 1,000,000 positions; the rows, aggregates and totals are 2.79 GB, the rest (ids, columns, runs) 354 bytes a trade (VAR_GUIDE.md 27.1 says about 120)."}
+  - {name: "StressScenarios", value: 250, unit: "scenarios", status: "estimate",
+     source: "RESOURCES_AND_SCALE.md 2.3: a stress window of 250 days."}
+  - {name: "LakeBytesPerValue", value: 2.9535, unit: "bytes", status: "calibrated",
+     source: "Re-benchmark: 2.8 GB of lake for two dates of 1,000,000 vectors of 509 values (read as GB of 1,024 MB, the larger reading)."}
+  - {name: "DiskDates", value: 60, unit: "files", status: "formula",
+     source: "CONFIGURATION.md: drishti.var.tier.disk-dates, 60 hot files kept on disk."}
+  - {name: "CurrencyRetentionDates", value: 5, unit: "dates", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.1: currency books kept on disk for 5 dates."}
+  - {name: "SpillFactor", value: 3, unit: "× hot file", status: "formula",
+     source: "VAR_GUIDE.md 26.8: before a build the tier reserves three times its largest hot file (the disk guard)."}
+  - {name: "LogsGB", value: 1.1, unit: "GB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.8, 6.4: the server log rotated at 1 GB in all, the GC log 5 × 20 MB."}
+  - {name: "DumpsKept", value: 1, unit: "dumps", status: "estimate",
+     source: "OPERATIONS.md: a heap dump is about the size of the heap; one kept."}
+  - {name: "IdMapBytesPerRow", value: 15, unit: "bytes", status: "measured",
+     source: "BENCHMARK.md 8.4: id maps on disk, about 15 bytes a trade a date."}
+  - {name: "TradeLakeBytesPerRow", value: 1500, unit: "bytes", status: "measured",
+     source: "BENCHMARK.md 8.4: about 1.5 KB a trade a day in the lake."}
+  - {name: "GroupedPagesBytesPerRow", value: 550, unit: "bytes", status: "measured",
+     source: "BENCHMARK.md 8.4: grouped pages, about 0.55 KB a trade a cached date."}
+  - {name: "GroupedPagesDates", value: 16, unit: "dates", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.4: grouped pages keep 16 dates."}
+  - {name: "DocCacheGB", value: 1, unit: "GB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.5: the document disk cache, 1 GB a connector."}
+  - {name: "IndexDiskGB", value: 2, unit: "GB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.5: the type-ahead index, index.max-disk 2 GB a connector."}
+  - {name: "BiLayerBytesPerRow", value: 300, unit: "bytes", status: "estimate",
+     source: "BI layers on disk a trade row a day read."}
+  - {name: "BiRunsGB", value: 20, unit: "GB", status: "formula",
+     source: "RESOURCES_AND_SCALE.md 3.3: the BI runs' store, 20 GB."}
+  - {name: "MinFreePercent", value: 10, unit: "%", status: "formula",
+     source: "CONFIGURATION.md: drishti.disk.min-free-percent, 10."}
+  - {name: "MinFreeGB", value: 20, unit: "GB", status: "formula",
+     source: "CONFIGURATION.md: drishti.disk.min-free-gb, 20 (both must hold)."}
+  - {name: "DiskStepGB", value: 50, unit: "GB", status: "formula",
+     source: "Disk recommendations are rounded up to a multiple of this."}
+  - {name: "ResidentShare", value: 0.7458, unit: "share", status: "calibrated",
+     source: "The users run: RSS 11,160 MB at the end minus 6,694 MB committed (NMT) leaves 4,466 MB of mapped hot-file pages, 75% of the two dates' 5,988 MB, under load."}
+  - {name: "BenchPositions", value: 1000000, unit: "positions", status: "measured",
+     source: "The 1,000,000-position benchmark's shape (BENCHMARK.md 3): positions, one trade each. The Calibration check uses only these Bench values."}
+  - {name: "BenchTrades", value: 1000000, unit: "trades", status: "measured",
+     source: "The benchmark's trades."}
+  - {name: "BenchNodes", value: 27024, unit: "nodes", status: "measured",
+     source: "The benchmark's hierarchy nodes."}
+  - {name: "BenchBooksCells", value: 130000, unit: "books + cells", status: "measured",
+     source: "The benchmark's books and cells (VAR_GUIDE.md 27.1's worked example)."}
+  - {name: "BenchPortfolios", value: 15000, unit: "portfolios", status: "measured",
+     source: "The benchmark's portfolios."}
+  - {name: "BenchMembers", value: 2000000, unit: "members", status: "measured",
+     source: "The benchmark's basket members."}
+  - {name: "BenchScenarios", value: 509, unit: "scenarios", status: "measured",
+     source: "The benchmark's scenarios."}
+  - {name: "BenchUsers", value: 50, unit: "users", status: "measured",
+     source: "The users of the warm-heap measure."}
+  - {name: "BenchVarShare", value: 0.5, unit: "share", status: "measured",
+     source: "The users run's share of VaR questions (50.5%)."}
+  - {name: "MeasuredXmxMB", value: 6144, unit: "MB", status: "measured",
+     source: "The -Xmx of the 1,000,000-position runs (6 GB)."}
+  - {name: "ResidentFirstIdle", value: 0.5207, unit: "share", status: "calibrated",
+     source: "The users run: RSS rose 2,281 MB with the first date (2,875 → 5,156 MB); less the 722 MB of the date's heap, 52% of its 2,994 MB hot file, written and read."}
+  - {name: "ResidentNextIdle", value: 0.341, unit: "share", status: "calibrated",
+     source: "The users run: RSS rose 1,743 MB with the second date (→ 6,899 MB); less 722 MB of heap, 34% of its hot file."}
+  - {name: "RssStartMB", value: 2875, unit: "MB", status: "measured",
+     source: "The users run: RSS at start, 1,000,000 positions, 6 GB heap, Java 21 (2,708 MB in the earlier run)."}
+  - {name: "MetaspaceCodeMB", value: 215, unit: "MB", status: "measured",
+     source: "PERFORMANCE.md (Resident memory): metaspace 131 MB and code cache 84 MB, flat."}
+  - {name: "DirectMaxMB", value: 256, unit: "MB", status: "formula",
+     source: "PERFORMANCE.md, OPERATIONS.md: -XX:MaxDirectMemorySize=256m on every launcher."}
+  - {name: "OtherNativeMB", value: 600, unit: "MB", status: "estimate",
+     source: "PERFORMANCE.md (Resident memory): RSS levels off at about -Xmx + 0.4 GB (two malloc arenas) to + 1 GB (default allocator); the rest beyond metaspace and direct memory."}
+  - {name: "OsReserveGB", value: 2, unit: "GB", status: "estimate",
+     source: "The operating system and its own services."}
+  - {name: "ConsoleGB", value: 1, unit: "GB", status: "estimate",
+     source: "The console's 4 worker processes on the same machine."}
+  - {name: "RamStepGB", value: 8, unit: "GB", status: "formula",
+     source: "RAM recommendations are rounded up to a multiple of this."}
+  - {name: "MeasuredCores", value: 12, unit: "cores", status: "measured",
+     source: "The benchmark machine: nproc says 24 hardware threads, 12 cores of 2 threads each (BENCHMARK.md 3). Cores in Results are physical cores."}
+  - {name: "ReqPerCoreTrades", value: 22.5, unit: "requests/s a core", status: "measured",
+     source: "REQ/S PER CORE, trade questions (trades, counterparty pages, netting sets, searches). BENCHMARK.md 4.3, trades only: 270 requests a second at 50 users on 12 cores."}
+  - {name: "ReqPerCoreVarAtRef", value: 11.56, unit: "requests/s a core", status: "calibrated",
+     source: "REQ/S PER CORE, VaR questions at 1,000,000 positions. The users run: 183.3 requests a second at 50 users on 12 cores, 0 failures, p95 0.6 to 1.1 s, 50.5% of them VaR (5,582 of 11,050); with trade questions at 22.5 a core, the VaR ones are 11.56 a core. 137.5 a second at 100 users and 123.8 at 200 (queueing: p95 about 2 and 5 s)."}
+  - {name: "VarRefPositions", value: 1000000, unit: "positions", status: "formula",
+     source: "The size the VaR rate above was measured at."}
+  - {name: "VarCostExponent", value: 1.0, unit: "exponent", status: "estimate",
+     source: "How a VaR question's cost grows with positions away from 1,000,000 (1: in proportion; the bank minus a desk reads every position)."}
+  - {name: "CpuTarget", value: 0.7, unit: "share", status: "estimate",
+     source: "Plan the cores to be 70% busy at the peak, so queues stay short."}
+  - {name: "CoresReserve", value: 2, unit: "cores", status: "estimate",
+     source: "Cores kept for a date's load, the collector and the operating system."}
+  - {name: "MinCores", value: 4, unit: "cores", status: "estimate",
+     source: "The fewest cores recommended."}
+  - {name: "FirstOpenSecPer1M", value: 18.5, unit: "s", status: "measured",
+     source: "Re-benchmark: a date's first open took 18 to 19 s at 1,000,000 positions."}
+  - {name: "LakeLoadSecPer1M", value: 14.2, unit: "s", status: "measured",
+     source: "Re-benchmark: the lake load took 28.4 s for two dates of 1,000,000 vectors."}
+  - {name: "ReopenSecPer1M", value: 0.25, unit: "s", status: "estimate",
+     source: "BENCHMARK.md 5.1: reopening a date from its hot file, about 0.25 s a million trades."}
+
+results:
+  - band: "Heap: one VaR book (VAR_GUIDE.md 27.1, term by term)"
+    rows:
+      - {name: "HbRuns", label: "Node members as runs", unit: "MB",
+         expression: "BytesPerRun*RunsPerNode*Nodes/BytesPerMB",
+         why: "8·R: each node's books and cells kept as runs of positions."}
+      - {name: "HbNames", label: "Names, runs, nodes", unit: "MB",
+         expression: "BytesPerNamedRow*(BooksCells+Nodes)/BytesPerMB",
+         why: "~150·(B + K + N): book and cell names and runs, the nodes and their book lists."}
+      - {name: "HbAggIndex", label: "Index of the aggregates", unit: "MB",
+         expression: "BytesPerAggIndexRow*(BooksCells+Nodes)/BytesPerMB",
+         why: "64·A: the aggregates themselves stay in the hot file; the heap keeps where each row is."}
+      - {name: "HbColumns", label: "Columns and position runs", unit: "MB",
+         expression: "(BytesPerTradeCols*Trades+BytesPerPositionCols*Positions)/BytesPerMB",
+         why: "108·T + 136·P: the coded columns, the position runs, positionOf, the id indexes."}
+      - {name: "HbIds", label: "Trade and position ids", unit: "MB",
+         expression: "BytesPerId*(2*Trades+3*Positions)/BytesPerMB",
+         why: "72·(2T + 3P): the ids and the high-cardinality dictionaries; the largest term."}
+      - {name: "HbCtot", label: "Per-currency totals of every node", unit: "MB",
+         expression: "BytesPerCtotValue*(Scenarios+1)*Nodes*TradeCcysPerNode/BytesPerMB",
+         why: "8·(S + 1)·N·C: each node's totals per trade currency, in float64."}
+      - {name: "HbPortfolios", label: "Portfolio definitions", unit: "MB",
+         expression: "(BytesPerPortfolio*Portfolios+BytesPerBasketMember*BasketMembers)/BytesPerMB",
+         why: "About 30 MB at 15,000 portfolios and 2 million basket members."}
+      - {name: "HbFormula", label: "One book by the formula", unit: "MB",
+         expression: "HbRuns+HbNames+HbAggIndex+HbColumns+HbIds+HbCtot+HbPortfolios",
+         why: "The sum of the terms above."}
+      - {name: "JavaHeapFactor", label: "Java version factor", unit: "factor",
+         expression: "IF(JavaVersion>=25,Java25HeapFactor,1)",
+         why: "Compact object headers on Java 25 save a little (the heap is mostly arrays)."}
+      - {name: "HeapBook", label: "One book, calibrated", unit: "MB",
+         expression: "HbFormula*BookHeapCalibration*JavaHeapFactor",
+         why: "The formula scaled to what the 1,000,000-position re-benchmark measured."}
+      - {name: "BooksPerDate", label: "Books a date", unit: "books",
+         expression: "1+CcysAhead+StressOn",
+         why: "The USD book, one more per reporting currency built ahead, one for the stress set."}
+      - {name: "HeapDate", label: "One date", unit: "MB",
+         expression: "HeapBook*BooksPerDate",
+         why: "H_date ≈ H_book × (1 + currency books + stress book)."}
+      - {name: "DatesInMemory", label: "Dates in memory", unit: "dates",
+         expression: "MAX(HotDates,PinnedMem+ProtectedAlways)",
+         why: "hot-dates, unless the protected dates (pinned + the newest + the one just used) are more."}
+      - {name: "DatesAtPeak", label: "Dates at the peak", unit: "dates",
+         expression: "DatesInMemory+1",
+         why: "While a new date opens, the date it pushes out stays open until its readers finish."}
+      - {name: "HeapDates", label: "All open dates", unit: "MB",
+         expression: "DatesAtPeak*HeapDate",
+         why: "Dates at the peak × one date."}
+      - {name: "IntradayUpdatesDay", label: "Intraday updates a day", unit: "updates",
+         expression: "IntradayBatches*UpdatesPerBatch",
+         why: "Batches a day × updates per batch."}
+      - {name: "IntradayTrades", label: "Trades changed by the day's layer", unit: "trades",
+         expression: "MIN(Trades,IntradayUpdatesDay*IntradayDistinctShare)",
+         why: "The layer keeps each changed trade's latest P&L only, so it grows with the trades changed, not the batches."}
+      - {name: "HeapIntradayTrades", label: "Intraday layer: changed trades", unit: "MB",
+         expression: "IntradayTrades*(IntradayTradeCopies*AggBytes*Scenarios+IntradayTradeOverheadB)/BytesPerMB",
+         why: "Three float64 vectors a changed trade (its difference, its P&L, its USD P&L) and its entries."}
+      - {name: "HeapIntradayAggs", label: "Intraday layer: changed aggregates", unit: "MB",
+         expression: "IF(IntradayTrades>0,(BooksCells+Nodes)*AggBytes*Scenarios*IntradayAggShare/BytesPerMB,0)",
+         why: "Every book and node above a changed trade holds its changed aggregate on the heap (the morning's stays in the hot file)."}
+      - {name: "HeapIntradayTotals", label: "Intraday layer: currency totals", unit: "MB",
+         expression: "IF(IntradayTrades>0,Nodes*TradeCcysPerNode*(Scenarios+1)*AggBytes/BytesPerMB,0)",
+         why: "The per-trade-currency totals' changes, per node and currency."}
+      - {name: "HeapIntraday", label: "Intraday layers (today's date)", unit: "MB",
+         expression: "(1+CcysAhead)*(IF(IntradayTrades>0,IntradayLayerMB,0)+HeapIntradayTrades+HeapIntradayAggs+HeapIntradayTotals)",
+         why: "About 5 MB and the updates per layer (VAR_GUIDE.md 27.1); the USD book and each currency book carry one."}
+      - {name: "IntradayApplyMB", label: "Applying a batch", unit: "MB",
+         expression: "IF(IntradayTrades>0,(1+CcysAhead)*(UpdatesPerBatch*(2*AggBytes*Scenarios+IntradayUpdateOverheadB)/BytesPerMB+HeapIntradayAggs),0)",
+         why: "A batch's updates in flight, and the layer's aggregates copied (the previous book stays readable until its requests finish)."}
+      - {name: "HeapFirstOpen", label: "Warmed by the first date", unit: "MB",
+         expression: "FirstOpenOnceMB*Positions/Scale1M*JavaHeapFactor",
+         why: "What the first open warms once (answers, views, connector caches)."}
+  - band: "Heap: exposure"
+    rows:
+      - {name: "ExpOpenDateMB", label: "One open exposure date", unit: "MB",
+         expression: "ExposureOn*ExpTrades*ExpOpenBytesPerTrade/BytesPerMB",
+         why: "The sets and trades of a date; its matrices are mapped, not on the heap."}
+      - {name: "HeapExposure", label: "Exposure dates and paths cache", unit: "MB",
+         expression: "ExpHotDates*ExpOpenDateMB+ExposureOn*ExpPathsCacheMB",
+         why: "Exposure dates in memory × one date, and the 256 MB trade-paths cache."}
+      - {name: "ExpLoadMB", label: "Loading an exposure date", unit: "MB",
+         expression: "ExposureOn*NettingSets*Paths*TimeSteps*ExpLoadBytesPerValue/BytesPerMB",
+         why: "Every netting set's value matrix in float64 while the date loads."}
+  - band: "Heap: the server, caches and users"
+    rows:
+      - {name: "HeapBase", label: "The server at start", unit: "MB",
+         expression: "(BaseFixedMB+BasePerPositionB*Positions/BytesPerMB)*JavaHeapFactor",
+         why: "Measured after GC with no date open: the lake's footers' residue and the entity index grow with positions."}
+      - {name: "FooterCacheMB", label: "Parquet footer cache", unit: "MB",
+         expression: "MAX(FooterCacheDefaultMB,CEILING(TradeRowsPerDay*TradeDaysKept/RowsPerRowGroup*ColumnsPerTable*FooterBytesPerChunk/BytesPerMB,1))",
+         why: "64 MB, or the footers of every trade table kept when they are more."}
+      - {name: "HeapSearch", label: "Type-ahead index", unit: "MB",
+         expression: "MIN(SearchIndexCapMB,TradeRowsPerDay*SearchBytesPerRow/BytesPerMB)",
+         why: "The kept day's index of trade rows, capped by index.max-memory."}
+      - {name: "HeapBiCaches", label: "BI, history and VaR answer caches", unit: "MB",
+         expression: "BiQueryCacheMB+BiPlanAnswersMB+HistoryCacheMB+VarAnswersMB",
+         why: "Each cache at its budget."}
+      - {name: "HeapTradeRows", label: "Trade rows beyond the measured", unit: "MB",
+         expression: "MAX(0,TradeRowsPerDay-BaseTradeRows)*TradeCacheBytesPerRow/BytesPerMB",
+         why: "The trade connectors' working set for rows above the 60,000 a day already in the start heap."}
+      - {name: "HeapUsers", label: "Requests in flight", unit: "MB",
+         expression: "Users*PerUserMB",
+         why: "Working memory per concurrent user (measured: about 2.5 MB)."}
+      - {name: "HeapSteady", label: "Heap after GC, all dates open", unit: "MB",
+         expression: "HeapBase+FooterCacheMB+HeapFirstOpen+HeapDates+HeapIntraday+HeapExposure+HeapSearch+HeapBiCaches+HeapTradeRows+HeapUsers",
+         why: "What survives a collection at the busiest steady moment."}
+      - {name: "HeapLoadTransient", label: "Loads in progress", unit: "MB",
+         expression: "LoadThreads*(PerLoadMBAt1M*Positions/Scale1M+ReadBufferMB)+ExpLoadMB+IntradayApplyMB",
+         why: "Each load thread's build (1.6 GB at 1,000,000 positions) and read buffer, an exposure load and an intraday batch being applied."}
+  - band: "The heap to set"
+    rows:
+      - {name: "XmxRawMB", label: "Heap needed", unit: "MB",
+         expression: "HeapSteady/LiveShare+HeapLoadTransient",
+         why: "The steady heap with the collector's 39% headroom, plus the loads."}
+      - {name: "XmxGB", label: "Recommended -Xmx", unit: "GB",
+         expression: "CEILING(XmxRawMB/1024,1)",
+         why: "Rounded up to a whole GB."}
+      - {name: "OopsMode", label: "Compressed object references", unit: "text",
+         expression: "IF(XmxGB<=CompressedOopsMaxGB,\"on: the heap is under 32 GB\",IF(XmxGB<=AlignedOopsMaxGB,\"on only with -XX:ObjectAlignmentInBytes=16 (added below)\",\"off: past 64 GB, plan a cluster\"))",
+         why: "Under 32 GB Java uses 4-byte references; from 32 GB they double unless objects align to 16 bytes (up to 64 GB)."}
+      - {name: "GcChoice", label: "Garbage collector", unit: "text",
+         expression: "IF(Collector=\"auto\",IF(XmxGB>=ZgcFromGB,\"ZGC\",\"G1\"),Collector)",
+         why: "Generational ZGC from 16 GB of heap, G1 below (RESOURCES_AND_SCALE.md 5.5)."}
+  - band: "Page cache and RAM"
+    rows:
+      - {name: "TmatRows", label: "Trade rows of shared positions", unit: "rows",
+         expression: "IF(Trades>Positions,TradesPerFungible*(Trades-Positions)/MAX(TradesPerFungible-1,1),0)",
+         why: "Trades of positions that hold several get rows of their own in the hot file."}
+      - {name: "HotFileBookMB", label: "Hot file of one book", unit: "MB",
+         expression: "(Positions*Scenarios*HotRowBytes+TmatRows*Scenarios*HotRowBytes+(BooksCells+Nodes)*Scenarios*AggBytes+Nodes*TradeCcysPerNode*(Scenarios+1)*AggBytes+HotSmallBytesPerTrade*Trades)/BytesPerMB",
+         why: "P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + the small sections (VAR_GUIDE.md 27.1)."}
+      - {name: "StressFileMB", label: "Hot file of the stress book", unit: "MB",
+         expression: "StressOn*HotFileBookMB*StressScenarios/Scenarios",
+         why: "The stress set's book, about 250 scenarios."}
+      - {name: "HotFileDateMB", label: "Hot files of one date", unit: "MB",
+         expression: "HotFileBookMB*(1+CcysAhead)+StressFileMB",
+         why: "The USD book, each currency book and the stress book."}
+      - {name: "ExpHotFileMB", label: "Exposure hot file of a date", unit: "MB",
+         expression: "ExposureOn*(NettingSets*Paths*TimeSteps*ExpHotBytesPerValue+ExpTrades*ExpHotBytesPerTrade)/BytesPerMB",
+         why: "V and E in float32 and the sets and trades."}
+      - {name: "PageCacheMB", label: "Page cache for the open dates", unit: "MB",
+         expression: "(DatesInMemory*HotFileDateMB+ExpHotDates*ExpHotFileMB)*ResidentShare",
+         why: "The open dates' hot files resident while people read them."}
+      - {name: "NativeMB", label: "Native memory beside the heap", unit: "MB",
+         expression: "MetaspaceCodeMB+DirectMaxMB+OtherNativeMB",
+         why: "Metaspace and code, direct buffers at their cap, threads, the collector and the allocator."}
+      - {name: "RssPlannedMB", label: "Resident memory planned", unit: "MB",
+         expression: "XmxGB*1024+NativeMB+PageCacheMB",
+         why: "RSS = heap (fully committed over a long run) + native + the page cache of the open dates."}
+      - {name: "RamRecommendedGB", label: "Recommended machine RAM", unit: "GB",
+         expression: "CEILING(RssPlannedMB/1024+OsReserveGB+ConsoleGB,RamStepGB)",
+         why: "RSS + the operating system + the console, rounded up to 8 GB."}
+      - {name: "RamMinimumGB", label: "Smallest workable RAM", unit: "GB",
+         expression: "CEILING(XmxGB+NativeMB/1024+OsReserveGB+ConsoleGB+HotFileDateMB/1024,RamStepGB)",
+         why: "Only the date being read resident: it works, but other dates read from disk first (slower)."}
+  - band: "Disk, by folder"
+    rows:
+      - {name: "LakeDates", label: "Business dates in the lake", unit: "dates",
+         expression: "LakeYears*BusinessDaysYear",
+         why: "Years kept × 252."}
+      - {name: "LakeVarDateMB", label: "VaR lake, one date", unit: "MB",
+         expression: "Trades*Scenarios*LakeBytesPerValue/BytesPerMB*(1+StressOn*StressScenarios/Scenarios)",
+         why: "The P&L vectors as Parquet (2.8 GB for two dates at 1,000,000)."}
+      - {name: "DiskLakeVarGB", label: "VaR lake (the lake folder)", unit: "GB",
+         expression: "LakeDates*LakeVarDateMB/1024",
+         why: "Every date kept."}
+      - {name: "HotDatesOnDisk", label: "VaR hot files kept", unit: "dates",
+         expression: "MIN(LakeDates,DiskDates)+PinnedDisk",
+         why: "disk-dates (60) and the pinned dates on disk."}
+      - {name: "DiskHotGB", label: "VaR hot files (var/hot)", unit: "GB",
+         expression: "(HotDatesOnDisk*(HotFileBookMB+StressFileMB)+CcysAhead*MIN(HotDatesOnDisk,CurrencyRetentionDates)*HotFileBookMB)/1024",
+         why: "Each kept date's book and stress book; currency books for the 5 newest dates."}
+      - {name: "DiskSpillGB", label: "Spill and temporary files (tmp/server)", unit: "GB",
+         expression: "LoadThreads*SpillFactor*HotFileBookMB/1024",
+         why: "The disk guard reserves 3 × the largest hot file for each load running."}
+      - {name: "DiskExpHotGB", label: "Exposure hot files (ccr/hot)", unit: "GB",
+         expression: "MIN(LakeDates,ExpDiskDates)*ExpHotFileMB/1024",
+         why: "60 dates of exposure hot files."}
+      - {name: "DiskExpLakeGB", label: "Exposure trade paths (the lake)", unit: "GB",
+         expression: "ExposureOn*MIN(LakeDates,ExpPathDaysKept)*ExpTrades*Paths*TimeSteps*ExpPathBytes/BytesPerMB/1024",
+         why: "20 business days of trade paths in float32."}
+      - {name: "DiskIntradayLakeGB", label: "Intraday batches in the lake", unit: "GB",
+         expression: "LakeDates*IntradayUpdatesDay*Scenarios*LakeBytesPerValue/BytesPerMB/1024",
+         why: "Each batch is appended to the P&L lake (the record: a restart rebuilds the layer from it); the layer itself is never written to disk."}
+      - {name: "DiskIntradayTmpGB", label: "An intraday batch file (tmp)", unit: "GB",
+         expression: "UpdatesPerBatch*Scenarios*IntradayJsonBytesPerValue/BytesPerMB/1024",
+         why: "One batch's JSON Lines under tmp while lake build appends it; no spill (the layer stays in memory)."}
+      - {name: "DiskTradesLakeGB", label: "Trades lake", unit: "GB",
+         expression: "TradeRowsPerDay*TradeDaysKept*TradeLakeBytesPerRow/BytesPerMB/1024",
+         why: "About 1.5 KB a trade a day."}
+      - {name: "DiskTradeCachesGB", label: "Trade connectors' caches (cache/, derived/, index/)", unit: "GB",
+         expression: "(TradeRowsPerDay*TradeDaysKept*IdMapBytesPerRow+TradeRowsPerDay*MIN(TradeDaysKept,GroupedPagesDates)*GroupedPagesBytesPerRow)/BytesPerMB/1024+TradeConnectors*(DocCacheGB+IndexDiskGB)",
+         why: "Id maps, grouped pages, the document cache and the type-ahead index of each connector."}
+      - {name: "DiskBiGB", label: "BI layers and runs (bi-store, bi-runs)", unit: "GB",
+         expression: "TradeRowsPerDay*TradeDaysKept*BiLayerBytesPerRow/BytesPerMB/1024+BiRunsGB",
+         why: "Layers of the dates read, and the runs' 20 GB."}
+      - {name: "DiskLogsGB", label: "Logs (logs)", unit: "GB",
+         expression: "LogsGB",
+         why: "The server log and the GC log, both rotated."}
+      - {name: "DiskDumpsGB", label: "Heap dumps (dumps)", unit: "GB",
+         expression: "DumpsKept*XmxGB",
+         why: "A dump on OutOfMemoryError is about the heap's size."}
+      - {name: "DiskUsedGB", label: "Disk in use", unit: "GB",
+         expression: "DiskLakeVarGB+DiskIntradayLakeGB+DiskIntradayTmpGB+DiskHotGB+DiskSpillGB+DiskExpHotGB+DiskExpLakeGB+DiskTradesLakeGB+DiskTradeCachesGB+DiskBiGB+DiskLogsGB+DiskDumpsGB",
+         why: "Every folder together."}
+      - {name: "DiskRecommendedGB", label: "Recommended disk (lake local)", unit: "GB",
+         expression: "CEILING(MAX(DiskUsedGB/(1-MinFreePercent/100),DiskUsedGB+MinFreeGB),DiskStepGB)",
+         why: "With the free-space guard's margin: 10% and 20 GB must stay free."}
+      - {name: "DiskLocalGB", label: "Local disk without the lakes", unit: "GB",
+         expression: "DiskUsedGB-DiskLakeVarGB-DiskIntradayLakeGB-DiskTradesLakeGB-DiskExpLakeGB",
+         why: "When the lakes live elsewhere (object storage): hot files, spill, caches, logs, dumps."}
+      - {name: "DiskLocalRecommendedGB", label: "Recommended local disk (lake elsewhere)", unit: "GB",
+         expression: "CEILING(MAX(DiskLocalGB/(1-MinFreePercent/100),DiskLocalGB+MinFreeGB),DiskStepGB)",
+         why: "Fast local disk (NVMe) for the hot files."}
+  - band: "CPU and times"
+    rows:
+      - {name: "VarRatePerCore", label: "VaR questions a second a core", unit: "requests/s",
+         expression: "ReqPerCoreVarAtRef*(VarRefPositions/Positions)^VarCostExponent",
+         why: "The rate measured at 1,000,000 positions, scaled by positions."}
+      - {name: "MixRatePerCore", label: "Mixed requests a second a core", unit: "requests/s",
+         expression: "1/(VarShare/VarRatePerCore+(1-VarShare)/ReqPerCoreTrades)",
+         why: "The VaR and other questions in their shares."}
+      - {name: "CoresForRequests", label: "Cores for the requests", unit: "cores",
+         expression: "CEILING(PeakRps/MixRatePerCore/CpuTarget,1)",
+         why: "The peak at 70% busy."}
+      - {name: "CoresRecommended", label: "Recommended cores", unit: "cores",
+         expression: "MAX(MinCores,CoresForRequests+CoresReserve)",
+         why: "Plus 2 for loads, the collector and the operating system."}
+      - {name: "FirstOpenSec", label: "First open of a date", unit: "s",
+         expression: "FirstOpenSecPer1M*Positions/Scale1M",
+         why: "Lake read, sort, sums and the hot file written."}
+      - {name: "LakeLoadSec", label: "Loading a date into the lake", unit: "s",
+         expression: "LakeLoadSecPer1M*Trades/Scale1M",
+         why: "The Java loader, P&L vectors of one date."}
+      - {name: "ReopenSec", label: "Reopening a date from its hot file", unit: "s",
+         expression: "ReopenSecPer1M*Trades/Scale1M",
+         why: "No lake read."}
+  - band: "The settings to put in the configuration: each with its exact key, in YAML, as an environment variable and as an argument"
+    settings: true
+    rows:
+      - {name: "AutoNetMB", label: "(the automatic safety net, for comparison)", unit: "MB",
+         expression: "MAX(NetShare*XmxGB*1024-NetReserveMB-LoadThreads*NetLoadMB,XmxGB*1024*NetFloorShare)",
+         why: "What open-heap-mb 0 would give: 0.4 × heap − 512 MB − load-threads × 1.6 GB, at least a tenth of the heap."}
+      - {name: "HeapTierBudgetMB", label: "(the heap tier would need, a date)", unit: "MB",
+         expression: "Trades*Scenarios*AggBytes/BytesPerMB",
+         why: "Only with drishti.var.tier.mode: heap, every vector in float64 on the heap."}
+
+settings:
+  - {name: "SetHotDates", key: "drishti.var.hot-dates", unit: "dates", env: "DRISHTI_VAR_HOT_DATES", envSource: "docs",
+     expression: "DatesInMemory",
+     why: "Dates in memory."}
+  - {name: "SetOpenHeapMB", key: "drishti.var.open-heap-mb", unit: "MB", env: "DRISHTI_VAR_OPEN_HEAP_MB", envSource: "docs",
+     expression: "CEILING(DatesInMemory*HeapDate*(1+OpenHeapMargin)+HeapIntraday,OpenHeapStepMB)",
+     why: "The byte safety net: every open date with 10% room, and today's intraday layer; set it rather than leave the automatic value."}
+  - {name: "SetMemoryBudgetMB", key: "drishti.var.memory-budget-mb", unit: "MB", env: "DRISHTI_VAR_MEMORY_MB", envSource: "docs",
+     expression: "0",
+     why: "0 (the default): it bounds the heap tier only; the mapped tier (the default) keeps vectors on disk."}
+  - {name: "SetLoadThreads", key: "drishti.var.load-threads", unit: "threads", env: "DRISHTI_VAR_LOADTHREADS", envSource: "relaxed",
+     expression: "LoadThreads",
+     why: "Dates loading at once; each needs its transient and its spill."}
+  - {name: "SetCurrencies", key: "drishti.var.currencies", unit: "text", env: "DRISHTI_VAR_CURRENCIES", envSource: "docs",
+     expression: "IF(CcysAhead=0,\"USD\",IF(CcysAhead=1,\"USD,EUR\",IF(CcysAhead=2,\"USD,EUR,CAD\",IF(CcysAhead=3,\"USD,EUR,CAD,JPY\",\"USD,EUR,CAD,JPY,GBP\"))))",
+     why: "USD and the currencies built ahead the planner counted, in the shipped order (name your own). The shipped default builds four."}
+  - {name: "SetStress", key: "drishti.var.stress.enabled", unit: "text", env: "DRISHTI_VAR_STRESS_ENABLED", envSource: "docs",
+     expression: "IF(StressOn=1,\"true\",\"false\")",
+     why: "Offer stressed VaR."}
+  - {name: "SetMaxDiskGB", key: "drishti.var.tier.max-disk-gb", unit: "GB", env: "DRISHTI_VAR_MAX_DISK_GB", envSource: "docs",
+     expression: "CEILING(DiskHotGB+DiskSpillGB,1)",
+     why: "Every hot file kept plus the reserve of the builds."}
+  - {name: "SetDiskDates", key: "drishti.var.tier.disk-dates", unit: "files", env: "DRISHTI_VAR_TIER_DISKDATES", envSource: "relaxed",
+     expression: "DiskDates",
+     why: "The default, 60."}
+  - {name: "SetExpHotDates", key: "drishti.ccr.exposure.hot-dates", unit: "dates", env: "DRISHTI_EXPOSURE_HOT_DATES", envSource: "docs", condition: "ExposureOn=1",
+     expression: "ExpHotDates",
+     why: "Exposure dates in memory (only when exposure is on)."}
+  - {name: "SetMinFreePercent", key: "drishti.disk.min-free-percent", unit: "%", env: "DRISHTI_DISK_MINFREEPERCENT", envSource: "relaxed",
+     expression: "MinFreePercent",
+     why: "The free-space guard the disk line keeps (the default)."}
+  - {name: "SetMinFreeGB", key: "drishti.disk.min-free-gb", unit: "GB", env: "DRISHTI_DISK_MINFREEGB", envSource: "relaxed",
+     expression: "MinFreeGB",
+     why: "The guard in GB (the default); both must hold."}
+
+jvm:
+  - {name: "JvmXmx", flag: "-Xmx", source: "documented", condition: "always",
+     expression: "\"-Xmx\"&XmxGB&\"g\"",
+     why: "The heap computed above."}
+  - {name: "JvmXms", flag: "-Xms", source: "suggested", condition: "a server",
+     expression: "\"-Xms\"&XmxGB&\"g\"",
+     why: "The whole heap reserved and committed from the start: no growth pauses, and RSS is known from day one."}
+  - {name: "JvmGc", flag: "Collector", source: "documented", condition: "heap ≥ 16 GB: ZGC; Java 21 needs -XX:+ZGenerational",
+     expression: "IF(GcChoice=\"ZGC\",IF(JavaVersion>=25,\"-XX:+UseZGC\",\"-XX:+UseZGC -XX:+ZGenerational\"),\"-XX:+UseG1GC\")",
+     why: "ZGC pauses under a millisecond whatever the heap; G1 costs less on a small heap. Measured: ZGC doubled RSS at the same -Xmx and stalled allocations at 200,000 positions; choose G1 (Collector) when RAM is tight."}
+  - {name: "JvmGcExtra", flag: "Collector tuning", source: "documented", condition: "ZGC: 0.8 × heap; G1: always",
+     expression: "IF(GcChoice=\"ZGC\",\"-XX:SoftMaxHeapSize=\"&INT(XmxGB*1024*ZgcSoftMaxShare)&\"m\",\"-XX:G1PeriodicGCInterval=60000\")",
+     why: "ZGC collects early to stay under 80% of the heap (planned in the docs); G1's periodic collection returns unused memory."}
+  - {name: "JvmPause", flag: "-XX:MaxGCPauseMillis", source: "documented", condition: "not set",
+     expression: "\"\"",
+     why: "The docs give no pause goal; G1's default (200 ms) stays."}
+  - {name: "JvmOops", flag: "-XX:ObjectAlignmentInBytes", source: "suggested", condition: "heap over 31 GB, up to 64 GB",
+     expression: "IF(XmxGB>CompressedOopsMaxGB,IF(XmxGB<=AlignedOopsMaxGB,\"-XX:ObjectAlignmentInBytes=16\",\"\"),\"\")",
+     why: "Keeps 4-byte references above 32 GB, at the cost of padding objects to 16 bytes; or stay at 31g."}
+  - {name: "JvmCompact", flag: "-XX:+UseCompactObjectHeaders", source: "documented", condition: "Java 25 only (21 refuses to start with it)",
+     expression: "IF(JavaVersion>=25,\"-XX:+UseCompactObjectHeaders\",\"\")",
+     why: "Smaller object headers, a little less heap."}
+  - {name: "JvmPreTouch", flag: "-XX:+AlwaysPreTouch", source: "documented", condition: "not set",
+     expression: "\"\"",
+     why: "Not proposed by the docs: a slow start, and the whole heap committed at once."}
+  - {name: "JvmDirect", flag: "-XX:MaxDirectMemorySize", source: "documented", condition: "always",
+     expression: "\"-XX:MaxDirectMemorySize=\"&DirectMaxMB&\"m\"",
+     why: "Caps direct buffers (the default cap is the heap's size)."}
+  - {name: "JvmTrim", flag: "-XX:TrimNativeHeapInterval", source: "documented", condition: "Java 21.0.1 and later",
+     expression: "\"-XX:TrimNativeHeapInterval=60000\"",
+     why: "Returns freed native memory to the system every minute."}
+  - {name: "JvmNioCache", flag: "-Djdk.nio.maxCachedBufferSize", source: "documented", condition: "always",
+     expression: "\"-Djdk.nio.maxCachedBufferSize=262144\"",
+     why: "Stops each thread keeping a large temporary direct buffer after a read."}
+  - {name: "JvmNmt", flag: "-XX:NativeMemoryTracking", source: "documented", condition: "always",
+     expression: "\"-XX:NativeMemoryTracking=summary\"",
+     why: "Lets jcmd split native memory by category; a few per cent of overhead."}
+  - {name: "JvmMeta", flag: "-XX:MaxMetaspaceSize", source: "suggested", condition: "always",
+     expression: "\"-XX:MaxMetaspaceSize=512m\"",
+     why: "A ceiling well above the 131 MB measured, so a class leak fails loudly instead of growing; the code cache keeps its default."}
+  - {name: "JvmDump", flag: "-XX:+HeapDumpOnOutOfMemoryError", source: "documented", condition: "always",
+     expression: "\"-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=\"&DataFolder&\"/dumps\"",
+     why: "A heap dump when the heap runs out, under the data folder; the disk lines keep room for it."}
+  - {name: "JvmGcLog", flag: "-Xlog:gc*", source: "documented", condition: "always",
+     expression: "\"-Xlog:gc*:file=\"&DataFolder&\"/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m\"",
+     why: "A rotated GC log (5 × 20 MB)."}
+  - {name: "JvmTmp", flag: "-Djava.io.tmpdir", source: "documented", condition: "always",
+     expression: "\"-Djava.io.tmpdir=\"&DataFolder&\"/tmp/server\"",
+     why: "Native libraries unpack and temporary files go under the data folder."}
+  - {name: "JvmFooter", flag: "-Ddrishti.parquet.footer-cache-mb", source: "documented", condition: "always",
+     expression: "\"-Ddrishti.parquet.footer-cache-mb=\"&FooterCacheMB",
+     why: "The Parquet footer cache computed above."}
+  - {name: "JvmGrace", flag: "-Ddrishti.open-dates.net-grace-seconds", source: "documented", condition: "always",
+     expression: "\"-Ddrishti.open-dates.net-grace-seconds=\"&NetGraceSeconds",
+     why: "The byte safety net never closes a date read in the last 120 s (closing it would reload it at once)."}
+  - {name: "JvmPinning", flag: "virtual-thread flags", source: "documented", condition: "not set",
+     expression: "\"\"",
+     why: "-Djdk.tracePinnedThreads=full is a diagnostic only; the scheduler's parallelism keeps its default (the cores)."}
+  - {name: "JvmNative", flag: "--enable-native-access", source: "documented", condition: "not set with -jar",
+     expression: "\"\"",
+     why: "The server jar's manifest already grants native access; no --add-opens is needed."}
+  - {name: "JvmArenas", flag: "MALLOC_ARENA_MAX (environment)", source: "documented", condition: "Linux (glibc) only",
+     expression: "\"MALLOC_ARENA_MAX=2\"",
+     why: "Two malloc arenas, not one per busy thread: about 500 MB less RSS measured."}
+
+warnings:
+  - {name: "WarnProtected", label: "Protected dates",
+     expression: "IF(PinnedMem+ProtectedAlways>HotDates,\"The protected dates alone (\"&(PinnedMem+ProtectedAlways)&\": pinned, the newest and the one just used) exceed hot-dates (\"&HotDates&\"): the number is exceeded; the planner counts \"&DatesInMemory&\".\",\"OK\")"}
+  - {name: "WarnOops", label: "Compressed oops",
+     expression: "IF(XmxGB>AlignedOopsMaxGB,\"Over 64 GB: compressed oops are off whatever the alignment; one server is past its comfortable size: plan a cluster.\",IF(XmxGB>CompressedOopsMaxGB,\"Over 31 GB: compressed oops are off unless -XX:ObjectAlignmentInBytes=16 (added below), or stay at 31g with fewer dates in memory.\",\"OK\"))"}
+  - {name: "WarnAutoNet", label: "Automatic safety net",
+     expression: "IF(AutoNetMB<DatesInMemory*HeapDate,\"The automatic safety net (\"&ROUND(AutoNetMB,0)&\" MB) holds fewer than the \"&DatesInMemory&\" dates in memory need (\"&ROUND(DatesInMemory*HeapDate,0)&\" MB): set drishti.var.open-heap-mb to \"&SetOpenHeapMB&\".\",\"OK\")"}
+  - {name: "WarnNetOneDate", label: "Safety net under one date",
+     expression: "IF(AutoNetMB<HeapDate,\"The automatic safety net is smaller than one date: dates in use stay open over it (the net's \"&NetGraceSeconds&\"-second grace), so set open-heap-mb at least to the dates in use × the date heap (\"&ROUND(HeapDate,0)&\" MB a date).\",\"OK\")"}
+  - {name: "WarnZgcRss", label: "ZGC resident memory",
+     expression: "IF(GcChoice=\"ZGC\",\"ZGC: measured about twice G1's resident memory at the same -Xmx, with allocation stalls (200,000 positions); the RAM line counts the whole heap resident. Choose G1 when RAM is tight.\",\"OK\")"}
+  - {name: "WarnExposureLoad", label: "Exposure load",
+     expression: "IF(ExpLoadMB>ExpShardLoadMB,\"Loading an exposure date needs \"&ROUND(ExpLoadMB/1024,0)&\" GB of heap for the netting sets' value matrices: past about \"&ROUND(ExpShardLoadMB/1024,0)&\" GB the load should be sharded (a cluster).\",\"OK\")"}
+  - {name: "WarnSingleNode", label: "One server's limit",
+     expression: "IF(OR(XmxGB>AlignedOopsMaxGB,RamRecommendedGB>SingleNodeRamGB),\"Beyond what one server should carry: plan a cluster (the cluster sheet comes later).\",\"OK\")"}
+  - {name: "WarnPageCache", label: "Page cache",
+     expression: "IF(PageCacheMB>XmxGB*1024*2,\"The open dates' hot files (\"&ROUND(PageCacheMB/1024,0)&\" GB) are larger than twice the heap: with less RAM than recommended, questions on dates not resident read the disk first.\",\"OK\")"}
+
+calibration:
+  - {name: "CalHbFormula", label: "One book by the formula, benchmark shape", unit: "MB",
+     expression: "(BytesPerRun*RunsPerNode*BenchNodes+(BytesPerNamedRow+BytesPerAggIndexRow)*(BenchBooksCells+BenchNodes)+BytesPerTradeCols*BenchTrades+BytesPerPositionCols*BenchPositions+BytesPerId*(2*BenchTrades+3*BenchPositions)+BytesPerCtotValue*(BenchScenarios+1)*BenchNodes+BytesPerPortfolio*BenchPortfolios+BytesPerBasketMember*BenchMembers)/BytesPerMB",
+     why: "The H_book formula at the Bench values (Coefficients), whatever the Inputs."}
+  - {name: "CalHeapBook", label: "One book, calibrated, benchmark shape", unit: "MB",
+     expression: "CalHbFormula*BookHeapCalibration",
+     why: "Measured: 722 MB a date on average (the users run)."}
+  - {name: "CalHotFileMB", label: "Hot file, benchmark shape", unit: "MB",
+     expression: "(BenchPositions*BenchScenarios*HotRowBytes+(BenchBooksCells+BenchNodes)*BenchScenarios*AggBytes+BenchNodes*(BenchScenarios+1)*AggBytes+HotSmallBytesPerTrade*BenchTrades)/BytesPerMB",
+     why: "Measured 3.14 GB a date."}
+  - {name: "CalHeapStart", label: "Heap after GC at start", unit: "MB",
+     expression: "BaseFixedMB+BasePerPositionB*BenchPositions/BytesPerMB+FooterCacheDefaultMB",
+     why: "Measured 769 MB (the users run: 1,000,000 positions, 6 GB heap, Java 21)."}
+  - {name: "CalHeapOne", label: "Heap after GC, one date open", unit: "MB",
+     expression: "CalHeapStart+FirstOpenOnceMB*BenchPositions/Scale1M+CalHeapBook",
+     why: "Measured 1,352 MB: the average date puts the planner 139 MB above, the safe side."}
+  - {name: "CalHeapTwo", label: "Heap after GC, two dates open", unit: "MB",
+     expression: "CalHeapOne+CalHeapBook",
+     why: "Measured 2,213 MB."}
+  - {name: "CalRssStart", label: "RSS at start (at a 6 GB heap)", unit: "MB",
+     expression: "RssStartMB",
+     why: "Measured 2,875 MB."}
+  - {name: "CalRssOne", label: "RSS, one date open", unit: "MB",
+     expression: "CalRssStart+(CalHeapOne-CalHeapStart)+ResidentFirstIdle*CalHotFileMB",
+     why: "Measured 5,156 MB."}
+  - {name: "CalRssTwo", label: "RSS, two dates open", unit: "MB",
+     expression: "CalRssOne+CalHeapBook+ResidentNextIdle*CalHotFileMB",
+     why: "Measured 6,899 MB."}
+  - {name: "CalLakeTwoGB", label: "Lake, two dates", unit: "GB",
+     expression: "2*BenchTrades*BenchScenarios*LakeBytesPerValue/BytesPerMB/1024",
+     why: "Measured 2.8 GB."}
+  - {name: "CalFirstOpen", label: "First open of a date", unit: "s",
+     expression: "FirstOpenSecPer1M*BenchPositions/Scale1M",
+     why: "Measured 18 to 21 s; the lake load 28.4 s for two dates."}
+  - {name: "CalWarmHeap", label: "Heap after GC, warm at 50 users", unit: "MB",
+     expression: "CalHeapTwo+BenchUsers*PerUserMB",
+     why: "Measured 2,336 MB."}
+  - {name: "CalRssEnd", label: "RSS at the end of the users run (6 GB heap)", unit: "MB",
+     expression: "MeasuredXmxMB+NativeMB+ResidentShare*2*CalHotFileMB",
+     why: "Measured 11,160 MB; the planner's native memory (1,071 MB) is more than the 550 MB NMT saw beyond the heap, so it lands a little above."}
+  - {name: "CalReqPerSec", label: "Requests a second on the benchmark machine", unit: "requests/s",
+     expression: "MeasuredCores/(BenchVarShare/(ReqPerCoreVarAtRef*(VarRefPositions/BenchPositions)^VarCostExponent)+(1-BenchVarShare)/ReqPerCoreTrades)",
+     why: "Measured 183.3 at 50 users, half VaR, 0 failures."}
+
+examples:
+  - name: production
+    inputs: {}
+    expected: {"HbFormula": 223.1, "HeapBook": 216.6, "HeapBase": 301.1, "HeapDates": 2382.7, "HeapIntraday": 1627.2, "HeapSteady": 5304.6, "HeapLoadTransient": 1367.4, "XmxGB": 10, "GcChoice": "G1", "SetOpenHeapMB": 4032, "AutoNetMB": 1024.0, "HotFileBookMB": 898.3, "PageCacheMB": 6699.2, "RamRecommendedGB": 24, "RamMinimumGB": 16, "DiskLakeVarGB": 105.8, "DiskIntradayLakeGB": 41.3, "DiskHotGB": 52.6, "DiskUsedGB": 375.4, "DiskRecommendedGB": 450, "DiskLocalRecommendedGB": 150, "CoresRecommended": 8, "FirstOpenSec": 5.5}
+  - name: benchmark
+    inputs: {"Positions": 1000000, "Trades": 1000000, "Portfolios": 15000, "BasketMembers": 2000000, "Nodes": 27024, "BooksCells": 130000, "IntradayBatches": 0, "UpdatesPerBatch": 0, "TradeRowsPerDay": 20000}
+    expected: {"HbFormula": 743.8, "HeapBook": 722.0, "HeapBase": 705.0, "HeapDates": 7942.4, "HeapIntraday": 0.0, "HeapSteady": 9240.4, "HeapLoadTransient": 3328.0, "XmxGB": 19, "GcChoice": "ZGC", "SetOpenHeapMB": 8000, "AutoNetMB": 4070.4, "HotFileBookMB": 2994.2, "PageCacheMB": 22330.8, "RamRecommendedGB": 48, "RamMinimumGB": 32, "DiskLakeVarGB": 352.8, "DiskIntradayLakeGB": 0.0, "DiskHotGB": 175.4, "DiskUsedGB": 603.6, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300, "CoresRecommended": 12, "FirstOpenSec": 18.5}
+
+calibrationExpected: {"CalHeapStart": 769.0, "CalHeapOne": 1491.0, "CalHeapTwo": 2213.0, "CalRssStart": 2875.0, "CalRssOne": 5156.1, "CalRssTwo": 6899.2, "CalLakeTwoGB": 2.8, "CalWarmHeap": 2336.3, "CalRssEnd": 11681.2, "CalReqPerSec": 183.3}

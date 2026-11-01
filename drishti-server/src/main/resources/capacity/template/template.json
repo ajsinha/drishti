@@ -1,0 +1,167 @@
+{
+ "comment": "Written by tools/sizing_planner.py: do not edit; edit capacity/planner.yaml and run the tool.",
+ "parts": [
+  "[Content_Types].xml",
+  "_rels/.rels",
+  "docProps/app.xml",
+  "docProps/core.xml",
+  "xl/_rels/workbook.xml.rels",
+  "xl/styles.xml",
+  "xl/workbook.xml",
+  "xl/worksheets/sheet1.xml",
+  "xl/worksheets/sheet2.xml",
+  "xl/worksheets/sheet3.xml",
+  "xl/worksheets/sheet4.xml"
+ ],
+ "inputsSheet": "xl/worksheets/sheet1.xml",
+ "valueColumn": "B",
+ "extraColumn": "F",
+ "headerRow": 3,
+ "styles": {
+  "head": 3,
+  "text": 4,
+  "note": 5,
+  "input.num": 27,
+  "input.dec": 9,
+  "input.text": 7,
+  "num0": 24
+ },
+ "inputs": {
+  "Positions": {
+   "row": 5,
+   "kind": "int"
+  },
+  "Trades": {
+   "row": 6,
+   "kind": "int"
+  },
+  "TradesPerFungible": {
+   "row": 7,
+   "kind": "dec"
+  },
+  "Portfolios": {
+   "row": 8,
+   "kind": "int"
+  },
+  "BasketMembers": {
+   "row": 9,
+   "kind": "int"
+  },
+  "Nodes": {
+   "row": 10,
+   "kind": "int"
+  },
+  "BooksCells": {
+   "row": 11,
+   "kind": "int"
+  },
+  "Scenarios": {
+   "row": 12,
+   "kind": "int"
+  },
+  "TradeCcysPerNode": {
+   "row": 13,
+   "kind": "dec"
+  },
+  "LakeYears": {
+   "row": 14,
+   "kind": "dec"
+  },
+  "HotDates": {
+   "row": 15,
+   "kind": "int"
+  },
+  "PinnedMem": {
+   "row": 16,
+   "kind": "int"
+  },
+  "PinnedDisk": {
+   "row": 17,
+   "kind": "int"
+  },
+  "CcysAhead": {
+   "row": 18,
+   "kind": "int"
+  },
+  "StressOn": {
+   "row": 19,
+   "kind": "int"
+  },
+  "IntradayBatches": {
+   "row": 20,
+   "kind": "int"
+  },
+  "UpdatesPerBatch": {
+   "row": 21,
+   "kind": "int"
+  },
+  "ExposureOn": {
+   "row": 23,
+   "kind": "int"
+  },
+  "NettingSets": {
+   "row": 24,
+   "kind": "int"
+  },
+  "ExpTrades": {
+   "row": 25,
+   "kind": "int"
+  },
+  "Paths": {
+   "row": 26,
+   "kind": "int"
+  },
+  "TimeSteps": {
+   "row": 27,
+   "kind": "int"
+  },
+  "ExpHotDates": {
+   "row": 28,
+   "kind": "int"
+  },
+  "TradeRowsPerDay": {
+   "row": 30,
+   "kind": "int"
+  },
+  "TradeDaysKept": {
+   "row": 31,
+   "kind": "int"
+  },
+  "TradeConnectors": {
+   "row": 32,
+   "kind": "int"
+  },
+  "Users": {
+   "row": 34,
+   "kind": "int"
+  },
+  "PeakRps": {
+   "row": 35,
+   "kind": "dec"
+  },
+  "VarShare": {
+   "row": 36,
+   "kind": "dec"
+  },
+  "JavaVersion": {
+   "row": 38,
+   "kind": "int"
+  },
+  "LoadThreads": {
+   "row": 39,
+   "kind": "int"
+  },
+  "Collector": {
+   "row": 40,
+   "kind": "text"
+  },
+  "DataFolder": {
+   "row": 41,
+   "kind": "text"
+  },
+  "ServerJar": {
+   "row": 42,
+   "kind": "text"
+  }
+ }
+}
