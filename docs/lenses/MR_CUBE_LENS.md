@@ -16,8 +16,7 @@
 # The MR Cube: a market risk cube lens that answers what FIS Adaptiv's artiQ answers, and shows why
 
 **Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
-[section 5](#5-what-drishti-has-today) says so and cites the guide it was read from (develop at b22ff3850 and the `wip/drill-a`
-consolidation, 2026-10-31). Every release named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
+[section 5](#5-what-drishti-has-today) says so and cites the guide it was read from (2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
 [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (MC1 to MC13; the proof-of-concept rows MCP1 to MCP6, section 12), not started.
 
 **The request (product owner, 2026-10-31):** what it takes to build something like FIS Adaptiv's risk cube (artiQ) in Drishti, "even
@@ -29,7 +28,7 @@ FIS, SunGard and Adaptiv in capability and in visualisation.
 the `position-sensitivity` contract this document adopts), [RISK_LENS.md](RISK_LENS.md) and [TRADING_LENS.md](TRADING_LENS.md) (the
 lenses the cube serves), [COMPUTED_ATTRIBUTES.md](../architecture/COMPUTED_ATTRIBUTES.md) (compute, never store; the modelling defaults
 of its section 10, confirmed by the product owner on 2026-10-31), [REGULATORY_VAR_REPORTING.md](../architecture/REGULATORY_VAR_REPORTING.md)
-(2.9.8 and 2.9.10), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md) (sharding), and the contracts [FRTB.md](../contracts/FRTB.md),
+(the regulatory foundation and the reports), [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md) (sharding), and the contracts [FRTB.md](../contracts/FRTB.md),
 [STR.md](../contracts/STR.md) and [PNL.md](../contracts/PNL.md).
 
 ## Contents
@@ -98,7 +97,7 @@ maps, ladders, a time-travel slider, provenance on every cell) that a vendor cub
 | **Market risk manager near the desks** | morning VaR by desk × risk class, the tail scenarios, sensitivity ladders against limits, what changed | Drishti Risk ([RISK_LENS.md](RISK_LENS.md)) |
 | **Second-line oversight** | bank-wide pivots, limit utilisation of every kind, why VaR moved, data trust | the proposed Oversight lens ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md)) |
 | **Desk head and trader** | my books by product and currency, my VaR contribution, "what does this trade do" | Drishti Trading ([TRADING_LENS.md](TRADING_LENS.md)) |
-| **Regulatory capital team** | FRTB SA by risk class and correlation scenario, IMA ES by liquidity horizon, PLA and backtesting by desk | none today; 2.9.8 and 2.9.10 build the reporting chain, 2.9.12 FRTB SA, 2.9.14 IMA |
+| **Regulatory capital team** | FRTB SA by risk class and correlation scenario, IMA ES by liquidity horizon, PLA and backtesting by desk | none today; the reporting chain, FRTB SA and then IMA are planned in that order |
 | **Product control** | hypothetical and actual P&L against the risk-theoretical P&L, restatements, corrections | none today |
 | **Model validation** | the scenario set, proxies, NMRF, PLA statistics, the provenance of every number | none today |
 
@@ -198,7 +197,7 @@ Beside the figures, never on another screen:
 ### 4.6 Data correction: write-back with approvals and audit
 
 FIS says users correct erroneous data inside the cube. Drishti does it through **write-back** ([WRITE_BACK.md](../guides/WRITE_BACK.md),
-built 2.8.0: a change request, approval by a second person, an edit log, audit): a user marks a member (a P&L vector, a sensitivity
+built: a change request, approval by a second person, an edit log, audit): a user marks a member (a P&L vector, a sensitivity
 record, a trade attribute) as wrong, proposes a correction (a proxy vector, an excluded record with a reason, a corrected attribute),
 and an approver applies it. The correction is **an overlay record** in the lake with its author, approver, reason and expiry; the
 original stays; every cell that uses it shows a **corrected** marker and its provenance names the correction. The official run either
@@ -206,8 +205,8 @@ includes approved corrections or not, by a setting; the choice is recorded with 
 
 ### 4.7 Streaming updates
 
-The cube subscribes to the engine's intraday updates (files appended to the lake, or the Kafka PV stream: VAR_GUIDE section 8.4, built
-in 2.9.4, `VarPvStream`). A visible cell whose members changed is recomputed and **patched in place** through the live channel (the
+The cube subscribes to the engine's intraday updates (files appended to the lake, or the Kafka PV stream: VAR_GUIDE section 8.4, built:
+`VarPvStream`). A visible cell whose members changed is recomputed and **patched in place** through the live channel (the
 same machinery as live views), flashing for a second with its old value on hover; a cell more than one batch behind says so. Throttle:
 a view recomputes at most once per batch, coalescing bursts.
 
@@ -218,13 +217,13 @@ a view recomputes at most once per batch, coalescing bursts.
 | xlsx | the view as a formatted workbook (one sheet per measure, totals, provenance sheet) | BI already exports statements as xlsx ([BI_GUIDE.md](../guides/BI_GUIDE.md)); the cube reuses it |
 | csv | the cells, unformatted, one row per cell | the VaR explorer exports CSV |
 | Power Query | a REST endpoint per saved view, with the token in the header | the pattern exists for search ([API_GUIDE.md](../guides/API_GUIDE.md)) |
-| Arrow | `Accept: application/vnd.apache.arrow.stream` on the view's answer | built for two answers in 2.9.7 ([API_GUIDE.md, answers as Arrow](../guides/API_GUIDE.md#answers-as-arrow-the-accept-header)) |
+| Arrow | `Accept: application/vnd.apache.arrow.stream` on the view's answer | built for two answers ([API_GUIDE.md, answers as Arrow](../guides/API_GUIDE.md#answers-as-arrow-the-accept-header)) |
 | Tableau, Power BI, XLCubed | through the REST and Arrow endpoints (Tableau's Web Data Connector, Power BI's web connector); no MDX/XMLA server | not built; decision 6 |
 
 ### 4.9 Embed and phone views (tiers)
 
 - **Embedding**: a cube view is a ViewModel screen, so the client renderer draws it in any web page
-  ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md), built 2.9.7): `render(el, {kind: 'cube-view', id: 'asha/morning'})`.
+  ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md), built): `render(el, {kind: 'cube-view', id: 'asha/morning'})`.
 - **Phone tiers** ([MOBILE_DISPLAY.md section 3](../architecture/MOBILE_DISPLAY.md#3-phone-tiers-must-glance-more-desk), design): the
   headline strip and the top-left 5 × 3 of the pivot are **must**; sparklines and the tail histogram **glance**; drill, explain and
   provenance **more**; the full pivot editor **desk** (open on desktop).
@@ -238,7 +237,7 @@ aggregate shows the aggregate and refuses drill-through with the reason. A lens 
 ### 4.11 Cluster execution: scatter and gather of vectors, bit-equal results
 
 A cube view is many scopes. On a sharded cluster ([VAR_GUIDE section 28](../guides/VAR_GUIDE.md#28-sharding-across-drishtinet),
-built 2.9.6) the coordinator splits each scope's rows by shard; each owner returns **one partial per scope**: its summed vector (for
+built) the coordinator splits each scope's rows by shard; each owner returns **one partial per scope**: its summed vector (for
 vector measures) or its summed inputs per factor (for formula measures); the coordinator adds the partials **in shard order** and takes
 the statistic once. A pivot request is batched: one call per owner carrying all the view's scopes, not one per cell. Bit-equality is the
 existing invariant (partials are always the 1-day vectors, never statistics); for sensitivities the partial is a sparse map factor →
@@ -292,16 +291,16 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 | Arrow answers (contributions) | **Built** | [API_GUIDE.md](../guides/API_GUIDE.md#answers-as-arrow-the-accept-header) |
 | Pivot over any fields with server totals (BI "Slice", matrix visual) | **Built for BI datasets**, additive measures only | [BI_GUIDE.md](../guides/BI_GUIDE.md) |
 | Pivot with non-additive VaR totals over the engine | **Not built** | MC2 |
-| Stressed VaR (a stress scenario set, 1-day and 10-day, `SVAR`) | **Planned** (2.9.7 row 2c, Drill B); the what-if already reports a "stressed window" figure | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
+| Stressed VaR (a stress scenario set, 1-day and 10-day, `SVAR`) | **Planned**; the what-if already reports a "stressed window" figure | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
 | Sensitivities per position and factor | **Not built**: book-grain `frtb-sensitivity` only, demo data; `DV01` per trade on `trade-valuation` | [OVERSIGHT_LENS.md section 7.1](OVERSIGHT_LENS.md#71-what-the-lake-holds-today) |
 | FRTB SA computed | **Not built** (stored book-grain charges, retiring) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); [FRTB.md](../contracts/FRTB.md) |
 | FRTB IMA | **Not built**, not planned | MC8 to MC10 |
 | Stress P&L by desk and scenario; the bank's P&L per scenario | **Built** stored and derived | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived) |
-| Actual and hypothetical P&L feed; backtesting engine with the multiplier | **Planned** (2.9.8 rows 3, 4) | [REGULATORY_VAR_REPORTING.md section 8](../architecture/REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap) |
+| Actual and hypothetical P&L feed; backtesting engine with the multiplier | **Planned** | [REGULATORY_VAR_REPORTING.md section 8](../architecture/REGULATORY_VAR_REPORTING.md#8-a-proposed-roadmap) |
 | VaR change explanation | **Not built**, designed (RO1) | [OVERSIGHT_LENS.md section 4.1](OVERSIGHT_LENS.md#41-ro1-var-change-explanation) |
 | Write-back with approval and audit | **Built**, on entity forms; not on engine inputs | [WRITE_BACK.md](../guides/WRITE_BACK.md) |
 | Client renderer, embedding | **Built** | [CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md) |
-| Phone tiers | **Design** (2.9.7 candidate) | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
+| Phone tiers | **Design** | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
 
 **Verified in code (2026-10-31):** `drishti-server/src/main/java/com/ash/drishti/server/var/` holds `VarService`, `VarWhatIf`,
 `VarPvStream` (the Kafka window), `VarShardBooks` and `VarSharding` (shards), `VarMatrix` (SMAT), `VarOfficial`, `VarCaches`; no class
@@ -398,12 +397,12 @@ see only in aggregate shows the aggregate and says drill is not allowed; **stale
 | # | Panel | Exact contents | Data | Interactions | Phase | Phone | Done? |
 |---|---|---|---|---|---|---|---|
 | A1 | Command line and key strip | `DRISHTI` mark; the command field (amber border, mono) showing the view as text: `MCUBE BANK BY DESK,RISK_CLASS MEASURE VAR <GO>`; the key strip **R C F** dims, **M** measures, **H** 1D/10D, **[ ]** versions, **E** explain, **P** provenance, **W** what-if, **?** | the view (`POST /api/v1/cube/mr/query`'s request) | type a view and `<GO>`; type-ahead of dimensions and measures; every key in section 6.4 | POC | must (command field), keys hidden | [ ] |
-| A2 | Headline strip (six tiles) | **VaR 99% 1-day · bank** 112,041,646 "6th worst of 509 · USD"; **ES 97.5%** 160,143,809 "mean of the 13 worst"; **Limit use** 74.7% with a bar (green under the warning level, amber from it, red over 100%, a tick at the warning level) "of 150,000,000"; **Σ desks − bank** 255,843,525 "diversification (desks sum 367.9m)"; **Stressed VaR** "—" with the reason ("no stress set on 2026-09-30", 2.9.7 row 2c); **Data**: the batch and intraday count, the Delta version, trade count, proxied share | `/api/v1/var/scope` of the view's scope; `var-limit` ([§7.6](#76-d5-risk-hierarchy-and-var-limit-existing)); the scope's provenance | click a tile: the matching measure in the pivot; hover: provenance | POC (stressed tile after 2c) | must (VaR, ES, limit use), glance (the rest) | [ ] |
+| A2 | Headline strip (six tiles) | **VaR 99% 1-day · bank** 112,041,646 "6th worst of 509 · USD"; **ES 97.5%** 160,143,809 "mean of the 13 worst"; **Limit use** 74.7% with a bar (green under the warning level, amber from it, red over 100%, a tick at the warning level) "of 150,000,000"; **Σ desks − bank** 255,843,525 "diversification (desks sum 367.9m)"; **Stressed VaR** "—" with the reason ("no stress set on 2026-09-30", stressed VaR); **Data**: the batch and intraday count, the Delta version, trade count, proxied share | `/api/v1/var/scope` of the view's scope; `var-limit` ([§7.6](#76-d5-risk-hierarchy-and-var-limit-existing)); the scope's provenance | click a tile: the matching measure in the pivot; hover: provenance | POC (stressed tile after 2c) | must (VaR, ES, limit use), glance (the rest) | [ ] |
 | A3 | Lens controls | chips **Rows: MGMT › desk** (blue), **Columns: risk class** (purple), **Filter: LE all** (green); segmented: measure **VaR · ES · Comp VaR · DV01 · SBM**; horizon **1D · 10D √10 · 10D sum**; confidence **99% · 97.5%**; set **Normal · Stressed**; currency **USD · EUR · CAD** | the view; currencies from `/api/v1/var/currencies` | drag a chip between Rows, Columns and Filters; click a segment; `R`, `C`, `F`, `M`, `H` | POC (SBM and Stressed greyed until MC5 and 2c) | desk (a phone opens saved views only) | [ ] |
 | A4 | Time-travel slider | a track from the first date with an official capture to now; ticks at the official runs and each batch (`09-29 official`, `09-30 06:00`, `10:40`, `11:02`); the amber handle "as of", the blue handle "compare"; the text "as of 2026-09-30 11:02 (data version 4182) · compare 09-29" | `GET /api/v1/cube/mr/versions` (dates with captures, each date's batches) | drag either handle; `[` and `]` step the as-of; **brush** a range for the sparkline window | POC (dates and batches; raw lake versions later, decision P3) | more | [ ] |
 | A5 | Pivot grid | rows: the ten desks (CREDIT, RATES, EQD, FI, INFL, FX, COMM, MM, STRUCT, SFT) as links; columns IR, CR, FX, EQ, CM, **Desk VaR**, **Limit**; each cell: the VaR (mono, thousands separators), under it a 70 × 16 px sparkline of 20 business days (blue; the desk column amber; dotted for intraday points); the Limit cell: use % and a 70 × 6 px bar (green, amber at the warning level, red over 100%, white tick at 100%); a dot `·` where the desk has no factor of the class; the selected cell outlined blue; **total row** "BANK (re-aggregated)" with each column's own VaR (IR 61,204,118 … bank 112,041,646) and 74.7%; **Σ cells − total** row in muted text | `POST /api/v1/cube/mr/query` (cells, totals, diversification, provenance ids); sparklines from official captures; per-class vectors ([§7.4](#74-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended)); limits ([§7.6](#76-d5-risk-hierarchy-and-var-limit-existing)) | click: select (fills the right rail); double-click or `Enter`: drill to books, positions, trades; `Backspace`: back; hover: the provenance popover (A8); shift-click: compare cells; arrows move the selection; the column header sorts | POC | must: the first five rows by the first measure, totals pinned; glance: the sparkline column | [ ] |
 | A6 | Tail histogram (right rail) | title "<row> × <column> · tail · 509 scenario P&Ls"; 34 bins; the ES tail bins red and marked **E** "ES tail, 13 worst"; the VaR bin amber with a dashed line and **V** "−VaR 121.5m (#6 of 509)"; a zero line; the x axis from the worst to the best P&L (m) | `/api/v1/var/scope/distribution` for the cell's scope; `GET /api/v1/cube/mr/cell` | hover a bin: its scenario days; click: open them in `SMAT`; **drag** the V marker onto another cell: compare that scenario day there | POC | glance (a strip) | [ ] |
-| A7 | Explain the move (right rail) | "BANK · 09-29 → 09-30 11:02"; lines: VaR 09-29 (official) 112,624,040; the steps with signed amounts (decreases green, increases red); the result 112,041,646 in bold; a note that the exact steps add up and the factor overlay is approximate | `GET /api/v1/cube/mr/explain` (POC: trades out, re-priced book, trades in); RO1's full steps and the overlay later | click a step: highlight the cells it moved; click a contributor: open it; `E` | POC (three steps); 2.9.9 (RO1's seven, the factor overlay, MC12) | more | [ ] |
+| A7 | Explain the move (right rail) | "BANK · 09-29 → 09-30 11:02"; lines: VaR 09-29 (official) 112,624,040; the steps with signed amounts (decreases green, increases red); the result 112,041,646 in bold; a note that the exact steps add up and the factor overlay is approximate | `GET /api/v1/cube/mr/explain` (POC: trades out, re-priced book, trades in); RO1's full steps and the overlay later | click a step: highlight the cells it moved; click a contributor: open it; `E` | POC (three steps); oversight and mobile (RO1's seven, the factor overlay, MC12) | more | [ ] |
 | A8 | Provenance popover | "Provenance · <cell> · VaR <value>"; business date and as-of; lake versions per input table; batches in order with their kind (FULL, INTRADAY, Kafka or files); scenario set and window; method (historical, equal weights, horizon, k of N, float64 sum); members (trades, positions, factors); proxied share with reason; corrections; shards asked and owners, time; links SMAT, inputs, corrections, CLI, API | `GET /api/v1/cube/provenance/{id}` | hover (desktop), long-press (phone), `P` | POC (corrections later) | more | [ ] |
 
 #### B: tail and attribution (tab)
@@ -425,7 +424,7 @@ see only in aggregate shows the aggregate and says drill is not allowed; **stale
 |---|---|---|---|---|---|---|---|
 | C1 | Grid chip | **Grid: BANK-IR-TENOR** beside the lens controls | `sensitivity-buckets.yaml` ([§7.10](#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new)) | click: choose FRTB-GIRR, SIMM or the bank's grids | POC (the bank's grid); FRTB grids with MC5 | desk | [ ] |
 | C2 | Sensitivity ladder | rows USD, EUR, GBP, CAD; columns 0-2Y, 2-5Y, 5-10Y, 10Y+; each cell "<DV01>k · <use>%" with a 100 × 8 px centre-zero bar (long right, short left), white ticks at both limits, green under the warning level, amber from it, red over; a **near** badge (amber) at the warning level, **breach** (red) over 100% | `GET /api/v1/cube/mr/sensitivities?grid=…` from `position-sensitivity` ([§7.9](#79-d8-position-sensitivity-sens-new)); limits from `risk-limit` ([§7.7](#77-d6-risk-limit-new-one-limit-table-for-every-measure)) | click a bucket: its positions; **brush** across buckets to sum them ("USD 2–10Y: −1,160k"); switch grid | POC (synthetic DV01 and DV01 limits) | must (the scope's worst three buckets), more (the ladder) | [ ] |
-| C3 | What-if side by side | columns Scope, Before, After, Incremental (decrease green, increase red); rows the visible desks and BANK; a cell whose change is material outlined blue; the tray under it listing each hypothetical trade with its method (copy, price) and its standalone, incremental and component VaR | `POST /api/v1/var/what-if` per visible scope (built); pricing of new terms later ([§7.16](#716-d15-predeal-request-and-predeal-result-new)) | `W` or **+ What-if trade**: copy and scale a booked trade; remove one; "show only changed" | POC (copy method); 2.9.14 (QLRisk pricing, delta-gamma) | desk | [ ] |
+| C3 | What-if side by side | columns Scope, Before, After, Incremental (decrease green, increase red); rows the visible desks and BANK; a cell whose change is material outlined blue; the tray under it listing each hypothetical trade with its method (copy, price) and its standalone, incremental and component VaR | `POST /api/v1/var/what-if` per visible scope (built); pricing of new terms later ([§7.16](#716-d15-predeal-request-and-predeal-result-new)) | `W` or **+ What-if trade**: copy and scale a booked trade; remove one; "show only changed" | POC (copy method); advanced and executive (QLRisk pricing, delta-gamma) | desk | [ ] |
 | C4 | Explain the move (intraday) | "DESK:RATES · 09-30 06:00 → 11:02": the morning VaR, one line per intraday batch with its source (Kafka, files) and trade count, the current VaR | `GET /api/v1/cube/mr/explain?from=<batch>&to=<batch>` | click a batch: highlight its trades | POC | more | [ ] |
 | C5 | Time-travel slider | as A4 | as A4 | as A4 | POC | more | [ ] |
 
@@ -439,33 +438,33 @@ Query later), the embed of a saved view, the phone layout of section 6.5, the SB
 ### Data needed: the complete list
 
 **Every dataset the MR Cube reads, in one table.** A row is needed from the phase in its *Phase* column onward. POC is the proof of
-concept of [section 12](#12-lens-design-and-proof-of-concept-poc); 2.9.8 (planned), 2.9.12 and 2.9.14 (proposed) are the releases of
-[section 13](#13-phases-proposed), from the plan's themed releases (product owner, 2026-10-31); *unscheduled* rows wait for the product owner. *State*: **existing** (a contract and demo data today), **extended** (existing, with optional fields
+concept of [section 12](#12-lens-design-and-proof-of-concept-poc); the regulatory foundation (planned), sensitivities and capital, and advanced and executive (proposed) are the phases of
+[section 13](#13-phases-proposed), from the plan's themes (product owner, 2026-10-31); *unscheduled* rows wait for the product owner. *State*: **existing** (a contract and demo data today), **extended** (existing, with optional fields
 added), **new**. *Demo or POC* says how the demo gets the data: an existing demo dataset; a **new generator** (a script under
 `tools/packgen/`, writing JSON Lines to `data/testdata/<domain>/<kind>/*.jsonl.gz`, loaded by `tools/build_demo_lakes.py` into Delta, read
 by the Delta connector, tested with the demo switched off); shipped **configuration** from a public text; or **bank only**.
 
 | # | Dataset | What it is; needed by | Phase | Typical source in a bank | Grain, frequency | State | Demo or POC gets it from | §7 |
 |---|---|---|---|---|---|---|---|---|
-| 1 | Trades (`trade`) | booking attributes as dimensions, drill to the trade; `FRTB_DESK`, `RRAO_CLASS` later | POC | Endur, Murex, Calypso | trade × date; daily, intraday amendments | existing; extended 2.9.12 | existing demo (`tools/packgen/trades/make_trades.py`, `data/testdata/trades`) | [7.2](#72-d1-trade-trd-existing-read-as-dimensions) |
+| 1 | Trades (`trade`) | booking attributes as dimensions, drill to the trade; `FRTB_DESK`, `RRAO_CLASS` later | POC | Endur, Murex, Calypso | trade × date; daily, intraday amendments | existing; extended (sensitivities and capital) | existing demo (`tools/packgen/trades/make_trades.py`, `data/testdata/trades`) | [7.2](#72-d1-trade-trd-existing-read-as-dimensions) |
 | 2 | Positions (`position`) | the position grain, market value for marginal VaR | POC | derived by Drishti | position × date, at load | existing | derived from the vectors | [7.3](#73-d2-position-pos-existing-derived-by-drishti) |
-| 3 | Scenario P&L vectors (`pnl-vector`, `scenario-pv`, `fx-scenario`) | VaR, ES, components, histogram, explain, time travel | POC | the risk engine of the booking system or the bank's pricing grid | trade or position × date × set; daily, intraday files or Kafka | existing; extended (`RISK_CLASS_VECTORS`) 2.9.9 | existing demo (`tools/packgen/var/make_var_data.py`); the POC adds per-class vectors from the same factor model | [7.4](#74-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
-| 4 | Scenario sets (`scenario-set`), the stress set included | the scenario days; the Normal / Stressed lens | POC (normal); 2.9.12 (stressed, from 2.9.7 row 2c) | the risk engine | set × date; daily, the stress set weekly | existing; extended (`PURPOSE`) | existing demo; the stress set from 2.9.7 row 2c's generator | [7.5](#75-d4-scenario-set-sset-existing-extended) |
+| 3 | Scenario P&L vectors (`pnl-vector`, `scenario-pv`, `fx-scenario`) | VaR, ES, components, histogram, explain, time travel | POC | the risk engine of the booking system or the bank's pricing grid | trade or position × date × set; daily, intraday files or Kafka | existing; extended (`RISK_CLASS_VECTORS`; oversight and mobile) | existing demo (`tools/packgen/var/make_var_data.py`); the POC adds per-class vectors from the same factor model | [7.4](#74-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
+| 4 | Scenario sets (`scenario-set`), the stress set included | the scenario days; the Normal / Stressed lens | POC (normal); sensitivities and capital (stressed, from stressed VaR) | the risk engine | set × date; daily, the stress set weekly | existing; extended (`PURPOSE`) | existing demo; the stress set from stressed VaR's generator | [7.5](#75-d4-scenario-set-sset-existing-extended) |
 | 5 | Hierarchies (`risk-hierarchy`) and VaR limits (`var-limit`) | rows of the pivot (MGMT, LEGAL, limit letters), limit bars | POC | the bank's hierarchy and limit systems | node × date; daily | existing | existing demo | [7.6](#76-d5-risk-hierarchy-and-var-limit-existing) |
-| 6 | Limits of every measure (`risk-limit`) | ladder limits (DV01, CS01, vega), stress, ES and capital limits | POC (DV01 only); 2.9.12 (all) | the limit system | limit × date; daily, on change | new | **new generator** `tools/packgen/var/make_risk_limits.py` → `data/testdata/market-risk/risk-limit/` | [7.7](#77-d6-risk-limit-new-one-limit-table-for-every-measure) |
-| 7 | Market data: rate, credit, inflation, FX forward, equity and commodity curves; vol surfaces and cubes | factor moves for explain's overlay; QLRisk pricing | 2.9.12 (explain overlay); 2.9.14 (pricing) | the market-data system (Bloomberg, Refinitiv, Markit through an in-house builder) | curve × date; end of day | existing | existing demo (`data/testdata/market-data/`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
+| 6 | Limits of every measure (`risk-limit`) | ladder limits (DV01, CS01, vega), stress, ES and capital limits | POC (DV01 only); sensitivities and capital (all) | the limit system | limit × date; daily, on change | new | **new generator** `tools/packgen/var/make_risk_limits.py` → `data/testdata/market-risk/risk-limit/` | [7.7](#77-d6-risk-limit-new-one-limit-table-for-every-measure) |
+| 7 | Market data: rate, credit, inflation, FX forward, equity and commodity curves; vol surfaces and cubes | factor moves for explain's overlay; QLRisk pricing | Sensitivities and capital (explain overlay); advanced and executive (pricing) | the market-data system (Bloomberg, Refinitiv, Markit through an in-house builder) | curve × date; end of day | existing | existing demo (`data/testdata/market-data/`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
 | 8 | FX rates (`fx-spot`, `fx-scenario`) | the reporting currency; sensitivities summed in USD | POC | market data; the risk engine for scenario FX | currency × date | existing | existing demo | [7.4](#74-d3-pnl-vector-scenario-pv-fx-scenario-existing-extended) |
-| 9 | Position sensitivities (`position-sensitivity`) | ladders, heat map, SBM, explain overlay, SIMM (CCR cube) | POC (synthetic); 2.9.12 | the same engine and run as the scenario PVs | position × date × batch; daily, intraday | new | **new generator** `tools/packgen/var/sensitivities.py`, from `factors.py`'s loadings so the first-order P&L matches the vectors → `data/testdata/market-risk/position-sensitivity/` | [7.9](#79-d8-position-sensitivity-sens-new) |
-| 10 | Factor dictionary (`risk-factor`) and bucket grids (`sensitivity-buckets.yaml`) | factor parts and bucket grids for ladders and SBM; liquidity horizons and modellability for IMA | POC (names, grids); 2.9.14 (IMA attributes) | the FRTB engine or the market-data system | factor, slowly changing | new | **new generator** `tools/packgen/var/risk_factors.py` (the demo's forty-odd factors and their curve points) → `data/testdata/market-risk/risk-factor/`; the grids as pack configuration | [7.10](#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new) |
-| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | 2.9.12 | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | new | **configuration** shipped from the public text (`config/packs/market-risk/frtb/*.yaml`, BCBS first) | [8.3](#83-frtb-standardised-approach-mc5-to-mc7) |
-| 12 | Issuers and ratings (`issuer`, `credit-curve`, the counterparty's `RATING`) | heat map by issuer, DRC credit quality, concentration | 2.9.12 | the security master and the credit system | issuer × date | existing | existing demo (`data/testdata/core/issuer`, `data/testdata/market-data/credit-curve`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
+| 9 | Position sensitivities (`position-sensitivity`) | ladders, heat map, SBM, explain overlay, SIMM (CCR cube) | POC (synthetic); sensitivities and capital | the same engine and run as the scenario PVs | position × date × batch; daily, intraday | new | **new generator** `tools/packgen/var/sensitivities.py`, from `factors.py`'s loadings so the first-order P&L matches the vectors → `data/testdata/market-risk/position-sensitivity/` | [7.9](#79-d8-position-sensitivity-sens-new) |
+| 10 | Factor dictionary (`risk-factor`) and bucket grids (`sensitivity-buckets.yaml`) | factor parts and bucket grids for ladders and SBM; liquidity horizons and modellability for IMA | POC (names, grids); advanced and executive (IMA attributes) | the FRTB engine or the market-data system | factor, slowly changing | new | **new generator** `tools/packgen/var/risk_factors.py` (the demo's forty-odd factors and their curve points) → `data/testdata/market-risk/risk-factor/`; the grids as pack configuration | [7.10](#710-d9-the-factor-dictionary-risk-factor-and-the-bucket-mapping-sensitivity-bucketsyaml-new) |
+| 11 | FRTB parameters: risk weights, correlations (ρ, γ), curvature shocks, DRC and RRAO weights | SBM, DRC, RRAO | Sensitivities and capital | the Basel text (MAR21 to MAR23) and the jurisdiction's rule | parameter set, per regulatory change | new | **configuration** shipped from the public text (`config/packs/market-risk/frtb/*.yaml`, BCBS first) | [8.3](#83-frtb-standardised-approach-mc5-to-mc7) |
+| 12 | Issuers and ratings (`issuer`, `credit-curve`, the counterparty's `RATING`) | heat map by issuer, DRC credit quality, concentration | Sensitivities and capital | the security master and the credit system | issuer × date | existing | existing demo (`data/testdata/core/issuer`, `data/testdata/market-data/credit-curve`) | [7.8](#78-d7-market-data-existing-read-for-explain-and-pricing) |
 | 13 | Calendars (`calendar`) | business days for the time-travel slider, the 10-day windows, backtesting's 250 days | POC | the bank's calendar service | calendar, yearly | existing | existing demo (`data/testdata/core/calendar`) | — |
-| 14 | IMA P&L vectors (`ima-pnl-vector`) | ES by liquidity horizon, stressed calibration, IMCC | 2.9.14 | the FRTB IMA engine | position × date × subset; daily, stressed weekly | new | **new generator** `tools/packgen/var/ima_vectors.py` (the factor model with factor groups switched off per subset) | [7.11](#711-d10-ima-pnl-vector-new-pl-vectors-per-risk-class-and-liquidity-horizon) |
-| 15 | Actual, hypothetical and risk-theoretical P&L (`desk-pnl`) | backtesting, PLA, desk zones | 2.9.8 (backtesting, its row 3); 2.9.14 (PLA) | product control and the front office | desk (or trade) × date; T+1 | new | **new generator** `tools/packgen/var/desk_pnl.py` (hypothetical from the business date's own move, actual with noise and fees) | [7.12](#712-d11-desk-pnl-new-actual-hypothetical-and-risk-theoretical-pl) |
+| 14 | IMA P&L vectors (`ima-pnl-vector`) | ES by liquidity horizon, stressed calibration, IMCC | Advanced and executive | the FRTB IMA engine | position × date × subset; daily, stressed weekly | new | **new generator** `tools/packgen/var/ima_vectors.py` (the factor model with factor groups switched off per subset) | [7.11](#711-d10-ima-pnl-vector-new-pl-vectors-per-risk-class-and-liquidity-horizon) |
+| 15 | Actual, hypothetical and risk-theoretical P&L (`desk-pnl`) | backtesting, PLA, desk zones | Regulatory foundation (backtesting, its row 3); advanced and executive (PLA) | product control and the front office | desk (or trade) × date; T+1 | new | **new generator** `tools/packgen/var/desk_pnl.py` (hypothetical from the business date's own move, actual with noise and fees) | [7.12](#712-d11-desk-pnl-new-actual-hypothetical-and-risk-theoretical-pl) |
 | 16 | Stress scenarios and stress P&L (`stress-scenario`, `scenario-pnl`) | stress P&L per cell, the worst scenario | unscheduled (the stress engine, RO9) | the stress engine | scenario × date; trade × scenario × date | existing (extended); `scenario-pnl` new | existing `stress-scenario`; **new generator** `tools/packgen/var/scenario_pnl.py` (shocks × the factor loadings) | [7.13](#713-d12-stress-scenario-extended-and-scenario-pnl-new) |
-| 17 | DRC and RRAO inputs (`default-risk`, `residual-risk`) | DRC, RRAO | 2.9.12 | the FRTB engine; the booking system's classification | trade × obligor × date | new | **new generator** `tools/packgen/var/frtb_inputs.py` (from the credit and equity trades and the issuer master) | [7.14](#714-d13-default-risk-and-residual-risk-new-frtbmd-proposals) |
+| 17 | DRC and RRAO inputs (`default-risk`, `residual-risk`) | DRC, RRAO | Sensitivities and capital | the FRTB engine; the booking system's classification | trade × obligor × date | new | **new generator** `tools/packgen/var/frtb_inputs.py` (from the credit and equity trades and the issuer master) | [7.14](#714-d13-default-risk-and-residual-risk-new-frtbmd-proposals) |
 | 18 | Corrections (`cube-correction`) | data corrections inside the cube | unscheduled (MC11) | Drishti (write-back) | correction | new (Drishti-owned) | made in the demo through write-back (the demo script seeds one) | [7.15](#715-d14-cube-correction-new-data-corrections-drishti-owned) |
-| 19 | Pre-deal requests and results | what-if per cell; pricing of new terms | POC (copy method, built); 2.9.14 (pricing) | Drishti, per request | request | new (Drishti-owned, computed) | made at run time | [7.16](#716-d15-predeal-request-and-predeal-result-new) |
+| 19 | Pre-deal requests and results | what-if per cell; pricing of new terms | POC (copy method, built); advanced and executive (pricing) | Drishti, per request | request | new (Drishti-owned, computed) | made at run time | [7.16](#716-d15-predeal-request-and-predeal-result-new) |
 | 20 | Official captures and the intraday batch list (`var-official`, the batches on the vectors) | sparklines, explain between dates, the time-travel slider | POC | Drishti (official runs); the risk engine (batches) | node × date; batch | existing | existing demo (the demo's official captures and intraday batches) | [VAR_GUIDE section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
 
 **Count by the first phase each row is needed in:** POC **12** (rows 1 to 6, 8 to 10, 13, 19, 20); planned **1** (row 15);
@@ -523,7 +522,7 @@ Endur-style UPPER_SNAKE names. Sizes are at **2.3M positions** (about 10M trades
 | D8 | `position-sensitivity` (SENS) | input | **new** | sensitivities, ladders, SBM, explain overlay, SIMM (CCR) | 7.9 |
 | D9 | `risk-factor` (the factor dictionary) and `sensitivity-buckets.yaml` | fundamental + configuration | **new** | factor parts, liquidity horizons, modellability, bucket grids | 7.10 |
 | D10 | `ima-pnl-vector` | input | **new** | ES by liquidity horizon, reduced set, stressed calibration, by risk class | 7.11 |
-| D11 | `desk-pnl` (actual, hypothetical, risk-theoretical) | input | **new** (2.9.8 row 3) | backtesting, PLA | 7.12 |
+| D11 | `desk-pnl` (actual, hypothetical, risk-theoretical) | input | **new** (planned) | backtesting, PLA | 7.12 |
 | D12 | `stress-scenario` (SCN) and `scenario-pnl` | fundamental, input | existing; **extended**; `scenario-pnl` **new** (STR.md) | stress P&L | 7.13 |
 | D13 | `default-risk` and `residual-risk` | input | **new** (FRTB.md proposals) | DRC and RRAO | 7.14 |
 | D14 | `cube-correction` | drishti-owned | **new** | data corrections inside the cube | 7.15 |
@@ -582,7 +581,7 @@ NaN, a failed row counted never zero, one full run per date and source, one form
 
 | New field | Type | Unit | Req. | Meaning |
 |---|---|---|---|---|
-| `RISK_CLASS_VECTORS` | record list | USD | optional | the same vector split by FRTB risk class (`RISK_CLASS`, `PNL`), when the source runs partial revaluations; enables "VaR by risk type" (2.9.10 G6) without a second table; the split need not add up to `PNL` (cross effects), the residual is reported |
+| `RISK_CLASS_VECTORS` | record list | USD | optional | the same vector split by FRTB risk class (`RISK_CLASS`, `PNL`), when the source runs partial revaluations; enables "VaR by risk type" (G6, planned) without a second table; the split need not add up to `PNL` (cross effects), the residual is reported |
 | `FRTB_DESK` | id | | optional | the regulatory desk (as on the trade) |
 | `PROXY_REASON` | text | | optional | why `STATUS` is `proxied` (`NO_HISTORY`, `PROXY_CURVE`, `STALE_DATA`); counted per reason on the data-trust card |
 
@@ -604,8 +603,8 @@ scenario PVs in any currency turn into USD P&L.
 **Grain:** one row per scenario set per business date. **Key:** `SCENARIO_SET_ID`. Existing fields: `SCENARIO_DATES` (oldest first),
 `SCENARIO_COUNT`, `WINDOW_START`, `WINDOW_END`, `HORIZON_DAYS`, `REVALUATION` (`full` or `sensitivities`), `WEIGHTS`, `SOURCE_BATCH`,
 `DESCRIPTION`. **Extended (proposed):** `PURPOSE` (`NORMAL`, `STRESSED`, `IMA_CURRENT`, `IMA_STRESSED`, `STRESS_SELECTION`), `APPROVED_BY`
-and `APPROVAL_ID` (the stress window's sign-off, 2.9.8 row 8), `REDUCED_FACTOR_SET` (boolean: the vectors priced with the reduced set of
-MAR33's stressed calibration). Stressed VaR (2.9.7 row 2c) introduces a second set per date (`HS-STRESS-…`); the cube treats every set
+and `APPROVAL_ID` (the stress window's sign-off, the planned stress window tool), `REDUCED_FACTOR_SET` (boolean: the vectors priced with the reduced set of
+MAR33's stressed calibration). Stressed VaR introduces a second set per date (`HS-STRESS-…`); the cube treats every set
 as a **lens** (Normal / Stressed beside the confidence picker). **Validation:** one `NORMAL` set per date; a `STRESSED` set's window
 inside the approved stress period.
 
@@ -804,7 +803,7 @@ whose engine aggregates), far smaller (thousands of rows), losing position drill
 
 ### 7.12 D11 `desk-pnl`: new (actual, hypothetical and risk-theoretical P&L)
 
-The 2.9.8 row 3 feed ([REGULATORY_VAR_REPORTING section 8.2.3](../architecture/REGULATORY_VAR_REPORTING.md#823-the-pl-feed-g3)); the cube
+The planned P&L feed ([REGULATORY_VAR_REPORTING section 8.2.3](../architecture/REGULATORY_VAR_REPORTING.md#823-the-pl-feed-g3)); the cube
 uses it for backtesting and PLA. **Grain:** one row per regulatory desk (or trade, better) per business date. **Key:** `DESK_PNL_ID` =
 `DPNL-<FRTB_DESK or TRADE_ID>-<BUSINESS_DATE>`. **Storage:** `<root>/risk/desk-pnl/`. **Sources:** product control (actual, from the
 general ledger and the front office's P&L), the front office (hypothetical: yesterday's positions at today's prices), the risk engine
@@ -893,7 +892,7 @@ QLRisk), or `{SENSITIVITIES}` (a sparse list as D8, for the delta-gamma estimate
 | `config/packs/market-risk/contracts/position-sensitivity.contract.yaml` | `position-sensitivity` | `SENS` | input | market-risk | new |
 | `config/packs/market-risk/contracts/risk-factor.contract.yaml` | `risk-factor` | `RFAC` | fundamental | market-risk | new |
 | `config/packs/market-risk/contracts/ima-pnl-vector.contract.yaml` | `ima-pnl-vector` | `IMAV` | input | market-risk | new |
-| `config/packs/market-risk/contracts/desk-pnl.contract.yaml` | `desk-pnl` | `DPNL` | input | market-risk | new (2.9.8 row 3) |
+| `config/packs/market-risk/contracts/desk-pnl.contract.yaml` | `desk-pnl` | `DPNL` | input | market-risk | new (planned) |
 | `config/packs/market-risk/contracts/risk-limit.contract.yaml` | `risk-limit` | `RLIM` | fundamental | market-risk | new (RO3) |
 | `config/packs/market-risk/contracts/scenario-pnl.contract.yaml` | `scenario-pnl` | `SPNL` | input | market-risk | new (STR.md) |
 | `config/packs/market-risk/contracts/default-risk.contract.yaml` | `default-risk` | `DRCI` | input | market-risk | new (FRTB.md) |
@@ -922,7 +921,7 @@ As built ([VAR_GUIDE section 2](../guides/VAR_GUIDE.md#2-the-measures-with-worke
 scenarios sorted worst first, `VaR(α) = −v_(k)`, k = ⌈N(1−α)⌉ (the 6th worst of 509 at 99%); `ES(α) = −mean(v_(1..k_ES))` (13 worst at
 97.5%); component VaR the scope's tail window mean scaled to add up (Euler); component ES exact; incremental VaR `VaR(v) − VaR(v − p)`;
 marginal VaR per million. On the demo: **the bank's 1-day 99% VaR is 112,041,646 USD**, ES 160,143,809, the ten desks' VaRs sum to
-367.9 m (diversification shown in the pivot's total row). Stressed VaR (2.9.7 row 2c) is the same on the stress set.
+367.9 m (diversification shown in the pivot's total row). Stressed VaR is the same on the stress set.
 
 ### 8.2 Sensitivities and ladders (MC1, MC3)
 
@@ -1116,7 +1115,7 @@ done when every such row is ticked.
 | What-if side by side (tab C) | the existing basket what-if (copy and scale) per visible cell |
 | Phone and embedding | the landing's must and glance tiers; the view embeds through the client renderer |
 
-**Out of the POC:** FRTB SA (SBM, DRC, RRAO), IMA, PLA and backtesting by desk, stressed VaR in the cube (until 2.9.7 row 2c is in),
+**Out of the POC:** FRTB SA (SBM, DRC, RRAO), IMA, PLA and backtesting by desk, stressed VaR in the cube (until stressed VaR is in),
 corrections through write-back, QLRisk pricing of new terms and the delta-gamma estimate, SIMM, saved views shared with groups (saved
 private views are in), Excel Power Query and xlsx export (CSV and Arrow are in), Tableau and XLCubed.
 
@@ -1196,7 +1195,7 @@ the cell budget, explain's steps adding up, sensitivities summed by grid with ov
 `VarShardClusterTest`, the landing on 1 and 3 members, Delta and Iceberg). Console (pytest): the routes, the proxy as the person, the
 edition file (lens id, words, menus), the help page, `DRS` codes documented. Browser: the landing, a re-pivot, drill to a trade, the
 popover, the slider, tabs B and C, keyboard only, the phone at 390 px, an embed. **The drill:** one full drill for the POC branch
-(memory: once per wave), the new suites in it.
+the new suites in it.
 
 ### 12.6 POC effort and builder plan
 
@@ -1232,17 +1231,17 @@ branches would build the core twice or merge it across branches.
 
 ## 13. Phases (proposed)
 
-Releases follow the plan's themed releases (product owner, 2026-10-31): 2.9.8 market-risk regulatory foundation; 2.9.9 oversight and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA family; 2.9.14 advanced and executive. 2.9.8 is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "Risk cubes" section. The shared core (MC2) is built
-with the CCR cube in 2.9.11, so the POC's order (P1: core, MR, then CCR, one branch) becomes core and CCR in 2.9.11, then MR in 2.9.12, on
+The phases follow the plan's themes (product owner, 2026-10-31): the market-risk regulatory foundation; oversight and mobile; regulatory reporting; counterparty engines; sensitivities and market-risk capital; the CVA family; advanced and executive. The regulatory foundation is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "Risk cubes" section. The shared core (MC2) is built
+with the CCR cube in the counterparty engines phase, so the POC's order (P1: core, MR, then CCR, one branch) becomes core and CCR in the counterparty engines phase, then MR in the sensitivities and capital phase, on
 the same branch.
 
-| Phase | Rows | Release | Depends on |
+| Phase | Rows | Status | Depends on |
 |---|---|---|---|
 | 1. The shared core | MC2 (the cube core: pivot with non-additive totals, drill, saved views, provenance per cell, export), with the CCR cube core | proposed | the VaR engine (built) |
-| 2. Sensitivities in the lake | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums), first in its release | proposed | none; RO15's design |
+| 2. Sensitivities in the lake | MC1 (= RO15, the contract, loader, factor dictionary, buckets, sums), first in its phase | proposed | none; RO15's design |
 | 2. The MR pivot | MC3 (ladders and heat map), MC4 (sparklines, limit bars, waterfall, histogram), MC12 (explain the move: RO1 plus the factor overlay) | proposed | MC1 for sensitivity measures; MC2; RO1 |
 | 2. FRTB SA | MC5 (SBM delta, vega, curvature, three scenarios), MC6 (DRC), MC7 (RRAO), each with its playground | proposed | MC1; `default-risk`, `residual-risk` |
-| 3. FRTB IMA | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones), each with its playground | proposed | 2.9.8's P&L feed and backtesting; 2.9.7 row 2c (stressed VaR); `ima-pnl-vector` from the bank |
+| 3. FRTB IMA | MC8 (ES by liquidity horizon, stressed calibration), MC9 (SES and NMRF), MC10 (PLA and desk zones), each with its playground | proposed | the planned P&L feed and backtesting; stressed VaR (stressed VaR); `ima-pnl-vector` from the bank |
 | 3. Pre-deal pricing | MC13 (QLRisk pricing and delta-gamma, shared with CC12) | proposed | QLRisk's API declared stable |
 | Unscheduled | MC11 (corrections in the cube) | unscheduled | write-back (built) |
 
@@ -1279,9 +1278,9 @@ the same branch.
    (large; a product of its own).
 7. **Corrections in the official run.** Approved corrections included by default with the list on the run (recommended), or excluded
    unless the run is restated.
-8. **Release placement.** **Decided (product owner, 2026-10-31), by the themed release plan:** the shared core with the CCR cube in
-   2.9.11; sensitivities first, then the MR pivot and FRTB SA in 2.9.12; IMA and pre-deal pricing in 2.9.14 (section 13). The earlier
-   options (sensitivities and the pivot in 2.9.8 beside regulatory reporting phase 1, FRTB SA next) are superseded.
+8. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** the shared core with the CCR cube in the
+   counterparty engines phase; sensitivities first, then the MR pivot and FRTB SA in the sensitivities and capital phase; IMA and
+   pre-deal pricing in the advanced and executive phase (section 13).
 9. **Command word.** **Decided (product owner, 2026-10-31): `MCUBE`** (the CCR cube is `CCUBE`); checked against every pack's mnemonics at build.
 10. **The `position-sensitivity` contract.** Adopt OVERSIGHT_LENS decision 9 as this cube's input (recommended), retiring
     `frtb-sensitivity` when MC5 lands.

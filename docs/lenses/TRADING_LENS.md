@@ -16,8 +16,8 @@
 # Drishti Trading: what traders and desk heads need, what the lens gives them today, and what comes next
 
 **Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31 (develop at b22ff3850). Features built on a branch were cited as "branch, merging
-in 2.9.7"; built (10-day VaR and confidence, the scenario matrix, the renderer's sign-in window), they are cited as built. Everything in sections 5 and 8 is a proposal; the rows of section 8 are candidates in the
+document, section or file it was read from on 2026-10-31. Built features (10-day VaR and confidence, the scenario matrix, the renderer's
+sign-in window) are cited as built. Everything in sections 5 and 8 is a proposal; the rows of section 8 are candidates in the
 [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not started.
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
@@ -85,11 +85,11 @@ operations (COLL, MC) …").
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *What did my books make yesterday?* | **Built**: **P&L today**, the MtM change of every trade valued on both the business date and the business day before, summed over my books; no valuations the day before: no number, said ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading), the Trader desk) | Product control's struck P&L (actual, with cash, fees and reserves) is not received: the figure is MtM change only. The bank's P&L feed is 2.9.8 row 3 |
+| *What did my books make yesterday?* | **Built**: **P&L today**, the MtM change of every trade valued on both the business date and the business day before, summed over my books; no valuations the day before: no number, said ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading), the Trader desk) | Product control's struck P&L (actual, with cash, fees and reserves) is not received: the figure is MtM change only. The bank's P&L feed is planned |
 | *Why did it move?* | **Partly**: **Overnight movers** (the trades whose MtM moved most) on the Desk head landing; the trade events (new, amended, cancelled) on the Trader desk | A P&L explain (market by risk factor, time, new and amended trades, unexplained): the contract is proposed and parked ([PNL.md section 1](../contracts/PNL.md#1-summary)); section 5.4 |
-| *What is my VaR and how close am I to my limit?* | **Built**: **My VaR** (the union of my books, `BOOK:A + BOOK:B`), labelled intraday when updates were applied; **Limit use**: the highest of my books' VaR ÷ its `var-limit` (EDITIONS.md section 14) | Limits other than VaR (DV01, CS01, vega, stop-loss, notional): not built (section 5.7); 10-day and other confidences (**built** in 2.9.7: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
+| *What is my VaR and how close am I to my limit?* | **Built**: **My VaR** (the union of my books, `BOOK:A + BOOK:B`), labelled intraday when updates were applied; **Limit use**: the highest of my books' VaR ÷ its `var-limit` (EDITIONS.md section 14) | Limits other than VaR (DV01, CS01, vega, stop-loss, notional): not built (section 5.7); 10-day and other confidences (**built**: [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)) |
 | *Did any of my books breach?* | **Built** for VaR limits: **Breaches** and **Near limit** tiles (Desk head; `trading.near-limit` 0.8); **Limit use by book** over 5 business dates from the official records | A breach as a record the desk explains (RO2 of the oversight analysis; section 5.6) |
-| *Did yesterday's P&L exceed VaR?* | **Partly**: **P&L against VaR**, the desk's official history (hypothetical P&L against the VaR before it), last 60 days, exceptions circled; **left out** without official history (EDITIONS.md section 14) | The bank's actual and hypothetical P&L (2.9.8 rows 3 and 4); section 5.3 |
+| *Did yesterday's P&L exceed VaR?* | **Partly**: **P&L against VaR**, the desk's official history (hypothetical P&L against the VaR before it), last 60 days, exceptions circled; **left out** without official history (EDITIONS.md section 14) | The bank's actual and hypothetical P&L (planned); section 5.3 |
 | *What did I book yesterday, and is it right?* | **Built**: **Trades today** (new, amended, cancelled) and **Today's blotter**; on the demo data "new" reads 0 (no trade is booked on its business date) | New trades on the demo data (section 5.1) |
 
 ### 2.2 Intraday
@@ -114,7 +114,7 @@ operations (COLL, MC) …").
 
 | Task | Drishti today | Gap |
 |---|---|---|
-| Month-to-date and year-to-date P&L against budget and stop-loss | **Not built**: no P&L series is stored or received; the valuations give daily MtM change only | The bank's P&L feed (2.9.8 row 3), then a stop-loss check (RO5 of the oversight analysis); section 5.11 |
+| Month-to-date and year-to-date P&L against budget and stop-loss | **Not built**: no P&L series is stored or received; the valuations give daily MtM change only | The bank's P&L feed (planned), then a stop-loss check (RO5 of the oversight analysis); section 5.11 |
 | The desk's limit use over the month (average, peak, days near) | **Partly**: the official records carry `LIMIT_USE` per node and date, read in BI (`market-risk-var-official` is in the edition's BI datasets, `trading.yaml` `bi.datasets`) | A use-statistics card on the Desk head landing (section 5.12) |
 | P&L-against-VaR exceptions with their explanations | **Partly**: exceptions circled on the card | An exception commentary (one comment thread per exception, as for breaches) |
 | Next year's limit request | **Partly**: BI over the official records | The statistics above, as a desk report |
@@ -128,7 +128,7 @@ operations (COLL, MC) …").
 | Need | Status | Evidence or row |
 |---|---|---|
 | Daily MtM change of my books | **Built** | P&L today ([EDITIONS.md section 14](../admin/EDITIONS.md#14-drishti-trading)) |
-| Actual P&L (with cash, fees, reserves) | **Not built**; needs the bank's P&L feed | 2.9.8 row 3 ([IMPLEMENTATION_PLAN 2.9.8](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned)) |
+| Actual P&L (with cash, fees, reserves) | **Not built**; needs the bank's P&L feed | planned ([the implementation plan](../architecture/IMPLEMENTATION_PLAN.md#298-market-risk-regulatory-foundation-and-debugging-planned)) |
 | P&L explain (by risk factor, time, new and amended trades, unexplained) | **Not built**; contract proposed, parked | [PNL.md](../contracts/PNL.md); the stored `pnl-explain` (PNL) is a generator's, with known inconsistencies ([COMPUTED_ATTRIBUTES.md section 4.10](../architecture/COMPUTED_ATTRIBUTES.md#410-pnl-explain-pnl)) |
 | P&L by trader | **Built** from the valuations' `TRADER_ID`; masked for a role without raw, then said | EDITIONS.md section 14, Desk head |
 | The pricing system's own `PNL_1D` | **Not used**: a different figure on the demo data | EDITIONS.md section 14; agrees with MtM change on 201 of 15,000 trades (F14, [COMPUTED_ATTRIBUTES.md section 4.1](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval)) |
@@ -143,7 +143,7 @@ operations (COLL, MC) …").
 | Top positions by VaR contribution | **Built** | `/scope/contributions?by=position` (Trader desk) |
 | VaR by trader (adds up to the desk) | **Built** to `max-parts` (5,000 trades, the largest said) | Desk head, By trader |
 | 10-day VaR and the confidence chosen | **Built** (plan row 2b) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen): √10 and the 10-day sum, a confidence picker, limit use only when comparable |
-| Stressed VaR | **Planned** (2.9.7 row 2c) | |
+| Stressed VaR | **Planned** | |
 | The scenario matrix (is this tail scenario new?) | **Built** | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat), `SMAT`; on in Drishti Trading (`commands.words.SMAT: on`; `SMAT BOOK BOOK-RATES-1 20`), which settles section 9, decision 5 |
 | DV01 of my books | **Partly**: the sum of the live trades' `DV01` when any holds one; else the tile is left out | EDITIONS.md section 14 |
 | DV01 by tenor and currency, CS01, vega, FX delta | **Not built**: per-trade `DV01` only, no bucketed sensitivities | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); RO4 of the oversight analysis; section 5.7 |
@@ -173,7 +173,7 @@ operations (COLL, MC) …").
 
 | Need | Status | Evidence or row |
 |---|---|---|
-| A counterparty's trades, netting sets, MtM | **Built**: `CTRD`, `NSET`, `NSMTM`, `CPMTM` (netting-set and counterparty MtM derived in 2.9.7) | [COMPUTED_ATTRIBUTES.md section 13.1](../architecture/COMPUTED_ATTRIBUTES.md#131-the-derived-kinds-and-the-sutra-panels-q1-to-q4) |
+| A counterparty's trades, netting sets, MtM | **Built**: `CTRD`, `NSET`, `NSMTM`, `CPMTM` (netting-set and counterparty MtM derived) | [COMPUTED_ATTRIBUTES.md section 13.1](../architecture/COMPUTED_ATTRIBUTES.md#131-the-derived-kinds-and-the-sutra-panels-q1-to-q4) |
 | Pre-deal PFE against the credit limit | **Built**: exact `paths` method, or the engine's `addon` proxy labelled proxy | [EXPOSURE_GUIDE section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if); EDITIONS.md section 14 |
 | The desk's largest counterparty by exposure | **Partly**: by positive MtM | section 5.2 |
 | Credit limit use on the counterparty's page | **Built as read**; the stored limits read very low use (sized on the retired profiles) | [EXPOSURE_GUIDE section 28](../guides/EXPOSURE_GUIDE.md#28-open-items) |
@@ -218,7 +218,7 @@ person's edition or lens shows `TRD`), cached two minutes per person, date and s
 | **Desk P&L today** | As P&L today, over the desk, with the best book | As above |
 | **Desk VaR** and limit use | `DESK:<id>` from the VaR engine | — |
 | **Breaches**, **Near limit** | Books above 100% and at or above `trading.near-limit` | — |
-| **Largest counterparty** | Its share of the desk's **positive MtM** over live trades (current exposure before netting and collateral) | Exposure: EDITIONS.md said the exposure engine has no desk scope (corrected in 2.9.7). **Finding:** the engine does accept `DESK:` as a `partial` scope that cuts netting sets, recomputed in seconds per touched set ([EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes)); what it lacks is a desk's **share of each counterparty's netted, collateralised exposure** and a one-call ranking. Section 5.2 |
+| **Largest counterparty** | Its share of the desk's **positive MtM** over live trades (current exposure before netting and collateral) | Exposure: the engine accepts `DESK:` as a `partial` scope that cuts netting sets, recomputed in seconds per touched set ([EXPOSURE_GUIDE section 4](../guides/EXPOSURE_GUIDE.md#4-scopes)); what it lacks is a desk's **share of each counterparty's netted, collateralised exposure** and a one-call ranking. Section 5.2 |
 | **Limit use by book** | Last `trading.limit-days` (5) business dates, each cell VaR ÷ limit from that date's **official record**, each cell printing its percentage | A date without a record: "—", named under the grid; a role that sees only some nodes: "not available" |
 | **By trader** | Each trader's P&L and live trades from the valuations' `TRADER_ID`; VaR as the sum of their trades' component VaR in the desk | With `TRADER_ID` masked: "—", record counts with a star, the reason said; beyond `max-parts` the largest only |
 | **P&L against VaR** | The desk's official history: each day's hypothetical P&L against the VaR before it, `trading.pnl-var-days` (60), exceptions circled | Left out when the history is a replay (scenario P&L, not a day's) |
@@ -275,15 +275,15 @@ are this document's (Trading lens); RO ids are the oversight analysis's.
 |---|---|---|---|
 | TL1 | New trades on the demo data; `SOURCE_UPDATE_TIME` searchable | S | the test-data generators (seeds plan) |
 | TL2 | The desk's share of each counterparty's exposure | M | exposure contributions by trade (built at small sizes) |
-| TL3 | P&L against VaR from the bank's P&L | S | 2.9.8 rows 3 and 4 |
+| TL3 | P&L against VaR from the bank's P&L | S | the bank's P&L feed and the backtesting engine (planned) |
 | TL4 | P&L explain: TL4a by trade events (S), TL4b by risk factor (L) | S; L | TL4a none; TL4b per-trade sensitivities, market moves ([PNL.md](../contracts/PNL.md)) |
-| TL5 | Stressed VaR, 10-day and confidence on the landings and the check | S | 2.9.7 rows 2b (built) and 2c |
+| TL5 | Stressed VaR, 10-day and confidence on the landings and the check | S | 10-day VaR and confidence (built); stressed VaR |
 | TL6 | My breaches to explain | S | RO2 |
 | TL7 | Sensitivity ladders and limits on my books | M after RO4 | RO3, RO4 |
 | TL8 | The check on the real trade | S (labels) then L | QLRisk API stable (parked) |
 | TL9 | Intraday P&L | M | the bank's intraday base PVs |
 | TL10 | Watch my books (alerts from the landing) | S | alerts on numbers (built) |
-| TL11 | Month-to-date and year-to-date P&L, stop-loss | S | 2.9.8 row 3; RO5 |
+| TL11 | Month-to-date and year-to-date P&L, stop-loss | S | the bank's P&L feed (planned); RO5 |
 | TL12 | Limit use statistics on the Desk head | S | official records (built) |
 | TL13 | "My" from the directory | M | single sign-on groups; RBAC later |
 
@@ -335,11 +335,11 @@ gets zero; the standalone figure is shown beside it only when asked, labelled.
 its date's set, derived by Drishti) against the VaR before it ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting));
 left out without official history.
 
-**Design.** When the bank's daily P&L per desk arrives (2.9.8 row 3: actual from finance, hypothetical from the front office), the card
+**Design.** When the bank's daily P&L per desk arrives (the planned P&L feed: actual from finance, hypothetical from the front office), the card
 shows **actual** and **hypothetical** against VaR, with Drishti's own derived figure named as **risk-theoretical**; exceptions counted
-separately per series (2.9.8 row 4's backtesting engine). The card's default series is a site setting (proposed); a desk without a P&L
+separately per series (the planned backtesting engine). The card's default series is a site setting (proposed); a desk without a P&L
 row on a date shows "—" for the date, never zero. With no official history the card stays left out, as today: a replay is not a day's
-P&L. **Size** S after 2.9.8. **Tests:** crafted P&L rows give the right exceptions per series; a missing day is a gap; the card never
+P&L. **Size** S after the P&L feed. **Tests:** crafted P&L rows give the right exceptions per series; a missing day is a gap; the card never
 mixes series.
 
 ### 5.4 TL4: a P&L explain
@@ -418,9 +418,9 @@ notifies once with cooldown.
 
 ### 5.11 TL11: month-to-date and year-to-date P&L, stop-loss
 
-From the bank's daily P&L per desk (2.9.8 row 3; per book or trade when delivered, so any scope): month-to-date and year-to-date sums
+From the bank's daily P&L per desk (the planned P&L feed; per book or trade when delivered, so any scope): month-to-date and year-to-date sums
 (derived, a sum over dates), against the desk's **stop-loss** limit from the limit catalogue (RO3, RO5 of the oversight analysis). A tile
-on the Desk head ("MTD −3.1m · stop-loss 10m · 31%") and a line on the Trader desk. **Size** S after 2.9.8 row 3 and RO5.
+on the Desk head ("MTD −3.1m · stop-loss 10m · 31%") and a line on the Trader desk. **Size** S after the P&L feed and RO5.
 
 ### 5.12 TL12: limit use statistics on the Desk head
 
@@ -445,7 +445,7 @@ the RBAC work that wires `lens.roles` later.
 |---|---|---|---|
 | Trade valuations (MtM, DV01, notional) on consecutive business dates | per trade per date | P&L today, movers, by trader (built) | the bank's valuation system; `NOTIONAL`'s unit is disputed (F10, [COMPUTED_ATTRIBUTES.md section 6](../architecture/COMPUTED_ATTRIBUTES.md#6-findings-duplicates-and-inconsistencies)) |
 | Trades booked on their date, with `SOURCE_UPDATE_TIME`, `TRADE_ACTION`, `TRADE_STATUS` | per trade, intraday or end of day | Trades today (built), TL1, TL4a | the booking systems; the demo needs TL1 |
-| Actual and hypothetical P&L | per desk (better per book or trade) per date | TL3, TL11 | product control and finance; the 2.9.8 row 3 contract |
+| Actual and hypothetical P&L | per desk (better per book or trade) per date | TL3, TL11 | product control and finance; the planned P&L contract |
 | **Position sensitivities** (delta by risk factor and bucket: DV01 by currency and tenor, CS01 by curve and tenor, vega by underlying and expiry, FX delta by currency; gamma where options matter) | per trade per date | TL4b, TL7 | the bank's risk engine; FRTB.md's per-trade `sensitivity` table (proposed); RO4 of the oversight analysis (OVERSIGHT_LENS.md section 4.4) designs the aggregation. Today only per-trade `DV01` and FRTB buckets per book are held |
 | Market moves per risk factor | per factor per date | TL4b | derivable from the market-data pack's history for the factors it holds; the rest from the bank |
 | Intraday base PVs | per trade per update | TL9 | the intraday PV stream (`scenario-pv`'s `BASE_PV`) |
@@ -478,29 +478,29 @@ The rows below are added to the plan's [Lens product candidates (not started)](.
 section. Ordered by value for the persona and by what they need first.
 
 
-**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
 
-| Order | Row | Why here | Size | Depends on | Release |
+| Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
 | 1 | **TL1** new trades on the demo data; searchable update time | The lens's first tile reads 0 "new" on the demo and times out on a large lake | S | seeds plan | unscheduled (test data from seeds) |
 | 2 | **TL4a** P&L by trade events | Explains most of a day's surprises with no new data | S | — | proposed |
-| 3 | **TL5** horizons, confidence, stressed VaR on the landings | Follows 2.9.7 rows 2b and 2c at once | S | 2b, 2c | proposed |
+| 3 | **TL5** horizons, confidence, stressed VaR on the landings | Follows 10-day VaR and stressed VaR at once | S | 10-day VaR, stressed VaR | proposed |
 | 4 | **TL12** limit use statistics; **TL10** watch my books | Small, read only what is held | S each | — | TL12 proposed; TL10 proposed |
-| 5 | **TL8** fidelity labels on the check (now) | The check's honesty for options | S | — | proposed (fidelity line); 2.9.14 (pricing) |
+| 5 | **TL8** fidelity labels on the check (now) | The check's honesty for options | S | — | proposed (fidelity line); pricing later, with QLRisk |
 | 6 | **TL2** the desk's share of counterparty exposure | Replaces the positive-MtM stand-in | M | exposure contributions | proposed |
-| 7 | **TL3** P&L against VaR from the bank's P&L; **TL11** MTD, YTD, stop-loss | Need 2.9.8's P&L feed | S each | 2.9.8 rows 3, 4; RO5 | TL3 proposed; TL11 unscheduled |
+| 7 | **TL3** P&L against VaR from the bank's P&L; **TL11** MTD, YTD, stop-loss | Need the bank's P&L feed | S each | the P&L feed and the backtesting engine; RO5 | TL3 proposed; TL11 unscheduled |
 | 8 | **TL6** my breaches to explain | The first line's half of RO2 | S | RO2 | proposed |
 | 9 | **TL13** "my" from the directory | For a real deployment | M | SSO groups | unscheduled (later, decided) |
 | 10 | **TL9** intraday P&L | Needs the bank's intraday base PVs | M | data | unscheduled |
 | 11 | **TL7** sensitivity ladders and limits | Needs per-trade sensitivities | M | RO3, RO4 | proposed |
-| 12 | **TL4b** P&L explain by risk factor; **TL8** pricing the real trade | The largest; QLRisk parked | L each | sensitivities; QLRisk | TL4b unscheduled; TL8 proposed (fidelity line); 2.9.14 (pricing) |
+| 12 | **TL4b** P&L explain by risk factor; **TL8** pricing the real trade | The largest; QLRisk parked | L each | sensitivities; QLRisk | TL4b unscheduled; TL8 proposed (fidelity line); pricing later, with QLRisk |
 | 13 | **TL14** my VaR since the morning; **LX1** subject menus | Close what the mock-up showed and the build left out ([section 11](#11-mock-ups-the-screens-to-build)) | S each | — | TL14 proposed; LX1 planned |
 
 ---
 
 ## 9. Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
 
 1. **New trades on the demo (TL1).** Regenerate the trading test data with trades booked on their date (in the seeds work), or keep the
    data and leave "new" at 0 with its note.
@@ -512,7 +512,7 @@ section. Ordered by value for the persona and by what they need first.
    **Decided (product owner, 2026-10-31):** allocated exposure: desks add up to the counterparty (proposed, with CC2).
 3. **The P&L series on the P&L-against-VaR card (TL3).** Hypothetical by default (the regulators' first test), actual, or both.
 
-   **Decided (product owner, 2026-10-31):** hypothetical P&L by default (the regulators' first test), actual selectable (proposed, after 2.9.8's P&L feed).
+   **Decided (product owner, 2026-10-31):** hypothetical P&L by default (the regulators' first test), actual selectable (proposed, after the bank's P&L feed).
 4. **Stress in Trading.** Stays hidden (as for Drishti Risk, product owner 2026-10-30), or the stored stress results of my desk
    (`STR`, `SSPNL`) shown read-only on the Desk head.
 
@@ -520,7 +520,7 @@ section. Ordered by value for the persona and by what they need first.
 5. **The scenario matrix (`SMAT`) in the Trading lens** once it merges: add it to the edition's commands (recommended: "is this tail
    scenario new?" is a desk question), or leave it to Risk.
 
-   **Decided (product owner, 2026-10-31):** `SMAT` added to the Trading lens's commands (done in 2.9.7).
+   **Decided (product owner, 2026-10-31):** `SMAT` added to the Trading lens's commands (done).
 6. **TL4a before PNL.md.** Ship the trade-events split now as "P&L by trade events", or wait for the full explain.
 
    **Decided (product owner, 2026-10-31):** ship the trade-events split now as "P&L by trade events" (TL4a, proposed); the full explain (TL4b) later.
@@ -608,34 +608,34 @@ scope above `trading.max-rows` says **partial** ([section 4.5](#45-what-the-data
 (600 px and below): one column ([`trading-landing.css`](../../drishti-console/web/static/css/trading-landing.css)); the mock-up drew no
 phone form.
 
-| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| T1 | Bar and who (A, B) | `DRISHTI Trading` (amber, *Trading* green); a command line (*TRD, POS, VAR NODE …, XWIF*); *A. Shah · **Rates · Swaps and options** · BOOK-RATES-1, BOOK-RATES-2* (B: *T. Brennan · Commodities desk head*) | `/api/home/trading/me`; `trading.people`, a trader record, View as | View as | 2.9.7 | **Built** |
-| T2 | Meta line (A) | *Business date **2026-09-30** · intraday as of **14:05** · 732 trades in my books* | `/api/home/trading/risk` (`intraday.lastAt`), valuations | — | 2.9.7 | **Built** |
-| T3 | Tile: P&L today (A) | **+1.84m** green, *MtM change since yesterday's close*, green edge | `/api/home/trading/valuations` (`TVAL` on both dates) | — | 2.9.7 | **Built** |
-| T4 | Tile: My VaR (A) | *My VaR (99%, 1-day)* **6.12m** *intraday · −0.3m since morning* | `/api/home/trading/risk` (the engine's VaR of my books' union) | — | 2.9.7 | **Partly built**: VaR and *intraday · N trades updated · hh:mm*; the change **since the morning** is not shown (TL14) |
-| T5 | Tile: Limit use (A) | **83%** amber, *BOOK-RATES-1 · limit 7.4m* | the highest of my books' VaR ÷ `var-limit` | — | 2.9.7 | **Built** |
-| T6 | Tile: DV01 (A) | **−142k** *per bp, both books* | Σ live trades' `DV01` | — | 2.9.7 | **Built** (hidden when no trade holds one) |
-| T7 | Tile: Trades today (A) | **14** *11 new · 2 amended · 1 cancelled* | `/api/home/trading/blotter` (`SOURCE_UPDATE_TIME`) | — | 2.9.7 | **Built** ("new" reads 0 on the demo: TL1) |
-| T8 | Card: Check a new trade (A) | *VaR what-if and the counterparty's limit, one answer*; Product *IRS pay fixed 10Y*, Notional *USD 250m*, Counterparty *CP-ALDERSHOT*, **Check** (green); verdict: **Fits my VaR** *6.12m → 6.48m · limit use 83% → 88%* and **Counterparty near limit** *CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit* | `POST /api/home/trading/check` → `POST /api/v1/var/what-if`, `POST /api/v1/exposure/what-if` ([section 4.4](#44-the-new-trade-check)) | fill, Check | 2.9.7 | **Built** (also Side and Book; fits, near, breaches; a fidelity line is TL8) |
-| T9 | Card: Today's blotter (A) | *my books, newest first*; Time, Trade, Counterparty, Notional, a pill: 13:52 IRS-48213 CP-ALDERSHOT 120m **new**; 12:10 SWPN-20931 75m **amended**; 11:41 IRS-48190 40m **cancelled**; 10:05 CAP-11872 60m **new** | `/api/home/trading/blotter` | click a trade | 2.9.7 | **Built** |
-| T10 | Card: Top positions (A) | *by MtM*; Position, MtM, VaR contrib.: USD SOFR swaps 10Y −42.1m 2.31m; EUR €STR swaps 5Y +18.6m 0.94m; USD swaptions 1Yx10Y +9.2m 0.71m | `/api/home/trading/risk` (component VaR, market value) | click a position | 2.9.7 | **Built** (ordered by VaR contribution, with market value) |
-| T11 | Quick commands (A) | `TRDR TRDR-ASHAH` (me), `VAR NODE MGMT~BOOK-RATES-1` (my book's VaR), `POS BOOK-RATES-1` | the person's own, then `trading.yaml` `home.cards` | click | 2.9.7 | **Built** (my trader, my book's VaR, my book, my most traded counterparty, then the file's cards) |
-| T12 | Meta line (B) | *Business date **2026-09-30** · 4 traders · 6 books · desk MtM **−357.0m*** | valuations, `me` | — | 2.9.7 | **Built** |
-| T13 | Tile: Desk P&L today (B) | **+3.2m** *best: BOOK-COMM-2 +2.1m* | valuations by book | — | 2.9.7 | **Built** |
-| T14 | Tile: Desk VaR (B) | **14.6m** *within the desk limit (71%)* | `DESK:<id>` from the VaR engine | — | 2.9.7 | **Built** |
-| T15 | Tile: Breaches (B) | **1** red, *BOOK-COMM-1 at 259% of its limit* | books above 100% | — | 2.9.7 | **Built** |
-| T16 | Tile: Near limit (B) | **2** amber *(> 80%) books* | `trading.near-limit` (0.8) | — | 2.9.7 | **Built** |
-| T17 | Tile: Largest counterparty (B) | **31%** *of desk exposure · CP-NORTHPLAINS* | the share of the desk's positive MtM | — | 2.9.7 | **Partly built**: a share of **positive MtM**, not of exposure (TL2) |
-| T18 | Card: Limit use by book (B) | *VaR ÷ limit, last 5 days*: a grid books × dates (09-24 … 09-30), BOOK-COMM-1 212% … 259% red, BOOK-COMM-2 78% … 86% amber, BOOK-COMM-3 green, BOOK-COMM-4 40% … 81%; *each cell says its percentage; colour only repeats it* | `/api/home/trading/limits` (each date's official record; `trading.limit-days`) | — | 2.9.7 | **Built** ("—" for a date without a record, named) |
-| T19 | Card: By trader (B) | Trader, P&L, VaR, Trades: K. Moreau +2.4m 6.9m 9; R. Okafor +1.1m 4.2m 5; J. Varga −0.3m 3.1m 2 | `/api/home/trading/traders` (`TRADER_ID`; component VaR) | click a trader | 2.9.7 | **Built** (masked: "—" and the reason) |
-| T20 | Card: P&L against VaR (B) | *last 60 days · a breach is a loss beyond the VaR line*: green and red daily bars around zero, an orange −VaR line, the exception circled; *1 exception in 60 days (09-08)* | `/api/home/trading/pnl-var` (the desk's official history; `trading.pnl-var-days`) | — | 2.9.7 | **Built** (hypothetical P&L; the bank's actual P&L is TL3; left out when the history is a replay) |
-| T21 | Card: Overnight movers (B) | Trade, Book, Change: CMDF-31877 WTI Dec BOOK-COMM-1 −4.8m; CMDS-22014 Henry Hub swap +3.1m; CMDO-11520 Brent option +1.7m | valuations on both dates | click a trade | 2.9.7 | **Built** |
+| T1 | Bar and who (A, B) | `DRISHTI Trading` (amber, *Trading* green); a command line (*TRD, POS, VAR NODE …, XWIF*); *A. Shah · **Rates · Swaps and options** · BOOK-RATES-1, BOOK-RATES-2* (B: *T. Brennan · Commodities desk head*) | `/api/home/trading/me`; `trading.people`, a trader record, View as | View as | — | **Built** |
+| T2 | Meta line (A) | *Business date **2026-09-30** · intraday as of **14:05** · 732 trades in my books* | `/api/home/trading/risk` (`intraday.lastAt`), valuations | — | — | **Built** |
+| T3 | Tile: P&L today (A) | **+1.84m** green, *MtM change since yesterday's close*, green edge | `/api/home/trading/valuations` (`TVAL` on both dates) | — | — | **Built** |
+| T4 | Tile: My VaR (A) | *My VaR (99%, 1-day)* **6.12m** *intraday · −0.3m since morning* | `/api/home/trading/risk` (the engine's VaR of my books' union) | — | — | **Partly built**: VaR and *intraday · N trades updated · hh:mm*; the change **since the morning** is not shown (TL14) |
+| T5 | Tile: Limit use (A) | **83%** amber, *BOOK-RATES-1 · limit 7.4m* | the highest of my books' VaR ÷ `var-limit` | — | — | **Built** |
+| T6 | Tile: DV01 (A) | **−142k** *per bp, both books* | Σ live trades' `DV01` | — | — | **Built** (hidden when no trade holds one) |
+| T7 | Tile: Trades today (A) | **14** *11 new · 2 amended · 1 cancelled* | `/api/home/trading/blotter` (`SOURCE_UPDATE_TIME`) | — | — | **Built** ("new" reads 0 on the demo: TL1) |
+| T8 | Card: Check a new trade (A) | *VaR what-if and the counterparty's limit, one answer*; Product *IRS pay fixed 10Y*, Notional *USD 250m*, Counterparty *CP-ALDERSHOT*, **Check** (green); verdict: **Fits my VaR** *6.12m → 6.48m · limit use 83% → 88%* and **Counterparty near limit** *CP-ALDERSHOT PFE 95% 401.5m → 409.2m · 96% of limit* | `POST /api/home/trading/check` → `POST /api/v1/var/what-if`, `POST /api/v1/exposure/what-if` ([section 4.4](#44-the-new-trade-check)) | fill, Check | — | **Built** (also Side and Book; fits, near, breaches; a fidelity line is TL8) |
+| T9 | Card: Today's blotter (A) | *my books, newest first*; Time, Trade, Counterparty, Notional, a pill: 13:52 IRS-48213 CP-ALDERSHOT 120m **new**; 12:10 SWPN-20931 75m **amended**; 11:41 IRS-48190 40m **cancelled**; 10:05 CAP-11872 60m **new** | `/api/home/trading/blotter` | click a trade | — | **Built** |
+| T10 | Card: Top positions (A) | *by MtM*; Position, MtM, VaR contrib.: USD SOFR swaps 10Y −42.1m 2.31m; EUR €STR swaps 5Y +18.6m 0.94m; USD swaptions 1Yx10Y +9.2m 0.71m | `/api/home/trading/risk` (component VaR, market value) | click a position | — | **Built** (ordered by VaR contribution, with market value) |
+| T11 | Quick commands (A) | `TRDR TRDR-ASHAH` (me), `VAR NODE MGMT~BOOK-RATES-1` (my book's VaR), `POS BOOK-RATES-1` | the person's own, then `trading.yaml` `home.cards` | click | — | **Built** (my trader, my book's VaR, my book, my most traded counterparty, then the file's cards) |
+| T12 | Meta line (B) | *Business date **2026-09-30** · 4 traders · 6 books · desk MtM **−357.0m*** | valuations, `me` | — | — | **Built** |
+| T13 | Tile: Desk P&L today (B) | **+3.2m** *best: BOOK-COMM-2 +2.1m* | valuations by book | — | — | **Built** |
+| T14 | Tile: Desk VaR (B) | **14.6m** *within the desk limit (71%)* | `DESK:<id>` from the VaR engine | — | — | **Built** |
+| T15 | Tile: Breaches (B) | **1** red, *BOOK-COMM-1 at 259% of its limit* | books above 100% | — | — | **Built** |
+| T16 | Tile: Near limit (B) | **2** amber *(> 80%) books* | `trading.near-limit` (0.8) | — | — | **Built** |
+| T17 | Tile: Largest counterparty (B) | **31%** *of desk exposure · CP-NORTHPLAINS* | the share of the desk's positive MtM | — | — | **Partly built**: a share of **positive MtM**, not of exposure (TL2) |
+| T18 | Card: Limit use by book (B) | *VaR ÷ limit, last 5 days*: a grid books × dates (09-24 … 09-30), BOOK-COMM-1 212% … 259% red, BOOK-COMM-2 78% … 86% amber, BOOK-COMM-3 green, BOOK-COMM-4 40% … 81%; *each cell says its percentage; colour only repeats it* | `/api/home/trading/limits` (each date's official record; `trading.limit-days`) | — | — | **Built** ("—" for a date without a record, named) |
+| T19 | Card: By trader (B) | Trader, P&L, VaR, Trades: K. Moreau +2.4m 6.9m 9; R. Okafor +1.1m 4.2m 5; J. Varga −0.3m 3.1m 2 | `/api/home/trading/traders` (`TRADER_ID`; component VaR) | click a trader | — | **Built** (masked: "—" and the reason) |
+| T20 | Card: P&L against VaR (B) | *last 60 days · a breach is a loss beyond the VaR line*: green and red daily bars around zero, an orange −VaR line, the exception circled; *1 exception in 60 days (09-08)* | `/api/home/trading/pnl-var` (the desk's official history; `trading.pnl-var-days`) | — | — | **Built** (hypothetical P&L; the bank's actual P&L is TL3; left out when the history is a replay) |
+| T21 | Card: Overnight movers (B) | Trade, Book, Change: CMDF-31877 WTI Dec BOOK-COMM-1 −4.8m; CMDS-22014 Henry Hub swap +3.1m; CMDO-11520 Brent option +1.7m | valuations on both dates | click a trade | — | **Built** |
 | T22 | Menu bar (C) | **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | LX1 | **Not built**: the top menus are Views, BI, Build, Admin, Help for every edition; Trading's commands are in the Views menu and on C |
-| T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `XWIF CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | 2.9.7 | **Built** |
-| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `VWIF`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | 2.9.7 | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
-| T25 | Recently opened (C) | *IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT* | the person's command history (Trading's commands only) | click | 2.9.7 | **Built** |
-| T26 | Default by role (footer) | "A as the default for traders, B as the default for desk heads (by role, with a person's own choice remembered), C behind a link" | `trading.landing-by-role`, the person's settings | the landing switch | 2.9.7 | **Built** |
+| T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `XWIF CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | — | **Built** |
+| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `VWIF`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
+| T25 | Recently opened (C) | *IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT* | the person's command history (Trading's commands only) | click | — | **Built** |
+| T26 | Default by role (footer) | "A as the default for traders, B as the default for desk heads (by role, with a person's own choice remembered), C behind a link" | `trading.landing-by-role`, the person's settings | the landing switch | — | **Built** |
 
 **Gaps: on the mock-up, not in the product.**
 
@@ -650,7 +650,7 @@ phone form.
 [Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
 [C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
 four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
-(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+(chosen on the recommendation, product owner to review); plan row LX1.
 
 **Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
 

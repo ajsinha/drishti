@@ -16,9 +16,9 @@
 # Drishti Market: what the market-data team needs, what the lens gives it today, and what comes next
 
 **Status: analysis and product description: built parts as built, the rest proposals.** Every "built" or "partly" statement cites the
-document, section or file it was read from on 2026-10-31 (develop at b22ff3850). Everything in sections 5 and 8 is a proposal; the rows of
+document, section or file it was read from on 2026-10-31. Everything in sections 5 and 8 is a proposal; the rows of
 section 8 are candidates in the [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started), not
-started, except where a 2.9.9 row already names the work (cited as such).
+started, except where the plan already names the work (cited as such).
 
 **The request (product owner, 2026-10-31):** "We should have similar and fuller standalone document for other lenses too", after the
 market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the proposed Oversight lens; built). This is the Market lens's.
@@ -28,7 +28,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 [`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
 (every kind and field), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
-[2.9.9 rows 1 and 2](../architecture/IMPLEMENTATION_PLAN.md#299-oversight-and-mobile-proposed). The sibling lens
+[market-data rows](../architecture/IMPLEMENTATION_PLAN.md#299-oversight-and-mobile-proposed) (VaR at stake and the quality checks). The sibling lens
 documents: [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
 ## Contents
@@ -86,10 +86,10 @@ licensing shapes what they may show (section 6).
 | Question | Drishti today | Gap |
 |---|---|---|
 | *Did everything arrive?* | **Partly**: **Stale** check per curve and surface (`AS_OF` older than the business date by more than `quality.stale-days`, 2 business days) and per other kind by its latest load ([EDITIONS.md section 13](../admin/EDITIONS.md#13-drishti-market), Quality); late loads by expectation ([DATA_GUIDE.md › Telling Drishti new data has landed, section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)) | Completeness against an **expected list** of ids per date (a new curve that never arrived is not stale, it is missing): section 5.8 |
-| *Is anything internally inconsistent?* | **Built**: **Gaps** (a curve missing a tenor every other curve of its type has), **Discount factors and forwards** (a DF that does not fall with maturity or is outside (0, 1]: critical; a negative forward: warning), **Vol surfaces** (a vol at or below zero; ATM total variance falling with expiry on FX and equity surfaces) | Calendar and smile checks on the commodity, cap and swaption grids (2.9.9 row 2); section 5.4 |
-| *Did anything jump?* | **Partly**: the desk's **Biggest moves** ranks the latest move in σ of each item's own daily moves (a "jump" at 3σ or more), but only as a ranking on the desk, not as a Quality check | σ-jump as a check (2.9.9 row 2); section 5.2 |
-| *Do two sources disagree?* | **Not built**: the lake holds one source per kind | Section 5.3 (2.9.9 row 2) |
-| *If this is wrong, what does it cost?* | **Not built**: the tile reads *Impact on VaR and valuations comes in a later release* | VaR at stake (2.9.9 row 1); section 5.1 |
+| *Is anything internally inconsistent?* | **Built**: **Gaps** (a curve missing a tenor every other curve of its type has), **Discount factors and forwards** (a DF that does not fall with maturity or is outside (0, 1]: critical; a negative forward: warning), **Vol surfaces** (a vol at or below zero; ATM total variance falling with expiry on FX and equity surfaces) | Calendar and smile checks on the commodity, cap and swaption grids (planned); section 5.4 |
+| *Did anything jump?* | **Partly**: the desk's **Biggest moves** ranks the latest move in σ of each item's own daily moves (a "jump" at 3σ or more), but only as a ranking on the desk, not as a Quality check | σ-jump as a check (planned); section 5.2 |
+| *Do two sources disagree?* | **Not built**: the lake holds one source per kind | Section 5.3 (planned) |
+| *If this is wrong, what does it cost?* | **Not built**: the tile reads *Impact on VaR and valuations comes in a later release* | VaR at stake (planned); section 5.1 |
 
 ### 2.2 The morning
 
@@ -141,9 +141,9 @@ licensing shapes what they may show (section 6).
 | Gaps (missing tenor against the type) | **Built** for types of three or more | check 2 |
 | Discount factors monotone and in (0, 1]; negative forwards | **Built** | check 3 |
 | Vol surfaces: non-positive vols; ATM total variance falling with expiry (FX, equity) | **Built** | check 4 |
-| Calendar checks on commodity, cap and swaption grids; smile (butterfly) checks | **Planned** (2.9.9 row 2) | section 5.4 |
-| Jumps over n σ as a check | **Planned** (2.9.9 row 2) | section 5.2 |
-| Two sources disagreeing | **Planned** (2.9.9 row 2), needs a second source per kind | section 5.3 |
+| Calendar checks on commodity, cap and swaption grids; smile (butterfly) checks | **Planned** | section 5.4 |
+| Jumps over n σ as a check | **Planned** | section 5.2 |
+| Two sources disagreeing | **Planned**, needs a second source per kind | section 5.3 |
 | Completeness against an expected list | **Not built** | section 5.8 |
 | Quality results kept, with acknowledgements | **Not built** | section 5.7 |
 
@@ -152,8 +152,8 @@ licensing shapes what they may show (section 6).
 | Need | Status | Evidence or row |
 |---|---|---|
 | Who uses each item (trades, books, VaR inputs) | **Not built**; trades carry `LEGS[].INDEX` (a benchmark name) and `DISCOUNT_INDEX`, not market-data ids ([trading pack README](../../config/packs/trading/README.md)); IR curves carry an `INDEX` field ([market-data README](../../config/packs/market-data/README.md)) | section 5.1 |
-| VaR at stake of a flagged item | **Planned** (2.9.9 row 1) | section 5.1 |
-| Valuations at stake | **Planned** (2.9.9 row 1: "the valuations of which trades") | section 5.1 |
+| VaR at stake of a flagged item | **Planned** | section 5.1 |
+| Valuations at stake | **Planned** | section 5.1 |
 | The market-data line of a data-trust card | **Proposed** as RO13 of the oversight analysis (reusing the Quality checks) | OVERSIGHT_LENS.md section 4.6 |
 
 ### 3.4 Analytics
@@ -207,15 +207,12 @@ surface problems).
 
 ### 4.4 What the builder left out, and why
 
-- **VaR at stake** and the Impact card: no link from market data to the VaR and valuation inputs that use it (2.9.9 row 1).
-- **Jumps over n σ as a check**: the desk ranks moves in σ; turning that into a check with thresholds and severities is 2.9.9 row 2.
+- **VaR at stake** and the Impact card: no link from market data to the VaR and valuation inputs that use it (planned).
+- **Jumps over n σ as a check**: the desk ranks moves in σ; turning that into a check with thresholds and severities is planned.
 - **Two sources disagreeing**: one source per kind in the lake.
 - **Calendar spreads on commodity, cap and swaption grids**: a different underlying per row, so the FX and equity rule does not apply.
 - **Market data BI**: the pack ships no dataset; the edition keeps BI to `market-data-*` names so it never offers VaR or exposure items
   (`market.yaml` `bi`, its comment).
-
-**A small finding.** The module docstring of `drishti-console/core/market_landing.py` still says the impact, jump and two-source checks
-are planned in 2.9.8; the plan moved them to 2.9.9 (2.9.9 rows 1 and 2). A one-word fix for the next code change there.
 
 ---
 
@@ -246,7 +243,7 @@ scenarios with the bank's market data and sends a P&L vector or scenario PVs per
 ([VAR_GUIDE section 1](../guides/VAR_GUIDE.md#1-the-question-var-answers)). So "VaR at stake" is not a recomputation with a corrected
 curve; it is a measure of **how much of VaR and MtM rides on the trades that use the flagged item**. The plan's own words: "who uses each
 flagged point (VaR scenarios, the valuations of which trades) and the VaR at stake if it is wrong, computed, never invented; needs the
-market data linked to the VaR and valuation inputs that use it" (2.9.9 row 1).
+market data linked to the VaR and valuation inputs that use it" (planned).
 
 **Step 1: the usage map (M).** A computed kind `market-data-usage` (proposed), keyed by market-data id and date, built from the trades
 by **rules** (configuration), or from the bank's pricing configuration when it can supply one (fundamental, preferred):
@@ -307,7 +304,7 @@ per id.
 **The check.** Per field and pillar, |a − b| against a **tolerance table** by asset class and tenor (configuration: 0.5 bp for G10 OIS
 pillars, 2 bp for credit spreads, 0.25 vol points for liquid FX vols, 0.1% for equity closes …); breaches as warnings, a multiple of the
 tolerance as critical; the source the batch used marked. **IPV** at month-end: the same comparison of the desk's marks (the official close)
-against the independent source, aggregated by desk with the **MtM at stake** of ML1, as a BI report signed off through the 2.9.8 framework.
+against the independent source, aggregated by desk with the **MtM at stake** of ML1, as a BI report signed off through the report sign-off framework.
 **Size** M. **Depends on** a second source per kind (data). **Tests:** crafted pairs inside and outside tolerance; a missing second source
 is "single source", never "agreed".
 
@@ -362,7 +359,7 @@ Market lens hides VaR, so the list is a read-only card, or the item lives in the
 
 The VaR window is the last 509 business days of moves. Run ML2 over the **whole window** of every item the VaR uses (by ML1), not only
 the latest day; list suspected bad days with their **VaR at stake** (section 5.1: the scenario's rank today and the VaR without it). A
-monthly task for methodology, a BI report, and the evidence for the stress window review (2.9.8 row 8 chooses the window; this checks its
+monthly task for methodology, a BI report, and the evidence for the stress window review (the stress window tool chooses the window; this checks its
 data). **Size** M.
 
 ---
@@ -399,17 +396,17 @@ Section 9, decision 2.
 ## 8. A roadmap
 
 The rows below are added to the plan's [Lens product candidates (not started)](../architecture/IMPLEMENTATION_PLAN.md#lens-product-candidates-not-started)
-section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buildable steps.
+section. ML1 (with ML2 to ML4) is the plan's market-data rows (VaR at stake and the quality checks) broken into buildable steps.
 
 
-**Releases (product owner, 2026-10-31).** The Release column places each row in the plan's themed releases: 2.9.8 is planned, 2.9.9 to 2.9.14 are proposed until each starts, and *unscheduled* rows wait for the product owner.
+**Status (product owner, 2026-10-31).** The Status column says where each row stands: *planned* rows are next, *proposed* rows wait until their work starts, and *unscheduled* rows wait for the product owner.
 
-| Order | Row | Why here | Size | Depends on | Release |
+| Order | Row | Why here | Size | Depends on | Status |
 |---|---|---|---|---|---|
 | 1 | **ML2** σ-jump check | Small; the desk computes it already | S | — | proposed |
-| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; 2.9.9 row 1 | proposed |
+| 2 | **ML1** usage map and Used by; then at stake | The lens's empty tile; the most asked question ("who uses this?") | M then S | usage rules; VaR at stake (planned) | proposed |
 | 3 | **ML8** completeness against an expected list | Missing is worse than stale | S | — | unscheduled |
-| 4 | **ML4** grid calendar and smile checks | 2.9.9 row 2 | M | — | proposed |
+| 4 | **ML4** grid calendar and smile checks | Part of the planned quality checks | M | — | proposed |
 | 5 | **ML7** quality results kept and acknowledged | Turns checks into a control with an audit trail | M | — | proposed |
 | 6 | **ML6** market-data BI; **ML5** curve moves decomposed | Reports and the P&L explain's input | S each | ML7 for the quality dataset | ML6 unscheduled; ML5 unscheduled |
 | 7 | **ML9** the proxy list | Needs ML1 | S | ML1 | unscheduled |
@@ -421,7 +418,7 @@ section. ML1 (with ML2 to ML4) is the plan's 2.9.9 rows 1 and 2 broken into buil
 
 ## 9. Decisions for the product owner
 
-**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Releases follow the plan's themed releases 2.9.8 to 2.9.14, each proposed until that release starts.
+**Decided (product owner, 2026-10-31):** every recommendation accepted ("I am aligned with your recommendations"); each choice is under its question. Each row is proposed until its work starts.
 
 1. **VaR at stake: which figure leads** the tile: the component VaR at stake (recommended: adds up, cheap), the incremental VaR, or the
    MtM at stake.
@@ -516,29 +513,29 @@ the data*, said in place: a change only when both days hold real data; fewer tha
 reads *since*); no history: says so and ranks nothing; on the demo every quality check is clean ("no exceptions"). **Phone** (600 px and
 below): one column ([`market-landing.css`](../../drishti-console/web/static/css/market-landing.css)); the mock-up drew no phone form.
 
-| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Phase | Status |
+| # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| M1 | Bar (A, B, C) | `DRISHTI Market` (*Market* violet); a command line (*CRV CRV-USD-OIS, FXV EURUSD, CDS …*); menus **Views · Curves · Volatility · FX · Credit · BI · Help** | `market.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | 2.9.7 | **Partly built**: brand and command line; no Curves, Volatility, FX, Credit menus (LX1) |
-| M2 | Meta line (A) | *As of **2026-09-30** · 28 IR curves · 20 market-data kinds · official close* | `/api/home/market/desk` | — | 2.9.7 | **Built** (with the lake's lag when behind) |
-| M3 | Tile: USD OIS 10Y (A) | **3.92%** *−4bp* red; *CRV CRV-USD-OIS* | `CRV-USD-OIS` `TEN_Y`; history `/api/v1/history/{kind}/{id}/series` | click: the curve | 2.9.7 | **Built** (a change only when both days hold real data) |
-| M4 | Tile: USD 2s10s (A) | **+46bp** *+2*; *slope, CRV-USD-PROJ* | `CRV-USD-PROJ` `SLOPE_2S_10S` | click | 2.9.7 | **Built** |
-| M5 | Tile: EUR/USD 1M ATM vol (A) | **7.8%** *+0.3*; *FXV EURUSD* | `FXV-EURUSD` `ATM_1M` | click | 2.9.7 | **Built** |
-| M6 | Tile: IG CDS 5Y, median (A) | **68bp** *+3*; *CDS · 40 names* | the median of every credit curve's `SPREAD_5Y` | click: `CDS` by spread | 2.9.7 | **Built** (every credit curve, no investment-grade filter: the demo holds no rating to filter on) |
-| M7 | Tile: Data exceptions (A) | **5** amber *2 stale · 2 jumps · 1 gap* | `/api/home/market/quality` | click: C | 2.9.7 | **Partly built**: the count of the built checks; **jumps** are not a check (ML2) |
-| M8 | Card: USD curves (A) | *zero rates, today against a week ago*: OIS solid violet today, dashed a week ago; projection amber; x 1M, 2Y, 10Y, 30Y; y 3.5 to 4.5 | the curves' points; five business days before when held | — | 2.9.7 | **Built** (without that history: OIS against projection, said) |
-| M9 | Card: Biggest moves today (A) | *by standard deviations of their own history*; Item, Move, σ, a pill: CRV-CAD-GOVT 5Y +11bp 3.4 **jump**; CMDC WTI Dec −2.8% 2.9; FXV USDJPY 3M +0.9 vol 2.6; CDS CP-ALDERSHOT 5Y +14bp 2.4 | `/api/home/market/moves` (21 business days; `TEN_Y`, `SPREAD_5Y`, `MID`, `FRONT`, `LEVEL`) | click an item; hover: its dates | 2.9.7 | **Built** (*jump* at 3σ; fewer than ten moves: against the day before) |
-| M10 | Quick commands (A) | `CRV CRV-USD-OIS` (a curve: points, zero rates, discount factors, forwards, history), `FXV EURUSD`, `IRV USD`, `FIX SOFR` | `market.yaml` `home.cards` | click | 2.9.7 | **Built** (the demo's ids: `FXV FXV-EURUSD`, `IRV IRV-USD`, `FIX FIX-SOFR`) |
-| M11 | Big command line and chips (B) | *a curve, a surface, a currency pair, a fixing, a bond…*; chips `CRV CRV-USD-OIS`, `CRV CRV-CAD-GOVT`, `FXF EURUSD`, `FXV USDJPY`, `IRV USD`, `CDS …`, `INFC USCPI`, `CMDC WTI`, `CORR` | `market.yaml` `home.chips` | type, `<GO>`; click | 2.9.7 | **Built** (the demo's ids, and `DATAMAP`) |
-| M12 | Strip (B) | *IR curves **28** · Vol surfaces **FX · EQ · CMD · caps** · Credit curves **CDS** · Fixings **FIX** · Bonds **BND*** | each command's `matched` count | — | 2.9.7 | **Built** (counts by asset class) |
-| M13 | Command groups (B) | Rates (`CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`); FX (`FX`, `FXF`, `FXV`); Credit and bonds (`CDS`, `BND`); Equity and commodities (`EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`, `CORR`) | the template's groups | click | 2.9.7 | **Built** (each with its count; plus Recently opened, Knowledge, Data map, Learn) |
-| M14 | Meta line: the checks (C) | *Checks on **2026-09-30**: stale (no update in 2 business days), jumps (over 3σ), gaps (missing tenors), arbitrage (negative forwards, calendar spreads), two sources disagreeing* | `quality.stale-days` | — | 2.9.7 | **Partly built**: stale, gaps, discount factors and negative forwards, vol surfaces (negative vols, total variance falling with expiry); **jumps** (ML2) and **two sources** (ML3) are not run, and the card says so |
-| M15 | Tile: Critical (C) | **1** red *arbitrage on FXV USDTRY* | `/api/home/market/quality` | — | 2.9.7 | **Built** |
-| M16 | Tile: Warnings (C) | **4** amber *2 stale · 2 jumps* | as M15 | — | 2.9.7 | **Built** (the built checks' warnings) |
-| M17 | Tile: Clean (C) | **96%** *of 260 items checked* | as M15 | — | 2.9.7 | **Built** |
+| M1 | Bar (A, B, C) | `DRISHTI Market` (*Market* violet); a command line (*CRV CRV-USD-OIS, FXV EURUSD, CDS …*); menus **Views · Curves · Volatility · FX · Credit · BI · Help** | `market.yaml` `menus` (`placeholder`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | type, `<GO>`; open a menu | — | **Partly built**: brand and command line; no Curves, Volatility, FX, Credit menus (LX1) |
+| M2 | Meta line (A) | *As of **2026-09-30** · 28 IR curves · 20 market-data kinds · official close* | `/api/home/market/desk` | — | — | **Built** (with the lake's lag when behind) |
+| M3 | Tile: USD OIS 10Y (A) | **3.92%** *−4bp* red; *CRV CRV-USD-OIS* | `CRV-USD-OIS` `TEN_Y`; history `/api/v1/history/{kind}/{id}/series` | click: the curve | — | **Built** (a change only when both days hold real data) |
+| M4 | Tile: USD 2s10s (A) | **+46bp** *+2*; *slope, CRV-USD-PROJ* | `CRV-USD-PROJ` `SLOPE_2S_10S` | click | — | **Built** |
+| M5 | Tile: EUR/USD 1M ATM vol (A) | **7.8%** *+0.3*; *FXV EURUSD* | `FXV-EURUSD` `ATM_1M` | click | — | **Built** |
+| M6 | Tile: IG CDS 5Y, median (A) | **68bp** *+3*; *CDS · 40 names* | the median of every credit curve's `SPREAD_5Y` | click: `CDS` by spread | — | **Built** (every credit curve, no investment-grade filter: the demo holds no rating to filter on) |
+| M7 | Tile: Data exceptions (A) | **5** amber *2 stale · 2 jumps · 1 gap* | `/api/home/market/quality` | click: C | — | **Partly built**: the count of the built checks; **jumps** are not a check (ML2) |
+| M8 | Card: USD curves (A) | *zero rates, today against a week ago*: OIS solid violet today, dashed a week ago; projection amber; x 1M, 2Y, 10Y, 30Y; y 3.5 to 4.5 | the curves' points; five business days before when held | — | — | **Built** (without that history: OIS against projection, said) |
+| M9 | Card: Biggest moves today (A) | *by standard deviations of their own history*; Item, Move, σ, a pill: CRV-CAD-GOVT 5Y +11bp 3.4 **jump**; CMDC WTI Dec −2.8% 2.9; FXV USDJPY 3M +0.9 vol 2.6; CDS CP-ALDERSHOT 5Y +14bp 2.4 | `/api/home/market/moves` (21 business days; `TEN_Y`, `SPREAD_5Y`, `MID`, `FRONT`, `LEVEL`) | click an item; hover: its dates | — | **Built** (*jump* at 3σ; fewer than ten moves: against the day before) |
+| M10 | Quick commands (A) | `CRV CRV-USD-OIS` (a curve: points, zero rates, discount factors, forwards, history), `FXV EURUSD`, `IRV USD`, `FIX SOFR` | `market.yaml` `home.cards` | click | — | **Built** (the demo's ids: `FXV FXV-EURUSD`, `IRV IRV-USD`, `FIX FIX-SOFR`) |
+| M11 | Big command line and chips (B) | *a curve, a surface, a currency pair, a fixing, a bond…*; chips `CRV CRV-USD-OIS`, `CRV CRV-CAD-GOVT`, `FXF EURUSD`, `FXV USDJPY`, `IRV USD`, `CDS …`, `INFC USCPI`, `CMDC WTI`, `CORR` | `market.yaml` `home.chips` | type, `<GO>`; click | — | **Built** (the demo's ids, and `DATAMAP`) |
+| M12 | Strip (B) | *IR curves **28** · Vol surfaces **FX · EQ · CMD · caps** · Credit curves **CDS** · Fixings **FIX** · Bonds **BND*** | each command's `matched` count | — | — | **Built** (counts by asset class) |
+| M13 | Command groups (B) | Rates (`CRV`, `REPO`, `IRV`, `CPV`, `FIX`, `INF`, `INFC`); FX (`FX`, `FXF`, `FXV`); Credit and bonds (`CDS`, `BND`); Equity and commodities (`EQ`, `EQX`, `DIV`, `EQV`, `CMD`, `CMDC`, `CMDV`, `CORR`) | the template's groups | click | — | **Built** (each with its count; plus Recently opened, Knowledge, Data map, Learn) |
+| M14 | Meta line: the checks (C) | *Checks on **2026-09-30**: stale (no update in 2 business days), jumps (over 3σ), gaps (missing tenors), arbitrage (negative forwards, calendar spreads), two sources disagreeing* | `quality.stale-days` | — | — | **Partly built**: stale, gaps, discount factors and negative forwards, vol surfaces (negative vols, total variance falling with expiry); **jumps** (ML2) and **two sources** (ML3) are not run, and the card says so |
+| M15 | Tile: Critical (C) | **1** red *arbitrage on FXV USDTRY* | `/api/home/market/quality` | — | — | **Built** |
+| M16 | Tile: Warnings (C) | **4** amber *2 stale · 2 jumps* | as M15 | — | — | **Built** (the built checks' warnings) |
+| M17 | Tile: Clean (C) | **96%** *of 260 items checked* | as M15 | — | — | **Built** |
 | M18 | Tile: VaR at stake (C) | **0.4m** *if the flagged points are wrong* | the usage map and VaR contributions | — | ML1 | **Not built**: the tile says *Impact on VaR and valuations comes in a later release* |
-| M19 | Card: Exceptions (C) | *worst first*; Item, Check, **Since**, a severity pill: FXV USDTRY 6M calendar spread today **critical**; CRV-CAD-GOVT 5Y jump 3.4σ today warn; INFC GBRPI stale 2 days; CDS 3 names stale 2 days; CRV-AUD-PROJ gap: 15Y missing today | `/api/home/market/quality` | click: its command | 2.9.7 | **Partly built**: Item, Check, **Detail** and the pill; no **Since** column (how long an exception has stood needs the kept quality records, ML7; ML11) |
+| M19 | Card: Exceptions (C) | *worst first*; Item, Check, **Since**, a severity pill: FXV USDTRY 6M calendar spread today **critical**; CRV-CAD-GOVT 5Y jump 3.4σ today warn; INFC GBRPI stale 2 days; CDS 3 names stale 2 days; CRV-AUD-PROJ gap: 15Y missing today | `/api/home/market/quality` | click: its command | — | **Partly built**: Item, Check, **Detail** and the pill; no **Since** column (how long an exception has stood needs the kept quality records, ML7; ML11) |
 | M20 | Card: Impact (C) | *who uses the flagged data*: Flagged item, Used by, VaR at stake: CRV-CAD-GOVT *VaR scenarios · TVAL of 412 trades* 0.31m; FXV USDTRY *valuations of 6 options* 0.06m; INFC GBRPI *3 inflation swaps* 0.02m | the usage map; component and incremental VaR | — | ML1 | **Not built**: a *Checks run* card stands in its place |
-| M21 | Landing switch | (the footer: A the default, B and C behind links) | `home.landings`, the person's settings | click | 2.9.7 | **Built** |
+| M21 | Landing switch | (the footer: A the default, B and C behind links) | `home.landings`, the person's settings | click | — | **Built** |
 
 **Gaps: on the mock-up, not in the product.**
 
@@ -555,7 +552,7 @@ below): one column ([`market-landing.css`](../../drishti-console/web/static/css/
 [Open the mock-up](mockups/menus/A.html) (options: [B](mockups/menus/B.html) a subject strip under the standard bar,
 [C](mockups/menus/C.html) one lens menu with subject columns; the light theme: [A-light.png](mockups/menus/A-light.png)). One mock-up for the
 four built lenses (Risk, Trading, Market, World), each lens with one menu open. **Recommended:** option A, subject menus in the bar
-(chosen on the recommendation, product owner to review); plan row LX1, 2.9.8 row 10.
+(chosen on the recommendation, product owner to review); plan row LX1.
 
 **Why A.** The lens mock-ups the product owner chose already drew their bars this way (Views, the lens's subjects, BI, Help), so A builds what was approved; each subject is one click from anywhere, as the five standard menus are. The strip of B costs a second row on every page; the single lens menu of C hides the subjects a click deeper and is better kept as the phone form of A. Subject menus are configured, not coded: the edition names its top menus in order, and a subject menu draws on the items of the menus file with the same switches (an item shows only when the edition keeps its command word).
 

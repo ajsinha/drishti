@@ -16,8 +16,8 @@
 # The CRO lens: is the bank within its risk appetite, what changed overnight, and what must the Chief Risk Officer act on
 
 **Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
-[section 4](#4-what-drishti-has-today) says so and cites the guide or file it was read from (the `wip/risk-cubes` branch over develop
-at b22ff3850, 2026-10-31). Every release named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
+[section 4](#4-what-drishti-has-today) says so and cites the guide or file it was read from (on
+2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
 [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#cro-lens-candidates-not-started) (CRO1 to CRO13), not started.
 
 **The request (product owner, 2026-10-31):** a **CRO lens**: the executive, top-of-house, cross-risk-type view that answers *"Is the
@@ -30,8 +30,8 @@ recommendation of [section 5.1](#51-the-layouts-decided).
 breach workflow are this lens's two largest dependencies), [MR_CUBE_LENS.md](MR_CUBE_LENS.md) and [CCR_CUBE_LENS.md](CCR_CUBE_LENS.md)
 (the drill targets, and the `risk-limit` and `credit-limit` contracts this lens reads), [RISK_LENS.md](RISK_LENS.md),
 [MARKET_LENS.md](MARKET_LENS.md) and [WORLD_LENS.md](WORLD_LENS.md) (the other lenses it links to), [EDITIONS.md](../admin/EDITIONS.md)
-(how lenses and editions work), [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (phone tiers) and the plan's themed releases 2.9.7 to 2.9.14
-sections in [IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md).
+(how lenses and editions work), [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) (phone tiers) and the plan's themed phases in
+[IMPLEMENTATION_PLAN.md](../architecture/IMPLEMENTATION_PLAN.md).
 
 ## Contents
 
@@ -124,7 +124,7 @@ comment, escalate), and only for people with the power to take them ([section 10
 | Bank and desk VaR 1-day 99%, ES, any scope, from the bank's vectors | **Built** | [VAR_GUIDE sections 1, 2](../guides/VAR_GUIDE.md#1-the-question-var-answers) |
 | 10-day VaR by √10 and by the overlapping 10-day sum | **Built** | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) |
 | VaR limits per node and limit use in the official record (`LIMIT`, `LIMIT_USE`) | **Built** | [VAR_GUIDE section 15.15](../guides/VAR_GUIDE.md#1515-var-limit-the-nodes-var-limits); [section 19](../guides/VAR_GUIDE.md#19-official-end-of-day-results) |
-| Stressed VaR (a stress scenario set, 1-day and 10-day) | **Planned** (2.9.7 row 2c, Drill B) | [IMPLEMENTATION_PLAN 2.9.7](../architecture/IMPLEMENTATION_PLAN.md#297-future-product-owner-2026-10-28-in-progress) |
+| Stressed VaR (a stress scenario set, 1-day and 10-day) | **Built** | [VAR_GUIDE section 18.8](../guides/VAR_GUIDE.md#188-stressed-var) |
 | Worst stress loss | **Partly**: stress P&L stored per desk and scenario with a desk `LIMIT`; the bank's P&L per scenario derived; not computed from trades (RO9) | [VAR_GUIDE section 21.4](../guides/VAR_GUIDE.md#214-the-banks-stress-pl-by-scenario-derived) |
 | Peak PFE by counterparty, connected group (`GROUP:`), legal entity, against the stored credit limit | **Built**; group limits on the group's own PFE and limits by tenor are CC4 | [EXPOSURE_GUIDE sections 3.3, 4](../guides/EXPOSURE_GUIDE.md#4-scopes); [CCR_CUBE_LENS section 7.10](CCR_CUBE_LENS.md#710-c9-credit-limit-lim-existing-extended) |
 | Official end-of-day exposure results | **Built** | [EXPOSURE_GUIDE section 20](../guides/EXPOSURE_GUIDE.md#20-official-end-of-day-results) |
@@ -138,17 +138,17 @@ comment, escalate), and only for people with the power to take them ([section 10
 | One catalogue of every limit | **Not built**, designed (RO3, the `risk-limit` contract) | [MR_CUBE_LENS section 7.7](MR_CUBE_LENS.md#77-d6-risk-limit-new-one-limit-table-for-every-measure) |
 | Comment threads anchored to data | **Built** | [COLLABORATION.md](../architecture/COLLABORATION.md) |
 | Alerts on numbers (inbox, bell, email, chat; hysteresis, cooldown) | **Built**; set up per person, not from a catalogue | [USER_GUIDE.md › Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
-| LCR, NSFR, survival horizon | **Not built**. Example records exist (`examples/packs/liquidity-risk`, camelCase, not loaded); liquidity is the 2.11.0 roadmap's measure 2 | [IMPLEMENTATION_PLAN 2.11.0](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory); [OVERSIGHT_LENS section 4.10](OVERSIGHT_LENS.md#410-ro10-liquidity) |
+| LCR, NSFR, survival horizon | **Not built**. Example records exist (`examples/packs/liquidity-risk`, camelCase, not loaded); liquidity is a measure of the balance-sheet roadmap | [IMPLEMENTATION_PLAN, balance sheet and regulatory](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory); [OVERSIGHT_LENS section 4.10](OVERSIGHT_LENS.md#410-ro10-liquidity) |
 | CET1 ratio, RWA | **Not built**; nothing in the packs (stored `sa-ccr` and `frtb-sensitivity` charges are partial RWA inputs only) | — |
-| Financed emissions | **Not built**. Example records (`examples/packs/climate-risk`, `financed-emissions`); **climate risk is out of scope as a computed measure** (product owner, 2026-10-25) | [IMPLEMENTATION_PLAN 2.11.0](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
+| Financed emissions | **Not built**. Example records (`examples/packs/climate-risk`, `financed-emissions`); **climate risk is out of scope as a computed measure** (product owner, 2026-10-25) | [IMPLEMENTATION_PLAN, balance sheet and regulatory](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
 | News and market moves | **Built** (news-and-markets pack; the World lens's desk) | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) |
 | News relevance to the book ("headlines touching the book") | **Not built** (WL9) | [WORLD_LENS section 5.9](WORLD_LENS.md#59-wl9-news-relevance) |
-| VaR at stake of a market move or a bad data point | **Proposed** (2.9.9 row 1) | [MARKET_LENS section 5.1](MARKET_LENS.md#51-ml1-who-uses-each-item-and-what-is-at-stake) |
+| VaR at stake of a market move or a bad data point | **Proposed** | [MARKET_LENS section 5.1](MARKET_LENS.md#51-ml1-who-uses-each-item-and-what-is-at-stake) |
 | Macro signals (economies, forecasts) | **Built** (world-economy pack; IMF data internal demos only) | [WORLD_LENS.md](WORLD_LENS.md) |
 | Data health: late loads by expectation, rejected rows, market-data quality | **Partly**: late loads ([DATA_GUIDE section 8](../guides/DATA_GUIDE.md#8-expectations-and-late-data)); quality in the Market lens; the data-trust card RO13 and a "safe to quote" rule **not built** | [OVERSIGHT_LENS section 4.6](OVERSIGHT_LENS.md#46-the-data-trust-card-ro13-and-model-performance-ro14) |
 | Ask: questions in words | **Partly**: *Ask about this page* and BI's *ask the data* on the AI layer ([AI.md section 7](../admin/AI.md#7-ask-on-the-ai-layer); [BI_GUIDE section 29](../guides/BI_GUIDE.md#29-ai-in-bi-report-from-words-ask-the-data-explain-this-number)); an answer across the engines with linked figures **not built**; AI is off in every edition today | |
 | Time travel: an earlier date's official figures | **Partly**: official records and history per date ([VAR_GUIDE section 7](../guides/VAR_GUIDE.md#7-history-and-backtesting)); "as at the last board" across every metric **not built** | |
-| Board pack PDF | **Proposed** (2.9.9 row 3, the board pack in a house style; RO11) | [OVERSIGHT_LENS section 4.11](OVERSIGHT_LENS.md#411-ro11-the-daily-risk-report-and-the-committee-pack) |
+| Board pack PDF | **Proposed** | [OVERSIGHT_LENS section 4.11](OVERSIGHT_LENS.md#411-ro11-the-daily-risk-report-and-the-committee-pack) |
 | Lenses and editions (a file per edition, a lens per person) | **Built** | [EDITIONS.md section 8](../admin/EDITIONS.md#8-lenses) |
 | Phone tiers | **Design** | [MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md) |
 
@@ -191,11 +191,11 @@ The three tabs share one data request (the same figures, three arrangements), so
 | **What changed** | the largest moves since the comparison point (overnight by default), each with before → after, the change, a one-line reason and a link | click: open the explaining lens (MCUBE explain, CCUBE group, STR scenario, the liquidity or capital input); the comparison switch (overnight, since last committee, since last board) | compare built for VaR; reasons not built (RO1) |
 | **Decision queue** | open breaches (id, what, use of limit, age, action taken); temporary limit increases awaiting the CRO (old → new, until, who asked, the second line's recommendation) with **Approve**, **Reject**, **Approve with conditions…** and **Comment**; increases expiring this week with "renew" and "let lapse" and what the use of the base limit would be | approve or reject records the decision with a required comment, four eyes, never one's own request; renew opens a new request | not built (RO2; CRO4) |
 | **Top 10** | counterparties and groups by peak PFE with limit use; desks by VaR with limit use; risk factors by component VaR with the overnight change | click: open CCUBE, MCUBE; `Enter` for ten (the landing shows five) | PFE and desk VaR built; factor component VaR needs MC1 |
-| **The world** | market moves with the VaR at stake and the desks touched; headlines touching the book; macro signals | click: open World or Market | moves and news built; VaR at stake proposed (2.9.9 row 1); relevance not built (WL9) |
+| **The world** | market moves with the VaR at stake and the desks touched; headlines touching the book; macro signals | click: open World or Market | moves and news built; VaR at stake proposed; relevance not built (WL9) |
 | **Data health** | each feed for the as-at: complete, late or periodic, with its time and count; the **safe to quote** badge and its caveats | click a feed: Admin → Loads; the caveat: the figure it affects | late loads built; the safe-to-quote rule not built (CRO9) |
 | **Ask** | a question box; the answer in sentences with every figure a link; suggested questions | `/` focuses it; `Enter` asks | not built across engines (CRO10) |
 | **As-at strip** | the as-at time and presets (now, the last official, the last board, quarter-end, pick a date); the comparison; the currency; the scope (BANK, a legal entity) | `[` `]` step; the presets | not built (CRO11) |
-| **Board pack PDF** | a button that generates the board pack from the as-at figures | click | proposed (2.9.9 row 3) |
+| **Board pack PDF** | a button that generates the board pack from the as-at figures | click | proposed |
 | **Panel badges and drill links** | the badge of every panel; links to MCUBE, CCUBE, Oversight, Market, World | click | not built |
 
 ### 5.3 Keyboard and the command line
@@ -222,7 +222,7 @@ bank's limit system is OVERSIGHT decision on RO2's temporary limits (overlay or 
 | As at the last board | 1.5 s¹ | the official records of that date; nothing recomputed |
 | An intraday batch: tiles patched | 1 s after the batch is applied¹ | VaR and exposure only; liquidity, capital and climate are daily or slower inputs |
 | Ask, first token | 2 s¹ | the AI layer's model; the figures are fetched first, never invented |
-| Board pack PDF | 20 s¹ | 2.9.9 row 3's generator |
+| Board pack PDF | 20 s¹ | the planned board pack's generator |
 
 ¹ Estimates, not measurements, scaled from the engines' measured node answers (VAR_GUIDE section 27); to be measured with the POC.
 
@@ -262,11 +262,11 @@ that brings it) and a **Done?** column for the build to tick. The empty, loading
 | Panel | Contents (exact) | Data and contract | Interaction | Phase | Done? |
 |---|---|---|---|---|---|
 | Command bar | `DRISHTI`, the command line with `CRO <GO>`, the key legend (`A` `B` `N` `T` `W` `/` `[` `]` `Enter` `?`) | the lens file's placeholder | type a command; keys | POC | no |
-| As-at strip | as at `2026-09-30 11:02`, presets *09-29 official*, *last board 2026-09-17*, *quarter-end 06-30*, *pick…*; compare *overnight* / *since last board*; currency USD / CAD; scope chip `BANK`; the **SAFE TO QUOTE** badge with its caveat (*liquidity is 09-29*); **Board pack PDF** with its PLANNED badge | `governance-calendar` (7.13) for the board and committee dates; the official records' dates; the safe-to-quote rule (8.3) | preset click; `[` `]`; badge click lists the caveats | POC: now and 09-29 official only; CRO11 the rest; PDF 2.9.9 row 3 | no |
+| As-at strip | as at `2026-09-30 11:02`, presets *09-29 official*, *last board 2026-09-17*, *quarter-end 06-30*, *pick…*; compare *overnight* / *since last board*; currency USD / CAD; scope chip `BANK`; the **SAFE TO QUOTE** badge with its caveat (*liquidity is 09-29*); **Board pack PDF** with its PLANNED badge | `governance-calendar` (7.13) for the board and committee dates; the official records' dates; the safe-to-quote rule (8.3) | preset click; `[` `]`; badge click lists the caveats | POC: now and 09-29 official only; CRO11 the rest; PDF the planned board pack | no |
 | Status count line | `BREACH 1 breached`, `NEAR 5 near (≥80%)`, `WITHIN 6 within`; *3 open breaches · 2 approvals waiting · 2 increases expire this week* | `appetite-status` (7.4); `limit-breach`, `limit-request` (7.10, 7.12) | click a count: filter the tiles | POC (counts); CRO4 (queue counts) | no |
 | Family headings | MARKET RISK · COUNTERPARTY AND CONCENTRATION · LIQUIDITY · CAPITAL AND CLIMATE | `risk-appetite-metric.FAMILY` (7.3) | none | POC | no |
 | Tile: VaR 1d 99% | `112.0m`, *limit 150m · 10d √10 354,306,794*, sparkline 30 days with the dashed limit and dotted 80% line, use bar 74.7%, `WITHIN`, BUILT, *Owner: Head of Market Risk* | `var-official` (bank node), `var-limit`; `risk-appetite-metric` VAR-1D-99 | click: `MCUBE BANK`; hover: provenance | POC | no |
-| Tile: Stressed VaR 1d 99% | `271.5m`, *limit 320m · window 2008-09 · 10d 858.5m*, 84.8% `NEAR`, PLANNED | the stress scenario set (2.9.7 row 2c) | click: `MCUBE` Normal / Stressed | after 2.9.7 row 2c | no |
+| Tile: Stressed VaR 1d 99% | `271.5m`, *limit 320m · window 2008-09 · 10d 858.5m*, 84.8% `NEAR`, PLANNED | the stress scenario set | click: `MCUBE` Normal / Stressed | with stressed VaR | no |
 | Tile: Worst stress loss | `1,284.6m`, *limit 1,500m · RATES +200bp / CREDIT +150bp*, 85.6% `NEAR`, PARTLY | `stress-result` (stored per desk) and the derived bank P&L per scenario; RO9 for computed | click: `STR` on the worst scenario | POC (stored) | no |
 | Tile: Largest counterparty PFE | `401.5m`, *limit 600m · CP-ALDERSHOT · peak 95% at 2W*, 66.9% `WITHIN`, BUILT | `exposure-official-cpty`, `credit-limit` | click: `CCUBE CPTY:CP-ALDERSHOT` (until CCUBE: `EXP CPTY:CP-ALDERSHOT`) | POC | no |
 | Tile: Largest group PFE | `512.3m`, *limit 500m · Northbridge Capital Holdings*, 102.5% `BREACH`, red outline, BUILT | the exposure engine at `GROUP:` scope; `counterparty-group`; group limit (CC4) | click: `CCUBE GRP:NORTHBRIDGE` | POC (stored group limit); CC4 for the group's own limit | no |
@@ -282,7 +282,7 @@ that brings it) and a **Done?** column for the build to tick. The empty, loading
 | What changed overnight | six moves: *Group PFE · Northbridge* 487.9m → 512.3m +24.4m; *RATES desk VaR* 67.7m → 74.6m +6.9m; *Worst stress loss* +41.1m; *Stressed VaR* +12.4m; *Bank VaR* 112.6m → 112.0m −0.6m; *LCR* 131% → 128% −3 pts; each with its one-line reason and link (`CCUBE GRP:NORTHBRIDGE`, `MCUBE DESK:RATES EXPLAIN`, …) | `appetite-status` of both dates (8.4); RO1 / MC12 for VaR reasons; exposure compare for PFE | click: the explaining lens | POC: moves without reasons for non-VaR; CRO3 reasons | no |
 | Ask | the box *Why is Rates VaR up?*; the answer: *RATES desk VaR rose 6.9m to 74.6m … +5.2m market moves … +2.4m new trades … −0.7m window roll … TLI-0415 asks to raise the limit to 95m*, every figure a link; *Sources: VaR change explanation, official record 09-29, batch B-2026-09-30-03*; three suggested questions | the AI layer; the engines' answers as tools (section 8.6) | `/`, `Enter`; click a link | CRO10 | no |
 | Top 10 | three lists of five (Enter for ten): counterparties and groups by peak PFE with use (Northbridge group 512.3m 102%, GRP-ALDERSHOT 446.9m 89%, CP-ALDERSHOT 401.5m 67%, CP-NORTHBRIDGE 352.6m 71%, CP-SUMMIT 288.3m 84%); desks by VaR with use (CREDIT 82%, RATES 88%, FX 69%, EQD 80%, FI 83%); risk factors by component VaR with the overnight change; amber near, red breach | exposure `tree`; `var-official` by desk; factor component VaR (MC1) | click: CCUBE, MCUBE | POC (counterparties, desks); factors after MC1 | no |
-| The world | market moves with VaR at stake and desks (*USD 10Y swap +11bp … +6.1m RATES, FI*); three headlines touching the book with time and what they touch; the macro line | news-and-markets `news`, `quote`; market data; world-economy; VaR at stake (2.9.9 row 1); relevance (WL9) | click: World, Market | CRO8 | no |
+| The world | market moves with VaR at stake and desks (*USD 10Y swap +11bp … +6.1m RATES, FI*); three headlines touching the book with time and what they touch; the macro line | news-and-markets `news`, `quote`; market data; world-economy; VaR at stake (planned); relevance (WL9) | click: World, Market | CRO8 | no |
 | Data health | **SAFE TO QUOTE · 1 caveat**; eight feeds with a dot (green complete, amber late, grey periodic) and their time and count (*Trades (Endur) B-2026-09-30-01 FULL 05:12 · 9,572*; *Liquidity (ALM) LATE · due 06:00 · 09-29 shown*; …); the rule in one line | load events and expectations (DATA_GUIDE section 8); official records; the safe-to-quote rule (8.3) | click a feed: Admin → Loads | POC (feeds); CRO9 (the rule) | no |
 | Footer | the synthetic-data note and the badge meanings; copyright from branding | branding configuration | none | POC | no |
 
@@ -374,7 +374,7 @@ Endur-style UPPER_SNAKE. The CRO lens is small in data volume (hundreds of rows 
 |---|---|---|---|---|---|---|---|---|
 | 1 | `var-official` (VOFF), `var-result` | VaR tile, desks, what changed | POC | Drishti (computed from the bank's vectors) | node × date | daily; intraday | existing | existing (computed from the demo `pnl-vector`, `scenario-pv`) |
 | 2 | `var-limit` (VLIM) | VaR use, desks | POC | the bank's limit system | node × date | daily, on change | existing | existing `data/testdata/market-risk/var-limit` |
-| 3 | `scenario-set` with the stress set | Stressed VaR | after 2.9.7 row 2c | the bank's VaR engine | set × date | daily or weekly | extended (2c) | 2c's synthetic stress set |
+| 3 | `scenario-set` with the stress set | Stressed VaR | with stressed VaR | the bank's VaR engine | set × date | daily or weekly | extended (2c) | 2c's synthetic stress set |
 | 4 | `stress-result`, `stress-scenario-pnl` | Worst stress loss | POC | the bank's stress engine | desk × scenario × date | daily | existing | existing `data/testdata/market-risk/stress-result` |
 | 5 | `simulation-run`, `exposure-path` | PFE tiles, top 10 | POC | the bank's exposure simulator | trade × path × time step | daily | existing | existing `data/testdata/counterparty-risk/` |
 | 6 | `exposure-official-cpty` | PFE, concentration | POC | Drishti (computed) | counterparty × date | daily | existing | computed from 5 |
@@ -392,7 +392,7 @@ Endur-style UPPER_SNAKE. The CRO lens is small in data volume (hundreds of rows 
 | 18 | **`governance-calendar`** (section 7.13) | "as at last board", "since last committee" | CRO11 | the corporate secretary's calendar | meeting | yearly, on change | **new** | **new synthetic generator**: `data/testdata/governance/governance-calendar/` |
 | 19 | `news`, `quote` (news-and-markets) | headlines, moves | CRO8 | news and market feeds | story; quote | intraday | existing | existing `data/testdata/news-and-markets/` (the offline snapshot) |
 | 20 | News relevance to the book (WL9) | "headlines touching the book" | CRO8 | Drishti (computed: story → issuer, counterparty, sector, country) | story × entity | intraday | new (WORLD_LENS section 5.9) | computed from 19 and 8 |
-| 21 | Market data (`ir-curve`, `fx-spot`, …) and VaR at stake (2.9.9 row 1) | market moves with VaR at stake | CRO8 | market data system | point × date | daily | existing; VaR at stake planned | existing `data/testdata/market-data/` |
+| 21 | Market data (`ir-curve`, `fx-spot`, …) and VaR at stake (planned) | market moves with VaR at stake | CRO8 | market data system | point × date | daily | existing; VaR at stake planned | existing `data/testdata/market-data/` |
 | 22 | world-economy (economies, forecasts) | macro signals | CRO8 | IMF and other public data | economy × indicator | monthly | existing | existing (**internal demos only**: the IMF data rule) |
 | 23 | Position sensitivities (`position-sensitivity`, MC1) | top 10 risk factors | after MC1 | the bank's risk engine | position × factor × date | daily | new (MR_CUBE_LENS 7.9) | MC1's generator |
 | 24 | VaR change explanation (RO1 / MC12) | what changed reasons; Ask | CRO3 | Drishti (computed) | node × step × date pair | on demand | new (computed) | computed |
@@ -552,7 +552,7 @@ shown as supplied; Drishti computes nothing climate-related (climate is out of s
 `var-official`, `var-limit`, `stress-result`, `stress-scenario-pnl`, `simulation-run`, `exposure-path`, `exposure-official-cpty`,
 `credit-limit`, `counterparty`, `counterparty-group`, `news`, `quote`, the market-data and world-economy kinds: read as their contracts
 say; the lens adds no field. `credit-limit` gains the CCR cube's tenor buckets and group limits (CC4) and `scenario-set` the stress
-flag (2.9.7 row 2c) through their own rows.
+flag (planned) through their own rows.
 
 ### 7.9 `risk-limit` (RO3)
 
@@ -626,7 +626,7 @@ requester; an expired request becomes `EXPIRED` by itself, never silently extend
 
 **Grain:** one row per meeting. **Key:** `MEETING_ID`. **Fields:** `MEETING_ID`, `BODY` (`BOARD`, `BOARD_RISK_COMMITTEE`,
 `EXECUTIVE_RISK_COMMITTEE`, `ALCO`), `MEETING_DATE`, `DATA_AS_OF` (the business date whose official figures the pack used), `PACK_REF`
-(the board pack produced, when 2.9.9 row 3 exists). Feeds the "as at last board" preset and "compare: since last board".
+(the board pack produced, when the planned board pack exists). Feeds the "as at last board" preset and "compare: since last board".
 
 ### 7.14 Proposed contract YAMLs (not created yet)
 
@@ -793,7 +793,7 @@ Built **after** the MR and CCR cube POCs, because its drill targets are the cube
 | In the POC | Out of the POC |
 |---|---|
 | The B landing and the phone layout on the demo lake, with the eight metrics the engines can serve today: VaR 1d 99% (and 10d √10 in the sub-line), worst stress loss (stored), largest counterparty PFE, largest group PFE, top-10 concentration; liquidity, capital and climate tiles drawn from their synthetic generators with the PROPOSED badge | the C and A tabs (CRO2) |
-| `risk-appetite-metric` with its generator (twelve metrics, RAF-2026), and the status rule of section 8.1 including floors | stressed VaR until 2.9.7 row 2c lands |
+| `risk-appetite-metric` with its generator (twelve metrics, RAF-2026), and the status rule of section 8.1 including floors | stressed VaR until stressed VaR lands |
 | `appetite-status` computed on open (captured from CRO1 on) | reasons for every move (RO1 / CRO3): the POC shows moves only |
 | Read-only breaches derived from `LIMIT_USE` above 1 and the appetite statuses | the breach records and approvals (CRO4); approve and reject drawn disabled with "comes with CRO4" |
 | Data health from the load events; the safe-to-quote badge from late loads only | Ask (CRO10), the world's VaR at stake and relevance (CRO8), time travel beyond the previous official date (CRO11), the board pack PDF |
@@ -808,15 +808,15 @@ never yesterday's figure; the phone view stacks the breached and near tiles firs
 
 ## 12. Phases (proposed)
 
-Releases follow the plan's themed releases (product owner, 2026-10-31): 2.9.8 market-risk regulatory foundation; 2.9.9 oversight and mobile; 2.9.10 regulatory reporting; 2.9.11 counterparty engines; 2.9.12 sensitivities and market-risk capital; 2.9.13 the CVA family; 2.9.14 advanced and executive. 2.9.8 is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "CRO lens" section. The proof of concept of section 11
-becomes the first part of the lens build in 2.9.14.
+The phases follow the plan's themes (product owner, 2026-10-31): the market-risk regulatory foundation; oversight and mobile; regulatory reporting; counterparty engines; sensitivities and market-risk capital; the CVA family; advanced and executive. The regulatory foundation is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "CRO lens" section. The proof of concept of section 11
+becomes the first part of the lens build in the advanced and executive phase.
 
-| Phase | Rows | Release | Depends on |
+| Phase | Rows | Status | Depends on |
 |---|---|---|---|
 | 1. Decisions | CRO4 (breach queue, approvals, expiring increases), with RO3 (the limit catalogue) | proposed | RO2, RO3; write-back approvals (built) |
-| 2. The lens build | CRO1 (catalogue, statuses), CRO2 (B, C, A), CRO3 (what changed with reasons), CRO9 (data health), CRO12 (phone), CRO13 (the lens file) | proposed | the cubes (2.9.12); RO1 / MC12 for reasons; the phone display |
-| 3. The rest of the appetite | CRO5 (liquidity), CRO6 (capital), CRO7 (climate: an optional supplied-input tile, off by default) | proposed | the bank's feeds; 2.11.0's liquidity measures if Drishti computes LCR |
-| 4. Context and words | CRO8 (world: VaR at stake, relevance), CRO10 (Ask), CRO11 (time travel, board pack) | proposed | 2.9.9 rows 1 and 3; WL9; the AI layer |
+| 2. The lens build | CRO1 (catalogue, statuses), CRO2 (B, C, A), CRO3 (what changed with reasons), CRO9 (data health), CRO12 (phone), CRO13 (the lens file) | proposed | the cubes (sensitivities and capital phase); RO1 / MC12 for reasons; the phone display |
+| 3. The rest of the appetite | CRO5 (liquidity), CRO6 (capital), CRO7 (climate: an optional supplied-input tile, off by default) | proposed | the bank's feeds; the roadmap's liquidity measures if Drishti computes LCR |
+| 4. Context and words | CRO8 (world: VaR at stake, relevance), CRO10 (Ask), CRO11 (time travel, board pack) | proposed | the planned market-data impact and board pack; WL9; the AI layer |
 
 ---
 
@@ -850,16 +850,15 @@ becomes the first part of the lens build in 2.9.14.
    GRC tool), or read from the bank's GRC system as a fundamental input.
 6. **Temporary limit increases.** **Decided (product owner, 2026-10-31), with OVERSIGHT decision 4: option a.** Record and approve in Drishti, and the bank's limit system takes the approved limit by its own process
    (recommended, one source of truth; OVERSIGHT's option a), or a Drishti overlay effective the same day (option b).
-7. **Ask.** On in the CRO lens when the site has a model provider (recommended), with tools only; or off until 2.9.14.
+7. **Ask.** On in the CRO lens when the site has a model provider (recommended), with tools only; or off until the lens build.
 8. **Board members.** A read-only `board` role that sees the Brief and the phone layout only (recommended, later), or no board access.
 9. **Packs.** Four small packs (risk-appetite, liquidity, capital, climate; recommended: each with its own README and refresh script,
    switchable), or one `enterprise-risk` pack.
 10. **Demo data for the Northbridge story.** **Decided (product owner, 2026-10-31): add the second synthetic member and the 500m group appetite limit through the generators.** Options were: add a second synthetic member and a 500m group appetite limit through the generators
     (recommended: the demo then matches the mock-up), or keep the demo's single-member group and change the mock-up's figures.
-11. **Release placement.** **Decided (product owner, 2026-10-31), by the themed release plan:** the decision queue (CRO4, with RO3) in
-    2.9.10, after RO2 in 2.9.9; the CRO lens build (CRO1 to CRO3, CRO9, CRO12, CRO13) with liquidity, capital, the optional climate tile
-    (off by default), Ask and time travel in 2.9.14 (section 12). The earlier options (a POC after the cube POCs, the queue in 2.9.9, the
-    rest in a later release) are superseded.
+11. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** the decision queue (CRO4, with RO3) with
+    regulatory reporting, after RO2 (oversight and mobile); the CRO lens build (CRO1 to CRO3, CRO9, CRO12, CRO13) with liquidity,
+    capital, the optional climate tile (off by default), Ask and time travel in the advanced and executive phase (section 12).
 
 ---
 
