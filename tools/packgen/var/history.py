@@ -100,6 +100,8 @@ class History:
 
     def __init__(self, demo, stress):
         self.demo, self.stress = demo, stress
+        if not stress.engine_vectors:
+            stress.rows()                                              # the scenario-PV trades' USD P&L as the engine computes it
         b = demo.batch
         self.days = business_days(FIRST, demo.scenario_dates[-1])
         at = {d: j for j, d in enumerate(self.days)}

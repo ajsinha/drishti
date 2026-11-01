@@ -19797,7 +19797,7 @@ datasets:
   documents: 28
   files:
   - cob-2026-09-30.jsonl.gz
-  bytes: 1154695
+  bytes: 1155846
 - folder: core/trader
   pack: core
   kind: trader

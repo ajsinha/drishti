@@ -86,3 +86,38 @@ class StressDataTest(unittest.TestCase):
         bank = VM.add(usd(r) for r in self.pnl + self.spv)
         self.assertEqual(len(bank), 250)
         self.assertGreater(VM.var(bank), 1.5 * 112_041_646)          # the normal set's VaR of the bank (VAR_GUIDE.md section 18.6)
+
+
+class HistoryDataTest(unittest.TestCase):
+    """The long-history P&L of today's portfolio per node (history.py, kind pnl-history; VAR_GUIDE.md section 18.9): every MGMT and LEGAL
+    node above the books, every business day since 2007, the stress set's and the normal set's days carried as they are (so the
+    configured window gives the bank's stressed VaR and the last 509 days its VaR), and a node the sum of its children."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.rows = {r["NODE_ID"]: r for r in docs("pnl-history")}
+        cls.nodes = {r["NODE_ID"]: r for r in docs("risk-hierarchy")}
+
+    def test_one_row_per_node_above_the_books_every_day_since_2007(self):
+        want = {n for n, r in self.nodes.items() if r["LEVEL"] != "book"}
+        self.assertEqual(set(self.rows), want)
+        for r in self.rows.values():
+            self.assertEqual((r["FIRST_DAY"], r["HISTORY_ID"], r["CURRENCY"], r["SYNTHETIC"]), ("2007-01-02", "PNLH-" + r["NODE_ID"], "USD", True))
+            self.assertEqual(len(r["HISTORY_DATES"]), r["DAY_COUNT"])
+            self.assertEqual(len(r["PNL"]), r["DAY_COUNT"])
+            self.assertEqual(r["HISTORY_DATES"], sorted(set(r["HISTORY_DATES"])))
+            self.assertGreater(r["DAY_COUNT"], 4800)
+
+    def test_the_stress_window_and_the_last_509_days_are_the_engines(self):
+        bank = self.rows["MGMT~BANK"]
+        days, pnl = bank["HISTORY_DATES"], bank["PNL"]
+        at = days.index("2008-07-01")
+        self.assertAlmostEqual(VM.var(pnl[at:at + 250]), 213_637_794, delta=1.0)    # the bank's stressed VaR (VAR_GUIDE.md section 18.8)
+        self.assertAlmostEqual(VM.var(pnl[-509:]), 112_041_646, delta=1.0)          # the bank's VaR (section 18.6)
+        self.assertEqual(days[-1], docs("scenario-set")[0]["SCENARIO_DATES"][-1])
+
+    def test_a_node_is_the_sum_of_its_children(self):
+        bank = self.rows["MGMT~BANK"]["PNL"]
+        kids = [self.rows[n]["PNL"] for n, r in self.nodes.items() if r.get("PARENT_ID") == "MGMT~BANK"]
+        total = VM.add(kids)
+        self.assertTrue(all(abs(a - b) < 1.0 for a, b in zip(bank, total)))
