@@ -124,7 +124,7 @@ finally right.**
   data on the server, how it joins and how much there is, as a **Map** (domains as clusters, joins as lines) or as **Cards** (one per
   domain, with each kind's joins and commands). Nothing is hand-drawn: kinds come from the enabled packs, joins from the data
   contracts, each **checked against the data** (how many ids match), counts from the lake on the business date; a new pack appears
-  with no setup. It found 11 joins that do not hold (e.g. a jurisdiction code where an id is expected), listed in the CHANGELOG.
+  with no setup. It found 11 joins that do not hold (e.g. a jurisdiction code where an id is expected).
 - **The fact of the day on Home** ([USER_GUIDE "Home: the fact of the day"](docs/guides/USER_GUIDE.md)): one surprising, true
   sentence from your data, with a small picture, "Why does that happen?", the command that shows it and "Another fact". Each pack
   declares its facts ([PACK_DEVELOPER_GUIDE "Facts for Home"](docs/guides/PACK_DEVELOPER_GUIDE.md)); they are computed as you, on
@@ -334,7 +334,7 @@ Everything since 2.6.7, including the patches pushed to main without a tag.
   cache is sized in real heap and defaults to 256 MB (`drishti.history.cache-mb`).
 - **Known open:** SOAK4-01 (the busiest soak node's live heap rose 165 MB/h over 73 minutes; not the caches; not yet diagnosed);
   Analyse does not use runs yet; runs' Parquet/Arrow results and the second run engine; a real-crash test of run adoption.
-- **Patched after the tag** (CHANGELOG, Unreleased): a fact table whose connector file lacked its kind showed no rows (now said, with
+- **Patched after the tag:** a fact table whose connector file lacked its kind showed no rows (now said, with
   the fix); as of a date each table reads its latest date on or before it, and the answer and the report say each table's date when
   they differ; a report's `as-of` setting (`per-table`, `aligned`, a date, a relative name); a report's visuals no longer fail
   `DRS-9025` when they queue as runs.
@@ -371,7 +371,7 @@ tutorial 21, [USER_GUIDE](docs/guides/USER_GUIDE.md#history-an-entity-over-time)
 # Drishti 2.6.0 — release notes
 
 *2026-10-20.* **Paper statements and field parameters in BI, Cassandra and Iceberg without Hadoop, three new themes, and the
-known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); the full list is in the [changelog](CHANGELOG.md).)
+known bugs fixed.** ([BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
 
 - **Paginated reports and statements:** a report page with `layout: statement` is paper: page-exact PDF (written by the
   server) and Excel set to print, headers and footers with tokens, page breaks, repeated column titles, groups kept
@@ -428,7 +428,7 @@ known bugs fixed.** (Wave D of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md); t
   design-and-evidence deck brought up to date (48 slides).
 
 Upgrading from 2.4.0: nothing to do for a single server (Drishti*net is off without `config/net/`); start the server with
-`-Djava.io.tmpdir=<data dir>/tmp/server` (README); see [CHANGELOG.md](CHANGELOG.md).
+`-Djava.io.tmpdir=<data dir>/tmp/server` (README).
 
 # Previous release: Drishti 2.4.0 — release notes
 
@@ -461,8 +461,7 @@ scale.** (Wave C of [BI_DESIGN.md](docs/architecture/BI_DESIGN.md).)
 **Not in this release:** field parameters in report wells (2.6.0). A full browser rehearsal and the tutorial 14 and 16
 pictures still to retake are carried to the end of 2.5.0; the release drill's tests pass.
 
-Upgrading from 2.3.0: stored boards become reports at the first start (`/bi/b/<id>` keeps working); see
-[CHANGELOG.md](CHANGELOG.md).
+Upgrading from 2.3.0: stored boards become reports at the first start (`/bi/b/<id>` keeps working).
 
 # Previous release: Drishti 2.3.0 — release notes
 
@@ -510,7 +509,7 @@ console's browser suite still uses the pre-2.3 field names and ids in its own fi
 examples); those tests, not the product, are being updated in 2.3.1.
 
 Upgrading from 2.2.0: trades and other kinds use UPPER_SNAKE attribute names; Sutras, BI items and forms written against
-the old camelCase names need the new names (the shipped packs and examples are converted). See [CHANGELOG.md](CHANGELOG.md).
+the old camelCase names need the new names (the shipped packs and examples are converted).
 
 # Previous release: Drishti 2.2.0 — release notes
 

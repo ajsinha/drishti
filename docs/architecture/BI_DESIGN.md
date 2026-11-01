@@ -56,7 +56,7 @@ about governance in E.
 - [12. W1 as built against this design, and the revised wave plan](#12-w1-against-this-design-and-the-wave-plan)
 - [13. Decisions for the product owner](#13-decisions-for-the-product-owner)
 - [14. The model architecture: decisions D1 to D6](#14-the-model-architecture-decisions-d1-to-d6)
-- [15. The model layer: the specification of wave W1](#15-the-model-layer-the-specification)
+- [15. The model layer: the specification](#15-the-model-layer-the-specification)
     - [0. Reading guide and terms](#0-reading-guide-and-terms)
     - [1. The dataset](#1-the-dataset)
     - [2. The data model](#2-the-data-model)

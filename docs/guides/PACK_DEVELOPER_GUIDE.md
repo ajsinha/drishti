@@ -4490,7 +4490,7 @@ tools/drill.sh
 Options: `--docs` (the light drill, below), `--full` (the full drill even when only docs changed), `--no-push` (verify only: no push,
 no merge, and it may run on any branch). `DRILL_MVN_ARGS="..."` adds Maven arguments to both Java runs (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). The script prints `drill: mode = full` or `drill: mode = docs`, then each
-stage's time, then a summary. It is costly (it runs everything): run it once per wave or release, and targeted tests in between.
+stage's time, then a summary. It is costly (it runs everything): run it once per release, and targeted tests in between.
 
 **Which mode.** The commits since `origin/develop` decide: when every changed file is under `docs/` or `tools/docs/`, is a `*.md` file
 or is a `help.yaml`, the drill runs in docs mode by itself; otherwise it runs in full mode. `tools/drill.sh --docs` on anything else is
@@ -4875,7 +4875,7 @@ Rūpaka, the BI engine, lives in `drishti-server` under `server.bi` and follows 
 one automatically, `bi.layer.PackDatasets`), **data models** (datasets in a star, relationships, measures written in **DEL**, the
 Drishti Expression Language, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#1-expressions-the-drishti-expression-language-del)), and **consumers** (reports, boards, notebooks, alerts, subscriptions,
 exports, embeds, AI) each bound to one model. Every consumer asks a model the same way: a **model query** (MQ), a versioned JSON or YAML
-question ([API_GUIDE.md](API_GUIDE.md), BI_DESIGN.md › The model layer: the specification of wave W1, section 5). Drishti SQL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)) is a second front end onto the same
+question ([API_GUIDE.md](API_GUIDE.md), BI_DESIGN.md › The model layer: the specification, section 5). Drishti SQL ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)) is a second front end onto the same
 plan. Nothing is computed in the browser.
 
 | Step | Where | What happens |

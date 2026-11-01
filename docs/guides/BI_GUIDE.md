@@ -495,7 +495,7 @@ real data and query time while designing, Check, undo and redo, save and save a 
 
 **Phase 5, streaming BI.** `mode: live` tables kept in memory and updated by key from the same live machinery as the terminal (with retention and per-reader rows and masks on every update); a live stream per report and visuals that redraw in place (coalesced, with a live indicator, pause and resume, stale and disconnected states); the rolling chart (`live-chart`); the Perspective grid and pivot over masked Arrow with streaming rows, under the narrowest policy; boards with pages, tile alerts, kiosk and rotation; the two live datasets, two live reports and the board shipped as samples; `drishti.bi.live.*`; `DRS-9050` to `9053`. References: [section 30, its section 7.1](#71-live-tables-phase-5), [section 31, its section 13](#13-live-visuals), [section 31, its section 23](#23-boards-report-pages-of-live-tiles).
 
-**Wave 3, the BI essentials.** Scheduled refresh of datasets (`refresh:` with a clock, the pack's business-day calendar or `after-load`, retried with the shared policy, its state on the dataset page: [section 30, its section 7.2](#72-scheduled-refresh));
+**The BI essentials.** Scheduled refresh of datasets (`refresh:` with a clock, the pack's business-day calendar or `after-load`, retried with the shared policy, its state on the dataset page: [section 30, its section 7.2](#72-scheduled-refresh));
 time intelligence in the measure language (`ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`: [section 30, its section 4.1](#41-time-intelligence)), badged in the designer's Fields pane; the visuals **map** (countries by ISO code, regions by ISO 3166-2 code with a click that drills from the world to a country and its regions, or points by latitude and longitude, from a vendored
 country file: no tiles, no CDN), **funnel**, **histogram**, **box plot** and **bubble** in the visual catalogue, the designer, exports and `<drishti-report>`; and **true totals** for the measures of a matrix or table that do not add up, worked out by the engine
 ([section 31, its sections 3.1 and 3.2](#31-the-map-funnel-histogram-box-plot-and-bubble)). Walk-through: [tutorial 10](../tutorials/10-first-bi-report.md); settings `drishti.bi.refresh.*` and `drishti.bi.report.distribution-rows` and `totals-max-rows`.
@@ -680,7 +680,7 @@ The designer needs the `bi-author` power. Its step-by-step use is [tutorial 10](
 
 **Several datasets.** Add dataset in the Fields pane, one tree for each, the dataset tag on a visual, the refusal of a mixed visual, the Links panel and the composed-dataset draft are described in [section 31, its section 16](#16-reports-over-several-datasets).
 
-**The new visuals (wave 3).** The Charts group of the Visualizations pane also offers `bubble`, `funnel`, `histogram`, `box` and `map`; Build shows each one's wells (a map needs a `location`, or a `latitude` and a `longitude`); Format has **Bars**, for a map **Level** and **Drill into countries** (a histogram's number of bands) and, for a table, **Total row**; a
+**More visuals.** The Charts group of the Visualizations pane also offers `bubble`, `funnel`, `histogram`, `box` and `map`; Build shows each one's wells (a map needs a `location`, or a `latitude` and a `longitude`); Format has **Bars**, for a map **Level** and **Drill into countries** (a histogram's number of bands) and, for a table, **Total row**; a
 measure that uses time intelligence carries a small badge (`ytd`, `running total`, ...) in the Fields pane. Reference: [section 31, its section 3.1](#31-the-map-funnel-histogram-box-plot-and-bubble).
 
 
@@ -803,7 +803,7 @@ The model is told the names, types and descriptions of the dataset and your word
 The model layer ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification)) splits what a version-1 dataset did in one file into two items: a **dataset** is one
 governed table (what one row is, its columns with roles and meanings, how it keeps time, its own security), and a **model** puts datasets in a star with
 relationships, measures and tighter security. Reports, Analyse and the API ask a model with **one request shape**, the model query (`mq: 1`). Everything in
-sections 13 to 22 still works as written: version-1 datasets are read as models by a compatibility reader until the migration wave (W4).
+sections 13 to 22 still works as written: version-1 datasets are read as models by a compatibility reader.
 
 **Models in the rail** (`/bi/models`, "Start from your data"):
 
@@ -1010,7 +1010,7 @@ measures and perspective from its YAML), `POST /bi/model-api/compose` with `base
 ## 25. Live answers and standing queries
 
 The design is [BI_DESIGN.md §4.5 and §4.6](../architecture/BI_DESIGN.md#46-standing-queries-and-incremental-maintenance); the endpoints are in
-[API_GUIDE.md](API_GUIDE.md#models-and-the-model-query-language-apiv1bi-wave-w1); the settings are `drishti.bi.mq.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+[API_GUIDE.md](API_GUIDE.md#models-and-the-model-query-language-apiv1bi); the settings are `drishti.bi.mq.*` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 **Three times, one plan.** Every question is asked at a time, bound per dataset of the model:
 
@@ -2209,7 +2209,7 @@ POST /api/v1/bi/datasets/file:dataset:desk-pnl-vs-exposure-py-result/refresh
 
 From the command line `python3 tools/drishti.py bi dataset refresh ID --now` asks for it and waits until the state is no longer `running`.
 
-Its **tests** (`tests:` with `agg`, `unique`, `not-null`, `references-exist`; BI_DESIGN.md › The model layer: the specification of wave W1, section 1.8) run from its page's *Expected values* and
+Its **tests** (`tests:` with `agg`, `unique`, `not-null`, `references-exist`; BI_DESIGN.md › The model layer: the specification, section 1.8) run from its page's *Expected values* and
 `drishti.py bi item tests ID`, and a failing one refuses its publish (`DRS-9043`).
 No new write endpoint: `POST .../refresh` is the one that existed and needs `bi-author` (and, for a personal token, the `bi:write` scope).
 
@@ -2453,10 +2453,10 @@ The console's two helper calls (`POST /bi/wizard/yaml` writes a JSON document as
 
 ### 13. Model-layer datasets (`rachana: 2`)
 
-Everything above describes the version-1 dataset, which is still read as written. Wave W1 adds the **model layer**
+Everything above describes the version-1 dataset, which is still read as written. The **model layer**
 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#15-the-model-layer-the-specification) section 1): a dataset becomes **one table** (a source, a grain, columns with roles, meanings, units
 and additivity, a time mode, its own security), and a **model** (`config/bi/models/<id>.model.yaml`, item kind `model`) puts datasets together with
-relationships and measures. Version-1 files keep working through a compatibility reader until the migration wave (W4).
+relationships and measures. Version-1 files keep working through a compatibility reader.
 
 **Pack datasets: nothing to build.** Every kind of every pack you may open is a dataset `pack.<pack>.<kind>`, generated from the pack (its promoted
 columns, its vocabulary's meanings, its entity references), certified, read-only and versioned with the pack. In the console: **Models** in the BI rail
@@ -2497,7 +2497,7 @@ columns:
   currency: {type: string, role: dimension}
 ```
 
-Check (`POST /api/v1/bi/models/validate` with `{yaml}`) answers the problems with codes `DRS-9100` to `DRS-9108` (BI_DESIGN.md › The model layer: the specification of wave W1, section 1.11). Every source
+Check (`POST /api/v1/bi/models/validate` with `{yaml}`) answers the problems with codes `DRS-9100` to `DRS-9108` (BI_DESIGN.md › The model layer: the specification, section 1.11). Every source
 answers: a **connector query** runs its SQL in its SQL-capable connector (DuckDB, PostgreSQL) with only the four named dates bound, the reader needing the
 right to open the connector's kinds; a **Python** dataset runs its Transform over its input model queries asked as the reader (kept per reader and inputs);
 a **model-answer** dataset asks its inner query as the reader. Each answer becomes the dataset's rows for the one query that reads it, under the dataset's own
@@ -3962,7 +3962,7 @@ passing its Check and the security safeguard; otherwise publish is refused with 
 model is read by its author only): publish the model first, where its Check and security safeguard run*. The publisher must also **read the model** (a
 member of its workspace, or in its audience): a report uses a model by reference, so *you may not read the model '…' this report reads, so you cannot publish a
 report on it* refuses it otherwise; `POST /bi/mq` refuses such a model the same way (`DRS-9151` *no model '…' that you may read*). The sample reports keep
-`dataset:` (the migration wave W4 moves them).
+`dataset:`.
 
 **Reports reference a model; they never own it.** Deleting a report never touches its model. A model item is **not deleted while anything reads it**:
 `DELETE /bi/items/<model>` answers `409 DRS-9004` *'Shared model' cannot be deleted: 1 report still read it. A model is shared, never owned by what reads it:
@@ -5747,7 +5747,7 @@ empty list everything the user's roles open. A host whose list names only entity
 **Not in the element.** Drill down and through, *Alert me*, *Show the rows behind this visual*, Export and Subscribe (use the console for those). A 2.1 `perspective-*` visual is drawn there as in the viewer, Drishti's own grid of the server's answer (no BI page loads WebAssembly). Two elements of one report do not cross-filter each other.
 The full list is in [BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20.6, part 3](../architecture/BI_DESIGN.md#206-part-3-embedding-and-phone-layouts-phase-7-complete).
 
-**Also in the library (1.4.0).** `<drishti-about kind entity>` shows the *About this page* layers of a view (sources, lineage, the masks and rules that applied to the reader) in a panel of the host's own; the application needs the scope `embed:about`.
+**Also in the library.** `<drishti-about kind entity>` shows the *About this page* layers of a view (sources, lineage, the masks and rules that applied to the reader) in a panel of the host's own; the application needs the scope `embed:about`.
 `<drishti-search>` is a search box across Drishti for the host's page: the console's own type-ahead for the signed-in user, **read-only and always masked** (masked fields are neither shown nor matched), cut to the kinds the application may show, at most
 `drishti.embed.search.max-results` results, and **rate-limited** per user and application (`drishti.embed.limits.searches-per-user-per-minute`, 30 a minute, `DRS-8004` with `Retry-After`). It needs the scope **`embed:search`**, which opens
 `GET /api/v1/embed/search` and nothing else. React, Vue and Angular sample host pages that embed all four elements are in `docs/guides/examples/embed/` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#react-angular-and-vue-sample-pages)).
@@ -6067,7 +6067,7 @@ takes the worker start off each call, see the end of this guide). The Chromium t
 Built: the Measure and Visual interfaces; Python items as BI items (versions, review, publish, shipped files, bundles); the manifest and its checks (server and console); Python measures in datasets; the
 `python` visual in reports and the designer; the sandboxed server runner with a pool; the shipped samples. There is no browser target.
 
-Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (`source.python`, each input a model query; [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2](../architecture/BI_DESIGN.md#12-sources)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
+Built with several datasets (section 13): the **Transform** interface, run on the server over the reader's answers and published as a **Python dataset** (`source.python`, each input a model query; [BI_DESIGN.md › The model layer: the specification, section 1.2](../architecture/BI_DESIGN.md#12-sources)), kept per reader and version of the inputs; Analyse promotes a join cell to one.
 
 Also built (section 17): a Transform's input may be a **pack kind read straight through a connector**, as the reader; the **Transform editor**
 (step by step, a preview and a profile after each step, a tested snippets library, no YAML to type); the **profile** of a frame (the editor, Analyse); **warm
@@ -6082,7 +6082,7 @@ allow-list (add them to `bi.python.packages` and the server's `python-packages` 
 
 ### 13. Transforms: a table in, a table out
 
-The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more answers into **a table**, which a **Python dataset** publishes as its one table (`source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2](../architecture/BI_DESIGN.md#12-sources)), with measures in a model over it. Use it where a join or a reshaping is easier in pandas than in the dataset language (a merge with a tolerance, a rank, a fitted column, a pivot), and you still want the result to be a dataset every report, alert and subscription can use. The design is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 13.1 and 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
+The third interface, after the Measure and the Visual, is the **Transform**: Python that turns the frames of one or more answers into **a table**, which a **Python dataset** publishes as its one table (`source: { python: <item>, inputs: { <name>: <a model query> } }`, [BI_DESIGN.md › The model layer: the specification, section 1.2](../architecture/BI_DESIGN.md#12-sources)), with measures in a model over it. Use it where a join or a reshaping is easier in pandas than in the dataset language (a merge with a tolerance, a rank, a fitted column, a pivot), and you still want the result to be a dataset every report, alert and subscription can use. The design is [BI_DESIGN.md › Rūpaka: the original design and every phase as built, sections 13.1 and 20.10](../architecture/BI_DESIGN.md#16-rupaka-the-original-design-and-every-phase).
 
 ```yaml
 rachana: 1
@@ -6251,7 +6251,7 @@ pandas, run in the same sandbox as every Python item (section 7), on the rows th
 
 #### 17.1 Inputs straight from a connector
 
-A Python dataset's `source.inputs` (section 13; [BI_DESIGN.md › The model layer: the specification of wave W1, section 1.2 C](../architecture/BI_DESIGN.md#12-sources)) takes, besides a model
+A Python dataset's `source.inputs` (section 13; [BI_DESIGN.md › The model layer: the specification, section 1.2 C](../architecture/BI_DESIGN.md#12-sources)) takes, besides a model
 query, a **pack kind read through a connector**:
 
 ```yaml
