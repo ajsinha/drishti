@@ -1178,8 +1178,8 @@ The target for 2.3M:
 
 | Piece | Choice |
 |---|---|
-| VaR owners | ECS on **EC2** (Fargate's 120 GB and 200 GB ephemeral limits are too small for an owner): `r7gd`/`r6id`-class 16 vCPU, 128 GB, local NVMe, one task a host, a service per node, tags `az:<zone>` from the task's zone |
-| Coordinators, BI, data-serving | ECS on EC2 (`m7i`/`r7i`-class) or Fargate for ≤ 120 GB |
+| VaR owners | ECS with **EC2** capacity (or ECS Managed Instances): `r7gd`/`r6id`-class 16 vCPU, 128 GB, local NVMe, one task a host, a service per node, tags `az:<zone>` from the task's zone. Not Fargate: its 16-vCPU tasks stop at 120 GiB, its largest task (32 vCPU, 244 GiB) has the memory but no instance-store NVMe (hot files on EBS, ephemeral storage at most 200 GiB) and costs more always on (section 16.10) |
+| Coordinators, BI, data-serving | ECS on EC2 (`m7i`/`r7i`-class) or Fargate (tasks to 32 vCPU and 244 GiB) |
 | Consoles | Fargate service `consoles`, 3 tasks, ALB target group without stickiness; the relay across hosts on (section 9.4), its ports open in the consoles' own security group |
 | Lake | S3 (Delta with conditional writes, or Iceberg), gateway endpoint |
 | Database | RDS PostgreSQL **Multi-AZ** |
@@ -1217,7 +1217,8 @@ DRISHTI_NODE_URL=http://var-3.drishti.local:18480 deploy/bin/drishti-node.sh wai
 The smallest highly available Drishti is **three identical machines**, each running one server (shard owner and coordinator at once,
 the all-in-one role of section 3.1) and one console, with the lake, the database and the load balancer shared and highly available
 outside them. This section says why three, what must be shared, how the three fail over, how large each machine is, what to buy on
-premises and what the same estate costs on AWS. Sections 3 and 17 cover the larger estate with separate roles; the mechanics behind
+premises, what the same estate costs on AWS, and which AWS disks and
+compute (EC2, ECS on EC2, Fargate) suit it. Sections 3 and 17 cover the larger estate with separate roles; the mechanics behind
 every statement here are in section 4.
 
 ### 16.1 Why three
@@ -1348,7 +1349,7 @@ Kafka is needed only for intraday PV streaming (section 2). Prices on premises a
 | Piece | Choice | Note |
 |---|---|---|
 | Drishti machines | 3 × **m7i.8xlarge** (32 vCPU, 128 GB), one per Availability Zone | `r7i.8xlarge` (256 GB) for 2M with every horizon; ECS on EC2 or plain EC2 (section 15.2) |
-| Hot files | EBS **gp3**, 1 TB a machine, 6,000 IOPS, 500 MiB/s | or an instance with local NVMe (`m7id`, `r7gd` classes); `DRISHTI_VAR_HOT_DIR` |
+| Hot files | EBS **gp3**, 1 TB a machine, 6,000 IOPS, 500 MiB/s | or the NVMe variant: **m8id.8xlarge** (32 vCPU, 128 GB, 1 × 1.9 TB NVMe; `m7gd.8xlarge` on Graviton, `r7gd`/`r6id` for more memory); `DRISHTI_VAR_HOT_DIR`; section 16.9 |
 | Lake | **S3**, gateway endpoint | Delta with conditional writes, or Iceberg (Appendix C) |
 | Database | RDS PostgreSQL **Multi-AZ** | about a minute to fail over (section 4.8) |
 | Load balancer | **ALB** across the three zones | target group on the consoles' `/readyz` |
@@ -1388,7 +1389,55 @@ reserved instances lower it and are not applied. ⁵ The savings rates are those
 the consoles (they run on the three machines), Kafka (only for intraday PV streaming), a disaster-recovery copy (section 14.5), support
 plans and taxes. **Graviton** (`m7g.8xlarge`) would save about USD 750 a month on demand (about 19% of the EC2 line: an ASSUMPTION from
 us-east-1 list prices, not in the price constants), once the native libraries are confirmed on ARM; `r7i.8xlarge` (256 GB) costs about
-1.3 times an m7i.8xlarge (the same kind of estimate).
+1.3 times an m7i.8xlarge (the same kind of estimate). The **NVMe variant**, 3 × `m8id.8xlarge` with the hot files on the instance's
+1.9 TB NVMe, costs about USD 5,100 a month on demand instead of 3,937 and drops the 363 of gp3: about **USD 800 a month more** (an
+ASSUMPTION, not in the price constants: the us-east-1 ratio of m8id.8xlarge to m7i.8xlarge, USD 2.0883 to 1.6128 an hour, applied to
+the Canada (Central) m7i rate).
+
+### 16.9 Fast disks on AWS
+
+The hot files are memory-mapped and read at random when a date is opened or a page is not in the page cache; the lake is read in large
+sequential ranges. Prices approximate: Canada (Central) where the price constants have them (gp3, S3 Standard), otherwise us-east-1 list
+prices; **check them in the AWS Pricing Calculator**.
+
+| Disk | Speed | Durability | Approximate price | For Drishti |
+|---|---|---|---|---|
+| **Instance-store NVMe** (`m8id`, `m7gd`, `r7gd`, `r6id`, `i4i`, `i7ie`) | the fastest: about 100 µs, hundreds of thousands to millions of IOPS per instance | survives a reboot; **wiped on stop, hibernation or replacement** of the instance | included in the instance price (the `d` variant costs more than the plain one) | **the hot files**: a rebuildable cache |
+| **EBS io2 Block Express** | up to 256,000 IOPS and 4,000 MB/s a volume, sub-millisecond | 99.999%; survives stop and start | about USD 0.125 a GB-month + 0.065 a provisioned IOPS-month (us-east-1) | not worth it for a rebuildable cache: 1 TB at 16,000 IOPS is about USD 1,165 a month, about seven times gp3 |
+| **EBS gp3** | 3,000 IOPS and 125 MB/s included; up to 80,000 IOPS and 2,000 MiB/s a volume (section 16.7) | 99.8–99.9%; survives stop and start | USD 0.088 a GB-month + 0.0055 an IOPS-month above 3,000 + 0.044 a MiB/s-month above 125 | hot files that must survive stop and start; the database's storage |
+| **FSx for Lustre** | shared by many instances, hundreds of GB/s in aggregate | scratch or persistent file systems | about USD 0.15–0.60 a GB-month by throughput tier (us-east-1) | not needed: each member keeps its own hot files and reads the lake from S3 |
+| **S3 Express One Zone** | single-digit-millisecond object reads | one Availability Zone only | about USD 0.11 a GB-month, cheaper requests (us-east-1) | optional for the newest dates of the lake |
+| **S3 Standard** | 10–100 ms to the first byte, high aggregate throughput | 11 nines over three zones | USD 0.025 a GB-month | **the lake** |
+
+**Recommendation.** Hot files on **instance-store NVMe** (`DRISHTI_VAR_HOT_DIR`): they are rebuildable caches, so a replaced instance
+starts empty and rebuilds each date's hot file from the lake on its first open (about half a minute for a date at 2 million positions,
+then it is warm). Where the hot files must survive stop and start, **gp3** with raised IOPS and throughput (the 16.7 reference). The lake on **S3
+Standard**, optionally **S3 Express One Zone** for the newest dates (kept in the members' zone, with S3 Standard as the copy of record).
+RDS PostgreSQL on **gp3**.
+
+### 16.10 EC2 or ECS; Fargate or EC2 capacity
+
+| | Plain EC2 | ECS with EC2 capacity (or ECS Managed Instances) | ECS on Fargate |
+|---|---|---|---|
+| Hosts | yours: AMI, patching, systemd unit (section 15.1) | yours, through a capacity provider and Auto Scaling group; **Managed Instances**: AWS patches and replaces them, for a management fee (about 12% of the instance rate for `m7i`) | none: AWS runs the task |
+| Largest member | any instance type | any instance type, one task a host | **32 vCPU with 60, 120 or 244 GiB** (16-vCPU tasks: 32–120 GiB) |
+| Local disk | instance-store NVMe | instance-store NVMe, mounted into the task | **no instance store**: ephemeral storage at most 200 GiB; an EBS volume attachable at task launch |
+| Stop time | systemd `TimeoutStopSec` (section 15.1) | `stopTimeout` up to the agent's `ECS_CONTAINER_STOP_TIMEOUT` | `stopTimeout` **at most 120 s**: the node task's 90 s drain plus 30 s of graceful shutdown fit (section 4.6) |
+| A replacement | the same disk unless the instance moved | a new host's NVMe is empty | always a **cold member**: shard handover is automatic (section 4.6), hot files rebuilt from the lake on first open |
+| Price for an always-on member | the instance | the instance (+ the Managed Instances fee) | higher: 32 vCPU and 120 GiB is about USD 2.01 an hour against USD 1.80 for an `m7i.8xlarge` (32 vCPU, 128 GB), before the EBS volume for the hot files |
+| Drishti roles | any; simplest for three machines | **VaR members**, coordinators, BI, data-serving | **consoles**; scheduled loads and maintenance; coordinators, BI, data-serving where no NVMe is needed |
+
+Fargate prices are the price constants' (Canada (Central): USD 0.04456 a vCPU-hour, 0.004865 a GB-hour); AWS announced 32-vCPU Fargate
+tasks in mid-2026 ([what's new](https://aws.amazon.com/about-aws/whats-new/2026/06/amazon-ecs-fargate-32vcpu/), [task
+sizes](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/fargate-tasks-services.html)).
+
+**Recommendation** (decision PO-C9, `CD7`): VaR members on **ECS with EC2 capacity** (or Managed Instances, after checking that the chosen
+NVMe types are offered), one task a host, on NVMe instances; consoles and the scheduled loads and maintenance on **Fargate**. For three
+machines, plain EC2 with the systemd unit is as good and simpler. **A Fargate member is possible** when hot files on EBS are acceptable:
+by memory a 32 vCPU, 244 GiB task carries a three-machine member (section 16.5) for 1-day VaR to 10 million positions (192 GB
+provisioned) and for every horizon to 2 million (192 GB); the hot files then sit on a gp3 volume attached at launch (the 200 GiB of
+ephemeral storage hold them only to about 1 million positions at 1-day), and each replacement is a cold member. Section 17's 16-vCPU,
+128 GB owner does not fit a 16-vCPU task (120 GiB at most) and would take a 32-vCPU task.
 
 ---
 
