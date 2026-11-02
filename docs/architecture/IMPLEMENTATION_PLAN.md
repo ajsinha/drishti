@@ -918,6 +918,8 @@ the default view, B and C are alternative views of the same data on the one scre
 
 ## 2.9.11: sensitivities and market-risk capital (proposed)
 
+**Every calculation ships with its playground and its Excel workbook (product owner, 2026-11-02):** position sensitivities, FRTB-SA (SBM delta, vega and curvature, DRC, RRAO), SIMM and the MR cube's figures each get a playground (the grid, the plain-words explanation, the formula bar) and an **export to Excel with live formulas** (Main, Data, Config and the method's own tabs, [SENSITIVITIES_AND_FRTB_SA.md section 12](SENSITIVITIES_AND_FRTB_SA.md#12-the-playgrounds)) whose result cells equal the engine's to the cent, checked by a test; no calculation is released without both.
+
 | # | Part | What |
 |---|---|---|
 | 1 | **Position sensitivities and the factor dictionary (first)** | RO15 = MC1 and MCP3: the `position-sensitivity` contract (decided), the loader and checks, the factor naming standard with a mapping from the bank's names (decided), FRTB and bank bucket grids both (decided), synthetic demo data from the VaR factor model, sums by bucket |
@@ -956,6 +958,8 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 
 
 ## 2.9.12: counterparty engines (proposed)
+
+**Every calculation ships with its playground and its Excel workbook of live formulas (product owner, 2026-11-02):** SA-CCR, the CCR cube's figures, exposure and FVA, each equal to the engine's to the cent in a test.
 
 | # | Part | What |
 |---|---|---|
