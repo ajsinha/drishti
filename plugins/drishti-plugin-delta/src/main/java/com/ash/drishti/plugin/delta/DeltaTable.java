@@ -152,6 +152,10 @@ final class DeltaTable {
         return path;
     }
 
+    String idColumn() {
+        return idColumn;
+    }
+
     private volatile String identity;
 
     private static String host() {

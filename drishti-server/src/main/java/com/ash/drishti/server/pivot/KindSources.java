@@ -135,7 +135,43 @@ public final class KindSources implements TabularSource.Resolver {
         String table = "pv_" + Integer.toHexString((source + "|" + fullVersion).hashCode()).replace('-', 'n');
         List<String> dates = d.dated() ? data.dates(source).stream().map(LocalDate::toString).toList() : List.of();
         boolean memoryOnly = com.ash.drishti.server.memlake.Retention.current().memoryOnly(source);
-        return new Kind(d, day, fields, maskedNames.size(), fullVersion, table, dates, memoryOnly, p);
+        com.ash.drishti.api.LakeFiles lake = memoryOnly ? null : lake(d, day, fields, p);
+        long estimate = -1;
+        if (lake == null) {
+            try {
+                estimate = router.rowEstimate(source, day).map(com.ash.drishti.api.RowEstimate::rows).orElse(-1L);
+            } catch (RuntimeException e) {
+                estimate = -1;
+            }
+        }
+        return new Kind(d, day, fields, maskedNames.size(), fullVersion, table, dates, memoryOnly, p, lake, estimate);
+    }
+
+    /**
+     * The direct lake route (PIVOT_ENGINE.md section 6.2): the date's Parquet files when the kind's one source can hand them over and every
+     * field the person may use is a column of them; masks are then applied as columns not read (a masked column is not in the relation),
+     * unless masking also changes values inside other fields ({@link Entitlements#masksValues}), when the rows go through the Data view's
+     * read one by one. Null: the staged route.
+     */
+    private com.ash.drishti.api.LakeFiles lake(DataViewService.Dataset d, LocalDate day, List<PivotProvider.Field> fields, Principal p) {
+        if (entitlements.masksValues(p)) {
+            return null;
+        }
+        java.util.Optional<com.ash.drishti.api.LakeFiles> f;
+        try {
+            f = router.lakeFiles(d.kind(), day == null ? com.ash.drishti.api.AsOf.LATEST : com.ash.drishti.api.AsOf.of(day));
+        } catch (RuntimeException e) {
+            return null;
+        }
+        if (f.isEmpty() || f.get().files().isEmpty()) {
+            return null;
+        }
+        for (PivotProvider.Field field : fields) {
+            if (!f.get().columns().containsKey(field.name()) && !field.name().equals(d.key())) {
+                return null;                                   // a field that is not a column: the connector's read builds it
+            }
+        }
+        return f.get();
     }
 
     /** The day to read: the one asked (one the dataset holds), else its latest; null for an undated dataset. */
@@ -171,9 +207,13 @@ public final class KindSources implements TabularSource.Resolver {
         final List<String> dates;
         final boolean memoryOnly;
         final Principal p;
+        final com.ash.drishti.api.LakeFiles lake;
+        final long estimate;
 
         Kind(DataViewService.Dataset d, LocalDate day, List<PivotProvider.Field> fields, int masked, String version, String table,
-                List<String> dates, boolean memoryOnly, Principal p) {
+                List<String> dates, boolean memoryOnly, Principal p, com.ash.drishti.api.LakeFiles lake, long estimate) {
+            this.lake = lake;
+            this.estimate = estimate;
             this.d = d;
             this.day = day;
             this.fields = fields;
@@ -222,12 +262,18 @@ public final class KindSources implements TabularSource.Resolver {
 
         @Override
         public long rows() {
+            if (lake != null) {
+                return lake.rows();
+            }
             Long n = staged.get(table);
-            return n == null ? -1 : n;
+            return n == null ? estimate : n;
         }
 
         @Override
         public long bytes() {
+            if (lake != null) {
+                return lake.bytes();
+            }
             long r = rows();
             return r < 0 ? -1 : r * Math.max(1, fields.size()) * 12L;
         }
@@ -235,7 +281,9 @@ public final class KindSources implements TabularSource.Resolver {
         @Override
         public Map<String, Object> notes() {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("route", "read through the " + d.format() + " connector (" + d.connector() + ") for you, staged in the pivot executor's DuckDB "
+            m.put("route", lake != null ? "read directly from the " + lake.format() + " table's " + lake.files().size() + " Parquet file(s) of "
+                    + lake.businessDate() + " by the pivot executor's DuckDB: only the columns the view needs, row groups skipped by their statistics"
+                    : "read through the " + d.format() + " connector (" + d.connector() + ") for you, staged in the pivot executor's DuckDB "
                     + "in memory" + (memoryOnly ? "; memory-only data, never written to a disk" : ""));
             m.put("pack", d.pack());
             m.put("masks", masked == 0 ? "none" : masked + " column(s) masked for you: not read, not usable");
@@ -246,6 +294,9 @@ public final class KindSources implements TabularSource.Resolver {
         @Override
         public Relation relation(DuckDbExecutor e) {
             exec = e;
+            if (lake != null) {
+                return lakeRelation();
+            }
             Object lock = locks.computeIfAbsent(table, k -> new Object());
             synchronized (lock) {
                 if (!staged.containsKey(table) || !e.exists(table)) {
@@ -254,6 +305,21 @@ public final class KindSources implements TabularSource.Resolver {
                 staged.get(table);
             }
             return new Relation(DuckDbExecutor.quote(table), List.of(), null, List.of());
+        }
+
+        /**
+         * The date's Parquet files as the relation: each field the person may use under its own name, masked columns never named (so never
+         * read); DuckDB reads only the columns a statement uses and skips row groups by their statistics.
+         */
+        private Relation lakeRelation() {
+            List<String> cols = new ArrayList<>();
+            for (PivotProvider.Field f : fields) {
+                String phys = f.name().equals(d.key()) && !lake.columns().containsKey(f.name()) ? lake.idColumn() : lake.columns().get(f.name());
+                cols.add(DuckDbExecutor.quote(phys) + " AS " + DuckDbExecutor.quote(f.name()));
+            }
+            List<String> files = lake.files().stream().map(x -> "'" + x.replace("'", "''") + "'").toList();
+            return new Relation("(SELECT " + (cols.isEmpty() ? "1 AS \"_\"" : String.join(", ", cols)) + " FROM read_parquet([" + String.join(", ", files)
+                    + "], union_by_name = true))", List.of(), null, List.of());
         }
 
         private void stage(DuckDbExecutor e) {
