@@ -131,7 +131,7 @@ def main(argv=None) -> int:
     # portfolios): tools/packgen/var/make_var_data.py, dated by its documents
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
     import make_var_data as VD  # noqa: E402
-    datasets += VD.write(out, VD.Demo(out, days.dates), with_samples=out.resolve() == (ROOT / "data" / "testdata").resolve())
+    datasets += VD.write(out, VD.demos(out, days.dates), with_samples=out.resolve() == (ROOT / "data" / "testdata").resolve())
     # the exposure engine's data (a simulation run of the last date and every member trade's paths over its grid, for the committed
     # netting sets just written): tools/packgen/ccr/make_ccr_data.py, dated by its documents
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "ccr"))

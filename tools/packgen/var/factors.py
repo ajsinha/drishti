@@ -65,8 +65,11 @@ def student_t(r: random.Random, dof: int = 4) -> float:
 class Market:
     """Daily factor moves: ``moves[f][j]`` for scenario day j (0 the oldest, ``n - 1`` the newest) and ``n`` the business date."""
 
-    def __init__(self, seed: str = "drishti-var-demo", n: int = N_SCENARIOS):
-        self.n = n
+    def __init__(self, seed: str = "drishti-var-demo", n: int = N_SCENARIOS, back: int = 0):
+        """``back``: the market of the business date that many business days before the newest (the demo's earlier dates): the window
+        slides back by as many days, the newest's oldest days preceded by ``back`` earlier ones, so a day has the same move whichever
+        date's window holds it (the oldest day leaves, yesterday's move enters, as the VaR change explanation reads them)."""
+        self.n, self.back, self.seed = n, back, seed
         days = n + 1
         r = seeded(seed, "market")
         stress_start = int(n * 0.62)                      # a stress episode inside the last 250 days
@@ -80,6 +83,26 @@ class Market:
             fr = seeded(seed, "factor", f)
             own = math.sqrt(max(0.05, 1.0 - wg * wg - wh * wh))
             self.moves[f] = [wg * global_[j] + wh * group[g][j] + own * student_t(fr) * scale[j] for j in range(days)]
+        if back:
+            # the days before the newest date's window: plain Student-t days (no episode), one generator per day, so the same day
+            # has the same move whichever earlier date asks for it
+            pre: dict[str, list[float]] = {f: [] for f in FACTORS}
+            for i in range(back, 0, -1):
+                gl = student_t(seeded(seed, "pre", i, "global"))
+                grp = {g: student_t(seeded(seed, "pre", i, "group", g)) for g in GROUPS}
+                for f, (g, wg, wh) in FACTORS.items():
+                    own = math.sqrt(max(0.05, 1.0 - wg * wg - wh * wh))
+                    pre[f].append(wg * gl + wh * grp[g] + own * student_t(seeded(seed, "pre", i, "factor", f)))
+            self.moves = {f: pre[f] + mv[:days - back] for f, mv in self.moves.items()}
+
+    def draws(self, *parts) -> list[float]:
+        """A unit Student-t draw for every day of the market (scenario days, then the business date), seeded by ``parts``: the same day
+        the same draw whichever business date's window holds it (a trade's own noise)."""
+        r = seeded(*parts)
+        main = [student_t(r) for _ in range(self.n + 1)]
+        if not self.back:
+            return main
+        return [student_t(seeded(*parts, "pre", i)) for i in range(self.back, 0, -1)] + main[:self.n + 1 - self.back]
 
     @staticmethod
     def _garch(r: random.Random, days: int, scale: list[float], crashes: set[int], skew: bool) -> list[float]:

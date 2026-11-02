@@ -395,7 +395,8 @@ dataset `market-risk-var-official` holds every result version; `market-risk-var-
 sums it: `VaR 99%` and `ES 97.5%` are `max()` of a node's one row (over several nodes, the largest, never a total), and `Bank VaR` and
 `Bank ES` are the bank node's own figures. The report: the bank's VaR, ES and limit use; VaR by desk (management hierarchy) and by legal
 entity (legal hierarchy), each bar drilling through to a **Node** page; the bank over time and, on its own page, a desk chosen in a
-slicer over time (pick a window of dates in the toolbar; the demo has one date, 2026-09-30, so one point); every node with VaR, ES,
+slicer over time (pick a window of dates in the toolbar; the demo's VaR data has three dates, 2026-09-28 to 2026-09-30, a point for
+each one captured officially: the newest when the server starts, each date a `lake demo` signals to a running server); every node with VaR, ES,
 limit and limit use (over 90% in red). A node id opens the node in the terminal; `VAR NODE:<id> <GO>` opens the VaR explorer (a report
 cannot run a command, so the page says so).
 

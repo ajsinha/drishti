@@ -409,12 +409,15 @@ desk P&L has no row of it either (a holiday); a period that starts before the fi
 `VAR BANK STATS FY2026 <GO>`; the API: `GET /api/v1/var/statistics?scope=BANK&period=FY2026&measure=var` (`periodEnd`, `average`,
 `high`, `low`, `records`, `missing`, `average60`, `stressedAverage`, `preview`).
 
-**A demo server's synthetic history.** The demo lake holds one business date of vectors, so it has one official record. With
-`drishti.regulatory.synthetic-history: true` (demo servers only; never on a bank's server) an administrator seeds the records before it
-(`drishti.py var official --synthetic-history 259`): for each scenario day whose 250 days before it lie inside the scenario set, every node
+**A demo server's synthetic history.** The demo lake holds three business dates of vectors (2026-09-28 to 2026-09-30); a server
+started on it captures the newest officially (a data-load signal of a date captures that date too), so it has one to three official
+records. With `drishti.regulatory.synthetic-history: true` (demo servers only; never on a bank's server) an administrator seeds the
+records before the oldest (`drishti.py var official --synthetic-history 259`): for each scenario day whose 250 days before it lie inside the scenario set, every node
 gets the VaR and ES of today's members over those 250 days (and at each backtesting confidence), its risk-theoretical P&L the scenario
 P&L of the day before, its stressed VaR scaled by the day's VaR against today's. Every seeded record says `synthetic: true` and is never
-published; every answer that reads one counts them and the screens say so. The demo figures in this document are on that history.
+published; every answer that reads one counts them and the screens say so. The demo figures in this document are on that history,
+seeded before the newest date's official record (a server that also captured 2026-09-28 and 2026-09-29 has their own records in place
+of two seeded ones, and figures a little different).
 
 ### 4.5 VaR by risk type and diversification
 
