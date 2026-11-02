@@ -269,6 +269,9 @@ The data of each benchmark is synthetic and made by the harness, the same every 
 | logs | `var_bench.py` | the server's own log file: bytes over 120 s at rest after both dates opened, and over the load |
 | reading | `jfr_summary.py` | the JDK's `jfr view`s per recording; each first open split by stage (read, intake, sort, aggregate, write) from its CPU samples, the lake read's own threads counted as read |
 
+`users.py` counts a polite busy refusal (`503` with `DRS-9501` to `DRS-9505` and `Retry-After`, [OPERATIONS.md section
+12.5](OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)) apart, as `busy`, not as an error.
+
 Swap is recorded at the start and end of every run and for every users window. A run is kept only when no page was swapped out during it
 and swap use grew by less than 256 MB; every run in the tables below passed.
 
