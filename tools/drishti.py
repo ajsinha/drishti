@@ -188,6 +188,9 @@ def problem_error(status: int, raw: bytes, headers, reason: str = "") -> ApiErro
         err.retry_after = max(1, int((headers or {}).get("Retry-After") or j.get("retryAfterSeconds") or 0))
     except (TypeError, ValueError):
         err.retry_after = 30
+    if code == "DRS-1020":                                       # a compute engine running nowhere (COMPUTE_ENGINES.md): exit 3, the server's words
+        err.args = ((detail or "").split(code + " ", 1)[-1] + f" ({code})",)
+        err.code = 3
     if status == 503 and (j.get("busy") or BUSY_CODE.match(str(code or ""))):
         err.args = (f"{(detail or '').split(code + ' ', 1)[-1]} ({code}; add --wait, or set DRISHTI_WAIT_BUSY=1, to try again by itself)",)
     return err
@@ -1421,7 +1424,8 @@ def build_parser() -> argparse.ArgumentParser:
     play_ctx = {"Api": Api, "CliError": CliError, "say_json": say_json}                                        # shared: frtbcli makes the play group
     load_module("frtbcli", "frtbcli.py").register(groups, srv, play_ctx)   # sens, frtb, play frtb (2.9.11)
     load_module("simmcli", "simmcli.py").register(groups, srv, play_ctx)   # simm show|list|explain|against|versions, play simm (2.9.11)
-    load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.10.a)
+    adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.10.a)
+    load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
