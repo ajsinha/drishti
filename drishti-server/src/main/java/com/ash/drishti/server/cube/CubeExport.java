@@ -231,8 +231,7 @@ public final class CubeExport {
             SheetStream p = wb.sheet("Provenance", "555555").width(0, 10).width(1, 34).width(2, 10).width(3, 90).width(4, 10);
             int pr = 1;
             p.row(pr++).text(0, "Every cell's members and scope; then what the whole view shares", "title");
-            p.row(pr++).text(0, "Kind", "head").text(1, "Cell", "head").text(2, "Trades", "head").text(3, "Scope (ask /api/v1/var/scope of it)", "head")
-                    .text(4, "Cached", "head");
+            p.row(pr++).text(0, "Kind", "head").text(1, "Cell", "head").text(2, "Trades", "head").text(3, "Scope (ask /api/v1/var/scope of it)", "head");
             for (Map<String, Object> rec : records(answer)) {
                 Map<String, Object> e = rec;
                 List<String> coords = new ArrayList<>();

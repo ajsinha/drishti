@@ -41,7 +41,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
  * The shared cube core's API (MR_CUBE_GUIDE.md section 10), as the person (every figure the cube's source computes for exactly that set of
@@ -154,10 +153,11 @@ public class CubeController {
             case "xlsx" -> {
                 String user = p == null ? "" : p.user();
                 String now = OffsetDateTime.now(ZoneOffset.UTC).withNano(0).toString();
-                StreamingResponseBody out = os -> CubeExport.xlsx(a, os, user, now);
+                java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();   // a view is at most max-cells: held whole
+                CubeExport.xlsx(a, out, user, now);
                 return ResponseEntity.ok().contentType(MediaType.parseMediaType(XLSX))
                         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + name + ".xlsx\"").header(HttpHeaders.CACHE_CONTROL, "no-store")
-                        .body(out);
+                        .body(out.toByteArray());
             }
             case "json" -> {
                 return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(a);
