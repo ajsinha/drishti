@@ -85,10 +85,10 @@ public final class NativeFileIO implements FileIO {
         return codecs;
     }
 
-    /** Whether the native engine can read paths of this scheme ({@code file}, {@code s3}, {@code s3a}, {@code s3n}). */
+    /** Whether the native engine can read paths of this scheme ({@code file}, {@code s3}, {@code s3a}, {@code s3n}, {@code mem}). */
     public static boolean supports(String path) {
         String scheme = LocalPaths.scheme(path);
-        return scheme.equals("file") || S3_SCHEMES.contains(scheme);
+        return scheme.equals("file") || S3_SCHEMES.contains(scheme) || scheme.equals(com.ash.drishti.lakeio.mem.MemoryStorage.SCHEME);
     }
 
     /** The storage that serves {@code path}. */
@@ -100,7 +100,10 @@ public final class NativeFileIO implements FileIO {
         if (S3_SCHEMES.contains(scheme)) {
             return s3();
         }
-        throw new UnsupportedOperationException("the native Delta engine reads local disk and S3 (s3://, s3a://), not " + scheme
+        if (scheme.equals(com.ash.drishti.lakeio.mem.MemoryStorage.SCHEME)) {
+            return com.ash.drishti.lakeio.mem.MemoryStores.forPath(path);     // the in-memory lake (IN_MEMORY_LAKE.md): never a disk
+        }
+        throw new UnsupportedOperationException("the native Delta engine reads local disk, S3 (s3://, s3a://) and memory (mem://), not " + scheme
                 + "://; set the connector's engine to hadoop for this lake");
     }
 

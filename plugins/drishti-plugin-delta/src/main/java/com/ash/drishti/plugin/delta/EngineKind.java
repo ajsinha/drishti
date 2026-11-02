@@ -60,6 +60,12 @@ enum EngineKind {
      */
     static EngineKind choose(String setting, String env, String root, boolean windows) {
         String v = setting != null && !setting.isBlank() ? setting : env != null && !env.isBlank() ? env : DEFAULT;
+        if (root != null && com.ash.drishti.lakeio.mem.MemoryStores.isMemory(root)) {
+            if (v.trim().equalsIgnoreCase("hadoop") && setting != null && !setting.isBlank()) {
+                throw new IllegalArgumentException("a lake in memory (" + root + ") is read by the native Delta engine only; remove engine: hadoop");
+            }
+            return NATIVE;                                       // Hadoop's file systems cannot reach the server's memory stores
+        }
         return switch (v.trim().toLowerCase(Locale.ROOT)) {
             case "native" -> {
                 if (!NativeEngine.supports(root)) {
