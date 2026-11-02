@@ -169,7 +169,7 @@ class ApiError(CliError):
         self.retry_after = 0
 
 
-BUSY_CODE = re.compile(r"^DRS-950[1-5]$")
+BUSY_CODE = re.compile(r"^DRS-950[1-57]$")
 BUSY_TRIES = 3
 
 
@@ -1422,6 +1422,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("frtbcli", "frtbcli.py").register(groups, srv, play_ctx)   # sens, frtb, play frtb (2.9.11)
     load_module("simmcli", "simmcli.py").register(groups, srv, play_ctx)   # simm show|list|explain|against|versions, play simm (2.9.11)
     load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.10.a)
+    load_module("pivotcli", "pivotcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # pivot run|estimate|export|views|save (2.9.11.a)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):

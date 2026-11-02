@@ -36,6 +36,7 @@ from routes.frtb_routes import redirect_for as frsa_redirect
 from routes.simm_routes import redirect_for as simm_redirect
 from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
+from routes.pivot_screen_routes import redirect_for as pivot_redirect
 from routes.exposure_routes import retired_link as exp_retired_link
 
 router = APIRouter(include_in_schema=False)
@@ -143,6 +144,8 @@ async def go(request: Request, q: str = ""):
         return to_frsa
     if ed.word_on("SIMM") and (to_simm := simm_redirect(typed)) is not None:          # SIMM [<netting set> | CPTY <id>]: ISDA SIMM (simm_routes.py)
         return to_simm
+    if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_screen_routes.py)
+        return to_pivot
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
         return to_smat
     if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)

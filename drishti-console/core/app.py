@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
+    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, pivot_screen_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -450,6 +450,13 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["smat_on"] = _smat_on
 
+    def _pivot_on() -> bool:
+        """The pivot screen (PIVOT) as this request's person sees it: offered where the edition or lens has the word."""
+        from core import edition as _ed
+        return app.state.editions.for_request(_ed.current_lens()).word_on("PIVOT")
+
+    templates.env.globals["pivot_on"] = _pivot_on
+
     def _play_on() -> bool:
         """The VaR Playground (PLAY) as this request's person sees it: offered where the edition or lens has the word and VaR."""
         from core import edition as _ed
@@ -572,6 +579,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(history_routes.router)          # history queries: before the terminal (/v/{kind}/{id}) and export routes
     app.include_router(var_regulatory_routes.router)   # regulatory VaR: backtesting, period statistics, report runs and sign-off (before /api/var/...)
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
+    app.include_router(pivot_screen_routes.router)     # the pivot screen: PIVOT [table | @owner/name] (PIVOT_GUIDE.md), /api/pivot/...
     app.include_router(smat_routes.router)             # the scenario matrix (/smat, SMAT <id> [N]) and its JSON, CSV and Arrow (/api/smat/...)
     app.include_router(frtb_routes.router)             # FRTB-SA: FRSA <scope> (the capital screen), PLAY FRTB <scope> (its playground), /api/frtb/...
     app.include_router(simm_routes.router)             # ISDA SIMM: SIMM <netting set> (the screen), PLAY SIMM <netting set> (its playground), /api/simm/...
