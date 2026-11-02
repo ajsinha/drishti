@@ -31,6 +31,7 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId></dependency>
