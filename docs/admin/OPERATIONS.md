@@ -78,6 +78,7 @@ handbook stays the reference for one server and its console.
     - [6. History](#6-history)
     - [7. The file, the API and the settings](#7-the-file-the-api-and-the-settings)
     - [8. Iceberg lakes](#8-iceberg-lakes)
+21. [Compute engines on or off](#21-compute-engines-on-or-off)
 
 ---
 
@@ -3741,3 +3742,145 @@ lakes:
 
 `deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
 The setting `orphan-hours` is in **Settings per table** of the page too (under 72 is refused).
+
+## 21. Compute engines on or off
+
+A **compute engine** is the part of the server that computes risk figures when asked: VaR (with regulatory VaR), exposure, the position
+sensitivities, FRTB-SA, SIMM, the in-memory lake, and later SA-CCR, FVA and the two cubes. Not every server runs every engine: a
+market-risk node has no use for exposure, a small console node needs none. Each engine has **its own file**, `config/engines/<engine>.yaml`,
+with its switch and every one of its settings, and **one switch with one meaning**: off, the engine does not exist on that server. The
+design and its reasons are in [COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md); every key of every file is in
+[CONFIGURATION.md, Compute engines](CONFIGURATION.md#compute-engines-configenginesyaml).
+
+### 21.1 The files
+
+```
+config/engines/                 DRISHTI_ENGINES_DIR (default ./config/engines), shipped with every distribution
+├── var.yaml                    drishti.engines.var.enabled, drishti.var.*, drishti.regulatory.*
+├── exposure.yaml               drishti.engines.exposure.enabled, drishti.ccr.exposure.*
+├── sensitivities.yaml          drishti.engines.sensitivities.enabled, drishti.sensitivities.*
+├── frtb-sa.yaml                drishti.engines.frtb-sa.enabled, drishti.frtb.*
+├── simm.yaml                   drishti.engines.simm.enabled, drishti.simm.*
+├── sa-ccr.yaml, fva.yaml, mr-cube.yaml, ccr-cube.yaml   (not installed yet: their switch only, off)
+└── memory-lake.yaml            drishti.engines.memory-lake.enabled (off as shipped), drishti.lake.memory.*
+```
+
+`application.yaml` imports each file twice, the copy inside the jar first and then the site's, so a key in the site's file wins over the
+shipped one, and `application.local.yaml`, the environment and `--key=value` win over both. A site that deletes a file, or an install
+that predates the folder, gets the shipped values. The keys keep the names they always had (`drishti.var.hot-dates` is still
+`drishti.var.hot-dates`); only the switches are new, and each keeps its environment variable (`DRISHTI_VAR_ENABLED`,
+`DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_FRTB_ENABLED`, `DRISHTI_SIMM_ENABLED`; new: `DRISHTI_SENSITIVITIES_ENABLED`,
+`DRISHTI_MEMORY_LAKE_ENABLED`, `DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`).
+
+**The old switch names still work.** `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled` and
+`drishti.simm.enabled`, set anywhere above the shipped files (most often `application.local.yaml`), decide as before, and the server
+says so once at start:
+
+```
+WARN  drishti.var.enabled is the old name of drishti.engines.var.enabled (set in local file); it still works.
+      Move it to config/engines/var.yaml, or use Admin -> Engines (DRS-1024).
+```
+
+`drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` moved to `drishti.sensitivities.*` and are read under their old names
+too. The in-memory lake is on when its stores are configured in the old place (`drishti.lake.memory.stores` in `application.local.yaml`)
+and nothing sets its switch, so an install that uses it keeps it. An edition's `var: off` or `exposure: off` (`config/editions/features.yaml`)
+presets the engines' switches. **On upgrade nothing is required.** To tidy up, move the engine keys from `application.local.yaml` to the
+engine's file; `drishti.py server engines show var --sources` says where each switch comes from.
+
+### 21.2 What "off" means
+
+Off, the engine is not started: no date is opened or loaded, no cache, no thread of its own, no warm-up, no pinned date, no official
+capture at start; the engine-input kinds it reads (P&L vectors, exposure paths, sensitivities) are not read ahead on a node where no
+running engine reads them. Its API answers `404` in words, never `403` (nothing is forbidden; the engine is not here):
+
+```json
+{"status": 404, "code": "DRS-1020", "engine": "frtb-sa",
+ "detail": "DRS-1020 FRTB-SA is not running on this server, and no other server of this cluster runs it. An administrator can turn it on in Admin → Engines."}
+```
+
+When no server of the cluster runs it, it disappears from the console everywhere: its command words (typed, they answer the same words),
+type-ahead, FUNC and examples, its menu items, Help pages, Home cards and chips, its pages and playgrounds (404), its BI datasets and the
+reports on them, and its `drishti.py` commands (exit code 3 with the same words). `/actuator/health` lists each engine's state under
+`engines`; an engine that is off is `off`, never down.
+
+### 21.3 Dependencies
+
+| Engine | Needs (on the same server) | Uses (its parts hidden without it) |
+|---|---|---|
+| FRTB-SA | VaR (its scopes, hierarchies and limit letters) and the sensitivities | |
+| SIMM | the sensitivities | exposure |
+| FVA (not installed) | exposure | |
+| MR cube (not installed) | VaR | the sensitivities, FRTB-SA |
+| CCR cube (not installed) | exposure | SA-CCR, FVA |
+
+Turning on an engine whose need is off, or off an engine another running one needs, is refused with words (`409 DRS-1021`): "FRTB-SA
+needs VaR on this server: its scopes (desks, books, limit letters) are VaR's ... Turn on VaR first, or both together." Admin → Engines
+offers **Turn on both** or **Turn off all three**; the command line takes `--with-needs` and `--with-dependents`. A server started with
+FRTB-SA on and VaR off in the files starts; FRTB-SA is `blocked` with the reason, the start log says it in one line (`DRS-1022`), and
+nothing else fails.
+
+### 21.4 Admin → Engines
+
+![Admin → Engines: FRTB-SA staged off, the review panel](../img/engines/review.png)
+
+**Admin → Engines** (`/admin/engines`, administrators only) lists every engine with its switch, its state (running, off, starting,
+stopping, blocked with the reason, restart needed, not installed), the memory it holds now, its threads, what it needs and what uses it,
+and **where its switch is set** (the shipped copy, the engine file, the local file, the environment, the edition, an old name). Flipping a
+switch only **stages** the change; the panel on the right shows the dependency check (a refusal in words, before anything is sent), **what
+disappears for people** (its words, menus, Help pages, tiles, BI datasets, CLI commands, playgrounds, from the engine catalogue), what
+happens on the server, and asks for the **reason** (required). **Apply** writes the engine's file:
+
+- only `enabled` (keeping its environment variable: `${DRISHTI_FRTB_ENABLED:false}`) and `changed` (`by`, `at`, `reason`), every comment
+  and every other key kept; atomically (a temporary file in the same folder, then a rename); the file is made from the shipped copy when
+  the site has none;
+- refused (`409 DRS-1023`) when the file was edited by hand since the page read it ("reload"), or when the folder cannot be written (the
+  page names the folder and `DRISHTI_ENGINES_DIR`);
+- when the switch is set above the file (the environment, the local file, an old name), the change is written and the page says that
+  setting still decides until it is removed.
+
+**Live or restart.** Off is live for every engine: new requests answer `404` (or go to another node in a cluster), the requests in flight
+finish within `drishti.engines.drain` (30 s), then its open dates, caches and buffers are released and its threads end. On is live for
+every engine but the in-memory lake, which is written to its file and shows **restart needed** until the next start (the launchers add its
+stores' caps to the direct-memory limit at start, `tools/lake/memory_caps.py` reading the engine's file). The files are also **watched**
+(`drishti.engines.watch-seconds`, 5): an edit by hand takes effect as a change from the page does and shows in History as "edited in the
+file", with no name and no reason.
+
+![Admin → Engines: a refused change, said before it is sent](../img/engines/refused.png)
+
+**History** (below the table, and its own tab) lists every change, newest first: when, the engine, on or off, who, why, the node and the
+outcome (live, restart needed, written, refused with the words). The audit log holds the same (`engine-enabled`, `engine-disabled`,
+`engine-refused`) with the file and its checksum before and after. A personal API token never changes an engine.
+
+### 21.5 In a cluster
+
+Each node reads its own `config/engines/` folder, so nodes differ by design (the VaR shard owners run `var`; the counterparty nodes
+`exposure`; a console node none). Each node publishes its engines in its capability digest (the service `engines`), so a change reaches
+the peers within a gossip round. A request for an engine's API arriving at a node that does not run it is **forwarded** to a node that
+does (the least loaded, signed with the cluster key, for the caller; the answer names the node in `X-Drishti-Engine-Node`); no node runs
+it: `404 DRS-1020`. People are offered an engine when any reachable node runs it. The **Cluster** tab of Admin → Engines is the matrix of
+nodes and engines with an "available to people" column; an administrator may change another node's engine from there (the change goes to
+that node, signed, which writes its own file; both nodes audit it).
+
+### 21.6 The command line
+
+```
+$ python3 tools/drishti.py server engines list
+ENGINE         STATE           MEMORY    NEEDS                 FILE
+var            running         3.1 GB    -                     config/engines/var.yaml
+exposure       running         1.4 GB    -                     config/engines/exposure.yaml
+sensitivities  running         210 MB    -                     config/engines/sensitivities.yaml
+frtb-sa        off             -         var, sensitivities    config/engines/frtb-sa.yaml
+simm           running         12 MB     sensitivities         config/engines/simm.yaml
+memory-lake    off             -         -                     config/engines/memory-lake.yaml (restart to turn on)
+
+$ python3 tools/drishti.py server engines off var --reason "a counterparty node"
+drishti: refused (DRS-1021): VaR is needed by FRTB-SA on this server. Turn it off first, or both together.
+
+$ python3 tools/drishti.py server engines on frtb-sa --with-needs --reason "capital desk asked"
+var already running; frtb-sa on (live). Written to config/engines/frtb-sa.yaml.
+```
+
+`list` (`--cluster`: every node side by side; `--json`), `show <id>` (state, memory, needs, used by, what it hides; `--sources`: where the
+switch comes from), `on <id>... [--with-needs]`, `off <id>... [--with-dependents]` (both need `--reason`; `--node` changes another node),
+`history`. `drishti.py admin engines` is the same command. Exit codes: 0 done, 2 refused, 3 not running anywhere. The API behind them is
+in [API_GUIDE.md](../guides/API_GUIDE.md) (`/api/v1/admin/engines`, and the codes `DRS-1020` to `DRS-1024` in its error code table).

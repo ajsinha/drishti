@@ -17,6 +17,23 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **Compute engines on or off per server, each with its own configuration file (2.9.11 row 14; COMPUTE_ENGINES.md, OPERATIONS.md
+  section 21).** VaR (with regulatory VaR), exposure, the position sensitivities, FRTB-SA, SIMM and the in-memory lake each have a file,
+  `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`; the same file inside the jar), holding the switch `drishti.engines.<engine>.enabled`
+  and every setting under its old key; `application.yaml` imports them and no longer holds them; SA-CCR, FVA and the two cubes have their
+  file and switch, shown "not installed". The old switch names (`drishti.var.enabled`, `drishti.ccr.exposure.enabled`,
+  `drishti.frtb.enabled`, `drishti.simm.enabled`) still decide when a site sets them, with one warning at start (DRS-1024); the
+  environment variables are unchanged; an edition's `var: off` presets the new switch; nothing is required on upgrade. Off, an engine is
+  not started (no date, cache, thread or capture), its API answers `404 DRS-1020` in words (was 403), and when no server of the cluster
+  runs it its words, menus, Help pages, Home cards, pages, playgrounds, BI datasets and `drishti.py` commands (exit 3) disappear.
+  Dependencies are enforced with words (FRTB-SA needs VaR and the sensitivities, SIMM the sensitivities; DRS-1021; a server started with
+  a need off starts with the engine `blocked`, DRS-1022). **Admin → Engines** (mock-up A): the engines with switch, state, memory,
+  threads, needs, used by and where each switch is set; a staged change reviewed in a side panel (dependency check, what disappears,
+  live or restart) and applied with a required reason, written to the engine's file (only `enabled` and `changed`, comments kept,
+  atomic, refused when edited by hand since, DRS-1023), audited, in History; off is live with a 30 s drain, on is live except the
+  in-memory lake ("restart needed"); an edit of the file by hand takes effect too. In a cluster each node publishes its engines in its
+  digest, an engine's request goes to a node that runs it, and the Cluster tab changes another node's engine (signed, audited on both).
+  `drishti.py server engines list|show|on|off|history` (`admin engines` the same). CONFIGURATION.md has an Engines area, checked.
 - **Construct your basket is one sheet like Excel; baskets are edited, amended and deleted (2.9.11 rows 10 and 12; VAR_GUIDE.md
   sections 3.5 and 5.8, tutorial 25 steps 5 and 7).** The chip tray is retired (mock-up D): a column per kind of part (trade, position,
   portfolio, book, desk, each configured hierarchy's word such as the limit letter, counterparty) and the Op column (+ or −), filled by

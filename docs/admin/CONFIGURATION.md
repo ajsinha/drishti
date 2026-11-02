@@ -3707,27 +3707,24 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 ### Compute engines: `config/engines/*.yaml`
 
-One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#20-compute-engines-on-or-off)). The old switch names are listed last: they still work, with a warning at start (`DRS-1024`).
+One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). The old switch names are listed last: they still work, with a warning at start (`DRS-1024`).
 
-#### VaR (`var`): `var.yaml`
+#### `drishti.engines.var`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.var.enabled` | boolean | `true` | `DRISHTI_VAR_ENABLED` | server (each node its own) | run the VaR engine on this node: /api/v1/var, VAR, SMAT, PLAY VAR, regulatory VaR (live) | live |  |
 | `drishti.engines.var.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.var`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.confidence` | number | `0.99` | `DRISHTI_VAR_CONFIDENCE` | server (each node its own) | VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1)) | restart |  |
 | `drishti.var.es-confidence` | number | `0.975` | `DRISHTI_VAR_ES_CONFIDENCE` | server (each node its own) | expected shortfall's | restart |  |
 | `drishti.var.confidences` | list | `[0.95, 0.975, 0.99, 0.995]` |  | server (each node its own) | the VaR confidences offered on the VaR page, in commands and the API (the default is always offered) | restart |  |
 | `drishti.var.es-confidences` | list | `[0.95, 0.975, 0.99]` |  | server (each node its own) | the ES confidences offered the same way (es-confidence is always offered) | restart |  |
 | `drishti.var.ten-day-method` | string | `sqrt10` | `DRISHTI_VAR_TEN_DAY_METHOD` | server (each node its own) | 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days) | restart |  |
-| `drishti.var.stress.enabled` | boolean | `true` | `DRISHTI_VAR_STRESS_ENABLED` | server (each node its own) | offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart) | restart |  |
-| `drishti.var.stress.id-prefix` | string | `HS-STRESS-` |  | server (each node its own) | a scenario set is the stress set when its SET\_TYPE is STRESS, or (no SET\_TYPE) its id starts with this | restart |  |
-| `drishti.var.stress.average-weeks` | integer | `12` |  | server (each node its own) | the stressed VaR average over the official records: this many weeks to the date | restart |  |
-| `drishti.var.stress-window.enabled` | boolean | `true` | `DRISHTI_VAR_STRESS_WINDOW_ENABLED` | server (each node its own) | the tool and its API (off: refused in words) | restart |  |
-| `drishti.var.stress-window.kind` | string | `pnl-history` |  | server (each node its own) | the kind of the long-history P&amp;L rows (one per hierarchy node and date) | restart |  |
-| `drishti.var.stress-window.length` | integer | `250` |  | server (each node its own) | the days of a window (about 12 months); a request may ask for another (at least 20) | restart |  |
-| `drishti.var.stress-window.top` | integer | `5` |  | server (each node its own) | the candidate windows listed, none overlapping another | restart |  |
-| `drishti.var.stress-window.alert-threshold` | number | `0.05` |  | server (each node its own) | alert when the worst window's stressed VaR exceeds the current window's by more than this (5%) | restart |  |
 | `drishti.var.scenario-window` | string | `all` | `DRISHTI_VAR_SCENARIO_WINDOW` | server (each node its own) | all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20) | restart |  |
 | `drishti.var.rank-rule` | string | `kth-worst` |  | server (each node its own) | kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated | restart |  |
 | `drishti.var.component-window` | integer | `5` |  | server (each node its own) | component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR | restart |  |
@@ -3737,17 +3734,8 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.refusal-ttl-seconds` | integer | `300` |  | server (each node its own) | a date refused for room (capacity, disk) is remembered this long: asked again, 503 at once with Retry-After, no lake read; forgotten sooner when room is freed (0: not remembered) | restart |  |
 | `drishti.var.open-heap-mb` | integer | `0` | `DRISHTI_VAR_OPEN_HEAP_MB` | server (each node its own) | the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave | restart |  |
 | `drishti.var.fiscal-year-end` | string | empty | `DRISHTI_FISCAL_YEAR_END` | server (each node its own) | the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off) | restart |  |
-| `drishti.var.pinned.month-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | each month's last business day (for example back: 13) | restart |  |
-| `drishti.var.pinned.quarter-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | March, June, September, December (for example back: 8) | restart |  |
-| `drishti.var.pinned.year-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | December (for example back: 7) | restart |  |
-| `drishti.var.pinned.fiscal-year-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | the fiscal year's last business day (needs fiscal-year-end) | restart |  |
-| `drishti.var.pinned.stress-window` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | 1: the first and last dates of the stress window in use (known once stressed VaR is asked) | restart |  |
-| `drishti.var.pinned.dates` | list | `[]` |  | server (each node its own) | any dates the bank names (yyyy-MM-dd: a crisis day, an audit date) | restart |  |
-| `drishti.var.pinned.dates-keep` | string | `disk` |  | server (each node its own) | how the named dates are kept: disk or memory | restart |  |
 | `drishti.var.view-cache-mb` | integer | `64` |  | server (each node its own) | most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date | restart |  |
 | `drishti.var.load-threads` | integer | `2` |  | server (each node its own) | threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool | restart |  |
-| `drishti.var.read.threads` | integer | `0` | `DRISHTI_VAR_READ_THREADS` | server (each node its own) | files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread) | restart |  |
-| `drishti.var.read.buffer-mb` | integer | `64` |  | server (each node its own) | most decoded rows waiting for one load, in MB (never above a thirty-second of the heap) | restart |  |
 | `drishti.var.version-check` | duration | `30s` | `DRISHTI_VAR_VERSION_CHECK` | server (each node its own) | an open date compares its lake version this often on a request; moved: reloaded in the background (0: off) | restart |  |
 | `drishti.var.history-days` | integer | `250` |  | server (each node its own) | history and backtest window | restart |  |
 | `drishti.var.component-scale-to-var` | boolean | `true` |  | server (each node its own) | components scaled to add up to the VaR exactly (false: to the smoothed VaR) | restart |  |
@@ -3756,7 +3744,58 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.histogram-bins` | integer | `42` |  | server (each node its own) | bins of the P&amp;L distribution sent to the screen | restart |  |
 | `drishti.var.max-parts` | integer | `5000` |  | server (each node its own) | most rows a contribution table lists (more: the largest by gross size, and said); totals are over all | restart |  |
 | `drishti.var.path-page` | integer | `60` |  | server (each node its own) | rows of the ranked P&amp;L path per page | restart |  |
+| `drishti.var.currencies` | string | `USD,EUR,CAD,JPY,GBP` | `DRISHTI_VAR_CURRENCIES` | server (each node its own) | reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask | restart |  |
+| `drishti.var.currency-retention-dates` | integer | `5` | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | server (each node its own) | newest business dates whose listed currencies are built ahead and kept on disk | restart |  |
+| `drishti.var.root-name` | string | empty | `DRISHTI_VAR_ROOT_NAME` | server (each node its own) | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME | restart |  |
+| `drishti.var.access` | map | `{}` |  | server (each node its own) | per role, per node: positions \| aggregate (drishti.var.access.&lt;role&gt;\[MGMT~DESK-RATES]=aggregate) | restart |  |
+
+#### `drishti.var.stress`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.stress.enabled` | boolean | `true` | `DRISHTI_VAR_STRESS_ENABLED` | server (each node its own) | offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart) | restart |  |
+| `drishti.var.stress.id-prefix` | string | `HS-STRESS-` |  | server (each node its own) | a scenario set is the stress set when its SET\_TYPE is STRESS, or (no SET\_TYPE) its id starts with this | restart |  |
+| `drishti.var.stress.average-weeks` | integer | `12` |  | server (each node its own) | the stressed VaR average over the official records: this many weeks to the date | restart |  |
+
+#### `drishti.var.stress-window`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.stress-window.enabled` | boolean | `true` | `DRISHTI_VAR_STRESS_WINDOW_ENABLED` | server (each node its own) | the tool and its API (off: refused in words) | restart |  |
+| `drishti.var.stress-window.kind` | string | `pnl-history` |  | server (each node its own) | the kind of the long-history P&amp;L rows (one per hierarchy node and date) | restart |  |
+| `drishti.var.stress-window.length` | integer | `250` |  | server (each node its own) | the days of a window (about 12 months); a request may ask for another (at least 20) | restart |  |
+| `drishti.var.stress-window.top` | integer | `5` |  | server (each node its own) | the candidate windows listed, none overlapping another | restart |  |
+| `drishti.var.stress-window.alert-threshold` | number | `0.05` |  | server (each node its own) | alert when the worst window's stressed VaR exceeds the current window's by more than this (5%) | restart |  |
+
+#### `drishti.var.pinned`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.pinned.month-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | each month's last business day (for example back: 13) | restart |  |
+| `drishti.var.pinned.quarter-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | March, June, September, December (for example back: 8) | restart |  |
+| `drishti.var.pinned.year-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | December (for example back: 7) | restart |  |
+| `drishti.var.pinned.fiscal-year-end` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | the fiscal year's last business day (needs fiscal-year-end) | restart |  |
+| `drishti.var.pinned.stress-window` | map | `{ back: 0, keep: disk }` |  | server (each node its own) | 1: the first and last dates of the stress window in use (known once stressed VaR is asked) | restart |  |
+| `drishti.var.pinned.dates` | list | `[]` |  | server (each node its own) | any dates the bank names (yyyy-MM-dd: a crisis day, an audit date) | restart |  |
+| `drishti.var.pinned.dates-keep` | string | `disk` |  | server (each node its own) | how the named dates are kept: disk or memory | restart |  |
+
+#### `drishti.var.read`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.read.threads` | integer | `0` | `DRISHTI_VAR_READ_THREADS` | server (each node its own) | files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread) | restart |  |
+| `drishti.var.read.buffer-mb` | integer | `64` |  | server (each node its own) | most decoded rows waiting for one load, in MB (never above a thirty-second of the heap) | restart |  |
+
+#### `drishti.var.smat`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.smat.max-days` | integer | `60` | `DRISHTI_VAR_SMAT_MAX_DAYS` | server (each node its own) | the most business dates a scenario matrix (SMAT &lt;id&gt; N, GET /api/v1/var/matrix) reads | restart |  |
+
+#### `drishti.var.playground`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.playground.enabled` | boolean | `true` | `DRISHTI_VAR_PLAYGROUND_ENABLED` | server (each node its own) | the screen, the command and the export | restart |  |
 | `drishti.var.playground.max-positions` | integer | `500` |  | server (each node its own) | positions the screen shows as their own columns (the largest by \|component VaR\|; the rest in Rest of scope); at most 500, above is refused at start | restart |  |
 | `drishti.var.playground.incremental-positions` | integer | `50` |  | server (each node its own) | positions that get incremental VaR (the largest by \|component VaR\|): each needs its own re-ranked column | restart |  |
@@ -3765,6 +3804,11 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.playground.export-choices` | list | `[100, 500, 1000, 10000, 0]` |  | server (each node its own) | the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope | restart |  |
 | `drishti.var.playground.export-default` | integer | `500` |  | server (each node its own) | the choice selected first | restart |  |
 | `drishti.var.playground.export-max-cells` | integer | `20000000` | `DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS` | server (each node its own) | the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words | restart |  |
+
+#### `drishti.var.explain`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.explain.enabled` | boolean | `true` | `DRISHTI_VAR_EXPLAIN_ENABLED` | server (each node its own) | the tab, the command, the API and the workbook | restart |  |
 | `drishti.var.explain.order` | list | `[restatement, hierarchy, trades-out, window, market, trades-in]` |  | server (each node its own) | the causes in sequence, each a full VaR state; restatement and trades-out before market, trades-in after, window next to market | restart |  |
 | `drishti.var.explain.window-lines` | string | `two` |  | server (each node its own) | two (oldest scenario dropped, newest added) or one (one window-roll line) | restart |  |
@@ -3774,18 +3818,35 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.explain.cache-minutes` | integer | `10` |  | server (each node its own) | answers kept this long, never stored | restart |  |
 | `drishti.var.explain.cache-mb` | integer | `32` |  | server (each node its own) | most memory the kept answers take (weighed in bytes) | restart |  |
 | `drishti.var.explain.matrix-max` | integer | `60` |  | server (each node its own) | most child nodes the Matrix view explains | restart |  |
-| `drishti.var.currencies` | string | `USD,EUR,CAD,JPY,GBP` | `DRISHTI_VAR_CURRENCIES` | server (each node its own) | reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask | restart |  |
-| `drishti.var.currency-retention-dates` | integer | `5` | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | server (each node its own) | newest business dates whose listed currencies are built ahead and kept on disk | restart |  |
+
+#### `drishti.var.intraday`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.intraday.kafka.window` | duration | `5m` | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | server (each node its own) | everything received in a window: one intraday batch in the lake, applied | restart |  |
 | `drishti.var.intraday.kafka.max-trades` | integer | `500` | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | server (each node its own) | a window applied earlier once this many trades wait | restart |  |
-| `drishti.var.root-name` | string | empty | `DRISHTI_VAR_ROOT_NAME` | server (each node its own) | the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME | restart |  |
+
+#### `drishti.var.sharding`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.sharding.release-after-seconds` | integer | `900` |  | server (each node its own) | a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released | restart |  |
+
+#### `drishti.var.tier`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.tier.mode` | string | `mapped` | `DRISHTI_VAR_TIER` | server (each node its own) | mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap | restart |  |
 | `drishti.var.tier.dir` | string | `./data/var/hot` | `DRISHTI_VAR_HOT_DIR` | server (each node its own) | one folder per business date; never under the repository | restart |  |
 | `drishti.var.tier.disk-dates` | integer | `60` |  | server (each node its own) | hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read | restart |  |
 | `drishti.var.tier.max-disk-gb` | integer | `0` | `DRISHTI_VAR_MAX_DISK_GB` | server (each node its own) | most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go | restart |  |
 | `drishti.var.tier.keep-on-shutdown` | boolean | `false` | `DRISHTI_VAR_KEEP_HOT_FILES` | server (each node its own) | false: deleted at shutdown (and any left over at start); the server images set true (PO-10) | restart |  |
 | `drishti.var.tier.close-grace-seconds` | integer | `60` |  | server (each node its own) | an evicted date stays mapped this long for the requests still reading it | restart |  |
+
+#### `drishti.var.kinds`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.kinds.vector` | string | `pnl-vector` |  | server (each node its own) | the kind of the stored P&amp;L vectors | restart |  |
 | `drishti.var.kinds.position` | string | `position` |  | server (each node its own) | the kind the engine's derived positions are served as (the var-positions connector) | restart |  |
 | `drishti.var.kinds.hierarchy` | string | `risk-hierarchy` |  | server (each node its own) | the kind of the risk hierarchies | restart |  |
@@ -3796,9 +3857,18 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.kinds.fx-spot` | string | `fx-spot` |  | server (each node its own) | the FX history scenario rates are derived from when not supplied (the market-data pack's) | restart |  |
 | `drishti.var.kinds.limit` | string | `var-limit` |  | server (each node its own) | the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it | restart |  |
 | `drishti.var.kinds.valuation` | string | `trade-valuation` |  | server (each node its own) | the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER\_ID) | restart |  |
-| `drishti.var.access` | map | `{}` |  | server (each node its own) | per role, per node: positions \| aggregate (drishti.var.access.&lt;role&gt;\[MGMT~DESK-RATES]=aggregate) | restart |  |
+
+#### `drishti.var.positions`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.positions.live-statuses` | list | `[NEW, VALIDATED, AMENDED]` |  | server (each node its own) | trade statuses that count on their date (a row with no status counts) | restart |  |
 | `drishti.var.positions.rules` | list | `[]` |  | server (each node its own) | first match wins: {name, groups: \[PRODUCT\_GROUP...], types: \[PRODUCT\_TYPE...], key: \[SECURITY\_ID, ISIN...]}; none: one position per trade | restart |  |
+
+#### `drishti.var.official`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.var.official.enabled` | boolean | `true` | `DRISHTI_VAR_OFFICIAL` | server (each node its own) | capture every node of every hierarchy when a date's inputs are complete (after the data-load signal) | restart |  |
 | `drishti.var.official.publish` | boolean | `true` |  | server (each node its own) | also append them to &lt;root&gt;/risk-results/var-official (append-only) for other systems | restart |  |
 | `drishti.var.official.root` | string | `./data/delta` | `DRISHTI_DELTA_ROOT` | server (each node its own) | a folder or s3://bucket/prefix | restart |  |
@@ -3808,6 +3878,11 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.var.official.on-start` | boolean | `true` |  | server (each node its own) | at start, capture the newest date when it has no official record yet | restart |  |
 | `drishti.var.official.currencies` | list | `[USD]` |  | server (each node its own) | reporting currencies captured officially (USD always, and the only one published); e.g. \[USD, EUR] | restart |  |
 | `drishti.var.official.jsonl` | boolean | `true` |  | server (each node its own) | also write each published date as JSON Lines: &lt;root&gt;/risk-results/jsonl/var-official/&lt;date&gt;/ | restart |  |
+
+#### `drishti.regulatory`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.regulatory.fiscal-year-end` | string | `10-31` | `DRISHTI_FISCAL_YEAR_END` | server (each node its own) | the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31 | restart |  |
 | `drishti.regulatory.pnl-kind` | string | `desk-pnl` |  | server (each node its own) | the kind with each desk's actual and hypothetical P&amp;L per business date (the backtest's input) | restart |  |
 | `drishti.regulatory.average-days` | integer | `60` |  | server (each node its own) | the business days of the VaR average the capital formula takes | restart |  |
@@ -3820,12 +3895,17 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.regulatory.backtesting.multipliers` | list | `[3.00, 3.00, 3.00, 3.00, 3.00, 3.40, 3.50, 3.65, 3.75, 3.85, 4.00]` |  | server (each node its own) | the capital multiplier by exceptions, the last for that many or more (US 12 CFR 217.204) | restart |  |
 | `drishti.regulatory.backtesting.count` | string | `actual` |  | server (each node its own) | the count the zone and multiplier read: actual (the US rule), hypothetical, or higher (of the two) | restart |  |
 
-#### Exposure (`exposure`): `exposure.yaml`
+#### `drishti.engines.exposure`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.exposure.enabled` | boolean | `true` | `DRISHTI_EXPOSURE_ENABLED` | server (each node its own) | run the exposure engine on this node: /api/v1/exposure, EXP, the exposure-engine connector (live) | live |  |
 | `drishti.engines.exposure.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.ccr.exposure`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.ccr.exposure.confidence` | list | `[0.95, 0.99]` |  | server (each node its own) | PFE confidences computed for every answer (any q in (0.5, 1) may be asked) | restart |  |
 | `drishti.ccr.exposure.limit-confidence` | number | `0.95` |  | server (each node its own) | the PFE credit limits are set on; the default q of an answer | restart |  |
 | `drishti.ccr.exposure.rank-rule` | string | `kth` |  | server (each node its own) | kth (the ceil(P q)-th smallest exposure) or interpolated | restart |  |
@@ -3883,22 +3963,32 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.ccr.exposure.retention.statistics-years` | integer | `7` |  | server (each node its own) | the official records (statistics per set, counterparty, group and node): every date, seven years | restart |  |
 | `drishti.ccr.exposure.retention.trade-contributions-years` | integer | `7` |  | server (each node its own) | every trade's EE contributions per primary date: every date, seven years | restart |  |
 
-#### Sensitivities (`sensitivities`): `sensitivities.yaml`
+#### `drishti.engines.sensitivities`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.sensitivities.enabled` | boolean | `true` | `DRISHTI_SENSITIVITIES_ENABLED` | server (each node its own) | run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live) | live |  |
 | `drishti.engines.sensitivities.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.sensitivities`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.sensitivities.sensitivity-kind` | string | `position-sensitivity` |  | server (each node its own) | the position sensitivities (SENS) | restart |  |
 | `drishti.sensitivities.factor-kind` | string | `risk-factor` |  | server (each node its own) | the factor dictionary (RFAC) | restart |  |
 | `drishti.sensitivities.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's sensitivities stay in memory after they are read | restart |  |
 
-#### FRTB-SA (`frtb-sa`): `frtb-sa.yaml`
+#### `drishti.engines.frtb-sa`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.frtb-sa.enabled` | boolean | `true` | `DRISHTI_FRTB_ENABLED` | server (each node its own) | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) | live |  |
 | `drishti.engines.frtb-sa.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.frtb`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.frtb.parameters-dir` | string | `./config/packs/market-risk/capital` | `DRISHTI_FRTB_PARAMETERS` | server (each node its own) | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) | restart |  |
 | `drishti.frtb.default-risk-kind` | string | `default-risk` |  | server (each node its own) | the DRC inputs; none served: "DRC not computed", never 0 | restart |  |
 | `drishti.frtb.residual-risk-kind` | string | `residual-risk` |  | server (each node its own) | the RRAO inputs; none served: derived from the positions' product types and notionals | restart |  |
@@ -3907,12 +3997,17 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.frtb.recipes-dir` | string | `./data/frtb/recipes` |  | server (each node its own) | saved playground recipes (PLAY FRTB RUN &lt;id&gt;) | restart |  |
 | `drishti.frtb.playground-template` | string | `""` |  | server (each node its own) | a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/ | restart |  |
 
-#### SIMM (`simm`): `simm.yaml`
+#### `drishti.engines.simm`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.simm.enabled` | boolean | `true` | `DRISHTI_SIMM_ENABLED` | server (each node its own) | run SIMM on this node: /api/v1/simm, SIMM, PLAY SIMM; needs sensitivities (live) | live |  |
 | `drishti.engines.simm.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.simm`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.simm.parameters-dir` | string | `./config/simm` | `DRISHTI_SIMM_PARAMETERS` | server (each node its own) | the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed) | restart |  |
 | `drishti.simm.default-version` | string | `""` |  | server (each node its own) | the version for a CSA naming none and for analytic scopes; blank: the installed one with the latest effective date | restart |  |
 | `drishti.simm.netting-set-kind` | string | `netting-set` |  | server (each node its own) | the netting sets and their trades | restart |  |
@@ -3926,40 +4021,45 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.simm.cache-minutes` | integer | `10` |  | server (each node its own) | how long a date's netting sets and CSAs stay in memory after they are read | restart |  |
 | `drishti.simm.playground-template` | string | `""` |  | server (each node its own) | a bank's workbook template folder; blank: the built-in playground/simm/template/ | restart |  |
 
-#### SA-CCR (`sa-ccr`): `sa-ccr.yaml`
+#### `drishti.engines.sa-ccr`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.sa-ccr.enabled` | boolean | `false` | `DRISHTI_SACCR_ENABLED` | server (each node its own) | run SA-CCR exposure at default on this node once it is installed (its settings will live under drishti.ccr.saccr.\*) | restart |  |
 | `drishti.engines.sa-ccr.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
 
-#### FVA (`fva`): `fva.yaml`
+#### `drishti.engines.fva`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.fva.enabled` | boolean | `false` | `DRISHTI_FVA_ENABLED` | server (each node its own) | run funding cost and benefit (FVA) on this node once it is installed (its settings will live under drishti.ccr.fva.\*) | restart |  |
 | `drishti.engines.fva.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
 
-#### MR cube (`mr-cube`): `mr-cube.yaml`
+#### `drishti.engines.mr-cube`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.mr-cube.enabled` | boolean | `false` | `DRISHTI_MR_CUBE_ENABLED` | server (each node its own) | run the market-risk cube on this node once it is installed (its settings will live under drishti.cube.mr.\*) | restart |  |
 | `drishti.engines.mr-cube.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
 
-#### CCR cube (`ccr-cube`): `ccr-cube.yaml`
+#### `drishti.engines.ccr-cube`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.ccr-cube.enabled` | boolean | `false` | `DRISHTI_CCR_CUBE_ENABLED` | server (each node its own) | run the counterparty cube on this node once it is installed (its settings will live under drishti.cube.ccr.\*) | restart |  |
 | `drishti.engines.ccr-cube.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
 
-#### In-memory lake (`memory-lake`): `memory-lake.yaml`
+#### `drishti.engines.memory-lake`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `drishti.engines.memory-lake.enabled` | boolean | `false` | `DRISHTI_MEMORY_LAKE_ENABLED` | server (each node its own) | run the in-memory lake on this node; off as shipped: turning it on needs a restart (the stores' caps set the direct-memory limit at start) | restart |  |
 | `drishti.engines.memory-lake.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.lake`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
 | `drishti.lake.memory.stores` | map | `{}` |  | server (each node its own) | memory stores by name (none by default): &lt;name&gt;: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), format (delta), idle-trim-minutes (10) }; their caps add to -XX:MaxDirectMemorySize | restart |  |
 | `drishti.lake.memory.tables` | list | `[]` |  | server (each node its own) | the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd) | restart |  |
 | `drishti.lake.memory.history-keep` | integer | `50` |  | server (each node its own) | the runs kept per table for Admin -&gt; Lakes and drishti.py lake memory jobs (in memory) | restart |  |

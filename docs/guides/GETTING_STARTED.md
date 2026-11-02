@@ -863,8 +863,11 @@ More in [TROUBLESHOOTING.md](TROUBLESHOOTING.md).
 ### The server
 
 Spring Boot reads `application.yaml` from inside the jar, then `./application.local.yaml` (the bundled file imports it with
-`optional:`), and you can add more. Drishti's own `spring.config.import` entries are exactly two: that local file and the packs
-overlay `<data>/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server writes it, do not edit it).
+`optional:`), and you can add more. Drishti's own `spring.config.import` entries are the compute engines' files, then that local file,
+then the packs overlay `<data>/packs/added.yaml` (`DRISHTI_PACKS_OVERLAY` moves it; the server writes it, do not edit it). The engines'
+files are `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), one per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM,
+the in-memory lake, ...) with its switch and its settings; each is imported twice, the jar's copy and then yours, and the local file
+still wins over both ([OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)).
 
 | You want | Do | Command |
 |---|---|---|

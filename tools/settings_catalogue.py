@@ -92,7 +92,7 @@ AREAS = [
          "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
          "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
-         "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#20-compute-engines-on-or-off)). "
+         "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). "
          "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
     Area("console", "The console: `application.yaml`",
          "`drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with "
@@ -194,8 +194,8 @@ def _collapsed(entries: list[S.Entry], prefixes: tuple[str, ...]) -> list[S.Entr
 
 def _group_of(area: str, key: str) -> str:
     parts = key.split(".")
-    if area == "server" and parts[0] == "drishti" and len(parts) > 2:
-        if parts[1] in ("bi", "security", "ccr", "sources", "collab", "packs", "var", "explain") and len(parts) > 3:
+    if area in ("server", "engines") and parts[0] == "drishti" and len(parts) > 2:
+        if parts[1] in ("bi", "security", "ccr", "sources", "collab", "packs", "var", "explain", "engines") and len(parts) > 3:
             return ".".join(parts[:3])
         return ".".join(parts[:2])
     if area == "console" and parts[0] in ("bi", "ui") and len(parts) > 2:
@@ -382,7 +382,7 @@ def engine_rows() -> tuple[list[Row], list[str]]:
             problems.append(f"config/engines/{e['file']} differs from its jar copy drishti-server/src/main/resources/engines/{e['file']}")
         for k in sorted(_flat_keys(yaml.safe_load(f.read_text(encoding="utf-8"))) & app_keys):
             problems.append(f"{k} is in both application.yaml and config/engines/{e['file']}: an engine's key lives in its file only")
-        rows += yaml_rows("engines", [f], "server (each node its own)", "restart", f"{e['title']} (`{e['id']}`): `{e['file']}`",
+        rows += yaml_rows("engines", [f], "server (each node its own)", "restart", None,   # grouped by key, as the server area (stable anchors)
                           collapse=COLLAPSE["server"])
     for e in catalogue:
         for alias in e.get("aliases") or []:
