@@ -76,6 +76,7 @@ public final class PivotCore {
     private final StateCache cache;
     private volatile Settings settings;
     private volatile Admission admission;
+    private volatile Functions.Resolver resolver;
     private final Map<String, Map<String, Object>> provenance;
 
     public PivotCore(List<PivotProvider> providers, StateCache cache, Settings settings) {
@@ -93,6 +94,11 @@ public final class PivotCore {
 
     public void admission(Admission a) {
         this.admission = a;
+    }
+
+    /** Custom functions (PIVOT_ENGINE.md section 8): the host's resolver of {@code fn:owner/name@v(...)} calls (null: none). */
+    public void functions(Functions.Resolver r) {
+        this.resolver = r;
     }
 
     public Settings settings() {
@@ -202,7 +208,7 @@ public final class PivotCore {
             this.catalogue = provider.catalogue(viewer, view.source(), view.date());
             catalogue.fields().forEach(f -> types.put(f.name(), f.type()));
             for (PivotView.Value v : view.values()) {
-                FunctionCall f = Functions.parse(v.measure(), v.label(), provider);
+                FunctionCall f = Functions.parse(v.measure(), v.label(), provider, resolver, viewer);
                 for (String in : f.inputs()) {
                     field(in);
                 }
@@ -392,6 +398,10 @@ public final class PivotCore {
                 }
             }
             return next;
+        }
+
+        boolean matchesAt(CellKey k, Map<String, String> at) {
+            return matches(k, at);
         }
 
         private boolean matches(CellKey k, Map<String, String> at) {
@@ -633,6 +643,44 @@ public final class PivotCore {
         out.put("values", PivotAnswer.values(this, c, cell).get("values"));
         out.put("scope", cell.scope);
         return out;
+    }
+
+    /**
+     * The merged states of every cell of one set (explain and what-if, PIVOT_ENGINE.md section 10 items 1 and 3): the view's functions, and
+     * per cell key its members and one state per function, made by the provider from the cells' own rows (through the cache). An extension
+     * point for the module's explain and what-if; the view's own answer is unchanged.
+     *
+     * @param functions the view's functions, in its value order
+     * @param states cell key to its states
+     * @param members cell key to its members
+     * @param date the business date read
+     */
+    public record SetStates(List<FunctionCall> functions, Map<CellKey, Object[]> states, Map<CellKey, Long> members, String date) {}
+
+    /** The states of the cells of {@code set} for the view's values, filters and date. */
+    public SetStates states(Viewer v, PivotView view, CellSet set) {
+        Computation c = new Computation(v, view);
+        set.grouping().forEach(k -> c.dim(Dim.parse(k)));
+        set.at().keySet().forEach(k -> c.dim(Dim.parse(k)));
+        c.evaluate(List.of(set));
+        Map<CellKey, Object[]> states = new TreeMap<>();
+        Map<CellKey, Long> members = new TreeMap<>();
+        java.util.Set<String> shape = new java.util.TreeSet<>(set.grouping());
+        shape.addAll(set.marks().keySet());
+        for (Map.Entry<CellKey, Cell> e : c.cells.entrySet()) {
+            CellKey k = e.getKey();
+            if (!k.coords().keySet().equals(shape) || !c.matchesAt(k, set.at())) {
+                continue;
+            }
+            states.put(k, e.getValue().states.clone());
+            members.put(k, e.getValue().members);
+        }
+        return new SetStates(List.copyOf(c.functions), states, members, c.catalogue.date());
+    }
+
+    /** The resolver of custom functions (null: none). */
+    public Functions.Resolver functions() {
+        return resolver;
     }
 
     /** A cell's member rows (drill-through), paged, as the person may see them. */

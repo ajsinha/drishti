@@ -47,13 +47,16 @@ public final class FormulaFunction implements AggFunction<Object> {
     private final Kind kind;
     private final boolean plainSum;
 
-    private FormulaFunction(String name, String text, FormulaAst tree) {
+    private FormulaFunction(String name, String text, FormulaAst tree, List<String> declared) {
         this.name = name;
         this.text = text;
         this.tree = tree;
-        List<String> fs = new ArrayList<>();
+        List<String> fs = new ArrayList<>(declared == null ? List.of() : declared);
         FormulaAst.walk(tree, n -> {
             if (n instanceof FormulaAst.Field f && !fs.contains(f.name())) {
+                if (declared != null) {
+                    throw new FormulaParser.FormulaException(f.name() + " is not one of the function's inputs " + declared, -1);
+                }
                 fs.add(f.name());
             }
         });
@@ -87,9 +90,17 @@ public final class FormulaFunction implements AggFunction<Object> {
 
     /** The formula as a function named {@code name} (a custom function's name; null: the formula's own text). */
     public static FormulaFunction of(String name, String text) {
+        return of(name, text, null);
+    }
+
+    /**
+     * The formula as a function whose inputs are {@code declared}, in that order (a custom function's named inputs, bound by position to
+     * the fields a view passes); null: the formula's own fields, in the order they appear.
+     */
+    public static FormulaFunction of(String name, String text, List<String> declared) {
         FormulaAst t = FormulaParser.parse(text);
         String canon = text.strip().replaceAll("\\s+", " ");
-        return new FormulaFunction(name == null ? canon : name, canon, t);
+        return new FormulaFunction(name == null ? canon : name, canon, t, declared);
     }
 
     private Part part(FormulaAst.Agg a) {

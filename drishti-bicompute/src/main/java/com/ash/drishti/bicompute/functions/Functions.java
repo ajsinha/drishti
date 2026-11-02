@@ -86,6 +86,42 @@ public final class Functions {
      * built-ins; refused in words otherwise ({@code DRS-5701}). {@code label}: the column header (null: the text).
      */
     public static FunctionCall parse(String text, String label, PivotProvider provider) {
+        return parse(text, label, provider, null, null);
+    }
+
+    /**
+     * Finds the functions a view names beyond the built-ins and the provider's natives (PIVOT_ENGINE.md section 8): custom functions
+     * ({@code fn:owner/name@v(FIELD, ...)}), resolved for the reader. The host sets one on the core.
+     */
+    @FunctionalInterface
+    public interface Resolver {
+        /** The call as a function call for this reader, or empty when the text is not one of its functions. */
+        Optional<FunctionCall> resolve(com.ash.drishti.bicompute.spi.Viewer v, String text, String label);
+    }
+
+    /**
+     * As {@link #parse(String, String, PivotProvider)}, with custom functions ({@code resolver}) and formulas of the built-ins
+     * ({@code sum(PNL) / sum(abs(PNL))}, DEL's syntax; section 8.2) on a provider that evaluates built-ins.
+     */
+    public static FunctionCall parse(String text, String label, PivotProvider provider, Resolver resolver, com.ash.drishti.bicompute.spi.Viewer v) {
+        if (resolver != null && text != null && text.strip().startsWith("fn:")) {
+            if (!provider.capabilities().builtIns()) {
+                throw PivotView.bad(text + ": custom functions run over a source's rows; " + provider.id() + "'s measures are its own");
+            }
+            return resolver.resolve(v, text, label).orElseThrow(() -> PivotView.bad("no custom function " + text.strip()));
+        }
+        try {
+            return simple(text, label, provider);
+        } catch (com.ash.drishti.common.DrishtiException e) {
+            if (!provider.capabilities().builtIns() || text == null || !com.ash.drishti.bicompute.formula.FormulaParser.isFormula(text)) {
+                throw e;
+            }
+            com.ash.drishti.bicompute.formula.FormulaFunction f = com.ash.drishti.bicompute.formula.FormulaFunction.of(text);
+            return new FunctionCall(f.text(), label == null || label.isBlank() ? f.text() : label.strip(), f, f.fields());
+        }
+    }
+
+    private static FunctionCall simple(String text, String label, PivotProvider provider) {
         Matcher m = CALL.matcher(text == null ? "" : text);
         if (!m.matches()) {
             throw PivotView.bad("'" + text + "' is not a measure: write a function and its fields, sum(NOTIONAL_USD), count(), var()");
