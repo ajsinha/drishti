@@ -85,27 +85,23 @@ def contributions(c: Ctx):
 @shot("06-basket.jpg")
 def basket(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-RATES")
-    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
     c.page.reload()
     painted(c, "DESK:DESK-RATES")
     c.until("document.querySelectorAll('.vx-tree .vx-row[data-scope]').length > 5")
     c.page.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-RATES"] [data-vx-add]').click(force=True)
     for text in ("pf usd", "-book-rates-1"):
+        n = c.page.evaluate("window.VarBasket.parts()")
         c.page.locator("[data-vb-find]").fill("")
         c.page.locator("[data-vb-find]").type(text, delay=20)
         c.until("document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
         c.page.locator("[data-vb-find]").press("Enter")
-        c.page.wait_for_timeout(300)
-    c.until("document.querySelectorAll('[data-vb-chip]').length === 3")
-    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.scope === window.VarBasket.compose()"
+        c.until("window.VarBasket.parts() > %d" % n)
+    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.VarBasket.signature()"
             " && !l.classList.contains('computing'); })()", 60)
-    c.page.locator("[data-vb-open]").click()
-    c.until("window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'"
-            " && document.querySelector('[data-var]').dataset.painted === window.VarBasket.compose()", 60)
-    tab(c, "contrib")
-    c.page.wait_for_timeout(800)
-    c.save("06-basket.jpg")
-    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
+    c.page.wait_for_timeout(600)
+    c.save("06-basket.jpg", locator="[data-var-basket]")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket2')")
 
 
 @shot("07-capture.jpg")
