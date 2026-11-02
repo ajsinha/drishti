@@ -303,6 +303,8 @@ def _record(pos: Position, ident: str, grain: str, trades: list[dict], els: list
                 "LIMIT_LETTER": t0.get("LIMIT_LETTER"), "FRTB_DESK": "FD-" + str(t0.get("DESK") or "").removeprefix("DESK-"),
                 "PRODUCT_GROUP": pos.group, "PRODUCT_TYPE": pos.ptype, "TRADE_STATUS": t0.get("TRADE_STATUS"),
                 "MATURITY_DATE": t0.get("MATURITY_DATE"), "CURRENCY": pos.ccy, "SENSITIVITIES": els})
+    if any(e.get("MEASURE") == "VEGA" for e in els):
+        rec["VOL_CONVENTION"] = "LOGNORMAL"                 # decision 3: the demo's pricer delivers lognormal vegas
     return rec
 
 

@@ -90,7 +90,8 @@ A real record, the most complete of the 8,052 (the one with the most non-empty f
       "SHOCK_SIZE": 0.35
     },
     "… 2 more elements of the same shape"
-  ]
+  ],
+  "VOL_CONVENTION": "LOGNORMAL"
 }
 ```
 
@@ -137,6 +138,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `SENSITIVITIES[].SHOCK_SIZE` | number | optional (filled in 18% of `SENSITIVITIES[]` entries) | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | unit: basis points (rates and spreads) or a fraction of the spot or price | `0.35` |
 | `SENSITIVITIES[].TENOR` | string | optional (filled in 65% of `SENSITIVITIES[]` entries) | The factor's tenor or option expiry (MAR21.8's vertices); empty on a curvature, spot or price factor without one. | — | `"3M"` |
 | `SENSITIVITIES[].IMPLIED_VOL` | number | optional (filled in 12% of `SENSITIVITIES[]` entries) | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). | unit: fraction | `0.32` |
+| `VOL_CONVENTION` | string | optional (filled in 22% of rows) | How the record's rates vegas are delivered (decision 3): LOGNORMAL (the default, absent means it) or NORMAL (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points); one source declares one convention. | one of `LOGNORMAL`, `NORMAL` | `"LOGNORMAL"` |
 
 ## Fields in other rows
 

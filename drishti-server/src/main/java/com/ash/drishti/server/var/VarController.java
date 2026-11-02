@@ -51,7 +51,7 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/scope/history?scope=                VaR, ES and hypothetical P&amp;L over 250 days, exceptions, traffic light
  *   GET  /api/v1/var/scope/contributions?scope=&amp;by=&amp;scenario=   standalone, component, incremental and marginal VaR of the parts
  *   GET  /api/v1/var/hints?q=&amp;limit=                  the basket tray's type-ahead: type, id, name, trades, standalone VaR
- *   POST /api/v1/var/what-if {scope, items}             a pre-deal what-if: copies of booked trades scaled, before and after (Python)
+ *   POST /api/v1/var/what-if {scope, items}             a pre-deal what-if: copies of booked trades scaled, before and after
  *   GET  /api/v1/var/tree?hierarchy=MGMT                 every node with its figures; the stored portfolios
  *   GET  /api/v1/var/status                              what is loaded, the settings
  *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}, DELETE /api/v1/var/baskets/{name} (your own)
@@ -241,7 +241,7 @@ public class VarController {
         return views.selection().hints(p, q, limit, date(asOf), ccy);
     }
 
-    /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, by the Python VaR engine (503 DRS-5205 when it is not running). */
+    /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, computed by the Java VaR engine (VarWhatIf). */
     @PostMapping("/what-if")
     public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {

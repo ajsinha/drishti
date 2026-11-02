@@ -49,21 +49,6 @@ compute:
       idle-stop: 5m  # a worker idle this long is stopped (down to min)
       timeout: 30s                   # an interactive request's budget
       timeout-batch: 10m  # a batch request's budget
-    var:                             # the Python VaR engine (what-if trades on a scope, the stressed window): docs/guides/VAR_GUIDE.md section 8
-      type: python
-      engines: [drishti_compute.var.whatif:VarWhatIfEngine]
-      environment: system            # standard library only: no package to approve
-      workers:
-        min: 0
-        max: ${DRISHTI_COMPUTE_VAR_WORKERS:4}
-      mode: auto
-      memory: 1GB
-      cpu-seconds: 300
-      recycle-after: 200
-      batch-share: 0.25
-      idle-stop: 5m
-      timeout: 60s
-      timeout-batch: 10m
     exposure:                        # the Python exposure engine (the exact what-if: candidates' paths added to their netting sets): docs/guides/EXPOSURE_GUIDE.md sections 7 and 19.5
       type: python
       engines: [drishti_compute.exposure.whatif:ExposureWhatIfEngine]

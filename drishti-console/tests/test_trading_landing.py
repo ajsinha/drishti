@@ -215,9 +215,11 @@ def test_by_trader_needs_a_role_that_sees_trader_ids():
     assert rows["TRDR-ASHAH"]["pnl"] == 480_000 and rows["TRDR-ASHAH"]["trades"] == 8 and rows["TRDR-KMOREAU"]["trades"] == 3
     assert rows["TRDR-ASHAH"]["var"] == sum(1_000_000 + 100_000 * i for i in (0, 1, 3, 4, 6, 7, 9, 10))
     assert rows["TRDR-ASHAH"]["name"] == "A. Shah" and not t["traderMasked"]
+    asked = [a[3].get("by") for a in b.asked if a[0] == "var" and a[2] == "/scope/contributions"]
+    assert asked == ["attribute:TRADER_ID"]                                               # the server sums; the console only shows rows
     b, me, d = _scope("t.brennan")                                                       # a viewer: masked, the records' counts only
     t = asyncio.run(tl.traders(b, me, d, {}))
-    assert t["traderMasked"] and "masked" in t["note"]
+    assert t["traderMasked"] and "masked" in t["note"] and t["varNote"] is None
     assert all(r["pnl"] is None and r["var"] is None for r in t["rows"]) and {r["recordTrades"] for r in t["rows"]} == {8, 4}
 
 

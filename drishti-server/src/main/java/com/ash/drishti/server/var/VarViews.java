@@ -47,10 +47,12 @@ final class VarViews {
     private static final String ENGINE = "drishti-compute " + ENGINE_VERSION;
     private final VarService svc;
     private final VarSelection selection;
+    private final VarAttributeGroups attributes;
 
     VarViews(VarService svc) {
         this.svc = svc;
         this.selection = new VarSelection(svc);
+        this.attributes = new VarAttributeGroups(svc);
     }
 
     VarService service() {
@@ -521,6 +523,14 @@ final class VarViews {
             List<Part> terms = selection.parts(p, s);                    // already through the answer's lens
             return new Parts(terms, terms.size());
         }
+        if (mode.startsWith(VarAttributeGroups.PREFIX)) {               // every trade in its value's group, never cut (2.9.11)
+            List<Part> groups = new ArrayList<>(attributes.parts(s, mode.substring(VarAttributeGroups.PREFIX.length())));
+            VarLens l = lens(s);
+            if (l.method() != VarLens.Method.NONE) {
+                groups.replaceAll(x -> new Part(x.key(), x.scope(), x.label(), x.kind(), l.apply(x.vector()), x.size(), x.attrs()));
+            }
+            return new Parts(groups, groups.size());
+        }
         return listed(s, b, mode);
     }
 
@@ -530,6 +540,10 @@ final class VarViews {
      */
     String partMode(VarService.Scoped s, String by, Principal p) {
         VarBook b = s.date().book();
+        String column = VarAttributeGroups.column(by);
+        if (column != null) {
+            return VarAttributeGroups.PREFIX + column;                  // the groups of a trade column's values (2.9.11)
+        }
         String mode = by == null || by.isBlank() ? "child" : by.trim().toLowerCase(java.util.Locale.ROOT);
         if (mode.equals("node") && (s.res().node() == null || b.node(s.res().node()).children().isEmpty())) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "by=node lists a node's child nodes; " + s.res().canonical()
@@ -554,7 +568,7 @@ final class VarViews {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "your role sees this scope in aggregate only: no positions or trades");
         }
         if (!List.of("node", "part", "position", "trade", "desk", "book").contains(mode)) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, part, position, trade, desk or book");
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, part, position, trade, desk, book or attribute:<COLUMN>");
         }
         return mode;
     }
@@ -818,6 +832,10 @@ final class VarViews {
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy, VarLens lens) {
         VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         VarBook b = s.date().book();
+        String column = VarAttributeGroups.column(by);
+        if (column != null && attributes.masked(p, column)) {
+            return VarAttributeGroups.maskedAnswer(s, column);          // masked for the caller: no groups, said so
+        }
         Parts ps = partsOf(s, by, p);
         List<Part> parts = ps.list();
         List<VarCalc.Part> cp = parts.stream().map(x -> new VarCalc.Part(x.key(), x.label(), x.kind(), x.vector(), x.size())).toList();
@@ -865,7 +883,11 @@ final class VarViews {
         out.put("canonical", s.res().canonical());
         out.put("currency", s.date().currency());
         out.put("intraday", intradayNote(s.date()));
-        out.put("by", parts.isEmpty() ? null : parts.get(0).kind());
+        out.put("by", column != null ? VarAttributeGroups.KIND : parts.isEmpty() ? null : parts.get(0).kind());
+        if (column != null) {
+            out.put("attribute", column);
+            out.put("masked", false);
+        }
         out.put("lens", lensNote(s));
         out.put("var", round(s.measures().var()));
         out.put("es", round(s.measures().es()));

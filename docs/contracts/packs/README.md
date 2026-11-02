@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-110 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+109 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -101,7 +101,6 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `SENS` | `position-sensitivity` | [market-risk](market-risk.md#sens-position-sensitivities-position-sensitivity) | input | active |  | 1 |
 | `RFAC` | `risk-factor` | [market-risk](market-risk.md#rfac-risk-factor-dictionary-risk-factor) | fundamental | active |  | 1 |
 | `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |
-| `VWIF` | `var-whatif` | [market-risk](market-risk.md#vwif-var-what-if-computed-python-var-whatif) | computed | active |  | 0 |
 | `VOFF` | `var-official` | [market-risk](market-risk.md#voff-var-official-results-published-var-official) | computed | active |  | 0 |
 | `SSPNL` | `stress-scenario-pnl` | [market-risk](market-risk.md#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | computed | active |  | 0 |
 | `TOPIC` | `news-topic` | [news-and-markets](news-and-markets.md#topic-news-topic-news-topic) | fundamental | active |  | 6 |

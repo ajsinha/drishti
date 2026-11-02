@@ -146,9 +146,16 @@ class TradingBackend(FakeBackend):
             return {"scope": scope, "businessDate": "2026-09-30", "var": 8_000_000, "limit": None, "limitUse": None, "confidence": 0.99, "trades": 8,
                     "intraday": {"updates": 2, "trades": 3, "lastAt": "2026-09-30T14:05:00Z"}}
         if method == "GET" and path == "/scope/contributions":
-            if params.get("by") == "trade":
-                return {"rows": [{"key": trade(i, "2026-09-30")["TRADE_ID"], "componentVar": 1_000_000 + 100_000 * i} for i in range(11)],
-                        "truncated": False, "total": 11}
+            if params.get("by") == "attribute:TRADER_ID":            # the server sums each trader's trades (masked without raw)
+                if not self._raw_role(ident):
+                    return {"by": "attribute", "attribute": "TRADER_ID", "masked": True, "rows": [], "var": 15_000_000,
+                            "note": "TRADER_ID is masked for your role: VaR by TRADER_ID needs a role that sees it"}
+                groups: dict = {}
+                for i in range(11):
+                    t = trade(i, "2026-09-30")["TRADER_ID"]
+                    groups[t] = groups.get(t, 0) + 1_000_000 + 100_000 * i
+                return {"by": "attribute", "attribute": "TRADER_ID", "masked": False, "truncated": False, "total": len(groups),
+                        "rows": [{"key": t, "label": t, "kind": "attribute", "componentVar": v} for t, v in groups.items()]}
             return {"rows": [{"label": "USD SOFR swaps 10Y", "scope": "POS:POS-BOOK-RATES-1~MX-20000001", "componentVar": 2_310_000,
                               "marketValue": -42_100_000, "book": "BOOK-RATES-1"},
                              {"label": "USD swaptions 1Yx10Y", "scope": "POS:POS-BOOK-RATES-2~MX-20000002", "componentVar": 710_000,
@@ -172,7 +179,7 @@ class TradingBackend(FakeBackend):
             f = body["items"][0]["factor"]
             after = int(v + 360_000 * f)
             return {"scope": scope, "before": {"var": v}, "after": {"var": after}, "change": {"var": after - v}, "confidence": 0.99, "currency": "USD",
-                    "engine": "var-whatif (Python VaR engine)", "note": "copies"}
+                    "engine": "Java VaR engine (the server)", "note": "copies"}
         raise BackendError(404, "DRS-1001", f"no VaR endpoint {path}")
 
     async def exposure(self, method, path, ident, body=None, raw=False, **params):

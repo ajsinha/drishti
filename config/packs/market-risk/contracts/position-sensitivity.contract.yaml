@@ -358,7 +358,13 @@ validation:
   - POSITION
   - TRADE
 - rule: link
+  field: POSITION_ID
+  kind: position
+- rule: link
   field: TRADE_ID
+  kind: trade
+- rule: link
+  field: TRADE_IDS
   kind: trade
 - rule: enum
   field: RUN_KIND
@@ -380,6 +386,11 @@ validation:
 - rule: link
   field: TT_BOOK
   kind: book
+- rule: enum
+  field: VOL_CONVENTION
+  values:
+  - LOGNORMAL
+  - NORMAL
 - rule: link
   field: SENSITIVITIES[].RISK_FACTOR
   kind: risk-factor

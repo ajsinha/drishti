@@ -39,7 +39,6 @@ kinds:
 - position-sensitivity
 - risk-factor
 - var-result
-- var-whatif
 - var-official
 - stress-scenario-pnl
 commands:
@@ -61,7 +60,6 @@ commands:
   SENS: position-sensitivity
   RFAC: risk-factor
   VRES: var-result
-  VWIF: var-whatif
   VOFF: var-official
   SSPNL: stress-scenario-pnl
   MRSK: pack overview
@@ -76,7 +74,6 @@ depends-on:
   - var-engine
   - var-positions
   - var-results
-  - var-whatif
   plugins:
   - delta
   - derived
@@ -646,16 +643,6 @@ About: VaR of a scope.
 
 No samples ship: documents are read live from its connector `var-engine` (plugin `reactive`).
 
-### `var-whatif`
-
-**VaR what-if (computed, Python)** · mnemonic `VWIF` · read through connector `var-whatif`.
-
-About: VaR what-if.
-
-**Id:** set by its connector (no samples ship).
-
-No samples ship: documents are read live from its connector `var-whatif` (plugin `reactive`).
-
 ### `var-official`
 
 **VaR official results (published)** · mnemonic `VOFF` · read through connector `var-results`.
@@ -698,7 +685,6 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `SENS` | `position-sensitivity` | Position sensitivities (delta, vega, curvature by risk factor) |
 | `RFAC` | `risk-factor` | Risk factor (the factor dictionary: FRTB and SIMM mapping, source names) |
 | `VRES` | `var-result` | VaR of a scope (computed) |
-| `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `VOFF` | `var-official` | VaR official results (published) |
 | `SSPNL` | `stress-scenario-pnl` | Stress P&L of a scenario across desks (derived from the stress results) |
 | `MRSK` | — | The pack's overview: its kinds, how many each holds, an example of each |
@@ -749,7 +735,6 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |
 | `pv-updates` | `var-pv-stream` | `pv-update` | `${DRISHTI_VAR_PV_STREAM:false}` |
 | `var-engine` | `reactive` | `var-result` | `${DRISHTI_VAR_ENABLED:true}` |
-| `var-whatif` | `reactive` | `var-whatif` | `${DRISHTI_VAR_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_KAFKA_BOOTSTRAP`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_MR_DERIVED_ENABLED`, `DRISHTI_VAR_ENABLED`, `DRISHTI_VAR_PV_STREAM`, `DRISHTI_VAR_PV_TOPIC`.
 

@@ -616,11 +616,43 @@ class VarApiTest {
         assertThat(none.at("/provenance/notices").toString()).contains("TRD:T6 is not live on " + prev + ": its status is CANCELLED (no P&L vector)")
                 .contains("TRD:NOPE is not a live trade on " + prev).contains("no trades");
 
-        // the pre-deal what-if runs in the Python VaR engine: off here, said plainly
+        // the pre-deal what-if is the Java engine's, with no compute workers: DESK-X is 40U + 10V (worst -390 on scenario 7); unwinding
+        // T1 (-100U) leaves -60U + 10V (worst -360 on scenario 18); the unwind's component VaR over the after's three worst scenarios
+        // (18, 13, 9: -600, -500, -400 of it) is 500 x 360/300
+        JsonNode w = json.readTree(mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita)
+                .contentType(MediaType.APPLICATION_JSON).content("{\"scope\": \"DESK:DESK-X\", \"items\": [{\"copyOf\": \"T1\", \"factor\": -1}]}"))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(w.at("/before/var").asLong()).isEqualTo(390);
+        assertThat(w.at("/after/var").asLong()).isEqualTo(360);
+        assertThat(w.at("/change/var").asLong()).isEqualTo(-30);
+        assertThat(w.at("/before/stressedVar").asLong()).isEqualTo(390);             // 20 scenarios: the stressed window is all of them
+        assertThat(w.at("/after/stressedVar").asLong()).isEqualTo(360);
+        assertThat(w.at("/items/0/label").asText()).isEqualTo("-1 × T1");
+        assertThat(w.at("/items/0/standaloneVar").asLong()).isEqualTo(600);
+        assertThat(w.at("/items/0/incrementalVar").asLong()).isEqualTo(-30);
+        assertThat(w.at("/items/0/incrementalAlone").asLong()).isEqualTo(-30);
+        assertThat(w.at("/items/0/componentVar").asLong()).isEqualTo(600);
+        assertThat(w.get("engine").asText()).contains("Java");
+        assertThat(w.get("confidence").asDouble()).isEqualTo(0.99);
+        // a copy of any scope (DESK-Y is 50V: the bank 40U + 60V without it is DESK-X again), and a P&L priced elsewhere: the same
+        StringBuilder minus50v = new StringBuilder();
+        for (double x : VarLakeFixture.V) {
+            minus50v.append(minus50v.isEmpty() ? "" : ",").append(-50 * x);
+        }
+        for (String item : new String[] {"{\"copyOf\": \"DESK:DESK-Y\", \"factor\": -1}", "{\"label\": \"priced\", \"pnl\": [" + minus50v + "]}"}) {
+            JsonNode b = json.readTree(mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita)
+                    .contentType(MediaType.APPLICATION_JSON).content("{\"scope\": \"BANK\", \"items\": [" + item + "]}"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            assertThat(b.at("/before/var").asLong()).as(item).isEqualTo(540);
+            assertThat(b.at("/after/var").asLong()).as(item).isEqualTo(390);
+        }
         mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
-                .content("{\"scope\": \"DESK:DESK-X\", \"items\": [{\"copyOf\": \"T1\", \"factor\": -1}]}"))
-                .andExpect(status().is(503)).andExpect(jsonPath("$.code").value("DRS-5205"))
-                .andExpect(jsonPath("$.detail").value(containsString("Python VaR engine")));
+                .content("{\"scope\": \"BANK\", \"items\": [{\"pnl\": [1, 2, 3]}]}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("has 3 scenario P&Ls; the scope has 20")));
+        // a trade that is not live is refused in words
+        mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"scope\": \"DESK:DESK-X\", \"items\": [{\"copyOf\": \"T6\", \"factor\": 1}]}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("T6")));
     }
 
     @Test

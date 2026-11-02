@@ -125,7 +125,9 @@ fields:
 - name: TRADER_ID
   type: id
   presence: required
-  description: 'The trader of the trade: a TRADER_ID of the core pack''s trader kind (TRDR-…).'
+  description: 'The trader of the trade: a TRADER_ID of the core pack''s trader kind (TRDR-…). The VaR engine''s VaR by trader joins it to
+    the P&L vectors by TRADE_ID (contributions by=attribute:TRADER_ID), so it is kept as a column of the table; a role that sees it masked
+    gets no VaR by trader.'
   example: TRDR-FROSSI
   pattern: ^TRDR-
   link: trader

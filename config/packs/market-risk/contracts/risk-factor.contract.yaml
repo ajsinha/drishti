@@ -271,6 +271,7 @@ validation:
   field: FACTOR_TYPE
   values:
   - CURVE
+  - BASIS
   - INFLATION
   - SPREAD
   - SPOT
@@ -302,6 +303,12 @@ validation:
   - IG
   - HY
 - rule: enum
+  field: SENIORITY
+  values:
+  - COVERED
+  - SENIOR
+  - NON_SENIOR
+- rule: enum
   field: MARKET_CAP
   values:
   - LARGE
@@ -311,6 +318,9 @@ validation:
   values:
   - ADVANCED
   - EMERGING
+- rule: link
+  field: ECONOMY
+  kind: economy
 - rule: enum
   field: LIQUIDITY_HORIZON
   values:
