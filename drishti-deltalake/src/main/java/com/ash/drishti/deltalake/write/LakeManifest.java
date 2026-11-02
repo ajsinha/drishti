@@ -74,7 +74,8 @@ public record LakeManifest(String table, List<String> partitionColumns, List<Col
         }
     }
 
-    public static final List<String> MODES = List.of("overwrite-dates", "overwrite-partitions", "append");
+    /** {@code replace}: the load is the whole table (every earlier file removed in the same commit; the in-memory lake's replace mode). */
+    public static final List<String> MODES = List.of("overwrite-dates", "overwrite-partitions", "append", "replace");
 
     /** Reads and checks a manifest file. */
     public static LakeManifest read(Path file) throws IOException {

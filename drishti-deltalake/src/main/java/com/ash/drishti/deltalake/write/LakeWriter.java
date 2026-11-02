@@ -279,6 +279,9 @@ public final class LakeWriter {
             partitions.add(p.values());
         }
         boolean byDate = m.mode().equals("overwrite-dates");
+        if (m.mode().equals("replace")) {
+            return removals(engine, s, pv -> true);             // the whole table: every file of the version before goes
+        }
         return removals(engine, s, pv -> {
             Map<String, String> mine = new HashMap<>();
             m.partitionColumns().forEach(c -> mine.put(c, pv.get(c)));

@@ -323,6 +323,15 @@ public final class MemoryStorage implements Storage {
         return new ArrayList<>(files.subMap(prefix, true, prefix + Character.MAX_VALUE, true).values());
     }
 
+    /** Every file under {@code path} with its length, sorted by path (a table's files, for its upkeep). */
+    public List<FileEntry> filesIn(String path) throws IOException {
+        String k = key(path);
+        String prefix = k.isEmpty() ? "" : k + "/";
+        List<FileEntry> out = new ArrayList<>();
+        files.subMap(prefix, true, prefix + Character.MAX_VALUE, true).forEach((key, f) -> out.add(new FileEntry(full(key), f.length, f.modified)));
+        return out;
+    }
+
     /** Files in the store. */
     public int fileCount() {
         return files.size();

@@ -22,6 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
+import com.ash.drishti.deltalake.write.TableUpkeep;
 import com.ash.drishti.lakeio.mem.MemoryStorage;
 import com.ash.drishti.lakeio.mem.MemoryStoreFullException;
 import com.ash.drishti.lakeio.mem.MemoryStores;
@@ -132,6 +133,30 @@ class MemoryLakeTest {
         assertEquals(100, got.size());
         assertTrue(got.get("2026-11-02|N1").contains("kept 1"));
         assertTrue(new MemoryStoreFullException("x").getMessage().equals("x"));
+    }
+
+    @Test
+    void oldVersionsAreExpiredAndRowsReadBackForARewrite() throws Exception {
+        MemoryStorage store = MemoryStores.define("unit", 64L << 20, 4096, "");
+        String table = "mem://unit/up";
+        for (int i = 0; i < 12; i++) {                           // replaces: each version's files only live until it is past keep-versions
+            LakeWriter.forTable(table, Map.of()).write(manifest(table, "replace", "2026-11-0" + (1 + i % 3), rows(i * 100, 100, "v" + i), 100), n -> { });
+        }
+        try (NativeEngine engine = NativeEngine.create(Map.of())) {
+            TableUpkeep.Shape before = TableUpkeep.shape(engine, store, table, 1 << 20);
+            assertEquals(11, before.version());
+            assertTrue(before.rows() == 100 || before.rows() == -1, "rows " + before.rows());
+            long used = store.pool().inUseBytes();
+            long freed = TableUpkeep.expire(engine, store, table, 2);
+            assertTrue(freed > 0, "freed " + freed);
+            assertTrue(store.pool().inUseBytes() < used);
+            assertEquals(100, read(table).size());
+            assertEquals(2, store.filesIn(table).stream().filter(f -> f.path().endsWith(".parquet") && !f.path().contains("_delta_log")).count());
+            List<TableUpkeep.Staged> staged = TableUpkeep.rows(engine, table, pv -> true);
+            assertEquals(100, staged.size());
+            assertTrue(staged.get(0).line().contains("\"doc\":") && staged.get(0).partitionValues().containsKey("business_date"));
+            assertEquals(3, TableUpkeep.columns(engine, table).size());
+        }
     }
 
     @Test
