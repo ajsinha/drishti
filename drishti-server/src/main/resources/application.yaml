@@ -154,6 +154,7 @@ drishti:
       download: 30                   # a Data view download (DRS-9503)
       bi-run: 60                     # a BI run (DRS-9504)
       bulk-load: 120                 # a bulk load of a pack's data (DRS-9505)
+      pivot-view: 20                 # a large pivot view (DRS-9507)
     keep: 50                         # refusals kept for Admin -> Health (in memory)
     override-max-minutes: 240        # the longest an operator's override may last (it ends by itself)
   disk:                              # RESOURCES_AND_SCALE.md 7: the local disk
@@ -1079,13 +1080,37 @@ drishti:
       log-answers: false             # true also writes the answer text to the server log
   pivot:                             # the Pivot tab (USER_GUIDE.md, The Pivot tab): only where a Sutra (pivot: on a table or
                                      # ladder) or a pack (pivot: beside a kind's columns:) opts in
-    enabled: ${DRISHTI_PIVOT_ENABLED:true}     # false hides every Pivot tab, whatever Sutras and packs say
+    enabled: ${DRISHTI_PIVOT_ENABLED:true}     # false hides every Pivot tab, whatever Sutras and packs say, and switches the pivot engine off
     max-records: 50000               # rows of a panel sent to the browser to pivot (the table's limit does not apply)
     max-row-keys: 2000               # innermost row groups shown (further ones still count in the totals)
     max-column-keys: 200             # column groups shown
     document-scan: 20000             # entities a search pivot reads as documents, when asked to, for fields that are not columns
     drill-page: 200                  # underlying rows per drill-down page at most
     budget: 20s                      # how long a search pivot waits for a day's columns or documents
+    # the pivot engine (docs/guides/PIVOT_GUIDE.md, docs/architecture/PIVOT_ENGINE.md): PIVOT, /api/v1/pivot. enabled above is its switch
+    # too (off: /api/v1/pivot answers 404 DRS-5703 in words); the engine-switch framework (COMPUTE_ENGINES.md) adopts it as
+    # config/engines/pivot.yaml (drishti.engines.pivot.enabled) when it lands
+    max-cells: 20000                 # visible cells a view may have, totals included; over it: refused with the count (DRS-5702), never cut short
+    max-holistic-cells: 5000         # the same for a view with a holistic measure (VaR, an exact median, an exact distinct count)
+    busy-cells: 2000                 # a view of more cells asks busy protection before it opens deeper levels (DRS-9507)
+    cache-mb: 512                    # the partial-state cache, weighed in bytes, in the one memory budget (pivot.states)
+    provenance-kept: 500             # answers whose provenance (per cell) is kept for the popover
+    local-shards: 1                  # split a mergeable plan into this many parts on this node and merge them in a fixed order (1: one pass)
+    stage-max-rows: 5000000          # the most rows of one table read for a pivot (a table over it is refused in words, never cut short)
+    stage-keep: 16                   # tables read for pivots kept in the executor (least recently used dropped)
+    duckdb:
+      connections: 0                 # statements at once (0: one per four cores)
+      threads: 0                     # DuckDB's threads per statement (0: its default)
+      memory-limit-mb: 4096          # DuckDB's memory limit
+      temp-directory: ""             # where DuckDB may spill (blank: nowhere, so memory-only data is never written)
+    estimate:
+      confirm-above-seconds: 60      # an estimate over this asks the person first
+      confirm-above-rows: 500000000  # an estimate over this many rows asks the person first
+    aggregate-only:
+      min-members-per-cell: 1        # a cell with fewer members shows no figures (1: no limit; a site may set 5)
+    export:
+      xlsx-max-rows: 1000000         # the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered
+      rows-max: 1000000              # the most member rows an export of the underlying rows writes
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

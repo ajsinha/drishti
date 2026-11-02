@@ -28,7 +28,9 @@ public enum Work {
     /** A BI run. */
     BI_RUN(ErrorCode.BUSY_BI_RUN, "BI run", true),
     /** A bulk load of a pack's data. */
-    BULK_LOAD(ErrorCode.BUSY_BULK_LOAD, "Bulk load", true);
+    BULK_LOAD(ErrorCode.BUSY_BULK_LOAD, "Bulk load", true),
+    /** A large pivot view: more cells than {@code drishti.pivot.busy-cells} (PIVOT_GUIDE.md). */
+    PIVOT_VIEW(ErrorCode.BUSY_PIVOT_VIEW, "Pivot view", true);
 
     private final ErrorCode code;
     private final String label;
