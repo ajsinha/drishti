@@ -39,8 +39,8 @@ from routes.common import ident, render
 router = APIRouter(include_in_schema=False)
 
 WORD = "PLAY"
-#: the metric after PLAY: VaR today; each later metric's playground adds its word here (VAR_PLAYGROUND.md section 13)
-METRICS = ("VAR",)
+#: the metric after PLAY: each metric's playground adds its word here (VAR_PLAYGROUND.md section 13); FRTB: routes/frtb_routes.py
+METRICS = ("VAR", "FRTB")
 #: the link's lens words and the engine's names for them
 LENS = {"h": "horizon", "m": "method", "q": "confidence", "esq": "esConfidence", "set": "set"}
 
@@ -55,6 +55,9 @@ def play_command(words: list[str], user: str) -> str | None:
     if len(words) == 1 or words[1].upper() not in METRICS:
         return "/play" if len(words) == 1 else None
     rest = words[2:]
+    if words[1].upper() == "FRTB":                            # PLAY FRTB <scope>, PLAY FRTB RUN <id>: the FRTB-SA Playground
+        from routes.frtb_routes import play_frtb_command
+        return play_frtb_command(rest)
     if not rest:
         return "/play"
     where = var_routes.var_command(["VAR"] + rest, user)

@@ -1,0 +1,82 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# FRTB-SA (docs/guides/FRTB_SA_GUIDE.md sections 7 and 8). mode "capital", FRSA <scope>: the decided mock-up B (the capital stack, the
+   class × measure grid, the bucket drill on the right) with A's three scenarios and the contributions as tabs. mode "play", PLAY FRTB
+   <scope> or PLAY FRTB RUN <id>: the playground on the VaR Playground's frame (the grid with its formula bar, the explanation beside it),
+   the Choices panel with every switch and a comparison explained by step, Save recipe and Export to Excel. A shell: frtb-sa.js fills it. #}
+{% extends "base.html" %}
+{% block title %}{{ 'FRTB-SA Playground' if mode == 'play' else 'FRTB-SA capital' }} · {{ scope or recipe or 'FRTB' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}{{ screen }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/frtb-sa.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="pg fr" data-frtb data-mode="{{ mode }}" data-scope="{{ scope }}" data-recipe="{{ recipe or '' }}">
+  <div class="pg-head">
+    <h1 class="pg-title"><span class="pg-word mono">{{ 'PLAY FRTB' if mode == 'play' else 'FRSA' }}</span>
+      {{ 'FRTB-SA Playground' if mode == 'play' else 'FRTB-SA capital' }}</h1>
+    <nav class="pg-path mono" aria-label="The scope">{{ scope or recipe }}</nav>
+    <span class="pg-meta" data-fr-meta aria-live="polite">{% if scope or recipe %}loading…{% endif %}</span>
+    <a class="pg-help" href="/help/context/frtb-sa" title="Help: FRTB-SA (the guide)" aria-label="Help: FRTB-SA"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if mode == 'play' and scope %}<a class="pg-link" href="/frtb?scope={{ scope|urlencode }}">Capital screen</a>{% elif scope %}<a class="pg-link" href="/play/frtb?scope={{ scope|urlencode }}">Open in the playground</a>{% endif %}
+  </div>
+  <form class="pg-ask" method="get" action="{{ '/play/frtb' if mode == 'play' else '/frtb' }}">
+    <label>Scope <input class="pg-input mono" name="scope" value="{{ scope }}" placeholder="BANK, DESK:DESK-RATES, BOOK:BOOK-FX-1, EXAMPLE" autocomplete="off"></label>
+    <button type="submit" class="pg-btn primary">Open</button>
+    <a class="pg-link" href="/api/frtb/template.xlsx" download title="The workbook of the design's hand-built cases: every figure a formula">Hand-built cases workbook</a>
+  </form>
+  <p class="pg-notice" data-fr-notice role="status" hidden></p>
+  {% if scope or recipe %}
+  {% if mode == 'capital' %}
+  <div class="fr-tabs" role="tablist">
+    <button type="button" role="tab" class="fr-tab" data-fr-tab="stack" aria-selected="true">Capital stack</button>
+    <button type="button" role="tab" class="fr-tab" data-fr-tab="scenarios" aria-selected="false">Scenarios</button>
+    <button type="button" role="tab" class="fr-tab" data-fr-tab="contrib" aria-selected="false">Contributions</button>
+  </div>
+  <div class="fr-body">
+    <section class="fr-main">
+      <div data-fr-pane="stack">
+        <div class="fr-stack" data-fr-stack aria-label="The capital stack: delta, vega, curvature, DRC, RRAO, the total"></div>
+        <table class="fr-grid" data-fr-classes aria-label="Charge by risk class and measure in the reported scenario"></table>
+      </div>
+      <div data-fr-pane="scenarios" hidden><table class="fr-grid" data-fr-scen aria-label="The three correlation scenarios"></table></div>
+      <div data-fr-pane="contrib" hidden>
+        <label class="pg-chip">By <select data-fr-by><option>DESK</option><option>TT_BOOK</option><option>LEGAL_ENTITY</option><option>PRODUCT_TYPE</option><option>POSITION</option></select></label>
+        <table class="fr-grid" data-fr-contrib aria-label="Contributions"></table>
+      </div>
+    </section>
+    <aside class="pg-explain fr-drill" data-fr-drill aria-live="polite"><p class="muted">Select a cell of the grid: its buckets, K_b and S_b per scenario, and the factors.</p></aside>
+  </div>
+  {% else %}
+  <div class="fr-choices" data-fr-choices aria-label="Choices: every method choice as a switch"></div>
+  <div class="pg-ctrls" role="toolbar">
+    <label class="pg-chip">Compare with <select data-fr-compare aria-label="A switch flipped"><option value="">(none)</option></select></label>
+    <span class="pg-actions">
+      <button type="button" class="pg-btn" data-fr-save title="Save this run as a recipe: PLAY FRTB RUN <id> computes it again to the cent">Save recipe</button>
+      <button type="button" class="pg-btn primary" data-fr-export title="The workbook of live formulas: the switches are cells of Config">Export to Excel</button>
+    </span>
+  </div>
+  <div class="fr-compare" data-fr-diff aria-live="polite" hidden></div>
+  <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-fr-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-fr-formula>Select a row</code></div>
+  <div class="pg-body">
+    <section class="pg-gridcard"><div class="pg-scroll" tabindex="0"><table class="fr-grid fr-ws" data-fr-ws aria-label="The weighted sensitivities and curvature risks, bucket by bucket"></table></div></section>
+    <aside class="pg-explain" data-fr-explain aria-live="polite"></aside>
+  </div>
+  {% endif %}
+  {% endif %}
+</div>
+<script src="/static/js/frtb-sa.js?v={{ ASSET_V }}"></script>
+{% endblock %}
