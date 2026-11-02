@@ -836,11 +836,28 @@ book moved in (+10); the new trade C offset 11. The newest day became the worst 
 2026-09-23 to 2026-09-16.
 
 **On the demo data.** The test data holds three business dates, 2026-09-28 to 2026-09-30 ([section 22.1](#221-what-the-repository-ships-verified-2026-10-25-version-13)),
-so the tab compares 2026-09-29 with 2026-09-30 by default: the bank's VaR falls by 533,406, from 112,575,052 to 112,041,646. The steps
-are real ones: 37 trades out (matured or cancelled), the earlier set's oldest scenario day (2024-09-16) leaving,
-the market, and 2026-09-29's move entering the window; no trade is booked on the day, so *trades in* is nil. `--from 2026-09-28 --to
-2026-09-29` adds the hierarchy step: book `BOOK-FI-3` moves from the credit desk to the fixed income desk (`VAR EXPLAIN DESK:CREDIT`
-shows it leave, `DESK:FI` arrive; the bank, which holds both, shows no hierarchy effect).
+so the tab compares 2026-09-29 with 2026-09-30 by default. The engine's answers (99%, 1-day, the default order; `GET
+/api/v1/var/explain` on a lake built with `lake demo --as-of data`), USD:
+
+| Step | BANK 2026-09-29 → 09-30 | BANK 2026-09-28 → 09-29 | DESK:CREDIT 09-28 → 09-29 | DESK:FI 09-28 → 09-29 |
+|---|---|---|---|---|
+| Earlier VaR | 112,575,052 | 112,405,919 | 147,794,310 | 13,634,471 |
+| Restatement | 0 | 0 | 0 | 0 |
+| Hierarchy and rules | 0 | 0 | −12,532,037 | +19,620,151 |
+| Trades out | −531,668 (37 trades) | −866,479 (31 trades) | −2,023,539 | −273,893 |
+| Oldest scenario dropped | 0 | 0 | 0 | 0 |
+| Market | −1,738 | +1,035,612 | 0 | +281,266 |
+| Newest scenario added | 0 | 0 | 0 | 0 |
+| Trades in | 0 | 0 | 0 | 0 |
+| **Later VaR** | **112,041,646** (−533,406) | **112,575,052** (+169,133) | **133,238,734** (−14,555,576) | **33,261,995** (+19,627,524) |
+
+Read as: the bank's VaR fell by 533,406 from 2026-09-29 to 2026-09-30, almost all of it the 37 trades that matured or were cancelled
+(the largest, Endur ComSwap 1002610 of BOOK-COMM-1, alone 840,196 of incremental VaR). The VaR scenario is 2026-07-16 on every date, and
+neither the day leaving the window nor the day entering it is in the tail, so both window steps are nil. No trade is booked on these
+days (the trades feed's newest trade date is 2026-09-25), so *trades in* is nil. The demo's trades carry no `TRADE_ACTION`, so the
+amended trades are part of the market step (the screen says so). From 2026-09-28 to 2026-09-29 book `BOOK-FI-3` moves from the credit
+desk to the fixed income desk: the hierarchy step takes it out of `DESK:CREDIT` and into `DESK:FI`, and the bank, which holds both, shows
+no hierarchy effect.
 
 From the command line (`drishti.py var explain DESK:RATES`, [section 10](#10-the-command-line)) the same answer prints as text, the
 waterfall as aligned lines:

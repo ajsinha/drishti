@@ -136,7 +136,10 @@
   `BOOK-FI-3` moved from the credit desk to the fixed income desk on 2026-09-29. Limits are the newest date's; the stress set, the desk
   P&L and the long P&L history stay on the newest date. 2026-09-30's files are byte for byte as before (the bank's VaR 112,041,646);
   the bank's VaR is 112,405,919 on 09-28 and 112,575,052 on 09-29. The test data grows by 32.8 MB to 181 MB. The browser test of the tab
-  builds the three dates in one `lake demo`; contracts and sample pages read the newest date. VAR_GUIDE.md sections 3.11 and 22.1.
+  builds the three dates in one `lake demo`; contracts and sample pages read the newest date. On the demo the bank's VaR falls 533,406
+  from 09-29 to 09-30 (trades out −531,668, market −1,738) and rises 169,133 from 09-28 to 09-29 (trades out −866,479, market
+  +1,035,612); `DESK:CREDIT` and `DESK:FI` show the book's move as a hierarchy step (−12,532,037 and +19,620,151). VAR_GUIDE.md sections
+  3.11 and 22.1.
 
 - **Tests and tools.** Browser tests not about the phone display read the whole page (the *Show everything* cookie), the phone
   tests the phone's; the Sutra Next equivalence compares the page drawn without its phone tiers; the scheduler and pack reload tests
