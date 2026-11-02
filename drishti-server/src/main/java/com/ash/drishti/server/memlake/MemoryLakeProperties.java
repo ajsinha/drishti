@@ -78,11 +78,16 @@ public record MemoryLakeProperties(Map<String, Store> stores, List<TableSpec> ta
      * @param file a JSON Lines file, {@code .jsonl} or {@code .jsonl.gz}
      * @param url an {@code http(s)} address answering JSON Lines or a JSON array
      * @param headers request headers for {@code url} (an API key from the environment: {@code ${VENDOR_KEY}})
+     * @param ids with {@code connector}: the entity ids to fetch one by one, for a connector that computes documents when asked (the news
+     *     connector) rather than listing them
+     * @param idsFrom with {@code connector}: the ids read from another memory table's field, {@code <table>.<FIELD>}
+     *     ({@code listed-company.NEWS_ID}: the news of every listed company)
      */
-    public record Source(String connector, String kind, String file, String url, Map<String, String> headers) {
+    public record Source(String connector, String kind, String file, String url, Map<String, String> headers, List<String> ids, String idsFrom) {
 
         public Source {
             headers = headers == null ? Map.of() : Map.copyOf(headers);
+            ids = ids == null ? List.of() : List.copyOf(ids);
         }
 
         /** In words, for Admin and the history (no secrets). */

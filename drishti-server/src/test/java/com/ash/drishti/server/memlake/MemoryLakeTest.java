@@ -78,7 +78,7 @@ class MemoryLakeTest {
     }
 
     private MemoryLakeProperties.TableSpec table(String name, String mode, boolean pin) {
-        return new MemoryLakeProperties.TableSpec(name, "vx", null, new MemoryLakeProperties.Source(null, null, null, url(), null), mode,
+        return new MemoryLakeProperties.TableSpec(name, "vx", null, new MemoryLakeProperties.Source(null, null, null, url(), null, null, null), mode,
                 List.of("INSTRUMENT_ID"), null, "2026-11-02", List.of("DESK"), null, null, false, null, pin, 2, null, null);
     }
 

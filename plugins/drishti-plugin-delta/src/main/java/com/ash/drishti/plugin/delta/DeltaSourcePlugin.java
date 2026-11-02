@@ -1415,6 +1415,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void refreshVersions() {
         latest.synchronous().invalidateAll();
+        if (memoryOnly) {
+            loaders.execute(this::reindex);   // a memory table just filled (or evicted): its kind is found and listed now, not at the next sweep
+        }
     }
 
     @Override

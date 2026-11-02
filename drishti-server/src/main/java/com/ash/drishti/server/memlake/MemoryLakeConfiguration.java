@@ -44,6 +44,8 @@ public class MemoryLakeConfiguration {
         com.ash.drishti.server.admission.RequestsInFlight f = inFlight.getIfAvailable();
         MemoryLake lake = new MemoryLake(props, new ReplenishSource(registry), owned, () -> f == null || f.counter().get() <= 1);
         MemoryBinding.install(lake, registry);
+        lake.onChange(() -> registry.plugins().stream().filter(com.ash.drishti.api.SourcePlugin::memoryOnly)
+                .forEach(com.ash.drishti.api.SourcePlugin::refreshVersions));
         return lake;
     }
 

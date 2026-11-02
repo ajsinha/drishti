@@ -48,9 +48,15 @@ final class ReplenishSource {
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).followRedirects(HttpClient.Redirect.NORMAL).build();
 
     private final SourceRegistry registry;
+    private volatile java.util.function.Function<String, List<String>> idsOf = ref -> List.of();
 
     ReplenishSource(SourceRegistry registry) {
         this.registry = registry;
+    }
+
+    /** How {@code ids-from} ({@code <table>.<FIELD>}) is read: the lake answers it from its own memory tables. */
+    void idsOf(java.util.function.Function<String, List<String>> f) {
+        this.idsOf = f;
     }
 
     /** The documents of {@code source}, each a JSON object. */
@@ -59,6 +65,13 @@ final class ReplenishSource {
             throw new IllegalArgumentException("the table names no source");
         }
         if (source.connector() != null && !source.connector().isBlank()) {
+            if (!source.ids().isEmpty() || (source.idsFrom() != null && !source.idsFrom().isBlank())) {
+                List<String> ids = new ArrayList<>(source.ids());
+                if (source.idsFrom() != null && !source.idsFrom().isBlank()) {
+                    ids.addAll(idsOf.apply(source.idsFrom().trim()));
+                }
+                return byIds(source.connector(), source.kind(), ids.stream().distinct().toList());
+            }
             return fromConnector(source.connector(), source.kind());
         }
         if (source.file() != null && !source.file().isBlank()) {
@@ -121,6 +134,28 @@ final class ReplenishSource {
         if (!listed) {
             throw new IllegalStateException("connector " + name + " cannot list its documents of " + kind
                     + "; fill the table from a file or a URL of the feed instead");
+        }
+        return out;
+    }
+
+    /** Each id fetched from the connector (one that computes a document when asked, such as the news connector); a miss is skipped. */
+    private List<ObjectNode> byIds(String name, String kind, List<String> ids) throws Exception {
+        SourcePlugin plugin = registry.connector(name, Duration.ofSeconds(30))
+                .orElseThrow(() -> new IllegalStateException("connector " + name + " is not running"));
+        List<ObjectNode> out = new ArrayList<>();
+        int failed = 0;
+        for (String id : ids) {
+            try {
+                var doc = plugin.fetch(new com.ash.drishti.api.EntityRef(kind, id));
+                if (doc.isPresent() && !doc.get().deleted() && doc.get().data() != null && JSON.valueToTree(doc.get().data().unwrap()) instanceof ObjectNode o) {
+                    out.add(o);
+                }
+            } catch (Exception e) {
+                failed++;                                        // one entity's feed failing does not stop the others
+            }
+        }
+        if (!ids.isEmpty() && out.isEmpty() && failed > 0) {
+            throw new IllegalStateException("connector " + name + " answered none of " + ids.size() + " ids (" + failed + " failed)");
         }
         return out;
     }

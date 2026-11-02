@@ -264,6 +264,11 @@ final class ConnectorInstance implements SourcePlugin {
     }
 
     @Override
+    public boolean memoryOnly() {
+        return delegate.memoryOnly();
+    }
+
+    @Override
     public void close() {
         delegate.close();
     }

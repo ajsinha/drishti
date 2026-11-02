@@ -70,6 +70,7 @@ public final class MemoryLake implements AutoCloseable {
     private final ExecutorService jobs;
     private final MemoryCompactor compactor;
     private volatile boolean warm;
+    private volatile Runnable changed = () -> { };
     private volatile Instant lastActivity = Instant.now();
 
     /**
@@ -110,6 +111,44 @@ public final class MemoryLake implements AutoCloseable {
         this.clock = Executors.newSingleThreadScheduledExecutor(Thread.ofPlatform().name("memory-lake-clock").daemon(true).factory());
         this.jobs = Executors.newFixedThreadPool(props.jobThreads(), Thread.ofPlatform().name("memory-lake-job-", 0).daemon(true).factory());
         this.compactor = new MemoryCompactor(this, props.compaction(), quiet);
+        source.idsOf(this::idsOf);
+    }
+
+    /** {@code <table>.<FIELD>}: the field's values over the memory table's rows (the ids a connector-by-ids source fetches). */
+    private List<String> idsOf(String ref) {
+        int dot = ref.indexOf('.');
+        MemoryTable t = dot < 0 ? null : tables.get(ref.substring(0, dot));
+        if (t == null) {
+            throw new IllegalArgumentException("ids-from " + ref + ": no memory table " + (dot < 0 ? ref : ref.substring(0, dot)));
+        }
+        String field = ref.substring(dot + 1);
+        List<String> out = new ArrayList<>();
+        try {
+            List<TableUpkeep.Staged> rows = TableUpkeep.rows(LakeWriter.engineFor(t.spec.path(), Map.of()), t.spec.path(), pv -> true);
+            for (TableUpkeep.Staged s : rows == null ? List.<TableUpkeep.Staged>of() : rows) {
+                JsonNode doc = JSON.readTree(JSON.readTree(s.line()).path("doc").asText("{}"));
+                JsonNode v = doc.get(field);
+                if (v != null && v.isTextual() && !v.asText().isBlank()) {
+                    out.add(v.asText());
+                }
+            }
+        } catch (Exception e) {
+            throw new IllegalStateException("ids-from " + ref + ": the table " + t.name() + " cannot be read now (" + valuesFree(e) + ")", e);
+        }
+        return out;
+    }
+
+    /** What runs after a table changed (a fill, a compaction, an eviction): the memory-only connectors look for the new version at once. */
+    void onChange(Runnable r) {
+        this.changed = r == null ? () -> { } : r;
+    }
+
+    void changed() {
+        try {
+            changed.run();
+        } catch (RuntimeException e) {
+            LOG.debug("memory lake: telling the connectors failed: {}", e.toString());
+        }
     }
 
     /** Whether anything is configured. */
@@ -243,6 +282,7 @@ public final class MemoryLake implements AutoCloseable {
             t.state(MemoryTable.State.READY);
             t.record(new MemoryTable.Run(Instant.now(), trigger, "ok", docs.size(), w.bytes, w.version, (System.nanoTime() - start) / 1_000_000, ""));
             LOG.info("memory lake: {} filled ({}): {} rows, version {}", t.name(), trigger, docs.size(), w.version);
+            changed();
             compactor.afterCommit(t);
         } catch (Exception e) {
             MemoryStoreFullException full = full(e);
@@ -455,6 +495,7 @@ public final class MemoryLake implements AutoCloseable {
                 t.record(new MemoryTable.Run(Instant.now(), "eviction", "evicted", 0, -b, -1, 0, "evicted whole to make room for " + writing));
                 LOG.warn("memory lake: {} evicted whole from memory store {} ({} MB) to make room; a refill is queued", t.name(), store.name(), b >> 20);
                 queueRefillAfterEviction(t);
+                changed();
             } catch (Exception e) {
                 // the table stays
             } finally {

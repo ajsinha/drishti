@@ -201,6 +201,7 @@ final class MemoryCompactor {
             t.record(new MemoryTable.Run(Instant.now(), "compaction", "ok", r.rows(), after, r.version(), (System.nanoTime() - start) / 1_000_000,
                     "rewritten (" + why + "): " + (before >> 10) + " KB before, " + (after >> 10) + " KB after"));
             LOG.info("memory lake: {} compacted ({}): {} KB to {} KB", t.name(), why, before >> 10, after >> 10);
+            lake.changed();
             return true;
         } catch (Exception e) {
             t.record(new MemoryTable.Run(Instant.now(), "compaction", "failed", 0, 0, t.version, (System.nanoTime() - start) / 1_000_000,
