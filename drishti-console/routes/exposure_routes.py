@@ -87,7 +87,9 @@ def exp_command(words: list[str]) -> str | None:
 
 
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+    from core.busy import problem as busy_problem
+
+    return busy_problem(e, e.status)                               # a busy refusal keeps its Retry-After and words (busy protection)
 
 
 @router.get("/exposure")

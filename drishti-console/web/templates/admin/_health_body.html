@@ -67,6 +67,7 @@
 </div>
 {% if sv.get('directWarning') %}<p class="hl-err" role="alert" data-direct-warning><b class="t-warn">Direct memory</b> {{ sv.directPercent }}% of -XX:MaxDirectMemorySize is in use: at the limit every lake read fails. Check that the server runs with -Djdk.nio.maxCachedBufferSize=262144 (OPERATIONS.md, Direct memory).</p>{% endif %}
 {% endif %}
+{% include "admin/_health_busy.html" %}
 {% set dk = h.get('disk') or {} %}
 {% if dk.get('folders') is not none %}
 {% from "admin/_cache_macros.html" import size %}

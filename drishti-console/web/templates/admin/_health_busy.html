@@ -1,0 +1,55 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin -> Health, "Busy protection" (docs/admin/OPERATIONS.md "Busy protection"; mock-up A, panel 4): every reading against its warn and
+   wait levels, the last refusals and the operator's override. The server decides; this only draws GET /api/v1/admin/busy's answer. #}
+{% set bz = h.get('busy') %}
+{% if bz %}
+{% set stone = 'wait' if bz.state in ('new heavy work waits', 'new sign-ins wait') else 'warn' if bz.state in ('getting full', 'everything let through') else 'ok' %}
+<section class="pnl busy-health" aria-label="Busy protection" data-health-busy data-busy-state="{{ bz.state }}"><div class="pnl-b">
+  <p><b>Busy protection</b> <span class="text-muted-d">new heavy work waits when the server is short of room</span>
+    <span class="busy-state {{ stone }}" data-busy-badge>{{ bz.state }}</span></p>
+  {% if bz.waitingSince %}<p class="text-muted-d" data-busy-since>Waits started {{ bz.waitingSince[11:19] }} UTC. It lifts by itself when the reading falls under its warn level or a load finishes.</p>{% endif %}
+  {% set ov = bz.override or {} %}
+  {% if ov.mode and ov.mode != 'automatic' %}<p class="t-warn" role="status" data-busy-override-now><b>Operator override:</b>
+    {{ 'everything is let through' if ov.mode == 'open' else 'all new heavy work is held' }} by {{ ov.by }} until {{ (ov.until or '')[11:16] }} UTC
+    ({{ ov.minutesLeft }} min left): {{ ov.reason }}</p>{% endif %}
+  {% for g in bz.gauges %}
+  <div class="busy-gauge" data-busy-gauge="{{ g.id }}">
+    <div class="busy-gauge-head"><span><b>{{ g.label }}</b> <span class="busy-state {{ g.state }}">{{ g.words }}</span></span>
+      <span class="busy-num">
+      {%- if g.id == 'memory' -%}{{ (g.value * 100) | round(0) | int }}% · {{ (g.usedBytes / 1073741824) | round(1) }} of {{ (g.maxBytes / 1073741824) | round(1) }} GB
+      {%- elif g.id == 'loads' -%}{{ g.running }} of {{ g.slots }} slots{% if g.engines %} · {% for x in g.engines %}{{ x.engine }} {{ x.running }}/{{ x.threads }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}
+      {%- elif g.id == 'requests' -%}{{ g.busy }} of {{ g.handlers }} · queue {{ g.queue }}
+      {%- else -%}{% if g.totalBytes %}{{ ((g.totalBytes - g.freeBytes) / 1073741824) | round(0) | int }} of {{ (g.totalBytes / 1073741824) | round(0) | int }} GB · {% endif %}{{ (g.freeBytes / 1073741824) | round(0) | int }} GB free
+      {%- endif -%}</span></div>
+    <div class="busy-bar" role="img" aria-label="{{ g.label }}: {{ g.words }}"><i class="{{ g.state }}" data-busy-w="{{ ([g.value, 1] | min * 100) | round(1) }}"></i>
+      {% if g.warn and g.warn < 1 %}<u class="warn" data-busy-x="{{ (g.warn * 100) | round(1) }}" title="warn"></u>{% endif %}
+      {% if g.refuse and g.refuse <= 1 %}<u class="wait" data-busy-x="{{ (g.refuse * 100) | round(1) }}" title="wait"></u>{% endif %}</div>
+    <span class="busy-note">{{ g.note }}</span>
+    {% if g.id == 'loads' and g.openHeap %}<span class="busy-note"> · open dates' memory: {% for x in g.openHeap %}{{ x.engine }} {{ (x.usedBytes / 1048576) | round(0) | int }} of {{ (x.netBytes / 1048576) | round(0) | int }} MB{{ ', ' if not loop.last }}{% endfor %}</span>{% endif %}
+  </div>
+  {% endfor %}
+  {% set rf = bz.refusals or {} %}
+  <p><b>Last refusals</b> <span class="text-muted-d">{{ rf.last15Minutes or 0 }} in the last 15 minutes · {{ rf.people or 0 }} {{ 'person' if rf.people == 1 else 'people' }} · {{ rf.sinceStart or 0 }} since the server started</span></p>
+  {% if rf.rows %}
+  <div class="tbl-wrap"><table class="tbl tbl-compact" data-busy-refusals data-plain><caption class="visually-hidden">The last refusals</caption>
+    <thead><tr><th scope="col">Time (UTC)</th><th scope="col">Who</th><th scope="col">What</th><th scope="col">Why</th><th scope="col">Code</th><th scope="col" class="num">Try again</th></tr></thead>
+    <tbody>{% for x in rf.rows[:10] %}<tr><td class="mono">{{ x.at[11:19] }}</td><td>{{ x.who }}</td><td>{{ x.what }}</td><td>{{ x.why }}</td><td class="mono">{{ x.code }}</td><td class="num mono">{{ x.retryAfterSeconds }} s</td></tr>{% endfor %}</tbody>
+  </table></div>
+  {% else %}<p class="text-muted-d" data-busy-none>Nothing has had to wait.</p>{% endif %}
+  <p class="text-muted-d busy-note">Settings: <span class="mono">drishti.admission.*</span> in <a href="/help/configuration">Configuration</a> (warn and wait levels). Markers on each bar: <span class="t-warn">warn</span>, <span class="t-neg">wait</span>.</p>
+</div></section>
+{% endif %}

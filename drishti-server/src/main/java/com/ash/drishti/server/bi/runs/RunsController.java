@@ -233,6 +233,13 @@ public class RunsController {
         }
     }
 
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void gate(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+    }
+
     @PostMapping("/runs")
     public ResponseEntity<?> submit(@RequestBody JsonNode body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         bi.requirePower(p, BiAccess.BI);
@@ -250,6 +257,9 @@ public class RunsController {
         Optional<ResponseEntity<?>> forwarded = toOwner(q, body, wait, p);
         if (forwarded.isPresent()) {
             return forwarded.get();
+        }
+        if (gate != null) {                                            // busy protection: a new BI run may wait (the owner node decides its own)
+            gate.admit(com.ash.drishti.server.admission.Work.BI_RUN, p.user(), "BI run");
         }
         RunService.Outcome o = runs().submit(q, new RunService.Options(wait, wait.isZero(), options.path("confirm").asBoolean(false)));
         if (o.inline()) {
@@ -511,6 +521,9 @@ public class RunsController {
         }
         RunService.Question q = sources.replay(r, p, data).orElseThrow(() -> new DrishtiException(ErrorCode.BAD_REQUEST, "this run cannot be asked again here"));
         Duration wait = body != null && body.path("wait").isTextual() ? Duration.parse(body.path("wait").asText()) : props.inline().inlineWait();
+        if (gate != null) {
+            gate.admit(com.ash.drishti.server.admission.Work.BI_RUN, p.user(), "BI run (again)");
+        }
         RunService.Outcome o = runs().submit(q, new RunService.Options(wait, wait.isZero(), false, null, fresh));
         Run.Builder b = o.run().toBuilder();
         b.rerunOf = r.id();

@@ -28,7 +28,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Signing in](#signing-in) | no sign-in page, wrong password, locked, signed in but bounced back |
 | [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the server's readiness is DOWN or OUT_OF_SERVICE, the Live button has an amber ring, typing does nothing |
 | [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
-| [Large books](#large-books-timeouts-grouped-pages-and-caches) | DRS-1004 on a trade, a counterparty or portfolio page slow or empty, grouped pages out of memory, only 1,000 trades listed, disk caches |
+| [Large books](#large-books-timeouts-grouped-pages-and-caches) | "the server is very busy" or a panel counting down (DRS-9501 to DRS-9505), DRS-1004 on a trade, a counterparty or portfolio page slow or empty, grouped pages out of memory, only 1,000 trades listed, disk caches |
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
 | [Live and dates](#live-updates-and-business-dates) | view does not tick, no data held for a date, DRS-4003, known at has no effect, DRS-1007, DRS-1001 naming a store that holds the date |
 | [Search](#search) | DRS-4004, empty results, partial results |
@@ -618,6 +618,19 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** allow the console's own `/static/` path through the proxy or extension; hard-refresh.
 
 ## Large books: timeouts, grouped pages and caches
+
+### "The server is very busy right now", or a panel counting down (503 `DRS-9501` to `DRS-9505`)
+
+- **Cause:** busy protection asked new work to wait so the server does not run out of memory: memory after clean-up is over its wait
+  level (85% for new loads, downloads, BI runs and bulk loads; 92% for new sign-ins), an engine's date loads are full, the open dates are
+  well over their safety net, too many requests are answered at once, or the data folder's disk is nearly full. Work already open is not
+  affected: a date already open keeps answering.
+- **Check:** Admin → Health → Busy protection: which reading is past its wait marker, and the last refusals (who, what, why). The
+  server log has one line when waits start (`busy protection: new ... waits: ...`) and one when work is let in again.
+- **Fix:** nothing, for a short peak: the page tries again by itself after the countdown (three times), and `drishti.py ... --wait` does
+  the same. If it happens daily, give the server more heap or another member, lower `drishti.var.hot-dates`, or move the levels
+  (`drishti.admission.*`, [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)). For an
+  urgent sign-off an administrator can let everything through for a few minutes (Health, Operator override, a reason required).
 
 ### "DRS-1004 … timed out" opening a trade
 
@@ -1517,6 +1530,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-5033` | no connector of that name (HTTP 404): check the spelling with `drishti.py connector list`; the file name is the name |
 | `DRS-5040` | Admin → Artifacts: no such installed pack, connector or BI file, or no such archive (HTTP 404): check the name in the list; an archive older than `drishti.admin.uninstalled-keep` is pruned |
 | `DRS-9203` | a compute pool is busy (HTTP 429): its queue for the request's class is full; try again in a moment, or raise `workers.max` or the queue |
+| `DRS-9501`–`DRS-9505` | busy protection: a new sign-in (9501), date (9502), download (9503), BI run (9504) or bulk load (9505) waits because the server is short of memory, load slots, request handlers or disk (HTTP 503 with `Retry-After`); see ["The server is very busy right now"](#the-server-is-very-busy-right-now-or-a-panel-counting-down-503-drs-9501-to-drs-9505) |
 | `DRS-9304` | the record's lane holds more changes than `lanes.max-lane-depth`: try again in a moment; the draft is kept (HTTP 503) |
 | `DRS-7003` | too many shares or directory searches in a minute (or shares today); wait the `Retry-After` seconds (HTTP 429). Limits are `drishti.collab.limits.*` |
 | `DRS-8001` | an embedded view or its token request was refused (HTTP 401, or 400 `invalid_grant`/`invalid_target` at the token endpoint): the embed token is missing, malformed, expired or for another audience, or embedding is off (`drishti.embed.enabled`); also the console's own check: a signature the server's key does not make (a token from another server, or the server's key changed and `embed.jwks_min_refetch_seconds` has not passed), a token for an audience not in the console's `embed.audiences`, or a live stream whose token expired and no fresh one reached `POST /embed/v1/channel/{cid}/token` within `embed.token_grace_seconds` (the element renews itself; a host whose `tokenProvider` fails or returns the same token ends the stream). The host's backend gets a new token (they last 5 minutes); check that its `audience` is one of `drishti.embed.audiences` and that the clocks agree; the server must run with a persistent `drishti.embed.signing-key` |

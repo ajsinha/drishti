@@ -79,6 +79,14 @@ public class HealthController {
         this.disk = d;
     }
 
+    /** Busy protection (OPERATIONS.md, "Busy protection"): its card on Health; absent in a test that makes the controller itself. */
+    private com.ash.drishti.server.admission.AdmissionGate busy;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void busy(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.busy = g;
+    }
+
     /** The platform alerts (OPERATIONS.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.metrics.PlatformAlerts alerts;
 
@@ -185,6 +193,9 @@ public class HealthController {
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
                 "packs", packRows.size(), "packsWithProblems", packProblems));
         out.put("server", server());
+        if (busy != null) {
+            out.put("busy", busy.describe());                          // busy protection: the readings against their levels, the last refusals
+        }
         if (disk != null) {
             Map<String, Object> d = disk.describe();                    // O7: every folder against its cap, free space against the guard
             out.put("disk", d);

@@ -545,6 +545,22 @@ async def scopes(request: Request, owner: str = ""):
 HEALTH_WAIT_SECONDS = 30.0
 
 
+@router.post("/api/busy/override")
+async def busy_override(request: Request):
+    """Busy protection's operator override (OPERATIONS.md, "Busy protection"): ``automatic``, ``open`` (let everything through) or ``hold``
+    (hold all new heavy work), with a reason and the minutes it lasts; the server checks, applies and audits it, and ends it by itself."""
+    body = await json_body(request)
+    try:
+        minutes = int(body.get("minutes") or 0)
+    except (TypeError, ValueError):
+        minutes = 0
+    try:
+        return await request.app.state.backend.admin("PUT", "/busy/override", ident(request),
+                                                     {"mode": str(body.get("mode", "")), "reason": str(body.get("reason", "")), "minutes": minutes})
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/health")
 async def health(request: Request, partial: int = 0):
     """Connector and pack health (admins): the page, or only its body for the page's own refresh."""

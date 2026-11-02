@@ -109,11 +109,11 @@
           var d = t.answer();                          // the same answer as the JSON one, read from the typed columns (2.9.7)
           Object.defineProperty(d, "__table", { value: t, enumerable: false });
           return d;
-        }, function (e) { var x = new Error(e.detail || e.message); x.status = e.status; x.code = e.code; throw x; })
+        }, function (e) { var x = new Error(e.detail || e.message); x.status = e.status; x.code = e.code; x.body = e.body; throw x; })
       : fetch("/api/var/" + path + "?" + p.toString(), { headers: { Accept: "application/json" }, credentials: "same-origin" })
       .then(function (r) {
         return r.json().catch(function () { return {}; }).then(function (b) {
-          if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; throw e; }
+          if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; e.body = b; throw e; }
           return b;
         });
       });
@@ -131,7 +131,7 @@
       body: body ? JSON.stringify(body) : undefined
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
-        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; throw e; }
+        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; e.body = b; throw e; }
         return b;
       });
     });
@@ -161,7 +161,13 @@
     var e = root.querySelector('[data-vx-fresh="' + which + '"]');
     if (e) { e.textContent = text; e.className = "vx-fresh" + (which === "main" ? " vx-tab-fresh" : "") + (cls ? " " + cls : ""); }
   }
-  function errorBox(host, e) {
+  function errorBox(host, e, retry) {
+    var busy = window.DrishtiBusy && window.DrishtiBusy.problem(e);
+    if (busy) {                                   // busy protection: the calm message in this panel, a countdown, tried again by itself
+      window.DrishtiBusy.render(host, busy, { retry: retry || function () { select(S.scope, { noPush: true }); },
+        keep: "the dates already open keep working." });
+      return;
+    }
     host.textContent = "";
     var p = h("p", "vx-err", (e.status === 403 ? "Not for your role: " : "Could not compute: ") + e.message);
     p.setAttribute("role", "alert");
@@ -982,7 +988,7 @@
         setHierarchy("MGMT");
         return loadTree();
       }
-      errorBox($("[data-vx-tree]"), e);
+      errorBox($("[data-vx-tree]"), e, loadTree);
       fresh("tree", "failed", "stale");
     });
   }

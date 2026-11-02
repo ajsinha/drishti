@@ -541,7 +541,17 @@ public enum ErrorCode {
     /** Write-back: no such change. */
     EDIT_NOT_FOUND("DRS-9305", 404),
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
-    EDIT_PAUSED("DRS-9306", 503);
+    EDIT_PAUSED("DRS-9306", 503),
+    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): the server is very busy, a new sign-in waits; people signed in keep working. */
+    BUSY_SIGN_IN("DRS-9501", 503),
+    /** Busy protection: a business date cannot be opened just yet (memory, the loads running, the open dates' memory, disk); open dates keep working. */
+    BUSY_LOAD("DRS-9502", 503),
+    /** Busy protection: a Data view download did not start; the selection is kept. */
+    BUSY_DOWNLOAD("DRS-9503", 503),
+    /** Busy protection: a BI run did not start. */
+    BUSY_BI_RUN("DRS-9504", 503),
+    /** Busy protection: a bulk load of a pack's data did not start. */
+    BUSY_BULK_LOAD("DRS-9505", 503);
 
     private final String code;
     private final int httpStatus;

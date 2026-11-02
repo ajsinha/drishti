@@ -342,6 +342,22 @@ final class ExposureService implements AutoCloseable {
         return r != null && r[0].equals(loader.version(d));
     }
 
+    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): a new date load asks the gate; absent in a test that makes the service. */
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+    private com.ash.drishti.server.admission.AdmissionGate.Loads gateLoads;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void admission(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+        this.gateLoads = g.loads("exposure", props::loadThreads);
+        g.openHeap("exposure", this::openHeapBytesUsed, props::openHeapBytes);
+    }
+
+    /** A slot for a new date load (busy protection), or a refusal; none without a gate. */
+    private com.ash.drishti.server.admission.AdmissionGate.Slot loadSlot(LocalDate d) {
+        return gate == null ? com.ash.drishti.server.admission.AdmissionGate.NO_SLOT : gate.admitLoad(gateLoads, d.toString());
+    }
+
     private ExposureDate load(LocalDate d, int depth, boolean strict) {
         String[] r = refused.get(d);
         if (r != null && r[0].equals(loader.version(d))) {
@@ -358,7 +374,21 @@ final class ExposureService implements AutoCloseable {
                 throw no.get();                                        // refused for room a moment ago: no lake read until it may fit
             }
         }
-        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x), loads));
+        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> {
+            com.ash.drishti.server.admission.AdmissionGate.Slot slot = loadSlot(x);   // busy protection: refused here, nothing is held
+            try {
+                return CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return loader.load(x);
+                    } finally {
+                        slot.close();
+                    }
+                }, loads);
+            } catch (RuntimeException e) {
+                slot.close();
+                throw e;
+            }
+        });
         try {
             ExposureDate xd = f.join();
             evictOld(d);

@@ -61,6 +61,13 @@ public class PackDataController {
         this.maxBytes = maxMb * 1024 * 1024;
     }
 
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void gate(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+    }
+
     @GetMapping
     public Map<String, Object> targets(@PathVariable String pack, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
@@ -88,6 +95,10 @@ public class PackDataController {
             throw new DrishtiException(ErrorCode.PAYLOAD_TOO_LARGE, "the file is over " + (maxBytes >> 20) + " MB (drishti.loads.upload-max-mb)");
         }
         String name = file == null ? null : file.replaceAll("[^A-Za-z0-9._ -]", "_");
+        if (gate != null) {                                            // busy protection: a new bulk load may wait (nothing read yet)
+            gate.admit(com.ash.drishti.server.admission.Work.BULK_LOAD, p.user(), "Bulk load " + pack + (kind == null ? "" : " " + kind)
+                    + (day == null ? "" : " " + day));
+        }
         try {
             PackDataLoader.Result r = loader.load(pack, kind, req.getInputStream(), day, name, p.user(), maxBytes);
             audit.record(p.user(), "data-load-upload", pack, r.kind() + ": " + r.rows() + " rows, " + r.rejected() + " rejected, days " + r.days().keySet()

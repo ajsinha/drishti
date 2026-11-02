@@ -538,6 +538,12 @@ Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentExc
 `400 DRS-5001` (`the request body is not valid JSON`, …); and a request with no caller attached becomes `401 DRS-5010`. Server errors (`5xx`) are also
 logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
 
+**When the server is busy.** New heavy work (a sign-in, opening a VaR or exposure date that is not open yet, a Data view download, a BI
+run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505`. The body adds `busy: true`, `title`
+and `because` (the same words the console and `drishti.py` show) and `retryAfterSeconds`. A script waits that many seconds and asks
+again, a few times at most; reads of what is already open are never asked to wait. Busy protection is described in
+[OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over).
+
 ## Answers as Arrow: the Accept header
 
 Two answers come as an **Apache Arrow IPC stream** when the caller asks with `Accept: application/vnd.apache.arrow.stream`:
@@ -1776,6 +1782,8 @@ until curl -s -H "Authorization: Bearer $DRISHTI_DRAIN_TOKEN" $B/admin/node | jq
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/admin/health` | admin. Everything Drishti depends on, in one answer, including `disk` (`{path, totalBytes, freeBytes, guardBytes, state (ok, amber, red), folders: [{name, path, usedBytes, limitBytes, state, oldest}]}`; red makes the status `DEGRADED`), `tmp` (`{base, path, bytes, files}`: the server's temp folder `drishti-<pid>`, [CONFIGURATION.md](../admin/CONFIGURATION.md#temporary-folders-drishtitmp-dir-and-the-consoles-tmp_dir)). `server` carries `rssMb`, the process's resident memory (`VmRSS` of `/proc/self/status`; null off Linux). Cheap enough to poll every few seconds |
+| `GET` | `/admin/busy` | admin. Busy protection ([OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)): `{enabled, state (fine, getting full, new heavy work waits, new sign-ins wait, everything let through, off), waitingSince, override: {mode, reason, by, since, until, minutesLeft, maxMinutes}, gauges: [{id (memory, loads, requests, disk), label, value, warn, refuse, state (ok, warn, wait), words, note, ...}], refusals: {last15Minutes, people, sinceStart, rows: [{at, who, what, why, code, retryAfterSeconds}]}}`; the same is `busy` in `/admin/health` |
+| `PUT` | `/admin/busy/override` | admin, never a token. `{mode: automatic \| open \| hold, reason, minutes}`: let everything through or hold all new heavy work for 1 to `drishti.admission.override-max-minutes` minutes (a reason is required; `400 DRS-5001` without one), or back to automatic at once; audited as `busy-override`; answers as `GET /admin/busy` |
 | `GET` | `/admin/alerts` | admin. The platform alert rules (from `config/alerts/platform-alerts.yaml`, with any rule that could not be read and why), the open alerts (rule, severity, value, threshold, since) and the recent closed ones; the same alerts appear on Admin → Health and in administrators' inboxes ([OPERATIONS.md](../admin/OPERATIONS.md)) |
 | `GET` | `/admin/caches` | admin. `{memory, disk, caches}`. `memory`: the cache budget (`budgetBytes`, `usedBytes`, `cacheShare`, `pools`) and the heap (`heapMaxBytes`, `heapUsedBytes`); `disk`: `freeBytes`, `guardBytes`, `state` and each folder's `usedBytes` against `limitBytes`; `caches`: one row each, `{name, owner, type, where (heap, mapped, disk), path, sizeBytes, limitBytes, entries, limitEntries, ttlSeconds, oldestAgeSeconds, hits, misses, freshness, dates, lastPurge {at, by, date}, stats}` (a value it cannot say is null): `engine`, `history`, `memory-budget`, every connector that caches, `var.answers`, `var.dates`, `var.hot-files`, `var.views`, `var.shard-books`, `exposure.answers`, `exposure.trade-paths`, `exposure.dates`, `exposure.hot-files`, `exposure.views`, `bi.results`, `bi.layers`, `security.pack-access`, `connectors.id-maps`. |
 | `GET` | `/admin/capacity` | admin. The single-node capacity planner, `capacity/planner.yaml` as JSON (RESOURCES_AND_SCALE.md 9.7): `inputs` (`name, group, label, default, unit, kind, choices, hint`; the server jar's name with this server's version), `coefficients`, `results` (bands of `name, label, expression, unit, why`), `settings`, `jvm`, `warnings`, `calibration`, `examples`. Admin → Capacity and `drishti.py admin capacity` evaluate the expressions ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
@@ -2116,6 +2124,11 @@ and the fix for the codes that need more than the meaning.
 | DRS-9304 | 503 | Edit lane busy | The record's lane is full (`lanes.max-lane-depth`): try again in a moment; your draft is kept |
 | DRS-9305 | 404 | Change not found | no such change id (HTTP 404) |
 | DRS-9306 | 503 | Edits paused | edits are paused: the edit primary named by `edit.primary` is not reachable, or the cluster has no shared edit log (use PostgreSQL for the server's database, or name an edit primary); reading is not affected (HTTP 503) |
+| DRS-9501 | 503 | Busy: sign-in waits | busy protection: the server is very short of memory (after clean-up, over `drishti.admission.memory-refuse-sign-in`, 92%), so a new sign-in waits; people signed in keep working. `Retry-After` says when to try again; the body carries `busy`, `title`, `because`, `retryAfterSeconds` ([OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)) |
+| DRS-9502 | 503 | Busy: a date waits | busy protection: a VaR or exposure date not yet open cannot be opened just yet (memory, that engine's loads full, the open dates over their safety net, request handlers, disk); dates already open keep answering; `Retry-After` |
+| DRS-9503 | 503 | Busy: a download waits | busy protection: a Data view download did not start (memory, request handlers, disk); nothing was sent; `Retry-After` |
+| DRS-9504 | 503 | Busy: a BI run waits | busy protection: a BI run (or asking a run again) did not start (memory, request handlers); `Retry-After` |
+| DRS-9505 | 503 | Busy: a bulk load waits | busy protection: a bulk load of a pack's data did not start (memory, request handlers, disk); nothing was read or written; `Retry-After` |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
