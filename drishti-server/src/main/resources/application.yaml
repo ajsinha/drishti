@@ -331,6 +331,8 @@ drishti:
     # (a pivot of a search, a command line). Add a path only if it writes nothing.
     token-read-posts:
       - /api/v1/search/pivot/**
+      - /api/v1/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
+      - /api/v1/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
@@ -378,6 +380,8 @@ drishti:
         description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
+          - POST /api/v1/frtb/playground/recipes   # save a FRTB-SA playground recipe (yours, replayable)
+          - POST /api/v1/simm/playground/recipes   # save a SIMM playground recipe
           - DELETE /api/v1/var/baskets/*/*
           - DELETE /api/v1/var/baskets/*
           - POST /api/v1/var/captures
@@ -481,6 +485,7 @@ drishti:
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
         allow:
           - POST /api/v1/packs/*/loads
+          - POST /api/v1/admin/lakes/memory/refill/*   # run an in-memory table's refill job now (drishti.py lake memory refill; the server still requires an administrator)
       "[node:drain]":
         description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_DEPLOYMENT.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
         allow:
