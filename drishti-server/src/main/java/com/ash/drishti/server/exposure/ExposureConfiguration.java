@@ -57,10 +57,22 @@ public class ExposureConfiguration {
         return svc;
     }
 
+    /** The exposure engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md): off, its dates and caches are released; its API answers 404. */
+    @Bean
+    public com.ash.drishti.server.engines.BasicEngine exposureComputeEngine(ExposureService svc, ExposureCaches caches) {
+        com.ash.drishti.server.engines.BasicEngine eng = new com.ash.drishti.server.engines.BasicEngine("exposure")
+                .onStop(() -> caches.purge("all", null))
+                .memory(svc::openHeapBytesUsed)
+                .dates(() -> svc.loaded().size())
+                .threads("drishti-exposure-");
+        svc.running(() -> eng.on(() -> svc.props().enabled()));
+        return eng;
+    }
+
     /** Readiness waits for the exposure engine's newest date (CD1, drishti.node.readiness.engines). */
     @Bean
     com.ash.drishti.server.node.ReadinessGate exposureNewestDateReady(ExposureService svc) {
-        return new com.ash.drishti.server.node.NewestDate("exposure", com.ash.drishti.server.node.NewestDate.engine(() -> svc.props().enabled(),
+        return new com.ash.drishti.server.node.NewestDate("exposure", com.ash.drishti.server.node.NewestDate.engine(svc::running,
                 () -> svc.loader().latest(), svc::open, svc::refusedNow, d -> svc.loader().version(d), d -> svc.date(d)));
     }
 
@@ -106,10 +118,10 @@ public class ExposureConfiguration {
     @EventListener(ApplicationReadyEvent.class)
     void captureNewest(ApplicationReadyEvent e) {
         ExposureProperties props = e.getApplicationContext().getBean(ExposureProperties.class);
-        if (!props.enabled() || !props.official().enabled() || !props.official().onStart()) {
+        ExposureService svc = e.getApplicationContext().getBean(ExposureService.class);
+        if (!svc.running() || !props.official().enabled() || !props.official().onStart()) {
             return;
         }
-        ExposureService svc = e.getApplicationContext().getBean(ExposureService.class);
         e.getApplicationContext().getBean(ExposureOfficial.class).later(() -> svc.loader().latest());
     }
 }

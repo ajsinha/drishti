@@ -23,8 +23,10 @@ features:
   pivot:         { server: [drishti.pivot.enabled] }
   reports:       { server: [drishti.reports.enabled], console: [features.reports] }
   collaboration: { server: [drishti.collab.enabled], console: [features.collaboration] }
-  var:           { server: [drishti.var.enabled] }
-  exposure:      { server: [drishti.ccr.exposure.enabled] }
+  var:           { server: [drishti.engines.var.enabled] }        # the compute engines' switches (config/engines/<id>.yaml, COMPUTE_ENGINES.md)
+  exposure:      { server: [drishti.engines.exposure.enabled] }
+  frtb-sa:       { server: [drishti.engines.frtb-sa.enabled] }
+  simm:          { server: [drishti.engines.simm.enabled] }
   governance:    { server: [drishti.governance.enabled] }
   ai:            { server: [drishti.ai.enabled], console: [ai.enabled] }
   mcp:           { server: [drishti.mcp.enabled], console: [mcp.enabled] }

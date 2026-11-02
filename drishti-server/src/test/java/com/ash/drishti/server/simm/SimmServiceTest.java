@@ -123,6 +123,6 @@ class SimmServiceTest {
     @Test
     void switchedOffItAnswersInWords() {
         SimmService off = SimmTestData.service(SimmTestData.props(false, SimmTestData.toyDir()));
-        assertThatThrownBy(() -> off.run(null, NS, COB, null, null, SimmChoices.defaults(), null)).hasMessageContaining("drishti.simm.enabled");
+        assertThatThrownBy(() -> off.run(null, NS, COB, null, null, SimmChoices.defaults(), null)).hasMessageContaining("DRS-1020 SIMM is not running on this server");
     }
 }

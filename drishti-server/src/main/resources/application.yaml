@@ -35,9 +35,30 @@ spring:
   main:
     banner-mode: off  # no Spring banner at start
   config:
-    # files read after this one: application.local.yaml in the working directory, then the packs overlay Admin -> Packs writes
+    # files read after this one: the engines' files (config/engines/<id>.yaml), application.local.yaml in the working directory, then the packs overlay Admin -> Packs writes
     # (DRISHTI_PACKS_OVERLAY, default <data dir>/packs/added.yaml)
     import:
+      # the engines' own files (docs/architecture/COMPUTE_ENGINES.md section 3): the jar's copy, then the site's, which wins key by key
+      - classpath:engines/var.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/var.yaml
+      - classpath:engines/exposure.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/exposure.yaml
+      - classpath:engines/sensitivities.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/sensitivities.yaml
+      - classpath:engines/frtb-sa.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/frtb-sa.yaml
+      - classpath:engines/simm.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/simm.yaml
+      - classpath:engines/sa-ccr.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/sa-ccr.yaml
+      - classpath:engines/fva.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/fva.yaml
+      - classpath:engines/mr-cube.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/mr-cube.yaml
+      - classpath:engines/ccr-cube.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/ccr-cube.yaml
+      - classpath:engines/memory-lake.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/memory-lake.yaml
       - optional:file:./application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}
@@ -163,21 +184,10 @@ drishti:
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
-  lake:
-    memory:                          # the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md): Delta tables held in memory only by contract, never on a disk
-      stores: {}                     # memory stores by name (none by default): <name>: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), format (delta), idle-trim-minutes (10) }; their caps add to -XX:MaxDirectMemorySize
-      tables: []                     # the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd)
-      history-keep: 50               # the runs kept per table for Admin -> Lakes and drishti.py lake memory jobs (in memory)
-      job-threads: 2                 # replenish jobs that may run at once (one per table at most)
-      compaction:                    # automated compaction: the memory optimizes itself (IN_MEMORY_LAKE.md section 13a)
-        enabled: true                # rewrite a table when it would save memory: small files merged, replaced rows dropped, appends re-sorted
-        idle-only: false             # true: only while no request is being answered
-        idle-seconds: 30             # the quiet that counts as idle
-        headroom-mb: 512             # memory kept free for a rewrite's new files beside the old (at most a quarter of the store): compaction never causes an eviction
-        small-file-mb: 8             # files below this are merged
-        dead-rows: 0.2               # a merge-mode table is rewritten when this share of its rows was replaced since its last rewrite
-        resort-after: 20             # appends after which a table is rewritten sorted by its sort-by
-        every-seconds: 60            # how often the compactor looks, besides after every commit
+  engines:                           # compute engines on or off per node, each with its own file (docs/architecture/COMPUTE_ENGINES.md; Admin -> Engines)
+    dir: ${DRISHTI_ENGINES_DIR:./config/engines}   # the folder of the engines' files Admin -> Engines writes (the imports above name the same folder)
+    drain: 30s                       # an engine turned off live: requests in flight finish within this, then are cancelled
+    watch-seconds: 5                 # how often the engine files are compared with what was read (an edit by hand takes effect as from the page)
   metrics:                           # the platform metrics and alerts (docs/admin/OPERATIONS.md section 13.6; RESOURCES_AND_SCALE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
     sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
@@ -529,6 +539,8 @@ drishti:
       - "* /api/v1/admin/artifacts/**"        # install, disable, uninstall, restore: an administrator from the console, never a token
       - "* /api/v1/admin/commands"            # Admin -> Commands: commands and packs on or off, audited with a reason; never a token
       - "* /api/v1/admin/commands/**"
+      - "* /api/v1/admin/engines"             # Admin -> Engines: compute engines on or off on a node, written to its file, audited with a reason; never a token
+      - "* /api/v1/admin/engines/**"
       - "* /api/v1/admin/collab/**"
       - "* /api/v1/admin/reports/**"
       - "* /api/v1/admin/subscriptions/**"
@@ -738,222 +750,6 @@ drishti:
     per-user: 20  # reports a person may keep
     tick: 30s  # how often the scheduler looks for due reports
     keep-runs: 20  # runs remembered per report (time, rows, where it went, or the error)
-  var:                               # the VaR engine (docs/guides/VAR_GUIDE.md): VaR of any set of trades from the stored P&L vectors
-    enabled: ${DRISHTI_VAR_ENABLED:true}  # run the VaR engine (/api/v1/var, the VaR explorer, VAR <scope>)
-    confidence: ${DRISHTI_VAR_CONFIDENCE:0.99}          # VaR's confidence: 0.99 or 0.95 (refused at start outside (0.5, 1))
-    es-confidence: ${DRISHTI_VAR_ES_CONFIDENCE:0.975}   # expected shortfall's
-    # the confidences a page or a command may choose (the default above is always offered; official records keep the default)
-    confidences: [0.95, 0.975, 0.99, 0.995]   # the VaR confidences offered on the VaR page, in commands and the API (the default is always offered)
-    es-confidences: [0.95, 0.975, 0.99]       # the ES confidences offered the same way (es-confidence is always offered)
-    ten-day-method: ${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}   # 10-day VaR when the method is not named: sqrt10 (1-day x sqrt 10) or sum (10 consecutive days)
-    stress:                          # stressed VaR: VaR and ES on the date's stress scenario set (docs/guides/VAR_GUIDE.md section 18.8)
-      enabled: ${DRISHTI_VAR_STRESS_ENABLED:true}   # offer Normal / Stressed (off: a stressed request is refused; the stress set's rows are still kept apart)
-      id-prefix: HS-STRESS-          # a scenario set is the stress set when its SET_TYPE is STRESS, or (no SET_TYPE) its id starts with this
-      average-weeks: 12              # the stressed VaR average over the official records: this many weeks to the date
-    stress-window:                   # the stress window selection (docs/guides/VAR_GUIDE.md section 18.9): which 12-month period is worst
-      enabled: ${DRISHTI_VAR_STRESS_WINDOW_ENABLED:true}   # the tool and its API (off: refused in words)
-      kind: pnl-history              # the kind of the long-history P&L rows (one per hierarchy node and date)
-      length: 250                    # the days of a window (about 12 months); a request may ask for another (at least 20)
-      top: 5                         # the candidate windows listed, none overlapping another
-      alert-threshold: 0.05          # alert when the worst window's stressed VaR exceeds the current window's by more than this (5%)
-    scenario-window: ${DRISHTI_VAR_SCENARIO_WINDOW:all}  # all (the scenario set's length, 509 in the demo) or N: the newest N scenarios (250: 1 year; at least 20)
-    rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
-    component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
-    threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
-    memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # heap tier only: most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204. The mapped tier is bounded by the disk (hard) and the page cache (advisory)
-    hot-dates: ${DRISHTI_VAR_HOT_DATES:10}             # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay
-    refusal-ttl-seconds: 300         # a date refused for room (capacity, disk) is remembered this long: asked again, 503 at once with Retry-After, no lake read; forgotten sooner when room is freed (0: not remembered)
-    open-heap-mb: ${DRISHTI_VAR_OPEN_HEAP_MB:0}        # the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave
-    fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:}       # the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off)
-    pinned:                          # pinned dates (docs/guides/VAR_GUIDE.md section 26.8): the last business day in every calendar of drishti.business-date.calendar; back: how many, newest first (0: off); keep: disk (hot file built after the official record, never trimmed) or memory (open, counted in hot-dates)
-      month-end: { back: 0, keep: disk }        # each month's last business day (for example back: 13)
-      quarter-end: { back: 0, keep: disk }      # March, June, September, December (for example back: 8)
-      year-end: { back: 0, keep: disk }         # December (for example back: 7)
-      fiscal-year-end: { back: 0, keep: disk }  # the fiscal year's last business day (needs fiscal-year-end)
-      stress-window: { back: 0, keep: disk }    # 1: the first and last dates of the stress window in use (known once stressed VaR is asked)
-      dates: []                      # any dates the bank names (yyyy-MM-dd: a crisis day, an audit date)
-      dates-keep: disk               # how the named dates are kept: disk or memory
-    view-cache-mb: 64                # most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date
-    load-threads: 2                  # threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool
-    read:                            # how a date's first open decodes its vectors from the lake (docs/guides/VAR_GUIDE.md section 27a.6)
-      threads: ${DRISHTI_VAR_READ_THREADS:0}   # files (or runs of row groups) decoded at once for one load, delivered in file order (0: half the cores, at most 8; 1: on the load's own thread)
-      buffer-mb: 64                  # most decoded rows waiting for one load, in MB (never above a thirty-second of the heap)
-    version-check: ${DRISHTI_VAR_VERSION_CHECK:30s}   # an open date compares its lake version this often on a request; moved: reloaded in the background (0: off)
-    history-days: 250                # history and backtest window
-    component-scale-to-var: true     # components scaled to add up to the VaR exactly (false: to the smoothed VaR)
-    parallel-rows: 4096              # the fewest rows a sum splits across threads
-    rows-per-chunk: 65536            # rows per chunk of the in-memory vector store
-    histogram-bins: 42               # bins of the P&L distribution sent to the screen
-    max-parts: 5000                  # most rows a contribution table lists (more: the largest by gross size, and said); totals are over all
-    path-page: 60                    # rows of the ranked P&L path per page
-    smat:
-      max-days: ${DRISHTI_VAR_SMAT_MAX_DAYS:60}   # the most business dates a scenario matrix (SMAT <id> N, GET /api/v1/var/matrix) reads
-    playground:                      # the VaR Playground (PLAY VAR, /api/v1/var/playground): every VaR figure worked in a grid and an .xlsx of real formulas
-      enabled: ${DRISHTI_VAR_PLAYGROUND_ENABLED:true}   # the screen, the command and the export
-      max-positions: 500             # positions the screen shows as their own columns (the largest by |component VaR|; the rest in Rest of scope); at most 500, above is refused at start
-      incremental-positions: 50      # positions that get incremental VaR (the largest by |component VaR|): each needs its own re-ranked column
-      max-ids: 50                    # ids PLAY VAR <id> <id> ... takes (give a scope for more)
-      template: ""                   # a bank's own workbook template: a folder with the built-in one's files and style names (blank: the built-in one)
-      export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope
-      export-default: 500            # the choice selected first
-      export-max-cells: ${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}   # the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words
-    explain:                         # why VaR moved (VAR EXPLAIN, GET /api/v1/var/explain, the VaR page's Why it moved tab; docs/guides/VAR_GUIDE.md section 3.11): the change between two dates in causes that add up exactly; a GET read, never stored
-      enabled: ${DRISHTI_VAR_EXPLAIN_ENABLED:true}   # the tab, the command, the API and the workbook
-      order: [restatement, hierarchy, trades-out, window, market, trades-in]   # the causes in sequence, each a full VaR state; restatement and trades-out before market, trades-in after, window next to market
-      window-lines: two              # two (oldest scenario dropped, newest added) or one (one window-roll line)
-      split-amendments: true         # amended trades as their own steps when the feed marks them (TRADE_ACTION or TRADE_STATUS AMEND/AMENDED)
-      top: 10                        # contributors listed per step before "the others and the interaction"
-      drivers-max: 2000              # most trades of one step whose incremental VaR is computed (the rest are in "the others")
-      cache-minutes: 10              # answers kept this long, never stored
-      cache-mb: 32                   # most memory the kept answers take (weighed in bytes)
-      matrix-max: 60                 # most child nodes the Matrix view explains
-    currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
-    currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
-    intraday:
-      kafka:                         # the PV topic (the market-risk pack's pv-updates connector, off by default): VAR_GUIDE.md section 8.4
-        window: ${DRISHTI_VAR_INTRADAY_KAFKA_WINDOW:5m}   # everything received in a window: one intraday batch in the lake, applied
-        max-trades: ${DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES:500}   # a window applied earlier once this many trades wait
-    root-name: ${DRISHTI_VAR_ROOT_NAME:}   # the top of the VaR tree (every hierarchy's root node); blank keeps the hierarchy data's NAME
-    # root-names: {MGMT: "Group", LEGAL: "Group legal"}   # one hierarchy's root name; wins over root-name for it
-    # hierarchies:                   # VAR_GUIDE.md section 15.14: wins over a loaded pack's hierarchies: block (the market-risk pack's:
-    #   LL: { title: Limit letters, levels: "LIMIT_LETTER > DESK", word: LL, limits: var-limit }   # MGMT, LEGAL from the rows; LL from columns)
-    sharding:                        # VaR sharding (docs/architecture/VAR_SHARDING.md): on only with the market-risk pack's sharding: block or enabled: true
-      release-after-seconds: 900     # a shard book of a date nobody has open (outside the newest hot-dates), unread this long, is released
-    tier:                            # the tiered memory (docs/guides/VAR_GUIDE.md section 26): where a loaded date's vectors live
-      mode: ${DRISHTI_VAR_TIER:mapped}                 # mapped: each date a float32 hot file, memory-mapped (heap: aggregates, columns, links); heap: float64 rows on the heap
-      dir: ${DRISHTI_VAR_HOT_DIR:${drishti.data.dir:./data}/var/hot}   # one folder per business date; never under the repository
-      disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted); a date not open maps its file again, no lake read
-      max-disk-gb: ${DRISHTI_VAR_MAX_DISK_GB:0}   # most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go
-      keep-on-shutdown: ${DRISHTI_VAR_KEEP_HOT_FILES:false}   # false: deleted at shutdown (and any left over at start); the server images set true (PO-10)
-      close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
-    kinds:                         # the kinds the engine reads (the market-risk pack's), and the kind its derived positions are served as
-      vector: pnl-vector  # the kind of the stored P&L vectors
-      position: position  # the kind the engine's derived positions are served as (the var-positions connector)
-      hierarchy: risk-hierarchy  # the kind of the risk hierarchies
-      scenario-set: scenario-set  # the kind of the scenario sets (the dates of the historical scenarios)
-      portfolio: portfolio  # the kind of the stored portfolios
-      scenario-pv: scenario-pv       # trades sent as scenario PVs in their own currency, converted to USD P&L at load (beside or instead of vectors)
-      fx-scenario: fx-scenario       # each currency's rate under each scenario, when the batch supplies it (USD per unit)
-      fx-spot: fx-spot               # the FX history scenario rates are derived from when not supplied (the market-data pack's)
-      limit: var-limit               # the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
-      valuation: trade-valuation     # the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER_ID)
-    access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
-    positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
-      live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)
-      rules: []                      # first match wins: {name, groups: [PRODUCT_GROUP...], types: [PRODUCT_TYPE...], key: [SECURITY_ID, ISIN...]}; none: one position per trade
-    official:                        # the official end-of-day captures (docs/guides/VAR_GUIDE.md section 19)
-      enabled: ${DRISHTI_VAR_OFFICIAL:true}       # capture every node of every hierarchy when a date's inputs are complete (after the data-load signal)
-      publish: true                  # also append them to <root>/risk-results/var-official (append-only) for other systems
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix
-      format: ${DRISHTI_VAR_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg)
-      storage: {}                    # the s3.* settings for an s3:// root (s3.region, s3.endpoint, keys; none: the default credential chain)
-      retention-years: 7             # the published table keeps its log and removed files (time travel) this long
-      on-start: true                 # at start, capture the newest date when it has no official record yet
-      currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
-      jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/
-  frtb:                              # position sensitivities and FRTB-SA, computed for any scope (docs/guides/FRTB_SA_GUIDE.md section 9)
-    enabled: ${DRISHTI_FRTB_ENABLED:true}   # the FRTB-SA engine, its API, FRSA and PLAY FRTB; off: every request answers it is switched off
-    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/market-risk/capital}   # frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/)
-    sensitivity-kind: position-sensitivity   # the position sensitivities (SENS)
-    factor-kind: risk-factor         # the factor dictionary (RFAC)
-    default-risk-kind: default-risk  # the DRC inputs; none served: "DRC not computed", never 0
-    residual-risk-kind: residual-risk   # the RRAO inputs; none served: derived from the positions' product types and notionals
-    rrao-from-positions: true        # derive the RRAO from PRODUCT_TYPE (the parameter file's mapping) and the VaR book's notionals
-    max-factors: 2000                # the most factors one playground grid and workbook holds
-    recipes-dir: ${drishti.data.dir:./data}/frtb/recipes   # saved playground recipes (PLAY FRTB RUN <id>)
-    cache-minutes: 10                # how long a date's sensitivities stay in memory after they are read
-    playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/
-  simm:                              # ISDA SIMM per netting set and regime, collect and post (docs/guides/SIMM_GUIDE.md section 9)
-    enabled: ${DRISHTI_SIMM_ENABLED:true}   # the SIMM engine, its API, the SIMM command and PLAY SIMM; off: every request answers it is switched off
-    parameters-dir: ${DRISHTI_SIMM_PARAMETERS:./config/simm}   # the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed)
-    default-version: ""              # the version for a CSA naming none and for analytic scopes; blank: the installed one with the latest effective date
-    netting-set-kind: netting-set    # the netting sets and their trades
-    csa-kind: csa                    # the CSAs; their SIMM terms (SIMM_VERSION, IM_COLLECT_REGIMES, IM_POST_REGIMES, IM_CALCULATION_CURRENCY, add-ons) when present
-    add-on-kind: simm-addon          # the notional add-on lines; none served: no notional add-on
-    external-kind: crif-external     # the counterparty's call (HEADER rows) for the comparison; none served: "no call"
-    stored-kind: simm                # the stored figures shown, labelled "stored, not computed", for netting sets without sensitivities
-    default-product-class: RatesFX   # the product class of a PRODUCT_GROUP not in drishti.simm.product-classes (built-in mapping: SIMM_GUIDE.md section 3.3)
-    max-factors: 1500                # the most factors one playground grid and workbook holds
-    recipes-dir: ${drishti.data.dir:./data}/simm/recipes   # saved playground recipes (PLAY SIMM RUN <id>)
-    cache-minutes: 10                # how long a date's netting sets and CSAs stay in memory after they are read
-    playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/simm/template/
-  regulatory:                       # regulatory VaR: backtesting, period statistics, report runs and sign-off (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14)
-    fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:10-31}   # the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31
-    pnl-kind: desk-pnl               # the kind with each desk's actual and hypothetical P&L per business date (the backtest's input)
-    average-days: 60                 # the business days of the VaR average the capital formula takes
-    reports-dir: ${DRISHTI_REPORTS_DIR:./config/reports}   # the report definitions, one YAML per report (docs/guides/VAR_GUIDE.md section 18.14)
-    synthetic-history: ${DRISHTI_SYNTHETIC_HISTORY:false}  # a demo server may seed synthetic official records before its oldest one; never on a bank's server
-    backtesting:                     # the regulatory backtest of the official VaR against the desk P&L (VAR_GUIDE.md section 18.11)
-      window: 250                    # the business days counted
-      confidences: [0.99, 0.975]     # the VaR confidences tested; the first sets the zone and the multiplier (each node's record keeps its VaR at the others)
-      green: 4                       # the most exceptions of the green zone
-      amber: 9                       # the most exceptions of the amber zone; more is red
-      multipliers: [3.00, 3.00, 3.00, 3.00, 3.00, 3.40, 3.50, 3.65, 3.75, 3.85, 4.00]   # the capital multiplier by exceptions, the last for that many or more (US 12 CFR 217.204)
-      count: actual                  # the count the zone and multiplier read: actual (the US rule), hypothetical, or higher (of the two)
-  ccr:
-    exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
-      # run the exposure engine (/api/v1/exposure, EXP <scope>, the counterparty-risk pack's exposure-engine connector)
-      enabled: ${DRISHTI_EXPOSURE_ENABLED:true}
-      confidence: [0.95, 0.99]       # PFE confidences computed for every answer (any q in (0.5, 1) may be asked)
-      limit-confidence: 0.95         # the PFE credit limits are set on; the default q of an answer
-      rank-rule: kth                 # kth (the ceil(P q)-th smallest exposure) or interpolated
-      collateral-model: lagged       # lagged (called at the look-back point), current (today's collateral on every path) or none
-      im-model: current              # current (the initial margin held today on every path) or none
-      alpha: 1.4                     # EAD_IMM = alpha x EEPE (informational)
-      contribution-window: 21        # paths around the PFE quantile a PFE contribution averages over
-      hot-dates: ${DRISHTI_EXPOSURE_HOT_DATES:10}   # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (as VaR's)
-      refusal-ttl-seconds: 300       # a date refused for room (capacity, disk) is remembered this long: 503 at once with Retry-After, no lake read (0: not remembered)
-      open-heap-mb: ${DRISHTI_EXPOSURE_OPEN_HEAP_MB:0}   # the byte safety net over the open dates' heap (0: automatic, as VaR's); over it the least recently used dates leave
-      fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:}     # the bank's fiscal year-end, MM-DD; blank: none
-      pinned:                        # pinned dates, as drishti.var.pinned (docs/guides/VAR_GUIDE.md section 26.8)
-        month-end: { back: 0, keep: disk }        # each month's last business day (back: how many; 0: off)
-        quarter-end: { back: 0, keep: disk }      # March, June, September, December
-        year-end: { back: 0, keep: disk }         # December
-        fiscal-year-end: { back: 0, keep: disk }  # the fiscal year's last business day (needs fiscal-year-end)
-        stress-window: { back: 0, keep: disk }    # exposure has no stress window: unused
-        dates: []                    # any dates the bank names (yyyy-MM-dd)
-        dates-keep: disk             # how the named dates are kept: disk or memory
-      view-cache-mb: 16              # most memory the viewers' views take; idle 1 h, released with the date
-      load-threads: 2                # threads that load dates from the lake: their own pool, never the common pool
-      version-check: ${DRISHTI_EXPOSURE_VERSION_CHECK:30s}   # an open date compares its lake version this often; moved: reloaded in the background (0: off)
-      memory-budget-gb: ${DRISHTI_EXPOSURE_MEMORY_GB:0}   # most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445
-      hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
-      tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap
-      disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them)
-      max-disk-gb: ${DRISHTI_EXPOSURE_MAX_DISK_GB:0}   # most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3)
-      keep-on-shutdown: ${DRISHTI_EXPOSURE_KEEP_HOT_FILES:false}   # false: deleted at shutdown; the server images set true (PO-10)
-      close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
-      max-scope-netting-sets: 20000  # the most whole netting sets an interactive answer sums (more: 503 DRS-5443; the official capture computes it)
-      max-parts: 5000                # most parts a contribution table computes at once
-      histogram-bins: 42             # bins of an exposure distribution
-      t0-tolerance: 0.10             # a trade's paths' mean at the first grid date is listed when it departs from its MtM today by more (or 5% of notional)
-      kinds:                         # the kinds the engine reads (the counterparty-risk pack's, the core pack's and the market-risk pack's hierarchies)
-        run: simulation-run  # the kind of the simulation runs (a data-load signal of it reloads that date)
-        paths: exposure-path  # the kind of the per-trade exposure paths
-        netting-set: netting-set  # the kind of the netting sets
-        csa: csa  # the kind of the credit support annexes
-        collateral: collateral-balance  # the kind of the collateral balances
-        counterparty: counterparty  # the kind of the counterparties (the core pack's)
-        group: counterparty-group  # the kind of the counterparty groups
-        hierarchy: risk-hierarchy  # the kind of the risk hierarchies (the market-risk pack's)
-        limit: credit-limit          # the stored credit limits, read as stored (the explorer's limit column; LIM stays parked)
-      access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
-      official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
-        enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
-        publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (append-only)
-        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix
-        format: ${DRISHTI_EXPOSURE_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's exposure-results connector follows it
-        storage: {}                  # the s3.* settings for an s3:// root, as drishti.var.official.storage
-        retention-years: 7           # the published tables keep their log and removed files (time travel) this long
-        on-start: true               # at start, capture the newest date when it has no official record yet
-        jsonl: true                  # also write each published date as JSON Lines: <root>/risk-results/jsonl/<table>/<date>/
-      retention:                     # what is kept how long (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26)
-        trade-paths-days: 20         # full trade paths: the last 20 business dates ...
-        trade-paths-month-end-years: 1   # ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond)
-        set-matrices-years: 1        # netting-set matrices (the hot files): every date for a year ...
-        set-matrices-month-end-years: 7  # ... and each month-end for seven
-        statistics-years: 7          # the official records (statistics per set, counterparty, group and node): every date, seven years
-        trade-contributions-years: 7 # every trade's EE contributions per primary date: every date, seven years
   calc:                              # Calc: Python in the browser (docs/guides/USER_GUIDE.md); the server never runs the code
     enabled: ${DRISHTI_CALC_ENABLED:true}   # also needs a role with calc, and a pack that enables it for the view's kind
     max-column-rows: 250000          # drishti.columns() returns at most this many entities (the browser holds them all)

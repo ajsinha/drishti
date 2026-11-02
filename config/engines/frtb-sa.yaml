@@ -1,0 +1,30 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/frtb-sa.yaml: the FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
+# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    frtb-sa:
+      enabled: ${DRISHTI_FRTB_ENABLED:true}   # run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live)
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  frtb:                              # position sensitivities and FRTB-SA, computed for any scope (docs/guides/FRTB_SA_GUIDE.md section 9)
+    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/market-risk/capital}   # frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/)
+    default-risk-kind: default-risk  # the DRC inputs; none served: "DRC not computed", never 0
+    residual-risk-kind: residual-risk   # the RRAO inputs; none served: derived from the positions' product types and notionals
+    rrao-from-positions: true        # derive the RRAO from PRODUCT_TYPE (the parameter file's mapping) and the VaR book's notionals
+    max-factors: 2000                # the most factors one playground grid and workbook holds
+    recipes-dir: ${drishti.data.dir:./data}/frtb/recipes   # saved playground recipes (PLAY FRTB RUN <id>)
+    playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/

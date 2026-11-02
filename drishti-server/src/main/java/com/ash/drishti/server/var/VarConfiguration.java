@@ -90,6 +90,21 @@ public class VarConfiguration {
         return VarNodeParts.drain(svc);
     }
 
+    /**
+     * The VaR engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md): the registry turns it on and off; off, its dates, answers,
+     * views and refusals are released (as Admin, Caches' purge of var) and every request answers 404 DRS-1020. Regulatory VaR is part of it.
+     */
+    @Bean
+    public com.ash.drishti.server.engines.BasicEngine varComputeEngine(VarService svc, VarCaches caches) {
+        com.ash.drishti.server.engines.BasicEngine eng = new com.ash.drishti.server.engines.BasicEngine("var")
+                .onStop(() -> caches.purge("all", null))
+                .memory(svc::openHeapBytesUsed)
+                .dates(() -> svc.openDates().size())
+                .threads("drishti-var-");
+        svc.running(() -> eng.on(() -> svc.props().enabled()));
+        return eng;
+    }
+
     /** The VaR engine's caches in Admin, Caches (2.9.7). */
     @Bean
     public VarCaches varCaches(VarService svc) {
@@ -214,10 +229,10 @@ public class VarConfiguration {
     @EventListener(ApplicationReadyEvent.class)
     void captureNewest(ApplicationReadyEvent e) {
         VarProperties props = e.getApplicationContext().getBean(VarProperties.class);
-        if (!props.enabled() || !props.official().enabled() || !props.official().onStart()) {
+        VarService svc = e.getApplicationContext().getBean(VarService.class);
+        if (!svc.running() || !props.official().enabled() || !props.official().onStart()) {
             return;
         }
-        VarService svc = e.getApplicationContext().getBean(VarService.class);
         e.getApplicationContext().getBean(VarOfficial.class).later(() -> svc.loader().latest());
     }
 }

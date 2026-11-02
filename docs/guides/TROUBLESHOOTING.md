@@ -147,7 +147,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -165,7 +165,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -187,7 +187,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-2.9.10.a-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-2.9.11-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -293,7 +293,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
@@ -1499,6 +1499,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-1012` | history queries: the kind keeps no daily history here. Cause: its pack says `history: {<kind>: {enabled: false}}`, `drishti.history.enabled` is off, or every connector of the kind holds today's data only (REST, a feed) and the pack declares no embedded `series:`. Fix: route the kind to a dated store (Delta Lake, a dated folder, a database with a date column) or add `series:` to the kind's `history:` block |
 | `DRS-1013` | history queries: the entity has no data in the range. Fix: widen the range (`TRD X 3M`), or move the date box to a date the entity has data |
 | `DRS-1014` | history queries: the connector did not answer within `drishti.history.timeout` (10 s), or `drishti.history.max-concurrent` history requests were running. With some days read the page shows them and says which days are missing. Fix: a shorter range, or raise `timeout` and look at the connector on Admin → Health |
+| `DRS-1020` | a compute engine runs on no server of the cluster (HTTP 404): its words, menus, Help pages and pages are gone and its API answers "<engine> is not running on this server". Cause: its switch is off (Admin → Engines, `config/engines/<engine>.yaml`, an old name such as `drishti.var.enabled` in `application.local.yaml`, the environment, or the edition), or it is `blocked` because an engine it needs is off (DRS-1022 in the start log). Fix: Admin → Engines or `drishti.py server engines on <engine> --with-needs --reason ...`; the row's "Switch set in" says which setting decides ([OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) |
 | `DRS-1016` | a command an administrator turned off (HTTP 403): its page shows "<CMD> is not active on this server", links to it are struck through, and its panels on other pages say "not active (turned off by an administrator)". Cause: an administrator's switch on Functions (`FUNC`; or `drishti.py server commands off`). Fix: an administrator turns it on again there; the history says who turned it off, when and why. On a cluster every server follows within seconds; a server shown "catching up" on Admin → Commands has not had the change yet |
 | `DRS-1017` | a pack refused by the server's edition (HTTP 403): Admin → Packs, Deploy archive or the registry tried to load a pack the edition does not list, and its packs are allow-only. Fix: add the pack to the edition's `packs.enabled`, or set `drishti.edition-spec.packs.allow-only: false` ([EDITIONS.md section 9](../admin/EDITIONS.md#9-troubleshooting)) |
 | `DRS-4023` | a command the edition (or your lens) hides (HTTP 404): typed, opened by its page or asked of the type-ahead. Fix: `FUNC` lists what you can use; an administrator adds it with `drishti.edition-spec.commands.also-allow` ([EDITIONS.md section 6](../admin/EDITIONS.md#6-customise-it-without-forking-and-white-label-it)), or you leave the lens |

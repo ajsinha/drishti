@@ -66,7 +66,7 @@ public final class ExposureResultEngine implements ComputeEngine {
     public EngineResult compute(EngineRequest req, EngineInputs inputs, EngineProgress progress) throws Exception {
         ExposureViews views = INSTALLED.get();
         if (views == null) {
-            throw new EngineException("the exposure engine is not running on this server (drishti.ccr.exposure.enabled)");
+            throw new EngineException("the exposure engine is not running on this server (config/engines/exposure.yaml, Admin → Engines)");
         }
         String asked = req.id().trim();
         String scope = ExposureService.scopeText(asked);             // EXP-ALDERSHOT-FRA (retired) is NSET:NS-ALDERSHOT-FRA

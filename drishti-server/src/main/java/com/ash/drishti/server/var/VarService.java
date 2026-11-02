@@ -146,7 +146,7 @@ public final class VarService implements AutoCloseable {
         this.pins = new com.ash.drishti.server.caches.PinKeeper("VaR", props.pinned(), props.fiscalYearEnd(), () -> calendar,
                 new com.ash.drishti.server.caches.PinKeeper.Engine() {
                     public LocalDate newest() {
-                        return props.enabled() ? loader.latest() : null;
+                        return running() ? loader.latest() : null;
                     }
 
                     public List<LocalDate> stressWindow() {
@@ -330,8 +330,8 @@ public final class VarService implements AutoCloseable {
 
     /** The date asked (or the newest before it) with its intraday layer, whatever the thread. */
     private VarDate live(LocalDate asked) {
-        if (!props.enabled()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "the VaR engine is switched off on this server (drishti.var.enabled)");
+        if (!running()) {
+            throw new com.ash.drishti.server.engines.EngineOffException("var", "VaR");
         }
         LocalDate latest = loader.latest();
         if (latest == null) {
@@ -391,7 +391,7 @@ public final class VarService implements AutoCloseable {
      * its load starts in the background and the answer is empty.
      */
     Optional<VarDate> loadedDate(LocalDate asked) {
-        LocalDate latest = props.enabled() ? loader.latest() : null;
+        LocalDate latest = running() ? loader.latest() : null;
         if (latest == null) {
             return Optional.empty();
         }
@@ -1082,6 +1082,19 @@ public final class VarService implements AutoCloseable {
     }
 
     /** What is loaded, for the provenance box and Admin. */
+    /** The engine registry's word on whether VaR runs on this node (COMPUTE_ENGINES.md); unset (a test of the service alone): the old switch. */
+    private volatile java.util.function.BooleanSupplier running;
+
+    public void running(java.util.function.BooleanSupplier on) {
+        this.running = on;
+    }
+
+    /** Whether the VaR engine runs on this node now (Admin, Engines; config/engines/var.yaml). */
+    public boolean running() {
+        java.util.function.BooleanSupplier r = running;
+        return r == null ? props.enabled() : r.getAsBoolean();
+    }
+
     /** The business dates open or opening now (the connectors' id-map TTL never drops them: {@link com.ash.drishti.api.DatesInUse}). */
     java.util.Set<LocalDate> openDates() {
         return java.util.Set.copyOf(dates.keySet());

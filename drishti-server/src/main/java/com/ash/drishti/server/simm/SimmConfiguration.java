@@ -55,4 +55,12 @@ public class SimmConfiguration {
         }
         return svc;
     }
+
+    /** ISDA SIMM as a compute engine (docs/architecture/COMPUTE_ENGINES.md): off, its API answers 404 DRS-1020 and what it read is released. */
+    @Bean
+    public com.ash.drishti.server.engines.BasicEngine simmComputeEngine(SimmService svc) {
+        com.ash.drishti.server.engines.BasicEngine eng = new com.ash.drishti.server.engines.BasicEngine("simm").onStop(svc::clear);
+        svc.running(() -> eng.on(svc::switchedOn));
+        return eng;
+    }
 }
