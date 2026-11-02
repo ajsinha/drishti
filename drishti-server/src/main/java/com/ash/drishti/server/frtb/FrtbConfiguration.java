@@ -62,4 +62,22 @@ public class FrtbConfiguration {
         return packs.packs().stream().filter(p -> p.name().equals("market-risk")).map(p -> p.dir().resolve("capital"))
                 .filter(d -> java.nio.file.Files.isRegularFile(d.resolve("frtb-sa-sbm.yaml"))).findFirst().orElse(set);
     }
+
+    /**
+     * The position sensitivities as a compute engine (docs/architecture/COMPUTE_ENGINES.md): the SENS sums and the factor dictionary
+     * (/api/v1/sensitivities, /api/v1/risk-factors), read by FRTB-SA and SIMM, which need it on the same node. Off: the dates read are released.
+     */
+    @Bean
+    public com.ash.drishti.server.engines.BasicEngine sensitivitiesComputeEngine(FrtbService svc) {
+        return new com.ash.drishti.server.engines.BasicEngine("sensitivities").onStop(() -> svc.data().clear());
+    }
+
+    /** FRTB-SA as a compute engine: off, its API answers 404 DRS-1020 and the sensitivities it read are released. Needs VaR and sensitivities. */
+    @Bean
+    public com.ash.drishti.server.engines.BasicEngine frtbComputeEngine(FrtbService svc,
+            @org.springframework.beans.factory.annotation.Qualifier("sensitivitiesComputeEngine") com.ash.drishti.server.engines.BasicEngine sensitivities) {
+        com.ash.drishti.server.engines.BasicEngine eng = new com.ash.drishti.server.engines.BasicEngine("frtb-sa").onStop(() -> svc.data().clear());
+        svc.running(() -> eng.on(svc::switchedOn), () -> sensitivities.on(() -> true));
+        return eng;
+    }
 }

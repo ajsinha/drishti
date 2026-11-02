@@ -1,0 +1,37 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/memory-lake.yaml: the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
+# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    memory-lake:
+      enabled: ${DRISHTI_MEMORY_LAKE_ENABLED:false}   # run the in-memory lake on this node; off as shipped: turning it on needs a restart (the stores' caps set the direct-memory limit at start)
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  lake:
+    memory:                          # the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md): Delta tables held in memory only by contract, never on a disk
+      stores: {}                     # memory stores by name (none by default): <name>: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), format (delta), idle-trim-minutes (10) }; their caps add to -XX:MaxDirectMemorySize
+      tables: []                     # the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd)
+      history-keep: 50               # the runs kept per table for Admin -> Lakes and drishti.py lake memory jobs (in memory)
+      job-threads: 2                 # replenish jobs that may run at once (one per table at most)
+      compaction:                    # automated compaction: the memory optimizes itself (IN_MEMORY_LAKE.md section 13a)
+        enabled: true                # rewrite a table when it would save memory: small files merged, replaced rows dropped, appends re-sorted
+        idle-only: false             # true: only while no request is being answered
+        idle-seconds: 30             # the quiet that counts as idle
+        headroom-mb: 512             # memory kept free for a rewrite's new files beside the old (at most a quarter of the store): compaction never causes an eviction
+        small-file-mb: 8             # files below this are merged
+        dead-rows: 0.2               # a merge-mode table is rewritten when this share of its rows was replaced since its last rewrite
+        resort-after: 20             # appends after which a table is rewritten sorted by its sort-by
+        every-seconds: 60            # how often the compactor looks, besides after every commit

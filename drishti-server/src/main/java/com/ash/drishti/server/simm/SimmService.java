@@ -187,9 +187,22 @@ public final class SimmService {
         return defaultVersion;
     }
 
+    /** The engine registry's word on whether SIMM runs on this node (COMPUTE_ENGINES.md); unset (a test of the service alone): the old switch. */
+    private volatile java.util.function.BooleanSupplier running;
+
+    public void running(java.util.function.BooleanSupplier on) {
+        this.running = on;
+    }
+
+    /** The old switch, drishti.simm.enabled (an alias of drishti.engines.simm.enabled). */
+    boolean switchedOn() {
+        return props.enabled();
+    }
+
     void enabled() {
-        if (!props.enabled()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "SIMM is switched off on this server (drishti.simm.enabled)");
+        java.util.function.BooleanSupplier r = running;
+        if (!(r == null ? props.enabled() : r.getAsBoolean())) {
+            throw new com.ash.drishti.server.engines.EngineOffException("simm", "SIMM");
         }
     }
 

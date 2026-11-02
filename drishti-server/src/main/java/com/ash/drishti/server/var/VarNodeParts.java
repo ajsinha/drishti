@@ -34,7 +34,7 @@ public final class VarNodeParts {
 
     /** The newest date's gate. */
     static ReadinessGate newestDate(VarService svc) {
-        return new NewestDate("var", NewestDate.engine(() -> svc.props().enabled(), () -> svc.loader().latest(), svc::open, svc::refusedNow,
+        return new NewestDate("var", NewestDate.engine(svc::running, () -> svc.loader().latest(), svc::open, svc::refusedNow,
                 d -> svc.loader().version(d), d -> svc.date(d)));
     }
 

@@ -69,7 +69,7 @@ public final class VarResultEngine implements ComputeEngine {
     public EngineResult compute(EngineRequest req, EngineInputs inputs, EngineProgress progress) throws Exception {
         VarViews views = INSTALLED.get();
         if (views == null) {
-            throw new EngineException("the VaR engine is not running on this server (drishti.var.enabled)");
+            throw new EngineException("the VaR engine is not running on this server (config/engines/var.yaml, Admin → Engines)");
         }
         String scope = req.id().trim();
         if (scope.isEmpty()) {

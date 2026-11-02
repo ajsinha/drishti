@@ -128,7 +128,7 @@ final class ExposureService implements AutoCloseable {
         this.pins = new com.ash.drishti.server.caches.PinKeeper("exposure", props.pinned(), props.fiscalYearEnd(), () -> calendar,
                 new com.ash.drishti.server.caches.PinKeeper.Engine() {
                     public LocalDate newest() {
-                        return props.enabled() ? loader.latest() : null;
+                        return running() ? loader.latest() : null;
                     }
 
                     public List<LocalDate> stressWindow() {
@@ -256,6 +256,19 @@ final class ExposureService implements AutoCloseable {
         return props;
     }
 
+    /** The engine registry's word on whether exposure runs on this node (COMPUTE_ENGINES.md); unset (a test of the service alone): the old switch. */
+    private volatile java.util.function.BooleanSupplier running;
+
+    public void running(java.util.function.BooleanSupplier on) {
+        this.running = on;
+    }
+
+    /** Whether the exposure engine runs on this node now (Admin, Engines; config/engines/exposure.yaml). */
+    public boolean running() {
+        java.util.function.BooleanSupplier r = running;
+        return r == null ? props.enabled() : r.getAsBoolean();
+    }
+
     /** The answers cache (Admin, Caches). */
     com.github.benmanes.caffeine.cache.Cache<String, Scoped> answers() {
         return cache;
@@ -296,7 +309,7 @@ final class ExposureService implements AutoCloseable {
      * load starts in the background and the answer is empty.
      */
     java.util.Optional<ExposureDate> loadedDate(LocalDate asked) {
-        LocalDate latest = props.enabled() ? loader.latest() : null;
+        LocalDate latest = running() ? loader.latest() : null;
         if (latest == null) {
             return java.util.Optional.empty();
         }
@@ -319,8 +332,8 @@ final class ExposureService implements AutoCloseable {
 
     /** The date a request reads: the one asked when it has paths, else the newest on or before it. */
     ExposureDate date(LocalDate asked, boolean strict) {
-        if (!props.enabled()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "the exposure engine is switched off on this server (drishti.ccr.exposure.enabled)");
+        if (!running()) {
+            throw new com.ash.drishti.server.engines.EngineOffException("exposure", "Exposure");
         }
         LocalDate latest = loader.latest();
         if (latest == null) {
