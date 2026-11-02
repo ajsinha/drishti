@@ -125,7 +125,7 @@ public class VarShardController {
     static final int MAX_SETS = 4096;
 
     /**
-     * Many row sets of one shard summed here in one call (VAR_SHARDING.md section 15): {@code sets} as {@code /partial}'s {@code rows},
+     * Many row sets of one shard summed here in one call (VAR_SHARDING.md section 15): {@code runs} each set's runs {@code [from, to)} (int32 pairs, base64),
      * the answer each set's row count and sum in order, each the sum {@code /partial} gives for that set. The same signature, label, data
      * version and access checks as {@code /partial}, for every set.
      */
@@ -139,14 +139,19 @@ public class VarShardController {
         int index = ((Number) body.get("shard")).intValue();
         String map = String.valueOf(body.get("map"));
         String digest = String.valueOf(body.get("digest"));
-        if (!(body.get("sets") instanceof java.util.List<?> raw) || raw.isEmpty() || raw.size() > MAX_SETS) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "sets is a list of 1 to " + MAX_SETS + " row sets");
+        if (!(body.get("runs") instanceof java.util.List<?> raw) || raw.isEmpty() || raw.size() > MAX_SETS) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "runs is a list of 1 to " + MAX_SETS + " row sets");
         }
         VarBook book = s.served(date, ccy, index, map, digest);
         Principal who = caller(p);
         java.util.List<OrdinalSet> sets = new java.util.ArrayList<>(raw.size());
         for (Object o : raw) {
-            OrdinalSet rows = VarShardRows.rowsOf(String.valueOf(o));
+            OrdinalSet rows;
+            try {
+                rows = VarShardRows.rowsOfRuns(String.valueOf(o), book.tradeCount());
+            } catch (IllegalArgumentException e) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "S" + index + ": " + e.getMessage());
+            }
             allowed(s, book, who, ccy, index, rows);
             sets.add(rows);
         }

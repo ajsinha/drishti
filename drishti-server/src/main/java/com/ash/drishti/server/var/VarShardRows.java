@@ -297,7 +297,7 @@ final class VarShardRows {
         }
     }
 
-    /** A batch of partials' request ({@code /partials}): as {@link #request} with {@code sets}, each set's rows as a bitmap's words. */
+    /** A batch of partials' request ({@code /partials}): as {@link #request} with {@code runs}, each set as its runs. */
     static byte[] request(LocalDate date, String ccy, ShardMap map, int index, String digest, List<OrdinalSet> sets) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("date", date.toString());
@@ -305,7 +305,7 @@ final class VarShardRows {
         m.put("shard", index);
         m.put("map", map.digest());
         m.put("digest", digest);
-        m.put("sets", sets.stream().map(VarShardRows::words).toList());
+        m.put("runs", sets.stream().map(VarShardRows::runs).toList());
         try {
             return JSON.writeValueAsBytes(m);
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
@@ -313,11 +313,44 @@ final class VarShardRows {
         }
     }
 
-    private static String words(OrdinalSet rows) {
-        long[] w = rows.words();
-        ByteBuffer b = ByteBuffer.allocate(w.length * Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
-        b.asLongBuffer().put(w);
+    /** A set as its runs {@code [from, to)}: int32 pairs, little-endian, base64 (a position's run is 8 bytes, not a bitmap's words). */
+    static String runs(OrdinalSet rows) {
+        List<int[]> rs = new ArrayList<>();
+        rows.forEachRun((a, b) -> rs.add(new int[] {a, b}));
+        ByteBuffer b = ByteBuffer.allocate(rs.size() * 2 * Integer.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+        rs.forEach(r -> b.putInt(r[0]).putInt(r[1]));
         return Base64.getEncoder().encodeToString(b.array());
+    }
+
+    /**
+     * The rows of a batch's set, from its runs: the same bitmap {@code /partial}'s {@link #rowsOf} reads (so each sum is the one {@code
+     * /partial} gives). Runs out of order, empty or beyond {@code limit} rows are refused.
+     */
+    static OrdinalSet rowsOfRuns(String base64, int limit) {
+        ByteBuffer b = ByteBuffer.wrap(Base64.getDecoder().decode(base64)).order(ByteOrder.LITTLE_ENDIAN);
+        if (b.remaining() % (2 * Integer.BYTES) != 0) {
+            throw new IllegalArgumentException("a set's runs are int32 pairs");
+        }
+        int n = b.remaining() / (2 * Integer.BYTES);
+        int[] runs = new int[2 * n];
+        int last = 0;
+        for (int i = 0; i < n; i++) {
+            int from = b.getInt();
+            int to = b.getInt();
+            if (from < last || to <= from || to > limit) {
+                throw new IllegalArgumentException("run [" + from + ", " + to + ") is out of order, empty or beyond the shard's " + limit + " rows");
+            }
+            runs[2 * i] = from;
+            runs[2 * i + 1] = to;
+            last = to;
+        }
+        long[] w = new long[(last + 63) / 64];
+        for (int i = 0; i < n; i++) {
+            for (int o = runs[2 * i]; o < runs[2 * i + 1]; o++) {
+                w[o >>> 6] |= 1L << (o & 63);
+            }
+        }
+        return OrdinalSet.ofWords(w);
     }
 
     private static String float64(double[] sum) {
