@@ -17,6 +17,28 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **The in-memory lake: data that never touches a disk** (2.9.11 row 13, on Java 21; docs/guides/IN_MEMORY_LAKE_GUIDE.md, tutorial 30).
+  Feeds that may not, by contract, be saved on a disk are held as ordinary Delta tables whose files live in the server's memory: a
+  `MemoryStorage` for `mem://<store>/…` beside local disk and S3 (direct buffers in a reused 1 MB chunk pool under a hard cap per store,
+  released explicitly on Java 21, reference-counted files so readers on an old version finish, truly exclusive commits; the same Storage
+  contract suite as local disk). The native Delta engine, the lake writer (rows from memory, no staged file; zstd by default, byte-equal
+  Parquet with `codec: snappy`) and Iceberg's file access read and write it; the Delta connector with `root: mem://<store>` reads it
+  unchanged. **Replenish jobs** (`drishti.lake.memory.tables`) fill each table from a URL, a file, a connector's documents or the news
+  connector by ids, in `replace`, `append` or `merge` mode, on a schedule or cron, on the source's signal, at start in warm-up order,
+  after an eviction and on demand; every run is in a values-free history. The **eviction ladder** frees old versions, then whole unpinned
+  tables least recently read first, then refuses the write with the table whole at its previous version. **Automated compaction** merges
+  small files, drops replaced rows and re-sorts appends, only with headroom under the cap. **The guard** (`DRS-5219`): a memory-only
+  connector keeps no disk cache, id-map files or index segments; scheduled reports, a share's picture or e-mail, notes copying values and
+  Ask are refused; BI run results are not stored; DuckDB does not spill; a user's download is allowed, streamed and audited without
+  values. **News first**: `config/connectors.examples/memory/news-store.yaml` and `config/examples/in-memory-lake.yaml` move the
+  news-and-markets pack to `mem://news`; the sentinel scan (markers through pages, a download and a refused report, then the data folder,
+  the temporary folder and the logs searched) finds none. Admin → Lakes and Health (store use, refusals, pinned tables, the direct-memory
+  limit against the caps, swap, heap dumps, JFR, the temporary folder), a gauge per store in busy protection, the off-heap pool in the
+  memory budget; `drishti.py lake memory status|jobs|refill`; node.yaml `memory-stores` binds a store and its pack to its owner node and
+  the others forward; the launchers raise `-XX:MaxDirectMemorySize` by the stores' caps (`tools/lake/memory_caps.py`,
+  `DRISHTI_LAKE_MEMORY_MB`). Measured on the demo tables: 4 to 42 times smaller than the decoded rows, 1.6 to 3.9 times smaller than the
+  disk lake (RESOURCES_AND_SCALE.md 5.8).
+
 - **Busy protection: refuse politely, never fall over** (2.9.11 row 8; mock-up A). One gate in front of new sign-ins, VaR and exposure
   date loads, Data view downloads, BI runs and bulk loads reads the heap after the last collection, each engine's loads against
   `load-threads`, the open dates' heap against their safety net, the requests answered at once and the free disk; past a wait level the

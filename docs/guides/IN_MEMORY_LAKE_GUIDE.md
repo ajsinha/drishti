@@ -196,8 +196,8 @@ process's temporary folder and everything logged: no marker is found.
 - **The memory budget** shows the stores as an off-heap pool beside the heap pools; busy protection shows each store's use against its
   cap. Neither makes new work wait for a store: the store bounds itself.
 - **Sizing.** Memory per table is close to its Parquet size with zstd, plus at most one partly filled chunk per file. Measured on the demo
-  tables, [RESOURCES_AND_SCALE.md](../architecture/RESOURCES_AND_SCALE.md#in-memory-lake-measured): the in-memory files are 4 to 42
-  times smaller than the decoded JSON and 1.7 to 3.9 times smaller than the disk lake's Snappy files. Small tables want small chunks
+  tables, [RESOURCES_AND_SCALE.md](../architecture/RESOURCES_AND_SCALE.md#58-the-in-memory-lake-measured): the in-memory files are 4 to 42
+  times smaller than the decoded JSON and 1.6 to 3.9 times smaller than the disk lake's Snappy files. Small tables want small chunks
   (`chunk-kb: 64`): a 30 KB log file holds a whole chunk.
 
 ## 8. A cluster: the owner node binds the pack
