@@ -131,6 +131,8 @@ LINKS = {
     "frtb-sensitivity": [("contracts/FRTB.md", "# ")], "pnl-explain": [("contracts/PNL.md", "# ")], "stress-result": [("contracts/STR.md", "# ")],
     "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
     "fund-holder": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
+    "position-sensitivity": [("architecture/SENSITIVITIES_AND_FRTB_SA.md", "2. "), ("lenses/MR_CUBE_LENS.md", "7.9 ")],
+    "risk-factor": [("architecture/SENSITIVITIES_AND_FRTB_SA.md", "3. "), ("lenses/MR_CUBE_LENS.md", "7.10 ")],
     "index-funds": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
 }
 PACK_LINKS = {
@@ -162,6 +164,7 @@ GROUPS = [
     ("Market data", "You produce this", None),               # every market-data folder
     ("Public data (refreshed by Drishti's scripts)", "Public source", None),   # gleif, us-equities, funds, news-and-markets, world-economy
     ("Demonstration only", "Demo", None),                    # compute-demo
+    ("Planned inputs (demo data generated, not loaded)", "You will produce this", None),   # planned contracts with generated data
 ]
 PUBLIC = ("gleif", "us-equities", "funds", "news-and-markets", "world-economy")
 
@@ -374,6 +377,14 @@ def pages() -> list[dict]:
         if files:
             out.append({"name": f"{cmd['pack']}/{cmd['kind']}", "pack": cmd["pack"], "kind": cmd["kind"], "dataset": None, "files": [],
                         "extra": files})
+    for f, c in C.planned(PACKS):                # planned inputs with demo data from their generator (not in the manifest)
+        files = C.planned_demo_data(c, TESTDATA)
+        if files and (c["pack"], c["kind"]) not in have:
+            dated = sorted(m.group(0) for x in files for m in [re.search(r"\d{4}-\d{2}-\d{2}", x.name)] if m)
+            ds = {"folder": f"{c['pack']}/{c['kind']}", "planned": True, "dated-by": c.get("dated-by"),
+                  "connector": (c.get("storage") or {}).get("connector"), "key": ", ".join(c.get("key") or []),
+                  "first-date": dated[0] if dated else None, "last-date": dated[-1] if dated else None}
+            out.append({"name": ds["folder"], "pack": c["pack"], "kind": c["kind"], "dataset": ds, "files": files, "extra": []})
     return out
 
 
@@ -457,7 +468,7 @@ def audit_one(page: dict, s: Scan | None = None) -> list[str]:
     if c.get("validation") and c["validation"] != C.Draft.rules(None, c.get("fields") or [], c.get("nested") or {}, c.get("key") or [],
                                                                c.get("dated-by") or ""):
         out.append(f"{page['name']}: the contract's validation rules no longer follow its fields (required, enums, links)")
-    if ds.get("folder") and f"data/testdata/{ds['folder']}" not in ((c.get("storage") or {}).get("test-data") or []):
+    if ds.get("folder") and not ds.get("planned") and f"data/testdata/{ds['folder']}" not in ((c.get("storage") or {}).get("test-data") or []):
         out.append(f"{page['name']}: the contract's storage.test-data does not name data/testdata/{ds['folder']}")
     test_paths = {p for p in s.keys}
     depth_ok = lambda p: p.count(".") <= C.MAX_DEPTH        # noqa: E731  (the contracts describe three nested levels)
@@ -706,6 +717,11 @@ def _cadence(page: dict, s: Scan) -> str:
         return (f"There is **no committed test data** for this kind: the sample comes from the pack's samples "
                 f"({', '.join(f'`{f.relative_to(ROOT)}`' for f in page['extra'])}, {s.rows} records). A bank or a public refresh delivers it "
                 f"in the same JSON Lines shape.")
+    if ds.get("planned"):
+        return (f"**A planned input: no command reads it yet.** Its demo data is generated (one file per business date, "
+                f"`{ds['dated-by']}` {ds.get('first-date')}, {s.rows:,} records) so the shape can be checked before the feature is built; "
+                f"it is not in `data/testdata/testdata.yaml` and `lake demo` does not load it. A bank delivers it per close of business, "
+                f"each date's file the full set of that date.")
     if ds.get("days"):
         days = ds["days"]
         ch = [d["documents"] for d in days[1:]]
@@ -892,6 +908,8 @@ def _recognise(name: str, doc: dict) -> str:
 # -- the index -----------------------------------------------------------------------------------------------------------------------
 
 def _group_of(page: dict) -> int:
+    if (page["dataset"] or {}).get("planned"):
+        return 8
     for i, (_, _, members) in enumerate(GROUPS):
         if members and page["name"] in members:
             return i
@@ -927,7 +945,7 @@ def render_index(all_pages: list[dict], scans: dict) -> str:
                          f"`{c.get('mnemonic', '')}`", pattern, f"{scans[p['name']].rows:,}", NEEDED.get(p["kind"], "—"), desc])
         if not rows:
             continue
-        out += [f"## {title}", "", f"**{who}.** Test data under `data/testdata/`" + (", or the pack's samples." if i >= 6 else "."), ""]
+        out += [f"## {title}", "", f"**{who}.** Test data under `data/testdata/`" + (", or the pack's samples." if i in (6, 7) else "."), ""]
         if i == 2:
             out += ["During the day the same scenario-PV and P&L-vector records may also arrive on Kafka (the PV topic, connector "
                     "`pv-updates`): each message's value is JSON Lines of exactly these records.", ""]

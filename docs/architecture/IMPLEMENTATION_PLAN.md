@@ -926,8 +926,28 @@ the default view, B and C are alternative views of the same data on the one scre
 | 4 | SIMM | CC8 per netting set and regime from the shared sensitivities, per the CSA's version (decided), with its playground |
 | 5 | **Delta-gamma-vega VaR on request (parked, product owner 2026-10-31)** | designed in [VAR_GUIDE 18.12](../guides/VAR_GUIDE.md#1812-delta-gamma-vega-var-on-request-design-not-built-parked): computed only on a button press, beside full revaluation, by risk class and position; inputs given on the screen as an input set (the PV contract unchanged): sensitivities uploaded from the bank's pricing system, or estimated from the scenario PVs (labelled), with factor shocks; its playground tab; scheduled with this release's position sensitivities when the product owner decides |
 | 6 | **Statistical factor VaR on request (parked, product owner 2026-10-31)** | no input beyond scenario PVs and P&L: drivers estimated from the scope's scenario P&L (principal components), positions fitted with loadings and curvature, factor VaR beside full VaR, labelled a statistical estimation on every panel, a Factors tab in the playground; designed in [VAR_GUIDE 18.13](../guides/VAR_GUIDE.md#1813-statistical-factor-var-estimated-from-scenario-pl-design-not-built-parked) |
-| 7 | **The cluster's VaR answers under load (S; moved from Oversight by the product owner, 2026-11-01)** | the 200K benchmark's three-member cluster (one machine): VaR requests timing out at 60 s in the 50-user step and contributions with a p95 of 10 to 24 s against 0.8 s on one server; found, measured and fixed, with a test |
+| 7 | **The cluster's VaR answers under load (S; moved from Oversight by the product owner, 2026-11-01)** | the 200K benchmark's three-member cluster (one machine): VaR requests timing out at 60 s in the 50-user step and contributions with a p95 of 10 to 24 s against 0.8 s on one server; found, measured and fixed, with a test; diagnosed (one serial call per position for contributions; carrier threads pinned in the shard skeleton stream on Java 21) with the fix and its tests in [VAR_SHARDING.md section 15](VAR_SHARDING.md#15-contributions-under-load-planned-work) |
 | 8 | **Overload defences: refuse politely, never fall over (M; product owner, 2026-11-01)** | when the server is short of memory or threads, new work is refused with a polite message instead of risking an out-of-memory: one admission gate in front of sign-in, date loads, VaR and exposure opens, the Data view's downloads, BI runs and bulk loads, reading the heap after the last collection, the loads in flight against `load-threads`, the open dates' heap against the safety net, request threads and queue depth, and free disk; thresholds as settings (`drishti.admission.*`: warn and refuse levels, e.g. refuse new loads over 85% of the heap after a collection, refuse new sign-ins over 92%); people already signed in keep working (reads of open dates are cheap), new heavy work waits; every refusal `503` with `Retry-After` and a code (`DRS-`), remembered like the refusals for room so a crowd makes one decision; the console shows a calm full-page or in-panel message (what is busy, when to try again, the request kept to retry with one click), mock-ups first; the API and `drishti.py` print the same words; Admin → Health shows the gate's state and the refusals; an operator override; tests that drive the heap and the load slots to the thresholds, and the benchmark's users phase run past them at a small heap to prove refusals instead of `OutOfMemoryError` |
+
+**Groundwork (2026-11-01):** the design of rows 1, 2 and 4 in [SENSITIVITIES_AND_FRTB_SA.md](SENSITIVITIES_AND_FRTB_SA.md)
+(the method of every step with its formulas, where each number comes from, the API, command line and screens, the playgrounds and the
+hand-built test cases); the planned contracts `position-sensitivity` (SENS) and `risk-factor` (RFAC) with their generated pages and
+sample pages ([market-risk contracts](../contracts/packs/market-risk.md)); the demo data from the VaR factor model
+(`tools/packgen/sensitivity/`, run by `tools/testdata/make_testdata.py`, not loaded by `lake demo` until the kinds have a command); the
+parameter files in draft ([capital-parameters](capital-parameters/frtb-sa-sbm.yaml)); row 7's diagnosis.
+
+### 2.9.11 mock-ups: the screens to build
+
+Made 2026-11-01 for the product owner to choose, three options each, self-contained HTML (system fonts, everything inline, nothing from a
+CDN), dark by default and light with `#light`; screenshots are taken when an option is chosen. **Decided already:** the MR cube's landing
+A with tabs B and C ([MR_CUBE_LENS.md section 6.7](../lenses/MR_CUBE_LENS.md#67-mock-ups-the-screens-to-build)), and the playgrounds on
+the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)). **To choose:**
+
+| Screen (row) | Options | Checklist |
+|---|---|---|
+| FRTB-SA capital (row 2) | [A: scenarios first](../lenses/mockups/frtb-sa/A.html) · [B: the capital stack](../lenses/mockups/frtb-sa/B.html) · [C: desk by class pivot](../lenses/mockups/frtb-sa/C.html) | [SENSITIVITIES_AND_FRTB_SA.md section 15](SENSITIVITIES_AND_FRTB_SA.md#15-mock-ups-the-screens-to-build) |
+| SIMM initial margin (row 4) | [A: netting-set list](../lenses/mockups/simm/A.html) · [B: one netting set](../lenses/mockups/simm/B.html) · [C: margin against the counterparty](../lenses/mockups/simm/C.html) | the same |
+| Risk factors and sensitivities (row 1) | [A: the dictionary](../lenses/mockups/risk-factors/A.html) · [B: the load's quality](../lenses/mockups/risk-factors/B.html) · [C: the factor's page](../lenses/mockups/risk-factors/C.html) | the same |
 
 
 ## 2.9.12: counterparty engines (proposed)

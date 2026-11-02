@@ -41,6 +41,19 @@
   something in the last 5 minutes and today's busiest minute.
 - **CLI**: `drishti.py admin capacity [--live] [--set Name=value] [--all] [--json] [--xlsx FILE --inputs plan|live|both]`.
 
+### Three VaR dates in the demo
+
+- **Three VaR dates in the demo data.** The committed VaR inputs are written for 2026-09-28, 2026-09-29 and 2026-09-30, each
+  in files of its own, so *Why it moved* shows real waterfalls on the demo: each date's positions from that date's trades (31 and 37
+  trades leave), the scenario window a day further on with every day keeping its move (the factor model's earlier days), and book
+  `BOOK-FI-3` moved from the credit desk to the fixed income desk on 2026-09-29. Limits are the newest date's; the stress set, the desk
+  P&L and the long P&L history stay on the newest date. 2026-09-30's files are byte for byte as before (the bank's VaR 112,041,646);
+  the bank's VaR is 112,405,919 on 09-28 and 112,575,052 on 09-29. The test data grows by 32.8 MB to 181 MB. The browser test of the tab
+  builds the three dates in one `lake demo`; contracts and sample pages read the newest date. On the demo the bank's VaR falls 533,406
+  from 09-29 to 09-30 (trades out −531,668, market −1,738) and rises 169,133 from 09-28 to 09-29 (trades out −866,479, market
+  +1,035,612); `DESK:CREDIT` and `DESK:FI` show the book's move as a hierarchy step (−12,532,037 and +19,620,151). VAR_GUIDE.md sections
+  3.11 and 22.1.
+
 ### Competitive analysis, for administrators
 
 - **A full competitive analysis, internal.** `docs/strategy/COMPETITIVE_ANALYSIS.md`: Drishti's position, its five strongest
@@ -56,6 +69,24 @@
   it is not listed, not found and its address answers 404 (`Guide.permits`, `visible()` in the help routes). docs/README.md's map of the
   help centre lists the pages everyone sees, so the internal page is in no customer-facing index (`test_docs_help_map.py`); tests:
   `test_help.py` (an administrator sees it, a viewer gets 404, a listed role opens it).
+
+### 2.9.11 and 2.9.12 groundwork
+
+- **Sensitivities and market-risk capital: the design and the data, nothing built.** The design note
+  `docs/architecture/SENSITIVITIES_AND_FRTB_SA.md`: position sensitivities and the factor dictionary, the FRTB standardised approach
+  step by step (SBM delta, vega and curvature per risk class, the three correlation scenarios, DRC, RRAO), ISDA SIMM's structure, where
+  each number comes from, the API, command line and screens planned, the FRTB-SA and SIMM playgrounds, and eight hand-built test cases.
+  The planned contracts `position-sensitivity` (SENS) and `risk-factor` (RFAC) of the market-risk pack with their generated pages and
+  sample pages; the parameter files in draft (`docs/architecture/capital-parameters/`: MAR21, MAR22–23 with their paragraphs; SIMM's
+  structure with every licensed number empty). Demo data from the VaR factor model: `tools/packgen/sensitivity/` writes 8,052 sensitivity
+  records (Murex and Calypso by position, Endur by trade) and 855 factors under `data/testdata/market-risk/`, run by `make_testdata.py`,
+  not loaded by `lake demo` until the kinds have a command; the sample pages tool shows planned kinds with demo data as their own group.
+  Mock-ups for the product owner to choose (three options each): the FRTB-SA capital screen, SIMM, and the factor dictionary with the
+  load's quality (`docs/lenses/mockups/frtb-sa/`, `simm/`, `risk-factors/`).
+- **The cluster's contributions under load, diagnosed.** VAR_SHARDING.md section 15: contributions by position make one serial
+  signed call per position to its shard's owner (the 10 to 24 s p95), and on Java 21 the shard skeleton stream pins carrier threads
+  (the 60 s timeouts); the fix (batched partials, parts built from one batch, no pinning in the stream, a call timeout inside the client's
+  budget) with its tests and the benchmark to re-run.
 
 ## 2.9.10 — Memory, scale and mobile; why VaR moved (2026-11-01)
 
@@ -172,17 +203,6 @@
   `GET /api/v1/var/explain`, `/explain/matrix`, `/explain.xlsx`; `drishti.py var explain <scope> [--from] [--to] [--matrix] [--xlsx]`;
   settings `drishti.var.explain.*` (the order of the causes, window lines, amendments, top, drivers, cache). The Shapley variant is
   planned. VAR_GUIDE.md section 3.11.
-- **Three VaR dates in the demo data (2.9.10.a).** The committed VaR inputs are written for 2026-09-28, 2026-09-29 and 2026-09-30, each
-  in files of its own, so *Why it moved* shows real waterfalls on the demo: each date's positions from that date's trades (31 and 37
-  trades leave), the scenario window a day further on with every day keeping its move (the factor model's earlier days), and book
-  `BOOK-FI-3` moved from the credit desk to the fixed income desk on 2026-09-29. Limits are the newest date's; the stress set, the desk
-  P&L and the long P&L history stay on the newest date. 2026-09-30's files are byte for byte as before (the bank's VaR 112,041,646);
-  the bank's VaR is 112,405,919 on 09-28 and 112,575,052 on 09-29. The test data grows by 32.8 MB to 181 MB. The browser test of the tab
-  builds the three dates in one `lake demo`; contracts and sample pages read the newest date. On the demo the bank's VaR falls 533,406
-  from 09-29 to 09-30 (trades out −531,668, market −1,738) and rises 169,133 from 09-28 to 09-29 (trades out −866,479, market
-  +1,035,612); `DESK:CREDIT` and `DESK:FI` show the book's move as a hierarchy step (−12,532,037 and +19,620,151). VAR_GUIDE.md sections
-  3.11 and 22.1.
-
 - **Tests and tools.** Browser tests not about the phone display read the whole page (the *Show everything* cookie), the phone
   tests the phone's; the Sutra Next equivalence compares the page drawn without its phone tiers; the scheduler and pack reload tests
   wait for the state they check; the VaR P&L history generator is `tools/packgen/var/pnl_history.py` (it shared a module name with the

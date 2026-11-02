@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (simm/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in
+  docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (section 15) and docs/architecture/IMPLEMENTATION_PLAN.md (the 2.9.11 mock-ups).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIMM initial margin: option B, one netting set</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.alts{font-size:12.5px;color:var(--muted);margin-top:6px} .alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.tot td{font-weight:700;background:var(--panel2)} tr.sel td{background:var(--hl)} td.bind{outline:2px solid var(--amber);outline-offset:-2px}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{flex:1 1 170px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.kpi .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:2px} .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.kpi.bind{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.steps div{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line2)}
+.steps div span:first-child{font-family:var(--sans)}
+.hbar{height:8px;background:var(--line2);border-radius:4px;position:relative;min-width:120px}
+.hbar i{position:absolute;top:0;bottom:0;left:0;border-radius:4px;background:var(--pos)}
+.hbar i.n{background:var(--neg)} .hbar i.a{background:var(--amber)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.formula{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;white-space:pre;overflow:auto}
+footer{font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line2);padding-top:8px}
+@media (max-width:1000px){.grid{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body><div class="page">
+<section class="intro"><h1>SIMM initial margin · option B: one netting set</h1><p>One netting set on its own page: the tree from risk classes to product classes to the margin with the formula and the numbers, and the concentration factors that scale a crowded bucket. Collect and post switch the whole page.</p><div class="alts">Options: <a class="" href="A.html">A: netting-set list</a> · <a class="on" href="B.html">B: one netting set</a> · <a class="" href="C.html">C: margin against the counterparty</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; SIMM NS-CP-SUMMIT-01 <GO></div><div class="menus"><span class="">Risk</span><span class="">Capital</span><span class="on">Counterparty</span><span class="">Data</span><span class="">Help</span></div></div>
+<div class="ctrls"><span class="pick"><b>Date</b>2026-09-30</span><span class="pick"><b>Regime</b>collect · post</span><span class="pick"><b>Parameters</b>the bank’s licensed SIMM files</span><span class="btn">Explain</span><span class="btn p">Open in playground</span></div><div class="head"><h2>NS-CP-SUMMIT-01</h2><span class="meta">CP-SUMMIT · CSA 2016 VM/IM · SIMM 2.6 · 1,104 trades · 2,318 sensitivities · 4 proxied</span></div><div class="grid" style="grid-template-columns:1.3fr 1fr"><div class="card"><h3>From the risk classes to the margin <span>collect, USD millions</span></h3><div class="steps"><div><span><b>SIMM collect · NS-CP-SUMMIT-01</b></span><span><b>112.7m</b></span></div><div><span>RatesFX = sqrt(IR² + FX² + 2ψ·IR·FX), ψ = 0.30 (placeholder)</span><span>63.7m</span></div><div><span>&nbsp;&nbsp;InterestRate: delta 45.0 · vega 7.2 · curvature 3.0</span><span>55.2m</span></div><div><span>&nbsp;&nbsp;FX: delta 16.4 · vega 2.2 · curvature 0.6</span><span>19.2m</span></div><div><span>Credit: CreditQ delta 14.0</span><span>14.0m</span></div><div><span>Equity: delta 22.5 · vega 5.7 · curvature 1.9</span><span>30.1m</span></div><div><span>Commodity: delta 4.4 · vega 0.5</span><span>4.9m</span></div><div><span>SIMM = the four product classes added (no correlation across them)</span><span>112.7m</span></div></div><div class="formula" style="margin-top:10px">IM_r   = Delta_r + Vega_r + Curvature_r
+SIMM_p = sqrt(Σ IM_r² + Σ ψ_rs·IM_r·IM_s)
+SIMM   = Σ SIMM_p + add-ons</div></div><div class="card"><h3>Concentration <span>CR_b = max(1, sqrt(|Σ s| / T_b)) · the thresholds are the licensed file’s</span></h3><table><tr><th class="l">Bucket</th><th>|Σ s|</th><th>T_b</th><th>CR_b</th></tr><tr><td class="l">USD (regular vol)</td><td>412.0k</td><td>—</td><td class="">1.00</td></tr><tr><td class="l">JPY (low vol)</td><td>298.5k</td><td>—</td><td class="">1.00</td></tr><tr><td class="l">EUR (regular vol)</td><td>611.3k</td><td>—</td><td class="warn">1.18</td></tr><tr><td class="l">Equity bucket 11 (indices)</td><td>9.8m</td><td>—</td><td class="">1.00</td></tr><tr><td class="l">FX group 1</td><td>5.1m</td><td>—</td><td class="">1.00</td></tr></table><p class="note">A factor above 1 means the netting set’s risk is concentrated in that bucket: its weighted sensitivities are scaled up.</p><div class="ctrls"><span class="seg"><span class="on">Collect</span><span>Post</span></span><span class="btn">Trades</span><span class="btn">Sensitivities</span></div></div></div>
+<footer>Mock-up for the product owner (2026-11-01). Figures are synthetic: the demo’s position sensitivities of 2026-09-30 run through a sketch of the engine (the CSR sector correlations, the DRC inputs and every SIMM parameter are placeholders; SIMM’s licensed parameters are never shown in a mock-up). Every figure is printed; a chart never replaces a number; a loss or a binding value is marked in words as well as colour.</footer>
+</div></body>
+</html>
