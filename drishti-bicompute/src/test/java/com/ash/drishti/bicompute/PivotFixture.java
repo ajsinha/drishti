@@ -45,11 +45,19 @@ final class PivotFixture implements AutoCloseable {
     final PivotCore core;
     final List<String> statements = new ArrayList<>();
 
+    /** With units: NOTIONAL and PNL are money in each row's CCY, RATE_PCT a percentage. */
+    final boolean units;
+
     PivotFixture(int rows, StateCache cache, PivotCore.Settings settings) {
+        this(rows, cache, settings, false);
+    }
+
+    PivotFixture(int rows, StateCache cache, PivotCore.Settings settings, boolean units) {
+        this.units = units;
         List<DuckDbExecutor.Column> cols = List.of(new DuckDbExecutor.Column("REGION", "text"), new DuckDbExecutor.Column("DESK", "text"),
                 new DuckDbExecutor.Column("CCY", "text"), new DuckDbExecutor.Column("TRADE_DATE", "text"),
                 new DuckDbExecutor.Column("NOTIONAL", "number"), new DuckDbExecutor.Column("PNL", "number"),
-                new DuckDbExecutor.Column("CPTY", "text"), new DuckDbExecutor.Column("SALARY", "number"));
+                new DuckDbExecutor.Column("CPTY", "text"), new DuckDbExecutor.Column("SALARY", "number"), new DuckDbExecutor.Column("RATE_PCT", "number"));
         exec.stage("trades", cols, sink -> {
             Random r = new Random(42);
             for (int i = 0; i < rows; i++) {
@@ -57,7 +65,8 @@ final class PivotFixture implements AutoCloseable {
                 String desk = region.equals("APAC") && r.nextBoolean() ? "FX" : DESKS[r.nextInt(DESKS.length)];
                 sink.row(new Object[] {region, desk, CCYS[r.nextInt(CCYS.length)], "2026-" + String.format("%02d", 1 + r.nextInt(10)) + "-"
                         + String.format("%02d", 1 + r.nextInt(28)), Math.round(r.nextDouble() * 1e7) / 100.0, i % 97 == 0 ? null
-                                : Math.round((r.nextGaussian() * 5e4) * 100) / 100.0, "CP-" + r.nextInt(150), 1000.0 + r.nextInt(500)});
+                                : Math.round((r.nextGaussian() * 5e4) * 100) / 100.0, "CP-" + r.nextInt(150), 1000.0 + r.nextInt(500),
+                        Math.round(r.nextDouble() * 500) / 100.0});
             }
             return rows;
         });
@@ -89,10 +98,13 @@ final class PivotFixture implements AutoCloseable {
                     @Override
                     public List<PivotProvider.Field> fields() {
                         List<PivotProvider.Field> f = new ArrayList<>(List.of(new PivotProvider.Field("REGION", "string", "region", ""),
-                                new PivotProvider.Field("DESK", "string", "desk", ""), new PivotProvider.Field("CCY", "string", "currency", ""),
+                                new PivotProvider.Field("DESK", "string", "desk", ""),
+                                new PivotProvider.Field("CCY", "string", "currency", "", units ? "currency" : ""),
                                 new PivotProvider.Field("TRADE_DATE", "date", "trade date", ""),
-                                new PivotProvider.Field("NOTIONAL", "number", "notional", ""), new PivotProvider.Field("PNL", "number", "P&L", ""),
-                                new PivotProvider.Field("CPTY", "string", "counterparty", "")));
+                                new PivotProvider.Field("NOTIONAL", "number", "notional", "", units ? "money" : ""),
+                                new PivotProvider.Field("PNL", "number", "P&L", "", units ? "money" : ""),
+                                new PivotProvider.Field("CPTY", "string", "counterparty", ""),
+                                new PivotProvider.Field("RATE_PCT", "number", "rate", "", units ? "pct" : "")));
                         if (!limited) {
                             f.add(new PivotProvider.Field("SALARY", "number", "salary", ""));
                         }
@@ -116,7 +128,7 @@ final class PivotFixture implements AutoCloseable {
 
                     @Override
                     public String version() {
-                        return "v1|" + (limited ? "limited" : "all");
+                        return "v1|" + (limited ? "limited" : "all") + (units ? "|units" : "");
                     }
 
                     @Override
@@ -137,7 +149,7 @@ final class PivotFixture implements AutoCloseable {
                     @Override
                     public Relation relation(DuckDbExecutor e) {
                         if (limited) {
-                            return new Relation("(SELECT REGION, DESK, CCY, TRADE_DATE, NOTIONAL, PNL, CPTY FROM \"trades\")", List.of(),
+                            return new Relation("(SELECT REGION, DESK, CCY, TRADE_DATE, NOTIONAL, PNL, CPTY, RATE_PCT FROM \"trades\")", List.of(),
                                     "\"t\".\"REGION\" = ?", List.of("EMEA"));
                         }
                         return new Relation("\"trades\"", List.of(), null, List.of());

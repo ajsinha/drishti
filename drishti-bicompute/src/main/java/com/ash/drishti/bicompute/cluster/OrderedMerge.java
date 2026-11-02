@@ -56,7 +56,20 @@ public final class OrderedMerge {
                     for (int f = 0; f < nf; f++) {
                         st[f] = plan.functions().get(f).fn().merge(have.states()[f], e.getValue().states()[f]);
                     }
-                    cells.put(e.getKey(), new Partials.Entry(have.members() + e.getValue().members(), st, have.scope(), have.notes()));
+                    java.util.Map<Integer, String> notes = new java.util.HashMap<>(have.notes());
+                    e.getValue().notes().forEach(notes::putIfAbsent);
+                    String scope = have.scope();
+                    if (have.scope() != null && e.getValue().scope() != null && have.scope().startsWith("currency ")
+                            && !have.scope().equals(e.getValue().scope())) {
+                        scope = null;                                // one shard in one currency, another in another: mixed
+                        for (int f = 0; f < nf; f++) {
+                            if (plan.money().money(plan.functions().get(f))) {
+                                notes.putIfAbsent(f, "mixed currencies (" + have.scope().substring(9) + ", " + e.getValue().scope().substring(9)
+                                        + "): convert them to add them (the view's currency: report and rates); amounts are never added raw");
+                            }
+                        }
+                    }
+                    cells.put(e.getKey(), new Partials.Entry(have.members() + e.getValue().members(), st, scope, notes));
                 }
             }
             out.add(new Partials.SetResult(plan.sets().get(s), cells));

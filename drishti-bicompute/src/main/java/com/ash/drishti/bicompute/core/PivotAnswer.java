@@ -54,6 +54,7 @@ final class PivotAnswer {
             m.put("plainSum", f.fn().plainSum());
             m.put("exact", f.fn().kind() != Kind.SKETCH);
             m.put("showAs", view.values().get(i).showAs());
+            m.put("unit", c.unit(f));
             measures.add(m);
         }
         out.put("measures", measures);
@@ -142,7 +143,9 @@ final class PivotAnswer {
             e.put("notes", notes);
         }
         e.put("members", cell.members);
-        if (cell.scope != null) {
+        if (cell.scope != null && cell.scope.startsWith("currency ")) {
+            e.put("currency", cell.scope.substring(9));
+        } else if (cell.scope != null) {
             e.put("scope", cell.scope);
         }
         return e;
@@ -392,6 +395,14 @@ final class PivotAnswer {
             fns.add(m);
         }
         p.put("functions", fns);
+        if (c.view.currency() != null) {
+            PivotView.Currency cc = c.view.currency();
+            p.put("currency", "money converted into " + cc.report() + " at " + cc.rates() + " (" + cc.source() + "), from each row's "
+                    + c.money.currencyField() + "; a row in a currency without a rate is left out");
+        } else if (c.money.guard()) {
+            p.put("currency", "money in each row's own currency (" + c.money.currencyField() + "); a cell over several currencies shows no money "
+                    + "figure until the view converts them");
+        }
         p.put("notes", c.catalogue.notes());
         p.put("statements", c.work.statements.size() > 20 ? c.work.statements.subList(0, 20) : c.work.statements);
         p.put("queries", c.work.queries);

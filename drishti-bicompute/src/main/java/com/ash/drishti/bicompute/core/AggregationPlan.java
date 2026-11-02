@@ -35,9 +35,38 @@ import java.util.TreeMap;
  * @param maxGroups the most groups a query may return before the view is refused (the cell budget's guard; 0: no guard)
  */
 public record AggregationPlan(String source, String date, String asOf, Map<String, Filter> filters, Map<String, Dim> dims,
-        List<FunctionCall> functions, List<CellSet> sets, Shard shard, int maxGroups) {
+        List<FunctionCall> functions, List<CellSet> sets, Shard shard, int maxGroups, Money money) {
+
+    /**
+     * Money in the plan (PIVOT_ENGINE.md section 5.4).
+     *
+     * @param currencyField the field of a row's currency (null: the source has none)
+     * @param fields the money fields
+     * @param conversion the view's explicit conversion (null: none, so a cell mixing currencies is refused for money measures)
+     */
+    public record Money(String currencyField, java.util.Set<String> fields, PivotView.Currency conversion) {
+        public Money {
+            fields = java.util.Set.copyOf(fields);
+        }
+
+        public static Money none() {
+            return new Money(null, java.util.Set.of(), null);
+        }
+
+        /** True when the function's inputs are money (its figures are in a currency). */
+        public boolean money(FunctionCall f) {
+            return f.fn().numeric() && f.inputs().stream().anyMatch(fields::contains) && !"count".equals(f.fn().name())
+                    && !"count_distinct".equals(f.fn().name());
+        }
+
+        /** True when the provider must say, per cell, whether its rows are in one currency. */
+        public boolean guard() {
+            return currencyField != null && conversion == null && !fields.isEmpty();
+        }
+    }
 
     public AggregationPlan {
+        money = money == null ? Money.none() : money;
         filters = java.util.Collections.unmodifiableMap(new TreeMap<>(filters == null ? Map.of() : filters));
         dims = Map.copyOf(dims);
         functions = List.copyOf(functions);
@@ -46,12 +75,12 @@ public record AggregationPlan(String source, String date, String asOf, Map<Strin
 
     /** The same plan for other sets (the cache's misses) or other functions. */
     public AggregationPlan with(List<CellSet> s, List<FunctionCall> f) {
-        return new AggregationPlan(source, date, asOf, filters, dims, f, s, shard, maxGroups);
+        return new AggregationPlan(source, date, asOf, filters, dims, f, s, shard, maxGroups, money);
     }
 
     /** The same plan for one shard of the rows. */
     public AggregationPlan on(Shard s) {
-        return new AggregationPlan(source, date, asOf, filters, dims, functions, sets, s, maxGroups);
+        return new AggregationPlan(source, date, asOf, filters, dims, functions, sets, s, maxGroups, money);
     }
 
     /** The canonical text of the filters (part of every cache key). */

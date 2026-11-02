@@ -107,6 +107,29 @@ public final class KindSources implements TabularSource.Resolver {
         return "string";
     }
 
+    /**
+     * What a column's values are (PIVOT_ENGINE.md section 5.4), from its contract type and name: an {@code amount} is money in the row's
+     * currency, a {@code rate} or a name ending {@code _PCT} or {@code PERCENT} is never summed, a text column named {@code CURRENCY},
+     * {@code CCY} or ending {@code _CCY} or {@code _CURRENCY} holds the row's currency.
+     */
+    static String unit(DataViewService.Column c) {
+        String t = c.type() == null ? "" : c.type().toLowerCase(Locale.ROOT);
+        String n = c.name().toUpperCase(Locale.ROOT);
+        if ("amount".equals(t)) {
+            return "money";
+        }
+        if ("rate".equals(t)) {
+            return "rate";
+        }
+        if (n.endsWith("_PCT") || n.endsWith("PERCENT")) {
+            return "pct";
+        }
+        if (!NUMBER.contains(t) && (n.equals("CURRENCY") || n.equals("CCY") || n.endsWith("_CCY") || n.endsWith("_CURRENCY"))) {
+            return "currency";
+        }
+        return "";
+    }
+
     @Override
     public TabularSource open(Viewer v, String source, String date) {
         Principal p = principal(v);
@@ -122,7 +145,7 @@ public final class KindSources implements TabularSource.Resolver {
                 continue;
             }
             fields.add(new PivotProvider.Field(c.name(), type(c), c.name().toLowerCase(Locale.ROOT).replace('_', ' '),
-                    c.description() == null ? "" : c.description()));
+                    c.description() == null ? "" : c.description(), unit(c)));
         }
         String version;
         try {

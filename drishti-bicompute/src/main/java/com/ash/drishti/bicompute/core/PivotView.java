@@ -57,7 +57,38 @@ import java.util.Set;
  */
 public record PivotView(String source, String date, String asOf, List<Dim> rows, List<Dim> columns, List<Value> values,
         Map<String, AggregationPlan.Filter> filters, List<Expansion> expanded, int expandRows, int expandColumns, Map<String, Sort> sort,
-        Map<String, Top> top, String subtotals) {
+        Map<String, Top> top, String subtotals, Currency currency) {
+
+    /**
+     * The explicit conversion of money (PIVOT_ENGINE.md section 5.4): every amount of a money field is converted from the currency of its
+     * row ({@code field}, else the source's currency field) into {@code report} at the {@code rates} given (units of {@code report} per one
+     * unit of the currency), named by {@code source} in every cell's provenance. A row in a currency without a rate is left out of the
+     * converted figures, and the cell says how. Without a conversion, a money total over several currencies is refused in words.
+     *
+     * @param report the reporting currency (three letters)
+     * @param field the field of a row's currency (null: the source's currency field)
+     * @param rates currency to its rate into {@code report}
+     * @param source where the rates come from, in words ({@code ECB close 2026-10-30})
+     */
+    public record Currency(String report, String field, Map<String, Double> rates, String source) {
+        public Currency {
+            if (report == null || !report.matches("[A-Z]{3}")) {
+                throw bad("currency.report is three capital letters (USD), not " + report);
+            }
+            rates = new java.util.TreeMap<>(rates == null ? Map.of() : rates);
+            for (Map.Entry<String, Double> e : rates.entrySet()) {
+                if (!e.getKey().matches("[A-Z]{3}") || e.getValue() == null || !(e.getValue() > 0) || e.getValue().isInfinite()) {
+                    throw bad("currency.rates: " + e.getKey() + " = " + e.getValue() + " is not a currency and a positive rate");
+                }
+            }
+            source = source == null || source.isBlank() ? "rates given in the view" : source.strip();
+        }
+
+        /** The rate of a currency into the report currency (1 for the report currency itself), or null when none is given. */
+        public Double rate(String ccy) {
+            return report.equals(ccy) ? Double.valueOf(1.0) : rates.get(ccy);
+        }
+    }
 
     /**
      * A measure of the view.
@@ -197,8 +228,23 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
                 }
             });
         }
+        Currency ccy = null;
+        if (m.get("currency") instanceof Map<?, ?> cm) {
+            Map<String, Double> rates = new LinkedHashMap<>();
+            if (cm.get("rates") instanceof Map<?, ?> rm) {
+                rm.forEach((k, v) -> {
+                    try {
+                        rates.put(String.valueOf(k).strip().toUpperCase(Locale.ROOT), v instanceof Number n ? n.doubleValue() : Double.parseDouble(String.valueOf(v)));
+                    } catch (NumberFormatException e) {
+                        throw bad("currency.rates." + k + " is not a number: " + v);
+                    }
+                });
+            }
+            ccy = new Currency(str(cm.get("report")) == null ? null : str(cm.get("report")).toUpperCase(Locale.ROOT), str(cm.get("field")), rates,
+                    str(cm.get("source")));
+        }
         return new PivotView(str(m.get("source")), str(m.get("date")), str(m.get("asOf")), rows, cols, values, filters, exp, er, ec, sort, top,
-                str(m.get("subtotals")));
+                str(m.get("subtotals")), ccy);
     }
 
     /** The view as its JSON map (what a saved view stores). */
@@ -265,17 +311,27 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
         });
         m.put("top", t);
         m.put("subtotals", subtotals);
+        if (currency != null) {
+            Map<String, Object> c = new LinkedHashMap<>();
+            c.put("report", currency.report());
+            if (currency.field() != null) {
+                c.put("field", currency.field());
+            }
+            c.put("rates", currency.rates());
+            c.put("source", currency.source());
+            m.put("currency", c);
+        }
         return m;
     }
 
     /** The same view on another date (compare, time travel). */
     public PivotView on(String otherDate) {
-        return new PivotView(source, otherDate, asOf, rows, columns, values, filters, expanded, expandRows, expandColumns, sort, top, subtotals);
+        return new PivotView(source, otherDate, asOf, rows, columns, values, filters, expanded, expandRows, expandColumns, sort, top, subtotals, currency);
     }
 
     /** The same view with other nodes open. */
     public PivotView withExpanded(List<Expansion> e, int er, int ec) {
-        return new PivotView(source, date, asOf, rows, columns, values, filters, e, er, ec, sort, top, subtotals);
+        return new PivotView(source, date, asOf, rows, columns, values, filters, e, er, ec, sort, top, subtotals, currency);
     }
 
     private static List<Dim> dims(Object o) {
