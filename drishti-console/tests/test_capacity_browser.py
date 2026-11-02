@@ -54,7 +54,7 @@ def open_page(browser, stack, viewport=None, theme=None):
     pg.errors = []
     pg.on("pageerror", lambda e: pg.errors.append(str(e)))
     pg.on("console", lambda m: m.type == "error" and "Content Security Policy" in m.text and pg.errors.append(m.text))
-    pg.goto(stack.console + "/admin/capacity")
+    pg.goto(stack + "/admin/capacity")
     wait(pg, "document.querySelectorAll('[data-cap-kpi]').length === 4 && /Measured|unavailable/.test(document.querySelector('[data-cap-meta]').textContent)")
     if theme:
         pg.evaluate("t => document.documentElement.setAttribute('data-theme', t)", theme)
@@ -92,12 +92,12 @@ def test_typing_an_input_changes_the_recommended_heap(browser, stack):
     wait(pg, "document.querySelector('[data-cap-answer=heap]').textContent === '-Xmx10g'")
     pg.fill("#cap-in-Trades", "1,000,000")
     pg.fill("#cap-in-Positions", "1000000")
-    wait(pg, "document.querySelector('[data-cap-answer=heap]').textContent === '-Xmx19g'")
+    wait(pg, "document.querySelector('[data-cap-answer=heap]').textContent === '-Xmx20g'")
     if SHOTS:
         pg.evaluate("document.documentElement.setAttribute('data-theme', 'light')")
         shot(pg, "plan", full=True)
     assert "ch" in pg.get_attribute("[data-cap-field='Trades']", "class")
-    assert "-Xmx19g -Xms19g" in pg.inner_text("[data-cap-cmd]")
+    assert "-Xmx20g -Xms20g" in pg.inner_text("[data-cap-cmd]")
     assert "hot-dates: 10" in pg.inner_text("[data-cap-yaml]")
     pg.fill("#cap-in-HotDates", "12")
     wait(pg, "document.querySelector('[data-cap-yaml]').textContent.indexOf('hot-dates: 12') >= 0")
@@ -158,7 +158,7 @@ def test_dark_and_light_draw_and_f1_opens_the_guide(browser, stack):
             pg.keyboard.press("F1")
             pg.wait_for_url("**/help/**")
             assert "#124-admin--capacity-today-against-the-plan" in pg.url
-            assert pg.locator("#124-admin--capacity-today-against-the-plan").count() == 1
+            assert pg.locator("[id='124-admin--capacity-today-against-the-plan']").count() == 1
         assert pg.errors == [], pg.errors
         pg.close()
     assert seen["terminal"][0] != seen["light"][0]

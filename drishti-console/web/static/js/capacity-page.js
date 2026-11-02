@@ -159,17 +159,23 @@
         ' ' + esc(SYMPTOM[f.id]) + ' <b>Fix</b>: <code>' + esc(f.fix) + '</code>.</div>';
     } else {
       html += '<div class="cap-box ' + (f.state === 'tight' ? 'a' : 'g') + '" data-cap-breaks="' + f.id + '"><b>Nothing breaks at the plan. Nearest: ' + esc(f.label.toLowerCase()) + '</b> (' +
-        esc(amount(f.need, f.unit) + ' of ' + amount(f.has, f.unit)) + (f.id === 'disk' && f.daysLeft != null ? esc(', about ' + Math.round(f.daysLeft / 21) + ' months of growth left') : '') + '). If it grows: <code>' + esc(f.fix) + '</code>.</div>';
+        esc(amount(f.need, f.unit) + ' of ' + amount(f.has, f.unit)) + (f.id === 'disk' && f.daysLeft != null ? esc(', ' + months(f.daysLeft) + ' of growth left') : '') + '). If it grows: <code>' + esc(f.fix) + '</code>.</div>';
     }
     known.slice(1).forEach(function (r, i) {
       if (r.state === 'short' || r.state === 'tight') {
         html += '<div class="cap-box ' + (r.state === 'short' ? 'r' : 'a') + '"><b>' + (i === 0 ? 'Second' : 'Then') + ': ' + esc(r.label.toLowerCase()) + '</b> (' +
-          esc(amount(r.need, r.unit) + ' of ' + amount(r.has, r.unit)) + (r.id === 'disk' && r.daysLeft != null ? esc(', about ' + Math.round(r.daysLeft / 21) + ' months at today\'s growth') : '') + '). Fix: <code>' + esc(r.fix) + '</code>.</div>';
+          esc(amount(r.need, r.unit) + ' of ' + amount(r.has, r.unit)) + (r.id === 'disk' && r.daysLeft != null ? esc(', ' + months(r.daysLeft) + ' at today\'s growth') : '') + '). Fix: <code>' + esc(r.fix) + '</code>.</div>';
       }
     });
     var fine = known.filter(function (r) { return r.state === 'room' && r !== f; }).map(function (r) { return r.label; });
     if (fine.length) { html += '<div class="cap-box g"><b>Fine:</b> ' + esc(fine.join(', ')) + ' ' + (fine.length > 1 ? 'have' : 'has') + ' room at the plan.</div>'; }
     el.innerHTML = html;
+  }
+
+  /** Business days as months in words (21 business days a month). */
+  function months(days) {
+    var m = Math.round(days / 21);
+    return m < 1 ? 'under a month' : 'about ' + m + (m === 1 ? ' month' : ' months');
   }
 
   function order(r) {

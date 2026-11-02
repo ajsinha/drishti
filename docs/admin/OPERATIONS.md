@@ -1741,6 +1741,8 @@ band with its **Why?**, the settings with their exact keys in three forms (YAML 
 variable, the server argument) and the YAML block with **Copy**, every JVM argument with its condition, the whole command line with
 **Copy**, and the warnings. The plan's inputs stay in the browser until reset.
 
+![Admin → Capacity: Edit the plan](img/capacity/plan.png)
+
 **Download the working (.xlsx)** gives the planner workbook (the same as `docs/architecture/Drishti-Sizing-Planner.xlsx`: Inputs,
 Results with the calibration check, Coefficients, Explain), every result a live Excel formula over the Inputs and Coefficients, so a
 number changed in Excel recomputes the heap, RAM, disk and cores (Excel recalculates on opening). The dialog asks which inputs:
@@ -1749,6 +1751,8 @@ number changed in Excel recomputes the heap, RAM, disk and cores (Excel recalcul
 figures the Inputs sheet also lists the measured figures that are not inputs (heap max and after GC, RSS, machine memory, cores, the
 open dates' heap and the safety net, disk free and the guard, people and requests a second). Each download is recorded in the audit
 log as `capacity-workbook-downloaded`, with the inputs chosen and the ones changed from the defaults.
+
+![Download the working: which inputs](img/capacity/download.png)
 
 Where each live figure comes from: the VaR engine's status (the newest date's positions, trades and nodes; dates open, hot-dates, the
 open dates' heap and the safety net), the JVM (`-Xmx`, heap used, heap after the last collection from `jvm.gc.live.data.size`), the
@@ -1760,6 +1764,8 @@ is left empty, never guessed. The page refreshes them every 60 seconds and on **
 On a phone (MOBILE_DISPLAY.md's tiers): **must**, the four states and what breaks first; **glance**, the headroom bars; **more**, the
 live table and growth, folded; **desk**, editing the plan, the JVM arguments, the command line, the growth sliders and the download,
 which a line says are on a wide screen. Dark and light themes both. <kbd>F1</kbd> opens this section.
+
+<img src="img/capacity/phone.png" alt="Admin → Capacity on a phone (390 px)" width="300">
 
 The endpoints (administrators; [API_GUIDE.md](../guides/API_GUIDE.md)): `GET /api/v1/admin/capacity` (the planner file as JSON),
 `GET /api/v1/admin/capacity/live` (the measured figures, `measuredAt`, and `inputs`: the planner inputs they stand for) and
