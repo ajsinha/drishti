@@ -162,6 +162,10 @@ public class ExposureController {
         m.put("alpha", pr.alpha());
         m.put("contributionWindow", pr.contributionWindow());
         m.put("hotDates", pr.hotDates());
+        m.put("memory", svc.memoryStatus());                          // VAR_GUIDE.md section 26.8, as VaR's
+        m.put("refusalTtlSeconds", pr.refusalTtlSeconds());
+        m.put("refusedForRoom", svc.room().describe());
+        m.put("pinned", svc.pins().describe());
         m.put("memoryBudgetGb", pr.memoryBudgetGb());
         m.put("maxScopeNettingSets", pr.maxScopeNettingSets());
         m.put("tier", svc.loader().tier().describe());

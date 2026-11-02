@@ -95,7 +95,11 @@ class SutraNextEquivalenceTest {
 
     /** The view as text, normalised, with the layout's own version (the provenance panel's "Sutra ir-curve vN") made one. */
     private static String same(JsonNode view) {
-        return normal(view.deepCopy()).toString().replace("Sutra ir-curve v2", "Sutra ir-curve v1");
+        JsonNode copy = view.deepCopy();
+        if (copy instanceof com.fasterxml.jackson.databind.node.ObjectNode o) {
+            o.remove("phone");        // the phone tiers the shared fragments declare: not part of the page drawn (PhoneViewTest)
+        }
+        return normal(copy).toString().replace("Sutra ir-curve v2", "Sutra ir-curve v1");
     }
 
     private static String layout(JsonNode view) {

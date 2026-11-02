@@ -40,7 +40,8 @@ EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 
           "  drishti.py var basket rates-hedges \"WHERE:'hedge' in TAGS\" --title 'Rates hedges'\n"
           "  drishti.py var basket-delete rates-hedges\n  drishti.py var basket-delete old-unwind --owner asha --reason 'left the desk'\n"
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
-          "  drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250")
+          "  drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250\n"
+          "  drishti.py var explain BANK\n  drishti.py var explain 'DESK:RATES' --from 2026-09-29 --to 2026-09-30 --xlsx why.xlsx")
 
 
 def money(v) -> str:
@@ -220,6 +221,73 @@ def render_playground(g: dict, say) -> None:
             f"{p.get('standaloneVar'):>16,.2f}" + (f"  incremental {inc:,.2f}" if inc is not None else ""))
     if g.get("rest"):
         say(f"  Rest of scope ({g['rest'].get('count')} positions) component {g['rest'].get('componentVar'):,.2f}")
+
+
+def render_explain(x: dict, say, bar_width: int = 32) -> None:
+    """Why VaR moved (VAR_GUIDE.md section 3.11): the sentences, the waterfall as aligned lines (a bar to scale each, + raises VaR, -
+    lowers it), the states with their VaR scenario, each step's top drivers, the order-free view and the add-up check."""
+    for s in x.get("sentences") or []:
+        say(s)
+    say("")
+    lines = x.get("lines") or []
+    biggest = max([abs(l.get("effect") or 0) for l in lines] + [1e-9])
+    labels = [f"VaR {x.get('from')}"] + [str(l.get("label")) for l in lines] + [f"VaR {x.get('to')}", "change"]
+    w = max(len(t) for t in labels)
+    say(f"{labels[0]:<{w}}  {money(x.get('varFrom')):>16}")
+    for l in lines:
+        e = l.get("effect") or 0
+        n = int(round(abs(e) / biggest * bar_width))
+        say(f"{str(l.get('label')):<{w}}  {signed(e):>16}  {('+' if e >= 0 else '-') * n}".rstrip())
+    say(f"{labels[-2]:<{w}}  {money(x.get('varTo')):>16}")
+    say(f"{'change':<{w}}  {signed(x.get('change') or 0):>16}  the steps add up: {'yes' if x.get('addsUp') else 'NO'}")
+    say("")
+    rows = [["State", "After", "Trades", "Scenarios", "VaR", "VaR scenario"]]
+    for st in x.get("states") or []:
+        rows.append([str(st.get("id")), str(st.get("what")), str(st.get("trades")), str(st.get("scenarios")), money(st.get("var")),
+                     str(st.get("varScenario") or "")])
+    table(rows, say)
+    for st in x.get("steps") or []:
+        d = st.get("drivers") or {}
+        top = (d.get("rows") or [])[:5]
+        if not top:
+            continue
+        say("")
+        say(f"{st.get('label')}: {signed(st.get('effect') or 0)}")
+        for r in top:
+            if d.get("kind") == "children":
+                say(f"  {str(r.get('label')):<28} {money(r.get('componentBefore')):>14} -> {money(r.get('componentAfter')):>14}  {signed(r.get('change') or 0):>12}")
+            elif d.get("kind") == "days":
+                say(f"  {r.get('day')}  P&L {money(r.get('pnl')):>14}  rank {r.get('rank')}{'  in the tail' if r.get('inTail') else ''}")
+            else:
+                say(f"  {str(r.get('id')):<28} {signed(r.get(d.get('field') or 'incrementalVar') or 0):>14}  {r.get('reason') or r.get('how') or ''}".rstrip())
+        if d.get("restLabel"):
+            say(f"  {str(d.get('restLabel')):<28} {signed(d.get('rest') or 0):>14}")
+    of = x.get("orderFree") or {}
+    if of.get("rows"):
+        say("")
+        say(f"Order-free, by {of.get('by')}: component VaR on {x.get('to')} less on {x.get('from')}")
+        for r in of["rows"][:10]:
+            say(f"  {str(r.get('label')):<28} {signed(r.get('change') or 0):>14}")
+        say(f"  {'total':<28} {signed(of.get('total') or 0):>14}  adds up: {'yes' if of.get('addsUp') else 'NO'}")
+    for wn in x.get("warnings") or []:
+        say(f"note: {wn}")
+
+
+def signed(v) -> str:
+    return ("+" if v >= 0 else "-") + money(abs(v))
+
+
+def render_explain_matrix(m: dict, say) -> None:
+    """The Matrix view: one row a node, VaR before, each step, VaR after."""
+    steps = m.get("steps") or []
+    rows = [["Node", f"VaR {m.get('from')}"] + [str(s.get("label")) for s in steps] + [f"VaR {m.get('to')}", "Change"]]
+    for r in m.get("rows") or []:
+        eff = r.get("effects") or {}
+        rows.append(["  " * int(r.get("depth") or 0) + str(r.get("label")), money(r.get("varFrom"))]
+                    + [money(eff.get(s.get("key"))) for s in steps] + [money(r.get("varTo")), signed(r.get("change") or 0)])
+    table(rows, say)
+    if m.get("note"):
+        say(m["note"])
 
 
 def render_estimate(e: dict, say) -> None:
@@ -476,6 +544,23 @@ def register(groups, srv, ctx: dict) -> None:
             else:
                 res = api.json("GET", "/api/v1/var/playground?" + enc(lensed(a, dated(a, q))))
                 say_json(res) if a.json else render_playground(res, print)
+        elif c == "explain":
+            q = {"scope": a.scope}
+            for k, v in (("from", a.from_), ("to", a.to), ("confidence", a.confidence)):
+                if v is not None:
+                    q[k] = v
+            if a.xlsx:
+                _, body = api.request("GET", "/api/v1/var/explain.xlsx?" + enc(q))
+                with open(a.xlsx, "wb") as f:
+                    f.write(body)
+                print(f"wrote {a.xlsx} ({len(body):,} bytes): why VaR moved, every state and step a formula (Main, Data, States, Drivers, "
+                      "Explain, Provenance)")
+            elif a.matrix:
+                res = api.json("GET", "/api/v1/var/explain/matrix?" + enc(q))
+                say_json(res) if a.json else render_explain_matrix(res, print)
+            else:
+                res = api.json("GET", "/api/v1/var/explain?" + enc(q))
+                say_json(res) if a.json else render_explain(res, print)
         elif c == "tree":
             res = api.json("GET", "/api/v1/var/tree?" + enc(lensed(a, dated(a, {"hierarchy": a.hierarchy}))))
             if a.json:
@@ -646,6 +731,15 @@ def register(groups, srv, ctx: dict) -> None:
     pg.add_argument("--xlsx", metavar="FILE", help="write the workbook (Main, Config, Data, FX, PnL, Explain, Provenance) to FILE")
     pg.add_argument("--count", default="500", help="positions in the workbook: 100, 500 (default), 1000, 10000 or all; the rest in Rest of scope")
     pg.add_argument("--estimate", action="store_true", help="each export size's estimated file size, recalculation time and the applications that open it")
+    ex = sub.add_parser("explain", help="why VaR moved (VAR EXPLAIN, VAR_GUIDE.md section 3.11): the change between two business dates in "
+                        "causes that add up exactly (restatement, hierarchy, trades out, the window, the market, trades in), with who drove each",
+                        parents=[srv])
+    ex.add_argument("scope", help="a scope: BANK, DESK:RATES, NODE:<id>, PORT:<id>, BASKET:<owner>/<name> ...")
+    ex.add_argument("--from", dest="from_", metavar="YYYY-MM-DD", help="the earlier business date (default the one before --to)")
+    ex.add_argument("--to", metavar="YYYY-MM-DD", help="the later business date (default the newest with vectors)")
+    ex.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (one of drishti.var.confidences)")
+    ex.add_argument("--matrix", action="store_true", help="the scope and each child node, the steps across (the Matrix view)")
+    ex.add_argument("--xlsx", metavar="FILE", help="write the explanation as a workbook of formulas to FILE")
     sw = sub.add_parser("stress-window", help="the stress window selection (SWIN): every window of a node's long-history P&L as a "
                         "stressed VaR, the worst against the current, the candidates; --propose freezes it, --decide approves or rejects",
                         parents=[srv])

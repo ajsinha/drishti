@@ -103,6 +103,7 @@
   <div hidden data-render-chrome><nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav><div data-render-tools>{{ head_tools }}</div></div>
   {% else %}
   {{ provenance_banners(vm, asof, business_date, embed, request.url.path | urlencode) }}
+  {% if phone_everything %}<p class="ph-back"><button type="button" class="ph-btn" data-phone-back><i class="bi bi-phone" aria-hidden="true"></i> Phone view</button> <span>You are seeing every panel of this page.</span></p>{% endif %}
   <section class="vhead">
     <nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav>
     <div class="vtitle">
@@ -111,11 +112,12 @@
     </div>
     {{ strip(vm) }}
   </section>
-  {% if grid %}{% include "terminal/_grid.html" %}{% else %}
+  {# a phone: the phone page (terminal/_phone.html); a tablet: the page as laid out, less its desk panels, then More on this page #}
+  {% if phone and phone.device == 'phone' %}{% include "terminal/_phone.html" %}{% else %}{% if grid %}{% include "terminal/_grid.html" %}{% else %}
   <div class="vgrid">
     <div class="vmain">{{ panels(main, false, vm.ref) }}</div>
     <aside class="vright" aria-label="Context">{{ panels(right, false, vm.ref) }}</aside>
-  </div>{% endif %}
+  </div>{% endif %}{% if phone %}{% include "terminal/_phone.html" %}{% endif %}{% endif %}
   {% endif %}
 </div>
 {% if not embed %}{% include "terminal/_share.html" %}{% endif %}

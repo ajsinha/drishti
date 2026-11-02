@@ -24,6 +24,8 @@
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/risk-landing.css?v={{ ASSET_V }}">{% endblock %}
 {% block content %}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{{ back(request) }}
 <div class="rl" data-risk-landing="{{ landing }}" data-hierarchy="{{ hierarchies[0] }}">
   <nav class="rl-switch" aria-label="Choose your Home">
     <span class="rl-switch-l">Home</span>
@@ -35,7 +37,7 @@
     <span data-rl-intraday></span><span data-rl-official></span></p>
 
   {% if landing == 'command' %}
-  <section class="rl-hero" aria-label="Command line">
+  <section class="rl-hero" aria-label="Command line"{{ part(PP, 'hero') }}>
     <form class="rl-big" action="/go" method="get" role="search" autocomplete="off">
       <label class="visually-hidden" for="rlCmd">Command</label>
       <span class="mono" aria-hidden="true">&gt;</span>
@@ -49,7 +51,7 @@
       <span>breaches <b class="mono" data-rl-breaches>…</b></span>
     </div>
   </section>
-  <div class="rl-qc">
+  <div class="rl-qc"{{ part(PP, 'quick') }}>
     <div class="rl-q"><h2>Saved baskets</h2><ul data-rl-baskets><li class="rl-muted">…</li></ul></div>
     <div class="rl-q"><h2>Watch list</h2><ul data-rl-monitors>{% for m in monitors %}<li><a href="/m/{{ m | urlencode }}">{{ m }}</a></li>{% else %}<li class="rl-muted">No monitors yet: <a href="/m">make one</a></li>{% endfor %}</ul></div>
     <div class="rl-q"><h2>Learn</h2><ul>
@@ -58,7 +60,7 @@
   </div>
   {% else %}
   {% if landing == 'desk' %}
-  <section class="rl-tiles" aria-label="Headline figures">
+  <section class="rl-tiles" aria-label="Headline figures"{{ part(PP, 'tiles') }}>
     <a class="rl-tile" href="/var?scope=BANK" data-rl-tile="var"><span class="k">VaR · BANK</span><span class="v mono" data-rl-var>…</span><span class="s" data-rl-var-s></span></a>
     <a class="rl-tile" href="/var?scope=BANK" data-rl-tile="backtest"><span class="k">Backtest</span><span class="v mono" data-rl-backtest>…</span><span class="s" data-rl-backtest-s></span></a>
     <a class="rl-tile" href="/exposure?scope=BANK" data-rl-tile="epe"><span class="k">Exposure EPE · BANK</span><span class="v mono" data-rl-epe>…</span><span class="s" data-rl-epe-s></span></a>
@@ -68,27 +70,27 @@
   {% endif %}
   <div class="rl-cols">
     {% if landing == 'map' %}
-    <section class="rl-card" aria-labelledby="rlTreeH">
+    <section class="rl-card" aria-labelledby="rlTreeH"{{ part(PP, 'card-1') }}>
       <h2 id="rlTreeH"><span data-rl-tree-title>{{ hierarchies[0] }}</span><small>VaR · limit use</small></h2>
       <div class="rl-hier" data-rl-hierarchies role="group" aria-label="Hierarchy"></div>
       <div class="rl-tree mono" data-rl-tree role="tree"><p class="rl-muted">…</p></div>
     </section>
-    <section class="rl-card" aria-labelledby="rlHeatH">
+    <section class="rl-card" aria-labelledby="rlHeatH"{{ part(PP, 'chart') }}>
       <h2 id="rlHeatH">Limit use<small>each node against its VaR limit</small></h2>
       <div class="rl-heat" data-rl-heat><p class="rl-muted">…</p></div>
       <p class="rl-note">Amber from 80%, red from 100%; each cell opens its scope.</p>
     </section>
-    <section class="rl-card" aria-labelledby="rlTodayH">
+    <section class="rl-card" aria-labelledby="rlTodayH"{{ part(PP, 'feed') }}>
       <h2 id="rlTodayH">Today<small>what the engines did</small></h2>
       <ul class="rl-feed" data-rl-feed><li class="rl-muted">…</li></ul>
     </section>
     {% else %}
-    <section class="rl-card" aria-labelledby="rlDeskH">
+    <section class="rl-card" aria-labelledby="rlDeskH"{{ part(PP, 'card-1') }}>
       <h2 id="rlDeskH">VaR by desk<small>limit use, worst first</small></h2>
       <table class="rl-table"><thead><tr><th scope="col">Desk</th><th scope="col" class="n">VaR</th><th scope="col">Limit use</th></tr></thead>
         <tbody data-rl-desks><tr><td colspan="3" class="rl-muted">…</td></tr></tbody></table>
     </section>
-    <section class="rl-card" aria-labelledby="rlCptyH">
+    <section class="rl-card" aria-labelledby="rlCptyH"{{ part(PP, 'table') }}>
       <h2 id="rlCptyH">Exposure by counterparty<small>PFE peak against limit</small></h2>
       <table class="rl-table"><thead><tr><th scope="col">Counterparty</th><th scope="col" class="n">EPE</th><th scope="col">Limit use</th></tr></thead>
         <tbody data-rl-cptys><tr><td colspan="3" class="rl-muted">…</td></tr></tbody></table>
@@ -96,12 +98,13 @@
     {% endif %}
   </div>
   {% if cards and landing == 'desk' %}
-  <nav class="rl-qc" aria-label="Quick commands">
+  <nav class="rl-qc" aria-label="Quick commands"{{ part(PP, 'quick') }}>
     {% for c in cards %}<a class="rl-q" href="{{ c.href }}" data-home-card="{{ c.cmd }}"><code class="mono">{{ c.cmd }}</code><span>{{ c.title }}</span></a>{% endfor %}
   </nav>
   {% endif %}
   {% endif %}
   <p class="rl-classic"><a href="/?landing=today">The classic Home</a></p>
+  {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/risk-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -15,6 +15,132 @@
 -->
 # Changelog
 
+## 2.9.10 — Memory, scale and mobile; why VaR moved (2026-11-01)
+
+*2.9.9 and 2.9.10 are released together as 2.9.10.*
+
+### Memory, scale and mobile
+
+- **A sizing planner for one server.** `docs/architecture/Drishti-Sizing-Planner.xlsx`, written by `tools/sizing_planner.py` (standard
+  library; `--check` guards drift, `tools/test_sizing_planner.py` its formulas and figures): type positions, dates in memory, users and
+  the Java version, and read the heap term by term, `-Xmx`, RAM, disk by folder, cores, the settings with their keys, the JVM arguments
+  as one command line, and warnings; every constant on its own tab with its source and status, calibrated to the 1,000,000-position
+  re-benchmark (RESOURCES_AND_SCALE.md section 9.7). The defaults are a production shape (300,000 trades, 39% updated
+  intraday in 10 batches), with today's intraday layer on the heap and its batches in the lake; Explain gives the results for it and for
+  the 1,000,000-position benchmark. A cluster version comes later.
+
+- **The VaR Playground's Explain tab in plain words.** The workbook's Explain tab opens with what VaR answers, how to read the tabs, and
+  signs and units; each of the ten steps starts with a sentence in plain language before its formula and cells; and every term of Main
+  (each input, derived cell and result), Config (each column), Data, FX, PnL and Provenance is explained: what it is, why it matters,
+  what changing it does, and its cell and value. Titles and text wrap at the top of their rows (styles `wrap` and `label.wrap`).
+- **The VaR page's Playground link carries the date** (`asOf`) beside the scope, currency, measure, horizon, confidences and set.
+- **VaR memory: node members as runs.** A hierarchy node's members (`OrdinalSet`) are kept as the sorted runs of its books' and cells'
+  ordinals, not as a bitmap of the whole date: at 1,000,000 trades and 27,024 nodes that is about 2.5 MB a date instead of 1.69 GB. Every
+  query and set operation answers the same in both forms (bit-exact; `OrdinalSetRunsTest`); an intraday layer's nodes stay runs.
+- **VaR CPU: a scope's parts summed run by run.** The totals over a scope's positions (`sumStandalone`, the count) walk the scope's runs
+  a position at a time, and whether a position is whole is a binary search over runs or a scan of its own bits, never a scan to the end of
+  the scope's run (`BitSet.nextClearBit`, 89% of the CPU of the 1,000,000-position benchmark). Answers unchanged to the bit.
+- **VaR and exposure: refusals for room remembered.** A date refused for room (`DRS-5204`, `DRS-5218`; exposure `DRS-5445`) is
+  remembered for `drishti.var.refusal-ttl-seconds` (300; exposure `drishti.ccr.exposure.refusal-ttl-seconds`): asked again, `503` at
+  once with `Retry-After`, without reading the lake (fifty requests at once make one load). Forgotten when room is freed, the inputs
+  change or the time is up; listed in the status (`refusedForRoom`) and in Admin → Caches (`var.refusals`, purgeable). Tests:
+  `RefusalsTest`, `VarRefusalRememberedTest`.
+- **VaR: mapped dates bounded by the disk, not a quarter of the heap.** `memory-budget-mb` now applies to the heap tier only. A mapped
+  build reserves three times its largest hot file, at least 256 MB when none exists yet (the estimate was 0), and checks the disk every
+  64 MB while the rows stream in: a date that would leave the disk under the guard is refused with `DRS-5204` naming the bytes needed and
+  free, its spill and part file deleted. The page cache is advisory: the status compares the open hot files with the memory beside the
+  heap (`memory`). Test: `VarDiskBudgetRefusalTest`.
+- **VaR and exposure: least recently used dates leave first; `hot-dates` 10.** `drishti.var.hot-dates` and
+  `drishti.ccr.exposure.hot-dates` default to 10 (were 2) and count dates. Every request stamps its date; the least recently used leaves
+  first; the date just used, the newest business date and the dates pinned in memory always stay. A byte safety net,
+  `drishti.var.open-heap-mb` (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap; exposure its own),
+  closes the least recently used dates' currency books, then stress books, then whole dates, never a protected one. Every book reports
+  `heapBytes()`; Admin → Caches `var.dates` shows every open book's heap. One shared class for both engines (`OpenDates`). Test:
+  `VarEvictionLruTest`.
+- **Pinned dates.** `drishti.var.pinned` (and `drishti.ccr.exposure.pinned`): `month-end`, `quarter-end`, `year-end`,
+  `fiscal-year-end` (with `drishti.var.fiscal-year-end`, `MM-DD`), `stress-window` and named `dates`, each with `back` and `keep`
+  (`disk`: the hot file built in the background after the official record and never trimmed; `memory`: open, protected, counted in
+  `hot-dates`); the last business day in every calendar of `drishti.business-date.calendar` (a New York or Toronto holiday moves it back).
+  Off by default. Listed with reasons and build state in `GET /api/v1/var/status` and `GET /api/v1/exposure/status`. Test:
+  `PinnedDatesTest`.
+- **VaR memory: aggregates read from the hot file.** A mapped date's book, cell and node aggregates (`AGGS`, float64) are mapped when the
+  hot file opens, like the position rows, instead of read onto the heap (642 MB a date at 1,000,000 positions): the heap keeps the key
+  to row index; a node's vector is a copy of its row, the same float64 bits. An intraday layer keeps only its changed aggregates and reads
+  the rest from the morning's mapping. The file format is unchanged (earlier files open as they are); `AGGS` is checked by
+  `VarHotFile.verify` with the matrices. Every book reports `heapBytes()` (`VarHeapPerDateTest`: 5.7 MB a date at 10,000 positions,
+  about 14.8 MB before; node runs 49 KB instead of 706 KB of bitmaps). The build writes the `AGGS` section a batch of rows at a time
+  instead of one `byte[]` of every aggregate (642 MB less at the load's peak at 1,000,000 positions); the file's bytes are unchanged.
+- **A date in use stays open over the byte safety net.** The net never closes a date (or its currency and stress books) read in the
+  last `-Ddrishti.open-dates.net-grace-seconds` (120): at a heap whose automatic net is smaller than one date, two dates asked in turn
+  by many users closed each other and loaded again at once, and the loads' working memory ran out. Idle dates still leave; a new load
+  without room is still refused (`DRS-5204`). Found by the 1,000,000-position re-benchmark at `-Xmx6g`. Test: `VarEvictionLruTest`.
+- **The Parquet footer cache weighed in bytes.** Parsed footers are weighed at about 700 bytes a column chunk and bounded by
+  `-Ddrishti.parquet.footer-cache-mb` (64), replacing `-Ddrishti.parquet.footer-cache-groups` (50,000 row groups, which held 385 MB
+  at 1,000,000 positions). Test: `ParquetFootersWeightTest`.
+- **The sizing formula corrected** (VAR_GUIDE 27.1, RESOURCES_AND_SCALE 9.5, BENCHMARK 12.1): the heap of a book with node runs and
+  mapped aggregates, about 0.77 GB at 1,000,000 positions (3.17 GB measured before); to be confirmed by the 1,000,000-position
+  re-benchmark. Tests: `VarHeapPerDateTest` (`-Dvar.heap.positions`, 10,000 by default), `VarEvictDeleteTest` (a hot file deleted only
+  once its three mappings are released).
+- **The phone display** ([MOBILE_DISPLAY.md](docs/architecture/MOBILE_DISPLAY.md), [USER_GUIDE.md, On a phone](docs/guides/USER_GUIDE.md#on-a-phone)).
+  Every panel has a phone tier: **must** (in full, first), **glance** (a compact form: five rows in chosen columns and sort, a chart as a
+  sparkline with its last value and change, the first bars, figures or tab, a map as its places, with *Show all*), **more** (a row under
+  *More on this page*, loaded in place when tapped, bound as the viewer with the page's controls and date) or **desk** (named under *On
+  desktop*, with the page's link to copy). A phone gets only its must and glance panels; a tablet keeps its layout less the desk panels;
+  a desktop is unchanged. *Show everything* gives the whole page for the session, *Why these panels* says which layer set each tier. The
+  grammar: `phone:` on a panel, a use and a Sutra, and a fragment's `doc.phone`, checked as `DRS-2059`, carried in the ViewModel's new
+  `phone`; the kind defaults (tables and charts glance, provenance and notes more, pivots desk); the site (`ui.phone.rules`,
+  `ui.phone.packs`, `ui.phone.kinds`) and the edition (`phone.rules`) set tiers and cap them with `max:`, the cap winning; Drishti Risk
+  puts its VaR contribution panels under *More*. The device is the `drishti-device` cookie the browser keeps from its width, or an
+  `X-Drishti-Device` header. The VaR and exposure pages and the four edition landings take the same tiers part by part
+  (`ui.phone.pages`, an edition's `phone.pages` and `home.phone`). Person pins come later, as decided. Tests: `PhoneReaderTest`,
+  `PhoneViewTest`, `test_phone.py`, `test_phone_browser.py` (390 px and 1280 px, dark and light).
+- **The lens menus on a phone** (LX1 option C): below 640 px an edition's subject menus fold into one menu named after it (**Risk**,
+  **Trading**, **Market**, **World**), first in the bar, a column per subject; a wider screen keeps the subject menus as before. The lens
+  documents' checklists say built.
+- **Connectors for AWS S3 Tables and Delta Lake on S3, with Python tool scripts.** S3 Tables: the `iceberg` connector with
+  `catalog: s3tables` and one setting, `table-bucket-arn`; the S3 Tables Iceberg REST endpoint, SigV4 under `s3tables`, the region,
+  the warehouse, the REST prefix and the namespace follow from the ARN (`S3Tables` in drishti-iceberg), kinds are read as S3 Tables
+  names (`pnl-vector` is `pnl_vector`), the native engine only, idle until the ARN is set; the loaders and `iceberg-external` take the
+  same settings ([ICEBERG_CONNECTOR.md section 20](docs/connectors/ICEBERG_CONNECTOR.md#20-aws-s3-tables)). Delta Lake on S3: the
+  `delta` connector with `root: s3://<bucket>/<prefix>` and credentials from the AWS default chain
+  ([DELTA_CONNECTOR.md section 17](docs/connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3)). Templates in
+  `config/connectors.examples/s3tables/` and `delta-s3/` (`risk-store.yaml`, `trade-endur.yaml`, each folder with its README). Tool
+  scripts in Python with `boto3` (no AWS CLI; `.sh` and `.ps1` wrappers): `deploy/aws/s3-tables/` and `deploy/aws/delta-s3/` create,
+  check (one table read end to end as Drishti reads it) and remove the buckets, the namespace or prefix and the IAM policy, with
+  `--dry-run`, `--region`, `--profile` and `--env`, never printing a credential ([TOOLS.md section 4.14](docs/guides/TOOLS.md)).
+  Tests: `S3TablesTest` (the settings an ARN gives, the names, the signatures against ones recorded with botocore),
+  `S3TablesRestTest` (a stand-in REST endpoint that refuses unsigned requests), `IcebergS3TablesTest`, `DeltaOnAwsS3Test` (the
+  template on S3Mock in the JVM), `test_s3_tables.py` and `test_delta_s3.py` (botocore's Stubber). Live runs pending an AWS
+  sandbox account.
+
+### Why VaR moved
+
+
+- **Why VaR moved (RO1).** The VaR page's new tab **Why it moved** (`VAR EXPLAIN <scope>`, or `VAR <scope> EXPLAIN`) splits a scope's
+  VaR change between two business dates (default the one before the newest, and the newest) into causes that add up exactly: a chain of
+  states S0 to S7, each a full VaR (the earlier date as officially captured, restated, by the later hierarchy and rules, without the trades
+  out, on the common scenario days, at the later market, on the later set, with the trades in), each step the difference of two states.
+  Each step names its drivers (incremental VaR of the trades out and in, the books moved by the hierarchy, the scenario days that left or
+  entered with their rank, each child's component VaR change for the market) and every state its VaR scenario's date in words; an
+  order-free view by child also adds up to the change, and the limit-use line splits its change into the VaR's part and the limit's. Only
+  the churn is summed. Three views over one answer, **Waterfall** (the default), **Matrix** (every child node, the steps across) and
+  **Sentences**, drawn with the standard panel kinds by the console's renderer; the view is kept in the address and the person's settings
+  (`varExplainView`); phone tiers; F1 opens the guide's section. **Download the working (.xlsx)**: every state's P&L column, ranks and VaR
+  as formulas, each step a difference of cells, the add-up check and checks against the engine to the cent, on the Playground's frame.
+  `GET /api/v1/var/explain`, `/explain/matrix`, `/explain.xlsx`; `drishti.py var explain <scope> [--from] [--to] [--matrix] [--xlsx]`;
+  settings `drishti.var.explain.*` (the order of the causes, window lines, amendments, top, drivers, cache). The Shapley variant is
+  planned. VAR_GUIDE.md section 3.11.
+
+- **Tests and tools.** Browser tests not about the phone display read the whole page (the *Show everything* cookie), the phone
+  tests the phone's; the Sutra Next equivalence compares the page drawn without its phone tiers; the scheduler and pack reload tests
+  wait for the state they check; the VaR P&L history generator is `tools/packgen/var/pnl_history.py` (it shared a module name with the
+  test data's history on multi-day runs); the demo lake's 87 tables in the guides.
+- **The plan.** 2.9.9 (memory, scale and mobile) and 2.9.10 (the VaR change explained) ship together as 2.9.10; there is no 2.9.9
+  release. Next: 2.9.11 sensitivities and market-risk capital (with the cluster's VaR timeouts), 2.9.12 counterparty engines, 2.9.13
+  Java 25 and performance I, 2.9.14 oversight, 2.9.15 regulatory reporting, 2.9.16 native performance II, 2.9.17 XVA and wrong-way risk,
+  2.9.18 advanced market risk, 2.9.19 executive. One full drill per release; a second when the first needed fixes, and always for the
+  performance releases.
+
 ## 2.9.8 — Regulatory VaR reporting begins; the VaR Playground; the Data view; choosing the stress window; the lenses' own menus (2026-11-01)
 
 - **Regulatory VaR reporting** ([REGULATORY_VAR_REPORTING.md](docs/guides/REGULATORY_VAR_REPORTING.md), one document for Canada and the

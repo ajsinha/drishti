@@ -1097,3 +1097,47 @@ def open_studio(client, url, **params):
     if "sutra" in q:
         form["sutra_given"] = "1"
     return client.post("/studio", data=form, follow_redirects=False)
+
+
+# The phone display (MOBILE_DISPLAY.md): below 640 px the console draws the phone page and static/js/phone.js reloads a page drawn for
+# another device. A browser test that is not about the phone display reads the whole page at any width, as a person who chose *Show
+# everything* does (the drishti-phone-all cookie, set before the first navigation, so no reload happens under the test); the phone
+# display's own tests keep it.
+PHONE_DISPLAY_TESTS = {"test_phone_browser.py", "test_var_explain_browser.py", "test_page_widths_browser.py", "test_lens_menus_browser.py"}
+_SHOW_EVERYTHING = {"on": True}
+
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    _SHOW_EVERYTHING["on"] = Path(str(item.fspath)).name not in PHONE_DISPLAY_TESTS
+
+
+def _show_everything_in_browsers():
+    try:
+        from playwright.sync_api import Browser
+    except ImportError:
+        return
+    if getattr(Browser, "_drishti_show_everything", False):
+        return
+
+    def cookies(ctx):
+        if _SHOW_EVERYTHING["on"]:
+            ctx.add_cookies([{"name": "drishti-phone-all", "value": "1", "domain": d, "path": "/"} for d in ("127.0.0.1", "localhost")])
+
+    new_context, new_page = Browser.new_context, Browser.new_page
+
+    def wrapped_context(self, *a, **k):
+        ctx = new_context(self, *a, **k)
+        cookies(ctx)
+        return ctx
+
+    def wrapped_page(self, *a, **k):
+        page = new_page(self, *a, **k)
+        cookies(page.context)
+        return page
+
+    Browser.new_context, Browser.new_page = wrapped_context, wrapped_page
+    Browser._drishti_show_everything = True
+
+
+_show_everything_in_browsers()

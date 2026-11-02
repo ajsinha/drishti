@@ -606,7 +606,7 @@ tile. *Empty or not given by the data*, each said in place: "no valuations on <d
 "no book above its limit", "No trade's MtM moved", "Nothing yet: type a command above"; the DV01 tile hidden when no trade holds a DV01; a
 scope above `trading.max-rows` says **partial** ([section 4.5](#45-what-the-data-does-not-give-as-the-builder-reported)). **Phone**
 (600 px and below): one column ([`trading-landing.css`](../../drishti-console/web/static/css/trading-landing.css)); the mock-up drew no
-phone form.
+phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
@@ -660,8 +660,9 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X3 | Positions menu | Books `BOOK`; Desks `DESK`; Traders `TRDR`; Positions `POS` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; VaR what-if `VWIF`; Trade valuations `TVAL`; P&L vectors `PNLV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Pre-deal check `XWIF`; Exposure `EXP` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`phone.js`](../../drishti-console/web/static/js/phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 
-On a phone the subject menus are to fold into one menu named after the lens (option C's form): not built, moved to 2.9.9 with the phone display; until then a phone shows the same menus as icons. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 
 ---
 

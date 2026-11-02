@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  Drawn by tools/bench/charts.py from the benchmark's results files; do not edit by hand.
+-->
+<svg xmlns='http://www.w3.org/2000/svg' width='900' height='366' viewBox='0 0 900 366' role='img'>
+<text x='16.0' y='24.0' fill='#8a8a86' font-size='15' font-weight='600' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Where the time goes: hottest CPU frames, a date&#x27;s first open, 200,000 positions</text>
+<text x='16.0' y='42.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>share of JFR execution samples (top frame), single server, Java 21, G1</text>
+<line x1='330.0' y1='52.0' x2='330.0' y2='320.0' stroke='#8a8a86' stroke-opacity='0.2' stroke-width='1'/>
+<text x='330.0' y='336.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0</text>
+<line x1='496.7' y1='52.0' x2='496.7' y2='320.0' stroke='#8a8a86' stroke-opacity='0.2' stroke-width='1'/>
+<text x='496.7' y='336.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>5</text>
+<line x1='663.3' y1='52.0' x2='663.3' y2='320.0' stroke='#8a8a86' stroke-opacity='0.2' stroke-width='1'/>
+<text x='663.3' y='336.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>10.0</text>
+<line x1='830.0' y1='52.0' x2='830.0' y2='320.0' stroke='#8a8a86' stroke-opacity='0.2' stroke-width='1'/>
+<text x='830.0' y='336.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>15.0</text>
+<text x='322.0' y='71.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>ByteStreamSplitValuesReader.decodeData</text>
+<rect x='330.0' y='60.0' width='364.0' height='14.0' rx='2' fill='#2a78d6'><title>org.apache.parquet.column.values.bytestreamsplit.ByteStreamSplitValuesReader.decodeData(ByteBuffer, int): 10.9 % of samples</title></rect>
+<text x='699.0' y='71.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>10.9</text>
+<text x='322.0' y='93.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>String.hashCode</text>
+<rect x='330.0' y='82.0' width='321.7' height='14.0' rx='2' fill='#2a78d6'><title>java.lang.String.hashCode(): 9.65 % of samples</title></rect>
+<text x='656.7' y='93.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>9.65</text>
+<text x='322.0' y='115.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>RecordReaderImplementation.read</text>
+<rect x='330.0' y='104.0' width='306.0' height='14.0' rx='2' fill='#2a78d6'><title>org.apache.parquet.io.RecordReaderImplementation.read(): 9.18 % of samples</title></rect>
+<text x='641.0' y='115.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>9.18</text>
+<text x='322.0' y='137.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>ColumnReaderBase$2$2.read</text>
+<rect x='330.0' y='126.0' width='168.7' height='14.0' rx='2' fill='#2a78d6'><title>org.apache.parquet.column.impl.ColumnReaderBase$2$2.read(): 5.06 % of samples</title></rect>
+<text x='503.7' y='137.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>5.06</text>
+<text x='322.0' y='159.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>ByteBitPackingValuesReader.readInteger</text>
+<rect x='330.0' y='148.0' width='163.7' height='14.0' rx='2' fill='#2a78d6'><title>org.apache.parquet.column.values.bitpacking.ByteBitPackingValuesReader.readInteger(): 4.91 % of samples</title></rect>
+<text x='498.7' y='159.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>4.91</text>
+<text x='322.0' y='181.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>DefaultColumnarBatch.getColumnVector</text>
+<rect x='330.0' y='170.0' width='126.7' height='14.0' rx='2' fill='#2a78d6'><title>io.delta.kernel.defaults.internal.data.DefaultColumnarBatch.getColumnVector(int): 3.8 % of samples</title></rect>
+<text x='461.7' y='181.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>3.8</text>
+<text x='322.0' y='203.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Buffer.checkIndex</text>
+<rect x='330.0' y='192.0' width='100.3' height='14.0' rx='2' fill='#2a78d6'><title>java.nio.Buffer.checkIndex(int): 3.01 % of samples</title></rect>
+<text x='435.3' y='203.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>3.01</text>
+<text x='322.0' y='225.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>ColumnReaderBase.writeCurrentValueToConverter</text>
+<rect x='330.0' y='214.0' width='100.3' height='14.0' rx='2' fill='#2a78d6'><title>org.apache.parquet.column.impl.ColumnReaderBase.writeCurrentValueToConverter(): 3.01 % of samples</title></rect>
+<text x='435.3' y='225.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>3.01</text>
+<text x='322.0' y='247.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>HashMap.getNode</text>
+<rect x='330.0' y='236.0' width='84.3' height='14.0' rx='2' fill='#2a78d6'><title>java.util.HashMap.getNode(Object): 2.53 % of samples</title></rect>
+<text x='419.3' y='247.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>2.53</text>
+<text x='322.0' y='269.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Columns$Builder.add</text>
+<rect x='330.0' y='258.0' width='74.0' height='14.0' rx='2' fill='#2a78d6'><title>com.ash.drishti.compute.var.Columns$Builder.add(String[], double[]): 2.22 % of samples</title></rect>
+<text x='409.0' y='269.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>2.22</text>
+<text x='322.0' y='291.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Buffer.checkIndex</text>
+<rect x='330.0' y='280.0' width='68.7' height='14.0' rx='2' fill='#2a78d6'><title>java.nio.Buffer.checkIndex(int, int): 2.06 % of samples</title></rect>
+<text x='403.7' y='291.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>2.06</text>
+<text x='322.0' y='313.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Binary$ByteBufferBackedBinary.getBytes</text>
+<rect x='330.0' y='302.0' width='68.7' height='14.0' rx='2' fill='#2a78d6'><title>org.apache.parquet.io.api.Binary$ByteBufferBackedBinary.getBytes(): 2.06 % of samples</title></rect>
+<text x='403.7' y='313.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>2.06</text>
+<text x='580.0' y='354.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>% of samples</text>
+</svg>

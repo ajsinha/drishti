@@ -43,9 +43,13 @@ strip:
   - { label: UEN, bind: $.UEN }
   - { label: Type, bind: $.TYPE }
   - { label: Net MTM, bind: $.NET_MTM, fmt: signed0, tone: sign }
+phone:                                     # on a phone (docs/architecture/MOBILE_DISPLAY.md): who they are, then their netting sets at a glance
+  order: [kyc, nettingSets]
+  summary: "${$.NAME} · rated ${$.RATING} · Net MTM ${fmt($.NET_MTM, 'signed0')}"
 panels:
   - id: nettingSets
     kind: table
+    phone: { tier: glance, rows: 5, columns: [Netting set, Net MTM], sort: -Net MTM }
     title: Netting sets
     key: F2
     rows: $.NETTING_SETS
@@ -56,6 +60,7 @@ panels:
       - { label: Net MTM, bind: "@.NET_MTM", fmt: signed0, tone: sign, total: true }
   - id: kyc
     kind: kv
+    phone: must
     title: KYC and classification
     area: right
     columns:
@@ -66,6 +71,7 @@ panels:
       - { label: PD (1 year), bind: $.KYC.PD_1Y, fmt: pct2 }
   - id: hierarchy
     kind: graph
+    phone: desk
     title: Group hierarchy (agreements and netting sets)
     code: HIER
     key: F3
@@ -76,6 +82,7 @@ panels:
     layout: tree
   - id: computed
     kind: kv
+    phone: more
     title: "Computed from the trade valuations, beside the stored figures"
     code: CMP
     key: F4
@@ -94,6 +101,7 @@ panels:
       - { label: Sum currency, bind: $src.CURRENCY_NOTE }
   - id: computedSets
     kind: table
+    phone: more
     title: Netting sets (computed from the trade valuations)
     rows: $src.NETTING_SETS
     source: { kind: cpty-mtm, id: $.COUNTERPARTY_ID }

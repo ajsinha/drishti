@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  Drawn by tools/bench/charts.py from the benchmark's results files; do not edit by hand.
+-->
+<svg xmlns='http://www.w3.org/2000/svg' width='760' height='380' viewBox='0 0 760 380' role='img'>
+<text x='16.0' y='24.0' fill='#8a8a86' font-size='15' font-weight='600' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Requests a second at 50, 100 and 200 users</text>
+<text x='16.0' y='42.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>VaR and trades mix (50/50), Java 21, G1; single server against a three-node cluster on one machine</text>
+<rect x='64' y='53' width='10' height='10' rx='2' fill='#2a78d6'/>
+<text x='79.0' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>200K single</text>
+<rect x='162.6' y='53' width='10' height='10' rx='2' fill='#eb6834'/>
+<text x='177.6' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>200K cluster</text>
+<rect x='267.79999999999995' y='53' width='10' height='10' rx='2' fill='#1baf7a'/>
+<text x='282.8' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>1M single</text>
+<line x1='64.0' y1='330.0' x2='740.0' y2='330.0' stroke='#8a8a86' stroke-opacity='0.6' stroke-width='1'/>
+<text x='58.0' y='334.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0</text>
+<line x1='64.0' y1='246.0' x2='740.0' y2='246.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='250.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>100</text>
+<line x1='64.0' y1='162.0' x2='740.0' y2='162.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='166.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>200</text>
+<line x1='64.0' y1='78.0' x2='740.0' y2='78.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='82.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>300</text>
+<text x='16.0' y='204.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif' transform='rotate(-90 16 204.0)'>requests / s</text>
+<rect x='131.7' y='103.5' width='28.0' height='226.5' rx='2' fill='#2a78d6'><title>200K single, 50 users: 270 requests / s</title></rect>
+<text x='145.7' y='99.5' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>270</text>
+<rect x='161.7' y='226.4' width='28.0' height='103.6' rx='2' fill='#eb6834'><title>200K cluster, 50 users: 123 requests / s</title></rect>
+<text x='175.7' y='222.4' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>123</text>
+<rect x='191.7' y='296.7' width='28.0' height='33.3' rx='2' fill='#1baf7a'><title>1M single, 50 users: 39.7 requests / s</title></rect>
+<text x='205.7' y='292.7' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>39.7</text>
+<text x='176.7' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>50 users</text>
+<rect x='357.0' y='142.9' width='28.0' height='187.1' rx='2' fill='#2a78d6'><title>200K single, 100 users: 223 requests / s</title></rect>
+<text x='371.0' y='138.9' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>223</text>
+<rect x='387.0' y='194.6' width='28.0' height='135.4' rx='2' fill='#eb6834'><title>200K cluster, 100 users: 161 requests / s</title></rect>
+<text x='401.0' y='190.6' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>161</text>
+<rect x='417.0' y='300.2' width='28.0' height='29.8' rx='2' fill='#1baf7a'><title>1M single, 100 users: 35.5 requests / s</title></rect>
+<text x='431.0' y='296.2' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>35.5</text>
+<text x='402.0' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>100 users</text>
+<rect x='582.3' y='169.6' width='28.0' height='160.4' rx='2' fill='#2a78d6'><title>200K single, 200 users: 191 requests / s</title></rect>
+<text x='596.3' y='165.6' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>191</text>
+<rect x='612.3' y='205.9' width='28.0' height='124.1' rx='2' fill='#eb6834'><title>200K cluster, 200 users: 148 requests / s</title></rect>
+<text x='626.3' y='201.9' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>148</text>
+<rect x='642.3' y='305.7' width='28.0' height='24.3' rx='2' fill='#1baf7a'><title>1M single, 200 users: 28.9 requests / s</title></rect>
+<text x='656.3' y='301.7' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>28.9</text>
+<text x='627.3' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>200 users</text>
+</svg>

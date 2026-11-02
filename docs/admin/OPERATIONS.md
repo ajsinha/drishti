@@ -149,7 +149,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.8-exec.jar`.
+You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.10-exec.jar`.
 
 > Use `clean`. Without it, `target/` keeps the jars of earlier versions, and both `java -jar
 > drishti-server-*-exec.jar` and the server Dockerfile's `COPY drishti-server/target/drishti-server-*-exec.jar`
@@ -160,7 +160,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 ```bash
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-2.9.8-exec.jar /opt/drishti/drishti-server.jar
+sudo cp drishti-server/target/drishti-server-2.9.10-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -760,7 +760,7 @@ WantedBy=multi-user.target
 - `WorkingDirectory` matters: `./config/packs`, `./data`, `./sutras` and `./application.local.yaml` are found from it.
 - The server shuts down gracefully (`server.shutdown: graceful`): it stops taking requests and lets running ones
   finish, for up to 30 seconds; `TimeoutStopSec=300` gives the drain (240 s) and that time. Exit code 143 is a normal stop on SIGTERM.
-- Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling.
+- Without `-Xmx` the JVM takes a quarter of the machine's memory as its heap ceiling. For VaR, **`-Xmx6g` serves 1,000,000 positions** with two dates in use and 200 users (measured: heap after GC 2.4 GB, about 0.72 GB a date; [BENCHMARK.md section 4.8](BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)); scale it with the positions (about 13 GB at 2.3 million) and add about 1.2 GB a further date kept open (`drishti.var.hot-dates`). The resident memory adds the mapped hot files' page cache (11.2 GB of RSS at the end of that run).
 - `MALLOC_ARENA_MAX=2`, `-XX:MaxDirectMemorySize=256m` and `-XX:TrimNativeHeapInterval=60000` keep the server's resident memory near
   `-Xmx` plus 0.4 GB over days (two glibc malloc arenas instead of one per busy thread, direct buffers capped, freed native memory given
   back every minute; Java 21.0.1 or later). Every launcher Drishti ships sets them: `drishti-stack`, the Docker and ECS server images,
@@ -1431,7 +1431,7 @@ Nothing grows with the day's data without bound. Every cache has a size limit yo
 | ActiveMQ / RabbitMQ connectors | recently read documents in memory; the latest document of every entity on disk (RocksDB, LZ4, level compaction: size follows the entities held, not the messages). Writes are kept per `state.durability`: `sync` (default; write-ahead log synced, no acknowledged message lost on a crash or power loss), `wal` or `none`; a message the store cannot keep is not acknowledged and comes again | `cache-mb` (128); `state.max-gb` (10) per connector under `state.dir` (default `./data/state/<connector>`); past it `state.when-full: evict-oldest` (default) removes the entities written longest ago, logged and counted in `evicted`, or `warn` only says so in health |
 | Delta Lake connectors (heap) | days' id maps, days' promoted columns, recently read documents, whole days of small tables | **one memory budget**: connectors that do not set their own share one cache of each, sized from the heap: `id-map-mb` 20 %, `columns-cache-mb` 20 %, `doc-cache-mb` 5 %, `cache-mb` 5 % (half the heap in all, however many connectors); a connector that sets one keeps its own of that size |
 | Delta Lake connectors (disk) | id maps memory-mapped, one file per table version and date (`<data dir>/cache/<connector>/idmaps`); documents read before, in a RocksDB per connector (`<data dir>/cache/<connector>/docs`), kept across restarts, keyed by table version | `id-map-disk.*` (old versions' files go when a new one is written; about 44 MB per trade connector measured); `doc-disk-cache.max-gb` (1), `.ttl` (12h), compacted hourly, cleared daily at `.reset-at` (02:00 New York) |
-| Delta Lake (Parquet footers) | each file's parsed footer, kept per immutable file | `-Ddrishti.parquet.footer-cache-groups` (50,000 row groups) |
+| Delta Lake (Parquet footers) | each file's parsed footer, kept per immutable file | `-Ddrishti.parquet.footer-cache-mb` (64 MB, weighed by column chunks: about 700 bytes each) |
 | Derived connector (grouped pages) | `store: heap`: every page; `store: disk` (the trading pack's `trade-pages`): each group's totals only, the members' keys and rows in a sorted store under `<data dir>/derived/<connector>`, kept across restarts | `store: heap`: `max-stream` (100,000 members); `store: disk`: the disk, one computation per date kept (16 dates) |
 | Aerospike connector | the kinds' dates and the ids (from the index set), and days of promoted bins for searches, impact and reverse lookups; not the days kept | `columns-cache-mb` (1024), kept `columns-seconds` (300) |
 | PostgreSQL (JDBC table mode) | nothing: every read is a query | `pool-size` connections (20; [sizing](#sizing-the-database-connection-pools)) |
@@ -1796,7 +1796,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "2.9.8", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
+    "server": { "version": "2.9.10", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24,
                 "directUsedBytes": 9437184, "directCapacityBytes": 9437184, "directBuffers": 71,
                 "mappedUsedBytes": 46137344, "mappedCapacityBytes": 46137344, "mappedBuffers": 12,

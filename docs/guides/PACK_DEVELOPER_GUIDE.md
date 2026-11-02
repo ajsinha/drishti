@@ -147,7 +147,7 @@ ports of their own, so that nothing of yours is touched: the seven shipped packs
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -553,7 +553,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.9.8-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-2.9.10-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -2605,7 +2605,7 @@ Four layers, from the cheapest. The first three need no server.
 | The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests, every shipped example loads |
 | A scratch server | the [checklist](#verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.8-exec.jar sutra …`);
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.10-exec.jar sutra …`);
 `pack check` finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the overlay of the checkout they run in (`<data>/packs/added.yaml`), so
 run them where that overlay names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder).
 
@@ -3626,7 +3626,7 @@ drishti-console/.venv/bin/python tools/drishti.py lake demo
   news/listed-company: … rows over 60 days
   news/news-topic: … rows over 60 days
 
-Demo lake ready: …/data/delta: 86 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
+Demo lake ready: …/data/delta: 87 tables, 60 business days 2026-07-08 to 2026-09-30, built in 943 s
 Feeds: …/data/feeds/fixing.jsonl (the file connector's sample feed)
 Server: no server at http://127.0.0.1:19590: left …/data/bi-store/lake-rebuilt.json, so a server clears its stored BI columns and rollups at its next start
 Connector files:
@@ -3681,7 +3681,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.10-exec.jar
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
@@ -4351,7 +4351,7 @@ git clone https://github.com/ajsinha/drishti.git && cd drishti
 uv venv --python 3.13 drishti-console/.venv
 uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requirements.txt
 ./mvnw -q package -DskipTests -pl drishti-server -am                 # 1 min 12 s with ~/.m2 filled
-drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 86 Delta tables, sixty days, under data/delta
+drishti-console/.venv/bin/python tools/drishti.py lake demo           # about 15 min (943 s): 87 Delta tables, sixty days, under data/delta
 ```
 
 then the server and the console as the run configurations start them ([GETTING_STARTED.md, Steps 6 and 7](GETTING_STARTED.md#step-6--start-the-server)).
@@ -4457,7 +4457,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -5712,7 +5712,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.8-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server

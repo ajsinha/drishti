@@ -43,13 +43,18 @@ public class ExposureConfiguration {
     @Bean(destroyMethod = "close")
     ExposureService exposureService(ExposureProperties props, SourceRouter router, Entitlements entitlements, ContentStore store,
             ObjectProvider<AuditLog> audit, ObjectProvider<com.ash.drishti.server.var.VarProperties> varProps,
-            ObjectProvider<com.ash.drishti.packs.PackRegistry> packs, ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk) {
+            ObjectProvider<com.ash.drishti.packs.PackRegistry> packs, ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk,
+            ObjectProvider<com.ash.drishti.engine.time.BusinessDates> businessDates) {
         ExposureLoader loader = new ExposureLoader(router, props, new ExposureTier(props).start().budget(disk.getIfAvailable()));
         com.ash.drishti.server.var.VarProperties vp = varProps.getIfAvailable();
         if (vp != null) {                                               // the hierarchies VaR builds (2.9.5): the same nodes here
             loader.hierarchies(com.ash.drishti.server.var.Hierarchies.of(vp, packs::getIfAvailable));
         }
-        return new ExposureService(props, loader, new ExposureAccess(props, entitlements), new ExposureOfficialStore(store), audit.getIfAvailable());
+        ExposureService svc = new ExposureService(props, loader, new ExposureAccess(props, entitlements), new ExposureOfficialStore(store),
+                audit.getIfAvailable());
+        com.ash.drishti.engine.time.BusinessDates bd = businessDates.getIfAvailable();
+        svc.calendar(bd == null ? null : bd.calendar());                 // the pinned dates' calendars (VAR_GUIDE.md section 26.8)
+        return svc;
     }
 
     /** Readiness waits for the exposure engine's newest date (CD1, drishti.node.readiness.engines). */

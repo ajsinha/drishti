@@ -718,8 +718,19 @@ drishti:
     rank-rule: kth-worst             # kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated
     component-window: 5              # component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR
     threads: ${DRISHTI_VAR_THREADS:0}                  # cores the vector sums use (0: every core)
-    memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204
-    hot-dates: 2                     # business dates kept loaded (the newest)
+    memory-budget-mb: ${DRISHTI_VAR_MEMORY_MB:0}       # heap tier only: most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204. The mapped tier is bounded by the disk (hard) and the page cache (advisory)
+    hot-dates: ${DRISHTI_VAR_HOT_DATES:10}             # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay
+    refusal-ttl-seconds: 300         # a date refused for room (capacity, disk) is remembered this long: asked again, 503 at once with Retry-After, no lake read; forgotten sooner when room is freed (0: not remembered)
+    open-heap-mb: ${DRISHTI_VAR_OPEN_HEAP_MB:0}        # the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave
+    fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:}       # the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off)
+    pinned:                          # pinned dates (docs/guides/VAR_GUIDE.md section 26.8): the last business day in every calendar of drishti.business-date.calendar; back: how many, newest first (0: off); keep: disk (hot file built after the official record, never trimmed) or memory (open, counted in hot-dates)
+      month-end: { back: 0, keep: disk }        # each month's last business day (for example back: 13)
+      quarter-end: { back: 0, keep: disk }      # March, June, September, December (for example back: 8)
+      year-end: { back: 0, keep: disk }         # December (for example back: 7)
+      fiscal-year-end: { back: 0, keep: disk }  # the fiscal year's last business day (needs fiscal-year-end)
+      stress-window: { back: 0, keep: disk }    # 1: the first and last dates of the stress window in use (known once stressed VaR is asked)
+      dates: []                      # any dates the bank names (yyyy-MM-dd: a crisis day, an audit date)
+      dates-keep: disk               # how the named dates are kept: disk or memory
     view-cache-mb: 64                # most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date
     load-threads: 2                  # threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool
     read:                            # how a date's first open decodes its vectors from the lake (docs/guides/VAR_GUIDE.md section 27a.6)
@@ -744,6 +755,16 @@ drishti:
       export-choices: [100, 500, 1000, 10000, 0]   # the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope
       export-default: 500            # the choice selected first
       export-max-cells: ${DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS:20000000}   # the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words
+    explain:                         # why VaR moved (VAR EXPLAIN, GET /api/v1/var/explain, the VaR page's Why it moved tab; docs/guides/VAR_GUIDE.md section 3.11): the change between two dates in causes that add up exactly; a GET read, never stored
+      enabled: ${DRISHTI_VAR_EXPLAIN_ENABLED:true}   # the tab, the command, the API and the workbook
+      order: [restatement, hierarchy, trades-out, window, market, trades-in]   # the causes in sequence, each a full VaR state; restatement and trades-out before market, trades-in after, window next to market
+      window-lines: two              # two (oldest scenario dropped, newest added) or one (one window-roll line)
+      split-amendments: true         # amended trades as their own steps when the feed marks them (TRADE_ACTION or TRADE_STATUS AMEND/AMENDED)
+      top: 10                        # contributors listed per step before "the others and the interaction"
+      drivers-max: 2000              # most trades of one step whose incremental VaR is computed (the rest are in "the others")
+      cache-minutes: 10              # answers kept this long, never stored
+      cache-mb: 32                   # most memory the kept answers take (weighed in bytes)
+      matrix-max: 60                 # most child nodes the Matrix view explains
     currencies: ${DRISHTI_VAR_CURRENCIES:USD,EUR,CAD,JPY,GBP}   # reporting currencies built ahead after the USD book (background, own hot files; USD always); others on first ask
     currency-retention-dates: ${DRISHTI_VAR_CURRENCY_RETENTION_DATES:5}   # newest business dates whose listed currencies are built ahead and kept on disk
     intraday:
@@ -811,7 +832,18 @@ drishti:
       im-model: current              # current (the initial margin held today on every path) or none
       alpha: 1.4                     # EAD_IMM = alpha x EEPE (informational)
       contribution-window: 21        # paths around the PFE quantile a PFE contribution averages over
-      hot-dates: 2                   # business dates kept open (the newest)
+      hot-dates: ${DRISHTI_EXPOSURE_HOT_DATES:10}   # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (as VaR's)
+      refusal-ttl-seconds: 300       # a date refused for room (capacity, disk) is remembered this long: 503 at once with Retry-After, no lake read (0: not remembered)
+      open-heap-mb: ${DRISHTI_EXPOSURE_OPEN_HEAP_MB:0}   # the byte safety net over the open dates' heap (0: automatic, as VaR's); over it the least recently used dates leave
+      fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:}     # the bank's fiscal year-end, MM-DD; blank: none
+      pinned:                        # pinned dates, as drishti.var.pinned (docs/guides/VAR_GUIDE.md section 26.8)
+        month-end: { back: 0, keep: disk }        # each month's last business day (back: how many; 0: off)
+        quarter-end: { back: 0, keep: disk }      # March, June, September, December
+        year-end: { back: 0, keep: disk }         # December
+        fiscal-year-end: { back: 0, keep: disk }  # the fiscal year's last business day (needs fiscal-year-end)
+        stress-window: { back: 0, keep: disk }    # exposure has no stress window: unused
+        dates: []                    # any dates the bank names (yyyy-MM-dd)
+        dates-keep: disk             # how the named dates are kept: disk or memory
       view-cache-mb: 16              # most memory the viewers' views take; idle 1 h, released with the date
       load-threads: 2                # threads that load dates from the lake: their own pool, never the common pool
       version-check: ${DRISHTI_EXPOSURE_VERSION_CHECK:30s}   # an open date compares its lake version this often; moved: reloaded in the background (0: off)

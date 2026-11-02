@@ -271,7 +271,15 @@ final class VarLoader {
     static final String STRESS_ABOUT = "stressSetDescription";
     static final String STRESS_SYNTHETIC = "stressSetSynthetic";
 
+    /** How many loads began (from a hot file or the lake): a test's count of the reads a remembered refusal saves. */
+    private final java.util.concurrent.atomic.AtomicLong loadsBegun = new java.util.concurrent.atomic.AtomicLong();
+
+    long loadsBegun() {
+        return loadsBegun.get();
+    }
+
     private VarDate load(LocalDate date, VarShardScope shard, boolean stress) {
+        loadsBegun.incrementAndGet();
         long t0 = System.nanoTime();
         VarProperties.Kinds k = props.kinds();
         AsOf asOf = AsOf.of(date);
@@ -299,7 +307,9 @@ final class VarLoader {
         // is the stress window itself: used whole
         List<LocalDate> scenarioDates = stress ? fullSet : window(fullSet);
         String fxSet = stress ? setId : null;
-        long budget = props.memoryBudgetMb() * 1024 * 1024;
+        // the heap tier's vectors are bounded by memory-budget-mb; the mapped tier's rows are on disk: bounded by the disk (a hard limit,
+        // checked before the build and while the rows stream in) and the page cache (advisory), never by a share of the heap
+        long budget = tier.mapped() ? Long.MAX_VALUE : props.memoryBudgetMb() * 1024 * 1024;
         if (shard != null && !tier.mapped()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a sharded date needs the tiered memory (drishti.var.tier.mode: mapped)");
         }
@@ -423,7 +433,7 @@ final class VarLoader {
                     ofSet(pvColumns, keep, shardRows(shard, pvColumns, intake::row)), reads));
         } catch (com.ash.drishti.compute.vector.VectorStore.BudgetExceeded e) {
             throw new DrishtiException(ErrorCode.VAR_CAPACITY, e.getMessage() + ": the engine has no room for this date now; raise "
-                    + "drishti.var.memory-budget-mb or the server's heap, or keep fewer dates loaded (drishti.var.hot-dates)");
+                    + "drishti.var.memory-budget-mb (the heap tier) or the server's heap, or keep fewer dates open (drishti.var.hot-dates)");
         } catch (VarBook.DuplicateTrade e) {
             throw new DrishtiException(ErrorCode.VAR_DUPLICATE_TRADE, "the P&L vectors of " + date + " are not loaded: " + e.getMessage()
                     + (unmarked == null ? "" : "; " + unmarked));

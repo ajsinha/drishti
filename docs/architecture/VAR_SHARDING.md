@@ -139,9 +139,12 @@ book X", "these 50,000 trades", "everything facing counterparty Y". To know whic
 their totals in under a millisecond, a server needs the map of **all** positions, not only of its own shards. It then sums its own rows and
 asks the other owners for theirs (section 6). So the rows are divided between the servers, but **the skeleton is copied to every server**.
 
-**Why it matters for memory.** The skeleton is held on the Java heap, about **0.8 KB a position**. At 2.3 million positions that is about
-**1.8 GB a date**; with two dates open, the answer cache and headroom, it is most of a server's heap (the capacity slides' 36 GB `-Xmx`
-per shard owner). Because each server holds a full copy, **adding servers does not reduce it**: six owners each hold the same skeleton.
+**Why it matters for memory.** The skeleton's ids, columns and the nodes' members (as runs) are held on the Java heap; the totals are
+mapped from the hot file. Measured on one server at 1,000,000 positions: **0.72 KB a position a date** (0.72 GB a date; two dates open
+in 2.2 GB of heap after GC, within `-Xmx6g`: [BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)).
+At 2.3 million positions that is about **1.7 GB a date**, and with two dates open a shard owner's heap is about 5 GB after GC, an
+`-Xmx` of about 13 GB for 1-day VaR (BENCHMARK.md section 12.1; the capacity model's 36 GB adds 1,518 values, four currency books and
+its headroom). Because each server holds a full copy, **adding servers does not reduce it**: six owners each hold the same skeleton.
 
 **What could shrink it** (the memory and CPU diet, D1; to be measured first):
 

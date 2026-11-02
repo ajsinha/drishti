@@ -68,6 +68,11 @@ bi:                                      # BI datasets, models, reports and boar
              trading-risk-*]                     # trades with their counterparties' and netting sets' exposure (the Counterparty risk report)
   models: [market-risk-var, counterparty-exposure, live-exposure, trading-risk]
 
+phone:                                   # the phone display in this edition (docs/architecture/MOBILE_DISPLAY.md), over the site's ui.phone
+  rules:                                 # tiers and caps by panel, kind, title, Sutra or entity kind (globs): a VaR contribution panel waits under More
+    - { title: "*contribution*", tier: more }
+  pages: {}                              # the VaR and exposure pages' parts, as ui.phone.pages: { var: { hist: glance } }
+
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
   top: [views, var, exposure, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
   # the Views menu's items by id, in order (drishti-console/config/menus.yaml)

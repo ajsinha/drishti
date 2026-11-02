@@ -802,6 +802,13 @@ Or keep the flow and group panels in folding **sections** (`layout.sections`, `s
 [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#layout-the-grid-areas-split-tabs-sections), and the designer's Outline mode
 ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#outline)) writes sections, nesting and widths for you.
 
+**On a phone** a reader gets only the panels that matter there. Give each heavy panel a **phone tier**: `phone: must` for the figures
+the page is about, `phone: { tier: glance, rows: 5, columns: [Trade, MTM], sort: -MTM }` for a table read at a glance, `phone: more` for
+what can wait until tapped and `phone: desk` for what needs a big screen; a screen's `phone: { order, default, summary }` arranges them
+and writes the one line at the top. Without it, each panel kind has its default (tables and charts glance). `sutra lint` checks it
+(`DRS-2059`); the keys are in [RACHANA_REFERENCE.md, phone](RACHANA_REFERENCE.md#phone-what-goes-to-a-phone), and what the reader sees in
+[USER_GUIDE.md, On a phone](USER_GUIDE.md#on-a-phone).
+
 Put the blocks of 4.2 to 4.7 together under one `panels:` and you have a complete trade view. The [reference's annotated example](RACHANA_REFERENCE.md#a-complete-example-annotated) is the same layout
 with every line commented, and the trading pack's `config/packs/trading/sutras/murex/irs-fixfloat.v1.sutra.yaml` is the one the server uses; it is built from shared blocks ([section
 7](#7-how-packs-ship-sutras)).

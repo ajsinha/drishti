@@ -808,15 +808,15 @@ never yesterday's figure; the phone view stacks the breached and near tiles firs
 
 ## 12. Phases (proposed)
 
-The phases follow the plan's themes (product owner, 2026-10-31): the market-risk regulatory foundation; oversight and mobile; regulatory reporting; counterparty engines; sensitivities and market-risk capital; the CVA family; advanced and executive. The regulatory foundation is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "CRO lens" section. The proof of concept of section 11
-becomes the first part of the lens build in the advanced and executive phase.
+The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): the market-risk regulatory foundation (2.9.8, released); memory, scale and mobile with the VaR change explained (2.9.10, in release); sensitivities and market-risk capital (2.9.11); counterparty engines (2.9.12); Java 25 and performance I (2.9.13); oversight (2.9.14); regulatory reporting (2.9.15); native performance II (2.9.16); XVA and wrong-way risk (2.9.17); advanced market risk (2.9.18); executive (2.9.19). From 2.9.11 on each is **proposed** until it starts; a row without one is unscheduled. The rows are in the plan's "CRO lens" section. The proof of concept of section 11
+becomes the first part of the lens build in the executive phase (2.9.19).
 
 | Phase | Rows | Status | Depends on |
 |---|---|---|---|
-| 1. Decisions | CRO4 (breach queue, approvals, expiring increases), with RO3 (the limit catalogue) | proposed | RO2, RO3; write-back approvals (built) |
-| 2. The lens build | CRO1 (catalogue, statuses), CRO2 (B, C, A), CRO3 (what changed with reasons), CRO9 (data health), CRO12 (phone), CRO13 (the lens file) | proposed | the cubes (sensitivities and capital phase); RO1 / MC12 for reasons; the phone display |
-| 3. The rest of the appetite | CRO5 (liquidity), CRO6 (capital), CRO7 (climate: an optional supplied-input tile, off by default) | proposed | the bank's feeds; the roadmap's liquidity measures if Drishti computes LCR |
-| 4. Context and words | CRO8 (world: VaR at stake, relevance), CRO10 (Ask), CRO11 (time travel, board pack) | proposed | the planned market-data impact and board pack; WL9; the AI layer |
+| 1. Decisions (regulatory reporting, 2.9.15) | CRO4 (breach queue, approvals, expiring increases), with RO3 (the limit catalogue) | proposed | RO2, RO3; write-back approvals (built) |
+| 2. The lens build (executive, 2.9.19) | CRO1 (catalogue, statuses), CRO2 (B, C, A), CRO3 (what changed with reasons), CRO9 (data health), CRO12 (phone), CRO13 (the lens file) | proposed | the cubes (sensitivities and capital phase); RO1 / MC12 for reasons; the phone display |
+| 3. The rest of the appetite (executive, 2.9.19) | CRO5 (liquidity), CRO6 (capital), CRO7 (climate: an optional supplied-input tile, off by default) | proposed | the bank's feeds; the roadmap's liquidity measures if Drishti computes LCR |
+| 4. Context and words (executive, 2.9.19) | CRO8 (world: VaR at stake, relevance), CRO10 (Ask), CRO11 (time travel, board pack) | proposed | the planned market-data impact and board pack; WL9; the AI layer |
 
 ---
 
@@ -857,8 +857,8 @@ becomes the first part of the lens build in the advanced and executive phase.
 10. **Demo data for the Northbridge story.** **Decided (product owner, 2026-10-31): add the second synthetic member and the 500m group appetite limit through the generators.** Options were: add a second synthetic member and a 500m group appetite limit through the generators
     (recommended: the demo then matches the mock-up), or keep the demo's single-member group and change the mock-up's figures.
 11. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** the decision queue (CRO4, with RO3) with
-    regulatory reporting, after RO2 (oversight and mobile); the CRO lens build (CRO1 to CRO3, CRO9, CRO12, CRO13) with liquidity,
-    capital, the optional climate tile (off by default), Ask and time travel in the advanced and executive phase (section 12).
+    regulatory reporting (2.9.15), after RO2 (oversight, 2.9.14); the CRO lens build (CRO1 to CRO3, CRO9, CRO12, CRO13) with liquidity,
+    capital, the optional climate tile (off by default), Ask and time travel in the executive phase (2.9.19) (section 12).
 
 ---
 

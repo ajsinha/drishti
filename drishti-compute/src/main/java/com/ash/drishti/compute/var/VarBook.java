@@ -102,11 +102,30 @@ public final class VarBook {
      * A mapped date's hot file: the file, its matrices (float32 positions; the trades of positions of several trades, or null), the
      * digest of the inputs it was built from, the server's own record (JSON) and when it was written.
      */
-    public record Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt, String range) {
+    public record Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt, String range,
+            MappedMatrix aggregates) {
 
         /** A date's whole hot file (no {@code RANG} section). */
         public Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt) {
-            this(file, positions, trades, digest, meta, writtenAt, null);
+            this(file, positions, trades, digest, meta, writtenAt, null, null);
+        }
+
+        /** A hot file whose aggregates are on the heap. */
+        public Hot(Path file, MappedMatrix positions, MappedMatrix trades, String digest, String meta, long writtenAt, String range) {
+            this(file, positions, trades, digest, meta, writtenAt, range, null);
+        }
+
+        /** Every matrix mapped from the file (the positions', the trades', the aggregates'). */
+        List<MappedMatrix> matrices() {
+            List<MappedMatrix> m = new ArrayList<>();
+            m.add(positions);
+            if (trades != null) {
+                m.add(trades);
+            }
+            if (aggregates != null) {
+                m.add(aggregates);
+            }
+            return m;
         }
     }
 
@@ -114,7 +133,12 @@ public final class VarBook {
      * Where a mapped load writes: the spill of the lake's rows (a temporary file, deleted after the build), the hot file being written
      * (in the folder of its final name, moved there when complete) and its final name, and the digest of the inputs.
      */
-    public record HotTarget(Path spill, Path part, Path file, String digest) {}
+    public record HotTarget(Path spill, Path part, Path file, String digest, java.util.function.LongConsumer room) {
+
+        public HotTarget(Path spill, Path part, Path file, String digest) {
+            this(spill, part, file, digest, null);
+        }
+    }
 
     private final LocalDate businessDate;
     private final String scenarioSet;
@@ -350,18 +374,64 @@ public final class VarBook {
         return store.bytes();
     }
 
-    /** Bytes the aggregates take on the heap (float64, one row per book and node). */
+    /** Bytes the aggregates take on the heap (float64, one row per book and node; none when they are read from the hot file). */
     public long aggregateBytes() {
+        if (aggregates instanceof MappedAggregates) {
+            return 0;
+        }
+        if (aggregates instanceof MappedAggregates.Overlay o) {
+            return o.heapBytes(store.width());
+        }
         return (long) aggregates.size() * store.width() * Double.BYTES;
+    }
+
+    /** True when the aggregates are read from the hot file's mapping, not kept on the heap. */
+    public boolean aggregatesMapped() {
+        return aggregates instanceof MappedAggregates || aggregates instanceof MappedAggregates.Overlay;
+    }
+
+    private volatile long heapBytes = -1;
+
+    /**
+     * The heap bytes this book holds (VAR_GUIDE.md section 27.1, measured from what it holds, once): the nodes (their member runs or
+     * bitmaps, names and book lists), the aggregates and currency totals, the trade and position columns, the ids and their indexes, the
+     * runs, and, on the heap tier, the vectors. A mapped book's rows are not on the heap (they are its hot file's pages). An intraday layer
+     * counts what it holds of its own, and shares the rest with its morning book.
+     */
+    public long heapBytes() {
+        long h = heapBytes;
+        if (h >= 0) {
+            return h + positionCached.get();
+        }
+        long b = 512;
+        for (Node n : nodes.values()) {
+            b += 200 + 2L * (n.id().length() + String.valueOf(n.name()).length()) + 8L * n.books().size() + n.members().heapBytes();
+        }
+        b += (long) bookRange.size() * 112;
+        b += aggregates instanceof MappedAggregates m ? m.heapBytes()
+                : aggregates instanceof MappedAggregates.Overlay o ? o.heapBytes(store.width()) : (long) aggregates.size() * (96 + 8L * store.width());
+        b += totals == null ? 0 : totals.heapBytes();
+        b += trades.heapBytes() + positions.heapBytes();
+        b += strings(tradeIds) + strings(positionIds);
+        b += 4L * positionOf.length + 4L * posFrom.length + 4L * posTo.length;
+        b += 8L * (tradeIds.length + positionIds.length);                 // the exact and any-case indexes, 4 bytes an id each
+        b += hot == null ? store.bytes() : 0;
+        heapBytes = b;
+        return b + positionCached.get();
+    }
+
+    private static long strings(String[] ids) {
+        long b = 16 + 4L * ids.length;
+        for (String s : ids) {
+            b += s == null ? 0 : 56 + s.length();
+        }
+        return b;
     }
 
     /** Unmaps a mapped date once no request reads it (its evicition); a heap date has nothing to release. */
     public void close() {
         if (hot != null) {
-            hot.positions().close();
-            if (hot.trades() != null) {
-                hot.trades().close();
-            }
+            hot.matrices().forEach(MappedMatrix::close);
         }
     }
 
@@ -370,7 +440,8 @@ public final class VarBook {
         if (hot == null) {
             return;
         }
-        java.util.concurrent.atomic.AtomicInteger open = new java.util.concurrent.atomic.AtomicInteger(hot.trades() == null ? 1 : 2);
+        List<MappedMatrix> ms = hot.matrices();
+        java.util.concurrent.atomic.AtomicInteger open = new java.util.concurrent.atomic.AtomicInteger(ms.size());
         Runnable delete = () -> {
             if (open.decrementAndGet() == 0) {
                 try {
@@ -380,10 +451,7 @@ public final class VarBook {
                 }
             }
         };
-        hot.positions().closeThen(delete);
-        if (hot.trades() != null) {
-            hot.trades().closeThen(delete);
-        }
+        ms.forEach(m -> m.closeThen(delete));                          // deleted once every mapping is released (Windows: never before)
     }
 
     public int width() {
@@ -845,12 +913,13 @@ public final class VarBook {
         Map<String, Node> out = new LinkedHashMap<>();
         for (String[] r : nodeRows) {
             List<String> bs = nodeBooks.getOrDefault(r[0], List.of()).stream().filter(books::containsKey).toList();
-            OrdinalSet.Builder m = new OrdinalSet.Builder();
-            for (String b : bs) {
-                m.addRange(books.get(b)[0], books.get(b)[1]);
+            int[] pairs = new int[2 * bs.size()];             // its books' runs, kept as runs (a few bytes, not a bitmap of the date)
+            for (int i = 0; i < bs.size(); i++) {
+                pairs[2 * i] = books.get(bs.get(i))[0];
+                pairs[2 * i + 1] = books.get(bs.get(i))[1];
             }
             out.put(r[0], new Node(r[0], r[1], r[2], r[3], r[4], List.copyOf(children.getOrDefault(r[0], List.of())), bs,
-                    nodeLimits.getOrDefault(r[0], Double.NaN), m.build()));
+                    nodeLimits.getOrDefault(r[0], Double.NaN), OrdinalSet.ofRuns(pairs)));
         }
         return out;
     }
@@ -905,6 +974,7 @@ public final class VarBook {
             this.vectors = null;
             this.target = target;
             this.spill = new RowSpill(target.spill(), scenarioDates.size(), budgetBytes, (long) scenarioDates.size() * Float.BYTES);
+            this.spill.room(target.room());                             // the disk checked while the rows stream in (a hard limit)
         }
 
         public int width() {
@@ -1022,6 +1092,13 @@ public final class VarBook {
         public void discard() {
             if (spill != null) {
                 spill.close();
+            }
+            if (target != null) {
+                try {
+                    java.nio.file.Files.deleteIfExists(target.part());      // a refused or failed load leaves nothing in the date's folder
+                } catch (java.io.IOException e) {
+                    // removed with the folder's temporary files at the next start
+                }
             }
         }
 

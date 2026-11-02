@@ -179,7 +179,8 @@ plugins:
       - { name: credential, secret: true, desc: "REST catalog credential: ${ENV_VAR} or file:/path", group: connection }
       - { name: root, type: path, desc: "`hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`)", group: connection }
       - { name: uri, desc: "`rest`: the catalog's URI", group: connection }
-      - { name: catalog, desc: "`hadoop` (path-based tables) or `rest`", group: connection, default: "hadoop" }
+      - { name: catalog, desc: "`hadoop` (path-based tables), `rest`, or `s3tables` (AWS S3 Tables: its Iceberg REST endpoint, the settings from `table-bucket-arn`)", group: connection, default: "hadoop" }
+      - { name: table-bucket-arn, desc: "`s3tables`: the table bucket, `arn:aws:s3tables:<region>:<account>:bucket/<name>`; the endpoint, SigV4 signing (`s3tables`), region, warehouse and REST prefix follow from it, the domain is the namespace and a kind is read from its table with underscores (`pnl-vector` is `pnl_vector`). Blank: the connector stays idle. Native engine only", group: connection }
       - { name: namespace, desc: "`rest`: the namespace (dots separate levels)", group: connection }
       - { name: domain, desc: "Domain", group: connection }
       - { name: kinds, type: list, desc: "Comma list of kinds to serve", group: mapping }
@@ -214,7 +215,8 @@ plugins:
       - { name: engine, type: "enum:native|auto", default: "auto", desc: "`native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only)", group: connection }
       - { name: root, type: path, desc: "Path-based tables' root (a folder or s3://…); tables.<kind>.table names the folder under it", group: connection }
       - { name: uri, desc: "A REST catalog's URI (Polaris, Snowflake Open Catalog, Glue, Unity, Nessie, Lakekeeper)", group: connection }
-      - { name: catalog, desc: "hadoop (path-based, the default) or rest", group: connection }
+      - { name: catalog, desc: "hadoop (path-based, the default), rest, or s3tables (AWS S3 Tables, the settings from table-bucket-arn)", group: connection }
+      - { name: table-bucket-arn, desc: "`s3tables`: the table bucket's ARN (arn:aws:s3tables:<region>:<account>:bucket/<name>); the REST settings follow from it", group: connection }
       - { name: warehouse, desc: "REST catalog warehouse", group: connection }
       - { name: credential, secret: true, desc: "REST catalog OAuth2 client credentials (id:secret): ${ENV_VAR} or file:/path", group: connection }
       - { name: token, secret: true, desc: "A fixed REST catalog bearer token: ${ENV_VAR} or file:/path", group: connection }

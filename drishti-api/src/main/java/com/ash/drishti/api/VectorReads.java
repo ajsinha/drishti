@@ -57,6 +57,7 @@ public final class VectorReads {
     /** One file of a date read into a sink (a connector's per-file decode); its buffers are its own, so files may decode at once. */
     @FunctionalInterface
     public interface FileRead {
+        /** Decodes file number {@code file} of the date (0-based, in the date's file order) into {@code to}. */
         void read(int file, VectorSink to) throws Exception;
     }
 
@@ -75,6 +76,7 @@ public final class VectorReads {
             to.row(id, values, length, texts);
         }
 
+        /** The read's options: how many files may decode at once and the buffer bytes per file. */
         public Options options() {
             return options;
         }

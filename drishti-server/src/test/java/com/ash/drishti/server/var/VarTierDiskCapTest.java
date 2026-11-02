@@ -67,7 +67,8 @@ class VarTierDiskCapTest {
         assertThat(t.dates().get(0)).containsEntry("state", "disk").containsEntry("sizeBytes", 100L * 1024).containsEntry("digest", "0123456789abcdef");
         assertThat(t.purgeDate(LocalDate.of(2026, 9, 29))).isEqualTo(1);
         assertThat(d2).doesNotExist();
-        assertThat(t.estimate()).isEqualTo(3 * 100 * 1024);
+        assertThat(t.estimate()).as("three times the largest file, at least the first build's floor (2.9.9)")
+                .isEqualTo(Math.max(VarTier.FIRST_BUILD_BYTES, 3 * 100 * 1024));
         assertThat(tier(0).maxDiskBytes()).as("0: half the disk").isEqualTo(DiskBudget.shareOfDisk(dir, 0.5));
     }
 

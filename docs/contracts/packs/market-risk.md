@@ -1042,7 +1042,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 | Contract | [pnl-history.contract.yaml](../../../config/packs/market-risk/contracts/pnl-history.contract.yaml) · version 1.0 |
 | Class | input |
 | Status | active |
-| Source | Synthetic sample data (tools/packgen/var/history.py, run by make_var_data.py) |
+| Source | Synthetic sample data (tools/packgen/var/pnl_history.py, run by make_var_data.py) |
 | Grain | One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). |
 | Key | `HISTORY_ID` |
 | Id pattern | `^PNLH-` |

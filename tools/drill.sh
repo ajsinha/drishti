@@ -117,6 +117,7 @@ python_tool_tests() {
   # drill also every public Java type and member of the Javadoc the Java 21 verify built (-P api-docs, doclint on) has a comment
   if [[ "$MODE" == docs ]]; then python3 tools/api_docs.py check-python; else python3 tools/api_docs.py check; fi
   python3 -m unittest -q tools/testdata/test_testdata.py
+  python3 -m unittest -q tools/test_sizing_planner.py   # the sizing planner: formulas over named inputs, documented keys, the committed workbook current
   if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
     # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
@@ -132,6 +133,8 @@ python_tool_tests() {
     timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests
     # the compute worker SDK and its engines (the VaR what-if among them): pure Python, no servers
     timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider drishti-compute/src/test/python
+    # the AWS connectors' tool scripts (S3 Tables, Delta on S3): botocore's Stubber and an in-memory S3, no AWS account
+    timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3
   fi
 }
 

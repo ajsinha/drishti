@@ -30,6 +30,7 @@ settings:
 - root
 - uri
 - catalog
+- table-bucket-arn
 - warehouse
 - credential
 - token
@@ -91,7 +92,8 @@ name; tables in Azure, Google Cloud Storage or HDFS are not read; branches and t
 | `engine` | one of native, auto | `auto` | `native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only) |
 | `root` | path |  | Path-based tables' root (a folder or s3://…); tables.<kind>.table names the folder under it |
 | `uri` | string |  | A REST catalog's URI (Polaris, Snowflake Open Catalog, Glue, Unity, Nessie, Lakekeeper) |
-| `catalog` | string |  | hadoop (path-based, the default) or rest |
+| `catalog` | string |  | hadoop (path-based, the default), rest, or s3tables (AWS S3 Tables, the settings from table-bucket-arn) |
+| `table-bucket-arn` | string |  | `s3tables`: the table bucket's ARN (arn:aws:s3tables:<region>:<account>:bucket/<name>); the REST settings follow from it |
 | `warehouse` | string |  | REST catalog warehouse |
 | `credential` | string |  | REST catalog OAuth2 client credentials (id:secret): ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `token` | string |  | A fixed REST catalog bearer token: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |

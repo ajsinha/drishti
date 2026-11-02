@@ -62,6 +62,20 @@ public final class RowSpill implements AutoCloseable {
         this.buf = ByteBuffer.allocateDirect(Math.max(BUFFER, width * Double.BYTES)).order(ByteOrder.LITTLE_ENDIAN);
     }
 
+    /** How often the room is checked while rows stream in: every this many bytes written. */
+    static final long CHECK_EVERY = 64L << 20;
+    private java.util.function.LongConsumer room;
+    private long checkedAt;
+
+    /**
+     * Checks the room for what is written (the disk: a hard limit) every {@link #CHECK_EVERY} bytes, with the bytes written so far; the
+     * check throws to stop the load. Null: no check.
+     */
+    public RowSpill room(java.util.function.LongConsumer check) {
+        this.room = check;
+        return this;
+    }
+
     public int width() {
         return width;
     }
@@ -88,6 +102,13 @@ public final class RowSpill implements AutoCloseable {
         }
         for (int j = n; j < width; j++) {
             buf.putDouble(Double.NaN);
+        }
+        if (room != null) {
+            long written = (long) (rows + 1) * width * Double.BYTES;
+            if (written - checkedAt >= CHECK_EVERY) {
+                checkedAt = written;
+                room.accept(written);
+            }
         }
         return rows++;
     }

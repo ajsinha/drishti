@@ -1289,20 +1289,20 @@ What is **not** shared: each machine's hot files and caches (local NVMe, or EBS 
 
 ### 16.5 Sizing a machine
 
-Per member of three, replicas 2, two dates open, about 15,000 portfolios. **EXTRAPOLATED, not measured**: the formulas are measured at
-200,000 positions ([BENCHMARK.md section 12](../admin/BENCHMARK.md#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions) sections 2 and 9) and are to be
-confirmed by the benchmark at 1 million positions. The first block is 1-day VaR (509 values a position, the USD book); the second adds
+Per member of three, replicas 2, two dates open, about 15,000 portfolios. **EXTRAPOLATED, not measured**, except the 1M heap: the
+heap rows scale the single server measured at 1,000,000 positions (`-Xmx6g`, [BENCHMARK.md sections 4.8 and 12](../admin/BENCHMARK.md#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions));
+the three-member cluster at 1M is to be measured. The first block is 1-day VaR (509 values a position, the USD book); the second adds
 10-day and stressed VaR and four currency books (1,518 values a position), from the capacity model ([RESOURCES_AND_SCALE.md section
 9.5](RESOURCES_AND_SCALE.md#95-capacity-tables)), the conservative case.
 
 | A machine of three | 200K positions | 1M | 2M | 10M |
 |---|---|---|---|---|
-| skeleton a date, copied to every member (b × P)¹ | 0.20 GB | 1.0 GB | 2.0 GB | 10.2 GB |
-| heap after GC, two dates open (H)¹ | 1.5 GB | 3.1 GB | 5.2 GB | 21.6 GB |
-| `-Xmx`: need (H + 0.13 GB) ÷ 0.61 → setting² | 2.7 → 8g | 5.4 → 8g | 8.7 → 12g | 35.6: over the 32 GB line |
+| heap a date, on every member (h × P)¹ | 0.14 GB | 0.72 GB | 1.44 GB | 7.2 GB |
+| heap after GC, two dates open (H)¹ | 0.54 GB | 2.2 GB (measured) | 4.3 GB | 21.0 GB |
+| `-Xmx`: need 2.7 × H → setting² | 1.5 → 4g | 6.0 → **6g** (held, measured) | 11.7 → 12g | 56.9: over the 32 GB line |
 | hot file a date, whole bank (2,783 B × P)³ | 0.56 GB | 2.8 GB | 5.6 GB | 27.8 GB |
 | page cache: the member's two thirds of two open dates³ | 0.7 GB | 3.7 GB | 7.4 GB | 37.1 GB |
-| RAM: need → provisioned (÷ 0.61)⁴ | 10 → 32 GB | 19 → 32 GB | 29 → 48 GB | 111 → 192 GB |
+| RAM: need → provisioned (÷ 0.61)⁴ | 9 → 16 GB | 18 → 32 GB | 28 → 48 GB | 111 → 192 GB |
 | local NVMe: 60 dates kept + a load → provisioned⁵ | 23 → 200 GB | 116 → 200 GB | 232 → 500 GB | 1,159 GB → 2 TB |
 | **with 10-day, stressed, four currencies:** `-Xmx` need⁶ | 12.0 → 16g | 20.7 → 24g | 31.5: at the line | 118: needs D1 |
 | RAM need → provisioned⁶ | 21 → 48 GB | 55 → 96 GB | 97 → 192 GB | 435: not three machines |
@@ -1310,10 +1310,11 @@ confirmed by the benchmark at 1 million positions. The first block is 1-day VaR 
 | lake: vectors a date, shared (1,362 B × P)⁷ | 0.27 GB | 1.4 GB | 2.7 GB | 13.6 GB |
 | lake: a year of 252 dates, measured / design compression⁷ | 0.07 / 0.15 TB | 0.34 / 0.77 TB | 0.69 / 1.54 TB | 3.4 / 7.7 TB |
 
-¹ H = H₀ + 2 × (b × P + a × N): H₀ = 323 MB, b = 1,023 B a position, a = 19.5 KB a node, measured at 200,000 positions (866 MB with
-two dates open); N = 20,000 nodes is an ASSUMPTION (5,000 hierarchy nodes, the reference bank of VAR_GUIDE 27.4, plus 15,000 portfolios
-each counted like a node). The heap is **not** divided by members: every member holds the whole skeleton. ² 0.13 GB is the measured
-working set; 0.61 keeps 39% headroom; settings rounded up to a multiple of 4 GB, at least 8g. **Keep `-Xmx` below 32 GB with G1**, where
+¹ H = H₀ + 2 × h × P: H₀ = 128 MB + 641 B a position (the heap at start), h = 722 B a position a date, measured at 1,000,000
+positions with 27,024 nodes and 15,000 portfolios (2.2 GB with two dates open; the per-book formula of VAR_GUIDE 27.1 gives 0.77 GB a
+date). Node members are runs and the aggregates are mapped, so the number of nodes adds little. The heap is **not** divided by members:
+every member holds the whole skeleton. ² 2.7 × H is the measured run's ratio (6 GB held two dates and 200 users, its heap after GC at
+39% of the limit); settings rounded up to an even number of GB, at least 4g. **Keep `-Xmx` below 32 GB with G1**, where
 the JVM compresses object pointers; just above the line a heap holds no more than one of 31 GB. ZGC (section 3.3) never compresses
 pointers, so the line does not apply to it, but the same data takes more heap; at 10M either run ZGC with about 48 GB (an estimate, to be
 measured) or use the mapped skeleton (D1, designed), which takes the skeleton off the heap. ³ 2,783 B a position a date, measured (557 MB
@@ -1322,12 +1323,15 @@ the heap** is needed for the memory-mapped hot files. ⁴ heap need + page cache
 a position, and of the new hot file) + 7 GB for the OS, native memory and the console; ÷ 0.61, up to a machine size. ⁵ the member's share
 of 60 kept dates (`drishti.var.tier.disk-dates`) and of a load; ÷ 0.61, up to a disk size; fewer kept dates shrink it in proportion.
 ⁶ The capacity model (RESOURCES_AND_SCALE 9.5) scaled by positions from 2.3M: heap need ((2 × 2.23 + 2 × 1.84 + 2) GB × P ÷ 2.3M + 4 GB)
-× 1.5; page cache 78.4 GB, a load 44.2 GB and NVMe 1,183 GB, each × P ÷ 2.3M × 2/3; RAM = heap need + page cache + load + 7 GB.
+× 1.5; page cache 78.4 GB, a load 44.2 GB and NVMe 1,183 GB, each × P ÷ 2.3M × 2/3; RAM = heap need + page cache + load + 7 GB. The
+measured book (0.72 KB a position at 509 values, about 0.94 KB at 1,518 values) in place of the model's books gives the same within 5%:
+these rows stay conservative (the model's 4 GB base and × 1.5 against the 0.77 GB measured at start).
 ⁷ 1,362 B a position a date, measured (545 MB of lake for two dates of 200,000) on synthetic vectors; real P&L compresses less, so the
 second figure uses the design's 0.75 × raw float64 (3,054 B). 10-day and stressed vectors multiply the lake by about 2.98.
 
-**Reading it.** A machine of **24–32 cores, 128 GB and 1–2 TB of NVMe** carries 1-day VaR to 2 million positions with room to spare,
-and 10-day and stressed VaR to about 1 million; at 2 million with every horizon, 192 GB or more. At 10 million, 1-day VaR fits three
+**Reading it.** A machine of **16 cores, 64 GB and 500 GB of NVMe** carries 1-day VaR to 2 million positions (a 6 GB heap at 1
+million, measured; 12 GB at 2 million); a machine of **24–32 cores, 128 GB and 1–2 TB of NVMe** carries 10-day and stressed VaR to about
+1 million; at 2 million with every horizon, 192 GB or more. At 10 million, 1-day VaR fits three
 machines of 192 GB with a heap above the 32 GB line; with every horizon three machines are the wrong shape: section 17's estate. The
 **lake** is not tens of terabytes: at 1–2 million positions with 1-day vectors, about **1–3 TB covers several years of history** (0.7 to
 1.5 TB a year at 2M); it grows in proportion to positions, horizons and years kept.
@@ -1336,7 +1340,7 @@ machines of 192 GB with a heap above the 32 GB line; with every horizon three ma
 
 | Item | Count | Size | Note |
 |---|---|---|---|
-| Drishti machines (server + console each) | 3 | 24–32 cores, 128 GB RAM (192–256 GB for 2M with every horizon), 1–2 TB NVMe | one per rack or hall (`zone-tag`); section 16.5 |
+| Drishti machines (server + console each) | 3 | 1-day VaR to 2M: 16 cores, 64 GB RAM, 500 GB NVMe; every horizon: 24–32 cores, 128 GB (192–256 GB for 2M), 1–2 TB NVMe | one per rack or hall (`zone-tag`); section 16.5 |
 | Shared object storage for the lake | 1 cluster | MinIO or the bank's S3-compatible store, erasure-coded over at least 4 nodes, 2–4 TB usable to start | or a NAS/SAN file system on every machine at one path |
 | PostgreSQL | 2 (primary + standby) | 8 cores, 32 GB, 500 GB SSD | streaming replication; Patroni or the bank's operator; section 3.2's size |
 | Load balancer | a pair | 4 cores, 8 GB, or the bank's F5 | TLS, `GET /readyz`, no stickiness |
@@ -1348,8 +1352,8 @@ Kafka is needed only for intraday PV streaming (section 2). Prices on premises a
 
 | Piece | Choice | Note |
 |---|---|---|
-| Drishti machines | 3 × **m7i.8xlarge** (32 vCPU, 128 GB), one per Availability Zone | `r7i.8xlarge` (256 GB) for 2M with every horizon; ECS on EC2 or plain EC2 (section 15.2) |
-| Hot files | EBS **gp3**, 1 TB a machine, 6,000 IOPS, 500 MiB/s | or the NVMe variant: **m8id.8xlarge** (32 vCPU, 128 GB, 1 × 1.9 TB NVMe; `m7gd.8xlarge` on Graviton, `r7gd`/`r6id` for more memory); `DRISHTI_VAR_HOT_DIR`; section 16.9 |
+| Drishti machines | 1-day VaR to 2M: 3 × **m7i.4xlarge** (16 vCPU, 64 GB); every horizon to 1M: 3 × **m7i.8xlarge** (32 vCPU, 128 GB); one per Availability Zone | `r7i.8xlarge` (256 GB) for 2M with every horizon; ECS on EC2 or plain EC2 (section 15.2) |
+| Hot files | EBS **gp3**, 500 GB (m7i.4xlarge) or 1 TB (m7i.8xlarge) a machine, 6,000 IOPS, 500 MiB/s | or the NVMe variant: **m8id.8xlarge** (32 vCPU, 128 GB, 1 × 1.9 TB NVMe; `m7gd.8xlarge` on Graviton, `r7gd`/`r6id` for more memory); `DRISHTI_VAR_HOT_DIR`; section 16.9 |
 | Lake | **S3**, gateway endpoint | Delta with conditional writes, or Iceberg (Appendix C) |
 | Database | RDS PostgreSQL **Multi-AZ** | about a minute to fail over (section 4.8) |
 | Load balancer | **ALB** across the three zones | target group on the consoles' `/readyz` |
@@ -1364,24 +1368,27 @@ memory-optimised r7i to 1.5 TB; one gp3 volume holds up to 64 TiB at up to 80,00
 Region **Canada (Central)**, on-demand list prices, 730 hours a month, read 2026-10-27: the same price constants as the VaR engine
 deck's AWS cost. **Estimates: check every price in the AWS Pricing Calculator before quoting.**
 
-| Item | Basis | USD a month |
-|---|---|---|
-| 3 × m7i.8xlarge¹ | 3 × USD 1.7976 an hour × 730 h | 3,937 |
-| EBS gp3, 3 × 1 TB² | 3 × (1,000 GB × 0.088 + 3,000 IOPS × 0.0055 + 375 MiB/s × 0.044) | 363 |
-| S3 lake, 2 TB Standard³ | 2,000 GB × 0.025 + 10 for requests | 60 |
-| RDS PostgreSQL Multi-AZ⁴ | **ASSUMPTION**: db.m7g.xlarge to db.m7g.2xlarge, 200–500 GB | 600–1,300 |
-| Application Load Balancer | 0.02475 × 730 h + 2 LCU × 0.0088 × 730 h | 31 |
-| Data between zones | 1,000 GB × 2 ways × 0.01 | 20 |
-| Loads and maintenance | Fargate, 60 h × (8 vCPU × 0.04456 + 32 GB × 0.004865) | 31 |
-| NAT gateways, interface endpoints | 2 NAT × 730 h × 0.05 + 50 GB × 0.05 + 12 endpoints × 730 h × 0.011 + 1 | 173 |
-| CloudWatch logs and metrics | 270 GB × 0.55 + 270 GB × 0.033 + 200 metrics × 0.30 | 217 |
-| Secrets Manager, KMS | 6 secrets × 0.40 + 2 | 4 |
-| **Total, on demand** | | **about 5,400–6,100** |
-| with a 1-year Compute Savings Plan⁵ | EC2 −26.9%, Fargate −20.0%, no upfront | about 4,400–5,100 |
-| with a 3-year Compute Savings Plan⁵ | EC2 −49.5%, Fargate −45.0%, no upfront | about 3,500–4,200 |
+| Item | Basis | USD a month, 1-day VaR to 2M (3 × m7i.4xlarge) | USD a month, every horizon to 1M (3 × m7i.8xlarge) |
+|---|---|---|---|
+| 3 Drishti machines¹ | 3 × USD 0.8988 / 1.7976 an hour × 730 h | 1,968 | 3,937 |
+| EBS gp3, 3 × 500 GB / 3 × 1 TB² | 3 × (GB × 0.088 + 3,000 IOPS × 0.0055 + 375 MiB/s × 0.044) | 231 | 363 |
+| S3 lake, 2 TB Standard³ | 2,000 GB × 0.025 + 10 for requests | 60 | 60 |
+| RDS PostgreSQL Multi-AZ⁴ | **ASSUMPTION**: db.m7g.xlarge to db.m7g.2xlarge, 200–500 GB | 600–1,300 | 600–1,300 |
+| Application Load Balancer | 0.02475 × 730 h + 2 LCU × 0.0088 × 730 h | 31 | 31 |
+| Data between zones | 1,000 GB × 2 ways × 0.01 | 20 | 20 |
+| Loads and maintenance | Fargate, 60 h × (8 vCPU × 0.04456 + 32 GB × 0.004865) | 31 | 31 |
+| NAT gateways, interface endpoints | 2 NAT × 730 h × 0.05 + 50 GB × 0.05 + 12 endpoints × 730 h × 0.011 + 1 | 173 | 173 |
+| CloudWatch logs and metrics | 270 GB × 0.55 + 270 GB × 0.033 + 200 metrics × 0.30 | 217 | 217 |
+| Secrets Manager, KMS | 6 secrets × 0.40 + 2 | 4 | 4 |
+| **Total, on demand** | | **about 3,300–4,000** | **about 5,400–6,100** |
+| with a 1-year Compute Savings Plan⁵ | EC2 −26.9%, Fargate −20.0%, no upfront | about 2,800–3,500 | about 4,400–5,100 |
+| with a 3-year Compute Savings Plan⁵ | EC2 −49.5%, Fargate −45.0%, no upfront | about 2,350–3,050 | about 3,500–4,200 |
 
-¹ m7i.8xlarge priced at half the m7i.16xlarge rate of the price constants (USD 3.5952 an hour): AWS prices a family's sizes linearly.
-² Provisioned above gp3's included 3,000 IOPS and 125 MiB/s; 1 TB covers 1-day VaR at 2M (section 16.5). ³ About three years of
+The heap measured at 1,000,000 positions (6 GB held two dates and 200 users, section 16.5) is what lets 1-day VaR run on the 64 GB
+machine: the 128 GB machine is for 10-day and stressed VaR with four currency books, or more dates kept open.
+¹ m7i.8xlarge and m7i.4xlarge priced at a half and a quarter of the m7i.16xlarge rate of the price constants (USD 3.5952 an hour): AWS
+prices a family's sizes linearly. ² Provisioned above gp3's included 3,000 IOPS and 125 MiB/s; 500 GB covers 1-day VaR at 2M with 60
+dates kept (section 16.5), 1 TB every horizon at 1M. ³ About three years of
 1-day vectors at 2M with the measured compression (section 16.5); S3 grows with history at USD 25 a TB-month in Standard, less in
 Standard-IA. ⁴ **Not in the price constants**: an estimate from public us-east-1 list prices plus about 10% for Canada (Central); RDS
 reserved instances lower it and are not applied. ⁵ The savings rates are those of the price constants (Compute Savings Plans, no upfront:
@@ -1410,8 +1417,8 @@ prices; **check them in the AWS Pricing Calculator**.
 | **S3 Standard** | 10–100 ms to the first byte, high aggregate throughput | 11 nines over three zones | USD 0.025 a GB-month | **the lake** |
 
 **Recommendation.** Hot files on **instance-store NVMe** (`DRISHTI_VAR_HOT_DIR`): they are rebuildable caches, so a replaced instance
-starts empty and rebuilds each date's hot file from the lake on its first open (about half a minute for a date at 2 million positions,
-then it is warm). Where the hot files must survive stop and start, **gp3** with raised IOPS and throughput (the 16.7 reference). The lake on **S3
+starts empty and rebuilds each date's hot file from the lake on its first open (about 20 s for a date at 1 million positions, measured,
+and about 40 s at 2 million; then it is warm). Where the hot files must survive stop and start, **gp3** with raised IOPS and throughput (the 16.7 reference). The lake on **S3
 Standard**, optionally **S3 Express One Zone** for the newest dates (kept in the members' zone, with S3 Standard as the copy of record).
 RDS PostgreSQL on **gp3**.
 
@@ -3133,8 +3140,20 @@ connector file (`plugin: iceberg`; [ICEBERG_CONNECTOR.md section 19](../connecto
    (Maven, Java 21): a Glue database `drishti_check_<time>` at `s3://<bucket>/<prefix>/_drishti-glue-check/…`, a table of 25 P&L
    vectors written by Drishti's loader, read back through the connector (a document, and `vectors()` bit for bit), then dropped
    (`--keep` keeps them). Exit 0 means Glue works end to end; the steps are printed from `target/glue-live-report.txt`.
-4. S3 Tables: create a table bucket, then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run here**
-   (no account); the product owner runs it.
+4. S3 Tables: `deploy/aws/s3-tables/s3-tables.sh create --bucket <name> --namespace risk` makes the table bucket, the namespace and
+   the policy; then `check-glue.sh --s3-tables arn:aws:s3tables:<region>:<account>:bucket/<name>`. **Not run here** (no account); the
+   live run waits for an AWS sandbox account.
+
+**The AWS connectors' tool scripts (Python).** Two connectors have their own small set of scripts beside these, in Python with `boto3`
+(no AWS CLI, so they run on Windows too) with `.sh` and `.ps1` wrappers: [`deploy/aws/s3-tables/`](../../deploy/aws/s3-tables/README.md)
+for **AWS S3 Tables** (the `iceberg` connector with `catalog: s3tables`, the table bucket named by its ARN;
+[ICEBERG_CONNECTOR.md section 20](../connectors/ICEBERG_CONNECTOR.md#20-aws-s3-tables)) and
+[`deploy/aws/delta-s3/`](../../deploy/aws/delta-s3/README.md) for **Delta Lake on S3** (the `delta` connector with
+`root: s3://<bucket>/<prefix>`; [DELTA_CONNECTOR.md section 17](../connectors/DELTA_CONNECTOR.md#17-delta-lake-on-aws-s3)). Each has
+`create` (the bucket, the namespace or prefix, the IAM policy, attached to a role), `check` (the resources, then one table read end to
+end as Drishti reads it), `remove` (only what is asked, with `--yes`) and `policy` (the document, printed); each takes `--region`,
+`--profile`, `--env deploy/aws/env` and `--dry-run`, and never prints a credential. Their tests need no AWS account (botocore's
+Stubber, an in-memory S3); none has yet run against a real AWS account.
 
 **Official results to S3.** The official VaR and exposure tables (`risk-results/var-official`, `exposure-official`,
 `exposure-official-cpty`) and their JSON Lines can be written straight to the bucket, in Delta (the default) or Iceberg, by the server
@@ -3675,7 +3694,7 @@ Drishti keeps small, bounded structures per table and day ([DELTA_CONNECTOR.md s
 | Cache | Where | Bounded by | After a restart |
 |---|---|---|---|
 | file list (snapshot) of each table | heap | the table's live files | re-read from the checkpoint |
-| Parquet footers | heap (`-Ddrishti.parquet.footer-cache-groups`, 50,000 row groups) | row groups | re-read on first use (one ranged GET) |
+| Parquet footers | heap (`-Ddrishti.parquet.footer-cache-mb`, 64 MB) | bytes (about 700 a column chunk) | re-read on first use (one ranged GET) |
 | id maps of days | heap (`id-map-mb`, 20 % of heap, shared) and disk (`id-map-disk.dir`) | memory; one file per table version and date | **memory-mapped from disk: no scan** |
 | column sets of days | heap (`columns-cache-mb`) | memory | re-read (the newest day in the background) |
 | documents | heap (`doc-cache-mb`) and RocksDB on disk (`doc-disk-cache.dir`, `max-gb` 1, TTL 12 h, cleared daily 02:00) | size, age | **warm from disk** |
@@ -4229,7 +4248,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | `cache-mb`, `max-load-rows` | Delta connector | not set: shared, 5 % of the heap; 200000 | whole days loaded for reverse links (tables without promoted link columns) |
 | `id-map-disk.enabled`, `id-map-disk.dir` | Delta connector | true, `<data dir>/cache/<connector>/idmaps` | id maps memory-mapped from disk, one file per table version and date |
 | `doc-disk-cache.enabled`, `.dir`, `.max-gb`, `.ttl`, `.reset-at`, `.zone` | Delta connector | true, `<data dir>/cache/<connector>/docs`, 1, 12h, 02:00, America/New_York | the RocksDB document cache (section 8.1) |
-| `drishti.parquet.page-index`, `drishti.parquet.footer-cache-groups` | server (system properties) | true, 50000 | the page index for single reads; parsed footers kept, by row groups |
+| `drishti.parquet.page-index`, `drishti.parquet.footer-cache-mb` | server (system properties) | true, 64 | the page index for single reads; parsed footers kept, in MB (weighed by column chunks) |
 | `max-concurrent-reads` | Delta connector | 16 | single-entity reads at once |
 | `warm-dates` | Delta connector | 3 | newest dates whose id maps load at start |
 | `index.days`, `index.max-memory`, `index.storage`, `index.max-disk` | Delta connector | 1, 600MB, heap, 2GB | the type-ahead index |

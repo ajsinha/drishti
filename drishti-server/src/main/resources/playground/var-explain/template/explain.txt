@@ -1,0 +1,43 @@
+# The Explain tab of the VaR change workbook ("Why it moved", VAR_GUIDE.md section 3.11), one entry a row: a line "## <title>" then its
+# text. {Name} is replaced by the cell the generator put that figure in (a reference the reader can follow) and {Name:v} by its value.
+# Only names defined on Main may be used. Three parts: the idea in plain words, the steps of the working, and every term of every tab.
+## In plain words: what this workbook answers
+VaR moved from {VaRFrom:v} on {FromDate:v} to {VaRTo:v} on {ToDate:v}, a change of {Change:v}. This workbook says why, in causes that add up to that change exactly. It does it by building a chain of full VaR calculations, the states S0 to the last, each one changing a single thing from the one before: first the earlier date's figures corrected after its official run, then the hierarchy, then the trades that ended, then the scenario days that left, then today's market, then the scenario days that entered, then the new trades. Each step's effect is one state's VaR less the one before. Because each state starts where the last one ended, the effects add up to the last VaR less the first, with nothing left over: a telescoping sum. Every state's VaR is worked here in formulas from its P&L column and checked against the engine to the cent.
+## In plain words: how to read the tabs
+Main is the summary: the inputs (Confidence, RankRule), each state's VaR worked from its column with its scenario count, its rank k and the day that sets it, the engine's figure beside it with a check; then each step as the difference of two state cells, the add-up check and the order the causes were applied in. Data holds the values the states are made of: the two dates' scope P&L by scenario day, and the sums of the trades that changed between them (ended, new, moved by the hierarchy, amended). States holds one P&L column per state, each a formula over the state before it and Data, and each state's rank of every day. Drivers lists who drove each step, as the engine reported it. Explain (this tab) says what every step and term means. Provenance records where the inputs came from.
+## In plain words: signs and units
+A loss is a negative P&L and VaR is reported as a positive number. A positive step raised VaR (more risk), a negative one lowered it. All money is in US dollars, 1-day, at the confidence on Main.
+## In plain words: the order matters, the total does not
+VaR is not a sum: it is one day's loss from a ranked list, and which day that is depends on everything held at once. So the size of each cause depends on the order the causes are applied in (trades first, then the market, would give other step sizes). The order is a setting (drishti.var.explain.order) and is written on Main; whatever the order, the steps add up to the same total. The order-free view on the Drivers tab, each part's component VaR on the later date less on the earlier, also adds up to the change.
+## 1. The days: two scenario sets on one axis
+In plain words: each date has its own set of past days (scenarios); from one business day to the next the set rolls by a day. Data lists every day of either set once, in date order, with 1 or 0 in "In earlier set" and "In later set". A state is valued on the earlier set, on the days common to both, or on the later set; a cell outside the state's days is left empty and is ignored by COUNT and SMALL.
+## 2. S0: where it starts
+S0 is the earlier date's VaR as it was officially captured (Data, Captured), when the scope is an official node seen whole and the data changed since; otherwise the earlier date's figure computed now (Data, Earlier now), and the restatement step is zero.
+## 3. Each state's P&L column
+Every state's column on States is the column before it with one change: restatement replaces the captured vector by the vector now (− (Captured − Earlier now)); hierarchy adds the trades moved into the scope and takes out those moved out; trades out takes out the ended trades' vectors; the window drop empties the days not in the later set; the market takes the later date's vectors of the same trades over the common days (Later − the trades in, and what the later steps add back); the window add extends that to every later day; trades in adds the new trades' vectors. The last state's column equals the later date's scope (Data, Later): the check on Main says so.
+## 4. Ranked worst first
+In plain words: line each state's days up from the worst loss to the best gain. Rank counts the days with a lower P&L, plus the earlier days with exactly the same P&L, plus one, so the worst day has rank 1 and a tie goes to the older day: the engine's rule.
+## 5. Each state's VaR
+With N the state's days (COUNT of its column) and k = ⌈N × (1 − Confidence)⌉, VaR = −(the k-th smallest P&L) = −SMALL(column, k). The day that sets it (the VaR scenario) is the day whose P&L is the k-th smallest: INDEX of the dates at MATCH of that value. With RankRule interpolated, the two ranks either side of N × (1 − Confidence) are weighted instead.
+## 6. Each step
+A step's effect is the next state's VaR less the state's own: a difference of two cells on Main. Their sum ({StepsSum}, {StepsSum:v}) equals the last VaR less the first ({Change}, {Change:v}): the add-up check.
+## 7. Who drove each step (Drivers)
+For trades out and in, each trade's incremental VaR: the state's VaR with it less without it (exact for one trade, but they do not add up, so a last line, "the others and the interaction", closes the step). For the market step, each part's component VaR before and after: the components of a state add up to its VaR, so their changes add up to the step. For the window steps, each day that left or entered with its P&L, its rank and whether it was in the tail (rank ≤ k).
+## Term (Main, input): Confidence
+The VaR confidence, for example 0.99. It sets k, the rank of VaR's day, for every state alike. Cell {Confidence}, today {Confidence:v}. Change it and every state and step recalculates; the engine checks then turn red (the engine's figures are for the original confidence) while the add-up check stays green.
+## Term (Main, input): RankRule
+kth-worst (the default and the regulatory convention): exactly the k-th worst day. interpolated: between the two days either side of N × (1 − Confidence). Cell {RankRule}.
+## Term (Main): N, k
+N is the count of a state's scenario days (its COUNT); k = ⌈N × (1 − Confidence)⌉. The window steps change N when the two sets differ in length.
+## Term (Main): VaR scenario
+The day whose P&L sets the state's VaR (rank k). When it changes between two states, the step between them moved the tail: the sentences on the screen say so in words.
+## Term (Main): Engine and Check
+The engine's own VaR of the state, and ✓ when the sheet's VaR equals it to the cent. ALL CHECKS PASS at the top when every state, the last column and the add-up agree.
+## Term (Data): Captured, Earlier now, Later
+Captured: the earlier date's official vector, kept to whole units (empty when not used). Earlier now: the scope on the earlier date, computed now. Later: the scope on the later date.
+## Term (Data): Moved in, Moved out
+Trades on both dates that are in the scope on one date only: the hierarchy or the rules moved them (a book moved between desks, a rule changed). Each valued on both dates, so the hierarchy step can sit before or after the market.
+## Term (Data): Trades out, Trades in, Amended
+Trades out: in the scope on the earlier date, with no vector on the later date (matured, closed) or cancelled. Trades in: in the scope on the later date, with no vector on the earlier (new). Amended: trades the feed marks amended on the later date, split out as their own steps when marked (their old vector out with the trades out, their new vector in with the trades in).
+## Term (States): Rank columns
+The rank of each day in that state, 1 the worst; empty for the days outside the state.

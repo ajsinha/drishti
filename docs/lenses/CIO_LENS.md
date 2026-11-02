@@ -892,16 +892,16 @@ the three-node test shows `2 / 3` and `ACT`; the phone view stacks ACT and WATCH
 
 ## 13. Phases (proposed)
 
-The phases follow the plan's themes (product owner, 2026-10-31): the market-risk regulatory foundation; oversight and mobile; regulatory reporting; counterparty engines; sensitivities and market-risk capital; the CVA family; advanced and executive. The regulatory foundation is planned; the others are **proposed** until each starts; a row without one is unscheduled. The rows are in the plan's "CIO lens" section. The proof of concept becomes the
-first part of the lens build in the advanced and executive phase.
+The phases follow the plan's themed releases (product owner, 2026-10-31; reordered 2026-11-01): the market-risk regulatory foundation (2.9.8, released); memory, scale and mobile with the VaR change explained (2.9.10, in release); sensitivities and market-risk capital (2.9.11); counterparty engines (2.9.12); Java 25 and performance I (2.9.13); oversight (2.9.14); regulatory reporting (2.9.15); native performance II (2.9.16); XVA and wrong-way risk (2.9.17); advanced market risk (2.9.18); executive (2.9.19). From 2.9.11 on each is **proposed** until it starts; a row without one is unscheduled. The rows are in the plan's "CIO lens" section. The proof of concept becomes the
+first part of the lens build in the executive phase (2.9.19).
 
 | Phase | Rows | Status | Depends on |
 |---|---|---|---|
-| 1. Data trust (the first CIO rows) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | proposed | Data loads and expectations (built); the data office's owners and service levels |
-| 2. The lens build | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | proposed | CIO1; the phone display |
-| 3. Platform | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | proposed | the platform metrics and alerts (built, OPERATIONS section 13.6), readiness, drain and runner (CD1 to CD3) |
-| 4. People | CIO6 (usage), CIO7 (security; decision 5) | proposed | the security team's agreement |
-| 5. Words and evidence | CIO10 (Ask), CIO11 (evidence pack, time travel) | proposed | the planned board pack's PDF house style; the AI layer |
+| 1. Data trust (the first CIO rows; regulatory reporting, 2.9.15) | CIO1 (SLA, dependency, forecast), CIO2 (content checks, history), CIO3 (BCBS 239 scorecard) | proposed | Data loads and expectations (built); the data office's owners and service levels |
+| 2. The lens build (executive, 2.9.19) | CIO9 (landing B, C and A tabs), CIO12 (phone), CIO13 (the lens file) | proposed | CIO1; the phone display |
+| 3. Platform (executive, 2.9.19) | CIO4 (metrics history), CIO5 (capacity), CIO8 (change and incidents) | proposed | the platform metrics and alerts (built, OPERATIONS section 13.6), readiness, drain and runner (CD1 to CD3) |
+| 4. People (executive, 2.9.19) | CIO6 (usage), CIO7 (security; decision 5) | proposed | the security team's agreement |
+| 5. Words and evidence (executive, 2.9.19) | CIO10 (Ask), CIO11 (evidence pack, time travel) | proposed | the planned board pack's PDF house style; the AI layer |
 | Later | CIO14 (cloud cost per desk) | unscheduled (after the lens build) | the billing export and allocation rules (decision 4) |
 
 ---
@@ -945,7 +945,7 @@ first part of the lens build in the advanced and executive phase.
 10. **Incidents.** Read from the bank's ITSM (recommended; Drishti never owns incidents), or a small Drishti-owned record for sites without
     one.
 11. **Phase placement.** **Decided (product owner, 2026-10-31), by the themed plan:** data trust (CIO1 to CIO3, the first CIO
-    rows) with regulatory reporting; the lens build, platform, people, words and evidence in the advanced and executive phase; cost per
+    rows) with regulatory reporting (2.9.15); the lens build, platform, people, words and evidence in the executive phase (2.9.19); cost per
     desk unscheduled (section 13).
 
 ---

@@ -54,6 +54,7 @@ settings:
 - root
 - uri
 - catalog
+- table-bucket-arn
 - namespace
 - domain
 - kinds
@@ -134,7 +135,8 @@ reads position and equality deletes and answers *known at* from older snapshots.
 | `credential` | string |  | REST catalog credential: ${ENV_VAR} or file:/path (secret: give `${ENV_VAR}` or `file:/path`, never the value) |
 | `root` | path |  | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) |
 | `uri` | string |  | `rest`: the catalog's URI |
-| `catalog` | string | `hadoop` | `hadoop` (path-based tables) or `rest` |
+| `catalog` | string | `hadoop` | `hadoop` (path-based tables), `rest`, or `s3tables` (AWS S3 Tables: its Iceberg REST endpoint, the settings from `table-bucket-arn`) |
+| `table-bucket-arn` | string |  | `s3tables`: the table bucket, `arn:aws:s3tables:<region>:<account>:bucket/<name>`; the endpoint, SigV4 signing (`s3tables`), region, warehouse and REST prefix follow from it, the domain is the namespace and a kind is read from its table with underscores (`pnl-vector` is `pnl_vector`). Blank: the connector stays idle. Native engine only |
 | `namespace` | string |  | `rest`: the namespace (dots separate levels) |
 | `domain` | string |  | Domain |
 | `kinds` | list |  | Comma list of kinds to serve |

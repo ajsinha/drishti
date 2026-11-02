@@ -37,7 +37,7 @@ import java.util.function.LongSupplier;
  * {@code min-free-gb}, both must hold) every folder frees down to 90% of its cap and the check is made again; when it still would not fit,
  * the write is refused with {@code DRS-5218} and says what to free. A date already open keeps answering; the lake is never touched.
  */
-public final class DiskBudget {
+public class DiskBudget {
 
     /** A folder Drishti fills. */
     public interface Folder {
@@ -121,7 +121,7 @@ public final class DiskBudget {
             f.free(Math.max(0, f.limitBytes() - bytes));
         }
         long guard = guardBytes(at);
-        if (usable(at) - bytes >= guard) {
+        if (usableBytes(at) - bytes >= guard) {
             return;
         }
         for (Folder x : folders) {
@@ -129,7 +129,7 @@ public final class DiskBudget {
                 x.free((long) (x.limitBytes() * 0.9));
             }
         }
-        long free = usable(at);
+        long free = usableBytes(at);
         if (free - bytes >= guard) {
             return;
         }
@@ -141,7 +141,7 @@ public final class DiskBudget {
 
     /** True when {@code bytes} more would still leave the guard (no freeing, no refusal): a quiet check. */
     public boolean fits(Path at, long bytes) {
-        return usable(at) - bytes >= guardBytes(at);
+        return usableBytes(at) - bytes >= guardBytes(at);
     }
 
     /** Brings every folder under its cap (the periodic check); returns the bytes freed. */
@@ -189,6 +189,11 @@ public final class DiskBudget {
         }
         out.put("folders", rows);
         return out;
+    }
+
+    /** The usable bytes on the disk holding {@code p}, as this budget sees it (a test may give a small disk). */
+    public long usableBytes(Path p) {
+        return usable(p);
     }
 
     /** The usable bytes on the disk holding {@code p} (its nearest existing ancestor). */

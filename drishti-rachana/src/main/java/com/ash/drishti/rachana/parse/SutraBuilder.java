@@ -23,6 +23,7 @@ import com.ash.drishti.rachana.model.Panel;
 import com.ash.drishti.rachana.model.PanelKind;
 import com.ash.drishti.rachana.model.PanelOptions;
 import com.ash.drishti.rachana.model.PivotSpec;
+import com.ash.drishti.rachana.model.ScreenPhone;
 import com.ash.drishti.rachana.model.SourceLocation;
 import com.ash.drishti.rachana.model.StripItem;
 import com.ash.drishti.rachana.model.Sutra;
@@ -51,9 +52,10 @@ final class SutraBuilder {
     private static final Pattern FKEY = Pattern.compile("F([1-9]|1[0-2])");
     private static final int LANGUAGE = SutraParser.LANGUAGE;
     private static final Set<String> TOP = Set.of("rachana", "sutra", "version", "domain", "match", "title", "strip", "panels", "keys",
-            "description", "notes", "controls", "doc", "refresh", "layout");
+            "description", "notes", "controls", "doc", "refresh", "layout", ScreenPhone.KEY);
     private static final Set<String> PANEL = Set.of("id", "kind", "title", "key", "code", "area", "infer", "columns", "body", "panels", "description",
-            Panel.SPAN, Panel.HEIGHT, com.ash.drishti.rachana.model.Refresh.KEY, Panel.ORDER, Panel.SECTION, Panel.COLLAPSIBLE, com.ash.drishti.rachana.model.Form.KEY);
+            Panel.SPAN, Panel.HEIGHT, com.ash.drishti.rachana.model.Refresh.KEY, Panel.ORDER, Panel.SECTION, Panel.COLLAPSIBLE, com.ash.drishti.rachana.model.Form.KEY,
+            ScreenPhone.KEY);
     private static final Set<String> STRIP = Set.of("label", "bind", "fmt", "tone", "emphasis");
     private static final Set<String> COLUMN = Set.of("label", "bind", "fmt", "tone", "total", "link");
 
@@ -126,6 +128,9 @@ final class SutraBuilder {
         LayoutReader layoutReader = new LayoutReader(file, problems);          // layout: the grid, areas, split, tabs, sections (RACHANA_REFERENCE.md 13)
         com.ash.drishti.rachana.model.ScreenLayout layout = layoutReader.read(m.get("layout"));
         layoutReader.check(layout, panels, m.getOrDefault("layout", root));
+        PhoneReader phoneReader = new PhoneReader(file, problems);            // phone: order, default tier, summary (MOBILE_DISPLAY.md 5.2)
+        ScreenPhone phone = phoneReader.screen(m.get(ScreenPhone.KEY));
+        phoneReader.check(phone, panels, m.getOrDefault(ScreenPhone.KEY, root));
         ControlsReader controlsReader = new ControlsReader(file, problems);
         List<com.ash.drishti.rachana.model.Control> controls = controlsReader.read(m.get("controls"), ids);
         controlsReader.checkSelects(panels, controls);
@@ -152,7 +157,7 @@ final class SutraBuilder {
             return null;
         }
         return new Sutra(name, version, text(m.get("domain"), domain), match, title, strip, panels, keyMap, loc(root),
-                text(m.get("description"), null), controls, layout);
+                text(m.get("description"), null), controls, layout, phone);
     }
 
     private Match match(PNode n, PNode root) {
@@ -288,6 +293,17 @@ final class SutraBuilder {
             }
         }
         placement(m, nested, gridArea, options);
+        PNode phone = m.get(ScreenPhone.KEY);                                // MOBILE_DISPLAY.md 5.1: the panel's phone tier
+        if (phone != null && phone.value() != null) {
+            if (nested) {
+                problem(LayoutReader.CODE, "'phone' sets a whole panel's tier: put it on the tabs panel", phone);
+            } else {
+                Map<String, Object> tier = new PhoneReader(file, problems).panel(phone, kind == null ? null : kind.id());
+                if (tier != null) {
+                    options.put(ScreenPhone.KEY, tier);
+                }
+            }
+        }
         PNode form = m.get(com.ash.drishti.rachana.model.Form.KEY);          // RACHANA_REFERENCE.md 10: how people edit its records
         if (form != null) {
             Object raw = form.isScalar() ? form.value() : plain(form);

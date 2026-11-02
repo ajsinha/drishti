@@ -167,6 +167,26 @@ def top_bar(request, ctx: dict) -> list:
     return out
 
 
+def lens_menu(request, menus: list, product: str = "") -> dict | None:
+    """The lens menus' phone form (LX1 option C, docs/lenses/README.md): on a phone the edition's (or lens's) subject menus fold into one
+    menu named after the lens, a column per subject, so the bar keeps a few finger-sized buttons; on a wider screen the subject menus
+    stand in the bar as before (static/css/phone.css switches them at 640 px). ``menus`` is :func:`top_bar`'s answer; None without
+    subject menus. ``{"label", "subjects": [labels], "columns": [(title, items)]}``."""
+    edition = _edition(request)
+    if not edition.active or edition.menu("top") is None:
+        return None
+    subject = {str(m.get("label") or "") for m in _spec(_console_dir(request)).get("menus") or [] if m.get("subject")}
+    folded = [(label, [it for _t, items in columns for it in items]) for label, _icon, columns in menus if label in subject]
+    folded = [(label, items) for label, items in folded if items]
+    if not folded:
+        return None
+    label = edition.title                                      # "Drishti Risk" -> "Risk": the product's name is already the brand beside it
+    words, brand = label.split(), (product or "").split()
+    if len(words) > 1 and brand and words[0].lower() == brand[0].lower():
+        label = " ".join(words[1:])
+    return {"label": label, "title": edition.title, "subjects": [s for s, _ in folded], "columns": folded}
+
+
 def footer(request) -> list[dict]:
     edition = _edition(request)
     return [i for i in _spec(_console_dir(request)).get("footer") or [] if edition.menu_shown("footer", str(i.get("id") or ""))]

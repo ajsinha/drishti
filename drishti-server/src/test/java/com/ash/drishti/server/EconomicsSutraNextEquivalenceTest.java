@@ -113,7 +113,11 @@ class EconomicsSutraNextEquivalenceTest {
 
     /** The view as text, normalised, with the layout's own version (the provenance panel's "Sutra kind vN") made one. */
     private static String same(String kind, JsonNode view) {
-        return normal(view.deepCopy()).toString().replace("Sutra " + kind + " v2", "Sutra " + kind + " v1");
+        JsonNode copy = view.deepCopy();
+        if (copy instanceof com.fasterxml.jackson.databind.node.ObjectNode o) {
+            o.remove("phone");        // the phone tiers the shared fragments declare: not part of the page drawn (PhoneViewTest)
+        }
+        return normal(copy).toString().replace("Sutra " + kind + " v2", "Sutra " + kind + " v1");
     }
 
     private static String layout(JsonNode view) {

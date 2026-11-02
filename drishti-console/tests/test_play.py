@@ -146,3 +146,10 @@ def test_market_has_no_playground(backend, monkeypatch):
     r = c.get("/go", params={"q": "PLAY VAR BANK <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and "DRS-4023" in r.headers["location"]
     assert not [s for s in c.get("/api/suggest", params={"q": "PLAY VAR BANK"}).json() if s.get("mnemonic") == "PLAY"]
+
+
+def test_the_var_page_link_carries_the_pages_date_and_settings():
+    """The VaR page's Playground link opens the same view: the page's date (asOf), currency, horizon, measure, confidences and set."""
+    js = (CONSOLE / "web" / "static" / "js" / "play-link.js").read_text(encoding="utf-8")
+    for k in ("asOf", "ccy", "h", "m", "q", "esq", "set"):
+        assert f'"{k}"' in js, k

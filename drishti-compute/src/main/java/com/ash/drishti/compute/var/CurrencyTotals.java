@@ -114,6 +114,19 @@ public final class CurrencyTotals {
         return width;
     }
 
+    /** The heap bytes the totals hold: per node its currencies' scenario sums ({@code width + 1} doubles each) and the key. */
+    public long heapBytes() {
+        long b = 64;
+        for (Map.Entry<String, Sums> e : byKey.entrySet()) {
+            Sums x = e.getValue();
+            b += 120 + 2L * e.getKey().length() + 16L * x.currencies().length + 8L * x.base().length + 4L * x.trades().length;
+            for (double[] v : x.pv()) {
+                b += 16 + 8L * v.length;
+            }
+        }
+        return b;
+    }
+
     /** A node's sums, or null for a key the date has none for. */
     public Sums get(String node) {
         return byKey.get(node);

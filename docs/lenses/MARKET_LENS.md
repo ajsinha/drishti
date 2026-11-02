@@ -28,7 +28,7 @@ market risk oversight analysis ([OVERSIGHT_LENS.md](OVERSIGHT_LENS.md), the prop
 [`config/editions/market.yaml`](../../config/editions/market.yaml), the [market-data pack README](../../config/packs/market-data/README.md)
 (every kind and field), [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time) (an item over time), [VAR_GUIDE.md](../guides/VAR_GUIDE.md)
 (how market data reaches VaR: through the upstream P&L vectors) and the plan's
-[market-data rows](../architecture/IMPLEMENTATION_PLAN.md#299-oversight-and-mobile-proposed) (VaR at stake and the quality checks). The sibling lens
+[market-data rows](../architecture/IMPLEMENTATION_PLAN.md#2914-oversight-proposed) (VaR at stake and the quality checks). The sibling lens
 documents: [RISK_LENS.md](RISK_LENS.md), [TRADING_LENS.md](TRADING_LENS.md), [WORLD_LENS.md](WORLD_LENS.md).
 
 ## Contents
@@ -645,7 +645,7 @@ chips and quick cards run their commands; hovering a move shows its dates and th
 and the lens links sit above every landing. **States.** *Loading:* `…`. *Error:* `Not available: <reason>` in the panel. *Not given by
 the data*, said in place: a change only when both days hold real data; fewer than ten moves ranks by the day's move (the σ column then
 reads *since*); no history: says so and ranks nothing; on the demo every quality check is clean ("no exceptions"). **Phone** (600 px and
-below): one column ([`market-landing.css`](../../drishti-console/web/static/css/market-landing.css)); the mock-up drew no phone form.
+below): one column ([`market-landing.css`](../../drishti-console/web/static/css/market-landing.css)); the mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
@@ -696,8 +696,9 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X3 | Volatility menu | Swaption volatility `IRV`; Cap volatility `CPV`; FX volatility `FXV`; Equity volatility `EQV`; Commodity volatility `CMDV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | FX menu | Spot `FX`; Forwards `FXF`; Volatility `FXV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X5 | Credit menu | CDS curves `CDS`; Bonds `BND` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X6 | Phone form | below 640 px the subject menus fold into one **Market** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`phone.js`](../../drishti-console/web/static/js/phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 
-On a phone the subject menus are to fold into one menu named after the lens (option C's form): not built, moved to 2.9.9 with the phone display; until then a phone shows the same menus as icons. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
 
 ### 11.3 Quality with VaR at stake, jumps and two sources (`market-checks`)
 

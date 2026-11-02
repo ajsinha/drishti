@@ -429,6 +429,9 @@ bytes than JSON, the same table cell for cell); everything else on the page stay
 
 **Captured results**: the captures of this scope ([section 6](#6-captures-and-compare)).
 
+**Why it moved**: the scope's VaR change since the previous business date (or between any two dates) in causes that add up exactly,
+with who drove each; Waterfall, Matrix and Sentences views ([section 3.11](#311-why-it-moved-the-var-change-explained)).
+
 **In other currencies** (loaded only when you open it): the scope's VaR 99% and ES 97.5% in each configured currency, each
 computed from its PVs summed per trade currency with that currency's scenario FX, that VaR in the page's currency at today's rate, and
 the difference from the page's VaR. The shown currency is marked; click another to move the page to it. The Contributions and the
@@ -663,7 +666,7 @@ figure moves; the check cells say whether the sheet still equals the engine. The
 
 **Open it.** `PLAY VAR <scope> <GO>` in the VaR explorer's words (`PLAY VAR DESK RATES`, `PLAY VAR BANK 10D SUM`,
 `PLAY VAR DESK:DESK-RATES-NY IN EUR`), or `PLAY VAR <id> <id> ...` with up to 50 positions or trades (`PLAY VAR POS-10442 MX-20000274`);
-or **Playground** in the VaR page's header strip, which opens the scope on screen with its currency, horizon and confidences.
+or **Playground** in the VaR page's header strip, which opens the scope on screen on the page's date, with its currency, measure, horizon, confidences and scenario set.
 
 **The screen** (the approved option A):
 
@@ -708,6 +711,167 @@ From the command line: `drishti.py var playground <scope> [--ids ...] [--xlsx FI
 ([section 10](#10-the-command-line)); the API: `GET /api/v1/var/playground`, `/playground.xlsx`, `/playground/estimate`,
 `/playground/template` ([section 11.1](#111-the-endpoints)). **Editions:** `PLAY` is part of Drishti Risk and Drishti Trading
 (`commands.words.PLAY: on`); off, the command answers `DRS-4023` and `/play` and `/api/play/...` answer 404.
+
+### 3.11 Why it moved: the VaR change explained
+
+VaR moved from one business date to the next; **Why it moved** says why, in causes that **add up exactly** to the change, and who drove
+each one. It is a tab of the VaR page beside the others (`VAR EXPLAIN <scope> <GO>`, or `VAR <scope> EXPLAIN`), it answers any scope the
+page answers (a node, a portfolio, a basket, an ad-hoc scope), and by default it compares the business date before the newest with the
+newest. The design and its reasoning are in [OVERSIGHT_LENS.md section 4.1](../lenses/OVERSIGHT_LENS.md#41-ro1-var-change-explanation).
+
+**In plain words.** Drishti moves **one thing at a time** from yesterday's state to today's (the corrections to yesterday's data, the
+books that moved, the trades that left, the oldest day leaving the scenario window, the market, the newest day entering it, the new
+trades) and recomputes VaR at each stage. Each step is the difference between two stages, which is why the steps always add up exactly to
+the change. An illustration (figures invented to show the shape, not from the demo data):
+
+| Step | What it means | Effect |
+|---|---|---|
+| Yesterday's VaR | | 10.0m |
+| Restatement | yesterday's data corrected after the official run | +0.1m |
+| Hierarchy and rules | a book moved into or out of the scope, no trade changing | 0.0m |
+| Trades out | matured, cancelled or closed | −0.4m |
+| Oldest scenario dropped | the window rolled; the oldest day left | −0.3m |
+| Market | the same trades revalued on today's market | +1.6m |
+| Newest scenario added | yesterday's move entered the window | +0.5m |
+| Trades in | new trades | +1.0m |
+| **Today's VaR** | the steps add up to +2.5m exactly | **12.5m** |
+
+Each step then names who drove it: the trades in and out by their incremental VaR, each desk's or book's share of the market step, and
+the scenario days that left or entered and whether they were among the worst days.
+
+**The method: states, each a full VaR.** VaR is a quantile, not a sum, so a change cannot be split by adding parts. The explanation builds
+a chain of **states**, each one a full VaR computation that changes one thing from the state before; a step's effect is one state's VaR
+less the one before. Because each state starts where the last ended, the steps add up to the last VaR less the first with nothing left
+over (a telescoping sum):
+
+| State | Trades | Vectors | Scenario days | Hierarchy and rules |
+|---|---|---|---|---|
+| S0 | the earlier date's members | the earlier date's **as officially captured** (when the scope is an official node you see whole), else as now | the earlier set | the earlier date's |
+| S1 | the same | the earlier date's **now** (a restated date: its data corrected after the official run) | the earlier set | the earlier date's |
+| S2 | the earlier date's trades that are in the scope **by the later date's hierarchy and rules** | the earlier date's | the earlier set | the later date's |
+| S3 | S2's trades **still live on the later date** | the earlier date's | the earlier set | the later date's |
+| S4 | the same | the earlier date's | the **days common to both sets** (the oldest days dropped) | the later date's |
+| S5 | the same | the **later date's** | the common days | the later date's |
+| S6 | the same | the later date's | the **later set** (the newest days added) | the later date's |
+| S7 | **the later date's members** (new trades in) | the later date's | the later set | the later date's |
+
+| Step | Effect | Reads as |
+|---|---|---|
+| S1 − S0 | **Restatement** | the earlier date's data was corrected after its official run |
+| S2 − S1 | **Hierarchy and rules** | the scope's membership changed with no trade changing (a book moved between desks, a rule changed) |
+| S3 − S2 | **Trades out** | trades with no vector on the later date (matured, closed) or cancelled |
+| S4 − S3 | **Oldest scenario dropped** | the window rolled: the earlier set's oldest days left |
+| S5 − S4 | **Market** | the same trades revalued on the later date over the same days: market levels, time decay, sensitivities |
+| S6 − S5 | **Newest scenario added** | the window rolled: the later set's newest days entered |
+| S7 − S6 | **Trades in** | new trades |
+| Σ | V(later) − V(earlier) | exactly |
+
+When the trade feed marks amended trades (`TRADE_ACTION` or `TRADE_STATUS` AMEND or AMENDED on the later date) and
+`drishti.var.explain.split-amendments` is on, they are two steps of their own: **Amendments: old terms out** after the trades out and
+**Amendments: new terms in** after the trades in; otherwise an amendment is part of the market step (the screen says which). When the
+scenario set was replaced rather than rolled (fewer than half its days in common), the window and the market are **one step**,
+*Scenario set and market*. When the dates are further apart than one day (a month for the committee), the window steps cover every day
+that left and entered, and trades out and in are the net churn between the two dates.
+
+**Only the churn is summed.** S1 and S7 are the scope's own vectors on each date (the engine holds them already); the others are those
+totals plus or minus the summed vectors of the trades that moved (out, in, moved by the hierarchy, amended), so the cost is bounded by
+the churn, not by the book. Both dates are opened through the engine (each counts towards `drishti.var.hot-dates`; the least recently
+used date leaves first, [section 26.8](#268-dates-in-memory-over-years-of-history)), so a second date open is cheap.
+
+**The order is a setting.** Any split of a quantile's change depends on the order the causes are applied in, so the order is stated on
+the screen and set by `drishti.var.explain.order` (default `restatement, hierarchy, trades-out, window, market, trades-in`: restatement
+first because it corrects yesterday, trades last because the desk decides them). Restatement and trades out come before the market (they
+have only the earlier date's vectors), trades in after it (only the later date's), the window next to the market; hierarchy and rules may
+go anywhere. A bad order refuses the start in words. Another order gives other step sizes with the same total. An order-free **Shapley**
+variant (each cause's effect averaged over every order) is **planned**; `method=shapley` answers 400 in words.
+
+**Who drove each step.**
+
+| Step | Its drivers |
+|---|---|
+| Trades out, trades in, amendments | each trade's **incremental VaR**: the state's VaR with it less without it (in the state that holds it); the top 10 (`drishti.var.explain.top`), then one line, *the others and the interaction*, that closes the step exactly (incremental VaRs do not add up) |
+| Hierarchy and rules | the books whose trades moved in or out of the scope, each group's incremental VaR, and *the interaction* |
+| Oldest scenario dropped, newest added | each day that left or entered: its P&L, its rank in the state and whether it was in the tail (rank ≤ k). At the same k, a day leaving can only lower VaR or leave it; a day entering can only raise it or leave it |
+| Market | each child's (a node's child nodes, else each book's) **component VaR** before and after: components add up to each state's VaR ([section 18.3](#183-decomposition-of-a-scope-into-parts)), so the changes add up to the step |
+| Every state | the **VaR scenario's date** (the day of rank k); when a step changes it, the answer says so in words: *at the newest scenario added step the VaR scenario changed from 2026-09-23 to 2026-09-16* |
+
+**The order-free view.** Beside the steps, each child's component VaR on the later date less on the earlier (each date's own hierarchy;
+a child that left or arrived shows its whole component), with a *restatement since the official run* line when S0 is a capture: it also
+adds up exactly to the change, with no order at all. The **limit-use line** splits the change of limit use into the VaR's part
+(ΔVaR / the earlier limit) and the limit's own part (the later VaR × the change of 1 / limit) for a node with a limit on both dates.
+
+**The screen: one tab, three views.** A switch, **Waterfall · Matrix · Sentences**, over one answer; the choice is kept in the address
+(`view=matrix`) and in your settings, so a link without `view=` opens the one you chose last, else Waterfall. The From and To dates and
+**Download the working (.xlsx)** are shared by the three.
+
+| View | What it draws |
+|---|---|
+| **Waterfall** (the default) | four tiles (VaR on each date, the change, limit use or the VaR scenario); the waterfall from the earlier VaR to the later (a rise in VaR orange, a fall blue: more risk is not a gain); the steps as a table whose rows open their drivers; the selected step's drivers; how it was worked out (the order, the start, the notes); the states (trades, vectors, days, scenarios, VaR, the VaR scenario, the step), and the order-free view |
+| **Matrix** | the bridge of every node: the scope and each child node down, VaR before, every step across, VaR after and the change; a row opens its sentence and its steps as bars, and a bar opens that node's waterfall |
+| **Sentences** | the answer in words, and each cause's step with the Shapley column marked planned |
+
+It is drawn with the standard panel kinds (`metric`, `waterfall`, `table`, `hbar`, `markdown`) by the console's one renderer, so it
+behaves like every other screen (themes, the Data table under each chart, phone widths). **On a phone** the answer in words comes first
+(must), the steps as horizontal bars (glance, a tap opens the step's drivers) and the drivers under them (more); the states and the matrix
+are for the desk. **F1** opens this section.
+
+**A worked example.** A desk on two business dates, 12 scenario days at 90% (k = 2, so every number can be checked by hand). The desk
+holds trade A; trade B (a hedge) matures; trade C is new; book M moves into the desk from another; the window rolls one day (2026-09-14
+leaves, 2026-09-30 enters); the market scales every P&L by 1.1:
+
+| State | After | Days | VaR | VaR scenario | Step |
+|---|---|---|---|---|---|
+| S0 | the earlier date | 12 | 20.00 | 2026-09-14 | |
+| S1 | Restatement (none: the data did not change) | 12 | 20.00 | 2026-09-14 | +0.00 |
+| S2 | Hierarchy and rules (book M moved in) | 12 | 30.00 | 2026-09-23 | +10.00 |
+| S3 | Trades out (B matured: it was a hedge) | 12 | 50.00 | 2026-09-23 | +20.00 |
+| S4 | Oldest scenario dropped (2026-09-14, rank 3: not in the tail) | 11 | 50.00 | 2026-09-23 | +0.00 |
+| S5 | Market (× 1.1) | 11 | 55.00 | 2026-09-23 | +5.00 |
+| S6 | Newest scenario added (2026-09-30, rank 1: in the tail) | 12 | 66.00 | 2026-09-16 | +11.00 |
+| S7 | Trades in (C) | 12 | 55.00 | 2026-09-16 | −11.00 |
+| | | | | **Σ** | **+35.00 = 55.00 − 20.00** |
+
+Read as: VaR rose by 35; the largest causes were the hedge that matured (+20), the new loss day that entered the window (+11) and the
+book moved in (+10); the new trade C offset 11. The newest day became the worst day (rank 1), so the VaR scenario (rank 2) moved from
+2026-09-23 to 2026-09-16. On the demo data (one business date, 2026-09-30) the tab says that there is no earlier business date to compare
+with; load a second date ([section 22](#22-test-data-and-generators)) to see it on the demo.
+
+From the command line (`drishti.py var explain DESK:RATES`, [section 10](#10-the-command-line)) the same answer prints as text, the
+waterfall as aligned lines:
+
+```text
+VaR of Rates rose by 35, from 20 on 2026-09-29 to 55 on 2026-09-30; the steps below add up to it exactly.
+The largest causes: trades out +20, newest scenario added +11, trades in −11.
+At the hierarchy and rules step the VaR scenario changed from 2026-09-14 to 2026-09-23.
+At the newest scenario added step the VaR scenario changed from 2026-09-23 to 2026-09-16.
+
+VaR 2026-09-29                         20
+Restatement                            +0
+Hierarchy and rules                   +10  ++++++++++++++++
+Trades out                            +20  ++++++++++++++++++++++++++++++++
+Oldest scenario dropped                +0
+Market                                 +5  ++++++++
+Newest scenario added                 +11  ++++++++++++++++++
+Trades in                             -11  ------------------
+VaR 2026-09-30                         55
+change                                +35  the steps add up: yes
+```
+
+**The working as a workbook.** *Download the working (.xlsx)* (`drishti.py var explain <scope> --xlsx FILE`, `GET
+/api/v1/var/explain.xlsx`) writes the explanation on the VaR Playground's frame ([section 3.10](#310-the-var-playground-play-var)): **Main**
+(the inputs Confidence and RankRule; each state's VaR worked from its column, N, k, the VaR scenario's date, the engine's VaR beside it and
+a check; each step as the difference of two state cells beside the engine's; the add-up check; the last state checked against the later
+date's scope; the order), **Data** (values only: the two dates' scope P&L by scenario day on one axis of both sets' days, and the churn's
+sums: captured, earlier now, moved in and out, trades out, amended, later, trades in), **States** (one P&L column per state, each a
+formula over the state before it and Data, and its ranks), **Drivers** (the engine's contributors and the order-free view), **Explain**
+(every step and term in plain words) and **Provenance**. Every formula uses only the functions Excel, LibreOffice and Google Sheets share;
+`VarExplainApiTest` recalculates it with headless LibreOffice and checks every state's VaR and VaR scenario against the engine to the cent.
+
+**Settings** (`drishti.var.explain.*`, [section 12](#12-settings)): `enabled` (true), `order`, `window-lines` (`two`, or `one` window-roll
+line), `split-amendments` (true), `top` (10), `drivers-max` (2,000 trades per step whose incremental VaR is computed, the largest by their
+share of the state's tail), `cache-minutes` (10: answers are kept, never stored), `cache-mb` (32, weighed in bytes) and `matrix-max` (60
+child nodes). The API: `GET /api/v1/var/explain`, `/explain/matrix` and `/explain.xlsx` ([section 11.1](#111-the-endpoints)); the same
+entitlements as the scope's VaR (a scope is resolved as you on each date).
 
 ## 4. Positions: derived, never delivered
 
@@ -1454,6 +1618,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
 | `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals] [--decide ID --decision approve\|reject]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
 | `var matrix <id> [--days N] [--date D] [--by trade [--scenario D]] [--confidence Q] [--window N] [--csv]` | the scenario matrix ([section 3.9](#39-the-scenario-matrix-smat)) of a trade, position or node over its last N business dates: each date's source, VaR (rank), ES, base PV and gap, then the scenarios worst on the newest date (`*` in a tail, `—` no value); `--csv` the whole matrix as the page's export |
+| `var explain <scope> [--from D] [--to D] [--confidence Q] [--matrix] [--xlsx FILE]` | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the change between two business dates (default the one before the newest, and the newest) in steps that add up exactly, printed as sentences, the waterfall as aligned lines, the states, each step's top drivers and the order-free view; `--matrix` the scope and each child node, the steps across; `--xlsx` the working as a workbook of formulas |
 | `var playground <scope> [--ids A,B] [--xlsx FILE] [--count N\|all] [--estimate]` | the VaR Playground ([section 3.10](#310-the-var-playground-play-var)): the headline, the checks and the largest positions' figures; `--xlsx` writes the workbook of real formulas (500 positions by default, the rest in Rest of scope); `--estimate` each export size's file size, recalculation time and applications |
 
 Add `--json` for the server's answer as it is. For example `drishti.py var show 'BANK - DESK:CREDIT' --date 2026-09-30` or
@@ -1539,6 +1704,9 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /playground/estimate` | `scope` or `ids`, `asOf`, `ccy`, `set` | the export's choices for the scope: `positions`, `layout`, `columns`, `rows`, `cells`, `formulas`, `bytes`, `size`, `recalc`, `apps`, `refused` (why it cannot be made) |
 | `GET /playground.xlsx` | as `/playground`, and `count` (`100`, `500` the default, `1000`, `10000`, `all`) | the workbook, streamed (`X-Drishti-Positions`, `X-Drishti-Estimated-Bytes`); a size no application opens, or above `playground.export-max-cells`: `400` in words before a byte is sent |
 | `GET /playground/template` | `positions` (10; 1 to 500), `scenarios` (509; 20 to 5,000) | the empty workbook: every formula in place, to paste PVs into and recalculate offline |
+| `GET /explain` | `scope`, `from`, `to` (business dates; none: the one before the newest, and the newest), `confidence`, `method` (`sequence`; `shapley` answers 400: planned) | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): the states (trades, vectors, days, VaR, the VaR scenario), the steps with their drivers, the display lines, the order used, the order-free view, the limit-use line, the sentences, `change`, `sumOfSteps` and `addsUp` |
+| `GET /explain/matrix` | `scope`, `from`, `to`, `confidence` | the Matrix view: the scope and each child node with every step |
+| `GET /explain.xlsx` | `scope`, `from`, `to`, `confidence` | the explanation as a workbook of formulas, checked against the engine |
 
 ```
 GET  /api/v1/var/scope?scope=DESK:DESK-RATES               headline, ancestors, backtest summary, provenance
@@ -1697,14 +1865,19 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.es-confidences` | `[0.95, 0.975, 0.99]` | the same | ES's; `es-confidence` always in |
 | `drishti.var.ten-day-method` | `${DRISHTI_VAR_TEN_DAY_METHOD:sqrt10}` | `sqrt10` | what a 10-day answer without a method means: `sqrt10` (the 1-day × √10, the conservative common practice) or `sum` (10 consecutive days, overlapping windows); refused at start otherwise |
 | `drishti.var.scenario-window` | `${DRISHTI_VAR_SCENARIO_WINDOW:all}` | all | `all` (the scenario set's length, 509 in the demo) or N ≥ 20, the newest N scenarios of each date's set (250: one year); backtesting keeps `history-days` ([section 18.5](#185-the-scenario-window-and-the-confidences)) |
+| `drishti.var.explain.*` | `explain:` block | enabled, the default order, `two` window lines, amendments split, top 10, 2,000 drivers, 10 minutes, 32 MB, 60 children | why VaR moved ([section 3.11](#311-why-it-moved-the-var-change-explained)): `order` (the causes in sequence; a bad order refuses the start), `window-lines`, `split-amendments`, `top`, `drivers-max`, `cache-minutes`, `cache-mb`, `matrix-max`; off: the tab, the command and the API answer 403 in words |
 | `drishti.var.rank-rule` | `kth-worst` | `kth-worst`; any value starting `interp` is `interpolated` | k = ceil(N (1 − a)): the 6th worst of 509; or `interpolated` ([section 18.1](#181-var)) |
 | `drishti.var.component-window` | `5` | 5 (below 1) | the scenarios around the VaR rank component VaR averages over |
 | `drishti.var.component-scale-to-var` | `true` | `true` | scale components to add up to VaR (else to the smoothed VaR) |
 | `drishti.var.threads` | `${DRISHTI_VAR_THREADS:0}` | every core (0 or less) | the sum pool's threads |
 | `drishti.var.parallel-rows` | `4096` | 4096 | fewest rows a sum splits across threads |
-| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | most bytes of vectors **one date** may hold ([section 27.1](#271-bytes-per-date)): float64 rows on the heap (8 bytes a value), or the float32 hot copy when mapped (4 bytes a value); over it the date answers `503 DRS-5204`, never loaded in part |
+| `drishti.var.memory-budget-mb` | `${DRISHTI_VAR_MEMORY_MB:0}` | a quarter of the JVM's max heap (0 or less) | the heap tier (`tier.mode: heap`) only: most bytes of float64 vectors **one date** may hold ([section 27.1](#271-bytes-per-date)); over it the date answers `503 DRS-5204`, never loaded in part. The mapped tier (the default) is bounded by the disk (a hard limit) and the page cache (advisory), not by the heap ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
 | `drishti.var.rows-per-chunk` | `65536` | 65,536 | rows per `double[]` chunk of the vector store |
-| `drishti.var.hot-dates` | `2` | 2 | business dates kept open |
+| `drishti.var.hot-dates` | `${DRISHTI_VAR_HOT_DATES:10}` | 10 | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
+| `drishti.var.refusal-ttl-seconds` | `300` | 300 (0: not remembered) | a date refused for room (capacity, disk) is remembered this long: asked again, `503` at once with `Retry-After`, no lake read; forgotten sooner when room is freed or the inputs change |
+| `drishti.var.open-heap-mb` | `${DRISHTI_VAR_OPEN_HEAP_MB:0}` | automatic: 0.4 × heap − 512 MB − `load-threads` × 1.6 GB, at least a tenth of the heap | the byte safety net over every open book's heap; over it the least recently used dates' currency books, then stress books, then whole dates leave (never a protected one) |
+| `drishti.var.fiscal-year-end` | `${DRISHTI_FISCAL_YEAR_END:}` | none | the bank's fiscal year-end, `MM-DD` (for example `10-31`), for the `fiscal-year-end` pin |
+| `drishti.var.pinned.*` | every rule `{ back: 0, keep: disk }`, `dates: []`, `dates-keep: disk` | off | the pinned dates: `month-end`, `quarter-end`, `year-end`, `fiscal-year-end`, `stress-window` (each `back`: how many, newest first; `keep`: `disk` or `memory`) and named `dates` ([section 26.8](#268-dates-in-memory-over-years-of-history)) |
 | `drishti.var.history-days` | `250` | 250 (1 or less) | history and backtest window |
 | `drishti.var.histogram-bins` | `42` | 42 (below 5) | bins of the P&L histogram |
 | `drishti.var.max-parts` | `5000` | 5,000 | most rows a contribution table lists; more: the largest by gross size, and said; every total is over all the parts ([section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales)) |
@@ -1763,7 +1936,8 @@ pools:
 | *Rows left out* in the provenance (`DRS-5201`) | rows of the wrong length, with a null or NaN, in another currency, or failed with a vector | fix the batch's rows and restate the date |
 | *two P&L vectors on one business date* (422 `DRS-5202`) | a trade id twice in the date's batch | restate the date with one row per trade |
 | a warning that the date before was answered (`DRS-5203`) | the date's rows come from two runs or scenario sets | restate the date as one run; the signal reloads it |
-| *… need N MB; the vector store's budget is M MB* (503 `DRS-5204`) | the date exceeds `drishti.var.memory-budget-mb` | raise the budget or the heap (mapped: it counts 4 bytes a value) |
+| *… need N MB; the vector store's budget is M MB* (503 `DRS-5204`) | a heap-tier date exceeds `drishti.var.memory-budget-mb` | raise the budget or the heap, or use the mapped tier |
+| *the VaR hot file of … needs about X GB more, Y GB free in …* (503 `DRS-5204`) | the disk ran out while the date's rows streamed in (mapped tier) | free disk in `drishti.var.tier.dir`, lower other folders' caps, or purge a date (Admin → Caches); asked again within `refusal-ttl-seconds` the date is refused at once with `Retry-After` |
 | *the what-if runs in the Python VaR engine …, which is not running on this server* (503 `DRS-5205`) | the basket tray's what-if, with the compute workers off | start them (`DRISHTI_COMPUTE_ENABLED=true`, pool `var`) |
 | *TRD:… is not a live trade on … (no P&L vector)*, **No trades** | the id is not in the day's vectors: unknown, matured or cancelled (a status or maturity the load left out is named) | check the id and the business date; a matured or cancelled trade has no VaR |
 | *the VaR hot folder … cannot be written* | `tier.dir` missing, read-only or full | point `DRISHTI_VAR_HOT_DIR` at writable local disk with room for `disk-dates` files |
@@ -2173,8 +2347,8 @@ the background ([section 19](#19-official-end-of-day-results)): a date whose inp
 gets the next result version. A **new** date is picked up without a signal (each request asks the connector for the newest date with
 vectors); a **restated** open date is too, within `drishti.var.version-check` (30 s, the version watch: reloaded in the
 background, the old figures answered meanwhile with a warning; a date with intraday updates applied is left to its signal); at start the server captures the newest date when it has no official record (`drishti.var.official.on-start`). **Hot dates:**
-at most `drishti.var.hot-dates` (2) dates stay loaded, the newest first; the date just used always stays; a dropped date's cached
-answers go too. **Restatements:** a batch that rewrites a date changes the vector table's data version; the signal reloads the date, a new
+at most `drishti.var.hot-dates` (10) dates stay open, the least recently used leaving first; the date just used, the newest business date
+and the dates pinned in memory always stay ([section 26.8](#268-dates-in-memory-over-years-of-history)); a closed date's cached answers go too. **Restatements:** a batch that rewrites a date changes the vector table's data version; the signal reloads the date, a new
 hot file is built (its name is the digest of the new inputs, [section 26](#26-the-tiered-memory-and-the-hot-file)) and the official
 capture is taken again with the next result version; the earlier one is kept. Time travel (*the VaR of a date as it was known on a later
 day*) reads the table at that instant, within the 7 years kept.
@@ -3017,7 +3191,7 @@ crisis shifted by a day; the current window is always shown, in its place by VaR
 hierarchy has its own worst window (the **By node** table); one window is chosen for the bank.
 
 **Worked figures on the demo data** (positions of 2026-09-30, USD, 99% 1-day, windows of 250 days; the history is **synthetic**, made
-by `tools/packgen/var/history.py`: the stress set's 250 days and the normal set's 509 days carried as they are, every other day of
+by `tools/packgen/var/pnl_history.py`: the stress set's 250 days and the normal set's 509 days carried as they are, every other day of
 2007-01-02 to 2026-09-29 made from each book's own volatility with episodes shaped like the crises since 2007; **not market history**):
 
 | Window | Stressed VaR of the bank | Against the current window |
@@ -3681,10 +3855,15 @@ then `VarBook.Builder.build`:
 walks 509 contiguous doubles in a plain Java loop the JIT vectorises (no incubating Vector API needed). Only rows of exactly N finite
 values reach it (the rest are rejected first, section 20). Immutable after build; any number of readers.
 
-**Ordinal sets** (`OrdinalSet`): a `java.util.BitSet` over the date's trade ordinals, one bit per trade (2 million trades: 250 KB); a
-scope resolves to one, so union, difference and intersection are exact and overlaps never double count; a run of a node is a run of
-bits. `digest()` = a 64-bit hash of the words in hex, `:`, the member count (the `membershipHash` of an answer). **Design differs:** the
-design proposed Roaring bitmaps of *position* ordinals.
+**Ordinal sets** (`OrdinalSet`): one of two forms with one meaning. A set built bit by bit (a rule, a basket, ids looked up) is a
+`java.util.BitSet` over the date's trade ordinals, one bit per trade (2 million trades: 250 KB). A set made of runs (a node: the union of
+its books' or cells' runs; a position; the whole date) is a sorted list of `from, to` pairs, eight bytes a run, whatever the date's size:
+a node of a 1,000,000-trade date costs a few bytes, not a 125 KB bitmap. Every query and operation answers the same in both forms
+(property-tested in `OrdinalSetRunsTest`): runs with runs stay runs, runs minus anything stay runs (a node minus the cancelled trades of
+an intraday layer), and an operation with a bitmap makes a new bitmap. A scope resolves to one set, so union, difference and intersection
+are exact and overlaps never double count. `digest()` = a 64-bit hash of the bitmap's words in hex, `:`, the member count (the
+`membershipHash` of an answer), the same in either form. **Design differs:** the design proposed Roaring bitmaps of *position*
+ordinals.
 
 **Parallel sums** (`ParallelSums`): a fixed pool of `threads` daemon threads (`drishti-vector-sum-<n>`). **In a fixed
 reduction order** (decision PO-7): a set under 1,024 rows is summed in row order into one float64 accumulator; a larger one is cut into
@@ -3717,8 +3896,10 @@ partition's file paths and sizes, not the Delta table version; Iceberg: a finger
 so a commit of another date keeps the answers. Views are cached per date, version and role levels (`VarAccess`).
 
 **Load and memory.** A date's load runs once (concurrent requests share it); a failed load is retried by the next request. The budget
-`memory-budget-mb` bounds the rows of **one** date (N × 8 bytes a row on the heap; N × 4 bytes a row of the float32 hot copy when
-mapped); a date that would exceed it is refused whole with the reason (`503 DRS-5204`). Up to `hot-dates` dates are open at once. On the
+`memory-budget-mb` bounds the rows of **one** date on the heap tier (N × 8 bytes a row); a date that would exceed it is refused whole
+with the reason (`503 DRS-5204`). The mapped tier is bounded by the disk instead: a first build reserves at least 256 MB, then the disk is
+checked every 64 MB while the rows stream in, and a date that would leave the disk under its guard is refused (`503 DRS-5204`, naming the
+bytes needed and free) with nothing left behind. Up to `hot-dates` dates are open at once (section 26.8). On the
 heap, total vector memory is up to `hot-dates` × budget, plus a second copy of one date during its permutation; mapped, the heap holds
 no vector at all (the load streams the rows to a spill file) and the vectors take the operating system's page cache, only the pages in
 use. A date that is not one run (`DRS-5203`) is remembered with its vector table's version and not read again until that version
@@ -3738,7 +3919,7 @@ section, written only for a date with cells: a date without cells is still forma
 |---|---|---|---|
 | **The lake** (Delta) | every trade's vector, every date, seven years | **float64**, as delivered (unchanged) | once per date and set of inputs: the first load streams the date's rows to the load's spill file |
 | **The hot file**, one per loaded date, on local disk, memory-mapped | one row per **position** in hierarchy order, the rows of the trades of fungible positions, every book's and node's aggregate, the columns, ids, runs, nodes and the load's record | rows **float32**, aggregates **float64** | memory-mapped; written by the first load; a date not open is **mapped again from its file** when asked (no lake read: the **disk tier**); never at start |
-| **The heap** | the open dates' aggregates, columns, ids and links, the last 512 answers | every sum in **float64** accumulators | on demand |
+| **The heap** | the open dates' columns, ids, links and nodes (their members as runs), the index of their aggregates, the last answers | every sum in **float64** accumulators | on demand |
 | **The page cache** | the mapped pages a sum touches | float32 | resident while used; the operating system keeps or drops them |
 
 `drishti.var.tier.mode: heap` keeps vectors on the heap instead: every trade's vector in float64 on the heap
@@ -3754,7 +3935,7 @@ section, written only for a date with cells: a date without cells is still forma
 2. **Requests.** A node is answered from its float64 aggregate (under 1 ms); any other scope sums float32 position rows into float64
    accumulators on every core; a trade is read only when a scope needs it alone (a drill below a position, `TRD:`, a basket of trades, a
    position held in part).
-3. **Eviction.** At most `hot-dates` (2) dates are open (the newest first; the date just used stays). An evicted date is unmapped after
+3. **Eviction.** At most `hot-dates` (10) dates are open, the least recently used leaving first (section 26.8). An evicted date is unmapped after
    `close-grace-seconds` (60) so requests still reading it finish; its file stays on disk, so asking for the date again maps it. At most
    `disk-dates` (60) files are kept: the least recently used beyond are deleted (never one that is open); a file built from inputs that
    have since changed (a restatement, new position rules) is deleted when the date's new file opens.
@@ -3820,14 +4001,14 @@ offset  bytes  field
 | `BOOK` (format 3) | the cells' runs too, after the books' (a cell's name has a `\|`, a book's never) |
 | `NODE` | per node id, hierarchy, level, name, parent, limit (float64) and its books (a column node: its cells) |
 | `CELL` | format 3: the positions split at a cell's edge (int32), then the cell columns (count, names) |
-| `AKEY`, `AGGS` | the aggregates' keys (books and nodes), then **float64 M × N**, summed from the lake's float64 rows (exact, independent of the float32 copy) |
+| `AKEY`, `AGGS` | the aggregates' keys (books and nodes), then **float64 M × N**, summed from the lake's float64 rows (exact, independent of the float32 copy). `AGGS` is **mapped** when the file opens, like `PMAT`: the heap keeps only the key-to-row index, and a node's vector is a copy of its row, the same float64 bits (at 1,000,000 positions, 642 MB a date that no longer sits on the heap) |
 | `TMAP` | per trade its row in `TMAT`, −1 when its position has one trade (its row is the position's) |
 | `CTOT` | a USD book only: every node's per-trade-currency totals (section 15.11): count; per node its id and currencies, each with its trade count (int32), today's native PV sum and the N scenarios' (float64) |
 | `PMAT` | **float32 P × N, row-major**, positions in hierarchy order (legal entity, desk, book, position), 64-byte aligned |
 | `TMAT` | **float32 Q × N**: the trades of positions of more than one trade (decided, open question 8), 64-byte aligned; absent when every position is one trade |
 
-Every section has a CRC32C: the small sections are checked when the file is opened (a damaged one is refused: *the hot file's … section is
-damaged (checksum)*, and the date is read from the lake again); the matrices by `VarHotFile.verify`.
+Every section has a CRC32C: the small sections (all but `AGGS`, `PMAT` and `TMAT`) are checked when the file is opened (a damaged one is refused: *the hot file's … section is
+damaged (checksum)*, and the date is read from the lake again); the matrices (`AGGS`, `PMAT`, `TMAT`) by `VarHotFile.verify`.
 
 ### 26.4 How a sum reads it
 
@@ -3841,7 +4022,7 @@ below a position, `TRD:`, a basket naming trades, a position held in part); ever
 | Design | Implementation |
 |---|---|
 | a local copy after the first load under `<data dir>/compute/vectors/<COB>/` (raw little-endian doubles plus an index, memory-mappable), so a restart reloads at disk speed | the **hot file** `<data folder>/var/hot/<date>/inputs-<digest>.vhot` (`drishti.var.tier.dir`): float32 matrices, float64 aggregates, columns, ids, runs, nodes and the load's record, a CRC32C per section; rebuilt when the inputs' digest changes; not the restart cache by default (`keep-on-shutdown: false` deletes the files at shutdown) |
-| vectors on the heap in `double[]` chunks; an off-heap variant optional (`ByteBuffer.allocateDirect`), no FFM | the rows are never on the heap when mapped: the load streams them to a spill file and writes the hot file from it; the heap holds about 0.8 KB a trade (columns, ids, links) |
+| vectors on the heap in `double[]` chunks; an off-heap variant optional (`ByteBuffer.allocateDirect`), no FFM | the rows are never on the heap when mapped: the load streams them to a spill file and writes the hot file from it; the heap holds the columns, ids, links and nodes (about 0.55 KB a position measured at 10,000 positions, `VarHeapPerDateTest`); the aggregates are mapped |
 | position vectors in the store | one float32 row per position (the float64 sum of its trades, rounded once) and the rows of the trades of positions of more than one trade; a single-trade position's trade is its position's row |
 | float32 precision estimated (±4,000 USD on 10⁹ over 2 million positions), an opt-in `vectors.hot-precision: float32` | the bound proven and measured ([section 26.6](#266-precision-float32-rows-float64-sums)); float32 is the default |
 | sharding by legal entity and desk, two replicas | built ([section 28](#28-sharding-across-drishtinet)): a shard is its own hot file (the same format, a `RANG` section) built from its key range of the lake, not a byte range of one date's `PMAT` |
@@ -3882,6 +4063,127 @@ The test date is a 24.9 MB hot file in USD (20.5 MB of float32 rows: 7,993 posit
 bytes), each currency built ahead a file of its own, against 39.0 MB of float64 vectors on the heap tier (38,977,184 bytes). An administrator's `drishti.py var reload` drops the open
 dates; the next request maps the same file again (`reopened` goes up) without reading the lake.
 
+### 26.8 Dates in memory over years of history
+
+A bank keeps VaR data for years and its people move between dates freely: today's VaR, then the same desk a year ago, then back. Memory
+never grows with the years kept; it grows only with the dates **open at once**, which is a setting.
+
+**Where a date is, and what it costs.**
+
+| Where | What it holds | Bounded by | Cost of a date of 1,000,000 positions (measured, Java 21, G1) |
+|---|---|---|---|
+| **open in memory** | the mapped hot file and the date's structures on the heap; its currency books built ahead and its stress book | the dates in memory (below) | the hot file 3.14 GB, resident only while read; about 0.72 GB of heap for the date's structures (0.6 to 0.9 GB, [section 27.1](#271-bytes-per-date)) |
+| **a hot file on local disk** | the built file of a date not open | `drishti.var.tier.disk-dates` (60) and `drishti.var.tier.max-disk-gb` | about 3 GB of disk, no memory; opening maps it again without reading the lake |
+| **the lake** (Delta or Iceberg) | every date, for the years kept | the bank's retention (7 years) | about 1.4 GB of storage; opening builds the hot file once (about 20 s at this size, measured) |
+| **the official record** | each date's figures of every node (VaR, ES, P&L, the backtest) | retention | a few KB a node; history, backtesting, statistics and the regulatory reports read it, never the vectors |
+
+**Which dates stay in memory.** The product owner's rule, built (`OpenDates`, shared by the VaR and exposure engines):
+
+1. **A configured number of dates in memory**, `drishti.var.hot-dates`, default **10** (two weeks of business dates).
+2. **Least recently used out first.** Every request stamps the date it reads (not only its load). A date asked for and not open is
+   opened; when that makes one more than the number, the date used longest ago is closed.
+3. **Always kept (protected):** the date just used, the newest business date, and the dates pinned in memory (below; counted within the
+   number). When the protected dates alone exceed the number, it is exceeded and `GET /api/v1/var/status` says so (`memory.warnings`).
+4. **A date's books go together:** its reporting-currency books (`drishti.var.currencies`), its stress book and its intraday layers close
+   with it; and when room is short (next point) a date's currency books, then its stress book, close first, before any date. They are
+   reopened from their hot files on the next ask.
+5. **A byte budget is the safety net** (`drishti.var.open-heap-mb`; 0, the default, is automatic: 0.4 × the heap − 512 MB −
+   `load-threads` × 1.6 GB, at least a tenth of the heap). Every book reports the heap it holds (`VarBook.heapBytes()`: its nodes' runs,
+   aggregates, currency totals, columns, ids, indexes and runs). Over the net, the least recently used dates' currency books leave, then
+   their stress books, then whole dates, least recently used first, never a protected one and **never a date read in the last
+   `-Ddrishti.open-dates.net-grace-seconds` (120)**: a date in use stays open even over the net, since closing it would only load it again
+   at once (two dates asked in turn by many users would otherwise close and reload each other). Idle dates still leave, and a new load
+   without room is still refused (`DRS-5204`). Memory therefore stays bounded by the dates in use and the net, whatever the number.
+6. **Exposure follows the same rule** (`drishti.ccr.exposure.hot-dates`, default 10, and its own `refusal-ttl-seconds`, `open-heap-mb`,
+   `fiscal-year-end` and `pinned`); it has no currency or stress books, so only whole dates leave.
+
+Closing a date unmaps its hot file once the requests still reading it finish (`drishti.var.tier.close-grace-seconds`, 60 s), drops its
+cached answers and leaves its hot file on disk for the next time; the operating system takes back the page cache.
+
+**Room: the disk is a hard limit, the page cache advisory.** The mapped tier's rows are on disk, never on the heap, so no share of the
+heap bounds them (`memory-budget-mb` applies to the heap tier only). Before a build, the tier reserves three times its largest hot file
+(at least 256 MB when there is none yet) under `max-disk-gb` and the free-space guard (`DRS-5218` when it cannot); while the rows stream
+in, the disk is checked every 64 MB, and a date that would leave the disk under the guard is refused with `503 DRS-5204` (*the VaR hot
+file of … needs about X GB more, Y GB free in …*), its spill and part file deleted. The page cache the open hot files may take is compared
+with the machine's memory beside the heap and shown in the status (`memory.mappedBytes`, `memory.pageCacheRoomBytes`) with a warning when
+it is exceeded: only the pages read stay resident.
+
+**A refusal is remembered.** A date refused for room (`DRS-5204` or `DRS-5218`) is remembered for `drishti.var.refusal-ttl-seconds`
+(300): a request for it meanwhile is answered at once with the same code and `Retry-After` (the seconds left), and the lake is not read
+again (fifty requests at once make one load). It is forgotten sooner when room is freed (a date or book closed, a reload, a purge of
+`var.refusals` in Admin → Caches), when the date's inputs change (a new version) or when the settings that decide room change. The status
+lists them (`refusedForRoom`). The exposure engine does the same for `DRS-5445` and `DRS-5218`.
+
+**Pinned dates (product owner, 2026-11-01).** The dates a bank comes back to are known in advance: month-ends, quarter-ends,
+year-ends, the fiscal year-end, the stress window. Drishti finds them from the calendar and keeps them ready (`PinnedDates`,
+`PinKeeper`):
+
+| Rule | Which date | Example (USNY+CATO, Gregorian) |
+|---|---|---|
+| `month-end` | the last business day of each month in **every** calendar named (a holiday in New York or Toronto moves it back) | 2026-05-29 (Friday; the 31st is a Sunday); 2027-05-28 (the 31st is Memorial Day in New York) |
+| `quarter-end` | the last business day of March, June, September and December | 2026-09-29 (the 30th is Toronto's National Day for Truth and Reconciliation); 2024-03-28 (the 29th is Good Friday in Toronto) |
+| `year-end` | the last business day of December | 2026-12-31 |
+| `fiscal-year-end` | the last business day of the bank's fiscal year (`drishti.var.fiscal-year-end`, for example `10-31`) | 2026-10-30 (the 31st is a Saturday) |
+| `stress-window` | the first and last dates of the stressed VaR window in use (known once a stress book is open) | |
+| `dates` | any date the bank names (a crisis day, an audit date), kept as `dates-keep` says | |
+
+Each rule says how far back it reaches (`back`: how many of its dates, newest first, on or before the newest business date; 0 is off,
+the default) and how it is kept (`keep`):
+
+- **`disk`** (the default): after each official record, a pinned date without a hot file has one built in the background (one at a
+  time, on a low-priority thread) and closed again; its file is never trimmed by `disk-dates` or `max-disk-gb`, so it opens in seconds
+  whenever asked, a year later included;
+- **`memory`**: the date is opened after the official record and stays open, protected and counted within `hot-dates` (for example the
+  latest month-end and quarter-end).
+
+```yaml
+drishti:
+  business-date:
+    calendar: USNY+CATO
+  var:
+    fiscal-year-end: "10-31"
+    pinned:
+      month-end: { back: 13, keep: disk }
+      quarter-end: { back: 8, keep: disk }
+      year-end: { back: 7, keep: disk }
+      fiscal-year-end: { back: 7, keep: disk }
+      stress-window: { back: 1, keep: disk }
+      dates: [2020-03-16]
+      dates-keep: disk
+```
+
+The calendars are those of the business date (`drishti.business-date.calendar`); a date pinned by two rules is kept once, with both
+reasons, in memory when either says so. `GET /api/v1/var/status` (`pinned`) lists every pinned date with its reasons, how
+it is kept, whether it is open, whether its hot file is built and the state of its build (`queued`, `building`, `built in … ms`, or *not
+built:* and why), and `GET /api/v1/exposure/status` the same for exposure; Admin → Caches counts them (`var.hot-files`: `pinned`) and names the protected dates (`var.dates`).
+
+**Opening a date, by where it is.** Open: no cost. A hot file on disk: mapped again, seconds. Only in the lake: built once, then on disk.
+For dates people return to (a year-end, the stress window), raise `disk-dates` and `max-disk-gb` or pin them; at 1,000,000 positions a
+year of business dates is about 800 GB of hot files on local NVMe disk (3.14 GB a date, measured).
+
+**Sizing.** The heap holds the dates in memory times their heap each, plus the skeleton and caches; the page
+cache holds what is read of their hot files. At 1,000,000 positions `-Xmx6g` held two dates and 200 users (heap after GC 2.4 GB);
+add about 1.2 GB of `-Xmx` a further date kept open ([section 27.1](#271-bytes-per-date),
+[BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)).
+
+### 26.9 Faster paths and their precision (planned)
+
+A Java 25 build will use accelerated implementations automatically (memory-mapped access through `MemorySegment`, SIMD sums, BLAS through
+OpenBLAS for many scopes at once) where their needs are met, and a Java 21 build today's code; a native mode setting (auto or off)
+chooses ([HIGH_PERFORMANCE_NATIVE.md section 2.8](../architecture/HIGH_PERFORMANCE_NATIVE.md#28-two-builds-one-code-base-the-baseline-and-the-accelerated-path-side-by-side)).
+Every faster path must give today's answers ([section 6.2 of that document](../architecture/HIGH_PERFORMANCE_NATIVE.md#62-precision-and-parity)):
+
+- **SIMD sums: bit-exact** against a plain-Java twin that adds in the same order;
+- **BLAS:** each scenario total within a **relative 10⁻¹²** of today's (twelve significant digits; on a total of 100 million, a
+  ten-thousandth of a cent), and **the same scenario selected** as the k-th worst, so VaR's date and every component VaR are unchanged
+  (a near tie goes to the lower scenario index on both paths);
+- a path that breaks the rule at the start-up check or in the release drill is switched off, back to today's code, with the reason shown.
+
+Order of addition is why paths can differ at all: in float64, adding a million rows one by one can be off by up to n × 1.1 × 10⁻¹⁶ of
+their absolute sum, typically √n × 1.1 × 10⁻¹⁶; adding in tiles, as SIMD and BLAS do, is more accurate than one by one. The rows' own
+precision (float32, section 26.6) is the larger term, and a float64 hot file is planned as a setting for banks that want it
+(`drishti.var.tier.precision`).
+
 ## 27. Sizes, performance and the benchmark
 
 Every measurement of the VaR engine (the tiered store and the heap tier, a date's first open, the cost per request, the 200,000-position
@@ -3906,12 +4208,38 @@ Heap tier, N = 509:
 | position vector cache | up to 4,072 per position used | |
 | a whole date | about **4.4 MB per 1,000 trades** + 4 KB per node | demo: 9,572 trades in 7,984 positions, 39 MB of vectors |
 
-**Mapped (the default).** Per 1,000 trades: no vector on the heap; the columns, ids and links about 0.8 MB on the heap (measured: 80 MB
-per open date of 100,000 trades, `VarTierBenchmark`); the hot file about 2.1 MB (float32 position rows, 2,036,000 bytes when every trade
-is its own position, plus the trades of fungible positions and the small sections), resident only while used.
+**Mapped (the default).** No vector and no aggregate on the heap; the hot file about 2.1 MB per 1,000 trades (float32 position rows,
+2,036,000 bytes when every trade is its own position, plus the trades of fungible positions, the float64 aggregates and the small
+sections), resident only while used. The heap of one open book (`VarBook.heapBytes()`, what Admin → Caches `var.dates` adds up):
 
-A memory budget applies (`drishti.var.memory-budget-mb`): in the mapped tier it measures the float32 copy (4 bytes a value); a date over
-it answers `503 DRS-5204`.
+```
+H_book ≈ 8·R                          node members as runs (R: the runs of every node's books and cells)
+       + ~150·(B + K + N)             names, book and cell runs, nodes and their book lists
+       + 64·A                         the index of the aggregates (A = B + K + N rows, mapped from the hot file)
+       + 108·T + 136·P                code and number columns, position runs, positionOf, the id indexes
+       + 72·(2T + 3P)                 trade and position ids and the high-cardinality dictionaries
+       + 8·(S + 1)·N·C                the per-trade-currency totals of every node (CTOT, a USD book only)
+       + the portfolio definitions    about 30 MB at 1,000,000 positions (15,000 portfolios, 2 million basket members)
+H_date ≈ H_book × (1 + currency books built ahead + the stress book) + about 5 MB and the updates per intraday layer
+```
+
+T trades, P positions, B books, K cells, N nodes, S scenarios, C trade currencies a node. At T = P = 1,000,000, N = 27,024, B + K =
+130,000, S = 509, C = 1: 244 MB + 360 MB + 110 MB + about 25 MB of names + 2 MB of runs + 30 MB ≈ **0.77 GB a book**. **Confirmed
+by the 1,000,000-position benchmark** (single server, Java 21, G1, `-Xmx6g`; [BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)):
+the two dates took 0.58 and 0.86 GB of heap after GC, **0.72 GB a date on average**; the heap after GC was 0.77 GB at start, 2.2 GB with
+both dates open and 2.4 GB after 200 users, and the resident memory 6.9 GB with both dates open (11.2 GB after the users, the page cache
+of the two mapped hot files included). So **`-Xmx6g` serves 1,000,000 positions with two dates in use**; each further date kept open adds
+about 0.75 GB of heap after GC (about 1.2 GB of `-Xmx`), and each currency or stress book built ahead about one book more. Measured at 10,000 positions (`VarHeapPerDateTest`, 1,026 nodes, 2,026
+aggregates): 5.7 MB a date, `heapBytes()` 5.4 MB, the formula 6.3 MB; the same date held about 14.8 MB with bitmaps and heap
+aggregates. The rest of the heap is the columns and ids (`108·T + 136·P` and `72·(2T + 3P)`); the page cache and the disk hold
+`P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + about 120·T` a book (2.9 GB at 1,000,000).
+
+These formulas, term by term, with the heap to set, the RAM, the disk by folder and the settings for your own sizes, are in the planner
+workbook ([RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)).
+
+A memory budget applies to the heap tier (`drishti.var.memory-budget-mb`: float64 rows, 8 bytes a value); a date over it answers
+`503 DRS-5204`. The mapped tier's rows are bounded by the disk (a hard limit) and the page cache (advisory), section 26.8; its heap by
+the byte safety net `drishti.var.open-heap-mb`.
 
 <a id="272-the-heap-tier-measured"></a><a id="273-the-tiered-store-measured-and-extrapolated"></a><a id="274-a-large-bank-the-designs-reference-sizing"></a>
 
@@ -3940,7 +4268,11 @@ during the day is walked as its run plus its added trades, the cancelled skipped
 130 ≥ 124, so A holds P whole. Scope B holds 120, 121 and 123: the first ordinal from 120 not in B is 122 < 124, so B holds P in part, and
 its trades in B are the runs `[120, 122)` and `[123, 124)`.
 
-**Cost.** Per position: its own trades ÷ 64 words, whatever the date's size. Per scope: the scope's positions.
+**Cost.** Per position: a binary search over the scope's runs (a node, a position) or a scan of the position's own bits (at most its
+trades ÷ 64 words; never `nextClearBit(from)` alone, which inside a long run of the scope would scan to that run's end), whatever the
+date's size. Per scope: its runs and its positions. The totals over a scope's parts (27a.3) walk the scope **run by run**: the ordinals of
+one run of the scope that fall in one position are one step, so a node of 1,000,000 trades is walked in its runs and positions, never
+ordinal by ordinal.
 
 ### 27a.2 The headline and the contribution table
 

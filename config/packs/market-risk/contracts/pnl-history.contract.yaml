@@ -23,7 +23,7 @@ title: Long-history P&L of a hierarchy node (stress window selection)
 description: Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the
   business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR
   (VAR_GUIDE.md section 18.9)
-source: Synthetic sample data (tools/packgen/var/history.py, run by make_var_data.py)
+source: Synthetic sample data (tools/packgen/var/pnl_history.py, run by make_var_data.py)
 grain: One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>).
 key:
 - HISTORY_ID

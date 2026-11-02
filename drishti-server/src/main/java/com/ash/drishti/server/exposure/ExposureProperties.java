@@ -34,7 +34,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param imModel {@code current} (the initial margin held today on every path) or {@code none}
  * @param alpha the IMM multiplier: EAD_IMM = alpha x EEPE (informational)
  * @param contributionWindow paths ranked around the PFE quantile a PFE contribution averages over
- * @param hotDates business dates kept open at once (the newest first)
+ * @param hotDates business dates kept open at once (10): the least recently used leaves first; the date just used, the newest business
+ *     date and the dates pinned in memory always stay (VAR_GUIDE.md section 26.8, the same rule as VaR)
  * @param memoryBudgetGb the most memory one date's netting-set matrices may take while it loads (0: a quarter of the heap)
  * @param hotFolder the hot files' folder ({@code <data folder>/ccr/hot}), one folder per business date
  * @param tier {@code mapped} (each date a float32 hot file, memory-mapped) or {@code heap} (float64 on the heap)
@@ -56,13 +57,20 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param maxDiskGb the most disk the hot files may take (0: a quarter of the disk's size); it wins over the retention (PO-3, 2.9.7): a
  *     retained date beyond it is deleted from local disk and read from the lake when asked
  * @param loadThreads the threads that load business dates from the lake (2), off the common pool (2.9.7)
+ * @param refusalTtlSeconds how long a date refused for room (capacity, disk) is remembered (300): asked again meanwhile, it is refused at
+ *     once with {@code Retry-After}, without a lake read; 0: not remembered
+ * @param openHeapMb the byte safety net over the open dates' heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least
+ *     a tenth of the heap); over it the least recently used dates leave, never a protected one
+ * @param fiscalYearEnd the bank's fiscal year-end, {@code MM-DD}; blank: none
+ * @param pinned the pinned dates, as VaR's (VAR_GUIDE.md section 26.8)
  */
 @ConfigurationProperties("drishti.ccr.exposure")
 public record ExposureProperties(Boolean enabled, List<Double> confidence, Double limitConfidence, String rankRule, String collateralModel,
         String imModel, Double alpha, Integer contributionWindow, Integer hotDates, Double memoryBudgetGb, String hotFolder, String tier,
         Integer diskDates, Boolean keepOnShutdown, Integer closeGraceSeconds, Integer maxScopeNettingSets, Integer maxParts, Integer histogramBins,
         Double t0Tolerance, Kinds kinds, Map<String, Map<String, String>> access, Official official, Retention retention, Integer viewCacheMb,
-        java.time.Duration versionCheck, Double maxDiskGb, Integer loadThreads) {
+        java.time.Duration versionCheck, Double maxDiskGb, Integer loadThreads, Integer refusalTtlSeconds, Long openHeapMb, String fiscalYearEnd,
+        com.ash.drishti.server.caches.PinnedDates.Settings pinned) {
 
     /** The kinds the engine reads, as the counterparty-risk pack names them. */
     public record Kinds(String run, String paths, String nettingSet, String csa, String collateral, String counterparty, String group,
@@ -148,7 +156,7 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         imModel = imModel == null || imModel.isBlank() ? "current" : imModel.trim().toLowerCase(Locale.ROOT);
         alpha = alpha == null || alpha <= 0 ? 1.4 : alpha;
         contributionWindow = contributionWindow == null || contributionWindow < 1 ? 21 : contributionWindow;
-        hotDates = hotDates == null || hotDates <= 0 ? 2 : hotDates;
+        hotDates = hotDates == null || hotDates <= 0 ? 10 : hotDates;
         memoryBudgetGb = memoryBudgetGb == null || memoryBudgetGb <= 0 ? Runtime.getRuntime().maxMemory() / 4.0 / (1L << 30) : memoryBudgetGb;
         hotFolder = hotFolder == null || hotFolder.isBlank() ? com.ash.drishti.api.DataDir.under("ccr/hot") : hotFolder;
         tier = tier == null || tier.isBlank() ? "mapped" : tier.trim().toLowerCase(Locale.ROOT).equals("heap") ? "heap" : "mapped";
@@ -167,6 +175,17 @@ public record ExposureProperties(Boolean enabled, List<Double> confidence, Doubl
         versionCheck = versionCheck == null || versionCheck.isNegative() ? java.time.Duration.ofSeconds(30) : versionCheck;
         maxDiskGb = maxDiskGb == null || maxDiskGb < 0 ? 0.0 : maxDiskGb;
         loadThreads = loadThreads == null || loadThreads <= 0 ? 2 : loadThreads;
+        refusalTtlSeconds = refusalTtlSeconds == null || refusalTtlSeconds < 0 ? 300 : refusalTtlSeconds;
+        openHeapMb = openHeapMb == null || openHeapMb < 0 ? 0L : openHeapMb;
+        fiscalYearEnd = fiscalYearEnd == null ? "" : fiscalYearEnd.trim();
+        com.ash.drishti.server.caches.PinnedDates.fiscalYearEnd(fiscalYearEnd);       // a bad value refuses the start
+        pinned = pinned == null ? com.ash.drishti.server.caches.PinnedDates.Settings.none() : pinned;
+    }
+
+    /** The heap the open dates may take before the safety net closes some (bytes): {@code open-heap-mb}, or the automatic net. */
+    public long openHeapBytes() {
+        return openHeapMb > 0 ? openHeapMb << 20
+                : com.ash.drishti.server.caches.OpenDates.automaticNet(Runtime.getRuntime().maxMemory(), loadThreads, 1600L << 20);
     }
 
     public ExposureMath.Rule rule() {

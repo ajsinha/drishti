@@ -120,6 +120,11 @@ final class ExposureOfficial implements AutoCloseable {
             return captureNow(date);
         } finally {
             lock.unlock();
+            try {
+                svc.pins().afterOfficial();                            // the pinned dates made ready after the record (VAR_GUIDE 26.8)
+            } catch (RuntimeException e) {
+                // the lake not readable now: the next record tries again
+            }
         }
     }
 

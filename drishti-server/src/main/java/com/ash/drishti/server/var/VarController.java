@@ -278,6 +278,10 @@ public class VarController {
         m.put("threads", svc.sums().threads());
         m.put("memoryBudgetMb", pr.memoryBudgetMb());
         m.put("hotDates", pr.hotDates());
+        m.put("memory", svc.memoryStatus());                          // section 26.8: the open dates' heap and the net, the page cache
+        m.put("refusalTtlSeconds", pr.refusalTtlSeconds());
+        m.put("refusedForRoom", svc.room().describe());
+        m.put("pinned", svc.pins().describe());
         m.put("tier", svc.loader().tier().describe());
         m.put("kinds", pr.kinds().all());
         m.put("positionRules", svc.loader().rules().toString());

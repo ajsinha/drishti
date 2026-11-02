@@ -88,6 +88,12 @@ public final class RachanaSchema {
         grid.put("tablet", Map.of("type", "object", "description", "{ areas, columns }: the picture at tablet width"));
         p.put("layout", Map.of("type", "object", "properties", grid, "additionalProperties", false,
                 "description", "Optional placement (RACHANA_REFERENCE.md 13): without it panels flow in the main and right columns"));
+        Map<String, Object> phone = new LinkedHashMap<>();
+        phone.put("order", Map.of("type", "array", "items", Map.of("type", "string"), "description", "The must and glance panels in phone order (ids)"));
+        phone.put("default", Map.of("type", "string", "enum", com.ash.drishti.rachana.model.ScreenPhone.TIERS, "description", "The tier of panels this Sutra gives none"));
+        phone.put("summary", text("One line at the top of the phone page (may hold {…})"));
+        p.put("phone", Map.of("type", "object", "properties", phone, "additionalProperties", false,
+                "description", "The phone display (MOBILE_DISPLAY.md 5.2): order, default tier and summary line"));
         Map<String, Object> keys = new LinkedHashMap<>();
         KEYS.forEach(k -> keys.put(k, text(EL + ", or impact or raw")));
         p.put("keys", Map.of("type", "object", "properties", keys, "additionalProperties", false,
@@ -230,6 +236,8 @@ public final class RachanaSchema {
         common.put("area", Map.of("type", "string", "description", "main or right (the flow), or an area named in layout.areas"));
         common.put("order", Map.of("type", "integer", "minimum", 0, "maximum", 999, "description", "Sort key within the area or the flow (lower first)"));
         common.put("section", text("The id of one of layout.sections this panel sits in"));
+        common.put("phone", Map.of("type", List.of("string", "object"), "description",
+                "The panel's phone tier: must, glance, more or desk, or { tier, rows, columns, sort, series, figures, tab } (MOBILE_DISPLAY.md 5)"));
         common.put("collapsible", Map.of("type", "boolean", "description", "The reader may fold the panel to its heading (remembered per reader)"));
         common.put("span", Map.of("type", "integer", "minimum", 1, "maximum", com.ash.drishti.rachana.model.Panel.MAX_SPAN,
                 "description", "Width in columns of a 12-column grid (default: the whole column)"));

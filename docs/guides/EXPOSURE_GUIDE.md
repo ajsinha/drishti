@@ -805,7 +805,10 @@ allow pruning. The demo lake (`lake build`) writes the same columns with the wri
 | `im-model` | `current` | initial margin held kept at today's amount on every path, `none`; [SIMM.md](../contracts/SIMM.md) paths later |
 | `alpha` | `1.4` | IMM EAD = alpha × EEPE (informational: §18.5) |
 | `contribution-window` | `21` | paths around the PFE quantile averaged for PFE contributions (§18.6) |
-| `hot-dates` | `2` | dates with mapped path matrices |
+| `hot-dates` | `10` | dates kept open: the least recently used leaves first; the date just used, the newest and the pinned in memory stay (VAR_GUIDE section 26.8) |
+| `refusal-ttl-seconds` | `300` | a date refused for room is answered at once with `Retry-After` this long, no lake read |
+| `open-heap-mb` | `0` (automatic) | the byte safety net over the open dates' heap |
+| `fiscal-year-end`, `pinned` | none, off | pinned dates, as VaR's (VAR_GUIDE section 26.8) |
 | `memory-budget-gb` | `0` (a quarter of the heap for statistics; matrices are mapped, not on the heap) | |
 | `hot-folder` | `${drishti.data.dir}/ccr/hot` | where the per-date files go (local disk, §26.2) |
 

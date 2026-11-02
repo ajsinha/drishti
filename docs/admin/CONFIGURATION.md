@@ -87,7 +87,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -291,10 +291,10 @@ the command line or in `JAVA_TOOL_OPTIONS`):
 | `-XX:NativeMemoryTracking=summary` | `jcmd <pid> VM.native_memory summary` |
 | `-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=<data dir>/dumps` | a heap dump when the heap runs out |
 | `-Xlog:gc*:file=<data dir>/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m` | a rotated GC log (100 MB at most); make the folder first, or the JVM does not start |
+| `-Ddrishti.open-dates.net-grace-seconds=120` (the default; no launcher passes it) | the byte safety net (`drishti.var.open-heap-mb`, `drishti.ccr.exposure.open-heap-mb`) never closes a date, nor its currency and stress books, read in the last this many seconds, so two dates asked in turn by many users do not close and reload each other at a small heap; idle dates still leave, a new load without room is still refused (`DRS-5204`); `0` turns it off ([VAR_GUIDE.md 26.8](../guides/VAR_GUIDE.md#268-dates-in-memory-over-years-of-history)). Likewise `-Ddrishti.parquet.footer-cache-mb=64`: the parsed Parquet footers kept, weighed at about 700 bytes a column chunk |
 
 Where each launcher puts the dumps and GC logs, and how to read them: [OPERATIONS.md](OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run).
-Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the
-connector file change that.
+Kafka connectors fetch at most 4 MB a poll and 1 MB a partition; `client.fetch.max.bytes` and `client.max.partition.fetch.bytes` in the connector file change that.
 
 ### External libraries: `external_lib` (`DRISHTI_EXTERNAL_LIB`)
 
@@ -750,7 +750,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -759,7 +759,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -772,7 +772,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -816,7 +816,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -1559,7 +1559,11 @@ else by `drishti.var.positions`.
 | `component-window` | `5` | Component VaR averages this many scenarios ranked around the VaR scenario (k−2 to k+2). |
 | `threads` | `0` (`DRISHTI_VAR_THREADS`) | Cores the vector sums use; `0` is every core. |
 | `memory-budget-mb` | `0` (`DRISHTI_VAR_MEMORY_MB`) | Most memory one date's vectors take; `0` is a quarter of the heap. The heap tier's position vectors (summed once and kept) take at most a quarter of it a date; past that a position's vector is summed on each ask. Measured on the heap tier at 8 bytes a value, on the mapped tier at 4 (the float32 hot copy). A date over it is refused whole (`503 DRS-5204`). |
-| `hot-dates` | `2` | Business dates kept loaded (open: mapped, or on the heap), the newest first; the date just used stays. |
+| `hot-dates` | `10` (`DRISHTI_VAR_HOT_DATES`) | Business dates kept open (mapped, or on the heap): the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (VAR_GUIDE section 26.8). |
+| `refusal-ttl-seconds` | `300` | A date refused for room (capacity, disk) is remembered this long: `503` at once with `Retry-After`, no lake read. |
+| `open-heap-mb` | `0` (`DRISHTI_VAR_OPEN_HEAP_MB`) | The byte safety net over every open book's heap; `0` is automatic (0.4 × heap − 512 MB − load-threads × 1.6 GB, at least a tenth of the heap). A date read in the last `-Ddrishti.open-dates.net-grace-seconds` (120) is never closed by the net ([JVM flags](#jvm-flags-for-a-long-run)). |
+| `fiscal-year-end` | blank (`DRISHTI_FISCAL_YEAR_END`) | The fiscal year-end, `MM-DD`, for the `fiscal-year-end` pin. |
+| `pinned` | every rule off | Pinned dates (`month-end`, `quarter-end`, `year-end`, `fiscal-year-end`, `stress-window`, `dates`): `back` and `keep: disk|memory` (VAR_GUIDE section 26.8). |
 | `version-check` | `30s` (`DRISHTI_VAR_VERSION_CHECK`) | The version watch: on a request, an open date compares its lake version (the connector's own, refreshed every `refresh-seconds`) with the one it was loaded from at most this often; when it moved without a data-load signal, the date is reloaded in the background and swapped in, the answers meanwhile carry a warning. One reload a date at a time; a failed one keeps the old date and says why. A date with intraday updates applied is left to its signal. `0` switches the watch off. |
 | `load-threads` | `2` | The threads that load business dates from the lake (and shard books, and listed currencies on first ask): a pool of their own (`drishti-var-load-*`, `drishti-var-shard-load-*`), never the common pool that parallel streams share. A load waiting for another on the pool is compensated, never deadlocked. |
 | `view-cache-mb` | `64` | The most memory the viewers' views take (each a bitset of the trades a role set sees, per date, version and currency); an idle view goes after an hour, and a date's views go when the date leaves memory or is reloaded ([RESOURCES_AND_SCALE.md 5.3](../architecture/RESOURCES_AND_SCALE.md#53-releases-with-the-date-d4)). |
@@ -1648,7 +1652,7 @@ compute workers on (`DRISHTI_COMPUTE_ENABLED=true`), otherwise that method answe
 | `im-model` | `current` | `current` (the initial margin held today, the collateral holding's `IM_HELD`, on every path) or `none`. |
 | `alpha` | `1.4` | EAD under the internal model = alpha × EEPE (informational). |
 | `contribution-window` | `21` | Paths ranked around the PFE quantile a PFE contribution averages over. |
-| `hot-dates` | `2` | Business dates kept open (mapped, or on the heap), the newest first; the date just used stays. |
+| `hot-dates` | `10` (`DRISHTI_EXPOSURE_HOT_DATES`) | Business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (as VaR's). `refusal-ttl-seconds`, `open-heap-mb`, `fiscal-year-end` and `pinned` as VaR's. |
 | `load-threads` | `2` | The threads that load business dates from the lake: a pool of their own (`drishti-exposure-load-*`), never the common pool. |
 | `version-check` | `30s` (`DRISHTI_EXPOSURE_VERSION_CHECK`) | The version watch, as VaR's: an open date restated in the lake without a signal is reloaded in the background within this interval (`0`: off). |
 | `view-cache-mb` | `16` | The most memory the viewers' views take (per date, version and role set); idle ones go after an hour, a date's with the date. |
@@ -2441,7 +2445,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2467,7 +2471,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.6-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
 ```
 
 ---
@@ -2738,16 +2742,16 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 1,876 settings in 15 areas, and 298 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 1,914 settings in 15 areas, and 304 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 649 |
-| [The console: `application.yaml`](#the-console-applicationyaml) | 205 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 678 |
+| [The console: `application.yaml`](#the-console-applicationyaml) | 210 |
 | [The console's other files](#the-consoles-other-files) | 85 |
-| [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 515 |
+| [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 517 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 135 |
-| [Editions: `config/editions/`](#editions-configeditions) | 67 |
+| [Editions: `config/editions/`](#editions-configeditions) | 69 |
 | [The content store: `config/store/store.yaml`](#the-content-store-configstorestoreyaml) | 14 |
 | [BI runs: `config/runs/runs.yaml`](#bi-runs-configrunsrunsyaml) | 48 |
 | [Write-back: `config/edit/`](#write-back-configedit) | 18 |
@@ -2757,7 +2761,7 @@ Every key of every kind: 1,876 settings in 15 areas, and 298 environment variabl
 | [Report definitions: `config/reports/`](#report-definitions-configreports) | 23 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 298 |
+| [Environment variable index](#environment-variable-index) | 304 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -3257,8 +3261,11 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.rank-rule` | string | `kth-worst` |  | server | kth-worst (k = ceil(N (1 - a)): the 6th worst of 509) or interpolated | restart |  |
 | `drishti.var.component-window` | integer | `5` |  | server | component VaR averages the scenarios ranked k-2 .. k+2, scaled to add up to the VaR | restart |  |
 | `drishti.var.threads` | integer | `0` | `DRISHTI_VAR_THREADS` | server | cores the vector sums use (0: every core) | restart |  |
-| `drishti.var.memory-budget-mb` | integer | `0` | `DRISHTI_VAR_MEMORY_MB` | server | most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204 | restart |  |
-| `drishti.var.hot-dates` | integer | `2` |  | server | business dates kept loaded (the newest) | restart |  |
+| `drishti.var.memory-budget-mb` | integer | `0` | `DRISHTI_VAR_MEMORY_MB` | server | heap tier only: most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204. The mapped tier is bounded by the disk (hard) and the page cache (advisory) | restart |  |
+| `drishti.var.hot-dates` | integer | `10` | `DRISHTI_VAR_HOT_DATES` | server | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay | restart |  |
+| `drishti.var.refusal-ttl-seconds` | integer | `300` |  | server | a date refused for room (capacity, disk) is remembered this long: asked again, 503 at once with Retry-After, no lake read; forgotten sooner when room is freed (0: not remembered) | restart |  |
+| `drishti.var.open-heap-mb` | integer | `0` | `DRISHTI_VAR_OPEN_HEAP_MB` | server | the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave | restart |  |
+| `drishti.var.fiscal-year-end` | string | empty | `DRISHTI_FISCAL_YEAR_END` | server | the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off) | restart |  |
 | `drishti.var.view-cache-mb` | integer | `64` |  | server | most memory the viewers' views (bitsets per date, version, currency, role set) take; idle 1 h, released with the date | restart |  |
 | `drishti.var.load-threads` | integer | `2` |  | server | threads that load dates (and shard books, currencies) from the lake: their own pool, never the common pool | restart |  |
 | `drishti.var.version-check` | duration | `30s` | `DRISHTI_VAR_VERSION_CHECK` | server | an open date compares its lake version this often on a request; moved: reloaded in the background (0: off) | restart |  |
@@ -3292,6 +3299,18 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.stress-window.top` | integer | `5` |  | server | the candidate windows listed, none overlapping another | restart |  |
 | `drishti.var.stress-window.alert-threshold` | number | `0.05` |  | server | alert when the worst window's stressed VaR exceeds the current window's by more than this (5%) | restart |  |
 
+#### `drishti.var.pinned`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.pinned.month-end` | map | `{ back: 0, keep: disk }` |  | server | each month's last business day (for example back: 13) | restart |  |
+| `drishti.var.pinned.quarter-end` | map | `{ back: 0, keep: disk }` |  | server | March, June, September, December (for example back: 8) | restart |  |
+| `drishti.var.pinned.year-end` | map | `{ back: 0, keep: disk }` |  | server | December (for example back: 7) | restart |  |
+| `drishti.var.pinned.fiscal-year-end` | map | `{ back: 0, keep: disk }` |  | server | the fiscal year's last business day (needs fiscal-year-end) | restart |  |
+| `drishti.var.pinned.stress-window` | map | `{ back: 0, keep: disk }` |  | server | 1: the first and last dates of the stress window in use (known once stressed VaR is asked) | restart |  |
+| `drishti.var.pinned.dates` | list | `[]` |  | server | any dates the bank names (yyyy-MM-dd: a crisis day, an audit date) | restart |  |
+| `drishti.var.pinned.dates-keep` | string | `disk` |  | server | how the named dates are kept: disk or memory | restart |  |
+
 #### `drishti.var.read`
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -3317,6 +3336,20 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.var.playground.export-choices` | list | `[100, 500, 1000, 10000, 0]` |  | server | the export's drop-down: positions as their own columns (0: All); the rest in Rest of scope | restart |  |
 | `drishti.var.playground.export-default` | integer | `500` |  | server | the choice selected first | restart |  |
 | `drishti.var.playground.export-max-cells` | integer | `20000000` | `DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS` | server | the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words | restart |  |
+
+#### `drishti.var.explain`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.var.explain.enabled` | boolean | `true` | `DRISHTI_VAR_EXPLAIN_ENABLED` | server | the tab, the command, the API and the workbook | restart |  |
+| `drishti.var.explain.order` | list | `[restatement, hierarchy, trades-out, window, market, trades-in]` |  | server | the causes in sequence, each a full VaR state; restatement and trades-out before market, trades-in after, window next to market | restart |  |
+| `drishti.var.explain.window-lines` | string | `two` |  | server | two (oldest scenario dropped, newest added) or one (one window-roll line) | restart |  |
+| `drishti.var.explain.split-amendments` | boolean | `true` |  | server | amended trades as their own steps when the feed marks them (TRADE\_ACTION or TRADE\_STATUS AMEND/AMENDED) | restart |  |
+| `drishti.var.explain.top` | integer | `10` |  | server | contributors listed per step before "the others and the interaction" | restart |  |
+| `drishti.var.explain.drivers-max` | integer | `2000` |  | server | most trades of one step whose incremental VaR is computed (the rest are in "the others") | restart |  |
+| `drishti.var.explain.cache-minutes` | integer | `10` |  | server | answers kept this long, never stored | restart |  |
+| `drishti.var.explain.cache-mb` | integer | `32` |  | server | most memory the kept answers take (weighed in bytes) | restart |  |
+| `drishti.var.explain.matrix-max` | integer | `60` |  | server | most child nodes the Matrix view explains | restart |  |
 
 #### `drishti.var.intraday`
 
@@ -3405,7 +3438,17 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.ccr.exposure.im-model` | string | `current` |  | server | current (the initial margin held today on every path) or none | restart |  |
 | `drishti.ccr.exposure.alpha` | number | `1.4` |  | server | EAD\_IMM = alpha x EEPE (informational) | restart |  |
 | `drishti.ccr.exposure.contribution-window` | integer | `21` |  | server | paths around the PFE quantile a PFE contribution averages over | restart |  |
-| `drishti.ccr.exposure.hot-dates` | integer | `2` |  | server | business dates kept open (the newest) | restart |  |
+| `drishti.ccr.exposure.hot-dates` | integer | `10` | `DRISHTI_EXPOSURE_HOT_DATES` | server | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (as VaR's) | restart |  |
+| `drishti.ccr.exposure.refusal-ttl-seconds` | integer | `300` |  | server | a date refused for room (capacity, disk) is remembered this long: 503 at once with Retry-After, no lake read (0: not remembered) | restart |  |
+| `drishti.ccr.exposure.open-heap-mb` | integer | `0` | `DRISHTI_EXPOSURE_OPEN_HEAP_MB` | server | the byte safety net over the open dates' heap (0: automatic, as VaR's); over it the least recently used dates leave | restart |  |
+| `drishti.ccr.exposure.fiscal-year-end` | string | empty | `DRISHTI_FISCAL_YEAR_END` | server | the bank's fiscal year-end, MM-DD; blank: none | restart |  |
+| `drishti.ccr.exposure.pinned.month-end` | map | `{ back: 0, keep: disk }` |  | server | each month's last business day (back: how many; 0: off) | restart |  |
+| `drishti.ccr.exposure.pinned.quarter-end` | map | `{ back: 0, keep: disk }` |  | server | March, June, September, December | restart |  |
+| `drishti.ccr.exposure.pinned.year-end` | map | `{ back: 0, keep: disk }` |  | server | December | restart |  |
+| `drishti.ccr.exposure.pinned.fiscal-year-end` | map | `{ back: 0, keep: disk }` |  | server | the fiscal year's last business day (needs fiscal-year-end) | restart |  |
+| `drishti.ccr.exposure.pinned.stress-window` | map | `{ back: 0, keep: disk }` |  | server | exposure has no stress window: unused | restart |  |
+| `drishti.ccr.exposure.pinned.dates` | list | `[]` |  | server | any dates the bank names (yyyy-MM-dd) | restart |  |
+| `drishti.ccr.exposure.pinned.dates-keep` | string | `disk` |  | server | how the named dates are kept: disk or memory | restart |  |
 | `drishti.ccr.exposure.view-cache-mb` | integer | `16` |  | server | most memory the viewers' views take; idle 1 h, released with the date | restart |  |
 | `drishti.ccr.exposure.load-threads` | integer | `2` |  | server | threads that load dates from the lake: their own pool, never the common pool | restart |  |
 | `drishti.ccr.exposure.version-check` | duration | `30s` | `DRISHTI_EXPOSURE_VERSION_CHECK` | server | an open date compares its lake version this often; moved: reloaded in the background (0: off) | restart |  |
@@ -3985,6 +4028,16 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|
 | `ui.render.mode` | string | `server` | `DRISHTI_UI_RENDER` | console | server or client: the renderer of the pages listed in ui.render.pages | restart |  |
 | `ui.render.pages` | string | `view,pane` | `DRISHTI_UI_RENDER_PAGES` | console | the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane) | restart |  |
+
+#### `ui.phone`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `ui.phone.enabled` | boolean | `true` | `DRISHTI_UI_PHONE` | console | true: a phone or tablet gets the tiered page; false: every screen gets every panel, as before | restart |  |
+| `ui.phone.kinds` | map | `{}` |  | console | a panel kind's tier over the built-in one, such as { table: more, map: desk } | restart |  |
+| `ui.phone.rules` | list | `[]` |  | console | the site's tiers and caps: \[{ kind: provenance, tier: desk }, { panel: "\*contrib\*", max: more }]; keys panel, kind, title, sutra, entity (globs), tier or max | restart |  |
+| `ui.phone.packs` | map | `{}` |  | console | a pack's rules, for the entity kinds it owns: { market-risk: \[{ panel: "\*contrib\*", tier: more }] } | restart |  |
+| `ui.phone.pages` | map | `{}` |  | console | the VaR and exposure pages and the landings: { var: { contrib: glance, tiles: { max: glance } } } | restart |  |
 
 #### `ui.facts`
 
@@ -4660,7 +4713,8 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `credential` | string | none |  | `iceberg` connectors | REST catalog credential: ${ENV\_VAR} or file:/path (secret) | live (the connector restarts) |  |
 | `root` | path | none |  | `iceberg` connectors | `hadoop`: the lake, a folder or `s3a://…` (`abfs://`, `gs://`, `hdfs://`) | live (the connector restarts) |  |
 | `uri` | string | none |  | `iceberg` connectors | `rest`: the catalog's URI | live (the connector restarts) |  |
-| `catalog` | string | `hadoop` |  | `iceberg` connectors | `hadoop` (path-based tables) or `rest` | live (the connector restarts) |  |
+| `catalog` | string | `hadoop` |  | `iceberg` connectors | `hadoop` (path-based tables), `rest`, or `s3tables` (AWS S3 Tables: its Iceberg REST endpoint, the settings from `table-bucket-arn`) | live (the connector restarts) |  |
+| `table-bucket-arn` | string | none |  | `iceberg` connectors | `s3tables`: the table bucket, `arn:aws:s3tables:<region>:<account>:bucket/<name>`; the endpoint, SigV4 signing (`s3tables`), region, warehouse and REST prefix follow from it, the domain is the namespace and a kind is read from its table with underscores (`pnl-vector` is `pnl_vector`). Blank: the connector stays idle. Native engine only | live (the connector restarts) |  |
 | `namespace` | string | none |  | `iceberg` connectors | `rest`: the namespace (dots separate levels) | live (the connector restarts) |  |
 | `domain` | string | none |  | `iceberg` connectors | Domain | live (the connector restarts) |  |
 | `kinds` | list | none |  | `iceberg` connectors | Comma list of kinds to serve | live (the connector restarts) |  |
@@ -4696,7 +4750,8 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `engine` | one of native, auto | `auto` |  | `iceberg-external` connectors | `native` or `auto`: both read through drishti-iceberg; `library` is refused (it is the `iceberg` connector's only) | live (the connector restarts) |  |
 | `root` | path | none |  | `iceberg-external` connectors | Path-based tables' root (a folder or s3://…); tables.&lt;kind&gt;.table names the folder under it | live (the connector restarts) |  |
 | `uri` | string | none |  | `iceberg-external` connectors | A REST catalog's URI (Polaris, Snowflake Open Catalog, Glue, Unity, Nessie, Lakekeeper) | live (the connector restarts) |  |
-| `catalog` | string | none |  | `iceberg-external` connectors | hadoop (path-based, the default) or rest | live (the connector restarts) |  |
+| `catalog` | string | none |  | `iceberg-external` connectors | hadoop (path-based, the default), rest, or s3tables (AWS S3 Tables, the settings from table-bucket-arn) | live (the connector restarts) |  |
+| `table-bucket-arn` | string | none |  | `iceberg-external` connectors | `s3tables`: the table bucket's ARN (arn:aws:s3tables:&lt;region&gt;:&lt;account&gt;:bucket/&lt;name&gt;); the REST settings follow from it | live (the connector restarts) |  |
 | `warehouse` | string | none |  | `iceberg-external` connectors | REST catalog warehouse | live (the connector restarts) |  |
 | `credential` | string | none |  | `iceberg-external` connectors | REST catalog OAuth2 client credentials (id:secret): ${ENV\_VAR} or file:/path | live (the connector restarts) |  |
 | `token` | string | none |  | `iceberg-external` connectors | A fixed REST catalog bearer token: ${ENV\_VAR} or file:/path (secret) | live (the connector restarts) |  |
@@ -5181,6 +5236,8 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `admin.pages` | list | `[users, roles, packs, commands, tokens, access, connectors, artifacts, loads,...` |  | an edition (server and console) | the Admin pages kept, by id; the others answer 404 | restart |  |
 | `branding.product` | string | `Drishti Risk` |  | an edition (server and console) | the product name the edition shows (a site's own branding wins) | restart |  |
 | `branding.tagline` | string | `VaR and exposure from your own pricing data` |  | an edition (server and console) | the line under it | restart |  |
+| `phone.rules` | list | empty |  | an edition (server and console) | tiers and caps by panel, kind, title, Sutra or entity kind (globs): a VaR contribution panel waits under More | restart |  |
+| `phone.pages` | map | `{}` |  | an edition (server and console) | the VaR and exposure pages' parts, as ui.phone.pages: { var: { hist: glance } } | restart |  |
 | `home.hierarchies` | list | `[MGMT]` |  | an edition (server and console) | the hierarchy the Risk map opens on (its switch lists every hierarchy the engine holds) | restart |  |
 | `trading.people.drishti-dev-admin` | map | `{ trader: TRDR-ASHAH }` |  | an edition (server and console) | the demo's administrator reads A. Shah's books (the demo data's rates trader) | restart |  |
 | `trading.match-records` | boolean | `true` |  | an edition (server and console) | fall back to a matching trader record (TRADER\_ID = TRDR-&lt;USER&gt;, or the same NAME) | restart |  |
@@ -5758,12 +5815,14 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_EMBED_SIGN_IN` | `embed.sign_in.enabled` | `true` | console | needs auth.oidc.enabled; off: the window answers DRS-8003 and pages keep the token exchange |
 | `DRISHTI_EMBED_SIGN_IN_WINDOW` | `drishti.embed.sign-in-window` | `true` | server | the renderer's auth: 'popup' (CLIENT\_RENDERER.md 10.1): a registered host's page signs its user in |
 | `DRISHTI_EXPOSURE_ENABLED` | `drishti.ccr.exposure.enabled` | `true` | server | run the exposure engine (/api/v1/exposure, EXP &lt;scope&gt;, the counterparty-risk pack's exposure-engine connector) |
+| `DRISHTI_EXPOSURE_HOT_DATES` | `drishti.ccr.exposure.hot-dates` | `10` | server | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (as VaR's) |
 | `DRISHTI_EXPOSURE_HOT_DIR` | `drishti.ccr.exposure.hot-folder` | `./data/ccr/hot` | server | the hot files, one folder per business date; never under the repository |
 | `DRISHTI_EXPOSURE_KEEP_HOT_FILES` | `drishti.ccr.exposure.keep-on-shutdown` | `false` | server | false: deleted at shutdown; the server images set true (PO-10) |
 | `DRISHTI_EXPOSURE_MAX_DISK_GB` | `drishti.ccr.exposure.max-disk-gb` | `0` | server | most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3) |
 | `DRISHTI_EXPOSURE_MEMORY_GB` | `drishti.ccr.exposure.memory-budget-gb` | `0` | server | most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445 |
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | server | capture every netting set, counterparty, group and hierarchy node when a date's run is complete |
 | `DRISHTI_EXPOSURE_OFFICIAL_FORMAT` | `drishti.ccr.exposure.official.format` | `delta` | server | delta or iceberg; BI's exposure-results connector follows it |
+| `DRISHTI_EXPOSURE_OPEN_HEAP_MB` | `drishti.ccr.exposure.open-heap-mb` | `0` | server | the byte safety net over the open dates' heap (0: automatic, as VaR's); over it the least recently used dates leave |
 | `DRISHTI_EXPOSURE_TIER` | `drishti.ccr.exposure.tier` | `mapped` | server | mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap |
 | `DRISHTI_EXPOSURE_VERSION_CHECK` | `drishti.ccr.exposure.version-check` | `30s` | server | an open date compares its lake version this often; moved: reloaded in the background (0: off) |
 | `DRISHTI_EXTERNAL_LIB` | `external_lib` | empty | console | base of the external library folder (blank: external\_lib in the repository root); &lt;base&gt;/python is importable, &lt;base&gt;/java is the server's |
@@ -5774,7 +5833,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FEED_NYFED_SOFR` | nyfed-sofr-feed enabled | `false` | packs | The NY Fed SOFR public feed on |
 | `DRISHTI_FEED_US_TREASURY` | us-treasury-feed enabled | `false` | packs | The US Treasury yield curve feed on |
 | `DRISHTI_FILES_ROOT` | files profile | `./data/files` | profile | The files profile's root (&lt;root&gt;/&lt;domain&gt;/&lt;date&gt;/&lt;kind&gt;.jsonl) |
-| `DRISHTI_FISCAL_YEAR_END` | `drishti.regulatory.fiscal-year-end` | `10-31` | server | the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31 |
+| `DRISHTI_FISCAL_YEAR_END` | `drishti.var.fiscal-year-end`, `drishti.regulatory.fiscal-year-end`, `drishti.ccr.exposure.fiscal-year-end` | empty | server | the bank's fiscal year-end, MM-DD (for example 10-31); blank: none (the fiscal-year-end pin is off) |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `drishti.identity.force-password-change-on-create` | `false` | server | Nobody is forced to change a password unless configured here (an admin can still tick it per user). |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | server | after an administrator resets a password, the user must change it at the next sign-in |
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
@@ -5917,6 +5976,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_UI_DESIGNER` | `ui.designer` | `false` | console | The Sutra designer (docs/guides/RACHANA\_REFERENCE.md › Screen designer and the Build workbench, section 31): Customize on every entity page and Describe under Build -&gt; New screen. A user's changes are their own Design, never the pack's Sutra. Off: pages and the screen designer are exactly as before. |
 | `DRISHTI_UI_KIT_DIR` | `drishti.ui-kit.dir` | `./config/ui-kit` | server | The Drishti UI kit (docs/guides/RACHANA\_REFERENCE.md, "The Drishti UI kit"): platform UI vocabulary loaded whatever packs are enabled: fragments/ (used by any Sutra as { use: series-line@1 }), assets/ (icons, images, logos) and brand.yaml. |
 | `DRISHTI_UI_KIT_SITE_DIR` | `drishti.ui-kit.site-dir` | `./data/ui-kit` | server | The site's overrides: brand.yaml (its keys win over the kit's) and assets/ (a file wins over the kit's of the same path). |
+| `DRISHTI_UI_PHONE` | `ui.phone.enabled` | `true` | console | true: a phone or tablet gets the tiered page; false: every screen gets every panel, as before |
 | `DRISHTI_UI_RENDER` | `ui.render.mode` | `server` | console | server or client: the renderer of the pages listed in ui.render.pages |
 | `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | console | the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane) |
 | `DRISHTI_UNINSTALLED_DIR` | `drishti.admin.uninstalled-dir` | `./data/uninstalled` | server | an uninstall MOVES the artifact here; nothing is deleted |
@@ -5930,14 +5990,17 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_CURRENCY_RETENTION_DATES` | `drishti.var.currency-retention-dates` | `5` | server | newest business dates whose listed currencies are built ahead and kept on disk |
 | `DRISHTI_VAR_ENABLED` | `drishti.var.enabled` | `true` | server | run the VaR engine (/api/v1/var, the VaR explorer, VAR &lt;scope&gt;) |
 | `DRISHTI_VAR_ES_CONFIDENCE` | `drishti.var.es-confidence` | `0.975` | server | expected shortfall's |
+| `DRISHTI_VAR_EXPLAIN_ENABLED` | `drishti.var.explain.enabled` | `true` | server | the tab, the command, the API and the workbook |
+| `DRISHTI_VAR_HOT_DATES` | `drishti.var.hot-dates` | `10` | server | business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay |
 | `DRISHTI_VAR_HOT_DIR` | `drishti.var.tier.dir` | `./data/var/hot` | server | one folder per business date; never under the repository |
 | `DRISHTI_VAR_INTRADAY_KAFKA_MAX_TRADES` | `drishti.var.intraday.kafka.max-trades` | `500` | server | a window applied earlier once this many trades wait |
 | `DRISHTI_VAR_INTRADAY_KAFKA_WINDOW` | `drishti.var.intraday.kafka.window` | `5m` | server | everything received in a window: one intraday batch in the lake, applied |
 | `DRISHTI_VAR_KEEP_HOT_FILES` | `drishti.var.tier.keep-on-shutdown` | `false` | server | false: deleted at shutdown (and any left over at start); the server images set true (PO-10) |
 | `DRISHTI_VAR_MAX_DISK_GB` | `drishti.var.tier.max-disk-gb` | `0` | server | most disk all hot files take (dates, currencies, shard books); 0: half the disk; least recently used beyond go |
-| `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | server | most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204 |
+| `DRISHTI_VAR_MEMORY_MB` | `drishti.var.memory-budget-mb` | `0` | server | heap tier only: most memory one date's vectors take (0: a quarter of the heap); over it: 503 DRS-5204. The mapped tier is bounded by the disk (hard) and the page cache (advisory) |
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` | `true` | server | capture every node of every hierarchy when a date's inputs are complete (after the data-load signal) |
 | `DRISHTI_VAR_OFFICIAL_FORMAT` | `drishti.var.official.format` | `delta` | server | delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg) |
+| `DRISHTI_VAR_OPEN_HEAP_MB` | `drishti.var.open-heap-mb` | `0` | server | the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave |
 | `DRISHTI_VAR_PLAYGROUND_ENABLED` | `drishti.var.playground.enabled` | `true` | server | the screen, the command and the export |
 | `DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS` | `drishti.var.playground.export-max-cells` | `20000000` | server | the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words |
 | `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |

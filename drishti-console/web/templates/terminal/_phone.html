@@ -1,0 +1,48 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The phone page (docs/architecture/MOBILE_DISPLAY.md section 7, core/phone.py): the summary line, the must panels, the glance panels in
+   their compact form, More on this page (a row a panel, loaded in place when tapped: static/js/phone.js) and On desktop (the panels a
+   phone never gets, with a link that opens the same page on a bigger screen). A tablet shows must, glance and more, with the desk panels
+   under More. Show everything gives the whole page for the session; Phone view returns. #}
+{% set base = request.url.path %}{# the page's own address: a panel is fetched as this page fetched it #}
+<div class="ph-page" data-phone-page="{{ phone.device }}" data-phone-base="{{ base }}" data-phone-query="{{ request.url.query }}">
+  {% if phone.device == 'phone' %}
+  {% if phone.summary %}<p class="ph-summary" data-phone-summary>{{ phone.summary }}</p>{% endif %}
+  <div class="vmain ph-main">{{ panels(phone.shown, false, vm.ref) }}</div>
+  {% endif %}
+  {% if phone.more %}
+  <section class="ph-more" aria-labelledby="phMoreH">
+    <h2 id="phMoreH" class="ph-h">More on this page</h2>
+    <ul class="ph-rows">
+      {% for s in phone.more %}<li data-phone-slot="{{ s.id }}"><button type="button" class="ph-row" data-phone-load="{{ s.id }}" aria-expanded="false">
+        <span class="ph-row-t">{{ s.title }}</span><span class="ph-row-k">{{ s.kind }}</span><i class="bi bi-chevron-right" aria-hidden="true"></i></button></li>{% endfor %}
+    </ul>
+  </section>
+  {% endif %}
+  {% if phone.desk %}
+  <section class="ph-desk" aria-labelledby="phDeskH">
+    <h2 id="phDeskH" class="ph-h">On desktop</h2>
+    <p class="ph-desk-l">{% for s in phone.desk %}{{ s.title }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+    <p class="ph-desk-a"><button type="button" class="ph-btn" data-phone-copy="{{ share_url }}"><i class="bi bi-link-45deg" aria-hidden="true"></i> Copy the link for a desktop</button>
+      <span class="ph-copied" role="status" data-phone-copied></span></p>
+  </section>
+  {% endif %}
+  <div class="ph-foot">
+    <button type="button" class="ph-btn" data-phone-everything><i class="bi bi-arrows-expand" aria-hidden="true"></i> Show everything</button>
+    <details class="ph-why"><summary>Why these panels</summary>
+      <ul>{% for w in phone.why %}<li><b>{{ w.title }}</b>: {{ w.tier }}{% if w.capped %}, capped by the {{ w.from }}{% else %}, set by the {{ {'kind': 'panel kind', 'rule': 'rule that a page always has a must panel'}.get(w.from, w.from) }}{% endif %}</li>{% endfor %}</ul></details>
+  </div>
+</div>

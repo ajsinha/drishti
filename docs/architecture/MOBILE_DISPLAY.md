@@ -15,8 +15,9 @@
 -->
 # Phone display: what goes to a phone, configured
 
-**Status: design, not built; decided (product owner, 2026-10-31); the build is proposed (oversight and mobile).** Designed in
-no code yet. The decisions, all taken as recommended, are in [section 11](#11-decisions-for-the-product-owner).
+**Status: built** as decided (product owner, 2026-10-31): the four tiers, charts at a glance, site and edition caps, tablets as proposed;
+person pins are later, as decided. What is built, and how, is in [section 12](#12-as-built-the-build-checklist); the decisions are in
+[section 11](#11-decisions-for-the-product-owner).
 
 **The request (product owner):** "Let us see if mobile display can be optimized. Not all panels need to go to mobile; it makes the
 display very dense and hard to handle. Propose a configurable design which allows must-have displays to go to mobile so things load
@@ -35,6 +36,7 @@ in the phone well. Do not code, just design, and keep it configurable. Something
 9. [Lint, tests and evidence](#9-lint-tests-and-evidence)
 10. [How it would be built](#10-how-it-would-be-built)
 11. [Decisions for the product owner](#11-decisions-for-the-product-owner)
+12. [As built: the build checklist](#12-as-built-the-build-checklist)
 
 ## 1. Today
 
@@ -87,7 +89,7 @@ The tier is resolved per panel, **the most specific layer wins**:
 | 1. **Kind default** | built in, per panel kind | Drishti | `key-figure`, `field-list` (header) → must; `table` → glance; `chart`, `ranked-bars` → glance; `provenance`, `notes`, `json` → more; `pivot`, `designer` → desk |
 | 2. **Fragment** | the fragment's `doc.phone` (`counterparty-risk/exposure-profile@2`) | pack author | an exposure profile is glance (a sparkline of EE and PFE) |
 | 3. **Sutra** | `phone:` on a panel, or the screen's `phone:` block (section 5) | pack or screen author | on the netting-set page the MtM panel is must, the trades table glance, the computed checks more |
-| 4. **Site, pack or edition** | `config/phone.yaml` and an edition's `phone:` block | administrator | in Drishti Risk, every VaR contribution panel is more; across the site, provenance is desk |
+| 4. **Site, pack or edition** | the console's `ui.phone` (`rules`, `packs`, `kinds`, `pages`) and an edition's `phone:` block | administrator | in Drishti Risk, every VaR contribution panel is more; across the site, provenance is desk |
 | 5. **The person** | *Pin to my phone* or *Not on my phone* on a panel's menu; stored per person and Sutra (the arrangement store already used by `user-can-arrange`) | the reader | a trader pins the limits panel to must |
 
 - **Layer 4 can cap as well as set:** `max: glance` stops a heavy panel from ever being must on a phone, whatever a Sutra says. The cap
@@ -105,7 +107,7 @@ panels:
   - id: trades
     kind: table
     rows: $.TRADES
-    phone: { tier: glance, rows: 5, columns: [TRADE_ID, PRODUCT, MTM], sort: -MTM }   # the compact form
+    phone: { tier: glance, rows: 5, columns: [Trade, Product, MTM], sort: -MTM }   # the compact form (column labels)
   - { use: ranked-bars@1, with: { id: limits, rows: $.LIMITS, label: LIMIT, value: USED }, phone: glance }
   - { use: cashflow-ladder@1, with: { id: flows, rows: $.CASHFLOWS }, phone: more }
   - { use: data-provenance@1, phone: desk }
@@ -119,7 +121,7 @@ panels:
 phone:
   order: [header, mtm, trades, limits]      # replaces layout.phone (kept as an alias); only must and glance panels
   default: more                             # the tier of panels this Sutra does not name (instead of the kind defaults)
-  summary: "Net MTM {$.NET_MTM | fmt:usd0}, {$.TRADE_COUNT} trades"   # one line at the top of the phone page
+  summary: "Net MTM ${fmt($.NET_MTM, 'signed0')}, ${$.TRADE_COUNT} trades"   # one line at the top of the phone page
 ```
 
 ### 5.3 Compact forms (glance)
@@ -245,3 +247,27 @@ Mock-ups first: two or three phone mock-ups of one heavy page (the netting set) 
 | 4 | **Person pins** in the first build, or later? | later, not in the first build |
 | 5 | **Tablet** as proposed (desk panels behind *More on this page*), or tablet treated as desktop? | tablets as proposed |
 | 6 | **Release:** with the client-side renderer? | designed; built with the oversight and mobile work |
+
+## 12. As built: the build checklist
+
+How the design is built, step by step against [section 10](#10-how-it-would-be-built). One choice differs from the design and is
+named: the tiers are resolved, and the glance panels cut, by the **console** (the page's server for the browser), from the ViewModel the
+Drishti server binds. The phone downloads only the must and glance panels in their compact form, which is the slow hop the design
+targets; the server still binds every panel for the console (row 2 below).
+
+| Step | What | Status | Where |
+|---|---|---|---|
+| 1 | The grammar: `phone:` on a panel (a tier, or `{ tier, rows, columns, sort, series, figures, tab }`), on a use (put on every panel it brings), a fragment's `doc.phone` (put on its panels, marked as the fragment's), and the screen's `phone: { order, default, summary }`; lint `DRS-2059` for a word that is not a tier, a compact option that does not fit the kind, an order naming a panel that is not there or is not must or glance | **Built** | `PhoneReader`, `ScreenPhone` (drishti-rachana); the Sutra schema |
+| 1 | The ViewModel's `phone`: each panel's tier and compact options with the layer that set them (`from: fragment` or `sutra`), the order, the default, the summary line read against the document | **Built** | `PhoneView` (drishti-engine); [VIEWMODEL.md](VIEWMODEL.md) |
+| 1 | The resolution over the layers, most specific first: the kind default, the fragment, the Sutra (and its `default`), the site (`ui.phone.rules`), the pack (`ui.phone.packs`, for the entity kinds it owns), the edition or lens (`phone.rules`); a `max:` from the site, pack or edition caps every layer; a page with no must panel gets its first panel as must; *Why these panels* on the phone page says the tier and the layer of each panel | **Built** | [`core/phone.py`](../../drishti-console/core/phone.py) |
+| 1 | The device class: `X-Drishti-Device`, else the `drishti-device` cookie the browser keeps from its width (phone below 640 px, tablet to 1000 px, desk above), at load and on rotation; never the user agent; a workspace pane or an embedded page never sets it | **Built** | [`phone.js`](../../drishti-console/web/static/js/phone.js) |
+| 2 | Binding by tier for the phone: must panels whole, glance panels in their compact form (a table's first N rows in its chosen columns and sort, a chart as a sparkline with its last value and change, the first N bars, events, links or figures, the first tab, a map as a list of its places), more and desk panels as rows only | **Built** (on the console) | [`core/phone.py`](../../drishti-console/core/phone.py) `compact` |
+| 2 | The server binding only must and glance panels (stubs for more and desk), and Arrow for a tablet's *Show all* | Not built | — |
+| 3 | The phone page: the summary line, must, glance, *More on this page* (a panel loaded in place when tapped, bound as the viewer with the page's controls, Sutra and date), *On desktop* (with the page's link to copy), *Show everything* for the session and *Phone view* back; *Show all* on a compact panel; a live tick of a compact panel keeps its compact form; a tablet keeps its layout less the desk panels, which wait under *More* | **Built** | [`terminal/_phone.html`](../../drishti-console/web/templates/terminal/_phone.html), [`phone_routes.py`](../../drishti-console/routes/phone_routes.py) (`GET /v/<kind>/<id>/phone/<panel>`) |
+| 4 | The pages beyond Sutra pages ([section 8](#8-beyond-sutra-pages)): the VaR page (headline and method must; the scenario P&L distribution at a glance; the worst scenarios, the path, the history, contributions, captures, other currencies, the scope tree and provenance under *More*; what-if and the basket on the desktop), the exposure page (tiles must, the profile at a glance, the tabs, the tree and provenance under *More*, the paths on the desktop) and the four edition landings (the command line, the tiles and the first card must, other tables at a glance, charts, maps and quick links under *More*); set and capped by `ui.phone.pages.<page>`, an edition's `phone.pages.<page>` and a landing's `home.phone` | **Built** | [`_macros/phone.html`](../../drishti-console/web/templates/_macros/phone.html); `core/phone.py` `PAGES` |
+| 4 | `phone:` defaults in the shipped packs' fragments and their heaviest Sutras (netting set, counterparty, deep trade); Drishti Risk's rule that a VaR contribution panel waits under *More* | **Built**: `doc.phone` in every UI-kit fragment that draws a panel and in the trading pack's shared fragments (ticket and key figures must; tables, ladders, bars, timelines, maps and charts at a glance; legs as their first tab; provenance, notes, links, events and payments under *More*); the netting set's, the counterparty's and the Endur commodity swap's Sutras with their phone order, summary line and tiers (a counterparty's group graph on the desktop); the lint warning for a fragment without `doc.phone` is not written | `config/ui-kit/fragments/`, `config/packs/trading/sutras/common/`, `netting-set.v1.sutra.yaml`, `counterparty.v1.sutra.yaml`, `endur-comswap.v1.sutra.yaml`, `config/editions/risk.yaml` |
+| 5 | Person pins (*Pin to my phone*, *Not on my phone*, reset) | Later, as decided (section 11, row 4) | — |
+| 6 | The lens menus' phone form (LX1 option C): below 640 px the subject menus fold into one menu named after the lens, a column per subject | **Built** | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the lens documents' checklists |
+| 6 | `sutra lint --phone` (each Sutra's panels with their tiers and a payload estimate), and the before-and-after measurement of phone payload | Not built | — |
+| 6 | Docs and screenshots: the user guide's *On a phone*, the Sutra reference's `phone:`, the configuration, the editions | **Built** | [USER_GUIDE.md](../guides/USER_GUIDE.md#on-a-phone) |
+| — | Tests: the layers and caps, the compact forms, a phone getting must and glance only, a *More* panel on its own, a tablet, the desktop unchanged, the lens menu; browser tests at 390 px and 1280 px in the dark and light themes, no sideways scroll, 44 px controls | **Built** | `test_phone.py`, `test_phone_browser.py`, `PhoneReaderTest`, `PhoneViewTest` |

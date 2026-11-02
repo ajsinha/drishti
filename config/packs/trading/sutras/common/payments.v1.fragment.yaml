@@ -25,6 +25,8 @@ doc:
   params: {}
   emits: []
   expects: []
+  # on a phone (docs/architecture/MOBILE_DISPLAY.md): a use or a Sutra's phone: overrides it
+  phone: more
   examples:
     - { use: payments@1 }
   since: "2.7.0"

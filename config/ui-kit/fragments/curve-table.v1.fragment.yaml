@@ -55,6 +55,8 @@ doc:
     area: { type: area, default: '', meaning: "Where the panel sits: main (the default when empty) or right" }
   emits: []
   expects: []
+  # on a phone (docs/architecture/MOBILE_DISPLAY.md): a use or a Sutra's phone: overrides it
+  phone: { tier: glance, rows: 5 }
   examples:
     - { use: curve-table@1, with: { rows: $.POINTS, key: F3 } }
   since: "2.7.0"

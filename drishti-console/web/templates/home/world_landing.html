@@ -26,6 +26,8 @@
 {% block head %}<link rel="stylesheet" href="/static/css/world-landing.css?v={{ ASSET_V }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% block content %}
+{% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'landing') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
+{{ back(request) }}
 <div class="wl" data-world-landing="{{ landing }}" data-topics="{{ topics | join(',') }}">
   <nav class="wl-switch" aria-label="Choose your Home">
     <span class="wl-switch-l">Home</span>
@@ -39,7 +41,7 @@
   {% endif %}
 
   {% if landing == 'explorer' %}
-  <section class="wl-hero" aria-label="Command line">
+  <section class="wl-hero" aria-label="Command line"{{ part(PP, 'hero') }}>
     <form class="wl-big" action="/go" method="get" role="search" autocomplete="off">
       <label class="visually-hidden" for="wlCmd">Command</label>
       <span class="mono" aria-hidden="true">&gt;</span>
@@ -67,7 +69,7 @@
       <li><a href="/help/external-data">External data: where it comes from</a></li></ul></div>
   </div>
   {% elif landing == 'map' %}
-  <section class="wl-card" aria-labelledby="wlMapH">
+  <section class="wl-card" aria-labelledby="wlMapH"{{ part(PP, 'map') }}>
     <h2 id="wlMapH">The world by <span data-wl-group-title>region</span><small data-wl-measure-title>growth, GDP-weighted</small></h2>
     <div class="wl-toggles">
       <div class="wl-seg" role="group" aria-label="Group by" data-wl-groups>
@@ -81,22 +83,22 @@
     <p class="wl-note" data-wl-map-note>Each economy's own figures (ECON), weighted by GDP; each tile opens its group or economy.</p>
   </section>
   <div class="wl-cols">
-    <section class="wl-card" aria-labelledby="wlSecH">
+    <section class="wl-card" aria-labelledby="wlSecH"{{ part(PP, 'card-1') }}>
       <h2 id="wlSecH">US sectors<small>revenue of the companies, by SIC division</small></h2>
       <div class="wl-bars" data-wl-sectors><p class="wl-muted">…</p></div>
     </section>
-    <section class="wl-card" aria-labelledby="wlFundH">
+    <section class="wl-card" aria-labelledby="wlFundH"{{ part(PP, 'table') }}>
       <h2 id="wlFundH">Largest funds<small>FUND, by net assets</small></h2>
       <table class="wl-table"><thead><tr><th scope="col">Fund</th><th scope="col">Tracks</th><th scope="col" class="n">Holdings</th><th scope="col" class="n">Assets</th></tr></thead>
         <tbody data-wl-funds><tr><td colspan="4" class="wl-muted">…</td></tr></tbody></table>
     </section>
-    <section class="wl-card" aria-labelledby="wlChgH">
+    <section class="wl-card" aria-labelledby="wlChgH"{{ part(PP, 'table') }}>
       <h2 id="wlChgH">What changed<small>the latest of each source</small></h2>
       <ul class="wl-feed" data-wl-changes><li class="wl-muted">…</li></ul>
     </section>
   </div>
   {% else %}
-  <section class="wl-tiles" aria-label="Headline figures">
+  <section class="wl-tiles" aria-label="Headline figures"{{ part(PP, 'tiles') }}>
     <a class="wl-tile" href="{{ go('ECG ECG-WLD') }}" data-wl-tile="world"><span class="k">World GDP growth</span><span class="v mono" data-wl-world>…</span><span class="s" data-wl-world-s></span></a>
     <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="breadth"><span class="k">Quotes up · down</span><span class="v mono" data-wl-breadth>…</span><span class="s" data-wl-breadth-s></span></a>
     <a class="wl-tile" href="{{ go('QUOTE where PRICE > 0 order by CHANGE_PCT desc') }}" data-wl-tile="mover"><span class="k">Biggest mover</span><span class="v mono" data-wl-mover>…</span><span class="s" data-wl-mover-s></span></a>
@@ -104,12 +106,12 @@
     <a class="wl-tile" href="{{ go('FUND where NET_ASSETS > 0 order by NET_ASSETS desc') }}" data-wl-tile="funds"><span class="k">Funds and ETFs</span><span class="v mono" data-wl-funds-n>…</span><span class="s" data-wl-funds-s></span></a>
   </section>
   <div class="wl-cols">
-    <section class="wl-card" aria-labelledby="wlMovedH">
+    <section class="wl-card" aria-labelledby="wlMovedH"{{ part(PP, 'table') }}>
       <h2 id="wlMovedH">Economies that moved<small>the largest, growth against the year before</small></h2>
       <table class="wl-table"><thead><tr><th scope="col">Economy</th><th scope="col" class="n">Growth</th><th scope="col" class="n">Inflation</th><th scope="col" class="n">Δ growth</th></tr></thead>
         <tbody data-wl-moved><tr><td colspan="4" class="wl-muted">…</td></tr></tbody></table>
     </section>
-    <section class="wl-card" aria-labelledby="wlNewsH">
+    <section class="wl-card" aria-labelledby="wlNewsH"{{ part(PP, 'table') }}>
       <h2 id="wlNewsH">Today's news<small>by topic</small></h2>
       <ul class="wl-feed" data-wl-news><li class="wl-muted">…</li></ul>
     </section>
@@ -121,6 +123,7 @@
   {% endif %}
   {% endif %}
   <p class="wl-classic"><a href="/?landing=today">The classic Home</a></p>
+  {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/world-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

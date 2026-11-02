@@ -28,6 +28,7 @@ import com.ash.drishti.api.Provenance;
 import com.ash.drishti.api.SourceCapabilities;
 import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.iceberg.catalog.S3Tables;
 import com.ash.drishti.plugin.iceberg.KindTable.Day;
 import com.ash.drishti.plugin.iceberg.KindTable.IdMap;
 import com.ash.drishti.plugin.iceberg.KindTable.Layout;
@@ -139,6 +140,42 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         return new PluginManifest(sourceName == null ? "iceberg" : sourceName, "1.0", tables.keySet(), new SourceCapabilities(false, true, true, true));
     }
 
+    /**
+     * The context with {@code catalog: s3tables} turned into the REST settings it stands for ({@link S3Tables#expand}), so the rest of the
+     * start reads one kind of REST catalog; a context without it unchanged. A table bucket not named yet leaves the connector idle.
+     */
+    static SourceContext s3Tables(SourceContext ctx) {
+        if (!S3Tables.named(ctx.settings())) {
+            return ctx;
+        }
+        if (S3Tables.arnOf(ctx.settings()).isEmpty()) {
+            throw new com.ash.drishti.api.PluginNotConfigured("iceberg with catalog: s3tables needs settings.table-bucket-arn "
+                    + "(arn:aws:s3tables:<region>:<account>:bucket/<name>)");
+        }
+        Map<String, String> expanded = java.util.Collections.unmodifiableMap(S3Tables.expand(ctx.settings()));
+        return new SourceContext() {
+            @Override
+            public Map<String, String> settings() {
+                return expanded;
+            }
+
+            @Override
+            public com.ash.drishti.api.DataNode parseJson(java.io.InputStream in) throws IOException {
+                return ctx.parseJson(in);
+            }
+
+            @Override
+            public java.util.concurrent.ScheduledExecutorService scheduler() {
+                return ctx.scheduler();
+            }
+
+            @Override
+            public com.ash.drishti.api.EntityReader reader() {
+                return ctx.reader();
+            }
+        };
+    }
+
     /** A table's snapshots answer {@code knownAt}. */
     @Override
     public boolean timeTravel() {
@@ -146,7 +183,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     }
 
     @Override
-    public void start(SourceContext ctx) throws IOException {
+    public void start(SourceContext given) throws IOException {
+        SourceContext ctx = s3Tables(given);
         if (ctx.setting("root", "").isBlank() && ctx.setting("uri", "").isBlank()) {
             // installed but not configured (the plugin running as itself): idle, rather than DOWN on a lake nobody named
             throw new com.ash.drishti.api.PluginNotConfigured("iceberg needs settings.root (a folder or s3a://…) or settings.uri (a REST catalog)");

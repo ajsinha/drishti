@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>. All rights reserved.
+  PROPRIETARY AND CONFIDENTIAL. See the LICENSE file in the root of this repository.
+  Drawn by tools/bench/charts.py from the benchmark's results files; do not edit by hand.
+-->
+<svg xmlns='http://www.w3.org/2000/svg' width='760' height='380' viewBox='0 0 760 380' role='img'>
+<text x='16.0' y='24.0' fill='#8a8a86' font-size='15' font-weight='600' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>Disk a date against the formulas</text>
+<text x='16.0' y='42.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>P&amp;L vectors in the lake (Java loader; 1,362 B a position) and the hot file (2,783 B a position)</text>
+<rect x='64' y='53' width='10' height='10' rx='2' fill='#2a78d6'/>
+<text x='79.0' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>measured</text>
+<rect x='142.8' y='53' width='10' height='10' rx='2' fill='#eb6834'/>
+<text x='157.8' y='62.0' fill='#8a8a86' font-size='12' font-weight='400' text-anchor='start' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>formula</text>
+<line x1='64.0' y1='330.0' x2='740.0' y2='330.0' stroke='#8a8a86' stroke-opacity='0.6' stroke-width='1'/>
+<text x='58.0' y='334.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0</text>
+<line x1='64.0' y1='267.0' x2='740.0' y2='267.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='271.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>1</text>
+<line x1='64.0' y1='204.0' x2='740.0' y2='204.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='208.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>2</text>
+<line x1='64.0' y1='141.0' x2='740.0' y2='141.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='145.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>3</text>
+<line x1='64.0' y1='78.0' x2='740.0' y2='78.0' stroke='#8a8a86' stroke-opacity='0.25' stroke-width='1'/>
+<text x='58.0' y='82.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='end' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>4</text>
+<text x='16.0' y='204.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif' transform='rotate(-90 16 204.0)'>GB</text>
+<rect x='118.5' y='312.0' width='28.0' height='18.0' rx='2' fill='#2a78d6'><title>measured, lake a date, 200K: 0.29 GB</title></rect>
+<text x='132.5' y='308.0' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0.29</text>
+<rect x='148.5' y='312.8' width='28.0' height='17.2' rx='2' fill='#eb6834'><title>formula, lake a date, 200K: 0.27 GB</title></rect>
+<text x='162.5' y='308.8' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0.27</text>
+<text x='148.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>lake a date, 200K</text>
+<rect x='287.5' y='294.9' width='28.0' height='35.1' rx='2' fill='#2a78d6'><title>measured, hot file a date, 200K: 0.56 GB</title></rect>
+<text x='301.5' y='290.9' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0.56</text>
+<rect x='317.5' y='294.9' width='28.0' height='35.1' rx='2' fill='#eb6834'><title>formula, hot file a date, 200K: 0.56 GB</title></rect>
+<text x='331.5' y='290.9' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>0.56</text>
+<text x='317.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>hot file a date, 200K</text>
+<rect x='456.5' y='240.1' width='28.0' height='89.9' rx='2' fill='#2a78d6'><title>measured, lake a date, 1M: 1.43 GB</title></rect>
+<text x='470.5' y='236.1' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>1.43</text>
+<rect x='486.5' y='244.2' width='28.0' height='85.8' rx='2' fill='#eb6834'><title>formula, lake a date, 1M: 1.36 GB</title></rect>
+<text x='500.5' y='240.2' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>1.36</text>
+<text x='486.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>lake a date, 1M</text>
+<rect x='625.5' y='132.1' width='28.0' height='197.9' rx='2' fill='#2a78d6'><title>measured, hot file a date, 1M: 3.14 GB</title></rect>
+<text x='639.5' y='128.1' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>3.14</text>
+<rect x='655.5' y='154.7' width='28.0' height='175.3' rx='2' fill='#eb6834'><title>formula, hot file a date, 1M: 2.78 GB</title></rect>
+<text x='669.5' y='150.7' fill='#8a8a86' font-size='10' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>2.78</text>
+<text x='655.5' y='348.0' fill='#8a8a86' font-size='11' font-weight='400' text-anchor='middle' font-family='Inter,Segoe UI,Helvetica,Arial,sans-serif'>hot file a date, 1M</text>
+</svg>

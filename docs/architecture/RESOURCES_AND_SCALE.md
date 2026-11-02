@@ -41,7 +41,7 @@ how it scales. Where it overlaps an older document, this one decides; the older 
 6. [CPU design](#6-cpu-design)
 7. [Disk design](#7-disk-design)
 8. [Observability](#8-observability)
-9. [Scale-out](#9-scale-out)
+9. [Scale-out](#9-scale-out) (with [9.7, sizing a single node: the planner workbook](#97-sizing-a-single-node-the-planner-workbook))
 10. [Benchmark, profiling and soak method](#10-benchmark-profiling-and-soak-method)
 11. [The work plan](#11-the-work-plan)
 12. [Decisions for the product owner](#12-decisions-for-the-product-owner)
@@ -239,7 +239,7 @@ history, the Delta memory budget and each connector, nothing else. A ⚠ marks a
 | Iceberg id maps on disk | `IcebergDiskCaches.java` (lines 66-67,129) (`<kind>/<day>@<fingerprint>.idmap`) | day, fingerprint | ⚠ none by bytes or dates | the same day's older fingerprints removed (line 157) | fingerprint | purge |
 | Iceberg manifests, deletes | `Planner.MANIFESTS` (`drishti-iceberg/.../scan/Planner.java:61`), `Deletes.FILES` (`.../read/Deletes.java:49`) | path | ⚠ count: `-Ddrishti.iceberg.manifest-cache-entries` 2,000,000; rows: `-Ddrishti.iceberg.delete-cache-rows` 5,000,000 | W-TinyLFU | immutable files | none |
 | Iceberg-external | `IcebergExternalPlugin.java` (lines 152-157) | | layouts ⚠ count 64; `id-index-mb` 1,024; `columns-cache-mb` 1,024; `doc-cache-mb` 256 | | | Caches |
-| Parquet footers | `ParquetFooters.FOOTERS`, `drishti-lakeio/.../ParquetFooters.java` (lines 43-45) | path and length (immutable files) | ⚠ weighed by row groups: `-Ddrishti.parquet.footer-cache-groups` 50,000 (not bytes) | W-TinyLFU | immutable | the Delta connector's purge |
+| Parquet footers | `ParquetFooters.FOOTERS`, `drishti-lakeio/.../ParquetFooters.java` (lines 43-45) | path and length (immutable files) | bytes (2.9.9): about 700 a column chunk, `-Ddrishti.parquet.footer-cache-mb` 64 MB | W-TinyLFU | immutable | the Delta connector's purge |
 | type-ahead index | `DatedHitIndex`, `DaySegment`; `drishti.index.dir` (`<data>/index`) | connector, kind, day, table version | `index.days` 1, `index.max-memory` 600 MB, `index.max-disk` 2 GB | oldest day | rebuilt every 6 × `refresh-seconds`; `index.reload-every` 10 m | Admin → Connectors → Index |
 | Kafka | `KafkaSourcePlugin.java` (lines 195-205) | entity | `cache-mb` 256; disk `disk-cache.max-gb` 10 (off by default); ⚠ `weights` map (line 322) unbounded | W-TinyLFU; tombstones | offsets | Caches |
 | message state (RabbitMQ, ActiveMQ, Kafka state mode) | `MessageStateSource.java` (lines 86,124-132) | entity | `cache-mb` 128; RocksDB `state.max-gb` 10; ⚠ `known`, `weights` unbounded | | | Caches |
@@ -976,10 +976,11 @@ console holds no channel state at all.
 
 Per server, from the capacity model (footnote 1) with 1,518 values a position, two dates open, four listed currencies; **after D1** as
 designed in [5.1](#51-the-heap-skeleton-d1), with the skeleton's residue estimated at 50 B a position and the aggregates on the heap
-(the "aggregates mapped" column maps them too). Estimated, not measured; to be replaced by the 200K benchmark and the 2.3M run.
+(the "aggregates mapped" column maps them too). Estimated, except the first row, measured on one server (BENCHMARK.md 4.8).
 
 | | Heap need | `-Xmx` (÷ 0.61) | Page cache | A load | RAM need | Local NVMe need |
 |---|---|---|---|---|---|---|
+| 1M, one server, 509 values, USD only (**measured**) | 2.2 GB with two dates (0.72 GB a date) | 6 GB held | two hot files, 6.3 GB | | 11.2 GB RSS at the end | 6.3 GB |
 | **2.3M, one server, before D1** | 21.2 GB | 36 GB | 78.4 GB | 44.2 GB | 151 GB | 1,183 GB |
 | 2.3M, one server, after D1 | 12.1 GB | 20 GB (16 GB aggregates mapped) | 78.4 GB | 44.2 GB | 142 GB | 1,183 GB |
 | **2.3M, a shard owner of 6 (replicas 2), before** | 21.2 GB | 36 GB | 26.1 GB | 14.7 GB | 69 GB | 394 GB |
@@ -1000,11 +1001,51 @@ Reading it: at 2.3M sharding already makes the disk and page cache affordable, a
 D1 every owner would need a 118 GB heap whatever the cluster's size, with D1 about 36 to 53 GB, and the next lever is the skeleton's
 sharding ((c) of [5.1](#51-the-heap-skeleton-d1)).
 
+**The heap of an open date, measured.** Node members are runs and the aggregates are mapped from the hot file, so a book's heap is the
+per-book formula of VAR_GUIDE.md [section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date): 0.77 GB at 1,000,000 positions, 27,024
+nodes and 509 values; measured 0.58 and 0.86 GB for two dates, **0.72 GB a date** on average, with 0.77 GB at start, 2.2 GB with both
+dates open and 2.4 GB after 200 users, all within `-Xmx6g` ([BENCHMARK.md section 4.8](../admin/BENCHMARK.md#48-1000000-positions-the-heap-and-what-the-formula-missed)).
+At 1,518 values and four currencies the measured book (about 0.94 KB a position with the larger per-currency totals, a currency book as
+large as the USD one) gives the "before D1" rows above within 4%: those rows stand as the estimate of the built design, and D1 remains
+what takes the skeleton (most of the 0.72 KB) off the heap. With the default `hot-dates` of 10 at 1,000,000 positions, USD only, the
+books would take about 7.2 GB; the byte safety net (`drishti.var.open-heap-mb`, automatic: 0.4 × the heap − 512 MB − `load-threads` ×
+1.6 GB, at least a tenth of it) closes the least recently used dates' currency and stress books, then dates, never one read in the last
+`-Ddrishti.open-dates.net-grace-seconds` (120).
+
 ### 9.6 The data-load signal in a cluster
 
 Today each server must be announced to ([4.1](#41-the-data-load-signal-today)). **Proposal (decision PO-5):** a `ready` announcement is
 forwarded once to every member that serves the kind over Drishti\*net (a signed one-hop call, as shard calls are), idempotent by its key;
 each member runs its own refresh. The loader's job keeps one call.
+
+### 9.7 Sizing a single node: the planner workbook
+
+**What it is.** [`docs/architecture/Drishti-Sizing-Planner.xlsx`](Drishti-Sizing-Planner.xlsx), a workbook for planning
+one server before a large deployment. A planner types the expected loads into the yellow cells of **Inputs** (positions, trades,
+portfolios, nodes, scenarios, dates in memory and pinned dates, reporting currencies and the stress set, intraday batches, exposure,
+trade rows a day, users and requests a second, Java 21 or 25, load threads). **Results** gives, each line with its formula, value and
+why: the heap of one VaR book term by term (VAR_GUIDE.md [section 27.1](../guides/VAR_GUIDE.md#271-bytes-per-date)), a date, the dates
+in memory, exposure, every cache at its budget ([section 3](#3-inventory-of-every-cache-and-memory-mapped-file-today)), the loads in
+progress and the users; the recommended `-Xmx` (the steady heap ÷ 0.61 plus the loads, with the compressed-oops boundary); the page cache,
+resident memory and RAM; the disk by folder with the free-space guard's margin; the cores; the settings with their exact keys
+(`drishti.var.hot-dates`, `drishti.var.open-heap-mb`, `drishti.var.memory-budget-mb`, `-Ddrishti.parquet.footer-cache-mb`,
+`drishti.var.load-threads`, `drishti.var.tier.max-disk-gb` and the rest); every JVM argument with its condition, and the whole command
+line ready to paste; each setting in its three exact forms (YAML for `./application.local.yaml`, the environment variable
+CONFIGURATION.md names, the `--key=value` argument) and one YAML block to paste; and warnings in words. **Coefficients** lists every constant with its unit, source and status (*measured*,
+*formula*, *calibrated* to the 1,000,000-position benchmark, or *estimate*): Results only refers to them, so a measurement of your own
+server changes one cell. **Explain** says all of it in plain words, with two examples: the defaults, a production shape (300,000 OTC
+trades of one trade a position, 39% of them updated intraday in 10 batches a day), and the 1,000,000-position benchmark. Today's intraday
+layer is counted on the heap (each changed trade keeps three vectors of the scenarios, and the changed books' and nodes' aggregates) and
+on disk (each batch appended to the lake; the layer itself is never written). The **Calibration check** computes the benchmark's shape
+from its own coefficients, so it shows the measured anchors whatever the inputs.
+
+**Regenerate it** after changing a coefficient's default, a formula or the words: `python3 tools/sizing_planner.py` (standard library
+only); `python3 tools/sizing_planner.py --check` exits 1 when the committed workbook differs from a fresh build, and
+`tools/test_sizing_planner.py` checks that every Results formula names only defined cells and that the defaults reproduce the figures the
+Explain tab states.
+
+**Limits.** One server only: a sharded cluster divides the hot files, the page cache and the loads among its members but copies each
+date's skeleton to every member; a cluster version of the workbook comes later.
 
 ---
 

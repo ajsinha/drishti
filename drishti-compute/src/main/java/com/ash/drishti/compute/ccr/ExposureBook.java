@@ -265,6 +265,14 @@ public final class ExposureBook implements AutoCloseable {
         }
     }
 
+    /**
+     * The heap bytes this book holds (VAR_GUIDE.md section 26.8, the byte safety net): per trade its record and index entries (about
+     * 600 bytes), per netting set about 400, and the matrices when they are on the heap (the mapped tier's are its hot file's pages).
+     */
+    public long heapBytes() {
+        return 4096L + 600L * trades.size() + 400L * sets.size() + (hot == null ? matrixBytes() : 0);
+    }
+
     /** Bytes the matrices take where they are kept. */
     public long matrixBytes() {
         return v.bytes() + e.bytes() + n.bytes();

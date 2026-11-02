@@ -81,6 +81,8 @@ class SettingsTest {
         patchAs(cy, "{\"varView\":{\"h\":\"10d\",\"m\":\"sum\",\"q\":0.95,\"esq\":0.975}}").andExpect(status().isOk())
                 .andExpect(jsonPath("$.varView.h").value("10d")).andExpect(jsonPath("$.varView.m").value("sum"));
         mvc.perform(get("/api/v1/me/settings").header("Authorization", bearer)).andExpect(jsonPath("$.varView.q").value(0.95));
+        patchAs(cy, "{\"varExplainView\":\"matrix\"}").andExpect(status().isOk()).andExpect(jsonPath("$.varExplainView").value("matrix"));
+        patchAs(cy, "{\"varExplainView\":\"pie\"}").andExpect(status().isBadRequest());
         patchAs(cy, "{\"varView\":{\"h\":\"5d\"}}").andExpect(status().isBadRequest());
         patchAs(cy, "{\"varView\":{\"q\":1.5}}").andExpect(status().isBadRequest());
         patchAs(cy, "{\"varView\":null}").andExpect(jsonPath("$.varView").isEmpty());
