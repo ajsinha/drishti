@@ -287,7 +287,7 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 | `DESK` | id |  | required |  | `DESK-COMM` (pattern `^DESK-`) | `desk` | The desk of the trade's book: a DESK_ID of the core pack's desk kind (DESK-…). |
 | `COUNTERPARTY` | id |  | required |  | `CP-HARBORPT` (pattern `^CP-`) | `counterparty` | The trade's counterparty: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). |
 | `NETTING_SET` | id |  | optional |  | `NS-BRAMBLE-LDN` (pattern `^NS-`) | `netting-set` | The netting set the trade belongs to: a NETTING_SET_ID of the counterparty-risk pack's netting-set kind (NS-<counterparty>-<legal entity>). |
-| `TRADER_ID` | id |  | required |  | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` | The trader of the trade: a TRADER_ID of the core pack's trader kind (TRDR-…). |
+| `TRADER_ID` | id |  | required |  | `TRDR-FROSSI` (pattern `^TRDR-`) | `trader` | The trader of the trade: a TRADER_ID of the core pack's trader kind (TRDR-…). The VaR engine's VaR by trader joins it to the P&L vectors by TRADE_ID (contributions by=attribute:TRADER_ID), so it is kept as a column of the table; a role that sees it masked gets no VaR by trader. |
 | `BUY_SELL_CODE` | text |  | required |  | `B`, `S` |  | B when the bank bought (or receives), S when it sold. |
 | `TRADE_STATUS` | text |  | required |  | `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` |  | The trade's status on the valuation date: NEW, VALIDATED, AMENDED, MATURED or CANCELLED; a trade that ends keeps a row on that date with its last value. |
 | `CURRENCY` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The trade's own currency, ISO 4217 (MTM is in USD whatever it is). |

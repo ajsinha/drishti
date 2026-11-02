@@ -17,6 +17,26 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **VaR by trader on the server (2.9.11 row 9; [VAR_GUIDE.md section 11.3](docs/guides/VAR_GUIDE.md#113-path-and-contributions)).**
+  `GET /api/v1/var/scope/contributions?by=attribute:<COLUMN>` groups every trade of the scope by its value of a trade column and sums
+  each group's vector in Java over all its trades (never cut to `max-parts`), so the groups' component VaR adds up to the scope's VaR. The
+  column is the VaR book's own (`COUNTERPARTY`, `STRATEGY`, a hierarchy's level column) or one the trade valuations keep (`TRADER_ID`,
+  joined by trade id; the new setting `drishti.var.kinds.valuation`, `trade-valuation`). A role that sees the column masked gets no groups,
+  `masked: true` and a note. The Trading landing's VaR by trader asks it (`by=attribute:TRADER_ID`) and only shows the rows: a desk with
+  more trades than the contributions page now counts every trade.
+- **The VaR what-if in Java (2.9.11 row 11; [VAR_GUIDE.md section 8.2](docs/guides/VAR_GUIDE.md#82-the-what-if-the-java-engine)).**
+  `POST /api/v1/var/what-if` keeps its request and answer and is computed by the server's VaR engine (`VarWhatIfMath`: before and after
+  VaR, ES and stressed VaR, each trade's standalone, incremental and component VaR), with no sandbox and no compute workers, so it answers
+  with `DRISHTI_COMPUTE_ENABLED=false`. Parity with the Python engine it replaces: its answers on the demo's DESK-RATES (three trades:
+  an unwind, a half, a double) are frozen in a test and given again to the cent. An item may also copy any scope (`"copyOf":
+  "BOOK:BOOK-RATES-3"`) or bring a vector priced elsewhere (`"pnl": [...]`); `drishti.py var whatif SCOPE --copy TRADE=FACTOR
+  [--trades FILE.json]` posts to it. **Retired:** the Python VaR engine (`drishti_compute.var`, its tests and the compute pool `var`,
+  `DRISHTI_COMPUTE_VAR_WORKERS`), the computed kind `var-whatif` with its connector, contract and command `VWIF` (the menus' *What-if*
+  entries, the editions' lists and chips; the Trading landing's new-trade check now needs the word `VAR` and `XWIF`), and `DRS-5205`.
+  **Upgrade:** a connector file generated from a pack's template that the pack no longer has and that nobody edited is removed at start
+  (kept beside it as `.retired-<time>.bak` and in the history); an edited `var-whatif.yaml` stays, its kind listed as obsolete under
+  Admin → Connectors → Template updates.
+
 - **FRTB-SA, computed for any scope (2.9.11 rows 1 and 2; [FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), tutorial 30).** Position
   sensitivities (`SENS`) and the factor dictionary (`RFAC`) are kinds of the market-risk pack, served by risk-store and loaded by `lake
   demo`; the server's Java engine computes the FRTB standardised approach from them: the sensitivities-based method (delta, vega and
