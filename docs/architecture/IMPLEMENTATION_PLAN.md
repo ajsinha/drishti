@@ -580,9 +580,9 @@ documents (2.9.8, 2.9.9 and later) are moved onto this plan; a candidate not nam
 | **2.9.17** (proposed) | XVA and wrong-way risk | CVA; BA-CVA; SA-CVA; MVA and KVA; wrong-way risk; each with its playground |
 | **2.9.18** (proposed) | Advanced market risk | **(L)** FRTB-IMA; **(L)** QLRisk pre-deal |
 | **2.9.19** (proposed) | Executive | **(L)** the CRO and CIO lens builds; liquidity, capital and climate (climate an optional supplied-input tile, off by default) |
-| **2.9.20** (proposed; product owner 2026-11-02; placement to confirm) | IFRS 9 expected credit loss | **(L)** the ECL engine (staging with reasons and cure, PD from curves or migration matrices, LGD with collateral, EAD with CCF, discounting at the EIR, weighted scenarios, POCI); **(L)** why the provision moved (S0 to S10, the IFRS 7.35H table); the credit-risk pack and demo loan book; overlays with four eyes; the playground and workbook; the screens after mock-ups ([IFRS9_ECL.md](IFRS9_ECL.md)) |
-| **2.9.21** (proposed; product owner 2026-11-02; placement to confirm) | Financial crime I: AML core | **(L)** transaction monitoring on the scenario framework, with the threshold-tuning playground; **(L)** alerts and case management on write-back with the data-protection rules; customer risk rating; FINTRAC STR, LCTR and EFTR; rule effectiveness ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
-| **2.9.22** (proposed; product owner 2026-11-02; placement to confirm) | Financial crime II: screening, surveillance, networks, fraud | **(L)** sanctions and PEP screening; **(L)** trade surveillance (orders, ticks, five market-abuse scenarios, the replay); network analytics; fraud scoring; each with its playground ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
+| **2.9.20** (proposed; product owner 2026-11-02; placement and decisions as recommended) | IFRS 9 expected credit loss | **(L)** the ECL engine (staging with reasons and cure, PD from curves or migration matrices, LGD with collateral, EAD with CCF, discounting at the EIR, weighted scenarios, POCI); **(L)** why the provision moved (S0 to S10, the IFRS 7.35H table); the credit-risk pack and demo loan book; overlays with four eyes; the playground and workbook; the screens after mock-ups ([IFRS9_ECL.md](IFRS9_ECL.md)) |
+| **2.9.21** (proposed; product owner 2026-11-02; placement and decisions as recommended) | Financial crime I: AML core | **(L)** transaction monitoring on the scenario framework, with the threshold-tuning playground; **(L)** alerts and case management on write-back with the data-protection rules; customer risk rating; FINTRAC STR, LCTR and EFTR; rule effectiveness ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
+| **2.9.22** (proposed; product owner 2026-11-02; placement and decisions as recommended) | Financial crime II: screening, surveillance, networks, fraud | **(L)** sanctions and PEP screening; **(L)** trade surveillance (orders, ticks, five market-abuse scenarios, the replay); network analytics; fraud scoring; each with its playground ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
 
 ## 2.9.8: market-risk regulatory foundation and debugging (planned)
 
@@ -866,7 +866,7 @@ from the directory, later by decision), ML5, ML6, ML8, ML10, WL1 to WL11. RL7 (s
 
 ## 2.9.20: IFRS 9 expected credit loss (proposed)
 
-*Proposed; product owner 2026-11-02; placement to confirm. The design: [IFRS9_ECL.md](IFRS9_ECL.md) (its build checklist, section 21).*
+*Proposed; product owner 2026-11-02; placement and every decision as recommended. The design: [IFRS9_ECL.md](IFRS9_ECL.md) (its build checklist, section 21).*
 
 | # | Part | What |
 |---|---|---|
@@ -880,7 +880,7 @@ from the directory, later by decision), ML5, ML6, ML8, ML10, WL1 to WL11. RL7 (s
 
 ## 2.9.21 and 2.9.22: financial crime (AML, fraud, FCU) (proposed)
 
-*Proposed; product owner 2026-11-02; placement to confirm. **Split in two** to keep two large items each. The design:
+*Proposed; product owner 2026-11-02; placement and every decision as recommended. **Split in two** to keep two large items each. The design:
 [FINANCIAL_CRIME.md](FINANCIAL_CRIME.md) (its build checklist, section 21). Drishti provides explainable, testable engines; the bank's FCU
 owns the rules, models and reporting decisions.*
 

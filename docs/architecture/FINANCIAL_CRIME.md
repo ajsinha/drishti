@@ -49,7 +49,7 @@ defaults are not a compliance programme.
 - [17. Hand-built cases](#17-hand-built-cases)
 - [18. Demo data](#18-demo-data)
 - [19. Sizing](#19-sizing)
-- [20. Decisions for the product owner](#20-decisions-for-the-product-owner)
+- [20. Decisions](#20-decisions)
 - [21. Build checklist](#21-build-checklist)
 - [22. Sources](#22-sources)
 
@@ -612,9 +612,11 @@ engines. Names are generated, never taken from real lists or people.
 
 The demo runs in seconds. A large bank's FCU engines belong on dedicated nodes of a cluster.
 
-## 20. Decisions for the product owner
+## 20. Decisions
 
-| # | Question | Recommended answer |
+**All decided by the product owner on 2026-11-02, as recommended.**
+
+| # | Question | Decided (as recommended) |
 |---|---|---|
 | 1 | Split | **two releases**: 2.9.21 *AML core* (transaction monitoring with tuning, alerts and cases, CRR, FINTRAC reports, effectiveness) and 2.9.22 *Screening, networks, surveillance and fraud*; each keeps two large items |
 | 2 | First jurisdiction | **Canada (FINTRAC)** first, as for the regulatory VaR reports; FinCEN and the EU later as report definitions |

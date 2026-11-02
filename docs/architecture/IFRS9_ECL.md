@@ -48,7 +48,7 @@ every move of the provision between two dates in exact steps. Every number is co
 - [17. Parameters as configuration](#17-parameters-as-configuration)
 - [18. Sizing](#18-sizing)
 - [19. Regulatory interaction: OSFI and Basel](#19-regulatory-interaction-osfi-and-basel)
-- [20. Decisions for the product owner](#20-decisions-for-the-product-owner)
+- [20. Decisions](#20-decisions)
 - [21. Build checklist](#21-build-checklist)
 - [22. Sources](#22-sources)
 
@@ -589,9 +589,11 @@ under 10 % of facilities for PD, all for ageing), so it costs about two to four 
 - US banks follow CECL (ASC 326: lifetime losses for every asset, no staging); the same engine runs CECL with `staging: off, horizon:
   lifetime` as a later option (decision 6).
 
-## 20. Decisions for the product owner
+## 20. Decisions
 
-| # | Question | Recommended answer |
+**All decided by the product owner on 2026-11-02, as recommended.**
+
+| # | Question | Decided (as recommended) |
 |---|---|---|
 | 1 | Release placement | 2.9.20 as proposed, after the executive release; nothing earlier moves |
 | 2 | Period granularity | **monthly** by default (banks' retail books amortise monthly), annual as a setting; the hand-built cases use annual for readability |
