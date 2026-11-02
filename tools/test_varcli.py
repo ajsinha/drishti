@@ -84,10 +84,9 @@ class FakeApi:
                     "rows": [{"label": "BOOK-RATES-1", "standaloneVar": 5, "componentVar": 1, "pct": 1.0, "incrementalVar": 1, "componentEs": 2}]}
         if path.startswith("/api/v1/var/matrix"):
             return MATRIX
-        if path == "/api/v1/compute/sandboxes":
-            return {"id": "sbx-1"}
-        if path.startswith("/api/v1/compute/var-whatif"):
-            return {"state": "ready", "requestId": "req-1", "result": {"BEFORE_VAR": 10, "AFTER_VAR": 12, "CHANGE_VAR": 2}}
+        if path.startswith("/api/v1/var/what-if"):
+            return {"businessDate": "2026-09-30", "currency": "USD", "before": {"var": 10}, "after": {"var": 12}, "change": {"var": 2},
+                    "items": [{"label": "new swap", "standaloneVar": 3, "incrementalVar": 2, "componentVar": 2}]}
         return {"ok": True}
 
 
@@ -178,8 +177,8 @@ class VarCli(unittest.TestCase):
         self.assertEqual(self.query()[0:3], ("POST", "/api/v1/var/captures", {"ccy": "EUR"}))
         run("official", "--ccy", "EUR")
         self.assertEqual(self.query()[0:3], ("GET", "/api/v1/var/official", {"ccy": "EUR"}))
-        run("whatif", "DESK:RATES", "--ccy", "EUR", "--stress-window", "0")
-        self.assertEqual(FakeApi.calls[-1][2]["params"], {"stress-window": 0, "ccy": "EUR"})
+        run("whatif", "DESK:RATES", "--ccy", "EUR", "--copy", "MX-1=-1")
+        self.assertEqual(FakeApi.calls[-1][2], {"scope": "DESK:RATES", "items": [{"copyOf": "MX-1", "factor": -1.0}], "ccy": "EUR"})
         out = []
         V.render_headline({**HEAD, "currency": "EUR", "provenance": {**HEAD["provenance"], "fx": {
             "reporting": "EUR", "crosses": "through USD", "rates": {"EUR": {"source": "supplied", "base": 1.174, "reporting": True}}}}}, out.append)
@@ -266,17 +265,21 @@ class VarCli(unittest.TestCase):
         self.assertEqual(csv[:3], ["scenario,2026-09-29,2026-09-30", "2026-08-31,,-1000", "2026-09-01,,200"])   # a gap is empty, not 0
         self.assertIn("gap,DRS-5203 refused,", csv)
 
-    def test_a_whatif_makes_a_sandbox_of_the_trades_and_asks_the_python_engine(self):
+    def test_a_whatif_posts_copies_and_priced_trades_to_the_servers_engine(self):
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "trades.json"
             f.write_text(json.dumps([{"LABEL": "new swap", "PNL": [1.0, -2.0], "FACTOR": 1}]), encoding="utf-8")
-            self.assertEqual(run("whatif", "DESK:RATES", "--trades", str(f), "--stress-window", "0"), 0)
-            self.assertEqual(FakeApi.calls[0][1], "/api/v1/compute/sandboxes")
-            self.assertEqual(FakeApi.calls[0][2]["connector"], "var-whatif")
-            self.assertEqual(FakeApi.calls[1][2], {"id": "DESK:RATES", "params": {"stress-window": 0, "sandbox": "sbx-1"}, "wait": 10000})
+            self.assertEqual(run("whatif", "DESK:RATES", "--trades", str(f), "--copy", "BOOK:BOOK-RATES-3=-0.5", "--date", "2026-09-30"), 0)
+            self.assertEqual(self.query()[0:3], ("POST", "/api/v1/var/what-if", {"asOf": "2026-09-30"}))
+            self.assertEqual(FakeApi.calls[-1][2], {"scope": "DESK:RATES", "items": [
+                {"copyOf": "BOOK:BOOK-RATES-3", "factor": -0.5}, {"label": "new swap", "factor": 1, "pnl": [1.0, -2.0]}]})
             f.write_text(json.dumps([{"LABEL": "no vector"}]), encoding="utf-8")
             with self.assertRaises(Err):
                 run("whatif", "DESK:RATES", "--trades", str(f))
+            with self.assertRaises(Err):
+                run("whatif", "DESK:RATES")
+            with self.assertRaises(Err):
+                run("whatif", "DESK:RATES", "--copy", "MX-1=half")
 
 
     def test_explain_asks_its_paths_and_prints_the_waterfall_as_aligned_lines(self):

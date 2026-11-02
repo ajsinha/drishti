@@ -45,7 +45,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 ### Value at risk: the VaR engine
 
-The pack's VaR is computed, never stored: the server adds up one P&L vector per live trade (`pnl-vector`, 509 historical scenario days) for any set of trades you name, from the bank down to a trade, with ES, component, incremental and marginal VaR, history and backtests. `VAR BANK <GO>`, `VAR DESK DESK-RATES <GO>` and `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; portfolios (`PORT`) are definitions whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an ordinary kind (`var-result`) and `VWIF <scope> <GO>` a what-if (`var-whatif`, the Python engine). Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.
+The pack's VaR is computed, never stored: the server adds up one P&L vector per live trade (`pnl-vector`, 509 historical scenario days) for any set of trades you name, from the bank down to a trade, with ES, component, incremental and marginal VaR, history and backtests. `VAR BANK <GO>`, `VAR DESK DESK-RATES <GO>` and `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; portfolios (`PORT`) are definitions whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an ordinary kind (`var-result`); the explorer's basket tray asks the same engine for a pre-deal what-if. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.
 
 The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the memory tiers and sizing, entitlements, the CLI and the API; tutorial 25 (`docs/tutorials/25-var-from-the-bank-to-a-trade.md`) walks through it on the test data; the data contract is its Part II.
 
@@ -131,7 +131,6 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `SENS` | `position-sensitivity` | input | `SENSITIVITY_ID` | One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. | 38 |
 | `RFAC` | `risk-factor` | fundamental | `RISK_FACTOR` | One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. | 27 |
 | `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 29 |
-| `VWIF` | `var-whatif` | computed | — | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. | 20 |
 | `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 31 |
 | `SSPNL` | `stress-scenario-pnl` | computed | `SCENARIO_ID` | One record per SCENARIO_ID of the stress-result records, computed when asked. | 17 |
 
@@ -845,43 +844,6 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 - No stored key: an answer's id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.
 - Computed as the viewer with the explorer's entitlements (VAR_GUIDE.md section 9); cached per view signature, data version and scope.
 
-### VWIF: VaR what-if (computed, Python) (`var-whatif`)
-
-A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored.
-
-**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `var-whatif` (plugin `reactive`).
-
-**Grain:** One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. **Contract:** `contracts/var-whatif.contract.yaml` ([full contract page](../../../../docs/contracts/packs/market-risk.md#vwif-var-what-if-computed-python-var-whatif)).
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `SCOPE` | text |  | required |  |  |  | The base scope (the id), e.g. DESK:RATES - TRD:X to take a trade out exactly. |
-| `CANONICAL` | text |  | required |  |  |  | The base scope in its canonical form. |
-| `BUSINESS_DATE` | date |  | required |  |  |  | The business date answered (YYYY-MM-DD). |
-| `CURRENCY` | text |  | required |  | `USD` |  | The reporting currency of every amount: the parameter ccy, USD by default; the scope's var-result is read in it. |
-| `ITEMS` | integer |  | required |  |  |  | The hypothetical trades of the sandbox (0 without one). |
-| `BEFORE_VAR` | amount |  | required | CURRENCY |  |  | The scope's VaR before the hypothetical trades. |
-| `AFTER_VAR` | amount |  | required | CURRENCY |  |  | The scope's VaR with the hypothetical trades added. |
-| `CHANGE_VAR` | amount |  | required | CURRENCY |  |  | AFTER_VAR minus BEFORE_VAR. |
-| `BEFORE_ES` | amount |  | required | CURRENCY |  |  | The scope's expected shortfall before the hypothetical trades. |
-| `AFTER_ES` | amount |  | required | CURRENCY |  |  | The scope's expected shortfall with the hypothetical trades added. |
-| `CHANGE_ES` | amount |  | required | CURRENCY |  |  | AFTER_ES minus BEFORE_ES. |
-| `LIMIT` | amount |  | optional | CURRENCY |  |  | The base scope's VaR limit; null when it has none. |
-| `LIMIT_USE_BEFORE` | rate |  | optional |  |  |  | BEFORE_VAR / LIMIT, as a fraction; null without a limit. |
-| `LIMIT_USE_AFTER` | rate |  | optional |  |  |  | AFTER_VAR / LIMIT, as a fraction; null without a limit. |
-| `CONFIDENCE` | rate |  | required |  |  |  | The base's VaR confidence level, as a fraction. |
-| `ES_CONFIDENCE` | rate |  | required |  |  |  | The base's expected shortfall confidence level, as a fraction. |
-| `STRESS_WINDOW` | integer |  | required |  |  |  | Scenario days of the stressed window (0 when not asked). |
-| `STRESSED_VAR_BEFORE` | amount |  | optional | CURRENCY |  |  | The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if. |
-| `STRESSED_VAR_AFTER` | amount |  | optional | CURRENCY |  |  | The largest VaR, after the trades, over every run of STRESS_WINDOW consecutive scenario days; null when the stress window is 0. |
-| `STRESSED_FROM` | integer |  | optional |  |  |  | The index of the stressed window's first scenario day. |
-
-**Links:** `SCOPE` → `var-result`.
-
-- No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, stress-window, component-window).
-- The hypothetical trades' vectors are supplied in the sandbox (one P&L per scenario day, priced elsewhere); taking trades out is the scope's own algebra. Pricing through QLRisk is parked until its API is stable.
-- The tables items (each trade's standalone, incremental in order and alone, component VaR and ES) and pnl (DAY, BEFORE, AFTER) come with the answer.
-
 ### VOFF: VaR official results (published) (`var-official`)
 
 The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input.
@@ -992,7 +954,6 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `SENS` | `position-sensitivity` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/position-sensitivity/` → `lake demo` → connector `risk-store` |
 | `RFAC` | `risk-factor` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/market-risk/risk-factor/` → `lake demo` → connector `risk-store` |
 | `VRES` | `var-result` | computed by Drishti: the reactive connector var-engine (java engine com.ash.drishti.server.var.VarResultEngine); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
-| `VWIF` | `var-whatif` | computed by Drishti: the reactive connector var-whatif (python engine drishti_compute.var.whatif:VarWhatIfEngine, pool var); see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `VOFF` | `var-official` | computed by Drishti: the official end-of-day capture (VarOfficial), appended by VarPublisher to risk-results/var-official; see the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/var-official/` |
 | `SSPNL` | `stress-scenario-pnl` | computed by Drishti: the derived connector mr-derived over the kind stress-result | nothing to load: computed from its inputs when asked |
 

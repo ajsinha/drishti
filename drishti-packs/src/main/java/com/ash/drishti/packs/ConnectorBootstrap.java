@@ -128,8 +128,44 @@ public final class ConnectorBootstrap {
                             + "); the pack's template for '" + name + "' is used as it stands");
                 }
             }
+            retire(packs, files, templates, messages);
         }
         return new Result(generated, migrated, messages, regenerated, changed);
+    }
+
+    private static final java.util.regex.Pattern GENERATED_BY = java.util.regex.Pattern.compile(
+            "^# Generated at first start from the connector template of pack '([^']+)'");
+
+    /**
+     * A file Drishti generated from a loaded pack's template and nobody edited since, whose pack no longer has that template (a
+     * connector the pack retired: {@code var-whatif} when the VaR what-if moved into the server's engine): removed, its text kept beside
+     * it ({@code <name>.yaml.retired-<time>.bak}) and in the history. An edited file is kept; Template updates lists its kinds as
+     * obsolete. A file of a pack that is not loaded is never touched.
+     */
+    private static void retire(List<Pack> packs, ConnectorFiles files, Map<String, Map<String, Object>> templates, List<String> messages) {
+        java.util.Set<String> loaded = new java.util.HashSet<>();
+        packs.forEach(p -> loaded.add(p.name()));
+        for (String name : files.names()) {
+            if (templates.containsKey(name)) {
+                continue;
+            }
+            String text = files.text(name);
+            java.util.regex.Matcher m = text == null ? null : GENERATED_BY.matcher(text);
+            if (m == null || !m.find() || !loaded.contains(m.group(1))) {
+                continue;                                                // the site's own file, or a pack not loaded here
+            }
+            ConnectorFiles.Marker mk = files.marker(name);
+            boolean pristine = TemplateStamp.of(text).isPresent() ? TemplateStamp.pristine(text)
+                    : mk != null && ConnectorFiles.etag(text).equals(mk.fileEtag());
+            if (!pristine) {
+                continue;
+            }
+            Path kept = files.keepBeside(name, "retired");
+            if (files.delete(name)) {
+                messages.add("connector file " + name + ".yaml removed: pack '" + m.group(1) + "' no longer has its template and the file had "
+                        + "never been edited" + (kept == null ? "" : " (kept as " + kept.getFileName() + " and in the history)"));
+            }
+        }
     }
 
     /**

@@ -90,7 +90,7 @@ Why a bank cares:
 | <a id="term-hypothetical-p-l"></a>**Hypothetical P&L** | The P&L the day's positions would have made had they been held unchanged through the next day's market move. The backtest compares it with VaR. | `drishti.py var history BANK` |
 | <a id="term-capture"></a>**Capture** | A frozen copy of a scope's answer (figures, members, vector, provenance), kept so you can compare it with now or with another capture. | `drishti.py var captures` |
 | <a id="term-official-var"></a>**Official VaR** | The end-of-day VaR and ES of every hierarchy node, captured and published once a day as the record of the date (kind var-official). | `VOFF MGMT~DESK-RATES <GO>` · `drishti.py var official` |
-| <a id="term-var-what-if"></a>**VaR what-if** | The VaR of a scope with trades added or removed before they are dealt, computed by the Python engine (kind var-whatif). | `drishti.py var whatif` |
+| <a id="term-var-what-if"></a>**VaR what-if** | The VaR of a scope with trades added or removed before they are dealt, computed by the server's VaR engine on request (POST /api/v1/var/what-if). | `drishti.py var whatif` |
 | <a id="term-stress-test"></a>**Stress test** | The P&L of a desk under a named shock, historical (COVID-19 March 2020) or hypothetical, against a stress limit. Stored results from the upstream risk engine. | `STR STR-COVID2020-COMM <GO>` |
 | <a id="term-frtb"></a>**FRTB** (Fundamental Review of the Trading Book) | Basel's market-risk capital rules. Drishti stores the standardised approach's delta, vega and curvature charges per book from an upstream engine; it does not compute them. | `FRTB FRTB-COMM-1 <GO>` |
 | <a id="term-sensitivity"></a>**Sensitivity** | How much a value changes for a small move in one risk factor: delta for the price or rate, vega for volatility, curvature for what delta misses. | `FRTB FRTB-COMM-1 <GO>` |
@@ -119,7 +119,7 @@ portfolio     PORT PF-<name>       HIERARCHY (a node), RULE (a condition on posi
 any scope text  (BANK, LE:LE-NY, DESK:RATES, PORT:PF-USD-RATES, CPTY:CP-ALDERSHOT, WHERE:<rule>, + - &)
    └─► var-result    VRES <scope>     computed when asked: VaR, ES, parts, path, backtest (never stored)
    └─► var-official  VOFF <node>      the official VaR and ES of every node, published once a day
-   └─► var-whatif    VWIF             the Python engine's what-if with trades added or removed
+   └─► what-if       (VAR basket)     the server's what-if with trades added or removed, asked from the basket tray
 
 stored results from upstream engines (fundamental, not computed by Drishti):
    stress-scenario SCN SCN-<name> ──► stress-result STR STR-<scenario>-<desk>      (a desk's P&L under the shock)

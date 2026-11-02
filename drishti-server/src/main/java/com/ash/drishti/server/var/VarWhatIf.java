@@ -34,6 +34,7 @@ import java.util.Map;
  *
  * <pre>
  *   POST /api/v1/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}], "ccy": "EUR"}
+ *   POST /api/v1/var/what-if {"scope": "DESK:RATES", "items": [{"copyOf": "BOOK:BOOK-RATES-3", "factor": -0.5, "label": "hedge"}]}
  * </pre>
  */
 final class VarWhatIf {
@@ -76,22 +77,43 @@ final class VarWhatIf {
         return out;
     }
 
-    /** One hypothetical trade: a booked trade's vector (read as the person) times the factor, with its label. */
+    /**
+     * One hypothetical trade times its factor, with its label: a copy of a booked trade's vector ({@code copyOf}: a trade id, or any
+     * scope such as {@code BOOK:BOOK-RATES-3} for a hedge shaped like a book; read as the person), or a vector priced elsewhere
+     * ({@code pnl}: one P&amp;L per scenario day, in the answer's reporting currency).
+     */
     private VarWhatIfMath.Item item(Principal p, Map<String, Object> it, VarService.Scoped base) {
         String from = it.get("copyOf") == null ? "" : String.valueOf(it.get("copyOf")).trim();
-        if (from.isEmpty()) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if item is a copy of a booked trade: {\"copyOf\": \"MX-30000121\", \"factor\": 1}");
+        boolean priced = it.get("pnl") instanceof List<?>;
+        if (from.isEmpty() && !priced) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if item is a copy of a booked trade, {\"copyOf\": \"MX-30000121\", \"factor\": 1}, "
+                    + "or a P&L priced elsewhere, {\"label\": \"new swap\", \"pnl\": [one per scenario day], \"factor\": 1}");
         }
         double f = it.get("factor") instanceof Number n ? n.doubleValue() : it.get("factor") == null ? 1.0 : parse(it.get("factor"));
         if (!Double.isFinite(f)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "a what-if factor is a finite number (-1: the unwind), not " + it.get("factor"));
         }
-        VarService.Scoped t = svc.scoped(p, "TRD:" + from, base.date().date(), base.date().currency());
-        if (t.set().isEmpty()) {
-            List<String> n = new VarSelection(svc).notices(t);
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, n.isEmpty() ? "TRD:" + from + " has no P&L vector on " + base.date().date() : n.get(0));
+        double[] v;
+        if (priced) {
+            List<?> l = (List<?>) it.get("pnl");
+            v = new double[l.size()];
+            for (int i = 0; i < v.length; i++) {
+                v[i] = l.get(i) instanceof Number n ? n.doubleValue() : Double.NaN;
+                if (!Double.isFinite(v[i])) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "what-if item " + (it.get("label") == null ? "" : it.get("label") + " ")
+                            + "has a P&L that is not a number on scenario day " + (i + 1));
+                }
+            }
+            from = it.get("label") == null ? "a trade priced elsewhere" : String.valueOf(it.get("label"));
+        } else {
+            String text = from.contains(":") ? from : "TRD:" + from;
+            VarService.Scoped t = svc.scoped(p, text, base.date().date(), base.date().currency());
+            if (t.set().isEmpty()) {
+                List<String> n = new VarSelection(svc).notices(t);
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, n.isEmpty() ? text + " has no P&L vector on " + base.date().date() : n.get(0));
+            }
+            v = t.vector().clone();
         }
-        double[] v = t.vector().clone();
         for (int i = 0; i < v.length; i++) {
             v[i] *= f;
         }

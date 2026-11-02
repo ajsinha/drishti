@@ -147,7 +147,7 @@ def overview(name: str, docs: dict) -> str:
                   "VaR, history and backtests. `VAR BANK <GO>`, `VAR DESK DESK-RATES <GO>` and `VAR SCOPE DESK:DESK-RATES - TRD:MX-30000121 <GO>` "
                   "open the explorer (F1 there opens the VaR guide); positions (`POS`) are derived by the pack's `positions:` rules; portfolios "
                   "(`PORT`) are definitions whose figures are computed as their page opens; `VRES <scope> <GO>` reads a scope's VaR as an "
-                  "ordinary kind (`var-result`) and `VWIF <scope> <GO>` a what-if (`var-whatif`, the Python engine). Each loaded date lives in a "
+                  "ordinary kind (`var-result`); the explorer's basket tray asks the same engine for a pre-deal what-if. Each loaded date lives in a "
                   "memory-mapped hot file under the data folder (`drishti.var.tier`). From the command line: `drishti.py var show 'DESK:RATES'`.", "",
                   "The VaR guide (`docs/guides/VAR_GUIDE.md`) explains every number with worked examples, the data flow, the scope grammar, the "
                   "memory tiers and sizing, entitlements, the CLI and the API; tutorial 25 (`docs/tutorials/25-var-from-the-bank-to-a-trade.md`) walks through "

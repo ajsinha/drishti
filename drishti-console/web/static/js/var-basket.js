@@ -22,8 +22,8 @@
    type, id, name, trade count and standalone VaR; arrow keys and Enter pick, a leading "-" takes away); "+ Rule" adds a WHERE:
    condition; each chip is + or −. As you pick, the engine computes the selection (a trade in two chips counts once): its VaR and ES,
    its trades, the sum of the parts' standalone VaRs and the diversification; a chip that matches nothing is flagged at once. "+ What-if
-   trade" adds a copy of a booked trade, scaled by a factor (−1: its unwind), and shows the VaR and ES before and after (the Python VaR
-   engine, /api/var/what-if; when it is off the tray says so). Save keeps it as a basket (private, or shared read-only) and opens
+   trade" adds a copy of a booked trade, scaled by a factor (−1: its unwind), and shows the VaR and ES before and after (the server's VaR
+   engine, /api/var/what-if: no compute workers needed). Save keeps it as a basket (private, or shared read-only) and opens
    VAR SCOPE BASKET:<owner>/<name>; opening a saved basket loads its parts back into the tray. The tray survives a reload (this browser). */
 (function () {
   "use strict";

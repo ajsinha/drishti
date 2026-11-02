@@ -141,7 +141,6 @@ generators:
 # The guide that explains each engine (by the connector named in a computed kind's contract).
 engines:
   var-engine: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md)"
-  var-whatif: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md)"
   var-results: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (official results)"
   var-positions: "the [VaR guide](../../../../docs/guides/VAR_GUIDE.md) (positions)"
   exposure-engine: "the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md)"

@@ -157,7 +157,7 @@ class EditionTwoLensesServerTest {
         assertThat(functions(cy, "risk")).contains("VRES", "FX").doesNotContain("CRV", "IRV", "ECON");
         settings(cy, "{\"lens\":\"trading\"}");                                                              // the fourth lens
         assertThat(ok(get("/api/v1/me/settings").header("Authorization", bearer(cy))).path("lens").asText()).isEqualTo("trading");
-        assertThat(functions(cy, "trading")).contains("TRD", "VWIF", "XWIF", "CRV", "TVAL").doesNotContain("ECON", "SCN", "COLL", "FRTB", "IRV");
+        assertThat(functions(cy, "trading")).contains("TRD", "XWIF", "CRV", "TVAL").doesNotContain("ECON", "SCN", "COLL", "FRTB", "IRV");
         assertThat(answer(cy, "trading", "SCN SCN-2008")).contains("DRS-4023");
         settings(cy, "{\"lens\":\"market\"}");
         assertThat(ok(get("/api/v1/me/settings").header("Authorization", bearer(cy))).path("lens").asText()).isEqualTo("market");

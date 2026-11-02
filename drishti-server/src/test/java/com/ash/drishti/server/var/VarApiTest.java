@@ -634,6 +634,21 @@ class VarApiTest {
         assertThat(w.at("/items/0/componentVar").asLong()).isEqualTo(600);
         assertThat(w.get("engine").asText()).contains("Java");
         assertThat(w.get("confidence").asDouble()).isEqualTo(0.99);
+        // a copy of any scope (DESK-Y is 50V: the bank 40U + 60V without it is DESK-X again), and a P&L priced elsewhere: the same
+        StringBuilder minus50v = new StringBuilder();
+        for (double x : VarLakeFixture.V) {
+            minus50v.append(minus50v.isEmpty() ? "" : ",").append(-50 * x);
+        }
+        for (String item : new String[] {"{\"copyOf\": \"DESK:DESK-Y\", \"factor\": -1}", "{\"label\": \"priced\", \"pnl\": [" + minus50v + "]}"}) {
+            JsonNode b = json.readTree(mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita)
+                    .contentType(MediaType.APPLICATION_JSON).content("{\"scope\": \"BANK\", \"items\": [" + item + "]}"))
+                    .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+            assertThat(b.at("/before/var").asLong()).as(item).isEqualTo(540);
+            assertThat(b.at("/after/var").asLong()).as(item).isEqualTo(390);
+        }
+        mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"scope\": \"BANK\", \"items\": [{\"pnl\": [1, 2, 3]}]}"))
+                .andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value(containsString("has 3 scenario P&Ls; the scope has 20")));
         // a trade that is not live is refused in words
         mvc.perform(post("/api/v1/var/what-if").param("asOf", prev).header("Authorization", rita).contentType(MediaType.APPLICATION_JSON)
                 .content("{\"scope\": \"DESK:DESK-X\", \"items\": [{\"copyOf\": \"T6\", \"factor\": 1}]}"))

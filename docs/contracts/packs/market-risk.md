@@ -39,7 +39,6 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [SENS](#sens-position-sensitivities-position-sensitivity) | `position-sensitivity` | input | active | 28 | 1 |
 | [RFAC](#rfac-risk-factor-dictionary-risk-factor) | `risk-factor` | fundamental | active | 27 | 1 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 29 | 0 |
-| [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
 | [SSPNL](#sspnl-stress-pl-of-a-scenario-across-desks-derived-from-the-stress-results-stress-scenario-pnl) | `stress-scenario-pnl` | computed | active | 11 | 0 |
 
@@ -1327,60 +1326,6 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 
 - No stored key: an answer's id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.
 - Computed as the viewer with the explorer's entitlements (VAR_GUIDE.md section 9); cached per view signature, data version and scope.
-
-## VWIF: VaR what-if (computed, Python) (`var-whatif`)
-
-A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored.
-
-|  |  |
-|---|---|
-| Contract | [var-whatif.contract.yaml](../../../config/packs/market-risk/contracts/var-whatif.contract.yaml) · version 1.0 |
-| Class | computed |
-| Status | active |
-| Source | computed by Drishti: the reactive connector var-whatif (python engine drishti_compute.var.whatif:VarWhatIfEngine, pool var) |
-| Grain | One answer per question (the scope, the sandbox and the parameters, the business date), computed when asked. |
-| Key | — |
-| Id pattern | — |
-| Dated by | `on request` |
-| Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger); never for a sandbox by a trigger) |
-| Storage | connector `var-whatif` (plugin `reactive`) |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `SCOPE` | text | required |  | The base scope (the id), e.g. DESK:RATES - TRD:X to take a trade out exactly. |  |  |
-| `CANONICAL` | text | required |  | The base scope in its canonical form. |  |  |
-| `BUSINESS_DATE` | date | required |  | The business date answered (YYYY-MM-DD). |  |  |
-| `CURRENCY` | text | required |  | The reporting currency of every amount: the parameter ccy, USD by default; the scope's var-result is read in it. | `USD` |  |
-| `ITEMS` | integer | required |  | The hypothetical trades of the sandbox (0 without one). |  |  |
-| `BEFORE_VAR` | amount | required | CURRENCY | The scope's VaR before the hypothetical trades. |  |  |
-| `AFTER_VAR` | amount | required | CURRENCY | The scope's VaR with the hypothetical trades added. |  |  |
-| `CHANGE_VAR` | amount | required | CURRENCY | AFTER_VAR minus BEFORE_VAR. |  |  |
-| `BEFORE_ES` | amount | required | CURRENCY | The scope's expected shortfall before the hypothetical trades. |  |  |
-| `AFTER_ES` | amount | required | CURRENCY | The scope's expected shortfall with the hypothetical trades added. |  |  |
-| `CHANGE_ES` | amount | required | CURRENCY | AFTER_ES minus BEFORE_ES. |  |  |
-| `LIMIT` | amount | optional | CURRENCY | The base scope's VaR limit; null when it has none. |  |  |
-| `LIMIT_USE_BEFORE` | rate | optional |  | BEFORE_VAR / LIMIT, as a fraction; null without a limit. |  |  |
-| `LIMIT_USE_AFTER` | rate | optional |  | AFTER_VAR / LIMIT, as a fraction; null without a limit. |  |  |
-| `CONFIDENCE` | rate | required |  | The base's VaR confidence level, as a fraction. |  |  |
-| `ES_CONFIDENCE` | rate | required |  | The base's expected shortfall confidence level, as a fraction. |  |  |
-| `STRESS_WINDOW` | integer | required |  | Scenario days of the stressed window (0 when not asked). |  |  |
-| `STRESSED_VAR_BEFORE` | amount | optional | CURRENCY | The largest VaR over every run of STRESS_WINDOW consecutive scenario days, before the what-if. |  |  |
-| `STRESSED_VAR_AFTER` | amount | optional | CURRENCY | The largest VaR, after the trades, over every run of STRESS_WINDOW consecutive scenario days; null when the stress window is 0. |  |  |
-| `STRESSED_FROM` | integer | optional |  | The index of the stressed window's first scenario day. |  |  |
-
-**Links:** `SCOPE` → `var-result`.
-
-**Validation**
-
-- required: fields `BEFORE_VAR`, `AFTER_VAR`
-
-**Notes**
-
-- No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, stress-window, component-window).
-- The hypothetical trades' vectors are supplied in the sandbox (one P&L per scenario day, priced elsewhere); taking trades out is the scope's own algebra. Pricing through QLRisk is parked until its API is stable.
-- The tables items (each trade's standalone, incremental in order and alone, component VaR and ES) and pnl (DAY, BEFORE, AFTER) come with the answer.
 
 ## VOFF: VaR official results (published) (`var-official`)
 

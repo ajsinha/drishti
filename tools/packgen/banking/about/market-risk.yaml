@@ -416,16 +416,3 @@ kinds:
       LIMIT_USE: { term: "Limit use", means: "The VaR over the node's VaR limit." }
       EXCEPTIONS_250: { term: "Backtest exceptions", means: "Days in the official history (up to 250) whose loss exceeded the VaR of the day before." }
       TRAFFIC_LIGHT: { term: "Traffic light", means: "The Basel backtesting zone: green, amber or red." }
-  var-whatif:
-    title: VaR what-if
-    about: >-
-      ${$.CANONICAL} on ${$.BUSINESS_DATE}: VaR ${fmt($.BEFORE_VAR, 'compact')} USD before and ${fmt($.AFTER_VAR, 'compact')} USD after the
-      ${$.ITEMS} hypothetical trade(s) of your sandbox, computed by the Python VaR engine; the stressed window over
-      ${$.STRESS_WINDOW} scenario days.
-    guide: market-risk
-    glossary:
-      BEFORE_VAR: { term: "VaR before", means: "The scope's 1-day 99% VaR as booked.", unit: "USD" }
-      AFTER_VAR: { term: "VaR after", means: "The scope's VaR with the sandbox's hypothetical trades added.", unit: "USD" }
-      CHANGE_VAR: { term: "Change in VaR", means: "VaR after minus VaR before: what the trades do to the scope's VaR.", unit: "USD" }
-      STRESSED_VAR_BEFORE: { term: "Stressed VaR", means: "The largest VaR over every run of the stress window's consecutive scenario days.", unit: "USD" }
-      ITEMS: { term: "What-if trades", means: "The hypothetical trades of your private sandbox, each with its P&L over the scenarios." }

@@ -92,7 +92,7 @@ class EditionRiskServerTest {
     void hiddenCommandsAreLeftOutOfFuncAndTheTypeAhead() throws Exception {
         List<String> codes = new ArrayList<>();
         getJson("/api/v1/functions").path("packs").forEach(p -> p.path("commands").forEach(c -> codes.add(c.path("code").asText())));
-        assertThat(codes).contains("VRES", "VWIF", "VOFF", "PNLV", "HIER", "EXP", "NSET", "XWIF", "TRD", "CPTY", "FX")
+        assertThat(codes).contains("VRES", "VOFF", "PNLV", "HIER", "EXP", "NSET", "XWIF", "TRD", "CPTY", "FX")
                 .doesNotContain("FRTB", "STR", "PNL", "SCN", "TVAL", "CVA", "SACCR", "SIMM", "CRV", "FXV", "EQ");
         List<String> suggested = new ArrayList<>();
         getJson("/api/v1/command/suggest?q=FRT").forEach(s -> suggested.add(s.path("mnemonic").asText()));
