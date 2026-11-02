@@ -97,8 +97,34 @@ public class PivotConfiguration {
 
     @Bean
     public KindSources pivotKindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition,
-            PivotProperties props) {
-        return new KindSources(data, router, entitlements, edition, props);
+            PivotProperties props, ObjectProvider<com.ash.drishti.engine.search.SearchProperties> search) {
+        return new KindSources(data, router, entitlements, edition, props, search.getIfAvailable());
+    }
+
+    /** A panel's rows (a table or ladder whose Sutra says pivot:) as a source: the old Pivot tab's place, on the engine. */
+    @Bean
+    public PanelSources pivotPanelSources(com.ash.drishti.engine.ViewPipeline pipeline, Entitlements entitlements, PivotProperties props) {
+        return new PanelSources(pipeline, entitlements, props.stageKeep());
+    }
+
+    /** The Data view's tables and the panels' rows, one resolver for the tabular provider. */
+    static com.ash.drishti.bicompute.sql.TabularSource.Resolver both(KindSources kinds, PanelSources panels) {
+        return new com.ash.drishti.bicompute.sql.TabularSource.Resolver() {
+            @Override
+            public java.util.Map<String, String> sources(com.ash.drishti.bicompute.spi.Viewer v) {
+                return kinds.sources(v);
+            }
+
+            @Override
+            public boolean serves(String source) {
+                return panels.serves(source) || kinds.serves(source);
+            }
+
+            @Override
+            public com.ash.drishti.bicompute.sql.TabularSource open(com.ash.drishti.bicompute.spi.Viewer v, String source, String date) {
+                return panels.serves(source) ? panels.open(v, source, date) : kinds.open(v, source, date);
+            }
+        };
     }
 
     @Bean
@@ -107,7 +133,8 @@ public class PivotConfiguration {
     }
 
     @Bean
-    public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, States states, ObjectProvider<VarService> var,
+    public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, States states,
+            ObjectProvider<VarService> var,
             ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         List<PivotProvider> providers = new ArrayList<>();
         VarService v = var.getIfAvailable();
@@ -117,7 +144,7 @@ public class PivotConfiguration {
                 return r == null || !r.known("var") || r.running("var");
             }));
         }
-        providers.add(new TabularProvider(exec, kinds));
+        providers.add(new TabularProvider(exec, both(kinds, panels)));
         PivotCore core = new PivotCore(providers, states, props.core());
         AdmissionGate g = gate.getIfAvailable();
         if (g != null) {
@@ -132,10 +159,11 @@ public class PivotConfiguration {
      * tables are released.
      */
     @Bean
-    public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, DuckDbExecutor exec) {
+    public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, PanelSources panels, DuckDbExecutor exec) {
         return new com.ash.drishti.server.engines.BasicEngine("pivot").onStop(() -> {
             states.clear();
             kinds.release(exec);
+            panels.release(exec);
         }).memory(states::bytes);
     }
 

@@ -153,6 +153,7 @@ public final class PivotCore {
         m.put("functions", p.capabilities().builtIns() ? Functions.describe() : List.of());
         m.put("masked", c.masked());
         m.put("notes", c.notes());
+        m.put("defaultView", c.notes() == null ? null : c.notes().get("defaultView"));
         m.put("capabilities", p.capabilities());
         m.put("limits", Map.of("maxCells", settings.maxCells(), "maxHolisticCells", settings.maxHolisticCells(), "busyCells", settings.busyCells()));
         return m;

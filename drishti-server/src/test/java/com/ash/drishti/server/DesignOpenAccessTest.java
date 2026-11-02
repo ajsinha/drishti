@@ -43,7 +43,7 @@ import org.springframework.test.web.servlet.ResultActions;
  * Designing and trying are open to every signed-in user; saving, proposing and data access are not. A role that may open only
  * trades and netting sets (no author right, no right to {@code sample} or {@code curve}) can preview a pasted document and use
  * the Screen Builder, but not save, not preview a stored curve, and sees "no access" (and none of the curve's values) in every
- * panel whose {@code source} is a curve: in a stored view, in a stored and a pasted preview, and in the pivot tab's records.
+ * panel whose {@code source} is a curve: in a stored view, in a stored and a pasted preview, and in a pivot of the panel's rows.
  */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
@@ -199,12 +199,12 @@ class DesignOpenAccessTest {
     }
 
     @Test
-    void thePivotTabsRecordsAreRefusedForASourceTheUserMayNotOpen() throws Exception {
-        String path = "/api/v1/views/netting-set/NS-NORTH-01/panels/srctable/records";
-        mvc.perform(get(path).header("Authorization", as("dee", "designer"))).andExpect(status().isForbidden())
-                .andExpect(jsonPath("$.code").value("DRS-5002"));
-        assertThat(mvc.perform(get(path).header("Authorization", as("rita", "risk"))).andExpect(status().isOk()).andReturn().getResponse()
-                .getContentAsString()).contains("3.93");
+    void aPanelsPivotIsRefusedForASourceTheUserMayNotOpen() throws Exception {
+        String body = "{\"source\":\"panel/netting-set/srctable/NS-NORTH-01\",\"rows\":[\"tenor\"],\"values\":[\"sum(rate)\"]}";
+        mvc.perform(post("/api/v1/pivot/query").header("Authorization", as("dee", "designer")).contentType(MediaType.APPLICATION_JSON).content(body))
+                .andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("DRS-5002"));
+        assertThat(mvc.perform(post("/api/v1/pivot/query").header("Authorization", as("rita", "risk")).contentType(MediaType.APPLICATION_JSON)
+                .content(body)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString()).contains("3.93");
     }
 
     @Test

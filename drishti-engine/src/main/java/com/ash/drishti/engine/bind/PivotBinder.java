@@ -50,7 +50,8 @@ public final class PivotBinder {
      * @param total rows the panel has
      * @param truncated true when only the first {@code limit} rows are given
      */
-    public record Records(String panel, List<Map<String, Object>> fields, List<List<Object>> rows, int total, boolean truncated, int limit) {}
+    public record Records(String panel, List<Map<String, Object>> fields, List<List<Object>> rows, int total, boolean truncated, int limit,
+            Map<String, Object> arrangement) {}
 
     private final ElCompiler el;
     private final ReferenceCatalog catalog;
@@ -142,7 +143,7 @@ public final class PivotBinder {
             }
             fields.add(m);
         }
-        return new Records(p.id(), fields, out, total, total > limit, limit);
+        return new Records(p.id(), fields, out, total, total > limit, limit, spec.arrangementMap());
     }
 
     /** The field's own label, else that of the column bound to the same expression, else its name in words. */

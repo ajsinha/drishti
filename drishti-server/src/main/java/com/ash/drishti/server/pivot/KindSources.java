@@ -55,12 +55,15 @@ public final class KindSources implements TabularSource.Resolver {
     private final Entitlements entitlements;
     private final EditionCommands edition;
     private final PivotProperties props;
+    private final com.ash.drishti.engine.search.SearchProperties search;
     /** Staged table name to its row count, in least-recently-used order. */
     private final Map<String, Long> staged = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
     private volatile DuckDbExecutor exec;
 
-    public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props) {
+    public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props,
+            com.ash.drishti.engine.search.SearchProperties search) {
+        this.search = search;
         this.data = data;
         this.router = router;
         this.entitlements = entitlements;
@@ -311,6 +314,10 @@ public final class KindSources implements TabularSource.Resolver {
             m.put("pack", d.pack());
             m.put("masks", masked == 0 ? "none" : masked + " column(s) masked for you: not read, not usable");
             m.put("rowRules", "the Data view's: you see the rows of " + d.kind() + " your role may open");
+            Map<String, Object> dv = defaultView(d.kind(), date());
+            if (dv != null) {
+                m.put("defaultView", dv);
+            }
             return m;
         }
 
@@ -401,6 +408,18 @@ public final class KindSources implements TabularSource.Resolver {
             } catch (RuntimeException ex) {
                 // already gone
             }
+        }
+    }
+
+    /** The view a kind opens with: its pack's {@code pivot:} arrangement (what the search results' Pivot offered), or null. */
+    Map<String, Object> defaultView(String kind, String date) {
+        if (search == null) {
+            return null;
+        }
+        try {
+            return search.pivotOf(kind).map(spec -> SpecViews.view(kind, date, spec.arrangementMap())).orElse(null);
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 
