@@ -813,7 +813,7 @@ drishti:
       currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
       jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/
   frtb:                              # position sensitivities and FRTB-SA, computed for any scope (docs/guides/FRTB_SA_GUIDE.md section 9)
-    enabled: ${DRISHTI_FRTB_ENABLED:true}
+    enabled: ${DRISHTI_FRTB_ENABLED:true}   # the FRTB-SA engine, its API, FRSA and PLAY FRTB; off: every request answers it is switched off
     parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/market-risk/capital}   # frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/)
     sensitivity-kind: position-sensitivity   # the position sensitivities (SENS)
     factor-kind: risk-factor         # the factor dictionary (RFAC)

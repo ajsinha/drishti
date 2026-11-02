@@ -2104,6 +2104,12 @@ and the fix for the codes that need more than the meaning.
 | DRS-5216 | 409 | var shard stale | VaR sharding: a partial sum or a shard's skeleton was asked for another data version or shard map than the owner holds (a load landed between two members, or the members read different lakes). The asking member tries the next owner, and when all refuse it reads the date again: ask again in a moment. Persistent: check every member reads the same tables (`drishti.py var shards` shows the maps) |
 | DRS-5217 | 422 | var not shardable | VaR sharding: the date cannot be put together from its shards because its data does not cut along the shard key: a book under two legal entities or desks that fall in two shards, or (with a hierarchy built from columns) one position id under two shards. Correct the trades' hierarchy columns upstream, shard by `[LEGAL_ENTITY]` only, or switch sharding off; one server answers the date |
 | DRS-5218 | 503 | disk guard | a hot file, shard book or currency's book was not built because the disk would fall under the free-space guard (`drishti.disk.min-free-percent` 10, `min-free-gb` 20) even after every folder freed down to 90% of its cap; nothing was written, a date already open keeps answering; the message gives what is free, what was needed and the guard ([RESOURCES_AND_SCALE.md 7.2](../architecture/RESOURCES_AND_SCALE.md#72-proposal-hot-files-bounded-by-size-and-the-free-space-guard-o5)) |
+| DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
+| DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
+| DRS-5324 | 422 | sensitivity without FX | an element's (or a default-risk or residual-risk row's) currency has no FX rate on the date: refused and counted |
+| DRS-5325 | 422 | sensitivity twice | a record carries the same factor and measure twice: the record is refused and counted |
+| DRS-5326 | 422 | sensitivity run twice | a source already delivered the full run of the date: the second batch is refused (send a restatement) |
+| DRS-5329 | 502 | FRTB-SA parameters refused | a parameter file (`frtb-sa-sbm.yaml`, `frtb-sa-drc-rrao.yaml`) is missing, incomplete or out of range: every FRTB-SA request answers with the file, the key and the reason; the server itself runs |
 | DRS-9201 | 503 | Compute off | compute is off on this server (HTTP 503): `compute.enabled` in `config/compute/compute.yaml` ([OPERATIONS.md](../admin/OPERATIONS.md#1-switch-it-on)) |
 | DRS-9202 | 409 | Compute refused | a compute request or decision refused before any work (HTTP 409): an unknown pool, requirements waiting for approval or rejected, an environment approved but not built, or four eyes (the person who asked cannot approve); the message says which ([OPERATIONS.md › Compute workers, section 10](../admin/OPERATIONS.md#10-when-something-is-wrong)) |
 | DRS-9203 | 429 | Compute busy | The pool's queue for the request's class is full |
@@ -3201,6 +3207,30 @@ The official captures are also appended to `${DRISHTI_DELTA_ROOT}/risk-results/v
 result version) for other systems; no engine reads that folder. The positions the engine derives are served as the `position` kind
 (`GET /api/v1/views/position/<id>`, the `var-positions` connector), and the position, portfolio and desk pages carry the engine's
 figures under `VAR_ENGINE`, computed as the page opens.
+
+## Sensitivities and FRTB-SA: `/api/v1/sensitivities`, `/api/v1/risk-factors`, `/api/v1/frtb`
+
+The FRTB standardised approach computed for any VaR scope from the position sensitivities, as the caller (the guide and the data contract
+in short: [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md), section 9). Every FRTB endpoint takes `scope`, `ccy`, `asOf`, the method switches
+(`curvatureSource`, `girrCurvatureShock`, `fxCurvatureDivisor`, `girrCorrelation`, `scenario`) and `override=path=value` (repeatable;
+the answer is then *not the regulatory figure*); `scope=EXAMPLE` runs the design's hand-built cases.
+
+| Endpoint | What |
+|---|---|
+| `GET /api/v1/sensitivities?scope=…&by=RISK_FACTOR` | a scope's sensitivities summed by `RISK_FACTOR`, `BUCKET`, `RISK_CLASS`, `TENOR`, `MEASURE` or a record attribute, in the reporting currency, with the load's refusals |
+| `GET /api/v1/risk-factors?q=…&limit=` | the factor dictionary of the date (name, class, type, FRTB and SIMM buckets, source names), its version and the load's refusals |
+| `GET /api/v1/frtb/sa?scope=…` | SBM per class, measure and scenario, the binding and reported scenario, DRC, RRAO (null with the reason when not computed), the total, the capital stack and the provenance (batches, dictionary, parameter files' SHA-256, choices, refusals) |
+| `GET /api/v1/frtb/sa/explain?scope=…&class=GIRR` | the steps: per class and measure the buckets with K_b and S_b per scenario (curvature: K±, the side), the factors with s, RW and its source, WS or CVR± |
+| `GET /api/v1/frtb/sa/contributions?scope=…&by=DESK` | contributions by an attribute (`POSITION` by id); `addsUp` says the sum equals the total |
+| `GET /api/v1/frtb/playground?scope=…&compare=girr-correlation=exact` | the capital answer with the Choices panel, the grid of WS and CVR rows with their formulas, the Explain steps, and with `compare` both runs and the difference per class with the bucket and the step where it arises, in words |
+| `GET /api/v1/frtb/playground.xlsx?scope=…` | the workbook of live formulas (Main, Config with the switch cells, Data, WS, Buckets, Classes, Curvature, DRC, RRAO, Explain, Provenance), every one-switch alternative's engine figure on Main; saves a recipe (`saveRecipe=false` not to); refused over `drishti.frtb.max-factors` |
+| `GET /api/v1/frtb/playground/template` | the same workbook on the hand-built cases |
+| `POST /api/v1/frtb/playground/recipes?scope=…` | saves the run as a recipe: `{id, knownAt, switches, overrides, parametersHash, inputsDigest, figures, command}` |
+| `GET /api/v1/frtb/playground/recipes/{id}` | replays a recipe: the answer, `recipe` (inputs and figures equal or the differences) and `reproduced` in words |
+
+Refusals: `400` for a bad switch value, an override naming no parameter or leaving its range, or a scope word the server cannot resolve;
+`403` for a role that sees the scope only in aggregate; `404 DRS-1002` when no connector serves `position-sensitivity`; `502 DRS-5329`
+when a parameter file is refused (the codes `DRS-5321` to `DRS-5326` count the load's refusals in each answer).
 
 ## Exposure engine: `/api/v1/exposure`
 

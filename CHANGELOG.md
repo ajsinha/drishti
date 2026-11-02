@@ -17,6 +17,22 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **FRTB-SA, computed for any scope (2.9.11 rows 1 and 2; [FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), tutorial 30).** Position
+  sensitivities (`SENS`) and the factor dictionary (`RFAC`) are kinds of the market-risk pack, served by risk-store and loaded by `lake
+  demo`; the server's Java engine computes the FRTB standardised approach from them: the sensitivities-based method (delta, vega and
+  curvature per risk class with the two curvature sides, the three correlation scenarios and the binding one, the alternative
+  specification), the default risk charge (from the `default-risk` input; *not computed* without it) and the residual risk add-on
+  (from the `residual-risk` input, or derived from the positions' product types and notionals), with Euler contributions that add up.
+  Parameters are the market-risk pack's `capital/frtb-sa-sbm.yaml` and `frtb-sa-drc-rrao.yaml` (MAR21.46's published GIRR table by
+  default), checked at start and hashed into every answer. `FRSA <scope>` opens the capital screen (the stack, the scenarios, the bucket
+  drill, the contributions); `PLAY FRTB <scope>` the playground: every method choice a switch, a switch compared side by side with the
+  difference explained by step, the workbook of live formulas with the switches as Config cells (recalculated by LibreOffice in the tests
+  and equal to the engine to the cent, with the defaults and each switch flipped), and recipes replayed to the cent (`PLAY FRTB RUN <id>`).
+  API `/api/v1/sensitivities`, `/api/v1/risk-factors`, `/api/v1/frtb/...`; CLI `drishti.py sens`, `frtb`, `play frtb`; settings
+  `drishti.frtb.*`. The factor names give GIRR curvature per currency (`IR/CURVE/<ccy>`) and commodity curvature per commodity
+  (`CM/PRICE/<commodity>`), with the cross-currency basis and inflation without a tenor; vega horizons follow MAR21.92. Planned
+  contracts `default-risk` (DRCI) and `residual-risk` (RRAI); the capital-input regime `BCBS-MAR`. Refusal codes `DRS-5321` to `DRS-5329`.
+
 - **One competitive analysis.** The older comparison page (`/about/competitive`, from `drishti-console/config/competitive.yaml`: product categories, no vendors) is retired; its address leads to the Help guide *Competitive analysis* (`docs/strategy/COMPETITIVE_ANALYSIS.md`, vendor by vendor, administrators only). Administrators reach it from the Help menu, the Help centre and About; the footer link is gone; `competitive.yaml` and its CONFIGURATION entry removed.
 - **Why it moved follows the active theme.** The VaR page's *Why it moved* view drew in the renderer library's own default palette (parchment whenever the computer was in light mode) instead of the theme picked in the console; it now takes the active theme and follows a switch at once.
 - **Construct your basket opens only when asked** (the link, Alt+B or + basket), never by itself when a basket kept in the browser or a saved basket opens.

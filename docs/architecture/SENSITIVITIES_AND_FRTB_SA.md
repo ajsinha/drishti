@@ -15,8 +15,10 @@
 -->
 # Sensitivities and market-risk capital: position sensitivities, the factor dictionary, FRTB-SA and SIMM
 
-Status: design, not built. The data contracts are written (`status: planned`) and the demo data is generated; the engines, screens and
-playgrounds below are the design to build. Companion to [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) (sections 7.9, 7.10 and 8.3),
+Status: built for position sensitivities (SENS), the factor dictionary (RFAC) and FRTB-SA (SBM, DRC, RRAO) with the capital screen
+(FRSA), the FRTB-SA Playground (PLAY FRTB) and its workbook ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)); design, not built, for SIMM
+and its playground (sections 8 and 12.2), the sensitivity-VaR consistency check (section 2.4), the bank's limit grids (section 3.3) and the
+official FRTB-SA captures. Companion to [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) (sections 7.9, 7.10 and 8.3),
 [FRTB.md](../contracts/FRTB.md) and [SIMM.md](../contracts/SIMM.md) (the earlier contract designs this document narrows), and the
 [VaR Playground](VAR_PLAYGROUND.md) (the playground frame every metric here reuses).
 
@@ -156,8 +158,8 @@ record a position from Murex and Calypso and one a trade from Endur (a source th
 its trades by quantity), 8,052 records and 25,821 elements (rate, credit and inflation ladders split onto the two vertices around maturity, spot and price
 deltas, vegas at the option's expiry, curvature on options). The factor loadings and the one-sigma P&L of each position are the VaR demo's
 own factor model, so a desk's sensitivities and its VaR tell the same story; about one record in a hundred is `proxied`. The files are
-deterministic from the inputs and checked by `tools/packgen/sensitivity/test_sensitivity_data.py`. Until the kinds have a command they are
-not in `testdata.yaml` and `lake demo` does not load them.
+deterministic from the inputs and checked by `tools/packgen/sensitivity/test_sensitivity_data.py`. `lake demo` loads them into risk-store with the
+other risk kinds.
 
 ## 3. The factor dictionary and the naming standard
 
@@ -264,7 +266,7 @@ gives a different figure (hand-built case 9).
 ### 5.1 Delta, per risk class
 
 The method is section 4's for every class; what differs is the factor, the bucket, the risk weight and the correlation. Parameter tables are
-in [`capital-parameters/frtb-sa-sbm.yaml`](capital-parameters/frtb-sa-sbm.yaml), each value with its paragraph.
+in the market-risk pack's [`capital/frtb-sa-sbm.yaml`](../../config/packs/market-risk/capital/frtb-sa-sbm.yaml), each value with its paragraph.
 
 | Class | Factors and bucket | Risk weight | Within a bucket (ρ) | Across buckets (γ) |
 |---|---|---|---|---|
@@ -377,7 +379,7 @@ portfolio, the three scenarios are compared at the desk (MAR21.7(2)(b)).
 Non-securitisations (MAR22), from per-obligor jump-to-default amounts. The inputs are the `default-risk` input of
 [FRTB.md section 3.3](../contracts/FRTB.md#33-default-risk-the-drc-inputs-optional) (obligor, seniority, notional, market value, credit
 quality), or, where the bank sends none, derived from the trade records and the issuer master. Parameters:
-[`capital-parameters/frtb-sa-drc-rrao.yaml`](capital-parameters/frtb-sa-drc-rrao.yaml).
+[`capital/frtb-sa-drc-rrao.yaml`](../../config/packs/market-risk/capital/frtb-sa-drc-rrao.yaml).
 
 1. **Gross jump-to-default per position** (MAR22.9 to MAR22.14): `JTD_long = max( LGD · notional + P&L, 0 )`,
    `JTD_short = min( LGD · notional + P&L, 0 )`, the notional positive for a long and negative for a short credit exposure (long means
@@ -505,7 +507,9 @@ and proxies counted), as the VaR answers do.
 
 ## 11. API, command line and screens
 
-All planned; the names follow the VaR API and are fixed at build.
+Built for sensitivities and FRTB-SA (the commands `FRSA <scope>`, `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`, and `drishti.py sens`,
+`frtb`, `play frtb`; [FRTB_SA_GUIDE.md section 9](../guides/FRTB_SA_GUIDE.md#9-api-command-line-and-settings)); SIMM and the official
+captures are design.
 
 | What | API | Command (terminal) | CLI |
 |---|---|---|---|
@@ -514,9 +518,9 @@ All planned; the names follow the VaR API and are fixed at build.
 | FRTB-SA of a scope (SBM by class and scenario, DRC, RRAO) | `GET /api/v1/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa` |
 | Its steps (buckets, WS, K, S, scenario) | `GET /api/v1/frtb/sa/explain?scope=…&class=…` | in `FRSA` | `drishti.py frtb explain` |
 | Contributions | `GET /api/v1/frtb/sa/contributions?scope=…&by=DESK` | in `FRSA` | `drishti.py frtb contributions` |
-| SIMM of a netting set or scope | `GET /api/v1/simm?nettingSet=…&regime=…` | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` |
-| The playgrounds | `/api/v1/frtb/playground`, `/api/v1/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY SIMM <netting set>` | `drishti.py play frtb`, `drishti.py play simm` |
-| Official captures | the official run captures FRTB-SA per filer and date, as VaR | — | `drishti.py frtb capture` |
+| SIMM of a netting set or scope (planned) | `GET /api/v1/simm?nettingSet=…&regime=…` | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` (planned) |
+| The playgrounds | `/api/v1/frtb/playground`, `/api/v1/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`; `PLAY SIMM <netting set>` (planned) | `drishti.py play frtb`; `drishti.py play simm` (planned) |
+| Official captures (planned) | the official run captures FRTB-SA per filer and date, as VaR | — | `drishti.py frtb capture` (planned) |
 
 **Computed kinds:** `frtb-sa-result` (the result of a scope and date) and `simm-result` (per netting set and regime), each with a contract
 of class `computed`; the stored `frtb-sensitivity` and `simm` kinds retire when these are built.
@@ -612,22 +616,23 @@ recalculated by LibreOffice equals the engine to the cent) and a row of the dril
 
 **Case 1: GIRR delta, one bucket, the three scenarios.** USD (a specified currency), DV01 5Y −1,000 and 10Y −500.
 `s = −10,000,000` and `−5,000,000`; `RW = 1.1 % / √2 = 0.777817 %`; `WS = −77,781.75` and `−38,890.87`;
-`ρ = max(exp(−0.03 · 5 / 5), 0.40) = 0.970446`.
+By default (decision 10) ρ is MAR21.46's published table, **0.970**; the exact formula `max(exp(−0.03 · 5 / 5), 0.40) = 0.970446` is
+the `girr-correlation` switch.
 
-| Scenario | ρ | K_USD |
-|---|---|---|
-| low | max(2 · 0.970446 − 1, 0.75 · 0.970446) = 0.940891 | 115,129.89 |
-| medium | 0.970446 | 115,903.82 |
-| high | min(1.25 · 0.970446, 1) = 1 | 116,672.62 (= \|WS₁\| + \|WS₂\|) |
+| Scenario | ρ (table) | K_USD (table, the default) | ρ (exact) | K_USD (exact) |
+|---|---|---|---|---|
+| low | max(2 · 0.970 − 1, 0.75 · 0.970) = 0.940 | 115,106.47 | 0.940891 | 115,129.89 |
+| medium | 0.970 | 115,892.19 | 0.970446 | 115,903.82 |
+| high | min(1.25 · 0.970, 1) = 1 | 116,672.62 | 1 | 116,672.62 (= \|WS₁\| + \|WS₂\|) |
 
 **Case 2: two buckets, a hedge, the low scenario binds.** Case 1 plus EUR DV01 2Y +800: `WS = 1.3 % / √2 · 8,000,000 = 73,539.11`,
 `K_EUR = 73,539.11`, `S_USD = −116,672.62`, γ = 50 % (low 37.5 %, high 62.5 %).
 
-| Scenario | γ | Δ_GIRR |
-|---|---|---|
-| low | 0.375 | 110,579.79 (binding) |
-| medium | 0.50 | 101,300.03 |
-| high | 0.625 | 91,079.64 |
+| Scenario | γ | Δ_GIRR (table, the default) | Δ_GIRR (exact) |
+|---|---|---|---|
+| low | 0.375 | 110,555.42 (binding) | 110,579.79 (binding) |
+| medium | 0.50 | 101,286.72 | 101,300.03 |
+| high | 0.625 | 91,079.64 | 91,079.64 |
 
 **Case 3: curvature.** One equity index (bucket 12, RW 15 %), `DELTA` 10,000 per 1 %, so `RW · s = 150,000`; `CURVATURE_UP = 120,000`,
 `CURVATURE_DOWN = −180,000`. `CVR+ = −(120,000 − 150,000) = 30,000`, `CVR− = −(−180,000 + 150,000) = 30,000`; one factor, so
@@ -693,8 +698,8 @@ between the issuers. Issuer X nets CS01 −4,000 over its tenors, so `CR_X = sqr
 
 | File (draft here; the market-risk pack's configuration at build) | Holds | Source |
 |---|---|---|
-| [`capital-parameters/frtb-sa-sbm.yaml`](capital-parameters/frtb-sa-sbm.yaml) | the SBM risk weights, correlations, scenario formulas and curvature rules per class | Basel MAR21 |
-| [`capital-parameters/frtb-sa-drc-rrao.yaml`](capital-parameters/frtb-sa-drc-rrao.yaml) | LGDs, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping | Basel MAR22, MAR23 |
+| [`capital/frtb-sa-sbm.yaml`](../../config/packs/market-risk/capital/frtb-sa-sbm.yaml) | the SBM risk weights, correlations, scenario formulas and curvature rules per class | Basel MAR21 |
+| [`capital/frtb-sa-drc-rrao.yaml`](../../config/packs/market-risk/capital/frtb-sa-drc-rrao.yaml) | LGDs, maturity scaling, DRC risk weights, RRAO weights and the product-type mapping | Basel MAR22, MAR23 |
 | [`capital-parameters/simm.yaml`](capital-parameters/simm.yaml) | the SIMM structure with every licensed number empty | ISDA SIMM methodology (licensed, per version) |
 
 **Rules.** One file per regime (Basel, a jurisdiction's variant) and per SIMM version; each names its regime or version, its effective
@@ -753,7 +758,9 @@ its text; `#` lines are comments), so the same `PlaygroundTemplate.explain()` re
 
 | File | Covers |
 |---|---|
-| [`playground/frtb-sa/template/explain.txt`](../../drishti-server/src/main/resources/playground/frtb-sa/template/explain.txt) | in plain words: what FRTB-SA answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the total and the contributions, each with a worked number from the hand-built cases of section 13.1 (cases 1 to 5 together give SBM 140,579.79 on the low scenario and a total of 416,757.11); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, DRC, RRAO and Provenance with its MAR paragraph |
+| [`playground/frtb-sa/template/explain.txt`](../../drishti-server/src/main/resources/playground/frtb-sa/template/explain.txt) | in plain words: what FRTB-SA answers, why a bank must hold it, the tabs, signs and units, the regime and its parameters; 18 steps from the delivered sensitivity to the total and the contributions, each with a worked number from the hand-built cases of section 13.1 (cases 1 to 5 together, with the default published table: GIRR delta 110,555.42, the index's own delta charge 150,000 and its curvature
+30,000 give SBM 290,555.42 on the low scenario and a total of 566,732.73; without the index's delta 140,555.42 and 416,732.73; with the
+exact formula 140,579.79 and 416,757.11); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, DRC, RRAO and Provenance with its MAR paragraph |
 | [`playground/simm/template/explain.txt`](../../drishti-server/src/main/resources/playground/simm/template/explain.txt) | in plain words: what SIMM answers, why initial margin is exchanged, the tabs, signs and units, the licensed parameters; 16 steps from the netting set's sensitivities to collect, post and the counterparty's call, each worked with the toy parameter set of case 6 (no licensed number appears); every term of Main, Config, Data, WS, Buckets, Classes, Curvature, Add-ons and Provenance |
 
 The decisions of section 16 are in the words: curvature from gamma is labelled an estimate, rates volatilities are lognormal unless a
