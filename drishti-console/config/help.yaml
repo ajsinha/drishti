@@ -20,6 +20,8 @@
 # so a link between documents always opens in the help centre (DOC-18; tests/test_help_links.py crawls them all).
 # The architecture documents, the per-plugin connector documents and the runbooks live there: in the repository,
 # linked from docs/README.md and from the pages that need them, not in this list.
+# A guide with `roles: [admin]` (or other role names) is shown only to administrators and people holding one of those roles: hidden
+# from the index and search, and 404 at its address for everyone else (routes/help_routes.py visible()).
 categories:
   # Knowledge (product owner, 2026-10-26): what the words of a bank's data mean and how Drishti's data connects them, one page per
   # domain with its glossary (docs/knowledge/glossary.yaml, rendered by tools/knowledge.py). First, above Start. WHAT <GO> opens the
@@ -121,6 +123,9 @@ categories:
       - { slug: ai, doc: admin/AI.md, title: "AI: model providers and MCP servers", icon: stars, summary: "Model providers (seventeen vendor types), one file each, off by default; TLS and Test connection; the admin page and API.; the MCP client (tools, resources, prompts, SAJHA); the designs of AI management and the quant service." }
       - { slug: troubleshooting, doc: guides/TROUBLESHOOTING.md, title: Troubleshooting, icon: life-preserver, summary: "Symptoms, likely causes and fixes." }
       - { slug: release-notes, doc: ../RELEASE_NOTES.md, title: Release notes, icon: tag, summary: "What each release contains and its known limits." }
+      # Internal, for administrators only (roles:, routes/help_routes.py visible()): it names competitors, so it is not listed, searched or
+      # opened for anyone else (404), and it is not in docs/README.md's customer-facing map (tests/test_docs_help_map.py skips roles: pages).
+      - { slug: competitive-analysis, doc: strategy/COMPETITIVE_ANALYSIS.md, title: "Competitive analysis (internal)", icon: binoculars, roles: [admin], summary: "Internal, not for customers, administrators only: where {product} stands against banking, finance and risk vendors and against general data and analytics platforms; built today against planned; capability matrices; per competitor where it wins, where it loses and how to position it; what still decides deals; pricing observations; sources." }
 
 # Retired addresses: the old slug redirects (301) to the page, and the section of it, that took the subject over. A target is a
 # slug or slug#anchor. Documents that left the list (architecture, the per-plugin connector pages, the runbooks) are still in

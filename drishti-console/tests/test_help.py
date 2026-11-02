@@ -243,3 +243,42 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
         assert t.status_code == 200 and "data-unavailable" not in t.text, href
         shots += len(re.findall(r'src="/help/files/tutorials/img/', t.text))
     assert shots >= 100
+
+
+def test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_else(client, monkeypatch):
+    """help.yaml `roles: [admin]` (the internal competitive analysis): an administrator sees it in the index and search and opens it; a
+    viewer finds it in neither and gets 404 at its address; a person holding a listed role sees it too (routes/help_routes.py visible())."""
+    import routes.help_routes as hr
+    from core.auth import Identity
+
+    entry = next(g for c in yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())["categories"] for g in c["guides"]
+                 if g["slug"] == "competitive-analysis")
+    assert entry["roles"] == ["admin"]
+    page = client.get("/help/competitive-analysis")                  # security off: the acting user is an administrator
+    assert page.status_code == 200 and "Internal" in page.text and "not for customers" in page.text
+    assert 'href="/help/competitive-analysis"' in client.get("/help").text
+    assert "/help/competitive-analysis" in client.get("/help/search", params={"q": "competitive analysis"}).text
+
+    def as_(*roles):
+        monkeypatch.setattr(hr, "_me", lambda request: Identity("vic", "Vic", "Rates", roles))
+
+    as_("viewer")
+    assert client.get("/help/competitive-analysis").status_code == 404
+    assert "/help/competitive-analysis" not in client.get("/help").text
+    assert "/help/competitive-analysis" not in client.get("/help/search", params={"q": "competitive analysis"}).text
+    assert client.get("/help/user-guide").status_code == 200                       # everything else stays open
+    as_("viewer", "admin")
+    assert client.get("/help/competitive-analysis").status_code == 200
+    monkeypatch.setattr(hr, "_me", lambda request: None)
+    assert client.get("/help/competitive-analysis").status_code == 404
+
+
+def test_a_guide_without_roles_permits_everyone_and_with_roles_only_those(tmp_path):
+    from core.auth import Identity
+    from core.guides import Guide
+
+    open_ = Guide("a", "A", "", "i", "reference", "operate", tmp_path / "a.md")
+    closed = Guide("b", "B", "", "i", "reference", "operate", tmp_path / "b.md", roles=("admin", "risk-head"))
+    viewer, head, admin = (Identity("u", "U", "", r) for r in (("viewer",), ("risk-head",), ("*",)))
+    assert open_.permits(None) and open_.permits(viewer)
+    assert not closed.permits(None) and not closed.permits(viewer) and closed.permits(head) and closed.permits(admin)

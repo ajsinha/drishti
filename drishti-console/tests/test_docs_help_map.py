@@ -30,7 +30,10 @@ LINK = re.compile(r"\[([^\]]*)\]\(([^)\s]+)\)")
 
 
 def _categories() -> list:
-    return yaml.safe_load(HELP.read_text(encoding="utf-8"))["categories"]
+    """help.yaml's sections with the pages everyone may see: a page with `roles:` (administrators only, such as the internal competitive
+    analysis) is not in the customer-facing map."""
+    cats = yaml.safe_load(HELP.read_text(encoding="utf-8"))["categories"]
+    return [{**c, "guides": [g for g in c["guides"] if not g.get("roles")]} for c in cats]
 
 
 def _map_rows() -> list:
@@ -45,10 +48,10 @@ def _map_rows() -> list:
 
 
 def test_every_help_entry_has_a_title_that_parsed_whole():
-    for c in _categories():
+    for c in yaml.safe_load(HELP.read_text(encoding="utf-8"))["categories"]:
         for g in c["guides"]:
             assert isinstance(g.get("title"), str) and g["title"], g
-            assert set(g) <= {"slug", "doc", "title", "icon", "kind", "summary", "packs"}, f"{g.get('slug')}: unexpected keys {sorted(set(g))} (an unquoted comma in a title?)"
+            assert set(g) <= {"slug", "doc", "title", "icon", "kind", "summary", "packs", "roles"}, f"{g.get('slug')}: unexpected keys {sorted(set(g))} (an unquoted comma in a title?)"
 
 
 def test_the_docs_readme_names_the_help_sections_in_order():

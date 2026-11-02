@@ -100,6 +100,16 @@ class Guide:
     path: Path
     listed: bool = True
     packs: tuple = ()                 # the packs the guide is about (a pack's own guide; help.yaml packs:), for an edition's help filter
+    roles: tuple = ()                 # help.yaml roles: only people with one of these roles (or an administrator) see the guide; empty = everyone
+
+    def permits(self, ident) -> bool:
+        """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
+        competitive analysis, ``roles: [admin]``) only an administrator or someone holding one of its roles. Nobody signed in: no."""
+        if not self.roles:
+            return True
+        if ident is None:
+            return False
+        return bool(getattr(ident, "is_admin", False)) or bool(set(self.roles) & set(getattr(ident, "roles", ()) or ()))
 
 
 class Library:
@@ -116,7 +126,8 @@ class Library:
                 src = g.get("doc")
                 path = (docs_dir / src) if src else (console_dir / "web" / "guides" / f"{g['slug']}.md")
                 guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
-                              g.get("kind", "reference" if src else "guide"), cat["id"], path, packs=tuple(g.get("packs") or ()))
+                              g.get("kind", "reference" if src else "guide"), cat["id"], path, packs=tuple(g.get("packs") or ()),
+                              roles=tuple(str(r) for r in (g.get("roles") or ())))
                 if path.exists():
                     self.guides[guide.slug] = guide
                     items.append(guide)
@@ -139,7 +150,7 @@ class Library:
                     cat["guides"].append(guide)
             self.contextual.update({k: v for k, v in pack.get("contextual", {}).items() if v in self.guides})
         self.by_file = {g.path.resolve(): g.slug for g in self.guides.values()}
-        self.listed = sum(1 for g in self.guides.values() if g.listed)
+        self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles)
         self._documents(cats)
         self._cache: dict[str, tuple[float, dict]] = {}
 
