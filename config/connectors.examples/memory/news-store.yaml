@@ -1,0 +1,28 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Example: copy to config/connectors/news-store.yaml to hold the news-and-markets pack's four kinds in the server's memory only
+# (mem://news), never on a disk. It replaces the pack's connector of the same name (settings are not merged). The memory store and the
+# replenish jobs that fill it are server settings: copy config/examples/in-memory-lake.yaml into application.local.yaml (or set the
+# drishti.lake.memory.* keys) and restart. Nothing else changes for the pages, the search, BI or the Data view. Being memory-only, this
+# connector keeps no disk cache, no id-map files and no index segments; scheduled reports, mail and pictures of its data are refused and
+# only a user's download leaves. Guide: docs/guides/IN_MEMORY_LAKE_GUIDE.md.
+plugin: delta
+kinds:
+- news-topic
+- listed-company
+- news
+- quote
+description: news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs
+settings:
+  root: mem://news

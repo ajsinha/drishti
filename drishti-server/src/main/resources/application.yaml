@@ -162,6 +162,21 @@ drishti:
     check-interval: 60s              # every folder measured and brought under its cap this often
     max-dumps: 2                     # heap dumps kept in the -XX:HeapDumpPath folder; the oldest beyond go at start
     dumps-dir: ${drishti.data.dir:./data}/dumps   # the dump folder when -XX:HeapDumpPath does not name one
+  lake:
+    memory:                          # the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md): Delta tables held in memory only by contract, never on a disk
+      stores: {}                     # memory stores by name (none by default): <name>: { max-mb (the hard cap), chunk-kb (1024), contract, owner (true), format (delta), idle-trim-minutes (10) }; their caps add to -XX:MaxDirectMemorySize
+      tables: []                     # the tables and their replenish jobs: name, store, folder, source { connector, kind, file, url, headers, ids, ids-from }, mode (replace, append, merge), key, sort-by, business-date, columns, every or cron, signal, warm-up, pin, keep-versions (2), codec (zstd)
+      history-keep: 50               # the runs kept per table for Admin -> Lakes and drishti.py lake memory jobs (in memory)
+      job-threads: 2                 # replenish jobs that may run at once (one per table at most)
+      compaction:                    # automated compaction: the memory optimizes itself (IN_MEMORY_LAKE.md section 13a)
+        enabled: true                # rewrite a table when it would save memory: small files merged, replaced rows dropped, appends re-sorted
+        idle-only: false             # true: only while no request is being answered
+        idle-seconds: 30             # the quiet that counts as idle
+        headroom-mb: 512             # memory kept free for a rewrite's new files beside the old (at most a quarter of the store): compaction never causes an eviction
+        small-file-mb: 8             # files below this are merged
+        dead-rows: 0.2               # a merge-mode table is rewritten when this share of its rows was replaced since its last rewrite
+        resort-after: 20             # appends after which a table is rewritten sorted by its sort-by
+        every-seconds: 60            # how often the compactor looks, besides after every commit
   metrics:                           # the platform metrics and alerts (docs/admin/OPERATIONS.md section 13.6; RESOURCES_AND_SCALE.md 8.3, 8.5)
     enabled: ${DRISHTI_METRICS_ENABLED:true}  # export the platform gauges (caches, memory budget, disk, sources, feeds, loads) on /actuator/prometheus and evaluate the alert rules
     sample-interval: 15s             # how often the gauges are sampled and the alert rules evaluated
