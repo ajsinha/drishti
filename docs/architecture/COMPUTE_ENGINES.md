@@ -46,7 +46,7 @@ their own config yaml file and main application.yaml should refer to these, else
 - [13. Tests that prove it](#13-tests-that-prove-it)
 - [14. Build checklist](#14-build-checklist)
 - [15. Mock-ups: Admin → Engines](#15-mock-ups-admin--engines)
-- [16. Points for the product owner](#16-points-for-the-product-owner)
+- [16. Decisions](#16-decisions)
 
 ## 1. The idea in one page
 
@@ -491,15 +491,19 @@ friendliest but spends the screen on cards and hides the memory and source detai
 
 The mock-up is picked by the product owner before the build.
 
-## 16. Points for the product owner
+## 16. Decisions
 
-| # | Question | Recommended answer |
+**All decided by the product owner on 2026-11-02, as recommended; mock-up A picked** ([section 15](#15-mock-ups-admin--engines)).
+
+| # | Question | Decided (as recommended) |
 |---|---|---|
 | 1 | The CLI's place: `drishti.py server engines` (beside `server commands` and `server packs`) with `admin engines` as an alias, or `admin engines` only? | **`server engines`, with `admin engines` accepted**: one place for administration over REST, and the words the product owner used still work |
 | 2 | Off answers `404` (not here) rather than today's `403` (switched off)? | **404**: nothing is forbidden, the engine is not on this server; the words say so |
 | 3 | `memory-lake` turned on from the page: write the file and say "restart needed", or refuse from the page? | **Write and say "restart needed"**: the administrator's choice is recorded and takes effect at the next start |
 | 4 | An administrator changing another node's engine from any node's Admin → Engines? | **Yes**, signed with the cluster key and audited on both nodes |
 | 5 | Regulatory VaR (backtesting, reports, sign-off) as part of `var`, or an engine of its own? | **Part of `var`** for now: it reads only VaR's official records; split when a node needs one without the other |
+
+**All decided by the product owner on 2026-11-02, as recommended; mock-up A picked** ([section 15](#15-mock-ups-admin--engines)).
 
 ---
 
