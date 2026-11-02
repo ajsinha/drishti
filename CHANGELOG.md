@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased (2.9.10: memory, scale and mobile; why VaR moved)
+## 2.9.10 — Memory, scale and mobile; why VaR moved (2026-11-01)
 
 *2.9.9 and 2.9.10 are released together as 2.9.10.*
 
