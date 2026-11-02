@@ -15,7 +15,7 @@
 -->
 # Drishti 2.9.10.a — release notes
 
-*Released 2026-11-02.* **Admin → Capacity; the cluster's VaR under load; three VaR dates in the demo; the competitive analysis; the next releases'
+*Released 2026-11-01.* **Admin → Capacity; the cluster's VaR under load; three VaR dates in the demo; the competitive analysis; the next releases'
 groundwork.**
 
 - **Admin → Capacity** ([OPERATIONS section 12.4](docs/admin/OPERATIONS.md), [RESOURCES_AND_SCALE section 9.7](docs/architecture/RESOURCES_AND_SCALE.md)):

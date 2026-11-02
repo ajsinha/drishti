@@ -635,6 +635,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 - [Crédit Agricole CIB taps Opensee (FinTech Futures)](https://www.fintechfutures.com/partnerships/cr-dit-agricole-cib-taps-opensee-for-market-risk-management-solution)
 - [Opensee goes live at Société Générale (IBS Intelligence)](https://ibsintelligence.com/ibsi-news/opensees-big-data-analytics-platform-goes-live-at-societe-generale)
 - [Opensee and Taula Capital (A-Team)](https://a-teaminsight.com/?p=71606)
+
 **Trading platforms**
 
 - [Murex, MX.3 enterprise risk and regulatory suite](https://murex.com/en/insights/mx3-enterprise-risk-and-regulatory-suite)
@@ -649,6 +650,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 - [Finastra to sell TCM to Apax funds (Mondo Visione, May 2025)](https://mondovisione.com/media-and-resources/news/finastra-to-sell-treasury-and-capital-markets-division-to-apax-funds-2025519/)
 - [Finastra sells TCM (Finovate)](https://finovate.com/finastra-sells-off-treasury-and-capital-markets-division/)
 - [Banco Sofisa partners with Finastra (Vector Risk)](https://www.finastra.com/press-media/banco-sofisa-partners-finastra-elevate-its-risk-management-strategy)
+
 **Enterprise market and credit risk**
 
 - [MSCI RiskMetrics RiskManager](https://www.msci.com/data-and-analytics/risk-management-solutions/riskmetrics-riskmanager)
@@ -667,6 +669,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 - [SAS community, market risk module](https://communities.sas.com/t5/SAS-Software-for-Learning/MARKET-RISK-MODULE/td-p/811654)
 - [Oracle Financial Services market risk data sheet](https://oracle.com/a/ocom/docs/industries/financial-services/ofs-market-risk-ds.pdf)
 - [Oracle OFS MRMM Pack 8.0.5 release notes](https://docs.oracle.com/cd/E92094_01/PDF/8.0.5.0.0/OFS_MRMM_Pack_8.0.5.0.0_Release%20Notes.pdf)
+
 **Regulatory reporting and governance**
 
 - [Wolters Kluwer completes divestment of FRR (1 Dec 2025)](https://www.wolterskluwer.com/en/news/wolters-kluwer-completes-divestment-of-its-finance-risk-and-regulatory-reporting-unit)
@@ -674,11 +677,13 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 - [Khaitan & Co, FRR India divestment (OneSumX)](https://khaitanco.com/firm-matter/wolters-kluwer-groug-divestment-of-financial-risk-and-reporting-frr-business-by-wolters-kluwer-group-to-regnology)
 - [IBM OpenPages](https://ibm.com/products/openpages)
 - [IBM OpenPages 9.1.2 release (Sep 2025)](https://community.ibm.com/community/user/discussion/releases-september-26-2025-ibm-openpages-912-both-on-premise-and-cloud-hosted-is-now-available)
+
 **Buy-side**
 
 - [Deutsche Börse completes takeover of SimCorp (Q3 2023)](https://deutsche-boerse.com/dbg-en/media/press-releases/Q3-2023-Deutsche-B-rse-Group-reports-further-growth-and-completes-takeover-of-SimCorp-3711076)
 - [Charles River and Axioma datasheet](https://crd.com/wp-content/uploads/2024/07/CRD-Axioma_Datasheet.pdf)
 - [Institutional Investor, State Street ramps up competition with Aladdin](https://www.institutionalinvestor.com/article/2bswekxa78s7hfwc3t1j4/corner-office/state-street-ramps-up-competition-with-blackrocks-aladdin)
+
 **General data and analytics**
 
 - [The Register, Power BI price rises (Apr 2025)](https://www.theregister.com/2025/04/02/microsoft_power_bi_hikes/)
@@ -709,6 +714,7 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 - [Superblocks, Appsmith pricing](https://www.superblocks.com/blog/appsmith-pricing)
 - [Superblocks, Retool pricing](https://www.superblocks.com/blog/retool-pricing)
 - [Grafana, pricing and cost models](https://grafana.com/docs/learning-hub/which-grafana/02-understand-your-options/08-pricing-and-cost-models/)
+
 **Not verified (looked, not found or not read at source):** Opensee's storage format; whether RiskAuthority moved to Regnology; the
 completion date of Regnology's Moody's purchase; completion and new name of Finastra TCM under Apax; the Fivetran and dbt Labs closing
 date (reported complete; one source says 1 June 2026); Dremio and MetricStream 2025–26 announcements; Qlik's current AI offering and Talend integration;

@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased (2.9.10.a)
+## 2.9.10.a — Admin → Capacity; the cluster under load; three VaR dates in the demo; the competitive analysis (2026-11-01)
 
 ### Admin → Capacity
 
