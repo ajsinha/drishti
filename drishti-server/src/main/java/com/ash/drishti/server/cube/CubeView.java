@@ -121,7 +121,9 @@ public record CubeView(String cube, String scope, List<String> rows, List<String
             throw bad("a view is a JSON object: {scope, rows, columns, measures, filters, date, lens}");
         }
         if (m.get("text") instanceof String t && !t.isBlank() && m.get("scope") == null && m.get("rows") == null) {
-            return parse(t, cube);
+            CubeView v = parse(t, cube);
+            return m.get("history") instanceof Number n && v.history() == 0
+                    ? new CubeView(v.cube(), v.scope(), v.rows(), v.columns(), v.measures(), v.filters(), v.date(), v.lens(), v.sort(), n.intValue()) : v;
         }
         Map<String, List<String>> filters = new LinkedHashMap<>();
         if (m.get("filters") instanceof Map<?, ?> f) {

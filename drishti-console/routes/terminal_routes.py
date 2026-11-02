@@ -33,6 +33,7 @@ from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
 from routes.exposure_routes import redirect_for as exp_redirect
 from routes.frtb_routes import redirect_for as frsa_redirect
+from routes.mcube_routes import redirect_for as mcube_redirect
 from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
 from routes.exposure_routes import retired_link as exp_retired_link
@@ -138,6 +139,8 @@ async def go(request: Request, q: str = ""):
         return to_var
     if ed.word_on("PLAY") and ed.word_on("VAR") and (to_play := play_redirect(typed, (me.user if me else "") or "")) is not None:   # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
         return to_play
+    if ed.word_on("VAR") and ed.word_on("MCUBE") and (to_mcube := mcube_redirect(typed)) is not None:   # MCUBE <view>: the MR cube (mcube_routes.py)
+        return to_mcube
     if ed.word_on("VAR") and ed.word_on("FRSA") and (to_frsa := frsa_redirect(typed)) is not None:   # FRSA <scope>: FRTB-SA capital (frtb_routes.py)
         return to_frsa
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)

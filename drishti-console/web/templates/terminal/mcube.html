@@ -1,0 +1,108 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The MR cube (docs/guides/MR_CUBE_GUIDE.md; docs/lenses/MR_CUBE_LENS.md section 6.7): the decided landing A (the pivot first, with the
+   headline strip, the lens controls, the time-travel slider and the right rail of tail, explain and provenance) and tabs B (tail and
+   attribution) and C (sensitivities and what-if) of the same view, one data request feeding the three. A shell: cube-core.js and mcube.js
+   fill it; every figure is the server's. #}
+{% extends "base.html" %}
+{% block title %}MR cube · {{ view_id or view_text or 'MCUBE' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}{{ screen }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/mcube.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="mc" data-mcube data-text="{{ view_text }}" data-view-id="{{ view_id }}" data-tab="{{ tab }}">
+  <div class="pg-head">
+    <h1 class="pg-title"><span class="pg-word mono">MCUBE</span> MR cube</h1>
+    <nav class="pg-path mono" aria-label="The view" data-mc-text>{{ ('@' ~ view_id) if view_id else view_text }}</nav>
+    <span class="pg-meta" data-mc-meta aria-live="polite">loading…</span>
+    <a class="pg-help" href="/help/context/mcube" title="Help: the MR cube (the guide)" aria-label="Help: the MR cube"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+  </div>
+  <form class="pg-ask mc-ask" data-mc-ask>
+    <label class="mc-cmd">View <input class="pg-input mono" name="text" value="{{ view_text }}" data-mc-input autocomplete="off"
+      placeholder="MCUBE BANK BY MGMT.DESK,RISK_CLASS MEASURE VAR" aria-label="The view as text"></label>
+    <button type="submit" class="pg-btn primary">Open</button>
+    <span class="mc-keys mono" aria-label="Keys"><kbd>R</kbd><kbd>C</kbd><kbd>F</kbd> dims <kbd>M</kbd> measures <kbd>H</kbd> 1D/10D
+      <kbd>[</kbd><kbd>]</kbd> dates <kbd>E</kbd> explain <kbd>P</kbd> provenance <kbd>W</kbd> what-if <kbd>S</kbd> save <kbd>X</kbd> export</span>
+  </form>
+  <p class="pg-notice" data-mc-notice role="status" hidden></p>
+
+  <section class="mc-tiles" data-mc-tiles aria-label="The view's headline"></section>
+
+  <div class="mc-lens" role="toolbar" aria-label="Rows, columns, filters and the lens">
+    <button type="button" class="mc-chip rows" data-mc-dim="rows" title="Rows (R)">Rows: <b data-mc-dim-label="rows">…</b></button>
+    <button type="button" class="mc-chip cols" data-mc-dim="columns" title="Columns (C)">Columns: <b data-mc-dim-label="columns">…</b></button>
+    <button type="button" class="mc-chip filt" data-mc-dim="filters" title="Filters (F)">Filter: <b data-mc-dim-label="filters">all</b></button>
+    <span class="mc-seg" data-mc-seg="measure" aria-label="Measure (M)"></span>
+    <span class="mc-seg" data-mc-seg="horizon" aria-label="Horizon (H)"><button type="button" data-v="1d">1D</button><button type="button" data-v="10d">10D √10</button><button type="button" data-v="10d-sum">10D sum</button></span>
+    <span class="mc-seg" data-mc-seg="confidence" aria-label="Confidence"><button type="button" data-v="0.99">99%</button><button type="button" data-v="0.975">97.5%</button></span>
+    <span class="mc-seg" data-mc-seg="set" aria-label="Scenario set"><button type="button" data-v="normal">Normal</button><button type="button" data-v="stressed">Stressed</button></span>
+    <span class="mc-seg" data-mc-seg="ccy" aria-label="Reporting currency"><button type="button" data-v="USD">USD</button><button type="button" data-v="EUR">EUR</button><button type="button" data-v="CAD">CAD</button></span>
+    <span class="mc-actions">
+      <select class="pg-input" data-mc-views aria-label="Saved views"><option value="">Saved views…</option></select>
+      <button type="button" class="pg-btn" data-mc-save title="Save this view (S): private, or shared with people or roles">Save</button>
+      <button type="button" class="pg-btn" data-mc-export="csv" title="Export the cells as CSV (X)">CSV</button>
+      <button type="button" class="pg-btn" data-mc-export="xlsx" title="A workbook: SUM formulas where additive, the server's values said so where not">Excel</button>
+      <button type="button" class="pg-btn" data-mc-export="arrow" title="The cells as an Arrow stream">Arrow</button>
+    </span>
+  </div>
+  <div class="mc-dimpick" data-mc-dimpick hidden></div>
+
+  <div class="mc-slider" data-mc-slider aria-label="Time travel: business dates and their batches ([ and ] step)"></div>
+
+  <div class="mc-tabs" role="tablist">
+    <button type="button" role="tab" class="mc-tab" data-mc-tab="pivot" aria-selected="true">A · Pivot</button>
+    <button type="button" role="tab" class="mc-tab" data-mc-tab="tail" aria-selected="false">B · Tail and attribution</button>
+    <button type="button" role="tab" class="mc-tab" data-mc-tab="sensitivities" aria-selected="false">C · Sensitivities and what-if</button>
+  </div>
+
+  <div class="mc-body" data-mc-pane="pivot">
+    <section class="mc-card mc-pivot">
+      <h2 class="mc-h" data-mc-pivot-title>Pivot</h2>
+      <div class="mc-scroll" tabindex="0" aria-label="The pivot: arrows move, Enter drills, Backspace goes back"><table class="mc-grid" data-mc-grid></table></div>
+      <nav class="mc-crumbs mono" data-mc-crumbs aria-label="Drill path"></nav>
+      <p class="mc-foot muted">Click a cell: the right rail. Double-click or Enter: drill. Every total is the union's own figure, re-aggregated from the
+        members' vectors, never a sum; the Σ cells − total line is the diversification.</p>
+    </section>
+    <aside class="mc-rail">
+      <section class="mc-card"><h2 class="mc-h" data-mc-tail-title>Tail</h2><div data-mc-tail class="mc-hist"></div></section>
+      <section class="mc-card"><h2 class="mc-h">Explain the move <small class="muted" data-mc-explain-dates></small></h2><div data-mc-explain><p class="muted">Select a cell, then E.</p></div></section>
+      <section class="mc-card mc-prov"><h2 class="mc-h">Provenance</h2><div data-mc-prov><p class="muted">Select a cell, then P (or hover it).</p></div></section>
+    </aside>
+  </div>
+
+  <div class="mc-body two" data-mc-pane="tail" hidden>
+    <section class="mc-card"><h2 class="mc-h">Components <small class="muted">Euler: they add up to the total exactly</small></h2><table class="mc-grid" data-mc-comp></table></section>
+    <section class="mc-card"><h2 class="mc-h">VaR attribution waterfall</h2><div data-mc-waterfall></div></section>
+    <section class="mc-card"><h2 class="mc-h">Scenario P&amp;L histogram <small class="muted" data-mc-hist-title></small></h2><div data-mc-hist class="mc-hist"></div></section>
+    <section class="mc-card"><h2 class="mc-h">Factor heat map <small class="muted">GIRR delta (DV01) by currency × tenor</small></h2><div data-mc-heat></div></section>
+  </div>
+
+  <div class="mc-body two" data-mc-pane="sensitivities" hidden>
+    <section class="mc-card"><h2 class="mc-h">Sensitivity ladder <label class="mc-grid-chip">Grid <select data-mc-grid-pick></select></label></h2><div data-mc-ladder></div></section>
+    <section class="mc-card"><h2 class="mc-h">What-if, side by side</h2>
+      <form class="mc-tray" data-mc-tray><label>Copy trade <input class="pg-input mono" name="trade" placeholder="a booked trade id, or a scope" required></label>
+        <label>× <input class="pg-input mono" name="factor" value="-1" size="5"></label><button type="submit" class="pg-btn primary">+ What-if trade</button>
+        <span class="mc-tray-items mono" data-mc-tray-items></span></form>
+      <div data-mc-whatif><p class="muted">Add a hypothetical trade (W): a booked trade's vector copied and scaled; every row before, after and the change.</p></div>
+    </section>
+    <section class="mc-card"><h2 class="mc-h">Explain the move <small class="muted" data-mc-explain2-dates></small></h2><div data-mc-explain2><p class="muted">Select a row on the pivot.</p></div></section>
+  </div>
+  <div class="mc-pop" data-mc-pop role="tooltip" hidden></div>
+</div>
+<script src="/static/js/cube-core.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/mcube.js?v={{ ASSET_V }}"></script>
+{% endblock %}

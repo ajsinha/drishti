@@ -369,6 +369,17 @@ class BackendClient:
         answer of a date reads its sensitivities: it may take longer than a page read, so this waits up to a minute."""
         return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
 
+    async def cube(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
+        """The cubes on the shared cube core (/api/v1/cube, docs/guides/MR_CUBE_GUIDE.md section 10), as the user. ``path`` starts after
+        /api/v1/cube (``/mr/query``); ``raw`` returns the bytes and headers of an export. A view's first answer of a date may open the date:
+        this waits up to two minutes."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
+        if body is not None:
+            kw["json"] = body
+        if raw:
+            kw.update(raw=True, with_headers=True)
+        return await self._send(method, "/cube" + path, ident, **kw)
+
     async def exposure(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
         """The exposure engine (/api/v1/exposure, docs/guides/EXPOSURE_GUIDE.md section 11), as the user. The first answer of a business
         date loads its paths (or maps its hot file): it may take longer than a page read, so this waits up to a minute."""
