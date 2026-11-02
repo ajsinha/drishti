@@ -51,6 +51,8 @@ public class CachesConfiguration {
         MemoryBudget b = ctx.getBean(MemoryBudget.class);
         ctx.getBeanProvider(com.ash.drishti.server.var.VarCaches.class).ifAvailable(v -> v.join(b));
         ctx.getBeanProvider(com.ash.drishti.server.exposure.ExposureCaches.class).ifAvailable(x -> x.join(b));
+        ctx.getBeanProvider(com.ash.drishti.server.cube.CubeEngine.class).ifAvailable(c ->
+                b.join("engine.answers", MemoryBudget.of(com.ash.drishti.server.cube.CubeConfiguration.CACHE, c.cache(), (long) c.props().cacheMb() << 20)));
         ctx.getBeanProvider(com.ash.drishti.server.bi.engine.QueryService.class).ifAvailable(q -> {
             if (q.resultCache() != null) {
                 b.join("engine.answers", MemoryBudget.of("bi.results", q.resultCache(), q.props().cacheMaxBytes()));

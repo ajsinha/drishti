@@ -28,7 +28,9 @@ public enum Work {
     /** A BI run. */
     BI_RUN(ErrorCode.BUSY_BI_RUN, "BI run", true),
     /** A bulk load of a pack's data. */
-    BULK_LOAD(ErrorCode.BUSY_BULK_LOAD, "Bulk load", true);
+    BULK_LOAD(ErrorCode.BUSY_BULK_LOAD, "Bulk load", true),
+    /** A large cube view: more cells than {@code drishti.cube.busy-cells} (MR_CUBE_GUIDE.md). */
+    CUBE_VIEW(ErrorCode.BUSY_CUBE_VIEW, "Cube view", true);
 
     private final ErrorCode code;
     private final String label;

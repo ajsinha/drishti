@@ -154,6 +154,7 @@ drishti:
       download: 30                   # a Data view download (DRS-9503)
       bi-run: 60                     # a BI run (DRS-9504)
       bulk-load: 120                 # a bulk load of a pack's data (DRS-9505)
+      cube-view: 20                  # a cube view of more cells than drishti.cube.busy-cells (DRS-9506)
     keep: 50                         # refusals kept for Admin -> Health (in memory)
     override-max-minutes: 240        # the longest an operator's override may last (it ends by itself)
   disk:                              # RESOURCES_AND_SCALE.md 7: the local disk
@@ -862,6 +863,19 @@ drishti:
     recipes-dir: ${drishti.data.dir:./data}/frtb/recipes   # saved playground recipes (PLAY FRTB RUN <id>)
     cache-minutes: 10                # how long a date's sensitivities stay in memory after they are read
     playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/
+  cube:                              # the cubes on the shared cube core (docs/guides/MR_CUBE_GUIDE.md section 9)
+    max-cells: 5000                  # the most cells one view computes, totals counted; a larger view is refused with its count (DRS-5602)
+    busy-cells: 600                  # a view of more cells asks busy protection first (DRS-9506 while the server is short of memory or threads)
+    cache-mb: 64                     # the cell cache's own limit (aggregates by data version, viewer and lens); the one memory budget may hold it to less
+    provenance-kept: 500             # the answers whose provenance ids are kept for the popover
+    sparkline-max: 600               # the most cells a view draws sparklines for (each date is the view computed again)
+    mr:                              # the market-risk cube (engine mr-cube: needs var, uses sensitivities and frtb-sa)
+      enabled: ${DRISHTI_MR_CUBE_ENABLED:true}   # the MR cube, /api/v1/cube/mr, MCUBE and its page; off: nothing is built, the API answers 404 DRS-5603
+      sbm-max-cells: 60              # the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell)
+      stressed-max-cells: 100        # the most cells whose stressed VaR one view computes, scope by scope
+      # risk-classes: { IR: [Rates, Inflation, Money market, Securities financing], CR: [Credit, Fixed income, Structured], FX: [FX], EQ: [Equity], CM: [Commodity] }
+      # grids: { BANK-IR-TENOR: { 0-2Y: "0-2", 2-5Y: "2-5", 5-10Y: "5-10", 10Y+: "10-" } }   # the ladders' bucket grids, in years
+      # ladder-limits: { "USD 2-5Y": 1500000 }   # two-sided DV01 limits per currency and bucket; none: no limit bars
   regulatory:                       # regulatory VaR: backtesting, period statistics, report runs and sign-off (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14)
     fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:10-31}   # the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31
     pnl-kind: desk-pnl               # the kind with each desk's actual and hypothetical P&L per business date (the backtest's input)

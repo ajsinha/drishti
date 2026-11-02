@@ -462,6 +462,38 @@ public final class FrtbService {
         }
     }
 
+    /**
+     * One element of a scope's sensitivities in the reporting currency, with its factor resolved and its record's position and trades (the MR
+     * cube's ladders, heat map and per-cell sums read these, MR_CUBE_GUIDE.md section 6).
+     */
+    public record Element(String positionKey, String tradeId, List<String> tradeIds, String grain, FactorDictionary.Factor factor, String measure,
+            double value) {}
+
+    /** A scope's sensitivity elements on a date: the elements, how many records, the batches read and the load's refusals. */
+    public record Elements(LocalDate date, String canonical, String reporting, List<Element> elements, int records, Set<String> batches,
+            Map<String, Integer> refusals, Object proxied) {}
+
+    /** Every sensitivity element of a scope as the person sees it, in the reporting currency (an element in a currency without FX: left out). */
+    public Elements elements(Principal p, String scope, LocalDate date, String ccy) {
+        String reporting = ccy == null || ccy.isBlank() ? "USD" : ccy.strip().toUpperCase(Locale.ROOT);
+        Scoped s = scoped(p, scope, new AsOf(date, null));
+        Double rep = s.day().usdPer().get(reporting);
+        if (rep == null) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "no FX for the reporting currency " + reporting);
+        }
+        List<Element> out = new ArrayList<>();
+        for (FrtbData.Record r : s.records()) {
+            for (FrtbData.Element e : r.elements()) {
+                Double per = s.day().usdPer().get(e.currency() == null ? reporting : e.currency().toUpperCase(Locale.ROOT));
+                if (per != null) {
+                    out.add(new Element(r.positionKey(), r.tradeId(), r.tradeIds(), r.grain(), s.day().dictionary().resolve(e.factor()), e.measure(),
+                            e.value() * per / rep));
+                }
+            }
+        }
+        return new Elements(s.day().date(), s.canonical(), reporting, out, s.records().size(), s.day().batches(), s.day().refusals(), s.day().proxied());
+    }
+
     /** Sensitivities of a scope summed by {@code by} (RISK_FACTOR, BUCKET, RISK_CLASS, MEASURE, TENOR or a record attribute), in the reporting currency. */
     public Map<String, Object> sums(Principal p, String scope, LocalDate date, String by, String ccy) {
         String reporting = ccy == null || ccy.isBlank() ? "USD" : ccy.strip().toUpperCase(Locale.ROOT);
@@ -487,6 +519,8 @@ public final class FrtbService {
                         case "BUCKET" -> f.riskClass() + " " + f.frtbBucket();
                         case "RISK_CLASS", "CLASS" -> f.riskClass();
                         case "TENOR" -> f.tenor() == null ? "—" : f.tenor();
+                        case "QUALIFIER" -> f.qualifier() == null ? "—" : f.qualifier();
+                        case "CURVE" -> f.curve() == null ? "—" : f.curve();
                         case "MEASURE" -> e.measure();
                         default -> r.attributes().getOrDefault(k, "(none)");
                     });

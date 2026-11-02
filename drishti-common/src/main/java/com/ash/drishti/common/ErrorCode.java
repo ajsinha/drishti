@@ -195,6 +195,17 @@ public enum ErrorCode {
      * Only a user's download may leave; the answer names the data and its contract.
      */
     MEMORY_ONLY("DRS-5219", 403),
+    /** The cube (MR_CUBE_GUIDE.md): a view the cube cannot answer (an unknown dimension or measure, a dimension twice, a bad filter or lens). */
+    CUBE_BAD_VIEW("DRS-5601", 400),
+    /**
+     * The cube's cell budget (MR_CUBE_GUIDE.md, {@code drishti.cube.max-cells}): a view of more cells (with its totals) than the budget is
+     * refused with the count, never cut short; narrow it with a filter or fewer dimensions.
+     */
+    CUBE_TOO_MANY_CELLS("DRS-5602", 422),
+    /** The cube is switched off on this server ({@code drishti.cube.mr.enabled: false}): its API, page and words are not offered. */
+    CUBE_OFF("DRS-5603", 404),
+    /** A saved cube view that is not there or not shared with the caller. */
+    CUBE_VIEW_NOT_FOUND("DRS-5604", 404),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**
@@ -552,7 +563,9 @@ public enum ErrorCode {
     /** Busy protection: a BI run did not start. */
     BUSY_BI_RUN("DRS-9504", 503),
     /** Busy protection: a bulk load of a pack's data did not start. */
-    BUSY_BULK_LOAD("DRS-9505", 503);
+    BUSY_BULK_LOAD("DRS-9505", 503),
+    /** Busy protection: a large cube view (more cells than {@code drishti.cube.busy-cells}) did not start (MR_CUBE_GUIDE.md). */
+    BUSY_CUBE_VIEW("DRS-9506", 503);
 
     private final String code;
     private final int httpStatus;

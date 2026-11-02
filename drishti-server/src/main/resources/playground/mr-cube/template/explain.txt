@@ -1,0 +1,10 @@
+# The About tab's words of the MR cube workbook (MR_CUBE_GUIDE.md section 8), one entry a row: a line "## <title>" then its text.
+# The generator writes them on About under the view's own lines; a bank's template may reword them.
+## What this workbook is
+A view of the MR cube exported as it was answered: one sheet per measure with the view's rows and columns, the row and column totals and the grand total, then Provenance with every cell's members and scope.
+## Additive measures are formulas
+A measure whose total is the sum of its members (PV, trades, component VaR and ES, DV01, CS01) is written with live formulas: each total is SUM of its cells, so a cell changed in the workbook moves its totals.
+## Non-additive measures are values, re-aggregated by the server
+VaR, ES, incremental and stressed VaR and FRTB-SA SBM are not sums. Each cell and each total is the figure of its own set of trades, computed by the server from the members' summed scenario P&L vectors (or from their sensitivities, for SBM). They are written as values; their totals are not formulas over the cells, and must not be summed. The line "Σ cells − total" under them is a formula: the diversification.
+## Provenance
+Provenance lists, for every cell, its trades, its scope in the engine's grammar (ask /api/v1/var/scope of it to get the same VaR) and whether its vector came from the cache; then the view's shared provenance: the business date, data versions, batches, scenario set and window, the method and the shards.
