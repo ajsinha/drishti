@@ -965,7 +965,7 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 
 ## 2.9.13: Java 25 and performance I (proposed)
 
-*A performance release: two planned drills, the benchmark between them.*
+*A performance release: two planned drills, the benchmark between them. Three large items, the native seam, the Vector API kernels and the in-memory lake, by the product owner's decision (2026-11-02), an exception to the two-large-items rule.*
 
 | # | Part | What |
 |---|---|---|
