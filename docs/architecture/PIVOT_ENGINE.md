@@ -17,7 +17,7 @@
 
 **Status: design, not built.** Nothing in this document is built unless [section 2](#2-what-drishti-has-today) says so and names the
 guide it was read from (2026-11-02). The plan's rows are in
-[IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube-proposed-product-owner-2026-11-02-placement-to-confirm)
+[IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube)
 (proposed; placement to confirm). The screens are chosen from three mock-ups ([section 25](#25-mock-ups-the-screens-to-build)) before the build.
 
 **What the product owner asked for (2026-11-02, in their words):** "build capability of a super scalable very generalized pivot
