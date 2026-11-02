@@ -36,6 +36,9 @@
     from: params.get("efrom") || "", to: params.get("eto") || "", scope: null, answer: null, matrix: null, step: null, row: null, seq: 0
   };
   var lib = null;
+  var shown = null;                                              // the drawn view, to follow a change of theme
+  function activeTheme() { return document.documentElement.getAttribute("data-theme") || "terminal"; }
+  document.addEventListener("drishti:theme", function () { if (shown && shown.setTheme) shown.setTheme(activeTheme()); });
   function renderer() { return lib || (lib = import("/static/render/1.1.0/drishti-render.js")); }
   var phone = function () { return window.matchMedia && window.matchMedia("(max-width: 640px)").matches; };
 
@@ -290,8 +293,11 @@
     }
     return Promise.all([renderer(), make]).then(function (got) {
       var R = got[0], model = got[1];
-      var v = R.render(host, model, { theme: "inherit", header: "none", help: false, tables: true, live: false, navigation: "host",
+      // the console's active theme by name: the library's "inherit" falls back to its own default palette (parchment on a light
+      // operating system), not the theme picked in the console
+      var v = R.render(host, model, { theme: activeTheme(), header: "none", help: false, tables: true, live: false, navigation: "host",
                                       device: phone() ? "phone" : "desk" });
+      shown = v;
       return v.ready;
     }).then(function () {
       pane.dataset.state = "ready";
