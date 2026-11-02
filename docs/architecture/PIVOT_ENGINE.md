@@ -15,10 +15,12 @@
 -->
 # The pivot engine: one generalised, very large-scale pivot for all of Drishti
 
-**Status: design, not built.** Nothing in this document is built unless [section 2](#2-what-drishti-has-today) says so and names the
-guide it was read from (2026-11-02). The plan's rows are in
-[IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube)
-(proposed; placement to confirm). The screens are chosen from three mock-ups ([section 25](#25-mock-ups-the-screens-to-build)) before the build.
+**Status: phase P1 partly built (2.9.11.a, unreleased); the rest design, not built.** Built, and described for users in
+[PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md): the module `drishti-bicompute` (the core with declarative cell sets, the provider and function
+SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over the Data view's tables, the
+ordered merge, the partial-state cache, the split-and-merge harness, xlsx and CSV export), the VaR provider on the new SPI, the API, the
+CLI and the screen of mock-up A. Everything the build checklist ([section 24](#24-build-checklist)) leaves unticked is not built. The plan's
+rows are in [IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube).
 
 **What the product owner asked for (2026-11-02, in their words):** "build capability of a super scalable very generalized pivot
 capability. Think of MS Excel but more capable. Built in aggregation functions but people can also supply custom aggregation functions.
@@ -1104,28 +1106,28 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 
 ## 24. Build checklist
 
-- [ ] `drishti-bicompute` module (no Spring; dependencies per decision 2); the architecture rule "no other module re-implements aggregation"
-- [ ] core moved from `wip/mr-cube` with the eight changes of section 7; the branch's fifteen tests pass on the engine
+- [x] `drishti-bicompute` module (no Spring; drishti-api, drishti-common, DuckDB); the architecture rule "no other module re-implements aggregation" is not yet a build test
+- [ ] core moved from `wip/mr-cube` with the eight changes of section 7 (built: changes 1 to 8 in the module; the branch's own tests run when the MR cube resumes on the engine)
 - [ ] DEL moved from `server/bi/expr`; BI calls the module
-- [ ] function SPI, kinds, codecs; built-ins of section 5.2; exact quantile by selection
-- [ ] grouping-sets compiler; DuckDB executor; tabular provider (BI layers, lake scans with shipped extensions, memory-only Arrow views)
-- [ ] VaR provider (from `VarCubeSource`); FRTB-SA and SIMM providers with their engines
-- [ ] partial-state cache, cell budgets, busy protection, per-person limits
-- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell
-- [ ] correctness: currencies, units, masks, no truncation, exact or ≈
-- [ ] provenance per answer and cell; time travel; compare; cell references
-- [ ] expand and collapse (section 11), lazy, saved in views and links
-- [ ] the screen (chosen mock-up), show-as, grouping, slicers, conditional formats, drill-through, keyboard, phone tiers
-- [ ] pivot charts (section 14.3), linked both ways, stacking rule
-- [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts
+- [x] function SPI, kinds, codecs; built-ins of section 5.2 except `first`/`last` and the sketches (P3); exact quantile from the values (selection with P3)
+- [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: the Data view's tables read through their connectors and staged in memory; not yet: BI layers, direct lake scans with shipped extensions)
+- [ ] VaR provider (built: `VarPivotProvider`, each cell the engine's scope; `VarCubeSource`'s batching, hierarchy levels and measures with the MR cube); FRTB-SA and SIMM providers with their engines
+- [ ] partial-state cache, cell budgets, busy protection, per-person limits (built: all but the per-person limit)
+- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs and the ordered merge of local shards)
+- [ ] correctness: currencies, units, masks, no truncation, exact or ≈ (built: masks before aggregation, no truncation, exact or holistic marked; not yet: currencies and units)
+- [x] provenance per answer and cell; time travel (by business date; data versions pinned with P3); compare; cell references
+- [x] expand and collapse (section 11, P1 part and expand by), lazy, saved in views and links
+- [ ] the screen (chosen mock-up), show-as, grouping, slicers, conditional formats, drill-through, keyboard, phone tiers (built: mock-up A, show-as in the API, grouping, drill-through, keyboard; not yet: slicers, conditional formats, phone tiers)
+- [ ] pivot charts (section 14.3), linked both ways, stacking rule (built: chart of a selection, the stacking rule, a click opens the member; not yet: pinned charts, PNG and SVG export)
+- [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts (built: xlsx with outline, formulas and Provenance, csv, Arrow, rows, definition)
 - [ ] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` with the BI sandbox
 - [ ] explain the difference; what-if overlays; view versions; cell comments
 - [ ] BI shadow mode, parity gate, models as sources, measures as functions
 - [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots
-- [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md
-- [ ] API, `drishti.py pivot`, error codes in API_GUIDE
+- [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: the `drishti.pivot` keys in CONFIGURATION.md; the engine file when the engine switches merge)
+- [x] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
-- [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine
+- [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)
 
 ## 25. Mock-ups: the screens to build
 

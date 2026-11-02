@@ -539,7 +539,7 @@ Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentExc
 logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
 
 **When the server is busy.** New heavy work (a sign-in, opening a VaR or exposure date that is not open yet, a Data view download, a BI
-run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505`. The body adds `busy: true`, `title`
+run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505` or `DRS-9507` (a large pivot). The body adds `busy: true`, `title`
 and `because` (the same words the console and `drishti.py` show) and `retryAfterSeconds`. A script waits that many seconds and asks
 again, a few times at most; reads of what is already open are never asked to wait. Busy protection is described in
 [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over).
@@ -2115,6 +2115,11 @@ and the fix for the codes that need more than the meaning.
 | DRS-5217 | 422 | var not shardable | VaR sharding: the date cannot be put together from its shards because its data does not cut along the shard key: a book under two legal entities or desks that fall in two shards, or (with a hierarchy built from columns) one position id under two shards. Correct the trades' hierarchy columns upstream, shard by `[LEGAL_ENTITY]` only, or switch sharding off; one server answers the date |
 | DRS-5218 | 503 | disk guard | a hot file, shard book or currency's book was not built because the disk would fall under the free-space guard (`drishti.disk.min-free-percent` 10, `min-free-gb` 20) even after every folder freed down to 90% of its cap; nothing was written, a date already open keeps answering; the message gives what is free, what was needed and the guard ([RESOURCES_AND_SCALE.md 7.2](../architecture/RESOURCES_AND_SCALE.md#72-proposal-hot-files-bounded-by-size-and-the-free-space-guard-o5)) |
 | DRS-5219 | 403 | memory only | the data is held in memory only by contract (a connector whose lake is at `mem://`, [IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md)) and this place would keep it: a scheduled report, a share's picture or e-mail, a note copying its values, an Ask about the page; nothing was written; the message names the data and its contract; a download is allowed (audited) |
+| DRS-5701 | 400 | pivot: bad view | the pivot engine cannot answer the view: an unknown source field or function, a field twice, a grouping a field's type does not take, a sort or show-as it does not know ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) |
+| DRS-5702 | 422 | pivot: too many cells | the view has more visible cells (totals included) than `drishti.pivot.max-cells` (or `max-holistic-cells`), with the count; or a table has more rows than `stage-max-rows`; or an xlsx export more rows than `export.xlsx-max-rows`; never cut short |
+| DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
+| DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
+| DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
 | DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
@@ -2145,6 +2150,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9503 | 503 | Busy: a download waits | busy protection: a Data view download did not start (memory, request handlers, disk); nothing was sent; `Retry-After` |
 | DRS-9504 | 503 | Busy: a BI run waits | busy protection: a BI run (or asking a run again) did not start (memory, request handlers); `Retry-After` |
 | DRS-9505 | 503 | Busy: a bulk load waits | busy protection: a bulk load of a pack's data did not start (memory, request handlers, disk); nothing was read or written; `Retry-After` |
+| DRS-9507 | 503 | Busy: a pivot waits | busy protection: a pivot view of more cells than `drishti.pivot.busy-cells` did not open its deeper levels; `Retry-After` |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -3336,6 +3342,35 @@ groups; restricted) for other systems; no engine reads them. The netting-set and
 `EXPOSURE_ENGINE`, computed as the page opens. `POST …/captures` needs the `risk:write` token scope; `POST …/reload` and `POST …/official`
 are never a token's. Answers, captures, what-ifs, exports, reloads and official captures are audited (`ccr-view`, `ccr-capture`,
 `ccr-whatif`, `ccr-export`, `ccr-reload`, `ccr-official`).
+
+## Pivot engine: `/api/v1/pivot`
+
+The pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md), design [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md)): any table of the Data view,
+or the VaR engine's trades (`source: var`), as a pivot. Every figure is computed by the engine (module `drishti-bicompute`); every total is
+made from its own members; masks apply before aggregation. Every view run and export is audited, never with its values.
+
+| Call | Does |
+|---|---|
+| `GET /api/v1/pivot/sources` | `{sources: [{source, title, provider}]}`: what the caller may pivot |
+| `GET /api/v1/pivot/catalogue?source=&date=` | the source's `fields` (name, type), `measures` (a provider's own: `var`, `es`), `functions` (the built-ins), `date`, `dates`, `version`, `masked`, `notes`, `limits` |
+| `POST /api/v1/pivot/query` | body: a view (or `{"view": {...}}`, or `{"view": "owner/name"}`); answer: `rows` and `columns` in display order, `cells` keyed `rowKey|colKey`, `measures`, `computed`, `cellCount`, `provenance` |
+| `POST /api/v1/pivot/estimate` | `{rows, bytes, columns, ofColumns, seconds, how, confirm, words}`; nothing read |
+| `POST /api/v1/pivot/expand` | `{view, axis: rows, path: [[dim, value], ...], by}`: the view with that node open (only its children computed; the rest from the cache) |
+| `POST /api/v1/pivot/compare` | `{view, otherDate}`: `{answer, other, diff}` (per cell: `delta` per measure, or `status` new or gone) |
+| `POST /api/v1/pivot/rows` | `{view, coords, offset, limit}`: a cell's member rows, as the caller may see them |
+| `GET /api/v1/pivot/cells?ref=pivot://owner/name@v/Measure[DIM=V, ...]` | one cell of a saved view by reference: `value`, `found` (false with "not in the view"), `newerVersion` |
+| `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
+| `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |
+| `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
+  -d '{"source":"trade","rows":["productType"],"values":[{"measure":"count()"},{"measure":"median(notional)","as":"Median"}]}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/export \
+  -d '{"view":"asha/desk-risk","format":"xlsx"}' -o desk-risk.xlsx
+```
+
+Refusals: `DRS-5701` to `DRS-5705` and `DRS-9507` ([the error code table](#error-code-table)).
 
 ## Embedding views in another web application
 

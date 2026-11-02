@@ -17,6 +17,16 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **The pivot engine, phase P1 (2.9.11.a; PIVOT_GUIDE.md, tutorial 33, PIVOT_ENGINE.md).** A new module `drishti-bicompute` (plain
+  Java): views of declarative cell sets compiled to one `GROUP BY GROUPING SETS` statement per restriction, functions with start, add,
+  merge and finish (mergeable: sum, count, avg, min, max, wavg, variance and standard deviation; holistic and exact: median, percentile,
+  distinct count), partial states merged in a fixed order, a partial-state cache in the one memory budget (`pivot.states`), the
+  split-and-merge harness. Any Data view table (read for the person, masks applied, staged in memory) or VaR (`source: var`, every cell the
+  VaR engine's answer for its scope) as a pivot: `PIVOT <GO>`, Views → Pivot, Pivot on a Data view table; nested rows opened lazily (only
+  open nodes computed), expand by another field per member, top N with an Others of its own members, sorting per level, the provenance of
+  every cell, the scan estimate, a chart that never stacks a non-additive measure, Excel with outline levels, SUM formulas only where a
+  figure adds up and a Provenance sheet, CSV, Arrow, saved and shared views, cell references, compare two dates. `/api/v1/pivot`,
+  `drishti.py pivot`, `drishti.pivot.*` settings, codes DRS-5701 to DRS-5705 and DRS-9507.
 - **Docs: the pivot engine designed (design, not built; PIVOT_ENGINE.md, mock-ups A, B and C in docs/architecture/mockups/pivot/,
   the plan's proposed 2.9.11.a).** One generalised, very large-scale pivot for all of Drishti in a new `drishti-bicompute` module:
   measure providers (DuckDB tabular, VaR vectors, FRTB-SA, SIMM, later CCR), mergeable, sketch and holistic measures, custom
