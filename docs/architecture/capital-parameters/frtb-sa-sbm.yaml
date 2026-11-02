@@ -22,7 +22,8 @@
 
 regime: BCBS-MAR21
 source: https://www.bis.org/basel_framework/chapter/MAR/21.htm
-scenarios:                           # MAR21.6: the three correlation scenarios, applied to every rho and gamma below
+scenarios:                           # MAR21.6: the three correlation scenarios, applied to every rho and gamma below; for curvature
+                                     # applied to the squared correlation (MAR21.100-101): square first, then the scenario
   medium: {formula: "rho"}
   high: {formula: "min(1.25 * rho, 1)"}
   low: {formula: "max(2 * rho - 1, 0.75 * rho)"}
@@ -44,12 +45,13 @@ GIRR:
     across-buckets: 0.50                                        # MAR21.50 (gamma)
   vega:
     risk-weight: 1.0                                            # MAR21.92: min(55% * sqrt(LH / 10), 100%), LH 60 for GIRR
-    option-maturity-correlation: "exp(-alpha * abs(Tk - Tl) / min(Tk, Tl))"   # MAR21.94
+    option-maturity-correlation: "exp(-alpha * abs(Tk - Tl) / min(Tk, Tl))"   # MAR21.93, and the same form on the underlying maturities
     alpha: 0.01
     across-buckets: 0.50                                        # MAR21.95
   curvature:
-    shock: highest-delta-risk-weight                            # MAR21.98: a parallel shift of every tenor by the largest risk weight
-    correlation: delta-squared                                  # MAR21.100: the delta correlations squared, within and across
+    factor: currency                                            # MAR21.8: every curve of the currency shifted together; no inflation or basis
+    shock: highest-delta-risk-weight                            # MAR21.99: a parallel shift of every tenor by the 0.25-year risk weight
+    correlation: delta-squared                                  # MAR21.100-101: the delta correlations squared, within and across
 
 CSR_NS:
   delta:
@@ -62,7 +64,7 @@ CSR_NS:
       5: 0.030    # consumer goods and services, transportation and storage, administrative and support services (IG)
       6: 0.020    # technology, telecommunications (IG)
       7: 0.015    # health care, utilities, professional and technical activities (IG)
-      8: 0.025    # covered bonds (MAR21.54 lets AA- or better use 1.5%)
+      8: 0.025    # covered bonds (MAR21.53 footnote: AA- or better may use 1.5%)
       9: 0.020    # sovereigns (HY and not rated)
       10: 0.040   # local governments ... (HY and not rated)
       11: 0.120   # financials (HY and not rated)
@@ -73,24 +75,26 @@ CSR_NS:
       16: 0.120   # other sector
       17: 0.015   # IG indices
       18: 0.050   # HY indices
-    within-bucket:                                              # MAR21.55: the product of the three
+    within-bucket:                                              # MAR21.54 (buckets 1-15): the product of the three
       same-name: 1.0
       different-name: 0.35
+      different-name-index-buckets: 0.80                        # MAR21.55: buckets 17 and 18
       same-tenor: 1.0
       different-tenor: 0.65
       same-basis: 1.0
       different-basis: 0.999                                    # bond curve against CDS curve
     other-sector-bucket: absolute-sum                           # MAR21.56: bucket 16 adds absolute weighted sensitivities, no correlation
     across-buckets:
-      rating: {same: 1.0, different: 0.5}                       # MAR21.57: gamma = gamma_rating * gamma_sector
+      rating: {same: 1.0, different: 0.5}                       # MAR21.57: gamma = gamma_rating * gamma_sector; 0.5 only between IG and HY buckets of 1-15
       sector: see-MAR21.57-table                                # the sector table: copied in the bank's copy of this file, by bucket pair
   vega:
     risk-weight: 1.0                                            # MAR21.92, LH 120
     option-maturity-correlation: "exp(-alpha * abs(Tk - Tl) / min(Tk, Tl))"
     alpha: 0.01
   curvature:
-    shock: bucket-delta-risk-weight                             # MAR21.98: a parallel shift of the issuer's curves
-    correlation: delta-squared
+    factor: issuer                                              # MAR21.9: bond and CDS curves of the issuer as one curve
+    shock: bucket-delta-risk-weight                             # MAR21.99: a parallel shift of the issuer's curve by the bucket's risk weight
+    correlation: name-only-squared                              # MAR21.100: rho_name squared; tenor and basis do not apply
 
 EQ:
   delta:
@@ -112,9 +116,10 @@ EQ:
       buckets-12-and-13: 0.75
       bucket-12-or-13-with-1-to-10: 0.45
   vega:
-    risk-weight: {large-cap: 0.7778, small-cap-and-other: 1.0}  # MAR21.92: LH 20 and 60
+    risk-weight: {large-cap-and-indices: 0.7778, small-cap-and-other: 1.0}  # MAR21.92: LH 20 (buckets 1-8, 12, 13) and 60 (9-11)
   curvature:
-    shock: bucket-delta-risk-weight
+    factor: spot                                                # MAR21.12: no curvature for repo
+    shock: bucket-delta-risk-weight                             # MAR21.98: a relative shift equal to the delta risk weight
     correlation: delta-squared
 
 COMM:
@@ -129,8 +134,9 @@ COMM:
   vega:
     risk-weight: 1.0                                            # MAR21.92, LH 120
   curvature:
-    shock: bucket-delta-risk-weight
-    correlation: delta-squared
+    factor: commodity                                           # MAR21.13: the whole curve of the commodity
+    shock: bucket-delta-risk-weight                             # MAR21.99: a parallel shift of every tenor by the bucket's risk weight
+    correlation: commodity-only-squared                         # MAR21.100: rho_commodity squared; tenor and location do not apply
 
 FX:
   delta:
@@ -140,5 +146,7 @@ FX:
   vega:
     risk-weight: 1.0                                            # MAR21.92, LH 40: min(55% * 2, 100%)
   curvature:
-    shock: delta-risk-weight                                    # MAR21.98; MAR21.99 lets a bank divide the FX curvature charge by 1.5
+    shock: delta-risk-weight                                    # MAR21.98: a relative shift equal to the delta risk weight
     correlation: delta-squared
+    divisor: 1.5                                                # MAR21.98: CVR+ and CVR- of options not referencing the reporting currency
+    divisor-all-fx-instruments: false                           # MAR21.98: every FX instrument, only with the supervisor's approval

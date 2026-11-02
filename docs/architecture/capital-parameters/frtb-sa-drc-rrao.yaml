@@ -28,10 +28,10 @@ drc:
     equity: 1.00
     covered-bond: 0.25
     no-recovery-instrument: 1.00         # an instrument whose value does not depend on recovery
-  maturity:                              # MAR22.19-21: the JTD is scaled by maturity / 1 year
+  maturity:                              # MAR22.15-18: the gross JTD is scaled by maturity / 1 year
     floor-years: 0.25
     cap-years: 1.0
-    equity-and-no-maturity-years: [0.25, 1.0]   # the bank chooses 3 months or 1 year per position
+    equity-and-no-maturity-years: [0.25, 1.0]   # MAR22.16: cash equity, 3 months or more than 1 year, nothing between
   buckets: [corporates, sovereigns, local-governments-and-municipalities]   # MAR22.22
   risk-weights:                          # MAR22.24, by credit quality
     AAA: 0.005
@@ -43,17 +43,19 @@ drc:
     CCC: 0.50
     unrated: 0.15
     defaulted: 1.00
-  netting: same-obligor-and-seniority    # MAR22.16-18: a short offsets a long of the same obligor when the short's seniority is the same or lower
-  hedge-benefit-ratio: "WtS = sum(netJTD_long) / (sum(netJTD_long) + sum(abs(netJTD_short)))"   # MAR22.25
-  bucket-charge: "max(sum(RW * netJTD_long) - WtS * sum(RW * abs(netJTD_short)), 0)"          # MAR22.26
-  total: sum-of-buckets                  # MAR22.27: no hedging across buckets
+  netting: same-obligor-and-seniority    # MAR22.19-21: a short offsets a long of the same obligor when the short's seniority is the same or lower
+  hedge-benefit-ratio: "HBR = sum(netJTD_long) / (sum(netJTD_long) + sum(abs(netJTD_short)))"   # MAR22.23, unweighted
+  bucket-charge: "max(sum(RW * netJTD_long) - HBR * sum(RW * abs(netJTD_short)), 0)"          # MAR22.25
+  total: sum-of-buckets                  # MAR22.26: no hedging across buckets
 
 rrao:                                    # MAR23
   exotic-underlying-weight: 0.010        # MAR23.8(1): gross notional of instruments with an exotic underlying
   other-residual-risk-weight: 0.001      # MAR23.8(2): gross notional of instruments bearing other residual risks
-  exotic-underlyings: [longevity-risk, weather, natural-disasters, future-realised-volatility]   # MAR23.2 examples
-  other-residual-risks: [gap-risk, correlation-risk, behavioural-risk]                           # MAR23.3
-  exclusions: [listed-instruments-eligible-for-central-clearing, back-to-back-hedged]            # MAR23.5-6
+  exotic-underlyings: [longevity-risk, weather, natural-disasters, future-realised-volatility]   # MAR23.3 examples
+  other-residual-risks: [gap-risk, correlation-risk, behavioural-risk]                           # MAR23.4-5
+  exclusions:                                                                                   # MAR23.7
+    all: [back-to-back]                                         # the trade and its exact third-party match
+    other-residual-only: [listed-or-eligible-for-central-clearing]   # an exotic underlying stays in even when listed or cleared
   product-types:                         # the demo's mapping from PRODUCT_TYPE (a bank's copy maps its own; a type absent is out of scope)
     exotic: [WEATHER_HDD, EQ_VARIANCE_SWAP, FX_VARIANCE_SWAP, EQ_VOL_SWAP]
     other: [EQ_BARRIER, FX_BARRIER, FX_DOUBLE_BARRIER, FX_TOUCH, EQ_DIGITAL, FX_DIGITAL, EQ_BASKET_OPTION, EQ_CLIQUET, AUTOCALLABLE,

@@ -18,15 +18,15 @@
 # ISDA's methodology document), and a netting set's CSA names the version it is margined under. Every number below is `null` on
 # purpose: the engine refuses a file with a null it needs.
 
-version: null                 # for example 2.6, as the CSA names it
+version: null                 # for example 2.8+2512, as the CSA names it
 effective-from: null
 source: ISDA SIMM Methodology, the version above (licensed)
 holding-period-days: 10       # SIMM's margin period of risk (a methodology constant)
 
 product-classes: [RatesFX, Credit, Equity, Commodity]                # SIMM's four product classes
 risk-classes: [InterestRate, CreditQ, CreditNonQ, Equity, Commodity, FX]
-product-class-correlation: null                                      # SIMM's matrix across the four product classes (sqrt-sum)
 risk-class-correlation: null                                         # psi_rs: across the six risk classes, within a product class
+                                                                     # (section K); the four product classes are added, no correlation
 
 InterestRate:
   tenors: [2w, 1m, 3m, 6m, 1y, 2y, 3y, 5y, 10y, 15y, 20y, 30y]
@@ -39,7 +39,9 @@ InterestRate:
   inflation-correlation: null
   across-currencies: null       # gamma
   vega-risk-weight: null
-  concentration-thresholds: {delta: null, vega: null}   # per currency group, USD millions per bp
+  concentration-thresholds: {delta: null, vega: null}   # per currency group (its own grouping, not the risk-weight one), USD millions per bp;
+                                                        # one factor per currency, inflation in, cross-currency basis out
+  historical-volatility-ratio: null   # HVR_IR: curvature margin multiplied by HVR_IR^-2
 
 CreditQ:
   tenors: [1y, 2y, 3y, 5y, 10y]
@@ -49,7 +51,7 @@ CreditQ:
   across-buckets: null
   base-correlation-risk-weight: null
   vega-risk-weight: null
-  concentration-thresholds: {delta: null, vega: null}
+  concentration-thresholds: {delta: null, vega: null}   # by bucket; the factor per issuer and seniority over all tenors
 
 CreditNonQ:
   tenors: [1y, 2y, 3y, 5y, 10y]
@@ -58,6 +60,7 @@ CreditNonQ:
   correlation: null
   across-buckets: null
   vega-risk-weight: null
+  concentration-thresholds: {delta: null, vega: null}   # by bucket; the factor per issuer (tranche) over all tenors
 
 Equity:
   buckets: 12                   # 1-8 large cap by economy and sector, 9-10 small cap, 11 indices, funds and ETFs, 12 volatility indices
@@ -66,7 +69,7 @@ Equity:
   across-buckets: null
   vega-risk-weight: null
   historical-volatility-ratio: null
-  concentration-thresholds: {delta: null, vega: null}
+  concentration-thresholds: {delta: null, vega: null}   # by bucket; the factor per name
 
 Commodity:
   buckets: 17                   # coal, crude, light ends, middle distillates, heavy distillates, NA gas, EU gas, NA power, EU power,
@@ -75,20 +78,22 @@ Commodity:
   correlation: null
   across-buckets: null
   vega-risk-weight: null
-  concentration-thresholds: {delta: null, vega: null}
+  historical-volatility-ratio: null
+  concentration-thresholds: {delta: null, vega: null}   # by bucket; the factor per commodity
 
 FX:
   buckets: {1: regular-volatility, 2: high-volatility}
   delta-risk-weights: null      # by the volatility group of the currency and of the calculation currency
   correlation: null
   vega-risk-weight: null
-  concentration-thresholds: {delta: null, vega: null}
+  historical-volatility-ratio: null
+  concentration-thresholds: {delta: null, vega: null}   # by FX category; the factor per currency
 
 curvature:
   scaling: "SF(t) = 0.5 * min(1, 14 / t_days)"   # SIMM's curvature scaling of vega by option expiry (methodology constant)
   lambda: "(Phi_inv(0.995)^2 - 1) * (1 + theta) - theta"
   theta: "min(sum(CVR) / sum(abs(CVR)), 0)"
-  interest-rate-scale: null     # the curvature margin's multiplier for interest rates, per version
+  interest-rate-scale: "HVR_IR^-2"   # the curvature margin's multiplier for interest rates (paragraph 11(d))
 
 add-ons:                        # agreed per netting set in the CSA, outside SIMM's parameters
   fixed-amount: null
