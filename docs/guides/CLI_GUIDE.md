@@ -102,6 +102,7 @@ scripts, `--json`.
 | `pack` | create a pack from JSON Lines, check it in CI, find missing help text, sign and publish it, install one from a registry | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | PyYAML; a server for `install` |
 | `data` | write your JSON Lines into a Delta lake or the file store; load the demo data into any store | `tools/ingest_jsonl.py`, `tools/load-<store>.sh` | `deltalake` + `pyarrow` for Delta |
 | `server` | health, and pack list / load / unload / on / off on a running server | REST `/api/v1/admin/...` | a server, an administrator |
+| `admin` | `capacity`: the single-node capacity planner the server serves, evaluated (`--live` with this server's figures), or its formula workbook | REST `/api/v1/admin/capacity`; `tools/capacitycli.py` | a server, an administrator, PyYAML |
 | `design` | the Screen Designer's designs: create, save, check, propose, approve, export, import, bind | REST `/api/v1/builder/designs`, `/api/v1/sutras/proposals` | a server |
 | `docs` | regenerate the guides' screenshots | `tools/docs/screenshots.py` | Playwright |
 
@@ -1819,6 +1820,36 @@ purge is safe at any time; it needs an administrator and is written to the audit
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py server caches purge trade-pages
 drishti-console/.venv/bin/python tools/drishti.py server caches purge var.hot-files --date 2026-09-29 --cluster
+```
+
+**`drishti.py admin capacity --help`**
+
+```text
+usage: drishti.py admin capacity [-h] [--server SERVER]
+                                 [--token-file TOKEN_FILE] [--user USER]
+                                 [--timeout TIMEOUT] [--json] [--live]
+                                 [--set Name=value] [--all] [--xlsx FILE]
+                                 [--inputs {plan,live,both}]
+
+options:
+  --json                machine-readable output
+  --live                put this server's measured figures into the inputs
+                        (and print them)
+  --set Name=value      an input by its name (repeat): Trades=450000,
+                        HotDates=12, Collector=ZGC
+  --all                 every result line, band by band
+  --xlsx FILE           download the formula workbook to FILE instead
+  --inputs {plan,live,both}
+                        with --xlsx: the plan's inputs, the live ones, or both
+                        side by side
+```
+
+`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py admin capacity --set Trades=450000 --set Positions=450000
+drishti-console/.venv/bin/python tools/drishti.py admin capacity --live
+drishti-console/.venv/bin/python tools/drishti.py admin capacity --xlsx capacity.xlsx --inputs both
 ```
 
 `server packs list|load|unload|on|off` manage packs. **load** and **unload** edit the overlay file

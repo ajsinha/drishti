@@ -595,7 +595,10 @@ Admins also have:
 - **Caches** (`/admin/caches`): every cache of the server (VaR, exposure, BI and pack access too) with where it lives, its size
   against its limit, age, hit rate, freshness and last purge, the memory budget and free disk above; a purge for any one or all, **Purge
   a date** and **Dates** for a cache that holds business dates, and a **whole cluster** switch (default: this server). Every purge is audited
-  (`cache-purged`).
+  (`cache-purged`);
+- **Capacity** (`/admin/capacity`): this server today against the single-node plan (heap, RAM, disk and cores, what breaks first, growth)
+  and the planner behind **Edit the plan**; **Download the working (.xlsx)** is audited (`capacity-workbook-downloaded`). See
+  [OPERATIONS.md 12.4](OPERATIONS.md#124-admin--capacity-today-against-the-plan).
 
 ---
 

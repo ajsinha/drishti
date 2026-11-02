@@ -52,7 +52,7 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
 # hides them through admin.pages.)
 # Admin pages by id (the edition's admin.pages); the path prefix each owns
 ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
-               "embedding", "bi", "audit", "net", "edits", "compute", "health", "caches", "scopes")
+               "embedding", "bi", "audit", "net", "edits", "compute", "health", "caches", "capacity", "scopes")
 
 
 # The landings' page (EDITIONS.md › The design as built, section 7): each edition names its own (home.template, home.titles); a file that names none keeps

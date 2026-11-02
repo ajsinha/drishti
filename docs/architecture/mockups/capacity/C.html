@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (capacity/C.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. The options and the design are in
+  docs/architecture/mockups/capacity/README.md. Illustrative figures: the planner's formulas
+  (tools/sizing_planner.py) at the product owner's production shape.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin → Capacity: option C, Wizard</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --c1:#7fb2ff; --c2:#e8a33a; --c3:#5fd39a; --c4:#c792ea; --c5:#f2955a; --c6:#4fc1c9; --c7:#93a0b8;
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  --c1:#1f5fc4; --c2:#b86e0c; --c3:#1b784c; --c4:#7a45a8; --c5:#b4491a; --c6:#11808a; --c7:#6b7690;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:130ch;line-height:1.5;font-size:13.5px}
+.alts{font-size:12.5px;color:var(--muted);margin-top:6px} .alts a.on{color:var(--amber);font-weight:700}
+.illus{display:inline-block;margin-left:8px;padding:1px 8px;border-radius:10px;background:var(--warn-t);color:var(--warn);font-size:11.5px;font-weight:600}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 260px;max-width:520px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.tabs{display:flex;flex-wrap:wrap;gap:2px;border-bottom:1px solid var(--line);font-size:12.5px}
+.tabs span{padding:6px 10px;color:var(--muted);border-bottom:2px solid transparent}
+.tabs span.on{color:var(--ink);border-bottom-color:var(--amber);font-weight:600}
+.tabs span.new::after{content:"new";margin-left:5px;font-size:10px;padding:0 5px;border-radius:8px;background:var(--amber-t);color:var(--amber)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.head .sp{flex:1}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;cursor:pointer;font-family:var(--sans)}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.big{font-size:13.5px;padding:7px 14px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.card h4{margin:10px 0 6px;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+td.k{text-align:left;font-family:var(--mono);color:var(--amber);white-space:normal;word-break:break-all}
+td.src{white-space:normal;font-size:11px}
+tr.tot td{font-weight:700;background:var(--panel2)}
+.muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{flex:1 1 150px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.kpi .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:2px} .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.kpi.hi{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.fld{display:grid;grid-template-columns:1fr 140px 40px;gap:6px;align-items:center;padding:3px 0;font-size:12.5px}
+.fld label{color:var(--ink)} .fld label small{display:block;color:var(--muted);font-size:11px}
+.fld input,.fld select{width:100%;font-family:var(--mono);font-size:12.5px;padding:3px 6px;border:1px solid var(--line);border-radius:4px;background:var(--bg2);color:var(--ink);text-align:right}
+.fld.ch input{border-color:var(--amber);background:var(--amber-t)}
+.grp{border-top:1px solid var(--line2);padding-top:6px;margin-top:6px}
+.grp:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.grp>b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:2px}
+.why{position:relative;display:inline-block;font-family:var(--sans);font-size:10.5px;color:var(--link);border:1px solid var(--line);border-radius:9px;padding:0 6px;cursor:help;line-height:16px}
+.why .tip{display:none;position:absolute;right:0;top:20px;z-index:5;width:300px;white-space:normal;text-align:left;background:var(--panel2);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:8px 10px;font-size:12px;line-height:1.45;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.why .tip code{font-family:var(--mono);font-size:11.5px;color:var(--amber)}
+.why:hover .tip,.why.open .tip{display:block}
+.stack{display:flex;height:22px;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+.stack i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11.5px;color:var(--muted);margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;background:var(--sw)}
+.hb{display:grid;grid-template-columns:150px 1fr 210px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--line2);font-size:12.5px}
+.hb .t{height:12px;background:var(--line2);border-radius:6px;position:relative}
+.hb .t i{position:absolute;top:0;bottom:0;left:0;border-radius:6px}
+.hb .t b{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink)}
+.hb .n{font-family:var(--mono);text-align:right}
+.code{font-family:var(--mono);font-size:12px;background:var(--bg2);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;white-space:pre-wrap;word-break:break-all;line-height:1.5}
+.copyrow{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.warnbox{border-left:3px solid var(--warn);background:var(--warn-t);padding:7px 10px;border-radius:4px;font-size:12.5px;line-height:1.45;margin-bottom:6px}
+.warnbox.r{border-color:var(--bad);background:var(--bad-t)} .warnbox.g{border-color:var(--ok);background:var(--ok-t)}
+.dlg{border:1px solid var(--amber);border-radius:10px;background:var(--panel);padding:14px 16px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.dlg h3{margin:0 0 4px;font-size:15px}
+.dlg .opt{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border:1px solid var(--line2);border-radius:6px;margin:6px 0;font-size:12.5px;line-height:1.4}
+.dlg .opt.on{border-color:var(--amber);background:var(--amber-t)}
+.dlg .opt input{margin-top:2px}
+.dlg .row{display:flex;gap:8px;justify-content:flex-end;margin-top:10px}
+.phone{width:390px;border:1px solid var(--line);border-radius:22px;background:var(--bg);padding:12px 12px 16px;display:flex;flex-direction:column;gap:8px;flex:0 0 390px}
+.phone .pbar{display:flex;justify-content:space-between;font-size:12px;color:var(--muted)}
+.tier{font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--amber);margin:2px 0 -2px}
+.phone .card{padding:9px}
+.phone .kpi{flex:1 1 150px;padding:7px 9px} .phone .kpi .v{font-size:17px}
+.phonewrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+.phonewrap>.note{flex:1 1 420px}
+.steps{display:flex;gap:0;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.steps div{flex:1;padding:9px 12px;font-size:12.5px;color:var(--muted);border-right:1px solid var(--line);background:var(--panel)}
+.steps div:last-child{border-right:0}
+.steps div b{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase}
+.steps div.done{color:var(--ok)} .steps div.on{background:var(--amber-t);color:var(--ink)} .steps div.on b{color:var(--amber)}
+.choice{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.choice div{border:1px solid var(--line);border-radius:8px;padding:9px 10px;font-size:12.5px;line-height:1.4;background:var(--panel)}
+.choice div.on{border-color:var(--amber);background:var(--amber-t)}
+.choice div b{display:block;font-size:13px;margin-bottom:2px}
+.slider{display:grid;grid-template-columns:150px 1fr 60px;gap:10px;align-items:center;font-size:12.5px;padding:5px 0}
+.slider .rail{height:6px;background:var(--line2);border-radius:3px;position:relative}
+.slider .rail i{position:absolute;left:0;top:0;bottom:0;background:var(--amber);border-radius:3px}
+.slider .rail b{position:absolute;top:-5px;width:16px;height:16px;border-radius:8px;background:var(--amber);border:2px solid var(--panel);margin-left:-8px}
+footer{font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line2);padding-top:8px}
+@media (max-width:1000px){.grid{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body><div class="page">
+<section class="intro"><h1>Admin → Capacity · option C: Wizard <span class="illus">illustrative figures</span></h1><p>Four questions, one at a time (data → dates in memory and pins → users → machine), each with three plain choices and the effect shown at once; it ends on a summary card with the four answers, the warning, the settings ready for application.yaml and the command line. For the first-time planner; “Skip to the full planner” leads to option A.</p><div class="alts">Options: <a class="" href="A.html">A: Planner</a> · <a class="" href="B.html">B: Today against the plan</a> · <a class="on" href="C.html">C: Wizard</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; ADMIN CAPACITY &lt;GO&gt;</div><div class="menus"><span>Risk</span><span>Counterparty</span><span>Data</span><span class="on">Admin</span><span>Help</span></div></div>
+<nav class="tabs" aria-label="Administration"><span class="">Users</span><span class="">Roles</span><span class="">Packs</span><span class="">Tokens</span><span class="">Access</span><span class="">Connectors</span><span class="">Artifacts</span><span class="">AI</span><span class="">Data loads</span><span class="">Lakes</span><span class="">BI</span><span class="">Audit log</span><span class="">Net</span><span class="">Compute</span><span class="">Health</span><span class="">Caches</span><span class="on new">Capacity</span><span class="">Configuration</span><span class="">My account</span></nav>
+<div class="head"><h2>Capacity · plan a server</h2><span class="meta">four questions, then the plan · about two minutes</span><span class="sp"></span><button class="btn" type="button">Skip to the full planner</button><button class="btn p big" type="button" title="As the VaR Playground: a live, formula-driven Excel workbook">⤓ Download the working (.xlsx)</button></div>
+<div class="steps"><div class="done"><b>1 · Data ✓</b>300,000 trades · 39% intraday</div><div class="done"><b>2 · Dates and pins ✓</b>10 in memory · none pinned</div><div class="done"><b>3 · Users ✓</b>50 · 100 req/s</div><div class="done"><b>4 · Machine ✓</b>Java 21 · 2 load threads</div><div class="on"><b>Summary</b>the plan, ready to use</div></div>
+<div class="grid" style="grid-template-columns:1.6fr 1fr"><div class="card" style="border-color:var(--amber)"><h3>Your plan: one server for 300,000 trades <span>production shape · Java 21 · saved as “production 300K”</span></h3><div class="kpis" style="margin-bottom:10px"><div class="kpi hi"><div class="l">Heap</div><div class="v">-Xmx10g</div><div class="s">G1 · 4.9 GB live + room</div></div><div class="kpi"><div class="l">RAM</div><div class="v">24 GB</div><div class="s">16 GB smallest workable</div></div><div class="kpi"><div class="l">Disk</div><div class="v">450 GB</div><div class="s">or 150 GB NVMe, lakes remote</div></div><div class="kpi"><div class="l">Cores</div><div class="v">8</div><div class="s">for 100 req/s at 70% busy</div></div></div><div class="warnbox">The automatic safety net (1,024 MB) holds fewer than the 10 dates in memory need (1,752 MB): set <code>drishti.var.open-heap-mb</code> to <b>3584</b>.</div><div class="grid" style="grid-template-columns:1fr 1fr"><div><h4>What the heap holds</h4><table><tr><td class="l">Dates in memory (10 + 1 opening)</td><td>1,927 MB</td><td><span class="why" tabindex="0">Why?<span class="tip">Each open date keeps its skeleton on the heap: 175 MB a date at 300,000 positions (the H_book formula, 223 MB, × the 0.785 calibration to the 1M benchmark). 10 dates in memory, plus the one opening while the oldest still has readers: 11 × 175 MB.</span></span></td></tr><tr><td class="l">Today's intraday layer</td><td>1,627 MB</td><td><span class="why" tabindex="0">Why?<span class="tip">117,000 trades changed today (39% of 300,000). Each keeps three float64 vectors of 509 scenarios (difference, P&amp;L, USD P&amp;L): 1,408 MB; the changed books' and nodes' aggregates 183 MB; currency totals 32 MB.</span></span></td></tr><tr><td class="l">Caches at their budgets</td><td>402 MB</td><td><span class="why" tabindex="0">Why?<span class="tip">BI query cache 64 MB, plan answers 50 MB, history 256 MB, VaR answers 32 MB: each at its configured budget (<code>drishti.bi.query.cache-max-bytes</code>, <code>drishti.history.cache-mb</code>…).</span></span></td></tr><tr><td class="l">Trade rows beyond the measured</td><td>347 MB</td><td><span class="why" tabindex="0">Why?<span class="tip">The trade connectors' working set for 300,000 rows a day, above the 20,000 the start heap already holds: 1.3 KB a row (BENCHMARK 8.2).</span></span></td></tr><tr><td class="l">Everything else (start, users, footers, search)</td><td>620 MB</td><td><span class="why" tabindex="0">Why?<span class="tip">The server at start 292 MB, users 123 MB, footer cache 64 MB, search 57 MB, first-open warm-up 83 MB.</span></span></td></tr><tr><td class="l"><b>Heap after GC</b></td><td><b>4,924 MB</b></td><td><span class="why" tabindex="0">Why?<span class="tip">÷ 0.61 for the collector + 1,367 MB of loads = 9.4 GB → 10g.</span></span></td></tr></table><h4>Disk</h4><table><tr><td class="l">Lakes (VaR, intraday, trades)</td><td>252.7 GB</td><td><span class="why" tabindex="0">Why?<span class="tip">One year: VaR 105.8, intraday 41.3, trades 105.6 GB.</span></span></td></tr><tr><td class="l">Hot files and spill</td><td>57.9 GB</td><td><span class="why" tabindex="0">Why?<span class="tip">60 dates of hot files and the builds' reserve.</span></span></td></tr><tr><td class="l">Caches, BI, logs, dumps</td><td>64.8 GB</td><td><span class="why" tabindex="0">Why?<span class="tip">Trade caches 12.5, BI 41.1, logs 1.1, one heap dump 10 GB.</span></span></td></tr></table></div><div><h4>Put these in application.yaml</h4><div class="copyrow"><span class="note">exact keys</span><button class="btn" type="button">Copy</button></div><div class="code">drishti:
+  var:
+    hot-dates: 10
+    open-heap-mb: 3584
+    memory-budget-mb: 0
+    load-threads: 2
+    tier:
+      max-disk-gb: 58
+      disk-dates: 60
+    currencies: [USD]
+    stress:
+      enabled: false
+  disk:
+    min-free-percent: 10
+    min-free-gb: 20</div><h4>Start the server with</h4><div class="copyrow"><span class="note">The whole command line, ready to paste (Linux; on Windows drop MALLOC_ARENA_MAX)</span><button class="btn" type="button">Copy</button></div><div class="code">MALLOC_ARENA_MAX=2 java -Xmx10g -Xms10g -XX:+UseG1GC -XX:G1PeriodicGCInterval=60000 -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary -XX:MaxMetaspaceSize=512m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/opt/drishti/data/dumps -Xlog:gc*:file=/opt/drishti/data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m -Djava.io.tmpdir=/opt/drishti/data/tmp/server -Ddrishti.parquet.footer-cache-mb=64 -Ddrishti.open-dates.net-grace-seconds=120 -jar drishti-server-2.9.10-exec.jar</div></div></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:10px"><button class="btn" type="button">← Back to step 4</button><button class="btn" type="button">Start again</button><button class="btn" type="button">Compare with this server</button><button class="btn p big" type="button" title="As the VaR Playground: a live, formula-driven Excel workbook">⤓ Download the working (.xlsx)</button></div></div><div style="display:flex;flex-direction:column;gap:12px"><div class="card"><h3>Step 2 of 4 · Dates in memory and pins <span>as it looked a moment ago: one question at a time, a choice of three, the effect shown at once</span></h3><div style="font-size:13px;margin:4px 0 8px">How many business dates should stay open at once?</div><div class="choice"><div><b>2 dates</b>today and yesterday · -Xmx7g · RAM 16 GB · older dates reopen in 0.1 s from disk</div><div class="on"><b>10 dates</b>two weeks open · <b>-Xmx10g</b> · the production choice</div><div><b>20 dates</b>a month open · -Xmx13g · RAM 32 GB</div></div><div class="fld" style="grid-template-columns:1fr 140px 40px;margin-top:8px"><label>Month-ends to pin in memory<small>always open; on top of the newest and the one just used</small></label><input value="0"><span class="why" tabindex="0">Why?<span class="tip">Pinned dates never leave; with 0 the protected dates (2) are fewer than hot-dates, so nothing is exceeded.</span></span></div><div class="fld" style="grid-template-columns:1fr 140px 40px"><label>Month-ends to pin on disk<small>open in a second, cost disk only</small></label><input value="0"><span class="why" tabindex="0">Why?<span class="tip">Each adds a 898 MB hot file under var/hot.</span></span></div><div class="row" style="display:flex;justify-content:space-between;margin-top:8px"><button class="btn" type="button">← Data</button><button class="btn p" type="button">Next: users →</button></div></div><div class="dlg" role="dialog" aria-label="Download the working"><h3>Download the working (.xlsx)</h3><p class="note" style="margin:0 0 6px">The same formula workbook as <code>docs/architecture/Drishti-Sizing-Planner.xlsx</code>: every result is a live Excel formula over the <b>Inputs</b> and <b>Coefficients</b> sheets, so you can change a number in Excel and watch the heap, RAM, disk and cores follow. Tabs: Inputs, Results, Coefficients, Explain, Calibration check.</p><div style="font-size:12.5px;margin-top:6px"><b>Which inputs?</b></div><label class="opt on"><input type="radio" name="dl" checked><span><b>What is on the screen</b><br><span class="muted">The inputs as you set them here (300,000 trades, 10 dates, 50 users, Java 21).</span></span></label><label class="opt"><input type="radio" name="dl"><span><b>This server's live figures</b><br><span class="muted">Positions, dates open, heap after GC, RSS, disk free, users and requests a second, measured now (2026-11-01 17:52 EST) in an Inputs column.</span></span></label><label class="opt"><input type="radio" name="dl"><span><b>Both, as two Inputs columns</b><br><span class="muted">"Plan" and "Live" side by side; Results computes each, so the workbook shows the gap in formulas.</span></span></label><p class="note" style="margin:6px 0 0">Recorded in the audit log as <code>capacity-workbook-downloaded</code>. Administrators only.</p><div class="row"><button class="btn" type="button">Cancel</button><button class="btn p" type="button">Download</button></div></div></div></div>
+<div class="card"><h3>The four steps <span>what each asks; every answer has a Why? and a default from the production shape</span></h3><table><tr><th class="l">Step</th><th class="l">Asks</th><th class="l">Shown as you answer</th></tr><tr><td class="l">1 · Data</td><td class="l">Trades a date (positions = trades?), intraday share and batches, exposure on, trade rows and days kept, years in the lake</td><td class="l">a date's heap (175 MB), hot file (898 MB), lake a day (1.0 GB)</td></tr><tr><td class="l">2 · Dates and pins</td><td class="l">Dates in memory (2 / 10 / 20 or a number), pins in memory and on disk, currencies ahead, stress</td><td class="l">dates heap, page cache, hot files on disk</td></tr><tr><td class="l">3 · Users</td><td class="l">Concurrent users, peak requests a second, share of VaR questions</td><td class="l">cores for requests, users' heap</td></tr><tr><td class="l">4 · Machine</td><td class="l">Java 21 or 25, load threads, collector (auto), data folder</td><td class="l">-Xmx, collector, the command line</td></tr></table></div>
+<h3 style="margin:6px 0 0;font-size:14px">On a phone</h3><div class="phonewrap"><div class="phone"><div class="pbar"><span>17:52</span><span>Capacity</span><span>●●● 5G</span></div><div class="tier">Must</div><div class="kpis"><div class="kpi hi"><div class="l">Heap</div><div class="v">-Xmx10g</div></div><div class="kpi"><div class="l">RAM</div><div class="v">24 GB</div></div><div class="kpi"><div class="l">Disk</div><div class="v">450 GB</div></div><div class="kpi"><div class="l">Cores</div><div class="v">8</div></div></div><div class="warnbox" style="margin:0">Set <code>open-heap-mb</code> to 3584: the automatic safety net holds fewer dates than planned.</div><div class="tier">Glance</div><div class="card note">Steps 1 to 4 work on a phone: one question a screen, three big choices, Next. The summary card stacks: the four answers, the warning, then “Copy settings”.</div><div class="tier">More</div><div class="card"><table><tr><td class="l">Heap after GC</td><td>4,924 MB</td></tr><tr><td class="l">Disk in use</td><td>375 GB</td></tr></table><div class="note">What the heap holds, disk ▸</div></div><div class="tier">Desk</div><div class="card note">The command line and Download the working (.xlsx) are on a desk; the phone offers “Email me the plan link”.</div></div><div class="note"><b>Phone tier (390 px).</b> <b>Must</b>: the four answers (heap, RAM, disk, cores) and the warnings in words. <b>Glance</b>: the heap bar by part, one line per resource. <b>More</b>: the settings with exact keys, collapsed (tap to open, one Why? each). <b>Desk</b>: inputs, JVM arguments, the command line and Download the working stay on a wide screen; the phone says so ; unlike A, the wizard's steps themselves fit a phone Same rule as MOBILE_DISPLAY (must/glance/more/desk).</div></div>
+<footer>Mock-up for the product owner (2026-11-01). Illustrative figures: the planner's formulas (tools/sizing_planner.py) at the production shape: 300,000 trades (positions = trades), 39% of them updated intraday (117,000 a day, 10 batches assumed), 10 dates in memory, 50 users, Java 21; the coefficients are those calibrated to the 1,000,000-position re-benchmark. The page and the workbook read one coefficients file, so a figure here and in the workbook always agree. Administrators only; every download is audited. Every figure is printed; a bar never replaces a number; a state is said in words as well as colour.</footer>
+</div></body>
+</html>

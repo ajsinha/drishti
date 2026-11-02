@@ -204,6 +204,7 @@ The same four tiers and the same `phone:` keys, configured where each page is co
 | BI reports | the report's existing `layouts.phone` (unchanged), plus `phone: desk` on visuals | as the report author sets |
 | Data map | the console's `ui.datamap.phone` | the list view instead of the map (already a glance form) |
 | Terminal and search | built in | results as cards, top 20 (glance), *Load more* |
+| Admin → Capacity | built in (the page's `data-tier` parts) | the four states and what breaks first must; the headroom bars glance; this server beside the plan and growth more (folded); editing the plan, the JVM arguments, the command line, the sliders and the download desk, with one line saying so |
 | Admin pages, designers, Studio | built in | desk, with a short *Open on desktop* page |
 
 ## 9. Lint, tests and evidence
