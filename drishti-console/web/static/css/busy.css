@@ -30,7 +30,7 @@
 .busy-ref { display: block; margin-top: 6px; color: var(--d-muted); font: 11px var(--d-font-mono); }
 .busy-auto { color: var(--d-muted); font-size: 12px; }
 /* Admin -> Health: the Busy protection card */
-.busy-health .busy-state { font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--d-fill); }
+.busy-health .busy-state { font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--d-surface); border: 1px solid var(--d-border); }
 .busy-health .busy-state.wait { background: var(--d-bad); color: var(--d-on-accent); }
 .busy-health .busy-state.warn { background: var(--d-warn); color: var(--d-on-accent); }
 .busy-health .busy-state.ok { background: var(--d-ok); color: var(--d-on-accent); }
@@ -38,7 +38,7 @@
 .busy-gauge-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
 .busy-gauge-head b { font-weight: 600; }
 .busy-gauge-head .busy-num { font-family: var(--d-font-mono); }
-.busy-bar { position: relative; height: 8px; border-radius: 4px; background: var(--d-fill); margin: 4px 0 2px; }
+.busy-bar { position: relative; height: 8px; border-radius: 4px; background: var(--d-border); margin: 4px 0 2px; }
 .busy-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--d-ok); }
 .busy-bar i.warn { background: var(--d-warn); }
 .busy-bar i.wait { background: var(--d-bad); }
@@ -47,8 +47,11 @@
 .busy-bar u.wait { background: var(--d-bad); }
 .busy-note { color: var(--d-muted); font-size: 12px; }
 .busy-override { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); }
-.busy-override .busy-modes { display: inline-flex; gap: 4px; margin: 6px 0; flex-wrap: wrap; }
-.busy-override .busy-modes label { cursor: pointer; padding: 3px 10px; border-radius: 12px; background: var(--d-fill); font-size: 13px; }
+.busy-override .busy-modes { display: flex; gap: 4px; margin: 8px 0; flex-wrap: wrap; }
+.busy-override .busy-modes label { cursor: pointer; padding: 3px 12px; border-radius: 12px; border: 1px solid var(--d-border); background: var(--d-surface); font-size: 13px; }
+.busy-override .busy-modes label:has(input:checked) { border-color: var(--d-accent); color: var(--d-accent); }
 .busy-override .busy-modes input { margin-right: 4px; }
 .busy-override .busy-row { display: flex; gap: 8px; align-items: center; margin: 6px 0; flex-wrap: wrap; }
+.busy-override .busy-row label { min-width: 80px; }
 .busy-override input[type=text] { flex: 1 1 260px; }
+.busy-override select { width: auto; flex: 0 0 auto; }

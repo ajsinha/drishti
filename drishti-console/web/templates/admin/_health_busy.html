@@ -45,7 +45,7 @@
   {% set rf = bz.refusals or {} %}
   <p><b>Last refusals</b> <span class="text-muted-d">{{ rf.last15Minutes or 0 }} in the last 15 minutes · {{ rf.people or 0 }} {{ 'person' if rf.people == 1 else 'people' }} · {{ rf.sinceStart or 0 }} since the server started</span></p>
   {% if rf.rows %}
-  <div class="tbl-wrap"><table class="tbl tbl-compact" data-busy-refusals><caption class="visually-hidden">The last refusals</caption>
+  <div class="tbl-wrap"><table class="tbl tbl-compact" data-busy-refusals data-plain><caption class="visually-hidden">The last refusals</caption>
     <thead><tr><th scope="col">Time (UTC)</th><th scope="col">Who</th><th scope="col">What</th><th scope="col">Why</th><th scope="col">Code</th><th scope="col" class="num">Try again</th></tr></thead>
     <tbody>{% for x in rf.rows[:10] %}<tr><td class="mono">{{ x.at[11:19] }}</td><td>{{ x.who }}</td><td>{{ x.what }}</td><td>{{ x.why }}</td><td class="mono">{{ x.code }}</td><td class="num mono">{{ x.retryAfterSeconds }} s</td></tr>{% endfor %}</tbody>
   </table></div>
