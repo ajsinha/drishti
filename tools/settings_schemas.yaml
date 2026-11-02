@@ -69,6 +69,7 @@ schemas:
       - { key: "categories[].guides[].kind", type: string, default: guide, meaning: "guide, tutorial or knowledge: the badge shown" }
       - { key: "categories[].guides[].summary", type: string, meaning: "The card's summary, also searched" }
       - { key: "categories[].guides[].packs", type: list, default: "[]", meaning: "The packs it is about: an edition that keeps none of them hides it" }
+      - { key: "categories[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
       - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
       - { key: "moved.<name>", type: string, meaning: "One retired slug and the page (and section) that took it over" }
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }
