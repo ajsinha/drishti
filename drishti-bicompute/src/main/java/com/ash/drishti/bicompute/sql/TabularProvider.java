@@ -55,6 +55,11 @@ public final class TabularProvider implements PivotProvider {
         return exec;
     }
 
+    /** The sources' resolver (a sampled or parted read wraps it: phase P3). */
+    public TabularSource.Resolver resolver() {
+        return resolver;
+    }
+
     @Override
     public String id() {
         return "tabular";

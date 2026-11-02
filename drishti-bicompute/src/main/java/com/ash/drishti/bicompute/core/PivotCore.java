@@ -31,8 +31,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 /**
  * The pivot engine's core (PIVOT_ENGINE.md sections 3, 4 and 11): a view becomes cell sets (the cells, every open node's subtotals, the
@@ -72,6 +75,43 @@ public final class PivotCore {
         void admit(Viewer v, String what);
     }
 
+    /**
+     * The scale extension points (phase P3, PIVOT_ENGINE.md section 9): a host adds hooks for sketches chosen by size, rollups (aggregate
+     * awareness), the cluster's scatter and gather, sampled first answers and measured scan rates. Each method has a default that does
+     * nothing, so the core runs alone exactly as without them.
+     */
+    public interface Hooks {
+        /** The view's parsed functions, before anything runs: a policy may answer a measure ≈ (its sketch) or exact; notes say so. */
+        default void functions(Viewer v, PivotView view, PivotProvider p, ScaleOptions o, List<FunctionCall> functions,
+                Supplier<PivotProvider.Estimate> estimate, List<String> notes) {}
+
+        /** A plan answered before the provider is asked (a rollup, the cluster's nodes); empty when this hook does not answer it. */
+        default Optional<Routed> route(Viewer v, PivotProvider p, AggregationPlan plan, ScaleOptions o) {
+            return Optional.empty();
+        }
+
+        /** A provider that reads a sample of {@code fraction} of the rows (a ≈ first answer); empty: the core samples by row hash. */
+        default Optional<PivotProvider> sampler(PivotProvider p, double fraction) {
+            return Optional.empty();
+        }
+
+        /** A provider run finished, the whole plan read (measured scan rates); not called for a sampled run. */
+        default void ran(Viewer v, PivotProvider p, AggregationPlan plan, Partials parts, long millis) {}
+
+        /** The scan estimate's answer, to add to (the rollup that covers it, the nodes, the measured rate, the options). */
+        default void estimated(Viewer v, PivotProvider p, AggregationPlan plan, Map<String, Object> answer) {}
+    }
+
+    /**
+     * A plan answered by a hook.
+     *
+     * @param partials the states, as the provider would have answered them
+     * @param how in words, for the answer's notes and provenance ("from the rollup desk-month")
+     * @param cacheable true when the states equal the provider's (a rollup, the cluster); false for anything approximate
+     */
+    public record Routed(Partials partials, String how, boolean cacheable) {}
+
+    private final List<Hooks> hooks = new CopyOnWriteArrayList<>();
     private final List<PivotProvider> providers;
     private final StateCache cache;
     private volatile Settings settings;
@@ -93,6 +133,15 @@ public final class PivotCore {
 
     public void admission(Admission a) {
         this.admission = a;
+    }
+
+    /** Adds scale hooks; routes are tried in the order added (rollups before the cluster). */
+    public void hooks(Hooks h) {
+        hooks.add(h);
+    }
+
+    public List<Hooks> hooks() {
+        return List.copyOf(hooks);
     }
 
     public Settings settings() {
@@ -173,6 +222,7 @@ public final class PivotCore {
         int setsAsked;
         int setsFromCache;
         int queries;
+        double sampled;
         long rowsRead = -1;
         long providerMs;
         final List<String> statements = new ArrayList<>();
@@ -194,10 +244,17 @@ public final class PivotCore {
         final Work work = new Work();
         final long t0 = System.nanoTime();
         final boolean holistic;
+        final ScaleOptions scale;
+        boolean uncacheable;
 
         Computation(Viewer viewer, PivotView view) {
+            this(viewer, view, ScaleOptions.AUTO);
+        }
+
+        Computation(Viewer viewer, PivotView view, ScaleOptions scale) {
             this.viewer = viewer;
             this.view = view;
+            this.scale = scale == null ? ScaleOptions.AUTO : scale;
             this.provider = provider(view.source());
             this.catalogue = provider.catalogue(viewer, view.source(), view.date());
             catalogue.fields().forEach(f -> types.put(f.name(), f.type()));
@@ -228,6 +285,18 @@ public final class PivotCore {
             }
             for (Map.Entry<String, PivotView.Top> t : view.top().entrySet()) {
                 measureIndex(t.getValue().by(), false);
+            }
+            if (!hooks.isEmpty()) {
+                PivotProvider.Estimate[] once = new PivotProvider.Estimate[1];
+                Supplier<PivotProvider.Estimate> est = () -> {
+                    if (once[0] == null) {
+                        once[0] = provider.estimate(viewer, plan(List.of(CellSet.of(List.of(), Map.of()))));
+                    }
+                    return once[0];
+                };
+                for (Hooks h : hooks) {
+                    h.functions(viewer, view, provider, this.scale, functions, est, work.notes);
+                }
             }
             this.rows = new Axis("rows", view.rows());
             this.cols = new Axis("columns", view.columns());
@@ -464,7 +533,7 @@ public final class PivotCore {
                 work.setsAsked++;
                 List<Integer> missing = new ArrayList<>();
                 for (int f = 0; f < functions.size(); f++) {
-                    Object hit = cache.get(prefix + s.signature() + "|" + functions.get(f).id());
+                    Object hit = scale.sampled() ? null : cache.get(prefix + s.signature() + "|" + functions.get(f).id());
                     if (hit instanceof Cached c) {
                         absorb(c, f);
                     } else {
@@ -505,7 +574,9 @@ public final class PivotCore {
                             }
                             bytes += 96 + 2L * x.getKey().canonical().length() + fns.get(j).fn().bytes(st);
                         }
-                        cache.put(prefix + r.set().signature() + "|" + functions.get(f).id(), c, bytes);
+                        if (!scale.sampled() && !uncacheable) {
+                            cache.put(prefix + r.set().signature() + "|" + functions.get(f).id(), c, bytes);
+                        }
                         absorb(c, f);
                     }
                 }
@@ -514,6 +585,51 @@ public final class PivotCore {
 
         /** The plan run: one pass, or split into this node's shards and merged in order (mergeable plans of a provider that shards). */
         private Partials run(AggregationPlan p) {
+            long t = System.nanoTime();
+            Partials out = route(p);
+            for (Hooks h : scale.sampled() ? List.<Hooks>of() : hooks) {
+                h.ran(viewer, provider, p, out, (System.nanoTime() - t) / 1_000_000);
+            }
+            return out;
+        }
+
+        /** A sample (the ≈ first answer), a hook's route (a rollup, the cluster), or the provider. */
+        private Partials route(AggregationPlan p) {
+            if (scale.sampled()) {
+                return sample(p);
+            }
+            for (Hooks h : hooks) {
+                Optional<Routed> r = h.route(viewer, provider, p, scale);
+                if (r.isPresent()) {
+                    if (!work.notes.contains(r.get().how())) {
+                        work.notes.add(r.get().how());
+                    }
+                    uncacheable |= !r.get().cacheable();
+                    return r.get().partials();
+                }
+            }
+            return direct(p);
+        }
+
+        /** The plan on a sample: a hook's sampling provider, else one row-hash shard of 1/f (mergeable plans of a provider that shards). */
+        private Partials sample(AggregationPlan p) {
+            for (Hooks h : hooks) {
+                Optional<PivotProvider> sp = h.sampler(provider, scale.sampleFraction());
+                if (sp.isPresent()) {
+                    work.sampled = scale.sampleFraction();
+                    return sp.get().evaluate(viewer, p);
+                }
+            }
+            int every = (int) Math.max(2, Math.round(1 / scale.sampleFraction()));
+            if (provider.capabilities().shards() && OrderedMerge.mergeable(p)) {
+                work.sampled = 1.0 / every;
+                return provider.evaluate(viewer, p.on(new AggregationPlan.Shard(0, every)));
+            }
+            work.sampled = 1.0;
+            return direct(p);
+        }
+
+        private Partials direct(AggregationPlan p) {
             int n = settings.localShards();
             if (n <= 1 || !provider.capabilities().shards() || !OrderedMerge.mergeable(p)) {
                 return provider.evaluate(viewer, p);
@@ -567,7 +683,15 @@ public final class PivotCore {
 
     /** The view's answer (section 4.4): the axes as shown, every visible cell's figures, totals, provenance id. */
     public Map<String, Object> query(Viewer v, PivotView view) {
-        Computation c = new Computation(v, view);
+        return query(v, view, ScaleOptions.AUTO);
+    }
+
+    /**
+     * The view's answer computed as {@code scale} asks: exact on request, ≈ by sketches, or from a sample (the first answer of a
+     * progressive pair, PIVOT_ENGINE.md section 9.8; never cached).
+     */
+    public Map<String, Object> query(Viewer v, PivotView view, ScaleOptions scale) {
+        Computation c = new Computation(v, view, scale);
         c.run();
         Map<String, Object> answer = PivotAnswer.build(this, c);
         keep(c, answer);
@@ -611,6 +735,9 @@ public final class PivotCore {
         boolean confirm = e.seconds() > settings.confirmSeconds() || e.rows() > settings.confirmRows();
         m.put("confirm", confirm);
         m.put("words", PivotAnswer.estimateWords(e, confirm));
+        for (Hooks h : hooks) {
+            h.estimated(v, c.provider, c.plan(sets), m);
+        }
         return m;
     }
 
