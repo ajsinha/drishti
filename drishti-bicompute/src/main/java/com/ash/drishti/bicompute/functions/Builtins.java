@@ -30,7 +30,7 @@ import java.util.Set;
  * (compensated), {@link Count}, {@link MinMax}, {@link Avg} (sum and count), {@link WeightedAvg} (Σwx and Σw), {@link Welford} (count,
  * mean and M2, merged by Chan's formula: variance and standard deviation, sample and population). Holistic and exact: {@link Quantile}
  * (median, percentile; the values, linear interpolation at q·(n−1) as DuckDB's {@code quantile_cont}) and {@link Distinct} (an exact
- * distinct count). Sketches (HyperLogLog, KLL, Space-Saving) come with phase P3.
+ * distinct count). The sketches (HyperLogLog, KLL, Space-Saving) are {@link Sketches}.
  */
 public final class Builtins {
 

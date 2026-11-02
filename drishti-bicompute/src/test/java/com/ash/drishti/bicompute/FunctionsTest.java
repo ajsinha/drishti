@@ -56,6 +56,9 @@ class FunctionsTest {
         Batch b = rows(10_000, 7);
         for (Functions.Info info : Functions.BUILT_INS) {
             String n = info.name();
+            if ("sketch".equals(info.kind())) {
+                continue;                       // a sketch's merge is within its stated error, not 1e-12: SketchErrorTest
+            }
             List<String> fields = switch (n) {
                 case "count" -> List.of("x");
                 case "wavg" -> List.of("x", "w");

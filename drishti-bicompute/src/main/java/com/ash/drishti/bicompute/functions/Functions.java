@@ -55,7 +55,13 @@ public final class Functions {
             new Info("stddev_pop", "mergeable", "x", "population standard deviation", false),
             new Info("median", "holistic", "x", "the exact median, from the cell's own values", false),
             new Info("percentile", "holistic", "x, q", "the exact q-quantile (linear interpolation), from the cell's own values", false),
-            new Info("count_distinct", "holistic", "x", "the exact number of distinct values, from the cell's own values", false));
+            new Info("count_distinct", "holistic", "x", "the exact number of distinct values, from the cell's own values", false),
+            new Info("approx_count_distinct", "sketch", "x", "≈ distinct values (HyperLogLog, ±1.6% at 4,096 registers); exact on request", false),
+            new Info("approx_median", "sketch", "x", "≈ median (KLL, ±1.8% of rank at k = 200); exact on request", false),
+            new Info("approx_percentile", "sketch", "x, q", "≈ q-quantile (KLL, ±1.8% of rank at k = 200); exact on request", false),
+            new Info("top", "sketch", "x, n", "rows of the n most frequent values (Space-Saving, 10·n counters; each count over by at most "
+                    + "the smallest counter); exact on request", false),
+            new Info("top_exact", "holistic", "x, n", "rows of the n most frequent values, every value counted", false));
 
     private Functions() {}
 
@@ -76,6 +82,11 @@ public final class Functions {
             case "median" -> new Builtins.Quantile("median", 0.5);
             case "percentile", "quantile" -> new Builtins.Quantile("percentile", numbers.isEmpty() ? -1 : numbers.get(0));
             case "count_distinct", "distinct" -> new Builtins.Distinct();
+            case "approx_count_distinct", "approx_distinct" -> new Sketches.ApproxDistinct();
+            case "approx_median" -> new Sketches.ApproxQuantile("approx_median", 0.5);
+            case "approx_percentile", "approx_quantile" -> new Sketches.ApproxQuantile("approx_percentile", numbers.isEmpty() ? -1 : numbers.get(0));
+            case "top" -> new Sketches.Top(numbers.isEmpty() ? 10 : (int) Math.round(numbers.get(0)), false);
+            case "top_exact" -> new Sketches.Top(numbers.isEmpty() ? 10 : (int) Math.round(numbers.get(0)), true);
             default -> null;
         };
         return Optional.ofNullable(f);
