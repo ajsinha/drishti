@@ -1,0 +1,28 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin -> Health, "In-memory lake" (docs/guides/IN_MEMORY_LAKE_GUIDE.md section 9): amber when a store is above 85% of its cap or a write
+   was refused, red when a pinned table is empty or the direct-memory limit is below the stores' caps; the host checks. Drawn from the
+   memoryLake part of GET /api/v1/admin/health only when the server has memory stores. #}
+{% set ml = h.get('memoryLake') %}
+{% if ml %}
+{% set stone = 'wait' if ml.state == 'red' else 'warn' if ml.state == 'amber' else 'ok' %}
+<section class="pnl busy-health" aria-label="In-memory lake" data-health-memory data-memory-state="{{ ml.state }}"><div class="pnl-b">
+  <p><b>In-memory lake</b> <span class="text-muted-d">data held in memory only, never on a disk</span>
+    <span class="busy-state {{ stone }}" data-memory-badge>{{ ml.state }}</span> <a href="/admin/lakes#lkMemory">Admin → Lakes</a></p>
+  {% for p in ml.problems or [] %}<p class="{{ 't-warn' if stone != 'ok' else 'text-muted-d' }}">{{ p }}</p>{% endfor %}
+  <ul class="text-muted-d">{% for c in ml.host or [] %}<li data-memory-check="{{ c.name }}"><b>{{ c.state }}</b> · {{ c.words }}</li>{% endfor %}</ul>
+</div></section>
+{% endif %}

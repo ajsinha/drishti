@@ -59,6 +59,13 @@ public final class ProcessResources {
             }
         }
         m.put("directMaxBytes", directMax);
+        // the in-memory lake's stores live in direct memory under their own caps (IN_MEMORY_LAKE.md section 3a): the warning is about the
+        // server's own buffers, the 256 MB beside the stores, so the stores' chunks and caps are taken out of both sides
+        long stores = com.ash.drishti.lakeio.mem.MemoryStores.all().stream().mapToLong(s -> s.pool().allocatedBytes()).sum();
+        long caps = com.ash.drishti.lakeio.mem.MemoryStores.totalCapBytes();
+        m.put("memoryStoresBytes", stores);
+        directUsed = Math.max(0, directUsed - stores);
+        directMax = caps > 0 && directMax > caps ? directMax - caps : directMax;
         int percent = directMax > 0 ? (int) Math.min(100, directUsed * 100 / directMax) : 0;
         m.put("directPercent", percent);
         m.put("directWarning", percent >= WARN_PERCENT);
