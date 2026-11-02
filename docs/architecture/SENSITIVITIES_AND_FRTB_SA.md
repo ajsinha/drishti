@@ -553,6 +553,44 @@ offers a class at a time.
 The explanation panel walks the selected cell: for a K_b cell it lists the WS of the bucket, the ρ used in the scenario, the sum of
 squares and cross terms with their values, and the result.
 
+### 12.1a Critique and reproduce: the method choices as switches
+
+**Requested by the product owner (2026-11-02):** the playground must show that the engine can be **critiqued** (every choice the method
+makes is visible, its alternative computable, the difference explained) and that its numbers can be **reproduced at will**.
+
+**Every method choice is a named switch**, on the playground's *Choices* panel and on the workbook's Config tab, with the decided default
+(section 16), the alternative, the rule paragraph and one sentence on why the default was chosen:
+
+| Switch | Default (decided) | Alternative(s) | Rule |
+|---|---|---|---|
+| `curvature-source` | revaluation (up and down PVs) where delivered | gamma estimate (`−½·Γ·h²`); **both side by side** | MAR21.5, MAR21.17 |
+| `girr-curvature-shock` | 1.7% | 1.7%/√2 where the √2 reduction is used | MAR21.99 |
+| `fx-curvature-divisor` | ÷ 1.5 for FX options not referencing the reporting currency | off; every FX instrument (with approval) | MAR21.98 |
+| `girr-correlation` | the published table (0.1%) | the exact formula | MAR21.46 |
+| `scenario` | the binding one of the three | high, medium, low, each shown | MAR21.6 |
+| `simm-parameters` | the bank's licensed file, by version | another version loaded beside it | SIMM |
+| `overrides` | none | any risk weight, correlation or shock typed by a validator | (not a regulatory figure) |
+
+- **Compare.** Any switch can be flipped and the playground shows **both runs side by side** with the difference per risk class, bucket
+  and factor, and the **step where it arises** (the WS, K_b, the scenario, the across-bucket sum), in words as the VaR change is explained:
+  *"Using the exact correlation formula instead of the published table raises GIRR delta by 1,204 (0.4%), all of it in USD, bucket 1,
+  between the 5-year and 10-year vertices."* Overrides are drawn in a different colour and every figure they touch carries *not the
+  regulatory figure*.
+- **The same in Excel.** The workbook's Config tab holds each switch as a cell with a drop-down; the formula tabs read it (`IF` and
+  `CHOOSE` on the switch), so a validator who flips a switch in Excel sees the alternative recompute **live in the workbook**, without
+  Drishti. The Main tab shows the engine's figure for the default and for every alternative the export was made with, each with its check
+  cell.
+- **Reproduce at will.** Every playground run is a **recipe**: the scope and date, the input versions (each Delta or Iceberg table's
+  version and the batch ids), the parameter file and its hash, every switch and override, and the engine version. A recipe is saved with
+  one click (and on every export: the workbook's Provenance tab), has an id, and `PLAY FRTB RUN <id>` (or the recipe's link) computes it
+  again **to the cent**, months later, even after new data arrived, because it reads the recorded versions. `drishti.py play frtb
+  --recipe <id>` does the same from the command line.
+- **The proof, in tests:** the workbook with the default switches equals the engine; the workbook with each switch flipped equals the
+  engine run with that switch; a saved recipe replayed gives byte-equal figures; an override never reaches an official record.
+
+The SIMM playground has the same Choices panel for its own choices (the parameter version, the concentration thresholds, the HVR), and so
+will every later playground: critique and reproduce are part of the playground frame, not of one method.
+
 ### 12.2 SIMM playground (`PLAY SIMM`)
 
 One netting set (or up to a configurable number of them side by side). Tabs: Main (SIMM per product class and total, against the engine),
@@ -695,6 +733,18 @@ Decided by the product owner on 2026-11-01:
 6. **The FX curvature division by 1.5 (MAR21.98):** on by default for the FX options that do not reference the reporting currency, a
    setting to turn it off; extending it to every FX instrument is a second setting, off by default, for a bank with the supervisor's
    approval.
+
+Decided by the product owner on 2026-11-02, after the check against the rules ([section 18](#18-checked-against-the-rules)):
+
+7. **Curvature from gamma** (refining decision 2): an estimate is an **analysis figure** until the supervisor accepts it for the filing
+   (MAR21.17 and its FAQ); every screen and export that shows one says so, and the playground shows it beside the revalued figure
+   whenever both exist ([section 12.1a](#121a-critique-and-reproduce-the-method-choices-as-switches)).
+8. **The GIRR curvature shock where the bank uses the √2 reduction:** the undivided **1.7%** until a regulator says otherwise; 1.7%/√2 is a
+   switch.
+9. **FX ÷ 1.5:** as decision 6 (only where the rules allow it by default; every FX instrument only with the supervisor's approval).
+10. **GIRR correlations:** the **published table** of MAR21.46 (rounded to 0.1%) by default, so the bank's figures match what its
+    regulator expects; the exact formula behind it is a switch.
+11. **SIMM numbers:** shipped **empty**; the bank loads its licensed ISDA file, whose version is recorded on every figure and export.
 
 ## 17. The playgrounds' explanations
 
