@@ -19,7 +19,6 @@ import com.ash.drishti.bicompute.core.CellKey;
 import com.ash.drishti.bicompute.core.Dim;
 import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Map;
@@ -92,7 +91,7 @@ final class Derivation {
                 case "quarter" -> v.substring(0, 4);
                 default -> CellKey.BLANK;
             };
-        } catch (DateTimeParseException | RuntimeException e) {
+        } catch (RuntimeException e) {
             return CellKey.BLANK;
         }
     }

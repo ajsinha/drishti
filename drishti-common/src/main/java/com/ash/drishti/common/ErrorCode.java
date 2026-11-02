@@ -208,6 +208,11 @@ public enum ErrorCode {
     PIVOT_NOT_FOUND("DRS-5704", 404),
     /** A masked field asked as a pivot dimension, measure input or filter: masks apply before aggregation, so it cannot be used. */
     PIVOT_MASKED("DRS-5705", 403),
+    /**
+     * A pivot computed across the cluster's nodes where a node gave no answer within {@code drishti.pivot.cluster.deadline-seconds} (and no
+     * other node could answer its share): its rows are missing, so no figure is shown, never a figure from the other nodes alone.
+     */
+    PIVOT_NODE_MISSING("DRS-5720", 504),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

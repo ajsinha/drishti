@@ -84,8 +84,13 @@ public final class TabularRollupSource implements RollupSource {
 
     @Override
     public Partials evaluate(AggregationPlan plan, List<String> parts) {
+        return evaluateAs(system, plan, parts);
+    }
+
+    @Override
+    public Partials evaluateAs(Viewer viewer, AggregationPlan plan, List<String> parts) {
         if (parts == null) {
-            return provider.evaluate(system, plan);
+            return provider.evaluate(viewer, plan);
         }
         TabularSource.Resolver base = provider.resolver();
         TabularSource.Resolver only = new TabularSource.Resolver() {
@@ -163,6 +168,6 @@ public final class TabularRollupSource implements RollupSource {
                 };
             }
         };
-        return new TabularProvider(provider.executor(), only).evaluate(system, plan);
+        return new TabularProvider(provider.executor(), only).evaluate(viewer, plan);
     }
 }

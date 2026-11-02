@@ -49,6 +49,14 @@ public interface RollupSource {
     /** The plan's partial states as the system reads them, over {@code parts} only (null: every row). */
     Partials evaluate(AggregationPlan plan, List<String> parts);
 
+    /** The plan's partial states as {@code v} reads them (row rules and masks applied), over {@code parts} only (null: every row). */
+    default Partials evaluateAs(Viewer v, AggregationPlan plan, List<String> parts) {
+        if (parts != null) {
+            throw new UnsupportedOperationException(plan.source() + " is not read by parts");
+        }
+        return provider().evaluate(v, plan);
+    }
+
     /**
      * A part of a source.
      *
