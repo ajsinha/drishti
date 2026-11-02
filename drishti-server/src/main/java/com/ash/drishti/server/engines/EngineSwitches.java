@@ -61,7 +61,7 @@ public final class EngineSwitches {
 
     private Switch read(EngineCatalogue.Entry e, ConfigurableEnvironment env) {
         for (PropertySource<?> ps : env.getPropertySources()) {
-            if (skipForAliases(ps) || shipped(ps)) {
+            if (skipForAliases(ps) || shipped(ps) || attached(ps)) {
                 continue;
             }
             for (String alias : e.aliases()) {
@@ -77,7 +77,7 @@ public final class EngineSwitches {
         boolean on = Boolean.TRUE.equals(env.getProperty(e.switchKey(), Boolean.class, e.shipped()));
         PropertySource<?> from = null;
         for (PropertySource<?> ps : env.getPropertySources()) {
-            if (!"systemEnvironment".equals(ps.getName()) && ps.containsProperty(e.switchKey())) {
+            if (!"systemEnvironment".equals(ps.getName()) && !attached(ps) && ps.containsProperty(e.switchKey())) {
                 from = ps;
                 break;
             }
@@ -100,7 +100,7 @@ public final class EngineSwitches {
             return s;
         }
         for (PropertySource<?> ps : env.getPropertySources()) {
-            if (shipped(ps) || EngineFiles.isEngineFile(ps.getName()) || !(ps instanceof EnumerablePropertySource<?> en)) {
+            if (shipped(ps) || attached(ps) || EngineFiles.isEngineFile(ps.getName()) || !(ps instanceof EnumerablePropertySource<?> en)) {
                 continue;
             }
             for (String n : en.getPropertyNames()) {
@@ -110,6 +110,11 @@ public final class EngineSwitches {
             }
         }
         return s;
+    }
+
+    /** Spring's own view over every source ({@code configurationProperties}), not a source of its own. */
+    private static boolean attached(PropertySource<?> ps) {
+        return "configurationProperties".equals(ps.getName());
     }
 
     private static boolean skipForAliases(PropertySource<?> ps) {
