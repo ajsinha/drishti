@@ -949,7 +949,7 @@ buckets with γ_bc² and the same ψ.
 
 **DRC (MAR22):** per obligor, gross jump-to-default `JTD_long = max(LGD · notional + P&L, 0)`, `JTD_short = min(LGD · notional + P&L, 0)`,
 scaled by maturity (floor 3 months, cap 1 year), netted by obligor and seniority; per bucket
-`DRC_b = max( Σ RW_i · netJTD_long,i − WtS · Σ RW_i · |netJTD_short,i| , 0 )` with `WtS = Σ netJTD_long / (Σ netJTD_long + Σ |netJTD_short|)`;
+`DRC_b = max( Σ RW_i · netJTD_long,i − HBR · Σ RW_i · |netJTD_short,i| , 0 )` with `HBR = Σ netJTD_long / (Σ netJTD_long + Σ |netJTD_short|)`;
 the total is the simple sum over buckets (non-securitisations).
 
 **RRAO (MAR23):** `Σ gross notional × 1.0%` for exotic underlyings, `× 0.1%` for other residual risks.
