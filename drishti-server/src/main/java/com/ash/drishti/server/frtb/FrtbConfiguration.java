@@ -1,0 +1,54 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.frtb;
+
+import com.ash.drishti.api.EntityDocument;
+import com.ash.drishti.engine.source.SourceRouter;
+import com.ash.drishti.server.loads.LoadService;
+import com.ash.drishti.server.var.VarService;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+/** The beans of position sensitivities and FRTB-SA ({@link FrtbService}) and their settings, {@code drishti.frtb}. */
+@Configuration
+@EnableConfigurationProperties(FrtbProperties.class)
+public class FrtbConfiguration {
+
+    @Bean
+    FrtbService frtbService(FrtbProperties props, SourceRouter router, ObjectProvider<VarService> var, ObjectProvider<LoadService> loads) {
+        FrtbData data = new FrtbData((kind, asOf, sink) -> {
+            try {
+                return router.documents(kind, asOf, (EntityDocument d) -> sink.accept(d.data()));
+            } catch (RuntimeException e) {
+                org.slf4j.LoggerFactory.getLogger(FrtbConfiguration.class).debug("{} not read: {}", kind, e.getMessage());
+                return false;
+            }
+        }, props);
+        VarService v = var.getIfAvailable();
+        FrtbService svc = new FrtbService(data, v == null ? null : v::scopeMembers, props);
+        LoadService l = loads.getIfAvailable();
+        if (l != null) {
+            l.onReady(r -> {
+                if (data.kinds().contains(r.kind())) {
+                    data.clear();                                     // a new or restated batch read again
+                }
+            });
+        }
+        return svc;
+    }
+}

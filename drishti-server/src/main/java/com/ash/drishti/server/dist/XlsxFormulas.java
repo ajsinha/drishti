@@ -41,7 +41,7 @@ public final class XlsxFormulas {
 
     /** The functions a formula may call. */
     public static final Set<String> ALLOWED = Set.of("SUM", "SUMPRODUCT", "SMALL", "LARGE", "AVERAGE", "COUNT", "INDEX", "MATCH", "ROUNDDOWN",
-            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER");
+            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER", "EXP", "SUMIFS", "SUMIF");
 
     /** A function call: a name then an opening parenthesis (a sheet name or a defined name is never followed by one). */
     private static final Pattern CALL = Pattern.compile("([A-Za-z_][A-Za-z0-9_.]*)\\s*\\(");

@@ -125,6 +125,13 @@ public final class SbmModel {
     public final FrtbParams params;
     public final FrtbChoices choices;
     public final String reporting;
+    /** Per input element (in the input's order): the delta or vega factor's key it was netted into, or null. */
+    public final String[] elementRisk;
+    /** Per input element: the curvature factor's key it feeds (a curvature input, or a delta of the factor's curve), or null. */
+    public final String[] elementCurv;
+    /** Per input element: the conversion to the regulatory sensitivity (10,000 per bp, 100 per 1%, 100·σ for vega; NaN: none). */
+    public final double[] elementConversion;
+    private int current;
 
     private final Map<String, Risk> riskByKey = new LinkedHashMap<>();
     private final Map<String, Curv> curvByKey = new LinkedHashMap<>();
@@ -137,8 +144,13 @@ public final class SbmModel {
         this.choices = choices;
         this.reporting = in.reporting();
         Map<Integer, Set<String>> fxCurvature = new HashMap<>();
+        elementRisk = new String[in.elements().size()];
+        elementCurv = new String[in.elements().size()];
+        elementConversion = new double[in.elements().size()];
+        java.util.Arrays.fill(elementConversion, Double.NaN);
         for (FrtbInput.Element e : in.elements()) {
             String why = place(e);
+            current++;
             if (why != null) {
                 refusals.add(new Refusal(e.position(), e.factor() == null ? "" : e.factor().name(), e.measure(), why));
             } else if (e.factor().riskClass().equals("FX") && e.measure().startsWith("CURVATURE")) {
@@ -199,12 +211,12 @@ public final class SbmModel {
                 String ccy = up(f.qualifier());
                 if (type.equals("INFLATION")) {
                     add(new Risk(cls, DELTA, ccy, "GIRR|" + ccy + "|INFLATION", "INFLATION", ccy, "", Double.NaN, Double.NaN, params.girrInflationRw,
-                            "GIRR.delta.inflation-risk-weight"), e, e.value() * perBp);
+                            "GIRR.delta.inflation-risk-weight"), e, perBp);
                     return null;
                 }
                 if (type.equals("BASIS")) {
                     add(new Risk(cls, DELTA, ccy, "GIRR|" + ccy + "|BASIS", "BASIS", ccy, "", Double.NaN, Double.NaN, params.girrBasisRw,
-                            "GIRR.delta.cross-currency-basis-risk-weight"), e, e.value() * perBp);
+                            "GIRR.delta.cross-currency-basis-risk-weight"), e, perBp);
                     return null;
                 }
                 double t = FactorDictionary.years(f.tenor());
@@ -216,7 +228,7 @@ public final class SbmModel {
                 double rw = params.girrRw[i] / (div ? params.girrDivisor : 1);
                 String curve = up(f.curve());
                 add(new Risk(cls, DELTA, ccy, "GIRR|" + ccy + "|CURVE|" + curve + "|" + f.tenor(), "CURVE", ccy, curve, t, Double.NaN, rw,
-                        "GIRR.delta.risk-weights[" + i + "]" + (div ? " / specified-divisor" : "")), e, e.value() * perBp);
+                        "GIRR.delta.risk-weights[" + i + "]" + (div ? " / specified-divisor" : "")), e, perBp);
                 return null;
             }
             case "CSR_NS" -> {
@@ -234,7 +246,7 @@ public final class SbmModel {
                 }
                 String curve = up(f.curve()).isEmpty() ? "BOND" : up(f.curve());
                 add(new Risk(cls, DELTA, String.valueOf(bucket), "CSR|" + bucket + "|" + f.qualifier() + "|" + curve + "|" + f.tenor(), "SPREAD", f.qualifier(),
-                        curve, t, Double.NaN, rw, "CSR_NS.delta.risk-weights." + bucket), e, e.value() * perBp);
+                        curve, t, Double.NaN, rw, "CSR_NS.delta.risk-weights." + bucket), e, perBp);
                 return null;
             }
             case "EQ" -> {
@@ -249,7 +261,7 @@ public final class SbmModel {
                 }
                 add(new Risk(cls, DELTA, String.valueOf(bucket), "EQ|" + bucket + "|" + f.qualifier() + "|" + (repo ? "REPO" : "SPOT"), repo ? "REPO" : "SPOT",
                         f.qualifier(), "", Double.NaN, Double.NaN, rw, "EQ.delta." + (repo ? "repo" : "spot") + "-risk-weights." + bucket), e,
-                        e.value() * (repo ? perBp : perPct));
+                        repo ? perBp : perPct);
                 return null;
             }
             case "COMM" -> {
@@ -267,7 +279,7 @@ public final class SbmModel {
                 }
                 String loc = up(f.curve());
                 add(new Risk(cls, DELTA, String.valueOf(bucket), "COMM|" + bucket + "|" + f.qualifier() + "|" + loc + "|" + f.tenor(), "PRICE", f.qualifier(), loc, t,
-                        Double.NaN, rw, "COMM.delta.risk-weights." + bucket), e, e.value() * perPct);
+                        Double.NaN, rw, "COMM.delta.risk-weights." + bucket), e, perPct);
                 return null;
             }
             default -> {
@@ -280,7 +292,7 @@ public final class SbmModel {
                 }
                 boolean div = params.fxSpecifiedPairs.contains(ccy + reporting) || params.fxSpecifiedPairs.contains(reporting + ccy);
                 add(new Risk(cls, DELTA, ccy, "FX|" + ccy, "FX", ccy, "", Double.NaN, Double.NaN, params.fxRw / (div ? params.fxDivisor : 1),
-                        "FX.delta.risk-weight" + (div ? " / specified-divisor" : "")), e, e.value() * perPct);
+                        "FX.delta.risk-weight" + (div ? " / specified-divisor" : "")), e, perPct);
                 return null;
             }
         }
@@ -295,7 +307,7 @@ public final class SbmModel {
         if (!(t > 0)) {
             return "the volatility " + f.name() + " has no option maturity";
         }
-        double s = e.value() * 100 * e.impliedVol();
+        double conv = 100 * e.impliedVol();
         switch (cls) {
             case "GIRR" -> {
                 String ccy = up(f.qualifier());
@@ -304,12 +316,12 @@ public final class SbmModel {
                     return "the GIRR volatility " + f.name() + " has no underlying maturity";
                 }
                 add(new Risk(cls, VEGA, ccy, "GIRR|" + ccy + "|VOL|" + f.tenor() + "|" + f.underlyingTenor(), "VOL", ccy, "", t, u, params.girrVegaRw,
-                        "GIRR.vega.risk-weight"), e, s);
+                        "GIRR.vega.risk-weight"), e, conv);
             }
             case "CSR_NS" -> {
                 int b = bucketNo(f.frtbBucket());
                 add(new Risk(cls, VEGA, String.valueOf(b), "CSR|" + b + "|" + f.qualifier() + "|VOL|" + f.tenor(), "VOL", f.qualifier(), "", t, Double.NaN,
-                        params.csrVegaRw, "CSR_NS.vega.risk-weight"), e, s);
+                        params.csrVegaRw, "CSR_NS.vega.risk-weight"), e, conv);
             }
             case "EQ" -> {
                 int b = bucketNo(f.frtbBucket());
@@ -318,23 +330,29 @@ public final class SbmModel {
                     return "the equity bucket " + f.frtbBucket() + " has no vega risk weight";
                 }
                 add(new Risk(cls, VEGA, String.valueOf(b), "EQ|" + b + "|" + f.qualifier() + "|VOL|" + f.tenor(), "VOL", f.qualifier(), "", t, Double.NaN, rw,
-                        "EQ.vega.risk-weights." + b), e, s);
+                        "EQ.vega.risk-weights." + b), e, conv);
             }
             case "COMM" -> {
                 int b = bucketNo(f.frtbBucket());
                 add(new Risk(cls, VEGA, String.valueOf(b), "COMM|" + b + "|" + f.qualifier() + "|VOL|" + f.tenor(), "VOL", f.qualifier(), "", t, Double.NaN,
-                        params.cmVegaRw, "COMM.vega.risk-weight"), e, s);
+                        params.cmVegaRw, "COMM.vega.risk-weight"), e, conv);
             }
             default -> {
                 String ccy = up(f.qualifier());
-                add(new Risk(cls, VEGA, ccy, "FX|" + ccy + "|VOL|" + f.tenor(), "VOL", ccy, "", t, Double.NaN, params.fxVegaRw, "FX.vega.risk-weight"), e, s);
+                add(new Risk(cls, VEGA, ccy, "FX|" + ccy + "|VOL|" + f.tenor(), "VOL", ccy, "", t, Double.NaN, params.fxVegaRw, "FX.vega.risk-weight"), e, conv);
             }
         }
         return null;
     }
 
-    private void add(Risk proto, FrtbInput.Element e, double s) {
+    private void add(Risk proto, FrtbInput.Element e, double conv) {
+        double s = e.value() * conv;
         Risk r = riskByKey.computeIfAbsent(proto.key, k -> proto);
+        elementRisk[current] = r.key;
+        elementConversion[current] = conv;
+        if (r.measure.equals(DELTA)) {
+            elementCurv[current] = curvKeyOfDelta(r);
+        }
         r.s += s;
         r.parts.merge(e.position(), s, Double::sum);
         if (r.measure.equals(DELTA)) {
@@ -376,6 +394,7 @@ public final class SbmModel {
             return "curvature is delivered on the whole curve or spot, not on " + f.name();
         }
         double[] raw = curvRaw.computeIfAbsent(key, k -> new TreeMap<>()).computeIfAbsent(e.position(), p -> new double[7]);
+        elementCurv[current] = key;
         switch (m) {
             case "CURVATURE_UP" -> {
                 raw[0] += e.value();

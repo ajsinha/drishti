@@ -12,20 +12,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Planned data contract of the risk-factor dictionary (proposed command RFAC): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 3;
+# Data contract of the risk-factor dictionary (command RFAC): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 3;
 # the MR cube's D9 (docs/lenses/MR_CUBE_LENS.md section 7.10). Demo data: tools/packgen/sensitivity/factor_dictionary.py.
 kind: risk-factor
 mnemonic: RFAC
 pack: market-risk
 version: '1.0'
 class: fundamental
-status: planned
+status: active
 title: 'Risk factor dictionary'
 description: 'Every risk factor the bank''s sensitivities use, named by the factor naming standard, with its parts (class, qualifier,
   curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class,
   bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not
-  here, or whose source name maps to no factor, is refused. Planned: no command and no engine reads it yet
-  (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md).'
+  here, or whose source name maps to no factor, is refused. Read by the server''s FRTB-SA engine with the sensitivities
+  (docs/guides/FRTB_SA_GUIDE.md).'
 source: The bank's risk-factor master (often kept in the market-data system or the FRTB engine)
 grain: One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR.
 key:
@@ -50,6 +50,8 @@ storage:
   - FRTB_BUCKET
   - SIMM_RISK_CLASS
   - SIMM_BUCKET
+  test-data:
+  - data/testdata/market-risk/risk-factor
 fields:
 - name: RISK_FACTOR
   type: id
@@ -172,6 +174,7 @@ fields:
   presence: optional
   description: ADVANCED or EMERGING for an equity (MAR21.72).
   example: ADVANCED
+  link: economy
   enum:
   - ADVANCED
   - EMERGING

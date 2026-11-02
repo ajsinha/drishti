@@ -342,6 +342,24 @@ def write(out: Path, testdata: Path | None = None) -> list[Path]:
     return written
 
 
+#: the testdata.yaml entry of each kind: its key (the lake's business key)
+KEYS = {"position-sensitivity": "SENSITIVITY_ID", "risk-factor": "RISK_FACTOR"}
+
+
+def datasets(out: Path, written: list[Path]) -> list[dict]:
+    """The testdata.yaml entries of the files just written (read by `drishti.py lake demo` into risk-store, as every risk kind)."""
+    entries = []
+    for f in sorted(written, key=lambda x: x.parent.name):
+        kind = f.parent.name
+        cob = f.name[4:14]
+        with gzip.open(f, "rt", encoding="utf-8") as fh:
+            documents = sum(1 for _ in fh)
+        entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": "risk-store", "key": KEYS[kind],
+                        "dated-by": "BUSINESS_DATE", "first-date": cob, "last-date": cob, "documents": documents, "files": [f.name],
+                        "bytes": f.stat().st_size})
+    return entries
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="make_sensitivity_data.py", description=__doc__.split("\n\n")[0])
     p.add_argument("--testdata", default=str(ROOT / "data" / "testdata"), help="the committed test data to read (default data/testdata)")

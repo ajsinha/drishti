@@ -12,20 +12,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Planned data contract of the position-sensitivity input (proposed command SENS): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md
+# Data contract of the position-sensitivity input (command SENS): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md
 # section 2; the MR cube's D8 (docs/lenses/MR_CUBE_LENS.md section 7.9). Demo data: tools/packgen/sensitivity/make_sensitivity_data.py.
 kind: position-sensitivity
 mnemonic: SENS
 pack: market-risk
 version: '1.0'
 class: input
-status: planned
+status: active
 title: 'Position sensitivities'
 description: 'The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank''s
   pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price
   deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB
   standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube''s ladders and heat maps, sensitivity
-  limits and P&L explain. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md).'
+  limits and P&L explain. Read by the server''s FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket.'
 source: The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors)
 grain: One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID
   (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure.
@@ -55,6 +55,8 @@ storage:
   - TT_BOOK
   - PRODUCT_TYPE
   - CURRENCY
+  test-data:
+  - data/testdata/market-risk/position-sensitivity
 fields:
 - name: SENSITIVITY_ID
   type: id
@@ -78,6 +80,7 @@ fields:
     record the position the trade belongs to when the source knows it.
   example: POS-BOOK-RATES-1~MX-20000002
   pattern: ^POS-
+  link: position
 - name: TRADE_ID
   type: id
   presence: optional
@@ -89,6 +92,7 @@ fields:
   presence: optional
   description: The trades a position record covers (for drill-through and the completeness check against the vectors).
   example: MX-20000002
+  link: trade
 - name: SOURCE_SYSTEM
   type: text
   presence: required

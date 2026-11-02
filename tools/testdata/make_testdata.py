@@ -137,11 +137,11 @@ def main(argv=None) -> int:
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "ccr"))
     import make_ccr_data as XD  # noqa: E402
     datasets += XD.write_testdata(out, days.dates, side_files=out.resolve() == (ROOT / "data" / "testdata").resolve())
-    # the planned kinds position-sensitivity and risk-factor (from the VaR data just written): tools/packgen/sensitivity/
-    # make_sensitivity_data.py; not in the manifest (no command reads them yet, so `lake demo` leaves them out)
+    # the kinds position-sensitivity (SENS) and risk-factor (RFAC) from the VaR data just written (tools/packgen/sensitivity/
+    # make_sensitivity_data.py): read by the server's FRTB-SA engine from risk-store, loaded by `lake demo` as every risk kind
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "sensitivity"))
     import make_sensitivity_data as SD  # noqa: E402
-    SD.write(out)
+    datasets += SD.datasets(out, SD.write(out))
     for pack in FROM_SAMPLES:
         for kind, (pk, connector) in sorted(owners.items()):
             if pk == pack and has_samples(pack, kind):
