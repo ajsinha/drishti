@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (pivot/C.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11.a, the pivot engine;
+  the design: docs/architecture/PIVOT_ENGINE.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pivot: option C, compare and insight canvas</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px}
+.intro h1{font-size:19px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:150ch;line-height:1.45;font-size:13px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:7px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:760px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:30px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:12.5px}
+.cmd.wide{max-width:none}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}
+.head h2{margin:0;font-size:16px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pick{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel);white-space:nowrap}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn kbd,.k{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px} .card h3 span{color:var(--muted);font-weight:400;font-size:11.5px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:3px 7px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:11.5px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+th.grp{text-align:center;color:var(--ink);font-weight:600;border-bottom:2px solid var(--line)}
+th.grp.m{border-bottom-color:var(--ok)} th.grp.s{border-bottom-color:var(--warn)} th.grp.h{border-bottom-color:var(--link)}
+.neg{color:var(--neg)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.ax{color:var(--warn)} .ax::before{content:"≈ ";font-weight:700}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.45}
+footer{font-size:11.5px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:6px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.msg{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-t);border-radius:8px;padding:7px 12px;font-size:12.5px;line-height:1.45;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.msg.calm{border-left-color:var(--link);background:var(--hl)}
+.msg b.t{margin-right:4px}
+.scene{border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg2);min-width:0}
+.scene>.lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.scene>.lbl b{color:var(--amber);font-weight:700;margin-right:6px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:10px;align-items:start}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.wrap{overflow-x:auto}
+.tw{display:inline-block;width:14px;text-align:center;font-family:var(--mono);color:var(--amber);font-weight:700}
+.lv1{padding-left:6px} .lv2{padding-left:24px} .lv3{padding-left:42px} .lv4{padding-left:60px}
+tr.sub td{background:var(--panel2);font-weight:600}
+tr.tot td{background:var(--amber-t);font-weight:700;border-top:1px solid var(--amber)}
+tr.sel td.c{outline:2px solid var(--link);outline-offset:-2px}
+td.sel{outline:2px solid var(--amber);outline-offset:-2px;background:var(--emph)}
+td.selc{background:var(--hl)}
+.by{font-size:10.5px;padding:0 6px;border-radius:8px;border:1px solid var(--link);color:var(--link);margin-left:6px;font-family:var(--sans)}
+.oth{color:var(--muted);font-style:italic}
+.div{color:var(--muted)}
+.fl{font-size:12px}
+.fl .srch{border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--faint);margin-bottom:6px;background:var(--panel2)}
+.fl .g{font-size:10.5px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 2px;font-weight:700}
+.fl .f{display:flex;align-items:center;gap:6px;padding:2px 0}
+.fl .f i{display:inline-block;width:12px;height:12px;border:1px solid var(--line);border-radius:3px;font-style:normal;font-size:9px;line-height:11px;text-align:center}
+.fl .f i.on{background:var(--amber);border-color:var(--amber);color:var(--onacc)}
+.fl .f .t{margin-left:auto;font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:0 5px}
+.fl .f .t.s{color:var(--warn);border-color:var(--warn)} .fl .f .t.h{color:var(--link);border-color:var(--link)} .fl .f .t.c{color:var(--ok);border-color:var(--ok)}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.zone{border:1px dashed var(--line);border-radius:6px;padding:5px;min-height:46px;background:var(--panel2)}
+.zone .zl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.chip{display:inline-block;font-size:11px;padding:1px 7px;border:1px solid var(--line);border-radius:10px;margin:1px;color:var(--ink);background:var(--panel)}
+.chip.s{border-color:var(--warn)} .chip.h{border-color:var(--link)} .chip.c{border-color:var(--ok)}
+.pop{position:absolute;z-index:3;width:390px;background:var(--panel);border:1px solid var(--amber);border-radius:8px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45);font-size:11.5px;line-height:1.45}
+.pop h4{margin:0 0 4px;font-size:12.5px}
+.pop .r{display:flex;gap:8px;border-top:1px solid var(--line2);padding:3px 0}
+.pop .r b{flex:0 0 86px;color:var(--muted);font-weight:500}
+.pop .acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.rel{position:relative}
+.keys{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px}
+.code{font-family:var(--mono);font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;white-space:pre;overflow-x:auto;color:var(--ink)}
+.code .kw{color:var(--link)} .code .cm{color:var(--faint)} .code .st{color:var(--ok)} .code .fn{color:var(--amber2)}
+.three{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.8fr) minmax(0,1fr);gap:10px;align-items:start}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.why .card h3{color:var(--amber)}
+.why ul{margin:0;padding-left:18px;font-size:12px;line-height:1.5}
+.chk{font-size:12px;line-height:1.6}
+.chk .y{color:var(--ok);font-weight:700;margin-right:6px} .chk .n{color:var(--bad);font-weight:700;margin-right:6px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px}
+.kv b{color:var(--muted);font-weight:500}
+.exp{font-size:12px}
+.exp .o{display:flex;gap:6px;align-items:center;padding:2px 0}
+.exp .rb{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid var(--line)} .exp .rb.on{border:3px solid var(--amber)}
+.step{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 10px;margin-bottom:8px}
+.step .sh{display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:600;margin-bottom:5px}
+.step .n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--amber);color:var(--onacc);align-items:center;justify-content:center;font-size:11px}
+.wiz{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.wiz span{font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid var(--line);color:var(--muted)}
+.wiz span.on{border-color:var(--amber);color:var(--ink);background:var(--amber-t);font-weight:600}
+.wiz span.done{color:var(--ok);border-color:var(--ok)}
+td.up{background:rgba(242,149,90,.16)} td.dn{background:rgba(127,178,255,.14)}
+tr.new td{border-left:0} tr.new td.l{box-shadow:inset 3px 0 0 var(--ok)} tr.gone td{color:var(--faint);text-decoration:line-through}
+.flag{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-left:5px;vertical-align:middle}
+.ins{font-size:12px;line-height:1.45;border-bottom:1px solid var(--line2);padding:5px 0}
+.ins b{display:block}
+@media (max-width:1100px){.layout,.three,.two{grid-template-columns:minmax(0,1fr)}.pop{position:static;width:auto;margin-top:8px}}
+@media (max-width:900px){.why{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){
+  .page{padding:10px 8px 18px}
+  .menus{display:none}
+  .intro h1{font-size:16px}
+  .rec,.alt{margin-left:0;margin-top:4px}
+  .zones{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Pivot: option C, compare and insight canvas<span class="alt">alternative</span></h1><p>Built around change: two dates or data versions side by side with changed cells shaded and new and gone members marked, insights flagged with their reasons, and Ask in words proposing a view you see before it runs. Scene 2 shows the playground as a wizard whose check fails a function declared mergeable that is not.</p></section>
+<div class="bar"><span class="brand">DRISHTI<i>Risk</i></span><div class="cmd">PIVOT asha/desk-risk COMPARE 2026-09-30 &lt;GO&gt;</div><div class="menus"><span class="on">Views</span><span>VaR</span><span>Exposure</span><span>BI</span><span>Admin</span><span>Help</span></div></div>
+<div class="scene"><p class="lbl"><b>Scene 1</b>The pivot screen in compare mode</p>
+<div class="ctrls" style="margin-bottom:8px"><span class="pick"><b>Left</b>2026-09-30 · v931 ▾</span><span class="pick"><b>Right</b>2026-10-30 · latest ▾</span><span class="pick"><b>Show</b>both and Δ ▾</span><span class="pick"><b>Highlight</b>|Δ| &gt; 5% ▾</span><span class="pick"><b>Insights</b>on</span><span class="btn">Fields<kbd>F</kbd></span><span class="btn">Chart Δ as waterfall<kbd>G</kbd></span><span class="btn">Export<kbd>X</kbd></span></div>
+<div class="msg calm" style="margin-bottom:8px"><span><b class="t">Estimate</b>both sides from the rollup REGION × DESK × BOOK (instant); exact counterparties read ≈2 × 180 GB, ≈4 min on 3 nodes.</span><span class="btn">Make exact</span></div>
+<div class="layout" style="grid-template-columns:minmax(0,1fr) 380px"><div class="col"><div class="card"><h3>Compare <span>2026-09-30 (trade v931, pnl-vector v1790) ↔ 2026-10-30 (trade v977, pnl-vector v1842) · changed cells shaded · new and gone members marked</span></h3>
+<div class="wrap"><table>
+<tr><th class="l" rowspan="2">REGION › DESK</th><th class="grp m" colspan="3">Notional Σ, USD bn (exact)</th><th class="grp h" colspan="3">VaR 99% 1d, USD m (exact, per cell)</th><th class="grp s" colspan="2">Counterparties (≈ ±1.6%)</th></tr>
+<tr><th>09-30</th><th>10-30</th><th>Δ</th><th>09-30</th><th>10-30</th><th>Δ</th><th>09-30</th><th>10-30</th></tr>
+<tr><td class="l"><span class="tw">−</span><b>EMEA</b></td><td>64.10</td><td>67.57</td><td class="up">+3.47</td><td>5.31</td><td>6.02</td><td class="up">+0.71</td><td>≈ 881</td><td>≈ 902</td></tr>
+<tr><td class="l"><span class="tw" style="margin-left:18px">+</span>RATES-LDN <span class="flag"></span></td><td>33.92</td><td>35.80</td><td class="up">+1.88</td><td>3.24</td><td>4.48</td><td class="up">+1.24</td><td>≈ 380</td><td>≈ 391</td></tr>
+<tr><td class="l"><span class="tw" style="margin-left:18px">+</span>FX-LDN</td><td>21.70</td><td>22.15</td><td>+0.45</td><td>2.41</td><td>2.36</td><td>−0.05</td><td>≈ 305</td><td>≈ 310</td></tr>
+<tr><td class="l"><span class="tw" style="margin-left:18px">+</span>CREDIT-LDN <span class="flag"></span></td><td>8.48</td><td>9.62</td><td class="up">+1.14</td><td>1.79</td><td>1.87</td><td>+0.08</td><td>≈ 396</td><td>≈ 402</td></tr>
+<tr class="new"><td class="l"><span class="tw" style="margin-left:18px"> </span>BK-1207 <span class="muted">(RATES-LDN)</span> <span class="pill g">new book</span></td><td>–</td><td>0.62</td><td class="up">+0.62</td><td>–</td><td>0.21</td><td class="up">+0.21</td><td>–</td><td>≈ 14</td></tr>
+<tr class="gone"><td class="l"><span class="tw" style="margin-left:18px"> </span>BK-0940 <span class="muted">(CREDIT-LDN)</span> <span class="pill n">gone</span></td><td>0.44</td><td>–</td><td>−0.44</td><td>0.16</td><td>–</td><td>−0.16</td><td>≈ 9</td><td>–</td></tr>
+<tr><td class="l"><span class="tw">+</span><b>AMERICAS</b></td><td>62.20</td><td>61.45</td><td class="dn">−0.75</td><td>5.72</td><td>5.60</td><td>−0.12</td><td>≈ 801</td><td>≈ 790</td></tr>
+<tr><td class="l"><span class="tw">+</span><b>APAC</b></td><td>24.95</td><td>24.80</td><td>−0.15</td><td>2.90</td><td>2.88</td><td>−0.02</td><td>≈ 347</td><td>≈ 344</td></tr>
+<tr class="tot"><td class="l">Grand total</td><td>151.25</td><td>153.82</td><td>+2.57</td><td>9.40</td><td>9.84</td><td>+0.44</td><td>≈ 1,701</td><td>≈ 1,712</td></tr>
+</table></div>
+<div class="note" style="margin-top:6px">Click any Δ for its explanation in steps that add up; VaR's grand-total Δ (+0.44) is not the sum of the regions' Δ (+0.57): each is its own figure. A time slider moves both sides; any data version may be picked.</div></div></div><div class="col"><div class="card"><h3>Insights <span>computed by the engine, with the reason; on request</span></h3>
+<div class="ins"><b><span class="flag" style="margin:0 6px 0 0"></span>RATES-LDN VaR +38% in a month</b>robust z-score 4.1 against its own last 60 business days (median 3.21 m); the market step explains +0.52 of the +1.24. <a>Why</a></div>
+<div class="ins"><b><span class="flag" style="margin:0 6px 0 0"></span>CREDIT-LDN: one counterparty is 22% of notional</b>CP-88123 holds 2.11 bn of 9.62 bn, above the 20% concentration level. <a>Rows</a></div>
+<div class="ins"><b>BK-1207 is new this month</b>0.62 bn notional, 0.21 m standalone VaR. <a>Show in hierarchy</a></div>
+</div>
+<div class="card"><h3>Ask in words <span>the AI proposes; you see the view before it runs</span></h3>
+<div class="pick" style="display:block;white-space:normal;border-radius:6px;margin-bottom:6px">VaR by desk and currency for last quarter, top 10</div>
+<div class="code" style="white-space:pre-wrap">rows: [DESK]   top: { n: 10, by: VaR, others: true }
+columns: [CURRENCY]
+values: [var(99, 1d)]
+date: { from: 2026-07-01, to: 2026-09-30, each: month-end }</div>
+<div class="ctrls" style="margin-top:6px"><span class="btn p">Run this view</span><span class="btn">Edit</span></div></div></div></div>
+</div>
+<div class="scene"><p class="lbl"><b>Scene 2</b>Pivot → Functions → New: the playground as a four-step wizard (step 3, the check, failing)</p>
+<div class="wiz"><span class="done">1 Write ✓</span><span class="done">2 Sample rows ✓</span><span class="on">3 Check</span><span>4 Cost and submit</span></div>
+<div class="two">
+<div class="card"><h3>trimmed_mean · kim @1 <span>Python · declared mergeable · trims 5% each side</span></h3>
+<div class="code"><span class="kw">def</span> <span class="fn">add</span>(self, s, batch):          <span class="cm"># trims each batch, then keeps sum and count</span>
+    x = np.sort(batch[<span class="st">"PNL_1D"</span>].to_numpy()); k = int(len(x) * 0.05)
+    t = x[k:len(x) - k]
+    <span class="kw">return</span> {<span class="st">"s"</span>: s[<span class="st">"s"</span>] + t.sum(), <span class="st">"n"</span>: s[<span class="st">"n"</span>] + len(t)}
+<span class="kw">def</span> <span class="fn">merge</span>(self, a, b): <span class="kw">return</span> {<span class="st">"s"</span>: a[<span class="st">"s"</span>] + b[<span class="st">"s"</span>], <span class="st">"n"</span>: a[<span class="st">"n"</span>] + b[<span class="st">"n"</span>]}</div>
+<svg viewBox="0 0 520 120" width="100%" height="120" role="img" aria-label="one pass compared with a three-way split and merge">
+<g font-size="11" fill="var(--ink)">
+<rect x="10" y="10" width="150" height="26" rx="5" fill="var(--panel2)" stroke="var(--line)"/><text x="85" y="27" text-anchor="middle">one pass: 1,029.4</text>
+<rect x="200" y="10" width="90" height="26" rx="5" fill="var(--panel2)" stroke="var(--line)"/><text x="245" y="27" text-anchor="middle">part 1</text>
+<rect x="300" y="10" width="90" height="26" rx="5" fill="var(--panel2)" stroke="var(--line)"/><text x="345" y="27" text-anchor="middle">part 2</text>
+<rect x="400" y="10" width="90" height="26" rx="5" fill="var(--panel2)" stroke="var(--line)"/><text x="445" y="27" text-anchor="middle">part 3</text>
+<line x1="245" y1="36" x2="345" y2="74" stroke="var(--line)"/><line x1="345" y1="36" x2="345" y2="74" stroke="var(--line)"/><line x1="445" y1="36" x2="345" y2="74" stroke="var(--line)"/>
+<rect x="260" y="74" width="170" height="26" rx="5" fill="var(--bad-t)" stroke="var(--bad)"/><text x="345" y="91" text-anchor="middle">merged: 1,031.7</text>
+<text x="10" y="70" fill="var(--bad)">differs by 2.3 (2.2e-3)</text><text x="10" y="86" fill="var(--muted)">tolerance 1e-12</text>
+</g></svg></div>
+<div class="card"><h3>The check <span>split 3, seed 2, balanced tree</span></h3>
+<div class="chk"><div><span class="y">✓</span>batches of 1 row: equal (nothing trimmed, so nothing differs)</div><div><span class="n">✗</span>batches of 1,000: one pass 1,029.4, batched 1,030.9</div><div><span class="n">✗</span>splits 2, 3, 16 × 5 seeds: largest difference 2.3 (split 3, seed 2)</div><div><span class="y">✓</span>empty and null parts</div></div>
+<div class="msg" style="margin-top:8px"><span><b class="t">Not mergeable as written.</b>A trimmed mean needs the whole cell's order statistics; trimming each part trims different values. Choose one:</span></div>
+<div class="exp" style="margin-top:6px"><div class="o"><span class="rb on"></span>declare it <b>holistic</b> (exact; a cell's rows to one worker, bounded at 5 M rows)</div><div class="o"><span class="rb"></span>make it a <b>sketch</b>: trim bounds from a KLL sketch (≈, error stated)</div><div class="o"><span class="rb"></span>keep editing</div></div>
+<div class="ctrls" style="margin-top:8px"><span class="btn p">Re-run as holistic</span><span class="btn">Back to code</span></div></div>
+</div></div>
+<div class="why"><div class="card"><h3>How it feels</h3><ul><li>A month-end review tool: what changed, where, and why, first.</li><li>The engine points at what deserves a look.</li></ul></div><div class="card"><h3>Why not recommended</h3><ul><li>Most days people pivot one date; compare is a mode, not the home screen.</li><li>Two columns per figure halve what fits on screen.</li></ul></div><div class="card"><h3>Keep from it</h3><ul><li>Compare as A's Compare picker, with this layout.</li><li>The failing check's three choices, in every playground.</li></ul></div></div>
+<footer>Mock-up. Design, not built (docs/architecture/PIVOT_ENGINE.md). Names, numbers, versions and thresholds are illustrative; insights are computed by the engine, never guessed.</footer>
+</div>
+</body>
+</html>
