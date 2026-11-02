@@ -1,0 +1,61 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# FRTB standardised approach: the default risk charge (non-securitisations) and the residual risk add-on, the parameters the engine reads
+# (docs/guides/FRTB_SA_GUIDE.md sections 5 and 6). Source: Basel Framework chapters MAR22 and MAR23 (effective 1 January 2023). A
+# jurisdiction's rule may differ; the bank's copy names its regime and version and is checked at start.
+
+regime: BCBS-MAR22-23
+version: '2023-01-01.1'
+effective: '2023-01-01'
+sources:
+  drc: https://www.bis.org/basel_framework/chapter/MAR/22.htm
+  rrao: https://www.bis.org/basel_framework/chapter/MAR/23.htm
+
+drc:
+  lgd:                                   # MAR22.12, by seniority
+    COVERED: 0.25
+    SENIOR: 0.75
+    NON_SENIOR: 1.00
+    EQUITY: 1.00
+    DEFAULTED: 1.00
+  seniority-order: [COVERED, SENIOR, NON_SENIOR, EQUITY, DEFAULTED]   # most senior first; MAR22.19-21: a short offsets a long of the same
+                                                                       # obligor when the short's seniority is the same or lower
+  maturity:                              # MAR22.15-18: the gross JTD scaled by min(max(M, floor), cap) years
+    floor-years: 0.25
+    cap-years: 1.0
+    cash-equity-years: 1.0               # MAR22.16: 0.25 or 1, at the bank's choice (nothing between)
+  buckets: [CORPORATE, SOVEREIGN, LOCAL_GOVT]   # MAR22.22
+  risk-weights:                          # MAR22.24, by credit quality
+    AAA: 0.005
+    AA: 0.02
+    A: 0.03
+    BBB: 0.06
+    BB: 0.15
+    B: 0.30
+    CCC: 0.50
+    UNRATED: 0.15
+    DEFAULTED: 1.00
+  sovereign-zero-weight: false           # MAR22.7: national discretion; true weighs sovereign exposures at 0%
+
+rrao:                                    # MAR23
+  exotic-underlying-weight: 0.010        # MAR23.8(1)
+  other-residual-risk-weight: 0.001      # MAR23.8(2)
+  product-types:                         # the demo's mapping from PRODUCT_TYPE (a bank maps its own; a type absent is out of scope)
+    EXOTIC: [WEATHER_HDD, EQ_VARIANCE_SWAP, FX_VARIANCE_SWAP, EQ_VOL_SWAP]
+    OTHER: [EQ_BARRIER, FX_BARRIER, FX_DOUBLE_BARRIER, FX_TOUCH, EQ_DIGITAL, FX_DIGITAL, EQ_BASKET_OPTION, EQ_CLIQUET, AUTOCALLABLE,
+            WORST_OF_NOTE, CMS_SPREAD_OPT, CMD_SPREAD_OPT, FX_TARF, FX_ACCUMULATOR, TARN_RATES, SNOWBALL_SWAP, RANGE_ACCRUAL_SWAP,
+            RANGE_ACCRUAL_NOTE, FIRST_TO_DEFAULT, GAS_SWING]
+  # MAR23.7, flagged on the input: BACK_TO_BACK excludes the trade entirely; LISTED_OR_CLEARED excludes it from the other-residual part
+  # only (an exotic underlying stays in)
