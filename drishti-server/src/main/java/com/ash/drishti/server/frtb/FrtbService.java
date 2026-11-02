@@ -199,7 +199,7 @@ public final class FrtbService {
     record Scoped(FrtbData.Day day, List<FrtbData.Record> records, String canonical, VarService.ScopeMembers members) {}
 
     /** The records' own scope words, when no VaR engine resolves scopes: BANK, DESK:, BOOK:, LE:, DIV:, LL:, FDESK:, POS:, TRD:, joined by + and −. */
-    static boolean matches(String scope, FrtbData.Record r) {
+    public static boolean matches(String scope, FrtbData.Record r) {
         boolean in = false;
         String s = scope.strip().replace(" - ", " -").replace(" + ", " +");
         for (String term : s.split("\\s+")) {

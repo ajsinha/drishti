@@ -28,14 +28,21 @@ import java.util.Map;
  * @param elements the sensitivity elements, converted to the calculation currency
  * @param calculationCurrency the CSA's calculation currency
  * @param addOns the CSA's add-ons (none: {@link AddOns#NONE})
+ * @param thresholdFx units of the calculation currency per unit of the parameter file's threshold currency (1 when they are the same)
  */
-public record SimmInput(List<Trade> trades, List<Element> elements, String calculationCurrency, AddOns addOns) {
+public record SimmInput(List<Trade> trades, List<Element> elements, String calculationCurrency, AddOns addOns, double thresholdFx) {
 
     public SimmInput {
         trades = List.copyOf(trades);
         elements = List.copyOf(elements);
         calculationCurrency = calculationCurrency == null || calculationCurrency.isBlank() ? "USD" : calculationCurrency.strip().toUpperCase(Locale.ROOT);
         addOns = addOns == null ? AddOns.NONE : addOns;
+        thresholdFx = thresholdFx > 0 && Double.isFinite(thresholdFx) ? thresholdFx : 1;
+    }
+
+    /** The input with thresholds in the calculation currency already (the threshold FX 1). */
+    public SimmInput(List<Trade> trades, List<Element> elements, String calculationCurrency, AddOns addOns) {
+        this(trades, elements, calculationCurrency, addOns, 1);
     }
 
     /**

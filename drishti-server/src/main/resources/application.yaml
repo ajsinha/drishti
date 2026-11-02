@@ -862,6 +862,20 @@ drishti:
     recipes-dir: ${drishti.data.dir:./data}/frtb/recipes   # saved playground recipes (PLAY FRTB RUN <id>)
     cache-minutes: 10                # how long a date's sensitivities stay in memory after they are read
     playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/
+  simm:                              # ISDA SIMM per netting set and regime, collect and post (docs/guides/SIMM_GUIDE.md section 9)
+    enabled: ${DRISHTI_SIMM_ENABLED:true}   # the SIMM engine, its API, the SIMM command and PLAY SIMM; off: every request answers it is switched off
+    parameters-dir: ${DRISHTI_SIMM_PARAMETERS:./config/simm}   # the bank's licensed parameter files, one YAML a SIMM version (none ships: ISDA's numbers are licensed)
+    default-version: ""              # the version for a CSA naming none and for analytic scopes; blank: the installed one with the latest effective date
+    netting-set-kind: netting-set    # the netting sets and their trades
+    csa-kind: csa                    # the CSAs; their SIMM terms (SIMM_VERSION, IM_COLLECT_REGIMES, IM_POST_REGIMES, IM_CALCULATION_CURRENCY, add-ons) when present
+    add-on-kind: simm-addon          # the notional add-on lines; none served: no notional add-on
+    external-kind: crif-external     # the counterparty's call (HEADER rows) for the comparison; none served: "no call"
+    stored-kind: simm                # the stored figures shown, labelled "stored, not computed", for netting sets without sensitivities
+    default-product-class: RatesFX   # the product class of a PRODUCT_GROUP not in drishti.simm.product-classes (built-in mapping: SIMM_GUIDE.md section 3.3)
+    max-factors: 1500                # the most factors one playground grid and workbook holds
+    recipes-dir: ${drishti.data.dir:./data}/simm/recipes   # saved playground recipes (PLAY SIMM RUN <id>)
+    cache-minutes: 10                # how long a date's netting sets and CSAs stay in memory after they are read
+    playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/simm/template/
   regulatory:                       # regulatory VaR: backtesting, period statistics, report runs and sign-off (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14)
     fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:10-31}   # the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31
     pnl-kind: desk-pnl               # the kind with each desk's actual and hypothetical P&L per business date (the backtest's input)

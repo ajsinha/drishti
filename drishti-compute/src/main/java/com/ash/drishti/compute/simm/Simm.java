@@ -325,7 +325,7 @@ public final class Simm {
             }
         }
         for (Group g : groups.values()) {
-            g.threshold = p.v(g.thresholdKey);
+            g.threshold = p.v(g.thresholdKey) * in.thresholdFx();
             g.cr = ch.concentrationOn() ? SimmMath.concentration(g.sum, g.threshold) : 1;
             for (int k : g.members) {
                 risks.get(k).cr = g.cr;
