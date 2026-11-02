@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (pivot/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11.a, the pivot engine;
+  the design: docs/architecture/PIVOT_ENGINE.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pivot: option A, Excel-familiar, with the field list on the right</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px}
+.intro h1{font-size:19px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:150ch;line-height:1.45;font-size:13px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:7px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:760px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:30px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:12.5px}
+.cmd.wide{max-width:none}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}
+.head h2{margin:0;font-size:16px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pick{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel);white-space:nowrap}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn kbd,.k{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px} .card h3 span{color:var(--muted);font-weight:400;font-size:11.5px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:3px 7px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:11.5px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+th.grp{text-align:center;color:var(--ink);font-weight:600;border-bottom:2px solid var(--line)}
+th.grp.m{border-bottom-color:var(--ok)} th.grp.s{border-bottom-color:var(--warn)} th.grp.h{border-bottom-color:var(--link)}
+.neg{color:var(--neg)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.ax{color:var(--warn)} .ax::before{content:"≈ ";font-weight:700}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.45}
+footer{font-size:11.5px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:6px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.msg{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-t);border-radius:8px;padding:7px 12px;font-size:12.5px;line-height:1.45;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.msg.calm{border-left-color:var(--link);background:var(--hl)}
+.msg b.t{margin-right:4px}
+.scene{border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg2);min-width:0}
+.scene>.lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.scene>.lbl b{color:var(--amber);font-weight:700;margin-right:6px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:10px;align-items:start}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.wrap{overflow-x:auto}
+.tw{display:inline-block;width:14px;text-align:center;font-family:var(--mono);color:var(--amber);font-weight:700}
+.lv1{padding-left:6px} .lv2{padding-left:24px} .lv3{padding-left:42px} .lv4{padding-left:60px}
+tr.sub td{background:var(--panel2);font-weight:600}
+tr.tot td{background:var(--amber-t);font-weight:700;border-top:1px solid var(--amber)}
+tr.sel td.c{outline:2px solid var(--link);outline-offset:-2px}
+td.sel{outline:2px solid var(--amber);outline-offset:-2px;background:var(--emph)}
+td.selc{background:var(--hl)}
+.by{font-size:10.5px;padding:0 6px;border-radius:8px;border:1px solid var(--link);color:var(--link);margin-left:6px;font-family:var(--sans)}
+.oth{color:var(--muted);font-style:italic}
+.div{color:var(--muted)}
+.fl{font-size:12px}
+.fl .srch{border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--faint);margin-bottom:6px;background:var(--panel2)}
+.fl .g{font-size:10.5px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 2px;font-weight:700}
+.fl .f{display:flex;align-items:center;gap:6px;padding:2px 0}
+.fl .f i{display:inline-block;width:12px;height:12px;border:1px solid var(--line);border-radius:3px;font-style:normal;font-size:9px;line-height:11px;text-align:center}
+.fl .f i.on{background:var(--amber);border-color:var(--amber);color:var(--onacc)}
+.fl .f .t{margin-left:auto;font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:0 5px}
+.fl .f .t.s{color:var(--warn);border-color:var(--warn)} .fl .f .t.h{color:var(--link);border-color:var(--link)} .fl .f .t.c{color:var(--ok);border-color:var(--ok)}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.zone{border:1px dashed var(--line);border-radius:6px;padding:5px;min-height:46px;background:var(--panel2)}
+.zone .zl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.chip{display:inline-block;font-size:11px;padding:1px 7px;border:1px solid var(--line);border-radius:10px;margin:1px;color:var(--ink);background:var(--panel)}
+.chip.s{border-color:var(--warn)} .chip.h{border-color:var(--link)} .chip.c{border-color:var(--ok)}
+.pop{position:absolute;z-index:3;width:390px;background:var(--panel);border:1px solid var(--amber);border-radius:8px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45);font-size:11.5px;line-height:1.45}
+.pop h4{margin:0 0 4px;font-size:12.5px}
+.pop .r{display:flex;gap:8px;border-top:1px solid var(--line2);padding:3px 0}
+.pop .r b{flex:0 0 86px;color:var(--muted);font-weight:500}
+.pop .acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.rel{position:relative}
+.keys{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px}
+.code{font-family:var(--mono);font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;white-space:pre;overflow-x:auto;color:var(--ink)}
+.code .kw{color:var(--link)} .code .cm{color:var(--faint)} .code .st{color:var(--ok)} .code .fn{color:var(--amber2)}
+.three{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.8fr) minmax(0,1fr);gap:10px;align-items:start}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.why .card h3{color:var(--amber)}
+.why ul{margin:0;padding-left:18px;font-size:12px;line-height:1.5}
+.chk{font-size:12px;line-height:1.6}
+.chk .y{color:var(--ok);font-weight:700;margin-right:6px} .chk .n{color:var(--bad);font-weight:700;margin-right:6px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px}
+.kv b{color:var(--muted);font-weight:500}
+.exp{font-size:12px}
+.exp .o{display:flex;gap:6px;align-items:center;padding:2px 0}
+.exp .rb{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid var(--line)} .exp .rb.on{border:3px solid var(--amber)}
+.step{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 10px;margin-bottom:8px}
+.step .sh{display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:600;margin-bottom:5px}
+.step .n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--amber);color:var(--onacc);align-items:center;justify-content:center;font-size:11px}
+.wiz{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.wiz span{font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid var(--line);color:var(--muted)}
+.wiz span.on{border-color:var(--amber);color:var(--ink);background:var(--amber-t);font-weight:600}
+.wiz span.done{color:var(--ok);border-color:var(--ok)}
+td.up{background:rgba(242,149,90,.16)} td.dn{background:rgba(127,178,255,.14)}
+tr.new td{border-left:0} tr.new td.l{box-shadow:inset 3px 0 0 var(--ok)} tr.gone td{color:var(--faint);text-decoration:line-through}
+.flag{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-left:5px;vertical-align:middle}
+.ins{font-size:12px;line-height:1.45;border-bottom:1px solid var(--line2);padding:5px 0}
+.ins b{display:block}
+@media (max-width:1100px){.layout,.three,.two{grid-template-columns:minmax(0,1fr)}.pop{position:static;width:auto;margin-top:8px}}
+@media (max-width:900px){.why{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){
+  .page{padding:10px 8px 18px}
+  .menus{display:none}
+  .intro h1{font-size:16px}
+  .rec,.alt{margin-left:0;margin-top:4px}
+  .zones{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Pivot: option A, Excel-familiar, with the field list on the right<span class="rec">recommended</span></h1><p>Excel's PivotTable as people know it (fields and four zones on the right), and beyond it in place: sums beside ≈ sketch figures and VaR computed per cell from its members, rows opened lazily and expanded by a different dimension per member, a correct Others row, a provenance popover, the scan estimate, a chart that never stacks VaR, the Export menu. Scene 2: the custom-function playground.</p></section>
+<div class="bar"><span class="brand">DRISHTI<i>Risk</i></span><div class="cmd">PIVOT asha/desk-risk &lt;GO&gt;</div><div class="menus"><span class="on">Views</span><span>VaR</span><span>Exposure</span><span>BI</span><span>Admin</span><span>Help</span></div></div>
+<div class="scene"><p class="lbl"><b>Scene 1</b>The pivot screen</p>
+<div class="head" style="margin-bottom:6px"><h2>Pivot · desk-risk @4</h2><span class="meta">trading.trades + VaR · business date 2026-10-30 · USD (FX close) · 3 nodes · shared with Rates risk</span></div>
+<div class="ctrls" style="margin-bottom:8px"><span class="pick"><b>Date</b>2026-10-30 ▾</span><span class="pick"><b>As of</b>latest (trade v977) ▾</span><span class="pick"><b>Compare</b>off ▾</span><span class="pick"><b>Layout</b>compact ▾</span><span class="pick"><b>Subtotals</b>below ▾</span><span class="pick"><b>What-if</b>none ▾</span><span class="btn">Chart<kbd>G</kbd></span><span class="btn">Export<kbd>X</kbd></span><span class="btn">Save view</span><span class="btn">Share</span><span class="btn">Explain…</span></div>
+<div class="msg calm" style="margin-bottom:8px"><span><b class="t">≈ figures</b>from the sketches in the rollup REGION × DESK × BOOK; VaR and ES exact. Exact reads ≈180 GB (41,220 of 96,400 files; 6 of 58 columns), ≈2 min on 3 nodes.</span><span class="btn p">Make exact (≈2 min)</span><span class="btn">Narrow to last 3 months (≈18 s)</span><span class="btn">Run in background</span></div>
+<div class="layout"><div class="col"><div class="card rel"><h3>Trades and VaR by region <span>rows REGION › DESK › BOOK (AMERICAS expanded by CURRENCY) · compact layout · subtotals below · 18 of 18 cells computed (lazy: closed nodes not computed)</span></h3>
+<div class="wrap"><table>
+<tr><th class="l" rowspan="2" style="min-width:250px">REGION › DESK › BOOK</th><th class="grp m" colspan="2">Mergeable · exact</th><th class="grp s" colspan="2">Sketch · ≈ (exact on request)</th><th class="grp h" colspan="3">Holistic · each cell from its members' vectors</th></tr>
+<tr><th>Notional Σ</th><th>Trades #</th><th>Counterparties ≈±1.6%</th><th>P&amp;L p99 ≈±1.65% rank</th><th>VaR 99% 1d</th><th>ES 97.5% 1d</th><th>Diversification</th></tr>
+
+<tr><td class="l lv1"><span class="tw">−</span><b>EMEA</b> <span class="by">by DESK</span></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="l lv2"><span class="tw">−</span>RATES-LDN <span class="by">by BOOK</span></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="l lv3"><span class="tw">+</span>BK-1101 <span class="muted" style="font-size:11px">· 1,204 trades ▸</span></td><td>18.42 bn</td><td>1,204</td><td class="ax">212</td><td class="ax">1.92 m</td><td>3.11 m</td><td>4.02 m</td><td class="div"></td></tr>
+<tr><td class="l lv3"><span class="tw">+</span>BK-1102</td><td>11.07 bn</td><td>866</td><td class="ax">148</td><td class="ax">1.30 m</td><td>2.05 m</td><td>2.71 m</td><td class="div"></td></tr>
+<tr><td class="l lv3 oth"><span class="tw"> </span>Others (3 books)</td><td>6.31 bn</td><td>512</td><td class="ax">97</td><td class="ax">0.88 m</td><td>1.22 m</td><td>1.60 m</td><td class="div"></td></tr>
+<tr class="sub"><td class="l lv2"><span class="tw"> </span>RATES-LDN total</td><td>35.80 bn</td><td>2,582</td><td class="ax">391</td><td class="ax">2.71 m</td><td>4.48 m</td><td>5.83 m</td><td class="div">−1.90 m</td></tr>
+<tr><td class="l lv2"><span class="tw">+</span>FX-LDN</td><td>22.15 bn</td><td>1,940</td><td class="ax">310</td><td class="ax">1.41 m</td><td>2.36 m</td><td>3.05 m</td><td class="div"></td></tr>
+<tr><td class="l lv2"><span class="tw">+</span>CREDIT-LDN</td><td>9.62 bn</td><td>731</td><td class="ax">402</td><td class="ax">1.12 m</td><td>1.87 m</td><td>2.66 m</td><td class="div"></td></tr>
+<tr class="sub"><td class="l lv1"><span class="tw"> </span>EMEA total</td><td>67.57 bn</td><td>5,253</td><td class="ax">902</td><td class="ax">3.40 m</td><td class="sel">6.02 m</td><td>7.90 m</td><td class="div">−2.69 m</td></tr>
+<tr><td class="l lv1"><span class="tw">−</span><b>AMERICAS</b> <span class="by">by CURRENCY</span></td><td></td><td></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td class="l lv2"><span class="tw">+</span>USD</td><td>48.30 bn</td><td>3,410</td><td class="ax">655</td><td class="ax">2.95 m</td><td>5.12 m</td><td>6.60 m</td><td class="div"></td></tr>
+<tr><td class="l lv2"><span class="tw">+</span>CAD</td><td>7.94 bn</td><td>602</td><td class="ax">88</td><td class="ax">0.61 m</td><td>0.94 m</td><td>1.25 m</td><td class="div"></td></tr>
+<tr><td class="l lv2 oth"><span class="tw"> </span>Others (5 currencies)</td><td>5.21 bn</td><td>455</td><td class="ax">121</td><td class="ax">0.52 m</td><td>0.77 m</td><td>1.02 m</td><td class="div"></td></tr>
+<tr class="sub"><td class="l lv1"><span class="tw"> </span>AMERICAS total</td><td>61.45 bn</td><td>4,467</td><td class="ax">790</td><td class="ax">3.30 m</td><td>5.60 m</td><td>7.31 m</td><td class="div">−1.23 m</td></tr>
+<tr><td class="l lv1"><span class="tw">+</span><b>APAC</b></td><td>24.80 bn</td><td>2,105</td><td class="ax">344</td><td class="ax">1.70 m</td><td>2.88 m</td><td>3.70 m</td><td class="div"></td></tr>
+<tr class="tot"><td class="l lv1">Grand total</td><td>153.82 bn</td><td>11,825</td><td class="ax">1,712</td><td class="ax">4.90 m</td><td>9.84 m</td><td>12.71 m</td><td class="div">−4.66 m</td></tr>
+</table></div>
+<div class="keys"><span><span class="k">→</span> expand</span><span><span class="k">←</span> collapse</span><span><span class="k">Shift+→</span> all below</span><span><span class="k">1</span>–<span class="k">9</span> to level</span><span><span class="k">E</span> expand by…</span><span><span class="k">Enter</span> rows</span><span><span class="k">G</span> chart the selection</span><span><span class="k">X</span> export</span><span><span class="k">I</span> provenance</span><span><span class="k">?</span> all keys</span></div>
+<div class="pop" style="right:10px;top:292px">
+<h4>VaR 99% 1d · EMEA = 6.02 m USD <span class="pill b">exact</span> <span class="pill n">holistic</span></h4>
+<div class="r"><b>How</b><span>the VaR of the summed scenario vectors of EMEA's 5,253 trades (509 days, rank 6); never the desks' VaR added</span></div>
+<div class="r"><b>Diversification</b><span>Σ desks 8.71 m − 6.02 m = 2.69 m</span></div>
+<div class="r"><b>Data</b><span class="mono">pnl-vector v1842 · trade v977 · batches: full + intraday 2</span></div>
+<div class="r"><b>Scenario set</b><span>HS-509, 2024-10-02 to 2026-10-30, equal weights</span></div>
+<div class="r"><b>Filters</b><span>PRODUCT_GROUP in RATES, FX, CREDIT · your row rules: LE-UK, LE-US, LE-SG</span></div>
+<div class="r"><b>Computed</b><span>var-1 (EMEA shard) 210 ms · cache: miss</span></div>
+<div class="r"><b>Reference</b><span class="mono">pivot://asha/desk-risk@4/VaR99[REGION=EMEA]</span></div>
+<div class="acts"><span class="btn">Rows (5,253)</span><span class="btn">Why it moved vs 10-29</span><span class="btn">Ask the VaR engine</span><span class="btn">Copy reference</span></div>
+</div>
+</div><div class="card"><h3>Chart of the selection: VaR 99% by region <span>column VaR, level REGION · suggested: waterfall (VaR does not add up) · <a>bar</a> · treemap not offered for VaR · pinned · linked to the pivot</span></h3>
+<svg viewBox="0 0 760 145" width="760" height="145" style="max-width:100%" role="img" aria-label="waterfall of VaR by region with diversification">
+<g font-size="11" fill="currentColor">
+<line x1="40" y1="120" x2="740" y2="120" stroke="var(--line)"/>
+<rect x="60" y="78.4" width="90" height="41.6" fill="var(--link)" opacity=".85"/><text x="105" y="72" text-anchor="middle" fill="var(--ink)">EMEA 6.02</text>
+<rect x="190" y="39.7" width="90" height="38.7" fill="var(--link)" opacity=".85"/><text x="235" y="34" text-anchor="middle" fill="var(--ink)">AMERICAS 5.60</text>
+<rect x="320" y="19.8" width="90" height="19.9" fill="var(--link)" opacity=".85"/><text x="365" y="14" text-anchor="middle" fill="var(--ink)">APAC 2.88</text>
+<rect x="450" y="19.8" width="90" height="32.2" fill="var(--neg)" opacity=".8"/><text x="495" y="66" text-anchor="middle" fill="var(--ink)">Diversification −4.66</text>
+<rect x="580" y="52" width="90" height="68" fill="var(--amber)" opacity=".9"/><text x="625" y="46" text-anchor="middle" fill="var(--ink)">Bank 9.84</text>
+<text x="40" y="138" fill="var(--muted)">USD m · exact · Σ regions 14.50 m; the bank's VaR is its own figure, so diversification is drawn as its own step, never stacked</text>
+</g></svg></div></div><div class="col"><div class="card fl"><h3>Fields <span>trading.trades + VaR engine</span></h3>
+<div class="srch">Search fields…  <span class="k">/</span></div>
+<div class="g">Trade</div>
+<div class="f"><i class="on">✓</i>REGION<span class="t">hierarchy</span></div>
+<div class="f"><i class="on">✓</i>DESK<span class="t">string</span></div>
+<div class="f"><i class="on">✓</i>BOOK<span class="t">string</span></div>
+<div class="f"><i></i>CURRENCY<span class="t">string</span></div>
+<div class="f"><i></i>TRADE_DATE<span class="t">date</span></div>
+<div class="f"><i class="on">✓</i>NOTIONAL_USD<span class="t">USD</span></div>
+<div class="f"><i class="on">✓</i>COUNTERPARTY_ID<span class="t s">≈ distinct</span></div>
+<div class="g">VaR engine</div>
+<div class="f"><i class="on">✓</i>VaR 99% 1d<span class="t h">holistic</span></div>
+<div class="f"><i class="on">✓</i>ES 97.5% 1d<span class="t h">holistic</span></div>
+<div class="g">Custom functions</div>
+<div class="f"><i></i>wavg_return · asha @3<span class="t c">approved</span></div>
+<div class="f"><i></i>robust_vol · lee @1<span class="t">private</span></div>
+<div class="zones">
+<div class="zone"><div class="zl">Filters</div><span class="chip">PRODUCT_GROUP (3)</span></div>
+<div class="zone"><div class="zl">Columns</div><span class="chip">Σ Values</span></div>
+<div class="zone"><div class="zl">Rows</div><span class="chip">REGION</span><span class="chip">DESK</span><span class="chip">BOOK</span></div>
+<div class="zone"><div class="zl">Values</div><span class="chip">Notional Σ</span><span class="chip">Trades #</span><span class="chip s">Cpty ≈</span><span class="chip s">p99 ≈</span><span class="chip h">VaR</span><span class="chip h">ES</span></div>
+</div></div><div class="card exp"><h3>Export <span class="k">X</span> <span>as you see it, masks applied</span></h3>
+<div class="o"><span class="rb on"></span>The pivot as shown (outline, subtotals)</div>
+<div class="o"><span class="rb"></span>The underlying rows (11,825 trades)</div>
+<div class="o"><span class="rb"></span>The chart's data</div>
+<div class="o"><span class="rb"></span>The view definition (YAML)</div>
+<div class="ctrls" style="margin-top:6px"><span class="pick"><b>Format</b>Excel ▾</span><span class="pick">CSV</span><span class="pick">Parquet</span><span class="pick">Arrow</span></div>
+<div class="note" style="margin-top:5px">Excel: values with formats, outline levels, SUM only where a figure adds up, a Provenance sheet. Native PivotTable and charts: later. 18 rows × 8 columns · instant.</div>
+<div class="ctrls" style="margin-top:6px"><span class="btn p">Export</span><span class="btn">Power Query link</span></div></div></div></div>
+</div>
+<div class="scene"><p class="lbl"><b>Scene 2</b>Pivot → Functions → New: the playground for a custom aggregation function</p>
+<div class="three">
+<div class="card"><h3>Code <span>Python · kind: mergeable · inputs r, w (float64) · tolerance 1e-12</span></h3>
+<div class="code"><span class="kw">from</span> drishti_pivot <span class="kw">import</span> function, Mergeable
+<span class="kw">import</span> pyarrow.compute <span class="kw">as</span> pc
+
+<span class="fn">@function</span>(name=<span class="st">"wavg_return"</span>, kind=Mergeable,
+          inputs={<span class="st">"r"</span>: <span class="st">"float64"</span>, <span class="st">"w"</span>: <span class="st">"float64"</span>})
+<span class="kw">class</span> <span class="fn">WeightedReturn</span>:
+    <span class="kw">def</span> <span class="fn">start</span>(self, params): <span class="kw">return</span> {<span class="st">"swr"</span>: 0.0, <span class="st">"sw"</span>: 0.0}
+    <span class="kw">def</span> <span class="fn">add</span>(self, s, batch):        <span class="cm"># one Arrow batch</span>
+        swr = pc.sum(pc.multiply(batch[<span class="st">"r"</span>], batch[<span class="st">"w"</span>])).as_py() <span class="kw">or</span> 0.0
+        sw = pc.sum(batch[<span class="st">"w"</span>]).as_py() <span class="kw">or</span> 0.0
+        <span class="kw">return</span> {<span class="st">"swr"</span>: s[<span class="st">"swr"</span>] + swr, <span class="st">"sw"</span>: s[<span class="st">"sw"</span>] + sw}
+    <span class="kw">def</span> <span class="fn">merge</span>(self, a, b):
+        <span class="kw">return</span> {k: a[k] + b[k] <span class="kw">for</span> k <span class="kw">in</span> a}
+    <span class="kw">def</span> <span class="fn">finish</span>(self, s):
+        <span class="kw">return</span> <span class="kw">None if</span> s[<span class="st">"sw"</span>] == 0 <span class="kw">else</span> s[<span class="st">"swr"</span>] / s[<span class="st">"sw"</span>]</div>
+<div class="note" style="margin-top:6px">Sandbox: no network, no files, no processes · 1 GB · 30 s a batch · packages: numpy, pyarrow (allowed list)</div></div>
+<div class="card"><h3>Sample rows <span>seeded draw of trading.trades, as you see it · 10 of 2,000</span></h3>
+<table><tr><th class="l">DESK</th><th>r</th><th>w</th><th class="l">part</th></tr>
+<tr><td class="l">RATES-LDN</td><td>0.0041</td><td>18.4</td><td class="l">1</td></tr>
+<tr><td class="l">RATES-LDN</td><td>−0.0012</td><td>11.1</td><td class="l">1</td></tr>
+<tr><td class="l">FX-LDN</td><td>0.0063</td><td>22.2</td><td class="l">1</td></tr>
+<tr><td class="l">FX-LDN</td><td>0.0018</td><td>3.0</td><td class="l">2</td></tr>
+<tr><td class="l">CREDIT-LDN</td><td>0.0109</td><td>9.6</td><td class="l">2</td></tr>
+<tr><td class="l">USD</td><td>0.0025</td><td>48.3</td><td class="l">2</td></tr>
+<tr><td class="l">CAD</td><td>−0.0030</td><td>7.9</td><td class="l">3</td></tr>
+<tr><td class="l">APAC</td><td>0.0052</td><td>24.8</td><td class="l">3</td></tr>
+<tr><td class="l">APAC</td><td>0.0000</td><td>0.0</td><td class="l">3</td></tr>
+<tr><td class="l">USD</td><td>0.0047</td><td>12.6</td><td class="l">3</td></tr>
+</table>
+</table></div>
+<div class="card"><h3>States and the check <span>runs on every edit</span></h3>
+<table><tr><th class="l">state</th><th>swr</th><th>sw</th></tr>
+<tr><td class="l">part 1</td><td>0.20198</td><td>51.7</td></tr><tr><td class="l">part 2</td><td>0.23079</td><td>60.9</td></tr><tr><td class="l">part 3</td><td>0.16448</td><td>45.3</td></tr>
+<tr class="sub"><td class="l">merged</td><td>0.59725</td><td>157.9</td></tr></table>
+<div style="height:6px"></div>
+<div class="kv" style="margin-bottom:6px"><b>One pass</b><span class="mono">0.0037825</span><b>Split and merge</b><span class="mono">0.0037825</span></div>
+<div class="chk"><div><span class="y">✓</span>batches of 1, 7, 1,000, 65,536: equal</div><div><span class="y">✓</span>splits 2, 3, 16 × 5 seeds, left-deep and balanced: max |diff| 2.2e-16 (≤ 1e-12)</div><div><span class="y">✓</span>empty part, all-null part, one row, NaN and ∞</div><div><span class="y">✓</span>state serialised and read back before merging</div><div><span class="y">✓</span>deterministic for the same order</div><div><span class="y">✓</span>state 16 bytes (declared ≤ 64)</div></div>
+<h3 style="margin-top:8px">Cost <span>measured on the sample, projected</span></h3>
+<div class="kv"><b>Per worker</b><span class="mono">41 M rows/s</span><b>trading.trades</b><span class="mono">10.2 bn rows: ≈3.2 s on 3 nodes × 8 workers</span></div>
+<div class="ctrls" style="margin-top:8px"><span class="btn">Try in a pivot</span><span class="btn">Save @4 (private)</span><span class="btn p">Submit for approval</span></div>
+<div class="note" style="margin-top:4px">Shown as <span class="mono">wavg_return · asha @4</span> wherever it is used; never an official measure.</div></div>
+</div></div>
+<div class="why"><div class="card"><h3>How it feels</h3><ul><li>Excel's PivotTable, field for field: drag, nest, expand, double-click for rows.</li><li>Everything Excel gets wrong is visibly right: VaR per cell, ≈ marked, diversification, Others computed.</li><li>One key for every action; the popover answers "where does this number come from" in place.</li></ul></div><div class="card"><h3>Why recommended</h3><ul><li>Nothing new to learn for anyone who has used Excel; adoption first.</li><li>The beyond-Excel parts sit where Excel's equivalents would be, so they are found.</li><li>B's command line is always in the bar, and C's compare is the Compare picker.</li></ul></div><div class="card"><h3>Trade-offs</h3><ul><li>The right rail takes 330 px; it folds away with <span class="k">F</span>.</li><li>Explain and what-if open as panels, not side by side (B shows them always).</li><li>On a phone: the grid's top left and the chart; the field list is desk only.</li></ul></div></div>
+<footer>Mock-up. Design, not built (docs/architecture/PIVOT_ENGINE.md). Names, numbers, versions and nodes are illustrative. A ≈ figure states its error; a holistic figure is computed from its own members, never from other cells; masks and row rules are applied before anything is grouped.</footer>
+</div>
+</body>
+</html>
