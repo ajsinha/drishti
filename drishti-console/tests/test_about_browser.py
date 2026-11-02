@@ -59,7 +59,7 @@ def test_about_on_a_phone(browser, about_console):
         assert not page.evaluate(AUDIT)
         small = [t for t in page.evaluate(TARGETS) if "toast" not in t]   # a live alert toast from the stand-in is not the page
         assert not small, small
-        assert page.locator("#competitive a[href='/about/competitive']").is_visible()
+        assert page.locator("#competitive a[href='/help/competitive-analysis']").is_visible()
         page.emulate_media(color_scheme="dark")
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     finally:

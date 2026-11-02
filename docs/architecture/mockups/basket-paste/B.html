@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (basket-paste/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11 row 10, paste a big basket).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Paste a list: option B, one column, the kind found for you</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+
+.ds td{font-size:12.5px}
+.ds tr.sel td{background:var(--hl)}
+.ds .grp td{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;background:var(--panel2)}
+.tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:8px;border:1px solid var(--line);color:var(--muted);margin-left:4px;font-family:var(--sans)}
+.tag.int{border-color:var(--warn);color:var(--warn)}
+.tag.ice{border-color:var(--link);color:var(--link)}
+.field{display:flex;align-items:center;gap:8px;margin:6px 0}
+.inp{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--ink);min-width:120px}
+.inp.mono{font-family:var(--mono)}
+.chip{display:inline-block;font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;margin:2px;color:var(--muted)}
+.chip.on{border-color:var(--amber);color:var(--ink);background:var(--amber-t)}
+.cal{display:grid;grid-template-columns:repeat(7,30px);gap:3px;font-size:11.5px;text-align:center}
+.cal span{padding:4px 0;border-radius:4px;color:var(--faint)}
+.cal span.h{color:var(--ink);background:var(--panel2)} .cal span.s{background:var(--amber);color:var(--onacc);font-weight:700} .cal span.w{color:var(--muted);font-weight:600}
+.sql{font-family:var(--mono);font-size:12.5px;background:var(--bg2);border:1px dashed var(--line);border-radius:6px;padding:8px 10px;color:var(--muted);white-space:pre-wrap}
+.words{font-size:13px;line-height:1.55}
+.big{font-family:var(--mono);font-size:20px}
+.x{color:var(--faint);padding:0 4px}
+
+.modal{border:1px solid var(--amber);border-radius:10px;background:var(--panel);box-shadow:0 10px 40px rgba(0,0,0,.45);padding:14px;display:flex;flex-direction:column;gap:10px}
+.modal h2{margin:0;font-size:16px} .modal .sub{color:var(--muted);font-size:12.5px}
+.grid{border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.grid table td,.grid table th{border-right:1px solid var(--line2);text-align:left}
+.grid td.rn,.grid th.rn{color:var(--faint);text-align:right;width:38px;background:var(--panel2);font-family:var(--mono)}
+.grid td.cur{outline:2px solid var(--amber);outline-offset:-2px}
+.grid td.okc{background:var(--ok-t)} .grid td.badc{background:var(--bad-t);color:var(--bad)} .grid td.empty{color:var(--faint)}
+.grid th .t{display:block;font-size:10.5px;color:var(--faint);font-family:var(--mono)}
+.foot{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.foot .sp{flex:1}
+.tray{border:1px dashed var(--line);border-radius:8px;padding:10px;background:var(--bg2)}
+.chip.grp{border-color:var(--link);color:var(--ink)} .chip.minus{border-color:var(--neg);color:var(--neg)}
+.tabsv{display:flex;flex-direction:column;gap:2px;min-width:190px}
+.tabsv span{padding:7px 10px;border-radius:6px;color:var(--muted);display:flex;justify-content:space-between;gap:10px}
+.tabsv span.on{background:var(--panel2);color:var(--ink);font-weight:600;border-left:3px solid var(--amber)}
+.paste{font-family:var(--mono);font-size:12.5px;background:var(--bg2);border:1px solid var(--line);border-radius:6px;padding:8px 10px;white-space:pre;line-height:1.55;min-height:260px;color:var(--ink)}
+.drop{border:2px dashed var(--line);border-radius:8px;padding:10px;text-align:center;color:var(--muted);font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="intro"><h1>Paste a list: option B, one column, the kind found for you <span class="alt">alternative</span></h1><p>The same link opens a single column: paste any ids, mixed, and the server says what each is (trade, position, portfolio, book, desk, limit letter, counterparty). An id that two kinds share asks you to pick. Then Accept, as in A.</p></div>
+<div class="bar"><span class="brand">DRISHTI<i>VaR</i></span><span class="cmd">VAR SCOPE BANK &lt;GO&gt;</span><div class="menus"><span class="on">VaR</span><span>Exposure</span><span>BI</span><span>Admin</span></div></div>
+<div class="tray"><div class="head"><h2 style="font-size:14px">◫ Construct your basket</h2><span class="meta">unsaved basket · 3 parts</span>
+<span style="margin-left:auto" class="btn p">⊞ Paste a list…</span></div>
+<div style="margin-top:6px"><span class="chip on">+ PORT:PF-USD-RATES</span><span class="chip on">+ NODE:MGMT~DESK-FX</span><span class="chip minus">− TRD:MX-30000121</span>
+<span class="inp" style="display:inline-block;min-width:260px;margin-left:6px">Find a trade, position, portfolio, desk…</span></div>
+<div class="note" style="margin-top:4px">New: <b>⊞ Paste a list…</b> beside the type-ahead opens the sheet below. Nothing else in the tray changes.</div></div>
+<div class="modal"><div class="head"><h2>Paste a list into the basket</h2><span class="sub">Paste one column of ids of any kind; the server finds what each is.</span><span style="margin-left:auto" class="btn">✕</span></div>
+<div class="ctrls"><span class="seg"><span class="on">Add (+)</span><span>Take away (−)</span></span><span class="pick"><b>Date</b>2026-10-28</span><span class="note">A second pasted column of + and − sets each row's Op.</span></div>
+<div class="grid"><table><tr><th class="rn"></th><th>Pasted id<span class="t">any kind</span></th><th>Kind<span class="t">found by the server</span></th><th>Op</th><th>Check</th></tr><tr><td class="rn">1</td><td>MX-30001877</td><td class="l">Trade</td><td>+</td><td class="okc">found</td></tr><tr><td class="rn">2</td><td>PF-USD-RATES</td><td class="l">Portfolio</td><td>+</td><td class="okc">found</td></tr><tr><td class="rn">3</td><td>DESK-FX</td><td class="l">Desk</td><td>+</td><td class="okc">found</td></tr><tr><td class="rn">4</td><td>LL-0003</td><td class="l">Limit letter</td><td>+</td><td class="okc">found</td></tr><tr><td class="rn">5</td><td>1000414</td><td class="l">Trade</td><td>+</td><td class="badc">CANCELLED on 2026-10-28</td></tr><tr><td class="rn">6</td><td>CP-SUMMIT</td><td class="l">Counterparty</td><td>+</td><td class="okc">found</td></tr><tr><td class="rn">7</td><td>BOOK-FI-3</td><td class="l">Book · or portfolio? ▾</td><td>+</td><td class=""><span class="pill a">two kinds match: pick one</span></td></tr><tr><td class="rn">8</td><td>1002344</td><td class="l">Trade</td><td>−</td><td class="okc">found</td></tr><tr><td class="rn">…</td><td>…</td><td class="l"></td><td></td><td class=""></td></tr><tr><td class="rn">1,240</td><td class="empty"></td><td></td><td></td><td></td></tr></table></div>
+<div class="card" style="padding:8px 12px"><span class="pill g">1,236 found</span> <span class="pill r">1 not found</span> <span class="pill a">3 match two kinds: pick one</span></div>
+<div class="foot"><span class="sp"></span><span class="btn">Cancel</span><span class="btn dis">Accept (pick the kind of 3 first)</span></div></div>
+<div class="card"><h3>After Accept: the tray<span>a pasted list is one chip a column, not 1,240 chips</span></h3>
+<span class="chip on">+ PORT:PF-USD-RATES</span><span class="chip on">+ NODE:MGMT~DESK-FX</span><span class="chip minus">− TRD:MX-30000121</span>
+<span class="chip grp">+ 1,180 trades (pasted) ▾</span><span class="chip grp">+ 40 positions (pasted) ▾</span><span class="chip grp">+ 6 desks (pasted) ▾</span><span class="chip minus">− 14 trades (pasted) ▾</span>
+<div class="kpis" style="margin-top:8px"><div class="kpi"><div class="k">VaR 99% 1D of the selection</div><div class="v">18,442,310</div><div class="s">by the engine, as you pasted</div></div>
+<div class="kpi"><div class="k">Sum of the parts</div><div class="v">27,901,554</div></div><div class="kpi"><div class="k">Diversification</div><div class="v posv">9,459,244</div></div>
+<div class="kpi"><div class="k">Trades</div><div class="v">3,912</div><div class="s">a trade in two parts counts once</div></div></div>
+<div class="field" style="margin-top:8px"><span class="inp" style="min-width:240px">rates-and-fx-unwind</span><span class="btn p">Save basket and open VaR</span><span class="btn">Open without saving</span></div></div>
+<footer>Option B. Pros: one paste, no columns to choose; fastest for a mixed list. Cons: ambiguous ids (a book and a portfolio both named BOOK-FI-3 in the demo) must be resolved by hand, and a large list makes the server guess thousands of times; less predictable than A.</footer>
+</div>
+</body>
+</html>

@@ -270,11 +270,11 @@ menus:
           - { id: knowledge, href: /what, icon: lightbulb, label: Knowledge, desc: "Market risk, counterparty risk and more, in plain words · WHAT <term>", requires: [word:WHAT] }
           - { id: install, href: /help/install-and-run, icon: flag, label: Install and run, desc: From nothing to your first view }
           - { id: about, href: /about, icon: info-circle, label: "About {product}", desc: "Version, licence and credits", match: /about }
+          - { id: competitive-analysis, href: /help/competitive-analysis, icon: binoculars, label: Competitive analysis, desc: "Vendor by vendor: banking and risk, and data platforms · internal, administrators only", requires: [admin] }
 
 footer:
   - { id: help, href: /help, icon: question-circle, label: Help }
   - { id: about, href: /about, icon: info-circle, label: About }
-  - { id: competitive, href: /about/competitive, icon: bar-chart-steps, label: Competitive analysis }
   - { id: release-notes, href: /help/release-notes, icon: tag, label: Release notes }
 
 # The command line's placeholder (an edition's menus.placeholder, or ui.placeholder, wins)

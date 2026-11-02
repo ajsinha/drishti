@@ -93,7 +93,7 @@
   <section class="ab-sec ab-compete" id="competitive"><h2>Competitive advantage</h2>
     <p>Terminals show market data, platform screens show one vendor's trades, risk systems publish overnight for a fixed hierarchy, low-code tools need a screen built per table, and BI tools stop at the chart.
        {{ PRODUCT }} is one grammar for all of them, with risk computed for the question you ask and every figure explained: live, linked, masked, self-hosted and keyboard-first.</p>
-    <p><a class="btn-pill btn-accent" href="/about/competitive"><i class="bi bi-diagram-3" aria-hidden="true"></i> Read the competitive analysis</a></p></section>
+    {% if competitive %}<p><a class="btn-pill btn-accent" href="/help/competitive-analysis"><i class="bi bi-binoculars" aria-hidden="true"></i> Read the competitive analysis</a></p>{% endif %}</section>
   <section class="ab-sec" id="stack"><h2>Technology stack</h2>
     <ul class="about-list">
       <li><b>Server:</b> one Spring Boot 3.5 application on Java 21 or newer with virtual threads; a Spring-free plugin SPI for sources; DuckDB for BI queries.</li>

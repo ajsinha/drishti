@@ -84,7 +84,11 @@ class HotFileDirectMemorySoakTest {
                     Path f = files.get(ThreadLocalRandom.current().nextInt(DATES));
                     VarBook b = VarHotFile.open(f, 0);
                     try {
-                        assertThat(b.tradeCount()).isEqualTo(trades);
+                        // no AssertJ on the worker threads: many platform and virtual threads entering its first assertThat at once
+                        // wait on its class initialisation for ever on Java 25; the main thread asserts the failures afterwards
+                        if (b.tradeCount() != trades) {
+                            failures.add(new AssertionError("trade count " + b.tradeCount() + ", expected " + trades));
+                        }
                     } finally {
                         b.close();
                     }
