@@ -627,94 +627,88 @@ Every source read on **2026-11-01** unless noted. Claims are the publisher's own
 
 **Risk aggregation cubes**
 
-- ActiveViam, Leonteq selects ActiveViam FRTB risk analytics (10 Feb 2026): https://www.activeviam.com/updates/leonteq-selects-activeviam-frtb-risk-analytics
-- ActiveViam FRTB solution documentation: https://docs.activeviam.com/solutions/frtb
-- Nordic Capital, ActiveViam acquires Derivitec (May 2026): https://www.nordiccapital.com/news-views/press-releases/activeviam-acquires-derivitec-to-strengthen-risk-analytics-capabilities/
-- Choate, Guidepost Growth Equity leads sale of ActiveViam (2024): https://www.choate.com/insights/guidepost-growth-equity-leads-sale-of-activeviam/
-- Natixis selects Atoti (01net, Italian): https://www.01net.it/natixis-seleziona-atoti-prodotto-di-punta-di-activeviam-come-soluzione-front-office-in-tempo-reale-per-rischio-e-pl/
-- Crédit Agricole CIB taps Opensee (FinTech Futures): https://www.fintechfutures.com/partnerships/cr-dit-agricole-cib-taps-opensee-for-market-risk-management-solution
-- Opensee goes live at Société Générale (IBS Intelligence): https://ibsintelligence.com/ibsi-news/opensees-big-data-analytics-platform-goes-live-at-societe-generale
-- Opensee and Taula Capital (A-Team): https://a-teaminsight.com/?p=71606
-
+- [ActiveViam, Leonteq selects ActiveViam FRTB risk analytics (10 Feb 2026)](https://www.activeviam.com/updates/leonteq-selects-activeviam-frtb-risk-analytics)
+- [ActiveViam FRTB solution documentation](https://docs.activeviam.com/solutions/frtb)
+- [Nordic Capital, ActiveViam acquires Derivitec (May 2026)](https://www.nordiccapital.com/news-views/press-releases/activeviam-acquires-derivitec-to-strengthen-risk-analytics-capabilities/)
+- [Choate, Guidepost Growth Equity leads sale of ActiveViam (2024)](https://www.choate.com/insights/guidepost-growth-equity-leads-sale-of-activeviam/)
+- [Natixis selects Atoti (01net, Italian)](https://www.01net.it/natixis-seleziona-atoti-prodotto-di-punta-di-activeviam-come-soluzione-front-office-in-tempo-reale-per-rischio-e-pl/)
+- [Crédit Agricole CIB taps Opensee (FinTech Futures)](https://www.fintechfutures.com/partnerships/cr-dit-agricole-cib-taps-opensee-for-market-risk-management-solution)
+- [Opensee goes live at Société Générale (IBS Intelligence)](https://ibsintelligence.com/ibsi-news/opensees-big-data-analytics-platform-goes-live-at-societe-generale)
+- [Opensee and Taula Capital (A-Team)](https://a-teaminsight.com/?p=71606)
 **Trading platforms**
 
-- Murex, MX.3 enterprise risk and regulatory suite: https://murex.com/en/insights/mx3-enterprise-risk-and-regulatory-suite
-- Murex, MX.3 XVA management: https://www.murex.com/en/insights/mx3-xva-management
-- Murex, MX.3 for FRTB: https://www.murex.com/en/frtbsolution
-- Nasdaq completes acquisition of Adenza (1 Nov 2023): https://ir.nasdaq.com/node/106776
-- Nasdaq 10-K FY2024 financial tables (Adenza consideration): https://www.sec.gov/Archives/edgar/data/1120193/000112019325000008/Financial_Report.xlsx
-- FIS Enterprise Risk Suite (formerly Adaptiv): https://www.fisglobal.com/zh-cn/products/fis-enterprise-risk-suite2
-- FIS XVA data services fact sheet: https://www.fisglobal.com/-/media/fisglobal/files/pdf/tip-sheet/xva-data-services-fact-sheet.pdf
-- Risk.net, counterparty risk product of the year: FIS: https://www.risk.net/awards/6980176/counterparty-risk-product-of-the-year-fis
-- FIS digital trading storefront (Finovate, Oct 2024): https://finovate.com/fis-launches-digital-trading-storefront-to-upgrade-the-trading-experience/
-- Finastra to sell TCM to Apax funds (Mondo Visione, May 2025): https://mondovisione.com/media-and-resources/news/finastra-to-sell-treasury-and-capital-markets-division-to-apax-funds-2025519/
-- Finastra sells TCM (Finovate): https://finovate.com/finastra-sells-off-treasury-and-capital-markets-division/
-- Banco Sofisa partners with Finastra (Vector Risk): https://www.finastra.com/press-media/banco-sofisa-partners-finastra-elevate-its-risk-management-strategy
-
+- [Murex, MX.3 enterprise risk and regulatory suite](https://murex.com/en/insights/mx3-enterprise-risk-and-regulatory-suite)
+- [Murex, MX.3 XVA management](https://www.murex.com/en/insights/mx3-xva-management)
+- [Murex, MX.3 for FRTB](https://www.murex.com/en/frtbsolution)
+- [Nasdaq completes acquisition of Adenza (1 Nov 2023)](https://ir.nasdaq.com/node/106776)
+- [Nasdaq 10-K FY2024 financial tables (Adenza consideration)](https://www.sec.gov/Archives/edgar/data/1120193/000112019325000008/Financial_Report.xlsx)
+- [FIS Enterprise Risk Suite (formerly Adaptiv)](https://www.fisglobal.com/zh-cn/products/fis-enterprise-risk-suite2)
+- [FIS XVA data services fact sheet](https://www.fisglobal.com/-/media/fisglobal/files/pdf/tip-sheet/xva-data-services-fact-sheet.pdf)
+- [Risk.net, counterparty risk product of the year: FIS](https://www.risk.net/awards/6980176/counterparty-risk-product-of-the-year-fis)
+- [FIS digital trading storefront (Finovate, Oct 2024)](https://finovate.com/fis-launches-digital-trading-storefront-to-upgrade-the-trading-experience/)
+- [Finastra to sell TCM to Apax funds (Mondo Visione, May 2025)](https://mondovisione.com/media-and-resources/news/finastra-to-sell-treasury-and-capital-markets-division-to-apax-funds-2025519/)
+- [Finastra sells TCM (Finovate)](https://finovate.com/finastra-sells-off-treasury-and-capital-markets-division/)
+- [Banco Sofisa partners with Finastra (Vector Risk)](https://www.finastra.com/press-media/banco-sofisa-partners-finastra-elevate-its-risk-management-strategy)
 **Enterprise market and credit risk**
 
-- MSCI RiskMetrics RiskManager: https://www.msci.com/data-and-analytics/risk-management-solutions/riskmetrics-riskmanager
-- Bloomberg MARS: https://professional.bloomberg.com/products/risk/mars
-- Bloomberg capital markets risk: https://professional.bloomberg.com/solutions/sales-trading/capital-markets-risk/
-- Commercial Bank International adopts Bloomberg MARS: https://www.bloomberg.com/company/press/commercial-bank-international-adopts-bloomberg-mars-as-primary-risk-management-system
-- Numerix (Wikipedia, ownership and acquisitions): https://en.wikipedia.org/wiki/Numerix
-- Quantifi XVA: https://www.quantifisolutions.com/xva/
-- Quantifi named Chartis category leader: https://www.quantifisolutions.com/quantifi-earns-sell-side-market-risk-category-leader-title-from-chartis-research/
-- Nordic Capital, Regnology to acquire Moody's Regulatory Reporting & ALM: https://www.nordiccapital.com/news-views/press-releases/regnology-backed-by-nordic-capital-signs-an-agreement-to-acquire-moody-s-regulatory-reporting-alm-solutions/
-- A-Team, Regnology finalizes Moody's acquisition: https://a-teaminsight.com/briefs/regnology-finalizes-moodys-acquisition-as-reporting-and-balance-sheet-controls-converge/?brand=ati
-- Moody's 10-K FY2025: https://www.sec.gov/Archives/edgar/data/1059556/000162828026009136/mco-20251231.htm
-- S&P Global, FRTB modellability service: https://cdn.ihsmarkit.com/www/pdf/0523/FRTB-Modellability-service.pdf
-- S&P Global, traded market risk case study: https://www.spglobal.com/marketintelligence/en/mi/topic/case-study-traded-market-risk.html
-- SAS Risk Stratum: https://www.sas.com/en_us/software/risk-stratum.html
-- SAS community, market risk module: https://communities.sas.com/t5/SAS-Software-for-Learning/MARKET-RISK-MODULE/td-p/811654
-- Oracle Financial Services market risk data sheet: https://oracle.com/a/ocom/docs/industries/financial-services/ofs-market-risk-ds.pdf
-- Oracle OFS MRMM Pack 8.0.5 release notes: https://docs.oracle.com/cd/E92094_01/PDF/8.0.5.0.0/OFS_MRMM_Pack_8.0.5.0.0_Release%20Notes.pdf
-
+- [MSCI RiskMetrics RiskManager](https://www.msci.com/data-and-analytics/risk-management-solutions/riskmetrics-riskmanager)
+- [Bloomberg MARS](https://professional.bloomberg.com/products/risk/mars)
+- [Bloomberg capital markets risk](https://professional.bloomberg.com/solutions/sales-trading/capital-markets-risk/)
+- [Commercial Bank International adopts Bloomberg MARS](https://www.bloomberg.com/company/press/commercial-bank-international-adopts-bloomberg-mars-as-primary-risk-management-system)
+- [Numerix (Wikipedia, ownership and acquisitions)](https://en.wikipedia.org/wiki/Numerix)
+- [Quantifi XVA](https://www.quantifisolutions.com/xva/)
+- [Quantifi named Chartis category leader](https://www.quantifisolutions.com/quantifi-earns-sell-side-market-risk-category-leader-title-from-chartis-research/)
+- [Nordic Capital, Regnology to acquire Moody's Regulatory Reporting & ALM](https://www.nordiccapital.com/news-views/press-releases/regnology-backed-by-nordic-capital-signs-an-agreement-to-acquire-moody-s-regulatory-reporting-alm-solutions/)
+- [A-Team, Regnology finalizes Moody's acquisition](https://a-teaminsight.com/briefs/regnology-finalizes-moodys-acquisition-as-reporting-and-balance-sheet-controls-converge/?brand=ati)
+- [Moody's 10-K FY2025](https://www.sec.gov/Archives/edgar/data/1059556/000162828026009136/mco-20251231.htm)
+- [S&P Global, FRTB modellability service](https://cdn.ihsmarkit.com/www/pdf/0523/FRTB-Modellability-service.pdf)
+- [S&P Global, traded market risk case study](https://www.spglobal.com/marketintelligence/en/mi/topic/case-study-traded-market-risk.html)
+- [SAS Risk Stratum](https://www.sas.com/en_us/software/risk-stratum.html)
+- [SAS community, market risk module](https://communities.sas.com/t5/SAS-Software-for-Learning/MARKET-RISK-MODULE/td-p/811654)
+- [Oracle Financial Services market risk data sheet](https://oracle.com/a/ocom/docs/industries/financial-services/ofs-market-risk-ds.pdf)
+- [Oracle OFS MRMM Pack 8.0.5 release notes](https://docs.oracle.com/cd/E92094_01/PDF/8.0.5.0.0/OFS_MRMM_Pack_8.0.5.0.0_Release%20Notes.pdf)
 **Regulatory reporting and governance**
 
-- Wolters Kluwer completes divestment of FRR (1 Dec 2025): https://www.wolterskluwer.com/en/news/wolters-kluwer-completes-divestment-of-its-finance-risk-and-regulatory-reporting-unit
-- Wolters Kluwer to divest FRR (21 Jul 2025): https://www.wolterskluwer.com/en/news/wolters-kluwer-to-divest-its-finance-risk-and-regulatory-reporting-unit
-- Khaitan & Co, FRR India divestment (OneSumX): https://khaitanco.com/firm-matter/wolters-kluwer-groug-divestment-of-financial-risk-and-reporting-frr-business-by-wolters-kluwer-group-to-regnology
-- IBM OpenPages: https://ibm.com/products/openpages
-- IBM OpenPages 9.1.2 release (Sep 2025): https://community.ibm.com/community/user/discussion/releases-september-26-2025-ibm-openpages-912-both-on-premise-and-cloud-hosted-is-now-available
-
+- [Wolters Kluwer completes divestment of FRR (1 Dec 2025)](https://www.wolterskluwer.com/en/news/wolters-kluwer-completes-divestment-of-its-finance-risk-and-regulatory-reporting-unit)
+- [Wolters Kluwer to divest FRR (21 Jul 2025)](https://www.wolterskluwer.com/en/news/wolters-kluwer-to-divest-its-finance-risk-and-regulatory-reporting-unit)
+- [Khaitan & Co, FRR India divestment (OneSumX)](https://khaitanco.com/firm-matter/wolters-kluwer-groug-divestment-of-financial-risk-and-reporting-frr-business-by-wolters-kluwer-group-to-regnology)
+- [IBM OpenPages](https://ibm.com/products/openpages)
+- [IBM OpenPages 9.1.2 release (Sep 2025)](https://community.ibm.com/community/user/discussion/releases-september-26-2025-ibm-openpages-912-both-on-premise-and-cloud-hosted-is-now-available)
 **Buy-side**
 
-- Deutsche Börse completes takeover of SimCorp (Q3 2023): https://deutsche-boerse.com/dbg-en/media/press-releases/Q3-2023-Deutsche-B-rse-Group-reports-further-growth-and-completes-takeover-of-SimCorp-3711076
-- Charles River and Axioma datasheet: https://crd.com/wp-content/uploads/2024/07/CRD-Axioma_Datasheet.pdf
-- Institutional Investor, State Street ramps up competition with Aladdin: https://www.institutionalinvestor.com/article/2bswekxa78s7hfwc3t1j4/corner-office/state-street-ramps-up-competition-with-blackrocks-aladdin
-
+- [Deutsche Börse completes takeover of SimCorp (Q3 2023)](https://deutsche-boerse.com/dbg-en/media/press-releases/Q3-2023-Deutsche-B-rse-Group-reports-further-growth-and-completes-takeover-of-SimCorp-3711076)
+- [Charles River and Axioma datasheet](https://crd.com/wp-content/uploads/2024/07/CRD-Axioma_Datasheet.pdf)
+- [Institutional Investor, State Street ramps up competition with Aladdin](https://www.institutionalinvestor.com/article/2bswekxa78s7hfwc3t1j4/corner-office/state-street-ramps-up-competition-with-blackrocks-aladdin)
 **General data and analytics**
 
-- The Register, Power BI price rises (Apr 2025): https://www.theregister.com/2025/04/02/microsoft_power_bi_hikes/
-- Microsoft Fabric community, Power BI pricing update: https://community.fabric.microsoft.com/t5/Power-BI-Updates-Blog/Important-update-to-Microsoft-Power-BI-pricing/ba-p/5174341
-- Microsoft Q&A, Copilot availability with Fabric: https://learn.microsoft.com/en-us/answers/questions/5844828/question-about-copilot-availability-with-fabric-an
-- Tableau Cloud pricing: https://www.tableau.com/pricing/cloud
-- ThoughtSpot launches Spotter (Nov 2024): https://www.thoughtspot.com/press-releases/thoughtspot-launches-spotter-the-autonomous-agent-for-analytics
-- ThoughtSpot Spotter agents documentation: https://docs.thoughtspot.com/cloud/26.6.0.cl/spotter-agents
-- Looker conversational analytics: https://cloud.google.com/looker/docs/studio/conversational-analytics-looker
-- dbt Labs open-sources MetricFlow (Oct 2025): https://tools.prnewswire.com/en-us/live/20813/release/20251014EN96968
-- TechTarget, Fivetran and dbt Labs complete merger: https://www.techtarget.com/data-technologies/news/366643590/Fivetran-DBT-Labs-complete-merger-to-form-data-layer-for-AI
-- Atlan, AtScale vs Cube: https://atlan.com/know/ai-agent/semantic-layer/atscale-vs-cube-semantic-layer/
-- AtScale 2025 product announcements: https://www.atscale.com/blog/atscale-2025-product-announcements/
-- Databricks AI/BI release notes 2025: https://learn.microsoft.com/en-us/Azure/databricks/ai-bi/release-notes/2025
-- Databricks, AI/BI Genie generally available: https://www.databricks.com/en/blog/aibi-genie-now-generally-available
-- Snowflake quickstart, Cortex Analyst semantic models: https://quickstarts.snowflake.com/guide/semantic_file_generation_for_cortex_analyst/index.html
-- Starburst Icehouse (HPCwire, Apr 2024): https://www.hpcwire.com/bigdatawire/2024/04/10/starburst-debuts-icehouse-its-managed-apache-iceberg-service/
-- MotherDuck, managed DuckLakes: https://motherduck.com/blog/announcing-ducklake-support-motherduck-preview/
-- MotherDuck, April 2026 product roundup (DuckLake 1.0): https://motherduck.com/blog/april-2026-product-roundup.md
-- ClickHouse raises USD 400M (Business Wire, Jan 2026): https://businesswire.com/news/home/20260116008883/en/ClickHouse-Raises-$400M-Series-D-Led-by-Dragoneer-to-Accelerate-Expansion-Across-Analytics-and-AI-Infrastructure
-- Langfuse joins ClickHouse: https://langfuse.com/blog/joining-clickhouse
-- KX emerges as standalone company (Mar 2025): https://www.fintechfutures.com/press-releases/kx-emerges-as-standalone-software-company-to-make-temporal-ai-a-commercial-reality
-- KX KDB-X Community Edition (Nov 2025): https://markets.financialcontent.com/winslow/article/bizwire-2025-11-19-kx-debuts-developer-built-kdb-x-community-edition-transforming-time-series-and-real-time-data-for-the-ai-era
-- KX KDB-X general availability (Apr 2026): https://www.businesswire.com/news/home/20260402375288/en/
-- StarTree products: https://startree.ai/products/
-- OpenAI acquires Rockset (InfoWorld): https://www.infoworld.com/article/3715564/openai-acquires-rockset-to-enhance-chatgpt-real-time-data-processing.html
-- Palantir FY2025 annual report: https://www.sec.gov/Archives/edgar/data/0001321655/000132165526000021/fy2025palantirars.pdf
-- Superblocks, Appsmith pricing: https://www.superblocks.com/blog/appsmith-pricing
-- Superblocks, Retool pricing: https://www.superblocks.com/blog/retool-pricing
-- Grafana, pricing and cost models: https://grafana.com/docs/learning-hub/which-grafana/02-understand-your-options/08-pricing-and-cost-models/
-
+- [The Register, Power BI price rises (Apr 2025)](https://www.theregister.com/2025/04/02/microsoft_power_bi_hikes/)
+- [Microsoft Fabric community, Power BI pricing update](https://community.fabric.microsoft.com/t5/Power-BI-Updates-Blog/Important-update-to-Microsoft-Power-BI-pricing/ba-p/5174341)
+- [Microsoft Q&A, Copilot availability with Fabric](https://learn.microsoft.com/en-us/answers/questions/5844828/question-about-copilot-availability-with-fabric-an)
+- [Tableau Cloud pricing](https://www.tableau.com/pricing/cloud)
+- [ThoughtSpot launches Spotter (Nov 2024)](https://www.thoughtspot.com/press-releases/thoughtspot-launches-spotter-the-autonomous-agent-for-analytics)
+- [ThoughtSpot Spotter agents documentation](https://docs.thoughtspot.com/cloud/26.6.0.cl/spotter-agents)
+- [Looker conversational analytics](https://cloud.google.com/looker/docs/studio/conversational-analytics-looker)
+- [dbt Labs open-sources MetricFlow (Oct 2025)](https://tools.prnewswire.com/en-us/live/20813/release/20251014EN96968)
+- [TechTarget, Fivetran and dbt Labs complete merger](https://www.techtarget.com/data-technologies/news/366643590/Fivetran-DBT-Labs-complete-merger-to-form-data-layer-for-AI)
+- [Atlan, AtScale vs Cube](https://atlan.com/know/ai-agent/semantic-layer/atscale-vs-cube-semantic-layer/)
+- [AtScale 2025 product announcements](https://www.atscale.com/blog/atscale-2025-product-announcements/)
+- [Databricks AI/BI release notes 2025](https://learn.microsoft.com/en-us/Azure/databricks/ai-bi/release-notes/2025)
+- [Databricks, AI/BI Genie generally available](https://www.databricks.com/en/blog/aibi-genie-now-generally-available)
+- [Snowflake quickstart, Cortex Analyst semantic models](https://quickstarts.snowflake.com/guide/semantic_file_generation_for_cortex_analyst/index.html)
+- [Starburst Icehouse (HPCwire, Apr 2024)](https://www.hpcwire.com/bigdatawire/2024/04/10/starburst-debuts-icehouse-its-managed-apache-iceberg-service/)
+- [MotherDuck, managed DuckLakes](https://motherduck.com/blog/announcing-ducklake-support-motherduck-preview/)
+- [MotherDuck, April 2026 product roundup (DuckLake 1.0)](https://motherduck.com/blog/april-2026-product-roundup.md)
+- [ClickHouse raises USD 400M (Business Wire, Jan 2026)](https://businesswire.com/news/home/20260116008883/en/ClickHouse-Raises-$400M-Series-D-Led-by-Dragoneer-to-Accelerate-Expansion-Across-Analytics-and-AI-Infrastructure)
+- [Langfuse joins ClickHouse](https://langfuse.com/blog/joining-clickhouse)
+- [KX emerges as standalone company (Mar 2025)](https://www.fintechfutures.com/press-releases/kx-emerges-as-standalone-software-company-to-make-temporal-ai-a-commercial-reality)
+- [KX KDB-X Community Edition (Nov 2025)](https://markets.financialcontent.com/winslow/article/bizwire-2025-11-19-kx-debuts-developer-built-kdb-x-community-edition-transforming-time-series-and-real-time-data-for-the-ai-era)
+- [KX KDB-X general availability (Apr 2026)](https://www.businesswire.com/news/home/20260402375288/en/)
+- [StarTree products](https://startree.ai/products/)
+- [OpenAI acquires Rockset (InfoWorld)](https://www.infoworld.com/article/3715564/openai-acquires-rockset-to-enhance-chatgpt-real-time-data-processing.html)
+- [Palantir FY2025 annual report](https://www.sec.gov/Archives/edgar/data/0001321655/000132165526000021/fy2025palantirars.pdf)
+- [Superblocks, Appsmith pricing](https://www.superblocks.com/blog/appsmith-pricing)
+- [Superblocks, Retool pricing](https://www.superblocks.com/blog/retool-pricing)
+- [Grafana, pricing and cost models](https://grafana.com/docs/learning-hub/which-grafana/02-understand-your-options/08-pricing-and-cost-models/)
 **Not verified (looked, not found or not read at source):** Opensee's storage format; whether RiskAuthority moved to Regnology; the
 completion date of Regnology's Moody's purchase; completion and new name of Finastra TCM under Apax; the Fivetran and dbt Labs closing
 date (reported complete; one source says 1 June 2026); Dremio and MetricStream 2025–26 announcements; Qlik's current AI offering and Talend integration;

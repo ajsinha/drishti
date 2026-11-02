@@ -75,8 +75,8 @@ drishti-server/src/main/resources/capacity/planner.yaml
 - The server evaluates the same formulas for the page (a small evaluator of the subset used: names, `+ - * / ^ &`, comparisons, `MAX`,
   `MIN`, `IF`, `CEILING`, `AND`, `OR`, `INT`, `ROUND`, the same subset the Python evaluator implements), so the page and Excel cannot
   disagree. A shared test vector (the `EXPECTED` and `EXPECTED_BENCH` figures) runs against both evaluators.
-- A measurement of your own server changes one coefficient in one file (or an override under `drishti.capacity.coefficients.*`), and
-  the page, the workbook and the tool follow.
+- A measurement of your own server changes one coefficient in one file, and the page, the workbook and the tool follow (overrides
+  of single coefficients from the server's configuration are planned).
 
 ## 3. Download the working (.xlsx): the VaR Playground's way
 

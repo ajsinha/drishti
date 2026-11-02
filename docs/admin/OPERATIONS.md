@@ -1765,7 +1765,7 @@ On a phone (MOBILE_DISPLAY.md's tiers): **must**, the four states and what break
 live table and growth, folded; **desk**, editing the plan, the JVM arguments, the command line, the growth sliders and the download,
 which a line says are on a wide screen. Dark and light themes both. <kbd>F1</kbd> opens this section.
 
-<img src="img/capacity/phone.png" alt="Admin → Capacity on a phone (390 px)" width="300">
+![Admin → Capacity on a phone (390 px)](img/capacity/phone.png)
 
 The endpoints (administrators; [API_GUIDE.md](../guides/API_GUIDE.md)): `GET /api/v1/admin/capacity` (the planner file as JSON),
 `GET /api/v1/admin/capacity/live` (the measured figures, `measuredAt`, and `inputs`: the planner inputs they stand for) and
