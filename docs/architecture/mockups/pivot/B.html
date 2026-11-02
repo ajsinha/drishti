@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (pivot/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11.a, the pivot engine;
+  the design: docs/architecture/PIVOT_ENGINE.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Pivot: option B, terminal first</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:14px 16px 24px;display:flex;flex-direction:column;gap:10px}
+.intro h1{font-size:19px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:150ch;line-height:1.45;font-size:13px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:7px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:760px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;height:30px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:12.5px}
+.cmd.wide{max-width:none}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline}
+.head h2{margin:0;font-size:16px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.pick{font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel);white-space:nowrap}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12px;padding:4px 11px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn kbd,.k{font-family:var(--mono);font-size:10.5px;color:var(--muted);border:1px solid var(--line);border-radius:4px;padding:0 4px;margin-left:4px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0}
+.card h3{margin:0 0 6px;font-size:13px} .card h3 span{color:var(--muted);font-weight:400;font-size:11.5px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:3px 7px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:11.5px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+th.grp{text-align:center;color:var(--ink);font-weight:600;border-bottom:2px solid var(--line)}
+th.grp.m{border-bottom-color:var(--ok)} th.grp.s{border-bottom-color:var(--warn)} th.grp.h{border-bottom-color:var(--link)}
+.neg{color:var(--neg)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.ax{color:var(--warn)} .ax::before{content:"≈ ";font-weight:700}
+.pill{display:inline-block;padding:1px 7px;border-radius:10px;font-size:11px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.note{font-size:11.5px;color:var(--muted);line-height:1.45}
+footer{font-size:11.5px;color:var(--muted);line-height:1.45;border-top:1px solid var(--line);padding-top:6px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.msg{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-t);border-radius:8px;padding:7px 12px;font-size:12.5px;line-height:1.45;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.msg.calm{border-left-color:var(--link);background:var(--hl)}
+.msg b.t{margin-right:4px}
+.scene{border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg2);min-width:0}
+.scene>.lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.scene>.lbl b{color:var(--amber);font-weight:700;margin-right:6px}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:10px;align-items:start}
+.col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.wrap{overflow-x:auto}
+.tw{display:inline-block;width:14px;text-align:center;font-family:var(--mono);color:var(--amber);font-weight:700}
+.lv1{padding-left:6px} .lv2{padding-left:24px} .lv3{padding-left:42px} .lv4{padding-left:60px}
+tr.sub td{background:var(--panel2);font-weight:600}
+tr.tot td{background:var(--amber-t);font-weight:700;border-top:1px solid var(--amber)}
+tr.sel td.c{outline:2px solid var(--link);outline-offset:-2px}
+td.sel{outline:2px solid var(--amber);outline-offset:-2px;background:var(--emph)}
+td.selc{background:var(--hl)}
+.by{font-size:10.5px;padding:0 6px;border-radius:8px;border:1px solid var(--link);color:var(--link);margin-left:6px;font-family:var(--sans)}
+.oth{color:var(--muted);font-style:italic}
+.div{color:var(--muted)}
+.fl{font-size:12px}
+.fl .srch{border:1px solid var(--line);border-radius:6px;padding:4px 8px;color:var(--faint);margin-bottom:6px;background:var(--panel2)}
+.fl .g{font-size:10.5px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 2px;font-weight:700}
+.fl .f{display:flex;align-items:center;gap:6px;padding:2px 0}
+.fl .f i{display:inline-block;width:12px;height:12px;border:1px solid var(--line);border-radius:3px;font-style:normal;font-size:9px;line-height:11px;text-align:center}
+.fl .f i.on{background:var(--amber);border-color:var(--amber);color:var(--onacc)}
+.fl .f .t{margin-left:auto;font-size:10px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:0 5px}
+.fl .f .t.s{color:var(--warn);border-color:var(--warn)} .fl .f .t.h{color:var(--link);border-color:var(--link)} .fl .f .t.c{color:var(--ok);border-color:var(--ok)}
+.zones{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.zone{border:1px dashed var(--line);border-radius:6px;padding:5px;min-height:46px;background:var(--panel2)}
+.zone .zl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px}
+.chip{display:inline-block;font-size:11px;padding:1px 7px;border:1px solid var(--line);border-radius:10px;margin:1px;color:var(--ink);background:var(--panel)}
+.chip.s{border-color:var(--warn)} .chip.h{border-color:var(--link)} .chip.c{border-color:var(--ok)}
+.pop{position:absolute;z-index:3;width:390px;background:var(--panel);border:1px solid var(--amber);border-radius:8px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.45);font-size:11.5px;line-height:1.45}
+.pop h4{margin:0 0 4px;font-size:12.5px}
+.pop .r{display:flex;gap:8px;border-top:1px solid var(--line2);padding:3px 0}
+.pop .r b{flex:0 0 86px;color:var(--muted);font-weight:500}
+.pop .acts{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.rel{position:relative}
+.keys{font-size:11px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 12px;margin-top:6px}
+.code{font-family:var(--mono);font-size:11.5px;line-height:1.5;background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px;white-space:pre;overflow-x:auto;color:var(--ink)}
+.code .kw{color:var(--link)} .code .cm{color:var(--faint)} .code .st{color:var(--ok)} .code .fn{color:var(--amber2)}
+.three{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,.8fr) minmax(0,1fr);gap:10px;align-items:start}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;align-items:start}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.why .card h3{color:var(--amber)}
+.why ul{margin:0;padding-left:18px;font-size:12px;line-height:1.5}
+.chk{font-size:12px;line-height:1.6}
+.chk .y{color:var(--ok);font-weight:700;margin-right:6px} .chk .n{color:var(--bad);font-weight:700;margin-right:6px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;font-size:12px}
+.kv b{color:var(--muted);font-weight:500}
+.exp{font-size:12px}
+.exp .o{display:flex;gap:6px;align-items:center;padding:2px 0}
+.exp .rb{display:inline-block;width:11px;height:11px;border-radius:50%;border:1px solid var(--line)} .exp .rb.on{border:3px solid var(--amber)}
+.step{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 10px;margin-bottom:8px}
+.step .sh{display:flex;gap:8px;align-items:center;font-size:12.5px;font-weight:600;margin-bottom:5px}
+.step .n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--amber);color:var(--onacc);align-items:center;justify-content:center;font-size:11px}
+.wiz{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap}
+.wiz span{font-size:12px;padding:4px 10px;border-radius:14px;border:1px solid var(--line);color:var(--muted)}
+.wiz span.on{border-color:var(--amber);color:var(--ink);background:var(--amber-t);font-weight:600}
+.wiz span.done{color:var(--ok);border-color:var(--ok)}
+td.up{background:rgba(242,149,90,.16)} td.dn{background:rgba(127,178,255,.14)}
+tr.new td{border-left:0} tr.new td.l{box-shadow:inset 3px 0 0 var(--ok)} tr.gone td{color:var(--faint);text-decoration:line-through}
+.flag{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--bad);margin-left:5px;vertical-align:middle}
+.ins{font-size:12px;line-height:1.45;border-bottom:1px solid var(--line2);padding:5px 0}
+.ins b{display:block}
+@media (max-width:1100px){.layout,.three,.two{grid-template-columns:minmax(0,1fr)}.pop{position:static;width:auto;margin-top:8px}}
+@media (max-width:900px){.why{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){
+  .page{padding:10px 8px 18px}
+  .menus{display:none}
+  .intro h1{font-size:16px}
+  .rec,.alt{margin-left:0;margin-top:4px}
+  .zones{grid-template-columns:minmax(0,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Pivot: option B, terminal first<span class="alt">alternative</span></h1><p>The command line writes the view; zones are chips under it; the grid takes the width, with nested columns (G10 open, EM closed) as well as rows. What-if, why it moved and provenance live in a right rail, always open. Scene 2 shows the playground as a notebook of the four steps, here for a holistic function.</p></section>
+<div class="bar"><span class="brand">DRISHTI<i>Risk</i></span><div class="cmd wide">PIVOT var:2026-10-30 ROWS DESK COLS CCY_GROUP&gt;CURRENCY VALUES VAR99 NOTIONAL CPTY≈ WHERE REGION=EMEA WHATIF -BOOK:BK-1101 &lt;GO&gt;</div></div>
+<div class="scene"><p class="lbl"><b>Scene 1</b>The pivot screen</p>
+<div class="ctrls" style="margin-bottom:8px"><span class="pick"><b>Rows</b>DESK</span><span class="pick"><b>Columns</b>CCY_GROUP › CURRENCY</span><span class="pick"><b>Values</b>VaR 99 · Notional Σ · Cpty ≈</span><span class="pick"><b>Filter</b>REGION = EMEA</span><span class="pick"><b>What-if</b>−BK-1101</span><span class="pick"><b>Estimate</b>vectors in memory on var-1: ≈3 s</span><span class="btn">Fields<kbd>F</kbd></span><span class="btn">Export<kbd>X</kbd></span></div>
+<div class="layout" style="grid-template-columns:minmax(0,1fr) 360px"><div class="col"><div class="card"><h3>EMEA by desk × currency <span>VaR 99% 1d, USD m · columns nested: G10 open, EM closed · what-if: BK-1101 excluded (amber)</span></h3>
+<div class="wrap"><table>
+<tr><th class="l" rowspan="2">DESK</th><th class="grp h" colspan="4"><span class="tw">−</span>G10</th><th class="grp h"><span class="tw">+</span>EM</th><th class="grp h" colspan="3">Total</th><th class="grp m">Mergeable</th><th class="grp s">Sketch</th></tr>
+<tr><th>USD</th><th>EUR</th><th>GBP</th><th>G10</th><th>EM (6)</th><th>VaR</th><th>what-if</th><th>Δ</th><th>Notional Σ</th><th>Cpty ≈±1.6%</th></tr>
+<tr><td class="l lv2"><span class="tw">+</span>RATES-LDN</td><td>2.10</td><td>2.85</td><td>1.40</td><td>4.21</td><td>0.62</td><td>4.48</td><td><span class="warn">3.02</span></td><td><span class="neg">−1.46</span></td><td>35.80 bn</td><td><span class="ax">391</span></td></tr>
+<tr><td class="l lv2"><span class="tw">+</span>FX-LDN</td><td>1.22</td><td>0.98</td><td>0.71</td><td>2.05</td><td>0.88</td><td>2.36</td><td>2.36</td><td>0.00</td><td>22.15 bn</td><td><span class="ax">310</span></td></tr>
+<tr><td class="l lv2"><span class="tw">+</span>CREDIT-LDN</td><td>0.84</td><td>1.31</td><td>0.40</td><td>1.70</td><td>0.55</td><td>1.87</td><td>1.87</td><td>0.00</td><td>9.62 bn</td><td><span class="ax">402</span></td></tr>
+<tr class="sub"><td class="l lv2">EMEA total</td><td>2.95</td><td>3.60</td><td>1.92</td><td>5.70</td><td>1.41</td><td class="sel">6.02</td><td><span class="warn">5.11</span></td><td><span class="neg">−0.91</span></td><td>67.57 bn</td><td><span class="ax">902</span></td></tr>
+<tr class="sub"><td class="l lv2"><span class="muted">Σ of the desks (not a total)</span></td><td>4.16</td><td>5.14</td><td>2.51</td><td>7.96</td><td>2.05</td><td>8.71</td><td>7.25</td><td></td><td>67.57 bn</td><td></td></tr>
+<tr><td class="l lv2"><span class="div">Diversification</span></td><td><span class="div">1.21</span></td><td><span class="div">1.54</span></td><td><span class="div">0.59</span></td><td><span class="div">2.26</span></td><td><span class="div">0.64</span></td><td><span class="div">2.69</span></td><td><span class="div">2.14</span></td><td></td><td></td><td></td></tr>
+</table></div>
+<div class="note" style="margin-top:6px">Every VaR above is the VaR of its own members' summed vectors; the "Σ of the desks" row is shown only to make diversification visible. Only the 9 cells holding BK-1101 were recomputed for the what-if.</div>
+<div class="keys"><span><span class="k">:</span> command</span><span><span class="k">W</span> what-if</span><span><span class="k">Y</span> why it moved</span><span><span class="k">→ ←</span> expand, collapse (rows or columns)</span><span><span class="k">E</span> expand by…</span><span><span class="k">G</span> chart</span><span><span class="k">X</span> export</span></div>
+</div></div><div class="col"><div class="card"><h3>What-if <span>private overlay; nothing written to the lake</span></h3>
+<div class="kv"><b>Change</b><span>exclude book BK-1101 (RATES-LDN, 1,204 trades)</span><b>Recomputed</b><span>9 of 30 cells (those holding it)</span><b>EMEA</b><span class="mono">6.02 → 5.11 m (−0.91)</span><b>RATES-LDN</b><span class="mono">4.48 → 3.02 m (−1.46)</span></div>
+<div class="note" style="margin-top:4px">The desk falls by more than EMEA: BK-1101 partly hedged FX-LDN. <a>Add a change</a> · <a>Scale a column</a> · <a>Override a price</a></div></div>
+<div class="card"><h3>Why it moved <span>EMEA VaR, 2026-09-30 → 2026-10-30</span></h3>
+<div class="kv" style="margin-bottom:4px"><b>Change</b><span class="mono">5.31 → 6.02 m (+0.71)</span></div>
+<svg viewBox="0 0 330 120" width="100%" height="120" role="img" aria-label="steps that add up to the change">
+<g font-size="10.5" fill="var(--ink)">
+<text x="0" y="12">restatement</text><text x="250" y="12" class="mono">0.00</text>
+<text x="0" y="28">hierarchy</text><text x="250" y="28">0.00</text>
+<text x="0" y="44">trades out</text><rect x="125" y="35" width="25" height="10" fill="var(--pos)"/><text x="250" y="44">−0.18</text>
+<text x="0" y="60">window roll</text><rect x="150" y="51" width="13" height="10" fill="var(--neg)"/><text x="250" y="60">+0.09</text>
+<text x="0" y="76">market</text><rect x="163" y="67" width="73" height="10" fill="var(--neg)"/><text x="250" y="76">+0.52</text>
+<text x="0" y="92">trades in</text><rect x="150" y="83" width="39" height="10" fill="var(--neg)"/><text x="250" y="92">+0.28</text>
+<line x1="0" y1="100" x2="330" y2="100" stroke="var(--line)"/>
+<text x="0" y="114" font-weight="700">adds up to</text><text x="250" y="114" font-weight="700">+0.71</text>
+</g></svg>
+<div class="note">By child (component VaR, adds up): RATES-LDN +0.49 · FX-LDN +0.15 · CREDIT-LDN +0.07. <a>Open as waterfall</a></div></div>
+<div class="card"><h3>Provenance <span>selected: EMEA total VaR</span></h3>
+<div class="kv"><b>Exact</b><span>holistic; 5,253 trades' vectors, 509 days</span><b>Data</b><span class="mono">pnl-vector v1842, trade v977</span><b>Ran</b><span>var-1, 210 ms</span><b>Ref</b><span class="mono">pivot://asha/emea@2/VaR99[DESK=*]</span></div></div></div></div>
+</div>
+<div class="scene"><p class="lbl"><b>Scene 2</b>Pivot → Functions → New: the playground as a notebook of the four steps</p>
+<div class="two">
+<div><div class="step"><div class="sh"><span class="n">1</span>start <span class="muted" style="font-weight:400">robust_vol · lee @2 · Python · declared holistic (no merge)</span></div>
+<div class="code"><span class="kw">def</span> <span class="fn">start</span>(self, params): <span class="kw">return</span> []        <span class="cm"># holistic: the engine passes every row of the cell</span></div></div>
+<div class="step"><div class="sh"><span class="n">2</span>add <span class="muted" style="font-weight:400">one Arrow batch of the cell's P&amp;L</span></div>
+<div class="code"><span class="kw">def</span> <span class="fn">add</span>(self, s, batch): s.append(batch[<span class="st">"PNL_1D"</span>].to_numpy()); <span class="kw">return</span> s</div>
+<div class="note" style="margin-top:4px">state after the sample: 3 arrays, 2,000 values, 16 KB</div></div>
+<div class="step"><div class="sh"><span class="n">3</span>merge <span class="muted" style="font-weight:400">none: declared holistic</span></div>
+<div class="note">Without merge the function is holistic: a cell's rows go to one worker, bounded at 5 M rows or 512 MB a cell (refused in words above it). The editor suggests a mergeable form: <a>robust_vol from a KLL sketch (≈ ±1.65% rank)</a></div></div>
+<div class="step"><div class="sh"><span class="n">4</span>finish</div>
+<div class="code"><span class="kw">def</span> <span class="fn">finish</span>(self, s):
+    x = np.concatenate(s); m = np.median(x)
+    <span class="kw">return</span> 1.4826 * np.median(np.abs(x - m))     <span class="cm"># MAD scaled to σ</span></div>
+<div class="note" style="margin-top:4px">value on the sample: <span class="mono">412,880.4</span></div></div></div>
+<div><div class="card"><h3>Sample rows <span>pasted · 2,000 rows · 3 desks</span></h3>
+<table><tr><th class="l">DESK</th><th class="l">TRADE_ID</th><th>PNL_1D</th></tr>
+<tr><td class="l">RATES-LDN</td><td class="l mono">T-88123</td><td>−112,400.0</td></tr>
+<tr><td class="l">RATES-LDN</td><td class="l mono">T-88124</td><td>48,210.5</td></tr>
+<tr><td class="l">FX-LDN</td><td class="l mono">T-90017</td><td>301,005.2</td></tr>
+<tr><td class="l">CREDIT-LDN</td><td class="l mono">T-77602</td><td>−9,880.0</td></tr>
+<tr><td class="l muted">… 1,996 more</td><td></td><td></td></tr></table></div>
+<div class="card" style="margin-top:10px"><h3>The check <span>holistic: one pass and edge cases only</span></h3>
+<div class="chk"><div><span class="y">✓</span>one pass equals itself on every batch size (1, 7, 1,000, 65,536)</div><div><span class="y">✓</span>empty cell → None; all-null → None; one row → 0.0</div><div><span class="y">✓</span>deterministic</div><div><span class="y">✓</span>size bound shown: 8 bytes a row; a 5 M-row cell needs 40 MB</div></div>
+<h3 style="margin-top:8px">Cost</h3><div class="kv"><b>Per worker</b><span class="mono">96 M rows/s (numpy median)</span><b>A 40 × 12 view</b><span class="mono">480 holistic cells: ≈11 s on 3 nodes × 8 workers</span></div>
+<div class="ctrls" style="margin-top:8px"><span class="btn">Try in a pivot</span><span class="btn">Save @3</span><span class="btn p">Submit for approval</span></div></div></div>
+</div></div>
+<div class="why"><div class="card"><h3>How it feels</h3><ul><li>A terminal: type the view, read the answer, every panel a key away.</li><li>What-if and the explanation are always beside the grid.</li></ul></div><div class="card"><h3>Why not recommended</h3><ul><li>Fast for experts, a wall for everyone else: the grammar must be learnt.</li><li>The rail takes width from the grid permanently.</li></ul></div><div class="card"><h3>Keep from it</h3><ul><li>The command line (already in A's bar).</li><li>The notebook view of the four steps, as a tab of A's playground.</li></ul></div></div>
+<footer>Mock-up. Design, not built (docs/architecture/PIVOT_ENGINE.md). Names, numbers and versions are illustrative; the command grammar is a proposal.</footer>
+</div>
+</body>
+</html>

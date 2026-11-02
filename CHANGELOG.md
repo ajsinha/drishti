@@ -34,6 +34,11 @@
   in-memory lake ("restart needed"); an edit of the file by hand takes effect too. In a cluster each node publishes its engines in its
   digest, an engine's request goes to a node that runs it, and the Cluster tab changes another node's engine (signed, audited on both).
   `drishti.py server engines list|show|on|off|history` (`admin engines` the same). CONFIGURATION.md has an Engines area, checked.
+- **Docs: the pivot engine designed (design, not built; PIVOT_ENGINE.md, mock-ups A, B and C in docs/architecture/mockups/pivot/,
+  the plan's proposed 2.9.11.a).** One generalised, very large-scale pivot for all of Drishti in a new `drishti-bicompute` module:
+  measure providers (DuckDB tabular, VaR vectors, FRTB-SA, SIMM, later CCR), mergeable, sketch and holistic measures, custom
+  aggregation functions (start, add, merge, finish) with a split-and-merge harness and a playground, expand and collapse, charts,
+  Excel and CSV export, BI and the MR cube on it; the MR cube (2.9.11 row 3) moved to after it.
 - **Construct your basket is one sheet like Excel; baskets are edited, amended and deleted (2.9.11 rows 10 and 12; VAR_GUIDE.md
   sections 3.5 and 5.8, tutorial 25 steps 5 and 7).** The chip tray is retired (mock-up D): a column per kind of part (trade, position,
   portfolio, book, desk, each configured hierarchy's word such as the limit letter, counterparty) and the Op column (+ or −), filled by
