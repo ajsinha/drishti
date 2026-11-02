@@ -61,6 +61,12 @@ fi
 echo "drill: mode = $MODE$([[ $PUSH == 0 ]] && echo ' (no push)')"
 
 PY=drishti-console/.venv/bin/python
+# a new worktree has no console environment of its own: stop at once with the remedy, not after the Java stages with a 0 s console stage
+if [[ ! -x "$PY" ]]; then
+  echo "drill: $PY not found: create the console environment (python3 -m venv drishti-console/.venv, then pip install -r" >&2
+  echo "       drishti-console/requirements.txt), or in a worktree link the main checkout's: ln -s <main>/drishti-console/.venv drishti-console/.venv" >&2
+  exit 1
+fi
 DATA="${DRISHTI_DATA_DIR:-data}"; LOGS="$DATA/drill"; mkdir -p "$LOGS"
 # Every temporary file of the drill goes to a folder on disk under the data folder (git-ignored with the rest of data/), never the
 # system /tmp: on a machine whose /tmp is a RAM disk, parallel suites would fill it and take memory from the test servers.
