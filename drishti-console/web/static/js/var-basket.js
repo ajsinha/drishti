@@ -22,8 +22,8 @@
    makes the basket the bank and the rows refine it. The sheet goes to the server as lists (POST /api/var/basket/sheet), which checks
    every cell (found, or not found with the reason in words; a minus that takes nothing away; a + under the whole bank) and computes the
    basket's VaR, ES, sum of the parts, diversification and trades: the console renders the answer and computes nothing. Under the figures
-   the pre-deal what-if (POST /api/var/what-if), then the name, sharing, Save and Open without saving. A saved basket opens back into the
-   sheet column by column (Edit; an administrator's edit is saved under its owner); a portfolio is the bank's, so it opens as a copy (Edit
+   the pre-deal what-if (POST /api/var/what-if, the server's VaR engine: no compute workers needed), then the name, sharing, Save and
+   Open without saving. A saved basket opens back into the sheet column by column (Edit; an administrator's edit is saved under its owner); a portfolio is the bank's, so it opens as a copy (Edit
    a copy). Download as .xlsx gives the sheet back to Excel. The sheet lives on the VaR explorer, opened by "Construct your basket" or
    Alt+B, and survives a reload (this browser). */
 (function () {
@@ -222,8 +222,8 @@
     el.wif.appendChild(el.wifList);
     var wrow = h("div", "vb-row");
     el.wifTrade = h("input", "vb-input mono vb-narrow");
-    el.wifTrade.placeholder = "a booked trade, MX-30000121";
-    el.wifTrade.setAttribute("aria-label", "The booked trade to copy");
+    el.wifTrade.placeholder = "a booked trade (MX-30000121) or a scope (BOOK:BOOK-RATES-3)";
+    el.wifTrade.setAttribute("aria-label", "The booked trade, or the scope, to copy");
     el.wifTrade.dataset.vbWhatifTrade = "";
     el.wifFactor = h("input", "vb-input mono vb-tiny");
     el.wifFactor.value = "1";
@@ -290,7 +290,7 @@
     el.pick.addEventListener("change", function () { var v = el.pick.value; el.pick.value = ""; if (v) edit(v); });
     el.wifRun.addEventListener("click", function () {
       var id = el.wifTrade.value.trim().replace(/^TRD:/i, ""), f = Number(el.wifFactor.value);
-      if (!id) { el.wifTrade.focus(); el.wifOut.textContent = "Name a booked trade to copy."; return; }
+      if (!id) { el.wifTrade.focus(); el.wifOut.textContent = "Name a booked trade (or a scope) to copy."; return; }
       if (isNaN(f) || f === 0) { el.wifOut.textContent = "The factor is a number other than 0 (−1: the trade's unwind)."; return; }
       T.whatif.push({ copyOf: id, factor: f });
       el.wifTrade.value = "";
@@ -642,11 +642,11 @@
       });
       t.appendChild(tb);
       el.wifOut.appendChild(t);
-      if (w.note) el.wifOut.appendChild(h("p", "vb-note", w.note));
+      el.wifOut.appendChild(h("p", "vb-note", "Pre-deal what-if by the server's VaR engine: " + (w.note || "")));
     }).catch(function (e) {
       el.wifOut.textContent = "";
       el.wifOut.dataset.done = "failed";
-      var p = h("p", "vb-err", e.code === "DRS-5205" ? "The what-if cannot run here: " + e.message + " (" + e.code + ")." : "What-if failed: " + e.message);
+      var p = h("p", "vb-err", "What-if failed: " + e.message + (e.code ? " (" + e.code + ")." : ""));
       p.setAttribute("role", "alert");
       el.wifOut.appendChild(p);
     });

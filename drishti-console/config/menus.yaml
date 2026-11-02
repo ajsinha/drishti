@@ -61,7 +61,6 @@ menus:
           - { id: var-explorer, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or ad-hoc set of trades", requires: [word:VAR] }
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
-          - { id: var-whatif, cmd: VWIF, icon: sliders, label: What-if, desc: "The VaR change of adding or removing trades", requires: [cmd:VWIF] }
           - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, a position or a scope", match: /smat, requires: [word:SMAT] }
           - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
       - title: Check and report
@@ -113,7 +112,6 @@ menus:
         items:
           - { id: my-var, cmd: VAR, icon: shield-check, label: My VaR, desc: "The VaR of the books you trade", match: /var, requires: [word:VAR] }
           - { id: vlim, cmd: VLIM, icon: speedometer2, label: VaR limits, desc: "Each limit and how much of it is used", requires: [cmd:VLIM] }
-          - { id: vwif, cmd: VWIF, icon: sliders, label: VaR what-if, desc: "The VaR change of adding or removing trades", requires: [cmd:VWIF] }
           - { id: tval, cmd: TVAL, icon: currency-exchange, label: Trade valuations, desc: "Each trade's value and its sensitivities", requires: [cmd:TVAL] }
           - { id: pnlv, cmd: PNLV, icon: bar-chart, label: P&L vectors, desc: "Each position's P&L under every scenario", requires: [cmd:PNLV] }
   - id: counterparties

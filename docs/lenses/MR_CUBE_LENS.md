@@ -291,7 +291,7 @@ corrections, streaming, export, embedding, permissions, scatter-gather and cachi
 | Arrow answers (contributions) | **Built** | [API_GUIDE.md](../guides/API_GUIDE.md#answers-as-arrow-the-accept-header) |
 | Pivot over any fields with server totals (BI "Slice", matrix visual) | **Built for BI datasets**, additive measures only | [BI_GUIDE.md](../guides/BI_GUIDE.md) |
 | Pivot with non-additive VaR totals over the engine | **Not built** | MC2 |
-| Stressed VaR (a stress scenario set, 1-day and 10-day, `SVAR`) | **Planned**; the what-if already reports a "stressed window" figure | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
+| Stressed VaR (a stress scenario set, 1-day and 10-day, `SVAR`) | **Planned**; the what-if already reports a "stressed window" figure | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-the-what-if-the-java-engine) |
 | Sensitivities per position and factor | **Not built**: book-grain `frtb-sensitivity` only, demo data; `DV01` per trade on `trade-valuation` | [OVERSIGHT_LENS.md section 7.1](OVERSIGHT_LENS.md#71-what-the-lake-holds-today) |
 | FRTB SA computed | **Not built** (stored book-grain charges, retiring) | [COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb); [FRTB.md](../contracts/FRTB.md) |
 | FRTB IMA | **Not built**, not planned | MC8 to MC10 |
@@ -350,7 +350,7 @@ each with its screenshot; [section 6.7](#67-mock-ups-the-screens-to-build) is th
 | Drill one level | 150 ms¹ | |
 | Hover provenance | 20 ms¹ | the provenance id is in the answer; details cached |
 | An intraday batch: visible cells patched | 1 s after the batch is applied¹ | coalesced per batch |
-| What-if with three copied trades, per cell | 800 ms¹ | the Python engine; pricing a new trade adds QLRisk's time |
+| What-if with three copied trades, per cell | 800 ms¹ | the server's VaR engine; pricing a new trade adds QLRisk's time |
 | Time-travel to another version of an open date | 1.5 s¹ | the version's batch rows replayed onto the date |
 | SBM capital of the bank, three correlation scenarios | 2 s¹ | sums per factor are additive and cached per node |
 
@@ -1063,7 +1063,7 @@ person's `lens` setting, and every call carries `X-Drishti-Lens` so the command 
 | Title, link | **Drishti MR Cube**; **Open Drishti MR Cube** in Views and on Home |
 | Home | **decided: layout A (pivot first) is the landing; B (tail and attribution) and C (sensitivities and what-if) are tabs of the same page**, one data request feeding the three |
 | Mnemonics on | `MCUBE` (the cube), `VAR`, `SMAT`, `EXP` and `CCUBE` (to cross to the counterparty cube), `FUNC`, `WHAT`, `BI` |
-| Kinds allowed | trades and books (`TRD`, `BOOK`, `DESK`, `POS`), VaR (`VRES`, `VWIF`, `VOFF`, `VLIM`, `PNLV`, `SPV`, `HIER`, `PORT`), sensitivities (`SENS`, `RFAC` when built), counterparties read for drill (`CPTY`, `NSET`), the market data explain reads (`CRV`, `FX`, `CDS`, `EQ`) |
+| Kinds allowed | trades and books (`TRD`, `BOOK`, `DESK`, `POS`), VaR (`VRES`, `VOFF`, `VLIM`, `PNLV`, `SPV`, `HIER`, `PORT`), sensitivities (`SENS`, `RFAC` when built), counterparties read for drill (`CPTY`, `NSET`), the market data explain reads (`CRV`, `FX`, `CDS`, `EQ`) |
 | Hidden | Build, Studio, the designer, Calc, Python, forms, the data map, World and Market packs' menus, Admin pages but users, packs, health, audit |
 | Switches | the edition's `words:` map, as `SMAT: on` today: `{MCUBE: on, CCUBE: on, VAR: on, EXP: on, SMAT: on, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off}`; a new feature preset **`cube`** in `config/editions/features.yaml` (`server: [drishti.cube.enabled]`, `console: [features.cube]`, proposed) |
 | Relation to other lenses | **Risk**: `MCUBE` and `CCUBE` switched on as screens (a chip on the Command-first landing); **Trading**: `MCUBE` on, opening on the person's own desk scope; **Oversight** (proposed): the MR Cube is its explorer landing; the MR Cube lens is for people who live in the cube (the regulatory capital team, risk analysts) |
@@ -1077,7 +1077,7 @@ packs:
   enabled: [core, market-data, trading, market-risk, counterparty-risk]
   allow-only: true
 commands:
-  allow: [MCUBE, CCUBE, TRD, BOOK, DESK, POS, VRES, VWIF, VOFF, VLIM, PNLV, SPV, HIER, PORT, SENS, RFAC, CPTY, NSET, CRV, FX, CDS, EQ]
+  allow: [MCUBE, CCUBE, TRD, BOOK, DESK, POS, VRES, VOFF, VLIM, PNLV, SPV, HIER, PORT, SENS, RFAC, CPTY, NSET, CRV, FX, CDS, EQ]
   words: { MCUBE: on, CCUBE: on, VAR: on, EXP: on, SMAT: on, BI: on, FUNC: on, WHAT: on, FORM: off, DATAMAP: off, RUPAKA: off }
 features: { cube: on, var: on, exposure: on, bi: edition, embed: on, layouts: on, workspaces: on, alerts: on,
             calc: off, pyconsole: off, python: off, designer: off, studio: off, build: off, forms: off, datamap: off, ai: off }

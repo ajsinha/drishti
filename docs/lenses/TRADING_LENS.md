@@ -141,7 +141,7 @@ operations (COLL, MC) …").
 |---|---|---|
 | VaR of my books, desk, any union | **Built** | My VaR, Desk VaR (EDITIONS.md section 14); scopes ([VAR_GUIDE section 5](../guides/VAR_GUIDE.md#5-scopes-portfolios-and-baskets)) |
 | Top positions by VaR contribution | **Built** | `/scope/contributions?by=position` (Trader desk) |
-| VaR by trader (adds up to the desk) | **Built** to `max-parts` (5,000 trades, the largest said) | Desk head, By trader |
+| VaR by trader (adds up to the desk) | **Built** in the server over every trade of the desk (`/scope/contributions?by=attribute:TRADER_ID`, [VAR_GUIDE section 11.3](../guides/VAR_GUIDE.md#113-path-and-contributions)); masked for a role without raw, then said | Desk head, By trader |
 | 10-day VaR and the confidence chosen | **Built** (plan row 2b) | [VAR_GUIDE section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen): √10 and the 10-day sum, a confidence picker, limit use only when comparable |
 | Stressed VaR | **Planned** | |
 | The scenario matrix (is this tail scenario new?) | **Built** | [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat), `SMAT`; on in Drishti Trading (`commands.words.SMAT: on`; `SMAT BOOK BOOK-RATES-1 20`), which settles section 9, decision 5 |
@@ -236,8 +236,8 @@ From [EDITIONS.md section 14, The new-trade check](../admin/EDITIONS.md#the-new-
 trade**, so the check picks one (a live trade of the product in my books: the counterparty's own first, then the chosen book's, then the
 largest notional) and scales it (factor = notional ÷ its notional, negative when the side differs).
 
-- **VaR**: `POST /api/v1/var/what-if` on `BOOK:<book>` with the copy and factor (the Python VaR engine) → VaR before and after, limit use
-  before and after: **fits**, **near**, **breaches**; without the Python engine the half says so (`DRS-5205`).
+- **VaR**: `POST /api/v1/var/what-if` on `BOOK:<book>` with the copy and factor (the server's VaR engine) → VaR before and after, limit use
+  before and after: **fits**, **near**, **breaches**; when the engine cannot answer (a book without vectors on the date) the half says why.
 - **Counterparty**: `POST /api/v1/exposure/what-if` on `CPTY:<cp>` (method `paths`, the copy into the counterparty's largest netting set) →
   peak PFE before and after against the credit limit; the `addon` proxy, labelled, when `paths` cannot run (`DRS-5446`, or no netting set).
 
@@ -249,7 +249,7 @@ Section 5.8 proposes saying so on the answer and, later, pricing the real trade.
 
 From [EDITIONS.md section 14](../admin/EDITIONS.md#what-the-data-does-not-give-left-out-or-labelled-never-invented): the DV01 tile
 without DV01s; P&L, by book, by trader and the movers without valuations the day before; the P&L-against-VaR card without official
-history; by-trader figures for a masked role; a book's limit use on a date without an official record; VaR by trader beyond `max-parts`;
+history; by-trader figures for a masked role; a book's limit use on a date without an official record;
 "new" trades on data that books none on the day; a time of day other than `SOURCE_UPDATE_TIME`; the largest counterparty's share of
 **exposure**; a scope above `trading.max-rows` (20,000 valuations a date) is read in part and every figure says **partial**.
 
@@ -633,7 +633,7 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 | T21 | Card: Overnight movers (B) | Trade, Book, Change: CMDF-31877 WTI Dec BOOK-COMM-1 −4.8m; CMDS-22014 Henry Hub swap +3.1m; CMDO-11520 Brent option +1.7m | valuations on both dates | click a trade | — | **Built** |
 | T22 | Menu bar (C) | **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | LX1 | **Built**: Blotter, Positions, Risk and Counterparties menus of their own ([section 11.2](#112-the-lens-menus-lx1-menusahtml)) |
 | T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `XWIF CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | — | **Built** |
-| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `VWIF`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
+| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
 | T25 | Recently opened (C) | *IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT* | the person's command history (Trading's commands only) | click | — | **Built** |
 | T26 | Default by role (footer) | "A as the default for traders, B as the default for desk heads (by role, with a person's own choice remembered), C behind a link" | `trading.landing-by-role`, the person's settings | the landing switch | — | **Built** |
 
@@ -658,7 +658,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X1 | Bar | `DRISHTI Trading`; the command line; menus **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`trading.yaml`](../../config/editions/trading.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens) (replaces the menus part of T22) |
 | X2 | Blotter menu | Trades `TRD`; By counterparty `CTRD`; By portfolio `PTRD`; By legal entity `LTRD` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Positions menu | Books `BOOK`; Desks `DESK`; Traders `TRDR`; Positions `POS` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; VaR what-if `VWIF`; Trade valuations `TVAL`; P&L vectors `PNLV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; Trade valuations `TVAL`; P&L vectors `PNLV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Pre-deal check `XWIF`; Exposure `EXP` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`phone.js`](../../drishti-console/web/static/js/phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 

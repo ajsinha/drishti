@@ -30,8 +30,8 @@ commands:                                # what people may type and see (command
     [TRD, CTRD, PTRD, LTRD, ITRD,
     # books and positions: books, desks, traders, positions (PSUM, PSTRIP and PBOOK are the compute-demo sample pack's: not a trading pack)
      BOOK, DESK, TRDR, POS,
-    # risk on my book: VaR limits, the VaR what-if, VaR results, trade valuations, P&L vectors, hierarchies, portfolios (VAR is the word)
-     VLIM, VWIF, VRES, TVAL, PNLV, HIER, PORT,
+    # risk on my book: VaR limits, VaR results, trade valuations, P&L vectors, hierarchies, portfolios (VAR is the word: the explorer and its what-if)
+     VLIM, VRES, TVAL, PNLV, HIER, PORT,
     # counterparties: counterparties, groups, netting sets and their MtM, counterparty MtM, credit limits, the pre-deal check, exposure
      CPTY, GRP, NSET, NSMTM, CPMTM, LIM, XWIF, EXP,
     # market data a trader reads: curves, FX spot and vols, equities and indexes, commodities and their curves, bonds, credit curves

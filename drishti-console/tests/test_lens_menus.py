@@ -62,7 +62,7 @@ def test_the_risk_edition_draws_var_and_exposure_menus_between_views_and_bi(back
     var = _panel(page, "VaR")
     assert "Value at risk" in var and "Check and report" in var
     cmds = _commands(var)
-    for c in ("VAR BANK", "VRES", "VOFF", "VWIF", "SMAT", "HIER", "SWIN BANK"):
+    for c in ("VAR BANK", "VRES", "VOFF", "SMAT", "HIER", "SWIN BANK"):
         assert c in cmds, c
     assert cmds.index("HIER") < cmds.index("SWIN BANK")
     assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in var and 'href="/smat"' in var
@@ -103,7 +103,7 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     alice.get("/lens/trading")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
-    assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "VWIF", "TVAL", "PNLV"]
+    assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV"]
     assert _commands(_panel(page, "Counterparties")) == ["CPTY", "NSET", "LIM", "XWIF", "EXP"]
 
 

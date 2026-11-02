@@ -175,9 +175,9 @@ terms:
     command: VOFF MGMT~DESK-RATES
     cli: drishti.py var official
   - term: VaR what-if
-    synonyms: [vwif, var whatif, what if]
+    synonyms: [var whatif, what if, pre-deal what-if]
     domain: market-risk
-    meaning: "The VaR of a scope with trades added or removed before they are dealt, computed by the Python engine (kind var-whatif)."
+    meaning: "The VaR of a scope with trades added or removed before they are dealt, computed by the server's VaR engine on request (POST /api/v1/var/what-if)."
     cli: drishti.py var whatif
   - term: Stress test
     synonyms: [stress scenario, stress, scn, stress result, str]

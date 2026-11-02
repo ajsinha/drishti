@@ -30,7 +30,7 @@ data built into a scratch lake (lake demo --only market-risk/<the VaR kinds>) an
   rows, Remove the not found, Download as .xlsx, Open without saving, saved as the sheet's lists, reopened in a fresh browser into the
   sheet column by column, edited (Save keeps the name as version 2), a portfolio's Edit a copy, deleted through the confirm dialog;
   elsewhere no Basket in the top bar and Alt+B does nothing, the explorer opens the sheet with the basket kept;
-- the pre-deal what-if under the sheet: a copy of a booked trade, unwound, before and after (compute on);
+- the pre-deal what-if under the sheet: a copy of a booked trade, unwound, before and after by the server's VaR engine (the compute workers off);
 - an id that is not a live trade (VAR TRD 10000000) says so, never a VaR of 0 that looks computed;
 - a trade page's Risk group (risk-links@1): its P&L vector and its VaR one click away, and why it has no exposure.
 
@@ -66,7 +66,7 @@ def stack(tmp_path_factory):
     if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
         pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_COMPUTE_ENABLED": "true", "DRISHTI_PYTHON": sys.executable}):    # the what-if's Python engine
+                                        "DRISHTI_COMPUTE_ENABLED": "false"}):    # the what-if needs no compute workers
         _engine_ready(str(st))
         yield st
 
@@ -411,7 +411,7 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
 
 
 def test_the_pre_deal_what_if_under_the_sheet(stack, browser):
-    """A copy of a booked trade, unwound (factor -1), added to the basket: VaR and ES before and after (POST /api/var/what-if)."""
+    """A copy of a booked trade, unwound (factor -1), added to the basket: VaR and ES before and after by the server's VaR engine."""
     pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX")
     pg.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
     pg.reload()

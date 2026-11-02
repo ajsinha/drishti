@@ -695,15 +695,16 @@ async def pnl_vs_var(backend, me, scope: Scope, cfg: dict) -> dict:
 
 
 async def traders(backend, me, scope: Scope, cfg: dict) -> dict:
-    """The desk by trader: each trader's P&L and live trades from the valuations' TRADER_ID, and their VaR as the sum of their trades'
-    component VaR in the desk (it adds up to the desk's VaR). A role that sees TRADER_ID masked gets the trader records' counts only."""
+    """The desk by trader: each trader's P&L and live trades from the valuations' TRADER_ID, and their VaR as the server computes it
+    (``/scope/contributions?by=attribute:TRADER_ID``: each trader's component VaR summed in Java over every trade of the desk, adding up
+    to the desk's VaR); the console only shows the rows. A role that sees TRADER_ID masked gets the trader records' counts only."""
     if scope.kind != "desk":
         return {"available": False, "reason": "by trader is a desk's: pick a desk"}
     listed, why, _c = await _ask(backend.search, f"TRDR where DESK = {_q(scope.id)} and (NAME != null or TRADE_COUNT != null) limit 200", me)
     tv_t = asyncio.create_task(valuations(backend, me, scope, cfg))
-    parts_t = asyncio.create_task(_ask(backend.var, "GET", "/scope/contributions", me, scope=f"DESK:{scope.id}", by="trade"))
+    groups_t = asyncio.create_task(_ask(backend.var, "GET", "/scope/contributions", me, scope=f"DESK:{scope.id}", by="attribute:TRADER_ID"))
     tv = await tv_t
-    parts, pwhy, _c2 = await parts_t
+    groups, gwhy, _c2 = await groups_t
     rows: dict[str, dict] = {}
     for r in (listed or {}).get("rows") or []:
         tid = str((r.get("ref") or {}).get("id") or "")
@@ -715,19 +716,16 @@ async def traders(backend, me, scope: Scope, cfg: dict) -> dict:
     for t in tv.get("byTrader") or []:
         row = rows.setdefault(t["trader"], {"trader": t["trader"], "name": t["trader"], "var": None, "recordTrades": None})
         row.update({"pnl": t["pnl"], "trades": t["trades"]})
-    var_note = pwhy
-    if parts and not masked_ids:
-        who = {tid: str(r.get("TRADER_ID") or "") for tid, r in (tv.get("__rows") or {}).items()}
-        sums: dict[str, float] = {}
-        for r in parts.get("rows") or []:
-            key = str(r.get("key") or "").removeprefix("TRD:")
-            t = who.get(key)
-            if t and _num(r.get("componentVar")) is not None:
-                sums[t] = sums.get(t, 0.0) + _num(r.get("componentVar"))
-        for t, v in sums.items():
-            rows.setdefault(t, {"trader": t, "name": t, "pnl": None, "trades": None, "recordTrades": None})["var"] = round(v)
-        if parts.get("truncated"):
-            var_note = f"the desk has {parts.get('total')} trades; VaR by trader counts the {len(parts.get('rows') or [])} largest"
+    var_note = gwhy
+    if groups and groups.get("masked"):
+        masked_ids, var_note = True, None                      # the server said so; the note below says it once
+    elif groups and not masked_ids:
+        for r in groups.get("rows") or []:                         # the server's figures, shown as they come
+            t = str(r.get("key") or "")
+            if t:
+                rows.setdefault(t, {"trader": t, "name": t, "pnl": None, "trades": None, "recordTrades": None})["var"] = _num(r.get("componentVar"))
+            elif _num(r.get("componentVar")):
+                var_note = f"{r.get('label')}: {r.get('trades')} trades of the desk name no trader (component VaR {r.get('componentVar')})"
     out = sorted(rows.values(), key=lambda r: (-(abs(r["pnl"]) if r.get("pnl") is not None else -1), r["trader"]))
     return {"available": bool(out), "reason": why if not out else None, "rows": out, "traderMasked": masked_ids,
             "hasPrevious": tv.get("hasPrevious"), "varNote": var_note,

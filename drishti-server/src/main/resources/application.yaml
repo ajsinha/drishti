@@ -835,6 +835,7 @@ drishti:
       fx-scenario: fx-scenario       # each currency's rate under each scenario, when the batch supplies it (USD per unit)
       fx-spot: fx-spot               # the FX history scenario rates are derived from when not supplied (the market-data pack's)
       limit: var-limit               # the nodes' VaR limits by hierarchy and node id (USD), for a hierarchy whose limits: names it
+      valuation: trade-valuation     # the trade valuations a VaR by a trade column the vectors do not carry joins by trade id (by=attribute:TRADER_ID)
     access: {}                       # per role, per node: positions | aggregate (drishti.var.access.<role>[MGMT~DESK-RATES]=aggregate)
     positions:                       # how positions are derived from the trades when no loaded pack has a positions: section (the market-risk pack's wins)
       live-statuses: [NEW, VALIDATED, AMENDED]   # trade statuses that count on their date (a row with no status counts)

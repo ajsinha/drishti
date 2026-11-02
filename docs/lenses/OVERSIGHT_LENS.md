@@ -197,7 +197,7 @@ are in [section 4.1](#41-ro1-var-change-explanation).
 | The worst scenarios, the VaR scenario, who lost what on it | **Built** | [VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs) |
 | A scope's scenarios across its last N dates (is this tail scenario new? did the window roll?) | **Built**: the scenario matrix `SMAT` ([VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | |
 | The stress matrix (every scenario of a set against a scope's children) | **Not built**, proposed | [STR.md section 6.5](../contracts/STR.md#65-the-matrix-and-limits) |
-| The stressed window inside the date's set | **Partly**: the Python what-if's `stress-window` | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
+| The stressed window inside the date's set | **Partly**: the what-if's stressed VaR (the worst run of 250 scenario days) | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-the-what-if-the-java-engine) |
 
 ### 3.7 Concentration and liquidity
 

@@ -160,8 +160,8 @@ you are on is highlighted.
 
 | Edition or lens | Menus |
 |---|---|
-| Drishti Risk | Views · **VaR** (*VaR explorer* `VAR BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *What-if* `VWIF`, *Scenario matrix* `SMAT`, *Hierarchies and limit letters* `HIER`; Check and report: *VaR Playground* `PLAY VAR`, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`) · **Exposure** (*Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF`) · BI · Admin · Help |
-| Drishti Trading | Views · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `VWIF`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
+| Drishti Risk | Views · **VaR** (*VaR explorer* `VAR BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Scenario matrix* `SMAT`, *Hierarchies and limit letters* `HIER`; Check and report: *VaR Playground* `PLAY VAR`, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`) · **Exposure** (*Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF`) · BI · Admin · Help |
+| Drishti Trading | Views · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 

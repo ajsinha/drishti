@@ -30,8 +30,8 @@ commands:                                # what people may type and see (command
     [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP,
     # trades and FX spot (scenario FX)
      TRD, CTRD, PTRD, LTRD, FX,
-    # VaR: hierarchies, portfolios, positions, P&L vectors, scenario PVs, FX scenarios, scenario sets, limits, results, what-if, official
-     HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VWIF, VOFF,
+    # VaR: hierarchies, portfolios, positions, P&L vectors, scenario PVs, FX scenarios, scenario sets, limits, results, official (the what-if is the word VAR's)
+     HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES, VOFF,
     # Exposure: agreements, CSAs, netting sets, credit limits, collateral, margin calls, runs, paths, results, what-if, official
      AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC,
     # derived from the trade valuations: netting-set and counterparty MtM totals
@@ -88,7 +88,7 @@ home:
   titles: { desk: Risk desk, command: Command first, map: Risk map }  # the landings' names, by landing
   landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
   hierarchies: [MGMT]                    # the hierarchy the Risk map opens on (its switch lists every hierarchy the engine holds)
-  chips: [VAR BANK, VAR DESK RATES, EXP BANK, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES, HIER, VWIF, VOFF]   # the command chips of B
+  chips: [VAR BANK, VAR DESK RATES, EXP BANK, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES, HIER, VOFF]   # the command chips of B
   sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
   cards:                                 # quick cards on Home (replace ui.home_cards)
     - { title: VaR of the bank, cmd: VAR BANK, icon: shield-check }

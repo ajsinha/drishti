@@ -20,7 +20,7 @@ book and trader, movers, DV01, the largest counterparty share), ``blotter`` (tod
 ``limits`` (limit use by book over the last business dates), ``pnl-var`` (the desk's P&L against VaR) and ``traders`` (by trader); with
 ``?for=desk`` a trader's figures are their desk's (the Desk head landing);
 ``POST /api/home/trading/check`` (the new-trade check). Each for a signed-in person whose edition or lens shows the trades (``TRD``; the
-check also ``VWIF`` and ``XWIF``); else ``404 DRS-4023``. ``GET /home/trading/view-as?as=trader:<id>|desk:<id>`` keeps the person's
+check also the word ``VAR``, whose engine answers the VaR what-if, and ``XWIF``); else ``404 DRS-4023``. ``GET /home/trading/view-as?as=trader:<id>|desk:<id>`` keeps the person's
 choice in their settings (``tradingView``) when they may pick (no mapping, or an administrator); ``as=`` empty forgets it."""
 from __future__ import annotations
 
@@ -41,11 +41,12 @@ PARTS = {"valuations": tl.valuations, "blotter": tl.blotter, "risk": tl.risk, "l
          "traders": tl.traders}
 
 
-def _refused(request, needs: tuple[str, ...]) -> JSONResponse | None:
+def _refused(request, needs: tuple[str, ...], words: tuple[str, ...] = ()) -> JSONResponse | None:
     ed = edition_of(request)
     if getattr(request.state, "identity", None) is None:
         return JSONResponse({"detail": "sign in first"}, status_code=401)
-    if not ed.active or not ed.commands() or not all(ed.command_shown(c) for c in needs):
+    if not ed.active or not ed.commands() or not all(ed.command_shown(c) for c in needs) \
+            or not all(ed.word_on(w) for w in words):
         return JSONResponse({"code": "DRS-4023", "detail": f"trading is not part of {ed.title if ed.active else 'a landing'}"}, status_code=404)
     return None
 
@@ -81,7 +82,7 @@ async def trading_part(request: Request, part: str):
         scope = await tl.desk_of(backend, me, scope)
     if part == "me":
         out = {"scope": scope.as_dict(), "near": tl.near_limit(cfg), "admin": bool(me.is_admin),
-               "check": all(ed.command_shown(c) for c in ("VWIF", "XWIF"))}
+               "check": ed.word_on("VAR") and ed.command_shown("XWIF")}
         if scope.can_pick:
             out["options"] = await tl.options(backend, me)
         return JSONResponse(out, headers={"Cache-Control": "no-store"})
@@ -97,7 +98,7 @@ async def trading_part(request: Request, part: str):
 
 @router.post("/api/home/trading/check")
 async def trading_check(request: Request):
-    if (no := _refused(request, ("TRD", "VWIF", "XWIF"))) is not None:
+    if (no := _refused(request, ("TRD", "XWIF"), ("VAR",))) is not None:
         return no
     body = await json_body(request, limit=8192)              # a body that is not JSON: 400 or 415 (core/csrf.py)
     if not isinstance(body, dict):
