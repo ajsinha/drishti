@@ -5807,6 +5807,7 @@ Only names an external tool looks for by exactly that name keep the dot:
 | `.idea/` | IntelliJ IDEA at the root, PyCharm in `drishti-console/` (our run configurations are in the visible `run-configs/` and `drishti-console/run-configs/`) |
 | `.venv/` | the Python convention for a virtual environment (git-ignored) |
 | `.claude/` | Claude Code |
+| `_rels/.rels` | the Excel file format (OOXML) names it so: a workbook template's package relationships (the Capacity and Playground templates) |
 
 Everything else is visible. The user's own `~/.cache/drishti*` (downloads of the fetch tools) follows the operating system's convention
 and is outside the repository.

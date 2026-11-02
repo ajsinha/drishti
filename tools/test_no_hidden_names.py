@@ -27,7 +27,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 # Names an external tool requires; also listed in docs/guides/PACK_DEVELOPER_GUIDE.md ("Why these few names start with a dot").
 ALLOWED = {".gitignore", ".dockerignore", ".editorconfig", ".java-version", ".mvn", ".github", ".idea", ".venv", ".claude",
-           ".git", ".pytest_cache", "__pycache__", ".DS_Store", ".well-known", ".gitattributes", ".vscode", ".gitmodules"}
+           ".git", ".pytest_cache", "__pycache__", ".DS_Store", ".well-known", ".gitattributes", ".vscode", ".gitmodules",
+           ".rels"}                                        # an OOXML part name the Excel format requires (_rels/.rels in a workbook template)
 
 # Hidden names only READ so an earlier build's data is migrated once to the visible name (never written).
 LEGACY = {".history", ".generated", ".migrated", ".previous", ".uploads", ".drishti-tmp", ".drishti-console-tmp", ".drishti-lake",
