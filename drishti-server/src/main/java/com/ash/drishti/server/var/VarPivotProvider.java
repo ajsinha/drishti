@@ -64,9 +64,16 @@ public final class VarPivotProvider implements PivotProvider {
             new Native("trades", "Trades", Kind.HOLISTIC, "count", "the trades in the cell"));
 
     private final VarService svc;
+    private final java.util.function.BooleanSupplier on;
 
     public VarPivotProvider(VarService svc) {
+        this(svc, () -> true);
+    }
+
+    /** {@code on}: whether the VaR engine runs here (COMPUTE_ENGINES.md: the pivot engine uses var); off, the source is not offered. */
+    public VarPivotProvider(VarService svc, java.util.function.BooleanSupplier on) {
         this.svc = svc;
+        this.on = on;
     }
 
     @Override
@@ -76,12 +83,12 @@ public final class VarPivotProvider implements PivotProvider {
 
     @Override
     public boolean serves(String source) {
-        return SOURCE.equals(source);
+        return SOURCE.equals(source) && on.getAsBoolean();
     }
 
     @Override
     public Map<String, String> sources(Viewer v) {
-        return Map.of(SOURCE, "VaR (the VaR engine's trades and scenario vectors)");
+        return on.getAsBoolean() ? Map.of(SOURCE, "VaR (the VaR engine's trades and scenario vectors)") : Map.of();
     }
 
     @Override

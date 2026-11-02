@@ -233,7 +233,7 @@ engines:
     installed: false
     live-on: true
     prefixes: [drishti.cube.mr]
-    needs: [var]
+    needs: [var, pivot]
     uses: [sensitivities, frtb-sa]
     api: [/api/v1/cube/mr]
     console: [/mcube, /api/mcube/]
@@ -301,6 +301,34 @@ engines:
     lenses: []
     bi: []
     cli: [lake memory]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []
+  - id: pivot
+    title: Pivot
+    about: "The pivot engine: any table or VaR as a pivot, nested rows opened lazily, totals from their own members, exports"
+    file: pivot.yaml
+    switch: drishti.engines.pivot.enabled
+    env: DRISHTI_PIVOT_ENGINE_ENABLED
+    aliases: [drishti.pivot.enabled]
+    shipped: true
+    installed: true
+    live-on: true
+    prefixes: [drishti.pivot]
+    needs: []
+    uses: [var]
+    api: [/api/v1/pivot]
+    console: [/pivot, /api/pivot-engine/, /api/pivot-engine-export]
+    words: [PIVOT]
+    menus: [pivot]
+    help: [docs-guides-pivot-guide, docs-tutorials-33-the-pivot-engine]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [pivot]
     playgrounds: []
     connectors: []
     kinds: []

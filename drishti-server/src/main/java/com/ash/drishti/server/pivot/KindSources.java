@@ -299,6 +299,22 @@ public final class KindSources implements TabularSource.Resolver {
         }
     }
 
+    /** Drops every staged table (the engine switched off). */
+    public void release(DuckDbExecutor e) {
+        List<String> names;
+        synchronized (staged) {
+            names = new ArrayList<>(staged.keySet());
+            staged.clear();
+        }
+        for (String t : names) {
+            try {
+                e.drop(t);
+            } catch (RuntimeException ex) {
+                // already gone
+            }
+        }
+    }
+
     /** The staged tables (Admin, tests). */
     public Map<String, Long> staged() {
         return Map.copyOf(staged);
