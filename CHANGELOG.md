@@ -17,6 +17,21 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **FRTB-SA, computed for any scope (2.9.11 rows 1 and 2; [FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), tutorial 30).** Position
+  sensitivities (`SENS`) and the factor dictionary (`RFAC`) are kinds of the market-risk pack, served by risk-store and loaded by `lake
+  demo`; the server's Java engine computes the FRTB standardised approach from them: the sensitivities-based method (delta, vega and
+  curvature per risk class with the two curvature sides, the three correlation scenarios and the binding one, the alternative
+  specification), the default risk charge (from the `default-risk` input; *not computed* without it) and the residual risk add-on
+  (from the `residual-risk` input, or derived from the positions' product types and notionals), with Euler contributions that add up.
+  Parameters are the market-risk pack's `capital/frtb-sa-sbm.yaml` and `frtb-sa-drc-rrao.yaml` (MAR21.46's published GIRR table by
+  default), checked at start and hashed into every answer. `FRSA <scope>` opens the capital screen (the stack, the scenarios, the bucket
+  drill, the contributions); `PLAY FRTB <scope>` the playground: every method choice a switch, a switch compared side by side with the
+  difference explained by step, the workbook of live formulas with the switches as Config cells (recalculated by LibreOffice in the tests
+  and equal to the engine to the cent, with the defaults and each switch flipped), and recipes replayed to the cent (`PLAY FRTB RUN <id>`).
+  API `/api/v1/sensitivities`, `/api/v1/risk-factors`, `/api/v1/frtb/...`; CLI `drishti.py sens`, `frtb`, `play frtb`; settings
+  `drishti.frtb.*`. The factor names give GIRR curvature per currency (`IR/CURVE/<ccy>`) and commodity curvature per commodity
+  (`CM/PRICE/<commodity>`), with the cross-currency basis and inflation without a tenor; vega horizons follow MAR21.92. Planned
+  contracts `default-risk` (DRCI) and `residual-risk` (RRAI); the capital-input regime `BCBS-MAR`. Refusal codes `DRS-5321` to `DRS-5329`.
 - **Busy protection: refuse politely, never fall over** (2.9.11 row 8; mock-up A). One gate in front of new sign-ins, VaR and exposure
   date loads, Data view downloads, BI runs and bulk loads reads the heap after the last collection, each engine's loads against
   `load-threads`, the open dates' heap against their safety net, the requests answered at once and the free disk; past a wait level the

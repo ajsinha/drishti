@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-108 contracts, 405 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+110 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -98,6 +98,8 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `VLIM` | `var-limit` | [market-risk](market-risk.md#vlim-var-limit-of-a-hierarchy-node-var-limit) | input | active |  | 0 |
 | `DPNL` | `desk-pnl` | [market-risk](market-risk.md#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | input | active |  | 0 |
 | `PNLH` | `pnl-history` | [market-risk](market-risk.md#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | input | active |  | 0 |
+| `SENS` | `position-sensitivity` | [market-risk](market-risk.md#sens-position-sensitivities-position-sensitivity) | input | active |  | 1 |
+| `RFAC` | `risk-factor` | [market-risk](market-risk.md#rfac-risk-factor-dictionary-risk-factor) | fundamental | active |  | 1 |
 | `VRES` | `var-result` | [market-risk](market-risk.md#vres-var-of-a-scope-computed-var-result) | computed | active |  | 0 |
 | `VWIF` | `var-whatif` | [market-risk](market-risk.md#vwif-var-what-if-computed-python-var-whatif) | computed | active |  | 0 |
 | `VOFF` | `var-official` | [market-risk](market-risk.md#voff-var-official-results-published-var-official) | computed | active |  | 0 |
@@ -132,10 +134,10 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `REGN` | `region` | [world-economy](world-economy.md#regn-world-region-region) | fundamental | active |  | 4 |
 | `SOCI` | `social-indicator` | [world-economy](world-economy.md#soci-social-indicator-social-indicator) | fundamental | active |  | 6 |
 | `CAPI` (proposed) | `capital-input` | [market-risk](market-risk.md#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | input | planned: no command or data yet |  | 1 |
+| `DRCI` (proposed) | `default-risk` | [market-risk](market-risk.md#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) | input | planned: no command or data yet |  | 1 |
 | `FPNL` (proposed) | `finance-pnl` | [market-risk](market-risk.md#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | input | planned: no command or data yet |  | 1 |
-| `SENS` (proposed) | `position-sensitivity` | [market-risk](market-risk.md#sens-position-sensitivities-position-sensitivity) | input | planned: no command yet; demo data generated, not loaded |  | 3 |
 | `RDSK` (proposed) | `regulatory-desk` | [market-risk](market-risk.md#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | input | planned: no command or data yet |  | 1 |
-| `RFAC` (proposed) | `risk-factor` | [market-risk](market-risk.md#rfac-risk-factor-dictionary-risk-factor) | fundamental | planned: no command yet; demo data generated, not loaded |  | 2 |
+| `RRAI` (proposed) | `residual-risk` | [market-risk](market-risk.md#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) | input | planned: no command or data yet |  | 1 |
 | `RTYP` (proposed) | `risk-type-map` | [market-risk](market-risk.md#rtyp-var-risk-type-mapping-risk-type-map) | input | planned: no command or data yet |  | 1 |
 | `TCF` (proposed) | `trade-cash-flow` | [market-risk](market-risk.md#tcf-trade-cash-flows-daily-trade-cash-flow) | input | planned: no command or data yet |  | 2 |
 | `VTRD` (proposed) | `volcker-trade` | [market-risk](market-risk.md#vtrd-volcker-trade-attributes-volcker-trade) | input | planned: no command or data yet |  | 1 |

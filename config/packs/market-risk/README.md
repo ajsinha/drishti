@@ -36,6 +36,8 @@ kinds:
 - var-limit
 - desk-pnl
 - pnl-history
+- position-sensitivity
+- risk-factor
 - var-result
 - var-whatif
 - var-official
@@ -56,6 +58,8 @@ commands:
   VLIM: var-limit
   DPNL: desk-pnl
   PNLH: pnl-history
+  SENS: position-sensitivity
+  RFAC: risk-factor
   VRES: var-result
   VWIF: var-whatif
   VOFF: var-official
@@ -612,6 +616,26 @@ Fields, from 1 sample document:
 
 Links: `NODE_ID` → `risk-hierarchy`.
 
+### `position-sensitivity`
+
+**Position sensitivities (delta, vega, curvature by risk factor)** · mnemonic `SENS` · read through connector `risk-store`.
+
+About: Position sensitivities.
+
+**Id:** pattern `^SENS-`.
+
+No samples ship: documents are read live from its connector `risk-store` (plugin `delta`).
+
+### `risk-factor`
+
+**Risk factor (the factor dictionary: FRTB and SIMM mapping, source names)** · mnemonic `RFAC` · read through connector `risk-store`.
+
+About: Risk factor.
+
+**Id:** pattern `^(IR|INF|CR|FX|EQ|CM|VOL)/`.
+
+No samples ship: documents are read live from its connector `risk-store` (plugin `delta`).
+
 ### `var-result`
 
 **VaR of a scope (computed)** · mnemonic `VRES` · read through connector `var-engine`.
@@ -671,6 +695,8 @@ No samples ship: documents are read live from its connector `mr-derived` (plugin
 | `VLIM` | `var-limit` | VaR limit of a hierarchy node |
 | `DPNL` | `desk-pnl` | Desk P&L: actual and hypothetical (daily) |
 | `PNLH` | `pnl-history` | Long-history P&L of a hierarchy node (stress window selection) |
+| `SENS` | `position-sensitivity` | Position sensitivities (delta, vega, curvature by risk factor) |
+| `RFAC` | `risk-factor` | Risk factor (the factor dictionary: FRTB and SIMM mapping, source names) |
 | `VRES` | `var-result` | VaR of a scope (computed) |
 | `VWIF` | `var-whatif` | VaR what-if (computed, Python) |
 | `VOFF` | `var-official` | VaR official results (published) |
@@ -717,7 +743,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
-| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit`, `desk-pnl`, `pnl-history` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `risk-store` | `delta` | `stress-scenario`, `stress-result`, `frtb-sensitivity`, `pnl-explain`, `trade-valuation`, `portfolio`, `pnl-vector`, `scenario-pv`, `fx-scenario`, `scenario-set`, `risk-hierarchy`, `var-limit`, `desk-pnl`, `pnl-history`, `position-sensitivity`, `risk-factor` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `mr-derived` | `derived` | `stress-scenario-pnl` | `${DRISHTI_MR_DERIVED_ENABLED:true}` |
 | `var-results` | `delta` | `var-official` | `${DRISHTI_VAR_ENABLED:true}` |
 | `var-positions` | `var-positions` | `position` | `${DRISHTI_VAR_ENABLED:true}` |

@@ -36,6 +36,8 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [VLIM](#vlim-var-limit-of-a-hierarchy-node-var-limit) | `var-limit` | input | active | 10 | 0 |
 | [DPNL](#dpnl-desk-pl-actual-and-hypothetical-daily-desk-pnl) | `desk-pnl` | input | active | 10 | 0 |
 | [PNLH](#pnlh-long-history-pl-of-a-hierarchy-node-stress-window-selection-pnl-history) | `pnl-history` | input | active | 16 | 0 |
+| [SENS](#sens-position-sensitivities-position-sensitivity) | `position-sensitivity` | input | active | 28 | 1 |
+| [RFAC](#rfac-risk-factor-dictionary-risk-factor) | `risk-factor` | fundamental | active | 27 | 1 |
 | [VRES](#vres-var-of-a-scope-computed-var-result) | `var-result` | computed | active | 29 | 0 |
 | [VWIF](#vwif-var-what-if-computed-python-var-whatif) | `var-whatif` | computed | active | 20 | 0 |
 | [VOFF](#voff-var-official-results-published-var-official) | `var-official` | computed | active | 31 | 0 |
@@ -1092,6 +1094,180 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 - JSON Lines, one row per line (UTF-8). Example line (two days shown; a row holds every day): {"HISTORY_ID":"PNLH-MGMT~DESK-RATES","BUSINESS_DATE":"2026-09-30","HIERARCHY":"MGMT","NODE_ID":"MGMT~DESK-RATES","NAME":"Rates","LEVEL":"desk","CURRENCY":"USD","FIRST_DAY":"2007-01-02","LAST_DAY":"2007-01-03","DAY_COUNT":2,"HISTORY_DATES":["2007-01-02","2007-01-03"],"PNL":[-1250000.5,840000.25],"SYNTHETIC":true}
 - A row whose PNL and HISTORY_DATES differ in length, or whose dates are not increasing, is refused for the tool in words; a node without a row says so, never zero.
 
+## SENS: Position sensitivities (`position-sensitivity`)
+
+The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket.
+
+|  |  |
+|---|---|
+| Contract | [position-sensitivity.contract.yaml](../../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | active |
+| Source | The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors) |
+| Grain | One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. |
+| Key | `SENSITIVITY_ID` |
+| Id pattern | `^SENS-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: the full run after the close, with the scenario PVs (by 06:30 New York the next business day in the demo); intraday batches replace a position's record whole) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/position-sensitivity/` |
+| Columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
+| Test data | data/testdata/market-risk/position-sensitivity |
+| Worked example | [market-risk/position-sensitivity](../samples/market-risk/position-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SENSITIVITY_ID` | id | required |  | The record's id, SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID> (the business key). | `SENS-POS-BOOK-RATES-1~MX-20000002-B-SENS-2026-09-30-01` (pattern `^SENS-`) |  |
+| `GRAIN` | text | required |  | What the record is for: POSITION (POSITION_ID, the position Drishti derives by the pack's position rules) or TRADE (TRADE_ID). One source system sends one grain on one date. | `POSITION`, `TRADE` |  |
+| `POSITION_ID` | id | optional |  | The position, POS-<TT_BOOK>~<key> as the pack's position rules derive it; required when GRAIN is POSITION, and on a TRADE record the position the trade belongs to when the source knows it. | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | The trade; required when GRAIN is TRADE. | `MX-20000002` | `trade` |
+| `TRADE_IDS` | id list | optional |  | The trades a position record covers (for drill-through and the completeness check against the vectors). | `MX-20000002` | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | The system that computed the sensitivities (the trades' booking or risk system). | `MUREX` |  |
+| `BUSINESS_DATE` | date | required |  | The business date the sensitivities are for (YYYY-MM-DD); the lake's partition. | `2026-09-30` |  |
+| `BATCH_ID` | id | required |  | The run that produced the record; the full run and each intraday batch have their own. One full run per date and source. | `B-SENS-2026-09-30-01` |  |
+| `RUN_KIND` | text | required |  | FULL (the run after the close: every live position) or INTRADAY (only the changed positions; a later COMPUTED_AT wins). | `FULL`, `INTRADAY` |  |
+| `COMPUTED_AT` | timestamp | required |  | The as-of of the sensitivities, when the run computed them (UTC); a restated record carries a later one. | `2026-09-30T06:10:00Z` |  |
+| `RESTATEMENT` | integer | required |  | 0 for the first delivery of the date, 1, 2 ... for each restatement of it. | `0` |  |
+| `STATUS` | text | required |  | ok; proxied (valued with a proxy, PROXY_REASON says which: counted and shown beside every sum); failed (no sensitivities: SENSITIVITIES null, never zeros). | `ok`, `proxied`, `failed` |  |
+| `PROXY_REASON` | text | optional |  | Why a proxied record was proxied (the missing curve or surface and its proxy). | `volatility surface missing on the date: the underlying's index surface used` |  |
+| `PRICER` | text | optional |  | The pricing library or model family (audit). | `demo-factor-model` |  |
+| `MODEL_VERSION` | text | optional |  | The model version (audit). | `demo-sens-1` |  |
+| `LEGAL_ENTITY` | id | required |  | The legal entity that books the position (the LEGAL hierarchy), as on the P&L vectors. | `LE-NY` | `legal-entity` |
+| `DIVISION` | id | required |  | The division of the management hierarchy, as on the P&L vectors. | `DIV-MARKETS` |  |
+| `DESK` | id | required |  | The desk of the management hierarchy, as on the P&L vectors. | `DESK-RATES` | `desk` |
+| `TT_BOOK` | id | required |  | The trading book. | `BOOK-RATES-1` | `book` |
+| `LIMIT_LETTER` | id | optional |  | The limit letter of authority the position sits under (the LL hierarchy), as on the P&L vectors. | `LL-0001` |  |
+| `FRTB_DESK` | id | optional |  | The regulatory trading desk (FRTB desk) when the bank's desk structure differs from the management desks; else the regulatory-desk mapping decides. | `FD-USD-RATES` |  |
+| `PRODUCT_GROUP` | text | required |  | The product group of the position's trades (Rates, Credit, FX, Equity, Commodity, Inflation, ...). | `Rates` |  |
+| `PRODUCT_TYPE` | text | required |  | The product type of the position's trades; with PRODUCT_GROUP it decides the residual-risk add-on's class. | `IRS_FIXFLOAT` |  |
+| `TRADE_STATUS` | text | required |  | The trades' status; a CANCELLED record carries an empty SENSITIVITIES list. | `NEW` |  |
+| `MATURITY_DATE` | date | required |  | The position's last maturity (the live rule; the DRC's maturity scaling). | `2031-04-15` |  |
+| `CURRENCY` | text | required |  | The position's own currency (ISO 4217); each element carries the currency of its VALUE. | `EUR` |  |
+| `VOL_CONVENTION` | text | optional |  | How the record's rates vegas are delivered (decision 3): LOGNORMAL (the default, absent means it) or NORMAL (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points); one source declares one convention. | `LOGNORMAL`, `NORMAL` |  |
+| `SENSITIVITIES` | record list | required |  | The sparse list of the position's sensitivities: one element per risk factor and measure, never the same twice; empty only when TRADE_STATUS is CANCELLED, null when STATUS is failed. |  |  |
+
+**Nested `SENSITIVITIES[]`**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `RISK_FACTOR` | id | required |  | The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, IR/BASIS/<ccy>, INF/<index>[/<tenor>], CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the curvature factor: IR/CURVE/<ccy> (the currency), CR/SPREAD/<issuer>, EQ/SPOT/<underlying>, CM/PRICE/<underlying> (the commodity), FX/SPOT/<ccy>. A bank's own names are mapped to these by the dictionary's SOURCE_NAMES; a name that is not mapped is refused, never guessed. | `IR/CURVE/USD/SOFR/10Y` | `risk-factor` |
+| `MEASURE` | text | required |  | What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for a +1% relative move of the spot or price, and for an equity repo, EQ/REPO, the P&L for +1 basis point of the repo rate, MAR21.20); VEGA (P&L for +1 volatility point: 0.01 of lognormal implied volatility, or 1 basis point of normal volatility for a source whose record declares VOL_CONVENTION NORMAL); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5); GAMMA (decisions 2 and 7: from a source that cannot revalue, the second derivative of the position's value to a parallel shift of the curvature factor, per basis point squared for a curve (IR/CURVE/<ccy> or a curve point, per currency; CR/SPREAD/<issuer>) and per (1%) squared for a spot or price; Drishti estimates curvature from it as −½ · Γ · h², labelled an estimate). BETA and BASE_CORR are reserved for SIMM. | `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR` |  |
+| `VALUE` | amount | required | the element's CURRENCY | The sensitivity, in the element's currency, signed from the bank's point of view (a gain positive). Finite; a factor that could not be computed fails the record, never a zero. | `-19565.62` |  |
+| `CURRENCY` | text | required |  | The currency of VALUE (ISO 4217), converted to the reporting currency at the date's FX when summed. | `USD` |  |
+| `RISK_CLASS` | text | optional |  | The FRTB risk class of the factor (GIRR, CSR_NS, CSR_SEC_NCTP, CSR_SEC_CTP, EQ, COMM, FX); derived from the dictionary when absent, and the dictionary wins when they differ (a warning). | `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` |  |
+| `FRTB_BUCKET` | text | optional |  | The FRTB bucket (MAR21.39 to MAR21.89; the currency for GIRR and FX); the dictionary wins when they differ (a warning). | `EUR` |  |
+| `TENOR` | text | optional |  | The factor's tenor or option expiry (MAR21.8's vertices); empty on a curvature, spot or price factor without one. | `5Y` |  |
+| `SIMM_BUCKET` | text | optional |  | The ISDA SIMM bucket of the factor (Residual when none applies); the dictionary wins when they differ (a warning). | `1` |  |
+| `SHOCK_SIZE` | rate | optional | basis points (rates and spreads) or a fraction of the spot or price | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | `170` |  |
+| `IMPLIED_VOL` | rate | optional | fraction | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). | `0.28` |  |
+
+**Links:** `TRADE_ID` → `trade`, `DESK` → `desk`, `TT_BOOK` → `book`, `LEGAL_ENTITY` → `legal-entity`.
+
+**Validation**
+
+- required: fields `SENSITIVITY_ID`, `GRAIN`, `SOURCE_SYSTEM`, `BUSINESS_DATE`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `RESTATEMENT`, `STATUS`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `TRADE_STATUS`, `MATURITY_DATE`, `CURRENCY`, `SENSITIVITIES`
+- unique: key `SENSITIVITY_ID`; per BUSINESS_DATE
+- pattern: field SENSITIVITY_ID; pattern ^SENS-
+- enum: field GRAIN; values `POSITION`, `TRADE`
+- link: field TRADE_ID; kind trade
+- enum: field RUN_KIND; values `FULL`, `INTRADAY`
+- enum: field STATUS; values `ok`, `proxied`, `failed`
+- link: field LEGAL_ENTITY; kind legal-entity
+- link: field DESK; kind desk
+- link: field TT_BOOK; kind book
+- link: field SENSITIVITIES[].RISK_FACTOR; kind risk-factor
+- enum: field SENSITIVITIES[].MEASURE; values `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR`
+- enum: field SENSITIVITIES[].RISK_CLASS; values `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX`
+
+**Notes**
+
+- JSON Lines, one record per line (UTF-8, gzip). Example line: {"SENSITIVITY_ID":"SENS-POS-BOOK-RATES-1~MX-20000002-B-SENS-2026-09-30-01","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-SENS-2026-09-30-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-09-30T06:10:00Z","RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS_FIXFLOAT","TRADE_STATUS":"NEW","MATURITY_DATE":"2031-04-15","CURRENCY":"EUR","SENSITIVITIES":[{"RISK_FACTOR":"IR/CURVE/EUR/ESTR/5Y","MEASURE":"DV01","VALUE":-19565.62,"CURRENCY":"USD"}]}
+- Refusals, each counted per source: a factor name not in the dictionary or not mapped (the element); VALUE null, NaN or infinite (the element); a currency without FX on the date (the element); the same factor and measure twice (the record); a second full run of a source on a date (the run). Warnings: a curvature without SHOCK_SIZE or with a shock other than the bucket's; a position with vectors and no sensitivities, or the reverse (completeness, by desk); a bucket that differs from the dictionary's.
+- Decided (2026-11-01, decision 3): rates vega in lognormal volatility points by default; a source sending normal volatility declares VOL_CONVENTION NORMAL on its records (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points) and is converted on load: the vega risk sensitivity is VEGA × IMPLIED_VOL.
+- Decided (2026-11-01 and 2026-11-02, decisions 2 and 7): curvature is revalued (CURVATURE_UP and CURVATURE_DOWN) where the source can; a source that cannot sends GAMMA and the curvature Drishti derives is an estimate, an analysis figure until the supervisor accepts it.
+- Conventions turned into the regulatory sensitivities by Drishti (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 2.3): FRTB s_k = DV01 × 10,000 (MAR21.8's per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes DV01 and CS01 per basis point and DELTA per one per cent as delivered.
+
+**To review (1)**
+
+- The due time of the full run and of intraday batches at the bank.
+
+## RFAC: Risk factor dictionary (`risk-factor`)
+
+Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md).
+
+|  |  |
+|---|---|
+| Contract | [risk-factor.contract.yaml](../../../config/packs/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
+| Class | fundamental |
+| Status | active |
+| Source | The bank's risk-factor master (often kept in the market-data system or the FRTB engine) |
+| Grain | One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. |
+| Key | `RISK_FACTOR` |
+| Id pattern | `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | on change (due: before the first business date a new factor or mapping applies to; a change takes effect from VALID_FROM) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-factor/` |
+| Columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
+| Test data | data/testdata/market-risk/risk-factor |
+| Worked example | [market-risk/risk-factor](../samples/market-risk/risk-factor.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `RISK_FACTOR` | id | required |  | The factor's standard name, slash-separated: IR/CURVE/<ccy>/<curve>/<tenor> (a curve point), IR/CURVE/<ccy> (the currency, every curve shifted together: the GIRR curvature factor, MAR21.8), IR/BASIS/<ccy> (the cross-currency basis), INF/<index> (the inflation factor, no tenor in FRTB) and INF/<index>/<tenor>, CR/SPREAD/<issuer or index>[/<BOND or CDS>/<tenor>] (without the tenor: the issuer, the CSR curvature factor), FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor> and CM/PRICE/<underlying> (the commodity, every location and tenor: the commodity curvature factor, MAR21.13), VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]. | `IR/CURVE/USD/SOFR/10Y` (pattern `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/`) |  |
+| `FACTOR_TYPE` | text | required |  | The kind of factor: CURVE (an interest-rate curve or its point), BASIS (a cross-currency basis), INFLATION, SPREAD (a credit spread), SPOT (an FX rate or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied volatility). | `CURVE`, `BASIS`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL` |  |
+| `RISK_CLASS` | text | required |  | The FRTB risk class (MAR21.1): GIRR (interest rates and inflation), CSR_NS (credit spread, non-securitisation), CSR_SEC_NCTP and CSR_SEC_CTP (securitisations), EQ, COMM, FX. A volatility's class is its underlying's. | `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` |  |
+| `QUALIFIER` | text | required |  | What the factor is of: the currency (GIRR, FX), the issuer or index (credit), the underlying (equity, commodity). | `USD` |  |
+| `CURVE` | text | optional |  | The curve (SOFR, ESTR), the instrument curve of a credit factor (BOND or CDS), the delivery location of a commodity, or the index of an inflation factor. | `SOFR` |  |
+| `UNDERLYING` | text | optional |  | The underlying of an equity, commodity, FX or volatility factor (an index, a name, a commodity, a currency pair). | `SPX` |  |
+| `TENOR` | text | optional |  | The tenor (curve point) or the option expiry (a volatility); empty for a spot or a whole curve. | `10Y` |  |
+| `UNDERLYING_TENOR` | text | optional |  | The tenor of the underlying swap of an interest-rate volatility (a swaption's 10Y). | `10Y` |  |
+| `FRTB_BUCKET` | text | required |  | The FRTB bucket: the currency for GIRR and FX (MAR21.39, MAR21.86), 1 to 18 for CSR non-securitisation (MAR21.51), 1 to 13 for equity (MAR21.72), 1 to 11 for commodity (MAR21.82). | `USD` |  |
+| `SIMM_RISK_CLASS` | text | required |  | The ISDA SIMM risk class: InterestRate, CreditQ, CreditNonQ, Equity, Commodity or FX. | `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX` |  |
+| `SIMM_BUCKET` | text | required |  | The SIMM bucket (the currency's volatility group for interest rates, the sector and quality for credit and equity, the commodity group); Residual when none applies. | `1` |  |
+| `SIMM_LABEL1` | text | optional |  | SIMM's Label1: the tenor (2w … 30y) of a rate or credit factor, the expiry of a volatility; Inf for inflation. | `10y` |  |
+| `SIMM_LABEL2` | text | optional |  | SIMM's Label2: the sub-curve of a rate (OIS, Libor3m, Prime) or the credit instrument (BOND, CDS). | `OIS` |  |
+| `SECTOR` | text | optional |  | The sector of a credit issuer or equity name, as the bucket grids use it. | `Financials including government-backed financials` |  |
+| `CREDIT_QUALITY` | text | optional |  | IG (investment grade) or HY (high yield and not rated) for a credit factor. | `IG`, `HY` |  |
+| `SENIORITY` | text | optional |  | The seniority of a credit factor's curve (SIMM credit qualifiers and the CRIF are per issuer and seniority; the DRC nets by seniority, MAR22.19). SENIOR in the demo. | `COVERED`, `SENIOR`, `NON_SENIOR` |  |
+| `MARKET_CAP` | text | optional |  | LARGE or SMALL for an equity (MAR21.72's market capitalisation test). | `LARGE`, `SMALL` |  |
+| `ECONOMY` | text | optional |  | ADVANCED or EMERGING for an equity (MAR21.72). | `ADVANCED`, `EMERGING` | `economy` |
+| `LIQUIDITY_HORIZON` | integer | required | business days | The liquidity horizon of the factor (MAR33.12), 10, 20, 40, 60 or 120; the vega risk weights scale with it (MAR21.92). | `10`, `20`, `40`, `60`, `120` |  |
+| `MODELLABLE` | boolean | optional |  | Whether the factor passes the risk factor eligibility test on the date (MAR31; for the internal models approach). | `True` |  |
+| `PROXY_OF` | id | optional |  | The factor this one is proxied by, when its data is proxied. | `VOL/EQ/SPX/1Y` |  |
+| `MARKET_DATA_REF` | text | optional |  | Where the factor's level comes from in the market data (for explain and repricing). | `CRV-USD-SOFR#10Y` |  |
+| `SOURCE_NAMES` | text list | required |  | The names the source systems give this factor (the bank's mapping to the standard): each maps to exactly one factor; a sensitivity delivered under a name in no list is refused. | `IR.CURVE.USD.SOFR.10Y` |  |
+| `VALID_FROM` | date | required |  | The first business date the row applies to. | `2026-01-02` |  |
+| `VALID_TO` | date | optional |  | The last business date the row applies to; empty while it applies. |  |  |
+| `BUSINESS_DATE` | date | required |  | The business date of the delivery (YYYY-MM-DD); the lake's partition. | `2026-09-30` |  |
+| `SOURCE` | text | required |  | The system the dictionary row came from. | `demo-factor-master` |  |
+
+**Validation**
+
+- required: fields `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET`, `LIQUIDITY_HORIZON`, `SOURCE_NAMES`, `VALID_FROM`, `BUSINESS_DATE`, `SOURCE`
+- unique: key `RISK_FACTOR`; per BUSINESS_DATE
+- pattern: field RISK_FACTOR; pattern ^(IR|INF|CR|FX|EQ|CM|VOL)/
+- enum: field FACTOR_TYPE; values `CURVE`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL`
+- enum: field RISK_CLASS; values `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX`
+- enum: field SIMM_RISK_CLASS; values `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX`
+- enum: field CREDIT_QUALITY; values `IG`, `HY`
+- enum: field MARKET_CAP; values `LARGE`, `SMALL`
+- enum: field ECONOMY; values `ADVANCED`, `EMERGING`
+- enum: field LIQUIDITY_HORIZON; values `10`, `20`, `40`, `60`, `120`
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8, gzip). Example line: {"RISK_FACTOR":"IR/CURVE/USD/SOFR/10Y","FACTOR_TYPE":"CURVE","RISK_CLASS":"GIRR","QUALIFIER":"USD","CURVE":"SOFR","TENOR":"10Y","FRTB_BUCKET":"USD","SIMM_RISK_CLASS":"InterestRate","SIMM_BUCKET":"1","SIMM_LABEL1":"10y","SIMM_LABEL2":"OIS","LIQUIDITY_HORIZON":10,"MARKET_DATA_REF":"CRV-USD-SOFR#10Y","SOURCE_NAMES":["MX:IR:CURVE-USD-SOFR-10Y","IR.CURVE.USD.SOFR.10Y","10Y_SOFR_USD_CURVE_IR"],"VALID_FROM":"2026-01-02","BUSINESS_DATE":"2026-09-30","SOURCE":"demo-factor-master"}
+- LIQUIDITY_HORIZON of a volatility factor is the vega liquidity horizon of MAR21.92 (GIRR 60, CSR 120, equity large-cap and index 20, small-cap and other 60, commodity 120, FX 40); of the other factors the IMA horizon of MAR33.12.
+- Decided (2026-11-01, decision 5): a credit index is one SIMM qualifier now (Residual in the demo); look-through to the constituents later.
+- The bucket here is the default; the bucket grids of the configuration (FRTB, SIMM and the bank's own limit grids) decide, and a factor falls in exactly one bucket of each grid (checked at start, overlaps refused).
+
+**To review (1)**
+
+- Whether the bank keeps the mapping from its system names in this table (SOURCE_NAMES) or in a separate mapping file per source.
+
 ## VRES: VaR of a scope (computed) (`var-result`)
 
 The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored.
@@ -1340,10 +1516,10 @@ Contracts of inputs designed before their data exists (`status: planned`): no co
 | Proposed command | Kind | Class | Status | Fields | To review |
 |---|---|---|---|---|---|
 | [CAPI](#capi-market-risk-capital-inputs-per-filer-and-date-capital-input) | `capital-input` | input | planned: no command or data yet | 16 | 1 |
+| [DRCI](#drci-default-risk-inputs-the-drc-per-position-and-obligor-default-risk) | `default-risk` | input | planned: no command or data yet | 15 | 1 |
 | [FPNL](#fpnl-finance-trading-pl-by-legal-entity-daily-finance-pnl) | `finance-pnl` | input | planned: no command or data yet | 13 | 1 |
-| [SENS](#sens-position-sensitivities-position-sensitivity) | `position-sensitivity` | input | planned: no command yet; demo data generated, not loaded | 27 | 3 |
 | [RDSK](#rdsk-regulatory-trading-desk-definitions-regulatory-desk) | `regulatory-desk` | input | planned: no command or data yet | 13 | 1 |
-| [RFAC](#rfac-risk-factor-dictionary-risk-factor) | `risk-factor` | fundamental | planned: no command yet; demo data generated, not loaded | 26 | 2 |
+| [RRAI](#rrai-residual-risk-inputs-the-rrao-per-trade-residual-risk) | `residual-risk` | input | planned: no command or data yet | 12 | 1 |
 | [RTYP](#rtyp-var-risk-type-mapping-risk-type-map) | `risk-type-map` | input | planned: no command or data yet | 9 | 1 |
 | [TCF](#tcf-trade-cash-flows-daily-trade-cash-flow) | `trade-cash-flow` | input | planned: no command or data yet | 10 | 2 |
 | [VTRD](#vtrd-volcker-trade-attributes-volcker-trade) | `volcker-trade` | input | planned: no command or data yet | 13 | 1 |
@@ -1373,7 +1549,7 @@ What the market risk capital needs besides VaR, stressed VaR and the backtest: t
 | `CAPITAL_INPUT_ID` | id | required |  | The row's id, CAPI-<FILER>-<REGIME>-<BUSINESS_DATE> (the business key) | `CAPI-LE-NY-US217-2026-09-30` (pattern `^CAPI-`) |  |
 | `BUSINESS_DATE` | date | required |  | The business date the figures apply from (YYYY-MM-DD). | `2026-09-30` |  |
 | `FILER` | id | required |  | The legal entity that files (a LEGAL hierarchy node's entity). | `LE-NY` (pattern `^LE-`) | `legal-entity` |
-| `REGIME` | text | required |  | The capital rule: US217 (12 CFR 217 subpart F, Basel 2.5) or OSFI-CAR9 (OSFI CAR chapter 9, FRTB). | `US217`, `OSFI-CAR9` |  |
+| `REGIME` | text | required |  | The capital rule: US217 (12 CFR 217 subpart F, Basel 2.5), BCBS-MAR (the Basel Framework MAR20 to MAR33, FRTB; the reference regime of FRTB-SA, decision 4) or OSFI-CAR9 (OSFI CAR chapter 9, FRTB). | `US217`, `BCBS-MAR`, `OSFI-CAR9` |  |
 | `MULTIPLIER_OVERRIDE` | rate | optional |  | A multiplier the supervisor sets above the backtesting table's. The capital uses the larger of this and the table's figure for the exception count; empty when none. | `3.5` |  |
 | `ADD_ON` | amount | optional | USD | A capital add-on the supervisor requires on top of the computed measure; zero or empty when none. | `0` |  |
 | `ADD_ON_REASON` | text | optional |  | The supervisory letter or reason for MULTIPLIER_OVERRIDE or ADD_ON. | `none` |  |
@@ -1394,7 +1570,7 @@ What the market risk capital needs besides VaR, stressed VaR and the backtest: t
 - required: fields `CAPITAL_INPUT_ID`, `BUSINESS_DATE`, `FILER`, `REGIME`, `CURRENCY`, `APPROVED_BY`, `SOURCE`, `AS_OF`
 - unique: key `CAPITAL_INPUT_ID`; per BUSINESS_DATE
 - pattern: field CAPITAL_INPUT_ID; pattern ^CAPI-
-- enum: field REGIME; values `US217`, `OSFI-CAR9`
+- enum: field REGIME; values `US217`, `BCBS-MAR`, `OSFI-CAR9`
 - range: field MULTIPLIER_OVERRIDE; min 1
 - link: field FILER; kind legal-entity
 
@@ -1406,6 +1582,59 @@ What the market risk capital needs besides VaR, stressed VaR and the backtest: t
 **To review (1)**
 
 - Whether the bank files by legal entity only, or also by a consolidated group that is not a legal entity of the LEGAL hierarchy.
+
+## DRCI: Default risk inputs (the DRC, per position and obligor) (`default-risk`)
+
+The jump-to-default inputs of the FRTB standardised default risk charge for non-securitisations (Basel MAR22): one row per position (or trade), obligor and business date, with the obligor's bucket, the seniority, the credit quality, the bond-equivalent notional and market value and the maturity. Optional: without it the FRTB-SA answer says "DRC not computed: no default-risk inputs", never 0. Planned: no command and no data yet; the engine reads it when a connector serves the kind (docs/guides/FRTB_SA_GUIDE.md).
+
+|  |  |
+|---|---|
+| Contract | [default-risk.contract.yaml](../../../config/packs/market-risk/contracts/default-risk.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's risk system or issuer master (obligor, seniority, rating) with the positions' notionals and market values |
+| Grain | One row per position (or trade), obligor and BUSINESS_DATE, keyed by DEFAULT_RISK_ID (DRC-<POSITION_ID or TRADE_ID>-<OBLIGOR>-<BATCH_ID>). |
+| Key | `DEFAULT_RISK_ID` |
+| Id pattern | `^DRC-` |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the position sensitivities of the date) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/default-risk/` |
+| Columns | `DEFAULT_RISK_ID`, `POSITION_ID`, `TRADE_ID`, `OBLIGOR`, `DRC_BUCKET`, `SENIORITY`, `CREDIT_QUALITY`, `NOTIONAL`, `MARKET_VALUE`, `CURRENCY` |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `DEFAULT_RISK_ID` | id | required |  | The row's id, DRC-<POSITION_ID or TRADE_ID>-<OBLIGOR>-<BATCH_ID> (the business key). | `DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01` (pattern `^DRC-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date (YYYY-MM-DD). | `2026-09-30` |  |
+| `POSITION_ID` | id | optional |  | The position (POS-<TT_BOOK>~<key>) the row is of; required when the source sends by position. | `POS-BOOK-CREDIT-1~CLY-3000087` (pattern `^POS-`) | `position` |
+| `TRADE_ID` | id | optional |  | The trade the row is of, when the source sends by trade. | `CLY-3000087` |  |
+| `BATCH_ID` | id | required |  | The delivery's batch (one full run per source and date). | `B-DRC-2026-09-30-01` |  |
+| `OBLIGOR` | id | required |  | The issuer or reference entity, an LEI preferred. | `5493001KJTIIGC8Y1R12` |  |
+| `DRC_BUCKET` | text | required |  | The DRC bucket (MAR22.22): CORPORATE, SOVEREIGN or LOCAL_GOVERNMENT_MUNICIPALITY. | `CORPORATE`, `SOVEREIGN`, `LOCAL_GOVERNMENT_MUNICIPALITY` |  |
+| `SENIORITY` | text | required |  | The seniority (MAR22.12, MAR22.19): COVERED_BOND, SENIOR, NON_SENIOR or EQUITY. A short offsets a long of the same obligor when its seniority is the same or lower. | `COVERED_BOND`, `SENIOR`, `NON_SENIOR`, `EQUITY` |  |
+| `CREDIT_QUALITY` | text | required |  | The credit quality (MAR22.24): AAA, AA, A, BBB, BB, B, CCC, UNRATED or DEFAULTED (100% whatever the seniority). | `AAA`, `AA`, `A`, `BBB`, `BB`, `B`, `CCC`, `UNRATED`, `DEFAULTED` |  |
+| `NOTIONAL` | amount | required | CURRENCY | The bond-equivalent notional, positive for a long credit exposure (loses on default), negative for a short (a bought CDS). | `10000000` |  |
+| `MARKET_VALUE` | amount | required | CURRENCY | The bond-equivalent market value, signed as the notional (P&L = MARKET_VALUE − NOTIONAL, MAR22.14). | `9800000` |  |
+| `CURRENCY` | text | required |  | The currency of NOTIONAL and MARKET_VALUE (ISO 4217), converted to the reporting currency at the date's FX. | `USD` |  |
+| `MATURITY_DATE` | date | optional |  | The instrument's maturity (of the derivative, not its underlying), for the scaling min(max(M, 0.25), 1) (MAR22.15 to MAR22.18); not for cash equity. | `2028-09-30` |  |
+| `CASH_EQUITY_MATURITY` | rate | optional |  | For cash equity, 0.25 or 1 (years) at the bank's choice (MAR22.16); absent, the parameter file's. | `1` |  |
+| `RECOVERY_INDEPENDENT` | boolean | optional |  | The price does not depend on the recovery (MAR22.12): the LGD is 100%. | `False` |  |
+
+**Validation**
+
+- required: fields `DEFAULT_RISK_ID`, `BUSINESS_DATE`, `BATCH_ID`, `OBLIGOR`, `DRC_BUCKET`, `SENIORITY`, `CREDIT_QUALITY`, `NOTIONAL`, `MARKET_VALUE`, `CURRENCY`
+- unique: key `DEFAULT_RISK_ID`; per BUSINESS_DATE
+- pattern: field DEFAULT_RISK_ID; pattern ^DRC-
+
+**Notes**
+
+- JSON Lines, one row per line (UTF-8, gzip). Example line: {"DEFAULT_RISK_ID":"DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01","BUSINESS_DATE":"2026-09-30","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","BATCH_ID":"B-DRC-2026-09-30-01","OBLIGOR":"5493001KJTIIGC8Y1R12","DRC_BUCKET":"CORPORATE","SENIORITY":"SENIOR","CREDIT_QUALITY":"BBB","NOTIONAL":10000000,"MARKET_VALUE":9800000,"CURRENCY":"USD","MATURITY_DATE":"2028-09-30"}
+- Signs are checked on load: a bought CDS has a negative NOTIONAL, a sold put on a bond a positive one; MARKET_VALUE has the notional's sign.
+
+**To review (1)**
+
+- Whether the bank's risk system delivers the obligor, seniority and rating with the positions, or Drishti joins them from an issuer master.
 
 ## FPNL: Finance trading P&L by legal entity (daily) (`finance-pnl`)
 
@@ -1462,102 +1691,6 @@ Finance's daily trading P&L of each legal entity from the general ledger, with t
 
 - The tolerance of the reconciliation (an amount, a share of the day's gross P&L, or both) is the bank's policy.
 
-## SENS: Position sensitivities (`position-sensitivity`)
-
-The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md).
-
-|  |  |
-|---|---|
-| Contract | [position-sensitivity.contract.yaml](../../../config/packs/market-risk/contracts/position-sensitivity.contract.yaml) · version 1.0 |
-| Class | input |
-| Status | planned: no command yet; demo data generated, not loaded |
-| Source | The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors) |
-| Grain | One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. |
-| Key | `SENSITIVITY_ID` |
-| Id pattern | `^SENS-` |
-| Dated by | `BUSINESS_DATE` |
-| Cadence | daily (due: the full run after the close, with the scenario PVs (by 06:30 New York the next business day in the demo); intraday batches replace a position's record whole) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/position-sensitivity/` |
-| Columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
-| Worked example | [market-risk/position-sensitivity](../samples/market-risk/position-sensitivity.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `SENSITIVITY_ID` | id | required |  | The record's id, SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID> (the business key). | `SENS-POS-BOOK-RATES-1~MX-20000002-B-SENS-2026-09-30-01` (pattern `^SENS-`) |  |
-| `GRAIN` | text | required |  | What the record is for: POSITION (POSITION_ID, the position Drishti derives by the pack's position rules) or TRADE (TRADE_ID). One source system sends one grain on one date. | `POSITION`, `TRADE` |  |
-| `POSITION_ID` | id | optional |  | The position, POS-<TT_BOOK>~<key> as the pack's position rules derive it; required when GRAIN is POSITION, and on a TRADE record the position the trade belongs to when the source knows it. | `POS-BOOK-RATES-1~MX-20000002` (pattern `^POS-`) |  |
-| `TRADE_ID` | id | optional |  | The trade; required when GRAIN is TRADE. | `MX-20000002` | `trade` |
-| `TRADE_IDS` | id list | optional |  | The trades a position record covers (for drill-through and the completeness check against the vectors). | `MX-20000002` |  |
-| `SOURCE_SYSTEM` | text | required |  | The system that computed the sensitivities (the trades' booking or risk system). | `MUREX` |  |
-| `BUSINESS_DATE` | date | required |  | The business date the sensitivities are for (YYYY-MM-DD); the lake's partition. | `2026-09-30` |  |
-| `BATCH_ID` | id | required |  | The run that produced the record; the full run and each intraday batch have their own. One full run per date and source. | `B-SENS-2026-09-30-01` |  |
-| `RUN_KIND` | text | required |  | FULL (the run after the close: every live position) or INTRADAY (only the changed positions; a later COMPUTED_AT wins). | `FULL`, `INTRADAY` |  |
-| `COMPUTED_AT` | timestamp | required |  | The as-of of the sensitivities, when the run computed them (UTC); a restated record carries a later one. | `2026-09-30T06:10:00Z` |  |
-| `RESTATEMENT` | integer | required |  | 0 for the first delivery of the date, 1, 2 ... for each restatement of it. | `0` |  |
-| `STATUS` | text | required |  | ok; proxied (valued with a proxy, PROXY_REASON says which: counted and shown beside every sum); failed (no sensitivities: SENSITIVITIES null, never zeros). | `ok`, `proxied`, `failed` |  |
-| `PROXY_REASON` | text | optional |  | Why a proxied record was proxied (the missing curve or surface and its proxy). | `volatility surface missing on the date: the underlying's index surface used` |  |
-| `PRICER` | text | optional |  | The pricing library or model family (audit). | `demo-factor-model` |  |
-| `MODEL_VERSION` | text | optional |  | The model version (audit). | `demo-sens-1` |  |
-| `LEGAL_ENTITY` | id | required |  | The legal entity that books the position (the LEGAL hierarchy), as on the P&L vectors. | `LE-NY` | `legal-entity` |
-| `DIVISION` | id | required |  | The division of the management hierarchy, as on the P&L vectors. | `DIV-MARKETS` |  |
-| `DESK` | id | required |  | The desk of the management hierarchy, as on the P&L vectors. | `DESK-RATES` | `desk` |
-| `TT_BOOK` | id | required |  | The trading book. | `BOOK-RATES-1` | `book` |
-| `LIMIT_LETTER` | id | optional |  | The limit letter of authority the position sits under (the LL hierarchy), as on the P&L vectors. | `LL-0001` |  |
-| `FRTB_DESK` | id | optional |  | The regulatory trading desk (FRTB desk) when the bank's desk structure differs from the management desks; else the regulatory-desk mapping decides. | `FD-USD-RATES` |  |
-| `PRODUCT_GROUP` | text | required |  | The product group of the position's trades (Rates, Credit, FX, Equity, Commodity, Inflation, ...). | `Rates` |  |
-| `PRODUCT_TYPE` | text | required |  | The product type of the position's trades; with PRODUCT_GROUP it decides the residual-risk add-on's class. | `IRS_FIXFLOAT` |  |
-| `TRADE_STATUS` | text | required |  | The trades' status; a CANCELLED record carries an empty SENSITIVITIES list. | `NEW` |  |
-| `MATURITY_DATE` | date | required |  | The position's last maturity (the live rule; the DRC's maturity scaling). | `2031-04-15` |  |
-| `CURRENCY` | text | required |  | The position's own currency (ISO 4217); each element carries the currency of its VALUE. | `EUR` |  |
-| `SENSITIVITIES` | record list | required |  | The sparse list of the position's sensitivities: one element per risk factor and measure, never the same twice; empty only when TRADE_STATUS is CANCELLED, null when STATUS is failed. |  |  |
-
-**Nested `SENSITIVITIES[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `RISK_FACTOR` | id | required |  | The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, INF/<index>/<tenor>, CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the curve or spot without a tenor. A bank's own names are mapped to these by the dictionary's SOURCE_NAMES; a name that is not mapped is refused, never guessed. | `IR/CURVE/USD/SOFR/10Y` | `risk-factor` |
-| `MEASURE` | text | required |  | What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for a +1% relative move of the spot or price); VEGA (P&L for +1 volatility point, 0.01 of implied volatility); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5). GAMMA, BETA and BASE_CORR are reserved for the SIMM base-correlation and equity-beta inputs. | `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR` |  |
-| `VALUE` | amount | required | the element's CURRENCY | The sensitivity, in the element's currency, signed from the bank's point of view (a gain positive). Finite; a factor that could not be computed fails the record, never a zero. | `-19565.62` |  |
-| `CURRENCY` | text | required |  | The currency of VALUE (ISO 4217), converted to the reporting currency at the date's FX when summed. | `USD` |  |
-| `RISK_CLASS` | text | optional |  | The FRTB risk class of the factor (GIRR, CSR_NS, CSR_SEC_NCTP, CSR_SEC_CTP, EQ, COMM, FX); derived from the dictionary when absent, and the dictionary wins when they differ (a warning). | `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` |  |
-| `FRTB_BUCKET` | text | optional |  | The FRTB bucket (MAR21.39 to MAR21.89; the currency for GIRR and FX); the dictionary wins when they differ (a warning). | `EUR` |  |
-| `TENOR` | text | optional |  | The factor's tenor or option expiry (MAR21.8's vertices); empty on a curvature, spot or price factor without one. | `5Y` |  |
-| `SIMM_BUCKET` | text | optional |  | The ISDA SIMM bucket of the factor (Residual when none applies); the dictionary wins when they differ (a warning). | `1` |  |
-| `SHOCK_SIZE` | rate | optional | basis points (rates and spreads) or a fraction of the spot or price | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | `170` |  |
-| `IMPLIED_VOL` | rate | optional | fraction | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). | `0.28` |  |
-
-**Links:** `TRADE_ID` → `trade`, `DESK` → `desk`, `TT_BOOK` → `book`, `LEGAL_ENTITY` → `legal-entity`.
-
-**Validation**
-
-- required: fields `SENSITIVITY_ID`, `GRAIN`, `SOURCE_SYSTEM`, `BUSINESS_DATE`, `BATCH_ID`, `RUN_KIND`, `COMPUTED_AT`, `RESTATEMENT`, `STATUS`, `LEGAL_ENTITY`, `DIVISION`, `DESK`, `TT_BOOK`, `PRODUCT_GROUP`, `PRODUCT_TYPE`, `TRADE_STATUS`, `MATURITY_DATE`, `CURRENCY`, `SENSITIVITIES`
-- unique: key `SENSITIVITY_ID`; per BUSINESS_DATE
-- pattern: field SENSITIVITY_ID; pattern ^SENS-
-- enum: field GRAIN; values `POSITION`, `TRADE`
-- link: field TRADE_ID; kind trade
-- enum: field RUN_KIND; values `FULL`, `INTRADAY`
-- enum: field STATUS; values `ok`, `proxied`, `failed`
-- link: field LEGAL_ENTITY; kind legal-entity
-- link: field DESK; kind desk
-- link: field TT_BOOK; kind book
-- link: field SENSITIVITIES[].RISK_FACTOR; kind risk-factor
-- enum: field SENSITIVITIES[].MEASURE; values `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR`
-- enum: field SENSITIVITIES[].RISK_CLASS; values `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX`
-
-**Notes**
-
-- JSON Lines, one record per line (UTF-8, gzip). Example line: {"SENSITIVITY_ID":"SENS-POS-BOOK-RATES-1~MX-20000002-B-SENS-2026-09-30-01","GRAIN":"POSITION","POSITION_ID":"POS-BOOK-RATES-1~MX-20000002","SOURCE_SYSTEM":"MUREX","BUSINESS_DATE":"2026-09-30","BATCH_ID":"B-SENS-2026-09-30-01","RUN_KIND":"FULL","COMPUTED_AT":"2026-09-30T06:10:00Z","RESTATEMENT":0,"STATUS":"ok","LEGAL_ENTITY":"LE-NY","DIVISION":"DIV-MARKETS","DESK":"DESK-RATES","TT_BOOK":"BOOK-RATES-1","PRODUCT_GROUP":"Rates","PRODUCT_TYPE":"IRS_FIXFLOAT","TRADE_STATUS":"NEW","MATURITY_DATE":"2031-04-15","CURRENCY":"EUR","SENSITIVITIES":[{"RISK_FACTOR":"IR/CURVE/EUR/ESTR/5Y","MEASURE":"DV01","VALUE":-19565.62,"CURRENCY":"USD"}]}
-- Refusals, each counted per source: a factor name not in the dictionary or not mapped (the element); VALUE null, NaN or infinite (the element); a currency without FX on the date (the element); the same factor and measure twice (the record); a second full run of a source on a date (the run). Warnings: a curvature without SHOCK_SIZE or with a shock other than the bucket's; a position with vectors and no sensitivities, or the reverse (completeness, by desk); a bucket that differs from the dictionary's.
-- Conventions turned into the regulatory sensitivities by Drishti (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 2.3): FRTB s_k = DV01 × 10,000 (MAR21.8's per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes DV01 and CS01 per basis point and DELTA per one per cent as delivered.
-
-**To review (3)**
-
-- Whether the bank's systems deliver vega per volatility point of lognormal volatility for rates options, or per basis point of normal volatility (then IMPLIED_VOL in basis points and a conversion rule per source).
-- Whether curvature comes from the source (CURVATURE_UP and CURVATURE_DOWN revalued) or is to be estimated from delta and gamma for some sources (then GAMMA elements, labelled as an estimate).
-- The due time of the full run and of intraday batches at the bank.
-
 ## RDSK: Regulatory trading desk definitions (`regulatory-desk`)
 
 The trading desks as the regulators see them, beside the management hierarchy's desks: the desk id used in filings, its legal entity, whether it is eligible for internal models (OSFI IMA), its Volcker desk id and covered activities, its trading-day calendar, and whether it is backtested at desk level. Desk backtesting, the P&L attribution test, the Volcker metrics and the desk rows of the reports read it. Planned: no command, no data and no engine reads it yet (docs/guides/REGULATORY_VAR_REPORTING.md section 7).
@@ -1611,78 +1744,54 @@ The trading desks as the regulators see them, beside the management hierarchy's 
 
 - Whether a regulatory desk is always one management desk, or may group several (the definition would then list DESK_IDs).
 
-## RFAC: Risk factor dictionary (`risk-factor`)
+## RRAI: Residual risk inputs (the RRAO, per trade) (`residual-risk`)
 
-Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md).
+The residual risk add-on's inputs (Basel MAR23): one row per trade and business date with its class (an exotic underlying, other residual risks, or none), its gross notional and the exclusion flags no trade master holds. Optional: without it the engine derives the RRAO from each position's PRODUCT_TYPE (the parameter file's mapping) and its notional. Planned: no command and no data yet; the engine reads it when a connector serves the kind (docs/guides/FRTB_SA_GUIDE.md).
 
 |  |  |
 |---|---|
-| Contract | [risk-factor.contract.yaml](../../../config/packs/market-risk/contracts/risk-factor.contract.yaml) · version 1.0 |
-| Class | fundamental |
-| Status | planned: no command yet; demo data generated, not loaded |
-| Source | The bank's risk-factor master (often kept in the market-data system or the FRTB engine) |
-| Grain | One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. |
-| Key | `RISK_FACTOR` |
-| Id pattern | `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/` |
+| Contract | [residual-risk.contract.yaml](../../../config/packs/market-risk/contracts/residual-risk.contract.yaml) · version 1.0 |
+| Class | input |
+| Status | planned: no command or data yet |
+| Source | The bank's product control or risk system (the instruments with residual risk and their exclusions) |
+| Grain | One row per trade and BUSINESS_DATE, keyed by RESIDUAL_RISK_ID (RRAO-<TRADE_ID>-<BATCH_ID>). |
+| Key | `RESIDUAL_RISK_ID` |
+| Id pattern | `^RRAO-` |
 | Dated by | `BUSINESS_DATE` |
-| Cadence | on change (due: before the first business date a new factor or mapping applies to; a change takes effect from VALID_FROM) |
-| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/risk-factor/` |
-| Columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
-| Worked example | [market-risk/risk-factor](../samples/market-risk/risk-factor.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+| Cadence | daily (due: with the position sensitivities of the date) |
+| Storage | connector `risk-store` (plugin `delta`), table `<root>/risk/residual-risk/` |
+| Columns | `RESIDUAL_RISK_ID`, `TRADE_ID`, `POSITION_ID`, `RRAO_CLASS`, `GROSS_NOTIONAL`, `CURRENCY` |
 
 **Fields**
 
 | Field | Type | Presence | Unit | Description | Example or values | Link |
 |---|---|---|---|---|---|---|
-| `RISK_FACTOR` | id | required |  | The factor's standard name, slash-separated: IR/CURVE/<ccy>/<curve>[/<tenor>], INF/<index>/<tenor>, CR/SPREAD/<issuer or index>[/<BOND or CDS>/<tenor>], FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>[/<tenor>], VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]. Without a tenor: the curve, issuer or underlying as a whole (curvature). | `IR/CURVE/USD/SOFR/10Y` (pattern `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/`) |  |
-| `FACTOR_TYPE` | text | required |  | The kind of factor: CURVE (an interest-rate curve or its point), INFLATION, SPREAD (a credit spread), SPOT (an FX rate or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied volatility). | `CURVE`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL` |  |
-| `RISK_CLASS` | text | required |  | The FRTB risk class (MAR21.1): GIRR (interest rates and inflation), CSR_NS (credit spread, non-securitisation), CSR_SEC_NCTP and CSR_SEC_CTP (securitisations), EQ, COMM, FX. A volatility's class is its underlying's. | `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` |  |
-| `QUALIFIER` | text | required |  | What the factor is of: the currency (GIRR, FX), the issuer or index (credit), the underlying (equity, commodity). | `USD` |  |
-| `CURVE` | text | optional |  | The curve (SOFR, ESTR), the instrument curve of a credit factor (BOND or CDS), the delivery location of a commodity, or the index of an inflation factor. | `SOFR` |  |
-| `UNDERLYING` | text | optional |  | The underlying of an equity, commodity, FX or volatility factor (an index, a name, a commodity, a currency pair). | `SPX` |  |
-| `TENOR` | text | optional |  | The tenor (curve point) or the option expiry (a volatility); empty for a spot or a whole curve. | `10Y` |  |
-| `UNDERLYING_TENOR` | text | optional |  | The tenor of the underlying swap of an interest-rate volatility (a swaption's 10Y). | `10Y` |  |
-| `FRTB_BUCKET` | text | required |  | The FRTB bucket: the currency for GIRR and FX (MAR21.39, MAR21.86), 1 to 18 for CSR non-securitisation (MAR21.51), 1 to 13 for equity (MAR21.72), 1 to 11 for commodity (MAR21.82). | `USD` |  |
-| `SIMM_RISK_CLASS` | text | required |  | The ISDA SIMM risk class: InterestRate, CreditQ, CreditNonQ, Equity, Commodity or FX. | `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX` |  |
-| `SIMM_BUCKET` | text | required |  | The SIMM bucket (the currency's volatility group for interest rates, the sector and quality for credit and equity, the commodity group); Residual when none applies. | `1` |  |
-| `SIMM_LABEL1` | text | optional |  | SIMM's Label1: the tenor (2w … 30y) of a rate or credit factor, the expiry of a volatility; Inf for inflation. | `10y` |  |
-| `SIMM_LABEL2` | text | optional |  | SIMM's Label2: the sub-curve of a rate (OIS, Libor3m, Prime) or the credit instrument (BOND, CDS). | `OIS` |  |
-| `SECTOR` | text | optional |  | The sector of a credit issuer or equity name, as the bucket grids use it. | `Financials including government-backed financials` |  |
-| `CREDIT_QUALITY` | text | optional |  | IG (investment grade) or HY (high yield and not rated) for a credit factor. | `IG`, `HY` |  |
-| `MARKET_CAP` | text | optional |  | LARGE or SMALL for an equity (MAR21.72's market capitalisation test). | `LARGE`, `SMALL` |  |
-| `ECONOMY` | text | optional |  | ADVANCED or EMERGING for an equity (MAR21.72). | `ADVANCED`, `EMERGING` |  |
-| `LIQUIDITY_HORIZON` | integer | required | business days | The liquidity horizon of the factor (MAR33.12), 10, 20, 40, 60 or 120; the vega risk weights scale with it (MAR21.92). | `10`, `20`, `40`, `60`, `120` |  |
-| `MODELLABLE` | boolean | optional |  | Whether the factor passes the risk factor eligibility test on the date (MAR31; for the internal models approach). | `True` |  |
-| `PROXY_OF` | id | optional |  | The factor this one is proxied by, when its data is proxied. | `VOL/EQ/SPX/1Y` |  |
-| `MARKET_DATA_REF` | text | optional |  | Where the factor's level comes from in the market data (for explain and repricing). | `CRV-USD-SOFR#10Y` |  |
-| `SOURCE_NAMES` | text list | required |  | The names the source systems give this factor (the bank's mapping to the standard): each maps to exactly one factor; a sensitivity delivered under a name in no list is refused. | `IR.CURVE.USD.SOFR.10Y` |  |
-| `VALID_FROM` | date | required |  | The first business date the row applies to. | `2026-01-02` |  |
-| `VALID_TO` | date | optional |  | The last business date the row applies to; empty while it applies. |  |  |
-| `BUSINESS_DATE` | date | required |  | The business date of the delivery (YYYY-MM-DD); the lake's partition. | `2026-09-30` |  |
-| `SOURCE` | text | required |  | The system the dictionary row came from. | `demo-factor-master` |  |
+| `RESIDUAL_RISK_ID` | id | required |  | The row's id, RRAO-<TRADE_ID>-<BATCH_ID> (the business key). | `RRAO-MX-20000311-B-RRAO-2026-09-30-01` (pattern `^RRAO-`) |  |
+| `BUSINESS_DATE` | date | required |  | The business date (YYYY-MM-DD). | `2026-09-30` |  |
+| `TRADE_ID` | id | required |  | The trade. | `MX-20000311` |  |
+| `POSITION_ID` | id | optional |  | The position the trade belongs to. | `POS-BOOK-FX-1~MX-20000311` (pattern `^POS-`) | `position` |
+| `BATCH_ID` | id | required |  | The delivery's batch. | `B-RRAO-2026-09-30-01` |  |
+| `RRAO_CLASS` | text | required |  | EXOTIC (an exotic underlying, MAR23.3: 1.0%), OTHER (gap, correlation or behavioural risk, MAR23.4 and MAR23.5: 0.1%) or NONE (out of scope); overrides the product-type mapping. | `EXOTIC`, `OTHER`, `NONE` |  |
+| `RISK_TYPE` | text | optional |  | The residual risk named (longevity, weather, natural-disaster, future-realised-volatility, gap, correlation, behavioural). | `gap` |  |
+| `GROSS_NOTIONAL` | amount | required | CURRENCY | The gross notional, absolute (MAR23.8). | `50000000` |  |
+| `CURRENCY` | text | required |  | The currency of GROSS_NOTIONAL (ISO 4217). | `USD` |  |
+| `BACK_TO_BACK_OF` | id | optional |  | The trade it exactly matches with a third party; both are excluded entirely (MAR23.7). | `MX-20000312` |  |
+| `LISTED_OR_CLEARABLE` | boolean | optional |  | Listed or eligible for central clearing; excluded from the other-residual part only (an exotic underlying stays in, MAR23.7). | `False` |  |
+| `REASON` | text | optional |  | Why the trade is in scope. | `knock-out barrier` |  |
 
 **Validation**
 
-- required: fields `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET`, `LIQUIDITY_HORIZON`, `SOURCE_NAMES`, `VALID_FROM`, `BUSINESS_DATE`, `SOURCE`
-- unique: key `RISK_FACTOR`; per BUSINESS_DATE
-- pattern: field RISK_FACTOR; pattern ^(IR|INF|CR|FX|EQ|CM|VOL)/
-- enum: field FACTOR_TYPE; values `CURVE`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL`
-- enum: field RISK_CLASS; values `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX`
-- enum: field SIMM_RISK_CLASS; values `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX`
-- enum: field CREDIT_QUALITY; values `IG`, `HY`
-- enum: field MARKET_CAP; values `LARGE`, `SMALL`
-- enum: field ECONOMY; values `ADVANCED`, `EMERGING`
-- enum: field LIQUIDITY_HORIZON; values `10`, `20`, `40`, `60`, `120`
+- required: fields `RESIDUAL_RISK_ID`, `BUSINESS_DATE`, `TRADE_ID`, `BATCH_ID`, `RRAO_CLASS`, `GROSS_NOTIONAL`, `CURRENCY`
+- unique: key `RESIDUAL_RISK_ID`; per BUSINESS_DATE
+- pattern: field RESIDUAL_RISK_ID; pattern ^RRAO-
 
 **Notes**
 
-- JSON Lines, one row per line (UTF-8, gzip). Example line: {"RISK_FACTOR":"IR/CURVE/USD/SOFR/10Y","FACTOR_TYPE":"CURVE","RISK_CLASS":"GIRR","QUALIFIER":"USD","CURVE":"SOFR","TENOR":"10Y","FRTB_BUCKET":"USD","SIMM_RISK_CLASS":"InterestRate","SIMM_BUCKET":"1","SIMM_LABEL1":"10y","SIMM_LABEL2":"OIS","LIQUIDITY_HORIZON":10,"MARKET_DATA_REF":"CRV-USD-SOFR#10Y","SOURCE_NAMES":["MX:IR:CURVE-USD-SOFR-10Y","IR.CURVE.USD.SOFR.10Y","10Y_SOFR_USD_CURVE_IR"],"VALID_FROM":"2026-01-02","BUSINESS_DATE":"2026-09-30","SOURCE":"demo-factor-master"}
-- The bucket here is the default; the bucket grids of the configuration (FRTB, SIMM and the bank's own limit grids) decide, and a factor falls in exactly one bucket of each grid (checked at start, overlaps refused).
+- JSON Lines, one row per line (UTF-8, gzip). Example line: {"RESIDUAL_RISK_ID":"RRAO-MX-20000311-B-RRAO-2026-09-30-01","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000311","BATCH_ID":"B-RRAO-2026-09-30-01","RRAO_CLASS":"OTHER","RISK_TYPE":"gap","GROSS_NOTIONAL":50000000,"CURRENCY":"USD","LISTED_OR_CLEARABLE":false,"REASON":"knock-out barrier"}
 
-**To review (2)**
+**To review (1)**
 
-- Whether the bank keeps the mapping from its system names in this table (SOURCE_NAMES) or in a separate mapping file per source.
-- The SIMM buckets of credit indices: look-through to the constituents, or the index as one qualifier (Residual in the demo).
+- Which product control system flags back-to-back trades and listed or centrally clearable instruments at the bank.
 
 ## RTYP: VaR risk-type mapping (`risk-type-map`)
 

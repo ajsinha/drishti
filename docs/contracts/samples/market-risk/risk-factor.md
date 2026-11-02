@@ -17,7 +17,7 @@
 
 # Risk factor dictionary: risk-factor (RFAC)
 
-Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md). One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/risk-factor/`). **A planned input: no command reads it yet.** Its demo data is generated (one file per business date, `BUSINESS_DATE` 2026-09-30, 855 records) so the shape can be checked before the feature is built; it is not in `data/testdata/testdata.yaml` and `lake demo` does not load it. A bank delivers it per close of business, each date's file the full set of that date.
+Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md). One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/risk-factor/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (855 records), never a change on the day before.
 
 ## File layout
 
@@ -27,14 +27,14 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `RISK_FACTOR` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | none (the whole record is kept as `doc`) |
+| Promoted columns | `RISK_FACTOR`, `FACTOR_TYPE`, `RISK_CLASS`, `QUALIFIER`, `TENOR`, `FRTB_BUCKET`, `SIMM_RISK_CLASS`, `SIMM_BUCKET` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
 | A day's file | the full set of its date |
 
 ## One sample record
 
-A real record, the most complete of the 855 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
+A real record, the most complete of the 867 (the one with the most non-empty fields), pretty-printed with two-space indents. **A string such as `"… 506 more numbers"` inside an array marks a fold**: it stands for the elements left out and is not part of the data.
 
 ```json
 {
@@ -73,20 +73,20 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 
 | Field | Type | Required | Meaning | Values, format, unit | Example |
 |---|---|---|---|---|---|
-| `RISK_FACTOR` | string | required | The factor's standard name, slash-separated: IR/CURVE/<ccy>/<curve>[/<tenor>], INF/<index>/<tenor>, CR/SPREAD/<issuer or index>[/<BOND or CDS>/<tenor>], FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>[/<tenor>], VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]. Without a tenor: the curve, issuer or underlying as a whole (curvature). | pattern `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/` | `"CR/SPREAD/CDX.NA.HY/CDS/10Y"` |
-| `FACTOR_TYPE` | string | required | The kind of factor: CURVE (an interest-rate curve or its point), INFLATION, SPREAD (a credit spread), SPOT (an FX rate or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied volatility). | one of `CURVE`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL` | `"SPREAD"` |
+| `RISK_FACTOR` | string | required | The factor's standard name, slash-separated: IR/CURVE/<ccy>/<curve>/<tenor> (a curve point), IR/CURVE/<ccy> (the currency, every curve shifted together: the GIRR curvature factor, MAR21.8), IR/BASIS/<ccy> (the cross-currency basis), INF/<index> (the inflation factor, no tenor in FRTB) and INF/<index>/<tenor>, CR/SPREAD/<issuer or index>[/<BOND or CDS>/<tenor>] (without the tenor: the issuer, the CSR curvature factor), FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor> and CM/PRICE/<underlying> (the commodity, every location and tenor: the commodity curvature factor, MAR21.13), VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]. | pattern `^(IR\|INF\|CR\|FX\|EQ\|CM\|VOL)/` | `"CR/SPREAD/CDX.NA.HY/CDS/10Y"` |
+| `FACTOR_TYPE` | string | required | The kind of factor: CURVE (an interest-rate curve or its point), BASIS (a cross-currency basis), INFLATION, SPREAD (a credit spread), SPOT (an FX rate or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied volatility). | one of `CURVE`, `BASIS`, `INFLATION`, `SPREAD`, `SPOT`, `REPO`, `PRICE`, `VOL` | `"SPREAD"` |
 | `RISK_CLASS` | string | required | The FRTB risk class (MAR21.1): GIRR (interest rates and inflation), CSR_NS (credit spread, non-securitisation), CSR_SEC_NCTP and CSR_SEC_CTP (securitisations), EQ, COMM, FX. A volatility's class is its underlying's. | one of `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` | `"CSR_NS"` |
 | `QUALIFIER` | string | required | What the factor is of: the currency (GIRR, FX), the issuer or index (credit), the underlying (equity, commodity). | — | `"CDX.NA.HY"` |
-| `CURVE` | string | optional (filled in 78% of rows) | The curve (SOFR, ESTR), the instrument curve of a credit factor (BOND or CDS), the delivery location of a commodity, or the index of an inflation factor. | — | `"CDS"` |
+| `CURVE` | string | optional (filled in 75% of rows) | The curve (SOFR, ESTR), the instrument curve of a credit factor (BOND or CDS), the delivery location of a commodity, or the index of an inflation factor. | — | `"CDS"` |
 | `UNDERLYING` | string | optional (filled in 41% of rows) | The underlying of an equity, commodity, FX or volatility factor (an index, a name, a commodity, a currency pair). | — | `"CDX.NA.HY"` |
-| `TENOR` | string | optional (filled in 90% of rows) | The tenor (curve point) or the option expiry (a volatility); empty for a spot or a whole curve. | — | `"10Y"` |
+| `TENOR` | string | optional (filled in 88% of rows) | The tenor (curve point) or the option expiry (a volatility); empty for a spot or a whole curve. | — | `"10Y"` |
 | `FRTB_BUCKET` | string | required | The FRTB bucket: the currency for GIRR and FX (MAR21.39, MAR21.86), 1 to 18 for CSR non-securitisation (MAR21.51), 1 to 13 for equity (MAR21.72), 1 to 11 for commodity (MAR21.82). | — | `"18"` |
 | `SIMM_RISK_CLASS` | string | required | The ISDA SIMM risk class: InterestRate, CreditQ, CreditNonQ, Equity, Commodity or FX. | one of `InterestRate`, `CreditQ`, `CreditNonQ`, `Equity`, `Commodity`, `FX` | `"CreditQ"` |
 | `SIMM_BUCKET` | string | required | The SIMM bucket (the currency's volatility group for interest rates, the sector and quality for credit and equity, the commodity group); Residual when none applies. | — | `"Residual"` |
-| `SIMM_LABEL1` | string | optional (filled in 83% of rows) | SIMM's Label1: the tenor (2w … 30y) of a rate or credit factor, the expiry of a volatility; Inf for inflation. | — | `"10y"` |
-| `SIMM_LABEL2` | string | optional (filled in 57% of rows) | SIMM's Label2: the sub-curve of a rate (OIS, Libor3m, Prime) or the credit instrument (BOND, CDS). | seen: `CDS`, `BOND`, `OIS` | `"CDS"` |
-| `SECTOR` | string | optional (filled in 60% of rows) | The sector of a credit issuer or equity name, as the bucket grids use it. | — | `"Index"` |
-| `CREDIT_QUALITY` | string | optional (filled in 50% of rows) | IG (investment grade) or HY (high yield and not rated) for a credit factor. | one of `IG`, `HY` | `"HY"` |
+| `SIMM_LABEL1` | string | optional (filled in 82% of rows) | SIMM's Label1: the tenor (2w … 30y) of a rate or credit factor, the expiry of a volatility; Inf for inflation. | — | `"10y"` |
+| `SIMM_LABEL2` | string | optional (filled in 56% of rows) | SIMM's Label2: the sub-curve of a rate (OIS, Libor3m, Prime) or the credit instrument (BOND, CDS). | seen: `CDS`, `BOND`, `OIS`, `XCcy` | `"CDS"` |
+| `SECTOR` | string | optional (filled in 59% of rows) | The sector of a credit issuer or equity name, as the bucket grids use it. | — | `"Index"` |
+| `CREDIT_QUALITY` | string | optional (filled in 49% of rows) | IG (investment grade) or HY (high yield and not rated) for a credit factor. | one of `IG`, `HY` | `"HY"` |
 | `LIQUIDITY_HORIZON` | integer | required | The liquidity horizon of the factor (MAR33.12), 10, 20, 40, 60 or 120; the vega risk weights scale with it (MAR21.92). | one of `10`, `20`, `40`, `60`, `120`; unit: business days | `40` |
 | `MODELLABLE` | boolean | optional (filled in every row) | Whether the factor passes the risk factor eligibility test on the date (MAR31; for the internal models approach). | seen: `true`, `false` | `false` |
 | `MARKET_DATA_REF` | string | optional (filled in every row) | Where the factor's level comes from in the market data (for explain and repricing). | — | `"CDX-CDX.NA.HY#10Y"` |
@@ -97,15 +97,16 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 
 ## Fields in other rows
 
-Fields no record above has, found by reading all 855 rows, with how many rows fill them.
+Fields no record above has, found by reading all 867 rows, with how many rows fill them.
 
 | Field | Type | Rows with it | Meaning | Example |
 |---|---|---|---|---|
-| `UNDERLYING_TENOR` | string | 50 of 855 | The tenor of the underlying swap of an interest-rate volatility (a swaption's 10Y). | `"10Y"` |
-| `VALID_TO` | date (YYYY-MM-DD) | 7 of 855 | The last business date the row applies to; empty while it applies. | `"2026-12-31"` |
-| `MARKET_CAP` | string | 80 of 855 | LARGE or SMALL for an equity (MAR21.72's market capitalisation test). | `"LARGE"` |
-| `ECONOMY` | string | 80 of 855 | ADVANCED or EMERGING for an equity (MAR21.72). | `"EMERGING"` |
-| `PROXY_OF` | string | 10 of 855 | The factor this one is proxied by, when its data is proxied. | `"VOL/EQ/MXEF/10Y"` |
+| `UNDERLYING_TENOR` | string | 50 of 867 | The tenor of the underlying swap of an interest-rate volatility (a swaption's 10Y). | `"10Y"` |
+| `VALID_TO` | date (YYYY-MM-DD) | 7 of 867 | The last business date the row applies to; empty while it applies. | `"2026-12-31"` |
+| `SENIORITY` | string | 396 of 867 | The seniority of a credit factor's curve (SIMM credit qualifiers and the CRIF are per issuer and seniority; the DRC nets by seniority, MAR22.19). SENIOR in the demo. | `"SENIOR"` |
+| `MARKET_CAP` | string | 80 of 867 | LARGE or SMALL for an equity (MAR21.72's market capitalisation test). | `"LARGE"` |
+| `ECONOMY` | string | 80 of 867 | ADVANCED or EMERGING for an equity (MAR21.72). | `"EMERGING"` |
+| `PROXY_OF` | string | 10 of 867 | The factor this one is proxied by, when its data is proxied. | `"VOL/EQ/MXEF/10Y"` |
 
 ## For the production query
 

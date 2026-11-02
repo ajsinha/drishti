@@ -834,7 +834,19 @@ drishti:
       on-start: true                 # at start, capture the newest date when it has no official record yet
       currencies: [USD]              # reporting currencies captured officially (USD always, and the only one published); e.g. [USD, EUR]
       jsonl: true                    # also write each published date as JSON Lines: <root>/risk-results/jsonl/var-official/<date>/
-  regulatory:                        # regulatory VaR: backtesting, period statistics, report runs and sign-off (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14)
+  frtb:                              # position sensitivities and FRTB-SA, computed for any scope (docs/guides/FRTB_SA_GUIDE.md section 9)
+    enabled: ${DRISHTI_FRTB_ENABLED:true}   # the FRTB-SA engine, its API, FRSA and PLAY FRTB; off: every request answers it is switched off
+    parameters-dir: ${DRISHTI_FRTB_PARAMETERS:./config/packs/market-risk/capital}   # frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/)
+    sensitivity-kind: position-sensitivity   # the position sensitivities (SENS)
+    factor-kind: risk-factor         # the factor dictionary (RFAC)
+    default-risk-kind: default-risk  # the DRC inputs; none served: "DRC not computed", never 0
+    residual-risk-kind: residual-risk   # the RRAO inputs; none served: derived from the positions' product types and notionals
+    rrao-from-positions: true        # derive the RRAO from PRODUCT_TYPE (the parameter file's mapping) and the VaR book's notionals
+    max-factors: 2000                # the most factors one playground grid and workbook holds
+    recipes-dir: ${drishti.data.dir:./data}/frtb/recipes   # saved playground recipes (PLAY FRTB RUN <id>)
+    cache-minutes: 10                # how long a date's sensitivities stay in memory after they are read
+    playground-template: ""          # a bank's workbook template folder; blank: the built-in playground/frtb-sa/template/
+  regulatory:                       # regulatory VaR: backtesting, period statistics, report runs and sign-off (docs/guides/VAR_GUIDE.md sections 18.10, 18.11 and 18.14)
     fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:10-31}   # the last day of the fiscal year, MM-DD: FY2026 is 2025-11-01 to 2026-10-31 with 10-31
     pnl-kind: desk-pnl               # the kind with each desk's actual and hypothetical P&L per business date (the backtest's input)
     average-days: 60                 # the business days of the VaR average the capital formula takes

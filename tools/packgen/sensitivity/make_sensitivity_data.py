@@ -185,7 +185,7 @@ def elements(pos: Position) -> list[dict]:
             ladder(f"IR/CURVE/{ccy}/{curve}", D.GIRR_TENORS, "DV01", dv01)
             underlyings["IR"] = f"{ccy}/{curve}"
             if pos.option:
-                curv.append((f"IR/CURVE/{ccy}/{curve}", "GIRR", dv01 * CURVATURE_SHOCK["GIRR"], CURVATURE_SHOCK["GIRR"]))
+                curv.append((f"IR/CURVE/{ccy}", "GIRR", dv01 * CURVATURE_SHOCK["GIRR"], CURVATURE_SHOCK["GIRR"]))
         elif head == "INFL":
             index = D.INFLATION.get(part, "USCPI")
             ladder(f"INF/{index}", D.INF_TENORS, "IE01", -one_sigma / DAILY_SIGMA["INF"])
@@ -220,7 +220,7 @@ def elements(pos: Position) -> list[dict]:
             underlyings["CM"] = und
             if pos.option:
                 rw = CM_RW[D.COMMODITIES[und][2]]
-                curv.append((f"CM/PRICE/{und}/{loc}", "COMM", delta * rw * 100, rw))
+                curv.append((f"CM/PRICE/{und}", "COMM", delta * rw * 100, rw))
         elif head == "VOL":
             expiry = D.nearest_two(D.VEGA_EXPIRIES, pos.years)
             vega = one_sigma / DAILY_SIGMA["VOL"]
@@ -340,6 +340,24 @@ def write(out: Path, testdata: Path | None = None) -> list[Path]:
         (out / rel).write_bytes(data)
         written.append(out / rel)
     return written
+
+
+#: the testdata.yaml entry of each kind: its key (the lake's business key)
+KEYS = {"position-sensitivity": "SENSITIVITY_ID", "risk-factor": "RISK_FACTOR"}
+
+
+def datasets(out: Path, written: list[Path]) -> list[dict]:
+    """The testdata.yaml entries of the files just written (read by `drishti.py lake demo` into risk-store, as every risk kind)."""
+    entries = []
+    for f in sorted(written, key=lambda x: x.parent.name):
+        kind = f.parent.name
+        cob = f.name[4:14]
+        with gzip.open(f, "rt", encoding="utf-8") as fh:
+            documents = sum(1 for _ in fh)
+        entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": "risk-store", "key": KEYS[kind],
+                        "dated-by": "BUSINESS_DATE", "first-date": cob, "last-date": cob, "documents": documents, "files": [f.name],
+                        "bytes": f.stat().st_size})
+    return entries
 
 
 def main(argv=None) -> int:

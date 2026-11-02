@@ -330,8 +330,8 @@ its liquidity horizon, and `SOURCE_NAMES`: the names each source system gives th
 
 | File | Holds | Source |
 |---|---|---|
-| [`frtb-sa-sbm.yaml`](../architecture/capital-parameters/frtb-sa-sbm.yaml) | SBM risk weights per class, bucket and vertex; ρ and γ; the scenario formulas; the curvature rules (factor, shock, correlation, FX divisor) | Basel MAR21 |
-| [`frtb-sa-drc-rrao.yaml`](../architecture/capital-parameters/frtb-sa-drc-rrao.yaml) | LGDs, maturity floor and cap, DRC buckets and risk weights, netting rule, HBR; RRAO weights, exotic and other lists, exclusions, the product-type mapping | Basel MAR22, MAR23 |
+| [`frtb-sa-sbm.yaml`](../../config/packs/market-risk/capital/frtb-sa-sbm.yaml) | SBM risk weights per class, bucket and vertex; ρ and γ; the scenario formulas; the curvature rules (factor, shock, correlation, FX divisor) | Basel MAR21 |
+| [`frtb-sa-drc-rrao.yaml`](../../config/packs/market-risk/capital/frtb-sa-drc-rrao.yaml) | LGDs, maturity floor and cap, DRC buckets and risk weights, netting rule, HBR; RRAO weights, exotic and other lists, exclusions, the product-type mapping | Basel MAR22, MAR23 |
 
 **Rules** ([design section 14](../architecture/SENSITIVITIES_AND_FRTB_SA.md#14-parameters-as-configuration)): one file per regime (Basel,
 then a jurisdiction's variant); each names its regime, its effective date and the paragraph of every value. A filer is configured with

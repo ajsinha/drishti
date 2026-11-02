@@ -115,6 +115,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
 | `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground`, `var explain` | [5.12](#512-var) |
+| `sens`, `frtb`, `play` | `sens show`, `sens factors`, `frtb sa`, `frtb explain`, `frtb contributions`, `play frtb` | [5.14](#514-sens-frtb-and-play-frtb) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -1367,6 +1368,25 @@ Exit codes are `0`, `1` (the server said no) and `2` (usage).
 drishti-console/.venv/bin/python tools/drishti.py exposure show CPTY:CP-ALDERSHOT
 drishti-console/.venv/bin/python tools/drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
 drishti-console/.venv/bin/python tools/drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA
+```
+
+### 5.14 sens, frtb and play frtb
+
+Position sensitivities and FRTB-SA as the token's user sees them (`tools/frtbcli.py`; [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)):
+
+- `sens show SCOPE [--by RISK_FACTOR|BUCKET|RISK_CLASS|TENOR|MEASURE|<attribute>]`: a scope's sensitivities summed in the reporting currency;
+  `sens factors [--q TEXT]`: the factor dictionary, its buckets and source names, and the load's refusals.
+- `frtb sa SCOPE`: SBM per class, measure and scenario, the binding one, DRC, RRAO and the total; `frtb explain SCOPE [--class GIRR]`: the
+  buckets, factors, WS, K_b and S_b; `frtb contributions SCOPE [--by DESK]`: contributions that add up to the total. Every one takes the
+  switches (`--curvature-source`, `--girr-curvature-shock`, `--fx-curvature-divisor`, `--girr-correlation`, `--scenario`), `--override
+  PATH=VALUE` (repeatable; not the regulatory figure), `--ccy` and `--date`. `EXAMPLE` is the design's hand-built cases.
+- `play frtb SCOPE [--compare SWITCH=VALUE] [--xlsx FILE] [--save]`: the playground: the switches, a comparison explained by step, the
+  workbook of live formulas, a recipe; `play frtb --recipe FR-...` replays a recipe and exits 1 when it does not reproduce to the cent.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py frtb sa DESK:DESK-RATES
+drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --compare girr-correlation=exact
+drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --xlsx frtb-cases.xlsx
 ```
 
 ## 6. Store loaders: `tools/load-*.sh`

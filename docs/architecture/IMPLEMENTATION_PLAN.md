@@ -941,7 +941,7 @@ the default view, B and C are alternative views of the same data on the one scre
 hand-built test cases); the planned contracts `position-sensitivity` (SENS) and `risk-factor` (RFAC) with their generated pages and
 sample pages ([market-risk contracts](../contracts/packs/market-risk.md)); the demo data from the VaR factor model
 (`tools/packgen/sensitivity/`, run by `tools/testdata/make_testdata.py`, not loaded by `lake demo` until the kinds have a command); the
-parameter files in draft ([capital-parameters](capital-parameters/frtb-sa-sbm.yaml)); row 7's diagnosis.
+parameter files (now the market-risk pack's [capital/](../../config/packs/market-risk/capital/frtb-sa-sbm.yaml)); row 7's diagnosis.
 
 ### 2.9.11 mock-ups: the screens to build
 

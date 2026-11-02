@@ -67,6 +67,8 @@ menus:
       - title: Check and report
         items:
           - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every VaR figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
+          - { id: frsa, cmd: FRSA BANK, icon: bank2, label: FRTB-SA capital, desc: "Market-risk capital by the standardised approach for any scope", match: /frtb, requires: [word:VAR, route:/frtb] }
+          - { id: play-frtb, cmd: PLAY FRTB EXAMPLE, icon: calculator, label: FRTB-SA Playground, desc: "Every method choice a switch, compared and reproduced; a workbook of formulas", match: /play/frtb, requires: [word:VAR, word:PLAY, route:/play/frtb] }
           - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the day's P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
           - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
   - id: exposure

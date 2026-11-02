@@ -38,6 +38,7 @@ public final class SheetStream {
     private final TreeMap<Integer, Double> widths = new TreeMap<>();
     private final List<String> conditional = new ArrayList<>();
     private final List<String> merges = new ArrayList<>();
+    private final List<String> validations = new ArrayList<>();
     private int freezeRows;
     private int freezeCols;
     private boolean begun;
@@ -80,6 +81,12 @@ public final class SheetStream {
             widths.put(c, w);
         }
         return this;
+    }
+
+    /** A drop-down list on {@code sqref} (a switch cell): only {@code options} may be typed. */
+    public void list(String sqref, List<String> options) {
+        validations.add("<dataValidation type=\"list\" allowBlank=\"0\" showErrorMessage=\"1\" sqref=\"" + sqref + "\"><formula1>"
+                + XlsxWriter.esc("\"" + String.join(",", options) + "\"") + "</formula1></dataValidation>");
     }
 
     /** A merged range ({@code A1:H1}). */
@@ -212,6 +219,11 @@ public final class SheetStream {
             b.append("</mergeCells>");
         }
         conditional.forEach(b::append);
+        if (!validations.isEmpty()) {
+            b.append("<dataValidations count=\"").append(validations.size()).append("\">");
+            validations.forEach(b::append);
+            b.append("</dataValidations>");
+        }
         String copyright = footerText(values.getOrDefault("COPYRIGHT", ""));
         String product = footerText(values.getOrDefault("PRODUCT", ""));
         String tpl = footerText(values.getOrDefault("TEMPLATE", "") + " " + values.getOrDefault("TEMPLATE_VERSION", ""));

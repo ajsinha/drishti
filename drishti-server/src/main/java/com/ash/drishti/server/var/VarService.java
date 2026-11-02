@@ -1254,6 +1254,58 @@ public final class VarService implements AutoCloseable {
         return s;
     }
 
+    /**
+     * The members of a VaR scope as the person sees them, without computing a figure (2.9.11: the FRTB-SA engine reads its sensitivities
+     * for the same scopes as VaR, FRTB_SA_GUIDE.md section 7): the trades and the positions they belong to, the scope's canonical form and
+     * how many trades the person's role hides.
+     */
+    public record ScopeMembers(LocalDate date, String canonical, java.util.Set<String> trades, java.util.Set<String> positions,
+            Map<String, Double> notionals, int hidden) {}
+
+    /** {@link ScopeMembers} of {@code scope} on the date asked (null: the latest), with the same refusals as a VaR answer. */
+    public ScopeMembers scopeMembers(Principal p, String scope, LocalDate asked) {
+        VarDate d = date(asked);
+        VarAccess.View view = access.view(p, d);
+        ScopeResolver.Resolution res;
+        ScopeExpr parsed;
+        try {
+            Map<String, String> words = words();
+            parsed = ScopeExpr.parse(scope, words.keySet());
+            res = new ScopeResolver(d.book(), definitions(p, d), words).resolve(scope);
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
+        if (parsed.refs().stream().anyMatch(r -> r.word().equals("CPTY")) && access.masked(p, "COUNTERPARTY")) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "the counterparty is masked for your role: a scope may not select trades by it");
+        }
+        OrdinalSet set = view.full() ? res.set() : res.set().and(view.visible());
+        if (!view.seesPositions(set)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "your role sees this scope in aggregate only: FRTB-SA reads it position by position");
+        }
+        VarBook b = d.book();
+        java.util.Set<String> trades = new java.util.LinkedHashSet<>();
+        java.util.Set<String> positions = new java.util.LinkedHashSet<>();
+        set.forEach(o -> {
+            trades.add(b.tradeId(o));
+            int pi = b.positionOf(o);
+            if (pi >= 0) {
+                positions.add(b.positionId(pi));
+            }
+        });
+        Map<String, Double> notionals = new LinkedHashMap<>();
+        com.ash.drishti.compute.var.Columns pc = b.positions();
+        for (String pid : positions) {
+            int pi = b.positionIndex(pid);
+            if (pi >= 0 && pc != null) {
+                double n = pc.number("NOTIONAL", pi);
+                if (Double.isFinite(n)) {
+                    notionals.put(pid, n);
+                }
+            }
+        }
+        return new ScopeMembers(d.date(), res.canonical(), trades, positions, notionals, res.set().size() - set.size());
+    }
+
     private Scoped scoped1d(Principal p, String scope, LocalDate asked, String ccy) {
         return scoped1d(p, scope, date(asked, ccy));
     }

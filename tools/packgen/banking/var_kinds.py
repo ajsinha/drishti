@@ -49,6 +49,11 @@ KINDS = {
     "desk-pnl": ("DPNL", "Desk P&L: actual and hypothetical (daily)", "^DPNL-", "DESK_PNL_ID"),
     # the long-history P&L of today's portfolio per hierarchy node, for the stress window selection (VAR_GUIDE.md section 18.9)
     "pnl-history": ("PNLH", "Long-history P&L of a hierarchy node (stress window selection)", "^PNLH-", "HISTORY_ID"),
+    # 2.9.11: the positions' sensitivities to the standard risk factors and the factor dictionary (SENSITIVITIES_AND_FRTB_SA.md sections 2
+    # and 3), read by the server's FRTB-SA engine; a factor's id is its standard name (IR/CURVE/USD/SOFR/10Y)
+    "position-sensitivity": ("SENS", "Position sensitivities (delta, vega, curvature by risk factor)", "^SENS-", "SENSITIVITY_ID"),
+    "risk-factor": ("RFAC", "Risk factor (the factor dictionary: FRTB and SIMM mapping, source names)", "^(IR|INF|CR|FX|EQ|CM|VOL)/",
+                    "RISK_FACTOR"),
     # the computed kinds: the id is a scope (DESK:RATES), so no id pattern claims them
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
     "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
@@ -143,7 +148,7 @@ CONNECTORS = {
 #: link fields the kinds carry (field -> (kind, label)); the hierarchy fields (TT_BOOK, LEGAL_ENTITY, COUNTERPARTY) link through the
 #: core and trading packs' own fields
 FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio", "Portfolio"), "NODE_ID": ("risk-hierarchy", "Hierarchy node"),
-          "TRADE_IDS": ("trade", "Trade"),
+          "TRADE_IDS": ("trade", "Trade"), "RISK_FACTOR": ("risk-factor", "Risk factor"),
           # a trade page's Risk links (risk-links@1): set on the view by the VaR engine when the trade is live
           "PNL_VECTOR_ID": ("pnl-vector", "P&L vector"), "SCENARIO_PV_ID": ("scenario-pv", "Scenario PVs"),
           "VAR_RESULT_ID": ("var-result", "VaR of this trade")}
@@ -170,6 +175,10 @@ LAYOUT = {
     # one row per node and date: the day-by-day P&L a vector column, its dates in the document
     "pnl-history": {"columns": ["HIERARCHY", "NODE_ID", "LEVEL", "CURRENCY", "FIRST_DAY", "LAST_DAY", "DAY_COUNT"], "vectors": ["PNL"]},
     "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER"]},
+    # 2.9.11: the sparse SENSITIVITIES list stays in the document; the columns are the contract's storage columns
+    "position-sensitivity": {"columns": ["SENSITIVITY_ID", "GRAIN", "POSITION_ID", "TRADE_ID", "SOURCE_SYSTEM", "BATCH_ID", "STATUS", "DESK", "TT_BOOK",
+                                         "PRODUCT_TYPE", "CURRENCY"]},
+    "risk-factor": {"columns": ["RISK_FACTOR", "FACTOR_TYPE", "RISK_CLASS", "QUALIFIER", "TENOR", "FRTB_BUCKET", "SIMM_RISK_CLASS", "SIMM_BUCKET"]},
 }
 #: the search form (FORM market-risk) of each kind: its key columns
 FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CURRENCY", "SECURITY_ID"],
@@ -183,7 +192,9 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "desk-pnl": ["DESK_ID", "BUSINESS_DATE", "ACTUAL_PNL", "HYPOTHETICAL_PNL"],
                 "pnl-history": ["HIERARCHY", "NODE_ID", "FIRST_DAY", "LAST_DAY"],
                 "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"],
-                "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"]}
+                "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"],
+                "position-sensitivity": ["POSITION_ID", "DESK", "TT_BOOK", "PRODUCT_TYPE", "SOURCE_SYSTEM"],
+                "risk-factor": ["RISK_CLASS", "FACTOR_TYPE", "QUALIFIER", "FRTB_BUCKET"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
 #: the computed kinds' fields (VAR_GUIDE.md section 8): read as an ordinary kind, never stored
 COMPUTED = ("var-result", "var-whatif")
