@@ -15,6 +15,22 @@
 -->
 # Changelog
 
+## 2.9.10.a — Competitive analysis, for administrators (2026-11-01)
+
+- **A full competitive analysis, internal.** `docs/strategy/COMPETITIVE_ANALYSIS.md`: Drishti's position, its five strongest
+  differentiators and five biggest gaps, and the first and long-term pitches; built today against planned, with evidence levels
+  (measured, designed, claimed, not verified); banking, finance and risk (risk aggregation cubes, trading-platform risk modules,
+  enterprise market and credit risk, regulatory reporting, governance, buy-side) with a capability matrix, each competitor's strengths,
+  where Drishti wins and loses and how to position it, the vendor stacks Drishti could replace once the plan is built, and what still
+  decides deals; general data and analytics (BI, semantic layers, lakehouses, real-time engines, app builders, Grafana, AI assistants)
+  with its own matrix; pricing observations from public sources; risks and upkeep; every source with the date read. Marked
+  "Internal — not for customers".
+- **Help pages for administrators only.** A help catalogue entry may carry `roles:` (`roles: [admin]` for the competitive analysis):
+  only an administrator, or a person holding one of the roles, sees it in the Help index and in search and opens it; for everyone else
+  it is not listed, not found and its address answers 404 (`Guide.permits`, `visible()` in the help routes). docs/README.md's map of the
+  help centre lists the pages everyone sees, so the internal page is in no customer-facing index (`test_docs_help_map.py`); tests:
+  `test_help.py` (an administrator sees it, a viewer gets 404, a listed role opens it).
+
 ## 2.9.10 — Memory, scale and mobile; why VaR moved (2026-11-01)
 
 *2.9.9 and 2.9.10 are released together as 2.9.10.*

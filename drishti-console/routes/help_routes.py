@@ -49,13 +49,25 @@ def shown(edition, guide) -> bool:
     return True
 
 
+def _me(request):
+    return getattr(request.state, "identity", None)
+
+
+def visible(request, guide) -> bool:
+    """Whether this person, in this edition, sees a guide: the edition keeps it (:func:`shown`) and the guide's ``roles:`` let them
+    (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis). A guide they may not see is not listed, not
+    found by search and not reached by its address (404)."""
+    return guide.permits(_me(request)) and shown(_edition(request), guide)
+
+
 def categories_for(request, lib) -> list:
     ed = _edition(request)
-    if not ed.active:
+    me = _me(request)
+    if not ed.active and all(g.permits(me) for c in lib.categories for g in c["guides"]):
         return lib.categories
     out = []
     for c in lib.categories:
-        guides = [g for g in c["guides"] if shown(ed, g)]
+        guides = [g for g in c["guides"] if g.permits(me) and (not ed.active or shown(ed, g))]
         if guides:
             out.append({**c, "guides": guides})
     return out
@@ -65,14 +77,13 @@ def categories_for(request, lib) -> list:
 async def help_index(request: Request):
     lib = await library(request)
     cats = categories_for(request, lib)
-    return render(request, "help/index.html", categories=cats, count=sum(len(c["guides"]) for c in cats) if _edition(request).active else lib.listed,
+    return render(request, "help/index.html", categories=cats, count=sum(len(c["guides"]) for c in cats),
                   screen="help")
 
 
 @router.get("/help/search")
 async def help_search(request: Request, q: str = ""):
-    ed = _edition(request)
-    return render(request, "help/search.html", q=q, hits=[h for h in (await library(request)).search(q) if shown(ed, h["guide"])], screen="help")
+    return render(request, "help/search.html", q=q, hits=[h for h in (await library(request)).search(q) if visible(request, h["guide"])], screen="help")
 
 
 @router.get("/help/configuration")
@@ -83,7 +94,7 @@ async def help_configuration(request: Request, q: str = "", area: str = ""):
 
     lib = await library(request)
     g = lib.guides.get("configuration")
-    if g is None or not shown(_edition(request), g):
+    if g is None or not visible(request, g):
         return await help_guide(request, "configuration")
     page = lib.render("configuration")
     me = ident(request)
@@ -118,7 +129,7 @@ async def what(request: Request, q: str = ""):
     slug = lib.by_file.get(folder / entry.page) if entry else None
     if entry and slug:
         return RedirectResponse(f"/help/{slug}#{entry.anchor}", status_code=303)
-    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY and shown(_edition(request), h["guide"])]
+    hits = [h for h in lib.search(words) if h["guide"].category == CATEGORY and visible(request, h["guide"])]
     return render(request, "help/search.html", q=words, hits=hits, knowledge=home or "", screen="help")
 
 
@@ -167,7 +178,7 @@ async def help_developer(request: Request):
 
     lib = await library(request)
     g = lib.guides.get("developer")
-    if g is None or not shown(_edition(request), g):
+    if g is None or not visible(request, g):
         return await help_guide(request, "developer")
     folder = request.app.state.api_docs_dir
     built = api_reference.versions(folder)
@@ -197,10 +208,9 @@ async def help_guide(request: Request, slug: str):
     lib = await library(request)
     if slug not in lib.guides and lib.moved.get(slug, "").partition("#")[0] in lib.guides:
         return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=301)       # permanent: the address was retired, the target may carry an #anchor
-    ed = _edition(request)
-    if slug not in lib.guides or not shown(ed, lib.guides[slug]):        # a guide the edition hides is not reached by its address either
+    if slug not in lib.guides or not visible(request, lib.guides[slug]):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
-                      hits=[h for h in lib.search(slug.replace("-", " ")) if shown(ed, h["guide"])], missing=slug, screen="help")
+                      hits=[h for h in lib.search(slug.replace("-", " ")) if visible(request, h["guide"])], missing=slug, screen="help")
     g = lib.guides[slug]
     page = lib.render(slug)
     siblings = next(c for c in lib.categories if c["id"] == g.category)
