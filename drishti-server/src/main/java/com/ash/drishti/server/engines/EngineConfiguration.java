@@ -99,6 +99,9 @@ public class EngineConfiguration {
         var ctx = e.getApplicationContext();
         EngineCluster cluster = ctx.getBean(EngineCluster.class);
         EngineRegistry registry = ctx.getBean(EngineRegistry.class);
+        // BI: the datasets and models an engine computes are not offered while it runs nowhere (the catalogue's bi: prefixes)
+        ctx.getBeanProvider(com.ash.drishti.server.edition.EditionBi.class).ifAvailable(b -> b.engines(name -> registry.entries().stream()
+                .anyMatch(en -> en.list("bi").stream().anyMatch(name::startsWith) && !cluster.available(en.id()))));
         ctx.getBeanProvider(DigestService.class).ifAvailable(d -> {
             d.service(EngineCluster.SERVICE, cluster::wire);
             registry.onChange(d::announce);

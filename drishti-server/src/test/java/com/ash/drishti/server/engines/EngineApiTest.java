@@ -41,7 +41,8 @@ import org.springframework.test.web.servlet.MockMvc;
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
         "drishti.sources.plugins.demo.settings.ticking=false", "drishti.identity.iterations=1000",
-        "drishti.engines.dir=${drishti.test.dir}/engines-${random.uuid}", "drishti.engines.watch-seconds=0",
+        "drishti.engines.dir=${drishti.test.dir}/engines-${random.uuid}", "drishti.engines.watch-seconds=0", "drishti.bi.dir=../config/bi",
+        "drishti.bi.query.store-dir=${drishti.test.dir}/engines-bi-store/${random.uuid}",
         "drishti.identity.database-url=jdbc:sqlite:${drishti.test.dir}/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
 class EngineApiTest {
@@ -98,5 +99,24 @@ class EngineApiTest {
                 .andExpect(jsonPath("$.changes[2].outcome").value("refused"));
         mvc.perform(get("/api/v1/admin/engines/frtb-sa/impact").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.hides.words[0]").value("FRSA")).andExpect(jsonPath("$.hides.menus[1]").value("play-frtb"));
+    }
+
+    @Test
+    void varOffWithItsDependentsHidesItsBiDatasetsAndItsApi() throws Exception {
+        String admin = as("drishti-dev-admin", "admin");
+        String reader = as("tina", "trader");
+        mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest").header("Authorization", admin)).andExpect(status().isOk());
+        try {
+            change(admin, "{\"reason\":\"a counterparty node\",\"withDependents\":true,\"changes\":[{\"engine\":\"var\",\"on\":false}]}")
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.outcomes[0].engine").value("frtb-sa"))
+                    .andExpect(jsonPath("$.outcomes[1].engine").value("var"));
+            mvc.perform(get("/api/v1/var/status").header("Authorization", reader)).andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.code").value("DRS-1020")).andExpect(jsonPath("$.engine").value("var"));
+            mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest").header("Authorization", admin)).andExpect(status().isNotFound());
+        } finally {
+            change(admin, "{\"reason\":\"back\",\"withNeeds\":true,\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true}]}").andExpect(status().isOk());
+        }
+        mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest").header("Authorization", admin)).andExpect(status().isOk());
+        assertThat(registry.running()).contains("var", "frtb-sa");
     }
 }
