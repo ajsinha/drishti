@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
+    from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -614,6 +614,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(datamap_routes.router)           # Data map: DATAMAP, the packs' kinds and joins, checked against the data (USER_GUIDE.md)
     app.include_router(data_routes.router)              # the Data view: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
+    app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)

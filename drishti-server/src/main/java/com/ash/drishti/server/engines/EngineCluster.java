@@ -131,6 +131,23 @@ public final class EngineCluster implements EngineGateFilter.Peers {
         return c.call(node, method, pathAndQuery, body, p, c.timeout());
     }
 
+    /**
+     * The about answers' {@code engines} ({@code /public/about}, {@code /api/v1/about}): each engine {@code {id, title, here, cluster}}; {@code
+     * here} it runs on this node, {@code cluster} here or on another reachable node (the console offers it when {@code cluster} is true).
+     */
+    public List<Map<String, Object>> about() {
+        List<Map<String, Object>> out = new java.util.ArrayList<>();
+        for (EngineCatalogue.Entry e : registry.entries()) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("id", e.id());
+            x.put("title", e.title());
+            x.put("here", registry.running(e.id()));
+            x.put("cluster", available(e.id()));
+            out.add(x);
+        }
+        return out;
+    }
+
     /** The node's own id (blank outside a cluster). */
     public String self() {
         RunCluster c = cluster.get();

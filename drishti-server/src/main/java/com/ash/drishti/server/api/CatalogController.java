@@ -110,7 +110,17 @@ public class CatalogController {
         m.put("copyright", branding.copyright());
         m.put("notice", branding.notice());
         m.put("edition", edition.edition().about());       // the instance's edition, or the caller's lens       // {name, title, packs, allowOnly}, or null: the full Drishti (EDITIONS.md)
+        com.ash.drishti.server.engines.EngineCluster c = engines;
+        m.put("engines", c == null ? null : c.about());    // the compute engines: here and in the cluster (COMPUTE_ENGINES.md section 5.2)
         return m;
+    }
+
+    private com.ash.drishti.server.engines.EngineCluster engines;
+
+    /** The compute engines' view (absent in a test that builds the controller alone). */
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void engines(com.ash.drishti.server.engines.EngineCluster cluster) {
+        this.engines = cluster;
     }
 
     /** The enabled domain packs (not switched off in Admin → Packs), with what the console needs from each. */
