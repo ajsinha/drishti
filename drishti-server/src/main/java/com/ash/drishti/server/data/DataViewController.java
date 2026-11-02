@@ -157,6 +157,13 @@ public class DataViewController {
         return m;
     }
 
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void gate(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+    }
+
     /** The selected rows of the day as {@code <kind>_<date>.jsonl.gz}: one JSON object a line, the chosen columns in order; audited. */
     @GetMapping("/{kind}/rows")
     public void rows(@RequestAttribute(Principal.ATTRIBUTE) Principal p, AsOf asOf, @PathVariable String kind,
@@ -167,6 +174,9 @@ public class DataViewController {
         List<String> out = chosen(p, d, sel);
         LocalDate day = day(d, date);
         String file = kind + "_" + (day == null ? "current" : day.toString()) + ".jsonl.gz";
+        if (gate != null) {                                            // busy protection: a new download may wait (nothing written yet)
+            gate.admit(com.ash.drishti.server.admission.Work.DOWNLOAD, p.user(), "Download " + kind + (day == null ? "" : " " + day));
+        }
         res.setStatus(200);
         res.setContentType("application/gzip");
         res.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"");

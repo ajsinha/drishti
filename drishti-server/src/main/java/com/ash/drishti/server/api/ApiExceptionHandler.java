@@ -110,6 +110,24 @@ public class ApiExceptionHandler {
                 .header(org.springframework.http.HttpHeaders.RETRY_AFTER, Long.toString(e.retryAfterSeconds())).body(p);
     }
 
+    /**
+     * New work asked to wait because the server is very busy (docs/admin/OPERATIONS.md, "Busy protection"): {@code 503}, its
+     * {@code DRS-95xx} code, {@code Retry-After}, and the calm words ({@code title}, {@code because}) the console and drishti.py show.
+     */
+    @ExceptionHandler(com.ash.drishti.server.admission.BusyRefusal.class)
+    org.springframework.http.ResponseEntity<ProblemDetail> busy(com.ash.drishti.server.admission.BusyRefusal e) {
+        ProblemDetail p = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, e.getMessage());
+        p.setTitle(e.title());
+        p.setProperty("code", e.errorCode().code());
+        p.setProperty("busy", true);
+        p.setProperty("work", e.work().name().toLowerCase(java.util.Locale.ROOT).replace('_', '-'));
+        p.setProperty("because", e.because());
+        p.setProperty("retryAfterSeconds", e.retryAfterSeconds());
+        return org.springframework.http.ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).contentType(org.springframework.http.MediaType.APPLICATION_PROBLEM_JSON)
+                .header(org.springframework.http.HttpHeaders.RETRY_AFTER, Long.toString(e.retryAfterSeconds()))
+                .header(org.springframework.http.HttpHeaders.CACHE_CONTROL, "no-store").body(p);
+    }
+
     /** A command an administrator turned off (Admin → Commands): {@code 403 DRS-1016} with the command and since when, nothing else. */
     @ExceptionHandler(com.ash.drishti.server.security.CommandOffException.class)
     ProblemDetail commandOff(com.ash.drishti.server.security.CommandOffException e) {

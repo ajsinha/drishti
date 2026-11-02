@@ -135,6 +135,27 @@ drishti:
     cache-share: 0.5                 # the share of -Xmx every cache in the budget may take together, in weighted pools
     # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
     squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
+  admission:                         # busy protection (docs/admin/OPERATIONS.md "Busy protection"): new heavy work waits politely instead of an out-of-memory
+    enabled: true                    # false: nothing waits (Admin -> Health still shows the readings)
+    memory-warn: 0.80                # the heap after the last collection past this share of -Xmx: Health says "getting full"
+    memory-refuse-heavy: 0.85        # past this, new date loads, downloads, BI runs and bulk loads wait (503 DRS-9502 to DRS-9505, Retry-After)
+    memory-refuse-sign-in: 0.92      # past this, new sign-ins wait too (DRS-9501); people signed in keep working
+    queued-loads: 2                  # date loads that may wait behind the running ones (each engine's load-threads) before a new one waits
+    open-heap-refuse: 1.2            # new date loads wait when the open dates' heap passes this share of its safety net (the dates in use are well over it)
+    request-handlers: 200            # requests answered at once before the server counts as full
+    requests-warn: 0.75              # share of request-handlers busy: Health says "getting full"
+    requests-refuse: 0.90            # past this share, new heavy work waits
+    queue-refuse: 50                 # new heavy work waits when more requests than this wait beyond request-handlers
+    disk-warn-gb: 20                 # free disk of the data folder under this: Health says "getting full"
+    disk-refuse-gb: 10               # under this, new date loads, downloads and bulk loads wait
+    retry-after:                     # the seconds each kind of work is told to wait (Retry-After); a refusal is remembered that long
+      sign-in: 45
+      load: 30
+      download: 30
+      bi-run: 60
+      bulk-load: 120
+    keep: 50                         # refusals kept for Admin -> Health (in memory)
+    override-max-minutes: 240        # the longest an operator's override may last (it ends by itself)
   disk:                              # RESOURCES_AND_SCALE.md 7: the local disk
     min-free-percent: 10             # the free-space guard: a build that would leave less than this share of the disk free is refused (DRS-5218)...
     min-free-gb: 20                  # ...or less than this many GB (both must hold)
@@ -460,6 +481,7 @@ drishti:
       - POST /api/v1/admin/edits/**            # write-back's switches (a connector's writes, withdrawing an overlay): an administrator in the console
       - "* /api/v1/auth/**"
       - "* /api/v1/admin/tokens/**"
+      - "PUT /api/v1/admin/busy/override"     # busy protection's operator override: an administrator in the console, with a reason, audited
       - "* /api/v1/net/**"                     # Drishti*net: nodes sign their calls with the cluster key; administrators use the console
       - "* /api/v1/compute/peer/**"            # compute fan-out between nodes: signed with the cluster key, never a token
       - "* /api/v1/admin/compute/**"           # compute pools, environments and four-eyes approvals: an administrator in the console

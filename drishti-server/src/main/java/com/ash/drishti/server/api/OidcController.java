@@ -67,6 +67,13 @@ public class OidcController {
         this.security = security;
     }
 
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void gate(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+    }
+
     @PostMapping("/oidc")
     public UserView signIn(@RequestBody OidcSignIn req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireService(p);
@@ -82,6 +89,9 @@ public class OidcController {
             throw e;
         }
         String username = firstText(claims, props.usernameClaim(), "email", "sub");
+        if (gate != null) {
+            gate.admit(com.ash.drishti.server.admission.Work.SIGN_IN, username, "Sign in");      // busy protection: a new sign-in may wait
+        }
         Set<String> roles = roles(claims);
         if (roles.isEmpty()) {
             users.recordAudit("system", "login-sso-refused", username, "no " + branding.productOr("application") + " role for the provider's groups");
