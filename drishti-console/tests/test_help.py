@@ -91,16 +91,17 @@ def test_about_page(client):
     # a product page: no Sutra, source or pack listing
     for text in ("irs-vanilla v3", "Sutras loaded", "Domain packs</dt>", "<dt>Java</dt>", "pnl-code"):
         assert text not in r.text, text
-    assert client.get("/about/competitive").status_code == 200 and 'href="/about/competitive"' in r.text
+    assert 'href="/help/competitive-analysis"' in r.text                 # security off: the acting user is an administrator
 
 
-def test_competitive_landscape(client):
-    r = client.get("/about/competitive")
-    assert r.status_code == 200
-    for text in ("Competitive landscape", "Market data terminals", "Low-code internal tools", "Categories, not vendors",
-                 "cmp cmp-yes", "cmp cmp-no", 'id="no-coded-screens"', "Market data content and analytics"):
-        assert text in r.text, text
-    assert "/about/competitive" in client.get("/about").text and "/about/competitive" in client.get("/help").text
+def test_one_competitive_analysis(client):
+    """One competitive analysis, the Help guide: the old landscape page's address leads to it, and About, the Help centre and the Help
+    menu link it (for administrators; test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_else for the rest)."""
+    r = client.get("/about/competitive", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/help/competitive-analysis"
+    assert 'href="/help/competitive-analysis"' in client.get("/about").text and 'href="/help/competitive-analysis"' in client.get("/help").text
+    assert "/about/competitive" not in client.get("/help").text
+    assert not (CONSOLE / "config" / "competitive.yaml").exists()
 
 
 def test_mobile_ready(client):
@@ -264,11 +265,15 @@ def test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_
 
     as_("viewer")
     assert client.get("/help/competitive-analysis").status_code == 404
-    assert "/help/competitive-analysis" not in client.get("/help").text
-    assert "/help/competitive-analysis" not in client.get("/help/search", params={"q": "competitive analysis"}).text
+    centre = client.get("/help").text
+    assert "/help/competitive-analysis" not in centre[centre.index('class="help-hero"'):]   # the page itself (the top bar's menu reads the signed-in user)
+    found = client.get("/help/search", params={"q": "competitive analysis"}).text
+    assert "/help/competitive-analysis" not in found[found.index('class="help-wrap"'):]
     assert client.get("/help/user-guide").status_code == 200                       # everything else stays open
+    assert "Read the competitive analysis" not in client.get("/about").text          # nor linked from About
     as_("viewer", "admin")
     assert client.get("/help/competitive-analysis").status_code == 200
+    assert 'href="/help/competitive-analysis"' in client.get("/about").text
     monkeypatch.setattr(hr, "_me", lambda request: None)
     assert client.get("/help/competitive-analysis").status_code == 404
 

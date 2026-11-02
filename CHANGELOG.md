@@ -15,6 +15,14 @@
 -->
 # Changelog
 
+## Unreleased (on develop, after 2.9.10.a)
+
+- **One competitive analysis.** The older comparison page (`/about/competitive`, from `drishti-console/config/competitive.yaml`: product categories, no vendors) is retired; its address leads to the Help guide *Competitive analysis* (`docs/strategy/COMPETITIVE_ANALYSIS.md`, vendor by vendor, administrators only). Administrators reach it from the Help menu, the Help centre and About; the footer link is gone; `competitive.yaml` and its CONFIGURATION entry removed.
+- **Construct your basket opens only when asked** (the link, Alt+B or + basket), never by itself when a basket kept in the browser or a saved basket opens.
+- **Drill:** stops at once with the remedy when `drishti-console/.venv` is missing (a new worktree).
+- **Decks:** the roadmap as it stands (built: the regulatory foundation, the VaR Playground, why VaR moved, the Data view, the phone; next: sensitivities and market-risk capital), hot-dates 10, the 200K and 1M benchmarks measured.
+- **Tests:** the direct-memory soak test no longer calls AssertJ from its 72 worker threads (on Java 25 they waited on its class initialisation for ever).
+
 ## 2.9.10.a — Admin → Capacity; the cluster under load; three VaR dates in the demo; the competitive analysis (2026-11-01)
 
 ### Admin → Capacity

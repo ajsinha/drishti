@@ -1222,7 +1222,7 @@ bg, bg-2, surface and surface-2, and for `--d-on-accent` on accent fills; ≥ 3:
 | `/bi/explore`, `/bi/transform`, `/pyconsole` | Analyse (Slice, SQL and Python cells, worked out by the servers), the Transform editor (Python data prep step by step), the browser Python console on a masked extract |
 | `/inbox`, `/share/{id}` | The inbox and the page a shared link opens |
 | `/help`, `/help/{slug}`, `/help/search`, `/help/examples` | Help centre: guides and the repository's docs rendered in-app; F1 opens help for the current screen; the Rachana examples |
-| `/about`, `/about/competitive` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices; the competitive comparison |
+| `/about` | Version and build, Java, uptime, loaded Sutras, source health, licence and notices; for administrators, the link to the competitive analysis (Help, `competitive-analysis`; `/about/competitive` leads there) |
 | `/login`, `/logout`, `/account` | Sign-in and sign-out; own profile, settings and password |
 | `/asof` | Sets the business date (and "known at") for the session, then returns to the page |
 | `/servers` | One console, many servers: the list of servers and the one this browser works with |

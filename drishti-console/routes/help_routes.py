@@ -78,7 +78,7 @@ async def help_index(request: Request):
     lib = await library(request)
     cats = categories_for(request, lib)
     return render(request, "help/index.html", categories=cats, count=sum(len(c["guides"]) for c in cats),
-                  screen="help")
+                  screen="help", competitive=_competitive(request, lib))
 
 
 @router.get("/help/search")
@@ -217,12 +217,16 @@ async def help_guide(request: Request, slug: str):
     return render(request, "help/guide.html", guide=g, page=page, category=siblings, screen="help")
 
 
+def _competitive(request, lib) -> bool:
+    """The one competitive analysis (help.yaml slug competitive-analysis) is linked only for those who may open it: administrators."""
+    g = lib.guides.get("competitive-analysis")
+    return bool(g and visible(request, g))
+
+
 @router.get("/about/competitive")
 async def competitive(request: Request):
-    import yaml
-
-    data = yaml.safe_load((ROOT / "drishti-console" / "config" / "competitive.yaml").read_text(encoding="utf-8"))
-    return render(request, "help/competitive.html", c=data, screen="about")
+    """One competitive analysis: the Help guide docs/strategy/COMPETITIVE_ANALYSIS.md (administrators only); the old address leads there."""
+    return RedirectResponse("/help/competitive-analysis", status_code=301)
 
 
 @router.get("/about")
@@ -232,4 +236,6 @@ async def about(request: Request):
         info = await request.app.state.backend.about(getattr(request.state, "identity", None) or request.app.state.auth.service())
     except BackendError as e:
         info = {"error": drs_message(e.code, e.detail, " ")}
-    return render(request, "help/about.html", info=info, notices=(await library(request)).guides.get("third-party-notices"), screen="about")
+    lib = await library(request)
+    return render(request, "help/about.html", info=info, notices=lib.guides.get("third-party-notices"), screen="about",
+                  competitive=_competitive(request, lib))

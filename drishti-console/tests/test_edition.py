@@ -90,7 +90,7 @@ def test_without_an_edition_the_console_is_the_full_product(backend, monkeypatch
     assert 'id="grammar"' in home and 'id="pipeline"' in home and "data-risk-landing" not in home
     assert app.state.settings.get("ui.product") == "Drishti"
     footer = home[home.index('class="site-footer"'):]
-    assert "/about/competitive" in footer
+    assert "/help/release-notes" in footer and "competitive" not in footer   # the competitive analysis is in the Help menu, administrators only
 
 
 def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch):
@@ -133,8 +133,8 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     lib = Library(CONSOLE, CONSOLE / "config" / "help.yaml", app.state.docs_dir, [])
     unlisted = next(s for s, g in lib.guides.items() if not g.listed)
     assert c.get(f"/help/{unlisted}").status_code == 404                              # help.unlisted-slugs: refuse
-    # the footer is data: the competitive analysis link is not in the edition's footer
-    assert "/about/competitive" not in t[t.index('class="site-footer"'):]
+    # the footer is data: no competitive analysis link in it (it is in the Help menu, administrators only)
+    assert "competitive" not in t[t.index('class="site-footer"'):]
 
 
 def test_home_offers_the_three_landings_and_remembers_the_choice(backend, monkeypatch):

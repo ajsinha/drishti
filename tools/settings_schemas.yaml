@@ -105,29 +105,6 @@ schemas:
       - { key: "domains[].packs", type: list, meaning: "The packs it holds" }
       - { key: computed, type: list, default: "[]", meaning: "Kinds drawn dashed as computed on demand, besides those whose data contract says class: computed" }
       - { key: low-coverage, type: number, default: "0.95", meaning: "A join is a finding when fewer than this share of the ids it holds name an entity that exists" }
-  competitive:
-    area: console-files
-    title: "`competitive.yaml`: the comparison page (/about/competitive)"
-    file: drishti-console/config/competitive.yaml
-    applies: console
-    change: live
-    keys:
-      - { key: as_of, type: string, meaning: "The date the comparison was made, shown on the page" }
-      - { key: intro, type: string, meaning: "The page's opening paragraph" }
-      - { key: categories, type: list, meaning: "The kinds of product compared, {id, name, examples} each" }
-      - { key: "categories[].id", type: string, meaning: "A category's id (a row's column key)" }
-      - { key: "categories[].name", type: string, meaning: "Its heading" }
-      - { key: "categories[].examples", type: string, meaning: "Products of that kind, named as examples" }
-      - { key: rows, type: list, meaning: "The capabilities compared, one row each" }
-      - { key: "rows[].id", type: string, meaning: "The row's id" }
-      - { key: "rows[].cap", type: string, meaning: "The capability" }
-      - { key: "rows[].problem", type: string, meaning: "The problem it solves" }
-      - { key: "rows[].how", type: string, meaning: "How the product does it" }
-      - { key: "rows[].drishti", type: string, meaning: "The product's own mark for the capability" }
-      - { key: "rows[].terminal", type: string, meaning: "The mark for terminal products" }
-      - { key: "rows[].bi", type: string, meaning: "The mark for BI products" }
-      - { key: "rows[].lowcode", type: string, meaning: "The mark for low-code platforms" }
-      - { key: "rows[].platform", type: string, meaning: "The mark for data platforms" }
   prep-snippets:
     area: console-files
     title: "`prep-snippets.yaml`: the Transform editor's data-prep snippets"
