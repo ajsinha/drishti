@@ -149,11 +149,11 @@ drishti:
     disk-warn-gb: 20                 # free disk of the data folder under this: Health says "getting full"
     disk-refuse-gb: 10               # under this, new date loads, downloads and bulk loads wait
     retry-after:                     # the seconds each kind of work is told to wait (Retry-After); a refusal is remembered that long
-      sign-in: 45
-      load: 30
-      download: 30
-      bi-run: 60
-      bulk-load: 120
+      sign-in: 45                    # a new sign-in (DRS-9501)
+      load: 30                       # a new VaR or exposure date (DRS-9502)
+      download: 30                   # a Data view download (DRS-9503)
+      bi-run: 60                     # a BI run (DRS-9504)
+      bulk-load: 120                 # a bulk load of a pack's data (DRS-9505)
     keep: 50                         # refusals kept for Admin -> Health (in memory)
     override-max-minutes: 240        # the longest an operator's override may last (it ends by itself)
   disk:                              # RESOURCES_AND_SCALE.md 7: the local disk

@@ -17,6 +17,19 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **Busy protection: refuse politely, never fall over** (2.9.11 row 8; mock-up A). One gate in front of new sign-ins, VaR and exposure
+  date loads, Data view downloads, BI runs and bulk loads reads the heap after the last collection, each engine's loads against
+  `load-threads`, the open dates' heap against their safety net, the requests answered at once and the free disk; past a wait level the
+  new work is answered `503` with `Retry-After` and `DRS-9501` (sign-in), `DRS-9502` (a date), `DRS-9503` (a download), `DRS-9504` (a BI
+  run) or `DRS-9505` (a bulk load), in calm words. Defaults: new heavy work waits over 85% of the heap after a collection, new sign-ins over
+  92%; people signed in keep working (open dates are never gated). A refusal is remembered for its `Retry-After`, so a crowd gets one
+  decision; it lifts as soon as its cause clears. The console shows the message in place with a countdown ring, Try now and Cancel, and
+  tries again by itself three times (sign-in, the VaR and exposure panels, the Data view's Download card); nothing else on the screen
+  changes. `drishti.py data get --wait` (and `DRISHTI_WAIT_BUSY=1` for every command) waits and tries again, printing the same words.
+  Admin → Health gains the Busy protection card (memory after clean-up, loads running, request handlers busy, disk, with warn and wait
+  markers; the last refusals) and the operator override (Automatic, Let everything through, Hold all new heavy work; a reason required,
+  ends by itself, audited as `busy-override`); `GET /api/v1/admin/busy`, `PUT /api/v1/admin/busy/override`. Settings `drishti.admission.*`
+  (OPERATIONS.md 12.5, CONFIGURATION.md).
 - **One competitive analysis.** The older comparison page (`/about/competitive`, from `drishti-console/config/competitive.yaml`: product categories, no vendors) is retired; its address leads to the Help guide *Competitive analysis* (`docs/strategy/COMPETITIVE_ANALYSIS.md`, vendor by vendor, administrators only). Administrators reach it from the Help menu, the Help centre and About; the footer link is gone; `competitive.yaml` and its CONFIGURATION entry removed.
 - **Why it moved follows the active theme.** The VaR page's *Why it moved* view drew in the renderer library's own default palette (parchment whenever the computer was in light mode) instead of the theme picked in the console; it now takes the active theme and follows a switch at once.
 - **Construct your basket opens only when asked** (the link, Alt+B or + basket), never by itself when a basket kept in the browser or a saved basket opens.

@@ -377,6 +377,7 @@ env:
   - { name: DRISHTI_REDIS_PASSWORD, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's password (secret)" }
   - { name: DRISHTI_SERVER, by: tools, default: ~, sets: "drishti.py", meaning: "The server the command line talks to" }
   - { name: DRISHTI_TOKEN, by: tools, default: ~, sets: "drishti.py", meaning: "A personal API token for the command line and tools (secret)" }
+  - { name: DRISHTI_WAIT_BUSY, by: tools, default: "false", sets: "drishti.py", meaning: "1: every command waits when the server is busy (503 DRS-9501 to DRS-9505, busy protection) for its Retry-After and tries again, three times at most (data get --wait does the same for one download)" }
   - { name: DRISHTI_DRAIN_TOKEN, by: tools, default: ~, sets: "rolling.py, deploy/bin/drishti-node.sh", meaning: "An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI_DRAIN_TOKEN_FILE, else DRISHTI_TOKEN)" }
   - { name: DRISHTI_DRAIN_WAIT, by: tools, default: "90", sets: "deploy/bin/drishti-node.sh", meaning: "Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop)" }
   - { name: DRISHTI_NODE_URL, by: tools, default: "http://localhost:18480", sets: "deploy/bin/drishti-node.sh", meaning: "The server the stop hook drains and checks" }
