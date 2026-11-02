@@ -275,4 +275,31 @@
   drawCal();
   drawLines();
   changed();
+
+  // Busy protection (docs/admin/OPERATIONS.md "Busy protection"): the download did not start; the card counts down the server's Retry-After
+  // and starts it again by itself (three times at most); the selection is kept.
+  var busyHost = $("[data-busy-host]");
+  if (busyHost && busyHost.getAttribute("data-busy") && window.DrishtiBusy) {
+    var raw = JSON.parse(busyHost.getAttribute("data-busy"));
+    var bp = window.DrishtiBusy.problem(raw);
+    busyHost.__busyTries = parseInt(raw.tries || "0", 10) || 0;
+    busyHost.__busyAt = Date.now();
+    var again = function () {
+      var u = $("[data-download]").href;
+      location.assign(u + (u.indexOf("?") >= 0 ? "&" : "?") + "tries=" + busyHost.__busyTries);
+      setTimeout(function () {                              // still here: the download started (a refusal comes back as a page)
+        window.DrishtiBusy.done(busyHost);
+        busyHost.textContent = "";
+        var p = document.createElement("p");
+        p.className = "text-muted-d dv-small";
+        p.setAttribute("role", "status");
+        p.textContent = "The download has started: see your browser's downloads.";
+        busyHost.appendChild(p);
+      }, 4000);
+    };
+    if (bp) {
+      window.DrishtiBusy.render(busyHost, bp, { retry: again, keep: "your selection is kept and you can keep working on other pages.",
+        cancel: function () { window.DrishtiBusy.done(busyHost); busyHost.textContent = ""; }, cli: cli(query()) + " --wait" });
+    }
+  }
 }());

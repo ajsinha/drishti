@@ -63,6 +63,15 @@ async def login(request: Request):
     try:
         profile = await request.app.state.backend.login(user, password, auth.service())
     except BackendError as e:
+        from core.busy import fields, problem as busy_problem
+        busy = fields(e)
+        if busy:                       # busy protection: sign-ins wait a moment; the page counts down and signs in by itself
+            if request.headers.get("x-drishti-busy") == "1":
+                return busy_problem(e)
+            busy["code"] = e.code
+            r = render(request, "auth/login.html", status_code=503, next=target, busy=busy, user=user)
+            r.headers["Retry-After"] = str(busy["retryAfterSeconds"])
+            return r
         msg = {"DRS-6005": "This account is locked after repeated failures. Try again later or ask an administrator."}.get(
             e.code, "Unknown user or wrong password." if e.status in (401, 404) else f"Sign-in unavailable: {e.detail}")
         return render(request, "auth/login.html", status_code=401 if e.status < 500 else 503, next=target, error=msg)

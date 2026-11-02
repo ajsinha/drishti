@@ -104,6 +104,10 @@ def local_zone(request: Request) -> tuple[str, str]:
 
 def problem(e) -> JSONResponse:
     """A server problem as the JSON the collaboration pages read (``code``, ``detail``), with the server's ``Retry-After`` passed on."""
+    from core.busy import is_busy, problem as busy_problem
+
+    if is_busy(e):
+        return busy_problem(e)                                     # busy protection: 503, Retry-After and the calm words
     headers = {"Retry-After": str(e.retry_after)} if getattr(e, "retry_after", None) else None
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status, headers=headers)
 

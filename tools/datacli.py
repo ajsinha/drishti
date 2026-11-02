@@ -33,7 +33,7 @@ EPILOG = ("examples:\n  drishti.py data get                                  lis
           "is not empty; the --where lines are joined by AND. Your entitlements and masks apply, and the server audits each download.")
 
 
-def download(api, path: str, out, ApiError, CliError) -> tuple[int, dict]:
+def download(api, path: str, out, ApiError, CliError, problem_error=None) -> tuple[int, dict]:
     """A GET whose answer is copied to the binary file ``out`` as it arrives, never held whole: the bytes written and the answer's headers."""
     headers = {"Accept": "application/gzip, application/json;q=0.5"}
     if api.token:
@@ -49,6 +49,8 @@ def download(api, path: str, out, ApiError, CliError) -> tuple[int, dict]:
             return n, dict(r.headers)
     except urllib.error.HTTPError as e:
         raw = e.read()
+        if problem_error is not None:                    # the server's words, a busy refusal's Retry-After (busy protection)
+            raise problem_error(e.code, raw, e.headers, str(e.reason)) from None
         try:
             j = json.loads(raw)
         except ValueError:
@@ -61,6 +63,18 @@ def download(api, path: str, out, ApiError, CliError) -> tuple[int, dict]:
 def register(d, add, srv_d, ctx: dict) -> None:
     """Adds ``data get`` to the ``data`` group."""
     Api, ApiError, CliError, say_json, load_date, q = (ctx[k] for k in ("Api", "ApiError", "CliError", "say_json", "load_date", "q"))
+    problem_error, busy_wait = ctx.get("problem_error"), ctx.get("busy_wait")
+
+    def fetch(api, path: str, out) -> tuple[int, dict]:
+        """The download; with --wait a busy refusal (nothing written yet) is waited for and asked again, three times at most."""
+        tries = 0
+        while True:
+            try:
+                return download(api, path, out, ApiError, CliError, problem_error)
+            except ApiError as e:
+                if busy_wait is None or not busy_wait(api, e, tries):
+                    raise
+                tries += 1
 
     def listing(api, a) -> int:
         r = api.json("GET", "/api/v1/data")
@@ -95,12 +109,12 @@ def register(d, add, srv_d, ctx: dict) -> None:
             return 0
         out = a.output or f"{a.dataset}_{date or 'latest'}.jsonl.gz"
         if out == "-":
-            download(api, base + "/rows" + query, sys.stdout.buffer, ApiError, CliError)
+            fetch(api, base + "/rows" + query, sys.stdout.buffer)
             return 0
         part = pathlib.Path(out + ".part")
         try:
             with open(part, "wb") as f:
-                n, headers = download(api, base + "/rows" + query, f, ApiError, CliError)
+                n, headers = fetch(api, base + "/rows" + query, f)
             part.replace(out)
         finally:
             part.unlink(missing_ok=True)
@@ -114,4 +128,6 @@ def register(d, add, srv_d, ctx: dict) -> None:
     p.add_argument("--columns", help="the columns, comma-separated (default every column you may see)")
     p.add_argument("--where", action="append", help="a filter line, attribute operator value (repeat it: the lines are joined by AND)")
     p.add_argument("-o", "--output", help="the file to write (default <dataset>_<date>.jsonl.gz; - for standard output)")
+    p.add_argument("--wait", dest="wait_busy", action="store_true", help="when the server is busy (503 DRS-9503, busy protection), wait its "
+                   "Retry-After and try again by itself, three times at most (DRISHTI_WAIT_BUSY=1 does the same for every command)")
     p.add_argument("--count", action="store_true", help="show the row count and the selection in words and as a SQL-like line; download nothing")

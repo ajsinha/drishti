@@ -1,0 +1,54 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* Busy protection's calm message in place (docs/admin/OPERATIONS.md "Busy protection"; mock-up A): a countdown ring driven by the server's
+   Retry-After, Try now and Cancel; and Admin -> Health's "Busy protection" card. */
+.busy-card { display: flex; gap: 14px; align-items: flex-start; padding: 12px 14px; margin: 8px 0; border-left: 3px solid var(--d-warn);
+  border-radius: var(--d-radius, 6px); background: var(--d-surface-2); color: var(--d-ink); }
+.busy-ring { position: relative; flex: 0 0 auto; width: 46px; height: 46px; }
+.busy-ring svg { width: 46px; height: 46px; transform: rotate(-90deg); }
+.busy-ring circle { fill: none; stroke-width: 4; }
+.busy-ring .busy-track { stroke: var(--d-border); }
+.busy-ring .busy-arc { stroke: var(--d-warn); stroke-linecap: round; transition: stroke-dashoffset .9s linear; }
+.busy-ring span { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font: 600 11px var(--d-font-mono); }
+.busy-body { flex: 1 1 auto; min-width: 0; }
+.busy-title { display: block; font-weight: 600; margin-bottom: 2px; }
+.busy-text { margin: 0 0 8px; color: var(--d-ink); }
+.busy-actions { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.busy-ref { display: block; margin-top: 6px; color: var(--d-muted); font: 11px var(--d-font-mono); }
+.busy-auto { color: var(--d-muted); font-size: 12px; }
+/* Admin -> Health: the Busy protection card */
+.busy-health .busy-state { font-size: 12px; padding: 1px 8px; border-radius: 10px; background: var(--d-fill); }
+.busy-health .busy-state.wait { background: var(--d-bad); color: var(--d-on-accent); }
+.busy-health .busy-state.warn { background: var(--d-warn); color: var(--d-on-accent); }
+.busy-health .busy-state.ok { background: var(--d-ok); color: var(--d-on-accent); }
+.busy-gauge { margin: 10px 0; }
+.busy-gauge-head { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; }
+.busy-gauge-head b { font-weight: 600; }
+.busy-gauge-head .busy-num { font-family: var(--d-font-mono); }
+.busy-bar { position: relative; height: 8px; border-radius: 4px; background: var(--d-fill); margin: 4px 0 2px; }
+.busy-bar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--d-ok); }
+.busy-bar i.warn { background: var(--d-warn); }
+.busy-bar i.wait { background: var(--d-bad); }
+.busy-bar u { position: absolute; top: -3px; bottom: -3px; width: 2px; text-decoration: none; }
+.busy-bar u.warn { background: var(--d-warn); }
+.busy-bar u.wait { background: var(--d-bad); }
+.busy-note { color: var(--d-muted); font-size: 12px; }
+.busy-override { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--d-border); border-radius: var(--d-radius, 6px); }
+.busy-override .busy-modes { display: inline-flex; gap: 4px; margin: 6px 0; flex-wrap: wrap; }
+.busy-override .busy-modes label { cursor: pointer; padding: 3px 10px; border-radius: 12px; background: var(--d-fill); font-size: 13px; }
+.busy-override .busy-modes input { margin-right: 4px; }
+.busy-override .busy-row { display: flex; gap: 8px; align-items: center; margin: 6px 0; flex-wrap: wrap; }
+.busy-override input[type=text] { flex: 1 1 260px; }

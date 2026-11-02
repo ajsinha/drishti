@@ -41,6 +41,7 @@ import re
 import shutil
 import subprocess
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -159,15 +160,60 @@ class ApiError(CliError):
              403: " (your role or a server setting does not allow it: designing is open to everyone, approving needs an approver, Admin pages an administrator; a personal drk_ token also needs the scope for the call: design:write, design:approve, packs:admin, loads:write, bi:write, bi:approve or bi:admin, see CLI_GUIDE)"}
 
     def __init__(self, status: int, code: str | None, detail: str):
+        if code and detail and detail.startswith(code + " "):
+            detail = detail[len(code) + 1:]                      # the code is said once
         super().__init__(f"the server said {status}{' ' + code if code else ''}: {detail}{self.HINTS.get(status, '')}", 1)
         self.status = status
+        self.drs = code                                          # the DRS- code (self.code is the exit code)
+        self.body = None
+        self.retry_after = 0
+
+
+BUSY_CODE = re.compile(r"^DRS-950[1-5]$")
+BUSY_TRIES = 3
+
+
+def problem_error(status: int, raw: bytes, headers, reason: str = "") -> ApiError:
+    """The server's problem answer as an :class:`ApiError`; a busy refusal (busy protection, 503 DRS-9501 to DRS-9505) says the server's own
+    words, the same the console shows, and how to wait for it."""
+    try:
+        j = json.loads(raw)
+        j = j if isinstance(j, dict) else {}
+    except ValueError:
+        j = {}
+    code, detail = j.get("code"), j.get("detail") or j.get("message") or j.get("title")
+    err = ApiError(status, code, detail or raw[:200].decode("utf-8", "replace") or reason)
+    err.body = j or None
+    try:
+        err.retry_after = max(1, int((headers or {}).get("Retry-After") or j.get("retryAfterSeconds") or 0))
+    except (TypeError, ValueError):
+        err.retry_after = 30
+    if status == 503 and (j.get("busy") or BUSY_CODE.match(str(code or ""))):
+        err.args = (f"{(detail or '').split(code + ' ', 1)[-1]} ({code}; add --wait, or set DRISHTI_WAIT_BUSY=1, to try again by itself)",)
+    return err
+
+
+def busy_wait(api, err: Exception, tries: int) -> bool:
+    """With --wait (or DRISHTI_WAIT_BUSY=1): a busy refusal is waited for, its Retry-After, and tried again, three times at most; says so on
+    standard error in the server's words. False: give up (not busy, not waiting, or tried enough)."""
+    if not getattr(api, "wait", False) or tries >= BUSY_TRIES or not isinstance(err, ApiError) or err.status != 503:
+        return False
+    body = err.body or {}
+    if not (body.get("busy") or BUSY_CODE.match(str(err.drs or ""))):
+        return False
+    because = str(body.get("because") or body.get("title") or "the server is busy")
+    secs = err.retry_after or 30
+    print(f"{because[:1].upper() + because[1:]}; trying again in {secs} s ({err.drs}) ...", file=sys.stderr)
+    time.sleep(secs)
+    return True
 
 
 class Api:
     """A tiny REST client: Bearer token from DRISHTI_TOKEN / --token-file (never printed), JSON in and out."""
 
-    def __init__(self, base: str, token: str | None = None, user: str | None = None, timeout: float = 60):
+    def __init__(self, base: str, token: str | None = None, user: str | None = None, timeout: float = 60, wait: bool = False):
         self.base, self.token, self.user, self.timeout = base.rstrip("/"), token, user, timeout
+        self.wait = wait                                                   # busy protection: wait for a busy refusal's Retry-After and try again
 
     @classmethod
     def from_args(cls, a: argparse.Namespace) -> "Api":
@@ -180,8 +226,9 @@ class Api:
             except OSError as e:
                 raise CliError(f"cannot read --token-file {a.token_file}: {e.strerror}") from None
         token = token or os.environ.get("DRISHTI_TOKEN") or None
+        wait = getattr(a, "wait_busy", False) or os.environ.get("DRISHTI_WAIT_BUSY", "").lower() in ("1", "true", "yes")
         return cls(getattr(a, "server", None) or os.environ.get("DRISHTI_SERVER") or DEFAULT_SERVER, token,
-                   getattr(a, "user", None) or os.environ.get("DRISHTI_USER"), getattr(a, "timeout", 60))
+                   getattr(a, "user", None) or os.environ.get("DRISHTI_USER"), getattr(a, "timeout", 60), wait)
 
     def request(self, method: str, path: str, body: object = None, data: bytes | None = None, ctype: str | None = None,
                 extra: dict | None = None) -> tuple[int, bytes]:
@@ -196,29 +243,24 @@ class Api:
             data, ctype = json.dumps(body).encode("utf-8"), "application/json"
         if ctype:
             headers["Content-Type"] = ctype
-        req = urllib.request.Request(self.base + path, data=data, method=method, headers={**headers, **(extra or {})})
-        try:
-            with urllib.request.urlopen(req, timeout=self.timeout) as r:      # noqa: S310 - the URL is the operator's own --server
-                self.headers = r.headers                                       # the last answer's headers (a statement's X-Statement-Cut)
-                return r.status, r.read()
-        except urllib.error.HTTPError as e:
-            raw = e.read()
-            code = detail = None
+        tries = 0
+        while True:
+            req = urllib.request.Request(self.base + path, data=data, method=method, headers={**headers, **(extra or {})})
             try:
-                j = json.loads(raw)
-                code, detail = j.get("code"), j.get("detail") or j.get("message") or j.get("title")
-            except ValueError:
-                pass
-            err = ApiError(e.code, code, detail or raw[:200].decode("utf-8", "replace") or str(e.reason))
-            try:
-                err.body = json.loads(raw)                                      # the whole problem (a 409 DRS-9082 carries the estimate and its confirm token)
-            except ValueError:
-                err.body = None
-            raise err from None
-        except urllib.error.URLError as e:
-            raise CliError(f"cannot reach {self.base}: {e.reason}; is the server running? (--server / DRISHTI_SERVER)", 1) from None
-        except OSError as e:
-            raise CliError(f"cannot reach {self.base}: {e}", 1) from None
+                with urllib.request.urlopen(req, timeout=self.timeout) as r:  # noqa: S310 - the URL is the operator's own --server
+                    self.headers = r.headers                                   # the last answer's headers (a statement's X-Statement-Cut)
+                    return r.status, r.read()
+            except urllib.error.HTTPError as e:
+                # the whole problem rides on the error (a 409 DRS-9082 carries the estimate and its confirm token)
+                err = problem_error(e.code, e.read(), e.headers, str(e.reason))
+                if busy_wait(self, err, tries):
+                    tries += 1
+                    continue
+                raise err from None
+            except urllib.error.URLError as e:
+                raise CliError(f"cannot reach {self.base}: {e.reason}; is the server running? (--server / DRISHTI_SERVER)", 1) from None
+            except OSError as e:
+                raise CliError(f"cannot reach {self.base}: {e}", 1) from None
 
     def json(self, method: str, path: str, body: object = None, **kw: object) -> object:
         """One call (as :meth:`request`), its answer parsed as JSON; ``{}`` for an empty answer."""
@@ -1219,7 +1261,8 @@ def build_parser() -> argparse.ArgumentParser:
     la.add_argument("--source", help="where it came from (a job or system name)")
     la.add_argument("--note", help="a short note (for a failed load: why)")
     load_module("datacli", "datacli.py").register(d, add, srv_d, {"Api": Api, "ApiError": ApiError, "CliError": CliError, "say_json": say_json,
-                                                                  "load_date": load_date, "q": q})   # data get: the Data view (DATA)
+                                                                  "load_date": load_date, "q": q, "problem_error": problem_error,
+                                                                  "busy_wait": busy_wait})   # data get: the Data view (DATA)
     ls = add(d, "loads", cmd_data_loads, "data loads: the pack's load history and, with --expectations, what is due and its state (GET /api/v1/packs/{pack}/loads)",
              [srv_d], "examples:\n  drishti.py data loads --pack my-bank\n  drishti.py data loads --pack my-bank --kind trade --status failed --json")
     ls.add_argument("--pack", required=True)
