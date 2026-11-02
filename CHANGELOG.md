@@ -15,6 +15,25 @@
 -->
 # Changelog
 
+## Unreleased (2.9.10.a)
+
+### The cluster's contribution tables under load
+
+- **A contribution table asks each remote shard once.** On a sharded date, contributions by position and by trade fetched each
+  position's or trade's vector from its shard's owner in turn: about 2,000 signed `POST /api/v1/var/partial` calls one after the other
+  for a desk of 2,000 positions held elsewhere. The table's reads are now fetched ahead (`VarBook.readAhead`,
+  `ShardedVectors.batched`): one call per remote shard of up to 1,024 row sets, the shards side by side, through the new members-only
+  `POST /api/v1/var/partials` (the same signature, label, data-version and access checks as `/partial`, in `token-never`). Every part is
+  the same to the bit as the one read alone (`ShardReadAheadTest`, on one member and on each of three).
+- **One deadline per gather.** The calls made for one answer share `drishti.var.sharding.call-timeout-seconds` (30 s): the first owner
+  gets its share of the time left and its replica the rest, so a stalled owner becomes an answer from the replica or a clear
+  `503 DRS-5215` inside the client's 60 s, never a client timeout.
+- **No pinned carrier while a skeleton streams.** `ShardSkeleton.write` copies the hot file's sections with positional reads into a
+  64 KB buffer and the stream's own `write`, no longer through `Channels.newChannel(out)` (whose `synchronized` write pinned a virtual
+  thread's carrier on Java 21 when the reader was slow). The same bytes.
+- Docs: VAR_SHARDING.md section 15 (contributions under load), BENCHMARK.md section 4.3 (the cluster rows, results in
+  `tools/bench/results/2.9.10a-200k-cluster.jsonl`), API_GUIDE.md (`/partials`).
+
 ## 2.9.10 — Memory, scale and mobile; why VaR moved (2026-11-01)
 
 *2.9.9 and 2.9.10 are released together as 2.9.10.*

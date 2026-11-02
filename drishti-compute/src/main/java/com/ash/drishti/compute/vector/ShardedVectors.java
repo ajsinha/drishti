@@ -16,9 +16,16 @@
 package com.ash.drishti.compute.vector;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Supplier;
 
 /**
  * The rows of a business date sharded across Drishti*net members (VAR_SHARDING.md): the date's ordinals cut into contiguous shards (legal
@@ -27,7 +34,9 @@ import java.util.concurrent.Executors;
  * float64 vectors added in shard order, so the same set gives the same bits whichever owners answered. Exactly one answer per shard asked:
  * a shard with no live owner fails the whole sum (the remote side says why), never a partial vector.
  *
- * <p>A single row or run (a drill below a position, a trade's vector) is read the same way: here when held, else from an owner.
+ * <p>A single row or run (a drill below a position, a trade's vector) is read the same way: here when held, else from an owner. Many of
+ * them asked together (a contribution table's positions or trades: {@link #batched}) go to each remote shard in one call of up to
+ * {@link #BATCH} sets, the shards side by side; each answer is the one the single read would have had, so the parts are the same to the bit.
  */
 public final class ShardedVectors implements Vectors, SetSums {
 
@@ -50,6 +59,28 @@ public final class ShardedVectors implements Vectors, SetSums {
         /** Shard {@code shard}'s part of a set was summed here, from its rows held here (for the answer's provenance). */
         default void held(int shard, Object context) {
         }
+
+        /**
+         * The sums of many row sets of shard {@code shard}, in order, each as {@link #sum} gives it. An owner answers them in one call;
+         * this default asks them one by one.
+         */
+        default List<double[]> sumAll(int shard, List<OrdinalSet> sets, Object context) {
+            List<double[]> out = new ArrayList<>(sets.size());
+            for (OrdinalSet r : sets) {
+                out.add(sum(shard, r, context));
+            }
+            return out;
+        }
+    }
+
+    /** The most row sets one call to an owner carries (at 509 scenarios about 4 MB of float64 back). */
+    public static final int BATCH = 1024;
+
+    /** One read of a remote shard: its rows {@code [from, to)} in the shard's ordinals, as a single row or as a run. */
+    private record Read(int shard, int from, int to, boolean single) {
+        OrdinalSet set() {
+            return single ? OrdinalSet.of(from) : OrdinalSet.range(from, to);
+        }
     }
 
     /**
@@ -69,6 +100,8 @@ public final class ShardedVectors implements Vectors, SetSums {
     private final List<Part> parts;
     private final int[] starts;
     private final Remote remote;
+    /** The remote reads fetched ahead by {@link #batched}, for the thread running its work. */
+    private final ThreadLocal<Map<Read, double[]>> fetched = new ThreadLocal<>();
 
     /**
      * @param width the vector width (the date's scenarios)
@@ -174,7 +207,7 @@ public final class ShardedVectors implements Vectors, SetSums {
         if (p.held()) {
             return p.rows().value(row - p.from(), j);
         }
-        return remote.sum(p.shard(), OrdinalSet.of(row - p.from()), remote.context())[j];
+        return single(p, row)[j];
     }
 
     @Override
@@ -184,7 +217,7 @@ public final class ShardedVectors implements Vectors, SetSums {
             p.rows().copy(row - p.from(), out);
             return;
         }
-        System.arraycopy(remote.sum(p.shard(), OrdinalSet.of(row - p.from()), remote.context()), 0, out, 0, width);
+        System.arraycopy(single(p, row), 0, out, 0, width);
     }
 
     @Override
@@ -194,7 +227,7 @@ public final class ShardedVectors implements Vectors, SetSums {
             p.rows().addInto(acc, row - p.from());
             return;
         }
-        add(acc, remote.sum(p.shard(), OrdinalSet.of(row - p.from()), remote.context()));
+        add(acc, single(p, row));
     }
 
     @Override
@@ -212,7 +245,97 @@ public final class ShardedVectors implements Vectors, SetSums {
             if (p.held()) {
                 p.rows().addRangeInto(acc, a - p.from(), b - p.from());
             } else {
-                add(acc, remote.sum(p.shard(), OrdinalSet.range(a - p.from(), b - p.from()), remote.context()));
+                add(acc, read(new Read(p.shard(), a - p.from(), b - p.from(), false)));
+            }
+        }
+    }
+
+    private double[] single(Part p, int row) {
+        return read(new Read(p.shard(), row - p.from(), row - p.from() + 1, true));
+    }
+
+    /** A remote read: fetched ahead by {@link #batched} on this thread, else asked of an owner now. */
+    private double[] read(Read r) {
+        Map<Read, double[]> ahead = fetched.get();
+        double[] v = ahead == null ? null : ahead.get(r);
+        return v != null ? v : remote.sum(r.shard(), r.set(), remote.context());
+    }
+
+    /**
+     * Runs {@code work} with the remote reads it will make fetched ahead: the runs {@code ranges} ({@code [from, to)} of the date's
+     * ordinals, read as {@link #addRangeInto} reads them) and the single rows {@code rows} (as {@link #copy} and {@link #addInto} read
+     * them). The reads of each remote shard go to one owner in calls of up to {@link #BATCH} sets, every shard's calls side by side under
+     * the one deadline the remote side keeps (its {@link Remote#context()}); then {@code work} runs on this thread and finds each answer
+     * where it would have asked for it. The rows held here are read as before. A shard nobody answers fails the whole work.
+     */
+    public <T> T batched(List<int[]> ranges, int[] rows, Supplier<T> work) {
+        Map<Integer, LinkedHashSet<Read>> byShard = new TreeMap<>();
+        for (int[] r : ranges) {
+            if (r[1] <= r[0]) {
+                continue;
+            }
+            for (int i = partOf(r[0]); i < parts.size() && parts.get(i).from() < r[1]; i++) {
+                Part p = parts.get(i);
+                int a = Math.max(r[0], p.from());
+                int b = Math.min(r[1], p.to());
+                if (b > a && !p.held()) {
+                    byShard.computeIfAbsent(p.shard(), k -> new LinkedHashSet<>()).add(new Read(p.shard(), a - p.from(), b - p.from(), false));
+                }
+            }
+        }
+        for (int row : rows) {
+            Part p = parts.get(partOf(row));
+            if (!p.held()) {
+                byShard.computeIfAbsent(p.shard(), k -> new LinkedHashSet<>()).add(new Read(p.shard(), row - p.from(), row - p.from() + 1, true));
+            }
+        }
+        Map<Read, double[]> before = fetched.get();
+        if (byShard.isEmpty()) {
+            return work.get();
+        }
+        Object ctx = remote.context();
+        List<List<Read>> calls = new ArrayList<>();
+        List<CompletableFuture<List<double[]>>> asked = new ArrayList<>();
+        for (Map.Entry<Integer, LinkedHashSet<Read>> e : byShard.entrySet()) {
+            List<Read> all = new ArrayList<>(e.getValue());
+            for (int at = 0; at < all.size(); at += BATCH) {
+                List<Read> call = all.subList(at, Math.min(all.size(), at + BATCH));
+                List<OrdinalSet> sets = call.stream().map(Read::set).toList();
+                int shard = e.getKey();
+                calls.add(call);
+                asked.add(CompletableFuture.supplyAsync(() -> remote.sumAll(shard, sets, ctx), ASK));
+            }
+        }
+        Map<Read, double[]> got = before == null ? new HashMap<>() : new HashMap<>(before);
+        RuntimeException failed = null;
+        for (int i = 0; i < asked.size(); i++) {
+            try {
+                List<double[]> answers = asked.get(i).join();
+                List<Read> call = calls.get(i);
+                if (answers.size() != call.size()) {
+                    throw new IllegalStateException(answers.size() + " sums for the " + call.size() + " row sets asked of shard " + call.get(0).shard());
+                }
+                for (int k = 0; k < call.size(); k++) {
+                    got.put(call.get(k), answers.get(k));
+                }
+            } catch (CompletionException e) {
+                failed = failed != null ? failed : e.getCause() instanceof RuntimeException re ? re
+                        : new IllegalStateException("a shard's answer failed: " + e.getCause(), e.getCause());
+            } catch (RuntimeException e) {
+                failed = failed != null ? failed : e;
+            }
+        }
+        if (failed != null) {
+            throw failed;                                               // every call waited for: none left running for this request
+        }
+        fetched.set(got);
+        try {
+            return work.get();
+        } finally {
+            if (before == null) {
+                fetched.remove();
+            } else {
+                fetched.set(before);
             }
         }
     }

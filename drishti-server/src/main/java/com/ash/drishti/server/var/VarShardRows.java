@@ -78,8 +78,11 @@ final class VarShardRows {
         }
     }
 
-    /** The asking thread's caller and counters, carried to the threads that ask the owners. */
-    record Ctx(Principal principal, Stats stats) {}
+    /**
+     * The asking thread's caller and counters, carried to the threads that ask the owners, and the one deadline ({@link System#nanoTime})
+     * every call made for it keeps: {@code drishti.var.sharding.call-timeout-seconds} from when it was taken.
+     */
+    record Ctx(Principal principal, Stats stats, long deadline) {}
 
     private static final ThreadLocal<Stats> STATS = new ThreadLocal<>();
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -114,6 +117,11 @@ final class VarShardRows {
             }
 
             @Override
+            public List<double[]> sumAll(int shard, List<OrdinalSet> sets, Object context) {
+                return VarShardRows.this.sumAll(date, ccy, map, shard, digests[shard], sets, context instanceof Ctx c ? c : null);
+            }
+
+            @Override
             public void held(int shard, Object context) {
                 if (context instanceof Ctx c && c.stats() != null) {
                     c.stats().shards.add(shard);
@@ -123,7 +131,7 @@ final class VarShardRows {
 
             @Override
             public Object context() {
-                return new Ctx(NetCaller.current().map(NetCaller.Caller::principal).orElse(null), STATS.get());
+                return new Ctx(NetCaller.current().map(NetCaller.Caller::principal).orElse(null), STATS.get(), deadline());
             }
         };
     }
@@ -152,6 +160,21 @@ final class VarShardRows {
     }
 
     private double[] sum(LocalDate date, String ccy, ShardMap map, int index, String digest, OrdinalSet rows, Ctx ctx) {
+        return sumAll(date, ccy, map, index, digest, List.of(rows), ctx).get(0);
+    }
+
+    /** A deadline {@code call-timeout-seconds} from now. */
+    private long deadline() {
+        return System.nanoTime() + Duration.ofSeconds(shards.own().callTimeoutSeconds()).toNanos();
+    }
+
+    /**
+     * The sums of shard {@code index}'s row sets {@code sets}, in order, from one member: here when it holds the shard, else in one call
+     * ({@code /partial} for one set, {@code /partials} for more). Each member in turn gets a share of the time left before the context's
+     * deadline (the first owner half when a replica follows), so a stalled owner leaves time for its replica and a shard nobody answers
+     * is refused ({@code DRS-5215}) inside the deadline, never after the caller has given up.
+     */
+    private List<double[]> sumAll(LocalDate date, String ccy, ShardMap map, int index, String digest, List<OrdinalSet> sets, Ctx ctx) {
         Stats st = ctx == null ? null : ctx.stats();
         if (st != null) {
             st.shards.add(index);
@@ -160,31 +183,43 @@ final class VarShardRows {
         java.util.Optional<VarBook> here = shards.books().held(k);
         if (here.isPresent()) {
             count(st, shards.peers().self(), false, true);
-            return shards.sums().sum(here.get().store(), rows);
+            return sumHere(here.get(), sets);
         }
         List<String> order = candidates(date, map, index, digest);
         List<String> owners = shards.owners(map.shard(index));
         List<String> why = new ArrayList<>();
         int stale = 0;
-        byte[] body = request(date, ccy, map, index, digest, rows);
-        Duration timeout = Duration.ofSeconds(shards.own().callTimeoutSeconds());
+        boolean one = sets.size() == 1;
+        byte[] body = one ? request(date, ccy, map, index, digest, sets.get(0)) : request(date, ccy, map, index, digest, sets);
+        long deadline = ctx == null ? deadline() : ctx.deadline();
+        int remotes = (int) order.stream().filter(n -> !n.equals(shards.peers().self())).count();
         for (String node : order) {
             boolean replica = owners.isEmpty() || !owners.get(0).equals(node);
             if (node.equals(shards.peers().self())) {
                 try {
                     VarBook b = shards.served(date, ccy, index, map.digest(), digest);
                     count(st, node, replica, true);
-                    return shards.sums().sum(b.store(), rows);
+                    return sumHere(b, sets);
                 } catch (DrishtiException e) {
                     stale += e.errorCode() == ErrorCode.VAR_SHARD_STALE ? 1 : 0;
                     why.add(node + ": " + e.getMessage());
                     continue;
                 }
             }
+            long left = deadline - System.nanoTime();
+            if (left <= 0) {
+                why.add(node + ": not asked, the call's " + shards.own().callTimeoutSeconds() + " s were spent");
+                remotes--;
+                continue;
+            }
+            Duration timeout = Duration.ofNanos(Math.max(left / Math.max(1, remotes), Math.min(left, MIN_CALL_NANOS)));
+            remotes--;
             try {
-                PeerHttp.Answer a = shards.peers().call(node, "POST", "/api/v1/var/partial", body, ctx == null ? null : ctx.principal(), timeout);
+                PeerHttp.Answer a = shards.peers().call(node, "POST", one ? "/api/v1/var/partial" : "/api/v1/var/partials", body,
+                        ctx == null ? null : ctx.principal(), timeout);
                 if (a.status() == 200) {
-                    double[] v = answer(a.body(), map, index, digest, rows.size());
+                    List<double[]> v = one ? List.of(answer(a.body(), map, index, digest, sets.get(0).size()))
+                            : answers(a.body(), map, index, digest, sets);
                     count(st, node, replica, false);
                     return v;
                 }
@@ -198,6 +233,17 @@ final class VarShardRows {
             }
         }
         throw refused(date, map, index, why, stale);
+    }
+
+    /** The least time a member is given while the deadline allows it: two seconds. */
+    private static final long MIN_CALL_NANOS = Duration.ofSeconds(2).toNanos();
+
+    private List<double[]> sumHere(VarBook b, List<OrdinalSet> sets) {
+        List<double[]> out = new ArrayList<>(sets.size());
+        for (OrdinalSet r : sets) {
+            out.add(shards.sums().sum(b.store(), r));
+        }
+        return out;
     }
 
     private DrishtiException refused(LocalDate date, ShardMap map, int index, List<String> why, int stale) {
@@ -249,6 +295,83 @@ final class VarShardRows {
         } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
             throw new IllegalStateException(e);
         }
+    }
+
+    /** A batch of partials' request ({@code /partials}): as {@link #request} with {@code sets}, each set's rows as a bitmap's words. */
+    static byte[] request(LocalDate date, String ccy, ShardMap map, int index, String digest, List<OrdinalSet> sets) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("date", date.toString());
+        m.put("ccy", ccy);
+        m.put("shard", index);
+        m.put("map", map.digest());
+        m.put("digest", digest);
+        m.put("sets", sets.stream().map(VarShardRows::words).toList());
+        try {
+            return JSON.writeValueAsBytes(m);
+        } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    private static String words(OrdinalSet rows) {
+        long[] w = rows.words();
+        ByteBuffer b = ByteBuffer.allocate(w.length * Long.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+        b.asLongBuffer().put(w);
+        return Base64.getEncoder().encodeToString(b.array());
+    }
+
+    private static String float64(double[] sum) {
+        ByteBuffer b = ByteBuffer.allocate(sum.length * Double.BYTES).order(ByteOrder.LITTLE_ENDIAN);
+        b.asDoubleBuffer().put(sum);
+        return Base64.getEncoder().encodeToString(b.array());
+    }
+
+    private static double[] float64(String base64) {
+        ByteBuffer b = ByteBuffer.wrap(Base64.getDecoder().decode(base64)).order(ByteOrder.LITTLE_ENDIAN);
+        double[] v = new double[b.remaining() / Double.BYTES];
+        b.asDoubleBuffer().get(v);
+        return v;
+    }
+
+    /** An owner's answer to a batch: the label, each set's row count and its partial sum (float64, little-endian, base64), in order. */
+    static Map<String, Object> answers(int index, String id, String map, String digest, String node, List<OrdinalSet> sets, List<double[]> sums) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("shard", index);
+        m.put("id", id);
+        m.put("map", map);
+        m.put("digest", digest);
+        m.put("node", node);
+        m.put("rows", sets.stream().map(OrdinalSet::size).toList());
+        m.put("sums", sums.stream().map(VarShardRows::float64).toList());
+        return m;
+    }
+
+    /** Reads an owner's answer to a batch, refusing one labelled for another shard, map or data version, or another count or row list. */
+    static List<double[]> answers(byte[] body, ShardMap map, int index, String digest, List<OrdinalSet> sets) {
+        com.fasterxml.jackson.databind.JsonNode n;
+        try {
+            n = JSON.readTree(body);
+        } catch (IOException e) {
+            throw new IllegalStateException("the answer is not a batch of partial sums: " + e.getMessage());
+        }
+        com.fasterxml.jackson.databind.JsonNode rows = n.path("rows");
+        com.fasterxml.jackson.databind.JsonNode sums = n.path("sums");
+        boolean rowsMatch = rows.isArray() && rows.size() == sets.size();
+        for (int i = 0; rowsMatch && i < sets.size(); i++) {
+            rowsMatch = rows.get(i).asInt(-1) == sets.get(i).size();
+        }
+        if (n.path("shard").asInt(-1) != index || !map.digest().equals(n.path("map").asText()) || !digest.equals(n.path("digest").asText())
+                || !rowsMatch || !sums.isArray() || sums.size() != sets.size()) {
+            throw new IllegalStateException("the partial sums are labelled S" + n.path("shard").asText() + " of map "
+                    + n.path("map").asText().substring(0, Math.min(16, n.path("map").asText().length())) + " at data version "
+                    + n.path("digest").asText().substring(0, Math.min(16, n.path("digest").asText().length())) + " for " + sums.size()
+                    + " sets; S" + index + " for " + sets.size() + " sets was asked: refused");
+        }
+        List<double[]> out = new ArrayList<>(sets.size());
+        for (com.fasterxml.jackson.databind.JsonNode v : sums) {
+            out.add(float64(v.asText()));
+        }
+        return out;
     }
 
     /** The rows of a partial's request. */

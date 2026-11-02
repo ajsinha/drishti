@@ -20,6 +20,7 @@ import com.ash.drishti.compute.vector.OrdinalSet;
 import com.ash.drishti.compute.vector.ParallelSums;
 import com.ash.drishti.compute.vector.PermutedVectors;
 import com.ash.drishti.compute.vector.RowSpill;
+import com.ash.drishti.compute.vector.ShardedVectors;
 import com.ash.drishti.compute.vector.VectorStore;
 import com.ash.drishti.compute.vector.Vectors;
 import java.io.IOException;
@@ -682,6 +683,43 @@ public final class VarBook {
             return raced;
         }
         return acc;
+    }
+
+    /**
+     * The store's runs {@link #positionVector} reads for position {@code index} when asked now, in order (none: kept from an earlier ask,
+     * or read from the hot file's position rows). A put-together date fetches them ahead in one batch ({@code ShardedVectors.batched}).
+     */
+    public void forEachPositionRead(int index, OrdinalSet.RunConsumer f) {
+        if (layer != null) {
+            forEachPositionRun(index, f);
+        } else if (hot == null && !positionCache.containsKey(index) && posTo[index] > posFrom[index]) {
+            f.run(posFrom[index], posTo[index]);
+        }
+    }
+
+    /**
+     * Runs {@code work}, which reads the vectors of positions {@code positions} (whole, or the part of each in {@code set}) and of trades
+     * {@code trades}, with every remote read it makes fetched ahead: on a put-together date each remote shard is asked once (in calls of
+     * up to {@link ShardedVectors#BATCH} sets), the shards side by side, instead of once per position or trade in turn (VAR_SHARDING.md
+     * section 15). The vectors are the same to the bit: each read is the one {@code work} would have made. Elsewhere {@code work} just runs.
+     */
+    public <T> T readAhead(OrdinalSet set, int[] positions, int[] trades, java.util.function.Supplier<T> work) {
+        if (!(store instanceof ShardedVectors sv)) {
+            return work.get();
+        }
+        List<int[]> ranges = new ArrayList<>();
+        java.util.stream.IntStream.Builder rows = java.util.stream.IntStream.builder();
+        for (int pi : positions) {
+            if (positionWithin(pi, set)) {
+                forEachPositionRead(pi, (f, t) -> ranges.add(new int[] {f, t}));
+            } else {
+                forEachPositionMemberIn(pi, set, rows::add);             // part of a position: its trades in the scope, one by one
+            }
+        }
+        for (int o : trades) {
+            rows.add(o);
+        }
+        return sv.batched(ranges, rows.build().toArray(), work);
     }
 
     /** A trade's vector (a copy). */
