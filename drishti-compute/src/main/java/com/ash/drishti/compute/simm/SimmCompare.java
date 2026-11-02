@@ -98,6 +98,7 @@ public final class SimmCompare {
         }
         boolean cr = false;
         boolean ws = false;
+        boolean hvr = false;
         Map<String, Simm.Risk> byKey = new LinkedHashMap<>();
         for (Simm.Bucket bk : x.buckets) {
             for (int m : bk.members) {
@@ -111,8 +112,12 @@ public final class SimmCompare {
                 if (o == null || Math.abs(o.ws - r.ws) > 1e-9 * Math.max(1, Math.abs(o.ws))) {
                     ws = true;
                     cr |= o != null && Math.abs(o.cr - r.cr) > 1e-12;
+                    hvr |= o != null && Math.abs(o.hvr - r.hvr) > 1e-12;
                 }
             }
+        }
+        if (hvr) {
+            return "historical volatility ratio (the vega WS and its concentration factor)";
         }
         if (cr) {
             return "concentration factor (WS)";

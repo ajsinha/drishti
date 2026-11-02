@@ -2122,6 +2122,12 @@ and the fix for the codes that need more than the meaning.
 | DRS-5325 | 422 | sensitivity twice | a record carries the same factor and measure twice: the record is refused and counted |
 | DRS-5326 | 422 | sensitivity run twice | a source already delivered the full run of the date: the second batch is refused (send a restatement) |
 | DRS-5329 | 502 | FRTB-SA parameters refused | a parameter file (`frtb-sa-sbm.yaml`, `frtb-sa-drc-rrao.yaml`) is missing, incomplete or out of range: every FRTB-SA request answers with the file, the key and the reason; the server itself runs |
+| DRS-5331 | 422 | not a SIMM factor | an element has no SIMM mapping in the dictionary, a tenor or expiry off SIMM's vertices, a bucket the version does not have, an equity repo, or a measure its class does not have: left out of SIMM, counted and named in the answer's provenance ([SIMM_GUIDE.md section 11](SIMM_GUIDE.md#11-refusals-and-error-codes)) |
+| DRS-5332 | 422 | trade in two netting sets | a trade is listed in two netting sets on the date: kept in both, flagged in each answer's provenance |
+| DRS-5333 | 502 | SIMM version not installed | the version the CSA names (or the one asked for, or the default) has no installed parameter file, or its file is refused with every missing key named: the netting set is not computed; `GET /api/v1/simm/versions` lists the files |
+| DRS-5334 | 422 | regime not recognised | a CSA's regime code the version does not list: ignored and named in the answer |
+| DRS-5335 | 422 | record spans netting sets | a position record whose trades lie in several netting sets: left out of SIMM and counted (send it by trade) |
+| DRS-5336 | 422 | vega without implied volatility | a rates or credit `VEGA` with no `IMPLIED_VOL`: left out of SIMM and counted |
 | DRS-9201 | 503 | Compute off | compute is off on this server (HTTP 503): `compute.enabled` in `config/compute/compute.yaml` ([OPERATIONS.md](../admin/OPERATIONS.md#1-switch-it-on)) |
 | DRS-9202 | 409 | Compute refused | a compute request or decision refused before any work (HTTP 409): an unknown pool, requirements waiting for approval or rejected, an environment approved but not built, or four eyes (the person who asked cannot approve); the message says which ([OPERATIONS.md › Compute workers, section 10](../admin/OPERATIONS.md#10-when-something-is-wrong)) |
 | DRS-9203 | 429 | Compute busy | The pool's queue for the request's class is full |
@@ -3249,6 +3255,33 @@ the answer is then *not the regulatory figure*); `scope=EXAMPLE` runs the design
 Refusals: `400` for a bad switch value, an override naming no parameter or leaving its range, or a scope word the server cannot resolve;
 `403` for a role that sees the scope only in aggregate; `404 DRS-1002` when no connector serves `position-sensitivity`; `502 DRS-5329`
 when a parameter file is refused (the codes `DRS-5321` to `DRS-5326` count the load's refusals in each answer).
+
+## ISDA SIMM: `/api/v1/simm`
+
+Initial margin per netting set and regime, collect and post, from the same position sensitivities, as the caller (the guide:
+[SIMM_GUIDE.md](SIMM_GUIDE.md), section 9; the data contract and the computed kind `simm-result`: [SIMM.md](../contracts/SIMM.md)). Every
+endpoint takes `nettingSet` (a netting set id, `EXAMPLE` for the hand-built examples, or any VaR scope for an analytic; `scope` is the
+same), `version` (another installed version; default the CSA's), the switches `concentration` and `hvr` (`on`, `off`), `override=key=value`
+(repeatable; the answer is then *not the regulatory figure*) and `asOf`. No figure is computed until the bank installs its licensed
+parameter file (`drishti.simm.parameters-dir`).
+
+| Endpoint | What |
+|---|---|
+| `GET /api/v1/simm?nettingSet=…` | `IM_COLLECT`, `IM_POST`, the binding regimes, `SIMM_*`, `ADDON_*`, `BY_PRODUCT_CLASS`, `BY_RISK_CLASS` (delta, vega, curvature, base correlation, post total), `SIMM_VERSION`, `PARAMETER_SHA256`, `MISSING_TRADES`, `SWITCHES`, `OVERRIDES`, `REGULATORY`, `PROVENANCE` |
+| `GET /api/v1/simm/netting-sets?counterparty=` | every netting set of the date the caller may see: computed (or *computed, incomplete*), the stored figure labelled *stored, not computed*, or why not computed; the counterparty's call; the sums (no netting across netting sets) |
+| `GET /api/v1/simm/explain?nettingSet=…&direction=post&class=Equity` | per charge the buckets with K_b, the net, the capped S_b and the factors (s, RW and its key, HVR, CR, WS); the curvature's θ, λ and scale; the concentration factors above 1; the add-ons |
+| `GET /api/v1/simm/against?nettingSet=…` | the margin beside the counterparty's call (`crif-external`) per side and risk class, the difference and the status (agreed, within tolerance, dispute, no call) |
+| `GET /api/v1/simm/versions` | the parameter files found: installed with their SHA-256 and effective date, or refused with the reason; the default version |
+| `GET /api/v1/simm/playground?nettingSet=…&side=post&compare=hvr=off` | the answer with the Choices panel (`simm-parameters`, `concentration`, `hvr`), the grid of the side's WS and CVR rows with their formulas, the Explain steps, and with `compare` both runs and the difference per class with the bucket and the step, in words |
+| `GET /api/v1/simm/playground.xlsx?nettingSet=…&side=…` | the workbook of live formulas (Main, Config with the switch and side cells, Data, WS, Buckets, Classes, Curvature, Add-ons, Explain, Provenance); saves a recipe (`saveRecipe=false` not to); refused over `drishti.simm.max-factors` |
+| `GET /api/v1/simm/playground/template` | the same workbook on the hand-built examples with every parameter cell empty |
+| `POST /api/v1/simm/playground/recipes?nettingSet=…` | saves the run as a recipe: `{id, knownAt, version, switches, overrides, parametersHash, inputsDigest, figures, command}` |
+| `GET /api/v1/simm/playground/recipes/{id}` | replays a recipe with its own parameter file: the answer, `recipe` and `reproduced` in words |
+
+Refusals: `400` for a bad switch value, an override naming no parameter, a multiplier below 1, or a schedule-IM CSA; `403` when SIMM is
+switched off (`drishti.simm.enabled`) or the caller sees none of the netting set's trades; `404 DRS-1002` when no connector serves
+`position-sensitivity` or `netting-set`; `502 DRS-5333` when the version is not installed or its file is refused (`DRS-5331`, `DRS-5332`,
+`DRS-5334`, `DRS-5335`, `DRS-5336` count what each answer left out).
 
 ## Exposure engine: `/api/v1/exposure`
 

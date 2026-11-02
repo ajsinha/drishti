@@ -52,6 +52,22 @@
   (kept beside it as `.retired-<time>.bak` and in the history); an edited `var-whatif.yaml` stays, its kind listed as obsolete under
   Admin → Connectors → Template updates.
 
+- **ISDA SIMM, computed per netting set, collect and post (2.9.11 row 4; [SIMM_GUIDE.md](docs/guides/SIMM_GUIDE.md), tutorial 32).** The
+  server's Java engine computes SIMM from the same position sensitivities as FRTB-SA: each netting set's trades from the netting-set
+  records, its CSA's version, regimes, calculation currency and add-ons when the CSA carries them; delta, vega, curvature and base
+  correlation per risk class with the concentration factor at the rules' grain (per currency for rates, per issuer and seniority for
+  credit, per factor otherwise), f_kl and g_bc, every bucket's net capped at its K, the residual buckets outside the root, vega σ from the
+  risk weight × HVR, HVR_IR⁻² on rates curvature; the risk classes within a product class with ψ and the four product classes added; the
+  CSA's fixed, notional and multiplier add-ons. Post is every sensitivity negated. **ISDA's numbers are licensed: none ships.** The bank
+  installs one parameter file a version in `drishti.simm.parameters-dir` (the structure `docs/architecture/capital-parameters/simm.yaml`,
+  every number empty); a version with a number missing is refused (`DRS-5333`) and every figure carries the version and the file's
+  SHA-256. `SIMM` opens the netting-set list with each one's breakdown and the margin against the counterparty's call (`crif-external`);
+  netting sets without sensitivities show the stored figure, labelled; any VaR scope is an analytic. `PLAY SIMM <netting set>`: the
+  Choices panel (the version, concentration, HVR), the side, a switch compared in words, recipes replayed to the cent (`PLAY SIMM RUN
+  <id>`), and the workbook of live formulas with the switches and the side as Config cells (recalculated by LibreOffice in the tests and
+  equal to the engine to the cent); the template workbook has every parameter cell empty. API `/api/v1/simm/...`; CLI `drishti.py simm`,
+  `play simm`; settings `drishti.simm.*` (`enabled` switches it off); codes `DRS-5331` to `DRS-5336`. The tests use a toy parameter file
+  (not ISDA's).
 - **FRTB-SA, computed for any scope (2.9.11 rows 1 and 2; [FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), tutorial 30).** Position
   sensitivities (`SENS`) and the factor dictionary (`RFAC`) are kinds of the market-risk pack, served by risk-store and loaded by `lake
   demo`; the server's Java engine computes the FRTB standardised approach from them: the sensitivities-based method (delta, vega and

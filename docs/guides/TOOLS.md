@@ -116,6 +116,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
 | `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground`, `var explain` | [5.12](#512-var) |
 | `sens`, `frtb`, `play` | `sens show`, `sens factors`, `frtb sa`, `frtb explain`, `frtb contributions`, `play frtb` | [5.14](#514-sens-frtb-and-play-frtb) |
+| `simm`, `play` | `simm show`, `simm list`, `simm explain`, `simm against`, `simm versions`, `play simm` | [5.15](#515-simm-and-play-simm) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -1389,6 +1390,27 @@ Position sensitivities and FRTB-SA as the token's user sees them (`tools/frtbcli
 drishti-console/.venv/bin/python tools/drishti.py frtb sa DESK:DESK-RATES
 drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --compare girr-correlation=exact
 drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --xlsx frtb-cases.xlsx
+```
+
+### 5.15 simm and play simm
+
+ISDA SIMM as the token's user sees it (`tools/simmcli.py`; [SIMM_GUIDE.md](SIMM_GUIDE.md)):
+
+- `simm show NETTING-SET`: IM to collect and post, by product class and by risk class (delta, vega, curvature), the binding regimes, the
+  add-ons; `EXAMPLE` is the hand-built examples, any VaR scope an analytic. `simm list [--counterparty CP-...]`: every netting set
+  (computed, stored and labelled, or why not computed) and the sums. `simm explain NETTING-SET [--direction post] [--class Equity]`: the
+  buckets, factors, CR, WS, K_b and S_b. `simm against NETTING-SET`: the margin against the counterparty's call. `simm versions`: the
+  installed parameter files and the refused ones with why. Every one takes `--version`, `--concentration on|off`, `--hvr on|off`,
+  `--override KEY=VALUE` (repeatable; not the regulatory figure) and `--date`.
+- `play simm NETTING-SET [--side post] [--compare SWITCH=VALUE] [--xlsx FILE] [--save]`: the playground: the switches, a comparison in
+  words, the workbook of live formulas (a recipe saved with it), a recipe; `play simm --recipe SM-...` replays a recipe and exits 1 when it
+  does not reproduce to the cent.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py simm versions
+drishti-console/.venv/bin/python tools/drishti.py simm show NS-ALDERSHOT-LDN
+drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --compare concentration=off
+drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot.xlsx
 ```
 
 ## 6. Store loaders: `tools/load-*.sh`

@@ -73,6 +73,13 @@ class SimmServiceTest {
         assertThat(r.collect().charge("Credit", "CreditQ", Simm.DELTA).margin).isCloseTo(786_129.76, offset(0.005));
         assertThat(r.imPost()).isLessThan(r.imCollect());              // the swaption's curvature falls on one side
         assertThat(r.provenance()).containsKey("Inputs");
+        SimmService.Run on = svc.run(null, NS, COB, null, null, SimmChoices.defaults(), null);
+        SimmService.Run off = svc.run(null, NS, COB, null, null, SimmChoices.defaults().with("hvr", "off"), null);
+        assertThat(com.ash.drishti.compute.simm.SimmCompare.compare(on.collect(), off.collect(), "hvr: on → off").words())
+                .isEqualTo("hvr: on → off raises the margin by 5,633,711.74 (2.6%), most of it in Equity Equity vega, bucket 10, at the historical "
+                        + "volatility ratio (the vega WS and its concentration factor) step.");
+        assertThat(r.imCollect()).isCloseTo(1_231_385.86, offset(0.005));
+        assertThat(r.imPost()).isCloseTo(1_223_938.71, offset(0.005));
     }
 
     @Test

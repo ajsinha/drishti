@@ -47,7 +47,7 @@ with the breakdown by product class, risk class, measure (delta, vega, curvature
 concentration factors applied, and the add-ons; the margin against the counterparty's call, to explain a dispute; and the same model
 over any other scope as an analytic (a desk's SIMM, labelled *analytic, not a margin*).
 
-**Commands (planned; names fixed at build).**
+**Commands (built in 2.9.11; [SIMM_GUIDE.md section 9](../guides/SIMM_GUIDE.md#9-api-command-line-and-settings)).**
 
 | What | Command | API | CLI |
 |---|---|---|---|
@@ -58,10 +58,10 @@ over any other scope as an analytic (a desk's SIMM, labelled *analytic, not a ma
 | Part | Status | Where |
 |---|---|---|
 | Sensitivities: the shared `position-sensitivity` (SENS) and the dictionary `risk-factor` (RFAC) | contracts `planned`, demo data generated | [FRTB.md section 3.2](FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens), section 3.2 here |
-| The CSA's SIMM terms (version, regimes, calculation currency, add-ons) | needed on the `csa` master; not in its contract yet | section 4 |
+| The CSA's SIMM terms (version, regimes, calculation currency, add-ons) | read from the `csa` records when present (`SIMM_VERSION`, `IM_COLLECT_REGIMES`, `IM_POST_REGIMES`, `IM_CALCULATION_CURRENCY`, `IM_MODEL`, `IM_FIXED_ADDON`, `IM_PRODUCT_MULTIPLIERS`, `IM_ADDON_FACTORS`, `IM_DISPUTE_TOLERANCE`); not in its contract yet | section 4 |
 | Notional add-on lines (`simm-addon`) and the counterparty's CRIF (`crif-external`) | drafts | sections 3.3, 3.4 |
-| The parameter file per SIMM version, shipped empty | draft structure | section 6.1 |
-| The engine, the computed kind `simm-result`, the playground | design | sections 6 to 9 |
+| The parameter file per SIMM version, shipped empty | built: the structure `capital-parameters/simm.yaml`, read and checked by the engine (`DRS-5333`) | section 6.1, [SIMM_GUIDE.md section 4](../guides/SIMM_GUIDE.md#4-the-licensed-parameter-file) |
+| The engine, the computed kind `simm-result` (the answer of `GET /api/v1/simm`), the playground | built (the contributions and incremental IM of section 9.2 and the CRIF export are not yet) | sections 6 to 9, [SIMM_GUIDE.md](../guides/SIMM_GUIDE.md) |
 
 ## 2. The measure in one page
 
@@ -350,8 +350,8 @@ tolerance). It explains *why* the numbers differ, and never recomputes the count
 
 ## 10. Validation, errors and data quality
 
-The sensitivity checks of [FRTB.md section 10](FRTB.md#10-validation-errors-and-data-quality) hold. SIMM adds (codes proposed, range
-`DRS-533x`):
+The sensitivity checks of [FRTB.md section 10](FRTB.md#10-validation-errors-and-data-quality) hold. SIMM adds (range `DRS-533x`; also
+`DRS-5336`, a rates or credit vega without `IMPLIED_VOL`, left out and counted):
 
 | Check | Outcome | Words |
 |---|---|---|

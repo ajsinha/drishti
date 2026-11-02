@@ -127,6 +127,10 @@ AREAS = [
     Area("reports", "Report definitions: `config/reports/`",
          "One YAML per regulatory report (`drishti.regulatory.reports-dir`), read when a run is made: its rows, columns, checks, outputs "
          "and sign-off chain ([VAR_GUIDE.md section 18.14](../guides/VAR_GUIDE.md#1814-regulatory-reports-definitions-runs-checks-and-sign-off))."),
+    Area("simm", "SIMM parameter files: `drishti.simm.parameters-dir`",
+         "One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `./config/simm`), read and checked at start: the bank's "
+         "licensed numbers, never shipped. The structure is `docs/architecture/capital-parameters/simm.yaml`, every number empty; a version "
+         "with a number missing is refused with `DRS-5333` ([SIMM_GUIDE.md section 4](../guides/SIMM_GUIDE.md#4-the-licensed-parameter-file))."),
     Area("ui-kit", "The UI kit: `config/ui-kit/brand.yaml`",
          "The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`)."),
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
