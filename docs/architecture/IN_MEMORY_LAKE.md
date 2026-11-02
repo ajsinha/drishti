@@ -15,7 +15,7 @@
 -->
 # The in-memory lake: Delta tables that never touch a disk
 
-**Status: designed, not built; the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
+**Status: designed, not built; planned for 2.9.13 (product owner, 2026-11-02); the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
 the owner node binds the pack and the others reach it through the pack; nothing leaves but downloads; whole unpinned tables may be
 evicted; Iceberg as well as Delta; news first; compaction automated so the memory keeps optimizing itself. The build checklist is in
 [section 15](#15-the-build-checklist).
