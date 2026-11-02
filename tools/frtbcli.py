@@ -176,9 +176,10 @@ def register(groups, srv, ctx: dict) -> None:
             p.add_argument("--top", type=int, default=25)
         p.set_defaults(func=cmd, frtb_cmd=name)
 
-    play = groups.add_parser("play", help="play: the playgrounds from the command line (play frtb; PLAY VAR is drishti.py var playground)",
+    play = groups.add_parser("play", help="play: the playgrounds from the command line (play frtb, play simm; PLAY VAR is drishti.py var playground)",
                              epilog=EPILOG_PLAY, formatter_class=argparse.RawDescriptionHelpFormatter)
     ps = play.add_subparsers(dest="play_cmd", required=True)
+    ctx["play_subparsers"] = ps                                              # simmcli adds play simm
     pf = ps.add_parser("frtb", help="the FRTB-SA Playground: the switches, a comparison in words, the workbook, a recipe and its replay", parents=[srv])
     pf.add_argument("scope", nargs="?")
     switches(pf)

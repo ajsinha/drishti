@@ -16,9 +16,10 @@
 package com.ash.drishti.compute.simm;
 
 /**
- * The aggregation formulas ISDA SIMM shares with FRTB-SA, with SIMM's concentration factors (SENSITIVITIES_AND_FRTB_SA.md sections 4 and
- * 8): the formulas only, proved by the design's hand-built cases 6 and 11 with toy parameters. The SIMM engine (its parameter files,
- * risk classes, vega and curvature, product classes and add-ons) is built on these with the SIMM playground (2.9.11 row 4).
+ * The aggregation formulas of ISDA SIMM (SENSITIVITIES_AND_FRTB_SA.md sections 4 and 8, docs/guides/SIMM_GUIDE.md section 5): the
+ * concentration factor, the bucket's K with f_kl, the capped bucket net, the sum across buckets with g_bc and the residual bucket outside
+ * the root, the curvature scaling SF(t), θ and λ, and the product class's margin with ψ. {@link Simm} computes every figure through these;
+ * the design's hand-built cases 6 and 11 prove them with toy parameters.
  */
 public final class SimmMath {
 
@@ -56,5 +57,51 @@ public final class SimmMath {
             }
         }
         return Math.sqrt(Math.max(0, sum));
+    }
+
+    /** The capped bucket net {@code S_b = max(min(Σ WS, K_b), −K_b)} (SIMM always caps; paragraphs 7(d), 8(d)). */
+    public static double capped(double net, double k) {
+        return Math.max(Math.min(net, k), -k);
+    }
+
+    /**
+     * Across buckets: {@code sqrt(max(0, Σ K_b² + Σ_{b≠c} γ_bc · g_bc · S_b · S_c))} with {@code S} already capped; {@code g} null for 1.
+     */
+    public static double acrossBuckets(double[] k, double[] s, double[][] gamma, double[][] g) {
+        double sum = 0;
+        for (int b = 0; b < k.length; b++) {
+            sum += k[b] * k[b];
+            for (int c = 0; c < k.length; c++) {
+                if (c != b) {
+                    sum += gamma[b][c] * (g == null ? 1 : g[b][c]) * s[b] * s[c];
+                }
+            }
+        }
+        return Math.sqrt(Math.max(0, sum));
+    }
+
+    /** {@code g_bc = min(CR_b, CR_c) / max(CR_b, CR_c)} (also f_kl). */
+    public static double ratio(double a, double b) {
+        return Math.min(a, b) / Math.max(a, b);
+    }
+
+    /** The curvature scaling {@code SF(t) = 0.5 · min(1, 14 / t_days)} of an expiry in years (365 days a year). */
+    public static double scaling(double years) {
+        return 0.5 * Math.min(1, 14 / (years * 365));
+    }
+
+    /** {@code θ = min(Σ CVR / Σ |CVR|, 0)}; 0 when every CVR is 0. */
+    public static double theta(double sum, double sumAbs) {
+        return sumAbs == 0 ? 0 : Math.min(sum / sumAbs, 0);
+    }
+
+    /** {@code λ = (Φ⁻¹(99.5 %)² − 1) · (1 + θ) − θ}. */
+    public static double lambda(double theta) {
+        return (SimmParams.PHI995 * SimmParams.PHI995 - 1) * (1 + theta) - theta;
+    }
+
+    /** The curvature margin of one side: {@code max(Σ CVR + λ · K, 0)}. */
+    public static double curvature(double sum, double lambda, double k) {
+        return Math.max(sum + lambda * k, 0);
     }
 }

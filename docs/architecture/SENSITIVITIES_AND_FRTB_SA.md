@@ -16,9 +16,10 @@
 # Sensitivities and market-risk capital: position sensitivities, the factor dictionary, FRTB-SA and SIMM
 
 Status: built for position sensitivities (SENS), the factor dictionary (RFAC) and FRTB-SA (SBM, DRC, RRAO) with the capital screen
-(FRSA), the FRTB-SA Playground (PLAY FRTB) and its workbook ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)); design, not built, for SIMM
-and its playground (sections 8 and 12.2), the sensitivity-VaR consistency check (section 2.4), the bank's limit grids (section 3.3) and the
-official FRTB-SA captures. Companion to [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) (sections 7.9, 7.10 and 8.3),
+(FRSA), the FRTB-SA Playground (PLAY FRTB) and its workbook ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)); built for SIMM per netting
+set, collect and post, with the SIMM screen, the SIMM Playground (PLAY SIMM) and its workbook (sections 8 and 12.2;
+[SIMM_GUIDE.md](../guides/SIMM_GUIDE.md), whose section 12 lists what SIMM still lacks); design, not built, for the sensitivity-VaR
+consistency check (section 2.4), the bank's limit grids (section 3.3) and the official FRTB-SA and SIMM captures. Companion to [MR_CUBE_LENS.md](../lenses/MR_CUBE_LENS.md) (sections 7.9, 7.10 and 8.3),
 [FRTB.md](../contracts/FRTB.md) and [SIMM.md](../contracts/SIMM.md) (the earlier contract designs this document narrows), and the
 [VaR Playground](VAR_PLAYGROUND.md) (the playground frame every metric here reuses).
 
@@ -508,8 +509,9 @@ and proxies counted), as the VaR answers do.
 ## 11. API, command line and screens
 
 Built for sensitivities and FRTB-SA (the commands `FRSA <scope>`, `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`, and `drishti.py sens`,
-`frtb`, `play frtb`; [FRTB_SA_GUIDE.md section 9](../guides/FRTB_SA_GUIDE.md#9-api-command-line-and-settings)); SIMM and the official
-captures are design.
+`frtb`, `play frtb`; [FRTB_SA_GUIDE.md section 9](../guides/FRTB_SA_GUIDE.md#9-api-command-line-and-settings)) and for SIMM (`SIMM
+<netting set>`, `PLAY SIMM <netting set>`, `PLAY SIMM RUN <id>`, `drishti.py simm`, `play simm`;
+[SIMM_GUIDE.md section 9](../guides/SIMM_GUIDE.md#9-api-command-line-and-settings)); the official captures are design.
 
 | What | API | Command (terminal) | CLI |
 |---|---|---|---|
@@ -518,8 +520,8 @@ captures are design.
 | FRTB-SA of a scope (SBM by class and scenario, DRC, RRAO) | `GET /api/v1/frtb/sa?scope=…` | `FRSA <scope>` | `drishti.py frtb sa` |
 | Its steps (buckets, WS, K, S, scenario) | `GET /api/v1/frtb/sa/explain?scope=…&class=…` | in `FRSA` | `drishti.py frtb explain` |
 | Contributions | `GET /api/v1/frtb/sa/contributions?scope=…&by=DESK` | in `FRSA` | `drishti.py frtb contributions` |
-| SIMM of a netting set or scope (planned) | `GET /api/v1/simm?nettingSet=…&regime=…` | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` (planned) |
-| The playgrounds | `/api/v1/frtb/playground`, `/api/v1/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`; `PLAY SIMM <netting set>` (planned) | `drishti.py play frtb`; `drishti.py play simm` (planned) |
+| SIMM of a netting set or scope | `GET /api/v1/simm?nettingSet=…` (and `/netting-sets`, `/explain`, `/against`, `/versions`) | `SIMM <netting set>` (the computed figure) | `drishti.py simm show` |
+| The playgrounds | `/api/v1/frtb/playground`, `/api/v1/simm/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY FRTB <scope>`, `PLAY FRTB RUN <id>`; `PLAY SIMM <netting set>`, `PLAY SIMM RUN <id>` | `drishti.py play frtb`; `drishti.py play simm` |
 | Official captures (planned) | the official run captures FRTB-SA per filer and date, as VaR | — | `drishti.py frtb capture` (planned) |
 
 **Computed kinds:** `frtb-sa-result` (the result of a scope and date) and `simm-result` (per netting set and regime), each with a contract

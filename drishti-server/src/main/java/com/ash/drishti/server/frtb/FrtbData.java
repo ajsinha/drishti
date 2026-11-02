@@ -84,6 +84,11 @@ public final class FrtbData {
         cache.clear();
     }
 
+    /** The kind of the factor dictionary (SIMM reads its SIMM columns). */
+    public String factorKind() {
+        return props.factorKind();
+    }
+
     /** The kinds whose load changes a date's answers. */
     public List<String> kinds() {
         return List.of(props.sensitivityKind(), props.factorKind(), props.defaultRiskKind(), props.residualRiskKind(), "fx-spot");
