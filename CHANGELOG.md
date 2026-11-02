@@ -20,6 +20,15 @@
 - **One competitive analysis.** The older comparison page (`/about/competitive`, from `drishti-console/config/competitive.yaml`: product categories, no vendors) is retired; its address leads to the Help guide *Competitive analysis* (`docs/strategy/COMPETITIVE_ANALYSIS.md`, vendor by vendor, administrators only). Administrators reach it from the Help menu, the Help centre and About; the footer link is gone; `competitive.yaml` and its CONFIGURATION entry removed.
 - **Why it moved follows the active theme.** The VaR page's *Why it moved* view drew in the renderer library's own default palette (parchment whenever the computer was in light mode) instead of the theme picked in the console; it now takes the active theme and follows a switch at once.
 - **Construct your basket opens only when asked** (the link, Alt+B or + basket), never by itself when a basket kept in the browser or a saved basket opens.
+- **Sensitivities and market-risk capital (design):** checked against Basel MAR21–23 and ISDA SIMM 2.8+2512 before the engine is
+  built. Curvature now takes an up and a down term per factor with the larger bucket charge kept, floors the across-bucket sum at zero
+  and applies the correlation scenarios to the squared correlations; the curvature factors and shocks are stated per class (commodity
+  added to the parallel shift); the estimate from gamma is written out as a second-order approximation; the FX ÷ 1.5 is limited to
+  options not referencing the reporting currency. SIMM concentration is applied per currency, per issuer or per factor (not per bucket),
+  with the f and g adjustments, the always-capped bucket net, residual buckets and the equity/FX/commodity vega volatility; the SIMM
+  parameter file no longer carries a correlation across product classes (they add). DRC and RRAO paragraph references corrected; RRAO's
+  listed/cleared exclusion limited to other residual risks. Hand-built cases 9 to 11 added; cases 1 to 6 recomputed unchanged. The
+  playground explanations follow. A new section *Checked against the rules* lists each point.
 - **Drill:** stops at once with the remedy when `drishti-console/.venv` is missing (a new worktree).
 - **Decks:** the roadmap as it stands (built: the regulatory foundation, the VaR Playground, why VaR moved, the Data view, the phone; next: sensitivities and market-risk capital), hot-dates 10, the 200K and 1M benchmarks measured.
 - **Tests:** the direct-memory soak test no longer calls AssertJ from its 72 worker threads (on Java 25 they waited on its class initialisation for ever).
