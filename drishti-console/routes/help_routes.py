@@ -57,17 +57,23 @@ def visible(request, guide) -> bool:
     """Whether this person, in this edition, sees a guide: the edition keeps it (:func:`shown`) and the guide's ``roles:`` let them
     (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis). A guide they may not see is not listed, not
     found by search and not reached by its address (404)."""
-    return guide.permits(_me(request)) and shown(_edition(request), guide)
+    return guide.permits(_me(request)) and shown(_edition(request), guide) and _engine_on(guide)
+
+
+def _engine_on(guide) -> bool:
+    """A guide about a compute engine that runs on no server of the cluster is not shown (help.yaml engine:, the catalogue's help:)."""
+    from core import engines
+    return (not guide.engine or engines.engine_available(guide.engine)) and not engines.help_hidden(guide.slug)
 
 
 def categories_for(request, lib) -> list:
     ed = _edition(request)
     me = _me(request)
-    if not ed.active and all(g.permits(me) for c in lib.categories for g in c["guides"]):
+    if not ed.active and all(g.permits(me) and _engine_on(g) for c in lib.categories for g in c["guides"]):
         return lib.categories
     out = []
     for c in lib.categories:
-        guides = [g for g in c["guides"] if g.permits(me) and (not ed.active or shown(ed, g))]
+        guides = [g for g in c["guides"] if g.permits(me) and (not ed.active or shown(ed, g)) and _engine_on(g)]
         if guides:
             out.append({**c, "guides": guides})
     return out

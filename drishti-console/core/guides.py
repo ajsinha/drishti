@@ -101,6 +101,7 @@ class Guide:
     listed: bool = True
     packs: tuple = ()                 # the packs the guide is about (a pack's own guide; help.yaml packs:), for an edition's help filter
     roles: tuple = ()                 # help.yaml roles: only people with one of these roles (or an administrator) see the guide; empty = everyone
+    engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (COMPUTE_ENGINES.md)
 
     def permits(self, ident) -> bool:
         """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
@@ -127,7 +128,7 @@ class Library:
                 path = (docs_dir / src) if src else (console_dir / "web" / "guides" / f"{g['slug']}.md")
                 guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
                               g.get("kind", "reference" if src else "guide"), cat["id"], path, packs=tuple(g.get("packs") or ()),
-                              roles=tuple(str(r) for r in (g.get("roles") or ())))
+                              roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""))
                 if path.exists():
                     self.guides[guide.slug] = guide
                     items.append(guide)

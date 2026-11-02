@@ -113,6 +113,9 @@ async def go(request: Request, q: str = ""):
     typed = q.replace("<GO>", "").replace("<go>", "").strip()
     ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
     head = typed.split(None, 1)[0].upper() if typed else ""
+    from core import engines as _engines
+    if (off := _engines.typed_engine(typed)) is not None:          # FRSA with FRTB-SA running nowhere: said in the server's words (DRS-1020)
+        return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
     if head in WORDS and head != "EXP" and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
     if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4), whatever packs define
