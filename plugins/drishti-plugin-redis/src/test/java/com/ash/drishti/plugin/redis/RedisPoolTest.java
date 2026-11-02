@@ -62,6 +62,10 @@ class RedisPoolTest {
             }
             assertThat(c.stats().open()).isBetween(2, 3);                      // grew with the load, never past pool-size
             CompletableFuture.allOf(all.toArray(CompletableFuture[]::new)).get();
+            long settled = System.currentTimeMillis() + 2_000;                   // a connection is handed back just after its last reply
+            while (c.stats().inUse() > 0 && System.currentTimeMillis() < settled) {
+                Thread.sleep(10);
+            }
             assertThat(c.stats().inUse()).isZero();                              // every command completed: nothing in flight
             long until = System.currentTimeMillis() + 5_000;
             while (c.stats().open() > 1 && System.currentTimeMillis() < until) {

@@ -15,6 +15,106 @@
 -->
 # Changelog
 
+## 2.9.10.a — Admin → Capacity; the cluster under load; three VaR dates in the demo; the competitive analysis (2026-11-01)
+
+### Admin → Capacity
+
+- **Admin → Capacity**, after Caches (administrators; the editions' `admin.pages` gain `capacity`; OPERATIONS.md 12.4). It opens on
+  **today against the plan**: heap, RAM, disk and cores each with a state in words (room, tight, short, not measured) and a headroom bar
+  (what the plan needs against what this server has, a tick where it is now, a Why? with the sum and every figure in it); **what breaks
+  first** in a sentence with its symptom and the fix (`-Xmx`, `drishti.var.open-heap-mb`, the disk, the cores); this server beside the
+  plan (positions, dates open, the open dates' heap and the safety net, heap after GC, `-Xmx`, RSS, machine memory and cores, disk free,
+  people and requests a second); growth at ×1 to ×3 the trades with sliders for the intraday share, dates in memory and users; the
+  warnings. **Edit the plan** shows the planner: the inputs grouped (changed ones yellow, Reset to defaults, Use this server's figures),
+  the four answers, what the heap holds, every result with its Why?, the settings in three forms with the YAML block, every JVM argument
+  with its condition and the command line, each with Copy. **Download the working (.xlsx)** gives the planner workbook with every result
+  a live formula, its inputs as on the screen, this server's live figures, or both side by side (a Live column stamped with its time),
+  audited as `capacity-workbook-downloaded`. Phone tiers (must, glance, more folded, desk), dark and light, F1 to the guide.
+- **One planner file, three evaluators.** `drishti-server/src/main/resources/capacity/planner.yaml` holds the inputs, coefficients,
+  results, settings, JVM arguments, warnings, calibration and the Explain examples; `tools/sizing_planner.py` now reads it (the workbook
+  is byte-for-byte as before) and also writes the server's workbook template (`capacity/template/`) and shared test vectors (every named
+  figure at three shapes), which the browser's evaluator (`capacity.js`, under Node) and the Python one are checked against.
+  RESOURCES_AND_SCALE.md 9.7.
+- **API**: `GET /api/v1/admin/capacity` (the planner as JSON), `GET /api/v1/admin/capacity/live` (the measured figures with their time
+  and the planner inputs they stand for), `GET /api/v1/admin/capacity.xlsx?inputs=plan|live|both&<Input>=…`; `GET /api/v1/admin/health`'s
+  `server.rssMb` (resident memory from `VmRSS`, Linux; null elsewhere). The server's request activity also counts the people who asked
+  something in the last 5 minutes and today's busiest minute.
+- **CLI**: `drishti.py admin capacity [--live] [--set Name=value] [--all] [--json] [--xlsx FILE --inputs plan|live|both]`.
+
+### Large workbook downloads
+
+- **A streamed answer may take 30 minutes.** `spring.mvc.async.request-timeout` (`DRISHTI_ASYNC_TIMEOUT`, `30m`) replaces the
+  servlet container's 30-second limit for streamed answers: the VaR Playground's workbook for a whole bank (7,089 positions, about
+  106 MB of formulas), the Why it moved working, the capacity workbook and BI exports arrived cut short and would not open. Test:
+  `StreamedDownloadTimeoutTest`.
+
+### Three VaR dates in the demo
+
+- **Three VaR dates in the demo data.** The committed VaR inputs are written for 2026-09-28, 2026-09-29 and 2026-09-30, each
+  in files of its own, so *Why it moved* shows real waterfalls on the demo: each date's positions from that date's trades (31 and 37
+  trades leave), the scenario window a day further on with every day keeping its move (the factor model's earlier days), and book
+  `BOOK-FI-3` moved from the credit desk to the fixed income desk on 2026-09-29. Limits are the newest date's; the stress set, the desk
+  P&L and the long P&L history stay on the newest date. 2026-09-30's files are byte for byte as before (the bank's VaR 112,041,646);
+  the bank's VaR is 112,405,919 on 09-28 and 112,575,052 on 09-29. The test data grows by 32.8 MB to 181 MB. The browser test of the tab
+  builds the three dates in one `lake demo`; contracts and sample pages read the newest date. On the demo the bank's VaR falls 533,406
+  from 09-29 to 09-30 (trades out −531,668, market −1,738) and rises 169,133 from 09-28 to 09-29 (trades out −866,479, market
+  +1,035,612); `DESK:CREDIT` and `DESK:FI` show the book's move as a hierarchy step (−12,532,037 and +19,620,151). VAR_GUIDE.md sections
+  3.11 and 22.1.
+
+### Competitive analysis, for administrators
+
+- **A full competitive analysis, internal.** `docs/strategy/COMPETITIVE_ANALYSIS.md`: Drishti's position, its five strongest
+  differentiators and five biggest gaps, and the first and long-term pitches; built today against planned, with evidence levels
+  (measured, designed, claimed, not verified); banking, finance and risk (risk aggregation cubes, trading-platform risk modules,
+  enterprise market and credit risk, regulatory reporting, governance, buy-side) with a capability matrix, each competitor's strengths,
+  where Drishti wins and loses and how to position it, the vendor stacks Drishti could replace once the plan is built, and what still
+  decides deals; general data and analytics (BI, semantic layers, lakehouses, real-time engines, app builders, Grafana, AI assistants)
+  with its own matrix; pricing observations from public sources; risks and upkeep; every source with the date read. Marked
+  "Internal — not for customers".
+- **Help pages for administrators only.** A help catalogue entry may carry `roles:` (`roles: [admin]` for the competitive analysis):
+  only an administrator, or a person holding one of the roles, sees it in the Help index and in search and opens it; for everyone else
+  it is not listed, not found and its address answers 404 (`Guide.permits`, `visible()` in the help routes). docs/README.md's map of the
+  help centre lists the pages everyone sees, so the internal page is in no customer-facing index (`test_docs_help_map.py`); tests:
+  `test_help.py` (an administrator sees it, a viewer gets 404, a listed role opens it).
+
+### 2.9.11 and 2.9.12 groundwork
+
+- **Sensitivities and market-risk capital: the design and the data, nothing built.** The design note
+  `docs/architecture/SENSITIVITIES_AND_FRTB_SA.md`: position sensitivities and the factor dictionary, the FRTB standardised approach
+  step by step (SBM delta, vega and curvature per risk class, the three correlation scenarios, DRC, RRAO), ISDA SIMM's structure, where
+  each number comes from, the API, command line and screens planned, the FRTB-SA and SIMM playgrounds, and eight hand-built test cases.
+  The planned contracts `position-sensitivity` (SENS) and `risk-factor` (RFAC) of the market-risk pack with their generated pages and
+  sample pages; the parameter files in draft (`docs/architecture/capital-parameters/`: MAR21, MAR22–23 with their paragraphs; SIMM's
+  structure with every licensed number empty). Demo data from the VaR factor model: `tools/packgen/sensitivity/` writes 8,052 sensitivity
+  records (Murex and Calypso by position, Endur by trade) and 855 factors under `data/testdata/market-risk/`, run by `make_testdata.py`,
+  not loaded by `lake demo` until the kinds have a command; the sample pages tool shows planned kinds with demo data as their own group.
+  Mock-ups for the product owner to choose (three options each): the FRTB-SA capital screen, SIMM, and the factor dictionary with the
+  load's quality (`docs/lenses/mockups/frtb-sa/`, `simm/`, `risk-factors/`).
+### The cluster's contribution tables under load
+
+- **A contribution table asks each remote shard once.** On a sharded date, contributions by position and by trade fetched each
+  position's or trade's vector from its shard's owner in turn: about 2,000 signed `POST /api/v1/var/partial` calls one after the other
+  for a desk of 2,000 positions held elsewhere. The table's reads are now fetched ahead (`VarBook.readAhead`,
+  `ShardedVectors.batched`): one call per remote shard of up to 1,024 row sets (each set sent as its runs, 8 bytes a position), the
+  shards side by side, through the new members-only `POST /api/v1/var/partials` (the same signature, label, data-version and access
+  checks as `/partial`, in `token-never`). Every part is the same to the bit as the one read alone (`ShardReadAheadTest`, on one member and
+  on each of three).
+- **A scope's standalone sums too.** The sum of the parts' standalone VaR behind a headline (the bank minus a desk, a basket) computed
+  each position's vector with a call to its owner, on the vector-sum pool: with every pool thread waiting on owners, the first requests
+  of a date on a member waited past the client's 60 s. These reads are fetched ahead as well, a step of 1,024 positions or trades.
+- **Measured** (three members, 200,000 positions, Java 21, `-Xmx4g`): contributions p95 0.88 / 1.35 / 2.53 s at 50 / 100 / 200 users
+  (10.4 / 15.8 / 13.9 s before), no error in any window (17 timeouts at 50 users before), 226 / 249 / 231 requests a second (123 / 161 /
+  148), no pinned virtual thread.
+- **One deadline per gather.** The calls made for one answer share `drishti.var.sharding.call-timeout-seconds` (30 s): the first owner
+  gets its share of the time left and its replica the rest, so a stalled owner becomes an answer from the replica or a clear
+  `503 DRS-5215` inside the client's 60 s, never a client timeout.
+- **No pinned carrier while a skeleton streams.** `ShardSkeleton.write` copies the hot file's sections with positional reads into a
+  64 KB buffer and the stream's own `write`, no longer through `Channels.newChannel(out)` (whose `synchronized` write pinned a virtual
+  thread's carrier on Java 21 when the reader was slow). The same bytes.
+- Docs: VAR_SHARDING.md section 15 (contributions under load), BENCHMARK.md section 4.3 (the cluster rows, results in
+  `tools/bench/results/2.9.10a-200k-cluster.jsonl`), API_GUIDE.md (`/partials`).
+
+
 ## 2.9.10 — Memory, scale and mobile; why VaR moved (2026-11-01)
 
 *2.9.9 and 2.9.10 are released together as 2.9.10.*
@@ -130,7 +230,6 @@
   `GET /api/v1/var/explain`, `/explain/matrix`, `/explain.xlsx`; `drishti.py var explain <scope> [--from] [--to] [--matrix] [--xlsx]`;
   settings `drishti.var.explain.*` (the order of the causes, window lines, amendments, top, drivers, cache). The Shapley variant is
   planned. VAR_GUIDE.md section 3.11.
-
 - **Tests and tools.** Browser tests not about the phone display read the whole page (the *Show everything* cookie), the phone
   tests the phone's; the Sutra Next equivalence compares the page drawn without its phone tiers; the scheduler and pack reload tests
   wait for the state they check; the VaR P&L history generator is `tools/packgen/var/pnl_history.py` (it shared a module name with the

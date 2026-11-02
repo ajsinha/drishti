@@ -19,9 +19,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
-import java.nio.channels.WritableByteChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -65,25 +63,28 @@ public final class ShardSkeleton {
             h.putInt(24, 0);                                                 // P: no position rows here
             h.putInt(36, kept.size());
             h.putInt(184, 0);                                                // Q: no trade rows here
-            WritableByteChannel to = Channels.newChannel(out);
-            long written = write(to, h.flip());
+            long written = put(out, h.flip());
             ByteBuffer tb = ByteBuffer.allocate(kept.size() * VarHotFile.ENTRY).order(ByteOrder.LITTLE_ENDIAN);
             for (long[] e : layout) {
                 tb.putInt((int) e[0]).putInt(0).putLong(e[1]).putLong(e[2]).putInt((int) e[3]).putInt(0);
             }
-            written += write(to, tb.flip());
+            written += put(out, tb.flip());
             long pos = written;
+            byte[] buf = new byte[COPY];
+            ByteBuffer bb = ByteBuffer.wrap(buf);
             for (long[] e : layout) {
                 if (e[1] > pos) {
-                    written += write(to, ByteBuffer.allocate((int) (e[1] - pos)));   // the 8-byte alignment
+                    written += put(out, ByteBuffer.allocate((int) (e[1] - pos)));   // the 8-byte alignment
                     pos = e[1];
                 }
                 long done = 0;
-                while (done < e[2]) {
-                    long n = ch.transferTo(e[4] + done, e[2] - done, to);
+                while (done < e[2]) {                                        // positional reads into one buffer, then the stream's own write
+                    bb.clear().limit((int) Math.min(COPY, e[2] - done));
+                    int n = ch.read(bb, e[4] + done);
                     if (n <= 0) {
                         throw new IOException("the hot file " + file + " ends early in a section");
                     }
+                    out.write(buf, 0, n);
                     done += n;
                 }
                 written += e[2];
@@ -94,11 +95,18 @@ public final class ShardSkeleton {
         }
     }
 
-    private static long write(WritableByteChannel to, ByteBuffer b) throws IOException {
-        long n = 0;
-        while (b.hasRemaining()) {
-            n += to.write(b);
-        }
+    /**
+     * The copy buffer. The sections are copied with positional reads and {@link OutputStream#write}, never through
+     * {@code Channels.newChannel(out)}: that adapter writes under a {@code synchronized} lock, and on Java 21 a virtual thread blocked in it
+     * by a slow reader (HTTP/2 flow control) pins its carrier thread (VAR_SHARDING.md section 15).
+     */
+    static final int COPY = 64 * 1024;
+
+    /** Writes a heap buffer's remaining bytes to {@code out}; returns how many. */
+    private static long put(OutputStream out, ByteBuffer b) throws IOException {
+        int n = b.remaining();
+        out.write(b.array(), b.arrayOffset() + b.position(), n);
+        b.position(b.limit());
         return n;
     }
 

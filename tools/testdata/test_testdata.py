@@ -87,7 +87,8 @@ class TestData(unittest.TestCase):
         big = [f"{f.relative_to(TD)} {f.stat().st_size / 1e6:.1f} MB" for f in files if f.stat().st_size > 10 * 1024 * 1024]
         self.assertEqual(big, [], "a file above 10 MB: lower --part-mb")
         total = sum(f.stat().st_size for f in files)
-        self.assertLess(total, 150e6, f"{total / 1e6:.1f} MB committed")   # sixty days, about 115 MB; GitHub refuses files over 100 MB, none is over 10
+        # sixty days and the VaR data's three business dates, about 181 MB; GitHub refuses files over 100 MB, none is over 10
+        self.assertLess(total, 190e6, f"{total / 1e6:.1f} MB committed")
         self.assertEqual(sorted(p.name for p in TD.iterdir() if p.is_file()), ["README.md", "testdata.yaml"])
 
     def test_the_docs_quote_as_many_demo_tables_as_lake_demo_builds(self):

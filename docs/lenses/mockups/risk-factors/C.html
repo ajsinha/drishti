@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (risk-factors/C.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in
+  docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (section 15) and docs/architecture/IMPLEMENTATION_PLAN.md (the 2.9.11 mock-ups).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Risk factors and sensitivities: option C, the factor’s page</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.alts{font-size:12.5px;color:var(--muted);margin-top:6px} .alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.tot td{font-weight:700;background:var(--panel2)} tr.sel td{background:var(--hl)} td.bind{outline:2px solid var(--amber);outline-offset:-2px}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{flex:1 1 170px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.kpi .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:2px} .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.kpi.bind{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.steps div{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line2)}
+.steps div span:first-child{font-family:var(--sans)}
+.hbar{height:8px;background:var(--line2);border-radius:4px;position:relative;min-width:120px}
+.hbar i{position:absolute;top:0;bottom:0;left:0;border-radius:4px;background:var(--pos)}
+.hbar i.n{background:var(--neg)} .hbar i.a{background:var(--amber)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.formula{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;white-space:pre;overflow:auto}
+footer{font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line2);padding-top:8px}
+@media (max-width:1000px){.grid{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body><div class="page">
+<section class="intro"><h1>Risk factors and sensitivities · option C: the factor’s page</h1><p>One factor on its own page, reached from any ladder, heat map or explain step: its parts and mappings, who holds it, its move yesterday and on the VaR scenario day, its place in every grid and the names each system gives it.</p><div class="alts">Options: <a class="" href="A.html">A: the dictionary</a> · <a class="" href="B.html">B: the load’s quality</a> · <a class="on" href="C.html">C: the factor’s page</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; RFAC IR/CURVE/USD/SOFR/10Y <GO></div><div class="menus"><span class="on">Risk</span><span class="">Capital</span><span class="">Counterparty</span><span class="">Data</span><span class="">Help</span></div></div>
+<div class="head"><h2>IR/CURVE/USD/SOFR/10Y</h2><span class="meta">GIRR · USD · 10Y · SIMM InterestRate 1 · 10y · OIS · LH 10 · CRV-USD-SOFR#10Y</span></div><div class="kpis"><div class="kpi"><div class="l">Bank DV01</div><div class="v neg">−275,117</div><div class="s">USD per bp · 90 positions</div></div><div class="kpi"><div class="l">Gross</div><div class="v">741,883</div><div class="s">Σ |DV01|</div></div><div class="kpi"><div class="l">Move yesterday</div><div class="v">+4.2 bp</div><div class="s">first-order P&amp;L −1.16m</div></div><div class="kpi"><div class="l">On the VaR scenario</div><div class="v">+11.8 bp</div><div class="s">2025-04-09 · first-order −3.25m</div></div></div><div class="grid" style="grid-template-columns:1.4fr 1fr"><div class="card"><h3>Who holds it <span>DV01 by desk, USD per bp</span></h3><table><tr><th class="l">Desk</th><th>DV01</th><th>Positions</th><th class="l"></th></tr><tr><td class="l">DESK-RATES</td><td class="neg">-412,300</td><td>31</td><td style="width:30%"><div class="hbar"><i class="n" style="width:100%"></i></div></td></tr><tr><td class="l">DESK-INFL</td><td class="">188,900</td><td>14</td><td style="width:30%"><div class="hbar"><i class="" style="width:46%"></i></div></td></tr><tr><td class="l">DESK-FI</td><td class="neg">-96,200</td><td>22</td><td style="width:30%"><div class="hbar"><i class="n" style="width:23%"></i></div></td></tr><tr><td class="l">DESK-MM</td><td class="">21,400</td><td>9</td><td style="width:30%"><div class="hbar"><i class="" style="width:5%"></i></div></td></tr><tr><td class="l">DESK-STRUCT</td><td class="">13,233</td><td>3</td><td style="width:30%"><div class="hbar"><i class="" style="width:3%"></i></div></td></tr><tr><td class="l">DESK-CREDIT</td><td class="">9,850</td><td>11</td><td style="width:30%"><div class="hbar"><i class="" style="width:2%"></i></div></td></tr></table></div><div class="card"><h3>In each grid</h3><div class="steps"><div><span>FRTB GIRR bucket USD, vertex 10Y</span><span>RW 0.778%</span></div><div><span>WS (bank)</span><span>−21.4m</span></div><div><span>ρ with 5Y · 15Y · 30Y</span><span>97.0% · 98.5% · 94.2%</span></div><div><span>SIMM InterestRate, bucket 1, 10y</span><span>(licensed)</span></div><div><span>Bank grid BANK-IR-TENOR</span><span>5-10Y · limit use 62%</span></div></div><h3 style="margin-top:12px">Names in the source systems</h3><table><tr><th class="l">System</th><th class="l">Name</th><th>Today</th></tr><tr><td class="l">MUREX</td><td class="l">MX:IR:CURVE-USD-SOFR-10Y</td><td>41</td></tr><tr><td class="l">CALYPSO</td><td class="l">IR.CURVE.USD.SOFR.10Y</td><td>37</td></tr><tr><td class="l">ENDUR</td><td class="l">10Y_SOFR_USD_CURVE_IR</td><td>12</td></tr></table></div></div>
+<footer>Mock-up for the product owner (2026-11-01). Figures are synthetic: the demo’s position sensitivities of 2026-09-30 run through a sketch of the engine (the CSR sector correlations, the DRC inputs and every SIMM parameter are placeholders; SIMM’s licensed parameters are never shown in a mock-up). Every figure is printed; a chart never replaces a number; a loss or a binding value is marked in words as well as colour.</footer>
+</div></body>
+</html>

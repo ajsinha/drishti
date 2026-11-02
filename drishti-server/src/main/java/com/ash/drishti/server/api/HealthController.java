@@ -318,6 +318,7 @@ public class HealthController {
         m.put("heapMaxMb", rt.maxMemory() / 1_048_576);
         m.put("threads", ManagementFactory.getThreadMXBean().getThreadCount());
         m.put("cpus", rt.availableProcessors());
+        m.put("rssMb", ProcessResources.rssMb(Path.of("/proc/self/status")));   // resident memory (Linux VmRSS), null elsewhere
         m.putAll(ProcessResources.snapshot());                    // direct and mapped memory, open files: what a long run exhausts
         return m;
     }

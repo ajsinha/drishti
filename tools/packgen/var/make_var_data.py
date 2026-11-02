@@ -13,7 +13,10 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Writes the VaR engine's demo inputs (docs/guides/VAR_GUIDE.md) into data/testdata/market-risk/, from the committed trades of the business
-date (data/testdata/trades/*) and the core pack's desks, as an upstream risk batch would deliver them:
+dates (data/testdata/trades/*) and the core pack's desks, as an upstream risk batch would deliver them, for the last VAR_DATES (three)
+business dates, each in files of its own (cob-<date>...): each date's trades replayed to it, its scenario window a day further on (a day
+keeps its move on every date: factors.Market ``back``), one book moved between desks (MOVED_BOOK), so the VaR change explanation
+(VAR_GUIDE.md section 3.11) compares real dates. The stress set, the desk P&L and the long P&L history are the newest date's only:
 
     pnl-vector/       one P&L vector per live trade: 509 scenario P&Ls in USD, the vector column PNL (list<double> in the lake), with the
                       trade's terms the server derives positions from (SECURITY_ID, TRADE_STATUS, MATURITY_DATE, product, book)
@@ -76,6 +79,12 @@ KEYS = {"pnl-vector": "VECTOR_ID", "scenario-pv": "SCENARIO_PV_ID", "fx-scenario
         "risk-hierarchy": "NODE_ID", "portfolio": "PORTFOLIO_ID", "var-limit": "LIMIT_ID", "desk-pnl": "DESK_PNL_ID", "pnl-history": "HISTORY_ID"}
 #: the folders this generator used to write and no longer does (removed when it writes)
 RETIRED = ("position", "var-node")
+#: the business dates the VaR data is written for: the newest and the two before it, so the VaR change explanation (VAR_GUIDE.md
+#: section 3.11) has real dates to compare; the stress set, the desk P&L and the long P&L history are the newest date's only
+VAR_DATES = 3
+#: the reorganisation the earlier dates show (the hierarchy step of the explanation): BOOK-FI-3 sat under the credit desk until the newest
+#: date but one, when it moved to the fixed income desk (both LE-NY, Markets): (book, the desk before, dates back it still sat there from)
+MOVED_BOOK = ("BOOK-FI-3", "DESK-CREDIT", 2)
 PART_BYTES = 1_200_000                       # compressed bytes per file: the vectors are split into a few small files
 PACK_YAML = ROOT / "config" / "packs" / PACK / "pack.yaml"
 
@@ -94,19 +103,26 @@ nice = PF.nice
 
 
 class Demo:
-    """Everything the VaR demo data holds for one business date."""
+    """Everything the VaR demo data holds for one business date (``back`` business days before the newest)."""
 
     def __init__(self, testdata: Path, dates: list[str], budget: int = 0, rules: P.Rules | None = None, pv_systems=None,
-                 position_systems=()):
-        self.cob = dates[-1]
+                 position_systems=(), back: int = 0):
+        """``back``: the date that many business days before ``dates[-1]`` (its trades, desks and market as of that day: the demo's
+        earlier VaR dates, VAR_DATES)."""
+        dates = dates[:len(dates) - back]
+        self.cob, self.back = dates[-1], back
         trades: dict[str, dict] = {}
         for system in ("endur", "calypso", "murex"):
             trades.update(P.replay(testdata / "trades" / system, "TRADE_ID", dates))
         desks = P.replay(testdata / "core" / "desk", "DESK_ID", dates)
+        book, before, since = MOVED_BOOK
+        if back >= since and before in desks:                     # the risk system's tree on that date: the book still on its old desk
+            desks = {k: {**d, "BOOKS": [b for b in d.get("BOOKS") or [] if b.get("ID") != book]} for k, d in desks.items()}
+            desks[before]["BOOKS"] = desks[before]["BOOKS"] + [{"ID": book}]
         vals = P.latest(testdata / "market-risk" / "trade-valuation", "VALUATION_ID", dates)
         self.desks = desks
         self.rules = rules or P.Rules.of_pack(PACK_YAML)
-        market = F.Market()
+        market = F.Market(back=back)
         self.fx = SFX.Fx(market, SFX.today_rates(P.replay(testdata / "market-data" / "fx-spot", "PAIR", dates)))
         self.batch = P.Batch(trades, desks, vals, self.cob, self.rules, budget, market=market, fx=self.fx, pv_systems=pv_systems,
                              position_systems=position_systems)
@@ -264,7 +280,38 @@ def dumps(d: dict) -> str:
     return json.dumps(d, separators=(",", ":"), ensure_ascii=False)
 
 
-def documents(demo: Demo) -> dict[str, list[dict]]:
+def demos(testdata: Path, dates: list[str], budget: int = 0, **kw) -> list[Demo]:
+    """The Demo of every VaR date, the oldest first and the newest last."""
+    return [Demo(testdata, dates, budget, back=k, **kw) for k in range(VAR_DATES - 1, -1, -1)]
+
+
+#: the kinds written for the newest date only (histories of their own, or the stress window's input)
+NEWEST_ONLY = ("desk-pnl", "pnl-history")
+
+
+def all_documents(ds: list[Demo]) -> dict[str, list[dict]]:
+    """Every date's documents by kind, the oldest date first. Limits are a risk manager's settings, not the day's VaR: the earlier dates
+    carry the newest date's limit wherever it has one (a node or portfolio only an earlier date has keeps its own)."""
+    newest = documents(ds[-1])
+    limit = {r["LIMIT_ID"]: r["LIMIT_VAR"] for r in newest["var-limit"]}
+    out: dict[str, list[dict]] = {k: [] for k in newest}
+    for d in ds[:-1]:
+        docs = documents(d, newest_only=False)
+        docs["var-limit"] = [{**r, "LIMIT_VAR": limit.get(r["LIMIT_ID"], r["LIMIT_VAR"])} for r in docs["var-limit"]]
+        for k, rows in docs.items():
+            out[k] += rows
+    for k, rows in newest.items():
+        out[k] += rows
+    return out
+
+
+def newest(docs: dict[str, list[dict]], cob: str) -> dict[str, list[dict]]:
+    """The documents of the date ``cob`` (the NEWEST_ONLY kinds whole)."""
+    return {k: v if k in NEWEST_ONLY else [r for r in v if r["BUSINESS_DATE"] == cob] for k, v in docs.items()}
+
+
+def documents(demo: Demo, newest_only: bool = True) -> dict[str, list[dict]]:
+    """The documents of the demo's date (``newest_only`` False: without the NEWEST_ONLY kinds)."""
     demo.limits()
     portfolios = PF.rows(demo)
     limits = demo.var_limit_rows() + demo.portfolio_limit_rows(portfolios)
@@ -274,17 +321,19 @@ def documents(demo: Demo) -> dict[str, list[dict]]:
             "scenario-pv": sorted(demo.batch.pv_rows, key=lambda r: (r["LEGAL_ENTITY"], r["DESK"], r["TT_BOOK"], r["TRADE_ID"])),
             "fx-scenario": demo.fx.rows(demo.cob, SET, f"B-{demo.cob}-01"),
             "portfolio": [{k: v for k, v in p.items() if k != "LIMIT_VAR"} for p in portfolios], "var-limit": limits,
-            "desk-pnl": DP.rows(demo),
-            # the long-history P&L of today's portfolio per node, for the stress window selection (history.py; VAR_GUIDE.md section 18.9)
-            "pnl-history": HI.History(demo, demo.stress()).rows()}
+            **({"desk-pnl": DP.rows(demo),
+                # the long-history P&L of today's portfolio per node, for the stress window selection (history.py; VAR_GUIDE.md section 18.9)
+                "pnl-history": HI.History(demo, demo.stress()).rows()} if newest_only else {})}
 
 
-def write(out: Path, demo: Demo, with_samples: bool = True) -> list[dict]:
-    """Writes the folders (and the pack's reference samples); returns their testdata.yaml entries."""
+def write(out: Path, ds: list[Demo], with_samples: bool = True) -> list[dict]:
+    """Writes the folders (and the pack's reference samples) for the dates of ``ds`` (the newest last); returns their testdata.yaml
+    entries. Each date of a dated kind has its own files (cob-<date>...); a kind written for the newest date only keeps its stem."""
     entries = []
-    docs = documents(demo)
+    demo = ds[-1]
+    docs = all_documents(ds)
     if with_samples:
-        want = samples(demo, docs)
+        want = samples(demo, newest(docs, demo.cob))
         for path, text in want.items():
             path.parent.mkdir(parents=True, exist_ok=True)
             if not path.is_file() or path.read_text(encoding="utf-8") != text:
@@ -300,10 +349,16 @@ def write(out: Path, demo: Demo, with_samples: bool = True) -> list[dict]:
     stressed = demo.stress().rows()
     for kind, rows in docs.items():
         dates = sorted({r["BUSINESS_DATE"] for r in rows})
-        stem = f"cob-{dates[-1]}" if len(dates) == 1 else f"history-{dates[0]}-to-{dates[-1]}"
-        files = _gz_files(out / PACK / kind, stem, [dumps(r) for r in rows])
+        if kind in NEWEST_ONLY:
+            stem = f"cob-{dates[-1]}" if len(dates) == 1 else f"history-{dates[0]}-to-{dates[-1]}"
+            files = _gz_files(out / PACK / kind, stem, [dumps(r) for r in rows])
+        else:
+            files = []
+            for i, day in enumerate(dates):
+                files += _gz_files(out / PACK / kind, f"cob-{day}", [dumps(r) for r in rows if r["BUSINESS_DATE"] == day], clear=i == 0)
+            stem = f"cob-{dates[-1]}"
         extra = stressed.get(kind) or []
-        if extra:                                                   # the stress set: its own files beside the normal set's (stress.py)
+        if extra:                                                   # the stress set (newest date): its own files beside the normal set's (stress.py)
             files += _gz_files(out / PACK / kind, f"{ST.FILE_PREFIX}{stem}", [dumps(r) for r in extra], clear=False)
         entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": CONNECTOR, "key": KEYS[kind],
                         "dated-by": "BUSINESS_DATE", "first-date": dates[0], "last-date": dates[-1], "documents": len(rows) + len(extra),
@@ -409,11 +464,12 @@ def main(argv=None) -> int:
     if a.inputs_config:
         print(inputs_config(pv, by_position))
         return 0
-    demo = Demo(td, dates, a.budget, pv_systems=pv, position_systems=by_position)
+    ds = demos(td, dates, a.budget, pv_systems=pv, position_systems=by_position)
+    demo = ds[-1]
     if a.check:
         import tempfile
         with tempfile.TemporaryDirectory(prefix="drishti-var-check-") as tmp:
-            write(Path(tmp), demo, with_samples=False)
+            write(Path(tmp), ds, with_samples=False)
             want = samples(demo, documents(demo))
             stale_samples = [str(p) for p, t in want.items() if not p.is_file() or p.read_text(encoding="utf-8") != t]
             stale = [f"{k}/{f.name}" for k in FOLDERS for f in sorted((Path(tmp) / k).glob("*.jsonl.gz"))
@@ -426,7 +482,7 @@ def main(argv=None) -> int:
         print("VaR demo data up to date")
         return 0
     out = Path(a.out) if a.out else td
-    entries = write(out, demo)
+    entries = write(out, ds)
     if not a.out:
         update_manifest(td, entries)
     b = demo.batch
@@ -437,7 +493,9 @@ def main(argv=None) -> int:
           f"{len(entries)} folders, {total / 1e6:.2f} MB")
     print(f"  {len(b.vector_rows):,} trades as P&L vectors, {len(b.pv_rows):,} as scenario PVs ({', '.join(b.pv_systems) or 'none'}), "
           f"scenario FX supplied for {', '.join(SFX.CURRENCIES)}")
-    print("  the bank as the engine computes it: " + bank_figures(demo))
+    for d in ds:
+        print(f"  the bank on {d.cob} as the engine computes it: " + bank_figures(d) + f" ({len(d.batch.positions):,} positions, "
+              f"{len(d.batch.trade_vectors):,} trades)")
     print("  the bank under the stress set: " + demo.stress().bank_figures())
     return 0
 

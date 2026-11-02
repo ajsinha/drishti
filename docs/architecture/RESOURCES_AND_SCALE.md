@@ -1039,10 +1039,31 @@ layer is counted on the heap (each changed trade keeps three vectors of the scen
 on disk (each batch appended to the lake; the layer itself is never written). The **Calibration check** computes the benchmark's shape
 from its own coefficients, so it shows the measured anchors whatever the inputs.
 
-**Regenerate it** after changing a coefficient's default, a formula or the words: `python3 tools/sizing_planner.py` (standard library
-only); `python3 tools/sizing_planner.py --check` exits 1 when the committed workbook differs from a fresh build, and
-`tools/test_sizing_planner.py` checks that every Results formula names only defined cells and that the defaults reproduce the figures the
-Explain tab states.
+**One file, three evaluators.** The inputs (name, group, label, default, unit, kind, choices, hint), the coefficients (value, unit,
+status, source), the results (name, label, expression, unit, why, in bands), the settings (key, expression, environment variable,
+condition), the JVM arguments (flag, expression, condition, why), the warnings, the calibration lines and the Explain tab's two examples
+live in one file, [`drishti-server/src/main/resources/capacity/planner.yaml`](../../drishti-server/src/main/resources/capacity/planner.yaml).
+Every expression is in a small Excel subset over the names: `+ - * / ^`, `&` (text), comparisons, `IF`, `MAX`, `MIN`, `CEILING`, `INT`,
+`ROUND`, `AND`, `OR`, `CHAR`. Three consumers read it and must agree:
+
+- `tools/sizing_planner.py` writes the workbook (every expression an Excel formula over named cells), the server's workbook template
+  (`capacity/template/`: the workbook's parts with the branding as placeholders and `template.json` naming each input's row) and the
+  shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`: every named figure at the production shape, the
+  1,000,000-position benchmark and a large Java 25 shape with exposure);
+- the server serves it to **Admin → Capacity** ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)),
+  whose `capacity.js` evaluates the expressions as you type, and fills the template's Inputs for **Download the working (.xlsx)**, so
+  the downloaded workbook keeps every formula live;
+- `drishti.py admin capacity` evaluates the server's planner with the Python evaluator.
+
+The Python evaluator, the browser's (checked under Node against the vectors) and Excel's recalculation of the same formulas give the
+same figures; the YAML block and the command line are derived from the settings and JVM arguments the same way in Python and in the
+browser. To calibrate to your own servers, change a coefficient in `planner.yaml` and regenerate.
+
+**Regenerate it** after changing a coefficient, a formula or the words: `python3 tools/sizing_planner.py` (Python with PyYAML) writes
+the workbook, the template and the test vectors; `python3 tools/sizing_planner.py --check` exits 1 when any of the three differs from a
+fresh build, and `tools/test_sizing_planner.py` checks that every Results formula names only defined cells, that the defaults reproduce
+the figures the Explain tab states, that `planner.yaml` names every cell of the workbook once and that every expression stays in the
+subset the browser evaluates.
 
 **Limits.** One server only: a sharded cluster divides the hot files, the page cache and the loads among its members but copies each
 date's skeleton to every member; a cluster version of the workbook comes later.

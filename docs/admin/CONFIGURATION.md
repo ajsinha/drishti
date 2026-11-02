@@ -87,7 +87,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -750,7 +750,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -759,7 +759,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -772,7 +772,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -816,7 +816,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -2445,7 +2445,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2471,7 +2471,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
 ```
 
 ---
@@ -2742,13 +2742,13 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 1,914 settings in 15 areas, and 304 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 1,916 settings in 15 areas, and 305 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 678 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 679 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 210 |
-| [The console's other files](#the-consoles-other-files) | 85 |
+| [The console's other files](#the-consoles-other-files) | 86 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 517 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 135 |
 | [Editions: `config/editions/`](#editions-configeditions) | 69 |
@@ -2761,7 +2761,7 @@ Every key of every kind: 1,914 settings in 15 areas, and 304 environment variabl
 | [Report definitions: `config/reports/`](#report-definitions-configreports) | 23 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 304 |
+| [Environment variable index](#environment-variable-index) | 305 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -2774,6 +2774,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `spring.application.name` | string | `drishti` |  | server | the application's name in logs and metrics | restart |  |
+| `spring.mvc.async.request-timeout` | duration | `30m` | `DRISHTI_ASYNC_TIMEOUT` | server | how long a streamed answer may take: a workbook download (the VaR Playground, the Why it moved working, the capacity workbook), a BI export; an answer cut at this limit arrives incomplete | restart |  |
 | `spring.threads.virtual.enabled` | boolean | `true` |  | server | every request runs on a virtual thread; fetches and link fan-out block cheaply | restart |  |
 | `spring.ai.model.chat` | string | `none` |  | server | Spring AI's chat auto-configuration: off (none) | restart |  |
 | `spring.ai.model.embedding` | string | `none` |  | server | Spring AI's embedding auto-configuration: off | restart |  |
@@ -4348,6 +4349,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `categories[].guides[].kind` | string | `guide` |  | console | guide, tutorial or knowledge: the badge shown | live |  |
 | `categories[].guides[].summary` | string | none |  | console | The card's summary, also searched | live |  |
 | `categories[].guides[].packs` | list | `[]` |  | console | The packs it is about: an edition that keeps none of them hides it | live |  |
+| `categories[].guides[].roles` | list | `[]` |  | console | Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it) | live |  |
 | `moved` | map | `shipped` |  | console | Retired addresses: old slug -&gt; slug or slug#anchor, answered with a 301 | live |  |
 | `moved.<name>` | string | none |  | console | One retired slug and the page (and section) that took it over | live |  |
 | `knowledge` | map | `shipped` |  | console | "What does this mean?" beside a data page: screen or kind -&gt; the Knowledge page or glossary entry that explains it | live |  |
@@ -5741,6 +5743,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_ASK_ENDPOINT` | `drishti.explain.ask.endpoint` | empty | server | an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api) |
 | `DRISHTI_ASK_KEY` | `drishti.explain.ask.api-key` | empty | server | from the environment only; never logged |
 | `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | server | the model Ask uses: a logical model of the AI layer (provider/model) |
+| `DRISHTI_ASYNC_TIMEOUT` | `spring.mvc.async.request-timeout` | `30m` | server | how long a streamed answer may take: a workbook download (the VaR Playground, the Why it moved working, the capacity workbook), a BI export; an answer cut at this limit arrives incomplete |
 | `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `./data/identity/audit.jsonl` | server | the pre-1.10 audit file, imported into the database once |
 | `DRISHTI_AUTH_ENABLED` | `auth.enabled` | `false` | console | off for local development |
 | `DRISHTI_BACKEND_DISCOVER` | `backend.discover` | `true` | console | pull the cluster's member list from the server in use, and keep it (&lt;console data dir&gt;/net/servers.json) |

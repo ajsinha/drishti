@@ -115,7 +115,7 @@ Every node's task definition gets the same value.
   edition's commands; `FORM` says it is not part of Drishti Risk;
 - Home is the **Risk desk** landing (section 4);
 - Help shows Knowledge, Start, Use, Data and Operate, without the BI and Build categories;
-- Admin shows users, roles, packs, commands, tokens, access, connectors, artifacts, data loads, lakes, audit, net, health, caches, BI and ad-hoc scopes (every person's VaR baskets)
+- Admin shows users, roles, packs, commands, tokens, access, connectors, artifacts, data loads, lakes, audit, net, health, caches, capacity, BI and ad-hoc scopes (every person's VaR baskets)
   settings; `/admin/ai` answers 404;
 - BI's catalogue offers the VaR and exposure datasets, models and reports only.
 
@@ -138,7 +138,7 @@ outside it are skipped, and they load again when you switch back.
 | **Commands** | `VAR` and the VaR page; `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`; `EXP` and the exposure page; `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`; the derived totals `NSMTM`, `CPMTM`; `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` (the Data view), `SMAT` (the scenario matrix), `PLAY` (the VaR Playground) | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; `FORM`, `RUPAKA` |
 | **Menus** | Views (above), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms, the competitive analysis link |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
-| **Admin pages** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, BI, scopes (Ad-hoc scopes: every person's VaR baskets) | AI, collaboration, embedding, edits, compute |
+| **Admin pages** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, capacity, BI, scopes (Ad-hoc scopes: every person's VaR baskets) | AI, collaboration, embedding, edits, compute |
 | **BI datasets** | `market-risk-var-latest`, `market-risk-var-official`, `counterparty-exposure-counterparties`, `counterparty-exposure-netting-sets`, `counterparty-exposure-official`, `counterparty-exposure-official-counterparties`, `counterparty-exposure-official-netting-sets`, `live-exposure`, `live-exposure-netting` (models `market-risk-var`, `counterparty-exposure`, `live-exposure`, and the reports on them) | every other dataset, model, report and board |
 
 A hidden command is hidden from people only. The engines still read every kind they need (the VaR engine reads P&L vectors, positions,
@@ -571,7 +571,7 @@ home:
   cards: [...]
 help: { categories: [knowledge, start, use, data, operate], knowledge: [market-risk, counterparty-risk, core, trading, market-data],
         unlisted-slugs: refuse }
-admin: { pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, bi, scopes] }
+admin: { pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, capacity, bi, scopes] }
 branding: { product: Drishti Risk, tagline: VaR and exposure from your own pricing data }
 ```
 
@@ -603,7 +603,7 @@ Optional blocks: `server:` and `console:` hold raw settings of either side (a pr
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Home** | the Drishti Risk landings (section 7); signed out, today's Home without its general sections | the grammar, the seven stages, the capabilities, the showcase, the stats |
 | **Help** | Knowledge (market risk, counterparty credit risk, trades, entities, market data, data and contracts), Start, Use, Data, Operate | the BI and Build categories, other packs' Knowledge pages, documents not in the catalogue |
-| **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, data loads, lakes, audit, net, health, caches, BI settings, ad-hoc scopes | AI, collaboration, embedding, edits, compute (404) |
+| **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, data loads, lakes, audit, net, health, caches, capacity, BI settings, ad-hoc scopes | AI, collaboration, embedding, edits, compute (404) |
 | **BI** | datasets `market-risk-var-latest`, `market-risk-var-official`, `counterparty-exposure-*` (five), `live-exposure`, `live-exposure-netting`; models `market-risk-var`, `counterparty-exposure`, `live-exposure`; the reports and boards on them | every other dataset, model, report and board |
 | **Branding** | **Drishti Risk**, with Drishti's name and eye mark | nothing, by default |
 

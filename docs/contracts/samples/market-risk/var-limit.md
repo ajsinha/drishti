@@ -17,7 +17,7 @@
 
 # VaR limit of a hierarchy node: var-limit (VLIM)
 
-The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's HORIZON and CONFIDENCE say otherwise. One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/var-limit/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (157 records), never a change on the day before.
+The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's id, in USD; 1-day 99% unless the row's HORIZON and CONFIDENCE say otherwise. One row per hierarchy node with a limit per BUSINESS_DATE, keyed by LIMIT_ID (VL-<NODE_ID>). Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/var-limit/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-28 to 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (157 records on 2026-09-30), never a change on the day before.
 
 ## File layout
 

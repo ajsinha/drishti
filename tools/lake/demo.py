@@ -22,7 +22,7 @@ For every dataset of data/testdata/testdata.yaml (written by tools/testdata/make
 (the first day's snapshot, then each later day's changes applied by key) and writes each day with `lake build` (tools/lake/build.py)
 into the table the dataset's Delta connector reads: <lake>/<domain>/<kind>/, the trades into trading/trade_endur, trade_calypso and
 trade_murex, partitioned by business date (and PRODUCT_TYPE for trades). Each table is written afresh (its folder is removed first). A dataset ``dated-by`` a field (the market-risk pack's VaR data,
-tools/packgen/var/make_var_data.py: the trades' P&L vectors of the last business date, the nodes' 250-day VaR history) is loaded in one
+tools/packgen/var/make_var_data.py: the trades' P&L vectors of the last three business dates, the desks' 260-day P&L history) is loaded in one
 run, each document on its own date, its dates moved with the business dates like every other dataset's.
 The exposure engine's paths are the exception: by default (`--exposure demo`) they are generated from the committed netting sets
 and CSAs for every netting set of 23 of the 24 counterparties (8,022 live trades on the data's date, about a minute; the committed run of eight sets
@@ -687,8 +687,9 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--names", metavar="FILE", help="the bank's own names (default config/demo/names.yaml): every value that is a default name, "
                    "or a default name and a comma (a branch), is renamed as it is loaded; LEIs and BICs stay")
     p.add_argument("--keep-other-dates", action="store_true", help="add the dated tables' dates to the lake, keeping the dates already "
-                   "there (each date written is replaced): `--as-of 2026-09-29 --keep-other-dates` adds the day before, the VaR data's scenario "
-                   "window moved with it (the scenario matrix, tutorial 25 step 15); an undated table is rebuilt as always")
+                   "there (each date written is replaced): the VaR data's three dates are 2026-09-28 to 2026-09-30, `--as-of 2026-09-25 "
+                   "--keep-other-dates` adds them again as 2026-09-23 to 2026-09-25, the scenario window moved with them (the scenario matrix, "
+                   "tutorial 25 step 16); an undated table is rebuilt as always")
     p.add_argument("--dry-run", action="store_true", help="print the names mapping it would apply and build nothing")
     p.add_argument("-q", "--quiet", action="store_true", help="only the summary")
     return p

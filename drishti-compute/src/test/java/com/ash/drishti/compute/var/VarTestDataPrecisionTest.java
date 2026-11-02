@@ -80,10 +80,17 @@ class VarTestDataPrecisionTest {
         lines(folder, true, each);
     }
 
+    /**
+     * The business date these tests read: the newest of the committed VaR dates (data/testdata holds three, 2026-09-28 to 2026-09-30, each
+     * date in files of its own, cob-&lt;date&gt;...; a kind written for the newest only, as the desk P&amp;L's history, names it too).
+     */
+    static final String DATE = "2026-09-30";
+
     static void lines(Path folder, boolean stress, Consumer<JsonNode> each) throws IOException {
         List<Path> files;
         try (Stream<Path> s = Files.list(folder)) {
-            files = s.filter(f -> f.getFileName().toString().endsWith(".jsonl.gz") && f.getFileName().toString().startsWith("stress-") == stress)
+            files = s.filter(f -> f.getFileName().toString().endsWith(".jsonl.gz") && f.getFileName().toString().startsWith("stress-") == stress
+                            && f.getFileName().toString().contains(DATE))
                     .sorted().toList();
         }
         for (Path f : files) {

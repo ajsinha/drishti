@@ -408,6 +408,18 @@ class VarShardClusterTest {
             byOwners += sc.at("/provenance/shards/answeredByOwners").asInt();
         }
         assertThat(byOwners).as("partial sums answered by other members").isPositive();
+        // contribution tables by position and by trade (their remote reads fetched ahead, one /partials call per remote shard)
+        for (String scope : List.of("BANK", "BANK - TRD:T4", "NODE:LEGAL~LE-B", "TRD:T1,T3,T5")) {
+            for (String by : List.of("position", "trade")) {
+                for (String ccy : List.of("USD", "EUR")) {
+                    String path = "/api/v1/var/scope/contributions?" + q(scope, ccy) + "&by=" + by;
+                    JsonNode ref = cents(strip(get(url("ref") + path)));
+                    for (String n : MEMBERS) {
+                        assertThat(cents(strip(get(url(n) + path)))).as(scope + " by " + by + " in " + ccy + " on " + n).isEqualTo(ref);
+                    }
+                }
+            }
+        }
     }
 
     @Test

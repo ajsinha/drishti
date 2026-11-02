@@ -15,14 +15,16 @@
 
 """The single-node sizing planner workbook (RESOURCES_AND_SCALE.md, Sizing a single node: the planner workbook).
 
-    python3 tools/sizing_planner.py                 writes docs/architecture/Drishti-Sizing-Planner.xlsx
+    python3 tools/sizing_planner.py                 writes docs/architecture/Drishti-Sizing-Planner.xlsx, the server's template
+                                                    (capacity/template/) and the shared test vectors, all from capacity/planner.yaml
     python3 tools/sizing_planner.py --out DIR       writes the workbook into DIR instead
     python3 tools/sizing_planner.py --check         exit 1 when the committed workbook differs from a fresh build
 
 The workbook has four tabs: Inputs (the yellow cells a planner types: positions, dates in memory, users, the Java version...),
 Results (every heap, page-cache, RAM, disk and CPU figure, the settings with their keys, the JVM arguments and the warnings, each a
 real Excel formula over named cells), Coefficients (every constant with its unit, source and status: measured, formula, calibrated
-or estimate; Results never hard-code one) and Explain (plain words). Standard library only: the parts are written as XML into a zip.
+or estimate; Results never hard-code one) and Explain (plain words). Every input, coefficient, formula and warning comes from
+capacity/planner.yaml (PyYAML reads it); the parts are written as XML into a zip.
 The look is the VaR Playground's template (drishti-server/src/main/resources/playground/var/template/xl/styles.xml).
 
 Every formula is also evaluated here by a small evaluator of the subset used (names, + - * / ^ &, comparisons, MAX, MIN, IF,
@@ -32,12 +34,15 @@ states (EXPECTED) without a spreadsheet program.
 from __future__ import annotations
 
 import argparse
+import json
 import math
 import re
+import shutil
 import sys
 import zipfile
 from pathlib import Path
 from xml.sax.saxutils import escape
+import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "architecture" / "Drishti-Sizing-Planner.xlsx"
@@ -60,320 +65,54 @@ def _branding() -> dict:
     return out
 
 
-# ---------------------------------------------------------------------------------------------------------------- the inputs
+# ---------------------------------------------------------------------------------------------------------------- the planner's one file
+# drishti-server/src/main/resources/capacity/planner.yaml holds the inputs, coefficients, results, settings, JVM arguments, warnings,
+# calibration lines and the Explain tab's examples. The server serves it to Admin -> Capacity, whose capacity.js evaluates the same
+# expressions; this module turns it into the workbook. The tuples below keep the shapes the workbook code and the tests read.
+PLANNER = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "planner.yaml"
+TEMPLATE_OUT = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "template"
+VECTORS = ROOT / "drishti-server" / "src" / "test" / "resources" / "capacity" / "test-vectors.json"
+
+
+def _load() -> dict:
+    with PLANNER.open(encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
+
+PLAN = _load()
 # (section, name, label, default, unit, kind, hint); kind: int, dec, text
-INPUTS = [
-    ("VaR", "Positions", "Positions a business date", 300_000, "positions", "int",
-     "How many positions one business date holds. Default: the production shape, OTC trades, one trade a position, so positions = trades."),
-    ("VaR", "Trades", "Trades a business date", 300_000, "trades", "int",
-     "How many trades those positions are made of. Default: production, about 300,000 trades."),
-    ("VaR", "TradesPerFungible", "Trades per position, of positions that hold several", 2, "trades", "dec",
-     "Only used when trades exceed positions: how many trades a shared (fungible) position holds on average."),
-    ("VaR", "Portfolios", "Portfolios", 4_500, "portfolios", "int",
-     "Stored portfolios: baskets, rule portfolios, desk and book portfolios. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 15,000 (desks and books grow with the positions: a desk holds 2,000 positions at both benchmark sizes, BENCHMARK.md 3)."),
-    ("VaR", "BasketMembers", "Basket members", 600_000, "members", "int", "Positions named by all the baskets together. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 2,000,000."),
-    ("VaR", "Nodes", "Hierarchy nodes", 8_107, "nodes", "int",
-     "Nodes of every risk hierarchy (bank, legal entities, divisions, desks, limit letters...). Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 27,024."),
-    ("VaR", "BooksCells", "Books and cells", 39_000, "books + cells", "int", "Trading books plus the cells of column hierarchies. Default: 300,000 ÷ 1,000,000 of the 1,000,000-position benchmark's 130,000."),
-    ("VaR", "Scenarios", "Scenarios", 509, "scenarios", "int", "Scenario days in a P&L vector (509: two years of history plus the base)."),
-    ("VaR", "TradeCcysPerNode", "Trade currencies per node", 1, "currencies", "dec", "On average, how many trade currencies a node's trades are in."),
-    ("VaR", "LakeYears", "Years of business dates kept in the lake", 1, "years", "dec", "How much history the lake keeps (the bank's rule is often 7 years)."),
-    ("VaR", "HotDates", "Dates in memory (hot-dates)", 10, "dates", "int", "Business dates kept open at once; the least recently used one leaves first."),
-    ("VaR", "PinnedMem", "Pinned dates kept in memory", 0, "dates", "int", "Dates that must always stay open (a month-end the desks compare with, an audit date)."),
-    ("VaR", "PinnedDisk", "Pinned dates kept on disk", 0, "dates", "int", "Dates whose hot file is always kept on local disk, so they open in a second (month-ends, year-ends)."),
-    ("VaR", "CcysAhead", "Reporting currencies built ahead (besides USD)", 0, "currencies", "int",
-     "Each one is a whole extra book a date (the shipped setting builds 4: EUR, CAD, JPY, GBP)."),
-    ("VaR", "StressOn", "Stress set on (1) or off (0)", 0, "0 or 1", "int", "1 when stressed VaR is used: the stress set is a book of its own a date."),
-    ("VaR", "IntradayBatches", "Intraday batches a day", 10, "batches", "int",
-     "Intraday batches applied to today's date. Default 10 (hourly over the trading day): assumed, confirm the batch count."),
-    ("VaR", "UpdatesPerBatch", "Updates per intraday batch", 11_700, "trades", "int",
-     "Trades amended, added or cancelled in one batch. Default: 39% of the 300,000 trades a day (117,000) over the 10 batches."),
-    ("Exposure", "ExposureOn", "Exposure on (1) or off (0)", 0, "0 or 1", "int", "1 when the counterparty exposure engine serves dates on this server."),
-    ("Exposure", "NettingSets", "Netting sets", 10_000, "sets", "int", "Netting sets a business date."),
-    ("Exposure", "ExpTrades", "Exposure trades", 100_000, "trades", "int", "Trades with simulated paths a business date."),
-    ("Exposure", "Paths", "Paths", 200, "paths", "int", "Monte Carlo paths a trade."),
-    ("Exposure", "TimeSteps", "Time steps", 24, "grid dates", "int", "Grid dates of a path."),
-    ("Exposure", "ExpHotDates", "Exposure dates in memory", 10, "dates", "int", "drishti.ccr.exposure.hot-dates: exposure dates kept open."),
-    ("Trades and BI", "TradeRowsPerDay", "Trade and BI rows a day", 300_000, "rows", "int",
-     "Trade rows loaded a business date, all trade systems together. Default: the same 300,000 production trades, served as trades too."),
-    ("Trades and BI", "TradeDaysKept", "Days of trade rows kept", 252, "days", "int", "Business days of trades kept in the lake (252 is a year)."),
-    ("Trades and BI", "TradeConnectors", "Trade connectors", 3, "connectors", "int", "Trade systems read through their own connector (for example ENDUR, CALYPSO, MUREX)."),
-    ("Users", "Users", "Concurrent users", 50, "users", "int", "People (or programs) asking questions at the same moment at the busiest time."),
-    ("Users", "PeakRps", "Peak requests a second wanted", 100, "requests/s", "dec", "Requests a second the server must answer at the peak."),
-    ("Users", "VarShare", "Share of VaR questions", 0.5, "share", "dec", "Of those requests, the share that are VaR questions (the rest are trades, searches, pages)."),
-    ("Machine", "JavaVersion", "Java version (21 or 25)", 21, "21 or 25", "int", "The Java the server runs on; 25 adds compact object headers."),
-    ("Machine", "LoadThreads", "Load threads (drishti.var.load-threads)", 2, "threads", "int", "Dates that may load from the lake at the same time."),
-    ("Machine", "Collector", "Garbage collector: auto, G1 or ZGC", "auto", "text", "text", "auto follows the documented rule: generational ZGC from 16 GB of heap, G1 below."),
-    ("Machine", "DataFolder", "Data folder", "/opt/drishti/data", "path", "text", "Where Drishti keeps everything it writes (dumps, logs and temporary files go under it)."),
-    ("Machine", "ServerJar", "Server jar", "drishti-server-{VERSION}-exec.jar", "file", "text", "The server's jar, as the command line starts it."),
-]
-
-# ---------------------------------------------------------------------------------------------------------------- coefficients
+INPUTS = [(i["group"], i["name"], i["label"], i["default"], i["unit"], i["kind"], i["hint"]) for i in PLAN["inputs"]]
 # (name, value, unit, status, source); status: measured, formula, calibrated, estimate
-COEFFS = [
-    ("BytesPerMB", 1_048_576, "bytes", "formula", "1 MB = 1,024 × 1,024 bytes, as the JVM and Admin → Caches count it; 1 GB = 1,024 MB."),
-    ("Scale1M", 1_000_000, "positions", "formula", "The size every per-million coefficient refers to."),
-    ("BusinessDaysYear", 252, "days", "formula", "Business days a year."),
-    ("BytesPerRun", 8, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: 8·R, node members kept as runs."),
-    ("RunsPerNode", 9.7, "runs", "estimate", "VAR_GUIDE.md 27.1 worked example: about 2 MB of runs at 27,024 nodes (about 9.7 runs a node)."),
-    ("BytesPerNamedRow", 150, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: ~150·(B + K + N), names, book and cell runs, nodes and their book lists."),
-    ("BytesPerAggIndexRow", 64, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: 64·A, the index of the aggregates (A = B + K + N, the rows mapped from the hot file)."),
-    ("BytesPerTradeCols", 108, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: 108·T, code and number columns of a trade, positionOf, its id index."),
-    ("BytesPerPositionCols", 136, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: 136·P, a position's columns, run and id index."),
-    ("BytesPerId", 72, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: 72·(2T + 3P), trade and position ids and the high-cardinality dictionaries."),
-    ("BytesPerCtotValue", 8, "bytes", "formula", "VAR_GUIDE.md 27.1, H_book: 8·(S + 1)·N·C, every node's per-trade-currency totals (float64)."),
-    ("BytesPerPortfolio", 1_000, "bytes", "estimate", "VAR_GUIDE.md 27.1: the portfolio definitions are about 30 MB at 15,000 portfolios and 2 million basket members; half given to the portfolios."),
-    ("BytesPerBasketMember", 7.5, "bytes", "estimate", "The other half of those 30 MB, given to the basket members."),
-    ("BookHeapCalibration", 0.9707, "factor", "calibrated",
-     "The final 1,000,000-position users run (tools/bench/results/2.9.10-1m.jsonl; Java 21, G1, 6 GB heap): heap after GC 769 MB at start, 1,352 MB with "
-     "one date, 2,213 MB with two: 722 MB a date on average (0.72 GB, VAR_GUIDE.md 27.1, BENCHMARK.md 4.8), against 743.8 MB by the H_book formula. "
-     "Every date is counted at the average (the first date measured less, 583 MB): the safe side. An earlier run that night measured 740 / 1,602 / "
-     "2,186 MB; before node members were runs and the aggregates were mapped, a date held about 3.2 GB at this size."),
-    ("FirstOpenOnceMB", 0, "MB at 1M positions", "calibrated",
-     "The users run shows no one-time heap of the first open beyond the average date (one date +583 MB, two +1,444 MB); kept as a coefficient to tune (the earlier run suggested 278 MB)."),
-    ("ProtectedAlways", 2, "dates", "formula", "VAR_GUIDE.md 26.8: the date just used and the newest business date always stay open, on top of the pinned ones."),
-    ("IntradayLayerMB", 5, "MB", "formula", "VAR_GUIDE.md 27.1, H_date: about 5 MB and the updates per intraday layer."),
-    ("IntradayTradeCopies", 3, "vectors", "formula",
-     "VarIntraday: each trade a layer changed keeps three float64 vectors of the scenarios (its difference from the morning, its current P&L, its current USD P&L); only the trade's latest P&L is kept, never the batches."),
-    ("IntradayTradeOverheadB", 400, "bytes", "estimate", "VarIntraday: per changed trade its map entries, value today and texts."),
-    ("IntradayDistinctShare", 1.0, "share", "estimate", "Share of the day's updates that are trades not updated earlier that day (1: every update a different trade, the most heap)."),
-    ("IntradayAggShare", 1.0, "share", "estimate", "VarIntraday: share of the books and nodes whose aggregate a layer re-holds (float64 vectors); with updates spread over the bank, all of them."),
-    ("IntradayUpdateOverheadB", 500, "bytes", "estimate", "VarIntraday.Update: an update in flight holds its P&L and USD P&L (2 float64 vectors) plus its texts and numbers."),
-    ("IntradayJsonBytesPerValue", 12, "bytes", "estimate", "A batch file in JSON Lines: about 12 characters a scenario value, under tmp while lake build appends it."),
-    ("BaseFixedMB", 128, "MB", "formula", "BENCHMARK.md 4.8: the fitted heap at start, 128 MB plus a share per position."),
-    ("BasePerPositionB", 605.0, "bytes", "calibrated",
-     "The users run: 769 MB of heap after GC at start at 1,000,000 positions; minus the 64 MB footer cache (below) and 128 MB, 577 MB over 1,000,000 positions (lake footers' residue, the entity index of the P&L rows). The earlier run: 740 MB."),
-    ("BaseTradeRows", 20_000, "rows a day", "calibrated", "The measured start heap already holds the benchmark's trades (20,000 a day over 2 days, 2,000 counterparties); only rows above it are added."),
-    ("FooterCacheDefaultMB", 64, "MB", "formula", "RESOURCES_AND_SCALE.md 3.5: -Ddrishti.parquet.footer-cache-mb, 64 MB by default."),
-    ("FooterBytesPerChunk", 700, "bytes", "measured", "RESOURCES_AND_SCALE.md 3.5: about 700 bytes a column chunk of a Parquet footer."),
-    ("RowsPerRowGroup", 128_000, "rows", "estimate", "Rows in one Parquet row group of a trade table."),
-    ("ColumnsPerTable", 60, "columns", "estimate", "Columns of a trade table's Parquet files (each a column chunk in the footer)."),
-    ("SearchIndexCapMB", 600, "MB", "formula", "RESOURCES_AND_SCALE.md 3.5, CONFIGURATION.md: the type-ahead index's index.max-memory, 600 MB."),
-    ("SearchBytesPerRow", 200, "bytes", "estimate", "Heap of the type-ahead index a trade row of the kept day."),
-    ("BiQueryCacheMB", 64, "MB", "formula", "RESOURCES_AND_SCALE.md 3.3: drishti.bi.query.cache-max-bytes, 64 MB."),
-    ("BiPlanAnswersMB", 50, "MB", "estimate", "RESOURCES_AND_SCALE.md 3.3: plan answers, 2,000 entries (drishti.bi.plan.cache-entries), about 25 KB each."),
-    ("HistoryCacheMB", 256, "MB", "formula", "RESOURCES_AND_SCALE.md 3.4, CONFIGURATION.md: drishti.history.cache-mb, 256 MB."),
-    ("VarAnswersMB", 32, "MB", "estimate", "RESOURCES_AND_SCALE.md 3.1: the VaR answers, 512 entries, about 64 KB each."),
-    ("TradeCacheBytesPerRow", 1_300, "bytes", "estimate", "BENCHMARK.md 8.2 and 8.4: 1.2 to 1.8 GB of heap after GC with 1.16 million trades on the latest day and 50 users."),
-    ("PerLoadMBAt1M", 1_600, "MB", "formula", "VarProperties.PER_LOAD_BYTES: the heap one load holds while it builds a date (its aggregates and currency totals), 1.6 GB at 1,000,000 positions, scaled by positions."),
-    ("ReadBufferMB", 64, "MB", "formula", "VAR_GUIDE.md 27a.6: drishti.var.read.buffer-mb, decoded rows waiting for one load."),
-    ("PerUserMB", 2.466, "MB", "measured",
-     "PER-USER WORKING MEMORY. The 1,000,000-position users run (6 GB heap, Java 21, G1): heap after GC 2,336.2 MB warm at 50 users against 2,212.9 MB with two dates open, (2,336.2 − 2,212.9) ÷ 50; 2,355 MB at the end after 200 users."),
-    ("LiveShare", 0.61, "share", "formula", "RESOURCES_AND_SCALE.md 9.5 and BENCHMARK.md 11: the heap needed is the heap after collection ÷ 0.61 (39% headroom for the collector)."),
-    ("Java25HeapFactor", 0.977, "factor", "measured", "BENCHMARK.md 4.4: Java 25 with compact object headers, 7,335 MB against 7,505 MB at 1,000,000 positions."),
-    ("CompressedOopsMaxGB", 31, "GB", "formula", "Java: compressed object references work up to a heap just under 32 GB; 31g is the safe largest."),
-    ("AlignedOopsMaxGB", 64, "GB", "formula", "Java: with -XX:ObjectAlignmentInBytes=16 compressed references reach 64 GB (objects pad to 16 bytes)."),
-    ("ZgcFromGB", 16, "GB", "formula", "RESOURCES_AND_SCALE.md 5.5, PERFORMANCE.md (JVM settings): generational ZGC for large single servers (16 to 36 GB), G1 for small ones."),
-    ("OpenHeapStepMB", 64, "MB", "formula", "drishti.var.open-heap-mb is rounded up to a multiple of this."),
-    ("ZgcSoftMaxShare", 0.8, "share", "formula", "RESOURCES_AND_SCALE.md 5.5: -XX:SoftMaxHeapSize = 0.8 × -Xmx with ZGC (planned in the docs)."),
-    ("ExpShardLoadMB", 8_192, "MB", "estimate", "BENCHMARK.md 6: past about 8 GB of value matrices an exposure date's load should be sharded."),
-    ("SingleNodeRamGB", 512, "GB", "estimate", "Past about 512 GB of RAM one server is the wrong shape: plan a cluster."),
-    ("OpenHeapMargin", 0.10, "share", "estimate", "Room in drishti.var.open-heap-mb above the dates in memory, so the safety net does not close a date for a few MB."),
-    ("NetShare", 0.4, "share", "formula", "OpenDates.automaticNet: the automatic safety net is 0.4 × the heap − 512 MB − load-threads × 1.6 GB."),
-    ("NetReserveMB", 512, "MB", "formula", "OpenDates.automaticNet: the 512 MB of that formula."),
-    ("NetLoadMB", 1_600, "MB", "formula", "OpenDates.automaticNet: the per-load 1.6 GB of that formula (not scaled by positions)."),
-    ("NetFloorShare", 0.1, "share", "formula", "OpenDates.automaticNet: at least a tenth of the heap."),
-    ("NetGraceSeconds", 120, "seconds", "formula", "-Ddrishti.open-dates.net-grace-seconds: the safety net never closes a date read in the last 120 s."),
-    ("ExpOpenBytesPerTrade", 1_720, "bytes", "measured", "BENCHMARK.md 6: an open exposure date, 172 MB of heap at 100,000 trades (matrices mapped)."),
-    ("ExpLoadBytesPerValue", 8, "bytes", "measured", "BENCHMARK.md 6: while loading, every set's value matrix in float64 (sets × paths × steps × 8): 380 MB at 9,901 sets, 200 paths, 24 steps."),
-    ("ExpPathsCacheMB", 256, "MB", "formula", "RESOURCES_AND_SCALE.md 3.2: the exposure trade-paths cache, 256 MB."),
-    ("ExpHotBytesPerValue", 6, "bytes", "formula", "EXPOSURE_GUIDE.md 27.2: V in float32 (4 bytes) and E on the primary dates, half the grid (2 bytes a value)."),
-    ("ExpHotBytesPerTrade", 1_256, "bytes", "calibrated", "BENCHMARK.md 6: the hot file of 100,000 trades was 410.8 MB; minus the matrices' 285 MB, 1,256 bytes a trade."),
-    ("ExpPathBytes", 4, "bytes", "formula", "EXPOSURE_GUIDE.md 27.2: trade paths in the lake, float32."),
-    ("ExpPathDaysKept", 20, "days", "formula", "EXPOSURE_GUIDE.md 27.3: trade paths kept at full resolution for 20 business days."),
-    ("ExpDiskDates", 60, "files", "formula", "CONFIGURATION.md: the exposure tier's disk-dates, 60 (the retention may keep more)."),
-    ("HotRowBytes", 4, "bytes", "formula", "VAR_GUIDE.md 26.3: position and trade rows in float32."),
-    ("AggBytes", 8, "bytes", "formula", "VAR_GUIDE.md 26.3: aggregates and currency totals in float64."),
-    ("HotSmallBytesPerTrade", 354, "bytes", "calibrated",
-     "BENCHMARK.md 3: the hot file measured 3.14 GB a date at 1,000,000 positions; the rows, aggregates and totals are 2.79 GB, the rest (ids, columns, runs) 354 bytes a trade (VAR_GUIDE.md 27.1 says about 120)."),
-    ("StressScenarios", 250, "scenarios", "estimate", "RESOURCES_AND_SCALE.md 2.3: a stress window of 250 days."),
-    ("LakeBytesPerValue", 2.9535, "bytes", "calibrated", "Re-benchmark: 2.8 GB of lake for two dates of 1,000,000 vectors of 509 values (read as GB of 1,024 MB, the larger reading)."),
-    ("DiskDates", 60, "files", "formula", "CONFIGURATION.md: drishti.var.tier.disk-dates, 60 hot files kept on disk."),
-    ("CurrencyRetentionDates", 5, "dates", "formula", "RESOURCES_AND_SCALE.md 3.1: currency books kept on disk for 5 dates."),
-    ("SpillFactor", 3, "× hot file", "formula", "VAR_GUIDE.md 26.8: before a build the tier reserves three times its largest hot file (the disk guard)."),
-    ("LogsGB", 1.1, "GB", "formula", "RESOURCES_AND_SCALE.md 3.8, 6.4: the server log rotated at 1 GB in all, the GC log 5 × 20 MB."),
-    ("DumpsKept", 1, "dumps", "estimate", "OPERATIONS.md: a heap dump is about the size of the heap; one kept."),
-    ("IdMapBytesPerRow", 15, "bytes", "measured", "BENCHMARK.md 8.4: id maps on disk, about 15 bytes a trade a date."),
-    ("TradeLakeBytesPerRow", 1_500, "bytes", "measured", "BENCHMARK.md 8.4: about 1.5 KB a trade a day in the lake."),
-    ("GroupedPagesBytesPerRow", 550, "bytes", "measured", "BENCHMARK.md 8.4: grouped pages, about 0.55 KB a trade a cached date."),
-    ("GroupedPagesDates", 16, "dates", "formula", "RESOURCES_AND_SCALE.md 3.4: grouped pages keep 16 dates."),
-    ("DocCacheGB", 1, "GB", "formula", "RESOURCES_AND_SCALE.md 3.5: the document disk cache, 1 GB a connector."),
-    ("IndexDiskGB", 2, "GB", "formula", "RESOURCES_AND_SCALE.md 3.5: the type-ahead index, index.max-disk 2 GB a connector."),
-    ("BiLayerBytesPerRow", 300, "bytes", "estimate", "BI layers on disk a trade row a day read."),
-    ("BiRunsGB", 20, "GB", "formula", "RESOURCES_AND_SCALE.md 3.3: the BI runs' store, 20 GB."),
-    ("MinFreePercent", 10, "%", "formula", "CONFIGURATION.md: drishti.disk.min-free-percent, 10."),
-    ("MinFreeGB", 20, "GB", "formula", "CONFIGURATION.md: drishti.disk.min-free-gb, 20 (both must hold)."),
-    ("DiskStepGB", 50, "GB", "formula", "Disk recommendations are rounded up to a multiple of this."),
-    ("ResidentShare", 0.7458, "share", "calibrated", "The users run: RSS 11,160 MB at the end minus 6,694 MB committed (NMT) leaves 4,466 MB of mapped hot-file pages, 75% of the two dates' 5,988 MB, under load."),
-    ("BenchPositions", 1_000_000, "positions", "measured", "The 1,000,000-position benchmark's shape (BENCHMARK.md 3): positions, one trade each. The Calibration check uses only these Bench values."),
-    ("BenchTrades", 1_000_000, "trades", "measured", "The benchmark's trades."),
-    ("BenchNodes", 27_024, "nodes", "measured", "The benchmark's hierarchy nodes."),
-    ("BenchBooksCells", 130_000, "books + cells", "measured", "The benchmark's books and cells (VAR_GUIDE.md 27.1's worked example)."),
-    ("BenchPortfolios", 15_000, "portfolios", "measured", "The benchmark's portfolios."),
-    ("BenchMembers", 2_000_000, "members", "measured", "The benchmark's basket members."),
-    ("BenchScenarios", 509, "scenarios", "measured", "The benchmark's scenarios."),
-    ("BenchUsers", 50, "users", "measured", "The users of the warm-heap measure."),
-    ("BenchVarShare", 0.5, "share", "measured", "The users run's share of VaR questions (50.5%)."),
-    ("MeasuredXmxMB", 6_144, "MB", "measured", "The -Xmx of the 1,000,000-position runs (6 GB)."),
-    ("ResidentFirstIdle", 0.5207, "share", "calibrated", "The users run: RSS rose 2,281 MB with the first date (2,875 → 5,156 MB); less the 722 MB of the date's heap, 52% of its 2,994 MB hot file, written and read."),
-    ("ResidentNextIdle", 0.3410, "share", "calibrated", "The users run: RSS rose 1,743 MB with the second date (→ 6,899 MB); less 722 MB of heap, 34% of its hot file."),
-    ("RssStartMB", 2_875, "MB", "measured", "The users run: RSS at start, 1,000,000 positions, 6 GB heap, Java 21 (2,708 MB in the earlier run)."),
-    ("MetaspaceCodeMB", 215, "MB", "measured", "PERFORMANCE.md (Resident memory): metaspace 131 MB and code cache 84 MB, flat."),
-    ("DirectMaxMB", 256, "MB", "formula", "PERFORMANCE.md, OPERATIONS.md: -XX:MaxDirectMemorySize=256m on every launcher."),
-    ("OtherNativeMB", 600, "MB", "estimate", "PERFORMANCE.md (Resident memory): RSS levels off at about -Xmx + 0.4 GB (two malloc arenas) to + 1 GB (default allocator); the rest beyond metaspace and direct memory."),
-    ("OsReserveGB", 2, "GB", "estimate", "The operating system and its own services."),
-    ("ConsoleGB", 1, "GB", "estimate", "The console's 4 worker processes on the same machine."),
-    ("RamStepGB", 8, "GB", "formula", "RAM recommendations are rounded up to a multiple of this."),
-    ("MeasuredCores", 12, "cores", "measured", "The benchmark machine: nproc says 24 hardware threads, 12 cores of 2 threads each (BENCHMARK.md 3). Cores in Results are physical cores."),
-    ("ReqPerCoreTrades", 22.5, "requests/s a core", "measured",
-     "REQ/S PER CORE, trade questions (trades, counterparty pages, netting sets, searches). BENCHMARK.md 4.3, trades only: 270 requests a second at 50 users on 12 cores."),
-    ("ReqPerCoreVarAtRef", 11.56, "requests/s a core", "calibrated",
-     "REQ/S PER CORE, VaR questions at 1,000,000 positions. The users run: 183.3 requests a second at 50 users on 12 cores, 0 failures, p95 0.6 to 1.1 s, 50.5% of them VaR (5,582 of 11,050); with trade questions at 22.5 a core, the VaR ones are 11.56 a core. 137.5 a second at 100 users and 123.8 at 200 (queueing: p95 about 2 and 5 s)."),
-    ("VarRefPositions", 1_000_000, "positions", "formula", "The size the VaR rate above was measured at."),
-    ("VarCostExponent", 1.0, "exponent", "estimate",
-     "How a VaR question's cost grows with positions away from 1,000,000 (1: in proportion; the bank minus a desk reads every position)."),
-    ("CpuTarget", 0.7, "share", "estimate", "Plan the cores to be 70% busy at the peak, so queues stay short."),
-    ("CoresReserve", 2, "cores", "estimate", "Cores kept for a date's load, the collector and the operating system."),
-    ("MinCores", 4, "cores", "estimate", "The fewest cores recommended."),
-    ("FirstOpenSecPer1M", 18.5, "s", "measured", "Re-benchmark: a date's first open took 18 to 19 s at 1,000,000 positions."),
-    ("LakeLoadSecPer1M", 14.2, "s", "measured", "Re-benchmark: the lake load took 28.4 s for two dates of 1,000,000 vectors."),
-    ("ReopenSecPer1M", 0.25, "s", "estimate", "BENCHMARK.md 5.1: reopening a date from its hot file, about 0.25 s a million trades."),
-]
+COEFFS = [(c["name"], c["value"], c["unit"], c["status"], c["source"]) for c in PLAN["coefficients"]]
 
 
-# ---------------------------------------------------------------------------------------------------------------- results
-# ("band", title) or (name, label, formula, unit, why) or ("note", text); unit "text" marks a text result
 def _results() -> list:
+    """("band", title), (name, label, formula, unit, why) and ("settings",) after the band that carries them."""
     r = []
-    band = lambda t: r.append(("band", t))  # noqa: E731
-    row = lambda *a: r.append(a)  # noqa: E731
-    band("Heap: one VaR book (VAR_GUIDE.md 27.1, term by term)")
-    row("HbRuns", "Node members as runs", f"BytesPerRun*RunsPerNode*Nodes/{MB}", "MB", "8·R: each node's books and cells kept as runs of positions.")
-    row("HbNames", "Names, runs, nodes", f"BytesPerNamedRow*(BooksCells+Nodes)/{MB}", "MB", "~150·(B + K + N): book and cell names and runs, the nodes and their book lists.")
-    row("HbAggIndex", "Index of the aggregates", f"BytesPerAggIndexRow*(BooksCells+Nodes)/{MB}", "MB", "64·A: the aggregates themselves stay in the hot file; the heap keeps where each row is.")
-    row("HbColumns", "Columns and position runs", f"(BytesPerTradeCols*Trades+BytesPerPositionCols*Positions)/{MB}", "MB", "108·T + 136·P: the coded columns, the position runs, positionOf, the id indexes.")
-    row("HbIds", "Trade and position ids", f"BytesPerId*(2*Trades+3*Positions)/{MB}", "MB", "72·(2T + 3P): the ids and the high-cardinality dictionaries; the largest term.")
-    row("HbCtot", "Per-currency totals of every node", f"BytesPerCtotValue*(Scenarios+1)*Nodes*TradeCcysPerNode/{MB}", "MB", "8·(S + 1)·N·C: each node's totals per trade currency, in float64.")
-    row("HbPortfolios", "Portfolio definitions", f"(BytesPerPortfolio*Portfolios+BytesPerBasketMember*BasketMembers)/{MB}", "MB", "About 30 MB at 15,000 portfolios and 2 million basket members.")
-    row("HbFormula", "One book by the formula", "HbRuns+HbNames+HbAggIndex+HbColumns+HbIds+HbCtot+HbPortfolios", "MB", "The sum of the terms above.")
-    row("JavaHeapFactor", "Java version factor", "IF(JavaVersion>=25,Java25HeapFactor,1)", "factor", "Compact object headers on Java 25 save a little (the heap is mostly arrays).")
-    row("HeapBook", "One book, calibrated", "HbFormula*BookHeapCalibration*JavaHeapFactor", "MB", "The formula scaled to what the 1,000,000-position re-benchmark measured.")
-    row("BooksPerDate", "Books a date", "1+CcysAhead+StressOn", "books", "The USD book, one more per reporting currency built ahead, one for the stress set.")
-    row("HeapDate", "One date", "HeapBook*BooksPerDate", "MB", "H_date ≈ H_book × (1 + currency books + stress book).")
-    row("DatesInMemory", "Dates in memory", "MAX(HotDates,PinnedMem+ProtectedAlways)", "dates", "hot-dates, unless the protected dates (pinned + the newest + the one just used) are more.")
-    row("DatesAtPeak", "Dates at the peak", "DatesInMemory+1", "dates", "While a new date opens, the date it pushes out stays open until its readers finish.")
-    row("HeapDates", "All open dates", "DatesAtPeak*HeapDate", "MB", "Dates at the peak × one date.")
-    row("IntradayUpdatesDay", "Intraday updates a day", "IntradayBatches*UpdatesPerBatch", "updates", "Batches a day × updates per batch.")
-    row("IntradayTrades", "Trades changed by the day's layer", "MIN(Trades,IntradayUpdatesDay*IntradayDistinctShare)", "trades",
-        "The layer keeps each changed trade's latest P&L only, so it grows with the trades changed, not the batches.")
-    row("HeapIntradayTrades", "Intraday layer: changed trades", f"IntradayTrades*(IntradayTradeCopies*AggBytes*Scenarios+IntradayTradeOverheadB)/{MB}", "MB",
-        "Three float64 vectors a changed trade (its difference, its P&L, its USD P&L) and its entries.")
-    row("HeapIntradayAggs", "Intraday layer: changed aggregates", f"IF(IntradayTrades>0,(BooksCells+Nodes)*AggBytes*Scenarios*IntradayAggShare/{MB},0)", "MB",
-        "Every book and node above a changed trade holds its changed aggregate on the heap (the morning's stays in the hot file).")
-    row("HeapIntradayTotals", "Intraday layer: currency totals", f"IF(IntradayTrades>0,Nodes*TradeCcysPerNode*(Scenarios+1)*AggBytes/{MB},0)", "MB",
-        "The per-trade-currency totals' changes, per node and currency.")
-    row("HeapIntraday", "Intraday layers (today's date)", "(1+CcysAhead)*(IF(IntradayTrades>0,IntradayLayerMB,0)+HeapIntradayTrades+HeapIntradayAggs+HeapIntradayTotals)", "MB",
-        "About 5 MB and the updates per layer (VAR_GUIDE.md 27.1); the USD book and each currency book carry one.")
-    row("IntradayApplyMB", "Applying a batch", f"IF(IntradayTrades>0,(1+CcysAhead)*(UpdatesPerBatch*(2*AggBytes*Scenarios+IntradayUpdateOverheadB)/{MB}+HeapIntradayAggs),0)", "MB",
-        "A batch's updates in flight, and the layer's aggregates copied (the previous book stays readable until its requests finish).")
-    row("HeapFirstOpen", "Warmed by the first date", "FirstOpenOnceMB*Positions/Scale1M*JavaHeapFactor", "MB", "What the first open warms once (answers, views, connector caches).")
-    band("Heap: exposure")
-    row("ExpOpenDateMB", "One open exposure date", f"ExposureOn*ExpTrades*ExpOpenBytesPerTrade/{MB}", "MB", "The sets and trades of a date; its matrices are mapped, not on the heap.")
-    row("HeapExposure", "Exposure dates and paths cache", "ExpHotDates*ExpOpenDateMB+ExposureOn*ExpPathsCacheMB", "MB", "Exposure dates in memory × one date, and the 256 MB trade-paths cache.")
-    row("ExpLoadMB", "Loading an exposure date", f"ExposureOn*NettingSets*Paths*TimeSteps*ExpLoadBytesPerValue/{MB}", "MB", "Every netting set's value matrix in float64 while the date loads.")
-    band("Heap: the server, caches and users")
-    row("HeapBase", "The server at start", f"(BaseFixedMB+BasePerPositionB*Positions/{MB})*JavaHeapFactor", "MB", "Measured after GC with no date open: the lake's footers' residue and the entity index grow with positions.")
-    row("FooterCacheMB", "Parquet footer cache", f"MAX(FooterCacheDefaultMB,CEILING(TradeRowsPerDay*TradeDaysKept/RowsPerRowGroup*ColumnsPerTable*FooterBytesPerChunk/{MB},1))",
-        "MB", "64 MB, or the footers of every trade table kept when they are more.")
-    row("HeapSearch", "Type-ahead index", f"MIN(SearchIndexCapMB,TradeRowsPerDay*SearchBytesPerRow/{MB})", "MB", "The kept day's index of trade rows, capped by index.max-memory.")
-    row("HeapBiCaches", "BI, history and VaR answer caches", "BiQueryCacheMB+BiPlanAnswersMB+HistoryCacheMB+VarAnswersMB", "MB", "Each cache at its budget.")
-    row("HeapTradeRows", "Trade rows beyond the measured", f"MAX(0,TradeRowsPerDay-BaseTradeRows)*TradeCacheBytesPerRow/{MB}", "MB", "The trade connectors' working set for rows above the 60,000 a day already in the start heap.")
-    row("HeapUsers", "Requests in flight", "Users*PerUserMB", "MB", "Working memory per concurrent user (measured: about 2.5 MB).")
-    row("HeapSteady", "Heap after GC, all dates open", "HeapBase+FooterCacheMB+HeapFirstOpen+HeapDates+HeapIntraday+HeapExposure+HeapSearch+HeapBiCaches+HeapTradeRows+HeapUsers", "MB",
-        "What survives a collection at the busiest steady moment.")
-    row("HeapLoadTransient", "Loads in progress", "LoadThreads*(PerLoadMBAt1M*Positions/Scale1M+ReadBufferMB)+ExpLoadMB+IntradayApplyMB", "MB", "Each load thread's build (1.6 GB at 1,000,000 positions) and read buffer, an exposure load and an intraday batch being applied.")
-    band("The heap to set")
-    row("XmxRawMB", "Heap needed", "HeapSteady/LiveShare+HeapLoadTransient", "MB", "The steady heap with the collector's 39% headroom, plus the loads.")
-    row("XmxGB", "Recommended -Xmx", "CEILING(XmxRawMB/1024,1)", "GB", "Rounded up to a whole GB.")
-    row("OopsMode", "Compressed object references", 'IF(XmxGB<=CompressedOopsMaxGB,"on: the heap is under 32 GB",IF(XmxGB<=AlignedOopsMaxGB,"on only with -XX:ObjectAlignmentInBytes=16 (added below)","off: past 64 GB, plan a cluster"))',
-        "text", "Under 32 GB Java uses 4-byte references; from 32 GB they double unless objects align to 16 bytes (up to 64 GB).")
-    row("GcChoice", "Garbage collector", 'IF(Collector="auto",IF(XmxGB>=ZgcFromGB,"ZGC","G1"),Collector)', "text", "Generational ZGC from 16 GB of heap, G1 below (RESOURCES_AND_SCALE.md 5.5).")
-    band("Page cache and RAM")
-    row("TmatRows", "Trade rows of shared positions", "IF(Trades>Positions,TradesPerFungible*(Trades-Positions)/MAX(TradesPerFungible-1,1),0)", "rows", "Trades of positions that hold several get rows of their own in the hot file.")
-    row("HotFileBookMB", "Hot file of one book", f"(Positions*Scenarios*HotRowBytes+TmatRows*Scenarios*HotRowBytes+(BooksCells+Nodes)*Scenarios*AggBytes+Nodes*TradeCcysPerNode*(Scenarios+1)*AggBytes+HotSmallBytesPerTrade*Trades)/{MB}",
-        "MB", "P·S·4 + Q·S·4 + A·S·8 + N·C·(S+1)·8 + the small sections (VAR_GUIDE.md 27.1).")
-    row("StressFileMB", "Hot file of the stress book", "StressOn*HotFileBookMB*StressScenarios/Scenarios", "MB", "The stress set's book, about 250 scenarios.")
-    row("HotFileDateMB", "Hot files of one date", "HotFileBookMB*(1+CcysAhead)+StressFileMB", "MB", "The USD book, each currency book and the stress book.")
-    row("ExpHotFileMB", "Exposure hot file of a date", f"ExposureOn*(NettingSets*Paths*TimeSteps*ExpHotBytesPerValue+ExpTrades*ExpHotBytesPerTrade)/{MB}", "MB", "V and E in float32 and the sets and trades.")
-    row("PageCacheMB", "Page cache for the open dates", "(DatesInMemory*HotFileDateMB+ExpHotDates*ExpHotFileMB)*ResidentShare", "MB", "The open dates' hot files resident while people read them.")
-    row("NativeMB", "Native memory beside the heap", "MetaspaceCodeMB+DirectMaxMB+OtherNativeMB", "MB", "Metaspace and code, direct buffers at their cap, threads, the collector and the allocator.")
-    row("RssPlannedMB", "Resident memory planned", "XmxGB*1024+NativeMB+PageCacheMB", "MB", "RSS = heap (fully committed over a long run) + native + the page cache of the open dates.")
-    row("RamRecommendedGB", "Recommended machine RAM", "CEILING(RssPlannedMB/1024+OsReserveGB+ConsoleGB,RamStepGB)", "GB", "RSS + the operating system + the console, rounded up to 8 GB.")
-    row("RamMinimumGB", "Smallest workable RAM", "CEILING(XmxGB+NativeMB/1024+OsReserveGB+ConsoleGB+HotFileDateMB/1024,RamStepGB)", "GB",
-        "Only the date being read resident: it works, but other dates read from disk first (slower).")
-    band("Disk, by folder")
-    row("LakeDates", "Business dates in the lake", "LakeYears*BusinessDaysYear", "dates", "Years kept × 252.")
-    row("LakeVarDateMB", "VaR lake, one date", f"Trades*Scenarios*LakeBytesPerValue/{MB}*(1+StressOn*StressScenarios/Scenarios)", "MB", "The P&L vectors as Parquet (2.8 GB for two dates at 1,000,000).")
-    row("DiskLakeVarGB", "VaR lake (the lake folder)", "LakeDates*LakeVarDateMB/1024", "GB", "Every date kept.")
-    row("HotDatesOnDisk", "VaR hot files kept", "MIN(LakeDates,DiskDates)+PinnedDisk", "dates", "disk-dates (60) and the pinned dates on disk.")
-    row("DiskHotGB", "VaR hot files (var/hot)", "(HotDatesOnDisk*(HotFileBookMB+StressFileMB)+CcysAhead*MIN(HotDatesOnDisk,CurrencyRetentionDates)*HotFileBookMB)/1024", "GB",
-        "Each kept date's book and stress book; currency books for the 5 newest dates.")
-    row("DiskSpillGB", "Spill and temporary files (tmp/server)", "LoadThreads*SpillFactor*HotFileBookMB/1024", "GB", "The disk guard reserves 3 × the largest hot file for each load running.")
-    row("DiskExpHotGB", "Exposure hot files (ccr/hot)", "MIN(LakeDates,ExpDiskDates)*ExpHotFileMB/1024", "GB", "60 dates of exposure hot files.")
-    row("DiskExpLakeGB", "Exposure trade paths (the lake)", f"ExposureOn*MIN(LakeDates,ExpPathDaysKept)*ExpTrades*Paths*TimeSteps*ExpPathBytes/{MB}/1024", "GB", "20 business days of trade paths in float32.")
-    row("DiskIntradayLakeGB", "Intraday batches in the lake", f"LakeDates*IntradayUpdatesDay*Scenarios*LakeBytesPerValue/{MB}/1024", "GB",
-        "Each batch is appended to the P&L lake (the record: a restart rebuilds the layer from it); the layer itself is never written to disk.")
-    row("DiskIntradayTmpGB", "An intraday batch file (tmp)", f"UpdatesPerBatch*Scenarios*IntradayJsonBytesPerValue/{MB}/1024", "GB",
-        "One batch's JSON Lines under tmp while lake build appends it; no spill (the layer stays in memory).")
-    row("DiskTradesLakeGB", "Trades lake", f"TradeRowsPerDay*TradeDaysKept*TradeLakeBytesPerRow/{MB}/1024", "GB", "About 1.5 KB a trade a day.")
-    row("DiskTradeCachesGB", "Trade connectors' caches (cache/, derived/, index/)",
-        f"(TradeRowsPerDay*TradeDaysKept*IdMapBytesPerRow+TradeRowsPerDay*MIN(TradeDaysKept,GroupedPagesDates)*GroupedPagesBytesPerRow)/{MB}/1024+TradeConnectors*(DocCacheGB+IndexDiskGB)",
-        "GB", "Id maps, grouped pages, the document cache and the type-ahead index of each connector.")
-    row("DiskBiGB", "BI layers and runs (bi-store, bi-runs)", f"TradeRowsPerDay*TradeDaysKept*BiLayerBytesPerRow/{MB}/1024+BiRunsGB", "GB", "Layers of the dates read, and the runs' 20 GB.")
-    row("DiskLogsGB", "Logs (logs)", "LogsGB", "GB", "The server log and the GC log, both rotated.")
-    row("DiskDumpsGB", "Heap dumps (dumps)", "DumpsKept*XmxGB", "GB", "A dump on OutOfMemoryError is about the heap's size.")
-    row("DiskUsedGB", "Disk in use", "DiskLakeVarGB+DiskIntradayLakeGB+DiskIntradayTmpGB+DiskHotGB+DiskSpillGB+DiskExpHotGB+DiskExpLakeGB+DiskTradesLakeGB+DiskTradeCachesGB+DiskBiGB+DiskLogsGB+DiskDumpsGB", "GB", "Every folder together.")
-    row("DiskRecommendedGB", "Recommended disk (lake local)", "CEILING(MAX(DiskUsedGB/(1-MinFreePercent/100),DiskUsedGB+MinFreeGB),DiskStepGB)", "GB",
-        "With the free-space guard's margin: 10% and 20 GB must stay free.")
-    row("DiskLocalGB", "Local disk without the lakes", "DiskUsedGB-DiskLakeVarGB-DiskIntradayLakeGB-DiskTradesLakeGB-DiskExpLakeGB", "GB", "When the lakes live elsewhere (object storage): hot files, spill, caches, logs, dumps.")
-    row("DiskLocalRecommendedGB", "Recommended local disk (lake elsewhere)", "CEILING(MAX(DiskLocalGB/(1-MinFreePercent/100),DiskLocalGB+MinFreeGB),DiskStepGB)", "GB", "Fast local disk (NVMe) for the hot files.")
-    band("CPU and times")
-    row("VarRatePerCore", "VaR questions a second a core", "ReqPerCoreVarAtRef*(VarRefPositions/Positions)^VarCostExponent", "requests/s", "The rate measured at 1,000,000 positions, scaled by positions.")
-    row("MixRatePerCore", "Mixed requests a second a core", "1/(VarShare/VarRatePerCore+(1-VarShare)/ReqPerCoreTrades)", "requests/s", "The VaR and other questions in their shares.")
-    row("CoresForRequests", "Cores for the requests", "CEILING(PeakRps/MixRatePerCore/CpuTarget,1)", "cores", "The peak at 70% busy.")
-    row("CoresRecommended", "Recommended cores", "MAX(MinCores,CoresForRequests+CoresReserve)", "cores", "Plus 2 for loads, the collector and the operating system.")
-    row("FirstOpenSec", "First open of a date", "FirstOpenSecPer1M*Positions/Scale1M", "s", "Lake read, sort, sums and the hot file written.")
-    row("LakeLoadSec", "Loading a date into the lake", "LakeLoadSecPer1M*Trades/Scale1M", "s", "The Java loader, P&L vectors of one date.")
-    row("ReopenSec", "Reopening a date from its hot file", "ReopenSecPer1M*Trades/Scale1M", "s", "No lake read.")
-    band("The settings to put in the configuration: each with its exact key, in YAML, as an environment variable and as an argument")
-    row("AutoNetMB", "(the automatic safety net, for comparison)", "MAX(NetShare*XmxGB*1024-NetReserveMB-LoadThreads*NetLoadMB,XmxGB*1024*NetFloorShare)", "MB",
-        "What open-heap-mb 0 would give: 0.4 × heap − 512 MB − load-threads × 1.6 GB, at least a tenth of the heap.")
-    row("HeapTierBudgetMB", "(the heap tier would need, a date)", f"Trades*Scenarios*AggBytes/{MB}", "MB", "Only with drishti.var.tier.mode: heap, every vector in float64 on the heap.")
-    r.append(("settings",))
+    for band in PLAN["results"]:
+        r.append(("band", band["band"]))
+        r += [(x["name"], x["label"], x["expression"], x["unit"], x["why"]) for x in band["rows"]]
+        if band.get("settings"):
+            r.append(("settings",))
     return r
 
 
-# ---------------------------------------------------------------------------------------------------------------- settings
 # (name, key, formula, unit, environment variable, its source, why, condition); source "docs": the name CONFIGURATION.md gives (a
 # ${NAME:default} placeholder in application.yaml); "relaxed": none is documented, so Spring's relaxed binding of the key
-SETTINGS = [
-    ("SetHotDates", "drishti.var.hot-dates", "DatesInMemory", "dates", "DRISHTI_VAR_HOT_DATES", "docs", "Dates in memory.", None),
-    ("SetOpenHeapMB", "drishti.var.open-heap-mb", "CEILING(DatesInMemory*HeapDate*(1+OpenHeapMargin)+HeapIntraday,OpenHeapStepMB)", "MB",
-     "DRISHTI_VAR_OPEN_HEAP_MB", "docs", "The byte safety net: every open date with 10% room, and today's intraday layer; set it rather than leave the automatic value.", None),
-    ("SetMemoryBudgetMB", "drishti.var.memory-budget-mb", "0", "MB", "DRISHTI_VAR_MEMORY_MB", "docs",
-     "0 (the default): it bounds the heap tier only; the mapped tier (the default) keeps vectors on disk.", None),
-    ("SetLoadThreads", "drishti.var.load-threads", "LoadThreads", "threads", "DRISHTI_VAR_LOADTHREADS", "relaxed", "Dates loading at once; each needs its transient and its spill.", None),
-    ("SetCurrencies", "drishti.var.currencies", 'IF(CcysAhead=0,"USD",IF(CcysAhead=1,"USD,EUR",IF(CcysAhead=2,"USD,EUR,CAD",IF(CcysAhead=3,"USD,EUR,CAD,JPY","USD,EUR,CAD,JPY,GBP"))))',
-     "text", "DRISHTI_VAR_CURRENCIES", "docs", "USD and the currencies built ahead the planner counted, in the shipped order (name your own). The shipped default builds four.", None),
-    ("SetStress", "drishti.var.stress.enabled", 'IF(StressOn=1,"true","false")', "text", "DRISHTI_VAR_STRESS_ENABLED", "docs", "Offer stressed VaR.", None),
-    ("SetMaxDiskGB", "drishti.var.tier.max-disk-gb", "CEILING(DiskHotGB+DiskSpillGB,1)", "GB", "DRISHTI_VAR_MAX_DISK_GB", "docs", "Every hot file kept plus the reserve of the builds.", None),
-    ("SetDiskDates", "drishti.var.tier.disk-dates", "DiskDates", "files", "DRISHTI_VAR_TIER_DISKDATES", "relaxed", "The default, 60.", None),
-    ("SetExpHotDates", "drishti.ccr.exposure.hot-dates", "ExpHotDates", "dates", "DRISHTI_EXPOSURE_HOT_DATES", "docs", "Exposure dates in memory (only when exposure is on).", "ExposureOn=1"),
-    ("SetMinFreePercent", "drishti.disk.min-free-percent", "MinFreePercent", "%", "DRISHTI_DISK_MINFREEPERCENT", "relaxed", "The free-space guard the disk line keeps (the default).", None),
-    ("SetMinFreeGB", "drishti.disk.min-free-gb", "MinFreeGB", "GB", "DRISHTI_DISK_MINFREEGB", "relaxed", "The guard in GB (the default); both must hold.", None),
-]
-SETTINGS_FILE = "./application.local.yaml (the server's working directory)"
-OFF = "(exposure off: leave it out)"
+SETTINGS = [(s["name"], s["key"], s["expression"], s["unit"], s["env"], s["envSource"], s["why"], s.get("condition")) for s in PLAN["settings"]]
+SETTINGS_FILE = PLAN["settingsFile"]
+OFF = PLAN["settingOff"]
+# (name, flag, formula, condition, why, source); source: documented or suggested
+JVM = [(j["name"], j["flag"], j["expression"], j["condition"], j["why"], j["source"]) for j in PLAN["jvm"]]
+WARNINGS = [(w["name"], w["label"], w["expression"]) for w in PLAN["warnings"]]
+CALIBRATION = [(c["name"], c["label"], c["expression"], c["unit"], c["why"]) for c in PLAN["calibration"]]
+_EXAMPLES = {e["name"]: e for e in PLAN["examples"]}
+# The Explain tab's second example: the 1,000,000-position benchmark's shape; the figures the Explain tab states (EXPECTED at the
+# defaults, EXPECTED_BENCH with BENCH_SHAPE, CALIBRATION_EXPECTED whatever the inputs), checked by the tests of all three evaluators.
+BENCH_SHAPE = _EXAMPLES["benchmark"]["inputs"]
+EXPECTED = _EXAMPLES["production"]["expected"]
+EXPECTED_BENCH = _EXAMPLES["benchmark"]["expected"]
+CALIBRATION_EXPECTED = PLAN["calibrationExpected"]
 
 
 def _q(text: str) -> str:
@@ -396,10 +135,10 @@ def setting_columns(name: str, key: str, env: str, cond) -> dict:
             "cmd": _cond(cond, _q("--" + key + "=") + "&" + name), "use": _q("YAML")}
 
 
-def yaml_block_formula() -> str:
-    """One nested YAML block of every setting: one drishti: root, each group once."""
+def yaml_block_formula(settings: list | None = None) -> str:
+    """One nested YAML block of every setting (SETTINGS, or the tuples given): one drishti: root, each group once."""
     tree = {}
-    for name, key, _f, _u, _e, _s, _w, cond in SETTINGS:
+    for name, key, _f, _u, _e, _s, _w, cond in (settings if settings is not None else SETTINGS):
         node = tree
         for part in key.split(".")[:-1]:
             node = node.setdefault(part, {})
@@ -429,108 +168,9 @@ def yaml_block_formula() -> str:
     return "&".join(out)
 
 
-# ---------------------------------------------------------------------------------------------------------------- JVM arguments
-# (name, flag, formula, condition, why, source); source: documented or suggested
-JVM = [
-    ("JvmXmx", "-Xmx", '"-Xmx"&XmxGB&"g"', "always", "The heap computed above.", "documented"),
-    ("JvmXms", "-Xms", '"-Xms"&XmxGB&"g"', "a server", "The whole heap reserved and committed from the start: no growth pauses, and RSS is known from day one.", "suggested"),
-    ("JvmGc", "Collector", 'IF(GcChoice="ZGC",IF(JavaVersion>=25,"-XX:+UseZGC","-XX:+UseZGC -XX:+ZGenerational"),"-XX:+UseG1GC")', "heap ≥ 16 GB: ZGC; Java 21 needs -XX:+ZGenerational",
-     "ZGC pauses under a millisecond whatever the heap; G1 costs less on a small heap. Measured: ZGC doubled RSS at the same -Xmx and stalled allocations at 200,000 positions; choose G1 (Collector) when RAM is tight.", "documented"),
-    ("JvmGcExtra", "Collector tuning", 'IF(GcChoice="ZGC","-XX:SoftMaxHeapSize="&INT(XmxGB*1024*ZgcSoftMaxShare)&"m","-XX:G1PeriodicGCInterval=60000")', "ZGC: 0.8 × heap; G1: always",
-     "ZGC collects early to stay under 80% of the heap (planned in the docs); G1's periodic collection returns unused memory.", "documented"),
-    ("JvmPause", "-XX:MaxGCPauseMillis", '""', "not set", "The docs give no pause goal; G1's default (200 ms) stays.", "documented"),
-    ("JvmOops", "-XX:ObjectAlignmentInBytes", 'IF(XmxGB>CompressedOopsMaxGB,IF(XmxGB<=AlignedOopsMaxGB,"-XX:ObjectAlignmentInBytes=16",""),"")', "heap over 31 GB, up to 64 GB",
-     "Keeps 4-byte references above 32 GB, at the cost of padding objects to 16 bytes; or stay at 31g.", "suggested"),
-    ("JvmCompact", "-XX:+UseCompactObjectHeaders", 'IF(JavaVersion>=25,"-XX:+UseCompactObjectHeaders","")', "Java 25 only (21 refuses to start with it)", "Smaller object headers, a little less heap.", "documented"),
-    ("JvmPreTouch", "-XX:+AlwaysPreTouch", '""', "not set", "Not proposed by the docs: a slow start, and the whole heap committed at once.", "documented"),
-    ("JvmDirect", "-XX:MaxDirectMemorySize", '"-XX:MaxDirectMemorySize="&DirectMaxMB&"m"', "always", "Caps direct buffers (the default cap is the heap's size).", "documented"),
-    ("JvmTrim", "-XX:TrimNativeHeapInterval", '"-XX:TrimNativeHeapInterval=60000"', "Java 21.0.1 and later", "Returns freed native memory to the system every minute.", "documented"),
-    ("JvmNioCache", "-Djdk.nio.maxCachedBufferSize", '"-Djdk.nio.maxCachedBufferSize=262144"', "always", "Stops each thread keeping a large temporary direct buffer after a read.", "documented"),
-    ("JvmNmt", "-XX:NativeMemoryTracking", '"-XX:NativeMemoryTracking=summary"', "always", "Lets jcmd split native memory by category; a few per cent of overhead.", "documented"),
-    ("JvmMeta", "-XX:MaxMetaspaceSize", '"-XX:MaxMetaspaceSize=512m"', "always", "A ceiling well above the 131 MB measured, so a class leak fails loudly instead of growing; the code cache keeps its default.", "suggested"),
-    ("JvmDump", "-XX:+HeapDumpOnOutOfMemoryError", '"-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="&DataFolder&"/dumps"', "always",
-     "A heap dump when the heap runs out, under the data folder; the disk lines keep room for it.", "documented"),
-    ("JvmGcLog", "-Xlog:gc*", '"-Xlog:gc*:file="&DataFolder&"/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m"', "always", "A rotated GC log (5 × 20 MB).", "documented"),
-    ("JvmTmp", "-Djava.io.tmpdir", '"-Djava.io.tmpdir="&DataFolder&"/tmp/server"', "always", "Native libraries unpack and temporary files go under the data folder.", "documented"),
-    ("JvmFooter", "-Ddrishti.parquet.footer-cache-mb", '"-Ddrishti.parquet.footer-cache-mb="&FooterCacheMB', "always", "The Parquet footer cache computed above.", "documented"),
-    ("JvmGrace", "-Ddrishti.open-dates.net-grace-seconds", '"-Ddrishti.open-dates.net-grace-seconds="&NetGraceSeconds', "always",
-     "The byte safety net never closes a date read in the last 120 s (closing it would reload it at once).", "documented"),
-    ("JvmPinning", "virtual-thread flags", '""', "not set", "-Djdk.tracePinnedThreads=full is a diagnostic only; the scheduler's parallelism keeps its default (the cores).", "documented"),
-    ("JvmNative", "--enable-native-access", '""', "not set with -jar", "The server jar's manifest already grants native access; no --add-opens is needed.", "documented"),
-    ("JvmArenas", "MALLOC_ARENA_MAX (environment)", '"MALLOC_ARENA_MAX=2"', "Linux (glibc) only", "Two malloc arenas, not one per busy thread: about 500 MB less RSS measured.", "documented"),
-]
-
-
-def _command_formula() -> str:
-    parts = ['JvmArenas&" java"'] + [f'IF({n}="",""," "&{n})' for n, *_ in JVM if n != "JvmArenas"]
+def _command_formula(jvm: list | None = None) -> str:
+    parts = ['JvmArenas&" java"'] + [f'IF({n}="",""," "&{n})' for n, *_ in (jvm if jvm is not None else JVM) if n != "JvmArenas"]
     return "&".join(parts) + '&" -jar "&ServerJar'
-
-
-WARNINGS = [
-    ("WarnProtected", "Protected dates",
-     'IF(PinnedMem+ProtectedAlways>HotDates,"The protected dates alone ("&(PinnedMem+ProtectedAlways)&": pinned, the newest and the one just used) exceed hot-dates ("&HotDates&"): the number is exceeded; the planner counts "&DatesInMemory&".","OK")'),
-    ("WarnOops", "Compressed oops",
-     'IF(XmxGB>AlignedOopsMaxGB,"Over 64 GB: compressed oops are off whatever the alignment; one server is past its comfortable size: plan a cluster.",IF(XmxGB>CompressedOopsMaxGB,"Over 31 GB: compressed oops are off unless -XX:ObjectAlignmentInBytes=16 (added below), or stay at 31g with fewer dates in memory.","OK"))'),
-    ("WarnAutoNet", "Automatic safety net",
-     'IF(AutoNetMB<DatesInMemory*HeapDate,"The automatic safety net ("&ROUND(AutoNetMB,0)&" MB) holds fewer than the "&DatesInMemory&" dates in memory need ("&ROUND(DatesInMemory*HeapDate,0)&" MB): set drishti.var.open-heap-mb to "&SetOpenHeapMB&".","OK")'),
-    ("WarnNetOneDate", "Safety net under one date",
-     'IF(AutoNetMB<HeapDate,"The automatic safety net is smaller than one date: dates in use stay open over it (the net\'s "&NetGraceSeconds&"-second grace), so set open-heap-mb at least to the dates in use × the date heap ("&ROUND(HeapDate,0)&" MB a date).","OK")'),
-    ("WarnZgcRss", "ZGC resident memory",
-     'IF(GcChoice="ZGC","ZGC: measured about twice G1\'s resident memory at the same -Xmx, with allocation stalls (200,000 positions); the RAM line counts the whole heap resident. Choose G1 when RAM is tight.","OK")'),
-    ("WarnExposureLoad", "Exposure load",
-     'IF(ExpLoadMB>ExpShardLoadMB,"Loading an exposure date needs "&ROUND(ExpLoadMB/1024,0)&" GB of heap for the netting sets\' value matrices: past about "&ROUND(ExpShardLoadMB/1024,0)&" GB the load should be sharded (a cluster).","OK")'),
-    ("WarnSingleNode", "One server's limit",
-     'IF(OR(XmxGB>AlignedOopsMaxGB,RamRecommendedGB>SingleNodeRamGB),"Beyond what one server should carry: plan a cluster (the cluster sheet comes later).","OK")'),
-    ("WarnPageCache", "Page cache",
-     'IF(PageCacheMB>XmxGB*1024*2,"The open dates\' hot files ("&ROUND(PageCacheMB/1024,0)&" GB) are larger than twice the heap: with less RAM than recommended, questions on dates not resident read the disk first.","OK")'),
-]
-
-# The inputs of the Explain tab's second example: the 1,000,000-position benchmark's shape.
-BENCH_SHAPE = {"Positions": 1_000_000, "Trades": 1_000_000, "Portfolios": 15_000, "BasketMembers": 2_000_000, "Nodes": 27_024, "BooksCells": 130_000,
-               "IntradayBatches": 0, "UpdatesPerBatch": 0, "TradeRowsPerDay": 20_000}
-
-# The figures the Explain tab states; tools/test_sizing_planner.py checks the formulas reproduce them (EXPECTED at the defaults, EXPECTED_BENCH
-# with BENCH_SHAPE, CALIBRATION_EXPECTED whatever the inputs).
-EXPECTED = {
-    "HbFormula": 223.1, "HeapBook": 216.6, "HeapBase": 301.1, "HeapDates": 2382.7, "HeapIntraday": 1627.2, "HeapSteady": 5304.6,
-    "HeapLoadTransient": 1367.4, "XmxGB": 10, "GcChoice": "G1", "SetOpenHeapMB": 4032, "AutoNetMB": 1024.0, "HotFileBookMB": 898.3,
-    "PageCacheMB": 6699.2, "RamRecommendedGB": 24, "RamMinimumGB": 16, "DiskLakeVarGB": 105.8, "DiskIntradayLakeGB": 41.3, "DiskHotGB": 52.6,
-    "DiskUsedGB": 375.4, "DiskRecommendedGB": 450, "DiskLocalRecommendedGB": 150, "CoresRecommended": 8, "FirstOpenSec": 5.5,
-}
-EXPECTED_BENCH = {
-    "HbFormula": 743.8, "HeapBook": 722.0, "HeapBase": 705.0, "HeapDates": 7942.4, "HeapIntraday": 0.0, "HeapSteady": 9240.4,
-    "HeapLoadTransient": 3328.0, "XmxGB": 19, "GcChoice": "ZGC", "SetOpenHeapMB": 8000, "AutoNetMB": 4070.4, "HotFileBookMB": 2994.2,
-    "PageCacheMB": 22330.8, "RamRecommendedGB": 48, "RamMinimumGB": 32, "DiskLakeVarGB": 352.8, "DiskIntradayLakeGB": 0.0, "DiskHotGB": 175.4,
-    "DiskUsedGB": 603.6, "DiskRecommendedGB": 700, "DiskLocalRecommendedGB": 300, "CoresRecommended": 12, "FirstOpenSec": 18.5,
-}
-CALIBRATION_EXPECTED = {
-    "CalHeapStart": 769.0, "CalHeapOne": 1491.0, "CalHeapTwo": 2213.0, "CalRssStart": 2875.0, "CalRssOne": 5156.1, "CalRssTwo": 6899.2,
-    "CalLakeTwoGB": 2.8, "CalWarmHeap": 2336.3, "CalRssEnd": 11681.2, "CalReqPerSec": 183.3,
-}
-
-CALIBRATION = [
-    ("CalHbFormula", "One book by the formula, benchmark shape",
-     f"(BytesPerRun*RunsPerNode*BenchNodes+(BytesPerNamedRow+BytesPerAggIndexRow)*(BenchBooksCells+BenchNodes)+BytesPerTradeCols*BenchTrades+BytesPerPositionCols*BenchPositions+BytesPerId*(2*BenchTrades+3*BenchPositions)+BytesPerCtotValue*(BenchScenarios+1)*BenchNodes+BytesPerPortfolio*BenchPortfolios+BytesPerBasketMember*BenchMembers)/{MB}",
-     "MB", "The H_book formula at the Bench values (Coefficients), whatever the Inputs."),
-    ("CalHeapBook", "One book, calibrated, benchmark shape", "CalHbFormula*BookHeapCalibration", "MB", "Measured: 722 MB a date on average (the users run)."),
-    ("CalHotFileMB", "Hot file, benchmark shape",
-     f"(BenchPositions*BenchScenarios*HotRowBytes+(BenchBooksCells+BenchNodes)*BenchScenarios*AggBytes+BenchNodes*(BenchScenarios+1)*AggBytes+HotSmallBytesPerTrade*BenchTrades)/{MB}",
-     "MB", "Measured 3.14 GB a date."),
-    ("CalHeapStart", "Heap after GC at start", f"BaseFixedMB+BasePerPositionB*BenchPositions/{MB}+FooterCacheDefaultMB", "MB", "Measured 769 MB (the users run: 1,000,000 positions, 6 GB heap, Java 21)."),
-    ("CalHeapOne", "Heap after GC, one date open", "CalHeapStart+FirstOpenOnceMB*BenchPositions/Scale1M+CalHeapBook", "MB", "Measured 1,352 MB: the average date puts the planner 139 MB above, the safe side."),
-    ("CalHeapTwo", "Heap after GC, two dates open", "CalHeapOne+CalHeapBook", "MB", "Measured 2,213 MB."),
-    ("CalRssStart", "RSS at start (at a 6 GB heap)", "RssStartMB", "MB", "Measured 2,875 MB."),
-    ("CalRssOne", "RSS, one date open", "CalRssStart+(CalHeapOne-CalHeapStart)+ResidentFirstIdle*CalHotFileMB", "MB", "Measured 5,156 MB."),
-    ("CalRssTwo", "RSS, two dates open", "CalRssOne+CalHeapBook+ResidentNextIdle*CalHotFileMB", "MB", "Measured 6,899 MB."),
-    ("CalLakeTwoGB", "Lake, two dates", f"2*BenchTrades*BenchScenarios*LakeBytesPerValue/{MB}/1024", "GB", "Measured 2.8 GB."),
-    ("CalFirstOpen", "First open of a date", "FirstOpenSecPer1M*BenchPositions/Scale1M", "s", "Measured 18 to 21 s; the lake load 28.4 s for two dates."),
-    ("CalWarmHeap", "Heap after GC, warm at 50 users", "CalHeapTwo+BenchUsers*PerUserMB", "MB", "Measured 2,336 MB."),
-    ("CalRssEnd", "RSS at the end of the users run (6 GB heap)", "MeasuredXmxMB+NativeMB+ResidentShare*2*CalHotFileMB", "MB",
-     "Measured 11,160 MB; the planner's native memory (1,071 MB) is more than the 550 MB NMT saw beyond the heap, so it lands a little above."),
-    ("CalReqPerSec", "Requests a second on the benchmark machine",
-     "MeasuredCores/(BenchVarShare/(ReqPerCoreVarAtRef*(VarRefPositions/BenchPositions)^VarCostExponent)+(1-BenchVarShare)/ReqPerCoreTrades)", "requests/s",
-     "Measured 183.3 at 50 users, half VaR, 0 failures."),
-]
 
 
 # ---------------------------------------------------------------------------------------------------------------- the evaluator
@@ -958,14 +598,33 @@ def workbook_cells(overrides: dict | None = None) -> dict:
     return cells
 
 
+def plan_cells(plan: dict, overrides: dict | None = None) -> dict:
+    """Every named cell of a planner document (planner.yaml as read, or as a server serves it), {@code overrides} replacing inputs: what
+    drishti.py admin capacity and capacity.js evaluate."""
+    cells = {i["name"]: i["default"] for i in plan["inputs"]}
+    cells.update(overrides or {})
+    cells.update({c["name"]: c["value"] for c in plan["coefficients"]})
+    for band in plan["results"]:
+        cells.update({x["name"]: "=" + x["expression"] for x in band["rows"]})
+    jvm = [(j["name"], j["flag"], j["expression"], j["condition"], j["why"], j["source"]) for j in plan["jvm"]]
+    cells.update({j[0]: "=" + j[2] for j in jvm})
+    cells["JvmCommand"] = "=" + _command_formula(jvm)
+    settings = [(s["name"], s["key"], s["expression"], s["unit"], s["env"], s["envSource"], s["why"], s.get("condition")) for s in plan["settings"]]
+    cells.update({s[0]: "=" + s[2] for s in settings})
+    cells["YamlBlock"] = "=" + yaml_block_formula(settings)
+    cells.update({w["name"]: "=" + w["expression"] for w in plan["warnings"]})
+    cells.update({c["name"]: "=" + c["expression"] for c in plan.get("calibration") or []})
+    return cells
+
+
 def evaluate(overrides: dict | None = None) -> Evaluator:
     """The workbook's figures for the defaults, or for the inputs {@code overrides} changes (the Explain tab's examples)."""
     return Evaluator(workbook_cells(overrides))
 
 
-def build() -> dict:
-    """The workbook's parts: {path in the zip: text}."""
-    brand = _branding()
+def build(brand: dict | None = None) -> dict:
+    """The workbook's parts: {path in the zip: text}; {@code brand} replaces the configured branding (the template's placeholders)."""
+    brand = brand or _branding()
     styles_xml, st = _styles()
     where = {}  # name -> (sheet, row, col)
     cells = workbook_cells()
@@ -1193,21 +852,106 @@ def read(path: Path) -> dict:
         return {n: z.read(n).decode("utf-8") for n in z.namelist()}
 
 
+# The server's template (capacity/template/): the workbook's parts with the branding as {{PRODUCT}}, {{OWNER}}, {{COPYRIGHT}} placeholders
+# (PlaygroundTemplate's), and template.json naming the parts, the Inputs sheet, each input's row and the styles the server needs to fill
+# the Inputs (and a Live or Plan column) without touching a formula.
+PLACEHOLDERS = {"product": "{{PRODUCT}}", "owner": "{{OWNER}}", "copyright": "{{COPYRIGHT}}"}
+VECTOR_SHAPES = {
+    "production": {},
+    "benchmark": None,  # BENCH_SHAPE
+    "large-java25-exposure": {"Positions": 4_000_000, "Trades": 4_200_000, "JavaVersion": 25, "ExposureOn": 1, "StressOn": 1, "CcysAhead": 4,
+                              "PinnedMem": 12, "Collector": "auto", "Users": 400, "PeakRps": 900, "DataFolder": "/data/drishti"},
+}
+
+
+def template_parts() -> dict:
+    """{file under capacity/template/: text}."""
+    parts = build(PLACEHOLDERS)
+    _xml, styles = _styles()
+    rows = {}
+    for r, line in enumerate(parts["xl/worksheets/sheet1.xml"].split('<row r="')[1:], 0):
+        num = int(line[:line.index('"')])
+        for _s, name, *_rest in INPUTS:
+            if f'<c r="D{num}"' in line and f">{escape(name)}</t>" in line.split(f'<c r="D{num}"')[1].split("</c>")[0]:
+                rows[name] = num
+    inputs = {name: {"row": rows[name], "kind": kind} for _s, name, _l, _d, _u, kind, _h in INPUTS}
+    meta = {"comment": "Written by tools/sizing_planner.py: do not edit; edit capacity/planner.yaml and run the tool.",
+            "parts": sorted(parts), "inputsSheet": "xl/worksheets/sheet1.xml", "valueColumn": "B", "extraColumn": "F", "headerRow": 3,
+            "styles": {k: styles[k] for k in ("head", "text", "note", "input.num", "input.dec", "input.text", "num0")}, "inputs": inputs}
+    import license_headers                                                   # each .xml part carries the copyright notice (the server drops comments)
+    note = license_headers.block("xml")
+    out = {n: (x.split("\n", 1)[0] + "\n" + note + x.split("\n", 1)[1] if x.startswith("<?xml") else note + x) for n, x in parts.items()}
+    out["template.json"] = json.dumps(meta, indent=1, ensure_ascii=False) + "\n"
+    return out
+
+
+def vectors() -> dict:
+    """Every named figure at three shapes: the shared test vectors the Python, Java and JavaScript evaluators are checked against."""
+    out = {"comment": "Written by tools/sizing_planner.py from capacity/planner.yaml: every named figure at three shapes. Numbers rounded to 6 "
+                      "decimals; text exact. The console's capacity.js and the server's test check their evaluation against these.", "shapes": {}}
+    for shape, inputs in VECTOR_SHAPES.items():
+        inputs = BENCH_SHAPE if inputs is None else inputs
+        cells = workbook_cells(inputs)
+        ev = Evaluator(cells)
+        res = {}
+        for n in cells:
+            v = ev.value(n)
+            res[n] = v if isinstance(v, (str, bool)) else round(float(v), 6)
+        out["shapes"][shape] = {"inputs": inputs, "results": res}
+    return out
+
+
+def _vectors_text() -> str:
+    return json.dumps(vectors(), indent=1, ensure_ascii=False, sort_keys=False) + "\n"
+
+
+def _stale_template() -> list:
+    want = template_parts()
+    have = sorted(str(p.relative_to(TEMPLATE_OUT)).replace("\\", "/") for p in TEMPLATE_OUT.rglob("*") if p.is_file()) if TEMPLATE_OUT.exists() else []
+    stale = sorted(set(have) ^ set(want))
+    stale += [n for n in want if n in have and (TEMPLATE_OUT / n).read_text(encoding="utf-8") != want[n]]
+    return stale
+
+
+def write_template(folder: Path = TEMPLATE_OUT) -> None:
+    if folder.exists():
+        shutil.rmtree(folder)
+    for name, text in template_parts().items():
+        f = folder / name
+        f.parent.mkdir(parents=True, exist_ok=True)
+        f.write_text(text, encoding="utf-8")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("--out", help="the folder to write the workbook into (default docs/architecture)")
-    ap.add_argument("--check", action="store_true", help="exit 1 when the committed workbook differs from a fresh build")
+    ap.add_argument("--out", help="the folder to write the workbook into (default docs/architecture); the template and vectors are not written")
+    ap.add_argument("--check", action="store_true", help="exit 1 when the committed workbook, the server's template or the test vectors differ from a fresh build")
     a = ap.parse_args(argv)
     parts = build()
     if a.check:
+        bad = []
         if not OUT.exists() or read(OUT) != parts:
-            print(f"{OUT.relative_to(ROOT)} is out of date: run python3 tools/sizing_planner.py", file=sys.stderr)
+            bad.append(str(OUT.relative_to(ROOT)))
+        stale = _stale_template()
+        if stale:
+            bad.append(f"{TEMPLATE_OUT.relative_to(ROOT)} ({', '.join(stale[:5])})")
+        if not VECTORS.exists() or VECTORS.read_text(encoding="utf-8") != _vectors_text():
+            bad.append(str(VECTORS.relative_to(ROOT)))
+        if bad:
+            print(f"out of date: {'; '.join(bad)}: run python3 tools/sizing_planner.py", file=sys.stderr)
             return 1
-        print(f"{OUT.relative_to(ROOT)} is current")
+        print(f"{OUT.relative_to(ROOT)}, the server's template and the test vectors are current")
         return 0
-    path = Path(a.out) / OUT.name if a.out else OUT
-    write(parts, path)
-    print(f"wrote {path}")
+    if a.out:
+        path = Path(a.out) / OUT.name
+        write(parts, path)
+        print(f"wrote {path}")
+        return 0
+    write(parts, OUT)
+    write_template()
+    VECTORS.parent.mkdir(parents=True, exist_ok=True)
+    VECTORS.write_text(_vectors_text(), encoding="utf-8")
+    print(f"wrote {OUT.relative_to(ROOT)}, {TEMPLATE_OUT.relative_to(ROOT)}/ and {VECTORS.relative_to(ROOT)}")
     return 0
 
 

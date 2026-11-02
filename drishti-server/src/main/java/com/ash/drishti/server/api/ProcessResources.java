@@ -30,7 +30,7 @@ import java.util.Map;
  * memory against {@code -XX:MaxDirectMemorySize}, open file descriptors against the limit (where the operating system tells:
  * not on Windows) and, on Linux, the descriptors still open on deleted files. Cheap enough for the page's 5-second refresh.
  */
-final class ProcessResources {
+public final class ProcessResources {
 
     /** Direct memory at or above this share of its limit is shown as a warning. */
     static final int WARN_PERCENT = 80;
@@ -73,6 +73,28 @@ final class ProcessResources {
             m.put("deletedOpenFiles", deleted);
         }
         return m;
+    }
+
+    /**
+     * The process's resident memory in MB, from {@code VmRSS} of {@code /proc/self/status} (Linux); null where there is no such file or
+     * line (Windows, macOS). What {@code top} shows as RES: the heap committed, native memory and the mapped hot files' pages read.
+     */
+    public static Long rssMb(Path status) {
+        if (!Files.isRegularFile(status)) {
+            return null;
+        }
+        try {
+            for (String line : Files.readAllLines(status)) {
+                if (line.startsWith("VmRSS:")) {
+                    String[] f = line.substring(6).strip().split("\\s+");
+                    long kb = Long.parseLong(f[0]);
+                    return kb / 1024;                           // the kernel counts in kB
+                }
+            }
+        } catch (IOException | RuntimeException e) {
+            return null;
+        }
+        return null;
     }
 
     /** {@code -XX:MaxDirectMemorySize}, or the JVM's default when it is not set (the heap's maximum). */

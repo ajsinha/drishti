@@ -43,10 +43,11 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/shards?asOf=                 the settings, the members, the shards held here, a date's shard map and owners
  *   POST /api/v1/var/shards/drain {on}             this member hands its shards over (true) or takes shards again (false); administrators
  *   POST /api/v1/var/partial                       a member's call: a shard's part of a set summed here (signed, one hop, as the caller)
+ *   POST /api/v1/var/partials                      a member's call: many sets of one shard summed here in one call (the same checks)
  *   GET  /api/v1/var/shards/skeleton?date=&amp;ccy=&amp;shard=&amp;map=   a member's call: a shard's skeleton (its hot file without the matrices)
  * </pre>
  *
- * The last two are the cluster's own: only a member's signed call is answered (else {@code 401 DRS-5051}).
+ * The last three are the cluster's own: only a member's signed call is answered (else {@code 401 DRS-5051}).
  */
 @RestController
 @RequestMapping("/api/v1/var")
@@ -115,19 +116,64 @@ public class VarShardController {
         String digest = String.valueOf(body.get("digest"));
         VarBook book = s.served(date, ccy, index, map, digest);
         OrdinalSet rows = VarShardRows.rowsOf(String.valueOf(body.get("rows")));
+        allowed(s, book, caller(p), ccy, index, rows);
+        double[] sum = s.sums().sum(book.store(), rows);
+        return VarShardRows.answer(index, "S" + index, map, digest, s.peers().self(), rows.size(), sum);
+    }
+
+    /** The most row sets one {@code /partials} call may carry. */
+    static final int MAX_SETS = 4096;
+
+    /**
+     * Many row sets of one shard summed here in one call (VAR_SHARDING.md section 15): {@code runs} each set's runs {@code [from, to)} (int32 pairs, base64),
+     * the answer each set's row count and sum in order, each the sum {@code /partial} gives for that set. The same signature, label, data
+     * version and access checks as {@code /partial}, for every set.
+     */
+    @PostMapping("/partials")
+    public Map<String, Object> partials(@RequestAttribute(value = NetCallFilter.PEER, required = false) String peer,
+            @RequestAttribute(value = Principal.ATTRIBUTE, required = false) Principal p, @RequestBody Map<String, Object> body) {
+        peerOnly(peer);
+        VarShards s = shards();
+        LocalDate date = LocalDate.parse(String.valueOf(body.get("date")));
+        String ccy = VarCurrencies.normalise(String.valueOf(body.getOrDefault("ccy", VarDate.USD)));
+        int index = ((Number) body.get("shard")).intValue();
+        String map = String.valueOf(body.get("map"));
+        String digest = String.valueOf(body.get("digest"));
+        if (!(body.get("runs") instanceof java.util.List<?> raw) || raw.isEmpty() || raw.size() > MAX_SETS) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "runs is a list of 1 to " + MAX_SETS + " row sets");
+        }
+        VarBook book = s.served(date, ccy, index, map, digest);
+        Principal who = caller(p);
+        java.util.List<OrdinalSet> sets = new java.util.ArrayList<>(raw.size());
+        for (Object o : raw) {
+            OrdinalSet rows;
+            try {
+                rows = VarShardRows.rowsOfRuns(String.valueOf(o), book.tradeCount());
+            } catch (IllegalArgumentException e) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "S" + index + ": " + e.getMessage());
+            }
+            allowed(s, book, who, ccy, index, rows);
+            sets.add(rows);
+        }
+        java.util.List<double[]> sums = new java.util.ArrayList<>(sets.size());
+        for (OrdinalSet rows : sets) {
+            sums.add(s.sums().sum(book.store(), rows));
+        }
+        return VarShardRows.answers(index, "S" + index, map, digest, s.peers().self(), sets, sums);
+    }
+
+    /** Refuses rows beyond the shard's trades, and rows the caller may not see (their rights, applied here too). */
+    private static void allowed(VarShards s, VarBook book, Principal who, String ccy, int index, OrdinalSet rows) {
         int last = rows.isEmpty() ? -1 : rows.words().length * 64;
         if (!rows.isEmpty() && rows.slice(book.tradeCount(), Math.max(book.tradeCount(), last)).size() > 0) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "rows beyond the " + book.tradeCount() + " trades of S" + index + " were asked");
         }
-        Principal who = caller(p);
-        if (who != null) {                                             // the caller's rights, applied here too
+        if (who != null) {
             VarAccess.View v = s.view(who, book, ccy);
             if (!v.full() && !v.visible().containsAll(rows)) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, "the rows asked of S" + index + " include trades " + who.user() + " may not see");
             }
         }
-        double[] sum = s.sums().sum(book.store(), rows);
-        return VarShardRows.answer(index, "S" + index, map, digest, s.peers().self(), rows.size(), sum);
     }
 
     /** A shard's skeleton for the member that puts the date together without holding the shard (VAR_SHARDING.md section 5). */

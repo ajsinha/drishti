@@ -13,6 +13,34 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.10.a — release notes
+
+*Released 2026-11-01.* **Admin → Capacity; the cluster's VaR under load; three VaR dates in the demo; the competitive analysis; the next releases'
+groundwork.**
+
+- **Admin → Capacity** ([OPERATIONS section 12.4](docs/admin/OPERATIONS.md), [RESOURCES_AND_SCALE section 9.7](docs/architecture/RESOURCES_AND_SCALE.md)):
+  this server today against the plan (heap, RAM, disk and cores with their headroom, what breaks first and its fix, growth to three
+  times the trades); **Edit the plan** for the planner itself (every input, every result with its Why?, each setting with its exact
+  YAML key, environment variable and argument, every JVM argument and the command line, with Copy); **Download the working (.xlsx)**,
+  the planner workbook with live formulas over the plan, this server's measured figures, or both. One planner file feeds the page, the
+  workbook and `drishti.py admin capacity`, so they always agree. `GET /api/v1/admin/capacity`, `/capacity/live`, `/capacity.xlsx`.
+- **Three VaR dates in the demo** (2026-09-28, 09-29, 09-30): *Why it moved* shows real waterfalls (the bank's VaR down 533,406 from
+  09-29 to 09-30, mostly 37 trades that left; a book moved from the Credit desk to Fixed Income on 09-29). The 09-30 figures are
+  unchanged.
+- **The cluster's VaR answers under load:** a contribution table and a headline's standalone sums ask each remote shard once (up
+  to 1,024 sets a call, the shards side by side) under one deadline, and the skeleton stream no longer pins threads on Java 21. On the
+  200,000-position three-member cluster: no failure at 50, 100 or 200 users (17 timeouts at 50 before), contributions p95 0.9, 1.4 and
+  2.5 s (10 to 16 s before), the VaR unchanged to the dollar.
+- **Large workbooks download whole:** a streamed download may now take up to 30 minutes (`DRISHTI_ASYNC_TIMEOUT`); a whole
+  bank's VaR Playground workbook arrived cut short and would not open.
+- **The competitive analysis**, for administrators only (Help): Drishti against risk platforms and against general data and analytics
+  products, with sources; Help pages may now be limited to roles.
+- **Groundwork for the next releases:** the design of position sensitivities, FRTB-SA and SIMM with the product owner's decisions, the
+  planned contracts `position-sensitivity` and `risk-factor` with demo data, their screens' mock-ups and plain-words explanations; the
+  counterparty engines' design (SA-CCR, exposure, FVA) with hand-built test cases.
+- **Upgrade:** rebuild the server and console; rebuild the demo lakes (`drishti.py lake demo`) to get the three VaR dates.
+- **Known open:** `test_live_tabs_browser.py` (many live tabs, the shared-worker leader case) fails on the release machine as before.
+
 # Drishti 2.9.10 — release notes
 
 *Released 2026-11-01.* **Memory, scale and mobile; why VaR moved.** (2.9.9 and 2.9.10 are released together as 2.9.10; there is no

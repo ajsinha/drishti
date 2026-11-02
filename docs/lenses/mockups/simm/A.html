@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (simm/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its build checklist is in
+  docs/architecture/SENSITIVITIES_AND_FRTB_SA.md (section 15) and docs/architecture/IMPLEMENTATION_PLAN.md (the 2.9.11 mock-ups).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SIMM initial margin: option A, netting-set list</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --amber:#e8a33a; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --amber:#985b0a; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.alts{font-size:12.5px;color:var(--muted);margin-top:6px} .alts a.on{color:var(--amber);font-weight:700}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.grid{display:grid;gap:12px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+tr.tot td{font-weight:700;background:var(--panel2)} tr.sel td{background:var(--hl)} td.bind{outline:2px solid var(--amber);outline-offset:-2px}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{flex:1 1 170px;background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:9px 12px}
+.kpi .l{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi .v{font-family:var(--mono);font-size:20px;font-weight:600;margin-top:2px} .kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.kpi.bind{border-color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber)}
+.steps div{display:flex;justify-content:space-between;gap:12px;font-family:var(--mono);font-size:12.5px;padding:4px 0;border-bottom:1px dashed var(--line2)}
+.steps div span:first-child{font-family:var(--sans)}
+.hbar{height:8px;background:var(--line2);border-radius:4px;position:relative;min-width:120px}
+.hbar i{position:absolute;top:0;bottom:0;left:0;border-radius:4px;background:var(--pos)}
+.hbar i.n{background:var(--neg)} .hbar i.a{background:var(--amber)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.formula{font-family:var(--mono);font-size:12px;background:var(--panel2);border:1px solid var(--line2);border-radius:6px;padding:8px 10px;white-space:pre;overflow:auto}
+footer{font-size:11.5px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line2);padding-top:8px}
+@media (max-width:1000px){.grid{grid-template-columns:1fr!important}}
+</style>
+</head>
+<body><div class="page">
+<section class="intro"><h1>SIMM initial margin · option A: netting-set list</h1><p>Every netting set margined under SIMM, with the initial margin to collect and to post, the counterparty’s call and the dispute status; the selected netting set’s breakdown by risk class beside it.</p><div class="alts">Options: <a class="on" href="A.html">A: netting-set list</a> · <a class="" href="B.html">B: one netting set</a> · <a class="" href="C.html">C: margin against the counterparty</a></div></section>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">&gt; SIMM ALL <GO></div><div class="menus"><span class="">Risk</span><span class="">Capital</span><span class="on">Counterparty</span><span class="">Data</span><span class="">Help</span></div></div>
+<div class="ctrls"><span class="pick"><b>Date</b>2026-09-30</span><span class="pick"><b>Regime</b>collect · post</span><span class="pick"><b>Parameters</b>the bank’s licensed SIMM files</span><span class="btn">Explain</span><span class="btn p">Open in playground</span></div><div class="kpis"><div class="kpi"><div class="l">IM to collect · all CSAs</div><div class="v">294.5m</div><div class="s">6 netting sets with sensitivities</div></div><div class="kpi"><div class="l">IM to post</div><div class="v">222.4m</div><div class="s">computed from the counterparty’s side</div></div><div class="kpi"><div class="l">Disputes</div><div class="v">1</div><div class="s">NS-CP-SUMMIT-01: 8.7m (7.7%)</div></div><div class="kpi"><div class="l">Stored figure still used</div><div class="v">11</div><div class="s">netting sets without sensitivities</div></div></div><div class="grid" style="grid-template-columns:1.7fr 1fr"><div class="card"><h3>Netting sets <span>USD millions · SIMM version as the CSA names it</span></h3><table><tr><th class="l">Netting set</th><th class="l">Counterparty</th><th class="l">Version</th><th>Collect</th><th>Post</th><th>Their call</th><th class="l">Status</th></tr><tr class=""><td class="l"><a href="#">NS-CP-BRAMBLE-01</a></td><td class="l">CP-BRAMBLE</td><td class="l">SIMM 2.6</td><td>48.2</td><td>31.5</td><td>46.9</td><td class="l"><span class="pill g">agreed</span></td></tr><tr class="sel"><td class="l"><a href="#">NS-CP-SUMMIT-01</a></td><td class="l">CP-SUMMIT</td><td class="l">SIMM 2.6</td><td>112.7</td><td>88.1</td><td>104.0</td><td class="l"><span class="pill r">dispute</span></td></tr><tr class=""><td class="l"><a href="#">NS-CP-NORTHPLAINS-01</a></td><td class="l">CP-NORTHPLAINS</td><td class="l">SIMM 2.5</td><td>67.3</td><td>52.8</td><td>67.0</td><td class="l"><span class="pill g">agreed</span></td></tr><tr class=""><td class="l"><a href="#">NS-CP-HARBOUR-02</a></td><td class="l">CP-HARBOUR</td><td class="l">SIMM 2.6</td><td>21.9</td><td>14.0</td><td>22.4</td><td class="l"><span class="pill g">agreed</span></td></tr><tr class=""><td class="l"><a href="#">NS-CP-MERIDIAN-01</a></td><td class="l">CP-MERIDIAN</td><td class="l">SIMM 2.6</td><td>9.4</td><td>6.1</td><td>—</td><td class="l"><span class="pill n">no call</span></td></tr><tr class=""><td class="l"><a href="#">NS-CP-CASCADE-03</a></td><td class="l">CP-CASCADE</td><td class="l">SIMM 2.5</td><td>35.0</td><td>29.9</td><td>33.1</td><td class="l"><span class="pill a">within tolerance</span></td></tr></table></div><div class="card"><h3>NS-CP-SUMMIT-01 · collect <span>by risk class, USD millions</span></h3><table><tr><th class="l">Risk class</th><th class="l">Product</th><th>Delta</th><th>Vega</th><th>Curv.</th><th>IM</th></tr><tr><td class="l">InterestRate</td><td class="l muted">RatesFX</td><td>45.0</td><td>7.2</td><td>3.0</td><td><b>55.2</b></td></tr><tr><td class="l">FX</td><td class="l muted">RatesFX</td><td>16.4</td><td>2.2</td><td>0.6</td><td><b>19.2</b></td></tr><tr><td class="l">CreditQ</td><td class="l muted">Credit</td><td>14.0</td><td>0.0</td><td>0.0</td><td><b>14.0</b></td></tr><tr><td class="l">Equity</td><td class="l muted">Equity</td><td>22.5</td><td>5.7</td><td>1.9</td><td><b>30.1</b></td></tr><tr><td class="l">Commodity</td><td class="l muted">Commodity</td><td>4.4</td><td>0.5</td><td>0.0</td><td><b>4.9</b></td></tr></table><div class="steps" style="margin-top:8px"><div><span>RatesFX 63.7 + Credit 14.0 + Equity 30.1 + Commodity 4.9</span><span>112.7m</span></div><div><span>Add-ons (CSA)</span><span>0.0m</span></div><div><span><b>SIMM collect</b></span><span><b>112.7m</b></span></div></div></div></div>
+<footer>Mock-up for the product owner (2026-11-01). Figures are synthetic: the demo’s position sensitivities of 2026-09-30 run through a sketch of the engine (the CSR sector correlations, the DRC inputs and every SIMM parameter are placeholders; SIMM’s licensed parameters are never shown in a mock-up). Every figure is printed; a chart never replaces a number; a loss or a binding value is marked in words as well as colour.</footer>
+</div></body>
+</html>

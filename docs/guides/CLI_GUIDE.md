@@ -102,6 +102,7 @@ scripts, `--json`.
 | `pack` | create a pack from JSON Lines, check it in CI, find missing help text, sign and publish it, install one from a registry | `tools/packgen/pack_from_jsonl.py`, the Java tool, `tools/packreg/packreg.py`; REST for `install` | PyYAML; a server for `install` |
 | `data` | write your JSON Lines into a Delta lake or the file store; load the demo data into any store | `tools/ingest_jsonl.py`, `tools/load-<store>.sh` | `deltalake` + `pyarrow` for Delta |
 | `server` | health, and pack list / load / unload / on / off on a running server | REST `/api/v1/admin/...` | a server, an administrator |
+| `admin` | `capacity`: the single-node capacity planner the server serves, evaluated (`--live` with this server's figures), or its formula workbook | REST `/api/v1/admin/capacity`; `tools/capacitycli.py` | a server, an administrator, PyYAML |
 | `design` | the Screen Designer's designs: create, save, check, propose, approve, export, import, bind | REST `/api/v1/builder/designs`, `/api/v1/sutras/proposals` | a server |
 | `docs` | regenerate the guides' screenshots | `tools/docs/screenshots.py` | Playwright |
 
@@ -1821,6 +1822,36 @@ drishti-console/.venv/bin/python tools/drishti.py server caches purge trade-page
 drishti-console/.venv/bin/python tools/drishti.py server caches purge var.hot-files --date 2026-09-29 --cluster
 ```
 
+**`drishti.py admin capacity --help`**
+
+```text
+usage: drishti.py admin capacity [-h] [--server SERVER]
+                                 [--token-file TOKEN_FILE] [--user USER]
+                                 [--timeout TIMEOUT] [--json] [--live]
+                                 [--set Name=value] [--all] [--xlsx FILE]
+                                 [--inputs {plan,live,both}]
+
+options:
+  --json                machine-readable output
+  --live                put this server's measured figures into the inputs
+                        (and print them)
+  --set Name=value      an input by its name (repeat): Trades=450000,
+                        HotDates=12, Collector=ZGC
+  --all                 every result line, band by band
+  --xlsx FILE           download the formula workbook to FILE instead
+  --inputs {plan,live,both}
+                        with --xlsx: the plan's inputs, the live ones, or both
+                        side by side
+```
+
+`admin capacity` is **Admin → Capacity** from a terminal ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)): it reads the planner the server serves (`GET /api/v1/admin/capacity`, administrators) and evaluates it here with the evaluator the workbook is checked with, then prints the answers (`-Xmx`, the collector, `drishti.var.open-heap-mb`, RAM, disk, cores), the warnings that are not OK, the YAML block of the settings for `./application.local.yaml` and the whole JVM command line. `--set Name=value` changes any input by its workbook name (repeat it); `--live` puts this server's measured figures into the inputs and prints them (`GET /api/v1/admin/capacity/live`); `--all` prints every result line band by band; `--json` the inputs, the live figures and every result. `--xlsx FILE` downloads the formula workbook instead (`--inputs plan`, `live` or `both`), audited on the server as `capacity-workbook-downloaded`.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py admin capacity --set Trades=450000 --set Positions=450000
+drishti-console/.venv/bin/python tools/drishti.py admin capacity --live
+drishti-console/.venv/bin/python tools/drishti.py admin capacity --xlsx capacity.xlsx --inputs both
+```
+
 `server packs list|load|unload|on|off` manage packs. **load** and **unload** edit the overlay file
 (`data/packs/added.yaml`) after the server checks the pack the same way it does at start, then put the pack to use at once, with no restart;
 **on**/**off** switch a loaded pack for users without a restart. Unloading only works for packs an administrator loaded
@@ -1914,7 +1945,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.10-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.10.a-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -3202,7 +3233,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.10-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.10.a-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -3256,7 +3287,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.10-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.10.a-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.

@@ -1,0 +1,95 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# ISDA SIMM: the structure of a parameter set (design draft; docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 8). The SIMM
+# risk weights, correlations and concentration thresholds are ISDA's and are licensed: Drishti ships none of them. A bank holding a
+# SIMM licence puts each version it uses in its own copy of this file (one file per version, `version` and `effective-from` as in
+# ISDA's methodology document), and a netting set's CSA names the version it is margined under. Every number below is `null` on
+# purpose: the engine refuses a file with a null it needs.
+
+version: null                 # for example 2.6, as the CSA names it
+effective-from: null
+source: ISDA SIMM Methodology, the version above (licensed)
+holding-period-days: 10       # SIMM's margin period of risk (a methodology constant)
+
+product-classes: [RatesFX, Credit, Equity, Commodity]                # SIMM's four product classes
+risk-classes: [InterestRate, CreditQ, CreditNonQ, Equity, Commodity, FX]
+product-class-correlation: null                                      # SIMM's matrix across the four product classes (sqrt-sum)
+risk-class-correlation: null                                         # psi_rs: across the six risk classes, within a product class
+
+InterestRate:
+  tenors: [2w, 1m, 3m, 6m, 1y, 2y, 3y, 5y, 10y, 15y, 20y, 30y]
+  buckets: {1: regular-volatility, 2: low-volatility, 3: high-volatility}   # the currency's group
+  delta-risk-weights: null      # per bucket and tenor
+  inflation-risk-weight: null
+  cross-currency-basis-risk-weight: null
+  tenor-correlation: null       # 12 x 12
+  sub-curve-correlation: null   # phi: two sub-curves of one currency
+  inflation-correlation: null
+  across-currencies: null       # gamma
+  vega-risk-weight: null
+  concentration-thresholds: {delta: null, vega: null}   # per currency group, USD millions per bp
+
+CreditQ:
+  tenors: [1y, 2y, 3y, 5y, 10y]
+  buckets: 12                   # 1-6 investment grade by sector, 7-12 high yield and not rated; plus Residual
+  delta-risk-weights: null
+  correlation: {same-issuer: null, different-issuer: null, residual: null}
+  across-buckets: null
+  base-correlation-risk-weight: null
+  vega-risk-weight: null
+  concentration-thresholds: {delta: null, vega: null}
+
+CreditNonQ:
+  tenors: [1y, 2y, 3y, 5y, 10y]
+  buckets: 2                    # investment grade RMBS and CMBS; high yield and not rated
+  delta-risk-weights: null
+  correlation: null
+  across-buckets: null
+  vega-risk-weight: null
+
+Equity:
+  buckets: 12                   # 1-8 large cap by economy and sector, 9-10 small cap, 11 indices, funds and ETFs, 12 volatility indices
+  delta-risk-weights: null
+  correlation: null
+  across-buckets: null
+  vega-risk-weight: null
+  historical-volatility-ratio: null
+  concentration-thresholds: {delta: null, vega: null}
+
+Commodity:
+  buckets: 17                   # coal, crude, light ends, middle distillates, heavy distillates, NA gas, EU gas, NA power, EU power,
+                                # freight, base metals, precious metals, grains, softs, livestock, other, indices
+  delta-risk-weights: null
+  correlation: null
+  across-buckets: null
+  vega-risk-weight: null
+  concentration-thresholds: {delta: null, vega: null}
+
+FX:
+  buckets: {1: regular-volatility, 2: high-volatility}
+  delta-risk-weights: null      # by the volatility group of the currency and of the calculation currency
+  correlation: null
+  vega-risk-weight: null
+  concentration-thresholds: {delta: null, vega: null}
+
+curvature:
+  scaling: "SF(t) = 0.5 * min(1, 14 / t_days)"   # SIMM's curvature scaling of vega by option expiry (methodology constant)
+  lambda: "(Phi_inv(0.995)^2 - 1) * (1 + theta) - theta"
+  theta: "min(sum(CVR) / sum(abs(CVR)), 0)"
+  interest-rate-scale: null     # the curvature margin's multiplier for interest rates, per version
+
+add-ons:                        # agreed per netting set in the CSA, outside SIMM's parameters
+  fixed-amount: null
+  product-multipliers: null

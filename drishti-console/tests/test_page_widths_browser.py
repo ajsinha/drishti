@@ -34,7 +34,7 @@ from test_live_tabs_browser import _views, browser, console_url  # noqa: E402,F4
 WIDTHS = (390, 1600, 2560)
 PACK = "trading"                      # a pack the stand-in server loads (its loads page is the same shape for any pack)
 NO_SHARE = "sh_0123456789abcdef"     # a share id nobody can open: the clean no-access page
-ADMIN = ("users", "audit", "health", "caches", "packs", "roles", "tokens", "access")
+ADMIN = ("users", "audit", "health", "caches", "capacity", "packs", "roles", "tokens", "access")
 
 
 def _pages(views: list[str] | None = None) -> list[str]:

@@ -593,18 +593,28 @@ final class VarViews {
                 List<int[]> runs = VarPartTotals.positionRuns(b, s.set());  // each position once (2.9.7: an intraday-added trade's too)
                 total[0] = runs.size();
                 Sizer z = new Sizer(b);
-                for (int[] r : largest(runs, max, r -> z.position(s.set(), r[0]))) {
-                    out.add(position(b, s.set(), r[0]));
-                }
+                int[] keep = largest(runs, max, r -> z.position(s.set(), r[0])).stream().mapToInt(r -> r[0]).toArray();
+                out.addAll(b.readAhead(s.set(), keep, new int[0], () -> {  // one call per remote shard, not one per position (VAR_SHARDING 15)
+                    List<Part> ps = new ArrayList<>(keep.length);
+                    for (int pi : keep) {
+                        ps.add(position(b, s.set(), pi));
+                    }
+                    return ps;
+                }));
             }
             case "trade" -> {
                 List<Integer> os = new ArrayList<>();
                 s.set().forEach(os::add);
                 total[0] = os.size();
                 Sizer z = new Sizer(b);
-                for (int o : largest(os, max, z::trade)) {
-                    out.add(trade(b, o));
-                }
+                int[] keep = largest(os, max, z::trade).stream().mapToInt(Integer::intValue).toArray();
+                out.addAll(b.readAhead(s.set(), new int[0], keep, () -> {
+                    List<Part> ts = new ArrayList<>(keep.length);
+                    for (int o : keep) {
+                        ts.add(trade(b, o));
+                    }
+                    return ts;
+                }));
             }
             default -> throw new DrishtiException(ErrorCode.BAD_REQUEST, "by is child, node, part, position, trade, desk or book");
         }

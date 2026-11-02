@@ -1,0 +1,147 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The Explain tab of the Exposure Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
+# dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
+# PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
+# entries name the tab and the column, never a cell. The design is docs/architecture/COUNTERPARTY_ENGINES.md (section 4 for the method,
+# 8.2 for the tabs, 9 for the worked numbers: cases X1 and X2) and docs/guides/EXPOSURE_GUIDE.md section 18 (the engine as built).
+# Worked numbers are in USD millions. The entries come in three parts: the idea in plain words, the steps with one worked number each,
+# and every term of every tab.
+## In plain words: what this workbook answers
+Exposure answers one question: "how much could this counterparty owe us if it defaulted at some date in the future, on average and in a bad case, after netting and collateral?" Nobody knows how markets will move, so the bank's simulator draws many possible futures (paths) and values every trade of the netting set on each path at a series of future dates. This workbook starts from those values. It nets the trades on each path, works out the collateral the agreement would have called, floors what is left at zero (a defaulting counterparty never pays us more than it owes), and then reads the average (expected exposure, EE) and a high percentile (potential future exposure, PFE) at each date, and their time averages (EPE, EEPE). Every step after the simulated values is a plain Excel formula, so any figure can be followed back to the paths, an input can be changed and the result watched, and every result is compared with Drishti's exposure engine to the cent (Main, Checks).
+## In plain words: why the paths
+A derivative's value today says little about what it may be worth in a year: a swap at zero today can be worth millions either way. Collateral and netting make it worse to guess: they depend on the whole set's value on the same future day. So the exposure is computed on each simulated future separately and only then summarised. The order matters: net per path first, apply collateral per path, floor at zero per path, and only then average or take percentiles. Drishti does not simulate markets or price trades; the paths are the bank's own simulator's output, and the same path number is the same imagined market for every trade.
+## In plain words: what it is used for
+Credit officers set limits on PFE (usually at 95 %) by tenor. EE is the input of CVA, the price of the counterparty's default risk, and of FVA. EEPE times 1.4 is the exposure at default under an internal model approved by the supervisor (the Basel Framework's CRE53); without that approval it is shown for information only. The same exposure shares (contributions) say which trades and desks cause the exposure.
+## In plain words: how to read the tabs
+Main is the summary: the netting set, the run, the choices (confidence, collateral model), the profile per future date (EE, ENE, PFE, EEE, EE without collateral) and the headline figures (CE, EPE, EEPE, the peaks, EAD), each beside the engine's figure with a check. Config holds the collateral agreement's terms and the run's time grid. Data holds the simulated values exactly as delivered: one row per path, one column per trade and grid date. Netting adds the trades up per path and date. Collateral works out what the agreement would hold on each path. Exposure floors what is left at zero. Stats summarises each date across the paths. Contributions splits the expected exposure at one date between the trades. Explain (this tab) says what every step and every term means; Provenance where every input came from.
+## In plain words: signs and units
+A trade's value is from the bank's side: positive when the counterparty owes the bank. Collateral is positive when the bank holds it and negative when the bank has posted it. Exposure E is never negative; the negative exposure N (what the bank would owe them) is never positive. All money is in USD, as of each future date (not discounted). Times are in years from the business date, calendar days over 365.
+## 1. The simulated values
+In plain words: for each trade, each path p and each grid date k the simulator delivers the trade's value MTM(p, k) (Data). Every trade uses the same paths, so values can be added path by path. A trade after its maturity has no value (0). Worked number (case X1): on path 1 trade A is worth 2, 3, 4 and 3 at the four dates and trade B −1, −1, 0 and 1.
+## 2. The time grid
+In plain words: the dates where exposure is reported are the primary dates; each has a look-back date a margin period of risk earlier, used only to find out what collateral had been called. Δt_k = t_k − t_(k−1), with t_0 the business date. A primary date whose look-back would fall on or before today has no look-back: its collateral is today's. Worked number (case X1): primary dates 0.25, 0.5, 0.75 and 1 year; Δt = 0.25 each (Config, the grid; Main, t and Δt).
+## 3. Netting on each path
+In plain words: in a default, the trades of one netting set are closed out as one amount: their values are added. V(p, k) = Σ_i MTM_i(p, k) (Netting). Worked number (case X1): path 1 at the first date, V = 2 + (−1) = 1; at the third, 4 + 0 = 4.
+## 4. The look-back value
+In plain words: collateral arrives late. What the bank holds at date t is what it called a margin period of risk earlier, before the counterparty stopped paying. L(p, k) is the set's value on the same path at the look-back date (Netting, the look-back columns). Worked number (case X1): path 4 at the second date, L = 2.5 while V = 3.
+## 5. The collateral the agreement calls
+In plain words: the credit support annex (CSA) says how much collateral each side must post: everything the counterparty owes above its threshold, and the bank everything it owes above its own threshold, plus any independent amount. target(v) = max(v − TH_them, 0) − max(−v − TH_us, 0) + IA (Collateral). Worked number (case X1, both thresholds 1): path 4 at the second date, target(2.5) = 1.5.
+## 6. The minimum transfer amount and rounding
+In plain words: small calls are not made, and transfers are rounded. On the held side the counterparty's minimum transfer amount is taken off: C = max(C − MTA_them, 0) when C > 0 (conservative: the bank assumes the last small amount was never delivered); the CSA's rounding applies to the change from today's collateral, deliveries up and returns down. Worked numbers (case X1, MTA_them 0.5): path 4 at the second date, 1.5 becomes 1.0; path 1 at the second date, target 0.5 becomes 0 (Collateral, C).
+## 7. Posted collateral
+In plain words: when the bank owes the counterparty, it has posted collateral; if the counterparty defaults, the bank may not get that back. Posted collateral is negative C; no minimum transfer amount is taken off it. Worked number (case X1): path 3 at the last date, L = −1.5, so the bank has posted 0.5: C = −0.5 (Collateral, C).
+## 8. The collateral model
+In plain words: three ways to treat collateral. lagged (the default): what was called at the look-back date, as in steps 4 to 7. current: today's collateral held constant on every path. none: no collateral and no initial margin, the uncollateralised view. Initial margin held today is kept on every path; initial margin the bank posts in a segregated account adds nothing (Main, Collateral model).
+## 9. Exposure on each path
+In plain words: what the counterparty would owe after the collateral, never less than zero, because a defaulting counterparty's debt is a loss and its claim on us is still paid in full. E(p, k) = max(V − C − IM, 0); the negative exposure N(p, k) = min(V − C, 0) (Exposure). Worked numbers (case X1): path 4 at the second date, max(3 − 1, 0) = 2; path 3 at the last date, V − C = −2 + 0.5 = −1.5, so E = 0 and N = −1.5.
+## 10. Expected exposure
+In plain words: the average exposure at a date over all the paths, each path equally likely. EE(k) = (1/P) × Σ_p E(p, k) (Stats, EE; AVERAGE in the workbook; CRE50 definitions). Worked number (case X1): at the second date the exposures are 2, 2, 1, 2 and 1, so EE = 8/5 = 1.6; the profile is 0.8, 1.6, 1.1 and 1.3.
+## 11. Expected negative exposure
+In plain words: the average of what the bank would owe the counterparty: the other side's exposure to the bank. ENE(k) = (1/P) × Σ_p N(p, k), never positive. It feeds the funding benefit and the debit valuation adjustment. Worked number (case X1): at the third date, (−1 − 1) / 5 = −0.4 (Stats, ENE).
+## 12. Potential future exposure at a confidence
+In plain words: a bad but plausible case: the exposure exceeded on only (1 − q) of the paths. PFE_q(k) is the ⌈P × q⌉-th smallest exposure at the date (rank rule kth; SMALL and ROUNDUP in the workbook), or interpolated between neighbours when the rank rule is interpolated. Worked numbers (case X1, P = 5): at 95 %, ⌈4.75⌉ = 5, the largest: 1, 2, 2.5 and 2; at 80 %, ⌈4⌉ = 4, the fourth smallest: 1, 2, 2 and 2 (Stats, PFE).
+## 13. The peaks
+In plain words: the worst date of the profile, which is what a limit is usually checked against. Peak PFE = max over the primary dates of PFE_q, with its date (the earliest on a tie); peak EE likewise. Worked numbers (case X1): peak PFE 95 % = 2.5 at 0.75 years; peak PFE 80 % = 2 at 0.5 years (tied with later dates); peak EE = 1.6 at 0.5 years (Main, Peak PFE and Peak EE).
+## 14. Effective expected exposure
+In plain words: the regulator does not let exposure fall as trades mature within the first year, because the bank is likely to replace them. EEE(k) = max(EEE(k−1), EE(k)), starting from today's exposure (CRE53). Worked number (case X1): EE 0.8, 1.6, 1.1, 1.3 gives EEE 0.8, 1.6, 1.6, 1.6 (Stats, EEE).
+## 15. Expected positive exposure
+In plain words: one number for the profile: the time average of EE over the first year (or until the last trade matures, if sooner). T = min(1 year, the longest remaining maturity); EPE = Σ EE(k) × Δt_k / T over the dates up to T (the interval that crosses T counts up to T). Worked number (case X1, T = 1): (0.8 + 1.6 + 1.1 + 1.3) × 0.25 = 1.2 (Main, EPE).
+## 16. Effective EPE
+In plain words: the same average of the effective EE, the regulatory figure. EEPE = Σ EEE(k) × Δt_k / T (CRE53). Worked number (case X1): (0.8 + 1.6 + 1.6 + 1.6) × 0.25 = 1.4: larger than EPE because the effective EE does not fall after the second date (Main, EEPE).
+## 17. Current exposure
+In plain words: today's exposure, from today's values and today's collateral: CE = max(MTM today − C today − IM, 0). It is the starting point of the effective EE. Worked number (case X1): today's value 0.4, no collateral: CE = 0.4 (Main, CE).
+## 18. Exposure at default under an internal model
+In plain words: what the exposure would count for capital if the supervisor had approved the bank's simulation: alpha, 1.4, times EEPE (CRE53). Without that approval it is for information only, and labelled so. Worked number (case X1): 1.4 × 1.4 = 1.96 (Main, EAD_IMM).
+## 19. The effect of collateral
+In plain words: the same profile with no collateral, max(V, 0) per path, beside the collateralised one; the difference is what the collateral agreement does. It is usually a reduction, but posted collateral at risk can make exposure larger than without collateral. Worked number (case X1): at the third date, EE 1.1 with collateral against 1.8 without, an effect of −0.7 (Main, EE uncollateralised and Collateral effect).
+## 20. Contributions of the trades
+In plain words: which trades cause the expected exposure at a date. On each path where there is exposure, each trade keeps its value less its share of the collateral (shared in proportion to its value); averaged over the paths these shares add up exactly to EE (the Euler allocation). w_i = MTM_i / V; a_i = (MTM_i − w_i × (C + IM)) when E > 0, else 0; EE_i = (1/P) Σ_p a_i. Worked number (case X2, the second date): trade A 1.133333 and trade B 0.466667, adding up to EE 1.6; on path 4, where the bank holds 1 against a value of 3, A keeps 4 × 2/3 = 2.666667 and B −1 × 2/3 = −0.666667 (Contributions). A negative contribution marks a hedge.
+## 21. Beyond one netting set
+In plain words: exposures of different netting sets never net (each is floored at zero first), but they add path by path. A counterparty's or a group's exposure on a path is the sum of its sets' exposures, and its PFE is the percentile of that sum, never the sum of the sets' PFEs. Worked number (case X2): two sets with exposures 4, 0, 1, 0 and 0, 3, 1, 0 on four paths have PFE 75 % of 1 each; summed per path, 4, 3, 2, 0, the group's PFE 75 % is 3. EE adds: 1.25 + 1.0 = 2.25.
+## 22. Rest of set
+In plain words: a netting set can hold more trades than a workbook should show as columns. The largest trades by their contribution at the peak date get their own columns; Rest of set carries the summed values of all the others per path and date, entered as data, so V and every figure after it are still the whole set's to the cent (Data, Rest of set).
+## 23. The checks
+In plain words: each result stands beside the engine's own figure with a check, and the parts are checked to add up. The band at the top of Main says ALL CHECKS PASS when the sheet equals the engine to the cent, the contributions add up to EE, every Data cell is a number, the path count equals the run's and the shown trades with Rest of set make the whole set. Change a simulated value and the engine checks turn red by design while the add-up checks stay green.
+## Term (Main): Netting set, counterparty
+The set of trades the playground works on, with its counterparty. A trade in no enforceable netting set is its own set.
+## Term (Main): Business date
+The close the run starts from (t_0): today's values, collateral and terms are of this date.
+## Term (Main): Run, calibration, paths (P)
+RUN_ID of the simulation run whose paths are used, its calibration (REAL_WORLD for limits and PFE, RISK_NEUTRAL for pricing CVA and FVA, STRESSED for a stressed calibration) and the number of paths P, every path equally weighted.
+## Term (Main): Confidence (q)
+The percentile of PFE: 95 % by default for limits, 99 % also computed; any q between 50 % and 100 % may be chosen.
+## Term (Main): Rank rule
+kth (the default): PFE is the ⌈P × q⌉-th smallest exposure; interpolated: between the two neighbouring ranks. The same rule as VaR's.
+## Term (Main): Collateral model
+lagged, current or none (step 8). The default is lagged.
+## Term (Main): Contribution date
+The primary date whose EE the Contributions tab splits between trades; the peak EE date by default.
+## Term (Main): t, Δt
+A primary date in years from the business date, and the length of the period ending at it (step 2).
+## Term (Main): EE
+Expected exposure at the date (step 10).
+## Term (Main): ENE
+Expected negative exposure at the date (step 11).
+## Term (Main): PFE (at each confidence)
+Potential future exposure at the date (step 12).
+## Term (Main): EEE
+Effective expected exposure: EE that never falls (step 14).
+## Term (Main): EE uncollateralised, collateral effect
+EE with no collateral, and EE minus it (step 19).
+## Term (Main): CE
+Current exposure, today (step 17).
+## Term (Main): T
+The averaging horizon of EPE and EEPE: one year, or the longest remaining maturity of the set's trades if sooner.
+## Term (Main): EPE
+Expected positive exposure: EE averaged over the first year (step 15).
+## Term (Main): EEPE
+Effective EPE: EEE averaged over the first year (step 16); the regulatory figure.
+## Term (Main): Peak PFE and its date, peak EE
+The largest PFE (at each confidence) and EE over the primary dates (step 13).
+## Term (Main): EAD_IMM
+1.4 × EEPE (step 18), informational.
+## Term (Main): MPOR_MISMATCH
+A flag: the CSA's margin period of risk plus its remargining period minus one differs from the run's look-back distance. The run's look-back is used, as decided, and the figures say so.
+## Term (Main): Engine, Check, Checks, CHECK FAILED, ALL CHECKS PASS
+Engine is the figure Drishti's exposure engine reported for the same netting set, run and choices, typed in so the workbook can be compared with it; the workbook never uses it in its own calculation. Each check compares a computed figure with the engine's (equal to the cent) or confirms that parts add up. ALL CHECKS PASS means every one holds.
+## Term (Config): THRESHOLD_THEM, THRESHOLD_US
+How much the counterparty may owe the bank before it must post collateral, and how much the bank may owe before it must post; in USD at today's exchange rate (step 5).
+## Term (Config): MTA_THEM, MTA_US
+The minimum transfer amounts of the counterparty's and the bank's deliveries (step 6).
+## Term (Config): INDEPENDENT_AMOUNT
+Collateral posted regardless of the value (IA), held positive and posted negative, added to every call (step 5).
+## Term (Config): ROUNDING, ROUNDING_METHOD
+The unit transfers are rounded to and how (deliveries up and returns down by default) (step 6).
+## Term (Config): MPOR_DAYS, MARGIN_FREQUENCY_DAYS, LOOKBACK_DAYS
+The CSA's margin period of risk and remargining period in business days, and the run's look-back distance; see MPOR_MISMATCH.
+## Term (Config): Today's collateral (C_0), IM held
+The collateral held minus posted today, after haircut (the current model's value and the starting point of rounding), and the initial margin held today, kept on every path.
+## Term (Config): Grid dates, role, look-back pointer
+Every date of the run with its role (PRIMARY or LOOKBACK), for a look-back date the primary date it serves, and its time in years.
+## Term (Config): Alpha, horizon cap, longest remaining maturity
+1.4 for EAD_IMM (CRE53); the one-year cap of the averaging horizon; the latest maturity among the set's trades, which can make T shorter.
+## Term (Data): MTM per trade and grid date, Rest of set, today's MTM
+The simulated values as delivered (step 1); the summed values of the trades not shown (step 22); each trade's value today, for CE.
+## Term (Netting): V, L
+The set's value per path at each primary date (step 3) and at each look-back date (step 4).
+## Term (Collateral): target, after MTA, C
+The collateral the CSA calls at the look-back value, after the minimum transfer amount and rounding, and the collateral of the model chosen (steps 5 to 8).
+## Term (Exposure): E, N, max(V, 0)
+Exposure, negative exposure and the uncollateralised exposure per path and date (steps 9 and 19).
+## Term (Contributions): w, a, EE share
+A trade's share of the set's value on a path, its share of the exposure, and its average (step 20).
+## Term (Provenance): Sources, run and refusals
+The business date, the run (id, model and version, seed, calibration, value basis), the data versions of the paths, the CSA and the collateral, trades whose paths failed or were proxied, the flags, the template's version, who exported the workbook and when.

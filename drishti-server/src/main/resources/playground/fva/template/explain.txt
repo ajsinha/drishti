@@ -1,0 +1,99 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The Explain tab of the FVA Playground workbook, one entry a row: a line "## <title>" then its text (lines starting with "#" are
+# dropped; the text lines of an entry are joined with spaces). Same format as playground/var/template/explain.txt, read by
+# PlaygroundTemplate.explain(). {Name} and {Name:v} cell references are added when the generator names Main's cells; until then the
+# entries name the tab and the column, never a cell. The design is docs/architecture/COUNTERPARTY_ENGINES.md (section 5 for the method,
+# 8.3 for the tabs, 9 case F1 for the worked numbers) and docs/contracts/CVA.md section 6.3. The profile of case F1 is the Exposure
+# Playground's case X1 (EE 0.8, 1.6, 1.1, 1.3 and ENE 0, 0, −0.4, −0.3 USD millions at 0.25, 0.5, 0.75 and 1 year). The entries come in
+# three parts: the idea in plain words, the steps with one worked number each, and every term of every tab.
+## In plain words: what this workbook answers
+FVA, the funding valuation adjustment, answers one question: "what does it cost the bank to fund this netting set's trades over their life, net of the funding they provide?" When a trade is in the bank's favour and the counterparty does not post collateral against it, the bank has in effect lent the counterparty that value and must borrow the money in the market at its own funding spread over the risk-free rate. When the bank owes the counterparty, it holds that money and saves the same spread. FVA adds both up over the life of the trades: the funding cost (FCA) on the expected positive exposure and the funding benefit (FBA) on the expected negative exposure, at each future date, discounted to today. Every step is a plain Excel formula here, and every result is compared with Drishti's engine to the cent (Main, Checks).
+## In plain words: why it matters
+Accounting standards ask a bank to value its derivatives at the price a market participant would pay (fair value, IFRS 13), and dealers include their funding costs in the prices they quote, so most large banks book FVA beside CVA, the price of the counterparty's default risk. A trader quoting a new uncollateralised swap needs its funding cost before dealing; a desk needs to know which of its counterparties are expensive to fund. FVA is not a regulatory capital figure: it is part of the price and of the profit and loss.
+## In plain words: how to read the tabs
+Main is the summary: the netting set, the run, the choices, then the funding cost, the funding benefit and FVA, each beside the engine's figure with a check, and, when the spread is flat, the one-line reading "funding spread × the life's average exposure". Config holds the funding spread, the discount curve and, when used, the survival curves. Data holds the exposure profile as the exposure engine computed it: EE and ENE at each future date (or, in the paths mode, the Exposure Playground's tabs compute them from the simulated paths). Terms computes, date by date, the discount factor, the spread and the two terms. Explain (this tab) says what every step and every term means; Provenance where every input came from.
+## In plain words: signs and units
+FVA is a valuation adjustment from the bank's side: a cost is negative and a benefit positive. FCA is never positive, FBA never negative, FVA = FCA + FBA either sign. EE is positive, ENE negative; the formulas use the size of ENE. All money is in USD; spreads are written as fractions (50 basis points is 0.005); times are in years.
+## 1. The exposure profile
+In plain words: FVA starts from the netting set's expected exposure (EE) and expected negative exposure (ENE) at each future date, after netting and collateral, from the exposure engine (Data). Worked number (case F1): EE 0.8, 1.6, 1.1 and 1.3 million and ENE 0, 0, −0.4 and −0.3 million at 0.25, 0.5, 0.75 and 1 year.
+## 2. The period of each date
+In plain words: each date stands for the period that ends at it. Δt_k = t_k − t_(k−1), with t_0 today. With ee-point end (the default) the exposure at the end of the period is used for it; with mid, the average of both ends (today's end is the current exposure). Worked number: Δt = 0.25 for each of the four dates (Terms, Δt).
+## 3. The discount factor
+In plain words: money paid in the future is worth less today; the discount factor DF(t) is today's value of one dollar paid at t, read from the discount curve (the USD overnight-index swap curve by default), log-linear between its points. When the run's values are already discounted (VALUE_BASIS DISCOUNTED), DF is 1. Worked number (case F1 (b), a flat 4 % continuously compounded rate): DF = 0.990050, 0.980199, 0.970446 and 0.960789 (Terms, DF).
+## 4. The funding spread
+In plain words: the extra rate the bank pays to borrow over the risk-free rate, s_F(t): a flat value or a curve by tenor, linear between its points and flat beyond. Worked numbers (case F1): flat 50 basis points (0.005) in (a) and (b); in (c) 40 basis points up to half a year and 60 after (Terms, s_F).
+## 5. Discounted exposures
+In plain words: each date's exposure in today's money. EE*(t_k) = EE(t_k) × DF(t_k); ENE*(t_k) = ENE(t_k) × DF(t_k) (CVA.md section 6.2). Worked number (case F1 (b)): EE* = 0.792040, 1.568318, 1.067490 and 1.249026 million (Terms, EE* and ENE*).
+## 6. The funding cost
+In plain words: for each period, the expected amount the bank has lent the counterparty times the spread it pays for the money times the length of the period, discounted; added up and given a minus sign because it is a cost. FCA = −Σ_k EE*(t_k) × s_F(t_k) × Δt_k. Worked numbers (case F1): (a) with DF = 1, −0.005 × (0.8 + 1.6 + 1.1 + 1.3) × 0.25 = −0.006 million = −6,000; (b) with the 4 % discounting, the terms −990.05, −1,960.40, −1,334.36 and −1,561.28 add to −5,846.09 (Main, FCA; Terms, FCA term).
+## 7. The funding benefit
+In plain words: the same for the money the bank holds because it owes the counterparty: a saving at the same spread, positive. FBA = +Σ_k |ENE*(t_k)| × s_F(t_k) × Δt_k. Worked numbers (case F1): (a) +0.005 × (0.4 + 0.3) × 0.25 = +875; (b) 485.22 + 360.30 = +845.52 (Main, FBA; Terms, FBA term).
+## 8. FVA
+In plain words: the cost and the benefit together: FVA = FCA + FBA. Worked numbers (case F1): (a) −6,000 + 875 = −5,125; (b) −5,846.09 + 845.52 = −5,000.57; (c) with the term spread, −5,835.13 + 1,014.62 = −4,820.51 (Main, FVA).
+## 9. The one-line reading: spread × average exposure
+In plain words: with a flat spread and no discounting, the funding cost is simply the spread times how much the bank lends on average over the life times the length of the life: FCA = −s_F × T_life × EPE_life, where EPE_life is EE averaged over the whole life (not only the first year, as the regulatory EPE). Main shows this reading beside FCA when the spread is flat. Worked number (case F1 (a)): Σ EE × Δt = 1.2 million-years, so T_life × EPE_life = 1 × 1.2 and 0.005 × 1,200,000 = 6,000.
+## 10. Survival weighting (when on)
+In plain words: funding stops when either side defaults, so some banks weight each period by the chance that neither has defaulted by then: each term × S_C(t_k) × S_B(t_k), the counterparty's and the bank's survival probabilities from their credit curves. Off by default. Worked number (case F1 (d), flat hazards 2 % and 1 %, 50 basis points, the 4 % discounting): S_C × S_B = 0.992528, 0.985112, 0.977751 and 0.970446; FCA −5,733.68, FBA 824.07, FVA −4,909.60 (Terms, S_C and S_B).
+## 11. Funding cost only
+In plain words: some banks hold that they cannot really earn the funding benefit (it overlaps with the benefit of their own default risk, DVA), and report the funding cost alone. With fba off, FBA is 0 and FVA = FCA. On by default (Config, fba).
+## 12. Netting sets, counterparties and new trades
+In plain words: FVA is a sum over dates of exposures times numbers that do not depend on the set, and expected exposures add across netting sets, so FVA adds over netting sets and counterparties: a counterparty's FVA is the sum of its sets'. A new trade's FVA is the set's FVA with it minus without it (it changes the set's profile, so it is not the trade's FVA alone).
+## 13. The run behind the profile
+In plain words: FVA is a price, so it should come from a run calibrated to market prices (RISK_NEUTRAL); a run calibrated to history (REAL_WORLD, for limits) gives a different profile. By default FVA refuses another run; the demonstration computes it and flags every number REAL_WORLD_RUN (Main, Run; Provenance).
+## 14. The checks
+In plain words: each result stands beside the engine's own figure with a check, and the terms are checked to add up to FCA and FBA and the two to FVA. Change an input and the engine checks turn red by design while the add-up checks stay green.
+## Term (Main): Scope, netting set, counterparty
+The netting set (or the counterparty's sets side by side) the funding adjustment is computed for. FVA adds over sets.
+## Term (Main): Business date, run, calibration
+The date of the profile, the simulation run it came from and its calibration (step 13).
+## Term (Main): EePoint
+end or mid: which exposure stands for each period (step 2).
+## Term (Main): FundingSurvival
+Whether the terms are weighted by the two survival probabilities (step 10).
+## Term (Main): IncludeFba
+Whether the funding benefit is reported (step 11).
+## Term (Main): FCA (funding cost adjustment)
+−Σ EE* × s_F × Δt: the cost of funding the positive exposure (step 6). Never positive.
+## Term (Main): FBA (funding benefit adjustment)
++Σ |ENE*| × s_F × Δt: the benefit of the negative exposure (step 7). Never negative.
+## Term (Main): FVA (funding valuation adjustment)
+FCA + FBA (step 8).
+## Term (Main): EPE reading
+Σ EE × Δt, the life T_life, EPE_life and s_F × T_life × EPE_life (step 9): an explanation shown when the spread is flat, not a second result.
+## Term (Main): REAL_WORLD_RUN
+A flag on every figure computed from a run that is not risk-neutral (step 13).
+## Term (Main): Engine, Check, Checks, CHECK FAILED, ALL CHECKS PASS
+Engine is the figure Drishti's FVA engine reported for the same scope, date, run and settings, typed in so the workbook can be compared with it; the workbook never uses it in its own calculation. Each check compares a computed figure with the engine's (equal to the cent) or confirms that parts add up. ALL CHECKS PASS means every one holds.
+## Term (Config): Funding spread (flat or points)
+The bank's funding spread over the risk-free rate, a single value or tenor points in decimals, with its source (step 4).
+## Term (Config): Spread interpolation
+linear in time between the points, flat before the first and after the last.
+## Term (Config): Discount curve and its points
+The curve's id (the USD overnight-index swap curve by default) and its points (tenor, discount factor), log-linear between them (step 3).
+## Term (Config): Counterparty and bank survival points
+The survival probabilities by tenor from the counterparty's credit curve and the bank's own, used only when FundingSurvival is on (step 10).
+## Term (Config): ee-point, funding-survival, fba
+The three choices of Main as configured (steps 2, 10 and 11).
+## Term (Config): Sign convention
+Valuation adjustments from the bank's side: costs negative, benefits positive, as CVA and DVA.
+## Term (Data): t, EE, ENE
+Each primary date in years and the exposure engine's EE and ENE at it, after collateral, in USD of that date (step 1).
+## Term (Terms): Δt, DF, s_F, S_C, S_B
+The period, the discount factor, the funding spread and the two survival probabilities at each date (steps 2 to 4 and 10).
+## Term (Terms): EE*, ENE*, FCA term, FBA term
+The discounted exposures and each date's share of FCA and FBA (steps 5 to 7).
+## Term (Provenance): Sources and flags
+The business date, the exposure run and its calibration, the data versions of the profile, the discount and funding curves and their versions, the survival curves when used, the flags, the template's version, who exported the workbook and when.

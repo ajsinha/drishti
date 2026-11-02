@@ -32,7 +32,8 @@ cases, is folded into the one VaR document's section 28.
 6. [Queries: scatter-gather with a completeness check](#6-queries-scatter-gather-with-a-completeness-check) · 7. [Handover](#7-handover) ·
 8. [Failure cases](#8-failure-cases) · 9. [Configuration](#9-configuration) · 10. [API and CLI](#10-api-and-cli) ·
 11. [Fargate scale-in and drain](#11-fargate-scale-in-and-drain) · 12. [Tests and the equality evidence](#12-tests-and-the-equality-evidence) ·
-13. [Decisions](#13-decisions) · 14. [Open items](#14-open-items)
+13. [Decisions](#13-decisions) · 14. [Open items](#14-open-items) ·
+15. [Contributions under load](#15-contributions-under-load)
 
 ## 1. Why
 
@@ -319,6 +320,7 @@ owners, announced and held ready for the grace period). The draining member leav
 | `ShardOwnersTest` | the same owners on every member; a fourth member takes 20 to 30 % of the first owners and of the replica slots (2,000 shards); a member leaving moves only its shards, each keeping its other replica; zones and pins |
 | `ShardGatherTest` | every shard asked answers once, partials combine in shard order, a missing answer fails the whole gather; another measure's partials (a map by netting set) combine their own way |
 | `ShardAssemblyTest` | the synthetic bank (1,800 trades) cut into six shards, three held, three through skeletons and an "owner": the same trades, positions and nodes, every node's aggregate to the bit, every scope's vector exactly equal (whole-unit rows), at most two partials per shard per sum; a damaged skeleton refused; a book under two shards refused |
+| `ShardReadAheadTest` | a contribution table's reads fetched ahead equal the reads one by one to the raw bit (whole positions, parts of positions, trades; one member holding every shard and each of three holding two of six); a desk of many positions makes one call per remote shard; more than `BATCH` sets split into calls of `BATCH` at most; a shard nobody answers fails the table; the skeleton written through a slow stream is the same bytes (section 15) |
 | `VarShardHandoverTest` | the handover rule; a handover played second by second never leaves the shard without a ready holder; a partial labelled for another shard, map, data version or number of rows refused; the published state reads back |
 | `VarShardingSettingsTest` | off by default; the server's keys and their defaults; settings that are not valid refuse the start |
 | `VarShardSingleNodeTest` | Drishti*net off: the server owns both shards; the date put together equals the date loaded whole (aggregates to the bit, 40 random sets) |
@@ -332,7 +334,7 @@ minus a trade, a desk plus a trade) in USD and EUR, the headline (VaR, ES, the t
 contribution, a page of the P&L path and the MGMT tree of every member equal the reference server's **to the cent** on Delta, with two
 members, then with three, and on Iceberg; an intraday batch (an amendment, a cancel, a new trade, a scenario-PV update in EUR) applied live
 equals the reference for ten scopes, once every server's answers list both batches in USD and EUR (the test polls the provenance as a
-client would, no fixed sleep); the official record of the day has the same figures. While the third member joins and takes its
+client would, no fixed sleep); the official record of the day has the same figures; contribution tables by position and by trade (the bank, the bank minus a trade, a legal entity, a basket of trades), their reads fetched ahead through `/partials`, equal the reference's with three members. While the third member joins and takes its
 shards, 2 scopes are asked on two members every 300 ms: no request fails or differs. A partial with another data version is refused (409,
 `DRS-5216`), an unsigned one too (401). With one owner of a shard stopped its replica answers; with both stopped a scope needing it answers
 `503 DRS-5215` (the bank, a node, still answers its aggregate); 15 s later the member left owns the shard and answers the reference's numbers.
@@ -377,8 +379,70 @@ shards, 2 scopes are asked on two members every 300 ms: no request fails or diff
 - **Admin → Health "Shards" panel** (proposed, not built: mock-ups first): the members with their shards ready and held, each date's map
   with owners and readiness, a draining member's progress to "safe to stop", the last refusals (`DRS-5215`, `DRS-5216`). Until then
   `GET /api/v1/var/shards` and `drishti.py var shards`.
-- Batching single-row reads: a contribution table's positions and an intraday batch's morning rows of shards held elsewhere are one call
-  each (cached per position); a batched call would cut the calls for a table of thousands of parts.
+- An intraday batch's morning rows of shards held elsewhere are still read one call each (a contribution table's are fetched ahead,
+  [section 15](#15-contributions-under-load)); the same read-ahead would serve them, and an intraday date's overlay store.
 - The 2.3 M benchmark sharded on real servers with the second builder's sorted lake loader: its per-file key ranges make the
   file skipping of section 5 exact (today it uses the first key column's statistics).
 - Exposure and BI sharding (later releases) on the same machinery (section 13).
+
+## 15. Contributions under load
+
+A contribution table by position or by trade needs one vector per part, and a scope's headline needs the sum of its parts' standalone
+VaR (each whole position's, kept per date once computed): on a put-together date, each position's (or trade's) rows sit in one shard, and
+for a shard held elsewhere the rows are summed by an owner. Read part by part, a desk of 2,000 positions held on other members would be
+2,000 signed calls one after the other, and the bank minus a desk tens of thousands. Instead these reads are **fetched ahead**, and the
+members keep one deadline per answer and no carrier thread pinned while a skeleton streams out.
+
+### 15.1 One call per remote shard
+
+| Step | Where | What |
+|---|---|---|
+| choose the parts | `VarViews.listed`, `VarPartTotals` | a table: the positions (or trades) of the scope, the `max-parts` largest by gross size; the standalone sums: the whole positions not yet kept (or the trades), a step of 1,024 at a time, the steps side by side on the vector-sum pool |
+| list their reads | `VarBook.readAhead` | each whole position's run of ordinals (`forEachPositionRead`: none when its vector is already kept or comes from the hot file), each trade of a position only partly in the scope, each trade asked for |
+| group by shard | `ShardedVectors.batched` | each read cut at the shard boundaries as `addRangeInto`, `copy` and `addInto` cut it; the reads of shards held here are left alone; the others grouped by shard, a read asked twice asked once |
+| ask the owners | `VarShardRows.sumAll` → `POST /api/v1/var/partials` | one call per remote shard of up to 1,024 row sets (`ShardedVectors.BATCH`, about 4 MB of float64 back at 509 scenarios; a larger table makes more calls), every shard's calls side by side on virtual threads; a single set still goes to `/partial` |
+| build the parts | `VarViews.position`, `VarViews.trade` | unchanged: each read finds its answer where it would have asked for it (a map of the fetched reads, for the asking thread while the table is built) |
+
+`/partials` is asked `{date, ccy, shard, map, digest, runs: [...]}`, each set as its runs `[from, to)` (int32 pairs, base64: 8 bytes for
+a position, where a bitmap of the shard's ordinals would be kilobytes), and answers `{shard, id, map, digest, node, rows: [...], sums:
+[...]}`: each set's row count and its float64 sum, in the order asked. The owner turns each set's runs into the bitmap `/partial` reads,
+so each sum is the one `/partial` gives for that set. The owner applies the same checks to every set (the cluster key, the shard, map and
+data-version label, rows within the shard, the caller's rights); the coordinator refuses an answer labelled otherwise or with another
+count or row list, and asks the next member, as for `/partial`. Like `/partial` it is in `token-never`.
+
+**The same numbers, to the bit.** Every read is the one the part would have made, with the same row set, summed by the same function on
+the owner, added in the same order here: fetching ahead changes when and how often the owners are asked, not what they sum.
+The standalone sums add the parts' VaR in the same order, into one running sum. `ShardReadAheadTest` checks every whole position, every part of a position and every trade of three tables (the bank, the bank without
+every third trade, a desk), read one by one and fetched ahead, on one member holding every shard and on each of three members holding two
+of six: the raw bits of every value are equal. An intraday date's overlay store, and an intraday batch's morning rows, are still read
+one call each (section 14).
+
+### 15.2 One deadline per answer
+
+The calls made for one answer (a gather's shards, or a table's batches) share one deadline: `call-timeout-seconds` (30 s) from when the
+answer's context is taken. Each member tried for a shard gets its share of the time left (the first owner half when a replica follows,
+at least 2 s while the deadline allows it), so a stalled owner leaves time for its replica, and a shard nobody answers is refused
+(`503 DRS-5215`) inside the client's 60 s, not after it.
+
+### 15.3 No carrier pinned while a skeleton streams
+
+`ShardSkeleton.write` copies the hot file's sections with positional reads into a 64 KB buffer and the servlet stream's own `write`. It
+does not go through `Channels.newChannel(out)`: that adapter writes under a `synchronized` lock, and on Java 21 a virtual thread blocked
+in it by a slow reader (HTTP/2 flow control) pins its carrier thread, stalling the member's other requests (`/partial` among them). The
+bytes are the same. The other `synchronized` blocks of the VaR shard path guard memory only (`NetCaller`'s gathered and missing sets, the
+date-by-book map); the blocking work there already runs under `ReentrantLock` (`VarService`'s date loads, `VarShards`' tick).
+
+### 15.4 Measured
+
+| Three members, 200,000 positions, Java 21, `-Xmx4g` each | 50 users | 100 users | 200 users |
+|---|---|---|---|
+| contributions p50 / p95 / p99, read part by part | 0.35 / 10.4 / 14.6 s | 0.85 / 15.8 / 19.0 s | 2.16 / 13.9 / 15.5 s |
+| **contributions p50 / p95 / p99, fetched ahead** | 0.40 / **0.88** / 1.29 s | 0.49 / **1.35** / 1.95 s | 0.81 / **2.53** / 3.52 s |
+| errors, read part by part / fetched ahead | 17 / **0** | 0 / 0 | 0 / 0 |
+| requests a second, read part by part / fetched ahead | 123 / **226** | 161 / **249** | 148 / **231** |
+
+Read part by part, the 17 errors were requests (the bank minus a desk, baskets) that waited past the client's 60 s at the start of the
+50-user window: the vector-sum pool's threads were all asking owners, position by position, for the standalone sums. Fetched ahead, the
+50-user window has no error (nor the warm-up), the contributions' p95 is under 1 s at 50 users and 2.6 s at 200, and the recording has no
+pinned virtual thread on any member. The bank's VaR is the same to the dollar. The full table and the raw lines:
+[BENCHMARK.md section 4.3](../admin/BENCHMARK.md#43-users-50-100-and-200), `tools/bench/results/2.9.10a-200k-cluster.jsonl`.
