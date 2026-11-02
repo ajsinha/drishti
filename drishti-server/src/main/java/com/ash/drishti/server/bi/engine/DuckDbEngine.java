@@ -78,7 +78,10 @@ public final class DuckDbEngine implements AnalyticEngine {
                 try (Statement s = root.createStatement()) {
                     s.execute("SET memory_limit = '" + props.memoryLimit().replace("'", "") + "'");
                     s.execute("SET threads = " + props.threads());
-                    s.execute("SET temp_directory = '" + tmp.toString().replace("'", "''") + "'");
+                    // a server holding memory-only data (IN_MEMORY_LAKE.md section 8) never lets DuckDB spill: a query that needs more than
+                    // memory-limit fails with the engine's out-of-memory words instead of writing rows to a temporary file
+                    boolean memoryOnly = com.ash.drishti.lakeio.mem.MemoryStores.totalCapBytes() > 0;
+                    s.execute("SET temp_directory = '" + (memoryOnly ? "" : tmp.toString().replace("'", "''")) + "'");
                     s.execute("SET autoinstall_known_extensions = false");
                     s.execute("SET autoload_known_extensions = false");
                 }

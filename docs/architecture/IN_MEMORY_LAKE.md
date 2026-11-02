@@ -15,10 +15,11 @@
 -->
 # The in-memory lake: Delta tables that never touch a disk
 
-**Status: design, not built; planned for 2.9.11, on Java 21 (product owner, 2026-11-02: Java 25 may not reach production, so it is built on Java 21 and brought forward); the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
-the owner node binds the pack and the others reach it through the pack; nothing leaves but downloads; whole unpinned tables may be
-evicted; Iceberg as well as Delta; news first; compaction automated so the memory keeps optimizing itself. The build checklist is in
-[section 15](#15-the-build-checklist).
+**Status: built in 2.9.11 on Java 21, with the parts section 15 marks as not built yet; the product owner's decisions are taken**
+([section 14](#14-decisions-for-the-product-owner), 2026-11-02): the owner node binds the pack and the others reach it through the pack;
+nothing leaves but downloads; whole unpinned tables may be evicted; Iceberg as well as Delta; news first; compaction automated so the
+memory keeps optimizing itself. How to use it: [the in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md) and
+[tutorial 31](../tutorials/31-news-in-memory-only.md). The build checklist, with what is built, is in [section 15](#15-the-build-checklist).
 
 **The request (product owner, 2026-11-02):** some data feeds may not, by contract, be saved on disk; they may stay in memory. Wanted:
 "an in-memory Delta lake with a hard limit on RAM and automated eviction", reached through the Java server (the console's Python is
@@ -310,20 +311,20 @@ All taken by the product owner on 2026-11-02:
 
 ## 15. The build checklist
 
-| # | Part | Size |
-|---|---|---|
-| 1 | `MemoryStorage` (`mem://`): chunks off the heap, the cap, exclusive creates, reference-counted files, tests against the `Storage` contract that `LocalStorage` and `S3Storage` pass | M |
-| 2 | Replenish jobs: config, schedule, signals, warm-up, modes replace, append and merge, history, `drishti.py lake memory` | M |
-| 3 | The eviction ladder and the off-heap pool in `MemoryBudget`; Capacity and the planner | S to M |
-| 3a | Automated compaction (section 13a): the scoring, the headroom rule, merge, dead rows, re-sort, dictionary rebuild, expiry and checkpoints; bytes saved on Admin → Lakes | M |
-| 3b | The owner node binds the pack: `node.yaml` `memory-stores`, forwarding of the pack's reads over Drishti\*net with memory-only forwarding caches, the *restarting* words | S to M |
-| 3c | Iceberg on `mem://`: the loader's warehouse, path catalog, its maintenance in memory; the same tests as Delta | S to M |
-| 3d | **News first:** `news-store` on `mem://news`, its replenish job from the news plugin, the news pack bound to its owner node; the sentinel scan and the measured memory on it | S |
-| 4 | The guard: `Retention.mayPersist` at every sink of section 8, the derived-data tag, refusal words, audit | M |
-| 5 | Host checks in Admin → Health; DuckDB spill off; the memory-only VaR hot tier | S |
-| 6 | Admin → Lakes for memory stores; the screens' *refilling* words | S |
-| 7 | Tests of section 13, the sentinel scan first; the measured memory ratios in RESOURCES_AND_SCALE | M |
-| 8 | Docs: a guide (setting up a memory-only feed, end to end) and a tutorial, CONFIGURATION, OPERATIONS, the Help entries | S |
+| # | Part | Size | Built (2.9.11) |
+|---|---|---|---|
+| 1 | `MemoryStorage` (`mem://`): chunks off the heap, the cap, exclusive creates, reference-counted files, tests against the `Storage` contract that `LocalStorage` and `S3Storage` pass | M | built: `drishti-lakeio` `com.ash.drishti.lakeio.mem` (`ChunkPool`, `MemoryStorage`, `MemoryStores`); the contract suite (`StorageContract`) passes on local disk and in memory; the Delta engine, the lake writer and Iceberg's file access take `mem://` |
+| 2 | Replenish jobs: config, schedule, signals, warm-up, modes replace, append and merge, history, `drishti.py lake memory` | M | built: `drishti-server` `memlake` (`MemoryLake`, `ReplenishSource`); sources by URL, file, a connector's documents, or a connector by ids; cron as well as `every`; a signal is a file's time or a connector's last update (a Kafka message signals through its connector's state) |
+| 3 | The eviction ladder and the off-heap pool in `MemoryBudget`; Capacity and the planner | S to M | built, but for the planner: the sizing workbook does not have a line for the stores yet; the decoded-column cache (step 2) is not built, so the ladder goes from old versions to whole tables |
+| 3a | Automated compaction (section 13a): the scoring, the headroom rule, merge, dead rows, re-sort, dictionary rebuild, expiry and checkpoints; bytes saved on Admin → Lakes | M | built (`MemoryCompactor`), but for the dictionary rebuild trigger (a rewrite rebuilds dictionaries, but a fallen-back dictionary is not detected yet); checkpoints are Kernel's every 10 commits |
+| 3b | The owner node binds the pack: `node.yaml` `memory-stores`, forwarding of the pack's reads over Drishti\*net with memory-only forwarding caches, the *restarting* words | S to M | built: `memory-stores`, local routing and the digest leave the kinds to the owner (`MemoryBinding`); forwarding keeps nothing on disk (it caches nothing on disk today); the cluster-wide *its node is restarting* words are not built (a peer's screen shows the usual peer-unavailable words) |
+| 3c | Iceberg on `mem://`: the loader's warehouse, path catalog, its maintenance in memory; the same tests as Delta | S to M | partly: the Iceberg engine reads and writes `mem://` (a data file written and read back), the Iceberg connector keeps a memory warehouse off every disk; replenish jobs write Delta only, and Iceberg's table commit, catalog and maintenance on `mem://` are not tested |
+| 3d | **News first:** `news-store` on `mem://news`, its replenish job from the news plugin, the news pack bound to its owner node; the sentinel scan and the measured memory on it | S | built: `config/connectors.examples/memory/news-store.yaml`, `config/examples/in-memory-lake.yaml`, `NewsInMemorySentinelTest`; the news connector fills it by ids (`ids-from`) |
+| 4 | The guard: `Retention.mayPersist` at every sink of section 8, the derived-data tag, refusal words, audit | M | built at the connectors' disk caches, scheduled reports, shares (picture, e-mail, copied values), BI run results, DuckDB's spill, Ask, downloads (allowed, audited); not yet: the derived-data tag on VaR and exposure captures, official records and write-back from memory-only inputs |
+| 5 | Host checks in Admin → Health; DuckDB spill off; the memory-only VaR hot tier | S | built but for the VaR hot tier (VaR inputs on `mem://` still build their hot file on disk) |
+| 6 | Admin → Lakes for memory stores; the screens' *refilling* words | S | built: Admin → Lakes, Health; the connector's health and the tables' words; the Sutra pages themselves do not show the words yet |
+| 7 | Tests of section 13, the sentinel scan first; the measured memory ratios in RESOURCES_AND_SCALE | M | built: the sentinel scan, equality (byte-equal Parquet), the cap and the ladder, exclusive commits, chunk reuse over a soak of replaces; measured in [RESOURCES_AND_SCALE.md 5.8](RESOURCES_AND_SCALE.md#58-the-in-memory-lake-measured); not yet: Native Memory Tracking against the store's own count in a long soak |
+| 8 | Docs: a guide (setting up a memory-only feed, end to end) and a tutorial, CONFIGURATION, OPERATIONS, the Help entries | S | built: [the guide](../guides/IN_MEMORY_LAKE_GUIDE.md), [tutorial 31](../tutorials/31-news-in-memory-only.md), CONFIGURATION, OPERATIONS 12.6, Help |
 
-About L to XL in all with compaction, the owner binding and Iceberg; planned in 2.9.11, on Java 21 (section 3a), with the direct-memory
-limit in every launcher as part of item 1.
+About L to XL in all with compaction, the owner binding and Iceberg; built in 2.9.11, on Java 21 (section 3a), with the direct-memory
+limit in every launcher as part of item 1 (`tools/lake/memory_caps.py`, `DRISHTI_LAKE_MEMORY_MB`).

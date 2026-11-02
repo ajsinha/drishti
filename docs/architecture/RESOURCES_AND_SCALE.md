@@ -595,6 +595,29 @@ connectors' caches (`squeeze-at`, 0.85), the safety net closes the least recentl
 remembered for its `Retry-After` like a refusal for room, so a crowd makes one decision. Levels, the console's message and the operator's
 override: [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over).
 
+### 5.8 The in-memory lake, measured
+
+Memory-only feeds ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md), [the guide](../guides/IN_MEMORY_LAKE_GUIDE.md)) are Delta tables held in
+direct memory, outside the heap and outside the cache budget: each memory store is its own hard cap (an off-heap pool beside the heap
+pools of section 5.2; a gauge of its own in busy protection) and the JVM's direct-memory limit is 256 MB plus the stores' caps (section
+5.6). Measured on the demo tables (`MemoryRatiosTest`, at most 10,000 rows a table from `data/testdata`; the same rows sorted by key, one
+business date; decoded = the documents' JSON in UTF-8, twice that as Java strings):
+
+| Table | Rows | Decoded JSON | Disk lake (Snappy) | In memory (zstd 3) | Held in 64 KB chunks | Decoded / memory | Disk / memory |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| news (headlines) | 71 | 573,768 | 229,843 | 138,078 | 327,680 | 4.2x | 1.7x |
+| quote (with a year of history) | 20 | 717,516 | 224,022 | 137,048 | 327,680 | 5.2x | 1.6x |
+| trades (Calypso) | 10,000 | 66,918,873 | 7,553,647 | 2,038,223 | 2,228,224 | 32.8x | 3.7x |
+| counterparty | 1,440 | 3,461,706 | 317,821 | 82,159 | 262,144 | 42.1x | 3.9x |
+| desk P&L | 2,600 | 696,007 | 140,575 | 77,063 | 262,144 | 9.0x | 1.8x |
+
+Bytes. The in-memory files are 4 to 42 times smaller than the decoded documents (the most for wide, repetitive trade-like rows) and 1.6
+to 3.9 times smaller than the disk lake's Snappy files of the same rows; with `codec: snappy` they are byte-equal to the disk lake's
+(`MemoryLakeTest`). What a table holds is its files rounded up to whole chunks, plus its log (each commit, checksum and checkpoint is a file
+of its own): a small table's log files dominate, so stores of small tables use `chunk-kb: 64` (the 1 MB default suits tables of tens of
+MB and more). `keep-versions: 2` and the expiry after every commit keep at most two versions' files; automated compaction merges the
+small files appends leave (a rewrite saves what the extra footers and dictionaries cost).
+
 ---
 
 ## 6. CPU design

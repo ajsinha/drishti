@@ -72,7 +72,12 @@ async def page(request: Request):
         maint = await asyncio.to_thread(maintenance(request.app).overview, figures)
     except Exception:                     # noqa: BLE001 - without the tools folder or with a broken file the tables are listed without Maintain
         maint = None
-    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures, maint=maint)
+    try:                                  # the in-memory lake (IN_MEMORY_LAKE_GUIDE.md): ids and counts only, never a value of the data
+        memory = await request.app.state.backend.admin("GET", "/lakes/memory", me)
+    except BackendError:
+        memory = None
+    return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures, maint=maint,
+                  memory=memory if memory and memory.get("stores") else None)
 
 
 @router.get("/lakes/table")

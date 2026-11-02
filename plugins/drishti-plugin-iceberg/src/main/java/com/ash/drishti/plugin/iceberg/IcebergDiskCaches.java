@@ -67,14 +67,19 @@ final class IcebergDiskCaches implements AutoCloseable {
     private final LongAdder idMapsRead = new LongAdder();
 
     IcebergDiskCaches(String sourceName, SourceContext ctx) {
+        this(sourceName, ctx, false);
+    }
+
+    /** With {@code memoryOnly} (a warehouse at {@code mem://}, IN_MEMORY_LAKE.md section 8): no id-map files and no document cache on disk. */
+    IcebergDiskCaches(String sourceName, SourceContext ctx, boolean memoryOnly) {
         this.sourceName = sourceName;
-        this.idMapFolder = com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);
+        this.idMapFolder = memoryOnly ? null : com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);
         this.idMapDir = idMapFolder == null ? null : idMapFolder.dir();
         sweepDays(idMapDir);
         if (idMapFolder != null) {
             idMapFolder.trim(null);
         }
-        if (!Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
+        if (memoryOnly || !Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
             return;
         }
         String failed = open(ctx);

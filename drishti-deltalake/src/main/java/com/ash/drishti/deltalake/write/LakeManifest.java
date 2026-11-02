@@ -56,10 +56,26 @@ public record LakeManifest(String table, List<String> partitionColumns, List<Col
     /** A column and its type. */
     public record Column(String name, String type) {}
 
-    /** A staged file: its rows all have these partition values ({@code business_date} as yyyy-MM-dd; a null value is null). */
-    public record Part(Path file, long rows, Map<String, String> values) {}
+    /**
+     * A staged file: its rows all have these partition values ({@code business_date} as yyyy-MM-dd; a null value is null). A part of a
+     * table in memory has no file: its staged rows come from {@code source} (the replenish jobs of the in-memory lake never stage on a
+     * disk, docs/architecture/IN_MEMORY_LAKE.md section 8).
+     */
+    public record Part(Path file, long rows, Map<String, String> values, java.util.function.Supplier<java.io.Reader> source) {
 
-    public static final List<String> MODES = List.of("overwrite-dates", "overwrite-partitions", "append");
+        /** A part staged in a file. */
+        public Part(Path file, long rows, Map<String, String> values) {
+            this(file, rows, values, null);
+        }
+
+        /** A part whose staged rows are held in memory, one JSON object a line. */
+        public static Part inMemory(java.util.function.Supplier<java.io.Reader> source, long rows, Map<String, String> values) {
+            return new Part(null, rows, values, source);
+        }
+    }
+
+    /** {@code replace}: the load is the whole table (every earlier file removed in the same commit; the in-memory lake's replace mode). */
+    public static final List<String> MODES = List.of("overwrite-dates", "overwrite-partitions", "append", "replace");
 
     /** Reads and checks a manifest file. */
     public static LakeManifest read(Path file) throws IOException {

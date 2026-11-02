@@ -143,6 +143,19 @@ $javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=
     '-Djdk.nio.maxCachedBufferSize=262144', '-XX:NativeMemoryTracking=summary', '-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=$dumps",
     '-Xlog:gc*:file=data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m', '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
+# the in-memory lake (IN_MEMORY_LAKE.md section 3a): its stores live in direct memory, so the limit is 256 MB plus the stores' max-mb,
+# from DRISHTI_LAKE_MEMORY_MB or the configuration (tools\lake\memory_caps.py); the later flag wins. Admin -> Health turns red when short.
+$memMb = 0
+if ($env:DRISHTI_LAKE_MEMORY_MB) { $memMb = [int]$env:DRISHTI_LAKE_MEMORY_MB }
+else {
+    $py = Get-Command python -ErrorAction SilentlyContinue
+    if ($py) { try { $memMb = [int](& $py.Source (Join-Path $root 'tools\lake\memory_caps.py') --stores-only 2>$null) } catch { $memMb = 0 } }
+}
+if ($memMb -gt 0) {
+    $at = [Array]::IndexOf($javaArgs, '-jar')
+    $javaArgs = $javaArgs[0..($at - 1)] + @("-XX:MaxDirectMemorySize=$(256 + $memMb)m") + $javaArgs[$at..($javaArgs.Length - 1)]
+    Write-Host "In-memory lake: direct memory 256 MB + $memMb MB of memory stores"
+}
 Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' }), heap $Heap$(if ($DemoLakes) { ', offline demo on the lakes (sign in as drishti-dev-admin)' })"
 
 if ($Background) {

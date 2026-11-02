@@ -1886,6 +1886,28 @@ connectors' caches): the caches shrink first, then new heavy work waits, so a cr
 small heap, with more users than the heap can hold: the expected result is refusals with `Retry-After` (Health's table fills, the console
 counts down) and no `OutOfMemoryError` in the log.
 
+### 12.6 The in-memory lake: running memory-only feeds
+
+Feeds that may not be saved on a disk are held in memory stores (`drishti.lake.memory.*`; the
+[guide](../guides/IN_MEMORY_LAKE_GUIDE.md) sets one up end to end). What an operator does with them:
+
+| Task | How |
+|---|---|
+| See the stores and tables | Admin → Lakes, *Held in memory only*; `drishti.py lake memory status` (`--json`) |
+| See the jobs' runs (why one failed or was refused) | `drishti.py lake memory jobs --table <t>`; `GET /api/v1/admin/lakes/memory/jobs` |
+| Refill a table now | `drishti.py lake memory refill <table>` (audited as `lake.memory.refill`) |
+| Start the server | the shipped scripts raise `-XX:MaxDirectMemorySize` to 256 MB plus the stores' caps (`tools/lake/memory_caps.py`, or `DRISHTI_LAKE_MEMORY_MB` for Docker and ECS); a unit file adds the flag itself |
+| After a restart | the stores are empty by design; the warm-up refills them in `warm-up` order, pinned tables first by convention; screens and the connector's health say *refilling* meanwhile |
+| A store is full | Health amber, the run `refused`, the table at its previous version: raise `max-mb` (restart), unpin tables, or lower `keep-versions` |
+| Health red | a pinned table empty after the warm-up (its source: `jobs`), or the direct-memory limit below the caps (the start script) |
+| The host | no swap (or encrypted swap), no heap dump on out-of-memory unless to a RAM disk (`-XX:HeapDumpPath` on tmpfs), no JFR at launch, the temporary folder on a RAM disk: each is a host check on Health |
+| A cluster | `memory-stores: [<store>]` in the owner's `config/net/node.yaml`; the other nodes forward the pack's requests to it ([guide section 8](../guides/IN_MEMORY_LAKE_GUIDE.md#8-a-cluster-the-owner-node-binds-the-pack)) |
+
+Nothing of a memory-only connector is written to the data folder (no document cache, id-map files or index segments), a scheduled report,
+a share's picture or e-mail and an Ask about its pages are refused (`DRS-5219`), a BI run's rows are not stored, DuckDB does not spill on
+a server with memory stores, and logs and audit lines carry ids and counts only. A user's download from the Data view is the one way out,
+audited.
+
 ## 12a. Several servers as one (Drishti*net)
 
 Deploying a production cluster (roles, counts, ports, drains, rolling upgrades, failure handling): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).

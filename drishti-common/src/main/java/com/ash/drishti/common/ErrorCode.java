@@ -194,6 +194,12 @@ public enum ErrorCode {
      * cap. Nothing was written; a date already open keeps answering; the answer says what is free, what was needed and the guard.
      */
     DISK_GUARD("DRS-5218", 503),
+    /**
+     * The in-memory lake's guard (docs/architecture/IN_MEMORY_LAKE.md section 8): the data is held in memory only by contract, and this
+     * place would keep it (a scheduled report, a mail attachment, an inbox or share item with rows, a saved result, an outside AI provider).
+     * Only a user's download may leave; the answer names the data and its contract.
+     */
+    MEMORY_ONLY("DRS-5219", 403),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

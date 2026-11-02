@@ -176,6 +176,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private java.nio.file.Path idMapDir;
     /** The id-map folder's cap, TTL and drops ({@code id-map-disk.max-gb} 5, {@code id-map-disk.ttl} off: {@link com.ash.drishti.api.IdMapFolder}). */
     private com.ash.drishti.api.IdMapFolder idMapFolder;
+    /** The lake is in memory ({@code mem://}): nothing of it is written to a disk by this connector. */
+    private volatile boolean memoryOnly;
     /** Documents read before, on disk (doc-disk-cache.enabled), or null. */
     private volatile com.ash.drishti.diskcache.DiskCache diskDocs;
     private volatile java.util.concurrent.ScheduledFuture<?> diskDocsRetry;
@@ -276,7 +278,11 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.lookbackDays = Integer.parseInt(ctx.setting("lookback-days", "10"));
         // local disk or object storage (s3a://, abfs://, gs://), read by the native engine or Hadoop's (`engine`): the
         // rest of the connector does not know which
-        this.lake = LakeStore.of(ctx.setting("root", com.ash.drishti.api.DataDir.under("delta")), ctx.setting("domain", ""), ctx.settings());
+        String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta"));
+        // a lake in memory (mem://, IN_MEMORY_LAKE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
+        // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
+        this.memoryOnly = com.ash.drishti.lakeio.mem.MemoryStores.isMemory(root);
+        this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());
         this.engine = lake.engine();
         this.idColumn = ctx.setting("id-column", "id");
         this.docColumn = ctx.setting("doc-column", "doc");
@@ -300,7 +306,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         this.columnSets = !set.containsKey("columns-cache-mb") ? Shared.COLUMNS
                 : Caffeine.newBuilder().executor(loaders).maximumWeight(Long.parseLong(set.get("columns-cache-mb")) * 1024 * 1024)
                         .weigher((PartKey k, com.ash.drishti.api.ColumnSet v) -> (int) Math.min(Integer.MAX_VALUE, weight(v))).buildAsync();
-        idMapFolder = com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);
+        idMapFolder = memoryOnly ? null : com.ash.drishti.api.IdMapFolder.of(sourceName, ctx);
         if (idMapFolder != null) {
             // each table date's id map written once per table version, then memory-mapped: no heap per id, kept across restarts; the folder
             // capped (never a map in use) and, with id-map-disk.ttl, maps unused that long dropped (never the latest dates nor an open one)
@@ -310,7 +316,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
             idMapFolder.latestDates(this::latestDates);
             idMapFolder.schedule(ctx.scheduler(), loaders);
         }
-        if (Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
+        if (!memoryOnly && Boolean.parseBoolean(ctx.setting("doc-disk-cache.enabled", "true"))) {
             // documents already read, on disk under <data dir>/cache/<connector>/docs (one RocksDB per connector: no shared files or
             // compactions between connectors): keyed by the table version they were read from (never stale), capped by size, a time
             // limit and a daily clearing, compacted hourly, kept across restarts. It is a cache: when it cannot open, reads go on without it
@@ -351,7 +357,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                 vectorCols.put(k.substring(7, k.length() - 8), java.util.Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
-        this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
+        this.dated = new DatedHitIndex(memoryOnly ? null : sourceName, memoryOnly ? null : DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             String v = versions.get(k);
             return v == null ? null : "v" + v;
         });
@@ -1409,6 +1415,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void refreshVersions() {
         latest.synchronous().invalidateAll();
+        if (memoryOnly) {
+            loaders.execute(this::reindex);   // a memory table just filled (or evicted): its kind is found and listed now, not at the next sweep
+        }
     }
 
     @Override
@@ -1439,8 +1448,16 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     @Override
+    public boolean memoryOnly() {
+        return memoryOnly;
+    }
+
+    @Override
     public String health() {
         String engineName = "engine: " + lake.engineName();
+        if (!lake.reachable() && memoryOnly) {
+            return "UP: " + lake.describe() + " is held in memory only and is empty now: its replenish job refills it (Admin > Lakes)";
+        }
         if (!lake.reachable()) {
             return "DOWN: cannot reach " + lake.describe() + " (" + engineName + ")";
         }

@@ -81,6 +81,7 @@
   </section>
 
   {% include "admin/_lake_maintain.html" %}
+  {% if memory %}{% include "admin/_lake_memory.html" %}{% endif %}
 
   <h2 class="lk-h2">Recent builds</h2>
   <div class="tbl-wrap"><table class="tbl adm-tbl lk-runs">

@@ -1,0 +1,40 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Lakes, the in-memory lake (docs/guides/IN_MEMORY_LAKE_GUIDE.md section 9): the stores and tables the server holds in memory
+   only, from GET /api/v1/admin/lakes/memory. Ids and counts only. #}
+{% macro mb(n) %}{{ '{:,.1f}'.format((n or 0) / 1048576) }} MB{% endmacro %}
+<h2 class="lk-h2" id="lkMemory">Held in memory only <a class="emb-help" href="/help/in-memory-lake-guide" aria-label="Help: the in-memory lake" title="Help: the in-memory lake">?</a></h2>
+{% set h = memory.health or {} %}
+<p class="text-muted-d" data-memory-health="{{ h.state }}">Health: <strong>{{ h.state or 'green' }}</strong>{% for p in h.problems or [] %} · {{ p }}{% endfor %}</p>
+<div class="tbl-wrap"><table class="tbl adm-tbl lk-memory-stores">
+  <caption class="visually-hidden">Memory stores: each a hard cap of memory off the heap</caption>
+  <thead><tr><th scope="col">Store</th><th scope="col">Node</th><th scope="col">Used</th><th scope="col">Cap</th><th scope="col">Files</th><th scope="col">Refused writes</th><th scope="col">Contract</th></tr></thead>
+  <tbody>{% for s in memory.stores %}<tr>
+    <td class="mono">mem://{{ s.name }}</td><td>{{ 'owner' if s.owner else 'held by its owner node' }}</td>
+    <td>{{ mb(s.usedBytes) }}</td><td>{{ mb(s.capBytes) }}</td><td>{{ s.files }}</td><td>{{ s.refusals }}</td><td class="mono">{{ s.contract }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<div class="tbl-wrap"><table class="tbl adm-tbl lk-memory-tables">
+  <caption class="visually-hidden">Memory tables: their state, memory, rows, version and refills</caption>
+  <thead><tr><th scope="col">Table</th><th scope="col">State</th><th scope="col">In memory</th><th scope="col">Smaller than its rows</th><th scope="col">Rows</th>
+    <th scope="col">Version</th><th scope="col">Last refill</th><th scope="col">Next</th><th scope="col">Pinned</th><th scope="col">Evicted</th><th scope="col">Saved by compaction</th></tr></thead>
+  <tbody>{% for t in memory.tables %}<tr>
+    <td class="mono" title="{{ t.path }} ← {{ t.source }} ({{ t.mode }})">{{ t.name }}</td>
+    <td title="{{ t.words or '' }}">{{ t.stateWords }}</td><td>{{ mb(t.bytes) }}</td><td>{{ (t.ratio ~ 'x') if t.ratio else '' }}</td>
+    <td>{{ '{:,}'.format(t.rows or 0) }}</td><td>{{ t.version if t.version >= 0 else '' }}</td><td class="mono">{{ (t.lastRefill or '')[:19] }}</td>
+    <td class="mono">{{ (t.nextRefill or '')[:19] }}</td><td>{{ 'yes' if t.pinned else '' }}</td><td>{{ t.evictions }}</td><td>{{ mb(t.savedTotalBytes) }}</td></tr>{% endfor %}</tbody>
+</table></div>
+<p class="text-muted-d">Refill a table: <span class="mono">drishti.py lake memory refill &lt;table&gt;</span> · the runs: <span class="mono">drishti.py lake memory jobs</span>.
+  Nothing of these tables is written to a disk; only a download from the Data view leaves the server.</p>
