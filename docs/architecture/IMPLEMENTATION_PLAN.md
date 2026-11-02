@@ -758,6 +758,8 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 | 4 | FVA and its playground | EPE and ENE × the funding spread |
 | 5 | **The exposure what-if in Java (S to M; product owner, 2026-11-02)** | the pre-deal exposure check (`POST /api/v1/exposure/what-if`) moves from the Python engine (`drishti_compute.exposure.whatif`) into the Java exposure engine, same request and answer, parity to the cent, then the Python engine retired (as the VaR what-if in 2.9.11 row 11) |
 
+**Before the 2.9.12 build (noted 2026-11-02):** the SA-CCR screens need their mock-ups first (COUNTERPARTY_ENGINES.md section 12: the EAD waterfall, the netting-set list with the selected set's breakdown, a counterparty's sets side by side); section 3.12 still places RC to EAD in a Python engine and must say Java on the server (the product owner's rule); the SA-CCR parameter draft moves from section 11.1 into its own file beside `simm.yaml`. Branches `wip/saccr` and `wip/exposure-fva` exist, empty.
+
 **Decisions (product owner, 2026-11-02):** every open point of the counterparty engines' design is decided, each as recommended ([COUNTERPARTY_ENGINES.md section 14](COUNTERPARTY_ENGINES.md#14-decisions)).
 
 ## 2.9.13: Java 25 and performance I (proposed)
