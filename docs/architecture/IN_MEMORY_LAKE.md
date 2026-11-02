@@ -187,7 +187,7 @@ memory-only data unless the configuration allows that place:
 | Scheduled reports, e-mail attachments, inbox and share items carrying rows | **refused** (product owner): only downloads leave |
 | An outside AI provider | refused |
 | Another node of the cluster | over Drishti\*net only, to answer a request for the pack (section 9); never written to its disk |
-| The browser's storage (local storage, the basket tray) | ids only, no values |
+| The browser's storage (local storage, the basket's sheet) | ids only, no values |
 | Logs and audit | ids and counts only, never values |
 
 The servers that hold memory-only data also need, and Admin → Health checks: **no swap** (or encrypted swap), **no heap dump on

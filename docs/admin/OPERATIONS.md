@@ -1223,6 +1223,11 @@ at any time:
   was given (Admin → Audit log, filter by `<owner>/<name>`).
 - **The owner is told.** When an administrator deletes someone's basket, its owner gets an inbox row (and the bell): *Your VaR basket
   "…" (BASKET:…) was deleted by administrator … : reason*, opening the VaR explorer. Nothing is sent when owners delete their own.
+- **Editing someone's basket.** An administrator may also **Edit** anyone's basket at any time (the VaR explorer's *Ad-hoc scopes*
+  list: it opens in the basket's sheet; the API: `POST /api/v1/var/baskets` with `owner`). The edit is saved under its owner as the next
+  version (`editedBy` names the administrator), is one audit entry, action `var-basket-edit`, detail *edited by administrator `<user>`
+  for `<owner>`* with the version, the number of parts and whom it is shared with, and the owner gets an inbox row: *Your VaR basket "…"
+  (BASKET:…) was edited by administrator …: now version n*. A portfolio is never edited: it is the bank's feed.
 - **What is kept.** Captures taken of the basket are not touched: each keeps the scope text and members it was taken with, still opens,
   and says the basket no longer exists. Official end-of-day records never name a basket. The people it was shared with lose it at once.
 - **No unseen deletes.** The dialog sends the version it showed; a basket its owner changed in the meantime is refused (`409 DRS-5007`)

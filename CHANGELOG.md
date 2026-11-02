@@ -17,6 +17,21 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **Construct your basket is one sheet like Excel; baskets are edited, amended and deleted (2.9.11 rows 10 and 12; VAR_GUIDE.md
+  sections 3.5 and 5.8, tutorial 25 steps 5 and 7).** The chip tray is retired (mock-up D): a column per kind of part (trade, position,
+  portfolio, book, desk, each configured hierarchy's word such as the limit letter, counterparty) and the Op column (+ or −), filled by
+  typing, by the type-ahead (a hint lands in its kind's column), by **+ basket** on any explorer row, or by pasting whole columns from
+  Excel (a first row of headings places each column); only the rows in view are drawn, so 10,000 ids scroll as fast as ten. **Start from
+  the whole bank** is one checkbox (`BANK - DESK:COMM - TRD:XYZ`); a minus in the Op column or a leading `-` takes away, and a minus that
+  takes nothing away, or a + row under the whole bank, is flagged in words. Every check and figure is the server's: `POST
+  /api/v1/var/basket/sheet` takes the columns as lists and answers each cell found or not found with the reason (not live, outside your
+  view, a masked counterparty, one id a cell) and the basket's VaR, ES, sum of the parts, diversification and trades; **Remove the not
+  found**; **Download as .xlsx** (`POST /api/v1/var/basket/sheet.xlsx`). A saved basket keeps the sheet's lists (to 20,000 rows; its
+  scope composed when read) and opens back into the sheet column by column (`GET /api/v1/var/basket/sheet?scope=`). In *Ad-hoc scopes* a
+  basket of yours has **Edit** (Save keeps its name as the next version; a basket changed since is `409`) and **Delete**; an
+  administrator edits anyone's, saved under its owner, audited (`var-basket-edit`) and told in the owner's inbox; a portfolio (the bank's
+  feed) and a basket shared with you have **Edit a copy**. The what-if trades, save with read-only sharing, Open without saving, Alt+B and
+  the count on the link are kept.
 - **FRTB-SA, computed for any scope (2.9.11 rows 1 and 2; [FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), tutorial 30).** Position
   sensitivities (`SENS`) and the factor dictionary (`RFAC`) are kinds of the market-risk pack, served by risk-store and loaded by `lake
   demo`; the server's Java engine computes the FRTB standardised approach from them: the sensitivities-based method (delta, vega and

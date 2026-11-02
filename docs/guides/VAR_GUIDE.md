@@ -441,49 +441,92 @@ ranked path also list each trade's or position's **Trade currency**.
 
 ### 3.5 Construct your basket
 
-*VaR of any mix of portfolios, trades and counterparties.* Ad-hoc scopes and baskets are one thing, built one way: the basket tray, a
-strip across the top of the explorer, opened by **◫ Construct your basket** (with the count of its parts) or **Alt+B**. It lives on the
-VaR page only (the top bar has no Basket button, and Alt+B does nothing elsewhere); what you put in it stays in this browser, so a
-basket built earlier is there when the explorer opens, waiting behind the link's count: the tray opens only when asked (the link,
-Alt+B or **+ basket** on a row), never by itself, not even when the explorer opens a saved basket.
+*VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, built in one sheet like Excel.* Ad-hoc
+scopes and baskets are one thing, built one way: the basket's sheet, across the top of the explorer, opened by **◫ Construct your basket**
+(with the count of its parts) or **Alt+B**. It lives on the VaR page only (the top bar has no Basket button, and Alt+B does nothing
+elsewhere); what you put in it stays in this browser, so a basket built earlier is there when the explorer opens, waiting behind the
+link's count: the sheet opens only when asked (the link, Alt+B, **+ basket** on a row, **Edit**), never by itself, not even when the
+explorer opens a saved basket.
 
-- **Type to add.** Hints come from the engine as you type: portfolios, saved baskets, desks, books, legal entities, divisions,
-  counterparties, positions and trades, each with its type, id, name, trade count and standalone VaR (`pf usd`, `aldershot`, `MX-3000`,
-  `rates`). **↓ ↑** and **Enter** pick; a leading **-** takes it away (`-MX-30000121`). Anything in the [grammar](#52-the-grammar) can be
-  typed as written (`TRD:MX-30000121`).
-- **+ Rule** adds a condition over the positions' columns (`CURRENCY == 'EUR' and DIRECTION == 'SHORT'`, a `WHERE:` term,
-  [section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)).
-- **+ / −** on each chip adds or takes away that part; **×** removes it.
-- **+ basket** on any row of the tree, the contributions and the trades (By trade) adds that row.
-- **Live** as you pick: the selection's VaR 99% 1-day and ES, its trades, the **sum of the parts'** standalone VaRs (each part alone) and
-  the **diversification** (the sum minus the selection's VaR), all computed by the engine. A trade in two parts counts once.
-- **Matches nothing?** A part the date does not hold is flagged at once (a red chip, *matches nothing*) and said in words under the
-  figures, for example *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*, or *TRD:X is not live on …: its status is
-  CANCELLED*. A selection with no trades says **No trades**, never a VaR of 0 that looks computed; so does the explorer
-  ([section 5.3](#53-resolution-rules)).
-- **+ What-if trade**: a pre-deal what-if, a copy of a booked trade scaled by a factor (−1: its unwind), added to the basket; the VaR and
-  ES before → after and the incremental, by the Python VaR engine ([section 8.5](#85-the-pre-deal-what-if-in-the-basket-tray)).
-- **Save basket and open VaR** keeps it as a basket (private, or shared read-only with the users or roles you name) and opens
-  `VAR SCOPE BASKET:<you>/<name>` in the full explorer: the tree, the contributions by part (drill into any part, down to its trades), the
-  P&L path, the history, captures. **Open without saving** opens the ad-hoc scope; **Clear** empties the tray.
+**The sheet.** A column per kind of part: **Trade** (`TRD`), **Position** (`POS`), **Portfolio** (`PORT`), **Book** (`BOOK`), **Desk**
+(`DESK`), one column per configured hierarchy's word (the demo's **Limit letter**, `LL`) and **Counterparty** (`CPTY`), and the **Op**
+column, **+** or **−**, for each row. One id a cell. It fills four ways:
+
+- **Type in a cell.** Click it (or move with the arrows, Tab and Shift+Tab) and type; **Enter** keeps it and moves down, **Esc** drops
+  the edit, **Delete** clears the cell. In the Op column a click, Space, **+** or **−** sets the row's sign.
+- **Paste whole columns from Excel.** Select a cell and paste (Ctrl+V): Excel's columns fill downward from it, and rightward for several
+  columns. A first row of headings (**Op**, **Trade**, `TRD`, *Trade (TRD)*, as the sheet's own workbook writes them) puts each pasted
+  column under its heading wherever you paste. A sheet holds 20,000 rows; every column takes 10,000 ids and more.
+- **Find and add.** The type-ahead above the sheet offers what the engine knows as you type: portfolios, saved baskets, desks, books,
+  legal entities, divisions, counterparties, positions and trades, each with its type, id, name, trade count and standalone VaR (`pf usd`,
+  `aldershot`, `MX-3000`, `rates`); **↓ ↑** and **Enter** pick, and the hint lands in its kind's column. **Add (+)** or **Take away (−)**
+  above the sheet says which, and a leading **-** takes it away (`-MX-30000121`). Anything in the [grammar](#52-the-grammar) can be typed
+  as written (`TRD:MX-30000121`).
+- **+ basket** on any row of the tree, the contributions and the trades (By trade) adds that row to its column.
+
+A cell may name its kind itself (`NODE:MGMT~DESK-RATES` in the Desk column, `BASKET:asha/unwind` in the Portfolio column); a rule
+(`WHERE:`) has no column: open it as a scope from the command line ([section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)).
+
+**Take away by a minus.** The basket is everything added, then everything marked − taken away: a **−** in the Op column, or a leading
+**-** on an id (`-TRD:XYZ` or `-XYZ` in the Trade column), as the scope grammar's `A + B - C` does. A minus on a desk or a book takes away
+all its trades, whichever part added them. A minus that takes nothing away (none of its trades is in a part added) is flagged in words
+on its cell.
+
+**Start from the whole bank.** One checkbox above the sheet, never a row in it. Ticked, the basket is the whole bank (every trade you may
+see, `BANK`) and the rows refine it: `BANK - DESK:COMM - TRD:XYZ` is the bank without the commodities desk and one trade. A **+** row then
+adds nothing (the bank already holds it) and says so. A saved basket keeps the tick.
+
+**Every cell checked by the server.** As you type or paste, the sheet goes to the server as lists, one per column; the server checks
+every cell as you, on the page's date, and answers each one: **found** (green), **not found** (red, the reason in words as the cell's
+tooltip and in the list under the sheet, for example *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*, *TRD:X is not live
+on …: its status is CANCELLED*, *is outside your view: your role does not see its trades*, *cannot be used: the counterparty is masked
+for your role*), or found but **adding or taking away nothing** (amber). A cell not found is left out of the figures and kept in the
+sheet until you remove it: **Remove the not found** drops them all. Click a reason to go to its cell.
+
+**Live figures, the server's.** Under the sheet: the basket's **VaR** and **ES**, the **sum of the parts** (each cell added, alone), the
+**diversification** (the sum minus the basket's VaR) and its **trades** (a trade in two parts counts once), computed by the engine for
+the basket the sheet composes; the console computes nothing. A basket with no trades says so, never a VaR of 0 that looks computed; so
+does the explorer ([section 5.3](#53-resolution-rules)).
+
+**What-if trades.** Under the figures: a pre-deal what-if, a copy of a booked trade scaled by a factor (−1: its unwind), added to the
+basket; the VaR and ES before → after and the incremental ([section 8.5](#85-the-pre-deal-what-if-under-the-baskets-sheet)).
+
+**Name, share, save and open.** **Save basket and open VaR** keeps it as a basket (private, or shared read-only with the users or roles
+you name), its parts kept as the sheet's lists ([section 5.8](#58-baskets)), and opens `VAR SCOPE BASKET:<you>/<name>` in the full
+explorer: the tree, the contributions by part (drill into any part, down to its trades), the P&L path, the history, captures. **Open
+without saving** opens the ad-hoc scope (a basket too large for a link is saved first); **Clear** empties the sheet. **Download as .xlsx**
+gives the sheet back to Excel: a *Basket* sheet with the Op column and each kind's column under its heading (paste it back to open the
+basket again) and a *Checks* sheet with every cell that needs a word.
 
 The state reads **unsaved basket** until you save, then **saved basket · \<owner>/\<name>**. **Opening a saved basket** (from the tree,
-`VAR SCOPE <name>`, a link) loads its parts back into the tray, so you can edit it and save under the same name (a new version) or a new
-one. While the explorer shows the tray's unsaved scope, it follows every change you make.
+`VAR SCOPE <name>`, a link, **Open a saved basket ▾**) loads it back into the sheet, column by column. While the explorer shows the
+sheet's unsaved scope, it follows every change you make.
 
-**Deleting a basket.** Each basket you own has **Delete** in the explorer's *Ad-hoc scopes* list (shown as you point at its row or move
-to it with Tab; an administrator sees it on every basket listed). It asks first, in a dialog that names the basket, its owner and whom
-it is shared with (they lose it too); **Keep it** or **Esc** keeps it, **Delete basket** deletes it. The list refreshes at once, and
-when the explorer was showing that basket it says it was deleted (the scope now matches nothing: *no such basket you may read: it was
-deleted, or it is not shared with you*). What you had in the tray stays there as an unsaved basket, so you can save it again. Captures
-taken of the basket are kept: each still opens with the scope and members it was taken with, and says the basket no longer exists.
-Official end-of-day records never name a basket. A basket changed by its owner after you opened the dialog is not deleted unseen: the
-dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in **Admin → Ad-hoc scopes** (every owner's,
-filtered by owner, **Delete** with an optional reason that goes to the audit log and to the owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)).
-CLI: `drishti.py var basket-delete <name>` (yours), `--owner <user> --reason <text>` (an administrator, anyone's). API:
-`DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+**Edit, amend and delete.** In the explorer's *Ad-hoc scopes* list:
 
-![Construct your basket: a book's position added from its row, a portfolio from the hints, the FX desk from the tree, a trade taken away; the selection's VaR, the sum of the parts and the diversification, live](img/var/06-basket.jpg)
+- a basket you own has **Edit**: it opens in the sheet, and **Save as version *n*** keeps its name as a new version (every version is
+  kept); a changed name saves a new basket. Someone else's change since you opened it is not overwritten unseen: the save is refused
+  (`409`) and you open it again;
+- an **administrator** has Edit on everyone's basket at any time: the edit is saved under its owner, audited (`var-basket-edit`, *edited
+  by administrator \<user>*) and the owner gets an inbox notice, as for a delete;
+- a basket shared with you read-only, and every **portfolio**, have **Edit a copy**: a portfolio belongs to the bank (its feed, the
+  `portfolio` table) and is never edited, amended or deleted in Drishti; its copy opens in the sheet as your own unsaved basket, to save
+  under a name of yours;
+- **Delete**, on a basket you own (an administrator sees it on every basket listed), asks first, in a dialog that names the basket, its
+  owner and whom it is shared with (they lose it too); **Keep it** or **Esc** keeps it, **Delete basket** deletes it.
+
+After a delete the list refreshes at once, and when the explorer was showing that basket it says it was deleted (the scope now matches
+nothing: *no such basket you may read: it was deleted, or it is not shared with you*). What you had in the sheet stays there as an unsaved
+basket, so you can save it again. Captures taken of the basket are kept: each still opens with the scope and members it was taken with,
+and says the basket no longer exists. Official end-of-day records never name a basket. A basket changed by its owner after you opened
+the dialog is not deleted unseen: the dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in
+**Admin → Ad-hoc scopes** (every owner's, filtered by owner, **Delete** with an optional reason that goes to the audit log and to the
+owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
+(yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/var/basket/sheet` (the checks and figures),
+`GET /api/v1/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/var/basket/sheet.xlsx`,
+`POST /api/v1/var/baskets` (save, edit), `DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+
+![Construct your basket: one sheet, a column per kind; a position from its row, a portfolio from the hints, the FX desk from the tree, trades pasted from Excel, one taken away by its leading minus and one not live said in words on its cell; the basket's VaR, ES, sum of the parts and diversification, the server's](img/var/06-basket.jpg)
 
 ![VAR TRD 10000000: not a live trade on the date, said in words; the tiles say no trades instead of a VaR of 0](img/var/13-not-live.jpg)
 
@@ -998,7 +1041,7 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 
 | Rule | Behaviour |
 |---|---|
-| Unknown ids | an id, node, portfolio, basket or capture the date or the caller does not have resolves to nothing and is listed in `provenance.unknown` (*Unknown ids*), never silently dropped, and said in words in `provenance.notices`: *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the load left out names why (*… is not live on …: its status is CANCELLED*, *… it matured on …*); a rule that matches no position too. The answer is still `200`; an empty scope answers `empty: true` with VaR 0, and the explorer and the basket tray show **No trades** and the notices, never a VaR of 0 that looks computed |
+| Unknown ids | an id, node, portfolio, basket or capture the date or the caller does not have resolves to nothing and is listed in `provenance.unknown` (*Unknown ids*), never silently dropped, and said in words in `provenance.notices`: *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the load left out names why (*… is not live on …: its status is CANCELLED*, *… it matured on …*); a rule that matches no position too. The answer is still `200`; an empty scope answers `empty: true` with VaR 0, and the explorer and the basket's sheet show **No trades** and the notices, never a VaR of 0 that looks computed |
 | Overlap | set algebra on trade ordinals: a trade in two terms of a union counts once |
 | Rules and positions | `WHERE:` and `POS:` take whole positions; `TRD:` takes single trades (a position held in part is a *partial* part) |
 | Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a BASKET-type portfolio is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
@@ -1085,18 +1128,25 @@ once (two overlapping portfolios' vectors cannot simply be added, and a table of
 
 ### 5.8 Baskets
 
-A **basket** is a scope you save under a name (explorer or any page: **Construct your basket**, then **Save basket and open VaR**,
-[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/var/baskets`). The tray writes its parts as
-the scope: the parts to add joined by ` + `, then those to take away by ` - ` (`PORT:PF-USD-RATES + NODE:MGMT~DESK-FX - TRD:MX-30000121`);
-opening the basket splits its scope back into those parts (the headline's `terms`, below), so the tray shows them for editing. A basket
-of two parts or more is broken down **by part** (`by=part`, the default child of a basket or an ad-hoc union): each part's standalone
-VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components add up to
-the basket's VaR and a trade in two parts counts once. It is a RULE when it is a single rule (the scope starts with `WHERE:` and has no ` + `), else a BASKET;
-private unless you share it read-only with users or roles (*Share read-only with*: each reader sees it through their own entitlements).
-Baskets are stored in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
+A **basket** is a scope you save under a name (on the VaR explorer: **Construct your basket**, then **Save basket and open VaR**,
+[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/var/baskets`). A basket built in the sheet is
+kept as the **sheet's lists**, one per column, never as one long scope text: `sheet` holds `wholeBank` (Start from the whole bank), `op`
+(the Op column, `+` or `-` a row) and each filled column (`TRD`, `POS`, `PORT`, `BOOK`, `DESK`, a configured hierarchy's word such as
+`LL`, `CPTY`), aligned by row. Its scope is composed from them whenever it is read: the parts added joined by ` + ` (the ids of a kind as
+one list, `TRD:a,b`), or `BANK` when the whole bank is ticked, then each part taken away after a ` - `
+(`TRD:MX-1,MX-2 + PORT:PF-USD-RATES + DESK:DESK-FX - TRD:MX-30000121`), so it computes like any scope and stays computable as the data
+changes. A basket saved from scope text (the CLI, the API) keeps its `scope`. Opening a basket in the sheet lays it out column by column:
+the sheet's own lists, or a scope's top-level terms, the parts added first and those taken away below them
+(`GET /api/v1/var/basket/sheet?scope=`).
+
+A basket of two parts or more is broken down **by part** (`by=part`, the default child of a basket or an ad-hoc union): each part's
+standalone VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components
+add up to the basket's VaR and a trade in two parts counts once. It is a RULE when it is a single rule (the scope starts with `WHERE:` and
+has no ` + `), else a BASKET; private unless you share it read-only with users or roles (*Share read-only with*: each reader sees it
+through their own entitlements). Baskets are stored in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
 they follow their owner across the servers of a cluster and every version is kept; they are listed under *Ad-hoc scopes* as `★ name`
 and opened as `BASKET:<owner>/<name>` or `VAR SCOPE <name> <GO>`. A basket of nodes and rules is **dynamic** (what matches on the date
-you look at); one of ids is **static** (a later date may not hold them: *unknown*). Every save and delete is audited.
+you look at); one of ids is **static** (a later date may not hold them: *unknown*). Every save, edit and delete is audited.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -1104,15 +1154,31 @@ you look at); one of ids is **static** (a later date may not hold them: *unknown
 | `name` | string | the title given (`title`), else the name |
 | `description` | string | |
 | `type` | string | `RULE` or `BASKET`, as above |
-| `scope` | string | the scope text as saved (must parse) |
+| `sheet` | object | a basket built in the sheet: `wholeBank` (boolean), `op` (`+` or `-` a row) and a list per filled column, aligned by row, at most 20,000 rows |
+| `parts` | integer | a sheet's filled cells |
+| `scope` | string | the scope text: as saved (must parse), or composed from `sheet` when read (never stored with it) |
 | `owner` | string | the user who saved it |
+| `editedBy` | string | the administrator whose edit made this version, when one did |
 | `sharedWith` | string list | user names, or role names (optionally `role:<name>`): read-only |
 | `createdAt`, `updatedAt` | string | ISO-8601 instants |
 | `version` | integer | 1, then +1 on every save under the same name |
 
 **Name:** slugged to lower case (`[^a-z0-9._-]` → `-`), 1 to 64 characters `[a-z0-9][a-z0-9._-]{0,63}`; `<owner>` is the content
-store's form of the user name. **Who may read:** the owner, a named user, or a holder of a named role. **Delete:** the owner only
-(`204`; anything else `404`).
+store's form of the user name. **Who may read:** the owner, a named user, or a holder of a named role. **Save, edit:** the owner, under the
+same name a new version (`version` in the body, when given, is the version the editor opened: changed since, `409`); an administrator
+edits anyone's (`owner` in the body names whose): saved under its owner, audited as `var-basket-edit`, the owner told in their inbox;
+anyone else naming another person's basket gets `404`. **Delete:** the owner, or an administrator (`204`; anything else `404`). A
+**portfolio** is the bank's (the `portfolio` feed, [section 5.7](#57-stored-portfolios)): it is never saved, edited or deleted here; the
+sheet's *Edit a copy* saves its parts as your own basket.
+
+**The sheet's checks** (`POST /api/v1/var/basket/sheet`, the body the sheet itself or `{"sheet": {...}}`, with `asOf` and `ccy`) answer
+`cells` (only the cells that need a word: `column`, `row`, `text`, `word`, `id`, `op`, `status` `not-found`, `adds-nothing` or
+`takes-nothing`, `reason`), the counts `found`, `notFound`, `flagged`, `takesNothing`, and the basket's `var`, `es`, `sumOfParts`,
+`diversification`, `trades`, `takenAway`, `partsAdded`, `confidence`, `esConfidence`, `currency`, `businessDate`, `scope` (composed from
+every readable cell; the figures leave the cells not found out), `columns` (each column's `key` and `title`), `empty` and a `notice` in
+words when there is nothing to compute. A trade or position cell is looked up directly (a run of ordinals), so 10,000 ids in a column
+are checked in well under a second on the demo. A cell is one id: spaces, commas or brackets in it, a column the sheet does not have or
+more than 20,000 rows are refused in words (`400`, `413`); a role that may not name trades one by one gets `403` for a sheet that does.
 
 ## 6. Captures and compare
 
@@ -1539,11 +1605,11 @@ message of several records with the latest of a trade winning, a message mixing 
 with its place, the others applied), a tombstone ignored, an early flush, the guards, files and windows mixed equal to the same final
 data loaded as one run to the cent in USD, EUR and CAD, and the topic replayed after a restart writing nothing.
 
-### 8.5 The pre-deal what-if in the basket tray
+### 8.5 The pre-deal what-if under the basket's sheet
 
-The what-if is the tray's ([section 3.5](#35-construct-your-basket)): **+ What-if trade** (or **What-if…** in the explorer's right
-column, which puts the scope you are on in the tray) asks for a booked trade and a factor; the hypothetical trade is a **copy of that
-trade's P&L vector scaled by the factor** (1 the same again, −1 its unwind, 0.5 half), added to the basket. The tray shows the basket's
+The what-if is the basket's ([section 3.5](#35-construct-your-basket)), under its sheet: **+ What-if trade** (or **What-if…** in the
+explorer's right column, which puts the scope you are on in the sheet) takes a booked trade and a factor; the hypothetical trade is a
+**copy of that trade's P&L vector scaled by the factor** (1 the same again, −1 its unwind, 0.5 half), added to the basket. It shows the basket's
 VaR 99% and ES 97.5% **before → after** and the **incremental** change, and each hypothetical trade's standalone VaR, its incremental VaR
 in the order listed and its component in the basket after. Several may be added; **×** removes one. Good for pre-deal (*what does this
 trade do to my desk's VaR?*) and for VaR (*which unwind takes the most out?*).
@@ -1554,7 +1620,7 @@ Python VaR engine (`var-whatif`, [section 8.2](#82-var-whatif-the-python-engine)
 `after` and `change` (`var`, `es`; `stressedVar` before and after), `items` (`label`, `factor`, `standaloneVar`, `incrementalVar`,
 `incrementalAlone`, `componentVar`), `engine`, `note`. A scope with no trades, a copied trade without a vector on the date (*not live*),
 or a factor that is not a number is `400` in words. **When the compute workers are off** (`DRISHTI_COMPUTE_ENABLED=false`, the default)
-the answer is `503 DRS-5205` and the tray says so plainly: *the what-if runs in the Python VaR engine …, which is not running on this
+the answer is `503 DRS-5205` and the sheet says so plainly: *the what-if runs in the Python VaR engine …, which is not running on this
 server*. Pricing a new trade from its terms is not built ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)): the copy
 of a booked trade's vector stands in for it.
 
@@ -1698,8 +1764,8 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path ([section 11.3](#113-path-and-contributions)) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest ([section 11.4](#114-history-the-tree-and-the-status)) |
 | `GET /scope/contributions` | `scope`, `by` (`child` default, `node`, `part`, `position`, `trade`, `desk`, `book`), `scenario` (a scenario date), `asOf` | the parts ([section 11.3](#113-path-and-contributions)); `part`: the scope's terms ([section 5.8](#58-baskets)), each row with `term`, `word`, `trades`, `allocated`, `alone` |
-| `GET /hints` | `q` (typed text), `limit` (8, at most 25), `asOf` | the basket tray's type-ahead: `[{type, id, name, scope, trades, var, notice}]` (portfolios, your baskets, desks, books, legal entities, divisions, counterparties, positions, trades; a typed `WORD:id` as written, with its notice when it matches nothing), as you |
-| `POST /what-if` | body `{scope, items: [{copyOf, factor, label}]}`, `asOf` | the pre-deal what-if ([section 8.5](#85-the-pre-deal-what-if-in-the-basket-tray)): `before`, `after`, `change`, `items`; `503 DRS-5205` without the Python engine |
+| `GET /hints` | `q` (typed text), `limit` (8, at most 25), `asOf` | the basket sheet's type-ahead: `[{type, id, name, scope, trades, var, notice}]` (portfolios, your baskets, desks, books, legal entities, divisions, counterparties, positions, trades; a typed `WORD:id` as written, with its notice when it matches nothing), as you |
+| `POST /what-if` | body `{scope, items: [{copyOf, factor, label}]}`, `asOf` | the pre-deal what-if ([section 8.5](#85-the-pre-deal-what-if-under-the-baskets-sheet)): `before`, `after`, `change`, `items`; `503 DRS-5205` without the Python engine |
 | `GET /tree` | `hierarchy` (default `MGMT`), `asOf` | the nodes the caller sees with their figures, and the stored portfolios |
 | `GET /scope/currencies` | `scope`, `asOf`, `ccy` | the explorer's tab *In other currencies*: per listed currency `var`, `es`, `varInPage` (that VaR in `ccy` at today's rate), `difference`, `differencePct`, `shown`; `tradeCurrencies`; from the per-trade-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)) |
 | `GET /currencies` | `asOf` | the picker's list: `listed` (`drishti.var.currencies`), `available` (every currency with scenario FX on the date), `ready` (built already) |
@@ -1715,7 +1781,10 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `POST /reports/{report}/runs/{period}/signoff` | body `{version, action: approve\|return\|narrative, step, comment, narrative}` | the run with its updated sign-off record; refused (`409`) in words: not the next step, the same person twice, a failed check, a check needing the maker's note |
 | `GET /reports/{report}/runs/{period}/file` | `format` (`xlsx`, `csv`, `pdf`), `version`, `draft` | the file; released after the last approval (`409` before), a draft marked so on request |
 | `POST /official/synthetic-history` | `days` (259) | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records ([section 18.10](#1810-period-statistics)) |
-| `GET /baskets`, `POST /baskets` | body `{name, title, description, scope, sharedWith}` | baskets ([section 5.8](#58-baskets)) |
+| `GET /baskets`, `POST /baskets` | body `{name, title, description, scope or sheet, sharedWith, version, owner}` | baskets ([section 5.8](#58-baskets)): a list (without the sheets' lists, `fromSheet` on those), or a save; `version` the one the editor opened (`409` when changed since), `owner` someone else's basket an administrator edits (audited, the owner told) |
+| `POST /basket/sheet` | body the sheet `{wholeBank, op, TRD, POS, PORT, BOOK, DESK, LL, CPTY}` (lists aligned by row), `asOf`, `ccy` | every cell checked as you (`cells`: those not found or adding or taking away nothing, with the reason in words) and the basket's `var`, `es`, `sumOfParts`, `diversification`, `trades` ([section 5.8](#58-baskets)) |
+| `GET /basket/sheet` | `scope`, `asOf` | a scope laid into the sheet: a saved basket's lists (`basket` with `editable`), a portfolio's definition as a copy (`portfolio`), an ad-hoc scope's terms (`unplaced`: those with no column) |
+| `POST /basket/sheet.xlsx` | body `{name, sheet}`, `asOf`, `ccy` | the sheet as a workbook: the *Basket* sheet (Op and the columns) and the *Checks* sheet |
 | `GET /baskets/{owner}/{name}` | | one basket you may read |
 | `DELETE /baskets/{owner}/{name}`, `DELETE /baskets/{name}` (your own) | `reason`, `version` (optional; query or body) | deletes a basket (`204`): its owner their own, an administrator anyone's; anyone else `404`; `409 DRS-5007` when `version` is not the basket's now ([section 3.5](#35-construct-your-basket)) |
 | `GET /admin/baskets` | `owner` (optional, contained, any case) | administrators: every person's baskets with `owner`, `scope`, `sharedWith`, `createdAt`, `updatedAt`, `version`, `bytes` |
@@ -1796,7 +1865,7 @@ The last answers:
 | `confidence`, `esConfidence` | number | 0.99, 0.975 |
 | `children`, `childKind` | integer, string | the number of default parts (all of them, never cut by `max-parts`) and their kind (`division`, `desk`, `book`, `position`, `trade`, `part` for a basket or ad-hoc union of two terms or more; empty for an aggregate-only viewer below a node) |
 | `trades`, `empty` | integer, boolean | the trades counted; `true` when none (the VaR of 0 is then no figure: the screens say **No trades**) |
-| `terms` | list | a basket or ad-hoc scope only: its top-level parts `[{op: "+" or "-", scope, word}]` (a saved basket's from its definition), which the basket tray loads |
+| `terms` | list | a basket or ad-hoc scope only: its top-level parts `[{op: "+" or "-", scope, word}]` (a saved basket's from its definition) |
 | `basket` | object | a saved basket only: `{id, name, owner, scope, sharedWith, version}` |
 | `sumStandalone` | integer or null | Σ standalone VaR of every default part ([section 11.1](#111-the-endpoints): never cut by `max-parts`) |
 | `diversification` | integer or null | `sumStandalone − var` (two parts or more) |
@@ -1962,7 +2031,7 @@ pools:
 | a warning that the date before was answered (`DRS-5203`) | the date's rows come from two runs or scenario sets | restate the date as one run; the signal reloads it |
 | *… need N MB; the vector store's budget is M MB* (503 `DRS-5204`) | a heap-tier date exceeds `drishti.var.memory-budget-mb` | raise the budget or the heap, or use the mapped tier |
 | *the VaR hot file of … needs about X GB more, Y GB free in …* (503 `DRS-5204`) | the disk ran out while the date's rows streamed in (mapped tier) | free disk in `drishti.var.tier.dir`, lower other folders' caps, or purge a date (Admin → Caches); asked again within `refusal-ttl-seconds` the date is refused at once with `Retry-After` |
-| *the what-if runs in the Python VaR engine …, which is not running on this server* (503 `DRS-5205`) | the basket tray's what-if, with the compute workers off | start them (`DRISHTI_COMPUTE_ENABLED=true`, pool `var`) |
+| *the what-if runs in the Python VaR engine …, which is not running on this server* (503 `DRS-5205`) | the basket's what-if, with the compute workers off | start them (`DRISHTI_COMPUTE_ENABLED=true`, pool `var`) |
 | *TRD:… is not a live trade on … (no P&L vector)*, **No trades** | the id is not in the day's vectors: unknown, matured or cancelled (a status or maturity the load left out is named) | check the id and the business date; a matured or cancelled trade has no VaR |
 | *the VaR hot folder … cannot be written* | `tier.dir` missing, read-only or full | point `DRISHTI_VAR_HOT_DIR` at writable local disk with room for `disk-dates` files |
 | *the hot file … is not usable* in the log | a damaged or old-format file | nothing: the date is read from the lake and the file rebuilt |
@@ -2546,7 +2615,7 @@ The provenance's `tier` says `per-trade-currency totals of the USD book (float64
 **The picker (the console, mock-up A).** The VaR page's header strip has **Reporting currency**: the listed currencies, then
 **More…**, which adds every other currency with scenario FX on the date (`GET /api/v1/var/currencies`: `listed`, `available`,
 `ready`). The whole page follows it: the tiles (`VaR 99% · 1 day · EUR`), the limit (`set in USD, at today's rate`), the P&L path,
-the history, the contributions, the scope tree (`VaR EUR`), captures and the basket tray. The choice stays for the browser tab's session
+the history, the contributions, the scope tree (`VaR EUR`), captures and the basket's sheet. The choice stays for the browser tab's session
 and goes into the link (`/var?scope=DESK:DESK-RATES&ccy=EUR`); the command line says the same, **`VAR DESK DESK-RATES IN EUR`** (any
 VAR command ends with `IN <currency>`). The provenance says the reporting currency, the input form (`P&L vectors (USD) and scenario PVs
 in each trade's currency (1199 of 8566 trades)`), the scenario FX (`supplied`, `derived`) and `Cross rates: via USD`.

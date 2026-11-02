@@ -93,7 +93,7 @@ business risk managers.
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Has a big trade moved us close to a limit?* | **Built**: intraday updates from files and Kafka change today's VaR during the day ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)) | An intraday limit check that notifies (alerts on numbers watch BI and view numbers, [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers), not the VaR engine's intraday answer) |
+| *Has a big trade moved us close to a limit?* | **Built**: intraday updates from files and Kafka change today's VaR during the day ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet)) | An intraday limit check that notifies (alerts on numbers watch BI and view numbers, [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers), not the VaR engine's intraday answer) |
 | *Can I see what the desk sees?* | **Built**: the same explorer, entitlements as configured ([VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)) | — |
 | *A desk asks for a temporary limit increase* | **Not built** | The request, its approval and its expiry ([section 4.2](#42-ro2-breaches-and-escalation)) |
 
