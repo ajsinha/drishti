@@ -152,7 +152,7 @@ time: after the T valuation batch (to be agreed, open question 3).
 | Convention | Rule |
 |---|---|
 | Signs | P&L gain positive; cash received positive; `MOVE` positive is the factor going up |
-| Units | `MOVE` in the unit of the matching sensitivity ([FRTB.md section 3.2.1](FRTB.md#321-units-and-signs-of-amount_usd)) |
+| Units | `MOVE` in the unit of the matching sensitivity ([FRTB.md section 3.2.1](FRTB.md#322-units-and-signs)) |
 | Dates | T−1 is the previous USNY business date unless `from=` names another; a multi-day span uses T−1's sensitivities and the summed moves (a coarser explain, labelled) |
 | Clean or dirty | MtM dirty; coupons paid move MtM down and cash up: they cancel in the actual P&L; theta carries the accrual |
 | Rounding | whole USD in answers; float64 sums |

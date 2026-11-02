@@ -58,8 +58,8 @@ may still change before it ships, and the document records each change.
 | [TRADING_GROUPINGS.md](TRADING_GROUPINGS.md) | CTRD, PTRD, LTRD, ITRD (`counterparty-trades`, `portfolio-trades`, `legal-entity-trades`, `index-trades`) | PARKED (design kept) |
 | [TVAL.md](TVAL.md) | TVAL (`trade-valuation`) | PARKED (design kept) |
 | [STR.md](STR.md) | STR (`stress-result`); SCN stays fundamental | PARKED (design kept) |
-| [FRTB.md](FRTB.md) | FRTB (`frtb-sensitivity`) | PARKED (design kept) |
-| [SIMM.md](SIMM.md) | SIMM (`simm`) | PARKED (design kept) |
+| [FRTB.md](FRTB.md), [FRTB_DATA_STRUCTURES.md](FRTB_DATA_STRUCTURES.md) | FRSA, computed (`frtb-sa-result`); inputs SENS (`position-sensitivity`) and RFAC (`risk-factor`); retires FRTB (`frtb-sensitivity`) | DESIGN, not built: aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02); the input contracts are `planned` with demo data; the default-risk and residual-risk inputs are drafts |
+| [SIMM.md](SIMM.md) | SIMM, computed per netting set and regime (`simm-result`) from the same SENS and RFAC; replaces SIMM (`simm`) for the netting sets with sensitivities | DESIGN, not built: ISDA SIMM 2.8+2512 structure, parameters shipped empty (the bank's licensed file by version); aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02) |
 | [PNL.md](PNL.md) | PNL (`pnl-explain`) | PARKED (design kept) |
 | [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | PARKED (design kept) |
 | [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept) |
@@ -94,7 +94,8 @@ ${DRISHTI_DELTA_ROOT}                         default ${drishti.data.dir}/delta
     ├── scenario-set/
     ├── risk-hierarchy/
     ├── portfolio/
-    ├── sensitivity/                         
+    ├── position-sensitivity/
+    ├── risk-factor/
     ├── scenario-pnl/                        
     ├── exposure-path/                       
     └── ...

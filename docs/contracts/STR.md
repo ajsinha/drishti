@@ -7,7 +7,7 @@
 # STR, stress P&L: the data contract
 
 *Version 1.0 · 2026-10-25 · **Status:** proposed, not built (planned, parked) · Shared rules: [README.md](README.md) · Model contract:
-[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Sensitivities: [FRTB.md](FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)*
+[VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Sensitivities: [FRTB.md](FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)*
 
 This is the planned data contract of **STR**: the P&L of any set of trades under a stress scenario, computed when asked, either by
 **summing per-trade full-revaluation P&L** that the upstream engine delivers for the bank's defined scenarios, or by **applying a
@@ -192,7 +192,7 @@ proposed as **one limit table for every market-risk measure** (VaR's `LIMIT_VAR`
 |---|---|
 | P&L sign | gain positive, loss negative |
 | Limit | positive (a loss amount); `LIMIT_USE` = max(−P&L, 0) / `LIMIT`; a gain uses 0% |
-| Units of shocks | §3.3; applied to `sensitivity` amounts in their units ([FRTB.md section 3.2.1](FRTB.md#321-units-and-signs-of-amount_usd)) |
+| Units of shocks | §3.3; applied to `sensitivity` amounts in their units ([FRTB.md section 3.2.1](FRTB.md#322-units-and-signs)) |
 | Method shown | every figure says `full` or `sensitivity`; the two are never mixed in one total unless `fallback: sensitivity` is asked (§6.4), and then the count of trades on each method is shown |
 | Currency | USD |
 

@@ -29,6 +29,12 @@
   parameter file no longer carries a correlation across product classes (they add). DRC and RRAO paragraph references corrected; RRAO's
   listed/cleared exclusion limited to other residual risks. Hand-built cases 9 to 11 added; cases 1 to 6 recomputed unchanged. The
   playground explanations follow. A new section *Checked against the rules* lists each point.
+- **FRTB and SIMM data contracts (design):** `docs/contracts/FRTB.md` and `SIMM.md` rewritten to the sensitivities design: the shared
+  input is `position-sensitivity` (SENS) with the `risk-factor` dictionary (RFAC), replacing the earlier per-trade `sensitivity` table;
+  units, signs and the per-class delivery rules; draft default-risk and residual-risk inputs; the parameter files with version and hash;
+  the method switches, the playground recipe and workbook; refusals with their words; sizing at 300,000 trades and 2.3 million positions.
+  New `FRTB_DATA_STRUCTURES.md`: every field, the naming standard, the bucket grids, the computed records, worked JSON Lines records of
+  each kind and the mapping from CRIF and bump reports. SIMM follows 2.8+2512 with its numbers shipped empty.
 - **Drill:** stops at once with the remedy when `drishti-console/.venv` is missing (a new worktree).
 - **Decks:** the roadmap as it stands (built: the regulatory foundation, the VaR Playground, why VaR moved, the Data view, the phone; next: sensitivities and market-risk capital), hot-dates 10, the 200K and 1M benchmarks measured.
 - **Tests:** the direct-memory soak test no longer calls AssertJ from its 72 worker threads (on Java 25 they waited on its class initialisation for ever).
