@@ -16,7 +16,7 @@
 # Counterparty engines: SA-CCR, the Exposure playground, FVA and the CCR cube core
 
 Status: design, not built. The data contracts are written (`status: planned`); the engines, screens and playgrounds below are the
-design to build. The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
+design to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
 Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
 them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
@@ -44,7 +44,7 @@ results over counterparties, groups, desks and tenors.
 - [11. Parameters as configuration (drafts)](#11-parameters-as-configuration-drafts)
 - [12. Mock-ups: the screens to build](#12-mock-ups-the-screens-to-build)
 - [13. The playgrounds' explanations](#13-the-playgrounds-explanations)
-- [14. Open questions for the product owner](#14-open-questions-for-the-product-owner)
+- [14. Decisions](#14-decisions)
 
 ## 1. Scope and principles
 
@@ -95,14 +95,14 @@ For netting set *n* on the business date:
 | Symbol | Meaning | From |
 |---|---|---|
 | V | Σ `MTM` of the set's in-scope derivative members (SFTs and cash products excluded) | `valuation` |
-| C | the haircut value of net collateral held: VM, IA and IM held minus posted, **at regulatory (supervisory) haircuts**; includes NICA | COLL `C_REG` |
+| C | the haircut value of net collateral held: VM, IA and IM held minus posted, **at regulatory (supervisory) haircuts** (decision 1; the exposure engine keeps the CSA's contractual haircuts and both pages say which); includes NICA | COLL `C_REG` |
 | NICA | net independent collateral amount: IA and IM held minus IA and IM posted that is not segregated (CRE52.15 to CRE52.17) | COLL `NICA_REG` |
 | TH | `THRESHOLD_THEM`: the exposure the counterparty may run before it must post | `csa` (converted to USD at today's FX) |
 | MTA | `MTA_THEM`: the counterparty's minimum transfer amount | `csa` |
 | margined | the set's `MARGINED` (a CSA with VM) with TH, MTA, MPOR present; else unmargined and flagged | `netting-set`, `csa` |
 
 A set whose `NETTING_ENFORCEABLE` is false is not a set: every member is its own unmargined set (`NS-STANDALONE~<TRADE_ID>`). A member
-flagged `SPECIFIC_WWR` is taken out into its own set (open question 7).
+flagged `SPECIFIC_WWR` is taken out into its own set, with no netting benefit (decision 7).
 
 ### 3.2 Time parameters (CRE52.30 to CRE52.33)
 
@@ -152,10 +152,13 @@ the underlying.
 ```
 unmargined   MF_i = √( min(max(M_i, 10 bd), 250 bd) / 250 bd )                      CRE52.48
 margined     MF   = 1.5 · √( MPOR_n / 250 )                                          CRE52.52, one value for every trade of the set
-MPOR_n       = max(floor_n, MPOR_DAYS) + F − 1,   F = MARGIN_FREQUENCY_DAYS           CRE52.50 (as SACCR.md section 6.3)
+MPOR_n       = max(floor_n, MPOR_DAYS) + F − 1,   F = MARGIN_FREQUENCY_DAYS           CRE52.50 (as SACCR.md section 6.3; decision 2)
 floor_n      = 5 cleared · 10 bilateral · 20 when the set has more than 5,000 trades or ILLIQUID_COLLATERAL      CRE52.50
                doubled when DISPUTES_LAST_2Q > 2                                                                 CRE52.51
 ```
+
+The CSA's `MPOR_DAYS` excludes the remargining period (NSET.md states it), so the remargining lag F − 1 is added after the floor
+(decision 2): the conservative reading.
 
 ### 3.7 Effective notional, hedging sets and add-ons
 
@@ -220,7 +223,7 @@ never shown as a decomposition.
 | Case | Outcome |
 |---|---|
 | `TRANSACTION_TYPE`, `ASSET_CLASS`, `DIRECTION`, `CREDIT_QUALITY`, `HEDGING_SET` invalid; option or tranche terms incomplete; P + λ or K + λ not positive; S > E or E > M | the row is refused with its DRS code ([SACCR.md section 10](../contracts/SACCR.md#10-validation-errors-and-data-quality)) and counted |
-| a live derivative member without a `DRIVER` 0 row | counted `unclassified`; the set `incomplete`; its EAD excludes it and says so; `strict=true` refuses the answer (`DRS-5411`) |
+| a live derivative member without a `DRIVER` 0 row | counted `unclassified` on every page; the set `incomplete`; its EAD excludes it and says so; `strict=true` refuses the answer (`DRS-5411`). A bank that reports from Drishti may switch on the conservative stand-in instead (`drishti.ccr.saccr.unclassified: stand-in`: the trade's notional at the largest SF of its asset class, unmargined, flagged `STAND_IN`; decision 3) |
 | an SFT or cash product | ignored, counted `excluded` (out of SA-CCR; CRE22 covers SFTs) |
 | a margined set without TH, MTA or MPOR | computed unmargined, flagged `MARGIN_TERMS_MISSING` |
 | a row computed by the configured rules | `DERIVED_BY: rules`, counted in provenance |
@@ -256,7 +259,8 @@ none      C(p,k) = 0
 E(p,k)    = max(V − C − IM, 0)        N(p,k) = min(V − C, 0)             IM held today on every path (im-model: current)
 ```
 
-R is the CSA's rounding applied to the change from today's collateral (deliveries up, returns down). The MPOR of the CSA plus F − 1 is
+An independent amount is collateral held on every path, unmargined sets included, and Config says so (decision 8). R is the CSA's
+rounding applied to the change from today's collateral (deliveries up, returns down). The MPOR of the CSA plus F − 1 is
 compared with the run's `LOOKBACK_DAYS`; when they differ the run's look-back is used and the answer flagged `MPOR_MISMATCH`.
 
 ### 4.3 Statistics (CRE50 definitions; CRE53 for effective EE, EEPE and alpha)
@@ -311,12 +315,13 @@ Signs follow CVA.md section 5: valuation adjustments from the bank's side, FCA �
 
 | Part | Rule | Setting (`drishti.ccr.fva.*`) |
 |---|---|---|
-| Funding spread s_F(t) | a flat spread or a curve id (points by tenor), linear in t between points, flat beyond | `funding-spread` (default `0.0050`) |
+| Funding spread s_F(t) | a curve id (points by tenor), linear in t between points, flat beyond; the demo names a synthetic, labelled funding curve in the market-data pack and a bank names its own; the flat spread is the fallback when no curve is named (decision 12) | `funding-spread` (default `CRV-USD-FUNDING`; fallback `0.0050`) |
 | Discount factor DF(t) | from the discount curve's points, log-linear in DF between points; DF = 1 when `VALUE_BASIS` is `DISCOUNTED` | `discount-curve` (the USD OIS curve id) |
 | EE point | `end`: EE*(t_k) for the period (t_{k−1}, t_k]; `mid`: the average of both ends, EE*(t₀) = CE | `ee-point` (default `end`) |
-| Survival weighting | off: funding until maturity; on: × S_C(t_k) · S_B(t_k), funding stops at either default | `funding-survival` (default `false`) |
-| FBA | reported (symmetric funding) or left out (asymmetric: FCA only) | `fba` (default `true`) |
-| Run | the exposure run's `CALIBRATION`; FVA on a `REAL_WORLD` run is flagged `REAL_WORLD_RUN` | `require-risk-neutral` (default `true`; the demo profile `false`) |
+| Survival weighting | off: funding until maturity; on: × S_C(t_k) · S_B(t_k), funding stops at either default (decision 11: off by default) | `funding-survival` (default `false`) |
+| FBA | reported (symmetric funding) or left out (asymmetric: FCA only); symmetric by default, and DVA, when built, states its overlap with FBA (decision 11) | `fba` (default `true`) |
+| Run | the exposure run's `CALIBRATION`: in production FVA on a `REAL_WORLD` run is refused; the demo profile computes it and flags `REAL_WORLD_RUN` on every number until a risk-neutral demo run exists (decision 10) | `require-risk-neutral` (default `true`; the demo profile `false`) |
+| Exposure | EE and ENE after the CSA (collateralised), as CVA.md: collateral received can be reused to fund, so a set with a CSA has little FVA (decision 13) | |
 
 ### 5.3 The EPE reading
 
@@ -329,7 +334,8 @@ spread" and explains FVA in one line. FBA reads the same with |ENE|.
 FCA, FBA and FVA are linear in EE and ENE, which add across netting sets, so FVA adds over sets and counterparties: computed per set at date
 load from the per-set profile, a scope is a sum. A partial scope uses its partial profile. The computation runs in the Python engine
 `drishti_ccr.xva:XvaEngine` (planned; the CVA family later adds CVA and DVA to the same engine) on the `risk` pool; the computed kind is
-`fva-result` (open question 9).
+`fva-result` with `/api/v1/fva` (decision 9). When CVA is built, `cva-result` reads FVA by reference to `fva-result` rather than
+carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-questions-and-the-change-table)).
 
 ## 6. The CCR cube core: data flow
 
@@ -370,7 +376,8 @@ credit-limit (regenerated on the computed PFE, RL9) ──► the board's limits
 | `GET /api/v1/cube/ccr/waterfall?nset=…&tenor=…` | the collateral waterfall at a tenor: EE uncollateralised, VM held, posted at risk, IM held, TH and MTA effect, EE; the MPOR effect (`lagged` against `current`) | the set's matrices under each collateral model |
 
 **Totals rule.** Additive measures (EE, ENE, EPE, CE, EAD, FVA) sum their children; non-additive ones (PFE, peak PFE, EEPE, limit use)
-are computed on the cell's own summed path matrix. A group's PFE is the quantile of its members summed per path, never the sum of the
+are computed on the cell's own summed path matrix. FVA is one of landing A's measure chips, and the counterparty's FVA is a tile of C beside
+incremental EAD (decision 15). A group's PFE is the quantile of its members summed per path, never the sum of the
 members' peaks (section 9, case X2).
 
 ### 6.3 Allocation (CC2), limits (CC4), groups (CC3)
@@ -379,8 +386,8 @@ members' peaks (section 9, case X2).
   (decided) and cached: per trade × date, 8 bytes; summed by any hierarchy. Desks add up to the bank's EE exactly at every date (RL6, TL2).
 - **Limits by tenor** read `credit-limit` with `BUCKETS[]` (`FROM_TENOR`, `TO_TENOR`, `LIMIT`, buckets (FROM, TO]); usage of a bucket is
   the largest PFE_q at a primary date inside it; `use = usage / LIMIT`, `headroom = LIMIT − usage`, status by `WARNING_AT` (0.8 default)
-  as LIM section 6.3. The demo's limits are regenerated from the computed PFE (CCP2, RL9) so most read 30% to 70%, three near the warning
-  level and one over.
+  as LIM section 6.3. The demo's limits are regenerated from the computed PFE (CCP2, RL9) in three buckets, 0–1Y, 1–5Y and 5Y+ (decision
+  14; the contract keeps any number of buckets), so most read 30% to 70%, three near the warning level and one over.
 - **Group roll-up** over a synthetic legal tree for the demo (CCP2, kept apart from the real GLEIF data): each node's matrix is the sum of
   its members' sets per path; the quantile last.
 
@@ -428,7 +435,8 @@ first of these playgrounds, and the formula scanner keeps refusing anything else
 
 ### 8.1 SA-CCR playground (`PLAY SACCR`)
 
-Scope: one netting set (default), or up to 20 whole sets of one counterparty side by side (`drishti.ccr.saccr.playground.max-sets`); up to
+Scope: one netting set (default), or up to 20 whole sets of one counterparty side by side (`drishti.ccr.saccr.playground.max-sets`;
+decision 5; EAD adds over sets, so the counterparty total is a plain sum on Main); up to
 5,000 trade rows in the browser and the export (`max-trades`; above it the export offers one asset class at a time). The figures are the
 engine's for the same date, regulation and parameter version.
 
@@ -460,7 +468,8 @@ checksum.
 
 ### 8.2 Exposure playground (`PLAY EXP`)
 
-Scope: one netting set. Paths: all of the run's in the export up to `max-paths` (default 5,000); 200 in the browser grid. Trades: up to 50
+Scope: one netting set. Paths: all of the run's in the export up to `max-paths` (default 5,000); 200 in the browser grid (decision 6; the
+size estimate is shown before the download, as VaR's). Trades: up to 50
 columns in the browser and 500 in the export by default (choices 50, 500, 2,000, All within the column limit), the rest in Rest of set.
 
 | Tab | What it holds | Typed or formula |
@@ -790,7 +799,8 @@ its source, the inputs typed from the publication (SACCR.md open question 4).
 ## 11. Parameters as configuration (drafts)
 
 Drafts here; at build they become files of the counterparty-risk pack's configuration, loaded and checked at start, with their checksum in
-every answer's provenance. One file per regulation; a jurisdiction's variant is its own file.
+every answer's provenance. One file per regulation; a jurisdiction's variant is its own file. After BCBS the next file is OSFI CAR
+chapter 4 (`saccr-osfi.yaml`, as the FRTB order); the US final rule and EU CRR2 follow when a client asks (decision 4).
 
 ### 11.1 SA-CCR (`config/packs/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
 
@@ -825,7 +835,8 @@ supervisory-table:                                   # CRE52.72: SF, correlation
 ```
 
 Settings stay as SACCR.md section 6.1 (`drishti.ccr.saccr.*`): `regulation` names the file; `alpha-overrides` per counterparty;
-`ir-bucket-offset`; `risk-weights` for the RWA hook; `derive` (`rules` on the demo).
+`ir-bucket-offset`; `risk-weights` for the RWA hook; `derive` (`rules` on the demo); `unclassified` (`exclude` by default, `stand-in`;
+decision 3); `specific-wwr` (`own-set`, decision 7).
 
 ### 11.2 Exposure playground (`drishti.ccr.exposure.playground.*`, draft)
 
@@ -845,7 +856,7 @@ drishti.ccr.exposure.playground:
 ```yaml
 drishti.ccr.fva:
   enabled: true
-  funding-spread: 0.0050             # flat, or a curve id, e.g. CRV-USD-FUNDING (points: TENOR, SPREAD in decimals)
+  funding-spread: CRV-USD-FUNDING    # a curve id (points: TENOR, SPREAD in decimals; decision 12), or a flat spread such as 0.0050
   spread-interpolation: linear       # in t between points, flat beyond
   discount-curve: CRV-USD-OIS        # DF log-linear between points
   ee-point: end                      # or mid
@@ -887,25 +898,28 @@ its text; `#` lines are comments), so `PlaygroundTemplate.explain()` reads them:
 
 The cell references (`{Name}`, `{Name:v}`) are added when each generator names its Main cells.
 
-## 14. Open questions for the product owner
+## 14. Decisions
 
-| # | Question | Recommended answer |
-|---|---|---|
-| 1 | C and NICA in SA-CCR: collateral at supervisory haircuts (COLL's `C_REG`, `NICA_REG`, CRE22) or at the CSA's contractual haircuts (the exposure engine's basis)? | **Supervisory** (`C_REG`, `NICA_REG`): CRE52 asks for the haircut value of collateral under the standardised approach; the exposure engine keeps contractual haircuts, and both pages say which |
-| 2 | MPOR for SA-CCR: `max(floor, MPOR_DAYS) + F − 1` as SACCR.md writes it (the CSA's `MPOR_DAYS` taken as excluding the remargining lag), or `max(floor + F − 1, MPOR_DAYS)` (taken as including it)? | **As written** (`max(floor, MPOR_DAYS) + F − 1`), with the CSA field's definition stated in NSET.md as "excluding the remargining period"; conservative when in doubt |
-| 3 | A live derivative without a `saccr-trade` row: exclude it and mark the set `incomplete` (SACCR.md), or charge a conservative stand-in (the trade's notional at the largest SF of its asset class, unmargined)? | **Exclude and flag** by default (`incomplete`, counted on every page); the conservative stand-in as a setting for banks that report from Drishti |
-| 4 | The jurisdiction after BCBS: OSFI CAR chapter 4 (as the FRTB order), the US final rule, or EU CRR2? | **OSFI CAR chapter 4** next, as its own parameter file; US and EU when a client asks |
-| 5 | The SA-CCR playground's scope: one netting set only, or a counterparty's sets side by side? | **One set by default, up to 20 sets of one counterparty side by side** (EAD adds over sets, so the counterparty total is a plain sum on Main) |
-| 6 | The Exposure playground's size: all paths of the run in the export (up to 5,000) and 500 trades with Rest of set, 200 paths and 50 trades in the browser? | **Yes** (section 11.2); the estimate is shown before the download as VaR's |
-| 7 | Specific wrong-way risk trades (`SPECIFIC_WWR`) in SA-CCR: each in its own netting set (out of the set's netting), or left in the set until WWR is built? | **Own netting set** when the flag is set (conservative, no netting benefit); the demo has no flagged trade |
-| 8 | Unmargined sets of the exposure engine with an IA: the Exposure playground shows IA as collateral held on every path (as built)? | **Yes**, as built; stated on Config |
-| 9 | FVA's computed kind before CVA exists: a new `fva-result` (with `/api/v1/fva`), or `cva-result` (CVA.md) with only FCA, FBA and FVA filled until the CVA family is built? | **`fva-result`** now, from an xVA engine that CVA and DVA join later; CVA.md is amended then so `cva-result` reads FVA by reference rather than carrying a second copy |
-| 10 | FVA on the demo's `REAL_WORLD` run: refuse, or compute and flag? | **Refuse in production by default** (`require-risk-neutral: true`); the demo profile computes and flags `REAL_WORLD_RUN` on every number until a risk-neutral demo run exists |
-| 11 | Funding survival weighting and FBA: funding until maturity with FBA reported (symmetric), or survival-weighted, or FCA only? | **Symmetric, not survival-weighted** by default (simplest to explain and to check); both switches available; DVA, when built, states its overlap with FBA |
-| 12 | The funding spread source: the flat 50 bp setting, or a funding curve in the market-data pack? | **A synthetic, labelled funding curve in the demo market-data pack** (a few points), the flat setting as the fallback; a bank names its own curve id |
-| 13 | FVA on the collateralised EE (after the CSA) or on the uncollateralised EE? | **Collateralised EE** (as CVA.md): collateral received can be reused to fund; a set with a CSA has little FVA, as in practice |
-| 14 | The demo's credit-limit buckets: three (0–1Y, 1–5Y, 5Y+, as the mock-ups) or the five of today's stored limits? | **Three** for the regenerated demo limits; the contract keeps any number of buckets |
-| 15 | FVA as a CCR cube measure (additive, beside EE and EAD) on landing A's measure chips? | **Yes**, with the counterparty's FVA in C's tiles beside incremental EAD |
+The product owner decided every point below on 2026-11-02, taking each recommended answer. The sections above apply them; each says
+"decision N" where it does.
+
+| # | Question | Decision (product owner, 2026-11-02) | Applied in |
+|---|---|---|---|
+| 1 | C and NICA in SA-CCR: collateral at supervisory haircuts (COLL's `C_REG`, `NICA_REG`, CRE22) or at the CSA's contractual haircuts (the exposure engine's basis)? | **Supervisory** (`C_REG`, `NICA_REG`): CRE52 asks for the haircut value of collateral under the standardised approach; the exposure engine keeps contractual haircuts, and both pages say which | 3.1 |
+| 2 | MPOR for SA-CCR: `max(floor, MPOR_DAYS) + F − 1` as SACCR.md writes it (the CSA's `MPOR_DAYS` taken as excluding the remargining lag), or `max(floor + F − 1, MPOR_DAYS)` (taken as including it)? | **As written** (`max(floor, MPOR_DAYS) + F − 1`), with the CSA field's definition stated in NSET.md as "excluding the remargining period"; conservative when in doubt | 3.6 |
+| 3 | A live derivative without a `saccr-trade` row: exclude it and mark the set `incomplete` (SACCR.md), or charge a conservative stand-in (the trade's notional at the largest SF of its asset class, unmargined)? | **Exclude and flag** by default (`incomplete`, counted on every page); the conservative stand-in as a setting for banks that report from Drishti | 3.11, 11.1 |
+| 4 | The jurisdiction after BCBS: OSFI CAR chapter 4 (as the FRTB order), the US final rule, or EU CRR2? | **OSFI CAR chapter 4** next, as its own parameter file; US and EU when a client asks | 11 |
+| 5 | The SA-CCR playground's scope: one netting set only, or a counterparty's sets side by side? | **One set by default, up to 20 sets of one counterparty side by side** (EAD adds over sets, so the counterparty total is a plain sum on Main) | 8.1 |
+| 6 | The Exposure playground's size: all paths of the run in the export (up to 5,000) and 500 trades with Rest of set, 200 paths and 50 trades in the browser? | **Yes** (section 11.2); the estimate is shown before the download as VaR's | 8.2 |
+| 7 | Specific wrong-way risk trades (`SPECIFIC_WWR`) in SA-CCR: each in its own netting set (out of the set's netting), or left in the set until WWR is built? | **Own netting set** when the flag is set (conservative, no netting benefit); the demo has no flagged trade | 3.1, 11.1 |
+| 8 | Unmargined sets of the exposure engine with an IA: the Exposure playground shows IA as collateral held on every path (as built)? | **Yes**, as built; stated on Config | 4.2 |
+| 9 | FVA's computed kind before CVA exists: a new `fva-result` (with `/api/v1/fva`), or `cva-result` (CVA.md) with only FCA, FBA and FVA filled until the CVA family is built? | **`fva-result`** now, from an xVA engine that CVA and DVA join later; CVA.md is amended then so `cva-result` reads FVA by reference rather than carrying a second copy | 5.4; CVA.md |
+| 10 | FVA on the demo's `REAL_WORLD` run: refuse, or compute and flag? | **Refuse in production by default** (`require-risk-neutral: true`); the demo profile computes and flags `REAL_WORLD_RUN` on every number until a risk-neutral demo run exists | 5.2 |
+| 11 | Funding survival weighting and FBA: funding until maturity with FBA reported (symmetric), or survival-weighted, or FCA only? | **Symmetric, not survival-weighted** by default (simplest to explain and to check); both switches available; DVA, when built, states its overlap with FBA | 5.2 |
+| 12 | The funding spread source: the flat 50 bp setting, or a funding curve in the market-data pack? | **A synthetic, labelled funding curve in the demo market-data pack** (a few points), the flat setting as the fallback; a bank names its own curve id | 5.2, 11.3 |
+| 13 | FVA on the collateralised EE (after the CSA) or on the uncollateralised EE? | **Collateralised EE** (as CVA.md): collateral received can be reused to fund; a set with a CSA has little FVA, as in practice | 5.2 |
+| 14 | The demo's credit-limit buckets: three (0–1Y, 1–5Y, 5Y+, as the mock-ups) or the five of today's stored limits? | **Three** for the regenerated demo limits; the contract keeps any number of buckets | 6.3 |
+| 15 | FVA as a CCR cube measure (additive, beside EE and EAD) on landing A's measure chips? | **Yes**, with the counterparty's FVA in C's tiles beside incremental EAD | 6.2 |
 
 ---
 

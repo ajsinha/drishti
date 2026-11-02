@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (engines/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11 row 14, compute engines on or off;
+  the design: docs/architecture/COMPUTE_ENGINES.md).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin → Engines: option A, the engine list with a review panel</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:8px;border:1px solid var(--line);color:var(--muted);margin-left:4px;font-family:var(--sans)}
+.tag.int{border-color:var(--warn);color:var(--warn)}
+.tag.ice{border-color:var(--link);color:var(--link)}
+.field{display:flex;align-items:center;gap:8px;margin:6px 0}
+.inp{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--ink);min-width:120px}
+.inp.mono{font-family:var(--mono)}
+.chip{display:inline-block;font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;margin:2px;color:var(--muted)}
+.chip.on{border-color:var(--amber);color:var(--ink);background:var(--amber-t)}
+.cal{display:grid;grid-template-columns:repeat(7,30px);gap:3px;font-size:11.5px;text-align:center}
+.cal span{padding:4px 0;border-radius:4px;color:var(--faint)}
+.cal span.h{color:var(--ink);background:var(--panel2)} .cal span.s{background:var(--amber);color:var(--onacc);font-weight:700} .cal span.w{color:var(--muted);font-weight:600}
+.sql{font-family:var(--mono);font-size:12.5px;background:var(--bg2);border:1px dashed var(--line);border-radius:6px;padding:8px 10px;color:var(--muted);white-space:pre-wrap}
+.words{font-size:13px;line-height:1.55}
+.big{font-family:var(--mono);font-size:20px}
+.x{color:var(--faint);padding:0 4px}
+.scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.scene{border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg2);min-width:0}
+.scene>.lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.scene>.lbl b{color:var(--amber);font-weight:700;margin-right:6px}
+.mini{display:flex;gap:10px;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:12.5px;margin-bottom:10px;flex-wrap:wrap}
+.mini .brand{font-size:12px}
+.mini .cmd{height:26px;font-size:12px;flex:1 1 160px;max-width:340px}
+.mini .menus{font-size:12px}
+.signin{max-width:380px;margin:6px auto 4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.signin .logo{text-align:center;font-weight:700;letter-spacing:.14em;color:var(--amber);font-size:18px;margin-bottom:2px}
+.signin .tag2{text-align:center;color:var(--muted);font-size:12px;margin-bottom:14px}
+.signin label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+.signin .inp{display:block;width:100%}
+.signin .btn{display:block;text-align:center;margin-top:12px;padding:8px}
+.msg{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-t);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5}
+.msg.calm{border-left-color:var(--link);background:var(--hl)}
+.msg.okm{border-left-color:var(--ok);background:var(--ok-t)}
+.msg h4{margin:0 0 3px;font-size:13.5px}
+.msg .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.ref{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.ring{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;flex:0 0 46px;
+  background:conic-gradient(var(--warn) 0 62%,var(--line) 62% 100%);font-family:var(--mono);font-size:12px;font-weight:700}
+.ring span{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--panel)}
+.row{display:flex;gap:10px;align-items:flex-start}
+.chk{font-size:12.5px;color:var(--ink)} .chk b{color:var(--amber)}
+.dim{opacity:1}
+.ghost{border:1px dashed var(--line);border-radius:8px;padding:10px;color:var(--muted);font-size:12.5px}
+.gauge{margin:8px 0 12px}
+.gauge .t{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;flex-wrap:wrap}
+.gauge .t b{font-weight:600}
+.gauge .track{position:relative;height:12px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);margin-top:4px;overflow:visible}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px}
+.gauge .mk{position:absolute;top:-4px;bottom:-4px;width:2px}
+.gauge .mk.w{background:var(--warn)} .gauge .mk.r{background:var(--bad)}
+.gauge .s{font-size:11.5px;color:var(--muted);margin-top:3px}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:12.5px}
+.sw i{display:inline-block;width:34px;height:18px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);position:relative}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.sw.on i{background:var(--amber-t);border-color:var(--amber)} .sw.on i::after{left:18px;background:var(--amber)}
+.wrap{overflow-x:auto}
+.banner{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 12px;border-radius:8px;border:1px solid var(--warn);background:var(--warn-t);font-size:12.5px;margin-bottom:10px}
+.banner .dot{width:9px;height:9px;border-radius:50%;background:var(--warn);display:inline-block}
+.tray{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 10px;margin-bottom:10px;font-size:12.5px}
+.tray .it{display:flex;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.tray .it:last-child{border-bottom:0}
+.tray .it .w{flex:1 1 200px}
+.prog{display:inline-block;width:80px;height:6px;border-radius:3px;background:var(--panel2);position:relative;overflow:hidden;vertical-align:middle}
+.prog::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--p,40%);background:var(--warn)}
+.light3{display:inline-flex;gap:4px;align-items:center;padding:3px 9px;border:1px solid var(--line);border-radius:12px;font-size:12px}
+.light3 .d{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.light3 .d.g{background:var(--ok)} .light3 .d.a{background:var(--warn)} .light3 .d.r{background:var(--bad)}
+.hg{color:var(--warn);font-size:11.5px;margin-left:6px;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel2)}
+.tile .k{font-size:11.5px;color:var(--muted)} .tile .v{font-family:var(--mono);font-size:18px;margin-top:2px}
+.tile.a{border-left:3px solid var(--warn)} .tile.r{border-left:3px solid var(--bad)} .tile.g{border-left:3px solid var(--ok)}
+.spark{display:block;width:100%;height:26px;margin-top:4px}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.why .card h3{color:var(--amber)}
+.why ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.55}
+@media (max-width:900px){
+  .scenes,.why{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .page{padding:12px 8px 20px}
+  .menus{display:none}
+  .tiles{grid-template-columns:minmax(0,1fr)}
+  .intro h1{font-size:17px}
+  .rec,.alt{margin-left:0;margin-top:4px}
+}
+
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:4px 0 10px;flex-wrap:wrap}
+.tabs span{padding:6px 14px;font-size:13px;color:var(--muted);border-bottom:2px solid transparent}
+.tabs span.on{color:var(--ink);border-bottom-color:var(--amber);font-weight:600}
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:12px;align-items:start}
+.mem{display:inline-block;width:90px;height:7px;border-radius:4px;background:var(--panel2);position:relative;overflow:hidden;vertical-align:middle;margin-right:6px;border:1px solid var(--line2)}
+.mem b{position:absolute;left:0;top:0;bottom:0;background:var(--link)}
+tr.staged td{background:var(--amber-t)}
+tr.offrow td{color:var(--faint)}
+.side{background:var(--panel);border:1px solid var(--amber);border-radius:8px;padding:12px}
+.side h3{margin:0 0 6px;font-size:14px}
+.side .sec{border-top:1px solid var(--line2);padding-top:8px;margin-top:8px;font-size:12.5px;line-height:1.5}
+.side .sec b.h{display:block;color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px}
+.hides{display:flex;flex-wrap:wrap;gap:4px}
+.hides span{font-family:var(--mono);font-size:11.5px;padding:1px 7px;border-radius:8px;background:var(--panel2);border:1px solid var(--line);color:var(--ink)}
+.dep{font-size:12px;color:var(--muted)} .dep b{color:var(--ink);font-weight:600}
+.src{font-size:11.5px;color:var(--muted)} td.src{white-space:normal;max-width:210px;line-height:1.35}
+.fam{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ecard{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px;min-width:0;display:flex;flex-direction:column;gap:6px}
+.ecard.off{opacity:.7;border-style:dashed}
+.ecard.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.ecard .t{display:flex;justify-content:space-between;align-items:center;gap:6px}
+.ecard .t b{font-size:14px}
+.ecard .k{font-size:11.5px;color:var(--muted)}
+.famh{font-size:12px;color:var(--amber);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 6px;font-weight:700}
+.dialog{max-width:560px;margin:0 auto;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;box-shadow:0 8px 30px rgba(0,0,0,.35)}
+.dialog h3{margin:0 0 8px;font-size:15px}
+.mx td,.mx th{text-align:center}
+.mx td.l,.mx th.l{text-align:left}
+.cell{display:inline-flex;flex-direction:column;align-items:center;gap:2px;font-family:var(--sans);font-size:11px;color:var(--muted)}
+.cell .sw i{width:28px;height:15px} .cell .sw i::after{width:9px;height:9px} .cell .sw.on i::after{left:15px}
+.cell.chg{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;padding:2px}
+.avail td{font-weight:600;background:var(--panel2)}
+.stage{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:8px 12px;border:1px solid var(--amber);border-radius:8px;background:var(--amber-t);font-size:12.5px}
+@media (max-width:1100px){.layout{grid-template-columns:minmax(0,1fr)}.fam{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:480px){.fam{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Admin → Engines: option A, the engine list with a review panel<span class="rec">recommended</span></h1><p>One table of the engines on this server: switch, state, the memory each holds now, threads, what it needs and what uses it, and where its switch is set. Flipping a switch only stages the change; the panel on the right shows the dependency check, everything that will disappear for people, what happens on the server (live or restart), and asks for the reason. Here FRTB-SA is being turned off.</p></section>
+<div class="bar"><span class="brand">DRISHTI<i>Risk</i></span><div class="cmd">ADMIN ENGINES &lt;GO&gt;</div><div class="menus"><span>Views</span><span>VaR</span><span>Exposure</span><span>BI</span><span class="on">Admin</span><span>Help</span></div></div>
+<div class="head"><h2>Admin → Engines</h2><span class="meta">this server · drishti-main · 10.0.4.21:18480 · heap 16 GB · 8 of 10 engines running · 6.4 GB held by engines</span></div>
+<div class="tabs"><span class="on">This server</span><span>Cluster (3 nodes)</span><span>History</span></div>
+<div class="layout">
+<div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+<div class="card"><h3>Engines on this server <span>a change is staged until you review it; nothing changes yet</span></h3><div class="wrap"><table><tr><th class="l">Engine</th><th class="l">Switch</th><th class="l">State</th><th class="l">Memory now</th><th>Threads</th><th class="l">Needs</th><th class="l">Used by</th><th class="l">Switch set in</th></tr><tr><td class="l"><b>VaR</b> <span class="muted mono" style="font-size:11.5px">var</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill g">running</span></td><td class="l"><span class="mem"><b style="width:58%"></b></span>3.1 GB</td><td>6</td><td class="l dep">-</td><td class="l dep">frtb-sa, mr-cube</td><td class="l src">engine file</td></tr><tr><td class="l"><b>Exposure</b> <span class="muted mono" style="font-size:11.5px">exposure</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill g">running</span></td><td class="l"><span class="mem"><b style="width:26%"></b></span>1.4 GB</td><td>3</td><td class="l dep">-</td><td class="l dep">fva, ccr-cube, simm (uses)</td><td class="l src">environment<br><span class="mono">DRISHTI_EXPOSURE_ENABLED</span></td></tr><tr><td class="l"><b>Sensitivities</b> <span class="muted mono" style="font-size:11.5px">sensitivities</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill g">running</span></td><td class="l"><span class="mem"><b style="width:4%"></b></span>210 MB</td><td>1</td><td class="l dep">-</td><td class="l dep">frtb-sa, simm, mr-cube (uses)</td><td class="l src">engine file</td></tr><tr class="staged"><td class="l"><b>FRTB-SA</b> <span class="muted mono" style="font-size:11.5px">frtb-sa</span></td><td class="l"><span class="sw"><i></i>off</span></td><td class="l"><span class="pill g">running</span> <span class="pill a">off staged</span></td><td class="l"><span class="mem"><b style="width:12%"></b></span>640 MB</td><td>2</td><td class="l dep">var, sensitivities</td><td class="l dep">mr-cube (uses)</td><td class="l src">engine file</td></tr><tr class="offrow"><td class="l"><b>SIMM</b> <span class="muted mono" style="font-size:11.5px">simm</span></td><td class="l"><span class="sw"><i></i>off</span></td><td class="l"><span class="pill n">off</span></td><td class="l"><span class="muted">-</span></td><td>-</td><td class="l dep">sensitivities</td><td class="l dep">-</td><td class="l src">engine file</td></tr><tr><td class="l"><b>SA-CCR</b> <span class="muted mono" style="font-size:11.5px">sa-ccr</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill g">running</span></td><td class="l"><span class="mem"><b style="width:2%"></b></span>95 MB</td><td>1</td><td class="l dep">-</td><td class="l dep">ccr-cube (uses)</td><td class="l src">engine file</td></tr><tr><td class="l"><b>FVA</b> <span class="muted mono" style="font-size:11.5px">fva</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill g">running</span></td><td class="l"><span class="mem"><b style="width:2%"></b></span>12 MB</td><td>1</td><td class="l dep">exposure</td><td class="l dep">ccr-cube (uses)</td><td class="l src">engine file</td></tr><tr><td class="l"><b>MR cube</b> <span class="muted mono" style="font-size:11.5px">mr-cube</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill g">running</span></td><td class="l"><span class="mem"><b style="width:10%"></b></span>520 MB</td><td>2</td><td class="l dep">var</td><td class="l dep">-</td><td class="l src">engine file</td></tr><tr><td class="l"><b>CCR cube</b> <span class="muted mono" style="font-size:11.5px">ccr-cube</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill g">running</span></td><td class="l"><span class="mem"><b style="width:7%"></b></span>380 MB</td><td>2</td><td class="l dep">exposure</td><td class="l dep">-</td><td class="l src">engine file</td></tr><tr><td class="l"><b>In-memory lake</b> <span class="muted mono" style="font-size:11.5px">memory-lake</span></td><td class="l"><span class="sw on"><i></i>on</span></td><td class="l"><span class="pill a">restart needed</span></td><td class="l"><span class="muted">-</span></td><td>-</td><td class="l dep">-</td><td class="l dep">-</td><td class="l src">engine file</td></tr></table></div>
+<div class="note" style="margin-top:8px">The in-memory lake was turned on at 09:12 by a.sinha ("news feed must not touch disk"): written to <span class="mono">config/engines/memory-lake.yaml</span>; it starts at the next restart (its direct-memory limit is set at start). Exposure's switch comes from the environment: a change here is written to the file but the environment still wins until it is removed.</div></div>
+<div class="card"><h3>History <span>newest first · also in the audit log</span></h3><div class="wrap"><table><tr><th class="l">When</th><th class="l">Engine</th><th class="l">Change</th><th class="l">Who</th><th class="l">Why</th><th class="l">Node</th><th class="l">Outcome</th></tr>
+<tr><td class="l mono">2026-11-02 09:12</td><td class="l">In-memory lake</td><td class="l">on</td><td class="l">a.sinha</td><td class="l muted">news feed must not touch disk</td><td class="l">drishti-main</td><td class="l"><span class="pill a">restart needed</span></td></tr>
+<tr><td class="l mono">2026-11-01 17:40</td><td class="l">SIMM</td><td class="l">off</td><td class="l">r.okafor</td><td class="l muted">IM computed on ccr-1 only</td><td class="l">drishti-main</td><td class="l"><span class="pill g">live</span></td></tr>
+<tr><td class="l mono">2026-11-01 17:38</td><td class="l">Exposure</td><td class="l">off</td><td class="l">r.okafor</td><td class="l muted">-</td><td class="l">drishti-main</td><td class="l"><span class="pill r">refused</span> needed by FVA, CCR cube</td></tr>
+<tr><td class="l mono">2026-10-30 08:05</td><td class="l">SA-CCR</td><td class="l">edited in the file</td><td class="l muted">-</td><td class="l muted">-</td><td class="l">drishti-main</td><td class="l"><span class="pill g">live</span></td></tr>
+</table></div></div>
+</div>
+<div class="side"><h3>Turn FRTB-SA off on drishti-main</h3><div class="note">1 change staged · <a>Undo</a></div>
+<div class="sec"><b class="h">Dependencies</b><span class="ok">✔</span> Nothing on this server needs FRTB-SA.<br><span class="warn">●</span> The MR cube <b>uses</b> it: its <span class="mono">Capital</span> chip will be hidden.<br><span class="muted">VaR and Sensitivities stay on (FRTB-SA needs them, not the other way).</span></div>
+<div class="sec"><b class="h">What disappears for people</b><div class="hides"><span>FRSA</span><span>PLAY FRTB</span><span>Menu: VaR → FRTB-SA capital</span><span>Help: FRTB-SA guide (9 pages)</span><span>Tile: Capital today</span><span>MR cube: Capital chip</span><span>drishti.py frtb</span><span>BI: market-risk-frtb-*</span></div><div class="note" style="margin-top:4px">Saved things that read it: 2 BI reports, 1 monitor, 3 workspaces (they will say the engine is not running). <a>List them</a></div><div class="note">Nowhere else in the cluster runs FRTB-SA, so these disappear for everyone.</div></div>
+<div class="sec"><b class="h">On the server</b>Live, no restart: new requests answer "not running"; 1 request in flight finishes (up to 30 s); 640 MB and 2 threads are released.</div>
+<div class="sec"><b class="h">Reason (required)</b><span class="inp" style="display:block;margin-top:4px">market-risk capital moves to node var-1</span></div>
+<div class="sec" style="display:flex;gap:8px;flex-wrap:wrap"><span class="btn p">Turn FRTB-SA off</span><span class="btn">Cancel</span><span class="src" style="align-self:center">writes config/engines/frtb-sa.yaml</span></div>
+</div>
+</div>
+<div class="why"><div class="card"><h3>How it feels</h3><ul><li>The page Functions already uses: a list, a staged change, a review panel with the reason, then History.</li><li>Before Apply, the two facts that matter: what depends on it and what disappears for people.</li><li>Memory and threads per engine answer 'what does this server spend on what'.</li></ul></div><div class="card"><h3>Why recommended</h3><ul><li>Nothing new to learn: the same flow as turning a command off.</li><li>Fits the single server most installs are; the cluster is one tab away (option C's matrix).</li><li>Says where each switch comes from (file, local file, environment), so a change never silently fails.</li></ul></div><div class="card"><h3>Trade-offs</h3><ul><li>Dependencies are read from columns, not drawn (B draws them).</li><li>Several nodes at once only in the Cluster tab.</li><li>A long row of columns: on a phone the table scrolls sideways; the side panel stacks below.</li></ul></div></div>
+<footer>Mock-up. Design, not built (docs/architecture/COMPUTE_ENGINES.md). Names, numbers, nodes and the reference codes (DRS-1020 to DRS-1024) are illustrative; the codes are assigned when it is built. A change writes the engine's file config/engines/&lt;id&gt;.yaml, is audited with who, when and why, and is the same from <span class="mono">drishti.py server engines</span>.</footer>
+</div>
+</body>
+</html>
