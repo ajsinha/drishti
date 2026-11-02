@@ -15,8 +15,10 @@
 -->
 # The in-memory lake: Delta tables that never touch a disk
 
-**Status: designed, not built.** Decisions for the product owner are in [section 14](#14-decisions-for-the-product-owner); the build
-checklist is in [section 15](#15-the-build-checklist).
+**Status: designed, not built; the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
+the owner node binds the pack and the others reach it through the pack; nothing leaves but downloads; whole unpinned tables may be
+evicted; Iceberg as well as Delta; news first; compaction automated so the memory keeps optimizing itself. The build checklist is in
+[section 15](#15-the-build-checklist).
 
 **The request (product owner, 2026-11-02):** some data feeds may not, by contract, be saved on disk; they may stay in memory. Wanted:
 "an in-memory Delta lake with a hard limit on RAM and automated eviction", reached through the Java server (the console's Python is
@@ -39,6 +41,7 @@ memory efficient; (2) users may download what they see; (3) a server job repleni
 11. [Configuration](#11-configuration)
 12. [What an administrator sees](#12-what-an-administrator-sees)
 13. [The proof: tests](#13-the-proof-tests)
+13a. [Automated compaction: the memory optimizes itself](#13a-automated-compaction-the-memory-optimizes-itself)
 14. [Decisions for the product owner](#14-decisions-for-the-product-owner)
 15. [The build checklist](#15-the-build-checklist)
 
@@ -124,7 +127,7 @@ stops as soon as there is enough:
 
 1. **Old versions** past `keep-versions` (their files are no longer reachable).
 2. **The decoded-column cache** (if on).
-3. **Whole tables, least recently read first**, never a pinned table (`pin: true`) and never the table being written. A table is
+3. **Whole tables, least recently read first** (allowed by the product owner), never a pinned table (`pin: true`) and never the table being written. A table is
    evicted **whole, never file by file** (a Delta table missing some of its files would be corrupt): it becomes *evicted, refill queued*,
    its job is queued, and readers get the words above.
 4. **Refuse the write.** The commit fails, the table stays at its previous version, the job's run records *refused: the store is full*,
@@ -140,6 +143,10 @@ Admin → Health show its cap and use, and the overload defences (2.9.11 row 8) 
   the middle never breaks it (a reference count per file; the files are freed when the last reader leaves).
 - **VaR may read from it** (scenario PVs or P&L kept in memory): the VaR inputs' connector points at `mem://…`. The VaR hot tier for
   such a date is then **memory only** (the hot data held in the off-heap pool, not written to a hot file), bounded like any open date.
+- **Iceberg too** (decided): an Iceberg table is a metadata file, manifests and Parquet data files, all reached through the same
+  `Storage` interface, so `MemoryStorage` serves it unchanged; the Iceberg loader writes it, `catalog: path` with `warehouse: mem://…`,
+  and its maintenance (expire snapshots, rewrite data files) runs in memory like Delta's. Delta is built first, Iceberg straight after it
+  in the same item.
 - **BI** queries such a table through the server's Arrow reads, not through DuckDB's own Delta reader (which needs files on a disk), and
   DuckDB's `temp_directory` is switched off for those queries so it cannot spill.
 
@@ -157,8 +164,9 @@ memory-only data unless the configuration allows that place:
 | The BI store, saved BI runs and their results | the definition is saved, the rows are not (recomputed when opened) |
 | DuckDB's temporary spill | off for those queries |
 | **Downloads by a user** (Data view, Excel, CSV, JSON Lines) | **allowed** (product owner), streamed from memory with no temporary file on the server, audited per download |
-| Scheduled reports, e-mail attachments, inbox and share items carrying rows | refused by default (`allow: [download]` widens it) |
+| Scheduled reports, e-mail attachments, inbox and share items carrying rows | **refused** (product owner): only downloads leave |
 | An outside AI provider | refused |
+| Another node of the cluster | over Drishti\*net only, to answer a request for the pack (section 9); never written to its disk |
 | The browser's storage (local storage, the basket tray) | ids only, no values |
 | Logs and audit | ids and counts only, never values |
 
@@ -166,15 +174,21 @@ The servers that hold memory-only data also need, and Admin → Health checks: *
 out-of-memory** (or one written to a RAM disk), no JFR recording or core dump to disk, and the temporary folder on a RAM disk. A refused
 write says why, in words: *"This view uses vendor-x data held in memory only (contract VX-2026-07); it cannot be saved to a report."*
 
-## 9. A cluster
+## 9. A cluster: the owner node binds the pack
 
-Two ways, one of them chosen per store ([section 14](#14-decisions-for-the-product-owner)):
+**Decided (product owner):** a memory store is **owned by one node**, which **binds the pack** whose connectors read it (news, first),
+and the other nodes reach that pack **remotely, through the pack**, over Drishti\*net, as they reach any pack a peer holds today (view
+and data forwarding, search shares; [CLUSTER_DEPLOYMENT](CLUSTER_DEPLOYMENT.md), `peer-only-packs`).
 
-- **Each node fills its own** (recommended to start): the job runs on every node that serves the table. Simple and independent; the
-  memory is spent once per node.
-- **One owner, the others read it over Drishti\*net**: the owner node holds the table, the others read its pages over the encrypted
-  node-to-node link (never caching them on disk). Memory spent once; a read on another node costs a network round trip, and the table is
-  down while its owner restarts.
+- **The owner** (`node.yaml`: `memory-stores: [news]`, and the pack listed for it) holds the store, runs the replenish jobs and the
+  compaction, and answers its pack's reads for the whole cluster. The memory is spent once.
+- **The other nodes** do not load the store; a request for the pack's kinds on them is forwarded to the owner over the encrypted
+  node-to-node link, and the answer is shown, never cached on their disks (their forwarding caches are memory-only for a memory-only
+  pack, the guard of [section 8](#8-never-on-disk-the-guard)).
+- **While the owner restarts** the pack's screens on every node say *"news: its node is restarting; back in about a minute"*, and its
+  warm-up refills the store first, then reopens the pack.
+- **A second owner** (a standby that also fills the store and takes over when the first is down) is a later option, not in the first
+  build; it doubles the memory.
 
 ## 10. The console's Python
 
@@ -193,8 +207,8 @@ drishti:
           max-mb: 8192            # the hard cap (DRISHTI_LAKE_MEMORY_FEEDS_MAX_MB, -Ddrishti.lake.memory.stores.feeds.max-mb)
           chunk-kb: 1024
           contract: VX-2026-07   # shown on every refusal and on Admin → Lakes
-          allow: [download]       # what memory-only data may leave as (default: download only)
-          cluster: each-node      # each-node | owner
+          owner: true             # this node owns the store and binds its pack (others reach the pack over Drishti*net)
+          format: delta           # delta | iceberg (a table may say otherwise)
       tables:
         - name: vendor-x-prices
           store: feeds
@@ -207,6 +221,14 @@ drishti:
           pin: true
           keep-versions: 2
           codec: zstd
+      compaction:                 # section 13a: on by default, per store and per table
+        enabled: true
+        idle-only: false          # true: only when no request has arrived for idle-seconds
+        idle-seconds: 30
+        headroom-mb: 512          # memory kept free for a compaction's new files (the old are freed after its commit)
+        small-file-mb: 8          # files below this are merged
+        dead-rows: 0.2            # rewrite a file when this share of its rows is deleted or replaced (merge mode)
+        resort-after: 20          # appends after which the table is rewritten sorted by sort-by
 ```
 
 The Delta connector reading it is an ordinary connector file with `root: mem://feeds/vendor-x-prices`. Every setting appears, as all do,
@@ -232,14 +254,40 @@ in [CONFIGURATION.md](../admin/CONFIGURATION.md) in YAML, environment and comman
 - **Restart:** the store is empty, warm-up refills it in order, screens say *refilling* meanwhile.
 - **Memory:** the store's bytes in Native Memory Tracking match its own count; no growth over a soak of repeated replaces.
 
+## 13a. Automated compaction: the memory optimizes itself
+
+**Decided (product owner):** compaction runs by itself, so the store keeps getting smaller for the same data without anyone asking.
+A compactor per store wakes after every commit and every minute, scores each table by the memory a rewrite would save, and rewrites the
+best one first, one table at a time, as an ordinary atomic commit (readers on the old version finish on it; its files are freed after):
+
+| Trigger | What the rewrite does | Why it saves memory |
+|---|---|---|
+| Many small files (appends, Kafka batches) | merges them into files of about 64 MB | one footer, one dictionary per column and better compression instead of hundreds |
+| Rows deleted or replaced (merge mode) above `dead-rows` | rewrites the files without them | dead rows stop costing memory |
+| Appends out of key order, after `resort-after` | rewrites the table sorted by `sort-by` | runs of equal values: dictionary and RLE shrink most columns by half again |
+| A column's dictionary grown past Parquet's limit (falls back to plain) | rewrites with the dictionary rebuilt per file | dictionary encoding back |
+| Old versions and the log | expires versions past `keep-versions`, writes a checkpoint | the log stays a few files; old files go |
+
+- **Bounded:** a rewrite needs room for its new files before the old are freed; it only starts when `headroom-mb` (and the table's
+  estimated new size) is free under the cap, so compaction never pushes the store into eviction. If there is no room, the table with the
+  best saving per byte of headroom goes first, or the compactor waits.
+- **Gentle:** at most one rewrite at a time per store, on one thread at low priority; `idle-only: true` restricts it to quiet periods.
+- **Measured:** every rewrite records bytes before and after; Admin → Lakes shows the memory saved today and in total, and the table's
+  compression ratio.
+- **For Iceberg** the same compactor uses Iceberg's own rewrite and snapshot expiry.
+
 ## 14. Decisions for the product owner
 
-1. **Cluster:** each node fills its own (recommended to start), or one owner read by the others.
-2. **What may leave besides downloads:** scheduled reports and e-mail attachments (default: no).
-3. **Eviction of whole tables:** allowed for unpinned tables (recommended), or refuse writes only.
-4. **Iceberg too:** the same `MemoryStorage` serves Iceberg tables (its readers and loader use the same interface); with Delta first, or
-   Delta only.
-5. **The first feeds:** which feed and connector go first, for the build's own tests and the first sizing.
+All taken by the product owner on 2026-11-02:
+
+1. **Cluster:** the owner node keeps the store and binds the pack; the other nodes access it remotely through the pack
+   ([section 9](#9-a-cluster-the-owner-node-binds-the-pack)).
+2. **What may leave:** downloads only; no scheduled reports, e-mail attachments, inbox or share items carrying its rows.
+3. **Eviction of whole tables:** yes, for unpinned tables, with the replenish job refilling them.
+4. **Iceberg too:** yes, Delta first and Iceberg in the same item.
+5. **The first feed: news** (the `news-store` connector's kinds `news`, `news-topic`, `quote`, `listed-company`, filled from the news
+   plugin by a replenish job); with **automated compaction** so the memory keeps optimizing itself
+   ([section 13a](#13a-automated-compaction-the-memory-optimizes-itself)).
 
 ## 15. The build checklist
 
@@ -248,11 +296,15 @@ in [CONFIGURATION.md](../admin/CONFIGURATION.md) in YAML, environment and comman
 | 1 | `MemoryStorage` (`mem://`): chunks off the heap, the cap, exclusive creates, reference-counted files, tests against the `Storage` contract that `LocalStorage` and `S3Storage` pass | M |
 | 2 | Replenish jobs: config, schedule, signals, warm-up, modes replace, append and merge, history, `drishti.py lake memory` | M |
 | 3 | The eviction ladder and the off-heap pool in `MemoryBudget`; Capacity and the planner | S to M |
+| 3a | Automated compaction (section 13a): the scoring, the headroom rule, merge, dead rows, re-sort, dictionary rebuild, expiry and checkpoints; bytes saved on Admin → Lakes | M |
+| 3b | The owner node binds the pack: `node.yaml` `memory-stores`, forwarding of the pack's reads over Drishti\*net with memory-only forwarding caches, the *restarting* words | S to M |
+| 3c | Iceberg on `mem://`: the loader's warehouse, path catalog, its maintenance in memory; the same tests as Delta | S to M |
+| 3d | **News first:** `news-store` on `mem://news`, its replenish job from the news plugin, the news pack bound to its owner node; the sentinel scan and the measured memory on it | S |
 | 4 | The guard: `Retention.mayPersist` at every sink of section 8, the derived-data tag, refusal words, audit | M |
 | 5 | Host checks in Admin → Health; DuckDB spill off; the memory-only VaR hot tier | S |
 | 6 | Admin → Lakes for memory stores; the screens' *refilling* words | S |
 | 7 | Tests of section 13, the sentinel scan first; the measured memory ratios in RESOURCES_AND_SCALE | M |
 | 8 | Docs: a guide (setting up a memory-only feed, end to end) and a tutorial, CONFIGURATION, OPERATIONS, the Help entries | S |
 
-About L in all, as one release theme or the larger of two items in one. Java 25's `MemorySegment` makes part 1 simpler; it works on
+About L to XL in all with compaction, the owner binding and Iceberg, as one release theme or the larger of two items in one. Java 25's `MemorySegment` makes part 1 simpler; it works on
 Java 21 with direct buffers.
