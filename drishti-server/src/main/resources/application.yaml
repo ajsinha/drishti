@@ -17,6 +17,9 @@
 spring:
   application:
     name: drishti  # the application's name in logs and metrics
+  mvc:
+    async:
+      request-timeout: ${DRISHTI_ASYNC_TIMEOUT:30m}  # how long a streamed answer may take: a workbook download (the VaR Playground, the Why it moved working, the capacity workbook), a BI export; an answer cut at this limit arrives incomplete
   threads:
     virtual:
       enabled: true          # every request runs on a virtual thread; fetches and link fan-out block cheaply
