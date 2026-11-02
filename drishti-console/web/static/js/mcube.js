@@ -225,6 +225,7 @@
           + (x.detail.trades || 0) + " trades in " + (x.detail.positions || 0) + " positions · hover a bin: its scenarios</p>";
       }).catch(function (err) { $("[data-mc-tail]").innerHTML = '<p class="bad">' + esc(err.message) + "</p>"; });
     provenance(r, c);
+    explain("[data-mc-explain]", "[data-mc-explain-dates]", e.scope);
   }
 
   function provenance(r, c) {

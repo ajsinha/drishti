@@ -43,6 +43,8 @@ public final class VarCubeExtras {
 
     /** A bucket at this share of its limit is "near" (amber); over 100% a breach. */
     static final double NEAR = 0.8;
+    /** The most of the lake's own dates the slider lists (newest first). */
+    static final int HELD_DATES = 20;
     private final VarService svc;
     private final VarExplain explain;
     private final VarWhatIf whatIf;
@@ -64,6 +66,11 @@ public final class VarCubeExtras {
     public Map<String, Object> versions(Principal p) {
         Set<LocalDate> dates = new TreeSet<>(svc.official().dates());
         dates.addAll(svc.openDates());
+        LocalDate d0 = svc.loader().latest();                             // the dates the lake holds, newest first, without opening them
+        for (int i = 0; d0 != null && i < HELD_DATES; i++) {
+            dates.add(d0);
+            d0 = svc.loader().previous(d0);
+        }
         Map<LocalDate, Map<String, Object>> open = new HashMap<>();
         for (Map<String, Object> m : svc.loaded()) {
             if (m.get("currency") == null && m.get("businessDate") != null && m.get("refused") == null) {
@@ -76,6 +83,7 @@ public final class VarCubeExtras {
             Map<String, Object> s = new LinkedHashMap<>();
             s.put("date", d.toString());
             s.put("official", official.contains(d));
+            s.put("held", true);
             Map<String, Object> o = open.get(d);
             s.put("open", o != null);
             if (o != null) {
@@ -198,7 +206,7 @@ public final class VarCubeExtras {
             throw new DrishtiException(ErrorCode.CUBE_OFF, "the sensitivities engine is off on this server: the ladder and the heat map need it");
         }
         String cls = riskClass == null || riskClass.isBlank() ? "GIRR" : riskClass.strip().toUpperCase(Locale.ROOT);
-        String meas = measure == null || measure.isBlank() ? "DELTA" : measure.strip().toUpperCase(Locale.ROOT);
+        String meas = measure == null || measure.isBlank() ? deltaWord(cls) : measure.strip().toUpperCase(Locale.ROOT);
         FrtbService.Elements el = f.elements(p, scope == null || scope.isBlank() ? "BANK" : scope.strip(), date, ccy);
         boolean heat = by != null && !by.isBlank();
         List<String> keys = heat ? List.of(by.toUpperCase(Locale.ROOT).split("\\s*,\\s*")) : List.of("QUALIFIER", "BUCKET");
@@ -216,7 +224,7 @@ public final class VarCubeExtras {
         int noTenor = 0;
         for (FrtbService.Element e : el.elements()) {
             if (e.factor() == null || e.factor().riskClass() == null || !e.factor().riskClass().toUpperCase(Locale.ROOT).startsWith(cls)
-                    || !meas.equalsIgnoreCase(e.measure())) {
+                    || !isDelta(meas, e.measure())) {
                 continue;
             }
             String row = part(keys.get(0), e);
@@ -307,6 +315,23 @@ public final class VarCubeExtras {
         out.put("proxied", el.proxied());
         out.put("refusals", el.refusals());
         return out;
+    }
+
+    /** A class's delta as the sensitivities name it: DV01 for interest rates, CS01 for credit spreads, DELTA for the others. */
+    static String deltaWord(String cls) {
+        return cls.startsWith("GIRR") ? "DV01" : cls.startsWith("CSR") ? "CS01" : "DELTA";
+    }
+
+    /** True when an element's measure is the one asked; DV01, CS01 and DELTA name the same first-order sensitivity. */
+    static boolean isDelta(String asked, String measure) {
+        if (measure == null) {
+            return false;
+        }
+        if (asked.equalsIgnoreCase(measure)) {
+            return true;
+        }
+        List<String> delta = List.of("DELTA", "DV01", "CS01");
+        return delta.contains(asked) && delta.contains(measure.toUpperCase(Locale.ROOT));
     }
 
     private static String bucket(Map<String, double[]> buckets, double y) {

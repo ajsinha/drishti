@@ -566,7 +566,7 @@ public final class VarCubeSource implements CubeSource<double[]> {
             FrtbService.Elements el = f.elements(p, view.scope(), date(), base.date().currency());
             Map<String, Double> byKey = new HashMap<>();
             for (FrtbService.Element e : el.elements()) {
-                if (!"DELTA".equalsIgnoreCase(e.measure()) || e.factor() == null || e.factor().riskClass() == null
+                if (!VarCubeExtras.isDelta("DELTA", e.measure()) || e.factor() == null || e.factor().riskClass() == null
                         || !e.factor().riskClass().toUpperCase(Locale.ROOT).startsWith(cls)) {
                     continue;
                 }

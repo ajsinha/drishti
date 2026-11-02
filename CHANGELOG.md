@@ -17,6 +17,29 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **The MR cube: market risk as a pivot with the right totals, on the shared cube core (2.9.11 row 3: MC2, MC3, MC4, MC12, MCP1, MCP2,
+  MCP4 to MCP6; [MR_CUBE_GUIDE.md](docs/guides/MR_CUBE_GUIDE.md), [tutorial 32](docs/tutorials/32-the-mr-cube.md)).** `MCUBE <view> <GO>`
+  (and **MR cube** in the VaR menu) opens the decided landing A with tabs B and C: any dimensions on rows and columns (hierarchy levels
+  such as `MGMT.DESK`, the positions' and trades' columns, `RISK_CLASS` derived from the product group, `POSITION`, `TRADE`), and every
+  cell, row and column total and the grand total is the VaR (ES, stressed VaR, SBM) of **its own set of trades**, re-aggregated from their
+  summed scenario P&L vectors, never a sum of cells; the gap is shown as diversification (Σ cells − total). Each cell equals
+  `/api/v1/var/scope` of the cell's scope to the cent and carries that scope. Measures: VaR, ES, component VaR and ES (adding up to the
+  total), incremental VaR, PV, trades, stressed VaR, DV01 and CS01 (from the position sensitivities), FRTB-SA SBM. The landing: the
+  headline strip, the lens (measure, horizon, confidence, normal or stressed set, currency), the time-travel slider over the dates, the pivot
+  with sparklines of the open dates and limit bars, the right rail with the cell's tail histogram (V and E), explain the move (the VaR
+  engine's exact steps on the cell's scope) and its provenance; double-click or Enter drills (desk, book, position, trade). Tab B: the
+  components, the attribution waterfall, the histogram, the factor heat map (DV01 by currency × tenor); tab C: the DV01 ladder by a bucket
+  grid against two-sided limits (`drishti.cube.mr.grids`, `ladder-limits`), the what-if side by side for every row (the Java what-if), and
+  explain. Saved views (private or shared with people or roles, opened with the reader's rights, `MCUBE @owner/name`); exports as CSV,
+  Arrow and Excel (an additive measure's totals as `SUM` formulas, a non-additive measure's as the server's values said so, the
+  diversification a formula, a Provenance sheet), and `GET /api/v1/cube/views/{owner}/{name}/data` for Power Query. A view's sets go to the
+  engine in one batch: on a sharded date each shard's owner is asked once for all of them (`VarBook.vectors`, `ShardedVectors.sumSets`, each
+  vector the single set's to the bit). The cell cache (`cube.cells`) is in the one memory budget; a view over `drishti.cube.max-cells`
+  (5,000) is refused with its count (`DRS-5602`); one over `drishti.cube.busy-cells` asks busy protection (`DRS-9506`). The shared core
+  (`com.ash.drishti.server.cube`: the view, the measure classes, the source SPI) is generic for the counterparty cube of 2.9.12. Off with
+  `drishti.cube.mr.enabled: false` (`DRISHTI_MR_CUBE_ENABLED`): nothing is built and the API answers `404 DRS-5603`. `drishti.py cube
+  query|cell|export|ladder|explain|views|save`. New codes `DRS-5601` to `DRS-5604` and `DRS-9506`.
+
 - **Construct your basket is one sheet like Excel; baskets are edited, amended and deleted (2.9.11 rows 10 and 12; VAR_GUIDE.md
   sections 3.5 and 5.8, tutorial 25 steps 5 and 7).** The chip tray is retired (mock-up D): a column per kind of part (trade, position,
   portfolio, book, desk, each configured hierarchy's word such as the limit letter, counterparty) and the Op column (+ or −), filled by

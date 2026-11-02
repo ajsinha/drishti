@@ -61,6 +61,7 @@ menus:
           - { id: var-explorer, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or ad-hoc set of trades", requires: [word:VAR] }
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
+          - { id: mcube, cmd: MCUBE, href: /mcube, icon: grid-3x3-gap, label: MR cube, desc: "Any rows and columns, the right totals, the tail and why it moved", match: /mcube, requires: [word:VAR, word:MCUBE, route:/mcube] }
           - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, a position or a scope", match: /smat, requires: [word:SMAT] }
           - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
       - title: Check and report

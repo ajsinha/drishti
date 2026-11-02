@@ -76,7 +76,7 @@
     warn = warn || 0.8;
     var cls = use > 1 ? "bad" : use >= warn ? "warn" : "ok";
     var w = Math.min(100, Math.max(0, use * 100 / 1.2));
-    return '<span class="mc-lbar ' + cls + '" title="' + pct(use) + ' of the limit"><i style="width:' + w.toFixed(1) + '%"></i>'
+    return '<span class="mc-lbar ' + cls + '" title="' + pct(use) + ' of the limit"><span class="f" style="width:' + w.toFixed(1) + '%"></span>'
       + '<b class="tick" style="left:' + (warn * 100 / 1.2).toFixed(1) + '%"></b><b class="tick full" style="left:' + (100 / 1.2).toFixed(1) + '%"></b></span>';
   }
 
@@ -145,7 +145,7 @@
     var cls = status === "breach" ? "bad" : status === "near" ? "warn" : "ok";
     var ticks = isNum(limit) ? '<b class="tick" style="left:' + Math.max(0, half - limit / s * half).toFixed(1) + '%"></b><b class="tick" style="left:'
       + Math.min(100, half + limit / s * half).toFixed(1) + '%"></b>' : "";
-    return '<span class="mc-cbar ' + cls + '"><i style="left:' + x.toFixed(1) + "%;width:" + len.toFixed(1) + '%"></i><b class="zero"></b>' + ticks + "</span>";
+    return '<span class="mc-cbar ' + cls + '"><span class="f" style="left:' + x.toFixed(1) + "%;width:" + len.toFixed(1) + '%"></span><b class="zero"></b>' + ticks + "</span>";
     void w;
   }
 

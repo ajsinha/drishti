@@ -169,12 +169,12 @@ class ApiError(CliError):
         self.retry_after = 0
 
 
-BUSY_CODE = re.compile(r"^DRS-950[1-5]$")
+BUSY_CODE = re.compile(r"^DRS-950[1-6]$")
 BUSY_TRIES = 3
 
 
 def problem_error(status: int, raw: bytes, headers, reason: str = "") -> ApiError:
-    """The server's problem answer as an :class:`ApiError`; a busy refusal (busy protection, 503 DRS-9501 to DRS-9505) says the server's own
+    """The server's problem answer as an :class:`ApiError`; a busy refusal (busy protection, 503 DRS-9501 to DRS-9506) says the server's own
     words, the same the console shows, and how to wait for it."""
     try:
         j = json.loads(raw)
@@ -1419,6 +1419,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("varcli", "varcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # var show|parts|path|whatif (2.8.0)
     load_module("expcli", "expcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # exposure show|parts|whatif (2.9.0)
     load_module("frtbcli", "frtbcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # sens, frtb, play frtb (2.9.11)
+    load_module("cubecli", "cubecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # cube: the MR cube (2.9.11)
     load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.10.a)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")

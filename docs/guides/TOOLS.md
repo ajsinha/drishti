@@ -1391,6 +1391,25 @@ drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --compare gi
 drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --xlsx frtb-cases.xlsx
 ```
 
+### 5.15 cube
+
+The MR cube as the token's user sees it (`tools/cubecli.py`; [MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)). A view is its text
+(`MCUBE BANK BY MGMT.DESK,RISK_CLASS MEASURE VAR`; the word `MCUBE` may be left out) or `@owner/name` of a saved view.
+
+- `cube query VIEW`: the pivot as text: each cell's first measure, the row totals, the total row re-aggregated (never a sum) and the
+  diversification; `--json` the whole answer.
+- `cube cell VIEW [--row KEY] [--column KEY]`: one cell's VaR, its rank and scenario day, ES, and its members by the next dimension (the drill).
+- `cube export VIEW --format csv|xlsx|arrow|json -o FILE`: the view exported (the workbook: `SUM` formulas where the measure is additive, the
+  server's values said so where not, a Provenance sheet).
+- `cube ladder SCOPE [--grid BANK-IR-TENOR|FRTB-GIRR]`: the DV01 ladder; `--by QUALIFIER,TENOR` the factor heat map.
+- `cube explain SCOPE [--from DATE] [--to DATE]`: why the scope's VaR moved, in exact steps.
+- `cube views`, `cube save NAME VIEW [--share WHO]`: saved views (a reader opens one with their own entitlements).
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py cube query "MCUBE BANK BY MGMT.DESK,RISK_CLASS MEASURE VAR"
+drishti-console/.venv/bin/python tools/drishti.py cube export "MCUBE BANK BY DESK,CURRENCY MEASURE VAR,PV" --format xlsx -o cube.xlsx
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a

@@ -539,7 +539,7 @@ Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentExc
 logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
 
 **When the server is busy.** New heavy work (a sign-in, opening a VaR or exposure date that is not open yet, a Data view download, a BI
-run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505`. The body adds `busy: true`, `title`
+run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9506`. The body adds `busy: true`, `title`
 and `because` (the same words the console and `drishti.py` show) and `retryAfterSeconds`. A script waits that many seconds and asks
 again, a few times at most; reads of what is already open are never asked to wait. Busy protection is described in
 [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over).
@@ -2085,6 +2085,10 @@ and the fix for the codes that need more than the meaning.
 | DRS-5212 | 422 | VaR: a limit of no node | a `var-limit` row names a node the date does not have: said in `provenance.warnings`, the row unused; never an error of the request |
 | DRS-5213 | 422 | VaR: hierarchies not valid | the hierarchies' configuration is not valid (refused at start), or a hierarchy with `ids: leaf` has a value under two parents on the date (the date is refused) |
 | DRS-5214 | 404 | VaR: no such hierarchy | the tree of a hierarchy the date does not have (`GET /api/v1/var/tree?hierarchy=`); a scope naming a node no hierarchy has answers it as unknown, not as an error |
+| DRS-5601 | 400 | Cube view | a cube view the cube cannot answer: an unknown dimension or measure, a dimension twice, a bad filter, lens, sort or grid ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md#11-refusals-and-error-codes)) |
+| DRS-5602 | 422 | Cube too many cells | the view has more cells, its totals counted, than `drishti.cube.max-cells`: refused with the count, never cut short; narrow it with a filter or fewer dimensions |
+| DRS-5603 | 404 | Cube switched off | the MR cube is switched off on this server (`drishti.cube.mr.enabled: false`): its API, page and words are not offered |
+| DRS-5604 | 404 | Cube view not found | a saved cube view that is not there, or not shared with the caller or their role |
 | DRS-5440 | 400 | Exposure parameter | the exposure engine does not answer this scope or parameter: scopes are `NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `BOOK:`, `TRD:`, `BANK`, `WHERE:`; `q` in (0.5, 0.9999]; `collateral` lagged, current or none; `date` a primary grid date or tenor |
 | DRS-5441 | 409 | Exposure run inconsistent | the date's exposure run is not one run (its grid, two batch ids, a duplicate row, a trade in two netting sets): the date before answers with a warning until the run is rewritten whole and its load signalled again |
 | DRS-5442 | 400 | What-if not on the run | a what-if's candidate paths are of another simulation run: send paths of the date's run (its `RUN_ID`, its number of paths) |
@@ -2139,6 +2143,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9503 | 503 | Busy: a download waits | busy protection: a Data view download did not start (memory, request handlers, disk); nothing was sent; `Retry-After` |
 | DRS-9504 | 503 | Busy: a BI run waits | busy protection: a BI run (or asking a run again) did not start (memory, request handlers); `Retry-After` |
 | DRS-9505 | 503 | Busy: a bulk load waits | busy protection: a bulk load of a pack's data did not start (memory, request handlers, disk); nothing was read or written; `Retry-After` |
+| DRS-9506 | 503 | Busy: a large cube view waits | busy protection: a cube view of more than `drishti.cube.busy-cells` cells did not start (memory, request handlers); smaller views keep working; `Retry-After` |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -3249,6 +3254,35 @@ the answer is then *not the regulatory figure*); `scope=EXAMPLE` runs the design
 Refusals: `400` for a bad switch value, an override naming no parameter or leaving its range, or a scope word the server cannot resolve;
 `403` for a role that sees the scope only in aggregate; `404 DRS-1002` when no connector serves `position-sensitivity`; `502 DRS-5329`
 when a parameter file is refused (the codes `DRS-5321` to `DRS-5326` count the load's refusals in each answer).
+
+## The MR cube
+
+The market-risk cube on the shared cube core, as the caller ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md), section 10): any rows and columns over the
+VaR engine's trades, every cell, row and column total and the grand total the figure of its own set of trades (VaR and ES re-aggregated from
+the summed vectors, never sums), the diversification beside them. A view is `{scope, rows, columns, measures, filters, date, lens, sort,
+history}`, or `{text: "MCUBE BANK BY MGMT.DESK,RISK_CLASS MEASURE VAR"}`, or `{id: "owner/name"}` of a saved view.
+
+| Endpoint | What |
+|---|---|
+| `GET /api/v1/cube` | the cubes running here (`mr`), the cell budget, the cache |
+| `GET /api/v1/cube/mr/describe?scope=…&date=…` | the measures (`VAR`, `ES`, `COMP_VAR`, `COMP_ES`, `INCR_VAR`, `PV`, `TRADES`, `SVAR`, `DV01`, `CS01`, `SBM`, each additive, vector or formula) and the dimensions of the date (hierarchy levels, the positions' and trades' columns, `RISK_CLASS`, `POSITION`, `TRADE`) |
+| `POST /api/v1/cube/mr/query` | the pivot: `rows`, `columns` (each `{key, labels, coords, members, scope, values, spark}`), `cells` (`{r, c, …}`), `total`, `diversification` (per non-additive measure: per row, per column, the rows' and the columns' sum less the total), `headline`, `provenance` (an id), `cellCount`, `fromCache`; `Accept: application/vnd.apache.arrow.stream` answers the cells and totals as one Arrow table |
+| `GET /api/v1/cube/mr/query?text=…` · `?view=owner/name` | the same for a typed or a saved view (Power Query, Tableau's web connector) |
+| `POST /api/v1/cube/mr/cell` · `GET /api/v1/cube/mr/cell?view=…&row=…&column=…` | one cell: `cell`, `detail` (`edges`, `counts`, `var`, `es`, `k`, `esCount`, `varScenario`, `varDate`, `tail`, `mean`, `worst`, `best`, `trades`, `positions`, `method`) and `drill` (its members by the next dimension below, with the drilled view) |
+| `POST /api/v1/cube/mr/export?format=csv|xlsx|arrow|json` | the view exported: the workbook writes an additive measure's totals as `SUM` formulas and a non-additive measure's as the server's values, said so, with a Provenance sheet |
+| `GET /api/v1/cube/provenance/{id}?cell=r|c` | an answer's shared provenance and one cell's (`-1` for a total) |
+| `GET /api/v1/cube/mr/versions` | the time-travel slider's stops: business dates (official, open) and an open date's batches |
+| `GET /api/v1/cube/mr/explain?scope=…&from=…&to=…&confidence=` | why a cell's VaR moved: the VaR engine's exact steps on the cell's scope (as `/api/v1/var/explain`) |
+| `GET /api/v1/cube/mr/sensitivities?scope=…&grid=BANK-IR-TENOR` | the DV01 ladder: GIRR delta by currency and the grid's buckets, net and gross, `limit`, `use` and `status` (`ok`, `near`, `breach`) where a bucket limit is configured |
+| `GET /api/v1/cube/mr/sensitivities?scope=…&by=QUALIFIER,TENOR&class=GIRR&measure=DELTA` | the factor heat map by two factor parts (`QUALIFIER`, `TENOR`, `CURVE`, `UNDERLYING`, `BUCKET`, `RISK_CLASS`, `RISK_FACTOR`, `MEASURE`) |
+| `POST /api/v1/cube/mr/what-if` | `{view, items: [{copyOf, factor}]}`: every row of the view and its total, `before`, `after`, `incremental` (the Java what-if on each row's scope) |
+| `GET /api/v1/cube/views` · `POST /api/v1/cube/views` | the caller's saved views and those shared with them; save `{name, title, view, sharedWith: ["sam", "role:risk"]}` (the same name is its next version) |
+| `GET /api/v1/cube/views/{owner}/{name}` · `GET …/data?format=json|csv|xlsx|arrow` · `DELETE /api/v1/cube/views/{name}` | a saved view; answered now as the reader; deleted by its owner |
+
+Refusals: `400 DRS-5601` for a view the cube cannot answer; `422 DRS-5602` for a view over `drishti.cube.max-cells` (the count is given);
+`404 DRS-5603` when the MR cube is switched off; `404 DRS-5604` for a saved view not there or not shared; `503 DRS-9506` (busy protection) for
+a view over `drishti.cube.busy-cells` while the server is short of memory or threads; `403` for a dimension that would name positions of a
+scope the caller sees only in aggregate, or a masked column.
 
 ## Exposure engine: `/api/v1/exposure`
 

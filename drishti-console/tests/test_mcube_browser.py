@@ -76,7 +76,10 @@ def painted(pg):
 
 
 def no_sideways_scroll(pg):
-    assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways"
+    wide = pg.evaluate("Array.from(document.querySelectorAll('body *')).filter(e => e.getBoundingClientRect().right > window.innerWidth + 1"
+                       " && getComputedStyle(e).position !== 'fixed' && !e.closest('.mc-scroll, [hidden]')).slice(-4)"
+                       ".map(e => e.tagName + '.' + e.className + ' ' + Math.round(e.getBoundingClientRect().right))")
+    assert pg.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1"), "the page scrolls sideways: %s" % wide
 
 
 def test_the_landing_draws_the_pivot_with_totals_that_are_the_unions_own_var(stack, browser):
