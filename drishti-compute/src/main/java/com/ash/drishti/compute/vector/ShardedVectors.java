@@ -340,6 +340,94 @@ public final class ShardedVectors implements Vectors, SetSums {
         }
     }
 
+    /**
+     * The sums of many sets at once (a cube view's cells and totals, MR_CUBE_LENS.md section 4.11): each set cut by shard as {@link #sumSet}
+     * cuts it, every remote shard asked <b>once</b> for all the sets' parts it holds (in calls of up to {@link #BATCH} sets, the shards side by
+     * side under one deadline), the held shards summed here, then each set's partials added in shard order from zero, exactly as
+     * {@link #sumSet} adds them: each answer is the one {@link #sumSet} gives for that set, to the bit. A shard nobody answers fails them all.
+     */
+    public List<double[]> sumSets(List<OrdinalSet> sets, ParallelSums sums) {
+        int n = parts.size();
+        OrdinalSet[][] slices = new OrdinalSet[sets.size()][n];
+        Map<Integer, List<int[]>> remoteAsks = new TreeMap<>();          // part index -> (set index) asked of its owner
+        for (int s = 0; s < sets.size(); s++) {
+            for (int i = 0; i < n; i++) {
+                Part p = parts.get(i);
+                OrdinalSet slice = sets.get(s).slice(p.from(), p.to());
+                if (!slice.isEmpty()) {
+                    slices[s][i] = slice;
+                    if (!p.held()) {
+                        remoteAsks.computeIfAbsent(i, k -> new ArrayList<>()).add(new int[] {s});
+                    }
+                }
+            }
+        }
+        Object ctx = remote.context();
+        Map<Long, double[]> got = new HashMap<>();
+        List<CompletableFuture<List<double[]>>> asked = new ArrayList<>();
+        List<List<int[]>> calls = new ArrayList<>();
+        List<Integer> callPart = new ArrayList<>();
+        for (Map.Entry<Integer, List<int[]>> e : remoteAsks.entrySet()) {
+            int i = e.getKey();
+            List<int[]> all = e.getValue();
+            for (int at = 0; at < all.size(); at += BATCH) {
+                List<int[]> call = all.subList(at, Math.min(all.size(), at + BATCH));
+                List<OrdinalSet> rows = call.stream().map(x -> slices[x[0]][i]).toList();
+                int shard = parts.get(i).shard();
+                calls.add(call);
+                callPart.add(i);
+                asked.add(CompletableFuture.supplyAsync(() -> remote.sumAll(shard, rows, ctx), ASK));
+            }
+        }
+        // the held shards while the owners answer
+        for (int s = 0; s < sets.size(); s++) {
+            for (int i = 0; i < n; i++) {
+                if (slices[s][i] != null && parts.get(i).held()) {
+                    got.put(((long) s << 20) | i, sums.sum(parts.get(i).rows(), slices[s][i]));
+                    remote.held(parts.get(i).shard(), ctx);
+                }
+            }
+        }
+        RuntimeException failed = null;
+        for (int c = 0; c < asked.size(); c++) {
+            try {
+                List<double[]> answers = asked.get(c).join();
+                List<int[]> call = calls.get(c);
+                if (answers.size() != call.size()) {
+                    throw new IllegalStateException(answers.size() + " sums for the " + call.size() + " row sets asked of shard "
+                            + parts.get(callPart.get(c)).shard());
+                }
+                for (int k = 0; k < call.size(); k++) {
+                    got.put(((long) call.get(k)[0] << 20) | callPart.get(c), answers.get(k));
+                }
+            } catch (CompletionException e) {
+                failed = failed != null ? failed : e.getCause() instanceof RuntimeException re ? re
+                        : new IllegalStateException("a shard's answer failed: " + e.getCause(), e.getCause());
+            } catch (RuntimeException e) {
+                failed = failed != null ? failed : e;
+            }
+        }
+        if (failed != null) {
+            throw failed;
+        }
+        com.ash.drishti.compute.shard.ShardGather.Combine<double[]> combine = com.ash.drishti.compute.shard.ShardGather.sum(width);
+        List<double[]> out = new ArrayList<>(sets.size());
+        for (int s = 0; s < sets.size(); s++) {
+            double[] acc = combine.zero();
+            for (int i = 0; i < n; i++) {                                // a fixed order: shard 0, 1, 2 ... as sumSet
+                if (slices[s][i] != null) {
+                    double[] part = got.get(((long) s << 20) | i);
+                    if (part == null) {
+                        throw new IllegalStateException("shard " + parts.get(i).shard() + " gave no answer");
+                    }
+                    acc = combine.add(acc, part);
+                }
+            }
+            out.add(acc);
+        }
+        return out;
+    }
+
     private void add(double[] acc, double[] v) {
         for (int j = 0; j < width; j++) {
             acc[j] += v[j];
