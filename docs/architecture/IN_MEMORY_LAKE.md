@@ -15,7 +15,7 @@
 -->
 # The in-memory lake: Delta tables that never touch a disk
 
-**Status: designed, not built; planned for 2.9.11, on Java 21 (product owner, 2026-11-02: Java 25 may not reach production, so it is built on Java 21 and brought forward); the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
+**Status: design, not built; planned for 2.9.11, on Java 21 (product owner, 2026-11-02: Java 25 may not reach production, so it is built on Java 21 and brought forward); the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
 the owner node binds the pack and the others reach it through the pack; nothing leaves but downloads; whole unpinned tables may be
 evicted; Iceberg as well as Delta; news first; compaction automated so the memory keeps optimizing itself. The build checklist is in
 [section 15](#15-the-build-checklist).
@@ -36,7 +36,7 @@ memory efficient; (2) users may download what they see; (3) a server job repleni
 6. [The hard limit and the eviction ladder](#6-the-hard-limit-and-the-eviction-ladder)
 7. [Reading: every Java reader unchanged](#7-reading-every-java-reader-unchanged)
 8. [Never on disk: the guard](#8-never-on-disk-the-guard)
-9. [A cluster](#9-a-cluster)
+9. [A cluster: the owner node binds the pack](#9-a-cluster-the-owner-node-binds-the-pack)
 10. [The console's Python](#10-the-consoles-python)
 11. [Configuration](#11-configuration)
 12. [What an administrator sees](#12-what-an-administrator-sees)
