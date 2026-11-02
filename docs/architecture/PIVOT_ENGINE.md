@@ -58,7 +58,7 @@ budgets and busy protection) and [CLUSTER_DEPLOYMENT.md](CLUSTER_DEPLOYMENT.md).
 - [20. Tests that prove it](#20-tests-that-prove-it)
 - [21. The benchmark plan](#21-the-benchmark-plan)
 - [22. Phases and sizes](#22-phases-and-sizes)
-- [23. Decisions for the product owner](#23-decisions-for-the-product-owner)
+- [23. Decisions](#23-decisions)
 - [24. Build checklist](#24-build-checklist)
 - [25. Mock-ups: the screens to build](#25-mock-ups-the-screens-to-build)
 - [26. Sources](#26-sources)
@@ -372,7 +372,7 @@ The paused MR cube's `VarCubeSource` becomes this provider, unchanged in its ari
   scenario; diversification shown beside each total (Σ cells − total).
 - **Totals**: each total is its own set's vector, summed from members, so it equals `GET /api/v1/var/scope` for that scope to the bit
   (the branch's tests already prove it). Merging cells' vectors would be faster but equal only to the cent; it is not used for official
-  figures (decision 3, [section 23](#23-decisions-for-the-product-owner)).
+  figures (decision 3, [section 23](#23-decisions)).
 - **Scope text**: a cell's scope in VaR's grammar (`DESK:RATES-NY & CCY:USD`) so any cell can be asked of the VaR engine itself.
 
 ### 6.4 The FRTB-SA and SIMM providers
@@ -1081,9 +1081,11 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 | **P3: scale** | sketches (HLL, KLL, Space-Saving) and exact on request; rollups of partial states refreshed incrementally; aggregate awareness; progressive answers; scan estimates with options; scatter and gather of tabular partials across nodes with hedging; live pivots (5); the benchmark B1 to B3 | L | 2.9.11.c |
 | **P4: Excel and advice** | the native PivotTable export and charts bound to it; references in formulas and Excel (8); Python functions on by default where approved; layout advice; ask in words (6); automatic insights (7) | M to L | unscheduled candidate |
 
-## 23. Decisions for the product owner
+## 23. Decisions
 
-| # | Question | Recommended answer |
+**All 14 decided by the product owner on 2026-11-02, as recommended; mock-up A picked.**
+
+| # | Question | Decided (as recommended) |
 |---|---|---|
 | 1 | Placement: three releases, 2.9.11.a (P1 + MR cube), 2.9.11.b (P2 + BI), 2.9.11.c (P3), each with at most two large items | yes, as proposed; the MR cube right after P1, because it needs only the core and the VaR provider |
 | 2 | The module's dependencies beyond `drishti-api`, `drishti-common` and DuckDB | allow `arrow-format` (already in the build) and Apache DataSketches (Apache 2.0, pure Java) for KLL; HLL written in the module (it is small, and computed in SQL) |

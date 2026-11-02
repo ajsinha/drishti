@@ -730,7 +730,7 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 | Risk factors and sensitivities (row 1) | [A: the dictionary](../lenses/mockups/risk-factors/A.html) · [B: the load's quality](../lenses/mockups/risk-factors/B.html) · [C: the factor's page](../lenses/mockups/risk-factors/C.html) | the same |
 
 
-## 2.9.11.a: the pivot engine, then the MR cube (proposed; product owner 2026-11-02; placement to confirm)
+## 2.9.11.a: the pivot engine, then the MR cube (product owner 2026-11-02: placement, mock-up A and every decision as recommended)
 
 *"Build capability of a super scalable very generalized pivot capability. Think of MS Excel but more capable", with custom aggregation functions (Python too) and extremely large data; "pause MR cube then and build this capability first, then come back to MR cube"; "better than anything out there"; BI uses it; one `drishti-bicompute` module (product owner, 2026-11-02). The design: [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (its build checklist, section 24; decisions, section 23). **More than two large items, so split in three** (each at most two large items, each with its drills): 2.9.11.a (P1 and the MR cube), 2.9.11.b (P2 and BI), 2.9.11.c (P3). P4 is an unscheduled candidate.*
 
