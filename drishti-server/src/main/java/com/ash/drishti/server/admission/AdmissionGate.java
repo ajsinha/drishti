@@ -170,6 +170,20 @@ public final class AdmissionGate {
         return loads.computeIfAbsent(engine, e -> new Loads(e, threads));
     }
 
+    /** Memory held off the heap under its own cap (the in-memory lake's stores): shown with the readings, never refused on. */
+    private record OffHeap(String name, LongSupplier used, LongSupplier cap) {}
+
+    private final List<OffHeap> offHeaps = new CopyOnWriteArrayList<>();
+
+    /**
+     * A memory store joins the readings (IN_MEMORY_LAKE.md section 6): its use against its cap is shown on Health's busy card. Its writes
+     * are bounded by the store itself (the eviction ladder, then a refusal), so it never makes new work wait here.
+     */
+    public void memoryStore(String name, LongSupplier used, LongSupplier cap) {
+        offHeaps.removeIf(o -> o.name().equals(name));
+        offHeaps.add(new OffHeap(name, used, cap));
+    }
+
     /** An engine's open dates' heap and its safety net join the gate. */
     public void openHeap(String engine, LongSupplier used, LongSupplier net) {
         openHeaps.removeIf(o -> o.engine().equals(engine));
@@ -483,6 +497,17 @@ public final class AdmissionGate {
         d.put("note", String.format(Locale.ROOT, "warn under %.0f GB free · loads and downloads wait under %.0f GB free", props.diskWarnGb(),
                 props.diskRefuseGb()));
         gauges.add(d);
+        for (OffHeap o2 : offHeaps) {
+            long cap = o2.cap().getAsLong();
+            long used = o2.used().getAsLong();
+            double s2 = cap <= 0 ? 0 : (double) used / cap;
+            Map<String, Object> g = gauge("memory-store:" + o2.name(), "Memory store " + o2.name() + " (off the heap)", Math.min(1, s2), 0.85, 1.0,
+                    s2 >= 0.85 ? "warn" : "ok");
+            g.put("usedBytes", used);
+            g.put("maxBytes", cap);
+            g.put("note", "held in memory only under its own cap; when full the store evicts unpinned tables, then refuses the write (never new work here)");
+            gauges.add(g);
+        }
         out.put("gauges", gauges);
         List<Map<String, Object>> rows = new ArrayList<>();
         Set<String> people = new HashSet<>();

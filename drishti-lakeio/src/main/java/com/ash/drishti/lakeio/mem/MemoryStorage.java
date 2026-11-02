@@ -62,7 +62,7 @@ public final class MemoryStorage implements Storage {
     }
 
     private final String name;
-    private final ChunkPool pool;
+    private volatile ChunkPool pool;
     private final ConcurrentSkipListMap<String, MemFile> files = new ConcurrentSkipListMap<>();
     private volatile String contract = "";
     private volatile RoomMaker roomMaker;
@@ -78,6 +78,17 @@ public final class MemoryStorage implements Storage {
     /** The store's name (the authority of its paths). */
     public String name() {
         return name;
+    }
+
+    /** A new chunk size, only while the store holds nothing (a store defined after a reader met it first keeps its identity). */
+    synchronized boolean rechunk(long capBytes, int chunkBytes) {
+        if (!files.isEmpty() || pool.inUseBytes() > 0) {
+            return false;
+        }
+        ChunkPool old = pool;
+        pool = new ChunkPool(name, capBytes, chunkBytes);
+        old.cap(0);
+        return true;
     }
 
     /** The chunk pool: cap, use, allocation. */

@@ -87,6 +87,14 @@ public class HealthController {
         this.busy = g;
     }
 
+    /** The in-memory lake (IN_MEMORY_LAKE.md section 12): its stores, pinned tables and host checks on Health; absent in such a test. */
+    private com.ash.drishti.server.memlake.MemoryLake memoryLake;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void memoryLake(com.ash.drishti.server.memlake.MemoryLake m) {
+        this.memoryLake = m;
+    }
+
     /** The platform alerts (OPERATIONS.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.metrics.PlatformAlerts alerts;
 
@@ -200,6 +208,13 @@ public class HealthController {
             Map<String, Object> d = disk.describe();                    // O7: every folder against its cap, free space against the guard
             out.put("disk", d);
             if ("red".equals(d.get("state")) && "OK".equals(out.get("status"))) {
+                out.put("status", "DEGRADED");
+            }
+        }
+        if (memoryLake != null && memoryLake.configured()) {
+            Map<String, Object> m = memoryLake.health();                // amber: a store over 85% or a refused write; red: a pinned table empty,
+            out.put("memoryLake", m);                                   // the direct-memory limit below the stores' caps
+            if ("red".equals(m.get("state")) && "OK".equals(out.get("status"))) {
                 out.put("status", "DEGRADED");
             }
         }

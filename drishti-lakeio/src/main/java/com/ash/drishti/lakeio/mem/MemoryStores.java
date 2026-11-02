@@ -69,15 +69,10 @@ public final class MemoryStores {
      */
     public static MemoryStorage define(String name, long capBytes, int chunkBytes, String contract) {
         check(name);
-        MemoryStorage s = STORES.compute(name, (n, old) -> {
-            if (old == null || (old.fileCount() == 0 && old.pool().chunkBytes() != chunkBytes)) {
-                if (old != null) {
-                    old.pool().cap(0);
-                }
-                return new MemoryStorage(n, capBytes, chunkBytes);
-            }
-            return old;
-        });
+        MemoryStorage s = STORES.computeIfAbsent(name, n -> new MemoryStorage(n, capBytes, chunkBytes));
+        if (s.pool().chunkBytes() != chunkBytes) {
+            s.rechunk(capBytes, chunkBytes);                    // the same store object: readers that met it first keep reaching it
+        }
         s.pool().cap(capBytes);
         s.contract(contract);
         return s;
