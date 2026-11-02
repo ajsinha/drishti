@@ -151,7 +151,7 @@ fields:
 - name: RECOVERY_INDEPENDENT
   type: boolean
   presence: optional
-  description: The price does not depend on the recovery (MAR22.12): the LGD is 100%.
+  description: 'The price does not depend on the recovery (MAR22.12): the LGD is 100%.'
   example: false
 validation:
 - rule: required
@@ -176,3 +176,5 @@ validation:
 notes:
 - 'JSON Lines, one row per line (UTF-8, gzip). Example line: {"DEFAULT_RISK_ID":"DRC-POS-BOOK-CREDIT-1~CLY-3000087-5493001KJTIIGC8Y1R12-B-DRC-2026-09-30-01","BUSINESS_DATE":"2026-09-30","POSITION_ID":"POS-BOOK-CREDIT-1~CLY-3000087","BATCH_ID":"B-DRC-2026-09-30-01","OBLIGOR":"5493001KJTIIGC8Y1R12","DRC_BUCKET":"CORPORATE","SENIORITY":"SENIOR","CREDIT_QUALITY":"BBB","NOTIONAL":10000000,"MARKET_VALUE":9800000,"CURRENCY":"USD","MATURITY_DATE":"2028-09-30"}'
 - 'Signs are checked on load: a bought CDS has a negative NOTIONAL, a sold put on a bond a positive one; MARKET_VALUE has the notional''s sign.'
+review:
+- 'Whether the bank''s risk system delivers the obligor, seniority and rating with the positions, or Drishti joins them from an issuer master.'

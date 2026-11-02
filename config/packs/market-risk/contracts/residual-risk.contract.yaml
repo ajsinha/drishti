@@ -136,3 +136,5 @@ validation:
   pattern: ^RRAO-
 notes:
 - 'JSON Lines, one row per line (UTF-8, gzip). Example line: {"RESIDUAL_RISK_ID":"RRAO-MX-20000311-B-RRAO-2026-09-30-01","BUSINESS_DATE":"2026-09-30","TRADE_ID":"MX-20000311","BATCH_ID":"B-RRAO-2026-09-30-01","RRAO_CLASS":"OTHER","RISK_TYPE":"gap","GROSS_NOTIONAL":50000000,"CURRENCY":"USD","LISTED_OR_CLEARABLE":false,"REASON":"knock-out barrier"}'
+review:
+- 'Which product control system flags back-to-back trades and listed or centrally clearable instruments at the bank.'
