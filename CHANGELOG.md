@@ -22,9 +22,16 @@
 - **A contribution table asks each remote shard once.** On a sharded date, contributions by position and by trade fetched each
   position's or trade's vector from its shard's owner in turn: about 2,000 signed `POST /api/v1/var/partial` calls one after the other
   for a desk of 2,000 positions held elsewhere. The table's reads are now fetched ahead (`VarBook.readAhead`,
-  `ShardedVectors.batched`): one call per remote shard of up to 1,024 row sets, the shards side by side, through the new members-only
-  `POST /api/v1/var/partials` (the same signature, label, data-version and access checks as `/partial`, in `token-never`). Every part is
-  the same to the bit as the one read alone (`ShardReadAheadTest`, on one member and on each of three).
+  `ShardedVectors.batched`): one call per remote shard of up to 1,024 row sets (each set sent as its runs, 8 bytes a position), the
+  shards side by side, through the new members-only `POST /api/v1/var/partials` (the same signature, label, data-version and access
+  checks as `/partial`, in `token-never`). Every part is the same to the bit as the one read alone (`ShardReadAheadTest`, on one member and
+  on each of three).
+- **A scope's standalone sums too.** The sum of the parts' standalone VaR behind a headline (the bank minus a desk, a basket) computed
+  each position's vector with a call to its owner, on the vector-sum pool: with every pool thread waiting on owners, the first requests
+  of a date on a member waited past the client's 60 s. These reads are fetched ahead as well, a step of 1,024 positions or trades.
+- **Measured** (three members, 200,000 positions, Java 21, `-Xmx4g`): contributions p95 0.88 / 1.35 / 2.53 s at 50 / 100 / 200 users
+  (10.4 / 15.8 / 13.9 s before), no error in any window (17 timeouts at 50 users before), 226 / 249 / 231 requests a second (123 / 161 /
+  148), no pinned virtual thread.
 - **One deadline per gather.** The calls made for one answer share `drishti.var.sharding.call-timeout-seconds` (30 s): the first owner
   gets its share of the time left and its replica the rest, so a stalled owner becomes an answer from the replica or a clear
   `503 DRS-5215` inside the client's 60 s, never a client timeout.

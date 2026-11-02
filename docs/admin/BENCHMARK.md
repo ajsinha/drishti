@@ -324,6 +324,17 @@ Requests a second (both mixes together), errors, and p50 / p95 / p99 in seconds 
 | 100 users | 161, 0 | 0.26 / 1.43 / 2.22 | 1.20 / 2.24 / 2.93 | 0.24 / 1.34 / 1.96 | 0.62 / 1.66 / 2.32 | 0.70 / 1.64 / 2.52 | 0.85 / 15.8 / 19.0 | 0.31 / 2.24 / 3.25 |
 | 200 users | 148, 0 | 0.79 / 3.27 / 5.04 | 1.56 / 3.71 / 4.50 | 0.78 / 3.51 / 5.08 | 1.02 / 3.89 / 5.15 | 1.23 / 3.98 / 5.36 | 2.16 / 13.9 / 15.5 | 0.87 / 3.56 / 4.94 |
 
+| **Cluster, 200,000, contribution reads fetched ahead** (three members) | req/s, errors | trade | search | VaR node | bank − desk | basket 50K | contributions | P&L path |
+|---|---|---|---|---|---|---|---|---|
+| 50 users | **226**, 0 | 0.11 / 0.50 / 0.86 | 0.93 / 1.76 / 2.18 | 0.10 / 0.52 / 0.91 | 0.13 / 0.61 / 1.04 | 0.48 / 0.94 / 1.21 | 0.40 / **0.88** / 1.29 | 0.09 / 0.45 / 0.68 |
+| 100 users | 249, 0 | 0.23 / 1.16 / 1.78 | 0.79 / 1.62 / 2.02 | 0.22 / 1.11 / 1.79 | 0.25 / 1.05 / 1.65 | 0.47 / 1.37 / 1.94 | 0.49 / **1.35** / 1.95 | 0.24 / 1.11 / 1.41 |
+| 200 users | 231, 0 | 0.57 / 2.44 / 3.70 | 0.93 / 2.93 / 4.14 | 0.58 / 2.49 / 3.75 | 0.62 / 2.57 / 3.89 | 0.79 / 2.70 / 3.87 | 0.81 / **2.53** / 3.52 | 0.58 / 2.29 / 3.16 |
+
+The second cluster table is the same run (Java 21, G1, `-Xmx4g` each, the same lake and mix) with the contribution tables' and the
+standalone sums' remote reads fetched ahead, one `/partials` call per remote shard ([VAR_SHARDING.md section 15](../architecture/VAR_SHARDING.md#15-contributions-under-load));
+the 50-user window ran its 60 s, the warm-up had no error either, and the run recorded no pinned virtual thread on any member. First
+opens 10.9 / 17.9 s; the bank's VaR the same to the dollar; heap after GC at the end 1,546 / 1,686 / 1,632 MB, RSS 5.2 / 5.8 / 5.5 GB.
+
 The cluster at 1,000,000 positions: *to be measured*.
 
 ![Requests a second at 50, 100 and 200 users](images/benchmark/rps-by-users.svg)
@@ -351,9 +362,11 @@ together with the users; in the earlier 1,000,000-position run the bank minus a 
 - In the earlier configuration (`-Xmx16g`) **the bank minus a desk cost about 5.7 s at p50 with 50 users**, walking the scope position
   by position (89% of the CPU, [4.9](#49-where-the-time-goes)): requests a second fell to 40, 36 and 29, and at 100 and 200 users trade
   reads timed out (`DRS-1004`, the 23 and 77 errors, every one a trade, a counterparty page or a netting set).
-- **The cluster** (200,000): contributions by position have a p95 of 10 to 16 s (0.6 to 3.6 s on the single server): the coordinator
-  gathers each desk's positions from the owners. In the first seconds of the 50-user window 17 requests (9 bank − desk, 8 baskets) hit the
-  client's 60 s timeout on Java 21; the same window on Java 25 had none.
+- **The cluster** (200,000), first table: contributions by position had a p95 of 10 to 16 s (0.6 to 3.6 s on the single server), the
+  coordinator asking the owners for each position's vector in turn; in the first seconds of the 50-user window 17 requests (9 bank − desk,
+  8 baskets) hit the client's 60 s timeout: thread dumps of a re-run show the vector-sum pool's threads all waiting on owners, asked
+  position by position for the scopes' standalone sums. **With the reads fetched ahead** (second table): contributions p95 **0.88 / 1.35 / 2.53 s** at 50 / 100 / 200 users,
+  **no error** in any window, and 226 / 249 / 231 requests a second (one server: 270 / 223 / 191), the members' work now side by side.
 
 **Trades only** (`--var-share 0`), single server, the same 60,000 trades a day: the reference for what the VaR share adds.
 
@@ -386,7 +399,8 @@ GC CPU is the JDK's `gc-cpu-time` view, over runs of about 6 minutes (200,000) a
 25 does not report it for ZGC. The **pinned events on Java 25** all come from a connector opening the lake at start
 (`NativeFileIO.<init>`, `ParquetFooters.footer`, `DeltaTable.layout`: native frames, which Java 25 still pins), none from a request. The
 cluster (200,000) on Java 21 had 18 pinned events on members a and b, all in `ShardSkeleton.write` as the coordinator sent a date's
-skeleton to the owners, during the first opens; on Java 25 the cluster's members had 52 / 82 / 108, the connector start as above. The
+skeleton to the owners, during the first opens (the skeleton now streams without the channel adapter: none in the run of 4.3's second
+cluster table); on Java 25 the cluster's members had 52 / 82 / 108, the connector start as above. The
 log under load at 1,000,000 positions is the `DRS-1004` warnings of the timed-out trade reads.
 
 **Compact object headers** (Java 25, two dates open): 838 MB against 881 MB on Java 21 at 200,000 positions (−4.9%), 7,335 against 7,505
@@ -1452,6 +1466,7 @@ the Drishti\*net soak on real processes is [OPERATIONS.md › section 13](OPERAT
 | [`tools/bench/results/2.9.7-baseline.jsonl`](../../tools/bench/results/2.9.7-baseline.jsonl) | an earlier run of section 4 at 200,000 positions, whose Python-path loader figures 7.1 keeps: one JSON line per measure |
 | [`tools/bench/results/2.9.8-200k.jsonl`](../../tools/bench/results/2.9.8-200k.jsonl) | section 4 at 200,000 positions: the Java loader, the single server and the cluster on Java 21 and 25, G1 and ZGC, one user alone, and what each JFR recording says (GC, pinning, first-open stages, hottest frames and allocation sites) |
 | [`tools/bench/results/2.9.8-1m.jsonl`](../../tools/bench/results/2.9.8-1m.jsonl) | section 4 at 1,000,000 positions, the earlier configuration: the Java loader and disk, the single server on Java 21 and 25 at `-Xmx16g`, one user alone, and the configurations that failed (`run_failed`, with the heap histogram) |
+| [`tools/bench/results/2.9.10a-200k-cluster.jsonl`](../../tools/bench/results/2.9.10a-200k-cluster.jsonl) | section 4.3's second cluster table: the three-member cluster at 200,000 positions on Java 21, G1, `-Xmx4g`, with the remote reads fetched ahead (`cluster-21-g1`) |
 | [`tools/bench/results/2.9.10-1m.jsonl`](../../tools/bench/results/2.9.10-1m.jsonl) | section 4 at 1,000,000 positions, the current run: the Java loader (`r1`) and the single server on Java 21, G1, `-Xmx6g` (`single-21-g1-6g`), with the heap histograms |
 
 `python3 tools/bench/report.py <results.jsonl …>` turns the store lines into the tables of section 9; lines without a `store` (the VaR
