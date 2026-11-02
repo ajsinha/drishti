@@ -793,7 +793,7 @@ always a planned second drill for the performance releases (2.9.13 and 2.9.16), 
 2.9.10 (the VaR change explained, RO1 alone) ship as one release, 2.9.10, with no 2.9.9 release of its own (product owner, 2026-11-01); **2.9.11 to 2.9.19 are
 proposed** until each starts (rationalized 2026-11-01, reordered by the product owner the same day: sensitivities and capital, then counterparty engines, then Java 25, then oversight; memory first, the VaR change explained and oversight next, the Java 25 performance
 foundation before Java 21 is retired, the native libraries after the engines they speed up, the last release split in two; renumbered
-the same day when RO1 became a release of its own); **nothing beyond 2.9.7 starts without the product owner's go**. Earlier placements in the lens, cube, CRO, CIO and oversight
+the same day when RO1 became a release of its own); **nothing beyond 2.9.7 starts without the product owner's go**. **2.9.20 to 2.9.22** (IFRS 9 expected credit loss; financial crime in two parts) were added by the product owner on 2026-11-02, placement to confirm. Earlier placements in the lens, cube, CRO, CIO and oversight
 documents (2.9.8, 2.9.9 and later) are moved onto this plan; a candidate not named here is listed under
 [Unscheduled](#unscheduled-candidates).
 
@@ -811,6 +811,9 @@ documents (2.9.8, 2.9.9 and later) are moved onto this plan; a candidate not nam
 | **2.9.17** (proposed) | XVA and wrong-way risk | CVA; BA-CVA; SA-CVA; MVA and KVA; wrong-way risk; each with its playground |
 | **2.9.18** (proposed) | Advanced market risk | **(L)** FRTB-IMA; **(L)** QLRisk pre-deal |
 | **2.9.19** (proposed) | Executive | **(L)** the CRO and CIO lens builds; liquidity, capital and climate (climate an optional supplied-input tile, off by default) |
+| **2.9.20** (proposed; product owner 2026-11-02; placement to confirm) | IFRS 9 expected credit loss | **(L)** the ECL engine (staging with reasons and cure, PD from curves or migration matrices, LGD with collateral, EAD with CCF, discounting at the EIR, weighted scenarios, POCI); **(L)** why the provision moved (S0 to S10, the IFRS 7.35H table); the credit-risk pack and demo loan book; overlays with four eyes; the playground and workbook; the screens after mock-ups ([IFRS9_ECL.md](IFRS9_ECL.md)) |
+| **2.9.21** (proposed; product owner 2026-11-02; placement to confirm) | Financial crime I: AML core | **(L)** transaction monitoring on the scenario framework, with the threshold-tuning playground; **(L)** alerts and case management on write-back with the data-protection rules; customer risk rating; FINTRAC STR, LCTR and EFTR; rule effectiveness ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
+| **2.9.22** (proposed; product owner 2026-11-02; placement to confirm) | Financial crime II: screening, surveillance, networks, fraud | **(L)** sanctions and PEP screening; **(L)** trade surveillance (orders, ticks, five market-abuse scenarios, the replay); network analytics; fraud scoring; each with its playground ([FINANCIAL_CRIME.md](FINANCIAL_CRIME.md)) |
 
 ## 2.9.8: market-risk regulatory foundation and debugging (planned)
 
@@ -1078,6 +1081,9 @@ pack). New pack fragments: `breach-detail@1`, `quality-exception@1`. New compute
 | CVA, BA-CVA, SA-CVA | 2.9.17 (proposed) |
 | FRTB-IMA | 2.9.18 (proposed) |
 | MVA, KVA | 2.9.17 (proposed) |
+| IFRS 9 ECL and its movement | 2.9.20 (proposed) |
+| Threshold tuning, CRR | 2.9.21 (proposed) |
+| Screening, surveillance, network, fraud | 2.9.22 (proposed) |
 
 ### Unscheduled candidates
 
@@ -1085,6 +1091,37 @@ Kept as candidates with no release; each waits for the product owner: **cluster*
 **oversight** RO5, RO6, RO7, RO8, RO9, RO12 (the Oversight lens, after RO1 and RO2), RO14; **cubes** MC11 (corrections), CC10 (stressed
 EEPE and CVA), CC11 (collateral and margin views); **CIO** CIO14 (cloud cost per desk); **lenses** RL10, TL1, TL4b, TL9, TL11, TL13 ("my"
 from the directory, later by decision), ML5, ML6, ML8, ML10, WL1 to WL11. RL7 (stress in Risk) is closed by decision: kept hidden.
+
+## 2.9.20: IFRS 9 expected credit loss (proposed)
+
+*Proposed; product owner 2026-11-02; placement to confirm. The design: [IFRS9_ECL.md](IFRS9_ECL.md) (its build checklist, section 21).*
+
+| # | Part | What |
+|---|---|---|
+| 1 | The credit-risk pack | the contracts (facility, staging attributes, PD curve, migration matrix, LGD, collateral, macro scenario) and the seeded demo loan book of 10,000 facilities (M) |
+| 2 | **The ECL engine (L)** | staging with reasons and cure; PD, LGD, EAD, discounting; weighted scenarios; POCI; its own engine file, off as shipped |
+| 3 | Overlays | Drishti-owned, four-eyes approval through write-back (S) |
+| 4 | Scopes and captures | any cut, FX, the cluster partial sums, the API and CLI, month-end captures (M) |
+| 5 | **Why the provision moved (L)** | S0 to S10 per facility and scope, the order setting, sentences, the IFRS 7.35H table |
+| 6 | The playground and workbook | live formulas equal to the engine, the switches, recipes (M) |
+| 7 | The screens | after the mock-ups are chosen: provision, why it moved, staging monitor, facility (M) |
+
+## 2.9.21 and 2.9.22: financial crime (AML, fraud, FCU) (proposed)
+
+*Proposed; product owner 2026-11-02; placement to confirm. **Split in two** to keep two large items each. The design:
+[FINANCIAL_CRIME.md](FINANCIAL_CRIME.md) (its build checklist, section 21). Drishti provides explainable, testable engines; the bank's FCU
+owns the rules, models and reporting decisions.*
+
+| # | Release | Part | What |
+|---|---|---|---|
+| 1 | 2.9.21 | The financial-crime pack | contracts and a seeded synthetic population with planted, labelled patterns (M) |
+| 2 | 2.9.21 | **Transaction monitoring (L)** | the scenario framework (windows in one pass, segments, suppression, below-the-line events) and eight starting scenarios |
+| 3 | 2.9.21 | The threshold-tuning playground | above and below the line, alert-to-STR rates, sample sizes, in Excel (M) |
+| 4 | 2.9.21 | **Alerts and cases (L)** | states, queues, SLAs, four eyes, pinned evidence, audit; roles, masking, the tipping-off rule, retention |
+| 5 | 2.9.21 | Customer risk rating, FINTRAC reports, effectiveness | CRR with its playground (M); STR, LCTR, EFTR on the report framework (M); effectiveness and the model inventory (S) |
+| 6 | 2.9.22 | **Sanctions and PEP screening (L)** | lists, transliteration, blocking, scores, audited discounting, rescreening |
+| 7 | 2.9.22 | **Trade surveillance (L)** | order events and ticks, spoofing, wash trades, front-running, marking the close, insider timing, the replay |
+| 8 | 2.9.22 | Network analytics, fraud scoring | the graph and five patterns (M); streaming rules and a transparent scorecard (M) |
 
 ## High-performance native integration (proposed)
 

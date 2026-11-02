@@ -17,6 +17,13 @@
 
 ## Unreleased (on develop, after 2.9.10.a)
 
+- **Designs: IFRS 9 expected credit loss and financial crime (docs only; product owner, 2026-11-02).**
+  [IFRS9_ECL.md](docs/architecture/IFRS9_ECL.md) designs the impairment engine (staging with SICR, backstop, exemption and cure; PD from
+  curves or migration matrices; LGD with collateral; EAD with CCF; EIR discounting; weighted scenarios; overlays with four eyes; POCI;
+  why the provision moved in exact steps; contracts, playground, hand-built cases). [FINANCIAL_CRIME.md](docs/architecture/FINANCIAL_CRIME.md)
+  designs the FCU engines (trade surveillance, transaction monitoring with threshold tuning, network analytics, customer risk rating,
+  sanctions and PEP screening, fraud scoring, alerts and cases, FINTRAC STR, LCTR and EFTR, rule effectiveness, data protection). The
+  plan proposes 2.9.20 (IFRS 9) and 2.9.21 and 2.9.22 (financial crime, split in two), placement to confirm.
 - **VaR by trader on the server (2.9.11 row 9; [VAR_GUIDE.md section 11.3](docs/guides/VAR_GUIDE.md#113-path-and-contributions)).**
   `GET /api/v1/var/scope/contributions?by=attribute:<COLUMN>` groups every trade of the scope by its value of a trade column and sums
   each group's vector in Java over all its trades (never cut to `max-parts`), so the groups' component VaR adds up to the scope's VaR. The
