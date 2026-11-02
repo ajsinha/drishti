@@ -209,7 +209,7 @@ haircuts), MC (the call), EXP (collateral on each path) and CVA (via EXP). Today
 | `ROUNDING` | amount | DOUBLE | optional | R | CSA ccy | ≥ 0 | rounding unit of a transfer; 0 none | `10000` |
 | `ROUNDING_METHOD` | text | STRING | optional | R | | | `DELIVERY_UP_RETURN_DOWN` (ISDA default), `NEAREST`, `UP`, `DOWN` | `DELIVERY_UP_RETURN_DOWN` |
 | `MARGIN_FREQUENCY_DAYS` | integer | DOUBLE | required | R | business days | | remargining period (today `FREQUENCY: Daily` → 1) | `1` |
-| `MPOR_DAYS` | integer | DOUBLE | required | R | business days | | margin period of risk the bank assumes (today text) | `10` |
+| `MPOR_DAYS` | integer | DOUBLE | required | R | business days | | margin period of risk the bank assumes, **excluding the remargining period** (SA-CCR adds F − 1 after the floor; product owner, 2026-11-02) (today text) | `10` |
 | `DISPUTES_LAST_2Q` | integer | DOUBLE | optional | R | | | margin disputes longer than the MPOR in the last two quarters (SA-CCR doubles the MPOR above 2) | `0` |
 | `ILLIQUID_COLLATERAL` | boolean | STRING | optional | R | | | illiquid collateral or hard-to-replace trades in the set (MPOR floor 20 days) | `false` |
 | `IM_MODEL` | text | STRING | optional | R | | | `SIMM`, `SCHEDULE`, `NONE` (IM is [SIMM.md](SIMM.md)'s) | `NONE` |

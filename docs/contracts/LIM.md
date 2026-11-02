@@ -317,7 +317,7 @@ answered only to callers who may see the counterparty at `trades` level; sales u
 
 ## 13. Test data and generators
 
-`tools/packgen/ccr/terms.py` (planned): one counterparty limit per counterparty with five buckets (0–1Y, 1–3Y, 3–5Y, 5–10Y, 10Y+) set from
+`tools/packgen/ccr/terms.py` (planned): one counterparty limit per counterparty with three buckets (0–1Y, 1–5Y, 5Y+; product owner, 2026-11-02; the contract keeps any number) set from
 the **computed** PFE profile × a headroom factor (most `OK`, three `WARNING`, one `BREACH`, one `EXCESS_APPROVED`, one past review), one
 SA-CCR EAD limit for each bank counterparty, two group limits (GRP.md), one settlement limit. Files `data/testdata/counterparty-risk/credit-limit/`.
 
