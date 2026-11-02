@@ -112,6 +112,21 @@ def test_the_tab_explains_the_change_in_steps_that_add_up(stack, browser):
     assert "VaR of" in pg.evaluate("(%s).innerText" % shadow(pg, '[data-panel="answer"]'))
     shot(pg, "why-it-moved-sentences")
 
+    # the console's active theme, not the library's own default (parchment on a light operating system), and a switch follows at once
+    pg.emulate_media(color_scheme="light")
+    page_theme = pg.evaluate("document.documentElement.getAttribute('data-theme')")
+    assert pg.get_attribute("[data-vw-host]", "data-theme") == page_theme
+    bg = "getComputedStyle(document.querySelector('[data-vw-host]')).backgroundColor"
+    before = pg.evaluate(bg)
+    other = "light" if page_theme != "light" else "terminal"
+    pg.evaluate("document.querySelector('[data-theme-choice=\"%s\"]') ? document.querySelector('[data-theme-choice=\"%s\"]').click()"
+                " : document.dispatchEvent(new CustomEvent('drishti:theme', {detail: '%s'}))" % (other, other, other))
+    if pg.evaluate("document.documentElement.getAttribute('data-theme')") != other:   # no picker on the page: set it as the picker does
+        pg.evaluate("document.documentElement.setAttribute('data-theme', '%s'); document.dispatchEvent(new CustomEvent('drishti:theme', {detail: '%s'}))" % (other, other))
+    wait(pg, "document.querySelector('[data-vw-host]').getAttribute('data-theme') === '%s'" % other)
+    assert pg.evaluate(bg) != before
+    pg.emulate_media(color_scheme="no-preference")
+
     # F1 on the tab: the guide's section
     pg.keyboard.press("F1")
     pg.wait_for_url("**/help/**")
