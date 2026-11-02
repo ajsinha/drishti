@@ -66,7 +66,10 @@ settings:
   root: mem://news
 ```
 
-The store and its tables, in the server's configuration (`application.local.yaml` in its working folder, or the environment):
+The store and its tables, in the in-memory lake's own file `config/engines/memory-lake.yaml` (with its switch,
+`drishti.engines.memory-lake.enabled`, off as shipped: set it to `true`, or turn it on in Admin → Engines, then restart, since the
+stores' caps size the direct memory at start; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), or as
+before in `application.local.yaml` in the server's working folder or the environment (stores configured there keep the lake on):
 
 ```yaml
 # config/examples/in-memory-lake.yaml

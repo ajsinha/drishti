@@ -142,3 +142,28 @@ def test_the_comment_reader():
     assert S.env_names("${A_B:${C_D:x}}") == ["A_B", "C_D"]
     assert S.since("2.9.7 (RESOURCES_AND_SCALE.md 6.4): the log") == "2.9.7" and S.since("section 5.6") == ""
     assert cat.is_secret("drishti.security.secret") and not cat.is_secret("drishti.bi.ai.max-tokens")
+
+
+def test_the_engines_area_lists_every_engine_file_key_and_the_old_names(tmp_path, monkeypatch):
+    """COMPUTE_ENGINES.md section 12: the Engines area holds every key of every config/engines/*.yaml (the server area none of them), the
+    old switch names once each, and --check fails when a file and its jar copy differ or a key is in both application.yaml and a file."""
+    rows, problems = cat.engine_rows()
+    assert not problems, problems
+    keys = {r.key for r in rows}
+    for f in sorted((ROOT / "config" / "engines").glob("*.yaml")):
+        eid = f.stem
+        assert f"drishti.engines.{eid}.enabled" in keys, eid
+    assert {"drishti.var.hot-dates", "drishti.regulatory.average-days", "drishti.ccr.exposure.alpha", "drishti.frtb.max-factors",
+            "drishti.simm.max-factors", "drishti.sensitivities.factor-kind", "drishti.lake.memory.job-threads"} <= keys
+    assert {"drishti.var.enabled", "drishti.ccr.exposure.enabled", "drishti.frtb.enabled", "drishti.simm.enabled"} <= keys
+    server = {r.key for r in cat.yaml_rows("server", [ROOT / "drishti-server/src/main/resources/application.yaml"], "server", "restart")}
+    assert not {k for k in server if k.startswith(("drishti.var.", "drishti.frtb.", "drishti.simm.", "drishti.ccr.exposure.", "drishti.lake.memory."))}
+    # a site copy that differs from the jar's is a problem the check names
+    site = tmp_path / "engines"
+    site.mkdir()
+    for f in (ROOT / "config" / "engines").glob("*.yaml"):
+        (site / f.name).write_bytes(f.read_bytes())
+    (site / "fva.yaml").write_text((site / "fva.yaml").read_text() + "# edited\n")
+    monkeypatch.setattr(cat, "ENGINES_DIR", site)
+    _, problems = cat.engine_rows()
+    assert any("fva.yaml differs from its jar copy" in p for p in problems), problems

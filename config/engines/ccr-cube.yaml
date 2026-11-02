@@ -1,0 +1,22 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/ccr-cube.yaml: the counterparty cube (not installed in this release). Read at start, imported by application.yaml after the jar's copy of this
+# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    ccr-cube:
+      enabled: ${DRISHTI_CCR_CUBE_ENABLED:false}   # run the counterparty cube on this node once it is installed (its settings will live under drishti.cube.ccr.*)
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)

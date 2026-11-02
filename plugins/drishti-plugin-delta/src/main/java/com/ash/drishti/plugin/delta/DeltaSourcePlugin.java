@@ -1273,6 +1273,50 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return out;
     }
 
+    /**
+     * The date's Parquet files and the promoted columns, for the pivot engine's direct lake route: only for a snapshot table (one partition
+     * holds the date) on a local disk, without deletion vectors (a reader of the bare files would see deleted rows). No data file is read.
+     */
+    @Override
+    public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
+        if ("effective".equals(modes.get(kind)) || tables.get(kind) == null) {
+            return Optional.empty();
+        }
+        Optional<DeltaTable.Layout> l = readableLayout(kind, asOf.knownAt());
+        if (l.isEmpty() || l.get().deletionVectors()) {
+            return Optional.empty();
+        }
+        List<LocalDate> dates = candidates(kind, l.get(), asOf.businessDate());
+        if (dates.isEmpty()) {
+            return Optional.empty();
+        }
+        LocalDate d = dates.get(0);
+        List<String> files = new ArrayList<>();
+        long bytes = 0;
+        for (io.delta.kernel.data.Row r : l.get().files().getOrDefault(d, List.of())) {
+            io.delta.kernel.utils.FileStatus fs = io.delta.kernel.internal.InternalScanFileUtils.getAddFileStatus(r);
+            String path = fs.getPath();
+            if (path.startsWith("file:")) {
+                path = java.nio.file.Path.of(java.net.URI.create(path)).toString();
+            } else if (path.contains("://")) {
+                return Optional.empty();                       // an object store: the connector reads it
+            }
+            files.add(path);
+            bytes += fs.getSize();
+        }
+        if (files.isEmpty()) {
+            return Optional.empty();
+        }
+        long rows = -1;
+        try {
+            rows = rowEstimate(kind, d).map(com.ash.drishti.api.RowEstimate::rows).orElse(-1L);
+        } catch (RuntimeException e) {
+            rows = -1;
+        }
+        return Optional.of(new com.ash.drishti.api.LakeFiles("delta", files, promotedColumns(kind, l.get()), tables.get(kind).idColumn(), d,
+                bytes, rows));
+    }
+
     @Override
     public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) {
         Optional<DeltaTable.Layout> l = readableLayout(kind, asOf.knownAt());

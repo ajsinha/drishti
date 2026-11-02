@@ -108,11 +108,14 @@ public class PivotConfiguration {
 
     @Bean
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, States states, ObjectProvider<VarService> var,
-            ObjectProvider<AdmissionGate> gate) {
+            ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         List<PivotProvider> providers = new ArrayList<>();
         VarService v = var.getIfAvailable();
         if (v != null) {
-            providers.add(new VarPivotProvider(v));
+            providers.add(new VarPivotProvider(v, () -> {
+                com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
+                return r == null || !r.known("var") || r.running("var");
+            }));
         }
         providers.add(new TabularProvider(exec, kinds));
         PivotCore core = new PivotCore(providers, states, props.core());
@@ -121,6 +124,19 @@ public class PivotConfiguration {
             core.admission((viewer, what) -> g.admit(Work.PIVOT_VIEW, viewer.user(), what));
         }
         return core;
+    }
+
+    /**
+     * The pivot engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md, {@code config/engines/pivot.yaml}): off, its API answers
+     * 404 DRS-1020, the PIVOT word, the menu entry, Help pages and the CLI's pivot commands are gone, and its partial states and staged
+     * tables are released.
+     */
+    @Bean
+    public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, DuckDbExecutor exec) {
+        return new com.ash.drishti.server.engines.BasicEngine("pivot").onStop(() -> {
+            states.clear();
+            kinds.release(exec);
+        }).memory(states::bytes);
     }
 
     @Bean

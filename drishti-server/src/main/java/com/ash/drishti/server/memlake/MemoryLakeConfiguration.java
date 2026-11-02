@@ -37,9 +37,13 @@ import org.springframework.context.event.EventListener;
 public class MemoryLakeConfiguration {
 
     @Bean(destroyMethod = "close")
-    public MemoryLake memoryLake(MemoryLakeProperties props, SourceRegistry registry,
+    public MemoryLake memoryLake(MemoryLakeProperties configured, SourceRegistry registry,
             ObjectProvider<com.ash.drishti.server.net.NetService> net,
-            ObjectProvider<com.ash.drishti.server.admission.RequestsInFlight> inFlight) {
+            ObjectProvider<com.ash.drishti.server.admission.RequestsInFlight> inFlight,
+            ObjectProvider<com.ash.drishti.server.engines.EngineSwitches> switches) {
+        // off (config/engines/memory-lake.yaml, COMPUTE_ENGINES.md): no store, no table, no job; on needs a restart (the direct-memory limit)
+        com.ash.drishti.server.engines.EngineSwitches sw = switches.getIfAvailable();
+        MemoryLakeProperties props = sw == null || sw.of("memory-lake").on() ? configured : MemoryLakeProperties.none();
         Set<String> owned = ownedHere(net.getIfAvailable());
         com.ash.drishti.server.admission.RequestsInFlight f = inFlight.getIfAvailable();
         MemoryLake lake = new MemoryLake(props, new ReplenishSource(registry), owned, () -> f == null || f.counter().get() <= 1);
@@ -47,6 +51,16 @@ public class MemoryLakeConfiguration {
         lake.onChange(() -> registry.plugins().stream().filter(com.ash.drishti.api.SourcePlugin::memoryOnly)
                 .forEach(com.ash.drishti.api.SourcePlugin::refreshVersions));
         return lake;
+    }
+
+    /**
+     * The in-memory lake as a compute engine (docs/architecture/COMPUTE_ENGINES.md): off live releases its stores; on needs a restart (the
+     * launchers add the stores' caps to the direct-memory limit at start), so Admin, Engines writes the file and says "restart needed".
+     */
+    @Bean
+    public com.ash.drishti.server.engines.BasicEngine memoryLakeComputeEngine(MemoryLake lake) {
+        return new com.ash.drishti.server.engines.BasicEngine("memory-lake").onStop(lake::close).memory(lake::usedBytes)
+                .threads("memory-lake-");
     }
 
     /** node.yaml {@code memory-stores} when this node is in a cluster and names some; otherwise null (each store's {@code owner}). */

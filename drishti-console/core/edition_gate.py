@@ -18,6 +18,7 @@ feature or Admin page the edition (or the person's lens) hides, or that a consol
 with every switch on (the defaults) nothing is refused: the full Drishti, as before."""
 from __future__ import annotations
 
+from core import engines
 from core.edition import ADMIN_PAGES, FEATURE_PATHS, WORD_PATHS, Edition
 
 
@@ -47,6 +48,9 @@ def _under(path: str, prefixes: tuple) -> bool:
 
 def hidden(request, edition: Edition, path: str) -> str | None:
     """Why the page is hidden for this request (a short reason), or None when it is shown."""
+    off = engines.path_engine(path)                                 # a compute engine that runs nowhere (COMPUTE_ENGINES.md 5.2)
+    if off is not None:
+        return f"{off.get('title') or off.get('id')} is not running on this server, and no other server of this cluster runs it"
     for word, prefixes in WORD_PATHS.items():
         if _under(path, prefixes) and not edition.word_on(word):
             return f"{word} is not part of {edition.title}"

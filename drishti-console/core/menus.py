@@ -23,6 +23,7 @@ from urllib.parse import quote
 
 import yaml
 
+from core import engines
 from core.edition import Edition
 from core.edition_gate import feature_on
 
@@ -69,6 +70,8 @@ def _holds(request, edition: Edition, need: str, ctx: dict) -> bool:
         return edition.typed_shown(value)
     if kind == "route":
         return _has_route(request, value)
+    if kind == "engine":                                         # requires: engine:frtb-sa (COMPUTE_ENGINES.md 5.2)
+        return engines.engine_available(value)
     return True
 
 
@@ -126,7 +129,7 @@ def lens_links(request) -> list[dict]:
     out = [{"href": "/lens/leave", "label": f"Leave {current.title}", "leave": True, "name": current.name}] if current.lens else []
     verb = "Switch to" if current.lens else "Open"
     out += [{"href": f"/lens/{n}", "label": f"{verb} {e.title}", "leave": False, "name": n} for n, e in sorted(editions.lenses.items())
-            if n != current.name or not current.lens]
+            if (n != current.name or not current.lens) and not engines.lens_hidden(n)]   # a lens whose engine runs nowhere (MR cube)
     return out
 
 
@@ -151,7 +154,7 @@ def top_bar(request, ctx: dict) -> list:
             for it in col.get("items") or []:
                 if not all(_holds(request, edition, str(n), ctx) for n in it.get("requires") or []):
                     continue
-                if not edition.menu_shown(mid, str(it.get("id") or "")):
+                if not edition.menu_shown(mid, str(it.get("id") or "")) or engines.menu_hidden(str(it.get("id") or "")):
                     continue
                 items.append((_href(it), it.get("icon"), _text(it.get("label"), fill), _text(it.get("desc"), fill), it.get("match"),
                               str(it.get("cmd") or it.get("fill") or "")))

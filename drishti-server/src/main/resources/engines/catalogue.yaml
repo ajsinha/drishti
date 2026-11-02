@@ -1,0 +1,336 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The engine catalogue (docs/architecture/COMPUTE_ENGINES.md section 2): every compute engine of the product, what it needs and uses, and
+# everything it brings to the screen. Part of the product: the server reads it from its jar (engines/catalogue.yaml), the console its copy
+# (drishti-console/config/engines.yaml, the same bytes: a test checks it). A site's config/engines/<id>.yaml holds only the switch and the
+# engine's settings. An engine still to be built is listed with installed: false: the switch framework knows it, Admin -> Engines shows it
+# as not installed, and its build only registers its ComputeEngine bean (and sets installed: true here).
+#
+# Per engine: id, title, about, file (config/engines/<file>), switch (its key), env (the switch's environment variable), aliases (the old
+# switch names, still accepted: DRS-1024), shipped (the switch as shipped), installed, live-on (false: turning it on needs a restart),
+# prefixes (the settings it owns), needs (hard, on the same node: refused without them, DRS-1021), uses (soft: its parts that read the other
+# are hidden), api (server path prefixes: 404 DRS-1020 when it runs nowhere), console (console path prefixes; "=/path" is that path only),
+# words (command words; "PLAY VAR" is two), menus (item ids of drishti-console/config/menus.yaml), help (help.yaml slugs), landings, tiles
+# (Home quick cards by title), lenses, bi (BI dataset id prefixes), cli (drishti.py commands), playgrounds, connectors (its own), kinds
+# (computed here), inputs (engine-input kinds it reads: not read ahead on a node where no running engine reads them), ai-tools.
+engines:
+  - id: var
+    title: VaR
+    about: "VaR, ES, stressed VaR, the what-if, why it moved, regulatory VaR (backtesting, report runs, sign-off)"
+    file: var.yaml
+    switch: drishti.engines.var.enabled
+    env: DRISHTI_VAR_ENABLED
+    aliases: [drishti.var.enabled]
+    shipped: true
+    installed: true
+    live-on: true
+    prefixes: [drishti.var, drishti.regulatory]
+    needs: []
+    uses: []
+    api: [/api/v1/var]
+    console: [/var, /api/var/, /smat, /api/smat/, "=/play", /api/play/, /admin/scopes]
+    words: [VAR, "VAR EXPLAIN", SMAT, "PLAY VAR", SWIN]
+    menus: [var-explorer, smat, play-var, backtesting, stress-window]
+    help: [docs-guides-var-guide, docs-tutorials-25-var-from-the-bank-to-a-trade, docs-guides-regulatory-var-reporting]
+    landings: []
+    tiles: [VaR of the bank, VaR of the rates desk]
+    lenses: []
+    bi: [market-risk-var-]
+    cli: [var, play var]
+    playgrounds: [var]
+    connectors: [var-engine, var-positions, var-pv-stream]
+    kinds: [var-result]
+    inputs: [pnl-vector, scenario-pv]
+    ai-tools: []
+  - id: exposure
+    title: Exposure
+    about: "EE, ENE, PFE, EPE, EEPE, the exposure what-if and its playground"
+    file: exposure.yaml
+    switch: drishti.engines.exposure.enabled
+    env: DRISHTI_EXPOSURE_ENABLED
+    aliases: [drishti.ccr.exposure.enabled]
+    shipped: true
+    installed: true
+    live-on: true
+    prefixes: [drishti.ccr.exposure]
+    needs: []
+    uses: []
+    api: [/api/v1/exposure]
+    console: [/exposure, /api/exposure/]
+    words: [EXP, "PLAY EXP", XWIF]
+    menus: [exp-explorer, exp-cpty, exp-nset, xwif]
+    help: [docs-guides-exposure-guide]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: [counterparty-exposure-, live-exposure]
+    cli: [exposure]
+    playgrounds: [exposure]
+    connectors: [exposure-engine]
+    kinds: [exposure-result]
+    inputs: [exposure-path, simulation-run]
+    ai-tools: []
+  - id: sensitivities
+    title: Sensitivities
+    about: "Position sensitivities and the factor dictionary: load, checks, sums by bucket"
+    file: sensitivities.yaml
+    switch: drishti.engines.sensitivities.enabled
+    env: DRISHTI_SENSITIVITIES_ENABLED
+    aliases: []
+    shipped: true
+    installed: true
+    live-on: true
+    prefixes: [drishti.sensitivities]
+    needs: []
+    uses: []
+    api: [/api/v1/sensitivities, /api/v1/risk-factors]
+    console: [/api/frtb/sensitivities, /api/frtb/risk-factors]
+    words: []
+    menus: []
+    help: []
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [sens]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: [position-sensitivity]
+    ai-tools: []
+  - id: frtb-sa
+    title: FRTB-SA
+    about: "FRTB-SA: the sensitivities-based method, DRC, RRAO and its playground"
+    file: frtb-sa.yaml
+    switch: drishti.engines.frtb-sa.enabled
+    env: DRISHTI_FRTB_ENABLED
+    aliases: [drishti.frtb.enabled]
+    shipped: true
+    installed: true
+    live-on: true
+    prefixes: [drishti.frtb]
+    needs: [var, sensitivities]
+    uses: []
+    api: [/api/v1/frtb]
+    console: [/frtb, /play/frtb, /api/frtb/]
+    words: [FRSA, "PLAY FRTB"]
+    menus: [frsa, play-frtb]
+    help: [docs-guides-frtb-sa-guide, docs-tutorials-30-frtb-sa-from-the-cases-to-a-desk]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: [market-risk-frtb-]
+    cli: [frtb, play frtb]
+    playgrounds: [frtb]
+    connectors: []
+    kinds: []
+    inputs: [default-risk, residual-risk]
+    ai-tools: []
+  - id: simm
+    title: SIMM
+    about: "ISDA SIMM initial margin per netting set and regime, collect and post, and its playground"
+    file: simm.yaml
+    switch: drishti.engines.simm.enabled
+    env: DRISHTI_SIMM_ENABLED
+    aliases: [drishti.simm.enabled]
+    shipped: true
+    installed: true
+    live-on: true
+    prefixes: [drishti.simm]
+    needs: [sensitivities]
+    uses: [exposure]
+    api: [/api/v1/simm]
+    console: [/simm, /play/simm, /api/simm]
+    words: [SIMM, "PLAY SIMM"]
+    menus: [simm, play-simm]
+    help: [docs-guides-simm-guide, docs-tutorials-32-simm-from-the-examples-to-a-netting-set]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [simm, play simm]
+    playgrounds: [simm]
+    connectors: []
+    kinds: []
+    inputs: [simm-addon, crif-external]
+    ai-tools: []
+  - id: sa-ccr
+    title: SA-CCR
+    about: "SA-CCR exposure at default and its playground"
+    file: sa-ccr.yaml
+    switch: drishti.engines.sa-ccr.enabled
+    env: DRISHTI_SACCR_ENABLED
+    aliases: []
+    shipped: false
+    installed: false
+    live-on: true
+    prefixes: [drishti.ccr.saccr]
+    needs: []
+    uses: []
+    api: [/api/v1/saccr]
+    console: [/saccr, /play/saccr, /api/saccr/]
+    words: [SACCR, "PLAY SACCR"]
+    menus: [saccr, play-saccr]
+    help: []
+    landings: []
+    tiles: []
+    lenses: []
+    bi: [counterparty-saccr-]
+    cli: [saccr]
+    playgrounds: [saccr]
+    connectors: []
+    kinds: [saccr-result]
+    inputs: [saccr-trade]
+    ai-tools: []
+  - id: fva
+    title: FVA
+    about: "Funding cost and benefit (the xVA engine; CVA and DVA join later) and its playground"
+    file: fva.yaml
+    switch: drishti.engines.fva.enabled
+    env: DRISHTI_FVA_ENABLED
+    aliases: []
+    shipped: false
+    installed: false
+    live-on: true
+    prefixes: [drishti.ccr.fva]
+    needs: [exposure]
+    uses: []
+    api: [/api/v1/fva]
+    console: [/fva, /play/fva, /api/fva/]
+    words: [FVA, "PLAY FVA"]
+    menus: [fva, play-fva]
+    help: []
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [fva]
+    playgrounds: [fva]
+    connectors: []
+    kinds: [fva-result]
+    inputs: []
+    ai-tools: []
+  - id: mr-cube
+    title: MR cube
+    about: "The market-risk cube: pivot, ladders, heat map, explain the move"
+    file: mr-cube.yaml
+    switch: drishti.engines.mr-cube.enabled
+    env: DRISHTI_MR_CUBE_ENABLED
+    aliases: []
+    shipped: false
+    installed: false
+    live-on: true
+    prefixes: [drishti.cube.mr]
+    needs: [var, pivot]
+    uses: [sensitivities, frtb-sa]
+    api: [/api/v1/cube/mr]
+    console: [/mcube, /api/mcube/]
+    words: [MCUBE]
+    menus: [mcube]
+    help: []
+    landings: [mr-cube]
+    tiles: []
+    lenses: [mr-cube]
+    bi: []
+    cli: [cube mr]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []
+  - id: ccr-cube
+    title: CCR cube
+    about: "The counterparty cube: limit board, allocation, group roll-up, pre-deal overlay"
+    file: ccr-cube.yaml
+    switch: drishti.engines.ccr-cube.enabled
+    env: DRISHTI_CCR_CUBE_ENABLED
+    aliases: []
+    shipped: false
+    installed: false
+    live-on: true
+    prefixes: [drishti.cube.ccr]
+    needs: [exposure]
+    uses: [sa-ccr, fva]
+    api: [/api/v1/cube/ccr]
+    console: [/ccube, /api/ccube/]
+    words: [CCUBE]
+    menus: [ccube]
+    help: []
+    landings: [ccr-cube]
+    tiles: []
+    lenses: [ccr-cube]
+    bi: []
+    cli: [cube ccr]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []
+  - id: memory-lake
+    title: In-memory lake
+    about: "Delta tables held in memory only, with their replenish jobs"
+    file: memory-lake.yaml
+    switch: drishti.engines.memory-lake.enabled
+    env: DRISHTI_MEMORY_LAKE_ENABLED
+    aliases: []
+    shipped: false
+    installed: true
+    live-on: false
+    prefixes: [drishti.lake.memory]
+    needs: []
+    uses: []
+    api: [/api/v1/admin/lakes/memory]
+    console: [/admin/api/lakes/memory]
+    words: []
+    menus: []
+    help: [in-memory-lake-guide]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [lake memory]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []
+  - id: pivot
+    title: Pivot
+    about: "The pivot engine: any table or VaR as a pivot, nested rows opened lazily, totals from their own members, exports"
+    file: pivot.yaml
+    switch: drishti.engines.pivot.enabled
+    env: DRISHTI_PIVOT_ENGINE_ENABLED
+    aliases: [drishti.pivot.enabled]
+    shipped: true
+    installed: true
+    live-on: true
+    prefixes: [drishti.pivot]
+    needs: []
+    uses: [var]
+    api: [/api/v1/pivot]
+    console: [/pivot, /api/pivot-engine/, /api/pivot-engine-export]
+    words: [PIVOT]
+    menus: [pivot]
+    help: [docs-guides-pivot-guide, docs-tutorials-33-the-pivot-engine]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [pivot]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []

@@ -48,6 +48,19 @@ public enum ErrorCode {
      * {@code allow-only}, so Admin → Packs, Deploy archive and the registry may not load another one.
      */
     EDITION_PACK_REFUSED("DRS-1017", 403),
+    /**
+     * A compute engine is not running on this server and no other server of the cluster runs it (docs/architecture/COMPUTE_ENGINES.md
+     * section 5.1): its API answers 404 in words, never 403 (nothing is forbidden; the engine is not here).
+     */
+    ENGINE_OFF("DRS-1020", 404),
+    /** An engine change refused by a dependency: turning on an engine whose needs are off, or off an engine another running one needs. */
+    ENGINE_DEPENDENCY("DRS-1021", 409),
+    /** An engine switched on in its file but not started: an engine it needs is off on this server (logged at start, shown on Health). */
+    ENGINE_BLOCKED("DRS-1022", 503),
+    /** The engine's file changed on disk since the page read it, or its folder cannot be written (DRISHTI_ENGINES_DIR). */
+    ENGINE_FILE_CONFLICT("DRS-1023", 409),
+    /** An old switch name still in use ({@code drishti.var.enabled} for {@code drishti.engines.var.enabled}): a warning at start, never an answer. */
+    ENGINE_OLD_KEY("DRS-1024", 400),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),

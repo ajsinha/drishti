@@ -126,6 +126,17 @@ public final class GroupingSetsCompiler {
             types.keySet().stream().sorted().forEach(n -> all.add("CAST(" + DuckDbExecutor.quote(n) + " AS VARCHAR)"));
             where.add("hash(" + String.join(", ", all) + ") % " + plan.shard().count() + " = " + plan.shard().index());
         }
+        // the filters again on the raw columns, so a Parquet reader skips row groups and files by their statistics (the grouped
+        // expressions below are the filter of record; these only let the scan read less)
+        for (Map.Entry<String, AggregationPlan.Filter> f : plan.filters().entrySet()) {
+            Dim d = plan.dims().get(f.getKey());
+            if (d == null || d.group() != null || !"string".equals(types.getOrDefault(d.field(), "string")) || f.getValue().in().isEmpty()
+                    || f.getValue().in().contains(CellKey.BLANK)) {
+                continue;
+            }
+            where.add(DuckDbExecutor.quote(d.field()) + " IN (" + marks(f.getValue().in().size()) + ")");
+            params.addAll(f.getValue().in());
+        }
         where.addAll(extraWhere);
         if (!where.isEmpty()) {
             b.append(" WHERE ").append(String.join(" AND ", where));

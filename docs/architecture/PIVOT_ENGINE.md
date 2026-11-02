@@ -1124,7 +1124,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] explain the difference; what-if overlays; view versions; cell comments
 - [ ] BI shadow mode, parity gate, models as sources, measures as functions
 - [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots
-- [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: the `drishti.pivot` keys in CONFIGURATION.md; the engine file when the engine switches merge)
+- [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
 - [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)

@@ -54,7 +54,7 @@ public final class VarCaches implements CacheReport.Owner {
     @Override
     public List<CacheReport> reports() {
         List<CacheReport> out = new ArrayList<>();
-        if (!svc.props().enabled()) {
+        if (!svc.running()) {
             return out;
         }
         out.add(CacheReport.of(ANSWERS, "var", "VaR answers per date, version, view and scope", "heap", svc.answers(),
