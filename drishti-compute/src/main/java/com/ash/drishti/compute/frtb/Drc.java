@@ -100,7 +100,8 @@ public final class Drc {
             double pnl = d.marketValue() - d.notional();
             double jtd = lgd * d.notional() + pnl;
             double gross = d.notional() >= 0 ? Math.max(jtd, 0) : Math.min(jtd, 0);
-            double scale = d.cashEquity() ? p.drcCashEquityYears : Math.min(Math.max(d.maturityYears(), p.drcMaturityFloor), p.drcMaturityCap);
+            double scale = d.cashEquity() ? (Double.isFinite(d.maturityYears()) ? d.maturityYears() : p.drcCashEquityYears)
+                    : Math.min(Math.max(d.maturityYears(), p.drcMaturityFloor), p.drcMaturityCap);
             Line l = new Line(d, lgd, gross, scale, gross * scale);
             lines.add(l);
             byObligor.computeIfAbsent(d.obligor(), x -> new ArrayList<>()).add(l);
@@ -131,7 +132,7 @@ public final class Drc {
                 carry = avail - used;
                 shortLeft += v[1] - used;
             }
-            double rw = bucket.equals("SOVEREIGN") && p.drcSovereignZero ? 0 : p.drcRw.get(q);
+            double rw = bucket.equals("SOVEREIGN") && p.drcSovereignZero && !q.equals("DEFAULTED") ? 0 : p.drcRw.get(q);
             obligors.add(new Obligor(e.getKey(), bucket, q, rw, bySen, carry, -shortLeft));
         }
         List<Bucket> buckets = new ArrayList<>();

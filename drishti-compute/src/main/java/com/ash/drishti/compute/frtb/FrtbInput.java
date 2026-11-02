@@ -71,13 +71,13 @@ public record FrtbInput(List<Position> positions, List<Element> elements, String
      * @param id the row's id
      * @param position the position's index in {@link #positions}, or −1 when it is not one of the scope's sensitivity positions
      * @param obligor the issuer or reference entity
-     * @param bucket {@code CORPORATE}, {@code SOVEREIGN} or {@code LOCAL_GOVT}
-     * @param seniority {@code COVERED}, {@code SENIOR}, {@code NON_SENIOR}, {@code EQUITY}, {@code DEFAULTED}
+     * @param bucket {@code CORPORATE}, {@code SOVEREIGN} or {@code LOCAL_GOVERNMENT_MUNICIPALITY}
+     * @param seniority {@code COVERED_BOND}, {@code SENIOR}, {@code NON_SENIOR}, {@code EQUITY}
      * @param creditQuality {@code AAA} ... {@code CCC}, {@code UNRATED}, {@code DEFAULTED}
      * @param notional the bond-equivalent notional, positive long (loses on default), negative short
      * @param marketValue the market value of the exposure
-     * @param maturityYears the instrument's residual maturity in years
-     * @param lgd an LGD override (documented exceptions), NaN for the parameter file's by seniority
+     * @param maturityYears the instrument's residual maturity in years; for cash equity the bank's 0.25 or 1, NaN for the parameter file's
+     * @param lgd an LGD override (a recovery-independent instrument: 1), NaN for the parameter file's by seniority
      * @param cashEquity true for a cash equity position (maturity scaling of MAR22.16)
      */
     public record DrcPosition(String id, int position, String obligor, String bucket, String seniority, String creditQuality, double notional,

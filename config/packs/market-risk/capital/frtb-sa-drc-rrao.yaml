@@ -18,25 +18,25 @@
 
 regime: BCBS-MAR22-23
 version: '2023-01-01.1'
-effective: '2023-01-01'
+effective-from: '2023-01-01'
 sources:
   drc: https://www.bis.org/basel_framework/chapter/MAR/22.htm
   rrao: https://www.bis.org/basel_framework/chapter/MAR/23.htm
 
 drc:
-  lgd:                                   # MAR22.12, by seniority
-    COVERED: 0.25
+  lgd:                                   # MAR22.12, by seniority (the default-risk input's SENIORITY)
+    COVERED_BOND: 0.25
     SENIOR: 0.75
     NON_SENIOR: 1.00
     EQUITY: 1.00
-    DEFAULTED: 1.00
-  seniority-order: [COVERED, SENIOR, NON_SENIOR, EQUITY, DEFAULTED]   # most senior first; MAR22.19-21: a short offsets a long of the same
-                                                                       # obligor when the short's seniority is the same or lower
+  recovery-independent-lgd: 1.00         # MAR22.12: an instrument whose value does not depend on the recovery (RECOVERY_INDEPENDENT)
+  seniority-order: [COVERED_BOND, SENIOR, NON_SENIOR, EQUITY]   # most senior first; MAR22.19-21: a short offsets a long of the same
+                                                                # obligor when the short's seniority is the same or lower
   maturity:                              # MAR22.15-18: the gross JTD scaled by min(max(M, floor), cap) years
     floor-years: 0.25
     cap-years: 1.0
     cash-equity-years: 1.0               # MAR22.16: 0.25 or 1, at the bank's choice (nothing between)
-  buckets: [CORPORATE, SOVEREIGN, LOCAL_GOVT]   # MAR22.22
+  buckets: [CORPORATE, SOVEREIGN, LOCAL_GOVERNMENT_MUNICIPALITY]   # MAR22.22
   risk-weights:                          # MAR22.24, by credit quality
     AAA: 0.005
     AA: 0.02

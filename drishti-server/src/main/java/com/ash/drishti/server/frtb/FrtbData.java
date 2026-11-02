@@ -197,6 +197,7 @@ public final class FrtbData {
             }
             List<Element> els = new ArrayList<>();
             Set<String> seen = new HashSet<>();
+            boolean normal = "NORMAL".equalsIgnoreCase(text(n, "VOL_CONVENTION"));    // decision 3: normal vols converted on load
             DataNode arr = n.get("SENSITIVITIES");
             boolean dup = false;
             for (int i = 0; arr != null && !arr.isMissing() && i < arr.size(); i++) {
@@ -221,8 +222,11 @@ public final class FrtbData {
                 if (bucket != null && f.frtbBucket() != null && !bucket.equals(f.frtbBucket()) && warnings.size() < 50) {
                     warnings.add(f.name() + ": the delivered bucket " + bucket + " differs from the dictionary's " + f.frtbBucket() + " (the dictionary wins)");
                 }
-                els.add(new Element(f.name(), m == null ? "" : m.toUpperCase(Locale.ROOT), v, text(e, "CURRENCY"), num(e, "SHOCK_SIZE"), num(e, "IMPLIED_VOL"),
-                        bucket));
+                double iv = num(e, "IMPLIED_VOL");
+                if (normal && "VEGA".equalsIgnoreCase(m)) {
+                    iv = iv / 100;                                    // VEGA per bp × σ in bp = VEGA × 100 × (σ_bp / 100)
+                }
+                els.add(new Element(f.name(), m == null ? "" : m.toUpperCase(Locale.ROOT), v, text(e, "CURRENCY"), num(e, "SHOCK_SIZE"), iv, bucket));
             }
             if (dup) {
                 refusals.merge("DRS-5325 the same factor and measure twice in a record (the record refused)", 1, Integer::sum);

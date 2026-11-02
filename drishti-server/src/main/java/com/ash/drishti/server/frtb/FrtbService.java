@@ -274,12 +274,14 @@ public final class FrtbService {
         List<FrtbInput.Position> positions = new ArrayList<>();
         List<FrtbInput.Element> elements = new ArrayList<>();
         Map<String, Integer> byTrade = new HashMap<>();
+        Map<String, Integer> byPosition = new HashMap<>();
         for (FrtbData.Record rec : s.records()) {
             int idx = positions.size();
             positions.add(new FrtbInput.Position(rec.positionKey(), rec.attributes().get("PRODUCT_TYPE"), rec.attributes()));
             if (rec.tradeId() != null) {
                 byTrade.put(rec.tradeId(), idx);
             }
+            byPosition.putIfAbsent(rec.positionKey(), idx);
             rec.tradeIds().forEach(t -> byTrade.putIfAbsent(t, idx));
             for (FrtbData.Element e : rec.elements()) {
                 String ccy = e.currency() == null ? reporting : e.currency().toUpperCase(Locale.ROOT);
@@ -298,14 +300,25 @@ public final class FrtbService {
             for (DataNode n : day.defaultRisk()) {
                 String trade = text(n, "TRADE_ID");
                 Integer idx = trade == null ? null : byTrade.get(trade);
+                if (idx == null && text(n, "POSITION_ID") != null) {
+                    idx = byPosition.get(text(n, "POSITION_ID"));
+                }
                 if (idx == null) {
                     continue;                                         // not in the scope
                 }
-                double usd = 1 / rep;
+                Double per = day.usdPer().get(text(n, "CURRENCY") == null ? "USD" : text(n, "CURRENCY").toUpperCase(Locale.ROOT));
+                if (per == null) {
+                    refused.merge("DRS-5324 no FX rate for a default-risk row's currency", 1, Integer::sum);
+                    continue;
+                }
+                double fx = per / rep;
                 String sen = text(n, "SENIORITY");
-                drc.add(new FrtbInput.DrcPosition(trade + "~" + text(n, "OBLIGOR") + "~" + sen, idx, text(n, "OBLIGOR"), bucketOf(text(n, "DRC_BUCKET")), sen,
-                        text(n, "CREDIT_QUALITY"), num(n, "NOTIONAL_USD") * usd, num(n, "MARKET_VALUE_USD") * usd, years(day.date(), text(n, "MATURITY_DATE")),
-                        num(n, "LGD"), "EQUITY".equalsIgnoreCase(sen)));
+                boolean cash = "EQUITY".equalsIgnoreCase(sen) && text(n, "MATURITY_DATE") == null;
+                String id = text(n, "DEFAULT_RISK_ID");
+                drc.add(new FrtbInput.DrcPosition(id != null ? id : trade + "~" + text(n, "OBLIGOR") + "~" + sen, idx, text(n, "OBLIGOR"),
+                        bucketOf(text(n, "DRC_BUCKET")), sen, text(n, "CREDIT_QUALITY"), num(n, "NOTIONAL") * fx, num(n, "MARKET_VALUE") * fx,
+                        cash ? num(n, "CASH_EQUITY_MATURITY") : years(day.date(), text(n, "MATURITY_DATE")),
+                        "true".equalsIgnoreCase(text(n, "RECOVERY_INDEPENDENT")) ? prm.drcRecoveryIndependentLgd : Double.NaN, cash));
             }
         }
         List<FrtbInput.RraoItem> rrao = null;
@@ -314,9 +327,10 @@ public final class FrtbService {
             for (DataNode n : day.residualRisk()) {
                 String trade = text(n, "TRADE_ID");
                 Integer idx = trade == null ? null : byTrade.get(trade);
-                if (idx != null) {
-                    rrao.add(new FrtbInput.RraoItem(trade, idx, positions.get(idx).productType(), text(n, "RRAO_TYPE"), num(n, "GROSS_NOTIONAL_USD") / rep,
-                            "true".equalsIgnoreCase(text(n, "BACK_TO_BACK")), "true".equalsIgnoreCase(text(n, "LISTED_OR_CLEARED"))));
+                Double per = day.usdPer().get(text(n, "CURRENCY") == null ? "USD" : text(n, "CURRENCY").toUpperCase(Locale.ROOT));
+                if (idx != null && per != null) {
+                    rrao.add(new FrtbInput.RraoItem(trade, idx, positions.get(idx).productType(), text(n, "RRAO_CLASS"), num(n, "GROSS_NOTIONAL") * per / rep,
+                            text(n, "BACK_TO_BACK_OF") != null, "true".equalsIgnoreCase(text(n, "LISTED_OR_CLEARABLE"))));
                 }
             }
         } else if (props.rraoFromPositions() && s.members() != null) {
@@ -338,7 +352,7 @@ public final class FrtbService {
             return "CORPORATE";
         }
         String u = b.strip().toUpperCase(Locale.ROOT);
-        return u.startsWith("SOV") ? "SOVEREIGN" : u.startsWith("LOCAL") ? "LOCAL_GOVT" : u;
+        return u.startsWith("SOV") ? "SOVEREIGN" : u.startsWith("LOCAL") ? "LOCAL_GOVERNMENT_MUNICIPALITY" : u;
     }
 
     private static double years(LocalDate d, String maturity) {

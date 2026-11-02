@@ -129,6 +129,7 @@ public final class FrtbParams {
     public final double fxCurvatureDivisor;
     // DRC
     public final Map<String, Double> drcLgd;
+    public final double drcRecoveryIndependentLgd;
     public final List<String> drcSeniority;
     public final double drcMaturityFloor;
     public final double drcMaturityCap;
@@ -213,6 +214,7 @@ public final class FrtbParams {
         fxVegaAlpha = num(sbm, "FX.vega.alpha", 0, 1);
         fxCurvatureDivisor = num(sbm, "FX.curvature.divisor", 1, 10);
         drcLgd = byName(drc, "drc.lgd", 0, 1);
+        drcRecoveryIndependentLgd = num(drc, "drc.recovery-independent-lgd", 0, 1);
         drcSeniority = texts(drc, "drc.seniority-order");
         drcMaturityFloor = num(drc, "drc.maturity.floor-years", 0, 1);
         drcMaturityCap = num(drc, "drc.maturity.cap-years", 0, 5);

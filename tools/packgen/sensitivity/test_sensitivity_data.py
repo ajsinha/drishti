@@ -41,8 +41,8 @@ import factor_dictionary as D  # noqa: E402
 import make_sensitivity_data as S  # noqa: E402
 
 TD = ROOT / "data" / "testdata"
-NAME = re.compile(r"^(IR/CURVE/[A-Z]{3}/[A-Z]+(/\d+[MY])?|INF/[A-Z]+/\d+Y|CR/SPREAD/[A-Z0-9.-]+(/(BOND|CDS)/\d+[MY])?|FX/SPOT/[A-Z]{3}|"
-                  r"EQ/(SPOT|REPO)/[A-Z0-9-]+|CM/PRICE/[A-Z]+/[A-Z_]+(/\d+[MY])?|VOL/(IR|FX|EQ|CM|CR)/[A-Z0-9./-]+?/\d+[MY](/\d+Y)?)$")
+NAME = re.compile(r"^(IR/CURVE/[A-Z]{3}(/[A-Z]+/\d+[MY])?|IR/BASIS/[A-Z]{3}|INF/[A-Z]+(/\d+Y)?|CR/SPREAD/[A-Z0-9.-]+(/(BOND|CDS)/\d+[MY])?|"
+                  r"FX/SPOT/[A-Z]{3}|EQ/(SPOT|REPO)/[A-Z0-9-]+|CM/PRICE/[A-Z]+(/[A-Z_]+/\d+[MY])?|VOL/(IR|FX|EQ|CM|CR)/[A-Z0-9./-]+?/\d+[MY](/\d+Y)?)$")
 FRTB_BUCKETS = {"CSR_NS": {str(b) for b in range(1, 19)}, "EQ": {str(b) for b in range(1, 14)}, "COMM": {str(b) for b in range(1, 12)}}
 MEASURES = {"DV01", "CS01", "IE01", "DELTA", "VEGA", "CURVATURE_UP", "CURVATURE_DOWN"}
 

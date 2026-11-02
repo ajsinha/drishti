@@ -179,6 +179,22 @@ class FrtbHandBuiltCasesTest {
     }
 
     @Test
+    void casesOneToFiveTogetherWithTheDefaultPublishedTable() {
+        // decision 10: MAR21.46's published table (0.970) by default; the exact formula (0.970446) is the switch, asserted above
+        FrtbSa.Result r = run(FrtbExamples.together(), FrtbChoices.defaults());
+        assertThat(r.sbm().charge("GIRR", "DELTA", 0)).isCloseTo(110_555.42, offset(CENT));
+        assertThat(r.sbm().charge("EQ", "DELTA", 0)).isCloseTo(150_000, offset(CENT));      // case 3's index delta, kept explicit
+        assertThat(r.sbm().charge("EQ", "CURVATURE", 0)).isCloseTo(30_000, offset(CENT));
+        assertThat(r.sbm().total[0]).isCloseTo(290_555.42, offset(CENT));
+        assertThat(r.sbm().total[1]).isCloseTo(281_286.72, offset(CENT));
+        assertThat(r.sbm().total[2]).isCloseTo(271_079.64, offset(CENT));
+        assertThat(r.total()).isCloseTo(566_732.73, offset(CENT));            // the parts rounded first add to .74; the engine adds them unrounded
+        // without the index's own delta charge (the design's curvature-only sum of cases 2 and 3): 140,555.42 and 416,732.73
+        assertThat(r.sbm().total[0] - r.sbm().charge("EQ", "DELTA", 0)).isCloseTo(140_555.42, offset(CENT));
+        assertThat(r.total() - r.sbm().charge("EQ", "DELTA", 0)).isCloseTo(416_732.73, offset(CENT));
+    }
+
+    @Test
     void case6SimmAggregationWithToyParameters() {
         double k = SimmMath.bucketK(new double[] {50 * -1000, 60 * 400}, new double[] {1, 1}, new double[][] {{1, 0.8}, {0.8, 1}}, true);
         assertThat(k).isCloseTo(34_000, offset(CENT));

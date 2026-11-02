@@ -79,10 +79,12 @@ fields:
 - name: REGIME
   type: text
   presence: required
-  description: 'The capital rule: US217 (12 CFR 217 subpart F, Basel 2.5) or OSFI-CAR9 (OSFI CAR chapter 9, FRTB).'
+  description: 'The capital rule: US217 (12 CFR 217 subpart F, Basel 2.5), BCBS-MAR (the Basel Framework MAR20 to MAR33, FRTB; the
+    reference regime of FRTB-SA, decision 4) or OSFI-CAR9 (OSFI CAR chapter 9, FRTB).'
   example: US217
   enum:
   - US217
+  - BCBS-MAR
   - OSFI-CAR9
 - name: MULTIPLIER_OVERRIDE
   type: rate
@@ -179,6 +181,7 @@ validation:
   field: REGIME
   values:
   - US217
+  - BCBS-MAR
   - OSFI-CAR9
 - rule: range
   field: MULTIPLIER_OVERRIDE

@@ -185,7 +185,7 @@ def elements(pos: Position) -> list[dict]:
             ladder(f"IR/CURVE/{ccy}/{curve}", D.GIRR_TENORS, "DV01", dv01)
             underlyings["IR"] = f"{ccy}/{curve}"
             if pos.option:
-                curv.append((f"IR/CURVE/{ccy}/{curve}", "GIRR", dv01 * CURVATURE_SHOCK["GIRR"], CURVATURE_SHOCK["GIRR"]))
+                curv.append((f"IR/CURVE/{ccy}", "GIRR", dv01 * CURVATURE_SHOCK["GIRR"], CURVATURE_SHOCK["GIRR"]))
         elif head == "INFL":
             index = D.INFLATION.get(part, "USCPI")
             ladder(f"INF/{index}", D.INF_TENORS, "IE01", -one_sigma / DAILY_SIGMA["INF"])
@@ -220,7 +220,7 @@ def elements(pos: Position) -> list[dict]:
             underlyings["CM"] = und
             if pos.option:
                 rw = CM_RW[D.COMMODITIES[und][2]]
-                curv.append((f"CM/PRICE/{und}/{loc}", "COMM", delta * rw * 100, rw))
+                curv.append((f"CM/PRICE/{und}", "COMM", delta * rw * 100, rw))
         elif head == "VOL":
             expiry = D.nearest_two(D.VEGA_EXPIRIES, pos.years)
             vega = one_sigma / DAILY_SIGMA["VOL"]

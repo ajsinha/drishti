@@ -1191,7 +1191,7 @@ final class FrtbPlaygroundBook {
             int row = drcLineFirst + i;
             s.row(row).text(0, in.id(), "input.text").text(1, in.obligor(), "input.text").text(2, in.bucket(), "input.text").text(3, in.seniority(), "input.text")
                     .text(4, in.creditQuality(), "input.text").number(5, in.notional(), "input.money").number(6, in.marketValue(), "input.money")
-                    .number(7, in.maturityYears(), "input.dec").number(8, in.cashEquity() ? 1 : 0, "input.int");
+                    .number(7, in.maturityYears(), "input.rate").number(8, in.cashEquity() ? 1 : 0, "input.int");
             if (Double.isFinite(in.lgd())) {
                 s.number(9, in.lgd(), "input.rate");
             }
@@ -1199,7 +1199,8 @@ final class FrtbPlaygroundBook {
             s.formula(11, "G" + row + "-F" + row, null, "money");
             s.formula(12, "K" + row + "*F" + row + "+L" + row, null, "money");
             s.formula(13, "IF(F" + row + ">=0,MAX(M" + row + ",0),MIN(M" + row + ",0))", c(l.gross()), "money");
-            s.formula(14, "IF(I" + row + "=1," + cf("DrcCashEquity") + ",MIN(MAX(H" + row + "," + cf("DrcFloor") + ")," + cf("DrcCap") + "))", c(l.scale()), "rate");
+            s.formula(14, "IF(I" + row + "=1,IF(ISNUMBER(H" + row + "),H" + row + "," + cf("DrcCashEquity") + "),MIN(MAX(H" + row + "," + cf("DrcFloor") + "),"
+                    + cf("DrcCap") + "))", c(l.scale()), "rate");
             s.formula(15, "N" + row + "*O" + row, c(l.scaled()), "money");
         }
         int lastLine = drcLineFirst + Math.max(1, d.lines().size()) - 1;
@@ -1221,7 +1222,7 @@ final class FrtbPlaygroundBook {
             Drc.Obligor o = d.obligors().get(i);
             int row = drcObligorFirst + i;
             s.row(row).text(0, o.obligor(), "text").text(1, o.bucket(), "text").text(2, o.quality(), "text");
-            s.formula(3, "IF(AND(B" + row + "=\"SOVEREIGN\"," + cf("DrcSovZero") + "=1),0,INDEX(" + lgdVals + ",MATCH(\"DrcRw.\"&C" + row + "," + lgdKeys + ",0)))",
+            s.formula(3, "IF(AND(B" + row + "=\"SOVEREIGN\"," + cf("DrcSovZero") + "=1,C" + row + "<>\"DEFAULTED\"),0,INDEX(" + lgdVals + ",MATCH(\"DrcRw.\"&C" + row + "," + lgdKeys + ",0)))",
                     c(o.rw()), "rate");
             String prevCarry = "0";
             for (int j = 0; j < nl; j++) {

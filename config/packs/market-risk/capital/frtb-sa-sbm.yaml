@@ -21,7 +21,7 @@
 
 regime: BCBS-MAR21
 version: '2023-01-01.1'
-effective: '2023-01-01'
+effective-from: '2023-01-01'
 source: https://www.bis.org/basel_framework/chapter/MAR/21.htm
 
 scenarios:                           # MAR21.6: applied to every rho and gamma below; for curvature to the squared correlation (MAR21.100-101)

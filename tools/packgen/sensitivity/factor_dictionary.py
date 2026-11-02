@@ -18,12 +18,16 @@ give it.
 
 The naming standard (decided): one text name per factor, slash-separated:
 
-    IR/CURVE/<ccy>/<curve>/<tenor>          a point of an interest-rate curve (GIRR delta); without the tenor, the curve (GIRR curvature)
+    IR/CURVE/<ccy>/<curve>/<tenor>          a point of an interest-rate curve (GIRR delta)
+    IR/CURVE/<ccy>                          the currency's curves together (GIRR curvature, MAR21.8)
+    IR/BASIS/<ccy>                          the cross-currency basis against USD (GIRR delta)
+    INF/<index>                             the inflation factor of the index's currency (GIRR delta, no tenor in FRTB)
     INF/<index>/<tenor>                     a point of an inflation curve (GIRR inflation)
     CR/SPREAD/<issuer>/<BOND|CDS>/<tenor>   a point of an issuer's spread curve (CSR delta); CR/SPREAD/<issuer>: the issuer (curvature)
     FX/SPOT/<ccy>                           the currency against the reporting currency (FX delta and curvature)
     EQ/SPOT/<underlying>, EQ/REPO/<name>    an equity price or repo rate (equity delta and curvature)
-    CM/PRICE/<underlying>/<location>/<tenor>  a commodity forward (commodity delta); without the tenor, the curve (curvature)
+    CM/PRICE/<underlying>/<location>/<tenor>  a commodity forward (commodity delta)
+    CM/PRICE/<underlying>                   the commodity, every location and tenor (commodity curvature, MAR21.13)
     VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]   an implied volatility (vega)
 
 Everything here is synthetic but shaped on the regulatory grids: the buckets, tenors and liquidity horizons follow Basel MAR21 and MAR33,
@@ -148,7 +152,11 @@ def factors() -> list[dict]:
     """Every factor of the demo dictionary, in name order (without the dates, which the generator adds)."""
     out: list[dict] = []
     for ccy, (curve, simm, lh) in CURVES.items():
-        out.append(_row(f"IR/CURVE/{ccy}/{curve}", "CURVE", "GIRR", ccy, curve, None, None, ccy, simm, None, "OIS", lh, f"CRV-{ccy}-{curve}"))
+        # the GIRR curvature factor is the currency (MAR21.8): every curve of it shifted together; the cross-currency basis a factor of
+        # its own (MAR21.8(1)(d))
+        out.append(_row(f"IR/CURVE/{ccy}", "CURVE", "GIRR", ccy, None, None, None, ccy, simm, None, None, lh, f"CRV-{ccy}"))
+        if ccy != "USD":
+            out.append(_row(f"IR/BASIS/{ccy}", "BASIS", "GIRR", ccy, None, None, None, ccy, simm, None, "XCcy", lh, f"XCCY-{ccy}USD"))
         for t in GIRR_TENORS:
             out.append(_row(f"IR/CURVE/{ccy}/{curve}/{t}", "CURVE", "GIRR", ccy, curve, None, t, ccy, simm, t.lower(), "OIS", lh,
                             f"CRV-{ccy}-{curve}#{t}"))
@@ -156,6 +164,8 @@ def factors() -> list[dict]:
             out.append(_row(f"VOL/IR/{ccy}/{curve}/{e}/10Y", "VOL", "GIRR", ccy, curve, curve, e, ccy, simm, e.lower(), None, 60,
                             f"VOL-{ccy}-{curve}-SWPN#{e}x10Y", underlying_tenor="10Y"))
     for ccy, index in INFLATION.items():
+        # the inflation factor without a tenor (one per currency in FRTB, MAR21.8(1)(c)); the tenor points for SIMM and the ladders
+        out.append(_row(f"INF/{index}", "INFLATION", "GIRR", ccy, index, index, None, ccy, CURVES[ccy][1], "Inf", None, 20, f"INF-{index}"))
         for t in INF_TENORS:
             out.append(_row(f"INF/{index}/{t}", "INFLATION", "GIRR", ccy, index, index, t, ccy, CURVES[ccy][1], "Inf", None, 20,
                             f"INF-{index}#{t}"))
@@ -164,11 +174,11 @@ def factors() -> list[dict]:
         bucket, simm = (b_ig, s_ig) if q == "IG" else (b_hy, s_hy)
         lh = (20 if q == "IG" else 40) if sec == "SOV" else (40 if q == "IG" else 60)
         out.append(_row(f"CR/SPREAD/{iss}", "SPREAD", "CSR_NS", iss, None, None, None, str(bucket), str(simm), None, None, lh,
-                        f"CDS-{iss}", sector=sector, credit_quality=q))
+                        f"CDS-{iss}", sector=sector, credit_quality=q, seniority="SENIOR"))
         for kind in ("BOND", "CDS"):
             for t in CSR_TENORS:
                 out.append(_row(f"CR/SPREAD/{iss}/{kind}/{t}", "SPREAD", "CSR_NS", iss, kind, None, t, str(bucket), str(simm),
-                                SIMM_CREDIT_TENOR[t], kind, lh, f"{kind}-{iss}#{t}", sector=sector, credit_quality=q))
+                                SIMM_CREDIT_TENOR[t], kind, lh, f"{kind}-{iss}#{t}", sector=sector, credit_quality=q, seniority="SENIOR"))
     for idx, (bucket, q) in CREDIT_INDICES.items():
         out.append(_row(f"CR/SPREAD/{idx}", "SPREAD", "CSR_NS", idx, None, idx, None, str(bucket), "Residual", None, None, 40,
                         f"CDX-{idx}", sector="Index", credit_quality=q))
@@ -195,12 +205,13 @@ def factors() -> list[dict]:
             out.append(_row(f"VOL/EQ/{und}/{e}", "VOL", "EQ", und, None, und, e, str(bucket), str(simm), e.lower(), None,
                             20 if cap == "LARGE" else 60, f"VOL-{und}#{e}", **extra))
     for und, (loc, _, bucket, simm, lh) in COMMODITIES.items():
-        out.append(_row(f"CM/PRICE/{und}/{loc}", "PRICE", "COMM", und, loc, und, None, str(bucket), str(simm), None, None, lh, f"CMD-{und}-{loc}"))
+        # the commodity curvature factor is the commodity (MAR21.13): every location and tenor shifted together
+        out.append(_row(f"CM/PRICE/{und}", "PRICE", "COMM", und, None, und, None, str(bucket), str(simm), None, None, lh, f"CMD-{und}"))
         for t in CM_TENORS:
             out.append(_row(f"CM/PRICE/{und}/{loc}/{t}", "PRICE", "COMM", und, loc, und, t, str(bucket), str(simm), None, None, lh,
                             f"CMD-{und}-{loc}#{t}"))
         for e in VEGA_EXPIRIES:
-            out.append(_row(f"VOL/CM/{und}/{e}", "VOL", "COMM", und, loc, und, e, str(bucket), str(simm), e.lower(), None, 60,
+            out.append(_row(f"VOL/CM/{und}/{e}", "VOL", "COMM", und, loc, und, e, str(bucket), str(simm), e.lower(), None, 120,
                             f"VOL-{und}#{e}"))
     return sorted(out, key=lambda r: r["RISK_FACTOR"])
 
