@@ -269,6 +269,40 @@ def test_deleting_a_basket_goes_to_the_engine_with_its_reason_and_version(client
     assert r.status_code == 404 and "of yours" in r.json()["detail"]
 
 
+def test_the_basket_sheet_goes_to_the_engine_as_lists_and_comes_back_as_its_answer(client, backend, monkeypatch):
+    """Construct your basket is a sheet (VAR_GUIDE.md section 3.5): its columns go to the engine as lists (POST /basket/sheet, with the
+    page's date and currency), a scope is laid into it by the engine (GET /basket/sheet?scope=), the workbook is the engine's (raw
+    bytes passed on); the console checks and computes nothing."""
+    seen = []
+    sheet = {"wholeBank": True, "op": ["+", "-"], "TRD": ["MX-1", ""], "DESK": ["", "DESK-COMM"]}
+
+    async def var(method, path, ident, /, body=None, raw=False, **params):
+        seen.append((method, path, body, params))
+        if raw:
+            return b"PK\x03\x04", {"content-disposition": 'attachment; filename="mix.xlsx"'}
+        return {"found": 2, "notFound": 0, "cells": [], "var": 1.0} if method == "POST" else {"sheet": sheet}
+    monkeypatch.setattr(backend, "var", var, raising=False)
+    r = client.post("/api/var/basket/sheet?asOf=2026-09-30&ccy=EUR", json=sheet)
+    assert r.status_code == 200 and r.json()["found"] == 2
+    assert seen[-1] == ("POST", "/basket/sheet", sheet, {"asOf": "2026-09-30", "ccy": "EUR"})
+    r = client.get("/api/var/basket/sheet?scope=BASKET:rita/mix")
+    assert r.status_code == 200 and r.json()["sheet"] == sheet
+    assert seen[-1][:2] == ("GET", "/basket/sheet") and seen[-1][3]["scope"] == "BASKET:rita/mix"
+    r = client.post("/api/var/basket/sheet.xlsx", json={"name": "mix", "sheet": sheet})
+    assert r.status_code == 200 and r.content.startswith(b"PK") and "mix.xlsx" in r.headers["content-disposition"]
+    assert seen[-1][:3] == ("POST", "/basket/sheet.xlsx", {"name": "mix", "sheet": sheet})
+
+
+def test_the_var_page_draws_the_basket_as_a_sheet_with_edit(client):
+    """The chip tray is retired: the page loads the sheet's grid and the sheet; a saved basket has Edit, a portfolio Edit a copy."""
+    page = client.get("/var?scope=BANK").text
+    assert page.index("/static/js/var-basket-sheet.js") < page.index("/static/js/var-basket.js")
+    js = client.get("/static/js/var-basket.js").text
+    assert "basket/sheet" in js and "Start from the whole bank" in js and "Download as .xlsx" in js and "vb-chip" not in js
+    vx = client.get("/static/js/var-explorer.js").text
+    assert "Edit a copy" in vx and "B.edit(scope)" in vx
+
+
 def test_the_var_page_offers_delete_through_the_confirm_dialog(client):
     page = client.get("/var?scope=BANK").text
     assert "/static/js/scope-delete.js" in page and 'data-admin="true"' in page          # the test console's user is an administrator

@@ -19,11 +19,12 @@
    selected node are fetched ahead while the user reads, so drilling down is instant. The time from a click to the painted panels is
    shown in the status line and kept on the root element (data-paint-ms) for the tests.
 
-   Ad-hoc scopes and baskets are one thing: "Construct your basket" (var-basket.js), a strip at the top of this page whenever it
-   shows an ad-hoc scope or a basket (or the tray holds parts): hints as you type, + / − chips, a rule, "+ basket" on every row of the
-   tree and the contributions, the selection's VaR live, a pre-deal what-if, Save (a basket, private or shared read-only) and Open.
-   Opening a basket loads its parts back into the tray; "Delete" on a saved basket of yours (on every one for an administrator) asks in
-   a dialog (scope-delete.js), then refreshes the list and says so. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
+   Ad-hoc scopes and baskets are one thing: "Construct your basket" (var-basket.js and var-basket-sheet.js), one sheet like Excel at the
+   top of this page, opened when asked: a column per kind of part, the type-ahead, "+ basket" on every row of the tree and the
+   contributions, pasted columns, "Start from the whole bank", the server's check of every cell and the basket's VaR live, a pre-deal
+   what-if, Save (a basket, private or shared read-only) and Open. Opening a basket loads it back into the sheet; in Ad-hoc scopes a saved
+   basket of yours has "Edit" (an administrator's on everyone's; a basket shared with you and a portfolio, the bank's, have "Edit a copy")
+   and "Delete", which asks in a dialog (scope-delete.js), then refreshes the list and says so. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
    another capture or with now, and exports as CSV.
 
    The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
@@ -1106,18 +1107,39 @@
     var t = $("[data-vx-adhoc]");
     t.textContent = "";
     ((S.tree && S.tree.portfolios) || []).forEach(function (p) {
-      t.appendChild(treeRow(p.name + " · " + p.type.toLowerCase(), p.scope, 0, null, null, null, { adhoc: true }));
+      var pr = treeRow(p.name + " · " + p.type.toLowerCase(), p.scope, 0, null, null, null, { adhoc: true });
+      pr.querySelector(".nm").appendChild(editButton(p.scope, p.name, true));      // the bank's portfolio: never edited, a copy is
+      t.appendChild(pr);
     });
     api("baskets", {}, true).then(function (bs) {
       S.baskets = bs;
       bs.forEach(function (b) {
         var row = treeRow("★ " + b.name + (b.owner !== S.user ? " (" + b.owner + ")" : ""), "BASKET:" + b.id, 0, null, null, null, { adhoc: true });
-        if (b.owner === S.user || S.admin) row.querySelector(".nm").appendChild(deleteButton(b));
+        var mine = b.owner === S.user || S.admin;
+        row.querySelector(".nm").appendChild(editButton("BASKET:" + b.id, b.name, !mine));
+        if (mine) row.querySelector(".nm").appendChild(deleteButton(b));
         t.appendChild(row);
       });
       markTree();
     }).catch(function () { /* no baskets listed */ });
     markTree();
+  }
+
+  /** "Edit" (a basket the viewer owns, or anyone's for an administrator) or "Edit a copy" (a portfolio, a basket shared read-only): the sheet. */
+  function editButton(scope, name, copy) {
+    var x = h("button", "vx-add vx-edit", copy ? "Edit a copy" : "Edit");
+    x.type = "button";
+    x.dataset.vxEdit = scope;
+    x.title = copy ? "Open a copy of " + scope + " in the basket's sheet, to save as your own basket" : "Open " + scope + " in the basket's sheet: Save keeps its name as a new version";
+    x.setAttribute("aria-label", (copy ? "Edit a copy of " : "Edit ") + name);
+    x.addEventListener("keydown", function (ev) { ev.stopPropagation(); });
+    x.addEventListener("click", function (ev) {
+      ev.stopPropagation();
+      if (!B) return;
+      if (strip) { strip.hidden = false; }
+      B.edit(scope);
+    });
+    return x;
   }
 
   /** "Delete" on a saved basket the viewer owns (an administrator: on every basket listed): a confirm dialog (scope-delete.js). */
@@ -1134,7 +1156,7 @@
       window.DrishtiScopeDelete.ask(b, { admin: S.admin, me: S.user }).then(function (deleted) {
         if (!deleted) return;
         cache.clear();
-        if (B && B.state.saved === b.id) B.state.saved = null;          // the tray keeps its parts, as an unsaved basket
+        if (B && B.state.saved && B.state.saved.id === b.id) B.state.saved = null;   // the sheet keeps its parts, as an unsaved basket
         var n = $("[data-vx-notice]");
         n.hidden = false;
         n.dataset.vxDeleted = b.id;
@@ -1149,9 +1171,9 @@
     return x;
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- the basket tray
-  /** The basket tray as a strip at the top (var-basket.js): it moves the explorer when saved or opened, and while the explorer shows the
-      tray's own unsaved scope, every change moves it too (the VaR follows as you pick). */
+  // ---------------------------------------------------------------------------------------------------------------- the basket's sheet
+  /** The basket's sheet as a strip at the top (var-basket.js): it moves the explorer when saved or opened, and while the explorer shows
+      the sheet's own unsaved scope, every change moves it too (the VaR follows the sheet). */
   var strip = $("[data-vx-basket]"), follow = null;
   if (B) {
     B.attach({
@@ -1163,13 +1185,13 @@
         follow = setTimeout(function () { select(scope); }, 350);
       }
     });
-    // the tray opens only when asked (Construct your basket, Alt+B or + basket): a basket kept in this browser waits behind the link's count
+    // the sheet opens only when asked (Construct your basket, Alt+B, + basket, Edit): a basket kept in this browser waits behind the link's count
     document.addEventListener("vb:saved", function (ev) { root.dataset.saved = ev.detail.id; });
   }
   $("[data-vx-basket-open]").addEventListener("click", function () { if (B) { B.show(); var f = root.querySelector("[data-vb-find]"); if (f) f.focus(); } });
   $("[data-vx-whatif]").addEventListener("click", function () {
     if (!B) return;
-    if (!B.state.items.length && S.head) B.add(S.head.kind === "basket" ? S.head.canonical : S.scope, { name: S.head.label });
+    if (B.isEmpty() && S.head) B.add(S.head.kind === "basket" ? S.head.canonical : S.scope, { name: S.head.label });
     B.openWhatIf();
   });
 

@@ -13,28 +13,43 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* "Construct your basket" (docs/guides/VAR_GUIDE.md section 3.5): the VaR of any mix of portfolios, trades and counterparties.
+/* "Construct your basket" (docs/guides/VAR_GUIDE.md section 3.5): the VaR of any mix of trades, positions, portfolios, books, desks, limit
+   letters and counterparties, built in one sheet like Excel (var-basket-sheet.js draws the grid).
 
-   The tray lives on the VaR explorer (2.9.4: the top bar has no Basket button): a strip at the top, always shown on an ad-hoc scope or
-   a basket, opened by "Construct your basket" or Alt+B (Alt+B does nothing on pages without the basket). Its contents stay in this
-   browser, so a basket built earlier is there when the explorer opens. Typing shows hints from the
-   engine (/api/var/hints: portfolios, saved baskets, desks, books, legal entities, counterparties, positions, trades, each with its
-   type, id, name, trade count and standalone VaR; arrow keys and Enter pick, a leading "-" takes away); "+ Rule" adds a WHERE:
-   condition; each chip is + or −. As you pick, the engine computes the selection (a trade in two chips counts once): its VaR and ES,
-   its trades, the sum of the parts' standalone VaRs and the diversification; a chip that matches nothing is flagged at once. "+ What-if
-   trade" adds a copy of a booked trade, scaled by a factor (−1: its unwind), and shows the VaR and ES before and after (the Python VaR
-   engine, /api/var/what-if; when it is off the tray says so). Save keeps it as a basket (private, or shared read-only) and opens
-   VAR SCOPE BASKET:<owner>/<name>; opening a saved basket loads its parts back into the tray. The tray survives a reload (this browser). */
+   The sheet has a column per kind of part and the Op column (+ adds the row, − takes it away; a leading "-" on an id takes it away too).
+   It fills by typing in a cell, by the type-ahead above it (a hint lands in its kind's column; Add (+) or Take away (−) says which), by
+   "+ basket" on any row of the explorer, or by pasting whole columns from Excel. "Start from the whole bank" (a checkbox, never a row)
+   makes the basket the bank and the rows refine it. The sheet goes to the server as lists (POST /api/var/basket/sheet), which checks
+   every cell (found, or not found with the reason in words; a minus that takes nothing away; a + under the whole bank) and computes the
+   basket's VaR, ES, sum of the parts, diversification and trades: the console renders the answer and computes nothing. Under the figures
+   the pre-deal what-if (POST /api/var/what-if), then the name, sharing, Save and Open without saving. A saved basket opens back into the
+   sheet column by column (Edit; an administrator's edit is saved under its owner); a portfolio is the bank's, so it opens as a copy (Edit
+   a copy). Download as .xlsx gives the sheet back to Excel. The sheet lives on the VaR explorer, opened by "Construct your basket" or
+   Alt+B, and survives a reload (this browser). */
 (function () {
   "use strict";
-  var KEY = "drishti.varBasket";
-  var TYPES = { PORT: "portfolio", BASKET: "basket", DESK: "desk", BOOK: "book", LE: "legal entity", DIV: "division", NODE: "node",
-                CPTY: "counterparty", POS: "position", TRD: "trade", WHERE: "rule", BANK: "bank", SCOPE: "scope" };
-  var T = { items: [], whatif: [], saved: null, name: "", share: "", dirty: false };
-  var host = null, el = {}, attached = null, popup = null, timer = null, hintTimer = null, hi = 0, hintRows = [], seq = 0, liveSeq = 0, lastScope = "";
+  var KEY = "drishti.varBasket2", OLD = "drishti.varBasket";
+  var DEFAULT_COLS = [{ key: "TRD", title: "Trade" }, { key: "POS", title: "Position" }, { key: "PORT", title: "Portfolio" },
+                      { key: "BOOK", title: "Book" }, { key: "DESK", title: "Desk" }, { key: "CPTY", title: "Counterparty" }];
+  var OPEN_MAX = 4000;          // the longest scope text a link carries ("Open without saving"); a longer basket is saved first
+  var T = { rows: [], wholeBank: false, mode: "+", whatif: [], saved: null, copyOf: null, name: "", share: "", dirty: false, columns: DEFAULT_COLS };
+  var host = null, el = {}, grid = null, attached = null, popup = null, timer = null, hintTimer = null, hi = 0, hintRows = [], seq = 0;
+  var checkSeq = 0, answer = null, checked = {}, flags = {}, lastScope = "";
 
-  try { var kept = JSON.parse(localStorage.getItem(KEY) || "null"); if (kept && Array.isArray(kept.items)) T = Object.assign(T, kept); } catch (e) { /* none kept */ }
-  function persist() { try { localStorage.setItem(KEY, JSON.stringify(T)); } catch (e) { /* a private window: the tray lives until the page closes */ } }
+  try {
+    var kept = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (kept && Array.isArray(kept.rows)) T = Object.assign(T, kept);
+    else migrate(JSON.parse(localStorage.getItem(OLD) || "null"));
+  } catch (e) { /* none kept */ }
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(T)); } catch (e) { /* a private window, or too large: kept until the page closes */ } }
+
+  /** The chip tray's basket kept before the sheet: its parts laid into the sheet's columns. */
+  function migrate(old) {
+    if (!old || !Array.isArray(old.items) || !old.items.length) return;
+    old.items.forEach(function (i) { place(i.scope, i.op === "-" ? "-" : "+", true); });
+    T.name = old.name || ""; T.share = old.share || "";
+    try { localStorage.removeItem(OLD); } catch (e) { /* kept */ }
+  }
 
   // ---------------------------------------------------------------------------------------------------------------- helpers
   function h(tag, cls, text) {
@@ -46,74 +61,103 @@
   function btn(cls, text, title) { var b = h("button", "btn btn-sm vb-btn " + (cls || ""), text); b.type = "button"; if (title) b.title = title; return b; }
   function money(v) {
     if (v === null || v === undefined || isNaN(v)) return "—";
+    return (v < 0 ? "−" : "") + Math.round(Math.abs(v)).toLocaleString("en-US");
+  }
+  function short(v) {
+    if (v === null || v === undefined || isNaN(v)) return "—";
     var a = Math.abs(v), s = v < 0 ? "−" : "";
     if (a >= 1e9) return s + (a / 1e9).toFixed(2) + "bn";
     if (a >= 1e6) return s + (a / 1e6).toFixed(a >= 1e8 ? 0 : 1) + "m";
     if (a >= 1e3) return s + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + "k";
     return s + Math.round(a);
   }
-  /** The page's business date and reporting currency (the explorer keeps ccy in its link, 2.9.4): every answer of the tray in it. */
+  /** The page's business date and reporting currency (the explorer keeps ccy in its link): every answer of the sheet in it. */
   function asOf() {
     var q = new URLSearchParams(location.search), p = q.get("asOf"), c = q.get("ccy");
     return (p ? "&asOf=" + encodeURIComponent(p) : "") + (c && /^[A-Za-z]{3}$/.test(c) ? "&ccy=" + encodeURIComponent(c.toUpperCase()) : "");
   }
   function get(path) {
-    return fetch("/api/var/" + path + asOf(), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(answer);
+    return fetch("/api/var/" + path + asOf(), { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(reply);
   }
   function post(path, body) {
     return fetch("/api/var/" + path + (asOf() ? "?" + asOf().slice(1) : ""), { method: "POST", credentials: "same-origin",
-      headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) }).then(answer);
+      headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body) }).then(reply);
   }
-  function answer(r) {
+  function reply(r) {
     return r.json().catch(function () { return {}; }).then(function (b) {
       if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; throw e; }
       return b;
     });
   }
-
-  /** The tray as scope text: the chips to add joined by " + ", then those to take away by " - " (BANK first when none adds). */
-  function compose(items) {
-    items = items || T.items;
-    var plus = items.filter(function (i) { return i.op === "+"; }), minus = items.filter(function (i) { return i.op === "-"; });
-    if (!items.length) return "";
-    var text = (plus.length ? plus : [{ scope: "BANK" }]).map(function (i) { return wrap(i.scope); }).join(" + ");
-    minus.forEach(function (i) { text += " - " + wrap(i.scope); });
-    return text;
-  }
-  function wrap(s) { return /\s[+\-&]\s/.test(s) && !/^WHERE:/.test(s) ? "(" + s + ")" : s; }
-  function wordOf(scope) { var m = /^([A-Z]+):/.exec(scope || ""); return m ? m[1] : scope === "BANK" ? "BANK" : "SCOPE"; }
+  function wordOf(scope) { var m = /^([A-Za-z]+):/.exec(scope || ""); return m ? m[1].toUpperCase() : scope === "BANK" ? "BANK" : "SCOPE"; }
   function idOf(scope) { return scope.indexOf(":") > 0 ? scope.slice(scope.indexOf(":") + 1) : scope; }
-  function same(a, b) { return String(a || "").toUpperCase() === String(b || "").toUpperCase(); }
+  function keys() { return T.columns.map(function (c) { return c.key; }); }
+  function filled(row) { return keys().some(function (k) { return row[k]; }); }
+
+  /** The sheet as the server takes it: whole bank, the Op column and each filled column, as lists cut to the filled rows. */
+  function payload() {
+    var n = T.rows.length;
+    while (n > 0 && !filled(T.rows[n - 1])) n--;
+    var out = { wholeBank: !!T.wholeBank, op: [] };
+    for (var r = 0; r < n; r++) out.op.push(T.rows[r].op === "-" ? "-" : "+");
+    keys().forEach(function (k) {
+      var any = false, list = [];
+      for (var r2 = 0; r2 < n; r2++) { var v = T.rows[r2][k] || ""; list.push(v); any = any || !!v; }
+      if (any) out[k] = list;
+    });
+    return out;
+  }
+  function signature() { return JSON.stringify(payload()); }
+  function parts() { var n = 0; T.rows.forEach(function (row) { keys().forEach(function (k) { if (row[k]) n++; }); }); return n; }
+  function empty() { return !T.wholeBank && parts() === 0; }
+  /** The basket's scope text as the server composed it (its last answer for what the sheet holds now), else "". */
+  function compose() { return answer && answer.sig === signature() ? answer.scope || "" : ""; }
   function stateText() {
-    if (T.saved && !T.dirty) return "saved basket · " + T.saved;
-    return "unsaved basket" + (T.saved ? " (edited from " + T.saved + ")" : "");
+    var bits = [T.saved && !T.dirty ? "saved basket · " + T.saved.id : T.copyOf ? "a copy of the portfolio " + T.copyOf + " (unsaved)"
+      : "unsaved basket" + (T.saved ? " (edited from " + T.saved.id + ", version " + T.saved.version + ")" : "")];
+    bits.push(parts().toLocaleString("en-US") + " part" + (parts() === 1 ? "" : "s"));
+    if (answer && answer.businessDate) bits.push("date " + answer.businessDate);
+    return bits.join(" · ");
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- the tray
+  // ---------------------------------------------------------------------------------------------------------------- the sheet's screen
   function build() {
     var root = h("section", "vb");
     root.setAttribute("aria-label", "Construct your basket");
     root.dataset.varBasket = "";
     var head = h("div", "vb-head");
-    var title = h("h2", "vb-title", "Construct your basket");
+    head.appendChild(h("h2", "vb-title", "◫ Construct your basket"));
     el.state = h("span", "vb-state");
     el.state.dataset.vbState = "";
-    head.appendChild(title);
     head.appendChild(el.state);
-    head.appendChild(h("span", "vb-sub", "VaR of any mix of portfolios, trades and counterparties"));
-    el.scope = h("span", "vb-scope mono");
-    el.scope.dataset.vbScope = "";
-    head.appendChild(el.scope);
-    el.close = btn("", "Close", "Close the tray (Alt+B opens it again)");
+    var right = h("span", "vb-head-r");
+    el.mode = h("span", "vb-seg");
+    el.mode.setAttribute("role", "radiogroup");
+    el.mode.setAttribute("aria-label", "What a hint does: add or take away");
+    [["+", "Add (+)"], ["-", "Take away (−)"]].forEach(function (o) {
+      var b = h("button", "vb-segb", o[1]);
+      b.type = "button";
+      b.dataset.vbMode = o[0];
+      b.setAttribute("role", "radio");
+      b.addEventListener("click", function () { T.mode = o[0]; persist(); paint(); });
+      el.mode.appendChild(b);
+    });
+    right.appendChild(el.mode);
+    el.pick = h("select", "vb-input vb-pick");
+    el.pick.setAttribute("aria-label", "Open a saved basket");
+    el.pick.dataset.vbPick = "";
+    right.appendChild(el.pick);
+    el.close = btn("", "✕", "Close the sheet (Alt+B opens it again)");
     el.close.dataset.vbClose = "";
-    head.appendChild(el.close);
+    right.appendChild(el.close);
+    head.appendChild(right);
     root.appendChild(head);
 
     var row = h("div", "vb-row");
     var find = h("div", "vb-find");
     el.find = h("input", "vb-input mono");
-    el.find.placeholder = "Add a portfolio, basket, desk, book, legal entity, counterparty, position or trade: type for hints (\"-\" first takes away)";
-    el.find.setAttribute("aria-label", "Add to the basket");
+    el.find.placeholder = "Find and add: a trade, position, portfolio, book, desk, limit letter, counterparty… (\"-\" first takes away)";
+    el.find.setAttribute("aria-label", "Find and add to the basket");
     el.find.setAttribute("autocomplete", "off");
     el.find.setAttribute("role", "combobox");
     el.find.setAttribute("aria-expanded", "false");
@@ -127,43 +171,56 @@
     find.appendChild(el.find);
     find.appendChild(el.hints);
     row.appendChild(find);
-    el.ruleBtn = btn("", "+ Rule", "Add a condition over the positions' columns (WHERE:)");
-    el.ruleBtn.dataset.vbRule = "";
-    el.wifBtn = btn("", "+ What-if trade", "A pre-deal what-if: a copy of a booked trade, scaled, added to the basket");
-    el.wifBtn.dataset.vbWhatifOpen = "";
-    row.appendChild(el.ruleBtn);
-    row.appendChild(el.wifBtn);
+    row.appendChild(h("span", "vb-note vb-how", "a hint lands in its kind's column; + basket on any explorer row does the same; or paste whole columns from Excel"));
+    el.clear = btn("", "Clear");
+    el.clear.dataset.vbClear = "";
+    el.xlsx = btn("", "Download as .xlsx", "The sheet as a workbook: paste its columns back to open it again");
+    el.xlsx.dataset.vbXlsx = "";
+    row.appendChild(el.clear);
+    row.appendChild(el.xlsx);
     root.appendChild(row);
 
-    el.ruleRow = h("div", "vb-row");
-    el.ruleRow.hidden = true;
-    el.rule = h("input", "vb-input mono");
-    el.rule.placeholder = "CURRENCY == 'EUR' and DIRECTION == 'SHORT'";
-    el.rule.setAttribute("aria-label", "Rule over the positions' columns");
-    el.rule.dataset.vbRuleText = "";
-    var addRule = btn("", "Add rule");
-    addRule.dataset.vbRuleAdd = "";
-    el.ruleRow.appendChild(el.rule);
-    el.ruleRow.appendChild(addRule);
-    root.appendChild(el.ruleRow);
+    var bank = h("label", "vb-bank");
+    el.bank = h("input");
+    el.bank.type = "checkbox";
+    el.bank.dataset.vbBank = "";
+    bank.appendChild(el.bank);
+    bank.appendChild(h("b", null, " Start from the whole bank"));
+    bank.appendChild(h("span", "vb-note", " every trade you may see; the rows marked − take away from it (BANK − DESK:COMM − TRD:XYZ)"));
+    root.appendChild(bank);
 
-    el.chips = h("div", "vb-chips");
-    el.chips.dataset.vbChips = "";
-    root.appendChild(el.chips);
-    el.live = h("div", "vb-live");
+    grid = window.VarBasketGrid.create({
+      rows: function () { return T.rows; },
+      columns: function () { return T.columns; },
+      mode: function () { return T.mode; },
+      changed: function (what, info) {
+        changed(true);
+        if (what === "paste") el.msg.textContent = "Pasted " + info.rows.toLocaleString("en-US") + " row" + (info.rows === 1 ? "" : "s")
+          + (info.cut ? " (a sheet holds " + window.VarBasketGrid.MAX_ROWS.toLocaleString("en-US") + " rows: the rest left out)" : "") + ".";
+      },
+      flag: function (k, r) { return flags[k + ":" + r] || null; },
+      checked: function (k, r) { return checked[k + ":" + r]; }
+    });
+    root.appendChild(grid.root);
+
+    el.checks = h("div", "vb-checks");
+    el.checks.dataset.vbChecks = "";
+    el.checks.setAttribute("role", "status");
+    root.appendChild(el.checks);
+    el.live = h("div", "vb-kpis");
     el.live.dataset.vbLive = "";
     el.live.setAttribute("aria-live", "polite");
     root.appendChild(el.live);
-    el.notes = h("ul", "vb-notes");
-    el.notes.dataset.vbNotices = "";
-    el.notes.setAttribute("role", "status");
-    root.appendChild(el.notes);
 
-    el.wif = h("div", "vb-whatif");
-    el.wif.hidden = true;
+    el.wif = h("div", "vb-card vb-whatif");
     el.wif.dataset.vbWhatif = "";
+    var wt = h("h3", null, "What-if trades");
+    wt.appendChild(h("span", null, "pre-deal: a booked trade copied and scaled; before → after"));
+    el.wif.appendChild(wt);
+    el.wifList = h("div", "vb-wlist");
+    el.wifList.dataset.vbWhatifList = "";
+    el.wif.appendChild(el.wifList);
     var wrow = h("div", "vb-row");
-    wrow.appendChild(h("span", "vb-lbl", "Pre-deal what-if: a copy of"));
     el.wifTrade = h("input", "vb-input mono vb-narrow");
     el.wifTrade.placeholder = "a booked trade, MX-30000121";
     el.wifTrade.setAttribute("aria-label", "The booked trade to copy");
@@ -173,12 +230,12 @@
     el.wifFactor.setAttribute("aria-label", "Factor (−1: its unwind)");
     el.wifFactor.title = "Factor: 1 the same trade again, −1 its unwind, 0.5 half";
     el.wifFactor.dataset.vbWhatifFactor = "";
-    var wadd = btn("primary", "Add and run what-if");
-    wadd.dataset.vbWhatifRun = "";
+    el.wifRun = btn("", "+ What-if trade", "A copy of a booked trade, scaled, added to the basket: VaR and ES before and after");
+    el.wifRun.dataset.vbWhatifRun = "";
     wrow.appendChild(el.wifTrade);
     wrow.appendChild(h("span", "vb-lbl", "× factor"));
     wrow.appendChild(el.wifFactor);
-    wrow.appendChild(wadd);
+    wrow.appendChild(el.wifRun);
     el.wif.appendChild(wrow);
     el.wifOut = h("div", "vb-whatif-out");
     el.wifOut.dataset.vbWhatifOut = "";
@@ -194,26 +251,21 @@
     el.share.placeholder = "Share read-only with (users or roles, optional)";
     el.share.setAttribute("aria-label", "Share read-only with");
     el.share.dataset.vbShare = "";
-    el.save = btn("primary", "Save basket and open VaR");
-    el.save.dataset.vbSave = "";
-    el.open = btn("", "Open without saving");
-    el.open.dataset.vbOpen = "";
-    el.clear = btn("", "Clear");
-    el.clear.dataset.vbClear = "";
     el.msg = h("span", "vb-msg");
     el.msg.dataset.vbMsg = "";
     el.msg.setAttribute("aria-live", "polite");
-    [el.name, el.share, el.save, el.open, el.clear, el.msg].forEach(function (x) { save.appendChild(x); });
+    el.open = btn("", "Open without saving");
+    el.open.dataset.vbOpen = "";
+    el.save = btn("primary", "Save basket and open VaR");
+    el.save.dataset.vbSave = "";
+    [el.name, el.share, el.msg, el.open, el.save].forEach(function (x) { save.appendChild(x); });
     root.appendChild(save);
-    wire(root, addRule, wadd);
+    wire(root);
     return root;
   }
 
-  function wire(root, addRule, wadd) {
-    el.find.addEventListener("input", function () {
-      clearTimeout(hintTimer);
-      hintTimer = setTimeout(hints, 160);
-    });
+  function wire(root) {
+    el.find.addEventListener("input", function () { clearTimeout(hintTimer); hintTimer = setTimeout(hints, 160); });
     el.find.addEventListener("keydown", function (ev) {
       if (ev.key === "Escape") { closeHints(); return; }
       if (!hintRows.length) {
@@ -224,61 +276,52 @@
         ev.preventDefault();
         hi = (hi + (ev.key === "ArrowDown" ? 1 : hintRows.length - 1)) % hintRows.length;
         markHint();
-      } else if (ev.key === "Enter") {
-        ev.preventDefault();
-        pick(hintRows[hi]);
-      }
+      } else if (ev.key === "Enter") { ev.preventDefault(); pick(hintRows[hi]); }
     });
     el.find.addEventListener("blur", function () { setTimeout(closeHints, 200); });
-    el.ruleBtn.addEventListener("click", function () { el.ruleRow.hidden = !el.ruleRow.hidden; if (!el.ruleRow.hidden) el.rule.focus(); });
-    var ruleAdd = function () {
-      var r = el.rule.value.trim();
-      if (!r) return;
-      add("WHERE:" + r, { type: "WHERE", id: r, name: "rule" });
-      el.rule.value = "";
-      el.ruleRow.hidden = true;
-    };
-    addRule.addEventListener("click", ruleAdd);
-    el.rule.addEventListener("keydown", function (ev) { if (ev.key === "Enter") { ev.preventDefault(); ruleAdd(); } });
-    el.wifBtn.addEventListener("click", function () { openWhatIf(); });
-    wadd.addEventListener("click", function () {
-      var id = el.wifTrade.value.trim().replace(/^TRD:/i, "");
-      var f = Number(el.wifFactor.value);
-      if (!id) { el.wifOut.textContent = "Name a booked trade to copy."; return; }
+    el.bank.addEventListener("change", function () { T.wholeBank = el.bank.checked; changed(true); });
+    el.clear.addEventListener("click", function () {
+      T.rows = []; T.whatif = []; T.saved = null; T.copyOf = null; T.name = ""; T.share = ""; T.dirty = false; T.wholeBank = false;
+      el.wifOut.textContent = ""; el.msg.textContent = "";
+      changed(false);
+    });
+    el.xlsx.addEventListener("click", download);
+    el.pick.addEventListener("focus", listSaved);
+    el.pick.addEventListener("change", function () { var v = el.pick.value; el.pick.value = ""; if (v) edit(v); });
+    el.wifRun.addEventListener("click", function () {
+      var id = el.wifTrade.value.trim().replace(/^TRD:/i, ""), f = Number(el.wifFactor.value);
+      if (!id) { el.wifTrade.focus(); el.wifOut.textContent = "Name a booked trade to copy."; return; }
       if (isNaN(f) || f === 0) { el.wifOut.textContent = "The factor is a number other than 0 (−1: the trade's unwind)."; return; }
       T.whatif.push({ copyOf: id, factor: f });
       el.wifTrade.value = "";
-      changed(false);
+      persist();
+      paintWhatIf();
       runWhatIf();
     });
-    el.chips.addEventListener("change", function (ev) {
-      var k = ev.target.dataset.vbOp;
-      if (k !== undefined) { T.items[+k].op = ev.target.value; changed(true); }
-    });
-    el.chips.addEventListener("click", function (ev) {
-      var b = ev.target.closest("[data-vb-del],[data-vb-wdel]");
+    el.wifList.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-vb-wdel]");
       if (!b) return;
-      if (b.dataset.vbDel !== undefined) T.items.splice(+b.dataset.vbDel, 1);
-      else T.whatif.splice(+b.dataset.vbWdel, 1);
-      changed(b.dataset.vbDel !== undefined);
-      if (T.whatif.length) runWhatIf(); else el.wifOut.textContent = "";
+      T.whatif.splice(+b.dataset.vbWdel, 1);
+      persist();
+      paintWhatIf();
+      if (T.whatif.length) runWhatIf(); else { el.wifOut.textContent = ""; delete el.wifOut.dataset.done; }
     });
     el.name.addEventListener("input", function () { T.name = el.name.value; persist(); paint(); });
     el.share.addEventListener("input", function () { T.share = el.share.value; persist(); });
-    el.clear.addEventListener("click", function () {
-      T.items = []; T.whatif = []; T.saved = null; T.name = ""; T.share = ""; T.dirty = false;
-      el.name.value = ""; el.share.value = ""; el.wifOut.textContent = ""; el.msg.textContent = "";
-      changed(false);
+    el.open.addEventListener("click", function () {
+      var s = compose();
+      if (!s) { el.msg.textContent = "The server is still checking the sheet: a moment."; return; }
+      if (s.length > OPEN_MAX) { el.msg.textContent = "This basket is too large to open without saving: name it and save it."; return; }
+      go(s);
     });
-    el.open.addEventListener("click", function () { go(compose()); });
     el.save.addEventListener("click", save);
     el.close.addEventListener("click", function () { hide(); });
-    root.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && popup) hide(); });
+    root.addEventListener("keydown", function (ev) { if (ev.key === "Escape" && popup && !grid.editing) hide(); });
   }
 
   // ---------------------------------------------------------------------------------------------------------------- hints
   function hints(addTyped) {
-    var raw = el.find.value, q = raw.trim(), minus = /^-/.test(q);
+    var raw = el.find.value, q = raw.trim(), minus = /^[-−]/.test(q);
     if (minus) q = q.slice(1).trim();
     if (!q) { closeHints(); return; }
     var my = ++seq;
@@ -297,10 +340,10 @@
         var r = h("div", "vb-hint" + (x.trades ? "" : " flagged"));
         r.setAttribute("role", "option");
         r.dataset.vbHint = x.scope;
-        r.appendChild(h("span", "k", (minus ? "− " : "") + x.type));
+        r.appendChild(h("span", "k", (minus || T.mode === "-" ? "− " : "") + x.type));
         r.appendChild(h("span", "t mono", x.id));
         r.appendChild(h("span", "n", x.name));
-        r.appendChild(h("span", "d mono", x.trades ? x.trades.toLocaleString("en-US") + " trade" + (x.trades === 1 ? "" : "s") + " · VaR " + money(x["var"])
+        r.appendChild(h("span", "d mono", x.trades ? x.trades.toLocaleString("en-US") + " trade" + (x.trades === 1 ? "" : "s") + " · VaR " + short(x["var"])
           : (x.notice || "matches nothing")));
         r.addEventListener("mousedown", function (ev) { ev.preventDefault(); pick(hintRows[i]); });
         el.hints.appendChild(r);
@@ -321,26 +364,61 @@
   function closeHints() { el.hints.hidden = true; el.hints.textContent = ""; delete el.hints.dataset.q; hintRows = []; el.find.setAttribute("aria-expanded", "false"); }
   function pick(x) {
     if (!x) return;
-    add(x.scope, { type: x.type, id: x.id, name: x.name, trades: x.trades, "var": x["var"], notice: x.notice, op: x.minus ? "-" : "+" });
+    add(x.scope, { op: x.minus || T.mode === "-" ? "-" : "+" });
     el.find.value = "";
     closeHints();
     el.find.focus();
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- changes
-  /** Adds a part (a row's "+ basket", a hint): once; it shows the tray. */
+  // ---------------------------------------------------------------------------------------------------------------- placing parts
+  /** The column a scope lands in, and the cell's text there: {key, text}, or null when the sheet has no column for it (a rule). */
+  function columnOf(scope) {
+    var w = wordOf(scope), id = idOf(scope), has = keys();
+    if (w === "NODE") {
+      var leaf = id.slice(id.indexOf("~") + 1), m = /^(BOOK|DESK)-/.exec(leaf);
+      if (m && id.indexOf("MGMT~") === 0) return { key: m[1], text: leaf };
+      var hw = id.slice(0, id.indexOf("~"));
+      if (hw && has.indexOf(hw) >= 0) return { key: hw, text: leaf };
+      return { key: "DESK", text: "NODE:" + id };
+    }
+    if (w === "BASKET") return { key: "PORT", text: "BASKET:" + id };
+    if (w === "LE" || w === "DIV") return { key: "DESK", text: w + ":" + id };
+    if (has.indexOf(w) >= 0) return { key: w, text: id };
+    return null;
+  }
+
+  /** Puts a part in its column: the first row whose cell there is free and whose sign is the part's (a blank row takes the sign). */
+  function place(scope, op, quiet) {
+    var at = columnOf(scope);
+    if (!at) return null;
+    var ids = /^(TRD|POS|CPTY)$/.test(at.key) && at.text.indexOf(",") > 0 ? at.text.split(",") : [at.text];
+    var placed = null;
+    ids.forEach(function (text) {
+      text = text.trim();
+      if (!text) return;
+      var r = 0;
+      while (r < T.rows.length && (T.rows[r][at.key] || (filled(T.rows[r]) && (T.rows[r].op || "+") !== op))) r++;
+      while (T.rows.length <= r) T.rows.push({ op: op });
+      if (!filled(T.rows[r])) T.rows[r].op = op;
+      T.rows[r][at.key] = text;
+      placed = { key: at.key, row: r };
+    });
+    if (!quiet && placed && grid) grid.select(placed.row, keys().indexOf(placed.key) + 1);
+    return placed;
+  }
+
+  /** Adds a part (a hint, a row's "+ basket"): it lands in its kind's column and the sheet shows. */
   function add(scope, meta) {
     meta = meta || {};
     if (!scope) return;
-    var have = T.items.filter(function (i) { return same(i.scope, scope); })[0];
-    if (have) { have.op = meta.op || "+"; }
-    else {
-      T.items.push({ op: meta.op || "+", scope: scope, type: meta.type || wordOf(scope), id: meta.id || idOf(scope), name: meta.name || "",
-                     trades: meta.trades === undefined ? null : meta.trades, "var": meta["var"] === undefined ? null : meta["var"], notice: meta.notice || "" });
-    }
+    if (scope === "BANK") { T.wholeBank = true; changed(true); show(); return; }
+    var op = meta.op === "-" ? "-" : "+";
+    ensure();
+    var at = place(scope, op);
+    if (!at) { show(); el.msg.textContent = "The sheet has no column for " + scope + ": open it as a scope from the command line instead."; return; }
     changed(true);
     show();
-    if (el.msg) el.msg.textContent = "Added " + scope + ".";
+    el.msg.textContent = (op === "-" ? "Taking away " : "Added ") + scope + " (row " + (at.row + 1) + ").";
   }
 
   function changed(dirty) {
@@ -348,131 +426,192 @@
     persist();
     paint();
     clearTimeout(timer);
-    timer = setTimeout(live, 300);
-    var before = lastScope;
-    lastScope = compose();
-    if (attached && attached.onChange) attached.onChange(lastScope, before);
+    timer = setTimeout(check, 350);
   }
 
   function paint() {
     countBadge();
-    if (!el.chips) return;
+    if (!host) return;
     el.state.textContent = stateText();
     el.state.className = "vb-state" + (T.saved && !T.dirty ? " saved" : "");
-    el.scope.textContent = compose() || "—";
-    el.chips.textContent = "";
-    if (!T.items.length && !T.whatif.length) el.chips.appendChild(h("span", "vb-note", "Nothing in the basket yet: type above, or use \"+ basket\" on any row of the explorer."));
-    T.items.forEach(function (i, k) {
-      var flagged = i.trades === 0;
-      var c = h("span", "vb-chip" + (i.op === "-" ? " minus" : "") + (flagged ? " flagged" : ""));
-      c.dataset.vbChip = i.scope;
-      if (flagged) { c.title = i.notice || "matches nothing on the date"; c.dataset.flagged = "1"; }
-      var s = h("select", "vb-op");
-      s.setAttribute("aria-label", "Add or take away " + i.scope);
-      s.dataset.vbOp = String(k);
-      [["+", "+"], ["-", "−"]].forEach(function (o) { var e = h("option", null, o[1]); e.value = o[0]; if (o[0] === i.op) e.selected = true; s.appendChild(e); });
-      c.appendChild(s);
-      c.appendChild(h("span", "k", TYPES[i.type] || i.type));
-      c.appendChild(h("span", "mono", i.id));
-      if (i.trades !== null && i.trades !== undefined) c.appendChild(h("span", "t", flagged ? "matches nothing" : i.trades.toLocaleString("en-US") + " tr"));
-      var x = h("button", "vb-x", "×");
-      x.type = "button";
-      x.dataset.vbDel = String(k);
-      x.setAttribute("aria-label", "Remove " + i.scope);
-      c.appendChild(x);
-      el.chips.appendChild(c);
+    el.mode.querySelectorAll("[data-vb-mode]").forEach(function (b) {
+      var on = b.dataset.vbMode === T.mode;
+      b.classList.toggle("on", on);
+      b.setAttribute("aria-checked", on ? "true" : "false");
     });
-    T.whatif.forEach(function (w, k) {
-      var c = h("span", "vb-chip whatif");
-      c.dataset.vbWhatifChip = w.copyOf;
-      c.appendChild(h("span", "k", "what-if"));
-      c.appendChild(h("span", "mono", (w.factor === 1 ? "" : w.factor + " × ") + w.copyOf));
-      var x = h("button", "vb-x", "×");
-      x.type = "button";
-      x.dataset.vbWdel = String(k);
-      x.setAttribute("aria-label", "Remove the what-if " + w.copyOf);
-      c.appendChild(x);
-      el.chips.appendChild(c);
-    });
+    el.bank.checked = !!T.wholeBank;
     if (document.activeElement !== el.name) el.name.value = T.name || "";
     if (document.activeElement !== el.share) el.share.value = T.share || "";
-    var any = T.items.length > 0;
+    var any = !empty(), named = !!(T.name || "").trim();
     el.open.disabled = !any;
     el.clear.disabled = !any && !T.whatif.length;
-    el.save.disabled = !any || !(T.name || "").trim();
-    el.save.title = !any ? "Pick at least one part" : !(T.name || "").trim() ? "Name the basket first" : "Save as " + slug(T.name) + " and open it in the VaR explorer";
-    if (!any) { el.live.textContent = ""; el.notes.textContent = ""; }
+    el.xlsx.disabled = !any;
+    el.save.disabled = !any || !named;
+    var editing = T.saved && T.saved.editable && same(T.name, T.saved.name);
+    el.save.textContent = editing ? "Save as version " + (T.saved.version + 1) + " and open VaR" : T.copyOf ? "Save as your own basket and open VaR" : "Save basket and open VaR";
+    el.save.title = !any ? "Add at least one part, or tick Start from the whole bank" : !named ? "Name the basket first"
+      : editing ? "Keeps the name " + T.saved.id + (T.saved.own ? "" : " (an administrator's edit: saved under its owner, who is told)") : "Save as " + slug(T.name);
+    if (grid) grid.draw();
+    paintWhatIf();
   }
+  function same(a, b) { return String(a || "").toLowerCase() === String(b || "").toLowerCase() || slug(a) === slug(b); }
   function slug(n) { return String(n || "").toLowerCase().replace(/[^a-z0-9._-]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 64); }
   function countBadge() {
-    document.querySelectorAll("[data-basket-count]").forEach(function (c) { c.textContent = String(T.items.length); c.hidden = !T.items.length; });
+    var n = parts() + (T.wholeBank ? 1 : 0);
+    document.querySelectorAll("[data-basket-count]").forEach(function (c) { c.textContent = n.toLocaleString("en-US"); c.hidden = !n; });
   }
 
-  /** The selection computed by the engine: its headline and its parts (each chip alone; a trade in two chips once). */
-  function live() {
-    var scope = compose();
-    if (!scope || !el.live) return;
-    var my = ++liveSeq, t0 = performance.now();
-    el.live.textContent = "computing…";
-    el.live.className = "vb-live computing";
-    var q = encodeURIComponent(scope);
-    Promise.all([get("scope?scope=" + q), get("scope/contributions?scope=" + q + "&by=part")]).then(function (x) {
-      if (my !== liveSeq) return;
-      var d = x[0], c = x[1], ms = Math.round(performance.now() - t0);
-      (c.rows || []).forEach(function (r) {
-        T.items.forEach(function (i) { if (i.op === "+" && same(i.scope, r.key)) { i.trades = r.trades; i["var"] = r.standaloneVar; } });
-      });
-      var notices = (d.provenance && d.provenance.notices) || [];
-      T.items.forEach(function (i) {
-        var n = notices.filter(function (t) { return t.toUpperCase().indexOf(i.scope.toUpperCase()) === 0 || t.toUpperCase().indexOf(i.id.toUpperCase() + " ") === 0; })[0];
-        if (n && i.op === "-") { i.trades = 0; i.notice = n; }
-        if (n && i.trades === 0) i.notice = n;
-      });
+  // ---------------------------------------------------------------------------------------------------------------- the server's answer
+  /** Sends the sheet to the server and renders its checks and figures (a later change wins). */
+  function check() {
+    if (!host) return;
+    var body = payload(), sig = JSON.stringify(body), my = ++checkSeq;
+    var snap = {};
+    T.rows.forEach(function (row, r) { keys().forEach(function (k) { if (row[k]) snap[k + ":" + r] = row[k]; }); });
+    if (empty()) {
+      answer = null; checked = {}; flags = {};
+      el.checks.textContent = "";
+      el.live.textContent = "";
+      el.live.appendChild(h("span", "vb-note", "Nothing in the basket yet: type in the sheet or above it, use \"+ basket\" on any row of the explorer, paste columns from Excel, or tick Start from the whole bank."));
+      delete el.live.dataset.sig;
+      paint();
+      return;
+    }
+    el.live.classList.add("computing");
+    post("basket/sheet", body).then(function (a) {
+      if (my !== checkSeq) return;
+      a.sig = sig;
+      answer = a;
+      checked = snap;
+      flags = {};
+      (a.cells || []).forEach(function (c) { flags[c.column + ":" + c.row] = c; });
+      if (a.columns && a.columns.length) T.columns = a.columns.map(function (c) { return { key: c.key, title: c.title }; });
       persist();
       paint();
-      el.live.className = "vb-live";
-      el.live.textContent = "";
-      el.live.dataset.var = String(d["var"]);
-      el.live.dataset.trades = String(d.trades);
-      el.live.dataset.scope = scope;
-      if (d.empty) {
-        el.live.appendChild(h("b", "vb-empty", "No trades"));
-        el.live.appendChild(h("span", null, " · this selection holds no live trade with a P&L vector on " + d.businessDate + ": no VaR to show"));
-      } else {
-        el.live.appendChild(h("span", null, "VaR " + Math.round(d.confidence * 1000) / 10 + "% 1D of the selection "));
-        el.live.appendChild(h("b", "mono", money(d["var"]) + (d.currency && d.currency !== "USD" ? " " + d.currency : "")));
-        el.live.dataset.ccy = d.currency || "USD";
-        var parts = c.rows || [];
-        var rest = " · ES " + money(d.es) + " · " + d.trades.toLocaleString("en-US") + " trade" + (d.trades === 1 ? "" : "s");
-        if (parts.length) rest += " · sum of the parts " + money(c.sumStandalone);
-        el.live.appendChild(h("span", "mono", rest));
-        if (parts.length > 1) {
-          el.live.appendChild(h("span", null, " · diversification "));
-          el.live.appendChild(h("span", "mono vb-div", "−" + money(c.diversification)));
-        }
-        el.live.appendChild(h("span", "vb-ms", " · computed in " + ms + " ms"));
-      }
-      el.notes.textContent = "";
-      notices.filter(function (n) { return !/^no trades/.test(n); }).forEach(function (n) { el.notes.appendChild(h("li", null, n)); });
-      host && host.dispatchEvent(new CustomEvent("vb:live", { bubbles: true, detail: d }));
+      renderChecks(a);
+      renderFigures(a);
+      var before = lastScope;
+      lastScope = a.scope || "";
+      if (attached && attached.onChange && lastScope.length <= OPEN_MAX) attached.onChange(lastScope, before);
+      host.dispatchEvent(new CustomEvent("vb:live", { bubbles: true, detail: a }));
     }).catch(function (e) {
-      if (my !== liveSeq) return;
-      el.live.className = "vb-live";
-      el.live.textContent = (e.status === 403 ? "Not for your role: " : "Could not compute: ") + e.message;
+      if (my !== checkSeq) return;
+      el.live.classList.remove("computing");
+      el.live.textContent = "";
+      var p = h("p", "vb-err", (e.status === 403 ? "Not for your role: " : "Could not check the sheet: ") + e.message);
+      p.setAttribute("role", "alert");
+      el.live.appendChild(p);
+      el.live.dataset.sig = sig;
+      el.live.dataset.error = e.message;
     });
+  }
+
+  function renderChecks(a) {
+    el.checks.textContent = "";
+    el.checks.appendChild(h("span", "pill g", a.found.toLocaleString("en-US") + " found"));
+    if (a.notFound) el.checks.appendChild(h("span", "pill r", a.notFound.toLocaleString("en-US") + " not found"));
+    if (a.flagged) el.checks.appendChild(h("span", "pill a", a.flagged.toLocaleString("en-US") + " adding or taking away nothing"));
+    var list = h("ul", "vb-reasons");
+    list.dataset.vbReasons = "";
+    var colTitle = {};
+    T.columns.forEach(function (c) { colTitle[c.key] = c.title; });
+    (a.cells || []).slice(0, 8).forEach(function (c) {
+      var li = h("li", c.status === "not-found" ? "bad" : "warn");
+      li.dataset.vbReason = c.column + ":" + c.row;
+      li.appendChild(h("b", null, "Row " + (c.row + 1) + ", " + (colTitle[c.column] || c.column) + ": "));
+      li.appendChild(document.createTextNode(c.reason + (c.status === "not-found" ? " (left out of the figures, kept in the sheet until you remove it)" : "")));
+      li.addEventListener("click", function () { grid.select(c.row, keys().indexOf(c.column) + 1); grid.root.focus({ preventScroll: true }); });
+      list.appendChild(li);
+    });
+    if ((a.cells || []).length > 8) list.appendChild(h("li", "vb-more", "and " + (a.cells.length - 8).toLocaleString("en-US") + " more: each cell's reason is its tooltip"));
+    if (a.cells && a.cells.length) el.checks.appendChild(list);
+    if (a.notFound) {
+      var rm = btn("", "Remove the not found");
+      rm.dataset.vbRemoveMissing = "";
+      rm.addEventListener("click", function () {
+        (answer.cells || []).forEach(function (c) {
+          var row = T.rows[c.row];
+          if (c.status === "not-found" && row && row[c.column] === c.text) row[c.column] = "";
+        });
+        compact();
+        changed(true);
+      });
+      el.checks.appendChild(rm);
+    }
+  }
+
+  /** Drops rows left empty (after removing cells), keeping the order of the rest. */
+  function compact() { T.rows = T.rows.filter(filled); }
+
+  function renderFigures(a) {
+    el.live.classList.remove("computing");
+    el.live.textContent = "";
+    el.live.dataset.sig = a.sig;
+    el.live.dataset.var = a["var"] === null || a["var"] === undefined ? "" : String(a["var"]);
+    el.live.dataset.trades = String(a.trades || 0);
+    el.live.dataset.ccy = a.currency || "USD";
+    delete el.live.dataset.error;
+    var ccy = a.currency && a.currency !== "USD" ? " " + a.currency : "";
+    var pct = function (x) { return x ? Math.round(x * 1000) / 10 + "%" : ""; };
+    function kpi(k, v, s, cls, key) {
+      var d = h("div", "vb-kpi" + (cls ? " " + cls : ""));
+      d.dataset.vbKpi = key;
+      d.appendChild(h("div", "k", k));
+      d.appendChild(h("div", "v mono", v));
+      if (s) d.appendChild(h("div", "s", s));
+      el.live.appendChild(d);
+    }
+    if (a.empty) {
+      kpi("VaR of the basket", "—", a.notice || "no trades", "edge-a", "var");
+      return;
+    }
+    kpi("VaR " + pct(a.confidence) + " 1D of the basket", money(a["var"]) + ccy, "the engine's, follows every change", "", "var");
+    kpi("ES " + pct(a.esConfidence), money(a.es) + ccy, null, "", "es");
+    kpi("Sum of the parts", money(a.sumOfParts), a.wholeBank ? "the whole bank has no parts to add up" : (a.partsAdded || 0).toLocaleString("en-US") + " part" + (a.partsAdded === 1 ? "" : "s") + " added, each alone", "", "sum");
+    kpi("Diversification", a.diversification === null || a.diversification === undefined ? "—" : money(a.diversification), null, "pos", "div");
+    kpi("Trades", (a.trades || 0).toLocaleString("en-US"), "a trade in two parts counts once" + (a.takenAway ? "; " + a.takenAway.toLocaleString("en-US") + " taken away" : ""), "", "trades");
+    el.live.appendChild(h("span", "vb-ms", "checked and computed by the server in " + a.computeMs + " ms"));
   }
 
   // ---------------------------------------------------------------------------------------------------------------- what-if
+  function paintWhatIf() {
+    if (!el.wifList) return;
+    el.wifList.textContent = "";
+    if (!T.whatif.length) return;
+    var t = h("table", "vb-table");
+    var hr = h("tr");
+    ["Copy of", "Factor", ""].forEach(function (x, i) { hr.appendChild(h("th", i === 1 ? "n" : null, x)); });
+    t.appendChild(h("thead")).appendChild(hr);
+    var tb = h("tbody");
+    T.whatif.forEach(function (w, k) {
+      var tr = h("tr");
+      tr.dataset.vbWhatifChip = w.copyOf;
+      tr.appendChild(h("td", "mono", w.copyOf));
+      tr.appendChild(h("td", "n mono", String(w.factor).replace("-", "−")));
+      var td = h("td");
+      var x = btn("", "×", "Remove the what-if " + w.copyOf);
+      x.dataset.vbWdel = String(k);
+      td.appendChild(x);
+      tr.appendChild(td);
+      tb.appendChild(tr);
+    });
+    t.appendChild(tb);
+    el.wifList.appendChild(t);
+  }
   function openWhatIf() {
     show();
-    el.wif.hidden = false;
     el.wifTrade.focus();
   }
   function runWhatIf() {
-    var scope = compose();
-    el.wif.hidden = false;
     if (!T.whatif.length) return;
-    if (!scope) { el.wifOut.textContent = "Pick the basket first: the what-if adds its trade to it."; return; }
+    var scope = compose();
+    if (!scope) {
+      if (empty()) { el.wifOut.textContent = "Fill the basket first: the what-if adds its trades to it."; return; }
+      el.wifOut.textContent = "waiting for the server's check of the sheet…";
+      var once = function () { host.removeEventListener("vb:live", once); runWhatIf(); };
+      host.addEventListener("vb:live", once);
+      return;
+    }
     el.wifOut.textContent = "computing the what-if…";
     delete el.wifOut.dataset.done;
     post("what-if", { scope: scope, items: T.whatif.map(function (w) { return { copyOf: w.copyOf, factor: w.factor }; }) }).then(function (w) {
@@ -488,22 +627,22 @@
       [[("VaR " + cl(w.confidence)).trim(), b["var"], a["var"], ch["var"]], [("ES " + cl(w.esConfidence)).trim(), b.es, a.es, ch.es]].forEach(function (r) {
         var tr = h("tr");
         tr.appendChild(h("td", null, r[0]));
-        tr.appendChild(h("td", "n mono", money(r[1])));
-        tr.appendChild(h("td", "n mono", money(r[2])));
-        tr.appendChild(h("td", "n mono " + (r[3] > 0 ? "up" : "down"), (r[3] > 0 ? "+" : "") + money(r[3])));
+        tr.appendChild(h("td", "n mono", short(r[1])));
+        tr.appendChild(h("td", "n mono", short(r[2])));
+        tr.appendChild(h("td", "n mono " + (r[3] > 0 ? "up" : "down"), (r[3] > 0 ? "+" : "") + short(r[3])));
         tb.appendChild(tr);
       });
       (w.items || []).forEach(function (it) {
         var tr = h("tr", "vb-sub");
-        tr.appendChild(h("td", null, it.label + " alone " + money(it.standaloneVar)));
+        tr.appendChild(h("td", null, it.label + " alone " + short(it.standaloneVar)));
         tr.appendChild(h("td", "n mono", ""));
-        tr.appendChild(h("td", "n mono", "component " + money(it.componentVar)));
-        tr.appendChild(h("td", "n mono", (it.incrementalVar > 0 ? "+" : "") + money(it.incrementalVar)));
+        tr.appendChild(h("td", "n mono", "component " + short(it.componentVar)));
+        tr.appendChild(h("td", "n mono", (it.incrementalVar > 0 ? "+" : "") + short(it.incrementalVar)));
         tb.appendChild(tr);
       });
       t.appendChild(tb);
       el.wifOut.appendChild(t);
-      el.wifOut.appendChild(h("p", "vb-note", "Pre-deal what-if by the Python VaR engine: " + (w.note || "")));
+      if (w.note) el.wifOut.appendChild(h("p", "vb-note", w.note));
     }).catch(function (e) {
       el.wifOut.textContent = "";
       el.wifOut.dataset.done = "failed";
@@ -513,31 +652,126 @@
     });
   }
 
-  // ---------------------------------------------------------------------------------------------------------------- save, open
+  // ---------------------------------------------------------------------------------------------------------------- save, open, edit
   function save() {
-    var scope = compose(), name = (T.name || "").trim();
-    if (!scope || !name) { el.msg.textContent = "Name the basket and pick at least one part."; return; }
+    var name = (T.name || "").trim();
+    if (empty() || !name) { el.msg.textContent = "Name the basket and add at least one part (or tick Start from the whole bank)."; return; }
     el.msg.textContent = "saving…";
     var share = String(T.share || "").split(/[\s,]+/).filter(Boolean);
-    post("baskets", { name: name, title: name, scope: scope, sharedWith: share }).then(function (b) {
-      T.saved = b.id; T.dirty = false; T.name = b.name || name;
+    var body = { name: name, title: name, sheet: payload(), sharedWith: share };
+    if (T.saved && T.saved.editable && same(name, T.saved.name)) {
+      body.name = T.saved.id.slice(T.saved.id.indexOf("/") + 1);
+      body.version = T.saved.version;
+      if (!T.saved.own) body.owner = T.saved.id.slice(0, T.saved.id.indexOf("/"));
+    }
+    post("baskets", body).then(function (b) {
+      T.saved = { id: b.id, name: b.name || name, owner: b.owner, version: b.version, editable: true, own: !body.owner };
+      T.copyOf = null; T.dirty = false; T.name = b.name || name;
       persist();
       paint();
-      el.msg.textContent = "Saved as " + b.id + " (version " + b.version + (share.length ? ", shared read-only with " + share.join(", ") : ", private") + ").";
+      el.msg.textContent = "Saved as " + b.id + " (version " + b.version + (share.length ? ", shared read-only with " + share.join(", ") : ", private")
+        + (body.owner ? "; saved under its owner, who is told" : "") + ").";
       document.dispatchEvent(new CustomEvent("vb:saved", { detail: b }));
       go("BASKET:" + b.id);
-    }).catch(function (e) { el.msg.textContent = e.message; });
+    }).catch(function (e) { el.msg.textContent = e.status === 409 ? e.message + " (Open a saved basket ▾ to load it again)" : e.message; });
   }
   function go(scope) {
     if (!scope) return;
-    lastScope = compose();
+    lastScope = compose() || lastScope;
     if (attached && attached.onOpen) { attached.onOpen(scope); return; }
     location.href = "/var?scope=" + encodeURIComponent(scope);
   }
 
+  /** Lays a scope into the sheet, as the server lays it out: a saved basket (Edit), a portfolio's copy (Edit a copy), an ad-hoc scope. */
+  function load(scope, quiet) {
+    return get("basket/sheet?scope=" + encodeURIComponent(scope)).then(function (d) {
+      var s = d.sheet || {}, cols = (d.columns || []).map(function (c) { return { key: c.key, title: c.title }; });
+      if (cols.length) T.columns = cols;
+      var n = (s.op || []).length, rows = [];
+      keys().forEach(function (k) { n = Math.max(n, (s[k] || []).length); });
+      for (var r = 0; r < n; r++) {
+        var row = { op: (s.op || [])[r] === "-" ? "-" : "+" };
+        keys().forEach(function (k) { var v = (s[k] || [])[r]; if (v) row[k] = v; });
+        rows.push(row);
+      }
+      T.rows = rows;
+      T.wholeBank = !!s.wholeBank;
+      T.dirty = false;
+      T.copyOf = null;
+      T.saved = null;
+      if (d.basket) {
+        var b = d.basket;
+        T.saved = { id: b.id, name: b.name, owner: b.owner, version: b.version, editable: !!b.editable, own: !!b.own };
+        T.name = b.editable ? b.name : "";
+        T.share = b.editable ? (b.sharedWith || []).join(", ") : "";
+      } else if (d.portfolio) {
+        T.copyOf = d.portfolio.id;
+        T.name = "copy-of-" + String(d.portfolio.id).toLowerCase();
+        T.share = "";
+      }
+      answer = null; checked = {}; flags = {};
+      persist();
+      lastScope = scope;
+      if (grid) { grid.root.scrollTop = 0; grid.cur = { r: 0, c: 1 }; }
+      changed(false);
+      if (!quiet) {
+        show();
+        el.msg.textContent = d.basket ? (d.basket.editable ? "Editing " + d.basket.id + " (version " + d.basket.version + "): Save keeps its name as a new version."
+          : "Opened " + d.basket.id + ", shared with you read-only: name it to save your own copy.")
+          : d.portfolio ? d.portfolio.note + "." : "Opened " + scope + " in the sheet.";
+        if (d.notice) el.msg.textContent += " " + d.notice.charAt(0).toUpperCase() + d.notice.slice(1) + ".";
+      }
+      return d;
+    }).catch(function (e) {
+      ensure();
+      el.msg.textContent = "Could not open " + scope + ": " + e.message;
+      if (!quiet) show();
+      throw e;
+    });
+  }
+  function edit(scope) { ensure(); return load(scope, false).catch(function () { return null; }); }   // said in the sheet
+
+  /** The baskets the viewer may open, for "Open a saved basket ▾" (asked when the list is opened). */
+  function listSaved() {
+    get("baskets?").then(function (bs) {
+      var cur = el.pick.value;
+      el.pick.textContent = "";
+      var o = h("option", null, "Open a saved basket ▾");
+      o.value = "";
+      el.pick.appendChild(o);
+      bs.forEach(function (b) {
+        var x = h("option", null, b.name + " · " + b.id + (b.fromSheet ? "" : " (scope)"));
+        x.value = "BASKET:" + b.id;
+        el.pick.appendChild(x);
+      });
+      el.pick.value = cur;
+    }).catch(function () { /* none listed */ });
+  }
+
+  /** The sheet as a workbook, made by the server (it checks every cell again). */
+  function download() {
+    el.msg.textContent = "making the workbook…";
+    fetch("/api/var/basket/sheet.xlsx" + (asOf() ? "?" + asOf().slice(1) : ""), { method: "POST", credentials: "same-origin",
+      headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: T.name || "basket", sheet: payload() }) })
+      .then(function (r) {
+        if (!r.ok) return r.json().catch(function () { return {}; }).then(function (b) { throw new Error(b.detail || "HTTP " + r.status); });
+        return r.blob();
+      }).then(function (blob) {
+        var a = h("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = (slug(T.name) || "basket") + ".xlsx";
+        a.dataset.vbDownloaded = String(blob.size);
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        el.msg.textContent = "Downloaded " + a.download + ": paste its Basket sheet back here to open it again.";
+        el.xlsx.dataset.done = String(blob.size);
+      }).catch(function (e) { el.msg.textContent = "Could not make the workbook: " + e.message; });
+  }
+
   // ---------------------------------------------------------------------------------------------------------------- where it shows
   function ensure() {
-    if (!host) { host = build(); paint(); }
+    if (!host) { host = build(); paint(); listSaved(); }
     return host;
   }
   function show() {
@@ -546,20 +780,21 @@
       if (host.parentNode !== attached.strip) attached.strip.appendChild(host);
       attached.strip.hidden = false;
       host.classList.remove("popup");
-      return;
+    } else {
+      if (!popup) {
+        popup = h("div", "vb-shade");
+        popup.dataset.vbPopup = "";
+        popup.addEventListener("mousedown", function (ev) { if (ev.target === popup) hide(); });
+        document.body.appendChild(popup);
+      }
+      host.classList.add("popup");
+      host.setAttribute("role", "dialog");
+      host.setAttribute("aria-modal", "true");
+      popup.appendChild(host);
+      popup.hidden = false;
     }
-    if (!popup) {
-      popup = h("div", "vb-shade");
-      popup.dataset.vbPopup = "";
-      popup.addEventListener("mousedown", function (ev) { if (ev.target === popup) hide(); });
-      document.body.appendChild(popup);
-    }
-    host.classList.add("popup");
-    host.setAttribute("role", "dialog");
-    host.setAttribute("aria-modal", "true");
-    popup.appendChild(host);
-    popup.hidden = false;
-    if (T.items.length) { clearTimeout(timer); timer = setTimeout(live, 50); }
+    grid.draw();
+    if (!answer || answer.sig !== signature()) { clearTimeout(timer); timer = setTimeout(check, 50); }
   }
   function hide() {
     if (attached) { attached.strip.hidden = true; attached.closed = true; return; }
@@ -568,6 +803,7 @@
   function toggle() {
     var open = attached ? !attached.strip.hidden : popup && !popup.hidden;
     if (open && !attached) { hide(); return; }
+    if (open && attached) { hide(); return; }
     if (attached) attached.closed = false;
     show();
     el.find.focus();
@@ -578,29 +814,18 @@
     attached = opts;
     ensure();
     opts.strip.appendChild(host);
-    lastScope = compose();
-    if (T.items.length) { clearTimeout(timer); timer = setTimeout(live, 50); }
   }
 
-  /** The explorer opened a basket or an ad-hoc scope: the tray shows its parts (a basket's, for editing). */
+  /**
+   * The explorer opened a basket or an ad-hoc scope: the sheet holds its parts (a basket's, for editing) unless it holds them already
+   * (the sheet's own basket, unchanged; the ad-hoc scope the sheet opened). The sheet itself opens only when asked.
+   */
   function mirror(d) {
     if (!d || (d.kind !== "basket" && d.kind !== "adhoc")) return;
-    var terms = d.terms || [];
-    var same0 = d.kind === "adhoc" && compose() && (same(compose(), d.scope) || same(compose(), d.canonical));
-    if (d.kind === "basket" && d.basket && T.saved === d.basket.id && !T.dirty && T.items.length) same0 = true;
-    if (!same0 && terms.length) {
-      T.items = terms.map(function (t) { return { op: t.op, scope: t.scope, type: t.word, id: idOf(t.scope), name: "", trades: null, "var": null, notice: "" }; });
-      T.saved = d.kind === "basket" && d.basket ? d.basket.id : null;
-      T.name = d.kind === "basket" && d.basket ? d.basket.name : T.name;
-      T.share = d.kind === "basket" && d.basket ? (d.basket.sharedWith || []).join(", ") : T.share;
-      T.dirty = false;
-      persist();
-      lastScope = compose();
-      paint();
-      clearTimeout(timer);
-      timer = setTimeout(live, 50);
-    }
-    if (attached && !attached.strip.hidden) show();   // the parts are loaded; the tray itself opens only when asked
+    if (d.kind === "basket" && d.basket && T.saved && T.saved.id === d.basket.id && !T.dirty && T.saved.version === d.basket.version && !empty()) return;
+    if (d.kind === "adhoc" && (lastScope === d.scope || lastScope === d.canonical || compose() === d.scope || compose() === d.canonical)) return;
+    ensure();
+    load(d.kind === "basket" && d.basket ? "BASKET:" + d.basket.id : d.canonical || d.scope, true).catch(function () { /* said in the sheet */ });
   }
 
   // ---------------------------------------------------------------------------------------------------------------- Alt+B
@@ -614,11 +839,12 @@
         toggle();
       }
     });
-    // the explorer moved to another reporting currency: the selection's figures follow it
-    document.addEventListener("var:currency", function () { if (T.items.length && el.live) live(); });
+    // the explorer moved to another reporting currency: the basket's figures follow it
+    document.addEventListener("var:currency", function () { if (host && !empty()) check(); });
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
 
-  window.VarBasket = { add: add, attach: attach, mirror: mirror, show: show, hide: hide, toggle: toggle, compose: compose,
-                       openWhatIf: openWhatIf, state: T, live: function () { live(); } };
+  window.VarBasket = { add: add, attach: attach, mirror: mirror, show: show, hide: hide, toggle: toggle, compose: compose, signature: signature,
+                       edit: edit, openWhatIf: openWhatIf, isEmpty: empty, parts: parts, state: T, payload: payload,
+                       answer: function () { return answer; }, check: function () { check(); } };
 })();
