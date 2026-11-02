@@ -1157,7 +1157,7 @@
         follow = setTimeout(function () { select(scope); }, 350);
       }
     });
-    if (B.state.items.length) strip.hidden = false;
+    // the tray opens only when asked (Construct your basket, Alt+B or + basket): a basket kept in this browser waits behind the link's count
     document.addEventListener("vb:saved", function (ev) { root.dataset.saved = ev.detail.id; });
   }
   $("[data-vx-basket-open]").addEventListener("click", function () { if (B) { B.show(); var f = root.querySelector("[data-vb-find]"); if (f) f.focus(); } });

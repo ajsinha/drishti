@@ -600,7 +600,7 @@
       clearTimeout(timer);
       timer = setTimeout(live, 50);
     }
-    if (attached && !attached.closed) show();
+    if (attached && !attached.strip.hidden) show();   // the parts are loaded; the tray itself opens only when asked
   }
 
   // ---------------------------------------------------------------------------------------------------------------- Alt+B

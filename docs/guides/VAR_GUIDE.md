@@ -444,7 +444,8 @@ ranked path also list each trade's or position's **Trade currency**.
 *VaR of any mix of portfolios, trades and counterparties.* Ad-hoc scopes and baskets are one thing, built one way: the basket tray, a
 strip across the top of the explorer, opened by **◫ Construct your basket** (with the count of its parts) or **Alt+B**. It lives on the
 VaR page only (the top bar has no Basket button, and Alt+B does nothing elsewhere); what you put in it stays in this browser, so a
-basket built earlier is there when the explorer opens.
+basket built earlier is there when the explorer opens, waiting behind the link's count: the tray opens only when asked (the link,
+Alt+B or **+ basket** on a row), never by itself, not even when the explorer opens a saved basket.
 
 - **Type to add.** Hints come from the engine as you type: portfolios, saved baskets, desks, books, legal entities, divisions,
   counterparties, positions and trades, each with its type, id, name, trade count and standalone VaR (`pf usd`, `aldershot`, `MX-3000`,

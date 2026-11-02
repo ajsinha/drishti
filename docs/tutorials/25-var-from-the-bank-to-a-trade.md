@@ -342,7 +342,7 @@ its own (`POS-<book>~<trade>`, the *otc* rule).
 **In the UI.** In the basket tray of step 5, name it (`rates-mix`) and **Save basket and open VaR** (tick nothing more: it is private;
 name users or roles in *Share read-only with* to share it). The explorer opens `VAR SCOPE BASKET:<you>/rates-mix`, the tray reads
 *saved basket · \<you>/rates-mix*, and the basket is listed under *Ad-hoc scopes* as ★ rates-mix. Opening it later (from the list, a
-link, `VAR SCOPE rates-mix <GO>`) loads its parts back into the tray to edit and save again. Then the **Captured results** tab, a note,
+link, `VAR SCOPE rates-mix <GO>`) loads its parts back into the tray (**◫ Construct your basket** opens it) to edit and save again. Then the **Captured results** tab, a note,
 **Capture VaR**, and **Compare with now**:
 
 ![A capture of the FX desk compared with now](img/t25/07-capture.jpg)

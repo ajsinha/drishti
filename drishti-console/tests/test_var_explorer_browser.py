@@ -339,13 +339,17 @@ def test_construct_your_basket_hints_live_save_reopen_and_capture(stack, browser
     pg = ctx.new_page()
     pg.goto(str(stack) + "/go?q=" + f"VAR SCOPE {basket} <GO>".replace(" ", "+"))
     wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'basket'", 60)
+    wait(pg, "window.VarBasket.state.items.length === 4")
+    assert pg.locator("[data-vx-basket]").is_hidden()                       # the parts are loaded; the tray waits for the link
+    pg.locator("[data-vx-basket-open]").click()
     wait(pg, "document.querySelectorAll('[data-vb-chip]').length === 4 && !document.querySelector('[data-vx-basket]').hidden")
     assert pg.locator(f'[data-vb-chip="{trd}"]').get_attribute("class").find("minus") >= 0
     assert "saved basket · " + basket in pg.locator("[data-vb-state]").inner_text()
     assert pg.locator("[data-vb-name]").input_value() == "rates-mix"
     # the selection survives a reload
     pg.reload()
-    wait(pg, "document.querySelectorAll('[data-vb-chip]').length === 4", 60)
+    wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarBasket.state.items.length === 4", 60)
+    assert pg.locator("[data-vx-basket]").is_hidden()                       # kept, not opened: only the link opens it
     # anywhere else: no Basket in the top bar and Alt+B does nothing; the explorer opens the tray with the basket kept (this browser)
     pg.goto(str(stack) + "/t")
     wait(pg, "!!document.querySelector('header, nav')")
