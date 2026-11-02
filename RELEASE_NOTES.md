@@ -31,6 +31,8 @@ groundwork.**
   to 1,024 sets a call, the shards side by side) under one deadline, and the skeleton stream no longer pins threads on Java 21. On the
   200,000-position three-member cluster: no failure at 50, 100 or 200 users (17 timeouts at 50 before), contributions p95 0.9, 1.4 and
   2.5 s (10 to 16 s before), the VaR unchanged to the dollar.
+- **Large workbooks download whole:** a streamed download may now take up to 30 minutes (`DRISHTI_ASYNC_TIMEOUT`); a whole
+  bank's VaR Playground workbook arrived cut short and would not open.
 - **The competitive analysis**, for administrators only (Help): Drishti against risk platforms and against general data and analytics
   products, with sources; Help pages may now be limited to roles.
 - **Groundwork for the next releases:** the design of position sensitivities, FRTB-SA and SIMM with the product owner's decisions, the

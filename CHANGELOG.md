@@ -41,6 +41,13 @@
   something in the last 5 minutes and today's busiest minute.
 - **CLI**: `drishti.py admin capacity [--live] [--set Name=value] [--all] [--json] [--xlsx FILE --inputs plan|live|both]`.
 
+### Large workbook downloads
+
+- **A streamed answer may take 30 minutes.** `spring.mvc.async.request-timeout` (`DRISHTI_ASYNC_TIMEOUT`, `30m`) replaces the
+  servlet container's 30-second limit for streamed answers: the VaR Playground's workbook for a whole bank (7,089 positions, about
+  106 MB of formulas), the Why it moved working, the capacity workbook and BI exports arrived cut short and would not open. Test:
+  `StreamedDownloadTimeoutTest`.
+
 ### Three VaR dates in the demo
 
 - **Three VaR dates in the demo data.** The committed VaR inputs are written for 2026-09-28, 2026-09-29 and 2026-09-30, each
