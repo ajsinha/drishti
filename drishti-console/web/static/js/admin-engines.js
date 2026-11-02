@@ -76,13 +76,14 @@
           ? '<button type="button" role="switch" class="eng-sw" aria-checked="' + on + '" aria-label="' + esc(e.title) + ' on this server" data-eng-switch="' + esc(e.id) + '"><span></span></button> '
             + '<span class="eng-sw-l">' + (on ? 'on' : 'off') + '</span>'
           : '<span class="eng-muted">not installed</span>') + '</td>'
-        + '<td class="l">' + state + '</td>'
-        + '<td class="l"><span class="eng-bar" aria-hidden="true"><i style="width:' + share + '%"></i></span> ' + mb(e.memoryBytes) + '</td>'
+        + '<td class="l eng-state">' + state + '</td>'
+        + '<td class="l"><span class="eng-bar" aria-hidden="true"><i data-w="' + share + '"></i></span> ' + mb(e.memoryBytes) + '</td>'
         + '<td>' + (e.threads || (e.state === 'running' ? 0 : '-')) + '</td>'
-        + '<td class="l">' + (e.needs.length ? esc(e.needs.join(', ')) : '-') + '</td>'
-        + '<td class="l">' + esc(e.neededBy.concat(e.usedBy.map(function (u) { return u + ' (uses)'; })).join(', ') || '-') + '</td>'
+        + '<td class="l eng-wrap">' + (e.needs.length ? esc(e.needs.join(', ')) : '-') + '</td>'
+        + '<td class="l eng-wrap">' + esc(e.neededBy.concat(e.usedBy.map(function (u) { return u + ' (uses)'; })).join(', ') || '-') + '</td>'
         + '<td class="l eng-src">' + source + '</td></tr>';
     }).join('');
+    body.querySelectorAll('.eng-bar i[data-w]').forEach(function (i) { i.style.width = i.getAttribute('data-w') + '%'; });   // the CSP forbids inline style attributes
     var notes = [];
     (view.engines || []).forEach(function (e) {
       if (e.restartNeeded) { notes.push(e.title + ' was turned on (' + e.restartNeeded + '): written to ' + e.file + '; it starts at the next restart.'); }
@@ -90,8 +91,9 @@
     });
     $('[data-eng-notes]').textContent = notes.join(' ');
     var running = (view.engines || []).filter(function (e) { return e.state === 'running'; }).length;
-    $('[data-eng-meta]').textContent = 'this server · ' + (view.node || '') + ' · ' + running + ' of ' + (view.installed || 0)
-      + ' engines running · ' + mb(view.memoryBytes) + ' held by engines · files in ' + (view.dir || '');
+    $('[data-eng-meta]').textContent = 'this server' + (view.node && view.node !== 'this server' ? ' · ' + view.node : '') + ' · ' + running
+      + ' of ' + (view.installed || 0) + ' engines running · ' + (Number(view.memoryBytes) > 0 ? mb(view.memoryBytes) : 'nothing') + ' held by engines'
+      + ' · files in ' + (view.dir || '');
   }
 
   // ---------------------------------------------------------------------------------------------------------- the cluster (C)
@@ -192,12 +194,15 @@
     var saved = '';
     staged.filter(function (s) { return !s.on; }).forEach(function (s) {
       var e = byId(s.engine);
-      Object.keys(e.hides || {}).forEach(function (k) {
+      Object.keys(e.hides || {}).sort(function (a, b) { return (a === 'words' ? 0 : 1) - (b === 'words' ? 0 : 1); }).forEach(function (k) {
         (e.hides[k] || []).forEach(function (v) { hides.push('<span class="eng-chip">' + esc(k === 'words' ? v : k + ': ' + v) + '</span>'); });
       });
-      var elsewhere = ((view.cluster || {}).available || {})[s.engine] && e.state !== 'running';
-      saved += elsewhere ? '' : '<p class="eng-muted">' + (s.node ? 'If no other node runs ' + esc(e.title) + ', these disappear for everyone.'
-        : 'Nowhere else in the cluster runs ' + esc(e.title) + ' unless the Cluster tab says so; these disappear for everyone.') + '</p>';
+      var peers = (view.cluster || {}).peers || {};
+      var others = Object.keys(peers).filter(function (n) { return n !== s.node && (peers[n] || {})[s.engine] === 'running'; });
+      if (s.node && e.state === 'running') { others.push(view.node || 'this server'); }
+      saved += '<p class="eng-muted">' + (others.length
+        ? esc(list(others)) + ' still run' + (others.length === 1 ? 's' : '') + ' ' + esc(e.title) + ': people keep it, served from there.'
+        : 'Nowhere else in the cluster runs ' + esc(e.title) + ', so these disappear for everyone.') + '</p>';
     });
     staged.filter(function (s) { return s.on; }).forEach(function (s) { hides.push('<span class="eng-chip g">' + esc(title(s.engine)) + ' comes back</span>'); });
     $('[data-eng-hides]').innerHTML = (hides.join(' ') || '<p class="eng-muted">Nothing.</p>') + saved;
@@ -205,8 +210,9 @@
       var e = byId(s.engine);
       if (s.on && !e.liveOn) { return '<p><span class="eng-pill a">restart needed</span> ' + esc(e.title) + ' is written to its file and starts at the next restart (its direct memory is set at start).</p>'; }
       if (s.on) { return '<p>Live, no restart: ' + esc(e.title) + ' starts; its words come back at once.</p>'; }
-      return '<p>Live, no restart: new requests answer "not running"; requests in flight finish (up to 30 s); ' + mb(e.memoryBytes)
-        + ' and ' + (e.threads || 0) + ' threads are released.</p>';
+      return '<p>Live, no restart: new requests answer "not running"; requests in flight finish (up to 30 s); '
+        + (Number(e.memoryBytes) > 0 ? mb(e.memoryBytes) : 'what it holds') + ' and ' + (e.threads || 0) + ' thread' + (e.threads === 1 ? ' is' : 's are')
+        + ' released.</p>';
     }).join('');
     $('[data-eng-effect]').innerHTML = effect;
     $('[data-eng-writes]').textContent = 'writes ' + staged.map(function (s) { var e = byId(s.engine); return s.node ? s.node + ': config/engines/' + s.engine + '.yaml' : e.file; }).join(', ');
@@ -277,6 +283,8 @@
       changes: staged.map(function (s) { return {engine: s.engine, on: s.on}; })};
     var btn = $('[data-eng-apply]');
     btn.disabled = true;
+    $('[data-eng-done]').hidden = true;
+    $('[data-eng-error]').hidden = true;
     fetch('/admin/api/engines', {method: 'POST', headers: {'Content-Type': 'application/json', Accept: 'application/json'},
       credentials: 'same-origin', body: JSON.stringify(body)})
       .then(function (r) { return r.json().then(function (j) { return {ok: r.ok, j: j}; }); })
@@ -293,10 +301,11 @@
         if (!res.j.engines && res.j.forwardedTo) { out = 'sent to ' + res.j.forwardedTo + ': ' + out; }
         staged = [];
         $('[data-eng-reason]').value = '';
-        var done = $('[data-eng-done]');
-        done.hidden = false;
-        done.textContent = out;
-        return refresh();
+        return refresh().then(function () {                 // said once the list and History show the change
+          var done = $('[data-eng-done]');
+          done.hidden = false;
+          done.textContent = out;
+        });
       })
       .catch(function (e) { $('[data-eng-error]').hidden = false; $('[data-eng-error]').textContent = String(e); btn.disabled = false; });
   }

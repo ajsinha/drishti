@@ -86,6 +86,14 @@ AREAS = [
     Area("server", "The server: `application.yaml`",
          "`drishti-server/src/main/resources/application.yaml`, inside the jar. Override a key in `application.local.yaml`, with an "
          "environment variable (the one named, or Spring's relaxed name) or a `--key=value` argument ([Precedence](#precedence))."),
+    Area("engines", "Compute engines: `config/engines/*.yaml`",
+         "One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake), "
+         "`config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: "
+         "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
+         "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
+         "`drishti.py server engines` write only the switch and `changed`; every other key is edited in the file "
+         "([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#20-compute-engines-on-or-off)). "
+         "The old switch names are listed last: they still work, with a warning at start (`DRS-1024`)."),
     Area("console", "The console: `application.yaml`",
          "`drishti-console/config/application.yaml`. Override a key in `config/application.local.yaml`, with the variable named, with "
          "`DRISHTI_CONSOLE__SECTION__KEY` or a `--section.key=value` argument."),
@@ -337,12 +345,63 @@ def feature_rows() -> list[Row]:
     return rows
 
 
+# ---- the compute engines' files ---------------------------------------------------------------------------------------------
+
+ENGINES_DIR = ROOT / "config" / "engines"
+ENGINES_JAR = ROOT / "drishti-server" / "src" / "main" / "resources" / "engines"
+
+
+def _flat_keys(doc, prefix: str = "") -> set[str]:
+    if isinstance(doc, dict) and doc:
+        out: set[str] = set()
+        for k, v in doc.items():
+            out |= _flat_keys(v, f"{prefix}.{k}" if prefix else str(k))
+        return out
+    return {prefix}
+
+
+def engine_rows() -> tuple[list[Row], list[str]]:
+    """The Engines area: one table per engine file (catalogue order), then the old switch names. Problems: a shipped engine file and its
+    jar copy differ, a catalogue entry without a file or a file without an entry, a key in both application.yaml and an engine file."""
+    import yaml
+    rows: list[Row] = []
+    problems: list[str] = []
+    catalogue = yaml.safe_load((ENGINES_JAR / "catalogue.yaml").read_text(encoding="utf-8")).get("engines") or []
+    files = {e["file"] for e in catalogue}
+    on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
+    for name in sorted(on_disk - files):
+        problems.append(f"config/engines/{name}: no engine of the catalogue (drishti-server/src/main/resources/engines/catalogue.yaml) names it")
+    app_keys = _flat_keys(yaml.safe_load((ROOT / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
+    for e in catalogue:
+        f = ENGINES_DIR / e["file"]
+        jar = ENGINES_JAR / e["file"]
+        if not f.is_file() or not jar.is_file():
+            problems.append(f"the engine {e['id']} has no file config/engines/{e['file']} (and its jar copy)")
+            continue
+        if f.read_bytes() != jar.read_bytes():
+            problems.append(f"config/engines/{e['file']} differs from its jar copy drishti-server/src/main/resources/engines/{e['file']}")
+        for k in sorted(_flat_keys(yaml.safe_load(f.read_text(encoding="utf-8"))) & app_keys):
+            problems.append(f"{k} is in both application.yaml and config/engines/{e['file']}: an engine's key lives in its file only")
+        rows += yaml_rows("engines", [f], "server (each node its own)", "restart", f"{e['title']} (`{e['id']}`): `{e['file']}`",
+                          collapse=COLLAPSE["server"])
+    for e in catalogue:
+        for alias in e.get("aliases") or []:
+            rows.append(Row("engines", "Old names (still accepted)", "drishti-server/src/main/resources/engines/catalogue.yaml", alias, "boolean",
+                            None, [], "server", _clean(f"The old name of {e['switch']} ({e['title']}): still accepted, and when set above the "
+                                                         f"shipped files it decides, with a warning at start (DRS-1024). Move it to "
+                                                         f"config/engines/{e['file']} or use Admin → Engines."), "live", "2.9.11", False))
+    return rows, problems
+
+
 def all_rows() -> tuple[list[Row], list[str]]:
     """Every row, and every problem a schema has against the files it describes."""
     problems: list[str] = []
     rows: list[Row] = []
     rows += yaml_rows("server", [ROOT / "drishti-server/src/main/resources/application.yaml"], "server", "restart",
                       collapse=COLLAPSE["server"])
+    r, p = engine_rows()
+    rows += r
+    problems += p
     rows += yaml_rows("console", [ROOT / "drishti-console/config/application.yaml"], "console", "restart", collapse=COLLAPSE["console"])
     rows += connector_rows()
     rows += yaml_rows("editions", editions_files(), "an edition (server and console)", "restart", "An edition file: `config/editions/<name>.yaml`",
@@ -449,7 +508,7 @@ def env_index(rows: list[Row]) -> tuple[list[dict], list[str]]:
 
 
 def _area_short(area: str) -> str:
-    return {"server": "server", "console": "console", "connectors": "connector", "packs": "pack", "editions": "edition", "store": "store",
+    return {"server": "server", "engines": "engine", "console": "console", "connectors": "connector", "packs": "pack", "editions": "edition", "store": "store",
             "runs": "runs", "edit": "write-back", "compute": "compute", "net": "net", "ui-kit": "ui kit", "ai": "AI"}.get(area, area)
 
 
