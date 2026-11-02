@@ -251,6 +251,7 @@ final class VarViews {
                     m.put("scope", bk.get("scope"));
                     m.put("sharedWith", bk.get("sharedWith"));
                     m.put("version", bk.get("version"));
+                    m.put("fromSheet", bk.get("sheet") != null);                // kept as the sheet's lists (VAR_GUIDE.md section 3.5)
                     out.put("basket", m);
                 });
             }
