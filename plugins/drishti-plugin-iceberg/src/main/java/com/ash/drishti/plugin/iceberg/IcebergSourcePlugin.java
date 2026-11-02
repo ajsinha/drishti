@@ -107,6 +107,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
     private final Map<String, List<String>> vectorCols = new ConcurrentHashMap<>();
     /** Id maps and documents on disk, kept across restarts ({@code id-map-disk.enabled}, {@code doc-disk-cache.enabled}). */
     private IcebergDiskCaches disk;
+    /** The warehouse is in memory ({@code mem://}): nothing of it is written to a disk by this connector (IN_MEMORY_LAKE.md section 8). */
+    private volatile boolean memoryOnly;
     /** Set when a data-load signal found a new snapshot: the next refresh rebuilds type-ahead. */
     private volatile boolean reindexDue;
     private final HitIndex index = new HitIndex();
@@ -207,7 +209,8 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             java.lang.System.getLogger(IcebergSourcePlugin.class.getName()).log(java.lang.System.Logger.Level.WARNING, "{0}: {1}",
                     sourceName, relocateIgnored);
         }
-        this.dated = new DatedHitIndex(sourceName, DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
+        this.memoryOnly = com.ash.drishti.lakeio.mem.MemoryStores.isMemory(root) || com.ash.drishti.lakeio.mem.MemoryStores.isMemory(ctx.setting("warehouse", ""));
+        this.dated = new DatedHitIndex(memoryOnly ? null : sourceName, memoryOnly ? null : DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
             return v == null ? null : "s" + v;
         });
@@ -236,7 +239,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
                 vectorCols.put(k.substring(7, k.length() - 8), Arrays.stream(v.split(",")).map(String::trim).filter(x -> !x.isEmpty()).toList());
             }
         });
-        this.disk = new IcebergDiskCaches(sourceName, ctx);
+        this.disk = new IcebergDiskCaches(sourceName, ctx, memoryOnly);
         if (disk.idMapFolder() != null) {
             disk.idMapFolder().latestDates(this::latestDates);
             disk.idMapFolder().schedule(ctx.scheduler(), loaders);
@@ -1137,6 +1140,11 @@ public final class IcebergSourcePlugin implements SourcePlugin {
         } catch (IOException e) {
             // closing a REST client: nothing to do
         }
+    }
+
+    @Override
+    public boolean memoryOnly() {
+        return memoryOnly;
     }
 
     @Override

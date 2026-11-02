@@ -140,6 +140,28 @@ public final class Retention {
         return out;
     }
 
+    /**
+     * Whether {@code text} (a BI question, its data versions, a prompt) names a memory-only kind, mnemonic or connector as a whole word. Errs
+     * on the side of the contract: a question that merely mentions the word is treated as reading it (its result is then not stored).
+     */
+    public boolean mentions(String text) {
+        if (text == null || text.isBlank()) {
+            return false;
+        }
+        Map<String, String> kinds = memoryKinds();
+        if (kinds.isEmpty()) {
+            return false;
+        }
+        String t = text.toLowerCase(Locale.ROOT);
+        for (String k : kinds.keySet()) {
+            String word = k.startsWith("connector:") ? k.substring(10) : k;
+            if (java.util.regex.Pattern.compile("(?<![a-z0-9_-])" + java.util.regex.Pattern.quote(word) + "(?![a-z0-9_-])").matcher(t).find()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** Whether data of {@code kinds} may be written to {@code sink}: always, unless one is memory-only and the place is not allowed. */
     public boolean mayPersist(Sink sink, Collection<String> kinds) {
         return sink == Sink.DOWNLOAD || sink == Sink.PEER_NODE || memoryOnly(kinds).isEmpty();
