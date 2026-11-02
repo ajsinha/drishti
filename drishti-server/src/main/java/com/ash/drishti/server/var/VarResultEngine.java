@@ -36,8 +36,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * The computed kind {@code var-result} (VAR_GUIDE.md section 8, as built in 2.8.0): a scope's VaR answered by the server's VaR engine through
  * the market-risk pack's reactive connector {@code var-engine} ({@code plugin: reactive}, {@code engine.type: java}), so VaR opens as an
  * ordinary kind: {@code VRES DESK:RATES <GO>}, {@code /v/var-result/DESK:RATES}, the entities API, the CLI, search and the AI tools, with
- * the same entitlements as the explorer (the answer is computed as the viewer: their nodes, their masks, their audit entry). Java keeps
- * the additive aggregation here; the Python engine ({@code var-whatif}) reads this kind for what it adds on top.
+ * the same entitlements as the explorer (the answer is computed as the viewer: their nodes, their masks, their audit entry).
  *
  * <p>The id is the scope text ({@code DESK:RATES}, {@code BANK - DESK:CREDIT}); a {@code ~} inside a node id is written {@code %7E}
  * ({@code NODE:MGMT%7EDESK-RATES}), as every computed id writes it. The parameter {@code ccy} (2.9.4; default USD) asks it in a reporting

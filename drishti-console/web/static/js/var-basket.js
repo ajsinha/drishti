@@ -503,11 +503,11 @@
       });
       t.appendChild(tb);
       el.wifOut.appendChild(t);
-      el.wifOut.appendChild(h("p", "vb-note", "Pre-deal what-if by the Python VaR engine: " + (w.note || "")));
+      el.wifOut.appendChild(h("p", "vb-note", "Pre-deal what-if by the server's VaR engine: " + (w.note || "")));
     }).catch(function (e) {
       el.wifOut.textContent = "";
       el.wifOut.dataset.done = "failed";
-      var p = h("p", "vb-err", e.code === "DRS-5205" ? "The what-if cannot run here: " + e.message + " (" + e.code + ")." : "What-if failed: " + e.message);
+      var p = h("p", "vb-err", "What-if failed: " + e.message + (e.code ? " (" + e.code + ")." : ""));
       p.setAttribute("role", "alert");
       el.wifOut.appendChild(p);
     });

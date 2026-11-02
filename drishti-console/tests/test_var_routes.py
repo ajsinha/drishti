@@ -302,7 +302,7 @@ def test_admin_ad_hoc_scopes_says_when_the_engine_is_off(client, backend, monkey
     from core.backend import BackendError
 
     async def var(method, path, ident, /, body=None, raw=False, **params):
-        raise BackendError(503, "DRS-5205", "the VaR engine is off")
+        raise BackendError(503, "DRS-5204", "the VaR engine is off")
     monkeypatch.setattr(backend, "var", var, raising=False)
     page = client.get("/admin/scopes")
     assert page.status_code == 200 and "the VaR engine is off" in page.text
