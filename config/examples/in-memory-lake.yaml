@@ -24,7 +24,7 @@ drishti:
       stores:
         news:
           max-mb: ${DRISHTI_NEWS_MEMORY_MB:256}       # the hard cap
-          chunk-kb: 1024
+          chunk-kb: 64                                  # small tables: a file holds at least one chunk (RESOURCES_AND_SCALE, measured)
           contract: ${DRISHTI_NEWS_CONTRACT:NEWS-MEMORY-ONLY}   # shown on every refusal and on Admin -> Lakes
       tables:
         - name: news
