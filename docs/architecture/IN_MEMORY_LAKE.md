@@ -15,7 +15,7 @@
 -->
 # The in-memory lake: Delta tables that never touch a disk
 
-**Status: designed, not built; planned for 2.9.13 (product owner, 2026-11-02); the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
+**Status: designed, not built; planned for 2.9.11, on Java 21 (product owner, 2026-11-02: Java 25 may not reach production, so it is built on Java 21 and brought forward); the product owner's decisions are taken** ([section 14](#14-decisions-for-the-product-owner), 2026-11-02):
 the owner node binds the pack and the others reach it through the pack; nothing leaves but downloads; whole unpinned tables may be
 evicted; Iceberg as well as Delta; news first; compaction automated so the memory keeps optimizing itself. The build checklist is in
 [section 15](#15-the-build-checklist).
@@ -75,10 +75,10 @@ tables (on disk and in memory, the same bytes) and the measured figures replace 
 
 `mem://<store>/<path>`: a **store** is one named pool of memory with its own cap (`mem://feeds/vendor-x/prices/_delta_log/…`).
 
-- **Files as chunks off the heap.** A file is a list of fixed-size chunks (1 MB by default) taken from the store's slab, so a file of
-  any size costs at most one partly-filled chunk and the slab never fragments. Off-heap: direct buffers on Java 21, `MemorySegment`
-  from one shared `Arena` per store on Java 25 (the same seam as [HIGH_PERFORMANCE_NATIVE](HIGH_PERFORMANCE_NATIVE.md)). Nothing of the
-  data is on the Java heap except the listing (a sorted map of names to chunk lists: about 200 bytes a file).
+- **Files as chunks off the heap, on Java 21.** A file is a list of fixed-size chunks (1 MB by default) taken from the store's chunk
+  pool, so a file of any size costs at most one partly-filled chunk and the pool never fragments. Nothing of the data is on the Java
+  heap except the listing (a sorted map of names to chunk lists: about 200 bytes a file). The build uses only what Java 21 has without
+  preview flags ([section 3a](#3a-on-java-21)); nothing in it needs Java 25.
 - **The `Storage` contract, met exactly:** sorted listings (`listFrom`), `status`, positional reads (`open` → `RangeReader` over the
   chunks, no copy), `create` (visible when closed), **`createIfAbsent` truly exclusive** (`exclusiveCreates() == true`: a concurrent
   second commit of the same Delta version loses, as on local disk), `delete`.
@@ -86,6 +86,25 @@ tables (on disk and in memory, the same bytes) and the measured figures replace 
   ([section 6](#6-the-hard-limit-and-the-eviction-ladder)); if that frees too little, the write fails with a clear error, the file is
   dropped, and since a Delta commit is the last file written, the table stays at its previous version, whole.
 - **A restart empties it.** By design: the replenish jobs refill it ([section 4](#4-filling-the-tables-replenish-jobs)).
+
+## 3a. On Java 21
+
+**Decided (product owner, 2026-11-02):** production may stay on Java 21, so the store is built on Java 21, with no preview feature
+(Java 21's foreign-memory API is a preview there and is not used).
+
+- **The chunk pool:** direct `ByteBuffer`s of `chunk-kb`, allocated on demand up to the store's cap and **reused**: a deleted or evicted
+  file's chunks go back to the pool's free list at once, so the cap is exact and never waits for a garbage collection (Java frees an
+  unreachable direct buffer only after a collection notices it).
+- **Giving memory back:** when a store shrinks (its cap lowered, or the pool idle well below its cap for a while), chunks beyond what is
+  in use are released explicitly (`sun.misc.Unsafe.invokeCleaner`, in `jdk.unsupported` on Java 21), not left to the collector.
+- **The JVM's direct-memory limit:** every launcher sets `-XX:MaxDirectMemorySize=256m` today (the server's own I/O buffers). A server with
+  memory stores needs that limit raised by the stores' caps: the start scripts, the Docker images and the Windows script compute
+  `256m + the stores' max-mb` from the configuration, and Admin → Health turns red when the running limit is below it (the store would
+  refuse writes long before its cap otherwise). The sizing planner adds the stores to the server's RAM line.
+- **Reads without copies:** a `RangeReader` over the chunks hands the Parquet reader read-only slices of the buffers; a page that spans two
+  chunks is the only copy.
+- **Java 25 later, if production moves:** the pool sits behind one small interface, so a `MemorySegment` implementation can replace it
+  without changing anything above it; it is not planned.
 
 ## 4. Filling the tables: replenish jobs
 
@@ -306,5 +325,5 @@ All taken by the product owner on 2026-11-02:
 | 7 | Tests of section 13, the sentinel scan first; the measured memory ratios in RESOURCES_AND_SCALE | M |
 | 8 | Docs: a guide (setting up a memory-only feed, end to end) and a tutorial, CONFIGURATION, OPERATIONS, the Help entries | S |
 
-About L to XL in all with compaction, the owner binding and Iceberg, as one release theme or the larger of two items in one. Java 25's `MemorySegment` makes part 1 simpler; it works on
-Java 21 with direct buffers.
+About L to XL in all with compaction, the owner binding and Iceberg; planned in 2.9.11, on Java 21 (section 3a), with the direct-memory
+limit in every launcher as part of item 1.
