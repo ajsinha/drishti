@@ -75,10 +75,22 @@ public final class Retention {
      * @param contractOfStore a store's contract
      */
     public Retention(SourceRegistry registry, Function<String, String> codeFor, Function<String, String> contractOfStore) {
+        this(registry, codeFor, contractOfStore, null);
+    }
+
+    /** A guard over given memory-only kinds (tests): kind or mnemonic, lower case, to its contract; {@code connector:<name>} for a connector. */
+    static Retention of(Map<String, String> kinds) {
+        return new Retention(null, null, s -> "", Map.copyOf(kinds));
+    }
+
+    private Retention(SourceRegistry registry, Function<String, String> codeFor, Function<String, String> contractOfStore, Map<String, String> fixed) {
         this.registry = registry;
         this.codeFor = codeFor;
         this.contractOfStore = contractOfStore;
+        this.fixed = fixed;
     }
+
+    private final Map<String, String> fixed;
 
     /** The server's guard. */
     public static Retention current() {
@@ -92,6 +104,9 @@ public final class Retention {
 
     /** The memory-only kinds and their mnemonics, lower case, with their contracts (recomputed at most every 5 s). */
     Map<String, String> memoryKinds() {
+        if (fixed != null) {
+            return fixed;
+        }
         if (registry == null) {
             return Map.of();
         }
