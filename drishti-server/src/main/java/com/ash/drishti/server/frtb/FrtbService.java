@@ -28,7 +28,6 @@ import com.ash.drishti.compute.frtb.FrtbSa;
 import com.ash.drishti.server.security.Principal;
 import com.ash.drishti.server.var.VarService;
 import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -78,21 +77,44 @@ public final class FrtbService {
             .expireAfterWrite(Duration.ofMinutes(10)).<String, Run>build().asMap();
 
     public FrtbService(FrtbData data, Scopes scopes, FrtbProperties props) {
+        this(data, scopes, props, Path.of(props.parametersDir()));
+    }
+
+    /**
+     * The service with its parameter files in {@code dir}. Checked at start: a missing or refused file leaves the engine answering every
+     * request with {@code DRS-5329} and the reason (the server itself starts).
+     */
+    public FrtbService(FrtbData data, Scopes scopes, FrtbProperties props, Path dir) {
         this.data = data;
         this.scopes = scopes;
         this.props = props;
-        Path dir = Path.of(props.parametersDir());
+        byte[] s = new byte[0];
+        byte[] d = new byte[0];
+        FrtbParams prm = null;
+        String why = null;
         try {
-            this.sbmBytes = Files.readAllBytes(dir.resolve("frtb-sa-sbm.yaml"));
-            this.drcBytes = Files.readAllBytes(dir.resolve("frtb-sa-drc-rrao.yaml"));
+            s = Files.readAllBytes(dir.resolve("frtb-sa-sbm.yaml"));
+            d = Files.readAllBytes(dir.resolve("frtb-sa-drc-rrao.yaml"));
+            prm = FrtbParams.parse(s, d, Map.of());
         } catch (IOException e) {
-            throw new UncheckedIOException("DRS-5329 the FRTB-SA parameter files are not in " + dir.toAbsolutePath() + " (drishti.frtb.parameters-dir)", e);
-        }
-        try {
-            this.params = FrtbParams.parse(sbmBytes, drcBytes, Map.of());           // checked at start: a bad file refuses the server's engine
+            why = "DRS-5329 the FRTB-SA parameter files are not in " + dir.toAbsolutePath() + " (drishti.frtb.parameters-dir)";
         } catch (IllegalArgumentException e) {
-            throw new IllegalStateException("DRS-5329 " + e.getMessage(), e);
+            why = "DRS-5329 " + e.getMessage();
         }
+        if (why != null) {
+            org.slf4j.LoggerFactory.getLogger(FrtbService.class).error("{}: FRTB-SA does not answer", why);
+        }
+        this.sbmBytes = s;
+        this.drcBytes = d;
+        this.params = prm;
+        this.problem = why;
+    }
+
+    private final String problem;
+
+    /** Why the engine does not answer (a missing or refused parameter file), or null. */
+    public String problem() {
+        return problem;
     }
 
     public FrtbProperties props() {
@@ -118,6 +140,9 @@ public final class FrtbService {
     void enabled() {
         if (!props.enabled()) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "FRTB-SA is switched off on this server (drishti.frtb.enabled)");
+        }
+        if (problem != null) {
+            throw new DrishtiException(ErrorCode.SOURCE_FAILED, problem);
         }
     }
 

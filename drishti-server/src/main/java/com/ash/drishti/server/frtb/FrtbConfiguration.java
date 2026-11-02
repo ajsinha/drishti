@@ -30,7 +30,8 @@ import org.springframework.context.annotation.Configuration;
 public class FrtbConfiguration {
 
     @Bean
-    FrtbService frtbService(FrtbProperties props, SourceRouter router, ObjectProvider<VarService> var, ObjectProvider<LoadService> loads) {
+    FrtbService frtbService(FrtbProperties props, SourceRouter router, ObjectProvider<VarService> var, ObjectProvider<LoadService> loads,
+            ObjectProvider<com.ash.drishti.packs.PackRegistry> packs) {
         FrtbData data = new FrtbData((kind, asOf, sink) -> {
             try {
                 return router.documents(kind, asOf, (EntityDocument d) -> sink.accept(d.data()));
@@ -40,7 +41,7 @@ public class FrtbConfiguration {
             }
         }, props);
         VarService v = var.getIfAvailable();
-        FrtbService svc = new FrtbService(data, v == null ? null : v::scopeMembers, props);
+        FrtbService svc = new FrtbService(data, v == null ? null : v::scopeMembers, props, parametersDir(props, packs.getIfAvailable()));
         LoadService l = loads.getIfAvailable();
         if (l != null) {
             l.onReady(r -> {
@@ -50,5 +51,15 @@ public class FrtbConfiguration {
             });
         }
         return svc;
+    }
+
+    /** The parameter files' folder: the setting when it holds them, else the market-risk pack's {@code capital/} wherever the pack is. */
+    static java.nio.file.Path parametersDir(FrtbProperties props, com.ash.drishti.packs.PackRegistry packs) {
+        java.nio.file.Path set = java.nio.file.Path.of(props.parametersDir());
+        if (java.nio.file.Files.isRegularFile(set.resolve("frtb-sa-sbm.yaml")) || packs == null) {
+            return set;
+        }
+        return packs.packs().stream().filter(p -> p.name().equals("market-risk")).map(p -> p.dir().resolve("capital"))
+                .filter(d -> java.nio.file.Files.isRegularFile(d.resolve("frtb-sa-sbm.yaml"))).findFirst().orElse(set);
     }
 }
