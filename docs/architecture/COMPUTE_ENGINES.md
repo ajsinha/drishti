@@ -15,7 +15,7 @@
 -->
 # Compute engines on or off, each with its own configuration file
 
-Status: built (2.9.11 row 14, [the plan](IMPLEMENTATION_PLAN.md#2911-sensitivities-and-market-risk-capital-proposed)); mock-up A, with C as
+Status: built (2.9.11 row 14, [the plan](IMPLEMENTATION_PLAN.md#2911-sensitivities-and-market-risk-capital-released-2026-11-02)); mock-up A, with C as
 its Cluster tab. How it was built, and where it differs from the text below, is [section 17](#17-as-built). The administrator's guide is
 [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off).
 

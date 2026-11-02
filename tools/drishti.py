@@ -1424,7 +1424,7 @@ def build_parser() -> argparse.ArgumentParser:
     play_ctx = {"Api": Api, "CliError": CliError, "say_json": say_json}                                        # shared: frtbcli makes the play group
     load_module("frtbcli", "frtbcli.py").register(groups, srv, play_ctx)   # sens, frtb, play frtb (2.9.11)
     load_module("simmcli", "simmcli.py").register(groups, srv, play_ctx)   # simm show|list|explain|against|versions, play simm (2.9.11)
-    adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.10.a)
+    adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.11)
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")

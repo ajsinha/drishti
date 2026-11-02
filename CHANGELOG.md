@@ -15,7 +15,7 @@
 -->
 # Changelog
 
-## Unreleased (on develop, after 2.9.10.a)
+## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)
 
 - **Compute engines on or off per server, each with its own configuration file (2.9.11 row 14; COMPUTE_ENGINES.md, OPERATIONS.md
   section 21).** VaR (with regulatory VaR), exposure, the position sensitivities, FRTB-SA, SIMM and the in-memory lake each have a file,
