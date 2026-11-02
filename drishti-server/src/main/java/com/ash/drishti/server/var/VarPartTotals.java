@@ -50,6 +50,11 @@ final class VarPartTotals {
     static final long OWN_LIMIT = 64L << 20;
     /** Missing positions computed on one thread up to this many; more are split across the sum threads. */
     private static final int PARALLEL_FROM = 256;
+    /**
+     * The positions or trades whose remote reads are fetched ahead together (VAR_SHARDING.md section 15): one step's answers held at
+     * once, about 4 MB at 509 scenarios.
+     */
+    static final int AHEAD = com.ash.drishti.compute.vector.ShardedVectors.BATCH;
     private static final long NONE = Double.doubleToRawLongBits(Double.NaN);
 
     /** The parts counted and Σ standalone VaR. */
@@ -160,8 +165,14 @@ final class VarPartTotals {
                 int from = (int) ((long) missing.length * t / tasks);
                 int to = (int) ((long) missing.length * (t + 1) / tasks);
                 work.add(() -> {
-                    for (int i = from; i < to; i++) {
-                        values.set(missing[i], Double.doubleToRawLongBits(alone(b, missing[i], calc, lens)));
+                    for (int at = from; at < to; at += AHEAD) {          // on a put-together date: one call per remote shard a step
+                        int[] step = java.util.Arrays.copyOfRange(missing, at, Math.min(to, at + AHEAD));
+                        b.readAhead(s.set(), step, new int[0], () -> {
+                            for (int pi : step) {
+                                values.set(pi, Double.doubleToRawLongBits(alone(b, pi, calc, lens)));
+                            }
+                            return null;
+                        });
                     }
                     return null;
                 });
@@ -190,14 +201,21 @@ final class VarPartTotals {
         VarBook b = s.date().book();
         boolean apply = lens.method() != VarLens.Method.NONE;
         if (mode.equals("trade")) {
+            int[] all = new int[s.set().size()];
+            int[] n = {0};
+            s.set().forEach(o -> all[n[0]++] = o);
             double[] acc = {0};
-            int[] k = {0};
-            s.set().forEach(o -> {
-                double[] v = b.tradeVector(o);
-                acc[0] += calc.var(apply ? lens.apply(v) : v);
-                k[0]++;
-            });
-            return new Totals(k[0], acc[0]);
+            for (int at = 0; at < all.length; at += AHEAD) {            // in order, one running sum; each step's remote reads fetched ahead
+                int[] step = java.util.Arrays.copyOfRange(all, at, Math.min(all.length, at + AHEAD));
+                b.readAhead(s.set(), new int[0], step, () -> {
+                    for (int o : step) {
+                        double[] v = b.tradeVector(o);
+                        acc[0] += calc.var(apply ? lens.apply(v) : v);
+                    }
+                    return null;
+                });
+            }
+            return new Totals(all.length, acc[0]);
         }
         List<int[]> runs = positionRuns(b, s.set());
         boolean[] whole = new boolean[runs.size()];

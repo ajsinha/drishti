@@ -15,7 +15,8 @@
 -->
 # Drishti 2.9.10.a — release notes
 
-*Released 2026-11-02.* **Admin → Capacity; three VaR dates in the demo; the competitive analysis; the next releases' groundwork.**
+*Released 2026-11-02.* **Admin → Capacity; the cluster's VaR under load; three VaR dates in the demo; the competitive analysis; the next releases'
+groundwork.**
 
 - **Admin → Capacity** ([OPERATIONS section 12.4](docs/admin/OPERATIONS.md), [RESOURCES_AND_SCALE section 9.7](docs/architecture/RESOURCES_AND_SCALE.md)):
   this server today against the plan (heap, RAM, disk and cores with their headroom, what breaks first and its fix, growth to three
@@ -26,6 +27,10 @@
 - **Three VaR dates in the demo** (2026-09-28, 09-29, 09-30): *Why it moved* shows real waterfalls (the bank's VaR down 533,406 from
   09-29 to 09-30, mostly 37 trades that left; a book moved from the Credit desk to Fixed Income on 09-29). The 09-30 figures are
   unchanged.
+- **The cluster's VaR answers under load:** a contribution table and a headline's standalone sums ask each remote shard once (up
+  to 1,024 sets a call, the shards side by side) under one deadline, and the skeleton stream no longer pins threads on Java 21. On the
+  200,000-position three-member cluster: no failure at 50, 100 or 200 users (17 timeouts at 50 before), contributions p95 0.9, 1.4 and
+  2.5 s (10 to 16 s before), the VaR unchanged to the dollar.
 - **The competitive analysis**, for administrators only (Help): Drishti against risk platforms and against general data and analytics
   products, with sources; Help pages may now be limited to roles.
 - **Groundwork for the next releases:** the design of position sensitivities, FRTB-SA and SIMM with the product owner's decisions, the

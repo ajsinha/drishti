@@ -474,6 +474,7 @@ drishti:
       # shards away before it stops: an administrator (console, drishti.py var shards --drain, a task's stop hook signed in as one), never
       # a token, like /var/reload.
       - "POST /api/v1/var/partial"
+      - "POST /api/v1/var/partials"            # many sets of one shard in one call: the same channel as /partial
       - "POST /api/v1/var/shards/drain"
       - "POST /api/v1/exposure/reload"         # reloading the exposure paths: an administrator in the console
       - "POST /api/v1/exposure/official"       # running the official end-of-day exposure capture: an administrator in the console

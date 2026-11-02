@@ -83,10 +83,30 @@
   not loaded by `lake demo` until the kinds have a command; the sample pages tool shows planned kinds with demo data as their own group.
   Mock-ups for the product owner to choose (three options each): the FRTB-SA capital screen, SIMM, and the factor dictionary with the
   load's quality (`docs/lenses/mockups/frtb-sa/`, `simm/`, `risk-factors/`).
-- **The cluster's contributions under load, diagnosed.** VAR_SHARDING.md section 15: contributions by position make one serial
-  signed call per position to its shard's owner (the 10 to 24 s p95), and on Java 21 the shard skeleton stream pins carrier threads
-  (the 60 s timeouts); the fix (batched partials, parts built from one batch, no pinning in the stream, a call timeout inside the client's
-  budget) with its tests and the benchmark to re-run.
+### The cluster's contribution tables under load
+
+- **A contribution table asks each remote shard once.** On a sharded date, contributions by position and by trade fetched each
+  position's or trade's vector from its shard's owner in turn: about 2,000 signed `POST /api/v1/var/partial` calls one after the other
+  for a desk of 2,000 positions held elsewhere. The table's reads are now fetched ahead (`VarBook.readAhead`,
+  `ShardedVectors.batched`): one call per remote shard of up to 1,024 row sets (each set sent as its runs, 8 bytes a position), the
+  shards side by side, through the new members-only `POST /api/v1/var/partials` (the same signature, label, data-version and access
+  checks as `/partial`, in `token-never`). Every part is the same to the bit as the one read alone (`ShardReadAheadTest`, on one member and
+  on each of three).
+- **A scope's standalone sums too.** The sum of the parts' standalone VaR behind a headline (the bank minus a desk, a basket) computed
+  each position's vector with a call to its owner, on the vector-sum pool: with every pool thread waiting on owners, the first requests
+  of a date on a member waited past the client's 60 s. These reads are fetched ahead as well, a step of 1,024 positions or trades.
+- **Measured** (three members, 200,000 positions, Java 21, `-Xmx4g`): contributions p95 0.88 / 1.35 / 2.53 s at 50 / 100 / 200 users
+  (10.4 / 15.8 / 13.9 s before), no error in any window (17 timeouts at 50 users before), 226 / 249 / 231 requests a second (123 / 161 /
+  148), no pinned virtual thread.
+- **One deadline per gather.** The calls made for one answer share `drishti.var.sharding.call-timeout-seconds` (30 s): the first owner
+  gets its share of the time left and its replica the rest, so a stalled owner becomes an answer from the replica or a clear
+  `503 DRS-5215` inside the client's 60 s, never a client timeout.
+- **No pinned carrier while a skeleton streams.** `ShardSkeleton.write` copies the hot file's sections with positional reads into a
+  64 KB buffer and the stream's own `write`, no longer through `Channels.newChannel(out)` (whose `synchronized` write pinned a virtual
+  thread's carrier on Java 21 when the reader was slow). The same bytes.
+- Docs: VAR_SHARDING.md section 15 (contributions under load), BENCHMARK.md section 4.3 (the cluster rows, results in
+  `tools/bench/results/2.9.10a-200k-cluster.jsonl`), API_GUIDE.md (`/partials`).
+
 
 ## 2.9.10 — Memory, scale and mobile; why VaR moved (2026-11-01)
 
