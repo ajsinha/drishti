@@ -29,9 +29,18 @@ schemas:
       - { key: "menus[].id", type: string, meaning: "The menu's id (what an edition's menus.<id> names)" }
       - { key: "menus[].label", type: string, meaning: "Its name in the top bar" }
       - { key: "menus[].icon", type: string, meaning: "Its Bootstrap icon name" }
-      - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (VaR, Curves, Economies ...): drawn only where an edition's menus.top names it" }
+      - { key: "menus[].subject", type: boolean, default: "false", meaning: "A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it" }
+      - { key: "menus[].engines", type: boolean, default: "false", meaning: "The Engines menu: a column per compute engine, drawn for the engines running in the cluster that the person's role opens" }
+      - { key: "menus[].search-over", type: number, default: "4", meaning: "The Engines menu: its search box shows when more engines than this run" }
+      - { key: "menus[].admin-link", type: map, default: none, meaning: "The Engines menu: its Admin -> Engines link {href, label, requires} (administrators)" }
+      - { key: "menus[].admin-link.href", type: string, meaning: "Where it goes (/admin/engines)" }
+      - { key: "menus[].admin-link.label", type: string, meaning: "Its text" }
+      - { key: "menus[].admin-link.requires", type: list, default: "[]", meaning: "Conditions that must all hold for it to show (as an item's requires)" }
       - { key: "menus[].columns", type: list, meaning: "The menu's columns, each a title and its items" }
       - { key: "menus[].columns[].title", type: string, meaning: "A column's heading" }
+      - { key: "menus[].columns[].engine", type: string, default: none, meaning: "The Engines menu: the column's engine (its id in config/engines.yaml); drawn only while it runs on a server of the cluster" }
+      - { key: "menus[].columns[].word", type: string, default: "", meaning: "The Engines menu: the engine's command word, shown in the column's head" }
+      - { key: "menus[].columns[].opens", type: list, default: "[]", meaning: "The Engines menu: who opens the engine, any of role:<name> or pack:<name> (a pack assigned to the person); administrators always; none: everyone. The engine's command words follow it (left out of the type-ahead, refused when typed); Help does not" }
       - { key: "menus[].columns[].items", type: list, meaning: "A column's items" }
       - { key: "menus[].columns[].items[].id", type: string, meaning: "The item's id (what an edition lists to keep it)" }
       - { key: "menus[].columns[].items[].href", type: string, meaning: "Where it goes (blank with cmd: the command run; with fill: the command line filled)" }
@@ -54,22 +63,36 @@ schemas:
     file: drishti-console/config/help.yaml
     applies: console
     change: live
-    maps: [contextual, knowledge, moved]
+    maps: [contextual, knowledge, moved, aliases, documents]
     keys:
-      - { key: categories, type: list, default: shipped, meaning: "The help centre's sections, in display order" }
-      - { key: "categories[].id", type: string, meaning: "The section's id (an edition's help.categories names it)" }
-      - { key: "categories[].name", type: string, meaning: "Its heading" }
-      - { key: "categories[].icon", type: string, meaning: "Its icon" }
-      - { key: "categories[].blurb", type: string, meaning: "The line under the heading" }
-      - { key: "categories[].guides", type: list, meaning: "Its guides, in order" }
-      - { key: "categories[].guides[].slug", type: string, meaning: "The guide's address, /help/<slug>" }
-      - { key: "categories[].guides[].doc", type: string, default: none, meaning: "A repository document under docs/ rendered as it is; none: the console's own web/guides/<slug>.md" }
-      - { key: "categories[].guides[].title", type: string, meaning: "Its title ({product} filled in)" }
-      - { key: "categories[].guides[].icon", type: string, meaning: "Its icon" }
-      - { key: "categories[].guides[].kind", type: string, default: guide, meaning: "guide, tutorial or knowledge: the badge shown" }
-      - { key: "categories[].guides[].summary", type: string, meaning: "The card's summary, also searched" }
-      - { key: "categories[].guides[].packs", type: list, default: "[]", meaning: "The packs it is about: an edition that keeps none of them hides it" }
-      - { key: "categories[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
+      - { key: most-used, type: list, default: shipped, meaning: "The most used pages, under the search box of the help centre's front door: {slug, label} each (a page the person cannot see is left out)" }
+      - { key: "most-used[].slug", type: string, meaning: "The page" }
+      - { key: "most-used[].label", type: string, default: "its title", meaning: "A shorter name on its chip" }
+      - { key: aliases, type: map, default: shipped, meaning: "Old section names to the section that took them over (a pack guide's category, an edition's help.categories, /help#cat-<id>)" }
+      - { key: "aliases.<name>", type: string, meaning: "One old name and its section's id" }
+      - { key: documents, type: map, default: shipped, meaning: "An unlisted document's section by its top folder under docs/ (\"\" the top-level *.md, default any other)" }
+      - { key: "documents.<name>", type: string, meaning: "One folder and its section's id" }
+      - { key: pack-group, type: string, default: "From the packs", meaning: "The group a pack's own guides join, at the end of their section" }
+      - { key: sections, type: list, default: shipped, meaning: "The help centre's sections, in display order: a tile each on the front door, opening /help/section/<id>" }
+      - { key: "sections[].id", type: string, meaning: "The section's id (an edition's help.categories names it)" }
+      - { key: "sections[].name", type: string, meaning: "Its name" }
+      - { key: "sections[].icon", type: string, meaning: "Its icon" }
+      - { key: "sections[].blurb", type: string, meaning: "Its one line on the tile" }
+      - { key: "sections[].roles", type: list, default: "[]", meaning: "Who sees the section: none, everyone; else administrators and holders of these roles (Internal: [admin])" }
+      - { key: "sections[].groups", type: list, meaning: "Its groups of pages, in order" }
+      - { key: "sections[].groups[].title", type: string, meaning: "A group's heading" }
+      - { key: "sections[].groups[].words", type: list, default: "[]", meaning: "Command words shown beside the heading" }
+      - { key: "sections[].groups[].guides", type: list, meaning: "Its pages, in order; each page belongs to exactly one section" }
+      - { key: "sections[].groups[].guides[].slug", type: string, meaning: "The page's address, /help/<slug>" }
+      - { key: "sections[].groups[].guides[].doc", type: string, default: none, meaning: "A repository document under docs/ rendered as it is; none: the console's own web/guides/<slug>.md" }
+      - { key: "sections[].groups[].guides[].title", type: string, meaning: "Its title ({product} filled in)" }
+      - { key: "sections[].groups[].guides[].icon", type: string, meaning: "Its icon" }
+      - { key: "sections[].groups[].guides[].kind", type: string, default: guide, meaning: "guide, tutorial or knowledge: the badge shown" }
+      - { key: "sections[].groups[].guides[].summary", type: string, meaning: "The row's summary, also searched" }
+      - { key: "sections[].groups[].guides[].packs", type: list, default: "[]", meaning: "The packs it is about: an edition that keeps none of them hides it" }
+      - { key: "sections[].groups[].guides[].roles", type: list, default: "[]", meaning: "Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it)" }
+      - { key: "sections[].groups[].guides[].engine", type: string, default: none, meaning: "The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise" }
+      - { key: "sections[].groups[].guides[].pair", type: string, default: none, meaning: "The tutorial drawn beside this guide on its row (a page of the same group)" }
       - { key: moved, type: map, default: shipped, meaning: "Retired addresses: old slug -> slug or slug#anchor, answered with a 301" }
       - { key: "moved.<name>", type: string, meaning: "One retired slug and the page (and section) that took it over" }
       - { key: knowledge, type: map, default: shipped, meaning: "\"What does this mean?\" beside a data page: screen or kind -> the Knowledge page or glossary entry that explains it" }

@@ -69,8 +69,8 @@ bi:                                      # the trading and VaR datasets and mode
   models: [trading-risk, trading-cashflows, trades-basic, live-trading, market-risk-var]
 
 menus:                                   # by id, per menu; a menu not named shows every item its switches allow
-  top: [views, blotter, positions, risk, counterparties, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
-  views: [terminal, search, functions, data, var, exposure, reports, workspaces, monitors, alerts]
+  top: [views, engines, blotter, positions, risk, counterparties, bi, admin, help]  # the top menus by id, in order; one not named is not drawn
+  views: [terminal, search, functions, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]
   placeholder: "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, XWIF, CTRD CP-ALDERSHOT …  then <GO>"
@@ -106,7 +106,7 @@ trading:                                 # the Trading landings (EDITIONS.md ›
   max-rows: 20000                        # the most trade valuations read per date for a scope (more: the figures say partial)
 
 help:
-  categories: [knowledge, start, use, bi, data, operate]   # the Build category hidden
+  categories: [get-started, risk, analytics, data, operate, reference, knowledge, internal]   # the help sections kept (config/help.yaml): Build hidden
   knowledge: [trading, market-risk, counterparty-risk, core, market-data]   # Knowledge pages of these packs (the rest hidden)
   unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
 

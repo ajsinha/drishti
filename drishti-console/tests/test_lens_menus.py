@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The lens menus (docs/lenses/README.md, mock-up menus/A): each edition's own subject menus in the top bar, named by its menus.top in
-order; a full Drishti keeps Views, BI, Build, Admin and Help; an item shows only when the edition keeps its command."""
+order; a full Drishti keeps Views, Engines, BI, Build, Admin and Help (the Engines menu in place of the old VaR and Exposure menus,
+2.9.11.a); an item shows only when the edition keeps its command."""
 from __future__ import annotations
 
 import re
@@ -47,36 +48,40 @@ def _commands(panel: str) -> list[str]:
     return re.findall(r'<code class="mega-cmd mono">([^<]+)</code>', panel)
 
 
-def test_a_full_drishti_keeps_its_five_menus(backend, monkeypatch):
+def test_a_full_drishti_keeps_its_menus_with_engines_after_views(backend, monkeypatch):
     app = _app(backend, monkeypatch)
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": []})
-    menus = _menus(_client(app).get("/t").text)
-    assert _drawn(_client(app).get("/t").text) == ["Views", "Admin", "Help"] and "Build" in menus
+    page = _client(app).get("/t").text
+    assert _drawn(page) == ["Views", "Engines", "Admin", "Help"] and "Build" in _menus(page)
+    assert _menus(page)[:2] == ["Views", "Engines"]
 
 
-def test_the_risk_edition_draws_var_and_exposure_menus_between_views_and_bi(backend, monkeypatch):
+def test_the_risk_edition_draws_one_engines_menu_in_place_of_var_and_exposure(backend, monkeypatch):
+    """2.9.11.a: the Engines menu replaces the VaR and Exposure menus; a column per engine with its command word (mock-up engines-menu/A)."""
     app = _app(backend, monkeypatch)
     app.state.editions.learn(RISK_ABOUT)
     page = _client(app).get("/t").text
-    assert _drawn(page) == ["Views", "VaR", "Exposure", "Admin", "Help"] and "Build" not in _menus(page)   # Build is off in Risk
-    var = _panel(page, "VaR")
-    assert "Value at risk" in var and "Check and report" in var
-    cmds = _commands(var)
-    for c in ("VAR BANK", "VRES", "VOFF", "SMAT", "HIER", "SWIN BANK"):
+    assert _drawn(page) == ["Views", "Engines", "Admin", "Help"] and "Build" not in _menus(page)   # Build is off in Risk
+    assert "VaR" not in _menus(page) and "Exposure" not in _menus(page) and "data-subject" not in page
+    eng = _panel(page, "Engines")
+    assert re.findall(r'class="mega-title eng-name">([^<]+)<', eng)[:2] == ["VaR", "Exposure"]
+    cmds = _commands(eng)
+    for c in ("VAR BANK", "VRES", "VOFF", "SMAT", "HIER", "SWIN BANK", "EXP"):
         assert c in cmds, c
-    assert cmds.index("HIER") < cmds.index("SWIN BANK")
-    assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in var and 'href="/smat"' in var
-    exposure = _panel(page, "Exposure")
-    assert 'data-fill="EXP CPTY"' in exposure and 'href="/t?cmd=EXP%20CPTY"' in exposure and "XWIF" in _commands(exposure)
+    assert 'href="/go?q=SWIN%20BANK%20%3CGO%3E"' in eng and 'href="/smat"' in eng and 'href="/var"' in eng
+    assert 'data-fill="EXP CPTY"' in eng and 'href="/t?cmd=EXP%20CPTY"' in eng and "XWIF" in cmds
 
 
 def test_an_item_for_a_page_this_build_lacks_is_not_drawn(backend, monkeypatch):
+    from core.menus import _route_paths
+
     app = _app(backend, monkeypatch)
     app.state.editions.learn(RISK_ABOUT)
-    paths = {getattr(r, "path", "") for r in app.routes}
-    var = _panel(_client(app).get("/t").text, "VaR")
-    assert ("PLAY VAR" in _commands(var)) == ("/play" in paths)
-    assert ("VAR BANK BACKTEST" in _commands(var)) == ("/var/backtesting" in paths)
+    paths = _route_paths(app.routes)
+    assert "/var" in paths and "/t" in paths                       # every included router is walked (FastAPI 0.142 keeps them whole)
+    eng = _panel(_client(app).get("/t").text, "Engines")
+    assert ("PLAY VAR" in _commands(eng)) == ("/play" in paths)
+    assert ("VAR BANK BACKTEST" in _commands(eng)) == ("/var/backtesting" in paths)
 
 
 def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkeypatch):
@@ -85,12 +90,12 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
     alice, bob = _client(app), _client(app, "bob")
     expected = {"world": ["Views", "Economies", "Markets", "Companies", "Admin", "Help"],
                 "market": ["Views", "Curves", "Volatility", "FX", "Credit", "Admin", "Help"],
-                "trading": ["Views", "Blotter", "Positions", "Risk", "Counterparties", "Admin", "Help"]}
+                "trading": ["Views", "Engines", "Blotter", "Positions", "Risk", "Counterparties", "Admin", "Help"]}
     for lens, menus in expected.items():
         alice.get(f"/lens/{lens}")
         page = alice.get("/t").text
         assert _drawn(page) == menus, lens
-        assert _drawn(bob.get("/t").text) == ["Views", "Admin", "Help"]
+        assert _drawn(bob.get("/t").text) == ["Views", "Engines", "Admin", "Help"]
     alice.get("/lens/market")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Curves")) == ["CRV", "REPO", "FIX", "INF"]

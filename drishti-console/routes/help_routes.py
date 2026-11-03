@@ -31,14 +31,15 @@ def _edition(request):
     return getattr(request.state, "edition", None) or request.app.state.editions.instance
 
 
-def shown(edition, guide) -> bool:
-    """Whether the edition (or the person's lens) keeps a guide (EDITIONS.md › The design as built, section 5.8): its category listed (help.categories), a
-    Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge pages, packs.enabled for pack guides), and an
-    unlisted document only when the edition does not refuse them (help.unlisted-slugs: refuse). Without an edition: every guide."""
+def shown(edition, guide, aliases: dict | None = None) -> bool:
+    """Whether the edition (or the person's lens) keeps a guide (EDITIONS.md › The design as built, section 5.8): its section listed (help.categories,
+    a section's id or an old name in help.yaml's aliases:), a Knowledge page or pack guide about one of its packs (help.knowledge for Knowledge
+    pages, packs.enabled for pack guides), and an unlisted document only when the edition does not refuse them (help.unlisted-slugs: refuse).
+    Without an edition: every guide."""
     if not edition.active:
         return True
     cats = edition.help_categories()
-    if cats is not None and guide.category not in cats:
+    if cats is not None and guide.category not in {(aliases or {}).get(c, c) for c in cats}:
         return False
     if not guide.listed and edition.refuse_unlisted:
         return False
@@ -53,11 +54,18 @@ def _me(request):
     return getattr(request.state, "identity", None)
 
 
+def _aliases(request) -> dict:
+    """help.yaml's aliases: (old section names), from the library in use."""
+    lib = next(iter(getattr(request.app.state, "libraries", {}).values()), None)
+    return getattr(lib, "aliases", {}) or {}
+
+
 def visible(request, guide) -> bool:
-    """Whether this person, in this edition, sees a guide: the edition keeps it (:func:`shown`) and the guide's ``roles:`` let them
-    (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis). A guide they may not see is not listed, not
-    found by search and not reached by its address (404)."""
-    return guide.permits(_me(request)) and shown(_edition(request), guide) and _engine_on(guide)
+    """Whether this person, in this edition, sees a guide: the edition keeps it (:func:`shown`), the guide's ``roles:`` let them
+    (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis) and its engine runs in the cluster (help.yaml
+    ``engine:``). Help is documentation, not data: a running engine's pages are open to anyone who can open Help, whatever the Engines
+    menu's ``opens:`` say. A guide they may not see is not listed, not found by search and not reached by its address (404)."""
+    return guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide)
 
 
 def _engine_on(guide) -> bool:
@@ -66,30 +74,116 @@ def _engine_on(guide) -> bool:
     return (not guide.engine or engines.engine_available(guide.engine)) and not engines.help_hidden(guide.slug)
 
 
-def categories_for(request, lib) -> list:
-    ed = _edition(request)
+def status(request, guide) -> str:
+    """How a section's page draws a guide: ``on`` (a link), ``off`` (an administrator's greyed row: the guide's engine runs on no server;
+    everyone else never sees it) or blank (left out)."""
+    if visible(request, guide):
+        return "on"
     me = _me(request)
-    if not ed.active and all(g.permits(me) and _engine_on(g) for c in lib.categories for g in c["guides"]):
-        return lib.categories
+    if (me is not None and me.is_admin and not _engine_on(guide) and guide.permits(me)
+            and shown(_edition(request), guide, _aliases(request))):
+        return "off"
+    return ""
+
+
+def _section_open(request, section: dict) -> bool:
+    """A section with ``roles:`` (Internal) only for an administrator or a person holding one of them."""
+    roles = section.get("roles") or ()
+    me = _me(request)
+    return not roles or (me is not None and (me.is_admin or bool(set(roles) & set(getattr(me, "roles", ()) or ()))))
+
+
+def sections_for(request, lib) -> list:
+    """The sections this person sees, each with only the guides they see (``guides``, ``groups``) and the count of them; a section with
+    none left is not drawn (Risk measures while no engine of it runs, for anyone but an administrator)."""
     out = []
     for c in lib.categories:
-        guides = [g for g in c["guides"] if g.permits(me) and (not ed.active or shown(ed, g)) and _engine_on(g)]
+        if not _section_open(request, c):
+            continue
+        groups = [{**grp, "guides": [g for g in grp["guides"] if visible(request, g)]} for grp in c["groups"]]
+        guides = [g for grp in groups for g in grp["guides"]]
         if guides:
-            out.append({**c, "guides": guides})
+            out.append({**c, "groups": [grp for grp in groups if grp["guides"]], "guides": guides})
     return out
+
+
+def _engines_line(request, guides) -> dict:
+    """The engines a section's pages are about: those running and, for an administrator, those not (its subtitle)."""
+    from core import engines
+    ids = list(dict.fromkeys(g.engine for g in guides if g.engine))
+    me = _me(request)
+    on = [engines.title(e) for e in ids if engines.engine_available(e)]
+    off = [engines.title(e) for e in ids if not engines.engine_available(e)] if (me is not None and me.is_admin) else []
+    return {"on": on, "off": off}
 
 
 @router.get("/help")
 async def help_index(request: Request):
+    """The help centre's front door (mock-up help-hub/A): one search box over all of Help, the most used pages and a tile per section
+    with its one line and how many pages this person can open in it."""
+    from core import engines
+
     lib = await library(request)
-    cats = categories_for(request, lib)
-    return render(request, "help/index.html", categories=cats, count=sum(len(c["guides"]) for c in cats),
-                  screen="help", competitive=_competitive(request, lib))
+    secs = sections_for(request, lib)
+    most = []
+    for m in lib.most_used:
+        g = lib.guides.get(str(m.get("slug")))
+        if g is not None and visible(request, g):
+            most.append({"slug": g.slug, "label": str(m.get("label") or g.title), "icon": g.icon})
+    hidden = any(lib.guides.get(s) is not None for e in engines.off() for s in e.get("help") or []) or any(
+        g.engine and not engines.engine_available(g.engine) for g in lib.guides.values())
+    names = {c["id"]: c["id"] for c in lib.categories}
+    names.update({k: lib.section_id(k) for k in lib.aliases})
+    return render(request, "help/index.html", sections=secs, count=sum(len(c["guides"]) for c in secs), most=most, engines_hidden=hidden,
+                  section_names=names, screen="help", competitive=_competitive(request, lib))
+
+
+@router.get("/help/section/{sid}")
+async def help_section(request: Request, sid: str):
+    """A section's own page: its pages grouped, every guide beside its tutorial, a search of this section only; an administrator sees
+    the pages of an engine that runs nowhere greyed. An old section name leads to the section that took it over."""
+    lib = await library(request)
+    if sid != lib.section_id(sid) and lib.section(sid) is not None:
+        return RedirectResponse(f"/help/section/{lib.section_id(sid)}", status_code=301)
+    sec = lib.section(sid)
+    if sec is None or not _section_open(request, sec):
+        return render(request, "help/search.html", status_code=404, q=sid.replace("-", " "), hits=[], missing=sid, screen="help")
+    groups = []
+    for grp in sec["groups"]:
+        rows = _rows(request, grp["guides"])
+        if rows:
+            groups.append({**grp, "rows": rows})
+    if not groups:
+        return render(request, "help/search.html", status_code=404, q=sid.replace("-", " "), hits=[], missing=sid, screen="help")
+    count = sum(1 for grp in groups for r in grp["rows"] for x in (r["guide"], r["pair"]) if x is not None and r["status"] == "on")
+    return render(request, "help/section.html", section=sec, groups=groups, count=count,
+                  paired=any(r["pair"] for grp in groups for r in grp["rows"]),
+                  engines_line=_engines_line(request, sec["guides"]), screen="help")
+
+
+def _rows(request, guides) -> list:
+    """A group's rows: each guide with its tutorial beside it (``pair:``); a tutorial drawn beside its guide has no row of its own."""
+    st = {g.slug: status(request, g) for g in guides}
+    paired = {g.pair for g in guides if g.pair and st.get(g.slug) and st.get(g.pair)}
+    by_slug = {g.slug: g for g in guides}
+    rows = []
+    for g in guides:
+        if not st[g.slug] or g.slug in paired:
+            continue
+        pair = by_slug.get(g.pair) if g.pair in paired else None
+        rows.append({"guide": g, "pair": pair, "status": st[g.slug]})
+    return rows
 
 
 @router.get("/help/search")
-async def help_search(request: Request, q: str = ""):
-    return render(request, "help/search.html", q=q, hits=[h for h in (await library(request)).search(q) if visible(request, h["guide"])], screen="help")
+async def help_search(request: Request, q: str = "", section: str = ""):
+    """Search all of Help, or with ``section`` that section's pages only (its page's search box)."""
+    lib = await library(request)
+    sec = lib.section(section) if section else None
+    if sec is not None and not _section_open(request, sec):
+        sec = None
+    hits = [h for h in lib.search(q, section=sec["id"] if sec else "") if visible(request, h["guide"])]
+    return render(request, "help/search.html", q=q, hits=hits, section=sec, screen="help")
 
 
 @router.get("/help/configuration")
@@ -114,7 +208,7 @@ async def help_configuration(request: Request, q: str = "", area: str = ""):
             server, server_error = {}, drs_message(e.code, e.detail, " ")
         console = console_effective(request.app.state.settings, ROOT / "drishti-console" / "config")
     body, matched, total = searchable(page["html"], q, area, server, console)
-    category = next(c for c in lib.categories if c["id"] == g.category)
+    category = _siblings(request, lib, g)
     return render(request, "help/configuration.html", guide=g, page={**page, "html": body}, category=category, q=q, area=area,
                   areas=areas(page["html"]), matched=matched, total=total, admin=admin, server_error=server_error, screen="help")
 
@@ -157,7 +251,7 @@ async def help_examples(request: Request):
               "note": lib.fragment(request.app.state.examples.directory / f"{e.name}.md")} for e in request.app.state.examples.all()]
     body = request.app.state.templates.get_template("help/_examples.html").render(examples=items)
     page = {"html": body, "toc": [{"id": e["name"], "name": e["title"], "children": []} for e in items]}
-    category = next(c for c in lib.categories if c["id"] == g.category)
+    category = _siblings(request, lib, g)
     return render(request, "help/guide.html", guide=g, page=page, category=category, screen="help")
 
 
@@ -193,7 +287,7 @@ async def help_developer(request: Request):
     top = request.app.state.templates.get_template("help/_developer.html").render(
         built=built, folder=str(rel), openapi=openapi, renderer=render_dist.VERSION)
     page = lib.render("developer")
-    category = next(c for c in lib.categories if c["id"] == g.category)
+    category = _siblings(request, lib, g)
     return render(request, "help/guide.html", guide=g, page={**page, "html": top + page["html"]}, category=category, screen="help")
 
 
@@ -219,8 +313,13 @@ async def help_guide(request: Request, slug: str):
                       hits=[h for h in lib.search(slug.replace("-", " ")) if visible(request, h["guide"])], missing=slug, screen="help")
     g = lib.guides[slug]
     page = lib.render(slug)
-    siblings = next(c for c in lib.categories if c["id"] == g.category)
-    return render(request, "help/guide.html", guide=g, page=page, category=siblings, screen="help")
+    return render(request, "help/guide.html", guide=g, page=page, category=_siblings(request, lib, g), screen="help")
+
+
+def _siblings(request, lib, guide) -> dict:
+    """A guide's section for its breadcrumb and side list: the section with only the pages this person sees."""
+    sec = next(c for c in lib.categories if c["id"] == guide.category)
+    return {**sec, "guides": [g for g in sec["guides"] if visible(request, g)]}
 
 
 def _competitive(request, lib) -> bool:

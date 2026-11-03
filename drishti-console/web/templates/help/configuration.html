@@ -21,7 +21,7 @@
 {% block content %}
 <div class="help-wrap help-guide cfg-page" data-cfg-page>
   <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span>
-    <a href="/help#cat-{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
+    <a href="/help/section/{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
   <header class="cfg-head">
     <h1>{{ guide.title | product }}</h1>
     <p class="lead">Every setting of every kind, in one document: what it means, its default, the environment variable that sets it,

@@ -13,25 +13,41 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Help centre: filter guide cards as you type, fall back to full-text search, and copy code examples. */
+/* Help centre (mock-up help-hub/A): an old address /help#cat-<id> opens its section's page; on a section's page the rows filter as you
+   type (a group with none left folds away), falling back to a full-text search of the section; "all of Help" carries the words; code
+   examples copy. */
 (function () {
   'use strict';
+  var hub = document.querySelector('[data-help-hub]');
+  var m = hub && /^#cat-([\w-]+)$/.exec(location.hash || '');
+  if (m) {
+    var names = {};
+    try { names = JSON.parse(hub.getAttribute('data-help-sections') || '{}'); } catch (e) { names = {}; }
+    if (names[m[1]]) { location.replace('/help/section/' + encodeURIComponent(names[m[1]])); return; }
+  }
   var input = document.querySelector('[data-help-filter]');
   if (input) {
     var none = document.querySelector('[data-help-none]');
     input.addEventListener('input', function () {
       var q = input.value.trim().toLowerCase(), shown = 0;
-      document.querySelectorAll('.help-card[data-search]').forEach(function (c) {
-        var ok = !q || c.getAttribute('data-search').indexOf(q) >= 0;
-        c.hidden = !ok; if (ok) { shown++; }
+      document.querySelectorAll('[data-help-row][data-search]').forEach(function (r) {
+        var ok = !q || r.getAttribute('data-search').indexOf(q) >= 0;
+        r.hidden = !ok; if (ok) { shown++; }
       });
-      document.querySelectorAll('.help-cat').forEach(function (cat) {
-        cat.hidden = !!q && !cat.querySelector('.help-card:not([hidden])');
+      document.querySelectorAll('[data-help-group]').forEach(function (g) {
+        g.hidden = !!q && !g.querySelector('[data-help-row]:not([hidden])');
       });
       if (none) { none.hidden = shown > 0; }
     });
     var ft = document.querySelector('[data-help-fulltext]');
     if (ft) { ft.addEventListener('click', function (e) { e.preventDefault(); input.form.submit(); }); }
+    var all = document.querySelector('[data-help-all]');
+    if (all) {
+      all.addEventListener('click', function (e) {
+        var q = input.value.trim();
+        if (q) { e.preventDefault(); location.href = '/help/search?q=' + encodeURIComponent(q); }
+      });
+    }
   }
   document.querySelectorAll('[data-copy]').forEach(function (b) {
     b.addEventListener('click', function () {

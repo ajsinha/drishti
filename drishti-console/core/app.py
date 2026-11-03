@@ -464,6 +464,7 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
+    templates.env.globals["engines_panel"] = _menus.engines_panel  # the Engines menu's panel: search, Admin -> Engines, engines not running
     from core import phone as _phone
     templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (MOBILE_DISPLAY.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
