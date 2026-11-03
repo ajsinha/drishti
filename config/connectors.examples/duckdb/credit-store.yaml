@@ -18,7 +18,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 description: credit-store read from duckdb (the former application-duckdb.yaml profile)
 settings:
   domain: credit

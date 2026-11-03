@@ -2025,6 +2025,10 @@ and the fix for the codes that need more than the meaning.
 | DRS-5212 | 422 | VaR: a limit of no node | a `var-limit` row names a node the date does not have: said in `provenance.warnings`, the row unused; never an error of the request |
 | DRS-5213 | 422 | VaR: hierarchies not valid | the hierarchies' configuration is not valid (refused at start), or a hierarchy with `ids: leaf` has a value under two parents on the date (the date is refused) |
 | DRS-5214 | 404 | VaR: no such hierarchy | the tree of a hierarchy the date does not have (`GET /api/v1/var/tree?hierarchy=`); a scope naming a node no hierarchy has answers it as unknown, not as an error |
+| DRS-5410 | 400 | SA-CCR request | a scope SA-CCR does not answer (it adds over whole netting sets: `NSET:`, `CPTY:`, `LE:`, `BANK`, `EXAMPLE`), a bad `by`, or a row or what-if candidate the method refuses (an invalid enum, incomplete option or tranche terms, P + λ or K + λ not positive, dates not S ≤ E ≤ M, no notional, a computed figure on an input) ([SACCR_GUIDE.md section 11](SACCR_GUIDE.md#11-refusals-and-error-codes)) |
+| DRS-5411 | 409 | SA-CCR incomplete | asked with `strict=true`, a netting set of the scope has live derivatives without a classification row |
+| DRS-5412 | 400 | SA-CCR unknown set | a netting set, counterparty or legal entity the date does not have |
+| DRS-5413 | 502 | SA-CCR parameters refused | the regulation's parameter file has a value missing or out of range (every problem listed) |
 | DRS-5440 | 400 | Exposure parameter | the exposure engine does not answer this scope or parameter: scopes are `NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `BOOK:`, `TRD:`, `BANK`, `WHERE:`; `q` in (0.5, 0.9999]; `collateral` lagged, current or none; `date` a primary grid date or tenor |
 | DRS-5441 | 409 | Exposure run inconsistent | the date's exposure run is not one run (its grid, two batch ids, a duplicate row, a trade in two netting sets): the date before answers with a warning until the run is rewritten whole and its load signalled again |
 | DRS-5442 | 400 | What-if not on the run | a what-if's candidate paths are of another simulation run: send paths of the date's run (its `RUN_ID`, its number of paths) |
@@ -3228,6 +3232,29 @@ Refusals: `400` for a bad switch value, an override naming no parameter, a multi
 switched off (`drishti.simm.enabled`) or the caller sees none of the netting set's trades; `404 DRS-1002` when no connector serves
 `position-sensitivity` or `netting-set`; `502 DRS-5333` when the version is not installed or its file is refused (`DRS-5331`, `DRS-5332`,
 `DRS-5334`, `DRS-5335`, `DRS-5336` count what each answer left out).
+
+## SA-CCR: `/api/v1/saccr`
+
+SA-CCR exposure at default (Basel CRE52) computed when asked from the classification rows (`saccr-trade`), each netting set's live
+members' MTM, its CSA and collateral, as the caller (the guide: [SACCR_GUIDE.md](SACCR_GUIDE.md), section 9; the data contract:
+[SACCR.md](../contracts/SACCR.md); the computed kind `saccr-result`). A scope is `NSET:<id>` (or the bare id), `CPTY:<id>`, `LE:<id>`,
+`BANK` or `EXAMPLE` (the hand-built cases); EAD adds over netting sets. The switches `irBucketOffset` and `cap` (`true`, `false`; both
+`true` is the regulatory figure) and `asOf` apply to every read.
+
+| Endpoint | What |
+|---|---|
+| `GET /api/v1/saccr/scope?scope=…&nettingSet=…&strict=` | the SA-CCR page's one answer: `totals` (EAD, RC, PFE, netting sets, rows, excluded and unclassified trades, the RWA hook), `sets` (each set's V, C, RC, add-on, multiplier, PFE, EAD margined and unmargined, `CAPPED`, status, flags and its `waterfall` steps), `selected` (one set in full: the header with MPOR and MF margined, both bases, the class add-ons and after the multiplier, the hedging sets with their sub-keys, the formula lines), `largest`, `provenance` |
+| `GET /api/v1/saccr/scope/contributions?scope=…&by=netting-set\|asset-class\|hedging-set\|trade` | rows of the scope by part; by trade each row's effective notional and standalone EAD (parts below a set never add up to its EAD) |
+| `GET /api/v1/saccr/trade/{tradeId}` | a trade's terms per driver (S, E, M, T, SD, d, d1, δ, both MFs, both Ds, bucket, SF), its delivered row and its standalone EAD |
+| `POST /api/v1/saccr/what-if` | `{nettingSet, candidates: [saccr-trade row + MTM], remove: [tradeId]}` → EAD, RC, PFE and the multiplier before and after, `incrementalEad`, each hedging set's add-on before and after; stores nothing (a read for tokens) |
+| `GET /api/v1/saccr/parameters` | the regulation's parameter file: every key with its value and CRE52 paragraph, the file and its SHA-256 |
+| `GET /api/v1/saccr/playground?scope=…` | PLAY SACCR: the scope's answer, the `grid` of each row's terms (up to `browser-trades`), `explainSteps` |
+| `GET /api/v1/saccr/playground.xlsx?scope=…` | the workbook of live formulas (Main, Config with the switch cells, Data, Trades, Hedging sets, Explain, Provenance) |
+| `GET /api/v1/saccr/playground/template` | the same workbook on the hand-built cases |
+
+Refusals: `400 DRS-5410` (a scope or row refused), `409 DRS-5411` (`strict=true`, incomplete), `400 DRS-5412` (an unknown set),
+`502 DRS-5413` (the parameter file refused), `404 DRS-1002` when no connector serves `saccr-trade` or `netting-set`, `404 DRS-1020` when the
+engine is off on this server, `403` when the caller sees none of a netting set's trades.
 
 ## Exposure engine: `/api/v1/exposure`
 

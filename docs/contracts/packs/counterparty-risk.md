@@ -23,10 +23,9 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [AGR](#agr-master-agreement-agreement) | `agreement` | fundamental | active | 9 | 4 |
 | [CSA](#csa-credit-support-annex-csa) | `csa` | fundamental | active | 18 | 5 |
-| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 19 | 9 |
+| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 18 | 9 |
 | [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 11 | 5 |
 | [CVA](#cva-cva--xva-cva) | `cva` | fundamental | active | 10 | 6 |
-| [SACCR](#saccr-sa-ccr-exposure-sa-ccr) | `sa-ccr` | fundamental | active | 10 | 8 |
 | [COLL](#coll-collateral-balance-collateral-balance) | `collateral-balance` | fundamental | active | 8 | 5 |
 | [MC](#mc-margin-call-margin-call) | `margin-call` | fundamental | active | 11 | 6 |
 | [SIMM](#simm-isda-simm-initial-margin-simm) | `simm` | fundamental | active | 8 | 4 |
@@ -37,6 +36,8 @@ One section per command of the pack: the shape of its data, how it is stored and
 | [XOFC](#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | `exposure-official-cpty` | computed | active | 32 | 0 |
 | [NSMTM](#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) | `nset-mtm` | computed | active | 21 | 0 |
 | [CPMTM](#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm) | `cpty-mtm` | computed | active | 16 | 0 |
+| [SACT](#sact-sa-ccr-classification-row-a-derivatives-asset-class-hedging-set-and-terms-saccr-trade) | `saccr-trade` | fundamental | active | 31 | 0 |
+| [SACCR](#saccr-sa-ccr-exposure-at-default-of-a-scope-computed-saccr-result) | `saccr-result` | computed | active | 27 | 0 |
 
 ## AGR: Master agreement (`agreement`)
 
@@ -217,7 +218,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `CSA` | id | required |  | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9); absent for an unmargined set. | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` |
 | `CREDIT_LIMIT` | id | required |  | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
 | `CVA_RESULT` | id | required |  | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` |
-| `SACCR` | id | required |  | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) | `sa-ccr` |
 | `SIMM` | id | required |  | The counterparty's SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…). | `SIMM-ALDERSHOT` (pattern `^SIMM-`) | `simm` |
 | `COLLATERAL_BALANCE` | id | required |  | The set's collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…). | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) | `collateral-balance` |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
@@ -246,11 +246,11 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `ASSET` | text | required |  | An asset class of the set's trades. | `Securities financing` |  |
 | `MTM` | amount | required | USD | The net mark to market of the set's trades in that asset class, from the bank's side. | `-339550` |  |
 
-**Links:** `COUNTERPARTY` → `counterparty`, `AGREEMENT` → `agreement`, `CSA` → `csa`, `CREDIT_LIMIT` → `credit-limit`, `CVA_RESULT` → `cva`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `COLLATERAL_BALANCE` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`, `TRADE_IDS` → `trade`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
+**Links:** `COUNTERPARTY` → `counterparty`, `AGREEMENT` → `agreement`, `CSA` → `csa`, `CREDIT_LIMIT` → `credit-limit`, `CVA_RESULT` → `cva`, `SIMM` → `simm`, `COLLATERAL_BALANCE` → `collateral-balance`, `LEGAL_ENTITY` → `legal-entity`, `TRADE_IDS` → `trade`, `TRADES[].TRADE_ID` → `trade`, `TRADES[].BOOK` → `book`.
 
 **Validation**
 
-- required: fields `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE`
+- required: fields `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE`
 - unique: key `NETTING_SET_ID`; per business_date
 - pattern: field NETTING_SET_ID; pattern ^NS-
 - range: field TRADE_COUNT; min 0
@@ -259,7 +259,6 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 - link: field CSA; kind csa
 - link: field CREDIT_LIMIT; kind credit-limit
 - link: field CVA_RESULT; kind cva
-- link: field SACCR; kind sa-ccr
 - link: field SIMM; kind simm
 - link: field COLLATERAL_BALANCE; kind collateral-balance
 - link: field LEGAL_ENTITY; kind legal-entity
@@ -426,83 +425,6 @@ Credit, debit and funding valuation adjustments with sensitivities.
 - enum values inferred from the data, not from a glossary: COMPONENTS[].NAME, SENSITIVITIES[].FACTOR, SENSITIVITIES[].BUMP: confirm they are closed lists.
 - number types decided by the field's name: COMPONENTS[].AMOUNT amount: confirm amount, rate or integer.
 - no unit stated for the amounts COMPONENTS[].AMOUNT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-
-## SACCR: SA-CCR exposure (`sa-ccr`)
-
-Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
-
-|  |  |
-|---|---|
-| Contract | [sa-ccr.contract.yaml](../../../config/packs/counterparty-risk/contracts/sa-ccr.contract.yaml) · version 1.0 |
-| Class | fundamental |
-| Status | active |
-| Source | capital-engine |
-| Grain | One row per sa-ccr exposure per business date, keyed by CALC_ID. |
-| Key | `CALC_ID` |
-| Id pattern | `^SACCR-` |
-| Dated by | `business_date` |
-| Cadence | daily (due: to be confirmed) |
-| Storage | connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` |
-| Test data | data/testdata/counterparty-risk/sa-ccr |
-| Worked example | [counterparty-risk/sa-ccr](../samples/counterparty-risk/sa-ccr.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
-
-**Fields**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `CALC_ID` | id | required |  | The record's id (the business key) | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) |  |
-| `REPLACEMENT_COST` | amount | required | USD | The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero. | `0` |  |
-| `ADD_ON` | amount | required | USD | The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations. | `791562` |  |
-| `MULTIPLIER` | rate | required | factor | A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative. | `0.933` |  |
-| `EAD` | amount | required | USD | The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on. | `1033938` |  |
-| `RWA` | amount | required | USD | The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it. | `206788` |  |
-| `ADD_ONS` | record list | required |  | The potential-future-exposure add-ons, one element per asset class present (Interest rate, Foreign exchange, Credit, Equity, Commodity): ASSET_CLASS and ADD_ON in USD. |  |  |
-| `HEDGING_SETS` | record list | required |  | The hedging sets of the calculation, one element per asset class and hedging set (a currency for rates and FX): EFFECTIVE_NOTIONAL in USD and the supervisory factor SF (a fraction). |  |  |
-| `NETTING_SET` | id | required |  | The netting set the calculation is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` |
-| `ALPHA` | rate | required | factor | The SA-CCR alpha multiplier applied to replacement cost plus PFE (regulatory 1.4). | `1.4` |  |
-
-**Nested `ADD_ONS[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `ASSET_CLASS` | text | required |  | The SA-CCR asset class: Interest rate, Foreign exchange, Credit, Equity or Commodity. | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  |
-| `ADD_ON` | amount | required | USD | The asset class's aggregate add-on (sum of its hedging sets' effective notionals times their supervisory factors). | `791562` |  |
-
-**Nested `HEDGING_SETS[]`**
-
-| Field | Type | Presence | Unit | Description | Example or values | Link |
-|---|---|---|---|---|---|---|
-| `ASSET_CLASS` | text | required |  | The regulatory asset class: interest rate, FX, credit, equity or commodity. | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  |
-| `HEDGING_SET` | text | required |  | The group of trades within an asset class that can offset one another, for example by currency for interest rates. | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  |
-| `EFFECTIVE_NOTIONAL` | amount | required | USD | The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set. | `-89605479` |  |
-| `SF` | amount | required | fraction of the effective notional (0.005 is 0.5%) | The supervisory factor, as a fraction, applied to the effective notional to get the add-on. | `0.005` |  |
-
-**Links:** `NETTING_SET` → `netting-set`.
-
-**Validation**
-
-- required: fields `CALC_ID`, `REPLACEMENT_COST`, `ADD_ON`, `MULTIPLIER`, `EAD`, `RWA`, `ADD_ONS`, `HEDGING_SETS`, `NETTING_SET`, `ALPHA`
-- unique: key `CALC_ID`; per business_date
-- pattern: field CALC_ID; pattern ^SACCR-
-- link: field NETTING_SET; kind netting-set
-- enum: field ADD_ONS[].ASSET_CLASS; values `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate`
-- enum: field HEDGING_SETS[].ASSET_CLASS; values `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate`
-- enum: field HEDGING_SETS[].HEDGING_SET; values `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD`
-
-**Notes**
-
-- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-
-**To review (8)**
-
-- required inferred from 100% coverage in 142 documents (66 samples and 76 test-data documents (data/testdata/counterparty-risk/sa-ccr/snapshot-2026-07-08.jsonl.gz, data/testdata/counterparty-risk/sa-ccr/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
-- source 'capital-engine' is the test data's _meta.source (synthetic): name the production system that delivers it.
-- due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
-- EAD is a column a compute engine produces (docs/contracts/README.md section 14) on a record that keeps it: confirm whether it is computed and removed.
-- enum values inferred from the data, not from a glossary: ADD_ONS[].ASSET_CLASS, HEDGING_SETS[].ASSET_CLASS, HEDGING_SETS[].HEDGING_SET: confirm they are closed lists.
-- number types decided by the field's name: ALPHA rate, ADD_ONS[].ADD_ON amount: confirm amount, rate or integer.
-- no unit stated for the amounts ADD_ONS[].ADD_ON (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
-- ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine.
 
 ## COLL: Collateral balance (`collateral-balance`)
 
@@ -1178,3 +1100,134 @@ A counterparty's MtM totals derived from the trade valuations of its live trades
 
 - Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its connector: COMPUTED_ATTRIBUTES.md section 8.1, check (a)); the per-set positive parts come from group() over its rows.
 - Shown on the counterparty page beside the stored NET_MTM with the difference; retires when NSET computes counterparty scopes.
+
+## SACT: SA-CCR classification row (a derivative's asset class, hedging set and terms) (`saccr-trade`)
+
+One derivative's SA-CCR classification and terms per business date and risk driver (asset class, hedging set, transaction type, direction, notional, dates, option and tranche terms); the SA-CCR engine computes every supervisory figure and EAD from it. A row that carries a computed figure is refused.
+
+|  |  |
+|---|---|
+| Contract | [saccr-trade.contract.yaml](../../../config/packs/counterparty-risk/contracts/saccr-trade.contract.yaml) · version 1.0 |
+| Class | fundamental |
+| Status | active |
+| Source | the bank's capital or product-control process (classification signed off upstream); the demo's rows are derived by rules from the trade valuations (tools/packgen/ccr/make_saccr_data.py, DERIVED_BY rules) |
+| Grain | One row per live derivative and risk driver per BUSINESS_DATE, keyed by SACCR_ROW_ID (<TRADE_ID>~<DRIVER>). |
+| Key | `SACCR_ROW_ID` |
+| Id pattern | — |
+| Dated by | `BUSINESS_DATE` |
+| Cadence | daily (due: with the trade valuations of the business date (SACCR.md section 3.4, open question 2)) |
+| Storage | connector `exposure-store` (plugin `delta`), table `<root>/risk/saccr-trade/` |
+| Columns | `SACCR_ROW_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `DRIVER`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `ASSET_CLASS`, `HEDGING_SET`, `TRANSACTION_TYPE`, `REFERENCE`, `IS_INDEX`, `CREDIT_QUALITY`, `DIRECTION`, `NOTIONAL_USD`, `QUANTITY`, `UNDERLYING_PRICE`, `START_DATE`, `END_DATE`, `MATURITY_DATE`, `OPTION_TYPE`, `BOUGHT_SOLD`, `EXERCISE_DATE`, `STRIKE`, `UNDERLYING_FORWARD`, `SHIFT`, `ATTACHMENT`, `DETACHMENT`, `CLEARED`, `SPECIFIC_WWR`, `DERIVED_BY`, `PRODUCT_TYPE`, `BATCH_ID` |
+| Test data | data/testdata/counterparty-risk/saccr-trade |
+| Worked example | [counterparty-risk/saccr-trade](../samples/counterparty-risk/saccr-trade.md) (a real record, every field explained, for the production query; tools/testdata/sample_docs.py) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `SACCR_ROW_ID` | id | required |  | The record's id (the business key) | `CLY-3000020~0` |  |
+| `BUSINESS_DATE` | date | required |  | — | `2026-09-30` |  |
+| `TRADE_ID` | id | required |  | Trade: the trade it refers to | `CLY-3000020` | `trade` |
+| `SOURCE_SYSTEM` | text | required |  | — | `CALYPSO`, `ENDUR`, `MUREX` |  |
+| `DRIVER` | integer | required |  | 0 the primary risk driver; 1, 2 … further drivers of a complex trade, each its own row. | `0` |  |
+| `NETTING_SET` | id | required |  | Netting set: the netting-set it refers to | `NS-ALDERSHOT-LDN` (pattern `^NS-`) | `netting-set` |
+| `COUNTERPARTY` | id | required |  | Counterparty: the counterparty it refers to | `CP-ALDERSHOT` (pattern `^CP-`) | `counterparty` |
+| `LEGAL_ENTITY` | id | required |  | Legal entity: the legal-entity it refers to | `LE-LDN` (pattern `^LE-`) | `legal-entity` |
+| `ASSET_CLASS` | text | required |  | IR, FX, CREDIT, EQUITY or COMMODITY: the class of the trade's primary risk driver (CRE52.25). | `COMMODITY`, `CREDIT`, `EQUITY`, `FX`, `IR` |  |
+| `TRANSACTION_TYPE` | text | required |  | LINEAR, OPTION, CDO_TRANCHE, BASIS or VOLATILITY: how the supervisory delta and factor are taken. | `BASIS`, `CDO_TRANCHE`, `LINEAR`, `OPTION`, `VOLATILITY` |  |
+| `DIRECTION` | text | optional |  | LONG or SHORT in the primary risk factor: a payer swap and sold protection are long; a receiver swap and bought protection short. | `LONG`, `SHORT` |  |
+| `NOTIONAL_USD` | amount | required | USD | The adjusted-notional basis: IR and credit the trade notional, FX the foreign leg, equity and commodity units times price. | `232000000.0` |  |
+| `MATURITY_DATE` | date | required |  | — | `2038-08-04` |  |
+| `CLEARED` | boolean | required |  | — | `False` |  |
+| `DERIVED_BY` | text | required |  | upstream (the bank's capital process delivered the row) or rules (derived from the trade master by configured rules). | `rules` |  |
+| `PRODUCT_TYPE` | text | required |  | — | `FX_SWAP` |  |
+| `BATCH_ID` | id | required |  | — | `SB-2026-09-30-01` |  |
+| `HEDGING_SET` | text | required |  | The trades that may offset one another: IR the currency, FX the pair, credit and equity one set, commodity energy, metals, agricultural or other; a basis or volatility transaction its own (CRE52.27 to CRE52.29). | `CHFUSD` |  |
+| `BOUGHT_SOLD` | text | optional |  | — | `BOUGHT`, `SOLD` |  |
+| `OPTION_TYPE` | text | optional |  | — | `CALL`, `PUT` |  |
+| `UNDERLYING_FORWARD` | amount | optional |  | — | `0.7465` |  |
+| `STRIKE` | rate | optional |  | — | `0.7265` |  |
+| `EXERCISE_DATE` | date | optional |  | — | `2027-06-15` |  |
+| `REFERENCE` | text | optional |  | Credit and equity: the entity or index; commodity: the commodity type (ELECTRICITY has its own factor). | `EQ-SLRS` |  |
+| `IS_INDEX` | boolean | optional |  | — | `False` |  |
+| `START_DATE` | date | optional |  | — | `2026-09-30` |  |
+| `END_DATE` | date | optional |  | — | `2036-02-14` |  |
+| `SHIFT` | amount | optional |  | — | `0.01` |  |
+| `CREDIT_QUALITY` | text | optional |  | — | `A`, `B`, `BB`, `BBB`, `IG`, `SG` |  |
+| `ATTACHMENT` | amount | optional |  | — | `0.03` |  |
+| `DETACHMENT` | amount | optional |  | — | `0.07` |  |
+
+**Links:** `TRADE_ID` → `trade`, `NETTING_SET` → `netting-set`, `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`.
+
+**Validation**
+
+- required: fields `SACCR_ROW_ID`, `BUSINESS_DATE`, `TRADE_ID`, `SOURCE_SYSTEM`, `DRIVER`, `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY`, `ASSET_CLASS`, `TRANSACTION_TYPE`, `NOTIONAL_USD`, `MATURITY_DATE`, `CLEARED`, `DERIVED_BY`, `PRODUCT_TYPE`, `BATCH_ID`, `HEDGING_SET`
+- unique: key `SACCR_ROW_ID`; per BUSINESS_DATE
+- link: field TRADE_ID; kind trade
+- enum: field SOURCE_SYSTEM; values `CALYPSO`, `ENDUR`, `MUREX`
+- link: field NETTING_SET; kind netting-set
+- link: field COUNTERPARTY; kind counterparty
+- link: field LEGAL_ENTITY; kind legal-entity
+- enum: field ASSET_CLASS; values `COMMODITY`, `CREDIT`, `EQUITY`, `FX`, `IR`
+- enum: field TRANSACTION_TYPE; values `BASIS`, `CDO_TRANCHE`, `LINEAR`, `OPTION`, `VOLATILITY`
+- enum: field DIRECTION; values `LONG`, `SHORT`
+- enum: field BOUGHT_SOLD; values `BOUGHT`, `SOLD`
+- enum: field OPTION_TYPE; values `CALL`, `PUT`
+- enum: field CREDIT_QUALITY; values `AAA`, `AA`, `A`, `BBB`, `BB`, `B`, `CCC`, `IG`, `SG`
+
+## SACCR: SA-CCR exposure at default of a scope (computed) (`saccr-result`)
+
+SA-CCR exposure at default (Basel CRE52) of a netting set, counterparty, legal entity or the bank, computed when asked by the server's SA-CCR engine from the classification rows (saccr-trade), the live members' MTM, the CSAs and the collateral, as the person asking; never stored.
+
+|  |  |
+|---|---|
+| Contract | [saccr-result.contract.yaml](../../../config/packs/counterparty-risk/contracts/saccr-result.contract.yaml) · version 1.0 |
+| Class | computed |
+| Status | active |
+| Source | computed by Drishti: the reactive connector saccr-engine (java engine com.ash.drishti.server.saccr.SaccrResultEngine) |
+| Grain | One answer per question (the scope asked for and the business date), computed when asked. |
+| Key | — |
+| Id pattern | — |
+| Dated by | `on request` |
+| Cadence | on change (due: computed on request and again when the date's inputs load (data-version trigger)) |
+| Storage | connector `saccr-engine` (plugin `reactive`) |
+
+**Fields**
+
+| Field | Type | Presence | Unit | Description | Example or values | Link |
+|---|---|---|---|---|---|---|
+| `STATUS` | text | required |  | ok when computed. | `ok` |  |
+| `SCOPE` | text | required |  | The scope as asked (the id): NSET:<netting set>, CPTY:<counterparty>, LE:<legal entity> or BANK. | `NSET:NS-ALDERSHOT-NY` |  |
+| `SCOPE_KIND` | text | required |  | netting set, counterparty, legal entity or bank. |  |  |
+| `BUSINESS_DATE` | date | required |  | The business date of the inputs. |  |  |
+| `NETTING_SETS` | integer | required |  | Netting sets summed (EAD adds over whole sets). |  |  |
+| `TRADES` | integer | required |  | Classification rows computed. |  |  |
+| `EXCLUDED_TRADES` | integer | required |  | Live members that are not derivatives under CRE52 (SFTs, cash products): left out, counted. |  |  |
+| `UNCLASSIFIED_TRADES` | integer | required |  | Live derivatives without a DRIVER 0 row: left out, their sets incomplete. |  |  |
+| `RC` | amount | required |  | Replacement cost summed over the sets (USD). |  |  |
+| `PFE` | amount | required |  | Potential future exposure summed over the sets (USD). |  |  |
+| `EAD` | amount | required |  | Exposure at default: 1.4 (RC + PFE) per set, a margined set capped at its unmargined EAD, summed over the sets (USD). | `948761509.37` |  |
+| `RISK_WEIGHT` | rate | required |  | The configured risk weight of the RWA hook (drishti.ccr.saccr.risk-weight). |  |  |
+| `RWA` | amount | required |  | EAD times the risk weight: informational (USD). |  |  |
+| `V` | amount | optional |  | One netting set: the sum of the classified derivatives' MTM (USD). |  |  |
+| `C` | amount | optional |  | One netting set: collateral held net, after haircut, NICA included (USD). |  |  |
+| `NICA` | amount | optional |  | One netting set: the net independent collateral amount (USD). |  |  |
+| `ADD_ON` | amount | optional |  | One netting set: the aggregate add-on of the basis the EAD was taken from (USD). |  |  |
+| `MULTIPLIER` | rate | optional |  | One netting set: the PFE multiplier. |  |  |
+| `EAD_UNMARGINED` | amount | optional |  | One netting set: the EAD computed unmargined (USD). |  |  |
+| `CAPPED` | boolean | optional |  | One netting set: true when the unmargined EAD is the lower (CRE52.1). |  |  |
+| `ALPHA` | rate | optional |  | One netting set: alpha from the parameter file (1.4). |  |  |
+| `MPOR_DAYS` | integer | optional |  | One netting set: the margin period of risk in business days (0 unmargined). |  |  |
+| `MARGINED` | boolean | optional |  | One netting set: margined by a VM CSA with its terms. |  |  |
+| `ADD_ONS` | record list | optional |  | One netting set: per asset class ASSET_CLASS, ADD_ON. |  |  |
+| `HEDGING_SETS` | record list | optional |  | One netting set: per hedging set ASSET_CLASS, HEDGING_SET, EFFECTIVE_NOTIONAL (IR), ADD_ON. |  |  |
+| `BY_NETTING_SET` | record list | required |  | Per set NETTING_SET, COUNTERPARTY, STATUS, RC, PFE, MULTIPLIER, EAD, MARGINED. |  |  |
+| `PROVENANCE` | record | required |  | The date, the inputs read, the parameter file and its SHA-256, the choices, the engine. |  |  |
+
+**Validation**
+
+- required: fields `SCOPE`, `STATUS`, `EAD`
+
+**Notes**
+
+- No stored key: an answer's id is the scope asked. EAD adds over netting sets; nothing below a set adds (SACCR_GUIDE.md section 1).

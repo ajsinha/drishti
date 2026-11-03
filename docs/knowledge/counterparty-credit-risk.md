@@ -98,7 +98,7 @@ the expected loss from EE; **regulatory capital** under the internal model metho
 | <a id="term-official-exposure"></a>**Official exposure** | The end-of-day exposure figures of every netting set and counterparty, captured and published once a day as the record of the date. | `drishti.py exposure official` |
 | <a id="term-cva"></a>**CVA** (credit valuation adjustment) | The market price of the counterparty's possible default, taken off the trades' value: roughly loss given default times EE weighted by default probability. Stored from an upstream XVA engine; Drishti does not compute it yet. | `CVA CVA-ALDERSHOT-FRA <GO>` |
 | <a id="term-dva"></a>**DVA** (debit valuation adjustment) | CVA's mirror: the value of the bank's own possible default. FVA prices funding and KVA the cost of capital. All stored on the CVA record; not computed by Drishti. | `CVA CVA-ALDERSHOT-FRA <GO>` |
-| <a id="term-sa-ccr"></a>**SA-CCR** (standardised approach for counterparty credit risk) | Basel's formula for EAD without a model: 1.4 times (replacement cost plus multiplier times add-ons by asset class). Stored from an upstream engine; Drishti does not compute it. | `SACCR SACCR-ALDERSHOT-FRA <GO>` |
+| <a id="term-sa-ccr"></a>**SA-CCR** (standardised approach for counterparty credit risk) | Basel's formula for EAD without a model: 1.4 times (replacement cost plus multiplier times add-ons by asset class), per netting set, adding over sets. Computed by Drishti's SA-CCR engine from one classification row per derivative ([SA-CCR guide](../guides/SACCR_GUIDE.md)). | `SACCR NSET:NS-ALDERSHOT-NY <GO>` |
 | <a id="term-simm"></a>**SIMM** (ISDA Standard Initial Margin Model) | The industry model for initial margin on uncleared derivatives, from sensitivities by risk class. Stored, with IM posted and received. | `SIMM SIMM-ALDERSHOT <GO>` |
 | <a id="term-ccp"></a>**CCP** (central counterparty) | A clearing house that steps between the two sides of a cleared trade, with its own margin model and default fund. | `CCP CCP-CME <GO>` |
 | <a id="term-wrong-way-risk"></a>**Wrong-way risk** | When exposure to a counterparty rises as its credit worsens (it sold you protection on itself, or on its own country). Designed in the contracts; not computed by Drishti yet. |  |
@@ -123,7 +123,7 @@ counterparty        CPTY CP-<name>            rating, sector, country of risk, L
                         │  LEGAL_ENTITY ─► legal-entity LE LE-<city>   (the bank's booking entity)
                         │  COLLATERAL_BALANCE ─► collateral-balance COLL COLL-<name>-<legal entity>  held, posted, net
                         │  ◄─ margin-call MC MC-<name>-<legal entity>-<n>
-                        │  CVA_RESULT ─► cva CVA-<name>-<legal entity>    SACCR ─► sa-ccr SACCR-<name>-<legal entity>
+                        │  CVA_RESULT ─► cva CVA-<name>-<legal entity>    (SA-CCR: computed, SACCR NSET:NS-<name>-<legal entity>)
                         │  SIMM ─► simm SIMM-<name>                        (stored results from upstream engines)
                         │  TRADE_IDS ─► trade TRD <id>
                         ▼
@@ -147,7 +147,7 @@ The links are the contract link columns of `config/packs/counterparty-risk/contr
 **Id conventions.** A counterparty is `CP-<NAME>` (`CP-ALDERSHOT`), its group `GRP-<NAME>`, its limit `LIM-<NAME>`, its agreement
 `AGR-<NAME>-ISDA` and CSA `CSA-<NAME>`. Everything per netting set carries the counterparty and the bank's legal entity:
 `NS-ALDERSHOT-LDN` is Aldershot's trades booked by `LE-LDN`; its collateral is `COLL-ALDERSHOT-LDN`, its CVA `CVA-ALDERSHOT-LDN`, its
-SA-CCR `SACCR-ALDERSHOT-LDN`, its margin calls `MC-ALDERSHOT-LDN-<n>`. A simulation run is `XR-<business date>-<nn>`. A scope word
+SA-CCR `SACCR NSET:NS-ALDERSHOT-LDN` (computed), its margin calls `MC-ALDERSHOT-LDN-<n>`. A simulation run is `XR-<business date>-<nn>`. A scope word
 accepts an id with or without its prefix (`CPTY:ALDERSHOT` is `CPTY:CP-ALDERSHOT`; `EXP NS-ALDERSHOT-LDN <GO>` opens the set).
 
 ## 4. A worked example on the demo data

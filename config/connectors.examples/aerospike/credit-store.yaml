@@ -18,7 +18,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 description: credit-store read from aerospike (the former application-aerospike.yaml profile)
 settings:
   domain: credit

@@ -15,6 +15,46 @@
 -->
 # Changelog
 
+## 2.9.12 — Counterparty engines: SA-CCR computed (unreleased)
+
+### SA-CCR
+
+- **SA-CCR exposure at default computed by the server, for any scope of whole netting sets (SACCR_GUIDE.md; COUNTERPARTY_ENGINES.md
+  section 3 and "As built"; SACCR.md).** A Java engine (`com.ash.drishti.compute.saccr`) by the Basel Framework's CRE52: the
+  replacement cost unmargined and margined (TH + MTA − NICA), supervisory duration, delta (options with the supervisory volatility and the
+  shift for negative rates, CDO tranches) and maturity factors (the MPOR floors 5, 10 and 20 days, doubled after disputes, plus the
+  remargining lag), effective notionals on both bases, the add-ons by asset class and hedging set (IR over three maturity buckets with their
+  correlations, FX per pair, credit and equity names and indices through the systematic and idiosyncratic terms, commodity types per
+  hedging set, basis and volatility sets), the multiplier, PFE, EAD = 1.4 × (RC + PFE) and the cap of a margined set at its unmargined EAD.
+  Every number comes from the regulation's parameter file (`saccr/saccr-bcbs.yaml`, each value with its CRE52 paragraph, refused when
+  incomplete: `DRS-5413`); every answer names the file and its SHA-256. EAD adds over netting sets: `NSET:`, `CPTY:`, `LE:` and `BANK`
+  scopes; a set without enforceable netting splits into its trades, a `SPECIFIC_WWR` row is its own set, a live derivative without a row
+  is counted *unclassified* and its set *incomplete* (`strict=true` refuses it, `DRS-5411`), securities financing and cash products are
+  counted *excluded*.
+- **Its input, `saccr-trade`:** one classification row per derivative and risk driver (exposure-store, the risk domain); the demo's 6,527
+  rows of 2026-09-30 are derived by rules from the trade valuations by a seeded generator (`tools/packgen/ccr/make_saccr_data.py`, every
+  row `DERIVED_BY: rules`), with a second driver for cross-currency swaps and collars and one set deliberately incomplete.
+- **The stored `sa-ccr` kind is retired** (no dual machinery): its records, Sutra, contract, samples, Calc snippet `saccr_recompute.py`
+  and the netting set's `SACCR` link are gone; the computed kind `saccr-result` (the reactive connector `saccr-engine`, mnemonic
+  `SACCR`) answers in its place, and a retired id still opens its set (`SACCR SACCR-ALDERSHOT-NY` is `SACCR NSET:NS-ALDERSHOT-NY`). The
+  counterparty IRB snippet reads `saccr-result`.
+- **The SA-CCR page:** one page, three views over one answer of the server (`GET /api/v1/saccr/scope`; the browser computes nothing):
+  **A** the EAD waterfall with the hedging sets and the formula with the set's own figures (the default), **B** every netting set with the
+  selected set's breakdown, **C** a counterparty's sets side by side. The command word `SACCR`, a column of the Engines menu, the
+  engine on as shipped (`config/engines/sa-ccr.yaml`, `drishti.engines.sa-ccr.enabled`).
+- **The SA-CCR Playground (`PLAY SACCR`):** the grid of every row's terms with the formula bar and the explanation, the IR bucket offset
+  and cap switches, and the workbook of live formulas (Main, Config, Data, Trades, Hedging sets, Explain, Provenance) checked against the
+  engine to the cent; `LN`, `NORMSDIST` and `COUNTIFS` join the workbook's common functions.
+- **The API:** `/api/v1/saccr/scope`, `/scope/contributions`, `/trade/{tradeId}` (a trade's terms and standalone EAD), `POST /what-if`
+  (incremental EAD of candidate rows; a read for tokens), `/parameters`, `/playground`, `/playground.xlsx`, `/playground/template`;
+  `DRS-5410` to `DRS-5413`.
+- **The tests:** the design's hand-built cases S1 to S7 and SACCR.md's worked example, each published EAD and the arithmetic to the
+  cent (`SaccrHandBuiltCasesTest`); every demo netting set equal to the reference implementation (`tools/packgen/ccr/saccrmath.py`) to the
+  cent in the engine and through the service (`SaccrDemoParityTest`, `SaccrServiceTest`); the workbook recalculated by LibreOffice
+  (`SaccrPlaygroundWorkbookTest`). The Basel Committee's Annex 4 netting sets (BCBS 279) are in the engine but skipped: their inputs are
+  not yet checked against the publication.
+- **Docs:** the SA-CCR guide and tutorial 34, a Help pair; SACCR.md, COUNTERPARTY_ENGINES.md ("As built"), CONFIGURATION.md, the API guide.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox

@@ -826,7 +826,7 @@ virtual-table notebooks. Two large items, two drills. Nothing is coded until the
 
 | # | Part | What |
 |---|---|---|
-| 1 | **SA-CCR engine and playground (L)** | CC7: CRE52 from `saccr-trade` (BCBS first, decided), replacing the stored `sa-ccr`; its playground (replacement cost, add-ons, the multiplier, EAD as formulas) |
+| 1 | **SA-CCR engine and playground (L)** | CC7: CRE52 from `saccr-trade` (BCBS first, decided), replacing the stored `sa-ccr`; its playground (replacement cost, add-ons, the multiplier, EAD as formulas). **Built** (unreleased): the Java engine and its parameter file, the hand-built cases to the cent, `saccr-trade` derived by rules for the demo, the computed kind `saccr-result`, the stored `sa-ccr` retired, the page with views A (default), B and C over one API, `PLAY SACCR` and its workbook ([SACCR_GUIDE.md](../guides/SACCR_GUIDE.md), [COUNTERPARTY_ENGINES.md section 15](COUNTERPARTY_ENGINES.md#15-as-built-sa-ccr)) |
 | 2 | **The CCR cube (L)** | the CCR cube on the shared cube core (MC2, MCP1, built in 2.9.11 with the MR cube pivot): CC1 to CC4 (board, allocated exposure at date load, the GLEIF group roll-up with a synthetic legal tree, limits by tenor with demo credit limits regenerated from the computed PFE), CCP1 to CCP6; landing A, tabs B and C (decided); RL6, RL9, TL2 |
 | 3 | The Exposure playground | EE, EPE and PFE for one netting set: the simulated paths as data, every step after them a formula |
 | 4 | FVA and its playground | EPE and ENE × the funding spread |

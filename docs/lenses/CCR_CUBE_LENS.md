@@ -683,7 +683,7 @@ adds `cva` (before, after, incremental), `saccrEad` (incremental, from the candi
 | `config/packs/counterparty-risk/contracts/simm-addon.contract.yaml` | `simm-addon` | `SIMA` | input | new (SIMM.md) |
 | `config/packs/counterparty-risk/contracts/crif-external.contract.yaml` | `crif-external` | `CRIF` | input | new (SIMM.md) |
 | `config/packs/counterparty-risk/contracts/exposure-allocation.contract.yaml` | `exposure-allocation` | `XALC` | computed | new (allocated EE, EPE, PFE share by trade, desk, book) |
-| `config/packs/counterparty-risk/contracts/saccr-result.contract.yaml` | `saccr-result` | `SACR` | computed | new (replaces stored `sa-ccr`) |
+| `config/packs/counterparty-risk/contracts/saccr-result.contract.yaml` | `saccr-result` | `SACCR` | computed | built (replaced the stored `sa-ccr`) |
 | `config/packs/counterparty-risk/contracts/simm-result.contract.yaml` | `simm-result` | `SIMR` | computed | new (replaces stored `simm`) |
 | `config/packs/counterparty-risk/contracts/cva-result.contract.yaml` | `cva-result` | `CVAR` | computed | new (replaces stored `cva`) |
 | `simulation-run`, `exposure-path`, `csa`, `credit-limit`, `counterparty-group`, `trade-valuation` | existing | | | extended (optional fields above) |

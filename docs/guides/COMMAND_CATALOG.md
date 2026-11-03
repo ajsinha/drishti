@@ -17,11 +17,11 @@
 
 # The command catalog
 
-Every command of the command line: its own words and forms, the 11 packs' codes, and the 109 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
+Every command of the command line: its own words and forms, the 11 packs' codes, and the 110 mnemonics the packs define, each with what it does and an example. A pack's mnemonics work when the pack is switched on ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#part-v-domain-packs-the-packs-that-ship-turning-them-on-who-sees-which)); how to type them is in [USER_GUIDE.md](USER_GUIDE.md).
 
 **Data** says what kind of data a command shows ([the data contracts](../contracts/README.md#3-four-kinds-of-data)): *fundamental* (masters, terms, market and public data, kept as delivered), *engine input* (what upstream engines deliver for the computed measures), *Drishti's own* (made by Drishti) and *computed* (worked out when asked). **Change** says when a command moves to the compute model, or when the figures on a record start to be computed instead of stored ([the roadmap](../architecture/IMPLEMENTATION_PLAN.md#the-computed-measures-roadmap-280-to-2120-product-owner-2026-10-25)). Each mnemonic's fields are in its data contract ([every command's contract](../contracts/packs/README.md)).
 
-In numbers: 74 fundamental, 14 engine input, 1 Drishti's own and 20 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
+In numbers: 74 fundamental, 14 engine input, 1 Drishti's own and 21 computed; 0 move to the compute model and 0 keep their record while its figures become computed.
 
 ## Contents
 
@@ -123,7 +123,6 @@ ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR
 | `NSET` | Netting set | Trades that net on close-out under one agreement and CSA, with exposure and collateral. | `NSET NS-ALDERSHOT-NY` | fundamental |  |
 | `LIM` | Credit limit | PFE limit by tenor bucket for a counterparty, with utilisation. | `LIM LIM-SUMMIT` | fundamental |  |
 | `CVA` | CVA / XVA | Credit, debit and funding valuation adjustments with sensitivities. | `CVA CVA-SUMMIT-NY` | fundamental |  |
-| `SACCR` | SA-CCR exposure | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. | `SACCR SACCR-SUMMIT-NY` | fundamental |  |
 | `COLL` | Collateral balance | Collateral held and posted under a CSA, by asset, after haircuts. | `COLL COLL-ALDERSHOT-FRA` | fundamental |  |
 | `MC` | Margin call | A variation or initial margin call and its settlement status. | `MC MC-ALDERSHOT-FRA-1` | fundamental |  |
 | `SIMM` | ISDA SIMM initial margin | Initial margin by risk class and product class. | `SIMM SIMM-ALDERSHOT` | fundamental |  |
@@ -134,6 +133,8 @@ ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR
 | `XOFC` | Exposure official results by netting set and counterparty (published) | The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input. | `XOFC NSET:NS-ALDERSHOT-FRA` | computed |  |
 | `NSMTM` | Netting-set MtM totals (derived from the trade valuations) | A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (quick win Q1 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the netting-set engine computes them). |  | computed |  |
 | `CPMTM` | Counterparty MtM totals (derived from the trade valuations) | A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (quick win Q2 of docs/architecture/COMPUTED_ATTRIBUTES.md). |  | computed |  |
+| `SACT` | SA-CCR classification row (a derivative's asset class, hedging set and terms) | One derivative's SA-CCR classification and terms per business date and risk driver (asset class, hedging set, transaction type, direction, notional, dates, option and tranche terms); the SA-CCR engine computes every supervisory figure and EAD from it. A row that carries a computed figure is refused. | `SACT CLY-3000020~0` | fundamental |  |
+| `SACCR` | SA-CCR exposure at default of a scope (computed) | SA-CCR exposure at default (Basel CRE52) of a netting set, counterparty, legal entity or the bank, computed when asked by the server's SA-CCR engine from the classification rows (saccr-trade), the live members' MTM, the CSAs and the collateral, as the person asking; never stored. | `SACCR NSET:NS-SUMMIT-NY` | computed |  |
 
 ## Funds and ETFs (`funds`)
 

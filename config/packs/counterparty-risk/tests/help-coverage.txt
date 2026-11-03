@@ -5,4 +5,3 @@ simm=1
 credit-limit=1
 cva=1
 netting-set=1
-sa-ccr=1

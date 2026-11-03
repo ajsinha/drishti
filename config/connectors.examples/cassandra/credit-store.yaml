@@ -18,7 +18,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 description: credit-store read from Apache Cassandra (loaded by tools/load-cassandra.sh)
 settings:
   domain: credit

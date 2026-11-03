@@ -198,7 +198,6 @@ Fields, from 66 sample documents:
 | `CSA` | string | `CSA-ALDERSHOT-FRA` | link to `csa` |
 | `CREDIT_LIMIT` | string | `LIM-ALDERSHOT` | link to `credit-limit` |
 | `CVA_RESULT` | string | `CVA-ALDERSHOT-FRA` | link to `cva` |
-| `SACCR` | string | `SACCR-ALDERSHOT-FRA` | — |
 | `SIMM` | string | `SIMM-ALDERSHOT` | link to `simm` |
 | `COLLATERAL_BALANCE` | string | `COLL-ALDERSHOT-FRA` | link to `collateral-balance` |
 | `LEGAL_ENTITY` | string | `LE-FRA` | The bank's legal entity; link to `legal-entity` |

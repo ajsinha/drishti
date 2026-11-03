@@ -18,7 +18,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 description: credit-store read from mongodb (the former application-mongodb.yaml profile)
 settings:
   domain: credit

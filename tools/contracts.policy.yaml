@@ -183,8 +183,6 @@ review:
     - "SENSITIVITIES[] are per-bucket inputs: confirm they become the per-trade sensitivity table (FRTB.md) and are not kept on this record."
   pnl-explain:
     - "ACTUAL is the day-over-day MtM change: confirm it is computed from trade valuations, not delivered."
-  sa-ccr:
-    - "ALPHA (1.4) is a regulatory parameter: confirm it becomes a setting of the SA-CCR engine."
   counterparty:
     - "NET_MTM and NETTING_SETS[].NET_MTM are computed figures on a fundamental master (docs/contracts/README.md section 3): confirm they are removed when NSET's figures are computed (2.10.0); PFE_PEAK left in 2.9.0 (the exposure engine's)."
 
@@ -226,11 +224,6 @@ parked:
       contract: PNL.md
       measure: P&L explain
       figures: [ACTUAL, EXPLAINED, UNEXPLAINED, ATTRIBUTION, EXPLAIN_STEPS]
-    sa-ccr:
-      release: 2.10.0
-      contract: SACCR.md
-      measure: SA-CCR
-      figures: [REPLACEMENT_COST, ADD_ON, MULTIPLIER, EAD, RWA, ADD_ONS, HEDGING_SETS]
     cva:
       release: 2.10.0
       contract: CVA.md

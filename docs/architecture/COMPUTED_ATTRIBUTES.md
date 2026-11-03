@@ -508,8 +508,8 @@ LIM is brought back" (IMPLEMENTATION_PLAN.md, the EXP paragraph): the stored `US
 
 ### 5.7 `sa-ccr` (SACCR)
 
-Sutra `exposure-and-capital/sa-ccr.v1.sutra.yaml` (strip lines 35–40, add-ons bars, hedging-sets table). Plan of record:
-`parked.retiring.sa-ccr` (every figure). Regulatory source: **BCBS 279, *The standardised approach for measuring counterparty credit risk
+**Done: the stored kind is retired and every figure below is computed by the SA-CCR engine** ([SACCR_GUIDE.md](../guides/SACCR_GUIDE.md)),
+from `saccr-trade`; `SACCR <scope>` and the computed kind `saccr-result` answer it. The table keeps the reasoning. Regulatory source: **BCBS 279, *The standardised approach for measuring counterparty credit risk
 exposures*, as consolidated in the Basel Framework CRE52**; restated in SACCR.md sections 6.2–6.7.
 
 | Shown as | Field | Today | Should be | How (formula, CRE52) | Pri. |
@@ -943,7 +943,7 @@ last column.
 | E4 | SIMM | Python (SIMM.md) | CRIF sensitivities, licensed parameter files | `simm` `TOTAL`, `POSTED`, `RECEIVED`, `RISK_CLASSES` | planned (parked) |
 | E5 | PNL explain | Java + Python (PNL.md) | two dates of valuations, sensitivities, market moves | `pnl-explain` figures | planned (parked) |
 | E6 | NSET | Java (NSET.md) | `netting-set-member`, E0 | `netting-set` `NET_MTM`, `COLLATERAL`, `UTILISATION`, `CVA`, `BY_ASSET`, `TRADES`, `TRADE_COUNT`, `LIMIT`; counterparty `NET_MTM`; Q1/Q2 derived kinds | planned, order 1 |
-| E7 | SACCR | Java + Python (SACCR.md) | `saccr-trade`, COLL regulatory values | `sa-ccr` (whole kind) | planned, order 2 |
+| E7 | SACCR | Java (SACCR_GUIDE.md) | `saccr-trade`, COLL regulatory values when delivered | `sa-ccr` (whole kind, retired) | **built** |
 | E8 | COLL | Java (COLL.md) | `collateral-holding`, prices, FX | `HELD`, `POSTED`, `NET`, `MARKET_VALUE`, `VALUE` | planned, order 3 |
 | E9 | MC expected call | Python (MC.md) | NSET, COLL, CSA terms numeric | nothing (actual calls stay) | planned, order 4 |
 | E10 | LIM | Python over EXP, SACCR, NSET (LIM.md) | EXP (built), E7 | `USED`, `UTILISATION`, `STATUS`, bucket figures; `netting-set.LIMIT` | planned, order 6 |

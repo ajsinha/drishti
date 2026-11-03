@@ -18,7 +18,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 description: credit-store read from postgres (the former application-postgres.yaml profile)
 settings:
   domain: credit

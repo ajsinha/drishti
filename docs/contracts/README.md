@@ -62,7 +62,7 @@ may still change before it ships, and the document records each change.
 | [SIMM.md](SIMM.md) | SIMM, computed per netting set and regime (`simm-result`) from the same SENS and RFAC; replaces SIMM (`simm`) for the netting sets with sensitivities | DESIGN, not built: ISDA SIMM 2.8+2512 structure, parameters shipped empty (the bank's licensed file by version); aligned with [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md) (2026-11-02) |
 | [PNL.md](PNL.md) | PNL (`pnl-explain`) | PARKED (design kept) |
 | [NSET.md](NSET.md) | NSET (`netting-set`): terms kept, figures computed | PARKED (design kept) |
-| [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept) |
+| [SACCR.md](SACCR.md) | SACCR (`saccr-trade` in, `saccr-result` computed) | BUILT (the engine, [SACCR_GUIDE.md](../guides/SACCR_GUIDE.md)) |
 | [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | PARKED (design kept) |
 | [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | PARKED (design kept) |
 | [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`, `exposure-whatif`; the stored `exposure-profile` retired) | BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the Python what-if and its exact `paths` method, the CLI); Part II of the exposure guide since 2026-10-26 |

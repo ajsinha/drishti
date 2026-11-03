@@ -158,7 +158,7 @@ class ComputedAttributesPagesTest {
     @Test
     void theCheckPanelsShowOnTheirPages() throws Exception {
         String str = samples("market-risk", "stress-result").get(0).path("RESULT_ID").asText();
-        for (String view : List.of("collateral-balance/COLL-ALDERSHOT-FRA", "credit-limit/LIM-ALDERSHOT", "sa-ccr/SACCR-ALDERSHOT-FRA",
+        for (String view : List.of("collateral-balance/COLL-ALDERSHOT-FRA", "credit-limit/LIM-ALDERSHOT",
                 "stress-result/" + str)) {
             JsonNode p = panel(view, "checks");
             assertThat(p.path("empty").asBoolean()).as(view).isFalse();
