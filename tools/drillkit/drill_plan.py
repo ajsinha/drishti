@@ -162,7 +162,7 @@ def cmd_lanes(a) -> int:
         secs = [s for _, s in files]
         measured = sum(1 for p, _ in files if p in durations)
         top = ", ".join(f"{Path(p).name} {s:.0f}s" for p, s in files[:3])
-        print(f"drill: console lane {lane}: {len(files)} files ({measured} measured), {sum(secs):.0f}s of work, about "
+        print(f"drill: console lane {lane}: {len(files)} files ({measured} with a recorded time), {sum(secs):.0f}s of work, about "
               f"{lpt_makespan(secs, workers[lane]):.0f}s on {workers[lane]} workers; longest: {top}")
     return 0
 

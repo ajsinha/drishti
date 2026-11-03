@@ -4491,7 +4491,9 @@ Options: `--docs` (the light drill, below), `--full` (the full drill even when o
 no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
 once; by default the first failure stops the rest). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
-lanes' workers, `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The script prints
+lanes' workers, `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
+time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
+script prints
 `drill: mode = full` or `drill: mode = docs`, the machine's CPUs and memory with the workers it chose, each job's time, then a
 summary. It is costly (it runs everything): run it once per release, and targeted tests in between.
 

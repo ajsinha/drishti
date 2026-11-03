@@ -25,6 +25,7 @@
 #   DRILL_MVN_ARGS="..."        extra Maven arguments for every Maven run (e.g. -Ddrishti.test.forks=1 to run the test classes serially)
 #   DRILL_BROWSER_WORKERS, DRILL_OTHER_WORKERS   the console lanes' pytest workers (default from the CPUs and the memory)
 #   DRILL_GATE_THREADS          Maven threads of the gate's build (default 1C: one per CPU)
+#   DRILL_BROWSER_RERUNS        browser-lane files re-run at a time (default 1); DRILL_LANE_LIMIT a console lane's time limit in seconds
 #
 # Full drill, in two stages (docs/guides/TOOLS.md, "The release drill"):
 # 1. The gate, a few minutes, every job at once; the first failure stops the drill with the list:
@@ -419,7 +420,7 @@ if ! watch_jobs "${gate_jobs[@]}"; then
   stop_jobs
   echo "drill: FAILED at the gate after $(( SECONDS - t ))s (logs in $LOGS/: ${gate_jobs[*]/%/.log})" >&2; exit 1
 fi
-stage_done "gate (static, docs, Java 21 build + rules)" $t
+stage_done "gate ($(IFS=,; echo "${gate_jobs[*]}"))" $t
 
 t=$SECONDS
 if [[ "$MODE" == docs ]]; then
