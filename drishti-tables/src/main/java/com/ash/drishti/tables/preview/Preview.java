@@ -126,6 +126,19 @@ public final class Preview {
         return new Rows(cols, rows, List.copyOf(problems.values()), docs.size());
     }
 
+    /** The rows as objects, column name to value (what a materialisation keeps and the layer's answers read). */
+    public static List<DataNode> objects(Rows r) {
+        List<DataNode> out = new ArrayList<>(r.rows().size());
+        for (List<Object> row : r.rows()) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            for (int i = 0; i < r.columns().size(); i++) {
+                m.put(r.columns().get(i), row.get(i));
+            }
+            out.add(DataNode.of(m));
+        }
+        return out;
+    }
+
     /** The checks a sample allows: keys unique per business date, and every column path found in some row. */
     public static List<Problem> check(TableDef t, List<Doc> docs, RowEvaluator eval) {
         List<Problem> out = new ArrayList<>();
