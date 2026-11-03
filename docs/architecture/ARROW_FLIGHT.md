@@ -67,7 +67,16 @@ run against the demo lake and its real output shown (never invented):
 | **Operations** | sizing (memory for Arrow buffers per request and in total), the port in firewalls and load balancers, certificates and their renewal, monitoring (the metrics and the Admin page) |
 | **Diagrams** | the request path (client, token, entitlements, the query layer, the engines, the nodes) and the cluster read |
 
-## 4. Size
+**Mock-ups** of Admin → Data out (Q11; a planned screen, drawn with the decisions of Q3–Q9), each with a quiet
+morning and a busy afternoon (four streams, one request refused for the rows limit, a node down with its VaR shards served by a peer,
+Arrow memory near its cap): [A](mockups/data-out/A.html), one page read top to bottom: the service (switch, port, TLS, Arrow memory),
+the nodes with their real addresses and what each serves, live streams with Stop, the last day's readers with refusals and the limit
+hit, tokens with Flight scopes (Revoke) and limits per role (**recommended**: everything an administrator acts on is on one page, in
+order of urgency); [B](mockups/data-out/B.html), a map of clients and nodes with a line per stream and the selected stream's detail;
+[C](mockups/data-out/C.html), table-first: counts, then one requests table (live, last day, refused), nodes, limits and tokens.
 
+**Chosen** (product owner, 2026-11-03): **A and B, both built**, as two views of one screen over one API: A, the page (the default), and B, the map ("B has cool graphics"), switched by a toggle; C is not built.
+
+## 4. Size
 One large item: the Arrow library replacing the hand-written writers, the Flight service with tickets, endpoints, streams, limits and
 audit, the Python client and its tests. Flight SQL is a second, medium item if it joins the same release.

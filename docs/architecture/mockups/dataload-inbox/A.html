@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (dataload-inbox/A.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/DATALOAD_INBOX.md (section 10, Admin → Data loads → Inbox).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data inbox: option A, a status board (waiting · loading · done)</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:12.5px;margin-bottom:10px}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber);font-size:12px}
+.cmd{flex:1 1 160px;max-width:340px;white-space:nowrap;overflow:hidden;height:26px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:14px;font-family:var(--mono);color:var(--amber);font-size:12px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:12px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink);box-shadow:inset 0 -2px 0 var(--amber)}
+.ph{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;margin:2px 0 8px}
+.ph h2{margin:0;font-size:17px} .crumbs{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:10px;overflow-x:auto}
+.tabs span{padding:7px 14px;font-size:13px;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent}
+.tabs span.on{color:var(--ink);font-weight:600;border-bottom-color:var(--amber)}
+.tabs span i{font-style:normal;font-family:var(--mono);font-size:11px;margin-left:6px;padding:0 6px;border-radius:8px;background:var(--panel2);color:var(--muted)}
+.tabs span i.r{background:var(--bad-t);color:var(--bad)} .tabs span i.a{background:var(--warn-t);color:var(--warn)}
+.btn{display:inline-block;font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;min-height:30px;line-height:18px}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.s{font-size:12px;padding:3px 10px;min-height:26px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.wrap{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:5px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2);vertical-align:top}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)} td.lm{text-align:left}
+td.wr{white-space:normal;min-width:220px}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .mono{font-family:var(--mono)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600;white-space:nowrap}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:12.5px}
+.sw i{display:inline-block;width:34px;height:18px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);position:relative}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.sw.on i{background:var(--amber-t);border-color:var(--amber)} .sw.on i::after{left:18px;background:var(--amber)}
+.msg{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-t);border-radius:8px;padding:8px 12px;font-size:12.5px;line-height:1.5}
+.msg.calm{border-left-color:var(--link);background:var(--hl)} .msg.badm{border-left-color:var(--bad);background:var(--bad-t)} .msg.okm{border-left-color:var(--ok);background:var(--ok-t)}
+.msg b.h{display:block;font-size:13px}
+.prog{display:inline-block;width:110px;height:6px;border-radius:3px;background:var(--panel2);position:relative;overflow:hidden;vertical-align:middle;border:1px solid var(--line)}
+.prog::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--p,40%);background:var(--warn)}
+.prog.g::after{background:var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.scenes{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.scene{border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg2);min-width:0}
+.scene>.lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.scene>.lbl b{color:var(--amber);font-weight:700;margin-right:6px}
+.links{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px}
+.links a{font-family:var(--mono);font-size:11.5px}
+.rule{font-family:var(--mono);font-size:12px}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.why .card h3{color:var(--amber)}
+.why ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.55}
+footer{font-size:12px;color:var(--faint);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.eng{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12.5px;margin-bottom:10px}
+.eng .k{color:var(--muted);margin-right:4px}
+.eng .acts{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toast{position:relative;border:1px solid var(--warn);background:var(--panel);border-radius:8px;padding:8px 12px;font-size:12.5px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:520px}
+.toast b{color:var(--warn)}
+.fn{font-family:var(--mono);font-size:12.5px;word-break:break-all}
+.sub{font-size:11.5px;color:var(--muted);line-height:1.4}
+@media (max-width:900px){.why{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){
+  .page{padding:12px 8px 20px}
+  .menus{display:none}
+  .intro h1{font-size:17px}
+  .rec,.alt{margin-left:0;margin-top:4px}
+  .eng .acts{margin-left:0}
+  .btn{min-height:40px;line-height:28px}
+}
+
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:10px}
+.colm{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.colm>h3{margin:0;font-size:13.5px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.colm>h3 .n{font-family:var(--mono);font-size:12px;padding:0 7px;border-radius:9px;background:var(--panel2);color:var(--muted)}
+.colm>h3 .f{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--faint);font-weight:400}
+.colm.w{border-top:3px solid var(--link)} .colm.l{border-top:3px solid var(--warn)} .colm.d{border-top:3px solid var(--ok)}
+.fc{border:1px solid var(--line2);border-radius:8px;padding:8px 10px;background:var(--panel2);display:flex;flex-direction:column;gap:3px;min-width:0}
+.fc .t{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.fc .t .fn{flex:1 1 160px}
+.fc .t .sz{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+.fc.bad{border-left:3px solid var(--bad)} .fc.amb{border-left:3px solid var(--warn)} .fc.mute{opacity:.82}
+.fc.all{border:1px dashed var(--link);background:var(--hl)}
+.empty{border:1px dashed var(--line);border-radius:8px;padding:14px 10px;color:var(--muted);font-size:12.5px;text-align:center;line-height:1.5}
+.tblk{border:1px solid var(--line2);border-radius:8px;padding:8px 10px;background:var(--panel2)}
+.tblk .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;font-size:12.5px}
+.tblk .h b{font-size:13px}
+.tblk ul{margin:4px 0 0;padding-left:16px;font-size:12px;line-height:1.55}
+.cyc{display:grid;grid-template-columns:44px minmax(0,1fr);gap:2px 8px;padding:6px 0;border-bottom:1px solid var(--line2);font-size:12.5px}
+.cyc:last-child{border-bottom:0}
+.cyc .tm{font-family:var(--mono);color:var(--muted)}
+.cyc .bd{display:flex;flex-direction:column;gap:2px;min-width:0}
+.below{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+.ff{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--line2)}
+.ff:last-child{border-bottom:0}
+.ff .tx{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:3px;font-size:12.5px}
+.phone{width:390px;max-width:100%;margin:0 auto;border:1px solid var(--line);border-radius:22px;background:var(--bg);padding:10px 10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.30)}
+.pbar{display:flex;align-items:center;gap:8px;padding:4px 4px 8px;border-bottom:1px solid var(--line2);margin-bottom:8px}
+.pbar .ham{font-size:18px} .pbar .cmd{flex:1 1 auto;max-width:none}
+.phone .eng{gap:6px 12px;padding:8px}
+.phone .eng .acts{margin-left:0;width:100%} .phone .eng .acts .btn{flex:1 1 auto;text-align:center;min-height:40px;line-height:28px}
+.phone .board{grid-template-columns:minmax(0,1fr)}
+.sumrow{display:flex;justify-content:space-between;align-items:center;min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:var(--panel);margin-bottom:6px;font-size:13.5px}
+.sumrow .c{font-family:var(--mono);font-size:12px;color:var(--muted)}
+@media (max-width:1000px){.board,.below{grid-template-columns:minmax(0,1fr)}}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Data inbox: option A, a status board (waiting · loading · done)<span class="rec">recommended</span></h1><p>Admin → Data loads gets an <b>Inbox</b> tab. Option A draws the inbox as three columns that follow a file's way through the folders: <b>Waiting</b> (<span class="mono">inbox/</span>, each file with its state: ready, not yet stable, no marker, or ready via <span class="mono">ready.all</span>, and the rule that will route it), <b>Loading</b> (<span class="mono">inprocess/&lt;run&gt;/</span>, table by table) and <b>Last cycles</b> (<span class="mono">outbox/</span>: files, tables, dates, rows, rejects, time, outcome, skipped cycles). Failures with Retry, duplicates, the routing rules and the settings sit below; the engine's switch, owner node, lock, next cycle and <b>Load now</b> sit on top. Each mock-up shows two scenes: a quiet afternoon (one small run done, three files waiting) and a busy one (a 23-minute run of a 6.2 GB scenario archive, two cycles skipped because runs never overlap, <b>Load now</b> answered <i>skipped</i>, <span class="mono">ready.all</span> waiting for the next cycle, and one failed file with <b>Retry</b>). Times are the server's, UTC; a run id is its start time and node.</p></section>
+<div class="scenes">
+<div class="scene"><p class="lbl"><b>1</b>A quiet afternoon, 14:46: one run done, three files waiting</p>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">LOADS &lt;GO&gt;</div><div class="menus"><span>Views</span><span>Engines</span><span>BI</span><span>Build</span><span class="on">Admin ▾</span><span>Help</span></div></div>
+<div class="ph"><h2>Data loads</h2><span class="crumbs">Admin › Data loads › <b>Inbox</b></span></div>
+<div class="tabs"><span>Loads</span><span class="on">Inbox</span><span>Load a file into a lake</span></div>
+<div class="eng"><span class="sw on"><i></i><b>Data inbox on</b></span><span><span class="k">Owner node</span><b>drishti-main</b> <span class="muted">(this node)</span></span><span><span class="k">Lock</span>free</span><span><span class="k">Next cycle</span><b class="mono">14:50</b> <span class="muted">(in 3 min 40 s)</span></span><span class="acts"><a class="btn p" href="#">Load now</a><a class="btn" href="#">Settings ▸</a></span></div>
+<div class="board"><div class="colm w"><h3>Waiting <span class="n">3</span><span class="f">inbox/</span></h3>
+<div class="fc"><div class="t"><span class="fn">trades-endur-2026-11-03.jsonl.gz</span><span class="sz">412 MB</span></div>
+<div><span class="pill g">ready</span> <span class="sub">stable 4 min · marker empty</span></div>
+<div class="sub">rule 1 → <b>trading / trade</b> · trade-endur · 2026-11-03 from the name</div>
+<div class="sub ok">taken at the next cycle, 14:50</div></div>
+<div class="fc amb"><div class="t"><span class="fn">scenario-pv-2026-11-03-b.jsonl.gz</span><span class="sz">1.8 GB</span></div>
+<div><span class="pill a">not yet stable</span> <span class="sub">grew 9 s ago · marker present</span></div>
+<div class="sub">rule 2 → <b>market-risk / scenario-pv</b> · each row's BUSINESS_DATE</div>
+<div class="sub">taken once unchanged for 30 s (stable-seconds)</div></div>
+<div class="fc mute"><div class="t"><span class="fn">positions-2026-11-03.jsonl</span><span class="sz">22 MB</span></div>
+<div><span class="pill n">no marker</span> <span class="sub">since 13:58</span></div>
+<div class="sub">never taken without <span class="mono">positions-2026-11-03.jsonl.ready</span> or <span class="mono">ready.all</span></div>
+<div class="sub warn">no rule matches this name: once marked it would go to failed/</div></div>
+</div><div class="colm l"><h3>Loading <span class="n">0</span><span class="f">inprocess/</span></h3>
+<div class="empty">Nothing loading: <span class="mono">inprocess/</span> is empty and the lock is free.<br>
+Last run <span class="mono">20261103T144000Z-drishti-main</span> took 1 min 12 s.</div></div><div class="colm d"><h3>Last cycles <span class="n">today 6</span><span class="f">outbox/2026-11-03/</span></h3>
+<div class="cyc"><span class="tm">14:40</span><div class="bd"><span><span class="pill g">loaded</span> <a class="mono" href="#">20261103T144000Z-drishti-main</a></span>
+<span class="sub">3 files · 2 tables · 2026-11-02, 2026-11-03 · <b class="mono">1,284,551</b> rows · 0 rejects · 1 min 12 s</span>
+<span class="sub">trading/trade v416 · market-risk/scenario-pv v88, v89 · <a href="#">reports</a></span></div></div>
+<div class="cyc"><span class="tm">14:30</span><div class="bd"><span><span class="pill n">nothing ready</span></span></div></div>
+<div class="cyc"><span class="tm">14:20</span><div class="bd"><span><span class="pill b">duplicate</span> <a class="mono" href="#">20261103T142000Z-drishti-main</a></span>
+<span class="sub">1 file, already loaded: moved to the outbox, not loaded again · 2 s</span></div></div>
+<div class="cyc"><span class="tm">14:10</span><div class="bd"><span><span class="pill g">loaded</span> <a class="mono" href="#">20261103T141000Z-drishti-main</a></span>
+<span class="sub">1 file · trading/trade · 2026-11-03 · <b class="mono">12,004</b> rows · 0 rejects · 18 s</span></div></div>
+<a href="#" class="sub">All cycles (ledger) ▸</a></div></div>
+<div class="below"><div class="card"><h3>Failures <span>none</span></h3><div class="empty">No failed files in the last 30 days (keep-outbox-days).</div>
+<h3 style="margin-top:12px">Duplicates <span>today</span></h3><div class="ff"><span class="pill b">duplicate</span><div class="tx"><span class="fn">trades-endur-2026-11-02.jsonl.gz</span>
+<span class="sub">run 20261103T142000Z-drishti-main · moved to the outbox, not loaded again</span>
+<span>already loaded in run <span class="mono">20261102T221000Z-drishti-main</span> on 2026-11-02 22:10 (same SHA-256)</span></div></div></div>
+<div class="card"><h3>Routing rules in effect <span>read-only</span></h3><div class="wrap"><table>
+<tr><th class="l">#</th><th class="l">match (file name)</th><th class="l">pack / kind</th><th class="l">table</th><th class="l">business date</th></tr>
+<tr><td class="lm">1</td><td class="lm">trades-endur-*.jsonl.gz</td><td class="lm">trading / trade</td><td class="lm">trade-endur <span class="faint">(trading/trade_endur)</span></td><td class="l">from the name</td></tr>
+<tr><td class="lm">2</td><td class="lm">scenario-pv-*.jsonl.gz</td><td class="lm">market-risk / scenario-pv</td><td class="lm">the pack's <span class="faint">(market-risk/scenario_pv)</span></td><td class="l">each row's BUSINESS_DATE</td></tr>
+<tr><td class="lm">3</td><td class="lm">scenario-pv-*.tar.gz</td><td class="lm">market-risk / scenario-pv</td><td class="lm">the pack's</td><td class="l">each row's BUSINESS_DATE</td></tr>
+<tr><td class="lm faint">–</td><td class="l faint" colspan="4">anything else: <span class="mono">unmatched: fail</span>, to failed/ with the reason, never guessed</td></tr>
+</table></div>
+<p class="note">Read-only, from <span class="mono">config/dataload.yaml</span> (read again every cycle). A file's <span class="mono">.ready</span> may name its own pack, kind, table and date over these.</p>
+<p class="note" style="margin-top:8px">Settings: <span class="mono">interval 10m · stable-seconds 30 · loader-heap 4g · load-timeout 2h · reject-max-percent 0 · max-files off · max-gb off · reload-duplicates false · keep-outbox-days 30</span></p></div></div><div class="links"><span class="muted">Folders and reports:</span><a href="#">outbox/2026-11-03/20261103T144000Z-drishti-main/</a><a href="#">failed/2026-11-03/</a><a href="#">ledger/ledger-2026-11.jsonl</a><a href="#" style="font-family:var(--sans)">Loads tab: source inbox:</a><a href="#" style="font-family:var(--sans)">Admin → Engines → Data inbox</a></div></div>
+<div class="scene"><p class="lbl"><b>2</b>A busy afternoon, 15:23: a long run, two skipped cycles, Load now answered skipped, one failed file</p>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">LOADS &lt;GO&gt;</div><div class="menus"><span>Views</span><span>Engines</span><span>BI</span><span>Build</span><span class="on">Admin ▾</span><span>Help</span></div></div>
+<div class="ph"><h2>Data loads</h2><span class="crumbs">Admin › Data loads › <b>Inbox</b></span></div>
+<div class="tabs"><span>Loads</span><span class="on">Inbox<i class="r">1 failed</i></span><span>Load a file into a lake</span></div>
+<div class="eng"><span class="sw on"><i></i><b>Data inbox on</b></span><span><span class="k">Owner node</span><b>drishti-main</b> <span class="muted">(this node)</span></span><span><span class="k">Lock</span>held by <b>drishti-main</b>, run <span class="mono">20261103T150000Z-drishti-main</span>, heartbeat 4 s ago</span><span><span class="k">Next cycle</span><b class="mono">15:30</b> <span class="muted">(in 6 min 50 s; will skip again if the run still loads)</span></span><span class="acts"><a class="btn p" href="#">Load now</a><a class="btn" href="#">Settings ▸</a></span></div>
+<div class="toast" style="margin:-2px 0 10px auto"><b>Load now: skipped.</b> Run <span class="mono">20261103T150000Z-drishti-main</span> is still loading (23 min). Nothing was started; the waiting files stay in the inbox for the next cycle at 15:30.</div><div class="msg" style="margin-bottom:10px"><b class="h">A long run is in progress</b>Run <span class="mono">20261103T150000Z-drishti-main</span> has loaded for 23 min; the cycles at 15:10 and 15:20 were skipped (runs never overlap). Files that became ready meanwhile wait for the next cycle.</div><div class="board"><div class="colm w"><h3>Waiting <span class="n">3</span><span class="f">inbox/</span></h3>
+<div class="fc all"><div class="t"><span class="fn">ready.all</span><span class="sz">since 15:12</span></div>
+<div class="sub">every data file here is ready at the next cycle, with or without its own marker, once stable; then <span class="mono">ready.all</span> moves to that run's outbox (applies once)</div></div>
+<div class="fc"><div class="t"><span class="fn">trades-endur-2026-11-03-1505.jsonl.gz</span><span class="sz">388 MB</span></div>
+<div><span class="pill g">ready</span> <span class="sub">stable 16 min · arrived during the run</span></div>
+<div class="sub">rule 1 → <b>trading / trade</b> · 2026-11-03 from the name</div></div>
+<div class="fc amb"><div class="t"><span class="fn">scenario-pv-2026-11-03-c.jsonl.gz</span><span class="sz">2.4 GB</span></div>
+<div><span class="pill a">not yet stable</span> <span class="sub">grew 4 s ago · ready via ready.all</span></div>
+<div class="sub">rule 2 → <b>market-risk / scenario-pv</b></div></div>
+<div class="fc"><div class="t"><span class="fn">positions-2026-11-03.jsonl</span><span class="sz">22 MB</span></div>
+<div><span class="pill b">ready via ready.all</span> <span class="sub">no marker of its own</span></div>
+<div class="sub bad">no rule matches this name: it will go to failed/ (never guessed)</div></div>
+</div><div class="colm l"><h3>Loading <span class="n">4</span><span class="f">inprocess/20261103T150000Z-drishti-main/</span></h3>
+<div class="tblk" style="border-left:3px solid var(--warn)"><div class="h"><b class="mono">20261103T150000Z-drishti-main</b></div>
+<div class="sub">started 15:00:00 · <b class="warn">running 23 min 10 s</b> · 4 files, 7.0 GB · load-timeout 2h (stops at 17:00)</div></div>
+<div class="tblk"><div class="h"><span class="pill g">committed</span><b>1 of 2 · trading / trade</b><span class="sub">2 min 40 s</span></div>
+<ul><li><span class="mono">trades-endur-2026-11-03.jsonl.gz</span></li><li><span class="mono">trades-endur-2026-11-03-noon.jsonl.gz</span></li></ul>
+<div class="sub">2026-11-03 → v418 · 96,410 rows · 0 rejects</div></div>
+<div class="tblk"><div class="h"><span class="pill a">loading</span><b>2 of 2 · market-risk / scenario-pv</b><span class="sub">20 min 30 s</span></div>
+<ul><li><span class="mono">scenario-pv-2026-11-03.tar.gz</span> <span class="faint">6.2 GB</span></li><li><span class="mono">scenario-pv-2026-11-02-rerun.jsonl.gz</span> <span class="faint">410 MB</span></li></ul>
+<div class="sub">2026-11-02 → v90 committed (618,169 rows) · 2026-11-03 writing</div>
+<div class="sub">loader process pid 48211 · heap 4g · nice · <a href="#">load-2.log</a></div></div>
+<div class="sub">The pack signals go out when the run ends (connectors refresh, checks, alerts, notices).</div></div><div class="colm d"><h3>Last cycles <span class="n">today 9</span><span class="f">outbox/2026-11-03/</span></h3>
+<div class="cyc"><span class="tm">15:20</span><div class="bd"><span><span class="pill a">skipped</span></span>
+<span class="sub">run 20261103T150000Z-drishti-main still loading (20 min)</span></div></div>
+<div class="cyc"><span class="tm">15:10</span><div class="bd"><span><span class="pill a">skipped</span></span>
+<span class="sub">run 20261103T150000Z-drishti-main still loading (10 min)</span></div></div>
+<div class="cyc"><span class="tm">15:00</span><div class="bd"><span><span class="pill a">loading</span> <span class="mono">20261103T150000Z-drishti-main</span></span><span class="sub">see Loading</span></div></div>
+<div class="cyc"><span class="tm">14:50</span><div class="bd"><span><span class="pill r">1 failed</span> <a class="mono" href="#">20261103T145000Z-drishti-main</a></span>
+<span class="sub">3 files: 1 loaded, 1 duplicate, 1 failed · trading/trade v417 · 2026-11-03 · <b class="mono">48,213</b> rows · 46 s</span></div></div>
+<div class="cyc"><span class="tm">14:40</span><div class="bd"><span><span class="pill g">loaded</span> <a class="mono" href="#">20261103T144000Z-drishti-main</a></span>
+<span class="sub">3 files · 2 tables · <b class="mono">1,284,551</b> rows · 0 rejects · 1 min 12 s</span></div></div>
+<a href="#" class="sub">All cycles (ledger) ▸</a></div></div>
+<div class="below"><div class="card"><h3>Failures <span>1, needs a person</span></h3><div class="ff"><span class="pill r">failed</span><div class="tx"><span class="fn">scenario-pv-2026-11-02-eod.jsonl.gz</span>
+<span class="sub">run 20261103T145000Z-drishti-main · 14:50:31 · market-risk / scenario-pv</span>
+<span>3,212 of 229,400 rows (1.4 %) rejected (no BUSINESS_DATE), over reject-max-percent 0. Nothing committed (loader exit 1).</span>
+<span class="links"><a href="#">failed/2026-11-03/20261103T145000Z-drishti-main/scenario-pv-2026-11-02-eod.jsonl.gz.failed.json</a><a href="#">rejects</a></span></div>
+<a class="btn" href="#" title="Moves the file and its .ready back to inbox/">Retry</a></div>
+<p class="note">Retry puts the file and its marker back in the inbox; the next cycle or Load now loads it. Fix the file or the rules first.</p>
+<h3 style="margin-top:12px">Duplicates <span>today</span></h3><div class="ff"><span class="pill b">duplicate</span><div class="tx"><span class="fn">trades-endur-2026-11-02.jsonl.gz</span>
+<span class="sub">run 20261103T145000Z-drishti-main · moved to the outbox, not loaded again</span>
+<span>already loaded in run <span class="mono">20261102T221000Z-drishti-main</span> on 2026-11-02 22:10 (same SHA-256)</span></div></div></div>
+<div class="card"><h3>Routing rules in effect <span>read-only</span></h3><div class="wrap"><table>
+<tr><th class="l">#</th><th class="l">match (file name)</th><th class="l">pack / kind</th><th class="l">table</th><th class="l">business date</th></tr>
+<tr><td class="lm">1</td><td class="lm">trades-endur-*.jsonl.gz</td><td class="lm">trading / trade</td><td class="lm">trade-endur <span class="faint">(trading/trade_endur)</span></td><td class="l">from the name</td></tr>
+<tr><td class="lm">2</td><td class="lm">scenario-pv-*.jsonl.gz</td><td class="lm">market-risk / scenario-pv</td><td class="lm">the pack's <span class="faint">(market-risk/scenario_pv)</span></td><td class="l">each row's BUSINESS_DATE</td></tr>
+<tr><td class="lm">3</td><td class="lm">scenario-pv-*.tar.gz</td><td class="lm">market-risk / scenario-pv</td><td class="lm">the pack's</td><td class="l">each row's BUSINESS_DATE</td></tr>
+<tr><td class="lm faint">–</td><td class="l faint" colspan="4">anything else: <span class="mono">unmatched: fail</span>, to failed/ with the reason, never guessed</td></tr>
+</table></div>
+<p class="note">Read-only, from <span class="mono">config/dataload.yaml</span> (read again every cycle). A file's <span class="mono">.ready</span> may name its own pack, kind, table and date over these.</p>
+<p class="note" style="margin-top:8px">Settings: <span class="mono">interval 10m · stable-seconds 30 · loader-heap 4g · load-timeout 2h · reject-max-percent 0 · max-files off · max-gb off · reload-duplicates false · keep-outbox-days 30</span></p></div></div><div class="links"><span class="muted">Folders and reports:</span><a href="#">outbox/2026-11-03/20261103T150000Z-drishti-main/</a><a href="#">failed/2026-11-03/</a><a href="#">ledger/ledger-2026-11.jsonl</a><a href="#" style="font-family:var(--sans)">Loads tab: source inbox:</a><a href="#" style="font-family:var(--sans)">Admin → Engines → Data inbox</a></div></div>
+<div class="scene"><p class="lbl"><b>3</b>The busy afternoon at phone width (390 px): the columns stack, each a touch-sized row that opens</p>
+<div class="phone"><div class="pbar"><span class="ham">☰</span><span class="brand">DRISHTI</span><div class="cmd">LOADS &lt;GO&gt;</div></div>
+<div class="tabs"><span>Loads</span><span class="on">Inbox<i class="r">1 failed</i></span><span>Load a file</span></div>
+<div class="eng"><span class="sw on"><i></i><b>Data inbox on</b></span><span><span class="k">Owner</span><b>drishti-main</b></span>
+<span><span class="k">Next</span><b class="mono">15:30</b></span><span class="acts"><a class="btn p" href="#">Load now</a><a class="btn" href="#">Settings</a></span></div>
+<div class="sumrow"><span>Waiting <span class="pill b">ready.all</span></span><span class="c">3 ▸</span></div>
+<div class="sumrow" style="border-left:3px solid var(--warn)"><span>Loading <span class="sub">23 min · table 2 of 2</span></span><span class="c">4 ▾</span></div>
+<div class="tblk" style="margin-bottom:6px"><div class="sub mono">20261103T150000Z-drishti-main</div>
+<div class="sub"><span class="pill g">committed</span> trading / trade · v418 · 96,410 rows</div>
+<div class="sub"><span class="pill a">loading</span> market-risk / scenario-pv · 20 min</div></div>
+<div class="sumrow" style="border-left:3px solid var(--bad)"><span>Failed <span class="sub">scenario-pv-…-eod</span></span><span class="c">1 ▸</span></div>
+<div class="sumrow"><span>Last cycles <span class="sub">2 skipped</span></span><span class="c">9 ▸</span></div>
+<div class="sumrow"><span>Rules and settings</span><span class="c">▸</span></div></div></div>
+
+</div>
+<div class="why"><div class="card"><h3>How it feels</h3><ul><li>The columns are the folders: an administrator learns the hand-shake by looking.</li><li>One glance answers the three questions: is anything stuck, what is next, did it load.</li><li>The routing preview warns before a file fails (<i>no rule matches</i>).</li></ul></div>
+<div class="card"><h3>Trade-offs</h3><ul><li>History is short (the last cycles); the full list is the ledger link and the Loads tab.</li><li>Three columns need width: below 1000 px they stack (phone: rows that open).</li><li>Skipped cycles take room in a busy hour (two rows here).</li></ul></div>
+<div class="card"><h3>Build</h3><ul><li><span class="mono">GET /api/v1/admin/dataload</span> already gives the switch, owner, lock, next cycle, the run's start, waiting files with their state, failures, cycles and the ledger; it gains the run's files and tables, each waiting file's rule and the rules in effect.</li><li>Polls every 5 s while a run loads, 30 s when quiet.</li><li>Reuses the Loads tab's tables, pills and the engines switch.</li></ul></div></div>
+<footer>Mock-up. Design, not built: Admin → Data loads → Inbox (planned, DATALOAD_INBOX.md section 10). Every number is invented for the picture. The data comes from <span class="mono">GET /api/v1/admin/dataload</span>; Load now is <span class="mono">POST …/run</span>, Retry <span class="mono">POST …/retry</span> (both <span class="mono">loads:write</span>). On a node that is not the owner the tab names the owner and links to it. Phone width: columns stack, tables scroll in their frame, controls are touch sized. Open with #light for the light theme.</footer>
+</div>
+</body>
+</html>

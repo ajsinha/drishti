@@ -166,6 +166,16 @@ failed folders are deleted, the ledger kept), and `config/dataload.yaml` for the
 files, tables, dates, rows and time, failures with the reason and **Retry**, **Load now**, and the next cycle's time. The command line:
 `drishti.py dataload status | run | retry <file>`. Every load is on the Data loads page as today, with *inbox:* and its files as its source.
 
+**Mock-ups** of the Inbox tab (planned screen), each with a quiet and a busy scene (a long run, skipped cycles, Load now answered
+*skipped*, `ready.all` waiting, one failed file with Retry), the routing rules read-only, the engine's switch and owner node, and the
+folder links: [A](mockups/dataload-inbox/A.html), a status board with three columns that follow the folders (waiting `inbox/`, loading
+`inprocess/<run>/`, last cycles `outbox/`), failures, duplicates and rules below, and a phone scene (**recommended**: the columns teach
+the hand-shake and answer "stuck, next, loaded?" at a glance); [B](mockups/dataload-inbox/B.html), a timeline of cycles with the
+current run's steps, and a side panel of waiting files, failures and the engine; [C](mockups/dataload-inbox/C.html), table-first: one
+table of every file of the day wherever it is, then cycles, rules and settings (the cheapest to build, like the Loads tab).
+
+**Chosen** (product owner, 2026-11-03): **A and B, both built**, as two views of one screen over one API: A, the board (the default), and B, the timeline ("B has cool graphics"), switched by a toggle; C is not built.
+
 ## 11. The module
 
 `drishti-dataload`, plain Java (no Spring): `Inbox` (find and the hand-shake), `Claims` (the `inprocess/` folder, lock and heartbeat), `Ledger`,
