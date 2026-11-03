@@ -51,10 +51,15 @@ plugin: delta
 kinds: [news-topic, listed-company, news, quote]
 settings:
   root: mem://news
+  domain: ""          # the tables sit at mem://news/<kind>: without it the pack's template adds domain: news
 ```
 
 **The UI.** Admin → Connectors → `news-store` shows the same text and its origin *your file*. Until the store exists the connector's health
 reads *mem://news is held in memory only and is empty now*.
+
+**You should see** `news-store` with root `mem://news` and its origin *your file*; until the store exists its health reads *mem://news is held in memory only and is empty now*.
+
+![Admin → Connectors: news-store reading mem://news](img/t31/01-connector.jpg)
 
 ## Step 2 · Define the store and its four tables
 
@@ -92,6 +97,8 @@ python3 tools/lake/memory_caps.py
 
 (256 MB for the server's own buffers plus the store's 256 MB.) Restart the server with its start script.
 
+**You should see** `memory_caps.py` print 512 (the server's own 256 MB plus the store's 256 MB) and the server start again with no error about the direct-memory limit.
+
 ## Step 3 · Watch the warm-up fill the tables
 
 **The command line.**
@@ -127,6 +134,10 @@ RUNS (4)
 **The UI.** Admin → Lakes, *Held in memory only*: the store (used against its cap, the contract) and the four tables with their state,
 memory, how much smaller they are than their rows, the version and the next refill.
 
+**You should see** the store `news` owned by this node with its contract `NEWS-MEMORY-ONLY`, and the four tables *ready* with 71, 20, 15 and 20 rows, each a warm-up run in `lake memory jobs`.
+
+![Admin → Lakes, Held in memory only: the news store and its four tables](img/t31/02-lakes.jpg)
+
 ## Step 4 · Read it as before
 
 **The UI.** Type `NEWS Apple`, `QUOTE AAPL`, `CO AAPL`: the pages are the same. The Data view (`DATA`) lists the four datasets and
@@ -137,6 +148,14 @@ downloads a day as `.jsonl.gz`, streamed from memory with no temporary file, aud
 ```bash
 python3 tools/drishti.py view get listed-company/CO-AAPL
 ```
+
+**You should see** the same pages as on the disk lake, and the four datasets in the Data view.
+
+![The Apple headlines (NEWS-Apple) read from memory](img/t31/03-news.jpg)
+
+![The Apple quote (QUOTE-AAPL) read from memory](img/t31/04-quote.jpg)
+
+![The Data view: the news datasets, a day downloaded from memory](img/t31/05-data.jpg)
 
 ## Step 5 · What the guard refuses
 
@@ -158,6 +177,8 @@ curl -s -X PUT -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: appli
   -d '{"query":"NEWS where COUNT > 1","schedule":"business-days 18:30"}' http://localhost:18480/api/v1/me/reports/news-daily
 ```
 
+**You should see** the save refused with `DRS-5219` and the contract named, and nothing of the news under the data folder.
+
 ## Step 6 · Refill on demand, and after a restart
 
 ```bash
@@ -175,6 +196,8 @@ RUNS (2)
 Stop and start the server: the store is empty at start, by design, and the warm-up fills it again in order (`news` first, it is
 pinned); while it runs the connector's health and the table's state say *refilling*.
 
+**You should see** a new run *by* you with the table's version one higher, and after a restart the warm-up runs again with `news` first.
+
 ## Step 7 · The cap, eviction and Health
 
 **The YAML.** Lower the cap to see the ladder: `max-mb: 1`. On the next refill the store frees old versions first, then evicts whole
@@ -186,6 +209,10 @@ on a RAM disk); red if the server was started with a direct-memory limit below t
 
 Put `max-mb: 256` back.
 
+**You should see** with `max-mb: 1` an eviction or a refused write in `lake memory status` and Admin → Health turn amber; with 256 back, green again.
+
+![Admin → Health, Busy protection: the news store's gauge beside the server's own](img/t31/06-health.jpg)
+
 ## Step 8 · Go back to the disk lake
 
 ```bash
@@ -195,8 +222,22 @@ rm config/connectors/news-store.yaml       # the pack's own connector reads data
 
 Restart. `NEWS Apple` reads the disk lake; Admin → Lakes no longer shows *Held in memory only*.
 
+**You should see** `NEWS Apple` open from the disk lake and no *Held in memory only* section on Admin → Lakes.
+
 ## What you did
 
 You held a whole pack in memory only, filled by server jobs from its feed, read through the same connector, guarded at every place
 Drishti writes, measured and compacted by itself, and went back. The reference is the
 [in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md); the design is [IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md).
+
+## Next steps
+
+- The [in-memory lake guide](../guides/IN_MEMORY_LAKE_GUIDE.md): every setting, the replenish sources and the guard.
+- The design: [IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md).
+
+## When something goes wrong
+
+- The connector's health stays *empty now*: the in-memory lake engine is off (Admin → Engines, then restart) or the
+  `drishti.lake.memory` block is not in the `application.local.yaml` of the server's working folder.
+- Admin → Health is red about the direct-memory limit: start the server with its start script, which raises the limit by the caps
+  (`tools/lake/memory_caps.py`).

@@ -96,7 +96,10 @@ HEALTH_BUSY = {"enabled": True, "state": "new heavy work waits", "waitingSince":
                           {"id": "requests", "label": "Request handlers busy", "value": 0.82, "warn": 0.75, "refuse": 0.9, "state": "warn",
                            "words": "getting full", "busy": 164, "handlers": 200, "queue": 6, "note": "warn at 75%"},
                           {"id": "disk", "label": "Disk used", "value": 0.92, "warn": 0.96, "refuse": 0.98, "state": "ok", "words": "fine",
-                           "freeBytes": 44023414784, "totalBytes": 536870912000, "note": "warn under 20 GB free"}],
+                           "freeBytes": 44023414784, "totalBytes": 536870912000, "note": "warn under 20 GB free"},
+                          # a memory store of the in-memory lake (its use against its own cap; no free or total disk bytes)
+                          {"id": "memory-store:news", "label": "Memory store news (off the heap)", "value": 0.004, "warn": 0.85, "refuse": 1.0,
+                           "state": "ok", "words": "fine", "usedBytes": 1048576, "maxBytes": 268435456, "note": "held in memory only"}],
                "refusals": {"last15Minutes": 23, "people": 4, "sinceStart": 40, "rows": [
                    {"at": "2026-11-02T10:42:18Z", "who": "k.mehta", "what": "Sign in", "why": "memory 93%", "code": "DRS-9501", "retryAfterSeconds": 45}]}}
 
@@ -116,6 +119,7 @@ def test_health_draws_the_busy_protection_card_and_sends_the_override(client, ba
     page = client.get("/admin/health").text
     assert "data-health-busy" in page and "Busy protection" in page and "new heavy work waits" in page
     assert 'data-busy-gauge="memory"' in page and "93% · 6.5 of 7.0 GB" in page and "3 of 3 slots" in page and "164 of 200 · queue 6" in page
+    assert 'data-busy-gauge="memory-store:news"' in page and "0% · 1.0 of 256.0 MB" in page
     assert "k.mehta" in page and "DRS-9501" in page and "23 in the last 15 minutes" in page
     assert "data-busy-override" in page and "Hold all new heavy work" in page and "/static/js/admin-busy.js" in page
     assert 'style="' not in page.split("data-health-busy", 1)[1].split("</section>", 1)[0]      # no inline style (the page's policy)

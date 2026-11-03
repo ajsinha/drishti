@@ -1142,6 +1142,36 @@ def _show_everything_in_browsers():
 
     Browser.new_context, Browser.new_page = wrapped_context, wrapped_page
     Browser._drishti_show_everything = True
+    _sign_in_waits_like_a_navigation()
+
+
+def _sign_in_waits_like_a_navigation():
+    """The sign-in page sends its form in the background (static/js/login-busy.js, busy protection), so a click on Sign in starts no
+    navigation for Playwright to wait on, and a helper's wait_for_url("**/bi") matches the sign-in page's own ?next=/bi at once. A click
+    on a submit button of the sign-in page waits, as for a navigation, until the form has been answered: the page's data-signing-in mark
+    gone (the next page, the page with its error, or the busy countdown)."""
+    from playwright.sync_api import Error, Page
+
+    click = Page.click
+
+    def wrapped_click(self, selector, *a, **k):
+        on_sign_in = "/login" in (self.url or "") and "submit" in str(selector)
+        out = click(self, selector, *a, **k)
+        if on_sign_in:
+            for _ in range(600):
+                try:
+                    if not self.evaluate("document.documentElement.hasAttribute('data-signing-in')"):
+                        break
+                except Error:                                  # the page is navigating: its context went away mid-question
+                    pass
+                self.wait_for_timeout(50)
+            try:
+                self.wait_for_load_state("load")
+            except Error:
+                pass
+        return out
+
+    Page.click = wrapped_click
 
 
 _show_everything_in_browsers()

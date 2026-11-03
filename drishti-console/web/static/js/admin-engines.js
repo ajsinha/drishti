@@ -22,7 +22,7 @@
   'use strict';
   var root = document.querySelector('[data-engines]');
   if (!root) { return; }
-  var data = JSON.parse(root.querySelector('[data-eng-json]').textContent || '{}');
+  var data = JSON.parse(root.querySelector('[data-eng-json]').getAttribute('data-eng-json') || '{}');
   var view = data.engines || {};
   var history = data.history || [];
   var staged = [];           // [{engine, on, node}] in the order flipped

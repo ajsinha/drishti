@@ -15,7 +15,7 @@
 -->
 # Drishti 2.9.11 — release notes
 
-*Released 2026-11-02.* **Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines switched per
+*Released 2026-11-03.* **Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines switched per
 server; busy protection.**
 
 ## What changes for VaR users
@@ -36,7 +36,9 @@ server; busy protection.**
   server without the compute workers. A what-if may also copy a whole scope (for example a book).
 - **When the server is very busy**, opening a new date or a large download may say so and retry by itself after a short countdown;
   everything already open keeps working.
-- **VaR figures are unchanged**: the release was checked against the previous build on the same data, every node and date equal.
+- **VaR figures are unchanged**: the release was checked against the previous build (2.9.10.a) on the same data: VaR and ES of every
+  node of the three hierarchies (131 nodes) on all three business dates, 1-day and 10-day, and the 28 stored portfolios: 2,526
+  figures, every one equal.
 
 ## New
 
@@ -73,6 +75,7 @@ by the stores' caps (the start scripts do it). `lake demo` now builds 89 tables 
 
 - `test_live_tabs_browser.py` (many live tabs, the shared-worker leader case) fails on the release machine as in the last releases.
 - The MR cube moved to 2.9.11.a, on the new pivot engine.
+- This release was verified on Java 21, the production runtime; the Java 25 run is left to a later release.
 
 # Drishti 2.9.10.a — release notes
 

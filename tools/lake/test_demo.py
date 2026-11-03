@@ -170,7 +170,12 @@ class KeepOtherDates(unittest.TestCase):
                     with contextlib.redirect_stdout(io.StringIO()):
                         self.assertEqual(demo.run(a), 0)
                 rows = DeltaTable(str(next((lake / "risk").glob("scenario-set*")))).to_pyarrow_table().to_pylist()
-                by_day = {str(r["business_date"]): json.loads(r["doc"]) for r in rows}
+                docs = [(str(r["business_date"]), json.loads(r["doc"])) for r in rows]
+                by_day = {d: doc for d, doc in docs if doc.get("SET_TYPE") != "STRESS"}      # the normal sets slide with the dates
+                stress = [doc for _d, doc in docs if doc.get("SET_TYPE") == "STRESS"]
+                for s in stress:                                                     # a stress set keeps its period of history
+                    self.assertEqual((s["WINDOW_START"], s["WINDOW_END"], s["SCENARIO_DATES"][0]), ("2008-07-01", "2009-06-30", "2008-07-01"))
+                self.assertTrue(stress)
                 # the data's 2026-09-28 .. 09-30 moved back a day (09-30's onto 09-29, replacing it) beside the 09-30 already there
                 self.assertEqual(sorted(by_day), ["2026-09-25", "2026-09-28", "2026-09-29", "2026-09-30"])
                 d29, d30 = by_day["2026-09-29"]["SCENARIO_DATES"], by_day["2026-09-30"]["SCENARIO_DATES"]

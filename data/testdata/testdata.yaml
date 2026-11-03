@@ -20311,7 +20311,7 @@ datasets:
   documents: 8052
   files:
   - cob-2026-09-30.jsonl.gz
-  bytes: 423584
+  bytes: 426106
 - folder: market-risk/risk-factor
   pack: market-risk
   kind: risk-factor
@@ -20320,10 +20320,10 @@ datasets:
   dated-by: BUSINESS_DATE
   first-date: '2026-09-30'
   last-date: '2026-09-30'
-  documents: 855
+  documents: 867
   files:
   - cob-2026-09-30.jsonl.gz
-  bytes: 21318
+  bytes: 21745
 - samples: config/packs/world-economy/samples
   pack: world-economy
   kind: economic-forecast

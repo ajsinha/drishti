@@ -77,7 +77,7 @@ booking system on the last day are the same on every machine. `MX-20000001` is c
 tutorial that shows it live was captured before that. For history, the trades amended most (ten times each) are ENDUR `1000279` and `1001049`, CALYPSO
 `CLY-4000509` and MUREX `MX-30001745`.
 
-The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t19`; the pictures of tutorials 20 to 22 were captured separately, those of tutorial 23 by `drishti-console/tests/test_reactive_panels_browser.py`; tutorial 25's by `--guide t25`, which builds its own VaR lake, and tutorial 29's by `--guide t29`, which builds its own Iceberg risk lake) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
+The pictures are made, not drawn: `tools/docs/screenshots.py --guide t01` (to `t19`; the pictures of tutorials 20 to 22 were captured separately, those of tutorial 23 by `drishti-console/tests/test_reactive_panels_browser.py`; tutorial 25's by `--guide t25`, which builds its own VaR lake, tutorial 29's by `--guide t29`, which builds its own Iceberg risk lake; tutorials 30 and 32's by `--guide t30` and `--guide t32`, which build their own lake with the sensitivities and install the toy SIMM file; tutorial 31's by `--guide t31`, which starts its server with the news held in memory) drives a scratch stack with a real browser and writes them to `img/`. When the screens change, run it again.
 
 ## The sample data
 

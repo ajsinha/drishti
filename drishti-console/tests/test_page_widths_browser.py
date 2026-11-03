@@ -54,7 +54,13 @@ def _pages(views: list[str] | None = None) -> list[str]:
              "/admin/loads", f"/admin/packs/{PACK}/loads", f"/admin/packs/{PACK}", "/admin/connectors", "/admin/connectors/trade-endur", "/admin/artifacts", "/admin/collab", "/admin/embedding", "/inbox", "/inbox?tab=mentions&unread=1", f"/share/{NO_SHARE}",
              f"/?from=/v/{first}", "/?from=/admin/loads"]
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", [])]
+    # an engine off as shipped (config/engines/<engine>.yaml, e.g. the in-memory lake) takes its Help pages away (404): not read here
+    off = set()
+    for e in yaml.safe_load((CONSOLE / "config" / "engines.yaml").read_text()).get("engines", []):
+        f = CONSOLE.parent / "config" / "engines" / str(e.get("file", ""))
+        if f.is_file() and re.search(r"enabled:\s*\$\{[A-Z_]+:false\}", f.read_text()):
+            off.update(e.get("help") or [])
+    pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", []) if g["slug"] not in off]
     # last, a view at a past business date and then as known at a time: the top bar's widest state
     pages += [f"/asof?d=2026-09-29&next=/v/{first}", f"/asof?d=2026-09-29&k=2026-09-29T10:00&next=/v/{first}"]
     return pages

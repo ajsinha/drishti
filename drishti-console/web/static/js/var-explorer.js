@@ -1109,6 +1109,7 @@
     ((S.tree && S.tree.portfolios) || []).forEach(function (p) {
       var pr = treeRow(p.name + " · " + p.type.toLowerCase(), p.scope, 0, null, null, null, { adhoc: true });
       pr.querySelector(".nm").appendChild(editButton(p.scope, p.name, true));      // the bank's portfolio: never edited, a copy is
+      adhocActions(pr, p.name);
       t.appendChild(pr);
     });
     api("baskets", {}, true).then(function (bs) {
@@ -1118,11 +1119,28 @@
         var mine = b.owner === S.user || S.admin;
         row.querySelector(".nm").appendChild(editButton("BASKET:" + b.id, b.name, !mine));
         if (mine) row.querySelector(".nm").appendChild(deleteButton(b));
+        adhocActions(row, b.name);
         t.appendChild(row);
       });
       markTree();
     }).catch(function () { /* no baskets listed */ });
     markTree();
+  }
+
+  /** An ad-hoc row: its name in a span that shortens with an ellipsis and its buttons after it, never drawn over the name (the list is
+      narrow: Edit, Delete and + basket would cover a short name); the full name is the row's tooltip. */
+  function adhocActions(row, name) {
+    var nm = row.querySelector(".nm");
+    var acts = h("span", "vx-acts");
+    nm.querySelectorAll(".vx-add").forEach(function (b) { acts.appendChild(b); });
+    var lbl = h("span", "lbl");
+    Array.prototype.slice.call(nm.childNodes).forEach(function (n) {
+      if (n.nodeType === 3) lbl.appendChild(n);                   // the label's text node(s)
+    });
+    nm.appendChild(lbl);
+    nm.appendChild(acts);
+    row.classList.add("vx-adhoc-row");
+    row.title = name;
   }
 
   /** "Edit" (a basket the viewer owns, or anyone's for an administrator) or "Edit a copy" (a portfolio, a basket shared read-only): the sheet. */

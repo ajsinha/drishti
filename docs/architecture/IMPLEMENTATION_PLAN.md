@@ -734,7 +734,7 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 
 *Product owner, 2026-11-02: placement, mock-up A and every decision as recommended.*
 
-*"Build capability of a super scalable very generalized pivot capability. Think of MS Excel but more capable", with custom aggregation functions (Python too) and extremely large data; "pause MR cube then and build this capability first, then come back to MR cube"; "better than anything out there"; BI uses it; one `drishti-bicompute` module (product owner, 2026-11-02). The design: [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (its build checklist, section 24; decisions, section 23). **More than two large items, so split in three** (each at most two large items, each with its drills): 2.9.11.a (P1 and the MR cube), 2.9.11.b (P2 and BI), 2.9.11.c (P3). P4 is an unscheduled candidate.*
+*"Build capability of a super scalable very generalized pivot capability. Think of MS Excel but more capable", with custom aggregation functions (Python too) and extremely large data; "pause MR cube then and build this capability first, then come back to MR cube"; "better than anything out there"; BI uses it; one `drishti-bicompute` module (product owner, 2026-11-02). The design: [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (its build checklist, section 24; decisions, section 23). **More than two large items, so split** (each release with its own drills): first in three, then in two by the product owner (2026-11-03): 2.9.11.a (P1 and the MR cube), 2.9.11.b (P2, BI and P3). P4 is an unscheduled candidate. Each branch passes the drill's gate and its own tests before it is merged, and a short check runs before the full drill.*
 
 | # | Part | What | Size | Release |
 |---|---|---|---|---|
@@ -742,12 +742,36 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 | MR | **The MR cube on the pivot engine** | 2.9.11 row 3 resumed on the engine: the paused branch's VaR source as a provider, its landings A, B and C, every test of the branch unchanged; FRTB-SA and SIMM providers as those engines ship | L | 2.9.11.a |
 | P2 | **Custom functions, explain, what-if** | DEL formulas, SQL macros, Python (per-node sandboxed pool, shipped off) and Java plug-ins; the split-and-merge harness; the playground; versions, approval by someone other than the author, audit, labels; explain the difference between any two cells or dates in steps that add up; what-if overlays; view versions and cell comments; expand by and a correct Others for holistic measures | L | 2.9.11.b |
 | PB | **BI on the pivot engine** | BI's matrix, totals, rollups and the semantic model's measures on the engine; models as sources (MQ stays the contract); shadow mode comparing every BI test suite and shipped report on both paths, the default flipped per model after the parity gate | L | 2.9.11.b |
-| P3 | **Scale** | sketches (HLL, KLL, Space-Saving) with exact on request; rollups of partial states refreshed incrementally on load; aggregate awareness; progressive answers; scan estimates with options; scatter and gather across nodes with hedging; live pivots; the benchmark (100 GB, 1 TB, 3 TB; 1 node and 3; cold and warm; with and without rollups) into BENCHMARK.md | L | 2.9.11.c |
+| P3 | **Scale** | sketches (HLL, KLL, Space-Saving) with exact on request; rollups of partial states refreshed incrementally on load; aggregate awareness; progressive answers; scan estimates with options; scatter and gather across nodes with hedging; live pivots; the benchmark (100 GB, 1 TB, 3 TB; 1 node and 3; cold and warm; with and without rollups) into BENCHMARK.md | L | 2.9.11.b |
 | P4 | Excel and advice (candidate) | the native PivotTable with its pivot cache and charts bound to it; references in formulas and Excel; layout advice; ask in words; automatic insights | M to L | unscheduled |
 
 **Also in 2.9.11.a — the Help centre reorganised (product owner, 2026-11-02):** the main Help page becomes a search box, a "most used" row and eight tiles (Get started, Risk measures, Analytics and BI, Data, Build, Operate, Reference, Knowledge; Internal for administrators), each opening its own subpage with its pages grouped, every guide paired with its tutorial, a section-scoped search, only running engines' pages shown, old addresses and F1 kept working; two mock-ups first: [A](mockups/help-hub/A.html) (tiles, recommended) and [B](mockups/help-hub/B.html) (a rail of sections), **A picked for both** by the product owner (2026-11-02). Size S to M.
 
 **Also in 2.9.11.a — one Engines menu (product owner, 2026-11-02: engines are not common to all users):** the Engines menu replaces the VaR and Exposure top-level menus; shown only to roles that open an engine and only for running engines (a column or entry per engine with its command word, a search box when there are many, Admin → Engines for administrators); the top bar becomes Views, Engines, BI, Build, Admin, Help, and Views, BI, Build, Help for a role that opens no engine. Mock-ups [A](mockups/engines-menu/A.html) (a mega-menu with a column per engine, recommended), [B](mockups/engines-menu/B.html) (a list of engines with the pointed engine's pages) and [C](mockups/engines-menu/C.html) (engines grouped by risk family), **A picked for both** by the product owner (2026-11-02). Size S.
+
+**Also in 2.9.11.a — the in-memory lake in its own module (product owner, 2026-11-03):** `drishti-memlake` holds the `mem://` storage
+(from `drishti-lakeio`) and the service (from `drishti-server`); the server keeps only its wiring. The Delta and Iceberg readers reach it
+through the shared storage interface. The old code is removed in the same change. Size S.
+
+## 2.9.11.c: Arrow Flight, Drishti's data to any client (planned)
+
+*Product owner, 2026-11-03: "Arrow flight is a good idea"; release 2.9.11.c, picked up after 2.9.11.b is released; the design is
+discussed with the product owner first, then mock-ups, then the build.*
+
+One service, a module `drishti-flight`, sending Drishti's data as Arrow to any client: Python, Java, C#, R, Go and, through Flight SQL,
+JDBC and ODBC tools. It is a transport over the existing query layer (kinds, model queries, the pivot engine, VaR and the other measures,
+the in-memory lake), with the same entitlements, masks, busy protection and audit; API tokens and their scopes; TLS; the cluster's nodes
+named for parallel reads; snapshots and live streams. The first use: VaR scenario P&L (a scope's vector computed when asked and never
+stored, per-position P&L in batches, live intraday), exactly the engine's figures. The official Arrow Java library replaces the
+hand-written Arrow writers, and the console's own JSON-to-Arrow conversion goes; browsers keep Arrow over HTTP and live views over
+Server-Sent Events. Size L.
+
+## 2.9.11.d: client examples (planned)
+
+*Product owner, 2026-11-03.* Examples in several languages and technologies, led by Python notebooks: read-only (they never write to
+Drishti), querying through Arrow Flight by default; examples that read the lake directly are marked for people who already hold lake
+access (no entitlements or masks, no in-memory tables, no computed figures). Java, JDBC through Flight SQL, C#/.NET, R, Excel, a JDBC
+tool and the browser. Each example runs as a test on the demo lake. Size M.
 
 
 ## 2.9.12: counterparty engines (proposed)
