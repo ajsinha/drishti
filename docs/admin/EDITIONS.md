@@ -837,9 +837,11 @@ lens shows `CRV`).
   `SPREAD_5Y`, FX spot's `MID`, commodity's `FRONT` and index's `LEVEL` over 21 business days; the latest day's move in standard deviations
   of the item's own daily moves when ten or more are held (a "jump" at 3σ or more); with less history, the largest moves against the
   business day before; with none, the card says so and ranks nothing. Quick cards: `CRV CRV-USD-OIS`, `FXV FXV-EURUSD`, `IRV IRV-USD`,
-  `FIX FIX-SOFR`.
+  `FIX FIX-SOFR`. The CDS median, its change (the median today less the median the day before) and each move's σ (the move over the
+  population standard deviation of the item's earlier daily moves, every item in one ask) are the server's pivot engine's (`POST
+  /api/v1/pivot/inline`): the console sends the values it read and shows the figures; with the engine off they are left empty and said.
 - **B "explorer", Explorer**: a big command line; the chips of `home.chips`; counts by asset class (rates, FX, credit and bonds, equity and
-  commodities; each command's `matched` from the server's search); the commands grouped by asset class, each with its count; Recently
+  commodities; each command's `matched` from the server's search, each class's total the pivot engine's sum of them); the commands grouped by asset class, each with its count; Recently
   opened (the person's own history, Market's commands only), Knowledge, Data map and Learn cards.
 - **C "quality", Quality**: the checks the data supports today, by severity, worst first, each item opening its command:
   1. **Stale** (warning): a document's `AS_OF` (curves and repo curves), or the date its source holds it for, older than the business date
@@ -933,6 +935,10 @@ two minutes per person, date and scope; two panels needing the same valuations w
     time when the engine applied intraday updates. **Limit use**: the highest of my books' VaR ÷ its `var-limit` (each book's
     `/var/scope`), with the book and limit named.
   - **DV01**: the sum of the live trades' `DV01` when any holds a number; else the tile is left out.
+  - **Who adds up.** Every total of the landing (P&L today, MtM, DV01 and its trades, by book, by trader, the largest counterparty's
+    share) is the server's: the console sends the valuations it read to the pivot engine (`POST /api/v1/pivot/inline`; one view of books
+    down and traders across, one of counterparties with the engine's top 1 and its percent of the grand total) and shows the engine's
+    figures, rounded. With the pivot engine switched off the tiles show no figure and say why; the counts, the movers and the lists stand.
   - **Trades today**: the trades (`TRD`) of my books whose `SOURCE_UPDATE_TIME` is on the business date: **cancelled** (`TRADE_STATUS`
     CANCELLED), **new** (`TRADE_ACTION` NEW, or `TRADE_DATE` that day), else **amended**. On the demo data every change of a day is an
     amendment or a cancellation (no trade is booked on its business date), so "new" reads 0 there. `SOURCE_UPDATE_TIME` is no store

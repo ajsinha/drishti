@@ -72,3 +72,42 @@ def test_the_export_panel_opens(page):
     page.click("[data-pv-export-open]")
     assert page.locator("section[data-pv-export]").is_visible()
     assert not page.errors, page.errors
+
+
+def _holistic_answer():
+    """An engine answer with a median by desk: parts 100 and 50, the total 120 and the engine's gap (Σ parts − total) set to 31 on purpose,
+    not the 30 the parts would give: the chart must draw the engine's figure, never one it adds up itself."""
+    node = {"kind": "node", "depth": 1, "expandable": False, "expanded": False, "by": None, "dim": "DESK"}
+    return {"source": "trade", "title": "Trades", "date": "2026-10-30", "provenance": "stand-in-2", "exactness": "exact", "cellCount": 3,
+            "rowDimensions": ["DESK"], "columnDimensions": [],
+            "measures": [{"index": 0, "id": "median(NOTIONAL)", "label": "Median", "kind": "holistic", "plainSum": False, "exact": True}],
+            "rows": [{**node, "key": "DESK=A", "value": "A", "label": "A", "path": [["DESK", "A"]], "coords": {"DESK": "A"}},
+                     {**node, "key": "DESK=B", "value": "B", "label": "B", "path": [["DESK", "B"]], "coords": {"DESK": "B"}},
+                     {"key": "*", "kind": "grand", "depth": 0, "label": "Grand total", "value": None, "path": [], "coords": {}, "expandable": False,
+                      "expanded": False, "diversification": {"Median": 31}, "diversificationByColumn": {"*": {"Median": 31}}}],
+            "columns": [{"key": "*", "kind": "grand", "depth": 0, "label": "Grand total", "value": None, "path": [], "coords": {}}],
+            "cells": {"DESK=A|*": {"values": {"Median": 100}, "members": 3}, "DESK=B|*": {"values": {"Median": 50}, "members": 2},
+                      "*|*": {"values": {"Median": 120}, "members": 5}}}
+
+
+def test_the_chart_draws_the_engines_diversification_never_its_own(stack):
+    """A non-additive measure's chart: the parts beside the total and the diversification bar, the engine's gap of the charted column
+    (``diversificationByColumn``, PivotAnswer) shown as total − Σ parts; the browser adds up nothing (2.9.11.b)."""
+    import json
+    with sync_api.sync_playwright() as p:
+        try:
+            b = p.chromium.launch()
+        except Exception as e:  # noqa: BLE001
+            pytest.skip(f"needs Playwright's Chromium: {str(e).splitlines()[0]}")
+        pg = b.new_context(viewport={"width": 1440, "height": 900}, bypass_csp=True).new_page()
+        errors = []
+        pg.on("pageerror", lambda e: errors.append(str(e)))
+        pg.route("**/api/pivot/query", lambda route: route.fulfill(status=200, content_type="application/json", body=json.dumps(_holistic_answer())))
+        pg.goto(stack[0] + "/pivot?source=trade", wait_until="load")
+        pg.wait_for_selector("[data-pv-grid] table.pv-table td.pv-c")
+        pg.click("[data-pv-chart]")
+        pg.wait_for_selector("[data-pv-chart-note]:not(:empty)")
+        note = pg.locator("[data-pv-chart-note]").text_content()
+        assert "the engine's" in note and ("31" in note) and "30" not in note
+        b.close()
+        assert not errors, errors

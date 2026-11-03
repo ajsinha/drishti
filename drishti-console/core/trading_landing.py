@@ -20,10 +20,12 @@ edition file), then a trader record whose ``TRADER_ID`` is ``TRDR-<USER>`` or wh
 their own "View as" choice, kept in their settings (``tradingView``: ``trader:<id>`` or ``desk:<id>``). An administrator may always pick,
 and their choice wins. The scope only chooses what the landing shows: every read is still the person's own.
 
-**The figures**, each from an existing answer, never invented (a figure the data cannot give is None, or the panel says why):
+**The figures**, each from an existing answer, never invented (a figure the data cannot give is None, or the panel says why). Every
+total (MtM, P&L, DV01, by book, by trader, the largest counterparty's share) is the server's: the valuations read are sent to its pivot
+engine (``POST /api/v1/pivot/inline``, :func:`engine_figures`) and its cells shown; the console adds up nothing (ONE_GRAMMAR.md section 5):
 
 * P&L today: the MtM change of every trade valued on both the business date and the business day before (``TVAL``, the trade valuations,
-  read on both dates), summed over the scope; no valuations the day before: None, said;
+  read on both dates), summed over the scope by the engine; no valuations the day before: None, said;
 * VaR and limit use: the VaR engine's own answers (``/api/v1/var/scope`` of ``BOOK:`` and ``DESK:`` scopes, with their ``var-limit``),
   intraday when the engine applied updates (its ``intraday`` label);
 * DV01: the valuations' ``DV01`` of the live trades, when any holds a number;
@@ -47,6 +49,7 @@ from datetime import date, timedelta
 from typing import Any
 
 from core import asof
+from core import engine_figures as engine
 from core.backend import BackendError
 
 LIVE = ("NEW", "VALIDATED", "AMENDED")
@@ -407,8 +410,10 @@ async def valuations(backend, me, scope: Scope, cfg: dict) -> dict:
                 was = {**was, "rows": {}, "noData": {"businessDate": before.isoformat(), "latestDate": was_day.isoformat()}}
         except BackendError as e:
             was = e
-        out = summarise(now, None if isinstance(was, BaseException) else was, data_day, before, tuple(cfg.get("live-statuses") or LIVE),
-                        str(was) if isinstance(was, BackendError) else None)
+        was_read = None if isinstance(was, BaseException) else was
+        live = tuple(cfg.get("live-statuses") or LIVE)
+        figures = await engine_figures(backend, me, now, was_read, live)
+        out = summarise(now, was_read, data_day, before, live, str(was) if isinstance(was, BackendError) else None, figures)
         out["businessDate"], out["dataDate"] = business.isoformat(), data_day.isoformat()
         out["__rows"] = now["rows"]                   # kept for the other panels (the blotter's notionals, the check, by trader): never sent
         if out["hasPrevious"]:
@@ -434,12 +439,60 @@ async def data_date(backend, me, read: dict) -> date | None:
     return _day(((doc or {}).get("provenance") or {}).get("businessDate"))
 
 
-def summarise(now: dict, was: dict | None, business: date, before: date, live: tuple, was_problem: str | None = None) -> dict:
-    """The figures of two dates' valuations (pure: tested on its own)."""
+#: the rows the engine aggregates, one per trade valuation of the business date (figure_rows), and what it is asked
+FIG_FIELDS = (("BOOK", "string"), ("TRADER", "string"), ("CP", "string"), ("MTM", "number"), ("CHANGE", "number"), ("DV01", "number"),
+              ("POS", "number"))
+FIG_TOTALS = [{"measure": "sum(MTM)", "as": "mtm"}, {"measure": "sum(CHANGE)", "as": "pnl"}, {"measure": "sum(DV01)", "as": "dv01"},
+              {"measure": "count(DV01)", "as": "dv01Trades"}]
+FIG_COUNTERPARTY = [{"measure": "sum(POS)", "as": "positive"}, {"measure": "sum(POS)", "as": "share", "showAs": "pct-grand"}]
+
+
+def figure_rows(now: dict, was: dict | None, live: tuple) -> list[list]:
+    """The rows the server's engine adds up (pure), in FIG_FIELDS' order: each trade valuation's book, trader (left out when masked),
+    MtM, its change since the day before (a trade valued on both days only: the row's own difference), DV01 (live trades only) and, for a
+    live trade whose MtM is positive, its counterparty and that MtM (for the largest counterparty's share). No total is made here."""
     rows, old = now["rows"], (was or {}).get("rows") or {}
     had_before = bool(was) and not (was or {}).get("noData") and bool(old)
     live = tuple(str(s).upper() for s in live)
-    pnl, by_book, by_trader, movers = 0.0, {}, {}, []
+    out = []
+    for tid, r in rows.items():
+        m1, p = _num(r.get("MTM")), old.get(tid) if had_before else None
+        m0 = _num(p.get("MTM")) if p else None
+        trader, cp = r.get("TRADER_ID"), r.get("COUNTERPARTY")
+        live_now = str(r.get("TRADE_STATUS") or "").upper() in live
+        positive = live_now and m1 is not None and m1 > 0 and bool(cp) and not masked(cp)
+        out.append([str(r.get("PORTFOLIO") or "") or None, str(trader) if trader and not masked(trader) else None,
+                    str(cp) if positive else None, m1, m1 - m0 if m1 is not None and m0 is not None else None,
+                    _num(r.get("DV01")) if live_now else None, m1 if positive else None])
+    return out
+
+
+async def engine_figures(backend, me, now: dict, was: dict | None, live: tuple) -> tuple:
+    """The scope's totals from the server's pivot engine (``POST /api/v1/pivot/inline``; core/engine_figures.py), on the rows of
+    :func:`figure_rows`: MtM, P&L, DV01 and its trades by book, by trader and in all (one view: books down, traders across), and the
+    counterparties' positive MtM with the largest (the engine's top 1) and its share of the total (its percent of the grand total).
+    ``(totals, counterparties, problem)``: a refusal (the pivot engine switched off) gives no figures and its reason."""
+    rows = figure_rows(now, was, live)
+    try:
+        totals, cps = await asyncio.gather(
+            engine.ask(backend, me, FIG_FIELDS, rows, FIG_TOTALS, by="BOOK", across="TRADER"),
+            engine.ask(backend, me, FIG_FIELDS, rows, FIG_COUNTERPARTY, by="CP", top={"CP": {"n": 1, "by": "positive"}}))
+    except BackendError as e:
+        return None, None, f"the server's engine did not give the totals: {e.code or e.status} {e.detail}"
+    except ValueError as e:
+        return None, None, f"the server's engine did not give the totals: {e}"
+    return totals, cps, None
+
+
+def summarise(now: dict, was: dict | None, business: date, before: date, live: tuple, was_problem: str | None = None,
+              figures: tuple | None = None) -> dict:
+    """The landing's answer of two dates' valuations (pure: tested on its own): counts, movers and lists from the rows; every total
+    from ``figures`` (:func:`engine_figures`, the server's engine), shown as it comes, rounded for display."""
+    rows, old = now["rows"], (was or {}).get("rows") or {}
+    had_before = bool(was) and not (was or {}).get("noData") and bool(old)
+    live = tuple(str(s).upper() for s in live)
+    totals, cps, problem = figures if figures is not None else (None, None, "the server's engine was not asked")
+    by_book, by_trader, movers = {}, {}, []
     trader_masked = any(masked(r.get("TRADER_ID")) for r in rows.values())
     mtm_masked = any(masked(r.get("MTM")) for r in rows.values())
     both = 0
@@ -448,58 +501,58 @@ def summarise(now: dict, was: dict | None, business: date, before: date, live: t
         m0 = _num(p.get("MTM")) if p else None
         book, trader = str(r.get("PORTFOLIO") or ""), r.get("TRADER_ID")
         live_now = str(r.get("TRADE_STATUS") or "").upper() in live
-        b = by_book.setdefault(book, {"book": book, "pnl": 0.0, "trades": 0, "mtm": 0.0})
-        t = by_trader.setdefault(str(trader), {"trader": str(trader), "pnl": 0.0, "trades": 0}) if trader and not masked(trader) else None
+        b = by_book.setdefault(book, {"book": book, "trades": 0})
+        t = by_trader.setdefault(str(trader), {"trader": str(trader), "trades": 0}) if trader and not masked(trader) else None
         if live_now:
             b["trades"] += 1
             if t is not None:
                 t["trades"] += 1
-        if m1 is not None:
-            b["mtm"] += m1
         if m1 is not None and m0 is not None:
-            d = m1 - m0
             both += 1
-            pnl += d
-            b["pnl"] += d
-            if t is not None:
-                t["pnl"] += d
+            d = m1 - m0
             if d:
                 movers.append({"trade": tid, "book": book, "product": r.get("PRODUCT_TYPE"), "counterparty": r.get("COUNTERPARTY"),
                                "change": round(d), "mtm": round(m1), "valuation": r.get("VALUATION_ID")})
     movers.sort(key=lambda x: -abs(x["change"]))
     live_rows = [r for r in rows.values() if str(r.get("TRADE_STATUS") or "").upper() in live]
-    dv01s = [_num(r.get("DV01")) for r in live_rows if _num(r.get("DV01")) is not None]
-    positive: dict[str, float] = {}
-    for r in live_rows:
-        m = _num(r.get("MTM"))
-        cp = r.get("COUNTERPARTY")
-        if m is not None and m > 0 and cp and not masked(cp):
-            positive[str(cp)] = positive.get(str(cp), 0.0) + m
-    total_pos = sum(positive.values())
     products: dict[str, int] = {}
-    cps: dict[str, int] = {}
+    seen: dict[str, int] = {}
     for r in live_rows:
         if r.get("PRODUCT_TYPE") and _num(r.get("NOTIONAL")):
             products[str(r["PRODUCT_TYPE"])] = products.get(str(r["PRODUCT_TYPE"]), 0) + 1
         if r.get("COUNTERPARTY") and not masked(r.get("COUNTERPARTY")):
-            cps[str(r["COUNTERPARTY"])] = cps.get(str(r["COUNTERPARTY"]), 0) + 1
-    top_cp = max(positive.items(), key=lambda kv: kv[1]) if positive else None
+            seen[str(r["COUNTERPARTY"])] = seen.get(str(r["COUNTERPARTY"]), 0) + 1
+
+    def shown(v: Any, empty: Any = None) -> Any:
+        """An engine figure rounded for display; with the engine's answer in hand, a member with nothing to add up shows ``empty``."""
+        x = _num(v)
+        return round(x) if x is not None else (empty if totals is not None else None)
+
+    def of(name: str, row: Any = None, column: Any = None) -> Any:
+        return totals.get(name, row, column) if totals is not None else None
+
+    largest = None
+    top = next((c for c in (cps.members() if cps is not None else []) if c and c != engine.BLANK), None)
+    if top is not None and _num(cps.get("positive", top)) is not None and (_num(cps.get("positive")) or 0) > 0:
+        largest = {"counterparty": top, "share": cps.get("share", top), "positiveMtm": round(cps.get("positive", top)),
+                   "totalPositiveMtm": round(cps.get("positive"))}
     return {
         "available": True, "businessDate": business.isoformat(), "previousDate": before.isoformat(), "hasPrevious": had_before,
         "previousProblem": was_problem, "trades": len(rows), "liveTrades": len(live_rows), "valuedBoth": both,
         "matched": now["matched"], "partial": bool(now["partial"] or (was or {}).get("partial")),
-        "pnl": round(pnl) if had_before and both and not mtm_masked else None,
-        "mtm": round(sum(_num(r.get("MTM")) or 0 for r in rows.values())) if not mtm_masked else None,
+        "pnl": shown(of("pnl")) if had_before and both and not mtm_masked else None,
+        "mtm": shown(of("mtm"), 0) if not mtm_masked else None,
         "mtmMasked": mtm_masked, "traderMasked": trader_masked,
-        "dv01": round(sum(dv01s)) if dv01s else None, "dv01Trades": len(dv01s),
-        "byBook": sorted(({**b, "pnl": round(b["pnl"]) if had_before else None, "mtm": round(b["mtm"])} for b in by_book.values() if b["book"]),
-                         key=lambda b: b["book"]),
-        "byTrader": sorted(({**t, "pnl": round(t["pnl"]) if had_before else None} for t in by_trader.values()), key=lambda t: t["trader"]),
+        "dv01": shown(of("dv01")), "dv01Trades": int(_num(of("dv01Trades")) or 0),
+        "figuresProblem": problem if rows else None,
+        "byBook": sorted(({**b, "pnl": shown(of("pnl", b["book"]), 0) if had_before else None, "mtm": shown(of("mtm", b["book"]), 0)}
+                          for b in by_book.values() if b["book"]), key=lambda b: b["book"]),
+        "byTrader": sorted(({**t, "pnl": shown(of("pnl", None, t["trader"]), 0) if had_before else None} for t in by_trader.values()),
+                           key=lambda t: t["trader"]),
         "movers": movers[:10] if had_before else [],
         "products": [k for k, _ in sorted(products.items(), key=lambda kv: (-kv[1], kv[0]))][:40],
-        "counterparties": [k for k, _ in sorted(cps.items(), key=lambda kv: (-kv[1], kv[0]))][:60],
-        "largestCounterparty": ({"counterparty": top_cp[0], "share": top_cp[1] / total_pos, "positiveMtm": round(top_cp[1]),
-                                 "totalPositiveMtm": round(total_pos)} if top_cp and total_pos > 0 else None),
+        "counterparties": [k for k, _ in sorted(seen.items(), key=lambda kv: (-kv[1], kv[0]))][:60],
+        "largestCounterparty": largest,
     }
 
 
@@ -690,7 +743,7 @@ async def pnl_vs_var(backend, me, scope: Scope, cfg: dict) -> dict:
     rows = [r for r in rows if r["var"] is not None and r["pnl"] is not None]
     if not rows:
         return {"available": False, "reason": "the official history holds no day with both a P&L and a VaR"}
-    return {"available": True, "scope": text, "rows": rows, "days": len(rows), "exceptions": sum(r["exception"] for r in rows),
+    return {"available": True, "scope": text, "rows": rows, "days": len(rows), "exceptions": sum(1 for r in rows if r["exception"]),
             "backtest": h.get("backtest"), "note": h.get("note")}
 
 

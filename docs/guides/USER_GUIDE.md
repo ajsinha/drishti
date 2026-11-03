@@ -726,7 +726,7 @@ and press `Enter` or `Space`. The menu has, from the top:
 
   | Type | Conditions |
   |---|---|
-  | Numbers | equals, does not equal, greater than, greater than or equal to, less than, less than or equal to, between, **top N** and **bottom N** (N is a box, 10 to begin with), above average, below average. A value may be written `1m`, `250k`, `12%` |
+  | Numbers | equals, does not equal, greater than, greater than or equal to, less than, less than or equal to, between, **top N** and **bottom N** (N is a box, 10 to begin with), above average, below average (the average is the server's, its pivot engine's average of the column; no row is hidden while it is asked). A value may be written `1m`, `250k`, `12%` |
   | Dates | today, yesterday, this week (Monday to Sunday), last week, this month, last month, last 7 days, last 30 days, between, before, after. They count from today in your browser's calendar |
   | Text | equals, does not equal, contains, does not contain, begins with, ends with (any case) |
 

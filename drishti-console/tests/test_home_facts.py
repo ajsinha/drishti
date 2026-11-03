@@ -82,12 +82,31 @@ def test_the_language_reads_data_and_nothing_else():
     assert Expr("[n.id for n in tree.nodes if n.limitUse > 1 and find(tree.nodes, 'id', n.parent).limitUse <= 1]").eval(env) == ["B"]
     assert Expr("missing.deeper.still + 1").eval(env) is None                      # None is forgiving
     assert Expr("missing > 1").eval(env) is False and Expr("1 / 0").eval(env) is None
-    assert Expr("overlap(a, b, 'K', 'W')").eval({"a": [{"K": "x", "W": 3}, {"K": "y", "W": 2}, {"K": "x", "W": 1}],
-                                                 "b": [{"K": "x", "W": 2}, {"K": "z", "W": 9}]}) == 2
     assert Expr("flat(pluck(g, 'children'))").eval({"g": [{"children": [1, 2]}, {"children": [3]}]}) == [1, 2, 3]
     for bad in ("().__class__", "open('x')", "lambda: 1", "{'a': 1}", "x ** 99", "[a for a in b for c in a]", "f(x=1)"):
         with pytest.raises(ExprError):
             Expr(bad)
+
+
+def test_sum_and_overlap_are_the_servers_engines_in_a_let_step_only():
+    """``sum`` and ``overlap`` are asked of the pivot engine (POST /api/v1/pivot/inline as the user, core/engine_figures.py): the figures
+    the console computed before 2.9.11.b, now the engine's; outside a let step, or inside a comprehension, they are refused."""
+    from conftest import FakeBackend
+    with pytest.raises(ExprError, match="let step"):
+        Expr("sum(xs) > 1")                                                                 # a condition, a template, a pick: refused
+    with pytest.raises(ExprError, match="comprehension"):
+        Expr("[sum(x) for x in xs]", engine=True)
+    b = FakeBackend()
+    f = Fetcher(b, None)
+    env = {"a": [{"K": "x", "W": 3}, {"K": "y", "W": 2}, {"K": "x", "W": 1}], "b": [{"K": "x", "W": 2}, {"K": "z", "W": 9}],
+           "f": {"BY_ASSET": [{"PCT": 60.5}, {"PCT": 70.25}, {"PCT": None}]}}
+    assert asyncio.run(Expr("overlap(a, b, 'K', 'W')", engine=True).eval_async(env, f.figure)) == 2       # x: min(3 + 1, 2)
+    assert asyncio.run(Expr("sum(pluck(f.BY_ASSET, 'PCT'))", engine=True).eval_async(env, f.figure)) == 130.75
+    assert asyncio.run(Expr("sum([]) + 1", engine=True).eval_async(env, f.figure)) == 1                     # nothing to add: 0
+    assert asyncio.run(Expr("overlap(a, [], 'K', 'W')", engine=True).eval_async(env, f.figure)) is None
+    asked = [m["measure"] for x in b.inline for m in x["view"]["values"]]
+    assert asked == ["least(sum(A), sum(B))", "sum(V)", "sum(V)"]                                    # the engine's, every one
+    assert Expr("sum(xs)", engine=True).eval({"xs": [1, 2]}) is None                                  # never computed in the console
 
 
 def test_templates_fill_formats_and_a_hole_hides_the_sentence():

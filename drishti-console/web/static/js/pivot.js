@@ -382,17 +382,19 @@
       var v = c && c.values ? c.values[m.label] : null;
       if (v != null) { names.push(r.kind === "total" ? r.label.replace(/ total$/, "") : r.label); values.push(v); }
     });
-    var grand = a.cells[a.rows[a.rows.length - 1].key + "|" + colKey];
+    var grandRow = a.rows.filter(function (r) { return r.kind === "grand"; })[0] || a.rows[a.rows.length - 1];
+    var grand = a.cells[grandRow.key + "|" + colKey];
     var total = grand && grand.values ? grand.values[m.label] : null;
+    // the engine's own gap of this column (Σ parts − total, PivotAnswer.diversification): drawn as total − Σ parts, never added up here
+    var gap = ((grandRow.diversificationByColumn || {})[colKey] || {})[m.label];
     var note;
     var series;
     var colors = [];
-    if (holistic && total != null && sel.length <= 1) {
-      var sum = values.reduce(function (s, x) { return s + x; }, 0);
+    if (holistic && total != null && gap != null && sel.length <= 1) {
       names = names.concat(["Diversification", "Total"]);
-      values = values.concat([total - sum, total]);
+      values = values.concat([-gap, total]);
       note = m.label + " does not add up: the total is its own figure from its own members, so the parts stand beside it and the "
-        + "diversification (total − Σ parts = " + fmt(total - sum, m) + ") is drawn as its own bar, never stacked.";
+        + "diversification (total − Σ parts = " + fmt(-gap, m) + ", the engine's) is drawn as its own bar, never stacked.";
       colors = values.map(function (x, i) { return i === values.length - 1 ? "#d9a441" : i === values.length - 2 ? "#c87a52" : "#6f9fd8"; });
     } else {
       note = m.label + (m.plainSum ? " adds up: the bars sum to the total." : " by member; each figure is the cell's own.");

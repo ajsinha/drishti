@@ -196,7 +196,9 @@ Before a view runs, the screen shows what it will read. Over `drishti.pivot.esti
 
 Select cells (click, Shift+click or Shift+arrows) and press `G`. With nothing selected the chart shows the top level. A measure that adds up
 (sum, count) is drawn as bars that sum to the total. **A measure that does not add up is never stacked**: VaR by desk is drawn as the desks'
-bars beside the bank's, with the diversification as its own bar, and the chart says so in words. A bar's click opens that member in the
+bars beside the bank's, with the diversification as its own bar, and the chart says so in words. The diversification is the engine's
+own gap of the charted column (each open row's `diversificationByColumn` in the answer, Σ parts − total; drawn as total − Σ parts): the
+browser adds up nothing. A bar's click opens that member in the
 grid. ECharts is vendored; nothing comes from a CDN.
 
 ## 10. Export

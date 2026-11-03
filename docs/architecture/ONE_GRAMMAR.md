@@ -221,10 +221,17 @@ the per-row input).
 `FunctionProvider`; Rachana never depends on the engine; only `drishti-rachana` parses expressions, with the listed exceptions until
 2.9.11.e: DEL (`server.bi.expr`), BI's dataset expressions (`ExprParser`), model calculations (`CalculationParser`), the pivot's formulas
 in DEL syntax (`bicompute.formula`) and the VaR scope selector (`ScopeExpr`). The console check
-(`drishti-console/tests/test_console_does_not_aggregate.py`) finds every aggregation idiom in console Python and JavaScript and lets
-through plain counting, sizes and promise plumbing; every other one is listed with its reason: layout arithmetic, the console's own data
-(usage, rows loaded, a person's own Python cell), or a **debt** the server is to take over, never to grow: the trading landing's MTM and
-DV01 totals, the market landing's medians, sigma and group sums, the FACT expressions' evaluator, the quant stand-in's prices, a column
-filter's average, the pivot chart's diversification bar. The function catalogue page is generated from the registries
+(`drishti-console/tests/test_console_does_not_aggregate.py`) finds every aggregation idiom in console Python and JavaScript code (strings
+and comments left out: a measure's text sent to the engine is not a sum) and lets through plain counting, sizes and promise plumbing;
+every other one is listed with its reason, layout arithmetic or the console's own data (usage, rows loaded, a pack draft's sample
+documents, a person's own Python cell and the stand-in pricer it calls), and there is no third reason: **the browser computes nothing**.
+A figure the console needs over rows it read (the trading landing's MtM, P&L, DV01, by book and trader and the largest counterparty's
+share; the market landing's CDS median, its move, each move's sigma and the Explorer's group totals; the Home facts' `sum` and fund
+`overlap`; a column filter's average) is asked of the pivot engine through `POST /api/v1/pivot/inline`
+(`drishti-console/core/engine_figures.py`: the rows and the measures, `sum(MTM)`, `median(S)`, `abs(sum(LAST)) / stddev_pop(H)`,
+`least(sum(A), sum(B))`) and shown as the engine answers; with the engine switched off the figure is left empty with the reason. The
+pivot chart's diversification bar is the engine's gap of the charted column (`diversificationByColumn` on each open row, beside
+`diversification` at the column total). `ConsoleFiguresTest` (drishti-bicompute) proves each on the console tests' fixtures. The
+function catalogue page is generated from the registries
 (`FunctionCataloguePage`, [FUNCTIONS.md](../guides/FUNCTIONS.md)) and checked against [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md)'s
 names (`FunctionCataloguePageTest`).

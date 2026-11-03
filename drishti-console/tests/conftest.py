@@ -61,6 +61,15 @@ class FakeBackend:
         under test never answers 500 to its own bell (each one logged a long traceback)."""
         return {"unread": 0} if path.endswith("/count") else {"items": []}
 
+    async def pivot(self, method, path, ident, body=None, raw=False, **params):
+        """The pivot engine: POST /inline (the figures of rows the console holds, core/engine_figures.py) as engine_standin answers it;
+        each ask kept in ``self.inline`` (its body) so a test sees what the console sent."""
+        if method == "POST" and path == "/inline":
+            from engine_standin import engine_answer
+            self.__dict__.setdefault("inline", []).append(body)
+            return engine_answer(body)
+        raise BackendError(404, "DRS-1001", f"the stand-in has no pivot {method} {path}")
+
     async def view(self, kind, id_, user, controls=None, panels=None):
         self.calls.append(("view", kind, id_, user))
         f = FIXTURES / f"view_{kind}_{id_}.json"

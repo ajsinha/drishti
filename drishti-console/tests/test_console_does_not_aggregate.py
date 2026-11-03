@@ -13,19 +13,25 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """One grammar, one engine (docs/architecture/ONE_GRAMMAR.md section 5): the server computes, the console displays. No console Python or
-JavaScript sums, averages or groups risk or BI figures. The check finds every aggregation idiom in the console's own code (Python: sum,
-statistics, a groupby, a division by len; JavaScript: a reduce that adds, an average) and lets through what is plainly not a figure
-(counting items, sizes and bytes, timings, promise chains, list concatenation, extremes for layout); every other one must be listed
-below with its reason: LAYOUT (arithmetic for drawing: widths, angles, shares of a bar already sent), OWN (the console's own data, not a
-risk or BI figure: usage, run counts, rows read while building a pack) or DEBT (a figure the console aggregates today, to move to the
-server; listed so that no new one is added, and named in ONE_GRAMMAR.md section 5). A new aggregation fails the check until it is moved
-to the server or listed with its reason; an entry that no longer matches fails too, so the list stays true."""
+JavaScript sums, averages or groups risk or BI figures: every figure (totals, medians, averages, deviations, risk) is the server's, in Java,
+through the one engine (the console sends rows it read to the pivot engine, POST /api/v1/pivot/inline, core/engine_figures.py, and shows
+its cells). The check finds every aggregation idiom in the console's own code (Python: sum, statistics, a groupby, a division by len;
+JavaScript: a reduce that adds, an average), outside strings and comments (a measure's text sent to the engine, ``"sum(MTM)"``, is the
+server's language, not a sum here), and lets through what is plainly not a figure (counting items, sizes and bytes, timings, promise
+chains, list concatenation, extremes for layout); every other one must be listed below with its reason: LAYOUT (arithmetic for drawing:
+widths, angles, shares of a bar already sent) or OWN (the console's own data, not a risk or BI figure: usage, run counts, rows read
+while building a pack, a person's own Python cell). There is no third reason: since 2.9.11.b the browser computes nothing, so a new
+aggregation of a figure fails the check until it is moved to the server; an entry that no longer matches fails too, so the list stays
+true."""
+import io
 import re
+import tokenize
 
 from conftest import CONSOLE
 
 PY_DIRS = ("core", "routes")
 JS_DIR = "web/static/js"
+REASONS = ("LAYOUT", "OWN")
 
 PY_AGG = re.compile(r"\bsum\(|\bfsum\(|statistics\.(mean|fmean|median|pstdev|stdev|variance|pvariance)\(|\.groupby\(|/\s*len\(")
 JS_AGG = re.compile(r"\.reduce\(")
@@ -35,6 +41,7 @@ PY_PLAIN = re.compile(r"sum\(\s*1\s+for\b|sum\(\s*len\(|sum\(\s*int\(|st_size|su
                       r"|sum\(\s*low\.count\(|sum\(\s*\d+\s+if\b|sum\(\s*\d+\s+for\b|\.count\(w\)")
 JS_PLAIN = re.compile(r"\.then\(|\.concat\(|Promise|Math\.max\(m,|\.length;\s*\},\s*0\)|String\(.*\)\.length|offsetHeight|\.ms\b|byClass|\.runs\b|"
                       r"\.rows\b|\.bytes\b|\.docs\.length|counts\.panels|sel\[r\]\.length|n\(y\)|function \(p, |var chain = ")
+JS_STRING = re.compile(r"'(?:[^'\\]|\\.)*'|\"(?:[^\"\\]|\\.)*\"|`(?:[^`\\]|\\.)*`")
 
 # Every other aggregation idiom in the console, with its reason. Keys: "<path>: <the line's code, stripped, first 70 characters>".
 KNOWN = {
@@ -61,32 +68,16 @@ KNOWN = {
     'core/schemakit/plan.py: c.ann["items"] = {"min": min(lists), "max": max(lists), "avg": round(s': "OWN: list lengths in a pack's sample",
     "core/schemakit/anonymise.py: if len(counts) <= VOCAB_MAX and sum(counts.values()) >= 2 * len(counts":
         "OWN: how often a sample's words repeat (anonymising)",
-    'core/schemakit/bi.py: measures[f"{f.label} (total)"] = {"expr": f"sum({base}.{_ident(f.name)': "OWN: a BI measure's text for the server",
-    "core/schemakit/bi.py: measures[f\"{humanize(singular(arr.name.lower()))} {c.lower().replace('": "OWN: the same",
+    "core/schemakit/related.py: doc[name] = _clean(sum(x for x in (_num(v) for v in vals) if x is not ":
+        "OWN: a pack draft's sample documents for a related page (the pack maker's fixtures, made offline too by tools/packmake.py; "
+        "never a figure people read: the server's derived connector computes the pages)",
+    "core/quant/standin.py: return sum(c / (1 + i) ** k for k in range(1, n + 1)) + face / (1 + i)":
+        "OWN: the stand-in pricer a person's own Python cell calls as `quant` in its sandbox (a coupon's discounting, not a total of "
+        "figures; QLRisk replaces it on the server, docs/admin/AI.md section 16)",
+    'core/quant/standin.py: return sum(_num({"x": f}, "x") / (1 + r) ** t for t, f in enumerate(fl': "OWN: the same pricer's NPV",
     "core/pyrunner_worker.py: groups = df.groupby(by, sort=True, dropna=False) if by else [((), df)]":
         "OWN: a person's own Python cell, sandboxed (ONE_GRAMMAR.md part 4: Python stays the open-ended escape)",
     "core/pyrunner_worker.py: nulls = int(s.isna().sum())": "OWN: nulls in a person's own Python cell's frame",
-    'core/python_items.py: out = trades.groupby("desk", as_index=False)["mtm"].sum()': "OWN: an example Python cell, shown as text",
-    # DEBT: figures the console aggregates today, to move to the server (ONE_GRAMMAR.md section 5). Never add to this list.
-    "core/trading_landing.py: total_pos = sum(positive.values())": "DEBT: the trading landing's shares of positive MTM",
-    'core/trading_landing.py: "mtm": round(sum(_num(r.get("MTM")) or 0 for r in rows.values())) if n': "DEBT: the trading landing's MTM",
-    'core/trading_landing.py: "dv01": round(sum(dv01s)) if dv01s else None, "dv01Trades": len(dv01s)': "DEBT: the trading landing's DV01",
-    'core/trading_landing.py: return {"available": True, "scope": text, "rows": rows, "days": len(ro': "DEBT: backtest exceptions counted",
-    'core/market_landing.py: median, change = (statistics.median(spreads) if spreads else None), No': "DEBT: the market landing's median spread",
-    'core/market_landing.py: change = {"delta": statistics.median([m["to"] for m in moves]) - stati': "DEBT: the market landing's median move",
-    "core/market_landing.py: sd = statistics.pstdev(hist) if len(hist) >= SIGMA_MIN_DAYS else 0.0": "DEBT: the market landing's sigma",
-    "web/static/js/market-landing.js: sums[gid] = ns.reduce(function (a, b) { return a + b; }, 0);": "DEBT: the market landing's group sums",
-    "core/facts_expr.py: return sum(vals) if vals else (0 if isinstance(xs, (list, tuple)) else":
-        "DEBT: the FACT expressions' sum (an evaluator in the console; to be Rachana on the server)",
-    "core/facts_expr.py: return sum(min(w, tb[k]) for k, w in ta.items() if k in tb)": "DEBT: the same evaluator's overlap",
-    "core/schemakit/related.py: doc[name] = _clean(sum(x for x in (_num(v) for v in vals) if x is not ":
-        "DEBT: a related document's summed field in a pack's sample",
-    "core/quant/standin.py: return sum(c / (1 + i) ** k for k in range(1, n + 1)) + face / (1 + i)":
-        "DEBT: the quant stand-in's price (QLRisk will price on its engine)",
-    'core/quant/standin.py: return sum(_num({"x": f}, "x") / (1 + r) ** t for t, f in enumerate(fl': "DEBT: the same",
-    "web/static/js/colfilter.js: if (c.op === 'avga' || c.op === 'avgb') { x.avg = ns.length ? ns.reduc":
-        "DEBT: a column filter's above/below-average threshold over the rows shown",
-    "web/static/js/pivot.js: var sum = values.reduce(function (s, x) { return s + x; }, 0);": "DEBT: the pivot chart's diversification bar (total − Σ parts): the engine to send it",
 }
 
 
@@ -95,18 +86,36 @@ def _code(line: str, js: bool) -> str:
     return re.sub(r"\s//.*$", "", line) if js else re.sub(r"\s#.*$", "", line)
 
 
+def _py_code_only(text: str) -> list[str]:
+    """The file's lines with every string (docstrings, f-strings' text, a measure sent to the engine) and comment blanked out."""
+    lines = [list(x) for x in text.splitlines()]
+    blank = (tokenize.STRING, tokenize.COMMENT) + tuple(getattr(tokenize, n) for n in ("FSTRING_MIDDLE",) if hasattr(tokenize, n))
+    for tok in tokenize.generate_tokens(io.StringIO(text).readline):
+        if tok.type not in blank:
+            continue
+        (r0, c0), (r1, c1) = tok.start, tok.end
+        for r in range(r0, r1 + 1):
+            row = lines[r - 1]
+            for c in range(c0 if r == r0 else 0, c1 if r == r1 else len(row)):
+                row[c] = " "
+    return ["".join(x) for x in lines]
+
+
 def found() -> dict[str, str]:
     out = {}
     files = [(p, False) for d in PY_DIRS for p in sorted((CONSOLE / d).rglob("*.py"))]
     files += [(p, True) for p in sorted((CONSOLE / JS_DIR).glob("*.js"))]
     for path, js in files:
         rel = path.relative_to(CONSOLE).as_posix()
-        for line in path.read_text(encoding="utf-8").splitlines():
+        text = path.read_text(encoding="utf-8")
+        lines = text.splitlines()
+        bare = [JS_STRING.sub("''", _code(x, True)) for x in lines] if js else _py_code_only(text)
+        for line, plain_code in zip(lines, bare):
             code = _code(line, js).strip()
             if not code or code.startswith(("#", "//", "*", "/*")):
                 continue
             agg, plain = (JS_AGG, JS_PLAIN) if js else (PY_AGG, PY_PLAIN)
-            if agg.search(code) and not plain.search(code):
+            if agg.search(plain_code) and not plain.search(code):
                 out[f"{rel}: {code[:70]}"] = code
     return out
 
@@ -114,12 +123,19 @@ def found() -> dict[str, str]:
 def test_the_console_aggregates_no_figure_beyond_the_listed_exceptions():
     seen = found()
     new = sorted(k for k in seen if k not in KNOWN)
-    assert not new, ("the console aggregates here: move it to the server (the pivot engine, Rachana's aggregates) or, for layout or the "
-                     "console's own data, list it in KNOWN with its reason:\n  " + "\n  ".join(new))
+    assert not new, ("the console aggregates here: move it to the server (the pivot engine through core/engine_figures.py, Rachana's "
+                     "aggregates) or, for layout or the console's own data, list it in KNOWN with its reason:\n  " + "\n  ".join(new))
 
 
 def test_every_listed_exception_is_still_there_and_has_a_reason():
     seen = found()
     stale = sorted(k for k in KNOWN if k not in seen)
     assert not stale, "these entries match nothing any more: remove them\n  " + "\n  ".join(stale)
-    assert all(v.split(":")[0] in ("LAYOUT", "OWN", "DEBT") for v in KNOWN.values())
+    assert all(v.split(":")[0] in REASONS for v in KNOWN.values()), "a reason is LAYOUT or OWN: a figure is the server's, never a debt"
+
+
+def test_a_sum_hidden_in_a_string_is_not_a_sum_but_one_in_code_is():
+    """The check reads code, not text: a measure sent to the engine passes, the same sum written in code is found."""
+    lines = _py_code_only('x = {"measure": "sum(MTM)"}\n"""a docstring: sum(x)"""\ny = sum(v)  # sum(z)\n')
+    assert [bool(PY_AGG.search(x)) for x in lines] == [False, False, True]
+    assert not JS_AGG.search(JS_STRING.sub("''", "var m = 'a.reduce(b)';")) and JS_AGG.search("var t = xs.reduce(add, 0);")

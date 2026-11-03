@@ -2049,8 +2049,10 @@ items:
 
 **Expressions** are Python's expression syntax cut down to reading data: names bound by earlier steps (and `asOf`), `a.b` and
 `a['$.X']` (a missing key is `None`), `a[0]`, arithmetic, comparisons, `and or not`, `x if c else y`, lists and one-`for`
-comprehensions, and the functions `len sum min max abs round first find pluck flat top ratio overlap common pairs index upper`. `None`
-is forgiving: arithmetic with it is `None`, a comparison false, a division by zero `None`, so missing data hides the fact instead of
+comprehensions, and the functions `len sum min max abs round first find pluck flat top ratio overlap common pairs index upper`. `sum`
+(of a list's numbers) and `overlap(a, b, key, weight)` (for each key both lists hold, the smaller of its two weight totals, added up) are
+computed by the server's pivot engine as the user (`POST /api/v1/pivot/inline`; the console adds up no figure), so they belong in a
+`let` step, outside a comprehension; elsewhere the file check refuses them. `None` is forgiving: arithmetic with it is `None`, a comparison false, a division by zero `None`, so missing data hides the fact instead of
 failing. Nothing else parses (no Python attributes, imports, lambdas, dictionaries, `**`). **Templates** fill `{expression}` or
 `{expression|format}`: `money` (3.5m, 1,043.7bn), `int`, `num1`, `num2`, `pct`/`pct1`/`pct2` (a ratio: 2.23 is 223%),
 `pctv`/`pctv1`/`pctv2` (a value already in percent), `signpct` (+452%), `times` (13.6×); a field that is empty hides the sentence.

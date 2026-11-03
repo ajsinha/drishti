@@ -130,6 +130,22 @@
   Rachana; Rachana never depends on the engine; only Rachana parses expressions, DEL and its kin listed until 2.9.11.e) and a console
   check that lists every aggregation in console code with its reason (layout, the console's own data, or a debt to move to the server).
   The function catalogue page is generated from the registries (Help → Functions) and checked against FUNCTION_CATALOGUE.md.
+- **The browser computes nothing (plan row SC; ONE_GRAMMAR.md section 5; on wip/browser-computes-nothing).** Every figure the console
+  used to add up itself is now the server's pivot engine's: the console sends the rows it read, as the person, to `POST
+  /api/v1/pivot/inline` (`drishti-console/core/engine_figures.py`) and shows the engine's cells. Drishti Trading's landings: MtM, P&L
+  today, DV01 and its trades, by book, by trader and the largest counterparty's share of positive MtM (the engine's top 1 shown as a
+  percent of the grand total). Drishti Market's landing: the CDS 5Y median, its move over the day (`median(TO) - median(FROM)`), each
+  biggest move's sigma (`abs(sum(LAST)) / stddev_pop(H)` per item, one ask for all) and the Explorer's group totals. Home's facts:
+  `sum` and fund `overlap` are asked of the engine (in a `let` step only; a condition, template or comprehension that calls them is
+  refused when the file is checked). A column filter's "above / below average" compares with the engine's `avg` of the column (no row is
+  hidden while it is asked). The pivot chart's diversification bar is the engine's gap, now sent for every column
+  (`diversificationByColumn` beside `diversification` on each open row; `PivotAnswer`). With the pivot engine switched off a figure is
+  not made up: it is left empty and the reason is said. No new endpoint and no second aggregation in Java: `ConsoleFiguresTest`
+  (drishti-bicompute) runs the endpoint's own path on the console tests' fixtures and gets the figures the console showed before (MtM 0,
+  P&L 480,000, DV01 −48,000, the counterparty share 16/24, the median 70 and its move 1, the average 1,309,750, the overlap 2). The
+  console check is strict: a reason is layout or the console's own data, never a debt; it reads code only (a measure's text sent to the
+  engine is not a sum). Two entries became the console's own data: a pack draft's sample documents for a related page (the pack maker's
+  fixtures) and the stand-in pricer a person's own Python cell calls (QLRisk replaces it).
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 
