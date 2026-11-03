@@ -278,7 +278,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
-                        designer_routes, designer_grid_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
+                        designer_routes, designer_grid_routes, dist_routes, layout_routes, mcube_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
@@ -609,6 +609,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(layout_routes.router)
     app.include_router(designer_routes.router)          # the Sutra designer (ui.designer, off by default)
     app.include_router(designer_grid_routes.router)     # its Grid mode
+    app.include_router(mcube_routes.router)            # the MR cube: MCUBE [scope BY ... | @owner/name], the pivot screen with the MR lens, /api/pivot/mr/...
     app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (PIVOT_GUIDE.md)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
