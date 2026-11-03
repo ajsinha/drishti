@@ -15,6 +15,29 @@
 -->
 # Changelog
 
+## 2.9.11.c
+
+- **The lake configuration: one file per lake (LAKE_GUIDE.md; LAKE_CONFIG.md "As built"; DELTA_CONNECTOR.md and ICEBERG_CONNECTOR.md,
+  As a connector file; DATA_GUIDE.md section 3; TOOLS.md sections 4 and 4.13).** `config/lakes/<lake>.yaml` says where a lake is (a
+  folder, `s3://`, or `mem://<store>`), how to reach it, and every table in it: path, partitions after `business_date` (always first, at
+  most four more), promoted columns, vectors, id, date, latest-by, load mode, file layout, retention, properties. A new module,
+  `drishti-lakeconfig` (plain Java and Jackson), reads and checks it once; the Python tools run its `LakesCli` for the JSON, so the
+  rules exist once. Writers refer to it: the parallel loader (`target.lake: <name>` and `target.kind`; a load key that contradicts the
+  file, such as `--partition-by`, is refused with both named; a kind the file lacks is refused), the data inbox (rules name a lake, `demo`
+  as shipped; a kind the lake lacks gets its pack's recommended entry copied into the file once), `lake build --lake <name>` (with
+  `--lake-root` for a scratch lake), `lake demo` and `build_demo_lakes.py` (the hard-coded `PRODUCT_TYPE` partition is gone:
+  `config/lakes/demo.yaml` describes the demo lake like any other). Readers refer to it: a Delta or Iceberg connector names `lake:` (and
+  `lake-tables:` where a kind has several tables), and its root, folders, storage, catalog, promoted columns and vectors come from the
+  file. **Append**: `load-mode: append` adds rows instead of replacing dates; each load's batch id is recorded in the commit (Delta: a
+  transaction id per batch and date; Iceberg: the snapshot summary), so a repeated or retried batch is never appended twice; the inbox
+  sends one for every load. **In-memory stores are lakes** (`root: mem://<store>`, `memory: {max-mb, contract, ...}`); the engine file
+  keeps the switch, the replenish jobs and the compaction policy. **Checks**: `drishti.py lake check` (connectors name known lakes; each
+  lake file matches its tables on disk: format, partition columns, promoted columns; reported, never rewritten) and `drishti.py lake
+  show`. **Admin → Lakes** lists every lake and table from the files, read-only (`GET /api/v1/admin/lakes/files`). **Migration**:
+  `drishti.py lake migrate-config [--write]` writes lake files from connector files that still carry `root`, `domain`, `table.<kind>` or
+  `layout.<kind>.*` and rewrites them to `lake: <name>`; until then such a connector starts as before with one warning (the old keys are
+  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide.
+
 ## 2.9.11.f
 
 - **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;

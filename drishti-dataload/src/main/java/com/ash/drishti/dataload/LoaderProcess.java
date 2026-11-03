@@ -101,7 +101,9 @@ public final class LoaderProcess implements LoadRunner {
         t.put("format", r.format());
         t.put("lake", r.lake());
         t.put("kind", r.kind());
-        put(t, "table", r.table());
+        // the table: the route's, else the pack connector's (trade-endur: trade_endur), which picks among several tables of one kind
+        put(t, "table", r.table() != null ? r.table() : r.connector() == null ? null
+                : com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).table());
         t.put("batch-id", batchId(files));
         ObjectNode rj = root.putObject("rejects");
         rj.put("max-pct", rejectMaxPercent);
