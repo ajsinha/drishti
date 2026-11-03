@@ -305,7 +305,7 @@ final class SimmAnswer {
         if (!read) {
             m.put("note", "no connector serves crif-external: the counterparty's call is not loaded (SIMM.md section 3.4)");
         }
-        m.put("method", "Drishti never recomputes the counterparty's figure: the difference is split by risk class to trace a dispute "
+        m.put("method", com.ash.drishti.common.Branding.name("the product") + " never recomputes the counterparty's figure: the difference is split by risk class to trace a dispute "
                 + "(the risk class margins are summed over the product classes, before ψ)");
         return m;
     }

@@ -52,17 +52,14 @@ final class VarAttributeGroups {
     static final String KIND = "attribute";
     private static final Pattern COLUMN = Pattern.compile("[A-Z][A-Z0-9_]{0,63}");
     private static final Duration READ = Duration.ofMinutes(2);
-    private static final int JOINS_KEPT = 8;
     /** The most groups one answer computes (each a vector of the scenarios: 10,000 of 509 take about 40 MB while it is made). */
     static final int MAX_GROUPS = 10_000;
     private final VarService svc;
     /** The valuations' column joined by trade id, per kind, column, date and data version; the least recently used leaves first. */
-    private final Map<String, Map<String, String>> joins = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Map<String, String>> e) {
-            return size() > JOINS_KEPT;
-        }
-    });
+    private final Map<String, Map<String, String>> joins = com.github.benmanes.caffeine.cache.Caffeine.newBuilder()
+            .maximumWeight(64L << 20)                                   // weighed in bytes (D3): about 96 bytes a joined trade
+            .<String, Map<String, String>>weigher((k, m) -> (int) Math.min(Integer.MAX_VALUE, 1024L + 96L * m.size()))
+            .build().asMap();
 
     VarAttributeGroups(VarService svc) {
         this.svc = svc;
