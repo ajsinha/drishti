@@ -121,6 +121,22 @@
     }
     $("[data-pv-fields]").innerHTML = h.join("") || '<p class="pv-sub">No field you may use.</p>';
     $("[data-pv-fields-sub]").textContent = (c.title || c.source) + (c.masked ? " · " + c.masked + " masked for you" : "");
+    if (order.length) { suggestions(c.source); }
+  }
+
+  /** An administrator's suggestions (PIVOT_GUIDE.md, documents): the paths people typed most, with Promote and Add to dataset. */
+  function suggestions(source) {
+    call("GET", "/paths?source=" + encodeURIComponent(source)).then(function (r) {
+      var list = (r.paths || []).slice(0, 5);
+      if (!list.length) { return; }
+      var h = ['<h3>Most used paths <span class="pv-sub">(administrator)</span></h3>'];
+      list.forEach(function (p) {
+        h.push('<div class="pv-sugg" title="' + esc(p.promote + "; or " + p.dataset) + '"><span class="mono">' + esc(p.path) + '</span> <span class="pv-sub">' + esc(String(p.uses)) + ' uses</span> '
+          + (p.connector && p.grain === "entity" ? '<a class="pv-btn" href="/admin/connectors/' + encodeURIComponent(p.connector) + '">Promote</a> ' : "")
+          + '<a class="pv-btn" href="/bi/datasets/new">Add to dataset</a></div>');
+      });
+      $("[data-pv-fields]").insertAdjacentHTML("beforeend", h.join(""));
+    }, function () { /* not an administrator: no suggestions */ });
   }
 
   var FUNCS = ["sum", "count", "avg", "min", "max", "median", "count_distinct", "var_samp", "stddev_samp"];

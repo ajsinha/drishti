@@ -121,6 +121,12 @@ async def cells(request: Request, ref: str = ""):
     return await _call(request, "GET", "/cells", ref=ref)
 
 
+@router.get("/api/pivot/paths")
+async def paths(request: Request, source: str = ""):
+    """An administrator's suggestions: the document paths people typed on a source, most used first."""
+    return await _call(request, "GET", "/paths", source=source)
+
+
 @router.get("/api/pivot/views")
 async def views(request: Request):
     return await _call(request, "GET", "/views")

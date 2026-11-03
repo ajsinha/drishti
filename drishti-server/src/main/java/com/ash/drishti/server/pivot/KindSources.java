@@ -603,6 +603,11 @@ public final class KindSources implements TabularSource.Resolver {
             m.put("promote", t.path.grainLevels().isEmpty() ? "add " + t.path.id() + " to layout." + source + ".columns of its connector"
                     : "a list's field cannot be a promoted column: add it to a BI dataset (each: " + t.path.grainLevels().get(0).name() + ")");
             m.put("dataset", "a BI dataset column: path: " + t.path.text());
+            try {
+                m.put("connector", data.dataset(source).connector());
+            } catch (RuntimeException e) {
+                m.put("connector", "");
+            }
             out.add(m);
         });
         return out;
