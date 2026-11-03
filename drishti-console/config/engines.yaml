@@ -334,3 +334,31 @@ engines:
     kinds: []
     inputs: []
     ai-tools: []
+  - id: flight
+    title: Arrow Flight
+    about: "Drishti's data to any client as Arrow record batches: kinds, BI models, measures, the in-memory lake (TLS, tokens with data:read)"
+    file: flight.yaml
+    switch: drishti.engines.flight.enabled
+    env: DRISHTI_FLIGHT_ENABLED
+    aliases: []
+    shipped: false
+    installed: true
+    live-on: false
+    prefixes: [drishti.engines.flight]
+    needs: []
+    uses: []
+    api: [/api/v1/admin/data-out]
+    console: [/admin/api/data-out]
+    words: []
+    menus: []
+    help: [flight-guide]
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [flight]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []

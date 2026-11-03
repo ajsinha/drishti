@@ -1,0 +1,39 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/flight.yaml: Arrow Flight, Drishti's data to any client (docs/guides/FLIGHT_GUIDE.md). Read at start, imported by application.yaml
+# after the jar's copy of this file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    flight:
+      enabled: ${DRISHTI_FLIGHT_ENABLED:false}   # answer Arrow Flight on this node; off as shipped: turning it on needs a restart (the port opens at start)
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+      bind: ${DRISHTI_FLIGHT_BIND:0.0.0.0}       # the address the port opens on (0.0.0.0: every interface)
+      port: ${DRISHTI_FLIGHT_PORT:18815}         # the Flight port (gRPC over HTTP/2); open it in firewalls, TCP pass-through in load balancers
+      advertise: ${DRISHTI_FLIGHT_ADVERTISE:}    # the address clients are given in GetFlightInfo; empty: the node's real address (never localhost or 0.0.0.0)
+      tls:                                       # TLS is always on: the server's certificate as PEM files
+        certificate: ${DRISHTI_FLIGHT_TLS_CERT:./config/tls/server.pem}       # the certificate chain the port presents
+        private-key: ${DRISHTI_FLIGHT_TLS_KEY:./config/tls/server.key}        # its private key, PKCS#8 PEM
+        client-ca: ${DRISHTI_FLIGHT_TLS_CLIENT_CA:}                           # a CA bundle: set it and every client must present a certificate it signed (mutual TLS)
+      memory:                                    # Arrow's off-heap memory (counted by busy protection with the rest)
+        total-mb: 4096                           # every Flight read of this node together
+        request-mb: 1024                         # one read at most (a role's limit may be lower)
+      batch-rows: 65536                          # rows in one record batch sent
+      session-minutes: 60                        # how long the session given at the handshake lasts before the token is checked again
+      stream-keep: 1024                          # batches of a live stream kept for resuming
+      readers-hours: 24                          # how long finished reads are listed on Admin -> Data out (the audit keeps them for good)
+      limits:                                    # per read, by role: rows, gb, minutes, memory-mb (0: no limit); the most generous of a person's roles applies
+        default: { rows: 50000000, gb: 8, minutes: 10, memory-mb: 512 }
+        roles: {}                                # e.g. risk-manager: { rows: 200000000, gb: 32, minutes: 30, memory-mb: 1024 }
