@@ -122,7 +122,15 @@ COUNT_TICKS = """() => {
 
 
 def _ticks(target) -> int:
-    return target.evaluate(COUNT_TICKS)
+    """The strip's changes counted so far; -1 when the page was navigating (its counter starts again once loaded)."""
+    try:
+        return target.evaluate(COUNT_TICKS)
+    except sync_api.Error:
+        try:
+            target.wait_for_load_state("domcontentloaded", timeout=PAGE_LOAD_S * 1000)
+        except sync_api.Error:
+            pass
+        return -1
 
 
 def _goto(page, url: str) -> float:
@@ -144,12 +152,16 @@ def _open_channels(console_url) -> set | None:
 
 def _all_tick(targets, waiter) -> list[str]:
     """The tabs and panes that received no live update within a few seconds."""
-    before = {name: _ticks(t) for name, t in targets}
+    before = {name: max(_ticks(t), 0) for name, t in targets}
     deadline = time.monotonic() + SETTLE_S
     stale = list(before)
     while stale and time.monotonic() < deadline:
         waiter.wait_for_timeout(250)
-        stale = [name for name, t in targets if _ticks(t) <= before[name]]
+        now = {name: _ticks(t) for name, t in targets}
+        for name, n in now.items():
+            if n < before[name]:                       # the page loaded again (its counter restarted): it must tick from its new start
+                before[name] = max(n, 0)
+        stale = [name for name in before if now[name] <= before[name]]
     return stale
 
 

@@ -393,6 +393,9 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     wait(pg, "window.VarBasket.state.copyOf === 'PF-USD-RATES' && !document.querySelector('[data-vx-basket]').hidden")
     assert "your own basket" in pg.locator("[data-vb-save]").inner_text()
     # Delete, through the confirm dialog
+    # the sheet's cell gives up its focus first (its edit is committed and the explorer follows), then the row's Delete
+    pg.locator("[data-vb-name]").focus()
+    pg.wait_for_timeout(800)
     pg.locator(".vx-adhoc-row", has=pg.locator(f'[data-vx-delete="{basket}"]')).hover()
     pg.locator(f'[data-vx-adhoc] [data-vx-delete="{basket}"]').click()
     pg.locator("[data-sd-dialog]").wait_for(state="visible")
