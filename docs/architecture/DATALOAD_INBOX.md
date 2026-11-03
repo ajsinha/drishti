@@ -162,11 +162,11 @@ failed folders are deleted, the ledger kept), and `config/dataload.yaml` for the
 
 ## 10. What a person sees
 
-**Admin → Data loads → Inbox** (planned; mock-ups first): files waiting (ready, not yet stable, without a marker), the last cycles with their
+**Admin → Data loads → Inbox** (built, mock-up A; DATA_GUIDE.md section 7.8): files waiting (ready, not yet stable, without a marker), the last cycles with their
 files, tables, dates, rows and time, failures with the reason and **Retry**, **Load now**, and the next cycle's time. The command line:
 `drishti.py dataload status | run | retry <file>`. Every load is on the Data loads page as today, with *inbox:* and its files as its source.
 
-**Mock-ups** of the Inbox tab (planned screen), each with a quiet and a busy scene (a long run, skipped cycles, Load now answered
+**Mock-ups** of the Inbox tab, each with a quiet and a busy scene (a long run, skipped cycles, Load now answered
 *skipped*, `ready.all` waiting, one failed file with Retry), the routing rules read-only, the engine's switch and owner node, and the
 folder links: [A](mockups/dataload-inbox/A.html), a status board with three columns that follow the folders (waiting `inbox/`, loading
 `inprocess/<run>/`, last cycles `outbox/`), failures, duplicates and rules below, and a phone scene (**recommended**: the columns teach
@@ -174,7 +174,8 @@ the hand-shake and answer "stuck, next, loaded?" at a glance); [B](mockups/datal
 current run's steps, and a side panel of waiting files, failures and the engine; [C](mockups/dataload-inbox/C.html), table-first: one
 table of every file of the day wherever it is, then cycles, rules and settings (the cheapest to build, like the Loads tab).
 
-**Chosen** (product owner, 2026-11-03): **A**, the status board; B and C are not built.
+**Chosen** (product owner, 2026-11-03): **A**, the status board; B and C are not built. The screen draws only the server's words: every count, size, time and duration
+is written by the status (`InboxStatus`), and the page redraws itself from the server (5 s while a run loads, 30 s when quiet).
 
 ## 11. The module
 
@@ -217,6 +218,7 @@ and the lock on NTFS (the Windows workflow).
 | Recovery | a claimed file whose load's summary says it committed is completed from the summary (never loaded again); otherwise it goes back. A crash inside the loader's own write, before its summary, sends the file back and it loads again: its dates are replaced, the same data |
 | Cluster | each signal is passed on to every other live member by `loads.LoadForwarding`, the one path a data-load signal takes to the members (a person's announcement goes on as that person): the inbox's as this node, `node:<id>` with the service role, carried on behalf of the node and signed with the cluster key; the receiving member's `LoadController` takes a signed node signal as it takes an administrator's. One hop; a failed load is not passed on |
 | Row forms | `RowForms` looks at the first line of a plain, gzip or zstd file: loader rows and lake rows are refused with the reason. An archive's members are not looked at: rows of these forms there are rejected by the load (no pack id field) and the file fails with the loader's reason |
+| The Admin screen | Admin → Data loads → Inbox (`/admin/loads/inbox`, mock-up A): the console's `admin/inbox.html` and `admin/_inbox_body.html` (the board, redrawn from `?partial=1`), `admin-inbox.js` (the redraw, Load now and Retry with their answers in words), `admin-inbox.css`; the Data loads tabs (`admin/_loads_tabs.html`). Its figures come from `DataInbox.status()`, which adds the board through `InboxStatus` (the one status source): each waiting file's state code and the rule that will route it (`Routes.preview`, nothing moved), the run loading table by table from `inprocess/<run>/load-plan.json` (written by `Cycle` at each table's start and end, kept in `outbox/<day>/<run>/loads/`), today's cycles in words, failures with their reports, today's duplicates (the ledger), the rules (`Routes.describe`) and the settings. `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/` only. The page is listed under the engine's `console` paths, so it is gone while the inbox runs on no server |
 | Batch | one loader run per table (pack, kind, connector, table, date field or date, key, lake, format); when a run of several files fails without a commit, each file is loaded again alone, so one bad file fails alone |
 
-Still (planned): the Admin screen (mock-ups first); the three-node and Windows (NTFS) tests.
+Still (planned): the three-node and Windows (NTFS) tests.
