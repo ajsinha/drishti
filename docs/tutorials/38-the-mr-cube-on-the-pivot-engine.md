@@ -29,7 +29,7 @@ About 25 minutes.
 
 - The server and console running with the demo risk lake ([tutorial 25](25-var-from-the-bank-to-a-trade.md)): `VAR BANK <GO>` answers.
 - The engines `var`, `pivot` and `mr-cube` on (Admin → Engines; `mr-cube` is on by default). For step 6, `sensitivities` and `frtb-sa` on too.
-- A token for the command line (`drishti.py login`, [TOOLS.md](../guides/TOOLS.md)).
+- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
 
 ## What you will learn
 

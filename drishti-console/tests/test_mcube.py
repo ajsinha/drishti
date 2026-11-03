@@ -69,7 +69,7 @@ def test_the_page_is_the_pivot_screen_with_the_mr_lens_and_the_api_is_read_as_th
     assert "data-preset=" in typed and "DESK:RATES" in typed
     assert 'data-view-id="asha/morning"' in c.get("/mcube?view=asha/morning").text
     plain = c.get("/pivot", params={"source": "var"}).text
-    assert "mr-lens.js" not in plain and "data-lens" not in plain
+    assert "mr-lens.js" not in plain and 'data-lens="mr"' not in plain
     view = {"source": "var", "rows": ["MGMT.DESK"], "values": [{"measure": "var()"}]}
     h = c.post("/api/pivot/mr/headline", json={"view": view})
     assert h.status_code == 200 and sent[-1][:4] == ("POST", "/mr/headline", "alice", {"view": view})

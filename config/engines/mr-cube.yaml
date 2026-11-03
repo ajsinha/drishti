@@ -28,6 +28,6 @@ drishti:
       sparkline-dates: 20            # the open business dates a sparkline reads (a date not open here is not opened for one)
       sparkline-max-cells: 600       # the most cells of a view that get a sparkline
       what-if-rows: 40               # the most rows the what-if side by side computes (the total always added)
-      # risk-classes: { IR: [Rates, Inflation, Money market, Securities financing], CR: [Credit, Fixed income, Structured], FX: [FX], EQ: [Equity, Equity derivatives], CM: [Commodity] }
-      # grids: { BANK-IR-TENOR: { 0-2Y: "0-2", 2-5Y: "2-5", 5-10Y: "5-10", 10Y+: "10-" } }   # the ladders' bucket grids, in years
-      # ladder-limits: { "USD 2-5Y": 1500000 }   # two-sided DV01 limits per currency and bucket; none: no limit bars
+      risk-classes: {}               # RISK_CLASS: a class to its product groups, in column order; empty: IR, CR, FX, EQ, CM of the demo's groups (MR_CUBE_GUIDE.md section 3)
+      grids: {}                      # the ladders' bucket grids, each bucket label: from-to in years ({ BANK-IR-TENOR: { 0-2Y: "0-2", 10Y+: "10-" } }); empty: BANK-IR-TENOR and FRTB-GIRR
+      ladder-limits: {}              # two-sided DV01 limits per currency and bucket ({ "USD 2-5Y": 1500000 }); empty: no limit bars
