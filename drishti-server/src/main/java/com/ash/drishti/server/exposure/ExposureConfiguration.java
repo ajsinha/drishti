@@ -37,7 +37,7 @@ import org.springframework.context.event.EventListener;
  * of an input, and once at start for the newest date), and the exposure figures the netting-set and counterparty pages show.
  */
 @Configuration
-@EnableConfigurationProperties(ExposureProperties.class)
+@EnableConfigurationProperties({ExposureProperties.class, ExposurePlaygroundProperties.class})
 public class ExposureConfiguration {
 
     @Bean(destroyMethod = "close")
