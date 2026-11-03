@@ -137,7 +137,7 @@ You should see: the drop-down at the top right lists **Build demo lakes**, **Loa
    first, see section 4.1.) (This is Maven `package -DskipTests -pl drishti-server -am`
    on the project's `pom.xml`.)
 
-You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.10.a-exec.jar`
+You should see: in the Run window `BUILD SUCCESS`, and the file `drishti-server\target\drishti-server-2.9.11-exec.jar`
 exists.
 
 ---
@@ -229,7 +229,7 @@ shows CALYPSO, MUREX and ENDUR together.
 2. Press ▶ (Run).
 
 You should see, after about a minute: the Run window ends with what to start next; `data\delta` now holds the folders
-`trading`, `reference`, `legal`, `collateral`, `credit`, `risk`, `market`, `macro`, `news`, `civic`, `us-equities`, `gleif` and `funds` (87 tables). This includes the quotes and news snapshot,
+`trading`, `reference`, `legal`, `collateral`, `credit`, `risk`, `market`, `macro`, `news`, `civic`, `us-equities`, `gleif` and `funds` (89 tables). This includes the quotes and news snapshot,
 the world economy data and the us-equities, gleif and funds public data.
 
 Terminal instead (one line, from any folder):
@@ -328,7 +328,7 @@ Good to know:
 The same lakes can keep **one source system's trades in Apache Iceberg** and the others in Delta Lake (for example your ENDUR
 trades in Delta and the synthetic CALYPSO trades in Iceberg); every page, history, search and BI report must answer exactly as with
 everything in Delta. Iceberg is written by Drishti's own engine from the server jar, so **build the jar first** (step 2.3: the file
-`drishti-server\target\drishti-server-2.9.10.a-exec.jar` must exist). Stop the server first, as for 3.0.
+`drishti-server\target\drishti-server-2.9.11-exec.jar` must exist). Stop the server first, as for 3.0.
 
 1. **Look first** (changes nothing, prints every step):
 
@@ -596,7 +596,7 @@ VaR in any currency and intraday, hierarchies and limit letters, Iceberg) are no
 
 ## 6c. History of a trade or an equity (2.6.5)
 
-Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.10.a-exec.jar`), and **restart both** the server and
+Needs **2.6.7**: `git pull` on **main**, step 2.3 again (the jar is `drishti-server-2.9.11-exec.jar`), and **restart both** the server and
 the console. The demo lakes of step 3.0 hold **sixty business days**, enough to show it; your own ENDUR history shows as soon as **two or
 more** of your files are loaded (step 3.2, one per date). Any kind of data has a history, not only trades: a counterparty, a curve, an
 economy.
@@ -687,7 +687,7 @@ Delete `data\scratch-lake`, `data\scratch-lake2`, `data\scratch-iceberg` and `da
 | The Run tab says **DrishtiApplication**, quotes or news try the internet, or sample trades appear | The server was started from the ▶ in `DrishtiApplication.java`: stop it and start **Drishti server (demo lakes)** (section 4.1, way A). |
 | IntelliJ: **module not specified**, the main class `com.ash.drishti.server.DrishtiApplication` in red | PyCharm was opened on `drishti-orig` and rewrote its `.idea`: do the note of step 2.2 (close both, delete `drishti-orig\.idea`, PyCharm on `drishti-console`), or reload the Maven projects (section 4.1, way A), or use way B. |
 | `start-server.ps1 … cannot be loaded because running scripts is disabled` | Type the line exactly as in section 4.1 way B (`powershell -ExecutionPolicy Bypass -File …`): it allows this one script only. |
-| The what-if says `DRS-5205` (unknown parameter `ccy`), or a page misses a kind the pack serves | A connector file from an older release that the upgrade has not reached: restart the server (2.9.5 upgrades connector files before it answers), then **Admin → Connectors → Template updates**; a value listed under *changed* stays yours until you click **Use the pack's value**. |
+| A computed kind refuses a parameter its pack documents (unknown parameter `ccy`), or a page misses a kind the pack serves | A connector file from an older release that the upgrade has not reached: restart the server (2.9.5 upgrades connector files before it answers), then **Admin → Connectors → Template updates**; a value listed under *changed* stays yours until you click **Use the pack's value**. |
 | The server log scrolls with thousands of `FilterCompat` or `delta.kernel` INFO lines | An older copy of the project: `git pull` (since 2026-10-18 these libraries log at WARN; Drishti says one line per large table loaded). |
 | **BI → Trades overview** shows 0 trades, or a page of the demo shows nothing while Admin → Lakes has the table | Old connector files: stop the server, delete `config\connectors` (step 3.1 point 0), start the server again. |
 | `Port 18480 (or 17480) is already in use` | Another copy is running: stop it in IntelliJ / PyCharm (red square), or reboot. |

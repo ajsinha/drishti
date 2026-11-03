@@ -123,7 +123,7 @@ Delta column (the engine reads it without parsing the document).
 | `MTM_CURRENCY` | text (ISO 4217) | optional | P | | currency of `MTM_NATIVE` | `USD` |
 | `FX_TO_USD` | rate (DOUBLE) | optional | | USD per unit of `MTM_CURRENCY` | the rate the engine used; checked against the market-data close (§10) | `1.0` |
 | `PNL_1D` | amount (DOUBLE) | optional | P | USD; gain positive | the engine's own one-day P&L of the trade (clean, as the engine defines it); TVAL sums it, P&L explain computes its own (§6.3) | `29441.0` |
-| `DV01` | amount (DOUBLE) | optional | P | USD per +1 bp parallel shift of every rate curve | the trade's parallel PV01 (the bucketed figures are in `sensitivity`, [FRTB.md](FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)) | `-1250.0` |
+| `DV01` | amount (DOUBLE) | optional | P | USD per +1 bp parallel shift of every rate curve | the trade's parallel PV01 (the bucketed figures are in `sensitivity`, [FRTB.md](FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)) | `-1250.0` |
 | `CS01` | amount (DOUBLE) | optional | P | USD per +1 bp of every credit spread | parallel credit-spread PV01 | `0.0` |
 | `NOTIONAL` | amount (DOUBLE) | optional | P | USD, absolute | the trade's current notional in USD (the first leg's, as the engine defines it) | `167969743.2` |
 | `ACCRUED` | amount (DOUBLE) | optional | | USD | accrued interest included in `MTM` | `12500.0` |

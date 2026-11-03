@@ -52,7 +52,7 @@ public final class ExposureCaches implements CacheReport.Owner {
     @Override
     public List<CacheReport> reports() {
         List<CacheReport> out = new ArrayList<>();
-        if (!svc.props().enabled()) {
+        if (!svc.running()) {
             return out;
         }
         out.add(CacheReport.of(ANSWERS, "exposure", "Exposure answers per scope, date, run and parameters", "heap", svc.answers(),

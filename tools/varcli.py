@@ -17,7 +17,8 @@ it: a scope's headline (show), its ranked P&L path (path), history and backtest 
 (tree), a trade's, position's or node's scenario matrix over its last N business dates (matrix, 2.9.7), the engine's state and
 tiers (status), the shards across Drishti*net (shards: the date's shard map, owners, members; --drain), captures
 (capture, captures, compare), baskets (basket, baskets; basket-delete: yours, or with --owner anyone's for an administrator; baskets --all: everyone's, administrators), the official end-of-day
-record (official), a reload (administrators) and a what-if through the Python engine (whatif: hypothetical trades from a JSON file).
+record (official), a reload (administrators) and a pre-deal what-if by the server's VaR engine (whatif: copies of booked trades or
+scopes with --copy, or trades priced elsewhere from a JSON file).
 Every figure in a reporting currency with --ccy (2.9.4; USD by default): the vectors converted through USD with each scenario's FX, so
 the currency move is part of the risk (VAR_GUIDE.md section 15.10). Every answer of a scope, the tree and a capture through a lens
 (2.9.7, section 18.6): --horizon 10d with --method sqrt10 or sum (none: the setting's), --confidence and --es-confidence from the
@@ -40,7 +41,7 @@ EPILOG = ("examples:\n  drishti.py var show 'DESK:RATES'\n  drishti.py var show 
           "  drishti.py var basket rates-hedges \"WHERE:'hedge' in TAGS\" --title 'Rates hedges'\n"
           "  drishti.py var basket-delete rates-hedges\n  drishti.py var basket-delete old-unwind --owner asha --reason 'left the desk'\n"
           "  drishti.py var capture 'BASKET:asha/rates-hedges' --note 'before the unwind'\n  drishti.py var compare CAP-20260930-7 now\n"
-          "  drishti.py var whatif 'DESK:RATES' --trades new-swap.json --stress-window 250\n"
+          "  drishti.py var whatif 'DESK:RATES' --copy BOOK:BOOK-RATES-3=-0.5\n  drishti.py var whatif 'DESK:RATES' --trades new-swap.json\n"
           "  drishti.py var explain BANK\n  drishti.py var explain 'DESK:RATES' --from 2026-09-29 --to 2026-09-30 --xlsx why.xlsx")
 
 
@@ -350,16 +351,36 @@ def render_shards(s: dict, say) -> None:
 
 
 def trades_of(path: str, err) -> list[dict]:
-    """The what-if trades of a JSON file: a list of {LABEL, PNL: [509 numbers], FACTOR}, or {"items": [...]}."""
+    """The what-if trades of a JSON file as the API's items: a list (or {"items": [...]}) of trades priced elsewhere, {LABEL, PNL:
+    [509 numbers], FACTOR}, or copies, {COPY_OF: <trade id or scope>, FACTOR, LABEL}; lower-case keys (label, pnl, factor, copyOf) too."""
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
     except (OSError, ValueError) as e:
         raise err(f"cannot read the what-if trades in {path}: {e}", 2)
     items = data.get("items") if isinstance(data, dict) else data
-    if not isinstance(items, list) or not all(isinstance(i, dict) and isinstance(i.get("PNL"), list) for i in items):
-        raise err(f"{path}: give a list of trades, each with its PNL (one number per scenario day)", 2)
-    return items
+    if not isinstance(items, list) or not all(isinstance(i, dict) for i in items):
+        raise err(f"{path}: give a list of trades, each with its PNL (one number per scenario day) or COPY_OF (a booked trade)", 2)
+    out = []
+    for i in items:
+        it = {"label": i.get("LABEL", i.get("label")), "factor": i.get("FACTOR", i.get("factor", 1)),
+              "pnl": i.get("PNL", i.get("pnl")), "copyOf": i.get("COPY_OF", i.get("copyOf"))}
+        if not isinstance(it["pnl"], list) and not it["copyOf"]:
+            raise err(f"{path}: give a list of trades, each with its PNL (one number per scenario day) or COPY_OF (a booked trade)", 2)
+        out.append({k: v for k, v in it.items() if v is not None})
+    return out
+
+
+def copies_of(specs: list[str], err) -> list[dict]:
+    """``--copy MX-30000121=-1`` or ``--copy BOOK:BOOK-RATES-3=-0.5``: a copy of a booked trade or a scope, scaled (1 when no factor)."""
+    out = []
+    for spec in specs or []:
+        what, _, f = spec.rpartition("=") if "=" in spec else (spec, "", "1")
+        try:
+            out.append({"copyOf": what.strip(), "factor": float(f)})
+        except ValueError:
+            raise err(f"--copy {spec}: a trade or scope, then =FACTOR (-1: the unwind)", 2) from None
+    return out
 
 
 #: the fields of an intraday row that carry its business date (moved with --date)
@@ -652,28 +673,23 @@ def register(groups, srv, ctx: dict) -> None:
         elif c == "reload":
             say_json(api.json("POST", "/api/v1/var/reload" + ("?" + enc({"date": a.date}) if getattr(a, "date", None) else "")))
         elif c == "whatif":
-            params = {"stress-window": a.stress_window}
+            items = copies_of(a.copy, CliError) + (trades_of(a.trades, CliError) if a.trades else [])
+            if not items:
+                raise CliError("a what-if needs trades: --copy <trade or scope>=FACTOR, or --trades FILE.json", 2)
+            body = {"scope": a.scope, "items": items}
             if a.ccy:
-                params["ccy"] = a.ccy
-            if a.trades:
-                box = api.json("POST", "/api/v1/compute/sandboxes", {"connector": "var-whatif", "title": f"what-if on {a.scope}",
-                                                                      "items": trades_of(a.trades, CliError)})
-                params["sandbox"] = box.get("id")
-            body = {"id": a.scope, "params": params, "wait": a.wait}
-            if a.date:
-                body["asOf"] = a.date
-            res = api.json("POST", "/api/v1/compute/var-whatif/var-whatif", body)
+                body["ccy"] = a.ccy
+            res = api.json("POST", "/api/v1/var/what-if" + ("?" + enc({"asOf": a.date}) if a.date else ""), body)
             if a.json:
                 say_json(res)
-            else:
-                r = res.get("result") or {}
-                print(f"what-if on {a.scope}  {str(res.get('state', '')).upper()}  ({res.get('requestId')})  in {r.get('CURRENCY') or 'USD'}")
-                if res.get("message"):
-                    print("  " + res["message"])
-                for k in ("BEFORE_VAR", "AFTER_VAR", "CHANGE_VAR", "BEFORE_ES", "AFTER_ES", "CHANGE_ES", "STRESSED_VAR_BEFORE", "STRESSED_VAR_AFTER"):
-                    if k in r:
-                        print(f"  {k:<20} {money(r[k])}")
-            return 0 if res.get("state") in ("ready", "computing", "stale") else 1
+                return 0
+            print(f"what-if on {a.scope}  {res.get('businessDate', '')}  in {res.get('currency') or 'USD'}  ({res.get('engine', '')})")
+            for k, label in (("var", "VaR"), ("es", "ES"), ("stressedVar", "stressed VaR")):
+                b, x, d = (res.get("before") or {}).get(k), (res.get("after") or {}).get(k), (res.get("change") or {}).get(k)
+                print(f"  {label:<13} {money(b):>16} -> {money(x):>16}" + (f"   change {money(d)}" if d is not None else ""))
+            for it in res.get("items") or []:
+                print(f"  {it.get('label')}: standalone {money(it.get('standaloneVar'))}, incremental {money(it.get('incrementalVar'))}, "
+                      f"component {money(it.get('componentVar'))}")
         return 0
 
     p = groups.add_parser("var", help="var: the VaR engine as you see it (show, parts, path, history, tree, status, captures, baskets, what-if)",
@@ -834,10 +850,11 @@ def register(groups, srv, ctx: dict) -> None:
     rl = sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake",
                         parents=[srv])
     rl.add_argument("--date", metavar="YYYY-MM-DD", help="drop only this business date (2.9.7); the others stay open")
-    w = scoped("whatif", "a scope's VaR before and after hypothetical trades (the Python engine, var-whatif), and its stressed window")
-    w.add_argument("--trades", metavar="FILE.json", help="the hypothetical trades: [{LABEL, PNL: [one per scenario day], FACTOR}]")
-    w.add_argument("--stress-window", type=int, default=250, metavar="DAYS", help="scenario days of the stressed window (0: none)")
-    w.add_argument("--wait", type=int, default=10000, metavar="MS")
+    w = scoped("whatif", "a scope's VaR, ES and stressed VaR before and after hypothetical trades (the server's VaR engine)")
+    w.add_argument("--copy", action="append", metavar="TRADE=FACTOR", help="a copy of a booked trade or a scope, scaled: MX-30000121=-1 "
+                   "(its unwind), BOOK:BOOK-RATES-3=-0.5 (repeat for more)")
+    w.add_argument("--trades", metavar="FILE.json", help="trades priced elsewhere: [{LABEL, PNL: [one per scenario day], FACTOR}] "
+                   "(or {COPY_OF, FACTOR, LABEL})")
     p.set_defaults(func=cmd, cmd=None)
 
 

@@ -39,7 +39,7 @@
       <tr data-basket="{{ b.id }}" data-owner="{{ b.owner }}" data-name="{{ b.name }}" data-version="{{ b.version }}" data-shared="{{ (b.sharedWith or []) | join(',') }}">
         <td class="mono">{{ b.owner }}</td>
         <td><a href="/var?scope={{ ('BASKET:' ~ b.id) | urlencode }}">{{ b.name }}</a>{% if b.description %}<div class="text-muted-d small">{{ b.description }}</div>{% endif %}</td>
-        <td class="mono small" title="{{ b.scope }}">{{ b.scope | truncate(80) }}</td>
+        <td class="mono small" title="{{ b.scope | truncate(2000) }}">{{ b.scope | truncate(80) }}{% if b.parts %}<div class="text-muted-d small">a sheet of {{ b.parts }} parts</div>{% endif %}</td>
         <td>{{ (b.sharedWith or []) | join(', ') or '—' }}</td>
         <td class="mono">{{ (b.createdAt or '')[:10] }}</td><td class="mono">{{ (b.updatedAt or '')[:10] }}</td>
         <td class="mono n">{{ b.bytes }} B</td>

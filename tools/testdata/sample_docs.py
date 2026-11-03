@@ -154,6 +154,7 @@ GROUPS = [
     ("Market-risk inputs (VaR)", "You produce this", ["market-risk/scenario-pv", "market-risk/pnl-vector", "market-risk/scenario-set",
                                                        "market-risk/fx-scenario", "market-risk/risk-hierarchy", "market-risk/portfolio",
                                                        "market-risk/var-limit", "market-risk/desk-pnl", "market-risk/pnl-history"]),
+    ("Market-risk inputs (capital: FRTB-SA)", "You produce this", ["market-risk/position-sensitivity", "market-risk/risk-factor"]),
     ("Valuations and other risk results your engines produce", "You produce this",
      ["market-risk/trade-valuation", "market-risk/frtb-sensitivity", "market-risk/pnl-explain", "market-risk/stress-scenario",
       "market-risk/stress-result"]),

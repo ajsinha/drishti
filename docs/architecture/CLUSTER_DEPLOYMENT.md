@@ -1687,6 +1687,7 @@ gossip changes:
 | `sources` per kind | connector name, type, **table identity** (a Delta table's id and location; section 10), `earliestDate` and `latestDate` (the oldest and newest business dates it holds; a node that goes down counts only for the dates between them, section 7), `dataVersion` of the latest date, whether columnar |
 | `load` | requests a second over the last minute (from `RequestActivity`) and p95 latency, for choosing between peers |
 | `calendar` | the business calendar (`DRISHTI_CALENDAR`): the as-of of a forwarded request must mean the same date |
+| `services.engines` | the compute engines of this node and their state (`var:running,frtb-sa:off,...`; [COMPUTE_ENGINES.md section 9](COMPUTE_ENGINES.md#9-in-a-cluster-each-node-runs-its-own-engines)): a request for an engine's API (`/api/v1/frtb/**`) arriving at a node that does not run it is forwarded to the least loaded node that does, signed for the caller (the answer carries `X-Drishti-Engine-Node`); none does: `404 DRS-1020`; the console offers an engine when any reachable node runs it |
 
 A pack listed in `peer-only-packs` (`node.yaml`) is loaded and served to peers (view and data forwarding, search shares) but hidden from
 this node's own users: not in its catalog, forms home, type-ahead or command line, and a direct request for its kinds from

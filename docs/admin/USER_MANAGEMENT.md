@@ -663,6 +663,10 @@ curl -s 'localhost:18480/api/v1/admin/audit?subject=priya&limit=20'
 
 ## Functions (FUNC): every command, and turning one on or off
 
+Beside the command switches are the **compute engines** (Admin → Engines, [OPERATIONS.md section 21](OPERATIONS.md#21-compute-engines-on-or-off)):
+a command switch turns one mnemonic off for everyone in the cluster; an engine switch decides whether an engine (VaR, FRTB-SA, SIMM, ...)
+runs on one node, and when it runs nowhere its words disappear from Functions too.
+
 **Functions** is the command directory, for everyone: Views → **Functions**, or type `FUNC <GO>`. It lists every command you can use,
 grouped by pack, with what each does and an example; click one to open it. An administrator sees the same page with the switches: any
 command of the packs can be turned off for everyone (`FRTB`, `EQV`, `TRD` and every other mnemonic). The code stays; a command that is off

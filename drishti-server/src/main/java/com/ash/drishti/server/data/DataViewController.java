@@ -157,6 +157,13 @@ public class DataViewController {
         return m;
     }
 
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void gate(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+    }
+
     /** The selected rows of the day as {@code <kind>_<date>.jsonl.gz}: one JSON object a line, the chosen columns in order; audited. */
     @GetMapping("/{kind}/rows")
     public void rows(@RequestAttribute(Principal.ATTRIBUTE) Principal p, AsOf asOf, @PathVariable String kind,
@@ -167,6 +174,13 @@ public class DataViewController {
         List<String> out = chosen(p, d, sel);
         LocalDate day = day(d, date);
         String file = kind + "_" + (day == null ? "current" : day.toString()) + ".jsonl.gz";
+        if (gate != null) {                                            // busy protection: a new download may wait (nothing written yet)
+            gate.admit(com.ash.drishti.server.admission.Work.DOWNLOAD, p.user(), "Download " + kind + (day == null ? "" : " " + day));
+        }
+        // data held in memory only (IN_MEMORY_LAKE.md section 8): a user's download is the one way out, streamed from memory with no
+        // temporary file, audited; its audit line keeps the selection's shape, never its values
+        boolean memoryOnly = com.ash.drishti.server.memlake.Retention.current().memoryOnly(kind);
+        com.ash.drishti.server.memlake.Retention.current().require(com.ash.drishti.server.memlake.Retention.Sink.DOWNLOAD, List.of(kind), "This download");
         res.setStatus(200);
         res.setContentType("application/gzip");
         res.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"");
@@ -183,8 +197,8 @@ public class DataViewController {
             outcome = w.pushed() ? "complete, filtered by the connector" : "complete";
         } finally {
             audit.record(p.user(), "data.download", kind, "date=" + (day == null ? "current" : day) + "; columns=" + String.join(",", out)
-                    + "; where=" + String.join(" AND ", sel.lines().stream().map(DataSelection.Line::text).toList()) + "; rows=" + written[0]
-                    + "; " + outcome);
+                    + "; where=" + (memoryOnly ? sel.lines().size() + " condition(s)" : String.join(" AND ", sel.lines().stream().map(DataSelection.Line::text).toList()))
+                    + "; rows=" + written[0] + "; " + outcome + (memoryOnly ? "; memory-only data" : ""));
         }
     }
 

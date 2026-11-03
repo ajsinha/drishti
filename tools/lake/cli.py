@@ -21,6 +21,7 @@ the default; Apache Iceberg with `build --format iceberg`, and `maintain` for a 
     status     whether the lake's lock is held (lake maintain, or a load), and the last runs (from <lake>/_drishti-lake)
     demo       the demo lakes of the seven packs from the committed test data, data/testdata (tools/lake/demo.py)
     maintain   retention, compaction, checkpoints and vacuum, now or on schedules; --history (tools/lake/maintain.py; options passed through)
+    memory     the in-memory lake over REST: status, jobs, refill (tools/lake/memory_cli.py; docs/guides/IN_MEMORY_LAKE_GUIDE.md)
 """
 from __future__ import annotations
 
@@ -89,7 +90,7 @@ def cmd_maintain(a, extra) -> int:
     return _mod("maintain").main(extra)
 
 
-def register(groups, add, srv) -> None:
+def register(groups, add, srv, ctx: dict | None = None) -> None:
     """Adds the `lake` group to drishti.py's parser (`groups` its subparsers, `add` its parser factory)."""
     import argparse
     g = groups.add_parser("lake", help="Delta lakes: build one from a large JSON export (memory flat, safe to re-run), scan an export, status, maintain",
@@ -127,3 +128,5 @@ def register(groups, add, srv) -> None:
             "  drishti.py lake maintain --history\n"
             "  drishti.py lake maintain relayout --root data/delta --domain trading\n"
             "Only tables lake build built are maintained (--force-foreign overrides, with a warning). Guide: docs/admin/OPERATIONS.md")
+    if ctx:
+        _mod("memory_cli").register(sub, add, srv, ctx)                # lake memory status|jobs|refill (2.9.11, IN_MEMORY_LAKE.md)

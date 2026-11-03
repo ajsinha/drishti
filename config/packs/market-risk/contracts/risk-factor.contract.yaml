@@ -12,20 +12,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Planned data contract of the risk-factor dictionary (proposed command RFAC): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 3;
+# Data contract of the risk-factor dictionary (command RFAC): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 3;
 # the MR cube's D9 (docs/lenses/MR_CUBE_LENS.md section 7.10). Demo data: tools/packgen/sensitivity/factor_dictionary.py.
 kind: risk-factor
 mnemonic: RFAC
 pack: market-risk
 version: '1.0'
 class: fundamental
-status: planned
+status: active
 title: 'Risk factor dictionary'
 description: 'Every risk factor the bank''s sensitivities use, named by the factor naming standard, with its parts (class, qualifier,
   curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class,
   bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not
-  here, or whose source name maps to no factor, is refused. Planned: no command and no engine reads it yet
-  (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md).'
+  here, or whose source name maps to no factor, is refused. Read by the server''s FRTB-SA engine with the sensitivities
+  (docs/guides/FRTB_SA_GUIDE.md).'
 source: The bank's risk-factor master (often kept in the market-data system or the FRTB engine)
 grain: One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR.
 key:
@@ -50,23 +50,30 @@ storage:
   - FRTB_BUCKET
   - SIMM_RISK_CLASS
   - SIMM_BUCKET
+  test-data:
+  - data/testdata/market-risk/risk-factor
 fields:
 - name: RISK_FACTOR
   type: id
   presence: required
-  description: 'The factor''s standard name, slash-separated: IR/CURVE/<ccy>/<curve>[/<tenor>], INF/<index>/<tenor>, CR/SPREAD/<issuer
-    or index>[/<BOND or CDS>/<tenor>], FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>[/<tenor>],
-    VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]. Without a tenor: the curve, issuer or underlying as a whole (curvature).'
+  description: 'The factor''s standard name, slash-separated: IR/CURVE/<ccy>/<curve>/<tenor> (a curve point), IR/CURVE/<ccy> (the
+    currency, every curve shifted together: the GIRR curvature factor, MAR21.8), IR/BASIS/<ccy> (the cross-currency basis), INF/<index>
+    (the inflation factor, no tenor in FRTB) and INF/<index>/<tenor>, CR/SPREAD/<issuer or index>[/<BOND or CDS>/<tenor>] (without the
+    tenor: the issuer, the CSR curvature factor), FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>
+    and CM/PRICE/<underlying> (the commodity, every location and tenor: the commodity curvature factor, MAR21.13),
+    VOL/<class>/<underlying>/<expiry>[/<underlying tenor>].'
   example: IR/CURVE/USD/SOFR/10Y
   pattern: ^(IR|INF|CR|FX|EQ|CM|VOL)/
 - name: FACTOR_TYPE
   type: text
   presence: required
-  description: 'The kind of factor: CURVE (an interest-rate curve or its point), INFLATION, SPREAD (a credit spread), SPOT (an FX rate
-    or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied volatility).'
+  description: 'The kind of factor: CURVE (an interest-rate curve or its point), BASIS (a cross-currency basis), INFLATION, SPREAD (a
+    credit spread), SPOT (an FX rate or equity price), REPO (an equity repo rate), PRICE (a commodity forward) or VOL (an implied
+    volatility).'
   example: CURVE
   enum:
   - CURVE
+  - BASIS
   - INFLATION
   - SPREAD
   - SPOT
@@ -159,6 +166,16 @@ fields:
   enum:
   - IG
   - HY
+- name: SENIORITY
+  type: text
+  presence: optional
+  description: The seniority of a credit factor's curve (SIMM credit qualifiers and the CRIF are per issuer and seniority; the DRC nets by
+    seniority, MAR22.19). SENIOR in the demo.
+  example: SENIOR
+  enum:
+  - COVERED
+  - SENIOR
+  - NON_SENIOR
 - name: MARKET_CAP
   type: text
   presence: optional
@@ -172,6 +189,7 @@ fields:
   presence: optional
   description: ADVANCED or EMERGING for an equity (MAR21.72).
   example: ADVANCED
+  link: economy
   enum:
   - ADVANCED
   - EMERGING
@@ -253,6 +271,7 @@ validation:
   field: FACTOR_TYPE
   values:
   - CURVE
+  - BASIS
   - INFLATION
   - SPREAD
   - SPOT
@@ -284,6 +303,12 @@ validation:
   - IG
   - HY
 - rule: enum
+  field: SENIORITY
+  values:
+  - COVERED
+  - SENIOR
+  - NON_SENIOR
+- rule: enum
   field: MARKET_CAP
   values:
   - LARGE
@@ -293,6 +318,9 @@ validation:
   values:
   - ADVANCED
   - EMERGING
+- rule: link
+  field: ECONOMY
+  kind: economy
 - rule: enum
   field: LIQUIDITY_HORIZON
   values:
@@ -303,8 +331,10 @@ validation:
   - 120
 notes:
 - 'JSON Lines, one row per line (UTF-8, gzip). Example line: {"RISK_FACTOR":"IR/CURVE/USD/SOFR/10Y","FACTOR_TYPE":"CURVE","RISK_CLASS":"GIRR","QUALIFIER":"USD","CURVE":"SOFR","TENOR":"10Y","FRTB_BUCKET":"USD","SIMM_RISK_CLASS":"InterestRate","SIMM_BUCKET":"1","SIMM_LABEL1":"10y","SIMM_LABEL2":"OIS","LIQUIDITY_HORIZON":10,"MARKET_DATA_REF":"CRV-USD-SOFR#10Y","SOURCE_NAMES":["MX:IR:CURVE-USD-SOFR-10Y","IR.CURVE.USD.SOFR.10Y","10Y_SOFR_USD_CURVE_IR"],"VALID_FROM":"2026-01-02","BUSINESS_DATE":"2026-09-30","SOURCE":"demo-factor-master"}'
+- 'LIQUIDITY_HORIZON of a volatility factor is the vega liquidity horizon of MAR21.92 (GIRR 60, CSR 120, equity large-cap and index 20,
+  small-cap and other 60, commodity 120, FX 40); of the other factors the IMA horizon of MAR33.12.'
+- 'Decided (2026-11-01, decision 5): a credit index is one SIMM qualifier now (Residual in the demo); look-through to the constituents later.'
 - 'The bucket here is the default; the bucket grids of the configuration (FRTB, SIMM and the bank''s own limit grids) decide, and a
   factor falls in exactly one bucket of each grid (checked at start, overlaps refused).'
 review:
 - 'Whether the bank keeps the mapping from its system names in this table (SOURCE_NAMES) or in a separate mapping file per source.'
-- 'The SIMM buckets of credit indices: look-through to the constituents, or the index as one qualifier (Residual in the demo).'

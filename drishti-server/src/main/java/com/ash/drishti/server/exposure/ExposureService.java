@@ -128,7 +128,7 @@ final class ExposureService implements AutoCloseable {
         this.pins = new com.ash.drishti.server.caches.PinKeeper("exposure", props.pinned(), props.fiscalYearEnd(), () -> calendar,
                 new com.ash.drishti.server.caches.PinKeeper.Engine() {
                     public LocalDate newest() {
-                        return props.enabled() ? loader.latest() : null;
+                        return running() ? loader.latest() : null;
                     }
 
                     public List<LocalDate> stressWindow() {
@@ -256,6 +256,19 @@ final class ExposureService implements AutoCloseable {
         return props;
     }
 
+    /** The engine registry's word on whether exposure runs on this node (COMPUTE_ENGINES.md); unset (a test of the service alone): the old switch. */
+    private volatile java.util.function.BooleanSupplier running;
+
+    public void running(java.util.function.BooleanSupplier on) {
+        this.running = on;
+    }
+
+    /** Whether the exposure engine runs on this node now (Admin, Engines; config/engines/exposure.yaml). */
+    public boolean running() {
+        java.util.function.BooleanSupplier r = running;
+        return r == null ? props.enabled() : r.getAsBoolean();
+    }
+
     /** The answers cache (Admin, Caches). */
     com.github.benmanes.caffeine.cache.Cache<String, Scoped> answers() {
         return cache;
@@ -296,7 +309,7 @@ final class ExposureService implements AutoCloseable {
      * load starts in the background and the answer is empty.
      */
     java.util.Optional<ExposureDate> loadedDate(LocalDate asked) {
-        LocalDate latest = props.enabled() ? loader.latest() : null;
+        LocalDate latest = running() ? loader.latest() : null;
         if (latest == null) {
             return java.util.Optional.empty();
         }
@@ -319,8 +332,8 @@ final class ExposureService implements AutoCloseable {
 
     /** The date a request reads: the one asked when it has paths, else the newest on or before it. */
     ExposureDate date(LocalDate asked, boolean strict) {
-        if (!props.enabled()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "the exposure engine is switched off on this server (drishti.ccr.exposure.enabled)");
+        if (!running()) {
+            throw new com.ash.drishti.server.engines.EngineOffException("exposure", "Exposure");
         }
         LocalDate latest = loader.latest();
         if (latest == null) {
@@ -342,6 +355,22 @@ final class ExposureService implements AutoCloseable {
         return r != null && r[0].equals(loader.version(d));
     }
 
+    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): a new date load asks the gate; absent in a test that makes the service. */
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+    private com.ash.drishti.server.admission.AdmissionGate.Loads gateLoads;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void admission(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+        this.gateLoads = g.loads("exposure", props::loadThreads);
+        g.openHeap("exposure", this::openHeapBytesUsed, props::openHeapBytes);
+    }
+
+    /** A slot for a new date load (busy protection), or a refusal; none without a gate. */
+    private com.ash.drishti.server.admission.AdmissionGate.Slot loadSlot(LocalDate d) {
+        return gate == null ? com.ash.drishti.server.admission.AdmissionGate.NO_SLOT : gate.admitLoad(gateLoads, d.toString());
+    }
+
     private ExposureDate load(LocalDate d, int depth, boolean strict) {
         String[] r = refused.get(d);
         if (r != null && r[0].equals(loader.version(d))) {
@@ -358,7 +387,21 @@ final class ExposureService implements AutoCloseable {
                 throw no.get();                                        // refused for room a moment ago: no lake read until it may fit
             }
         }
-        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> loader.load(x), loads));
+        CompletableFuture<ExposureDate> f = dates.computeIfAbsent(d, x -> {
+            com.ash.drishti.server.admission.AdmissionGate.Slot slot = loadSlot(x);   // busy protection: refused here, nothing is held
+            try {
+                return CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return loader.load(x);
+                    } finally {
+                        slot.close();
+                    }
+                }, loads);
+            } catch (RuntimeException e) {
+                slot.close();
+                throw e;
+            }
+        });
         try {
             ExposureDate xd = f.join();
             evictOld(d);

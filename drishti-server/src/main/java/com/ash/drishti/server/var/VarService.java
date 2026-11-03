@@ -146,7 +146,7 @@ public final class VarService implements AutoCloseable {
         this.pins = new com.ash.drishti.server.caches.PinKeeper("VaR", props.pinned(), props.fiscalYearEnd(), () -> calendar,
                 new com.ash.drishti.server.caches.PinKeeper.Engine() {
                     public LocalDate newest() {
-                        return props.enabled() ? loader.latest() : null;
+                        return running() ? loader.latest() : null;
                     }
 
                     public List<LocalDate> stressWindow() {
@@ -330,8 +330,8 @@ public final class VarService implements AutoCloseable {
 
     /** The date asked (or the newest before it) with its intraday layer, whatever the thread. */
     private VarDate live(LocalDate asked) {
-        if (!props.enabled()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "the VaR engine is switched off on this server (drishti.var.enabled)");
+        if (!running()) {
+            throw new com.ash.drishti.server.engines.EngineOffException("var", "VaR");
         }
         LocalDate latest = loader.latest();
         if (latest == null) {
@@ -391,7 +391,7 @@ public final class VarService implements AutoCloseable {
      * its load starts in the background and the answer is empty.
      */
     Optional<VarDate> loadedDate(LocalDate asked) {
-        LocalDate latest = props.enabled() ? loader.latest() : null;
+        LocalDate latest = running() ? loader.latest() : null;
         if (latest == null) {
             return Optional.empty();
         }
@@ -424,6 +424,22 @@ public final class VarService implements AutoCloseable {
         return r != null && r[0].equals(loader.version(d));
     }
 
+    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): a new date load asks the gate; absent in a test that makes the service. */
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+    private com.ash.drishti.server.admission.AdmissionGate.Loads gateLoads;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void admission(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+        this.gateLoads = g.loads("var", props::loadThreads);
+        g.openHeap("var", this::openHeapBytesUsed, props::openHeapBytes);
+    }
+
+    /** A slot for a new date load (busy protection), or a refusal; none without a gate. */
+    private com.ash.drishti.server.admission.AdmissionGate.Slot loadSlot(LocalDate d) {
+        return gate == null ? com.ash.drishti.server.admission.AdmissionGate.NO_SLOT : gate.admitLoad(gateLoads, d.toString());
+    }
+
     private VarDate load(LocalDate d, int depth) {
         String[] r = refused.get(d);
         if (r != null && r[0].equals(loader.version(d))) {
@@ -437,8 +453,21 @@ public final class VarService implements AutoCloseable {
                 throw no.get();                                        // refused for room a moment ago: no lake read until it may fit
             }
         }
-        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> CompletableFuture.supplyAsync(() -> sharded() ? shards.assemble(x) : loader.load(x),
-                loads));
+        CompletableFuture<VarDate> f = dates.computeIfAbsent(d, x -> {
+            com.ash.drishti.server.admission.AdmissionGate.Slot slot = loadSlot(x);   // busy protection: refused here, nothing is held
+            try {
+                return CompletableFuture.supplyAsync(() -> {
+                    try {
+                        return sharded() ? shards.assemble(x) : loader.load(x);
+                    } finally {
+                        slot.close();
+                    }
+                }, loads);
+            } catch (RuntimeException e) {
+                slot.close();
+                throw e;
+            }
+        });
         try {
             VarDate vd = f.join();
             evictOld(d);
@@ -1053,6 +1082,19 @@ public final class VarService implements AutoCloseable {
     }
 
     /** What is loaded, for the provenance box and Admin. */
+    /** The engine registry's word on whether VaR runs on this node (COMPUTE_ENGINES.md); unset (a test of the service alone): the old switch. */
+    private volatile java.util.function.BooleanSupplier running;
+
+    public void running(java.util.function.BooleanSupplier on) {
+        this.running = on;
+    }
+
+    /** Whether the VaR engine runs on this node now (Admin, Engines; config/engines/var.yaml). */
+    public boolean running() {
+        java.util.function.BooleanSupplier r = running;
+        return r == null ? props.enabled() : r.getAsBoolean();
+    }
+
     /** The business dates open or opening now (the connectors' id-map TTL never drops them: {@link com.ash.drishti.api.DatesInUse}). */
     java.util.Set<LocalDate> openDates() {
         return java.util.Set.copyOf(dates.keySet());
@@ -1223,6 +1265,58 @@ public final class VarService implements AutoCloseable {
         Scoped s = base.through(lens, calc, base.computeMs() + (System.nanoTime() - t0) / 1_000_000, false);
         cache.put(key, s);
         return s;
+    }
+
+    /**
+     * The members of a VaR scope as the person sees them, without computing a figure (2.9.11: the FRTB-SA engine reads its sensitivities
+     * for the same scopes as VaR, FRTB_SA_GUIDE.md section 7): the trades and the positions they belong to, the scope's canonical form and
+     * how many trades the person's role hides.
+     */
+    public record ScopeMembers(LocalDate date, String canonical, java.util.Set<String> trades, java.util.Set<String> positions,
+            Map<String, Double> notionals, int hidden) {}
+
+    /** {@link ScopeMembers} of {@code scope} on the date asked (null: the latest), with the same refusals as a VaR answer. */
+    public ScopeMembers scopeMembers(Principal p, String scope, LocalDate asked) {
+        VarDate d = date(asked);
+        VarAccess.View view = access.view(p, d);
+        ScopeResolver.Resolution res;
+        ScopeExpr parsed;
+        try {
+            Map<String, String> words = words();
+            parsed = ScopeExpr.parse(scope, words.keySet());
+            res = new ScopeResolver(d.book(), definitions(p, d), words).resolve(scope);
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
+        if (parsed.refs().stream().anyMatch(r -> r.word().equals("CPTY")) && access.masked(p, "COUNTERPARTY")) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "the counterparty is masked for your role: a scope may not select trades by it");
+        }
+        OrdinalSet set = view.full() ? res.set() : res.set().and(view.visible());
+        if (!view.seesPositions(set)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "your role sees this scope in aggregate only: FRTB-SA reads it position by position");
+        }
+        VarBook b = d.book();
+        java.util.Set<String> trades = new java.util.LinkedHashSet<>();
+        java.util.Set<String> positions = new java.util.LinkedHashSet<>();
+        set.forEach(o -> {
+            trades.add(b.tradeId(o));
+            int pi = b.positionOf(o);
+            if (pi >= 0) {
+                positions.add(b.positionId(pi));
+            }
+        });
+        Map<String, Double> notionals = new LinkedHashMap<>();
+        com.ash.drishti.compute.var.Columns pc = b.positions();
+        for (String pid : positions) {
+            int pi = b.positionIndex(pid);
+            if (pi >= 0 && pc != null) {
+                double n = pc.number("NOTIONAL", pi);
+                if (Double.isFinite(n)) {
+                    notionals.put(pid, n);
+                }
+            }
+        }
+        return new ScopeMembers(d.date(), res.canonical(), trades, positions, notionals, res.set().size() - set.size());
     }
 
     private Scoped scoped1d(Principal p, String scope, LocalDate asked, String ccy) {

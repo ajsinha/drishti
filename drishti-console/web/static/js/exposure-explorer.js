@@ -58,7 +58,7 @@
     if (!opts.fresh && cache.has(url)) return cache.get(url);
     var pr = fetch(url, { headers: { Accept: "application/json" }, credentials: "same-origin" }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
-        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; throw e; }
+        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; e.body = b; throw e; }
         return b;
       });
     });
@@ -71,7 +71,7 @@
       method: "POST", credentials: "same-origin", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(body)
     }).then(function (r) {
       return r.json().catch(function () { return {}; }).then(function (b) {
-        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; throw e; }
+        if (!r.ok) { var e = new Error(b.detail || ("HTTP " + r.status)); e.status = r.status; e.code = b.code; e.body = b; throw e; }
         return b;
       });
     });
@@ -97,7 +97,13 @@
   }
   function wrap(t) { var d = h("div", "xx-scroll"); d.appendChild(t); return d; }
   function useClass(u) { return u > 1 ? "crit" : u > 0.9 ? "warn" : "ok"; }
-  function errorBox(host, e) {
+  function errorBox(host, e, retry) {
+    var busy = window.DrishtiBusy && window.DrishtiBusy.problem(e);
+    if (busy) {                                   // busy protection: the calm message in this panel, a countdown, tried again by itself
+      window.DrishtiBusy.render(host, busy, { retry: retry || function () { select(S.scope, { noPush: true }); },
+        keep: "the dates already open keep working." });
+      return;
+    }
     host.textContent = "";
     var p = h("p", "xx-err", (e.status === 403 ? "Not for your role: " : "Could not compute: ") + e.message);
     p.setAttribute("role", "alert");
@@ -837,7 +843,7 @@
       d.t = (S.head && S.head.profile ? S.head.profile.map(function (r) { return r.t; }) : null);
       renderTree();
       treeWaiters.splice(0).forEach(function (f) { f(d); });
-    }).catch(function (e) { S.treeLoading = false; errorBox($("[data-xx-tree]"), e); treeWaiters.splice(0).forEach(function (f) { f(null); }); });
+    }).catch(function (e) { S.treeLoading = false; errorBox($("[data-xx-tree]"), e, loadTree); treeWaiters.splice(0).forEach(function (f) { f(null); }); });
   }
 
   /** The keys of the rows open along the current scope: the bank, its legal entity, its counterparty, its netting set. */

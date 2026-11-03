@@ -250,10 +250,11 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
      * A bank sends its trades' scenario P&amp;L as P&amp;L vectors ({@code vector}, USD) or as scenario PVs in each trade's currency
      * ({@code scenarioPv}, 2.9.4), or both for different trades; the FX of the scenarios is {@code fxScenario} when the batch supplies
      * it, else derived from the FX history of {@code fxSpot} (the market-data pack's). The nodes' VaR limits by hierarchy and node id
-     * are {@code limit} (2.9.5, {@code var-limit}), read for the hierarchies whose {@code limits} names it.
+     * are {@code limit} (2.9.5, {@code var-limit}), read for the hierarchies whose {@code limits} names it. VaR by a trade column the
+     * vectors do not carry ({@code by=attribute:TRADER_ID}) joins the trade valuations, {@code valuation}, by trade id (2.9.11).
      */
     public record Kinds(String vector, String position, String hierarchy, String scenarioSet, String portfolio, String scenarioPv,
-            String fxScenario, String fxSpot, String limit) {
+            String fxScenario, String fxSpot, String limit, String valuation) {
         public Kinds {
             vector = vector == null ? "pnl-vector" : vector;
             position = position == null ? "position" : position;
@@ -264,6 +265,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
             fxScenario = fxScenario == null ? "fx-scenario" : fxScenario;
             fxSpot = fxSpot == null ? "fx-spot" : fxSpot;
             limit = limit == null ? "var-limit" : limit;
+            valuation = valuation == null ? "trade-valuation" : valuation;
         }
 
         public List<String> all() {
@@ -387,7 +389,7 @@ public record VarProperties(Boolean enabled, Double confidence, Double esConfide
         historyDays = historyDays == null || historyDays <= 1 ? 250 : historyDays;
         histogramBins = histogramBins == null || histogramBins < 5 ? 42 : histogramBins;
         maxParts = maxParts == null || maxParts <= 0 ? 5000 : maxParts;
-        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null) : kinds;
+        kinds = kinds == null ? new Kinds(null, null, null, null, null, null, null, null, null, null) : kinds;
         hierarchies = hierarchies == null ? Map.of() : hierarchies;
         access = access == null ? Map.of() : access;
         pathPage = pathPage == null || pathPage <= 0 ? 60 : pathPage;

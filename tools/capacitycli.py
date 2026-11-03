@@ -117,8 +117,8 @@ def report(plan: dict, ev, say, every: bool = False, live: dict | None = None) -
     say("  " + ev.value("JvmCommand"))
 
 
-def register(groups, srv, ctx: dict) -> None:
-    """Adds ``admin capacity``."""
+def register(groups, srv, ctx: dict):
+    """Adds ``admin capacity``; answers the ``admin`` group's commands (``admin engines`` joins them)."""
     import argparse
 
     Api, CliError, say_json = ctx["Api"], ctx["CliError"], ctx["say_json"]
@@ -151,8 +151,8 @@ def register(groups, srv, ctx: dict) -> None:
         report(plan, ev, print, a.all, live)
         return 0
 
-    g = groups.add_parser("admin", help="Administration over REST (administrators): the capacity planner",
-                          description="Administration over REST (administrators): the capacity planner")
+    g = groups.add_parser("admin", help="Administration over REST (administrators): the capacity planner, the compute engines",
+                          description="Administration over REST (administrators): the capacity planner, the compute engines")
     sub = g.add_subparsers(dest="cmd", metavar="COMMAND", required=True)
     p = sub.add_parser("capacity", parents=[srv], help="admin capacity: the heap, RAM, disk and cores for this server's plan, the settings and the command line",
                        description=__doc__.split("\n\n")[1] if "\n\n" in __doc__ else __doc__, epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -162,3 +162,4 @@ def register(groups, srv, ctx: dict) -> None:
     p.add_argument("--all", action="store_true", help="every result line, band by band")
     p.add_argument("--xlsx", metavar="FILE", help="download the formula workbook to FILE instead")
     p.add_argument("--inputs", choices=("plan", "live", "both"), default="plan", help="with --xlsx: the plan's inputs, the live ones, or both side by side")
+    return sub

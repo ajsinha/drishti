@@ -32,6 +32,8 @@ from routes.common import ident, packs, render
 from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
 from routes.exposure_routes import redirect_for as exp_redirect
+from routes.frtb_routes import redirect_for as frsa_redirect
+from routes.simm_routes import redirect_for as simm_redirect
 from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
 from routes.exposure_routes import retired_link as exp_retired_link
@@ -111,6 +113,9 @@ async def go(request: Request, q: str = ""):
     typed = q.replace("<GO>", "").replace("<go>", "").strip()
     ed = getattr(request.state, "edition", None) or request.app.state.editions.instance
     head = typed.split(None, 1)[0].upper() if typed else ""
+    from core import engines as _engines
+    if (off := _engines.typed_engine(typed)) is not None:          # FRSA with FRTB-SA running nowhere: said in the server's words (DRS-1020)
+        return RedirectResponse(f"/t?error={quote(_engines.refusal(off))}", status_code=303)
     if head in WORDS and head != "EXP" and not ed.word_on(head):    # a word the edition (or lens) switches off: said, not run (EXP is also a mnemonic)
         return RedirectResponse(f"/t?error={quote(f'DRS-4023 {head} is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
     if typed.split(None, 1)[:1] and typed.split(None, 1)[0].upper() in BI_WORDS:        # reserved (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 4), whatever packs define
@@ -137,6 +142,10 @@ async def go(request: Request, q: str = ""):
         return to_var
     if ed.word_on("PLAY") and ed.word_on("VAR") and (to_play := play_redirect(typed, (me.user if me else "") or "")) is not None:   # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
         return to_play
+    if ed.word_on("VAR") and ed.word_on("FRSA") and (to_frsa := frsa_redirect(typed)) is not None:   # FRSA <scope>: FRTB-SA capital (frtb_routes.py)
+        return to_frsa
+    if ed.word_on("SIMM") and (to_simm := simm_redirect(typed)) is not None:          # SIMM [<netting set> | CPTY <id>]: ISDA SIMM (simm_routes.py)
+        return to_simm
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
         return to_smat
     if ed.word_on("EXP") and (to_exp := exp_redirect(typed)) is not None:            # EXP NSET NS-X, EXP EXP-X (retired): exposure-result (exposure_routes.py)

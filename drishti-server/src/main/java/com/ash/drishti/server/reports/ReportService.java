@@ -112,11 +112,15 @@ public final class ReportService implements AutoCloseable {
             throw bad("a report's name is 1-64 letters, digits, spaces, dots, dashes or underscores");
         }
         String query = body.path("query").asText("").trim();
+        SearchQuery picked;
         try {
-            SearchQuery.pick(query);
+            picked = SearchQuery.pick(query);
         } catch (RuntimeException e) {
             throw bad("the query does not parse: " + e.getMessage());
         }
+        // a scheduled report delivers rows: never of data held in memory only (IN_MEMORY_LAKE.md section 8; only downloads leave)
+        com.ash.drishti.server.memlake.Retention.current().require(com.ash.drishti.server.memlake.Retention.Sink.REPORT,
+                java.util.List.of(picked.head()), "This report");
         String schedule = body.path("schedule").asText("");
         try {
             ReportSchedule.parse(schedule);
@@ -170,6 +174,8 @@ public final class ReportService implements AutoCloseable {
         }
         ObjectNode run = json.createObjectNode().put("at", Instant.now().toString()).put("trigger", trigger);
         try {
+            com.ash.drishti.server.memlake.Retention.current().require(com.ash.drishti.server.memlake.Retention.Sink.REPORT,
+                    java.util.List.of(SearchQuery.pick(r.path("query").asText()).head()), "This report");
             Principal who = principal(owner);
             LocalDate day = r.path("date").asText().equals("previous") ? dates.calendar().previous(dates.current()) : dates.current();
             boolean jsonl = "jsonl".equals(r.path("format").asText("csv"));

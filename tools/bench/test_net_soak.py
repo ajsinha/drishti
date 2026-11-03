@@ -400,6 +400,12 @@ class UsersHistoryTest(unittest.TestCase):
         self.assertEqual({"history": {"1000": 1, "1010": 1}}, out["failedBuckets"])
         self.assertEqual(2, out["history"]["failed"])
 
+    def test_a_busy_refusal_is_counted_apart_not_as_a_failure(self):
+        stats = {"trade": [(0.1, True, 1000.0), (0.2, False, 1001.0, True), (0.3, False, 1002.0)]}   # busy protection: 503 DRS-95xx
+        out = users.summary(stats, 10.0, self.A)
+        self.assertEqual((1, 1, 1), (out["busy"], out["trade"]["busy"], out["trade"]["failed"]))
+        self.assertEqual({"trade": {"1000": 1}}, out["failedBuckets"])
+
 
 class ServerLaunchTest(unittest.TestCase):
     """--jvm-arg and --server-env: the production settings of docs/admin/PERFORMANCE.md reach every server."""

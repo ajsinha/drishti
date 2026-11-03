@@ -17,7 +17,7 @@
 
 # Position sensitivities: position-sensitivity (SENS)
 
-The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md). One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/position-sensitivity/`). **A planned input: no command reads it yet.** Its demo data is generated (one file per business date, `BUSINESS_DATE` 2026-09-30, 8,052 records) so the shape can be checked before the feature is built; it is not in `data/testdata/testdata.yaml` and `lake demo` does not load it. A bank delivers it per close of business, each date's file the full set of that date.
+The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket. One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. Read by the **market-risk** pack's connector `risk-store` (table `<root>/risk/position-sensitivity/`). Delivered **per close of business**: one file per business date (`BUSINESS_DATE` 2026-09-30 in the test data), split into numbered parts when large; each date's file is the **full set** of that date (8,052 records), never a change on the day before.
 
 ## File layout
 
@@ -27,7 +27,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `SENSITIVITY_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |
-| Promoted columns | none (the whole record is kept as `doc`) |
+| Promoted columns | `SENSITIVITY_ID`, `GRAIN`, `POSITION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `BATCH_ID`, `STATUS`, `DESK`, `TT_BOOK`, `PRODUCT_TYPE`, `CURRENCY` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
 | A day's file | the full set of its date |
@@ -68,7 +68,7 @@ A real record, the most complete of the 8,052 (the one with the most non-empty f
   "CURRENCY": "EUR",
   "SENSITIVITIES": [
     {
-      "RISK_FACTOR": "CM/PRICE/WTI/CUSHING",
+      "RISK_FACTOR": "CM/PRICE/WTI",
       "MEASURE": "CURVATURE_DOWN",
       "VALUE": -2414930.93,
       "CURRENCY": "USD",
@@ -79,7 +79,7 @@ A real record, the most complete of the 8,052 (the one with the most non-empty f
       "SHOCK_SIZE": 0.35
     },
     {
-      "RISK_FACTOR": "CM/PRICE/WTI/CUSHING",
+      "RISK_FACTOR": "CM/PRICE/WTI",
       "MEASURE": "CURVATURE_UP",
       "VALUE": 1217226.89,
       "CURRENCY": "USD",
@@ -90,7 +90,8 @@ A real record, the most complete of the 8,052 (the one with the most non-empty f
       "SHOCK_SIZE": 0.35
     },
     "… 2 more elements of the same shape"
-  ]
+  ],
+  "VOL_CONVENTION": "LOGNORMAL"
 }
 ```
 
@@ -102,9 +103,9 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `SENSITIVITY_ID` | string | required | The record's id, SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID> (the business key). | pattern `^SENS-` | `"SENS-1004481-B-SENS-2026-09-30-01"` |
 | `GRAIN` | string | required | What the record is for: POSITION (POSITION_ID, the position Drishti derives by the pack's position rules) or TRADE (TRADE_ID). One source system sends one grain on one date. | one of `POSITION`, `TRADE` | `"TRADE"` |
-| `POSITION_ID` | string | optional (filled in every row) | The position, POS-<TT_BOOK>~<key> as the pack's position rules derive it; required when GRAIN is POSITION, and on a TRADE record the position the trade belongs to when the source knows it. | pattern `^POS-` | `"POS-BOOK-COMM-2~1004481"` |
+| `POSITION_ID` | string | optional (filled in every row) | The position, POS-<TT_BOOK>~<key> as the pack's position rules derive it; required when GRAIN is POSITION, and on a TRADE record the position the trade belongs to when the source knows it. | pattern `^POS-`; links to `position` | `"POS-BOOK-COMM-2~1004481"` |
 | `TRADE_ID` | string | optional (filled in 17% of rows) | The trade; required when GRAIN is TRADE. | links to `trade` | `"1004481"` |
-| `TRADE_IDS` | array of strings | optional (filled in every row) | The trades a position record covers (for drill-through and the completeness check against the vectors). | — | [1 values] |
+| `TRADE_IDS` | array of strings | optional (filled in every row) | The trades a position record covers (for drill-through and the completeness check against the vectors). | links to `trade` | [1 values] |
 | `SOURCE_SYSTEM` | string | required | The system that computed the sensitivities (the trades' booking or risk system). | seen: `MUREX`, `CALYPSO`, `ENDUR` | `"ENDUR"` |
 | `BUSINESS_DATE` | date (YYYY-MM-DD) | required | The business date the sensitivities are for (YYYY-MM-DD); the lake's partition. | — | `"2026-09-30"` |
 | `BATCH_ID` | string | required | The run that produced the record; the full run and each intraday batch have their own. One full run per date and source. | — | `"B-SENS-2026-09-30-01"` |
@@ -127,8 +128,8 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `MATURITY_DATE` | date (YYYY-MM-DD) | required | The position's last maturity (the live rule; the DRC's maturity scaling). | — | `"2026-11-30"` |
 | `CURRENCY` | string | required | The position's own currency (ISO 4217); each element carries the currency of its VALUE. | seen: `USD`, `EUR`, `JPY`, `GBP`, `CAD`, `CHF`, `AUD` | `"EUR"` |
 | `SENSITIVITIES` | array of objects | required | The sparse list of the position's sensitivities: one element per risk factor and measure, never the same twice; empty only when TRADE_STATUS is CANCELLED, null when STATUS is failed. | — | [4 objects] |
-| `SENSITIVITIES[].RISK_FACTOR` | string | required | The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, INF/<index>/<tenor>, CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the curve or spot without a tenor. A bank's own names are mapped to these by the dictionary's SOURCE_NAMES; a name that is not mapped is refused, never guessed. | links to `risk-factor` | `"CM/PRICE/WTI/CUSHING"` |
-| `SENSITIVITIES[].MEASURE` | string | required | What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for a +1% relative move of the spot or price); VEGA (P&L for +1 volatility point, 0.01 of implied volatility); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5). GAMMA, BETA and BASE_CORR are reserved for the SIMM base-correlation and equity-beta inputs. | one of `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR` | `"CURVATURE_DOWN"` |
+| `SENSITIVITIES[].RISK_FACTOR` | string | required | The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, IR/BASIS/<ccy>, INF/<index>[/<tenor>], CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the curvature factor: IR/CURVE/<ccy> (the currency), CR/SPREAD/<issuer>, EQ/SPOT/<underlying>, CM/PRICE/<underlying> (the commodity), FX/SPOT/<ccy>. A bank's own names are mapped to these by the dictionary's SOURCE_NAMES; a name that is not mapped is refused, never guessed. | links to `risk-factor` | `"CM/PRICE/WTI"` |
+| `SENSITIVITIES[].MEASURE` | string | required | What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for a +1% relative move of the spot or price, and for an equity repo, EQ/REPO, the P&L for +1 basis point of the repo rate, MAR21.20); VEGA (P&L for +1 volatility point: 0.01 of lognormal implied volatility, or 1 basis point of normal volatility for a source whose record declares VOL_CONVENTION NORMAL); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5); GAMMA (decisions 2 and 7: from a source that cannot revalue, the second derivative of the position's value to a parallel shift of the curvature factor, per basis point squared for a curve (IR/CURVE/<ccy> or a curve point, per currency; CR/SPREAD/<issuer>) and per (1%) squared for a spot or price; Drishti estimates curvature from it as −½ · Γ · h², labelled an estimate). BETA and BASE_CORR are reserved for SIMM. | one of `DV01`, `CS01`, `IE01`, `DELTA`, `VEGA`, `CURVATURE_UP`, `CURVATURE_DOWN`, `GAMMA`, `BETA`, `BASE_CORR` | `"CURVATURE_DOWN"` |
 | `SENSITIVITIES[].VALUE` | number | required | The sensitivity, in the element's currency, signed from the bank's point of view (a gain positive). Finite; a factor that could not be computed fails the record, never a zero. | unit: the element's CURRENCY | `-2414930.93` |
 | `SENSITIVITIES[].CURRENCY` | string | required | The currency of VALUE (ISO 4217), converted to the reporting currency at the date's FX when summed. | — | `"USD"` |
 | `SENSITIVITIES[].RISK_CLASS` | string | optional (filled in every `SENSITIVITIES[]` entry) | The FRTB risk class of the factor (GIRR, CSR_NS, CSR_SEC_NCTP, CSR_SEC_CTP, EQ, COMM, FX); derived from the dictionary when absent, and the dictionary wins when they differ (a warning). | one of `GIRR`, `CSR_NS`, `CSR_SEC_NCTP`, `CSR_SEC_CTP`, `EQ`, `COMM`, `FX` | `"COMM"` |
@@ -137,6 +138,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `SENSITIVITIES[].SHOCK_SIZE` | number | optional (filled in 18% of `SENSITIVITIES[]` entries) | The curvature shock applied (required on CURVATURE_UP and CURVATURE_DOWN), checked against the risk weight of the factor's bucket (MAR21.5, MAR21.98 to MAR21.101); a different shock is a warning. | unit: basis points (rates and spreads) or a fraction of the spot or price | `0.35` |
 | `SENSITIVITIES[].TENOR` | string | optional (filled in 65% of `SENSITIVITIES[]` entries) | The factor's tenor or option expiry (MAR21.8's vertices); empty on a curvature, spot or price factor without one. | — | `"3M"` |
 | `SENSITIVITIES[].IMPLIED_VOL` | number | optional (filled in 12% of `SENSITIVITIES[]` entries) | The implied volatility of a VEGA element, for the vega risk sensitivity (vega × implied volatility, MAR21.25). | unit: fraction | `0.32` |
+| `VOL_CONVENTION` | string | optional (filled in 22% of rows) | How the record's rates vegas are delivered (decision 3): LOGNORMAL (the default, absent means it) or NORMAL (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points); one source declares one convention. | one of `LOGNORMAL`, `NORMAL` | `"LOGNORMAL"` |
 
 ## Fields in other rows
 

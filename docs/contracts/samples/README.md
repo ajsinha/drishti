@@ -66,6 +66,15 @@ During the day the same scenario-PV and P&L-vector records may also arrive on Ka
 | [`desk-pnl`](market-risk/desk-pnl.md) | `DPNL` | `market-risk/desk-pnl/`, one full file set per date | 2,600 | Regulatory backtesting: required (each desk's actual and hypothetical P&L of the day) | The bank's daily P&L of each desk for regulatory backtesting (VAR_GUIDE.md section 15.16): the actual P&L from finance (clean: fees, commissions, reserves, net interest income and intraday trading left out) and the hypothetical P&L from front office (yesterday's positions revalued on today's market), in USD. Never an input of the VaR engine: the backtest compares the official VaR of the day before with them. Drishti's own risk-theoretical P&L (the official record's hypoPnl) is not this kind. |
 | [`pnl-history`](market-risk/pnl-history.md) | `PNLH` | `market-risk/pnl-history/`, one full file set per date | 28 | The stress window selection: required (monthly at least) | Today's portfolio at one hierarchy node revalued over every business day of a long history (2007 to the day before the business date in the demo), one P&L per day in USD; the stress window selection values every 12-month window of it as a stressed VaR (VAR_GUIDE.md section 18.9) |
 
+## Market-risk inputs (capital: FRTB-SA)
+
+**You produce this.** Test data under `data/testdata/`.
+
+| Kind | Command | Test data | Rows | Needed for | What one record is |
+|---|---|---|---|---|---|
+| [`position-sensitivity`](market-risk/position-sensitivity.md) | `SENS` | `market-risk/position-sensitivity/`, one full file set per date | 8,052 | — | The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Read by the server's FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket. |
+| [`risk-factor`](market-risk/risk-factor.md) | `RFAC` | `market-risk/risk-factor/`, one full file set per date | 867 | — | Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Read by the server's FRTB-SA engine with the sensitivities (docs/guides/FRTB_SA_GUIDE.md). |
+
 ## Valuations and other risk results your engines produce
 
 **You produce this.** Test data under `data/testdata/`.
@@ -95,13 +104,6 @@ During the day the same scenario-PV and P&L-vector records may also arrive on Ka
 | [`cva`](counterparty-risk/cva.md) | `CVA` | `counterparty-risk/cva/`, a snapshot, then daily changes | 4,373 | — | Credit, debit and funding valuation adjustments with sensitivities. |
 | [`sa-ccr`](counterparty-risk/sa-ccr.md) | `SACCR` | `counterparty-risk/sa-ccr/`, a snapshot, then daily changes | 76 | — | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
 | [`simm`](counterparty-risk/simm.md) | `SIMM` | `counterparty-risk/simm/`, a snapshot, then daily changes | 24 | — | Initial margin by risk class and product class. |
-
-## Market data
-
-**You produce this.** Test data under `data/testdata/`.
-
-| Kind | Command | Test data | Rows | Needed for | What one record is |
-|---|---|---|---|---|---|
 | [`bond`](market-data/bond.md) | `BND` | `market-data/bond/`, a snapshot, then daily changes | 1,920 | — | A listed bond: terms, price, yield, spreads and analytics. |
 | [`cap-vol-surface`](market-data/cap-vol-surface.md) | `CPV` | `market-data/cap-vol-surface/`, a snapshot, then daily changes | 7 | — | Cap vols by maturity and strike. |
 | [`commodity`](market-data/commodity.md) | `CMD` | `market-data/commodity/`, a snapshot, then daily changes | 480 | — | A traded commodity with its benchmark, unit and venue. |
@@ -123,9 +125,9 @@ During the day the same scenario-PV and P&L-vector records may also arrive on Ka
 | [`rate-fixing`](market-data/rate-fixing.md) | `FIX` | `market-data/rate-fixing/`, a snapshot, then daily changes | 418 | — | Published overnight and term rate fixings (SOFR, €STR, SONIA…). |
 | [`repo-curve`](market-data/repo-curve.md) | `REPO` | `market-data/repo-curve/`, a snapshot, then daily changes | 420 | — | General-collateral or specials repo rates by term. |
 
-## Public data (refreshed by Drishti's scripts)
+## Market data
 
-**Public source.** Test data under `data/testdata/`, or the pack's samples.
+**You produce this.** Test data under `data/testdata/`, or the pack's samples.
 
 | Kind | Command | Test data | Rows | Needed for | What one record is |
 |---|---|---|---|---|---|
@@ -157,23 +159,14 @@ During the day the same scenario-PV and P&L-vector records may also arrive on Ka
 | [`region`](world-economy/region.md) | `REGN` | none: the pack's samples | 7 | — | A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it. |
 | [`social-indicator`](world-economy/social-indicator.md) | `SOCI` | none: the pack's samples | 4,297 | — | A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law. |
 
-## Demonstration only
+## Public data (refreshed by Drishti's scripts)
 
-**Demo.** Test data under `data/testdata/`, or the pack's samples.
+**Public source.** Test data under `data/testdata/`, or the pack's samples.
 
 | Kind | Command | Test data | Rows | Needed for | What one record is |
 |---|---|---|---|---|---|
 | [`path-book`](compute-demo/path-book.md) | `PBOOK` | none: the pack's samples | 3 | — | A book of synthetic P&L strips, and the sum of their paths computed when the page asks: by a Python engine and by its Java twin. |
 | [`path-strip`](compute-demo/path-strip.md) | `PSTRIP` | none: the pack's samples | 120 | — | A synthetic P&L strip of the compute-demo pack: one path vector in a path book, summed by the demo engines. |
-
-## Planned inputs (demo data generated, not loaded)
-
-**You will produce this.** Test data under `data/testdata/`.
-
-| Kind | Command | Test data | Rows | Needed for | What one record is |
-|---|---|---|---|---|---|
-| [`position-sensitivity`](market-risk/position-sensitivity.md) | `SENS` | `market-risk/position-sensitivity/`, one full file set per date | 8,052 | — | The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank's pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube's ladders and heat maps, sensitivity limits and P&L explain. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md). |
-| [`risk-factor`](market-risk/risk-factor.md) | `RFAC` | `market-risk/risk-factor/`, one full file set per date | 855 | — | Every risk factor the bank's sensitivities use, named by the factor naming standard, with its parts (class, qualifier, curve, underlying, tenor), its FRTB standardised mapping (risk class and bucket, Basel MAR21), its ISDA SIMM mapping (risk class, bucket and labels), its liquidity horizon (MAR33.12) and the names the source systems give it. A sensitivity whose factor is not here, or whose source name maps to no factor, is refused. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md). |
 
 ## Computed by Drishti: you do not produce these
 
@@ -194,7 +187,6 @@ These kinds have a contract but no page: Drishti computes or derives them from t
 | market-data | `equity-beta` | `EQB` | Drishti computes this | An equity's beta, alpha, correlation and R squared against its index (EQUITY_INDEX), the regression of their daily log returns over a window, computed when asked from both price histories by the server's Java engine, as the person asking; never stored. It replaces the security master's stored BETA (retired). |
 | market-risk | `position` | `POS` | Drishti derives this | A position: one security held in one book (or one OTC trade), the trades that build or reduce it, and its VaR computed as the page opens. |
 | market-risk | `var-result` | `VRES` | Drishti computes this | The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the scope grammar of VAR_GUIDE.md section 5), computed when asked by the server's VaR engine as the person asking; never stored. |
-| market-risk | `var-whatif` | `VWIF` | Drishti computes this | A scope's VaR and ES before and after hypothetical trades kept in the person's private sandbox, and its stressed window, computed when asked by the Python VaR engine from the scope's var-result; never stored. |
 | market-risk | `var-official` | `VOFF` | Drishti computes this | The official end-of-day VaR and ES of every node of the MGMT and LEGAL hierarchies, as the server captured and published them (one row per node, business date and result version); read only, for BI and other readers, never an engine's input. |
 | market-risk | `stress-scenario-pnl` | `SSPNL` | Drishti computes this | The bank's stress P&L under one scenario: the desks' stored stress results added (additive), with each desk's limit use and breach, once per business date (quick win Q4 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the stress engine STR). |
 | trading | `counterparty-trades` | `CTRD` | Drishti computes this | Every trade with a counterparty, from every source system: its trades (every status, a status filter), upcoming payments, notional by product type and index, maturities, payments by month. |

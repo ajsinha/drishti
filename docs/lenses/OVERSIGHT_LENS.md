@@ -93,7 +93,7 @@ business risk managers.
 
 | Question | Drishti today | Gap |
 |---|---|---|
-| *Has a big trade moved us close to a limit?* | **Built**: intraday updates from files and Kafka change today's VaR during the day ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)) | An intraday limit check that notifies (alerts on numbers watch BI and view numbers, [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers), not the VaR engine's intraday answer) |
+| *Has a big trade moved us close to a limit?* | **Built**: intraday updates from files and Kafka change today's VaR during the day ([VAR_GUIDE section 8.4](../guides/VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); the pre-deal what-if ([VAR_GUIDE section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet)) | An intraday limit check that notifies (alerts on numbers watch BI and view numbers, [USER_GUIDE.md](../guides/USER_GUIDE.md#alerts-on-numbers), not the VaR engine's intraday answer) |
 | *Can I see what the desk sees?* | **Built**: the same explorer, entitlements as configured ([VAR_GUIDE section 9](../guides/VAR_GUIDE.md#9-who-sees-what-entitlements-and-audit)) | — |
 | *A desk asks for a temporary limit increase* | **Not built** | The request, its approval and its expiry ([section 4.2](#42-ro2-breaches-and-escalation)) |
 
@@ -197,7 +197,7 @@ are in [section 4.1](#41-ro1-var-change-explanation).
 | The worst scenarios, the VaR scenario, who lost what on it | **Built** | [VAR_GUIDE section 3.4](../guides/VAR_GUIDE.md#34-the-tabs) |
 | A scope's scenarios across its last N dates (is this tail scenario new? did the window roll?) | **Built**: the scenario matrix `SMAT` ([VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat)) | |
 | The stress matrix (every scenario of a set against a scope's children) | **Not built**, proposed | [STR.md section 6.5](../contracts/STR.md#65-the-matrix-and-limits) |
-| The stressed window inside the date's set | **Partly**: the Python what-if's `stress-window` | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) |
+| The stressed window inside the date's set | **Partly**: the what-if's stressed VaR (the worst run of 250 scenario days) | [VAR_GUIDE section 8.2](../guides/VAR_GUIDE.md#82-the-what-if-the-java-engine) |
 
 ### 3.7 Concentration and liquidity
 
@@ -1090,7 +1090,7 @@ holds, what is needed, a proposed data contract, its volume, and what is compute
 |---|---|---|
 | `frtb-sensitivity` (`FRTB`) | **One record per book** (`RESULT_ID` `FRTB-<desk>-<n>`, `BOOK`) with stored FRTB charges (`DELTA_CHARGE`, `VEGA_CHARGE`, `CURVATURE_CHARGE`, `TOTAL`, `BY_CLASS[]`) and a short list `SENSITIVITIES[]` of `RISK_CLASS`, `BUCKET` (`1` to `3`), `MEASURE` (`Delta`, `Vega`) and `VALUE` in USD, at most six elements a book; **demo data only: 30 records** in `data/testdata/market-risk/frtb-sensitivity/`, a snapshot then daily changes ([the sample page](../contracts/samples/market-risk/frtb-sensitivity.md); `config/packs/market-risk/contracts/frtb-sensitivity.contract.yaml`; the mnemonic `FRTB` in `config/packs/market-risk/pack.yaml`) | Book grain, not position or trade: no drill, no arbitrary scope, no intraday. Regulatory buckets only (a bucket is a sector or a rating group, not a curve and tenor); no risk factor, curve, tenor or issuer: no DV01 ladder, no CS01 by issuer. The charges are stored computed figures that FRTB.md retires ([COMPUTED_ATTRIBUTES.md section 4.9](../architecture/COMPUTED_ATTRIBUTES.md#49-frtb-sensitivity-frtb), finding F18) |
 | `trade-valuation.DV01` (`TVAL`) | One number per trade and date, total DV01 in USD ([COMPUTED_ATTRIBUTES.md section 4.1](../architecture/COMPUTED_ATTRIBUTES.md#41-trade-valuation-tval); `config/packs/market-risk/contracts/trade-valuation.contract.yaml`) | No curve, no tenor: a parallel shift only; no other measure |
-| The proposed `sensitivity` table of FRTB.md | One row per trade and risk factor, with the factor's parts (class, type, qualifier, curve, tenor, underlying tenor), FRTB and SIMM buckets ([FRTB.md section 3.2](../contracts/FRTB.md#32-sensitivity-one-row-per-trade-and-risk-factor-the-shared-table)) | Proposed, not built; a row per factor (tens of rows per trade), no position grain, no intraday rule. Its **factor fields** are the right ones and are reused below |
+| The proposed `sensitivity` table of FRTB.md | One row per trade and risk factor, with the factor's parts (class, type, qualifier, curve, tenor, underlying tenor), FRTB and SIMM buckets ([FRTB.md section 3.2](../contracts/FRTB.md#32-the-shared-sensitivity-table-position-sensitivity-sens)) | Proposed, not built; a row per factor (tens of rows per trade), no position grain, no intraday rule. Its **factor fields** are the right ones and are reused below |
 
 ### 7.2 What oversight needs
 

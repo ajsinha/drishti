@@ -191,13 +191,16 @@ maturity bucket, supervisory factor, add-ons, RC, multiplier, EAD, RWA. A table 
 | `cap-at-unmargined` | `true` | margined EAD ≤ unmargined EAD |
 | `risk-weights` | by counterparty type and rating (a standardised table, CRE20; 100% when unknown) | the RWA hook |
 | `derive` | `none` | `rules`: derive `saccr-trade` from the trade master (§3.2) |
-| `regulation` | `BCBS` | `BCBS`; jurisdictional variants (US, EU CRR2, OSFI) as named overrides later (open question 3) |
+| `regulation` | `BCBS` | `BCBS`; OSFI CAR chapter 4 next as its own parameter file, the US final rule and EU CRR2 when a client asks (decided 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions), decision 4) |
+| `unclassified` | `exclude` | `exclude`: a live derivative without a classification row is left out, counted `unclassified` and its set marked `incomplete`; `stand-in`: charged at its notional at the largest SF of its asset class, unmargined, flagged `STAND_IN` (for banks that report from Drishti; decision 3) |
+| `specific-wwr` | `own-set` | a member flagged `SPECIFIC_WWR` forms its own netting set with no netting benefit (decision 7) |
 
 ### 6.2 Replacement cost
 
 For netting set *n*: V = Σ MTM of its in-scope members (derivatives only; excluded trades are not in V); C = haircut value of collateral
-held minus posted (VM and IM, COLL.md); NICA = IA and IM held − IA and IM posted that is not segregated (COLL.md section 6);
-TH = `THRESHOLD_THEM`, MTA = `MTA_THEM` of the CSA (USD).
+held minus posted (VM and IM, COLL.md), **at supervisory haircuts** (COLL's `C_REG`, CRE22; the exposure engine keeps the CSA's contractual
+haircuts and both pages say which; decision 1); NICA = IA and IM held − IA and IM posted that is not segregated (COLL.md section 6);
+TH = `THRESHOLD_THEM`, MTA = `MTA_THEM` of the CSA (USD). NICA is COLL's `NICA_REG`.
 
 ```
 unmargined   RC = max(V − C, 0)
@@ -213,6 +216,8 @@ MPOR_n       = max(floor_n, MPOR_DAYS) + F − 1                         F = MAR
 floor_n      = 5 cleared · 10 bilateral · 20 when the set has > 5,000 trades or ILLIQUID_COLLATERAL
              doubled when DISPUTES_LAST_2Q > 2
 ```
+
+The CSA's `MPOR_DAYS` excludes the remargining period (NSET.md), so F − 1 is added after the floor (decision 2).
 
 ### 6.4 Supervisory duration, delta, adjusted and effective notional
 
@@ -438,7 +443,7 @@ reporting system reads for the EAD of the day.
 | Tranche terms | 0 ≤ A < D ≤ 1 | row rejected |
 | Notional | `NOTIONAL_USD`, or `QUANTITY` and `UNDERLYING_PRICE` | row rejected |
 | Dates | S ≤ E ≤ M (where given), all on or after the business date except S | row rejected |
-| Coverage | every live derivative member has a `DRIVER` 0 row | missing counted `unclassified`; the set is `incomplete` (its EAD excludes them and says so) |
+| Coverage | every live derivative member has a `DRIVER` 0 row | missing counted `unclassified`; the set is `incomplete` (its EAD excludes them and says so); with `unclassified: stand-in` charged conservatively and flagged `STAND_IN` (decision 3) |
 | Scope | a row for an SFT or cash product | row ignored, counted `excluded` |
 | Membership | `NETTING_SET` equals the membership | membership wins, flagged |
 | Margined terms | a margined set's CSA has TH, MTA, MPOR | treated as unmargined, flagged |
@@ -547,10 +552,10 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 |---|---|---|
 | 1 | Is there an upstream SA-CCR classification feed (the regulatory capital engine), or does Drishti derive the rows by configured rules for production too? | §3.2 |
 | 2 | Due time of `saccr-trade` | §3.4 |
-| 3 | Which jurisdictions' variants are needed (US final rule, EU CRR2, OSFI CAR): alpha for commercial end users, the treatment of collateral haircuts, SFT exclusions | §6.1 |
+| 3 | Which jurisdictions' variants are needed (US final rule, EU CRR2, OSFI CAR): alpha for commercial end users, the treatment of collateral haircuts, SFT exclusions | §6.1. **Decided 2026-11-02:** OSFI CAR chapter 4 next, as its own parameter file; US and EU when a client asks |
 | 4 | Reference test cases: the BCBS SA-CCR worked examples (the regulator's published netting sets) as the engine's acceptance tests | §13 |
 | 5 | Risk weights for the RWA hook: from configuration (standardised, by type and rating), from an upstream capital engine per counterparty, or not shown? | §6.7 |
-| 6 | Specific wrong-way risk trades (WWR.md) as separate netting sets in SA-CCR: by `SPECIFIC_WWR` on the membership row? | WWR.md |
+| 6 | Specific wrong-way risk trades (WWR.md) as separate netting sets in SA-CCR: by `SPECIFIC_WWR` on the membership row? | WWR.md. **Decided 2026-11-02:** yes, each flagged trade in its own set, no netting benefit (`specific-wwr: own-set`) |
 | 7 | Cleared trades: the CCP exposure (trade exposure and default fund contribution, CRE54) is out of this contract; needed? | |
 
 ### 16.2 The change table
@@ -558,6 +563,7 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
 
 ---
 

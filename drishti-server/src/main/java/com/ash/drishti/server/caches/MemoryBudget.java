@@ -172,6 +172,25 @@ public final class MemoryBudget {
         }
     }
 
+    /**
+     * An off-heap pool (IN_MEMORY_LAKE.md section 6): memory outside the heap with its own hard cap (the in-memory lake's stores). It is not
+     * a share of -Xmx and never squeezed; it is shown beside the heap pools so Capacity, the sizing planner and Health see its cap and use.
+     */
+    public record OffHeap(String name, java.util.function.LongSupplier used, java.util.function.LongSupplier cap) {}
+
+    private final List<OffHeap> offHeap = new CopyOnWriteArrayList<>();
+
+    /** Joins (or replaces, by name) an off-heap pool. */
+    public void offHeap(OffHeap pool) {
+        offHeap.removeIf(p -> p.name().equals(pool.name()));
+        offHeap.add(pool);
+    }
+
+    /** The off-heap pools' caps added up. */
+    public long offHeapCapBytes() {
+        return offHeap.stream().mapToLong(p -> p.cap().getAsLong()).sum();
+    }
+
     /** At start: a warning when the pools' members' own limits add up to more than the budget (they are then held to their pool's share). */
     public void startupCheck() {
         long own = pools.values().stream().flatMap(p -> p.members().stream()).mapToLong(Member::ownLimit).sum();
@@ -207,6 +226,15 @@ public final class MemoryBudget {
             ps.add(x);
         }
         m.put("pools", ps);
+        List<Map<String, Object>> off = new java.util.ArrayList<>();
+        for (OffHeap p : offHeap) {
+            Map<String, Object> x = new LinkedHashMap<>();
+            x.put("pool", p.name());
+            x.put("limitBytes", p.cap().getAsLong());
+            x.put("usedBytes", p.used().getAsLong());
+            off.add(x);
+        }
+        m.put("offHeap", off);
         return m;
     }
 

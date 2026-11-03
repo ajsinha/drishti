@@ -91,10 +91,11 @@ public final class FileAccess implements AutoCloseable {
         return codecs;
     }
 
-    /** Whether this engine reads {@code path}: local paths and {@code file:}, {@code s3:}, {@code s3a:}, {@code s3n:} URIs. */
+    /** Whether this engine reads {@code path}: local paths and {@code file:}, {@code s3:}, {@code s3a:}, {@code s3n:}, {@code mem:} URIs. */
     public static boolean supports(String path) {
         String scheme = LocalPaths.scheme(path);
-        return scheme.equals("file") || S3_SCHEMES.contains(scheme.toLowerCase(Locale.ROOT));
+        return scheme.equals("file") || S3_SCHEMES.contains(scheme.toLowerCase(Locale.ROOT))
+                || scheme.equals(com.ash.drishti.lakeio.mem.MemoryStorage.SCHEME);
     }
 
     /** {@code path} with the first matching {@code relocate} folder replaced (both in one form: {@link Relocation}). */
@@ -116,7 +117,10 @@ public final class FileAccess implements AutoCloseable {
         if (S3_SCHEMES.contains(scheme)) {
             return s3();
         }
-        throw new UnsupportedOperationException("drishti-iceberg reads local disk and S3 (s3://, s3a://), not " + scheme
+        if (scheme.equals(com.ash.drishti.lakeio.mem.MemoryStorage.SCHEME)) {
+            return com.ash.drishti.lakeio.mem.MemoryStores.forPath(path);     // a warehouse in memory (IN_MEMORY_LAKE.md section 7)
+        }
+        throw new UnsupportedOperationException("drishti-iceberg reads local disk, S3 (s3://, s3a://) and memory (mem://), not " + scheme
                 + "://; set the connector's engine: library for this table");
     }
 

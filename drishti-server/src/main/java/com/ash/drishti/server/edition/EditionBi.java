@@ -43,14 +43,48 @@ public final class EditionBi {
         this.context = context;
     }
 
-    /** True when the edition (or the person's lens) offers the item. */
+    /** Whether a dataset (or model) is built on a compute engine that runs nowhere in the cluster (COMPUTE_ENGINES.md section 5.2). */
+    private volatile java.util.function.Predicate<String> engineOff = name -> false;
+    private final Map<String, String> reads = new ConcurrentHashMap<>();
+
+    /** Wired by the engines: a dataset or model name that an engine off everywhere computes is not offered, by any edition. */
+    public void engines(java.util.function.Predicate<String> datasetOff) {
+        this.engineOff = datasetOff == null ? name -> false : datasetOff;
+    }
+
+    /** True when the edition (or the person's lens) offers the item, and no engine it is built on is off everywhere. */
     public boolean shown(BiStore.Item i) {
-        Edition edition = context.current();
-        if (!edition.biReduced() || i == null) {
+        if (i == null) {
             return true;
         }
         String body = i.body() == null ? "" : i.body();
+        if (engineOff.test(reads.computeIfAbsent(i.id() + "#" + body.hashCode(), k -> reads(i.id(), body)))) {
+            return false;
+        }
+        Edition edition = context.current();
+        if (!edition.biReduced()) {
+            return true;
+        }
         return seen.computeIfAbsent(edition.name() + "#" + i.id() + "#" + body.hashCode(), k -> decide(edition, i.kind(), i.id(), body));
+    }
+
+    /** The dataset (or model) an item reads, by name: its own name for a dataset or model, else its body's {@code dataset:} or {@code model:}. */
+    private static String reads(String id, String body) {
+        String own = id.contains(":") ? id.substring(id.lastIndexOf(':') + 1) : id;
+        if (body.isBlank()) {
+            return own;
+        }
+        try {
+            JsonNode root = YAML.readTree(body);
+            if (root != null && root.isObject()) {
+                String d = root.path("dataset").asText("");
+                String m = root.path("model").asText("");
+                return !d.isEmpty() ? d : !m.isEmpty() ? m : own;
+            }
+        } catch (java.io.IOException | RuntimeException e) {
+            // an item that cannot be read reads nothing an engine computes
+        }
+        return own;
     }
 
     private static boolean decide(Edition edition, String kind, String id, String body) {

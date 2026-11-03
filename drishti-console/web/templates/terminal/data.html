@@ -108,6 +108,7 @@
           <div class="dv-stat"><span class="dv-stat-k">Rows</span><span class="dv-stat-v mono" data-rows>…</span><span class="text-muted-d dv-small" data-total></span></div>
           <div class="dv-stat"><span class="dv-stat-k">Size</span><span class="dv-stat-v mono" data-size>…</span><span class="text-muted-d dv-small">.jsonl.gz, estimated</span></div>
         </div>
+        <div data-busy-host{% if busy %} data-busy="{{ busy | tojson | forceescape }}"{% endif %}></div>{# busy protection: the calm message, in place #}
         <p class="dv-actions"><a class="btn btn-primary" data-download href="#" aria-disabled="true">Download</a>
           <button type="button" class="btn btn-outline-secondary" data-copy>Copy link</button> <span class="text-muted-d dv-small" data-copied role="status"></span></p>
         <p class="text-muted-d dv-small">Streamed from the connector, never held whole in memory; any size. Your entitlements and masks apply. Each download is audited: who, what, the date, the selection, the rows.</p>

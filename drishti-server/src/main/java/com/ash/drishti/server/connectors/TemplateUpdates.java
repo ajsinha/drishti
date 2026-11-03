@@ -274,7 +274,7 @@ public final class TemplateUpdates implements AutoCloseable {
 
     /**
      * A reactive connector's parameters its pack's template has gained since the file was written ({@code kinds.<kind>.params.<name>}, e.g.
-     * {@code ccy} on var-whatif in 2.9.4), keyed {@code <kind>.<param>}: an older file lacks them and a call naming one is refused (DRS-5205).
+     * a reporting-currency parameter {@code ccy}), keyed {@code <kind>.<param>}: an older file lacks them and a call naming one is refused.
      * Only parameters of kinds the file already computes; nothing it has is changed.
      */
     @SuppressWarnings("unchecked")

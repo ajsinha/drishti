@@ -130,7 +130,8 @@ class Stack:
         self.tmp, self.procs, self.results = tmp, {}, Path(os.environ.get("DRISHTI_ELEMENTS_RESULTS") or tmp / "results.jsonl")
 
     def start_console(self):
-        env = dict(os.environ, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true")
+        # its temp folders in the test's own folder: the crash below kills its workers before they can remove theirs
+        env = dict(os.environ, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true", DRISHTI_CONSOLE_TMP_DIR=str(self.tmp / "console-tmp"))
         args = [sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"]
         # its own process group: the console runs several uvicorn workers, and a crash must take them all (a killed parent alone leaves its
         # workers serving the port, so the "restarted" console would be the old one)

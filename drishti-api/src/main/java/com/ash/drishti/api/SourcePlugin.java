@@ -360,6 +360,15 @@ public interface SourcePlugin extends AutoCloseable {
         return java.util.Map.of();
     }
 
+    /**
+     * Whether this source's data is held in memory only, by contract (a lake at {@code mem://}, docs/architecture/IN_MEMORY_LAKE.md):
+     * the server then keeps its documents off every disk (no disk caches, no saved rows, no reports or mail carrying them); only a user's
+     * download may leave.
+     */
+    default boolean memoryOnly() {
+        return false;
+    }
+
     /** Human-readable health; {@code "UP"} when healthy (shown on Admin and in Health). */
     default String health() {
         return "UP";

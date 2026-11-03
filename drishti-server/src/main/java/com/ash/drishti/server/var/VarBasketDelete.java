@@ -72,21 +72,21 @@ final class VarBasketDelete {
         svc.audit(p.user(), "var-basket-delete", String.valueOf(gone.getOrDefault("id", id)), by + " version=" + gone.get("version")
                 + " sharedWith=" + gone.get("sharedWith") + (why == null ? "" : " reason=" + why));
         if (admin) {
-            tell(String.valueOf(gone.get("owner")), p.user(), String.valueOf(gone.getOrDefault("name", name)), String.valueOf(gone.get("id")), why);
+            tell(inbox.get(), hub.get(), String.valueOf(gone.get("owner")), p.user(), "Your VaR basket \"" + gone.getOrDefault("name", name)
+                    + "\" (BASKET:" + gone.get("id") + ") was deleted by administrator " + p.user() + (why == null ? "" : ": " + why));
         }
     }
 
-    /** The owner's inbox row (best effort: a missing inbox or a failure never undoes the delete). */
-    private void tell(String owner, String admin, String title, String id, String why) {
-        InboxService in = inbox.get();
+    /**
+     * The owner's inbox row (and the bell) for an administrator's delete or edit of their basket: best effort, a missing inbox or a failure
+     * never undoes what was done (the audit entry already says who did it).
+     */
+    static void tell(InboxService in, InboxHub h, String owner, String admin, String line) {
         if (in == null || owner == null || owner.isBlank() || "null".equals(owner)) {
             return;
         }
-        String line = "Your VaR basket \"" + title + "\" (BASKET:" + id + ") was deleted by administrator " + admin
-                + (why == null ? "" : ": " + why);
         try {
             Notice stored = in.add(new Notice(0, owner, Instant.now(), NOTICE, KIND, LINK, line, null, null, null, admin, null));
-            InboxHub h = hub.get();
             if (h != null) {
                 h.publish(stored);
             }

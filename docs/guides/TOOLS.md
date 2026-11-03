@@ -103,8 +103,8 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `sutra` | `sutra shape`, `sutra design`, `sutra lint`, `sutra test`, `sutra preview`, `sutra gen` | [5.1](#51-sutra) |
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
 | `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, the Data view) | [5.3](#53-data) |
-| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain` | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
-| `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke` | [5.4](#54-server-and-doctor) |
+| `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
+| `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke`, `server engines` (`admin engines` is the same: the compute engines on or off, [OPERATIONS section 21](../admin/OPERATIONS.md)) | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
 | `net` | `net list`, `net check`, `net add-peer`, `net set`, `net members` | [5.9](#59-net) |
 | `design` | `design list`, `design create`, `design get`, `design save`, `design check`, `design propose`, `design approve`, `design reject`, `design proposals`, `design export`, `design import`, `design bind`, `design autodesign`, `design delete` | [5.6](#56-design) |
@@ -115,6 +115,8 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `history` | `drishti.py history KIND ID` (`--days`, `--range`, `--from`/`--to`, `--diff`, `--changes-only`, `--csv`, `--json`): one entity over business days, as the console's history page shows it | [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `contract` | `contract list`, `contract show`, `contract check`, `contract docs`, `contract bootstrap` | [5.11](#511-contract) |
 | `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground`, `var explain` | [5.12](#512-var) |
+| `sens`, `frtb`, `play` | `sens show`, `sens factors`, `frtb sa`, `frtb explain`, `frtb contributions`, `play frtb` | [5.14](#514-sens-frtb-and-play-frtb) |
+| `simm`, `play` | `simm show`, `simm list`, `simm explain`, `simm against`, `simm versions`, `play simm` | [5.15](#515-simm-and-play-simm) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -124,7 +126,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
 
 ## 4. lake build: a large JSON export into a Delta lake
 
@@ -179,7 +181,7 @@ dates, not the day of the extract), so the walk-through below uses `--as-of` for
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.10.a-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.11-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-22     CallNot                  50
 2026-09-22     Cash                    723
@@ -207,7 +209,7 @@ The next file of the book holds the day's changes (159 trades). Two bad lines ad
 $ (zcat data/testdata/trades/endur/changes-2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
-engine: drishti (Drishti's Java writer in drishti-server-2.9.10.a-exec.jar)
+engine: drishti (Drishti's Java writer in drishti-server-2.9.11-exec.jar)
 business date  PRODUCT_TYPE           rows
 2026-09-23     Cash                     27
 2026-09-23     ComFut                   29
@@ -412,7 +414,7 @@ removed by the next run, which holds the lock. A summary (the run of 4.3, two of
  "sampleId": "1000029", "sampleDate": "2026-09-23",
  "timings": {"readSeconds": 0.035, "writeSeconds": 2.159, "totalSeconds": 2.201},
  "engine": "drishti",
- "engineWhy": "Drishti's Java writer in drishti-server-2.9.10.a-exec.jar",
+ "engineWhy": "Drishti's Java writer in drishti-server-2.9.11-exec.jar",
  "batchRows": 10565, "averageDocumentBytes": 12703,
  "commit": {"commits": 1, "version": 1, "files": 4},
  "columns": {"partition": ["PRODUCT_TYPE"], "promoted": {"COUNTERPARTY": "string", "PORTFOLIO": "string", "QUANTITY": "double"}},
@@ -1016,7 +1018,7 @@ and `server smoke` (opens sample views of every kind on two dates; exit `1` on a
 ```
 $ drishti-console/.venv/bin/python tools/drishti.py doctor --server http://127.0.0.1:19590 --token-file ~/.drishti-token
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.10.a-exec.jar (version 2.5.0)
+GREEN  server jar              <repo>/drishti-server/target/drishti-server-2.9.11-exec.jar (version 2.5.0)
 GREEN  python                  <repo>/drishti-console/.venv/bin/python: Python 3.13.15
 GREEN  python pyyaml           installed
 GREEN  python deltalake        installed
@@ -1319,11 +1321,13 @@ picks the business date (default the newest with vectors); `--json` prints the s
 - `var reload [--date D]`: drops the loaded dates (administrators); with `--date` only that business date.
 - `var intraday [--date D]`: each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` appends an intraday batch to the lake (`lake build --mode append`) and raises its data-load signal ([VAR_GUIDE.md section 8.4](VAR_GUIDE.md#84-what-if-pricing-and-intraday-recomputes)); a file mixing scenario PVs and P&L vectors is routed by each record's `VALUE_TYPE`.
 - `var convert FILE.jsonl [--set FIELD=VALUE ...] [--infer] [--out F]`: makes an older PV or vector file say what each record is (`VALUE_TYPE`, `GRAIN`, `CURRENCY`, `SOURCE_SYSTEM`, leading each line), e.g. `--set VALUE_TYPE=PNL --set GRAIN=TRADE --set CURRENCY=USD --set SOURCE_SYSTEM=MUREX`; `--infer` takes `VALUE_TYPE` from the payload and `GRAIN` from the id; exit 1 when a record still lacks one ([VAR_GUIDE.md section 15.13](VAR_GUIDE.md#1513-inputs-any-form-any-grain)).
-- `var whatif SCOPE [--trades FILE.json] [--stress-window DAYS]`: the scope's VaR before and after hypothetical trades (a JSON list of
-  `{LABEL, PNL: [one number per scenario day], FACTOR}`, put in a private sandbox) and its stressed window, by the Python VaR engine
-  (the `var-whatif` connector; the compute workers must be on).
+- `var whatif SCOPE [--copy TRADE=FACTOR ...] [--trades FILE.json]`: the scope's VaR, ES and stressed VaR before and after
+  hypothetical trades, by the server's VaR engine (`POST /api/v1/var/what-if`, no compute workers needed): `--copy` a booked trade or any
+  scope scaled (`--copy MX-30000121=-1`, its unwind; `--copy BOOK:BOOK-RATES-3=-0.5`), `--trades` trades priced elsewhere (a JSON list of
+  `{LABEL, PNL: [one number per scenario day], FACTOR}`); each trade's standalone, incremental and component VaR
+  ([VAR_GUIDE.md section 8.2](VAR_GUIDE.md#82-the-what-if-the-java-engine)).
 
-Exit codes are `0`, `1` (the server said no, or a what-if refused or failed) and `2` (usage).
+Exit codes are `0`, `1` (the server said no) and `2` (usage).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py var show 'DESK:RATES'
@@ -1367,6 +1371,46 @@ Exit codes are `0`, `1` (the server said no) and `2` (usage).
 drishti-console/.venv/bin/python tools/drishti.py exposure show CPTY:CP-ALDERSHOT
 drishti-console/.venv/bin/python tools/drishti.py exposure parts NSET:NS-ALDERSHOT-NY --by trade --figure EE --top 10
 drishti-console/.venv/bin/python tools/drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA
+```
+
+### 5.14 sens, frtb and play frtb
+
+Position sensitivities and FRTB-SA as the token's user sees them (`tools/frtbcli.py`; [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)):
+
+- `sens show SCOPE [--by RISK_FACTOR|BUCKET|RISK_CLASS|TENOR|MEASURE|<attribute>]`: a scope's sensitivities summed in the reporting currency;
+  `sens factors [--q TEXT]`: the factor dictionary, its buckets and source names, and the load's refusals.
+- `frtb sa SCOPE`: SBM per class, measure and scenario, the binding one, DRC, RRAO and the total; `frtb explain SCOPE [--class GIRR]`: the
+  buckets, factors, WS, K_b and S_b; `frtb contributions SCOPE [--by DESK]`: contributions that add up to the total. Every one takes the
+  switches (`--curvature-source`, `--girr-curvature-shock`, `--fx-curvature-divisor`, `--girr-correlation`, `--scenario`), `--override
+  PATH=VALUE` (repeatable; not the regulatory figure), `--ccy` and `--date`. `EXAMPLE` is the design's hand-built cases.
+- `play frtb SCOPE [--compare SWITCH=VALUE] [--xlsx FILE] [--save]`: the playground: the switches, a comparison explained by step, the
+  workbook of live formulas, a recipe; `play frtb --recipe FR-...` replays a recipe and exits 1 when it does not reproduce to the cent.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py frtb sa DESK:DESK-RATES
+drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --compare girr-correlation=exact
+drishti-console/.venv/bin/python tools/drishti.py play frtb EXAMPLE --xlsx frtb-cases.xlsx
+```
+
+### 5.15 simm and play simm
+
+ISDA SIMM as the token's user sees it (`tools/simmcli.py`; [SIMM_GUIDE.md](SIMM_GUIDE.md)):
+
+- `simm show NETTING-SET`: IM to collect and post, by product class and by risk class (delta, vega, curvature), the binding regimes, the
+  add-ons; `EXAMPLE` is the hand-built examples, any VaR scope an analytic. `simm list [--counterparty CP-...]`: every netting set
+  (computed, stored and labelled, or why not computed) and the sums. `simm explain NETTING-SET [--direction post] [--class Equity]`: the
+  buckets, factors, CR, WS, K_b and S_b. `simm against NETTING-SET`: the margin against the counterparty's call. `simm versions`: the
+  installed parameter files and the refused ones with why. Every one takes `--version`, `--concentration on|off`, `--hvr on|off`,
+  `--override KEY=VALUE` (repeatable; not the regulatory figure) and `--date`.
+- `play simm NETTING-SET [--side post] [--compare SWITCH=VALUE] [--xlsx FILE] [--save]`: the playground: the switches, a comparison in
+  words, the workbook of live formulas (a recipe saved with it), a recipe; `play simm --recipe SM-...` replays a recipe and exits 1 when it
+  does not reproduce to the cent.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py simm versions
+drishti-console/.venv/bin/python tools/drishti.py simm show NS-ALDERSHOT-LDN
+drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --compare concentration=off
+drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot.xlsx
 ```
 
 ## 6. Store loaders: `tools/load-*.sh`
@@ -1507,7 +1551,10 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 with the API references' Javadoc and doclint, and 25), the console and tool tests in parallel, a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning), then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
+| `tools/drill.sh` | "Drill it" ([PACK_DEVELOPER_GUIDE.md §2.6](PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane and an other lane (files longest first), the Python tool tests, and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure. Once per release wave. |
+| `tools/drillkit/drill_plan.py` | the drill's console planner: `lanes` (the browser lane holds every file that drives a browser or uses the scratch ports, the other lane the rest; each longest first from `data/drill/durations.json`), `merge` (a run's per-file seconds into the durations), `rerun` (each failed test once more, file by file, under a time limit of twice the file's recorded time and at least ten minutes; every outcome reported; known failures from `tools/drill-known.txt` accepted) |
+| `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
+| `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
 | `tools/sizing_planner.py` | reads the planner's one file, `drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)), the server's workbook template (`drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |

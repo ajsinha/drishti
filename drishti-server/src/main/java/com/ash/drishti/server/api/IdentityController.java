@@ -102,9 +102,20 @@ public class IdentityController {
 
     // ---- sign-in and self service --------------------------------------------------------------
 
+    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): a new sign-in waits when the server is very short of memory. */
+    private com.ash.drishti.server.admission.AdmissionGate gate;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void gate(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.gate = g;
+    }
+
     @PostMapping("/auth/login")
     public UserView login(@RequestBody LoginRequest req, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireService(p);
+        if (gate != null) {
+            gate.admit(com.ash.drishti.server.admission.Work.SIGN_IN, req.username(), "Sign in");
+        }
         return view(users.authenticate(req.username(), req.password()));
     }
 

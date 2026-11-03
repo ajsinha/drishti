@@ -19,7 +19,7 @@ Value at risk answers *how much could this lose in a day, and where does that lo
 pack's VaR data into a lake, open the bank's VaR, drill down to one trade without a page load, read the P&L path and the contributions,
 write your own scopes (a desk minus a book plus a portfolio; a rule), see how Drishti derives positions, save a basket and capture it,
 read the history and the backtest, look at how the date sits in memory and on disk, read VaR as an ordinary computed kind, and ask the
-Python engine what a hedge would do, then read the bank over ten days and at another confidence. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
+what-if what a hedge would do, then read the bank over ten days and at another confidence. Each step shows the UI, the command line (`drishti.py var …`) and the YAML behind it, with real
 output from the committed test data. Everything else about VaR (every measure, column, setting, endpoint and error code, the data
 contract and how the engine stores a date) is in the one reference, [VAR_GUIDE.md](../guides/VAR_GUIDE.md); each step ends with the guide's sections
 that go further.
@@ -34,7 +34,6 @@ About 50 minutes.
 - The market-risk pack loaded (it is in the quick-start packs).
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`
   with sign-in off. The outputs below were captured as the user `rita` with sign-in off.
-- For step 11 only: the compute workers (a Python 3.10 or newer; the console's own is enough, the VaR engine uses the standard library).
 
 The VaR data is **synthetic** (a correlated, fat-tailed factor market over the committed trades), not prices.
 
@@ -47,7 +46,7 @@ The VaR data is **synthetic** (a correlated, fat-tailed factor market over the c
 - how positions are derived by the pack's rules, never delivered;
 - baskets, captures and compare; the history, the traffic light, Kupiec's and Christoffersen's tests;
 - the memory tiers: the date's memory-mapped hot file, float32 rows summed in float64;
-- VaR as a kind (`VRES`) and a what-if by the Python engine (`VWIF`);
+- VaR as a kind (`VRES`) and a pre-deal what-if: what a hedge does to a desk;
 - a hierarchy built from the trades' own columns: the limit letters, a letter holding part of a book.
 - the 10-day VaR by √10 and by the sum of 10 consecutive days, and VaR at another confidence.
 - the scenario matrix (`SMAT`): a book's scenarios across five business dates, its tail outlined each day, a scenario charted against −VaR.
@@ -246,17 +245,24 @@ least: its worst days are not the desk's.
 ## Step 5 · Your own scope: nodes, portfolios, rules
 
 **In the UI: Construct your basket.** On the rates desk, click **+ basket** on its row in the tree (point at the row to see it): the
-basket tray opens as a strip at the top. Type `pf usd` in it: the engine's hints list *PORT · PF-USD-RATES · USD rates exposure*, its
-trades and its VaR alone; **Enter** adds it. Type `-book-rates-1` and **Enter**: the book is taken away (a dashed **−** chip; the **+ / −**
-on any chip switches it). As you pick, the tray shows the selection's VaR and ES, its trades, the sum of the parts' VaRs and the
-diversification, computed by the engine. **Open without saving** moves the explorer to it: *unsaved basket*, its contributions are its
-parts. The basket lives on the VaR page: **◫ Construct your basket** (or **Alt+B**) opens it; what it holds stays in your browser.
+basket's sheet opens at the top, a column per kind of part (Trade, Position, Portfolio, Book, Desk, Limit letter, Counterparty) and the
+**Op** column (+ or −), with `DESK-RATES` in the Desk column. Type `pf usd` in **Find and add** above it: the engine's hints list *PORT ·
+PF-USD-RATES · USD rates exposure*, its trades and its VaR alone; **Enter** puts it in the Portfolio column. Click **Take away (−)**, type
+`book-rates-1` and **Enter**: the book lands in the Book column on a row marked **−**. Or paste: copy a column of trade ids from Excel,
+click the first free cell of the Trade column and press **Ctrl+V**; the ids fill downward, and a leading `-` on an id takes it away.
 
-![Construct your basket: the rates desk from its row in the tree, the USD rates portfolio from the hints, a book taken away; the selection's VaR live and the explorer on it, its contributions by part](img/t25/06-basket.jpg)
+As you go, the sheet goes to the server, which checks every cell (green found; red not found, the reason on the cell: try `10000000`
+in the Trade column, *TRD:10000000 is not a live trade on 2026-09-30 (no P&L vector)*; amber when a minus takes nothing away) and
+computes the basket's VaR and ES, the sum of the parts, the diversification and its trades under the sheet. **Remove the not found**
+drops the red cells. **Open without saving** moves the explorer to it: *unsaved basket*, its contributions are its parts. The basket
+lives on the VaR page: **◫ Construct your basket** (or **Alt+B**) opens it; what it holds stays in your browser.
 
-The tray writes `NODE:MGMT~DESK-RATES + PORT:PF-USD-RATES - NODE:MGMT~BOOK-RATES-1`: the parts to add, then those to take away. A part
-that matches nothing on the date (try `TRD:10000000`) turns red at once and the tray says why (*not a live trade on 2026-09-30 (no P&L
-vector)*), never a VaR of 0.
+![Construct your basket: the rates desk from its row in the tree, the USD rates portfolio from the hints, a book taken away on a − row; every cell checked and the basket's VaR, ES, sum of the parts and diversification under the sheet](img/t25/06-basket.jpg)
+
+The server composes the scope from the sheet's columns: `DESK:DESK-RATES + PORT:PF-USD-RATES - BOOK:BOOK-RATES-1`, the parts added,
+then those taken away. **Start from the whole bank** (the checkbox above the sheet) makes the basket the bank and the rows refine it:
+tick it and put `DESK-CREDIT` on a − row for `BANK - DESK:DESK-CREDIT`, the same answer as the command below. **Download as .xlsx** gives
+the sheet back to Excel; paste its *Basket* sheet back here to open it again.
 
 **From the command line**, a desk without another desk, and the desk without one trade:
 
@@ -339,17 +345,18 @@ its own (`POS-<book>~<trade>`, the *otc* rule).
 
 ## Step 7 · Save a basket, capture it, compare
 
-**In the UI.** In the basket tray of step 5, name it (`rates-mix`) and **Save basket and open VaR** (tick nothing more: it is private;
-name users or roles in *Share read-only with* to share it). The explorer opens `VAR SCOPE BASKET:<you>/rates-mix`, the tray reads
-*saved basket · \<you>/rates-mix*, and the basket is listed under *Ad-hoc scopes* as ★ rates-mix. Opening it later (from the list, a
-link, `VAR SCOPE rates-mix <GO>`) loads its parts back into the tray (**◫ Construct your basket** opens it) to edit and save again. Then the **Captured results** tab, a note,
-**Capture VaR**, and **Compare with now**:
+**In the UI.** In the basket's sheet of step 5, name it (`rates-mix`) and **Save basket and open VaR** (tick nothing more: it is
+private; name users or roles in *Share read-only with* to share it). The basket keeps the sheet's columns as lists. The explorer opens
+`VAR SCOPE BASKET:<you>/rates-mix`, the sheet reads *saved basket · \<you>/rates-mix*, and the basket is listed under *Ad-hoc scopes* as
+★ rates-mix with **Edit** and **Delete**. **Edit** (or opening it from the list, a link, `VAR SCOPE rates-mix <GO>`, then **◫ Construct
+your basket**) loads it back into the sheet, column by column; change a cell and **Save as version 2** keeps its name as a new version.
+A portfolio in the list has **Edit a copy** instead: it is the bank's, so its parts open as your own unsaved basket. Then the **Captured
+results** tab, a note, **Capture VaR**, and **Compare with now**:
 
 ![A capture of the FX desk compared with now](img/t25/07-capture.jpg)
 
-**What-if, before you deal.** **+ What-if trade** in the tray: a booked trade (say one of the desk's swaps) and a factor (−1 its unwind):
-the basket's VaR and ES before → after and the incremental, by the Python VaR engine. It needs the compute workers
-(`DRISHTI_COMPUTE_ENABLED=true`); without them the tray says so ([VAR_GUIDE.md section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-in-the-basket-tray)).
+**What-if, before you deal.** **+ What-if trade** under the sheet: a booked trade (say one of the desk's swaps) and a factor (−1 its unwind):
+the basket's VaR and ES before → after and the incremental, by the server's VaR engine (no compute workers needed: [VAR_GUIDE.md section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet)).
 
 **From the command line**, a basket of the rates desk's shorts, saved, captured and compared:
 
@@ -492,50 +499,38 @@ var-engine:
 
 **Further in the guide:** [section 8.1](../guides/VAR_GUIDE.md#81-var-result-the-java-engine) (`var-result`).
 
-## Step 11 · What would a hedge do? The Python engine
+## Step 11 · What would a hedge do? The what-if
 
-**On the server.** Start it with the compute workers on (`DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$PWD/drishti-console/.venv/bin/python`).
-The pool `var` of `config/compute/compute.yaml` runs the Python VaR engine:
+**On the server.** Nothing to start: the what-if is the server's VaR engine, the same that answers every scope, and needs no compute
+workers.
 
-```yaml
-pools:
-  var:
-    type: python
-    engines: [drishti_compute.var.whatif:VarWhatIfEngine]
-    environment: system            # standard library only: no package to approve
-    workers: { min: 0, max: ${DRISHTI_COMPUTE_VAR_WORKERS:4} }
-```
-
-**From the command line.** A hypothetical trade is a P&L over the 509 scenario days (priced elsewhere, or copied from a booked trade's
-vector) with a factor. Here: a hedge shaped like half of `BOOK-RATES-3`, sold (`new-hedge.json`):
-
-```json
-[{"LABEL": "hedge of BOOK-RATES-3 (half)", "FACTOR": -0.5, "PNL": [509 numbers: BOOK-RATES-3's vector, read with VRES BOOK:BOOK-RATES-3]}]
-```
+**From the command line.** A hypothetical trade is a copy of what is booked, scaled by a factor (a trade, or any scope), or a P&L over
+the 509 scenario days priced elsewhere. Here: a hedge shaped like half of `BOOK-RATES-3`, sold:
 
 ```text
-$ drishti.py var whatif DESK:RATES --trades new-hedge.json --stress-window 250
-what-if on DESK:RATES  READY  (req-mvot2fc8-0c51138d9548)
-  BEFORE_VAR           74,633,680
-  AFTER_VAR            47,599,220
-  CHANGE_VAR           -27,034,460
-  BEFORE_ES            75,377,415
-  AFTER_ES             56,247,260
-  CHANGE_ES            -19,130,155
-  STRESSED_VAR_BEFORE  85,318,588
-  STRESSED_VAR_AFTER   59,556,766
+$ drishti.py var whatif DESK:RATES --copy BOOK:BOOK-RATES-3=-0.5
+what-if on DESK:RATES  2026-09-30  in USD  (Java VaR engine (the server))
+  VaR                 74,633,680 ->       47,599,220   change -27,034,460
+  ES                  75,377,415 ->       56,247,260   change -19,130,155
+  stressed VaR        85,318,588 ->       59,556,766
+  -0.5 × BOOK:BOOK-RATES-3: standalone 34,296,045, incremental -27,034,460, component -32,542,151
 ```
 
-The command made a private sandbox of the trades and asked the computed kind `var-whatif` (`VWIF DESK:RATES` in the UI). With `--json`
-the answer also carries each trade's standalone VaR (34,296,045), its incremental VaR (−27,034,460) and its component in the desk after
-the trade (−32,542,152), and the desk's P&L day by day before and after. **In the UI**, `VWIF DESK:RATES` (no sandbox) opens the
-desk's stressed window; with a sandbox the id carries it (`DESK:RATES~sandbox=sbx-…`, as every computed id carries its parameters). The
-sandbox is yours alone (`drishti.py compute sandboxes`).
+The command asked `POST /api/v1/var/what-if` with `{"scope": "DESK:RATES", "items": [{"copyOf": "BOOK:BOOK-RATES-3", "factor": -0.5}]}`.
+The hedge alone has a VaR of 34,296,045; its incremental VaR is the change; its component in the desk after the trade is negative, as a
+hedge's is. A trade priced elsewhere goes in a file (`--trades new-swap.json`: `[{"LABEL": "new swap", "PNL": [509 numbers],
+"FACTOR": 1}]`).
+
+**In the UI.** Open `VAR DESK RATES <GO>`, click **What-if…** in the right column (the desk goes into the basket's sheet), then
+**+ What-if trade**: a trade id and a factor (−1: its unwind); the sheet shows VaR and ES before → after and each trade's figures.
+
+**In YAML.** Nothing: the what-if has no connector or setting of its own; it uses the VaR engine's confidence, rank rule and component
+window (`drishti.var.*`).
 
 **You should see** the desk's VaR fall by 27.0 million (from 74.6 to 47.6 million) and the stressed VaR (the worst run of 250
 consecutive scenario days) from 85.3 to 59.6 million: the hedge takes out most of `BOOK-RATES-3`'s tail.
 
-**Further in the guide:** [section 8.2](../guides/VAR_GUIDE.md#82-var-whatif-the-python-engine) and [section 8.3](../guides/VAR_GUIDE.md#83-where-it-runs-the-java-engine-and-the-python-engine) (the Python engine).
+**Further in the guide:** [section 8.2](../guides/VAR_GUIDE.md#82-the-what-if-the-java-engine) and [section 8.5](../guides/VAR_GUIDE.md#85-the-pre-deal-what-if-under-the-baskets-sheet).
 
 ## Step 12 · Who sees what
 
@@ -979,7 +974,7 @@ and 500 positions, is tested on every build.
 | the bank's VaR is 112,035,906 and the provenance says only `pnl-vector` | the lake has no `scenario-pv` table (built without it, or `--only` without it): the Endur trades are missing too (8,233 trades); rebuild with the `--only` list of step 1 |
 | `--ccy` answers `422 DRS-5207` | the date has no rates for that currency: supply them in `fx-scenario`, or load enough FX history in `fx-spot` ([VAR_GUIDE.md section 15.9](../guides/VAR_GUIDE.md#159-scenario-pv-scenario-pvs-per-trade-in-the-trades-currency)) |
 | `PORT <id>` says *no source holds portfolio/…* | the page opens on today's date; pick **2026-09-30** in the date box (the explorer finds the newest date by itself) |
-| step 11 answers *could not start* | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `var` |
+| step 11 answers `400` *… has no P&L vector* | the copied trade or scope has no vectors on the date (matured, cancelled, typed wrong): check it with `VAR SCOPE <it>` |
 | *the vectors of … were unloaded while this answer was computed* | ask again ([VAR_GUIDE.md section 13](../guides/VAR_GUIDE.md#13-troubleshooting)) |
 | `SMAT` shows one date only | the lake holds one business date (a lake built before the data had three): run `lake demo` again, or add more as in step 16 (`lake demo --as-of <date> --keep-other-dates`); the newest date is the date box's |
 | `SMAT` answers *DRS-4023 SMAT is not part of …* | your edition or lens is Drishti Market or World: the scenario matrix is Risk's and Trading's |

@@ -28,10 +28,12 @@
     {% if SERVERS %}<p class="login-srv"><span class="srv-dot" data-srv-color="{{ SERVER.color or 'var(--d-link)' }}" aria-hidden="true"></span>
       to <b>{{ SERVER.name }}</b> · <a class="lnk" href="/servers">another server</a></p>{% endif %}
     {% if error %}<p class="pnl-err" role="alert">{{ error }}</p>{% endif %}
+    {# busy protection (docs/admin/OPERATIONS.md "Busy protection"): when sign-ins wait, the calm message counts down here and signs in by itself #}
+    <div data-busy-host{% if busy %} data-busy="{{ busy | tojson | forceescape }}"{% endif %}></div>
     <input type="hidden" name="next" value="{{ next }}">
-    <label for="lu">User</label><input id="lu" name="user" class="cmd-input" autocomplete="username" required autofocus>
+    <label for="lu">User</label><input id="lu" name="user" class="cmd-input" autocomplete="username" required autofocus{% if user %} value="{{ user }}"{% endif %}>
     <label for="lp">Password</label><input id="lp" name="password" type="password" class="cmd-input" autocomplete="current-password" required>
-    <button type="submit" class="btn-pill btn-accent">Sign in</button>
+    <button type="submit" class="btn-pill btn-accent" data-sign-in>Sign in</button>
     {% set sso = request.app.state.oidc %}{% if sso.enabled %}
     <p class="login-or">or</p>
     <a class="btn-pill btn-ghost login-sso" href="/auth/oidc/login?next={{ next | urlencode }}"><i class="bi bi-shield-lock" aria-hidden="true"></i> {{ sso.label }}</a>
@@ -40,3 +42,4 @@
   <p class="login-back"><a class="lnk" href="/" data-login-back><i class="bi bi-arrow-left" aria-hidden="true"></i> Back to the home page</a></p>
 </div>
 {% endblock %}
+{% block scripts %}<script src="/static/js/login-busy.js?v={{ ASSET_V }}"></script>{% endblock %}

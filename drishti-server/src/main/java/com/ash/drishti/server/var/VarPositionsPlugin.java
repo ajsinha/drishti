@@ -165,6 +165,6 @@ public final class VarPositionsPlugin implements SourcePlugin {
     }
 
     private static Optional<VarPositions> positions() {
-        return VarPositions.installed().filter(p -> p.service().props().enabled());
+        return VarPositions.installed().filter(p -> p.service().running());
     }
 }

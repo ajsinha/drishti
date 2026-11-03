@@ -1599,7 +1599,7 @@ audit) are in [DATA_GUIDE.md](DATA_GUIDE.md#6-the-data-view-download-a-dataset).
 
 ```
 drishti.py data get [--json]                                    the datasets you may download: pack, format, dates held
-drishti.py data get DATASET [--date D] [--columns A,B,C] [--where "LINE"]... [-o FILE | -o -] [--count [--json]]
+drishti.py data get DATASET [--date D] [--columns A,B,C] [--where "LINE"]... [-o FILE | -o -] [--count [--json]] [--wait]
 ```
 
 - `--date` is `yyyy-MM-dd` (or `today` / `yesterday`), one the dataset holds; without it, its latest date.
@@ -1610,6 +1610,9 @@ drishti.py data get DATASET [--date D] [--columns A,B,C] [--where "LINE"]... [-o
 - `-o` the file (default `<dataset>_<date>.jsonl.gz`; `-` writes to standard output). The file appears only when the download is
   complete (it is written as `<file>.part` first); a refusal leaves no file.
 - `--count` prints the selection in words, the SQL-like line, the row count and the estimated size, and downloads nothing.
+- `--wait`: when the server is busy (`503 DRS-9503`, busy protection) the download waits the server's `Retry-After` and starts again by
+  itself, three times at most, saying so in the server's words. `DRISHTI_WAIT_BUSY=1` does the same for every command
+  ([OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)).
 
 ```
 $ python tools/drishti.py data get trade-valuation --date 2026-09-30 --columns TRADE_ID,PRODUCT_TYPE,DESK,MTM \
@@ -1625,7 +1628,8 @@ trade-valuation_2026-09-30.jsonl.gz: 9,912 bytes. From trade-valuation on 2026-0
 ```
 
 Exit `0`, `1` when the server refuses (an internal-only dataset where it is refused: `403 DRS-5002`; a date the dataset does not hold:
-`400 DRS-4003`; a line it cannot read: `400 DRS-5001`), `2` for a usage error. Every download is audited on the server.
+`400 DRS-4003`; a line it cannot read: `400 DRS-5001`; the server busy and no `--wait`, or still busy after three tries: `503 DRS-9503`),
+`2` for a usage error. Every download is audited on the server.
 
 ### `testdata capture-market`: the market snapshot for offline demos
 
@@ -1945,7 +1949,7 @@ and whether the token is accepted, with the exact id, scopes and expiry of the t
 ```
 $ python3 tools/drishti.py doctor --server http://localhost:18971
 GREEN  java                    /usr/lib/jvm/java-21-openjdk-amd64/bin/java: Java 21.0 (Ubuntu)
-GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.10.a-exec.jar (version 2.5.0)
+GREEN  server jar              ~/drishti/drishti-server/target/drishti-server-2.9.11-exec.jar (version 2.5.0)
 GREEN  python                  /usr/bin/python3: Python 3.14.4
 GREEN  python pyyaml           installed
 YELLOW python deltalake        not installed (needed for data ingest --store delta)
@@ -3233,7 +3237,7 @@ The Java `sutra` commands keep their own 0/1/2 and pass them through.
 
 | You see | Why | Do |
 |---|---|---|
-| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.10.a-exec.jar` |
+| `drishti: no drishti-server-*-exec.jar under drishti-server/target: build it ... or pass --jar / DRISHTI_JAR` | the Java commands need the exec jar | `./mvnw -q -DskipTests package`, or `export DRISHTI_JAR=/path/to/drishti-server-2.9.11-exec.jar` |
 | `drishti: jar not found: ...` | `--jar` / `DRISHTI_JAR` names a missing file | fix the path |
 | `drishti: cannot run java: ...; pass --java or set JAVA_HOME` | no JDK found | set `JAVA_HOME` to a JDK 21+ |
 | `drishti: PyYAML is not installed: run with uv run --with pyyaml ...` | the system Python has no PyYAML | use `uv run --with pyyaml`, or a venv |
@@ -3287,7 +3291,7 @@ empty PyCharm to a run configuration for each common task.
 | **Script path** (not *Module name*; switch the toggle on the left of the field) | `<repo>/tools/drishti.py` |
 | **Python interpreter** | the `drishti-console/.venv` interpreter from 14.1 |
 | **Working directory** | **the repository root**: relative paths in *Parameters* resolve from here |
-| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.10.a-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
+| **Environment variables** | `JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64;DRISHTI_JAR=<repo>/drishti-server/target/drishti-server-2.9.11-exec.jar;PYTHONUNBUFFERED=1`, and for server commands `DRISHTI_SERVER=http://localhost:18480;DRISHTI_TOKEN=drk_...` |
 
 Click the folder icon next to **Environment variables** to edit them as a table (one row per variable). `JAVA_HOME` and
 `DRISHTI_JAR` may be left out: the tool then looks for JDK 21 and for the newest `drishti-server/target/*-exec.jar` itself.

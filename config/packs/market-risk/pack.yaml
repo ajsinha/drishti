@@ -38,8 +38,9 @@ kinds:
 - var-limit
 - desk-pnl
 - pnl-history
+- position-sensitivity
+- risk-factor
 - var-result
-- var-whatif
 - var-official
 - stress-scenario-pnl
 sutras: sutras
@@ -90,12 +91,15 @@ mnemonics:
   PNLH:
     kind: pnl-history
     label: Long-history P&L of a hierarchy node (stress window selection)
+  SENS:
+    kind: position-sensitivity
+    label: Position sensitivities (delta, vega, curvature by risk factor)
+  RFAC:
+    kind: risk-factor
+    label: 'Risk factor (the factor dictionary: FRTB and SIMM mapping, source names)'
   VRES:
     kind: var-result
     label: VaR of a scope (computed)
-  VWIF:
-    kind: var-whatif
-    label: VaR what-if (computed, Python)
   VOFF:
     kind: var-official
     label: VaR official results (published)
@@ -136,6 +140,10 @@ graph:
     kind: desk-pnl
   - pattern: ^PNLH-
     kind: pnl-history
+  - pattern: ^SENS-
+    kind: position-sensitivity
+  - pattern: ^(IR|INF|CR|FX|EQ|CM|VOL)/
+    kind: risk-factor
   fields:
     NODE_ID:
       kind: risk-hierarchy
@@ -149,6 +157,9 @@ graph:
     POSITION_ID:
       kind: position
       label: Position
+    RISK_FACTOR:
+      kind: risk-factor
+      label: Risk factor
     SCENARIO:
       kind: stress-scenario
       label: Scenario
@@ -188,6 +199,8 @@ connectors:
     - var-limit
     - desk-pnl
     - pnl-history
+    - position-sensitivity
+    - risk-factor
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -337,6 +350,29 @@ connectors:
           - NAME
           - TYPE
           - OWNER
+        position-sensitivity:
+          columns:
+          - SENSITIVITY_ID
+          - GRAIN
+          - POSITION_ID
+          - TRADE_ID
+          - SOURCE_SYSTEM
+          - BATCH_ID
+          - STATUS
+          - DESK
+          - TT_BOOK
+          - PRODUCT_TYPE
+          - CURRENCY
+        risk-factor:
+          columns:
+          - RISK_FACTOR
+          - FACTOR_TYPE
+          - RISK_CLASS
+          - QUALIFIER
+          - TENOR
+          - FRTB_BUCKET
+          - SIMM_RISK_CLASS
+          - SIMM_BUCKET
   mr-derived:
     plugin: derived
     enabled: ${DRISHTI_MR_DERIVED_ENABLED:true}
@@ -485,68 +521,6 @@ connectors:
       timeout: 60s
       wait: 5s
       max-inflight-per-user: 4
-  var-whatif:
-    plugin: reactive
-    mode: reactive
-    enabled: ${DRISHTI_VAR_ENABLED:true}
-    description: 'A scope''s VaR before and after hypothetical trades (a private sandbox) and its stressed window, computed by the Python VaR
-      engine in the compute pool var from the scope''s var-result: VWIF <scope> <GO>'
-    kinds:
-      var-whatif:
-        compute: var-whatif
-        params:
-          ccy:
-            type: text
-            default: USD
-          sandbox:
-            type: sandbox-ref
-          stress-window:
-            type: int
-            default: 250
-            min: 0
-            max: 5000
-          component-window:
-            type: int
-            default: 5
-            min: 1
-            max: 51
-        result:
-          required:
-          - BEFORE_VAR
-          - AFTER_VAR
-          types:
-            BEFORE_VAR: number
-            AFTER_VAR: number
-    reads:
-    - kind: var-result
-      as: base
-      id: '{id}~ccy={params.ccy}'
-    engine:
-      type: python
-      entry: drishti_compute.var.whatif:VarWhatIfEngine
-      pool: var
-      version: '1.0'
-    triggers:
-    - 'on': data-version
-      kinds:
-      - pnl-vector
-      - scenario-pv
-      - fx-scenario
-      - risk-hierarchy
-      - scenario-set
-      - portfolio
-      - var-limit
-      affects: all
-    coalesce:
-      quiet: 250ms
-      max-wait: 2s
-    cache:
-      results: 500
-      ttl: 1h
-    limits:
-      timeout: 60s
-      wait: 250ms
-      max-inflight-per-user: 2
 routes:
   stress-scenario: risk-store
   stress-result: risk-store
@@ -563,8 +537,9 @@ routes:
   var-limit: risk-store
   desk-pnl: risk-store
   pnl-history: risk-store
+  position-sensitivity: risk-store
+  risk-factor: risk-store
   var-result: var-engine
-  var-whatif: var-whatif
   var-official: var-results
   stress-scenario-pnl: mr-derived
 form:
@@ -795,6 +770,41 @@ form:
     type: text
   - path: LAST_DAY
     label: Last day
+    type: text
+  position-sensitivity:
+  - path: SENSITIVITY_ID
+    label: Sensitivity id
+    type: id
+  - path: POSITION_ID
+    label: Position id
+    type: id
+  - path: DESK
+    label: Desk
+    type: enum
+  - path: TT_BOOK
+    label: TT book
+    type: text
+  - path: PRODUCT_TYPE
+    label: Product type
+    type: text
+  - path: SOURCE_SYSTEM
+    label: Source system
+    type: text
+  risk-factor:
+  - path: RISK_FACTOR
+    label: Risk factor
+    type: id
+  - path: RISK_CLASS
+    label: Risk class
+    type: text
+  - path: FACTOR_TYPE
+    label: Factor type
+    type: text
+  - path: QUALIFIER
+    label: Qualifier
+    type: text
+  - path: FRTB_BUCKET
+    label: Frtb bucket
     type: text
   var-official:
   - path: NODE_ID

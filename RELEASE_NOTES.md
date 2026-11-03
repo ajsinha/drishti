@@ -13,6 +13,70 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11 — release notes
+
+*Released 2026-11-03.* **Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines switched per
+server; busy protection.**
+
+## What changes for VaR users
+
+![Construct your basket as one sheet](docs/img/release/2.9.11-basket-sheet.png)
+
+- **Construct your basket is now one sheet** like Excel: a column per kind of part (trade, position, portfolio, book, desk, limit letter,
+  counterparty) and an Op column. Type, pick a hint, use **+ basket** on any row of the explorer, or **paste whole columns from Excel**.
+  A minus (`−` in Op, or a leading `-` on an id) takes a part away from everything added; **Start from the whole bank** ticks the bank in
+  and the rows take away from it. Every cell is checked by the server as you go (green found, red not found with the reason, amber when it
+  adds or takes away nothing), and the basket's VaR, ES, sum of the parts and diversification follow every change. The chip tray is gone;
+  **your saved baskets open into the sheet**, and a tray kept in your browser moves into it by itself. **Download as .xlsx** gives the
+  sheet back to Excel.
+- **Edit, amend and delete your baskets** from the Ad-hoc scopes list (**Edit**, **Edit a copy**, **Delete**); an administrator can do
+  the same on anyone's, recorded in the audit and with a note to the owner. Portfolios from the bank's feed are never changed: **Edit a
+  copy** makes them your own basket.
+- **The what-if** (+ What-if trade) is now computed by the server's Java VaR engine: the same figures to the cent, and it works on every
+  server without the compute workers. A what-if may also copy a whole scope (for example a book).
+- **When the server is very busy**, opening a new date or a large download may say so and retry by itself after a short countdown;
+  everything already open keeps working.
+- **VaR figures are unchanged**: the release was checked against the previous build (2.9.10.a) on the same data: VaR and ES of every
+  node of the three hierarchies (131 nodes) on all three business dates, 1-day and 10-day, and the 28 stored portfolios: 2,526
+  figures, every one equal.
+
+## New
+
+- **FRTB-SA** (`FRSA <scope>`, [FRTB_SA_GUIDE](docs/guides/FRTB_SA_GUIDE.md), tutorial 30): the standardised approach for market-risk
+  capital computed for any scope from position sensitivities: delta, vega and curvature per risk class with the three correlation
+  scenarios, the default risk charge and the residual risk add-on, with contributions that add up. **`PLAY FRTB`**: every method choice a
+  switch compared side by side with the difference explained, saved recipes replayed to the cent, and an Excel workbook of live formulas
+  with the switches as cells. Parameters follow Basel MAR21 to MAR23 (checked against the text) and are versioned and hashed into every
+  answer.
+- **ISDA SIMM** (`SIMM <netting set>`, [SIMM_GUIDE](docs/guides/SIMM_GUIDE.md), tutorial 32): initial margin per netting set and regime,
+  collect and post, compared with the counterparty's call; **`PLAY SIMM`** with its workbook. The bank loads its licensed ISDA parameter
+  file; Drishti ships none of ISDA's numbers.
+- **Position sensitivities and the risk-factor dictionary** as data kinds, with their data contracts ([FRTB](docs/contracts/FRTB.md),
+  [FRTB data structures](docs/contracts/FRTB_DATA_STRUCTURES.md), [SIMM](docs/contracts/SIMM.md)).
+- **The in-memory lake** ([IN_MEMORY_LAKE_GUIDE](docs/guides/IN_MEMORY_LAKE_GUIDE.md), tutorial 31): Delta tables held only in the
+  server's memory for feeds that by contract may never touch a disk, under a hard cap, refilled by server jobs, compacted automatically;
+  nothing of them reaches a disk (proved by a marker scan), downloads allowed and audited. News first.
+- **Compute engines switched on or off per server** (Admin → Engines, [OPERATIONS section 21](docs/admin/OPERATIONS.md)): each engine
+  has its own file under `config/engines/`; an engine that is off disappears everywhere (commands, menus, Help, pages, playgrounds, API),
+  dependencies are checked, and in a cluster a request goes to a node that runs the engine. Existing settings keep working.
+- **Busy protection** (Admin → Health): new heavy work (sign-in, a new date, a download, a BI run, a bulk load) waits politely when the
+  server is short of memory, instead of risking running out; an operator override with a reason.
+- **VaR by any trade column on the server** (`by=attribute:TRADER_ID` and others): the Trading landing's VaR by trader is now the
+  server's, over every trade.
+- **One competitive analysis**, for administrators (Help).
+
+## Upgrade
+
+Rebuild the server and console. Existing `drishti.var.*`, `drishti.frtb.*` and the other engine settings keep working (a warning at
+start names the new place); the engine files are in `config/engines/`. A server with memory stores needs its direct-memory limit raised
+by the stores' caps (the start scripts do it). `lake demo` now builds 89 tables (sensitivities and risk factors added).
+
+## Known open
+
+- `test_live_tabs_browser.py` (many live tabs, the shared-worker leader case) fails on the release machine as in the last releases.
+- The MR cube moved to 2.9.11.a, on the new pivot engine.
+- This release was verified on Java 21, the production runtime; the Java 25 run is left to a later release.
+
 # Drishti 2.9.10.a — release notes
 
 *Released 2026-11-01.* **Admin → Capacity; the cluster's VaR under load; three VaR dates in the demo; the competitive analysis; the next releases'

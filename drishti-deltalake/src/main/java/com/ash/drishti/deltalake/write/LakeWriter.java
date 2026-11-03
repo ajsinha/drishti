@@ -109,6 +109,22 @@ public final class LakeWriter {
         this.engine = engine;
     }
 
+    /**
+     * A table in memory favours bytes over speed (IN_MEMORY_LAKE.md section 5): ZSTD at level 3 by default ({@code codec}: zstd, lz4,
+     * snappy; {@code zstd-level}), the same small row groups and pages as on disk.
+     */
+    static Map<String, String> memoryConf(Map<String, String> settings) {
+        String codec = settings.getOrDefault("codec", "zstd").trim().toUpperCase(java.util.Locale.ROOT);
+        if (codec.equals("LZ4")) {
+            codec = "LZ4_RAW";                                   // the LZ4 Parquet readers agree on (the old LZ4 framing is deprecated)
+        }
+        if (!List.of("ZSTD", "LZ4_RAW", "SNAPPY", "UNCOMPRESSED").contains(codec)) {
+            throw new IllegalArgumentException("codec " + settings.get("codec") + " is not one of zstd, lz4, snappy, uncompressed");
+        }
+        return Map.of("parquet.compression", codec, "parquet.compression.codec.zstd.level", settings.getOrDefault("zstd-level", "3"),
+                "parquet.block.size", String.valueOf(ROW_GROUP_BYTES), "parquet.page.size", String.valueOf(PAGE_BYTES));
+    }
+
     private static Map<String, String> parquetConf() {
         return Map.of("parquet.compression", "SNAPPY", "parquet.block.size", String.valueOf(ROW_GROUP_BYTES), "parquet.page.size", String.valueOf(PAGE_BYTES));
     }
@@ -130,6 +146,9 @@ public final class LakeWriter {
     public static Engine engineFor(String table, Map<String, String> settings) {
         if (com.ash.drishti.lakeio.LocalPaths.isLocal(table)) {
             return DefaultEngine.create(new LocalWriteFileIO(parquetConf()));
+        }
+        if (com.ash.drishti.lakeio.mem.MemoryStores.isMemory(table)) {
+            return DefaultEngine.create(new StorageWriteFileIO(com.ash.drishti.lakeio.S3Settings.from(Map.of()), memoryConf(settings)));
         }
         return DefaultEngine.create(new StorageWriteFileIO(com.ash.drishti.lakeio.S3Settings.from(settings), parquetConf()));
     }
@@ -260,6 +279,9 @@ public final class LakeWriter {
             partitions.add(p.values());
         }
         boolean byDate = m.mode().equals("overwrite-dates");
+        if (m.mode().equals("replace")) {
+            return removals(engine, s, pv -> true);             // the whole table: every file of the version before goes
+        }
         return removals(engine, s, pv -> {
             Map<String, String> mine = new HashMap<>();
             m.partitionColumns().forEach(c -> mine.put(c, pv.get(c)));
@@ -323,7 +345,8 @@ public final class LakeWriter {
             this.m = m;
             this.part = part;
             this.schema = schema;
-            this.in = Files.newBufferedReader(part.file(), StandardCharsets.UTF_8);
+            this.in = part.source() != null ? new BufferedReader(part.source().get())
+                    : Files.newBufferedReader(part.file(), StandardCharsets.UTF_8);
         }
 
         @Override

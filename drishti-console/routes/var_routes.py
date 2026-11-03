@@ -245,7 +245,9 @@ def _var_where(words: list[str], user: str) -> str | None:
 
 
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+    from core.busy import problem as busy_problem
+
+    return busy_problem(e, e.status)                               # a busy refusal keeps its Retry-After and words (busy protection)
 
 
 #: a hierarchy's id (2.9.5: any configured one, LL; the page's selector lists the date's from the engine)
@@ -314,7 +316,7 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
 _GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "page", "size"), "scope/history": ("scope",),
          "scope/contributions": ("scope", "by", "scenario"), "tree": ("hierarchy",), "baskets": (), "captures": ("scope",),
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
-         "intraday/streams": (),
+         "intraday/streams": (), "basket/sheet": ("scope",),         # a scope laid into the basket sheet (a basket, a portfolio's copy)
          # the stress window selection (VAR_GUIDE.md section 18.9): the analysis of a node and the frozen proposals
          "stress-window": ("scope", "hierarchy", "length", "confidence"), "stress-window/proposals": ("limit",),
          # why it moved (VAR_GUIDE.md section 3.11): the explanation between two business dates and its Matrix view
@@ -371,6 +373,21 @@ async def api_get(request: Request, path: str):
         return _problem(e)
 
 
+@router.post("/api/var/basket/sheet.xlsx")
+async def basket_workbook(request: Request):
+    """The basket sheet as a workbook (VAR_GUIDE.md section 3.5): its columns as laid out and the cells that need a word, made by the
+    server as the person (it checks every cell again)."""
+    q = request.query_params
+    extra = {k: q[k] for k in ("asOf", "ccy") if q.get(k)}
+    sheet = await json_body(request)                      # a body that is not a JSON object is a 400/415 before the server is asked
+    try:
+        body, headers = await request.app.state.backend.var("POST", "/basket/sheet.xlsx", ident(request), body=sheet, raw=True, **extra)
+    except BackendError as e:
+        return _problem(e)
+    return Response(body, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": headers.get("content-disposition", 'attachment; filename="basket.xlsx"')})
+
+
 @router.post("/api/var/{path:path}")
 async def api_post(request: Request, path: str):
     if APPLY_NOW.match(path):
@@ -383,7 +400,7 @@ async def api_post(request: Request, path: str):
             return await request.app.state.backend.var("POST", "/" + path, ident(request), body=await json_body(request))
         except BackendError as e:
             return _problem(e)
-    if path not in ("baskets", "captures", "what-if"):
+    if path not in ("baskets", "captures", "what-if", "basket/sheet"):    # basket/sheet: the sheet's checks and figures (VAR_GUIDE.md 3.5)
         return JSONResponse({"code": "DRS-1001", "detail": f"no VaR endpoint {path}"}, status_code=404)
     try:
         extra = {"ccy": request.query_params["ccy"]} if request.query_params.get("ccy") else {}    # a capture or a what-if in that currency

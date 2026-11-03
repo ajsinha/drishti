@@ -113,4 +113,14 @@ class EditionWorldServerTest {
         getJson("/api/v1/bi/catalogue").path("items").forEach(i -> items.add(i.path("id").asText()));
         assertThat(items).contains("file:report:world-economics").doesNotContain("file:report:market-risk-var", "file:report:trades-overview");
     }
+
+    @Autowired com.ash.drishti.server.engines.EngineRegistry engines;
+
+    /** The edition's features var: off and exposure: off preset the engines' switches (config/engines/, COMPUTE_ENGINES.md section 4). */
+    @Test
+    void theEditionsFeaturesTurnTheVarAndExposureEnginesOff() {
+        assertThat(engines.state("var")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);
+        assertThat(engines.state("exposure")).isEqualTo(com.ash.drishti.server.engines.EngineRegistry.State.OFF);
+        assertThat(engines.switchOf("var").source()).isEqualTo("edition");
+    }
 }

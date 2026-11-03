@@ -49,7 +49,9 @@ def _setting(request: Request, key: str, default: float) -> float:
 
 
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status if 400 <= (e.status or 0) < 600 else 502)
+    from core.busy import problem as busy_problem
+
+    return busy_problem(e, e.status if 400 <= (e.status or 0) < 600 else 502)   # a busy refusal keeps its Retry-After and words
 
 
 def selection(request: Request) -> dict:
@@ -94,7 +96,10 @@ async def page(request: Request, q: str = "", kind: str = "", find: str = ""):
         groups.setdefault(d.get("pack") or "", []).append(d)
     sel = selection(request)
     words = " ".join(w for w in (kind, sel["date"]) if w)
-    return render(request, "terminal/data.html", datasets=datasets, groups=groups, chosen=chosen, kind=kind, sel=sel, find=find, error=error,
+    qp = request.query_params
+    busy = {"code": qp.get("busy"), "retryAfterSeconds": qp.get("wait"), "title": qp.get("title"), "because": qp.get("because"),
+            "tries": qp.get("tries"), "busy": True} if qp.get("busy") else None
+    return render(request, "terminal/data.html", datasets=datasets, groups=groups, chosen=chosen, kind=kind, sel=sel, find=find, error=error, busy=busy,
                   refused_all=bool(listed.get("internalOnlyRefused")), screen="data", command_text=f"{WORD} {words}".strip())
 
 
@@ -152,7 +157,14 @@ async def download(request: Request, kind: str):
     try:
         upstream = await request.app.state.backend.open_download(path, ident(request), read_timeout=_setting(request, "download_idle_seconds", 300))
     except BackendError as e:
-        back = [("kind", kind)] + params + [("error", f"{e.code} {e.detail}")]
+        from core.busy import fields
+        busy = fields(e)
+        if busy:                                            # busy protection: the Download card counts down and tries again in place
+            tries = request.query_params.get("tries", "0")
+            back = [("kind", kind)] + params + [("busy", e.code), ("wait", str(busy["retryAfterSeconds"])), ("title", busy["title"]),
+                                                ("because", busy["because"]), ("tries", tries if tries.isdigit() else "0")]
+        else:
+            back = [("kind", kind)] + params + [("error", f"{e.code} {e.detail}")]
         return RedirectResponse("/data?" + urlencode(back), status_code=303)
     name = f"{kind}_{s['date'] or 'latest'}.jsonl.gz"
     disposition = upstream.headers.get("content-disposition") or f'attachment; filename="{name}"'

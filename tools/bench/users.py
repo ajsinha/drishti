@@ -129,13 +129,16 @@ async def user(n: int, client, stats: dict, stop: float, a) -> None:
         else:
             url, headers = request_of(label, ent, date, cp, a)
         t = time.time()
+        busy = False
         try:
             resp = await client.get(url, headers=headers)
             bad = HISTORY_BAD if label == "history" else BAD
             ok = resp.status_code == 200 and not any(b in resp.text for b in bad) and "/login" not in resp.url.path   # signed out is a failure
+            # busy protection (OPERATIONS.md 12.5): a polite 503 DRS-9501..9505 with Retry-After is counted apart, not as a failure
+            busy = resp.status_code == 503 and "DRS-950" in resp.text[:400]
         except Exception:
             ok = False
-        stats.setdefault(label, []).append((time.time() - t, ok, t))
+        stats.setdefault(label, []).append((time.time() - t, ok, t, busy) if busy else (time.time() - t, ok, t))
 
 
 def request_of(label: str, ent, date, cp: str, a) -> tuple[str, dict]:
@@ -158,14 +161,16 @@ def summary(stats: dict, elapsed: float, a) -> dict:
     """The JSON line: requests a second; per kind n, failed, p50/p95/p99; failedBuckets: per kind, failures per --fail-bucket seconds."""
     out = {"target": "console" if a.console else "server", "users": a.users, "seconds": round(elapsed), "requests": sum(len(v) for v in stats.values())}
     out["perSecond"] = round(out["requests"] / elapsed, 1) if elapsed else 0.0
+    out["busy"] = sum(1 for v in stats.values() for x in v if len(x) > 3 and x[3])   # asked to wait (503 DRS-95xx), not failed
     bucket = getattr(a, "fail_bucket", 10) or 10
     out["bucket"], out["failedBuckets"] = bucket, {}
     for label, v in sorted(stats.items()):
         ts = sorted(x[0] for x in v)
-        out[label] = {"n": len(ts), "failed": sum(1 for x in v if not x[1]), "p50": round(statistics.median(ts), 3),
+        out[label] = {"n": len(ts), "failed": sum(1 for x in v if not x[1] and not (len(x) > 3 and x[3])),
+                      "busy": sum(1 for x in v if len(x) > 3 and x[3]), "p50": round(statistics.median(ts), 3),
                       "p95": round(ts[max(0, int(len(ts) * .95) - 1)], 3), "p99": round(ts[max(0, int(len(ts) * .99) - 1)], 3)}
         for x in v:
-            if not x[1]:
+            if not x[1] and not (len(x) > 3 and x[3]):
                 b = str(int(x[2] // bucket * bucket))
                 out["failedBuckets"].setdefault(label, {})[b] = out["failedBuckets"].get(label, {}).get(b, 0) + 1
     return out

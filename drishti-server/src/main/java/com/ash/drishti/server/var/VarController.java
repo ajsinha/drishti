@@ -51,10 +51,11 @@ import org.springframework.web.bind.annotation.RestController;
  *   GET  /api/v1/var/scope/history?scope=                VaR, ES and hypothetical P&amp;L over 250 days, exceptions, traffic light
  *   GET  /api/v1/var/scope/contributions?scope=&amp;by=&amp;scenario=   standalone, component, incremental and marginal VaR of the parts
  *   GET  /api/v1/var/hints?q=&amp;limit=                  the basket tray's type-ahead: type, id, name, trades, standalone VaR
- *   POST /api/v1/var/what-if {scope, items}             a pre-deal what-if: copies of booked trades scaled, before and after (Python)
+ *   POST /api/v1/var/what-if {scope, items}             a pre-deal what-if: copies of booked trades scaled, before and after
  *   GET  /api/v1/var/tree?hierarchy=MGMT                 every node with its figures; the stored portfolios
  *   GET  /api/v1/var/status                              what is loaded, the settings
  *   GET|POST /api/v1/var/baskets, GET|DELETE /api/v1/var/baskets/{owner}/{name}, DELETE /api/v1/var/baskets/{name} (your own)
+ *   POST /api/v1/var/basket/sheet, GET /api/v1/var/basket/sheet?scope=, POST /api/v1/var/basket/sheet.xlsx   the basket sheet (VarBasketController)
  *   GET  /api/v1/var/admin/baskets?owner=                every person's baskets (administrators; they may delete any)
  *   POST /api/v1/var/captures {scope, note, ccy}; GET /api/v1/var/captures?scope=; GET /api/v1/var/captures/{id}[/csv]; GET /api/v1/var/compare?a=&amp;b=
  *   GET  /api/v1/var/official?asOf=&amp;ccy=               a date's official end-of-day record; POST runs it (administrators)
@@ -82,6 +83,7 @@ public class VarController {
     private final VarWhatIf whatIf;
     private final Entitlements entitlements;
     private final VarBasketDelete baskets;
+    private final VarBasketEdit edits;
 
     VarController(VarService svc, VarViews views, VarOfficial official, Entitlements entitlements,
             org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.collab.InboxService> inbox,
@@ -93,6 +95,7 @@ public class VarController {
         this.whatIf = new VarWhatIf(svc);
         this.entitlements = entitlements;
         this.baskets = new VarBasketDelete(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
+        this.edits = new VarBasketEdit(svc, entitlements, inbox::getIfAvailable, hub::getIfAvailable);
     }
 
     private static LocalDate date(AsOf asOf) {
@@ -241,7 +244,7 @@ public class VarController {
         return views.selection().hints(p, q, limit, date(asOf), ccy);
     }
 
-    /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, by the Python VaR engine (503 DRS-5205 when it is not running). */
+    /** A pre-deal what-if: {@code {scope, items: [{copyOf, factor, label}]}}, computed by the Java VaR engine (VarWhatIf). */
     @PostMapping("/what-if")
     public Map<String, Object> whatIf(@RequestBody Map<String, Object> body, @RequestParam(required = false) String ccy, AsOf asOf,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
@@ -266,7 +269,7 @@ public class VarController {
     public Map<String, Object> status(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         VarProperties pr = svc.props();
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("enabled", pr.enabled());
+        m.put("enabled", svc.running());
         m.put("confidence", pr.confidence());
         m.put("esConfidence", pr.esConfidence());
         m.put("confidences", pr.confidences());                      // 2.9.7: what a page and a command may choose
@@ -371,14 +374,16 @@ public class VarController {
         return svc.saved().baskets(p);
     }
 
-    /** Saves a basket: {@code {"name": "unwind", "title": "Unwind candidates", "scope": "POS:a,b + TRD:c", "sharedWith": ["risk"]}}. */
+    /**
+     * Saves a basket: {@code {"name": "unwind", "title": "Unwind candidates", "scope": "POS:a,b + TRD:c", "sharedWith": ["risk"]}}, or
+     * from the sheet, {@code "sheet": {"wholeBank": false, "op": [...], "TRD": [...], ...}} (its lists kept as they are). The same name is
+     * the next version; {@code version} is the one the editor opened ({@code 409} when it changed since); {@code owner} names someone
+     * else's basket an administrator edits (audited, the owner told in their inbox; anyone else: {@code 404}).
+     */
     @PostMapping("/baskets")
     public Map<String, Object> saveBasket(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireOpen(p, svc.props().kinds().vector());
-        Map<String, Object> b = svc.saved().saveBasket(p, body);
-        svc.audit(p.user(), "var-basket-save", String.valueOf(b.get("id")), "version=" + b.get("version") + " scope=" + b.get("scope")
-                + " sharedWith=" + b.get("sharedWith"));
-        return b;
+        return edits.save(p, body);
     }
 
     @GetMapping("/baskets/{owner}/{name}")

@@ -37,7 +37,7 @@ handbook stays the reference for one server and its console.
 9. [Production checklist](#9-production-checklist) · [The token secret is a master key](#9a-1-the-token-secret-is-a-master-key) · [Scheduled reports](#9a-scheduled-reports) · [Collaboration email](#9a-2-collaboration-email-and-the-outbox) · [Retention, holds and export](#9a-3-collaboration-retention-legal-holds-and-the-compliance-export) · [Watermarked snapshots](#9a-3b-watermarked-snapshots-privacy-note) · [Chat bridges](#9a-4-chat-bridges-teams-slack-webhooks) · [The access log](#9b-the-access-log) · [Deleting people's VaR baskets](#9b-2-deleting-peoples-var-baskets) · [Pack registry keys](#9c-pack-registry-keys)
 10. [Backups and restore](#10-backups-and-restore)
 11. [The lake: where it lives and keeping it bounded](#11-the-lake-where-it-lives-and-keeping-it-bounded)
-12. [Memory and caches](#12-memory-and-caches) · [Admin → Capacity](#124-admin--capacity-today-against-the-plan) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
+12. [Memory and caches](#12-memory-and-caches) · [Admin → Capacity](#124-admin--capacity-today-against-the-plan) · [Busy protection](#125-busy-protection-refuse-politely-never-fall-over) · [Several servers as one (Drishti*net)](#12a-several-servers-as-one-drishtinet) · [Editions](#12b-editions)
 13. [Monitoring](#13-monitoring) · [Platform metrics and alerts](#136-platform-metrics-and-alerts)
 14. [Logs](#14-logs)
 15. [Upgrades and rollback](#15-upgrades-and-rollback)
@@ -78,6 +78,7 @@ handbook stays the reference for one server and its console.
     - [6. History](#6-history)
     - [7. The file, the API and the settings](#7-the-file-the-api-and-the-settings)
     - [8. Iceberg lakes](#8-iceberg-lakes)
+21. [Compute engines on or off](#21-compute-engines-on-or-off)
 
 ---
 
@@ -149,7 +150,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.10.a-exec.jar`.
+You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.11-exec.jar`.
 
 > Use `clean`. Without it, `target/` keeps the jars of earlier versions, and both `java -jar
 > drishti-server-*-exec.jar` and the server Dockerfile's `COPY drishti-server/target/drishti-server-*-exec.jar`
@@ -160,7 +161,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 ```bash
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-2.9.10.a-exec.jar /opt/drishti/drishti-server.jar
+sudo cp drishti-server/target/drishti-server-2.9.11-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -1223,6 +1224,11 @@ at any time:
   was given (Admin → Audit log, filter by `<owner>/<name>`).
 - **The owner is told.** When an administrator deletes someone's basket, its owner gets an inbox row (and the bell): *Your VaR basket
   "…" (BASKET:…) was deleted by administrator … : reason*, opening the VaR explorer. Nothing is sent when owners delete their own.
+- **Editing someone's basket.** An administrator may also **Edit** anyone's basket at any time (the VaR explorer's *Ad-hoc scopes*
+  list: it opens in the basket's sheet; the API: `POST /api/v1/var/baskets` with `owner`). The edit is saved under its owner as the next
+  version (`editedBy` names the administrator), is one audit entry, action `var-basket-edit`, detail *edited by administrator `<user>`
+  for `<owner>`* with the version, the number of parts and whom it is shared with, and the owner gets an inbox row: *Your VaR basket "…"
+  (BASKET:…) was edited by administrator …: now version n*. A portfolio is never edited: it is the bank's feed.
 - **What is kept.** Captures taken of the basket are not touched: each keeps the scope text and members it was taken with, still opens,
   and says the basket no longer exists. Official end-of-day records never name a basket. The people it was shared with lose it at once.
 - **No unseen deletes.** The dialog sends the version it showed; a basket its owner changed in the meantime is refused (`409 DRS-5007`)
@@ -1783,6 +1789,136 @@ To calibrate the planner to your own servers, change a coefficient in `capacity/
 is) and run `python3 tools/sizing_planner.py`: the workbook, the server's workbook template (`capacity/template/`) and the test vectors
 are written again, and `--check` fails while any of them is stale.
 
+### 12.5 Busy protection: refuse politely, never fall over
+
+When the server is short of memory or threads, new heavy work waits a moment instead of risking an out-of-memory. One gate stands in
+front of every kind of new work that can take a lot of memory at once:
+
+Memory counts as short only when **both** hold: the heap after the last collection is past its level, **and** less than
+`memory-free-min-mb` (768 MB) is left. A small heap that sits past 85% in its steady state is not refused for it, and a large heap still
+with gigabytes free at 85% keeps working; the same share on a 4 GB heap (about 600 MB left) waits.
+
+| New work | Code when it waits | Waits when | Tried again after (`Retry-After`) |
+|---|---|---|---|
+| a sign-in | `503 DRS-9501` | memory after clean-up over `memory-refuse-sign-in` (92%) | 45 s |
+| opening a VaR or exposure date not yet open | `503 DRS-9502` | memory over `memory-refuse-heavy` (85%); that engine's loads full (`load-threads` running and `queued-loads` waiting); the open dates' heap over `open-heap-refuse` (1.2) times their safety net; request handlers full; disk nearly full | 30 s |
+| a Data view download | `503 DRS-9503` | memory, request handlers, disk | 30 s |
+| a BI run (and asking a run again) | `503 DRS-9504` | memory, request handlers | 60 s |
+| a bulk load of a pack's data (Admin → Packs → Data) | `503 DRS-9505` | memory, request handlers, disk | 120 s |
+
+People already signed in keep working: reading a date that is already open, drilling, sorting and exporting what is on the screen are
+never gated, so a busy server slows nobody who is already working.
+
+**What it reads.** Each reading has a warn level (Health turns amber) and a wait level (new work waits):
+
+- **Memory in use after clean-up**: the heap the last garbage collection left, as a share of `-Xmx` (every collector's own report, read
+  at no cost). The heap in use at any moment includes garbage; the heap after a collection is what is really held.
+- **Loads running**: per engine (VaR, exposure), the date loads running and waiting against `load-threads`; a load the server starts by
+  itself (a pinned date, a date prefetched) takes a slot but never waits for one.
+- **The open dates' heap** against their safety net (the open-heap limit of [VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md)): the net
+  closes the least recently used dates first, but never a date in use; when the dates in use alone are well over it, a new date waits.
+- **Request handlers busy**: the requests being answered at once against `request-handlers`, and the queue beyond it.
+- **Free disk** of the data folder.
+
+**One decision for a crowd.** A refusal is remembered for its `Retry-After`, as the refusals for room are: a hundred people asking in
+the same second get the same answer and the same countdown, and the server reads nothing again for them. It is lifted sooner when its
+cause clears: memory back under its warn level, a load finished, disk freed, the operator's hold ended.
+
+**What people see.** The console says it in place, where the work was asked for, and nothing else on the screen changes: the sign-in form,
+the VaR or exposure panel of the new date (the date already open stays below), the Data view's Download card. A ring counts down the
+server's `Retry-After`; **Try now** and **Cancel** sit beside it; when the time is up it tries again by itself, three times at most, and
+then says so and waits for **Try now**. The console keeps no list of waiting requests: the server decides, the page only counts down.
+
+The API answers with the same words:
+
+```http
+HTTP/1.1 503 Service Unavailable
+Retry-After: 30
+Content-Type: application/problem+json
+
+{"title": "The download did not start", "status": 503, "code": "DRS-9503", "busy": true, "work": "download",
+ "because": "the server is short of memory: 93% in use after clean-up (new heavy work waits over 85%)", "retryAfterSeconds": 30,
+ "detail": "DRS-9503 The download did not start: the server is short of memory: 93% in use after clean-up (new heavy work waits over 85%). Your selection is kept; try again in 30 seconds."}
+```
+
+`drishti.py` prints them too; `--wait` (on `data get`), or `DRISHTI_WAIT_BUSY=1` for every command, waits and tries again by itself:
+
+```text
+$ python3 tools/drishti.py data get trade-valuation --date 2026-09-30 --where "DESK = DESK-COMM" --wait
+The server is short of memory: 93% in use after clean-up (new heavy work waits over 85%); trying again in 30 s (DRS-9503) ...
+trade-valuation_2026-09-30.jsonl.gz: 31,744 bytes. From trade-valuation on 2026-09-30: 9 columns, rows where DESK is DESK-COMM.
+```
+
+A script calling the API should do the same: wait `Retry-After` seconds and ask again, a few times at most.
+
+**Admin → Health, Busy protection.** The card shows the state (fine, getting full, new heavy work waits, new sign-ins wait), when the
+waits started, each reading as a bar with its warn and wait markers, and the last refusals (time, who, what, why, code, the seconds
+given). The same at `GET /api/v1/admin/busy` (administrators) and inside `GET /api/v1/admin/health` as `busy`.
+
+**The operator's override**, below the card, for an emergency only:
+
+- **Let everything through** turns the waits off (the server can then run out of memory): for a sign-off that must finish now.
+- **Hold all new heavy work** makes every new load, download, BI run and bulk load wait: for a planned restart; signed-in people keep
+  reading and sign-ins still work.
+- **Automatic** ends an override at once.
+
+A reason is required and the override ends by itself after the minutes chosen (at most `override-max-minutes`, 240); each change is
+recorded in the audit log (`busy-override`). The override is the member's own and lasts until it ends or the server restarts. From a
+script: `PUT /api/v1/admin/busy/override` with `{"mode": "hold", "reason": "planned restart 18:00", "minutes": 30}` (never with a
+personal token: an administrator in the console).
+
+**The settings**, `drishti.admission.*` in the server's `application.yaml` (every one in
+[CONFIGURATION.md](CONFIGURATION.md#drishtiadmission)):
+
+```yaml
+drishti:
+  admission:
+    enabled: true                 # false: nothing waits (Health still shows the readings)
+    memory-warn: 0.80
+    memory-refuse-heavy: 0.85     # new loads, downloads, BI runs, bulk loads
+    memory-refuse-sign-in: 0.92   # new sign-ins
+    memory-free-min-mb: 768       # the memory levels act only while less than this is left after a collection
+    queued-loads: 2               # loads that may wait behind each engine's load-threads
+    open-heap-refuse: 1.2         # times the open dates' safety net
+    request-handlers: 200
+    requests-warn: 0.75
+    requests-refuse: 0.90
+    queue-refuse: 50
+    disk-warn-gb: 20
+    disk-refuse-gb: 10
+    retry-after: { sign-in: 45, load: 30, download: 30, bi-run: 60, bulk-load: 120 }
+```
+
+Lower the memory levels on a server that runs close to its heap with large dates; raise `request-handlers` on a large server whose
+requests are mostly small reads. The levels sit below the memory budget's squeeze (`drishti.memory.squeeze-at`, 0.85, which halves the
+connectors' caches): the caches shrink first, then new heavy work waits, so a crowd sees a short wait, not a failure.
+
+**Proving it on your hardware.** Run the benchmark's users phase ([BENCHMARK.md section 4.3](BENCHMARK.md#43-users-50-100-and-200)) at a
+small heap, with more users than the heap can hold: the expected result is refusals with `Retry-After` (Health's table fills, the console
+counts down) and no `OutOfMemoryError` in the log.
+
+### 12.6 The in-memory lake: running memory-only feeds
+
+Feeds that may not be saved on a disk are held in memory stores (`drishti.lake.memory.*`; the
+[guide](../guides/IN_MEMORY_LAKE_GUIDE.md) sets one up end to end). What an operator does with them:
+
+| Task | How |
+|---|---|
+| See the stores and tables | Admin → Lakes, *Held in memory only*; `drishti.py lake memory status` (`--json`) |
+| See the jobs' runs (why one failed or was refused) | `drishti.py lake memory jobs --table <t>`; `GET /api/v1/admin/lakes/memory/jobs` |
+| Refill a table now | `drishti.py lake memory refill <table>` (audited as `lake.memory.refill`) |
+| Start the server | the shipped scripts raise `-XX:MaxDirectMemorySize` to 256 MB plus the stores' caps (`tools/lake/memory_caps.py`, or `DRISHTI_LAKE_MEMORY_MB` for Docker and ECS); a unit file adds the flag itself |
+| After a restart | the stores are empty by design; the warm-up refills them in `warm-up` order, pinned tables first by convention; screens and the connector's health say *refilling* meanwhile |
+| A store is full | Health amber, the run `refused`, the table at its previous version: raise `max-mb` (restart), unpin tables, or lower `keep-versions` |
+| Health red | a pinned table empty after the warm-up (its source: `jobs`), or the direct-memory limit below the caps (the start script) |
+| The host | no swap (or encrypted swap), no heap dump on out-of-memory unless to a RAM disk (`-XX:HeapDumpPath` on tmpfs), no JFR at launch, the temporary folder on a RAM disk: each is a host check on Health |
+| A cluster | `memory-stores: [<store>]` in the owner's `config/net/node.yaml`; the other nodes forward the pack's requests to it ([guide section 8](../guides/IN_MEMORY_LAKE_GUIDE.md#8-a-cluster-the-owner-node-binds-the-pack)) |
+
+Nothing of a memory-only connector is written to the data folder (no document cache, id-map files or index segments), a scheduled report,
+a share's picture or e-mail and an Ask about its pages are refused (`DRS-5219`), a BI run's rows are not stored, DuckDB does not spill on
+a server with memory stores, and logs and audit lines carry ids and counts only. A user's download from the Data view is the one way out,
+audited.
+
 ## 12a. Several servers as one (Drishti*net)
 
 Deploying a production cluster (roles, counts, ports, drains, rolling upgrades, failure handling): [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md).
@@ -1868,6 +2004,8 @@ connector's state, traffic, latency and last error, each pack's connectors and S
 **Pages** lists, per kind of any pack, the views built on the server in the last ten minutes with their p50, p95 and p99,
 slowest first: the screen to look at when users say a page is slow. **Activity** is a bar chart of requests a minute and their
 average response time over the last 30 minutes (hover a bar for the slowest request and the errors in that minute).
+**Busy protection** shows memory after clean-up, the loads running, the request handlers busy and the disk against their warn and wait
+levels, the last refusals, and the operator's override ([section 12.5](#125-busy-protection-refuse-politely-never-fall-over)).
 The data behind it:
 
 ```bash
@@ -1878,7 +2016,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "2.9.10.a", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
+    "server": { "version": "2.9.11", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24,
                 "directUsedBytes": 9437184, "directCapacityBytes": 9437184, "directBuffers": 71,
                 "mappedUsedBytes": 46137344, "mappedCapacityBytes": 46137344, "mappedBuffers": 12,
@@ -3609,3 +3747,145 @@ lakes:
 
 `deploy/aws/iceberg/maintain.sh` writes such a file and runs it nightly ([CLUSTER_DEPLOYMENT.md › Drishti on AWS: ECS, EFS and S3, section 22](../architecture/CLUSTER_DEPLOYMENT.md#22-iceberg-on-aws)).
 The setting `orphan-hours` is in **Settings per table** of the page too (under 72 is refused).
+
+## 21. Compute engines on or off
+
+A **compute engine** is the part of the server that computes risk figures when asked: VaR (with regulatory VaR), exposure, the position
+sensitivities, FRTB-SA, SIMM, the in-memory lake, and later SA-CCR, FVA and the two cubes. Not every server runs every engine: a
+market-risk node has no use for exposure, a small console node needs none. Each engine has **its own file**, `config/engines/<engine>.yaml`,
+with its switch and every one of its settings, and **one switch with one meaning**: off, the engine does not exist on that server. The
+design and its reasons are in [COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md); every key of every file is in
+[CONFIGURATION.md, Compute engines](CONFIGURATION.md#compute-engines-configenginesyaml).
+
+### 21.1 The files
+
+```
+config/engines/                 DRISHTI_ENGINES_DIR (default ./config/engines), shipped with every distribution
+├── var.yaml                    drishti.engines.var.enabled, drishti.var.*, drishti.regulatory.*
+├── exposure.yaml               drishti.engines.exposure.enabled, drishti.ccr.exposure.*
+├── sensitivities.yaml          drishti.engines.sensitivities.enabled, drishti.sensitivities.*
+├── frtb-sa.yaml                drishti.engines.frtb-sa.enabled, drishti.frtb.*
+├── simm.yaml                   drishti.engines.simm.enabled, drishti.simm.*
+├── sa-ccr.yaml, fva.yaml, mr-cube.yaml, ccr-cube.yaml   (not installed yet: their switch only, off)
+└── memory-lake.yaml            drishti.engines.memory-lake.enabled (off as shipped), drishti.lake.memory.*
+```
+
+`application.yaml` imports each file twice, the copy inside the jar first and then the site's, so a key in the site's file wins over the
+shipped one, and `application.local.yaml`, the environment and `--key=value` win over both. A site that deletes a file, or an install
+that predates the folder, gets the shipped values. The keys keep the names they always had (`drishti.var.hot-dates` is still
+`drishti.var.hot-dates`); only the switches are new, and each keeps its environment variable (`DRISHTI_VAR_ENABLED`,
+`DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_FRTB_ENABLED`, `DRISHTI_SIMM_ENABLED`; new: `DRISHTI_SENSITIVITIES_ENABLED`,
+`DRISHTI_MEMORY_LAKE_ENABLED`, `DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`).
+
+**The old switch names still work.** `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled` and
+`drishti.simm.enabled`, set anywhere above the shipped files (most often `application.local.yaml`), decide as before, and the server
+says so once at start:
+
+```
+WARN  drishti.var.enabled is the old name of drishti.engines.var.enabled (set in local file); it still works.
+      Move it to config/engines/var.yaml, or use Admin -> Engines (DRS-1024).
+```
+
+`drishti.frtb.sensitivity-kind`, `factor-kind` and `cache-minutes` moved to `drishti.sensitivities.*` and are read under their old names
+too. The in-memory lake is on when its stores are configured in the old place (`drishti.lake.memory.stores` in `application.local.yaml`)
+and nothing sets its switch, so an install that uses it keeps it. An edition's `var: off` or `exposure: off` (`config/editions/features.yaml`)
+presets the engines' switches. **On upgrade nothing is required.** To tidy up, move the engine keys from `application.local.yaml` to the
+engine's file; `drishti.py server engines show var --sources` says where each switch comes from.
+
+### 21.2 What "off" means
+
+Off, the engine is not started: no date is opened or loaded, no cache, no thread of its own, no warm-up, no pinned date, no official
+capture at start; the engine-input kinds it reads (P&L vectors, exposure paths, sensitivities) are not read ahead on a node where no
+running engine reads them. Its API answers `404` in words, never `403` (nothing is forbidden; the engine is not here):
+
+```json
+{"status": 404, "code": "DRS-1020", "engine": "frtb-sa",
+ "detail": "DRS-1020 FRTB-SA is not running on this server, and no other server of this cluster runs it. An administrator can turn it on in Admin → Engines."}
+```
+
+When no server of the cluster runs it, it disappears from the console everywhere: its command words (typed, they answer the same words),
+type-ahead, FUNC and examples, its menu items, Help pages, Home cards and chips, its pages and playgrounds (404), its BI datasets and the
+reports on them, and its `drishti.py` commands (exit code 3 with the same words). `/actuator/health` lists each engine's state under
+`engines`; an engine that is off is `off`, never down.
+
+### 21.3 Dependencies
+
+| Engine | Needs (on the same server) | Uses (its parts hidden without it) |
+|---|---|---|
+| FRTB-SA | VaR (its scopes, hierarchies and limit letters) and the sensitivities | |
+| SIMM | the sensitivities | exposure |
+| FVA (not installed) | exposure | |
+| MR cube (not installed) | VaR | the sensitivities, FRTB-SA |
+| CCR cube (not installed) | exposure | SA-CCR, FVA |
+
+Turning on an engine whose need is off, or off an engine another running one needs, is refused with words (`409 DRS-1021`): "FRTB-SA
+needs VaR on this server: its scopes (desks, books, limit letters) are VaR's ... Turn on VaR first, or both together." Admin → Engines
+offers **Turn on both** or **Turn off all three**; the command line takes `--with-needs` and `--with-dependents`. A server started with
+FRTB-SA on and VaR off in the files starts; FRTB-SA is `blocked` with the reason, the start log says it in one line (`DRS-1022`), and
+nothing else fails.
+
+### 21.4 Admin → Engines
+
+![Admin → Engines: FRTB-SA staged off, the review panel](../img/engines/review.png)
+
+**Admin → Engines** (`/admin/engines`, administrators only) lists every engine with its switch, its state (running, off, starting,
+stopping, blocked with the reason, restart needed, not installed), the memory it holds now, its threads, what it needs and what uses it,
+and **where its switch is set** (the shipped copy, the engine file, the local file, the environment, the edition, an old name). Flipping a
+switch only **stages** the change; the panel on the right shows the dependency check (a refusal in words, before anything is sent), **what
+disappears for people** (its words, menus, Help pages, tiles, BI datasets, CLI commands, playgrounds, from the engine catalogue), what
+happens on the server, and asks for the **reason** (required). **Apply** writes the engine's file:
+
+- only `enabled` (keeping its environment variable: `${DRISHTI_FRTB_ENABLED:false}`) and `changed` (`by`, `at`, `reason`), every comment
+  and every other key kept; atomically (a temporary file in the same folder, then a rename); the file is made from the shipped copy when
+  the site has none;
+- refused (`409 DRS-1023`) when the file was edited by hand since the page read it ("reload"), or when the folder cannot be written (the
+  page names the folder and `DRISHTI_ENGINES_DIR`);
+- when the switch is set above the file (the environment, the local file, an old name), the change is written and the page says that
+  setting still decides until it is removed.
+
+**Live or restart.** Off is live for every engine: new requests answer `404` (or go to another node in a cluster), the requests in flight
+finish within `drishti.engines.drain` (30 s), then its open dates, caches and buffers are released and its threads end. On is live for
+every engine but the in-memory lake, which is written to its file and shows **restart needed** until the next start (the launchers add its
+stores' caps to the direct-memory limit at start, `tools/lake/memory_caps.py` reading the engine's file). The files are also **watched**
+(`drishti.engines.watch-seconds`, 5): an edit by hand takes effect as a change from the page does and shows in History as "edited in the
+file", with no name and no reason.
+
+![Admin → Engines: a refused change, said before it is sent](../img/engines/refused.png)
+
+**History** (below the table, and its own tab) lists every change, newest first: when, the engine, on or off, who, why, the node and the
+outcome (live, restart needed, written, refused with the words). The audit log holds the same (`engine-enabled`, `engine-disabled`,
+`engine-refused`) with the file and its checksum before and after. A personal API token never changes an engine.
+
+### 21.5 In a cluster
+
+Each node reads its own `config/engines/` folder, so nodes differ by design (the VaR shard owners run `var`; the counterparty nodes
+`exposure`; a console node none). Each node publishes its engines in its capability digest (the service `engines`), so a change reaches
+the peers within a gossip round. A request for an engine's API arriving at a node that does not run it is **forwarded** to a node that
+does (the least loaded, signed with the cluster key, for the caller; the answer names the node in `X-Drishti-Engine-Node`); no node runs
+it: `404 DRS-1020`. People are offered an engine when any reachable node runs it. The **Cluster** tab of Admin → Engines is the matrix of
+nodes and engines with an "available to people" column; an administrator may change another node's engine from there (the change goes to
+that node, signed, which writes its own file; both nodes audit it).
+
+### 21.6 The command line
+
+```
+$ python3 tools/drishti.py server engines list
+ENGINE         STATE           MEMORY    NEEDS                 FILE
+var            running         3.1 GB    -                     config/engines/var.yaml
+exposure       running         1.4 GB    -                     config/engines/exposure.yaml
+sensitivities  running         210 MB    -                     config/engines/sensitivities.yaml
+frtb-sa        off             -         var, sensitivities    config/engines/frtb-sa.yaml
+simm           running         12 MB     sensitivities         config/engines/simm.yaml
+memory-lake    off             -         -                     config/engines/memory-lake.yaml (restart to turn on)
+
+$ python3 tools/drishti.py server engines off var --reason "a counterparty node"
+drishti: refused (DRS-1021): VaR is needed by FRTB-SA on this server. Turn it off first, or both together.
+
+$ python3 tools/drishti.py server engines on frtb-sa --with-needs --reason "capital desk asked"
+var already running; frtb-sa on (live). Written to config/engines/frtb-sa.yaml.
+```
+
+`list` (`--cluster`: every node side by side; `--json`), `show <id>` (state, memory, needs, used by, what it hides; `--sources`: where the
+switch comes from), `on <id>... [--with-needs]`, `off <id>... [--with-dependents]` (both need `--reason`; `--node` changes another node),
+`history`. `drishti.py admin engines` is the same command. Exit codes: 0 done, 2 refused, 3 not running anywhere. The API behind them is
+in [API_GUIDE.md](../guides/API_GUIDE.md) (`/api/v1/admin/engines`, and the codes `DRS-1020` to `DRS-1024` in its error code table).

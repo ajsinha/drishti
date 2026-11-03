@@ -75,33 +75,90 @@ final class VarSaved {
 
     // ------------------------------------------------------------------------------------------------------------------- baskets
 
-    @SuppressWarnings("unchecked")
     Map<String, Object> saveBasket(Principal p, Map<String, Object> body) {
+        return saveBasket(p.user(), body, null);
+    }
+
+    /**
+     * Saves a basket under {@code ownerUser} (the caller, or the owner an administrator edits for): from its {@code scope} text, or from
+     * its {@code sheet} (the sheet's lists, kept as they are: the scope is composed from them when read, VAR_GUIDE.md section 3.5). The
+     * same name keeps the basket and is its next version; {@code expected}, when given, is the version the editor opened: a basket changed
+     * since answers {@code 409}.
+     */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> saveBasket(String ownerUser, Map<String, Object> body, Integer expected) {
         String name = slug(String.valueOf(body.getOrDefault("name", "")));
-        String scope = String.valueOf(body.getOrDefault("scope", "")).trim();
-        if (scope.isEmpty()) {
-            throw new DrishtiException(ErrorCode.BAD_REQUEST, "a basket has a scope (its members or its rule)");
+        Map<String, Object> sheet = null;
+        String scope;
+        if (body.get("sheet") != null) {
+            VarBasketSheet s = VarBasketSheet.read(body.get("sheet"), words.get());
+            scope = s.scope();
+            if (scope.isEmpty()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "a basket adds at least one part, or starts from the whole bank");
+            }
+            sheet = s.toMap();
+        } else {
+            scope = String.valueOf(body.getOrDefault("scope", "")).trim();
+            if (scope.isEmpty()) {
+                throw new DrishtiException(ErrorCode.BAD_REQUEST, "a basket has a scope (its members or its rule), or a sheet");
+            }
         }
-        com.ash.drishti.compute.var.ScopeExpr.parse(scope, words.get());  // refused here when it does not parse
-        String type = scope.startsWith("WHERE:") && !scope.contains(" + ") ? "RULE" : "BASKET";
-        String key = "var/baskets/" + owner(p.user()) + "/" + name + ".json";
+        try {
+            com.ash.drishti.compute.var.ScopeExpr.parse(scope, words.get());   // refused here when it does not parse
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        }
+        String type = sheet == null && scope.startsWith("WHERE:") && !scope.contains(" + ") ? "RULE" : "BASKET";
+        String key = "var/baskets/" + owner(ownerUser) + "/" + name + ".json";
         Map<String, Object> b = new LinkedHashMap<>();
-        b.put("id", owner(p.user()) + "/" + name);
+        b.put("id", owner(ownerUser) + "/" + name);
         b.put("name", body.getOrDefault("title", name));
         b.put("description", String.valueOf(body.getOrDefault("description", "")));
         b.put("type", type);
-        b.put("scope", scope);
-        b.put("owner", p.user());
+        if (sheet != null) {
+            b.put("sheet", sheet);
+            b.put("parts", VarBasketSheet.read(sheet, words.get()).parts());
+        } else {
+            b.put("scope", scope);
+        }
+        b.put("owner", ownerUser);
         Object shared = body.get("sharedWith");
         b.put("sharedWith", shared instanceof List<?> l ? l.stream().map(String::valueOf).toList() : List.of());
         b.put("updatedAt", Instant.now().toString());
+        if (body.get("editedBy") != null) {
+            b.put("editedBy", String.valueOf(body.get("editedBy")));
+        }
         Map<String, Object> saved = docs.update(key, Map.class, old -> {
+            if (expected != null && (old == null ? 0 : ((Number) old.getOrDefault("version", 0)).intValue()) != expected) {
+                throw new DrishtiException(ErrorCode.STALE_REVISION, "the basket " + b.get("id") + " changed since you opened it (now version "
+                        + (old == null ? "none: it was deleted" : old.get("version")) + "): open it again before saving");
+            }
             Map<String, Object> m = new LinkedHashMap<>(b);
             m.put("createdAt", old == null ? m.get("updatedAt") : old.get("createdAt"));
             m.put("version", old == null ? 1 : ((Number) old.getOrDefault("version", 0)).intValue() + 1);
             return m;
         });
-        return saved;
+        return withScope(saved);
+    }
+
+    /** A basket kept from a sheet answers with its scope too, composed from its lists (never stored as one long text). */
+    Map<String, Object> withScope(Map<String, Object> m) {
+        if (m == null || m.get("scope") != null || m.get("sheet") == null) {
+            return m;
+        }
+        Map<String, Object> out = new LinkedHashMap<>(m);
+        try {
+            out.put("scope", VarBasketSheet.read(m.get("sheet"), words.get()).scope());
+        } catch (DrishtiException e) {
+            out.put("scope", "TRD:NONE");                                 // a sheet that no longer reads (a word unconfigured): nothing
+        }
+        return out;
+    }
+
+    /** A basket by owner and name whoever asks (an administrator's edit: the caller has checked the right). */
+    @SuppressWarnings("unchecked")
+    Optional<Map<String, Object>> rawBasket(String owner, String name) {
+        return docs.value(key(owner, name), Map.class).map(m -> (Map<String, Object>) m);
     }
 
     /** A basket by id ({@code owner/name}) the caller may read: theirs, or shared with them or one of their roles. */
@@ -113,7 +170,7 @@ final class VarSaved {
         }
         String key = "var/baskets/" + ContentDocs.name(id.substring(0, slash)) + "/" + id.substring(slash + 1).toLowerCase(Locale.ROOT) + ".json";
         Optional<Map<String, Object>> b = docs.value(key, Map.class).map(m -> (Map<String, Object>) m);
-        return b.filter(m -> readable(p, m));
+        return b.filter(m -> readable(p, m)).map(this::withScope);
     }
 
     private boolean readable(Principal p, Map<String, Object> m) {
@@ -140,9 +197,20 @@ final class VarSaved {
     List<Map<String, Object>> baskets(Principal p) {
         List<Map<String, Object>> out = new ArrayList<>();
         for (String key : docs.store().list("var/baskets/")) {
-            docs.value(key, Map.class).map(m -> (Map<String, Object>) m).filter(m -> readable(p, m)).ifPresent(out::add);
+            docs.value(key, Map.class).map(m -> (Map<String, Object>) m).filter(m -> readable(p, m)).map(this::listed).ifPresent(out::add);
         }
         out.sort((a, b) -> String.valueOf(a.get("id")).compareTo(String.valueOf(b.get("id"))));
+        return out;
+    }
+
+    /** A basket as a list shows it: without its sheet's lists (opened one at a time), with its scope and how many parts it has. */
+    private Map<String, Object> listed(Map<String, Object> m) {
+        Map<String, Object> out = withScope(m);
+        if (out.containsKey("sheet")) {
+            out = new LinkedHashMap<>(out);
+            out.remove("sheet");
+            out.put("fromSheet", true);
+        }
         return out;
     }
 
@@ -202,12 +270,12 @@ final class VarSaved {
         List<Map<String, Object>> out = new ArrayList<>();
         for (String key : docs.store().list("var/baskets/")) {
             docs.store().get(key).ifPresent(item -> {
-                Map<String, Object> m = ContentDocs.decode(item.bytes(), Map.class);
+                Map<String, Object> m = withScope(ContentDocs.decode(item.bytes(), Map.class));
                 if (!String.valueOf(m.get("owner")).toLowerCase(Locale.ROOT).contains(want)) {
                     return;
                 }
                 Map<String, Object> row = new LinkedHashMap<>();
-                for (String f : List.of("id", "owner", "name", "description", "type", "scope", "sharedWith", "createdAt", "updatedAt", "version")) {
+                for (String f : List.of("id", "owner", "name", "description", "type", "scope", "parts", "sharedWith", "createdAt", "updatedAt", "version")) {
                     row.put(f, m.get(f));
                 }
                 row.put("bytes", item.bytes().length);

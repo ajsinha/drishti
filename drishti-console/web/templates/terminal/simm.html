@@ -1,0 +1,74 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# ISDA SIMM (docs/guides/SIMM_GUIDE.md sections 7 and 8). mode "screen", SIMM [<netting set> | CPTY <id>]: the decided mock-up A (every
+   netting set with its IM to collect and post, the selected one's breakdown by product and risk class beside) with C (the margin against
+   the counterparty's call) as its second tab. mode "play", PLAY SIMM <netting set> or PLAY SIMM RUN <id>: the playground on the VaR
+   Playground's frame, the Choices panel (version, concentration, HVR, side) and a comparison explained by step, Save recipe and Export to
+   Excel. A shell: simm.js fills it. #}
+{% extends "base.html" %}
+{% block title %}{{ 'SIMM Playground' if mode == 'play' else 'SIMM' }} · {{ netting_set or counterparty or recipe or 'netting sets' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}{{ screen }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/frtb-sa.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="pg fr sm" data-simm data-mode="{{ mode }}" data-ns="{{ netting_set }}" data-cpty="{{ counterparty }}" data-recipe="{{ recipe or '' }}">
+  <div class="pg-head">
+    <h1 class="pg-title"><span class="pg-word mono">{{ 'PLAY SIMM' if mode == 'play' else 'SIMM' }}</span>
+      {{ 'SIMM Playground' if mode == 'play' else 'ISDA SIMM initial margin' }}</h1>
+    <nav class="pg-path mono" aria-label="The netting set">{{ netting_set or counterparty or recipe }}</nav>
+    <span class="pg-meta" data-sm-meta aria-live="polite">loading…</span>
+    <a class="pg-help" href="/help/context/simm" title="Help: ISDA SIMM (the guide)" aria-label="Help: ISDA SIMM"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if mode == 'play' and netting_set %}<a class="pg-link" href="/simm?nettingSet={{ netting_set|urlencode }}">SIMM screen</a>{% elif netting_set %}<a class="pg-link" href="/play/simm?nettingSet={{ netting_set|urlencode }}">Open in the playground</a>{% endif %}
+  </div>
+  <form class="pg-ask" method="get" action="{{ '/play/simm' if mode == 'play' else '/simm' }}">
+    <label>Netting set <input class="pg-input mono" name="nettingSet" value="{{ netting_set }}" placeholder="NS-ALDERSHOT-LDN, EXAMPLE, or a scope (an analytic)" autocomplete="off"></label>
+    <button type="submit" class="pg-btn primary">Open</button>
+    <a class="pg-link" href="/api/simm/template.xlsx" download title="The workbook of the hand-built examples: every figure a formula, every licensed parameter cell empty">Template workbook</a>
+  </form>
+  <p class="pg-notice" data-sm-notice role="status" hidden></p>
+  {% if mode == 'screen' %}
+  <div class="fr-tabs" role="tablist">
+    <button type="button" role="tab" class="fr-tab" data-sm-tab="sets" aria-selected="true">Netting sets</button>
+    <button type="button" role="tab" class="fr-tab" data-sm-tab="against" aria-selected="false">Against the counterparty</button>
+  </div>
+  <div class="fr-body">
+    <section class="fr-main">
+      <div data-sm-pane="sets"><table class="fr-grid" data-sm-sets aria-label="Every netting set: IM to collect and post"></table></div>
+      <div data-sm-pane="against" hidden><table class="fr-grid" data-sm-against aria-label="{{ PRODUCT }}'s margin beside the counterparty's call"></table></div>
+    </section>
+    <aside class="pg-explain fr-drill" data-sm-detail aria-live="polite"><p class="muted">Select a netting set: its IM by product class and risk class, collect and post, the version and the concentration factors.</p></aside>
+  </div>
+  {% else %}
+  <div class="fr-choices" data-sm-choices aria-label="Choices: the parameter version and every method switch"></div>
+  <div class="pg-ctrls" role="toolbar">
+    <label class="pg-chip">Side <select data-sm-side aria-label="Collect or post"><option>collect</option><option>post</option></select></label>
+    <label class="pg-chip">Compare with <select data-sm-compare aria-label="A switch flipped"><option value="">(none)</option></select></label>
+    <span class="pg-actions">
+      <button type="button" class="pg-btn" data-sm-save title="Save this run as a recipe: PLAY SIMM RUN <id> computes it again to the cent">Save recipe</button>
+      <button type="button" class="pg-btn primary" data-sm-export title="The workbook of live formulas: the switches and the side are cells of Config">Export to Excel</button>
+    </span>
+  </div>
+  <div class="fr-compare" data-sm-diff aria-live="polite" hidden></div>
+  <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-sm-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-sm-formula>Select a row</code></div>
+  <div class="pg-body">
+    <section class="pg-gridcard"><div class="pg-scroll" tabindex="0"><table class="fr-grid fr-ws" data-sm-ws aria-label="The weighted sensitivities and curvature risks, bucket by bucket"></table></div></section>
+    <aside class="pg-explain" data-sm-explain aria-live="polite"></aside>
+  </div>
+  {% endif %}
+</div>
+<script src="/static/js/simm.js?v={{ ASSET_V }}"></script>
+{% endblock %}

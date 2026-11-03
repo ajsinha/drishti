@@ -156,6 +156,43 @@ schemas:
       - { key: sign-off, type: list, default: "[maker, checker, approver]", meaning: "The sign-off steps in order, maker first, one person a step" }
       - { key: step-titles, type: map, default: "{}", meaning: "A step's title on the screens ({approver: CRO})" }
       - { key: "step-titles.*", type: string, meaning: "One step's title" }
+  simm-parameters:
+    area: simm
+    title: "A SIMM version's parameter file: `<drishti.simm.parameters-dir>/<version>.yaml` (docs/guides/SIMM_GUIDE.md section 4)"
+    file: docs/architecture/capital-parameters/simm.yaml
+    applies: server
+    change: restart
+    no-default: "none (licensed)"
+    keys:
+      - { key: version, type: string, meaning: "The SIMM version as the CSA names it (2.8+2512); a netting set's CSA picks its file by it" }
+      - { key: effective-from, type: date, meaning: "The version's effective date; the default version is the installed one with the latest" }
+      - { key: source, type: string, default: "", meaning: "Where the numbers come from (the licensed methodology document)" }
+      - { key: holding-period-days, type: integer, default: "10", meaning: "SIMM's margin period of risk (a methodology constant)" }
+      - { key: calculation-currency, type: string, default: USD, meaning: "The currency the thresholds are set in; converted at the date's FX for another calculation currency" }
+      - { key: regimes, type: list, meaning: "The regime codes the version recognises; a CSA's other code is ignored and named (DRS-5334)" }
+      - { key: product-classes, type: list, default: "[RatesFX, Credit, Equity, Commodity]", meaning: "SIMM's four product classes (added, no correlation between them)" }
+      - { key: risk-classes, type: list, default: "[InterestRate, CreditQ, CreditNonQ, Equity, Commodity, FX]", meaning: "The six risk classes, the axis of risk-class-correlation" }
+      - { key: risk-class-correlation, type: list, meaning: "ψ: the 6 × 6 correlation between risk classes within a product class (symmetric, unit diagonal)" }
+      - { key: InterestRate, type: map, meaning: "The InterestRate risk class's numbers (the keys below)" }
+      - { key: InterestRate.tenors, type: list, meaning: "The rates vertices (2w to 30y), the axis of the risk weights and the tenor correlation" }
+      - { key: InterestRate.buckets, type: list, meaning: "The volatility groups (the dictionary's SIMM_BUCKET of a rates factor)" }
+      - { key: "InterestRate.delta-risk-weights.*", type: list, meaning: "Per bucket, one risk weight per tenor (per bp)" }
+      - { key: InterestRate.inflation-risk-weight, type: number, meaning: "The inflation delta risk weight (per bp)" }
+      - { key: InterestRate.cross-currency-basis-risk-weight, type: number, meaning: "The cross-currency basis risk weight (per bp)" }
+      - { key: InterestRate.tenor-correlation, type: list, meaning: "The tenor × tenor correlation (also the vega and, squared, the curvature correlation)" }
+      - { key: InterestRate.sub-curve-correlation, type: number, meaning: "φ: two sub-curves of one currency" }
+      - { key: InterestRate.inflation-correlation, type: number, meaning: "Inflation to a curve of its currency" }
+      - { key: InterestRate.cross-currency-basis-correlation, type: number, meaning: "The basis to anything of its currency" }
+      - { key: InterestRate.across-currencies, type: number, meaning: "γ across currencies (with g_bc from the currencies' concentration factors)" }
+      - { key: InterestRate.vega-risk-weight, type: number, meaning: "The rates vega risk weight" }
+      - { key: InterestRate.historical-volatility-ratio, type: number, meaning: "HVR_IR: the rates curvature margin is multiplied by HVR_IR⁻²" }
+      - { key: "InterestRate.threshold-groups.*", type: list, meaning: "The currencies of each concentration group (any other currency: other)" }
+      - { key: "InterestRate.concentration-thresholds.*", type: map, meaning: "delta (per bp) and vega thresholds by group, other included" }
+      - { key: "CreditQ.*", type: map, meaning: "tenors, buckets, delta-risk-weights (by bucket and Residual, per bp), correlation (same-issuer, different-issuer, residual-same-issuer, residual-different-issuer), across-buckets (bucket × bucket), base-correlation-risk-weight, base-correlation-correlation, vega-risk-weight, concentration-thresholds (delta and vega by bucket)" }
+      - { key: "CreditNonQ.*", type: map, meaning: "as CreditQ, with across-buckets one number and no base correlation" }
+      - { key: "Equity.*", type: map, meaning: "buckets, delta-risk-weights (by bucket and Residual, per 1 %), correlation (by bucket), across-buckets (bucket × bucket), vega-risk-weight (one number or by bucket), historical-volatility-ratio, zero-curvature-buckets (volatility indices), concentration-thresholds" }
+      - { key: "Commodity.*", type: map, meaning: "buckets, delta-risk-weights (by bucket, per 1 %), correlation (by bucket), across-buckets, vega-risk-weight, historical-volatility-ratio, concentration-thresholds" }
+      - { key: "FX.*", type: map, meaning: "high-volatility-currencies, delta-risk-weights (regular-regular, regular-high, high-regular, high-high), correlation (by the calculation currency's group: regular-regular, regular-high, high-high), vega-correlation, vega-risk-weight, historical-volatility-ratio, threshold-groups, concentration-thresholds" }
   connector-file:
     area: connectors
     title: "A connector file: `config/connectors/<name>.yaml`"
@@ -377,6 +414,9 @@ env:
   - { name: DRISHTI_REDIS_PASSWORD, by: tools, default: ~, sets: "the Redis loader", meaning: "The Redis loader's password (secret)" }
   - { name: DRISHTI_SERVER, by: tools, default: ~, sets: "drishti.py", meaning: "The server the command line talks to" }
   - { name: DRISHTI_TOKEN, by: tools, default: ~, sets: "drishti.py", meaning: "A personal API token for the command line and tools (secret)" }
+  - { name: DRISHTI_WAIT_BUSY, by: tools, default: "false", sets: "drishti.py", meaning: "1: every command waits when the server is busy (503 DRS-9501 to DRS-9505, busy protection) for its Retry-After and tries again, three times at most (data get --wait does the same for one download)" }
+  - { name: DRISHTI_LAKE_MEMORY_MB, by: tools, default: "", sets: "the launchers' -XX:MaxDirectMemorySize", meaning: "The in-memory lake stores' caps in MB, summed; when set, the launchers raise the JVM's direct-memory limit by it instead of reading the stores from the configuration (tools/lake/memory_caps.py)" }
+  - { name: DRISHTI_LAKE_MEMORY_, by: tools, default: "", sets: "one store's cap for the launchers", meaning: "Prefix: DRISHTI_LAKE_MEMORY_<STORE>_MAX_MB overrides one in-memory lake store's max-mb when the launchers compute the direct-memory limit (tools/lake/memory_caps.py)" }
   - { name: DRISHTI_DRAIN_TOKEN, by: tools, default: ~, sets: "rolling.py, deploy/bin/drishti-node.sh", meaning: "An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI_DRAIN_TOKEN_FILE, else DRISHTI_TOKEN)" }
   - { name: DRISHTI_DRAIN_WAIT, by: tools, default: "90", sets: "deploy/bin/drishti-node.sh", meaning: "Seconds the stop hook waits for safeToStop after the drain (ECS on Fargate: at most 120 s for the whole stop)" }
   - { name: DRISHTI_NODE_URL, by: tools, default: "http://localhost:18480", sets: "deploy/bin/drishti-node.sh", meaning: "The server the stop hook drains and checks" }

@@ -230,7 +230,7 @@ vector is:
 Order: 3 (−11), 1 (−6), 9 (−6), 7 (−5), … → VaR = −v[1] = **6** (unchanged: T2's incremental VaR is 0) but ES = −(−11 − 6)/2 = **8.5**
 (up from 6.5): the short hedged the worst day, which ES sees and VaR at this rank does not. At α = 99% (k = 1) the book's VaR would be
 7, its worst value. With N = 509 the same steps use the 6th worst for VaR, the 13 worst for ES and ranks 4 to 8 for components. The
-engine's Python twin (`drishti_compute.var.measures`) and the Java engine (`VarMath`) are tested on exactly these numbers.
+engine (`VarMath`, `VarCalc` and the what-if's `VarWhatIfMath`) is tested on exactly these numbers.
 
 ### 2.2 On the test data
 
@@ -441,49 +441,93 @@ ranked path also list each trade's or position's **Trade currency**.
 
 ### 3.5 Construct your basket
 
-*VaR of any mix of portfolios, trades and counterparties.* Ad-hoc scopes and baskets are one thing, built one way: the basket tray, a
-strip across the top of the explorer, opened by **◫ Construct your basket** (with the count of its parts) or **Alt+B**. It lives on the
-VaR page only (the top bar has no Basket button, and Alt+B does nothing elsewhere); what you put in it stays in this browser, so a
-basket built earlier is there when the explorer opens, waiting behind the link's count: the tray opens only when asked (the link,
-Alt+B or **+ basket** on a row), never by itself, not even when the explorer opens a saved basket.
+*VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, built in one sheet like Excel.* Ad-hoc
+scopes and baskets are one thing, built one way: the basket's sheet, across the top of the explorer, opened by **◫ Construct your basket**
+(with the count of its parts) or **Alt+B**. It lives on the VaR page only (the top bar has no Basket button, and Alt+B does nothing
+elsewhere); what you put in it stays in this browser, so a basket built earlier is there when the explorer opens, waiting behind the
+link's count: the sheet opens only when asked (the link, Alt+B, **+ basket** on a row, **Edit**), never by itself, not even when the
+explorer opens a saved basket.
 
-- **Type to add.** Hints come from the engine as you type: portfolios, saved baskets, desks, books, legal entities, divisions,
-  counterparties, positions and trades, each with its type, id, name, trade count and standalone VaR (`pf usd`, `aldershot`, `MX-3000`,
-  `rates`). **↓ ↑** and **Enter** pick; a leading **-** takes it away (`-MX-30000121`). Anything in the [grammar](#52-the-grammar) can be
-  typed as written (`TRD:MX-30000121`).
-- **+ Rule** adds a condition over the positions' columns (`CURRENCY == 'EUR' and DIRECTION == 'SHORT'`, a `WHERE:` term,
-  [section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)).
-- **+ / −** on each chip adds or takes away that part; **×** removes it.
-- **+ basket** on any row of the tree, the contributions and the trades (By trade) adds that row.
-- **Live** as you pick: the selection's VaR 99% 1-day and ES, its trades, the **sum of the parts'** standalone VaRs (each part alone) and
-  the **diversification** (the sum minus the selection's VaR), all computed by the engine. A trade in two parts counts once.
-- **Matches nothing?** A part the date does not hold is flagged at once (a red chip, *matches nothing*) and said in words under the
-  figures, for example *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*, or *TRD:X is not live on …: its status is
-  CANCELLED*. A selection with no trades says **No trades**, never a VaR of 0 that looks computed; so does the explorer
-  ([section 5.3](#53-resolution-rules)).
-- **+ What-if trade**: a pre-deal what-if, a copy of a booked trade scaled by a factor (−1: its unwind), added to the basket; the VaR and
-  ES before → after and the incremental, by the Python VaR engine ([section 8.5](#85-the-pre-deal-what-if-in-the-basket-tray)).
-- **Save basket and open VaR** keeps it as a basket (private, or shared read-only with the users or roles you name) and opens
-  `VAR SCOPE BASKET:<you>/<name>` in the full explorer: the tree, the contributions by part (drill into any part, down to its trades), the
-  P&L path, the history, captures. **Open without saving** opens the ad-hoc scope; **Clear** empties the tray.
+**The sheet.** A column per kind of part: **Trade** (`TRD`), **Position** (`POS`), **Portfolio** (`PORT`), **Book** (`BOOK`), **Desk**
+(`DESK`), one column per configured hierarchy's word (the demo's **Limit letter**, `LL`) and **Counterparty** (`CPTY`), and the **Op**
+column, **+** or **−**, for each row. One id a cell. It fills four ways:
+
+- **Type in a cell.** Click it (or move with the arrows, Tab and Shift+Tab) and type; **Enter** keeps it and moves down, **Esc** drops
+  the edit, **Delete** clears the cell. In the Op column a click, Space, **+** or **−** sets the row's sign.
+- **Paste whole columns from Excel.** Select a cell and paste (Ctrl+V): Excel's columns fill downward from it, and rightward for several
+  columns. A first row of headings (**Op**, **Trade**, `TRD`, *Trade (TRD)*, as the sheet's own workbook writes them) puts each pasted
+  column under its heading wherever you paste. A sheet holds 20,000 rows; every column takes 10,000 ids and more.
+- **Find and add.** The type-ahead above the sheet offers what the engine knows as you type: portfolios, saved baskets, desks, books,
+  legal entities, divisions, counterparties, positions and trades, each with its type, id, name, trade count and standalone VaR (`pf usd`,
+  `aldershot`, `MX-3000`, `rates`); **↓ ↑** and **Enter** pick, and the hint lands in its kind's column. **Add (+)** or **Take away (−)**
+  above the sheet says which, and a leading **-** takes it away (`-MX-30000121`). Anything in the [grammar](#52-the-grammar) can be typed
+  as written (`TRD:MX-30000121`).
+- **+ basket** on any row of the tree, the contributions and the trades (By trade) adds that row to its column.
+
+A cell may name its kind itself (`NODE:MGMT~DESK-RATES` in the Desk column, `BASKET:asha/unwind` in the Portfolio column); a rule
+(`WHERE:`) has no column: open it as a scope from the command line ([section 5.4](#54-the-position-rule-language-where-and-rule-portfolios)).
+
+**Take away by a minus.** The basket is everything added, then everything marked − taken away: a **−** in the Op column, or a leading
+**-** on an id (`-TRD:XYZ` or `-XYZ` in the Trade column), as the scope grammar's `A + B - C` does. A minus on a desk or a book takes away
+all its trades, whichever part added them. A minus that takes nothing away (none of its trades is in a part added) is flagged in words
+on its cell.
+
+**Start from the whole bank.** One checkbox above the sheet, never a row in it. Ticked, the basket is the whole bank (every trade you may
+see, `BANK`) and the rows refine it: `BANK - DESK:COMM - TRD:XYZ` is the bank without the commodities desk and one trade. A **+** row then
+adds nothing (the bank already holds it) and says so. A saved basket keeps the tick.
+
+**Every cell checked by the server.** As you type or paste, the sheet goes to the server as lists, one per column; the server checks
+every cell as you, on the page's date, and answers each one: **found** (green), **not found** (red, the reason in words as the cell's
+tooltip and in the list under the sheet, for example *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*, *TRD:X is not live
+on …: its status is CANCELLED*, *is outside your view: your role does not see its trades*, *cannot be used: the counterparty is masked
+for your role*), or found but **adding or taking away nothing** (amber). A cell not found is left out of the figures and kept in the
+sheet until you remove it: **Remove the not found** drops them all. Click a reason to go to its cell.
+
+**Live figures, the server's.** Under the sheet: the basket's **VaR** and **ES**, the **sum of the parts** (each cell added, alone), the
+**diversification** (the sum minus the basket's VaR) and its **trades** (a trade in two parts counts once), computed by the engine for
+the basket the sheet composes; the console computes nothing. A basket with no trades says so, never a VaR of 0 that looks computed; so
+does the explorer ([section 5.3](#53-resolution-rules)).
+
+**What-if trades.** Under the figures: a pre-deal what-if, a copy of a booked trade (or of any scope, `BOOK:BOOK-RATES-3`) scaled by a
+factor (−1: its unwind), added to the basket; the VaR and ES before → after and the incremental, by the server's VaR engine with no
+compute workers ([section 8.5](#85-the-pre-deal-what-if-under-the-baskets-sheet)).
+
+**Name, share, save and open.** **Save basket and open VaR** keeps it as a basket (private, or shared read-only with the users or roles
+you name), its parts kept as the sheet's lists ([section 5.8](#58-baskets)), and opens `VAR SCOPE BASKET:<you>/<name>` in the full
+explorer: the tree, the contributions by part (drill into any part, down to its trades), the P&L path, the history, captures. **Open
+without saving** opens the ad-hoc scope (a basket too large for a link is saved first); **Clear** empties the sheet. **Download as .xlsx**
+gives the sheet back to Excel: a *Basket* sheet with the Op column and each kind's column under its heading (paste it back to open the
+basket again) and a *Checks* sheet with every cell that needs a word.
 
 The state reads **unsaved basket** until you save, then **saved basket · \<owner>/\<name>**. **Opening a saved basket** (from the tree,
-`VAR SCOPE <name>`, a link) loads its parts back into the tray, so you can edit it and save under the same name (a new version) or a new
-one. While the explorer shows the tray's unsaved scope, it follows every change you make.
+`VAR SCOPE <name>`, a link, **Open a saved basket ▾**) loads it back into the sheet, column by column. While the explorer shows the
+sheet's unsaved scope, it follows every change you make.
 
-**Deleting a basket.** Each basket you own has **Delete** in the explorer's *Ad-hoc scopes* list (shown as you point at its row or move
-to it with Tab; an administrator sees it on every basket listed). It asks first, in a dialog that names the basket, its owner and whom
-it is shared with (they lose it too); **Keep it** or **Esc** keeps it, **Delete basket** deletes it. The list refreshes at once, and
-when the explorer was showing that basket it says it was deleted (the scope now matches nothing: *no such basket you may read: it was
-deleted, or it is not shared with you*). What you had in the tray stays there as an unsaved basket, so you can save it again. Captures
-taken of the basket are kept: each still opens with the scope and members it was taken with, and says the basket no longer exists.
-Official end-of-day records never name a basket. A basket changed by its owner after you opened the dialog is not deleted unseen: the
-dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in **Admin → Ad-hoc scopes** (every owner's,
-filtered by owner, **Delete** with an optional reason that goes to the audit log and to the owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)).
-CLI: `drishti.py var basket-delete <name>` (yours), `--owner <user> --reason <text>` (an administrator, anyone's). API:
-`DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+**Edit, amend and delete.** In the explorer's *Ad-hoc scopes* list:
 
-![Construct your basket: a book's position added from its row, a portfolio from the hints, the FX desk from the tree, a trade taken away; the selection's VaR, the sum of the parts and the diversification, live](img/var/06-basket.jpg)
+- a basket you own has **Edit**: it opens in the sheet, and **Save as version *n*** keeps its name as a new version (every version is
+  kept); a changed name saves a new basket. Someone else's change since you opened it is not overwritten unseen: the save is refused
+  (`409`) and you open it again;
+- an **administrator** has Edit on everyone's basket at any time: the edit is saved under its owner, audited (`var-basket-edit`, *edited
+  by administrator \<user>*) and the owner gets an inbox notice, as for a delete;
+- a basket shared with you read-only, and every **portfolio**, have **Edit a copy**: a portfolio belongs to the bank (its feed, the
+  `portfolio` table) and is never edited, amended or deleted in Drishti; its copy opens in the sheet as your own unsaved basket, to save
+  under a name of yours;
+- **Delete**, on a basket you own (an administrator sees it on every basket listed), asks first, in a dialog that names the basket, its
+  owner and whom it is shared with (they lose it too); **Keep it** or **Esc** keeps it, **Delete basket** deletes it.
+
+After a delete the list refreshes at once, and when the explorer was showing that basket it says it was deleted (the scope now matches
+nothing: *no such basket you may read: it was deleted, or it is not shared with you*). What you had in the sheet stays there as an unsaved
+basket, so you can save it again. Captures taken of the basket are kept: each still opens with the scope and members it was taken with,
+and says the basket no longer exists. Official end-of-day records never name a basket. A basket changed by its owner after you opened
+the dialog is not deleted unseen: the dialog says it changed (`409`) and you look again. Administrators manage everyone's baskets in
+**Admin → Ad-hoc scopes** (every owner's, filtered by owner, **Delete** with an optional reason that goes to the audit log and to the
+owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-baskets)). CLI: `drishti.py var basket-delete <name>`
+(yours), `--owner <user> --reason <text>` (an administrator, anyone's). API: `POST /api/v1/var/basket/sheet` (the checks and figures),
+`GET /api/v1/var/basket/sheet?scope=` (a basket, a portfolio's copy or a scope laid into the sheet), `POST /api/v1/var/basket/sheet.xlsx`,
+`POST /api/v1/var/baskets` (save, edit), `DELETE /api/v1/var/baskets/<owner>/<name>` ([section 11](#11-the-api)).
+
+![Construct your basket: one sheet, a column per kind; a position from its row, a portfolio from the hints, the FX desk from the tree, trades pasted from Excel, one taken away by its leading minus and one not live said in words on its cell; the basket's VaR, ES, sum of the parts and diversification, the server's](img/var/06-basket.jpg)
 
 ![VAR TRD 10000000: not a live trade on the date, said in words; the tiles say no trades instead of a VaR of 0](img/var/13-not-live.jpg)
 
@@ -998,7 +1042,7 @@ SP       := whitespace (or, before an operator, a closing ')'; after it, an open
 
 | Rule | Behaviour |
 |---|---|
-| Unknown ids | an id, node, portfolio, basket or capture the date or the caller does not have resolves to nothing and is listed in `provenance.unknown` (*Unknown ids*), never silently dropped, and said in words in `provenance.notices`: *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the load left out names why (*… is not live on …: its status is CANCELLED*, *… it matured on …*); a rule that matches no position too. The answer is still `200`; an empty scope answers `empty: true` with VaR 0, and the explorer and the basket tray show **No trades** and the notices, never a VaR of 0 that looks computed |
+| Unknown ids | an id, node, portfolio, basket or capture the date or the caller does not have resolves to nothing and is listed in `provenance.unknown` (*Unknown ids*), never silently dropped, and said in words in `provenance.notices`: *TRD:10000000 is not a live trade on 2026-10-26 (no P&L vector)*; a trade the load left out names why (*… is not live on …: its status is CANCELLED*, *… it matured on …*); a rule that matches no position too. The answer is still `200`; an empty scope answers `empty: true` with VaR 0, and the explorer and the basket's sheet show **No trades** and the notices, never a VaR of 0 that looks computed |
 | Overlap | set algebra on trade ordinals: a trade in two terms of a union counts once |
 | Rules and positions | `WHERE:` and `POS:` take whole positions; `TRD:` takes single trades (a position held in part is a *partial* part) |
 | Entitlements | the resolved set is intersected with the trades the viewer may see; the rest are counted (`hidden`). A scope that names `POS`, `TRD`, `CPTY`, `WHERE`, `BASKET`, `CAPTURE` or a `PORT:` of a BASKET-type portfolio is refused (`403 DRS-5002`) unless every resolved trade is at `positions` level for the viewer; `CPTY:` is refused to a viewer who sees `COUNTERPARTY` masked |
@@ -1085,18 +1129,25 @@ once (two overlapping portfolios' vectors cannot simply be added, and a table of
 
 ### 5.8 Baskets
 
-A **basket** is a scope you save under a name (explorer or any page: **Construct your basket**, then **Save basket and open VaR**,
-[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/var/baskets`). The tray writes its parts as
-the scope: the parts to add joined by ` + `, then those to take away by ` - ` (`PORT:PF-USD-RATES + NODE:MGMT~DESK-FX - TRD:MX-30000121`);
-opening the basket splits its scope back into those parts (the headline's `terms`, below), so the tray shows them for editing. A basket
-of two parts or more is broken down **by part** (`by=part`, the default child of a basket or an ad-hoc union): each part's standalone
-VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components add up to
-the basket's VaR and a trade in two parts counts once. It is a RULE when it is a single rule (the scope starts with `WHERE:` and has no ` + `), else a BASKET;
-private unless you share it read-only with users or roles (*Share read-only with*: each reader sees it through their own entitlements).
-Baskets are stored in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
+A **basket** is a scope you save under a name (on the VaR explorer: **Construct your basket**, then **Save basket and open VaR**,
+[section 3.5](#35-construct-your-basket); CLI: `drishti.py var basket`; API: `POST /api/v1/var/baskets`). A basket built in the sheet is
+kept as the **sheet's lists**, one per column, never as one long scope text: `sheet` holds `wholeBank` (Start from the whole bank), `op`
+(the Op column, `+` or `-` a row) and each filled column (`TRD`, `POS`, `PORT`, `BOOK`, `DESK`, a configured hierarchy's word such as
+`LL`, `CPTY`), aligned by row. Its scope is composed from them whenever it is read: the parts added joined by ` + ` (the ids of a kind as
+one list, `TRD:a,b`), or `BANK` when the whole bank is ticked, then each part taken away after a ` - `
+(`TRD:MX-1,MX-2 + PORT:PF-USD-RATES + DESK:DESK-FX - TRD:MX-30000121`), so it computes like any scope and stays computable as the data
+changes. A basket saved from scope text (the CLI, the API) keeps its `scope`. Opening a basket in the sheet lays it out column by column:
+the sheet's own lists, or a scope's top-level terms, the parts added first and those taken away below them
+(`GET /api/v1/var/basket/sheet?scope=`).
+
+A basket of two parts or more is broken down **by part** (`by=part`, the default child of a basket or an ad-hoc union): each part's
+standalone VaR is the part alone inside the basket, its component VaR the part's trades not already in an earlier part, so the components
+add up to the basket's VaR and a trade in two parts counts once. It is a RULE when it is a single rule (the scope starts with `WHERE:` and
+has no ` + `), else a BASKET; private unless you share it read-only with users or roles (*Share read-only with*: each reader sees it
+through their own entitlements). Baskets are stored in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
 they follow their owner across the servers of a cluster and every version is kept; they are listed under *Ad-hoc scopes* as `★ name`
 and opened as `BASKET:<owner>/<name>` or `VAR SCOPE <name> <GO>`. A basket of nodes and rules is **dynamic** (what matches on the date
-you look at); one of ids is **static** (a later date may not hold them: *unknown*). Every save and delete is audited.
+you look at); one of ids is **static** (a later date may not hold them: *unknown*). Every save, edit and delete is audited.
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -1104,15 +1155,31 @@ you look at); one of ids is **static** (a later date may not hold them: *unknown
 | `name` | string | the title given (`title`), else the name |
 | `description` | string | |
 | `type` | string | `RULE` or `BASKET`, as above |
-| `scope` | string | the scope text as saved (must parse) |
+| `sheet` | object | a basket built in the sheet: `wholeBank` (boolean), `op` (`+` or `-` a row) and a list per filled column, aligned by row, at most 20,000 rows |
+| `parts` | integer | a sheet's filled cells |
+| `scope` | string | the scope text: as saved (must parse), or composed from `sheet` when read (never stored with it) |
 | `owner` | string | the user who saved it |
+| `editedBy` | string | the administrator whose edit made this version, when one did |
 | `sharedWith` | string list | user names, or role names (optionally `role:<name>`): read-only |
 | `createdAt`, `updatedAt` | string | ISO-8601 instants |
 | `version` | integer | 1, then +1 on every save under the same name |
 
 **Name:** slugged to lower case (`[^a-z0-9._-]` → `-`), 1 to 64 characters `[a-z0-9][a-z0-9._-]{0,63}`; `<owner>` is the content
-store's form of the user name. **Who may read:** the owner, a named user, or a holder of a named role. **Delete:** the owner only
-(`204`; anything else `404`).
+store's form of the user name. **Who may read:** the owner, a named user, or a holder of a named role. **Save, edit:** the owner, under the
+same name a new version (`version` in the body, when given, is the version the editor opened: changed since, `409`); an administrator
+edits anyone's (`owner` in the body names whose): saved under its owner, audited as `var-basket-edit`, the owner told in their inbox;
+anyone else naming another person's basket gets `404`. **Delete:** the owner, or an administrator (`204`; anything else `404`). A
+**portfolio** is the bank's (the `portfolio` feed, [section 5.7](#57-stored-portfolios)): it is never saved, edited or deleted here; the
+sheet's *Edit a copy* saves its parts as your own basket.
+
+**The sheet's checks** (`POST /api/v1/var/basket/sheet`, the body the sheet itself or `{"sheet": {...}}`, with `asOf` and `ccy`) answer
+`cells` (only the cells that need a word: `column`, `row`, `text`, `word`, `id`, `op`, `status` `not-found`, `adds-nothing` or
+`takes-nothing`, `reason`), the counts `found`, `notFound`, `flagged`, `takesNothing`, and the basket's `var`, `es`, `sumOfParts`,
+`diversification`, `trades`, `takenAway`, `partsAdded`, `confidence`, `esConfidence`, `currency`, `businessDate`, `scope` (composed from
+every readable cell; the figures leave the cells not found out), `columns` (each column's `key` and `title`), `empty` and a `notice` in
+words when there is nothing to compute. A trade or position cell is looked up directly (a run of ordinals), so 10,000 ids in a column
+are checked in well under a second on the demo. A cell is one id: spaces, commas or brackets in it, a column the sheet does not have or
+more than 20,000 rows are refused in words (`400`, `413`); a role that may not name trades one by one gets `403` for a sheet that does.
 
 ## 6. Captures and compare
 
@@ -1228,18 +1295,19 @@ feed the regulatory backtest of [section 18.11](#1811-backtesting-for-regulation
 
 ## 8. What-if and VaR as a kind
 
-Two **computed kinds** of the market-risk pack make VaR an ordinary kind, served by reactive connectors (`plugin: reactive`,
+The **computed kind** `var-result` of the market-risk pack makes VaR an ordinary kind, served by a reactive connector (`plugin: reactive`,
 [REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): by command (`VRES DESK:RATES <GO>`), link (`/v/var-result/DESK:RATES`),
-the entities and compute APIs, the CLI (`drishti.py compute run var-engine var-result DESK:RATES`, `drishti.py var whatif`), search and the
-AI tools, with the explorer's entitlements (each is computed as the person asking: their nodes, masks and audit entry; cached per view
-signature). Names decided (open question 12): `var-result` and `var-whatif`, fields `VAR` with `CONFIDENCE` (never `VAR_99`); the
-retired kind name `var` is not reused. The designs' `var-contribution`, `var-path` and `var-history` are not separate kinds: a
-`var-result` carries the parts (`CHILDREN`), the worst scenarios and the vector, and the explorer and the API serve paths and histories.
-Contracts: `config/packs/market-risk/contracts/var-result.contract.yaml` and `var-whatif.contract.yaml` (class `computed`).
+the entities and compute APIs, the CLI (`drishti.py compute run var-engine var-result DESK:RATES`), search and the AI tools, with the
+explorer's entitlements (computed as the person asking: their nodes, masks and audit entry; cached per view signature). Names decided
+(open question 12): `var-result`, fields `VAR` with `CONFIDENCE` (never `VAR_99`); the retired kind name `var` is not reused. The
+designs' `var-contribution`, `var-path` and `var-history` are not separate kinds: a `var-result` carries the parts (`CHILDREN`), the
+worst scenarios and the vector, and the explorer and the API serve paths and histories. Contract:
+`config/packs/market-risk/contracts/var-result.contract.yaml` (class `computed`). The **pre-deal what-if** is the same engine's, asked
+through the VaR API (`POST /api/v1/var/what-if`, [section 8.2](#82-the-what-if-the-java-engine)), not a kind.
 
 **Ids.** The id is the scope text. Like every computed id ([ComputeRef](../connectors/REACTIVE_CONNECTOR.md#reading-a-computed-kind)), a
 `~` inside it is written `%7E` (`NODE:MGMT%7EDESK-RATES`; prefer `DESK:RATES`, which needs none), `=` `%3D` (a `WHERE:` rule's `==`),
-and parameters ride after a `~` (`DESK:RATES~stress-window=120`). A scope with a `/` (a basket) is read through the compute API's body,
+and parameters ride after a `~` (`DESK:RATES~ccy=EUR`). A scope with a `/` (a basket) is read through the compute API's body,
 not a link.
 
 ### 8.1 `var-result`: the Java engine
@@ -1282,77 +1350,64 @@ var-engine DESK:RATES  READY  (req-mvosw177-c6042d15feb9)
 Tables with the answer: `children` and `worst` (for panels). A scope that does not parse, or a role that may not see VaR, is the
 engine's refusal in words (`failed` with the reason); a role that may not open the kind is `refused`.
 
-### 8.2 `var-whatif`: the Python engine
+### 8.2 The what-if: the Java engine
 
-`VWIF <scope> <GO>`: connector `var-whatif`, the **Python VaR engine** `drishti_compute.var.whatif:VarWhatIfEngine` in the compute pool
-`var`: the scope's VaR before and after hypothetical trades, and its stressed window. Java keeps the additive aggregation (it reads the
-scope's `var-result` as the viewer, input `base`); Python does what does not add. The hypothetical trades live in your private
-**sandbox** (parameter `sandbox`, type `sandbox-ref`: `POST /api/v1/compute/sandboxes {connector: var-whatif, items: [{LABEL, PNL: [N
-numbers], FACTOR}]}`, input `sandbox`), each with its P&L over the 509 scenario days (priced elsewhere, or copied from a booked trade's
-vector) and a `FACTOR`; taking trades out is the scope's own algebra (`DESK:RATES - TRD:X`), so it is exact. Parameters: `stress-window`
-(int, 250; 0 none: the largest VaR over every run of that many consecutive scenario days), `component-window` (int, 5). A trigger never
-recomputes a sandbox. It needs the compute workers (`DRISHTI_COMPUTE_ENABLED=true`).
+`POST /api/v1/var/what-if`: a scope's VaR, ES and stressed VaR **before and after hypothetical trades**, and each trade's figures,
+computed by the server's VaR engine (`VarWhatIf` over `VarWhatIfMath`, the same rules as every other VaR answer: the confidence, the
+rank rule, the component window and its scale, [section 18](#18-the-computation)). Nothing else is needed: no compute workers, no
+sandbox, so it answers on every server, the compute workers on or off. A hypothetical trade is one of:
+
+- **a copy** of what is booked, `{"copyOf": "MX-30000121", "factor": -1}`: a trade id, or any scope (`BOOK:BOOK-RATES-3` for a hedge
+  shaped like a book), its P&L vector read as you (a trade you may not see one by one is refused), times the factor (1 the same again,
+  −1 its unwind, 0.5 half);
+- **a trade priced elsewhere**, `{"label": "new swap", "pnl": [509 numbers], "factor": 1}`: one P&L per scenario day, in the answer's
+  reporting currency.
+
+Taking trades out is the scope's own algebra (`DESK:RATES - TRD:X`), so it is exact. At most 50 trades; `ccy` in the body (or the query)
+answers in a reporting currency, `asOf` on another business date.
 
 ```bash
-drishti.py var whatif DESK:RATES --trades new-hedge.json --stress-window 250
+drishti.py var whatif DESK:RATES --copy BOOK:BOOK-RATES-3=-0.5
 ```
-
-`new-hedge.json` is a list of trades: `[{"LABEL": "hedge of BOOK-RATES-3 (half)", "PNL": [509 numbers], "FACTOR": -0.5}]` (here the
-vector of `BOOK-RATES-3`, read with `VRES BOOK:BOOK-RATES-3`, sold at half). The command makes the sandbox and asks the engine:
 
 ```text
-what-if on DESK:RATES  READY  (req-mvot2fc8-0c51138d9548)
-  BEFORE_VAR           74,633,680
-  AFTER_VAR            47,599,220
-  CHANGE_VAR           -27,034,460
-  BEFORE_ES            75,377,415
-  AFTER_ES             56,247,260
-  CHANGE_ES            -19,130,155
-  STRESSED_VAR_BEFORE  85,318,588
-  STRESSED_VAR_AFTER   59,556,766
+what-if on DESK:RATES  2026-09-30  in USD  (Java VaR engine (the server))
+  VaR                 74,633,680 ->       47,599,220   change -27,034,460
+  ES                  75,377,415 ->       56,247,260   change -19,130,155
+  stressed VaR        85,318,588 ->       59,556,766
+  -0.5 × BOOK:BOOK-RATES-3: standalone 34,296,045, incremental -27,034,460, component -32,542,151
 ```
 
-The `items` table of the same answer (`--json`): the hedge alone has a VaR of 34,296,045; its incremental VaR is −27,034,460 (the
-change); its component in the desk after the trade is −32,542,151 (a hedge's component is negative). The engine ran on one worker of
-the pool `var` in 22 ms.
+The hedge (half of `BOOK-RATES-3`, sold) takes 27.0 million out of the desk's VaR; its component in the desk after the trade is
+negative, as a hedge's is. `--trades FILE.json` sends trades priced elsewhere (`[{"LABEL": …, "PNL": [509 numbers], "FACTOR": 1}]`);
+`--json` prints the answer as it comes.
 
 | Field | Type | Meaning |
 |---|---|---|
-| `SCOPE`, `CANONICAL`, `BUSINESS_DATE` | text, text, date | the base scope |
-| `ITEMS` | integer | hypothetical trades (0 without a sandbox) |
-| `BEFORE_VAR`, `AFTER_VAR`, `CHANGE_VAR`, `BEFORE_ES`, `AFTER_ES`, `CHANGE_ES` | amount (USD) | the scope's VaR and ES before and after the trades, and the change |
-| `LIMIT`, `LIMIT_USE_BEFORE`, `LIMIT_USE_AFTER` | amount, ratio | |
-| `CONFIDENCE`, `ES_CONFIDENCE` | number | the base's |
-| `STRESS_WINDOW`, `STRESSED_VAR_BEFORE`, `STRESSED_VAR_AFTER`, `STRESSED_FROM` | integer, amount, amount, integer | the largest VaR over every run of `STRESS_WINDOW` consecutive scenario days, before and after, and the run's first day (index) |
+| `scope`, `canonical`, `businessDate`, `currency` | text, text, date, text | the scope asked, as the engine reads it, the date and the reporting currency |
+| `confidence`, `esConfidence` | number | the VaR and ES confidences (the labels a screen shows) |
+| `before`, `after` | record | `var`, `es` and `stressedVar` (whole units): the scope as booked and with the trades added |
+| `change` | record | `var` and `es`: after minus before |
+| `items` | record list | per trade in the order given: `label`, `factor`, `standaloneVar` (its own VaR), `incrementalVar` (the change it makes after the ones before it), `incrementalAlone` (the change it makes added alone to the scope), `componentVar` (its share of the scope's VaR after) |
+| `engine`, `note` | text | who computed it, and how in words |
 
-Tables: `items` (`LABEL`, `FACTOR`, `STANDALONE_VAR`, `STANDALONE_ES`, `INCREMENTAL_VAR` in the order listed, `INCREMENTAL_ALONE` added
-alone to the base, `COMPONENT_VAR`, `COMPONENT_ES` in the scope after) and `pnl` (`DAY`, `BEFORE`, `AFTER`). A trade whose vector has
-another length is refused in words (*what-if item … has 3 scenario P&Ls; the scope has 509*). The compute workers are off as shipped
-(`compute.enabled`); with them off the kind answers `refused` with the reason. In the UI, `VWIF DESK:RATES` (no sandbox) opens the desk's
-stressed window; with a sandbox the id carries it (`DESK:RATES~sandbox=sbx-…`); the sandbox is yours alone (`drishti.py compute sandboxes`).
+**The stressed VaR** here is the largest VaR over every run of 250 consecutive scenario days of the date's scenario set (all of them
+when the set is shorter): a stressed period chosen from the scenarios the batch delivered, before and after the trades. It is not the
+stressed VaR on a stress scenario set ([section 18.8](#188-stressed-var)).
 
-### 8.3 Where it runs: the Java engine and the Python engine
+A scope with no trades, a copy without a vector on the date (*not live*), a priced trade whose vector has another length (*what-if item …
+has 3 scenario P&Ls; the scope has 509*) or a factor that is not a number is `400` in words. Every what-if is audited (`var-whatif`).
 
-**The Java engine** (the server's JVM: `drishti-compute`, `drishti-server`) keeps everything that adds: resolving a scope, summing
-vectors over the hot store, the node aggregates, the explorer's answers, the API, captures and the official records. Additions of stored
-vectors and a sort of N numbers per answer, on a bounded pool; no Python on that path.
+### 8.3 Where it runs: the Java engine
 
-**The Python VaR engine** (`drishti-compute/src/main/python/drishti_compute/var`: `measures.py` with the same rules as `VarMath` and
-`VarCalc`, and the engine `whatif.py`) runs in the compute workers, pool `var` of `config/compute/compute.yaml` (workers
-`DRISHTI_COMPUTE_VAR_WORKERS`, 4; standard library only, so no environment to approve), behind the reactive connector `var-whatif`. It
-receives only the few vectors it needs and does what does not add: a scope's VaR **before and after hypothetical trades** (each with its
-vector, priced elsewhere, scaled by a factor), each trade's incremental VaR in the order listed and alone, their component VaR and ES in
-the scope after, and the **stressed window** (the largest VaR over every run of `stress-window` consecutive scenario days, a stressed
-period chosen from the scenario set the batch delivered). The boundary:
+Every VaR figure is computed by the server, in Java (`drishti-compute`, `drishti-server`): resolving a scope, summing vectors over the
+hot store, the node aggregates, the explorer's answers, contributions by any part or trade column, the what-if, the API, captures and
+the official records. Additions of stored vectors and a sort of N numbers per answer, on a bounded pool. The console and the command
+line only show what the server answers.
 
-| From Java to Python | From Python to Java |
-|---|---|
-| the scope's `var-result` read as the viewer (an Arrow table: `PNL` as a fixed-size `float64` vector of N, `VAR`, `ES`, `CONFIDENCE`, `ES_CONFIDENCE`, `LIMIT`, `CANONICAL`, `BUSINESS_DATE`; nested records are left out) | one row with the measures (`var-whatif`, [section 8.2](#82-var-whatif-the-python-engine)), and the tables `items` and `pnl` |
-| the person's sandbox: one item per hypothetical trade, `PNL` (N numbers), `FACTOR`, `LABEL` | |
-
-**Not built (parked):** pricing an amended or new trade over the scenarios (QLRisk, when its API is stable): a what-if trade's vector is
-supplied in the sandbox today; methods beyond equal-weight historical (age-weighted, filtered), a stressed scenario set (`SVAR-250`,
-open question 6), ES backtests.
+**Not built (parked):** pricing an amended or new trade over the scenarios from its terms (QLRisk, when its API is stable): a what-if
+trade is a copy of a booked trade or a vector priced elsewhere today; methods beyond equal-weight historical (age-weighted, filtered),
+ES backtests.
 
 ### 8.4 What-if pricing and intraday recomputes
 
@@ -1367,7 +1422,7 @@ systems are built** (the subsection *Intraday updates* below).
 | **Unwind** a position (all of it) | subtract its stored vector | **no** (built: the scope's own algebra) |
 | **Partly unwind** a linear position (a cash bond, a future, an FX spot or forward, a vanilla swap scaled by notional) | scale its stored vector | **no**, if the product is marked linear in the pack's pricer mapping; otherwise priced |
 | **Amend** a trade (notional, strike, maturity, rate …) | price the amended trade over the 509 scenarios; subtract the stored vector, add the new one | **yes** |
-| **Add** a hypothetical trade (from a form, a copy of an existing trade, or a template) | price it over the 509 scenarios; add (built: a vector supplied in the sandbox) | **yes** |
+| **Add** a hypothetical trade (from a form, a copy of an existing trade, or a template) | price it over the 509 scenarios; add (built: a copy of a booked trade or scope, or a vector priced elsewhere, [section 8.2](#82-the-what-if-the-java-engine)) | **yes** |
 | **Move** a position to another book | no vector change; the scopes it belongs to change | **no** |
 
 **Pricing over the scenario days.** The pricer receives the trade, the base market of the business date (assembled by the server as
@@ -1539,24 +1594,22 @@ message of several records with the latest of a trade winning, a message mixing 
 with its place, the others applied), a tombstone ignored, an early flush, the guards, files and windows mixed equal to the same final
 data loaded as one run to the cent in USD, EUR and CAD, and the topic replayed after a restart writing nothing.
 
-### 8.5 The pre-deal what-if in the basket tray
+### 8.5 The pre-deal what-if under the basket's sheet
 
-The what-if is the tray's ([section 3.5](#35-construct-your-basket)): **+ What-if trade** (or **What-if…** in the explorer's right
-column, which puts the scope you are on in the tray) asks for a booked trade and a factor; the hypothetical trade is a **copy of that
-trade's P&L vector scaled by the factor** (1 the same again, −1 its unwind, 0.5 half), added to the basket. The tray shows the basket's
+The what-if is the basket's ([section 3.5](#35-construct-your-basket)), under its sheet: **+ What-if trade** (or **What-if…** in the
+explorer's right column, which puts the scope you are on in the sheet) takes a booked trade (or any scope) and a factor; the hypothetical trade is a
+**copy of that trade's P&L vector scaled by the factor** (1 the same again, −1 its unwind, 0.5 half), added to the basket. It shows the basket's
 VaR 99% and ES 97.5% **before → after** and the **incremental** change, and each hypothetical trade's standalone VaR, its incremental VaR
 in the order listed and its component in the basket after. Several may be added; **×** removes one. Good for pre-deal (*what does this
 trade do to my desk's VaR?*) and for VaR (*which unwind takes the most out?*).
 
-It is `POST /api/v1/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]}`: the server reads
-each copied trade's vector as you (a trade you may not see one by one is refused), puts the items in your private sandbox, asks the
-Python VaR engine (`var-whatif`, [section 8.2](#82-var-whatif-the-python-engine)) as you and deletes the sandbox. The answer: `before`,
-`after` and `change` (`var`, `es`; `stressedVar` before and after), `items` (`label`, `factor`, `standaloneVar`, `incrementalVar`,
-`incrementalAlone`, `componentVar`), `engine`, `note`. A scope with no trades, a copied trade without a vector on the date (*not live*),
-or a factor that is not a number is `400` in words. **When the compute workers are off** (`DRISHTI_COMPUTE_ENABLED=false`, the default)
-the answer is `503 DRS-5205` and the tray says so plainly: *the what-if runs in the Python VaR engine …, which is not running on this
-server*. Pricing a new trade from its terms is not built ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)): the copy
-of a booked trade's vector stands in for it.
+It is `POST /api/v1/var/what-if {"scope": "BASKET:asha/unwind", "items": [{"copyOf": "MX-30000121", "factor": -1}]}`, computed by
+the server's VaR engine as you ([section 8.2](#82-the-what-if-the-java-engine)): each copied trade's vector is read as you (a trade you
+may not see one by one is refused). The answer: `before`, `after` and `change` (`var`, `es`; `stressedVar` before and after), `items`
+(`label`, `factor`, `standaloneVar`, `incrementalVar`, `incrementalAlone`, `componentVar`), `engine`, `note`. A scope with no trades, a
+copied trade without a vector on the date (*not live*), or a factor that is not a number is `400` in words, shown under the sheet. It needs
+no compute workers. Pricing a new trade from its terms is not built ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)): the
+copy of a booked trade's vector stands in for it.
 
 ## 9. Who sees what: entitlements and audit
 
@@ -1637,7 +1690,7 @@ retention; official numbers are kept 7 years ([section 19](#19-official-end-of-d
 | `var stats [SCOPE] [--period FY2026] [--measure var]` | period end, average, high and low over the official records, the 60-day and 12-week stressed averages ([section 18.10](#1810-period-statistics)) |
 | `var report list`, `var report run REPORT [PERIOD]`, `var report show REPORT PERIOD`, `var report sign REPORT PERIOD --step S [--do approve\|return\|narrative] [--comment]`, `var report file REPORT PERIOD --format xlsx\|csv\|pdf [--draft]` | report runs, their sign-off and files ([section 18.14](#1814-regulatory-reports-definitions-runs-checks-and-sign-off)) |
 | `var intraday [--date D]`, `var intraday --load FILE.jsonl [--date D] [--lake DIR] [--no-signal] [--dry-run]` | each loaded date's intraday layer (updates, trades, batches, what was ignored or refused); `--load` appends an intraday batch file (scenario PVs or P&L vectors, one kind a file) to the lake with `lake build --mode append` and raises its data-load signal (a Delta lake: `lake build --format iceberg` only replaces dates, so on an Iceberg risk lake the pricing system appends with its own Iceberg writer, or publishes to the PV topic), `--date` moving its rows to another business date ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
-| `var whatif <scope> --trades FILE [--stress-window N]` | the Python engine's what-if |
+| `var whatif <scope> [--copy TRADE=FACTOR ...] [--trades FILE]` | the pre-deal what-if: copies of booked trades or scopes scaled (`--copy MX-30000121=-1`, `--copy BOOK:BOOK-RATES-3=-0.5`), or trades priced elsewhere from a JSON file ([section 8.2](#82-the-what-if-the-java-engine)) |
 | `--horizon 1d\|10d [--method sqrt10\|sum] [--confidence Q] [--es-confidence Q]` | on `show`, `parts`, `path`, `history`, `tree` and `capture`: the answer through that lens ([section 18.6](#186-horizons-the-two-10-day-methods-and-the-confidence-chosen)); `drishti.py var show BANK --horizon 10d --method sum`, `drishti.py var show BANK --confidence 95` |
 | `--stressed` | on the same commands: stressed VaR, the scope on the date's stress scenario set, in USD; `show` prints the 12-week average of a node's official stressed VaR ([section 18.8](#188-stressed-var)); `drishti.py var show BANK --stressed --horizon 10d --method sum` |
 | `var stress-window [scope] [--length N] [--propose [--first D]] [--proposals] [--decide ID --decision approve\|reject]` | the stress window selection ([section 18.9](#189-choosing-the-stress-window)): the current and the worst window, the alert, the candidates, each node; freeze and propose; decide |
@@ -1697,9 +1750,9 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `GET /scopes/{scope}` | `{scope}` in the path (no slash), `asOf` | the same |
 | `GET /scope/path` | `scope`, `page` (0), `size` (0 → `path-page`; at most 509), `asOf` | the P&L path ([section 11.3](#113-path-and-contributions)) |
 | `GET /scope/history` | `scope`, `asOf` | history and backtest ([section 11.4](#114-history-the-tree-and-the-status)) |
-| `GET /scope/contributions` | `scope`, `by` (`child` default, `node`, `part`, `position`, `trade`, `desk`, `book`), `scenario` (a scenario date), `asOf` | the parts ([section 11.3](#113-path-and-contributions)); `part`: the scope's terms ([section 5.8](#58-baskets)), each row with `term`, `word`, `trades`, `allocated`, `alone` |
-| `GET /hints` | `q` (typed text), `limit` (8, at most 25), `asOf` | the basket tray's type-ahead: `[{type, id, name, scope, trades, var, notice}]` (portfolios, your baskets, desks, books, legal entities, divisions, counterparties, positions, trades; a typed `WORD:id` as written, with its notice when it matches nothing), as you |
-| `POST /what-if` | body `{scope, items: [{copyOf, factor, label}]}`, `asOf` | the pre-deal what-if ([section 8.5](#85-the-pre-deal-what-if-in-the-basket-tray)): `before`, `after`, `change`, `items`; `503 DRS-5205` without the Python engine |
+| `GET /scope/contributions` | `scope`, `by` (`child` default, `node`, `part`, `position`, `trade`, `desk`, `book`, `attribute:<COLUMN>`), `scenario` (a scenario date), `asOf` | the parts ([section 11.3](#113-path-and-contributions)); `part`: the scope's terms ([section 5.8](#58-baskets)), each row with `term`, `word`, `trades`, `allocated`, `alone`; `attribute:TRADER_ID`: VaR by a trade column, every trade in its value's group ([section 11.3](#113-path-and-contributions)) |
+| `GET /hints` | `q` (typed text), `limit` (8, at most 25), `asOf` | the basket sheet's type-ahead: `[{type, id, name, scope, trades, var, notice}]` (portfolios, your baskets, desks, books, legal entities, divisions, counterparties, positions, trades; a typed `WORD:id` as written, with its notice when it matches nothing), as you |
+| `POST /what-if` | body `{scope, items: [{copyOf, factor, label}]}` (or `{pnl: [N numbers], factor, label}`: priced elsewhere), `ccy`, `asOf` | the pre-deal what-if by the server's engine ([section 8.2](#82-the-what-if-the-java-engine)): `before`, `after`, `change`, `items`, `engine`, `note` |
 | `GET /tree` | `hierarchy` (default `MGMT`), `asOf` | the nodes the caller sees with their figures, and the stored portfolios |
 | `GET /scope/currencies` | `scope`, `asOf`, `ccy` | the explorer's tab *In other currencies*: per listed currency `var`, `es`, `varInPage` (that VaR in `ccy` at today's rate), `difference`, `differencePct`, `shown`; `tradeCurrencies`; from the per-trade-currency totals ([section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker)) |
 | `GET /currencies` | `asOf` | the picker's list: `listed` (`drishti.var.currencies`), `available` (every currency with scenario FX on the date), `ready` (built already) |
@@ -1715,7 +1768,10 @@ the date before it, with a warning). Errors are RFC 7807 problems with a `code` 
 | `POST /reports/{report}/runs/{period}/signoff` | body `{version, action: approve\|return\|narrative, step, comment, narrative}` | the run with its updated sign-off record; refused (`409`) in words: not the next step, the same person twice, a failed check, a check needing the maker's note |
 | `GET /reports/{report}/runs/{period}/file` | `format` (`xlsx`, `csv`, `pdf`), `version`, `draft` | the file; released after the last approval (`409` before), a draft marked so on request |
 | `POST /official/synthetic-history` | `days` (259) | administrators, on a demo server (`drishti.regulatory.synthetic-history`): seeds synthetic official records ([section 18.10](#1810-period-statistics)) |
-| `GET /baskets`, `POST /baskets` | body `{name, title, description, scope, sharedWith}` | baskets ([section 5.8](#58-baskets)) |
+| `GET /baskets`, `POST /baskets` | body `{name, title, description, scope or sheet, sharedWith, version, owner}` | baskets ([section 5.8](#58-baskets)): a list (without the sheets' lists, `fromSheet` on those), or a save; `version` the one the editor opened (`409` when changed since), `owner` someone else's basket an administrator edits (audited, the owner told) |
+| `POST /basket/sheet` | body the sheet `{wholeBank, op, TRD, POS, PORT, BOOK, DESK, LL, CPTY}` (lists aligned by row), `asOf`, `ccy` | every cell checked as you (`cells`: those not found or adding or taking away nothing, with the reason in words) and the basket's `var`, `es`, `sumOfParts`, `diversification`, `trades` ([section 5.8](#58-baskets)) |
+| `GET /basket/sheet` | `scope`, `asOf` | a scope laid into the sheet: a saved basket's lists (`basket` with `editable`), a portfolio's definition as a copy (`portfolio`), an ad-hoc scope's terms (`unplaced`: those with no column) |
+| `POST /basket/sheet.xlsx` | body `{name, sheet}`, `asOf`, `ccy` | the sheet as a workbook: the *Basket* sheet (Op and the columns) and the *Checks* sheet |
 | `GET /baskets/{owner}/{name}` | | one basket you may read |
 | `DELETE /baskets/{owner}/{name}`, `DELETE /baskets/{name}` (your own) | `reason`, `version` (optional; query or body) | deletes a basket (`204`): its owner their own, an administrator anyone's; anyone else `404`; `409 DRS-5007` when `version` is not the basket's now ([section 3.5](#35-construct-your-basket)) |
 | `GET /admin/baskets` | `owner` (optional, contained, any case) | administrators: every person's baskets with `owner`, `scope`, `sharedWith`, `createdAt`, `updatedAt`, `version`, `bytes` |
@@ -1754,8 +1810,8 @@ them in one pass over all the scope's positions (or trades), each part's vector 
 The headline's `children` is likewise the number of all the parts. How, and what it costs:
 [section 27a](#27a-how-scopes-parts-and-totals-are-computed-and-why-it-scales).
 
-**The computed kinds:** `POST /api/v1/compute/var-engine/var-result` and `/api/v1/compute/var-whatif/var-whatif` (`{id, params, asOf,
-wait}`), or `GET /api/v1/views/var-result/DESK:RATES`. For example, with a token in `DRISHTI_TOKEN`:
+**The computed kind:** `POST /api/v1/compute/var-engine/var-result` (`{id, params, asOf, wait}`), or
+`GET /api/v1/views/var-result/DESK:RATES`. For example, with a token in `DRISHTI_TOKEN`:
 
 ```bash
 curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/var/scope?scope=DESK:DESK-RATES" | python3 -m json.tool
@@ -1796,7 +1852,7 @@ The last answers:
 | `confidence`, `esConfidence` | number | 0.99, 0.975 |
 | `children`, `childKind` | integer, string | the number of default parts (all of them, never cut by `max-parts`) and their kind (`division`, `desk`, `book`, `position`, `trade`, `part` for a basket or ad-hoc union of two terms or more; empty for an aggregate-only viewer below a node) |
 | `trades`, `empty` | integer, boolean | the trades counted; `true` when none (the VaR of 0 is then no figure: the screens say **No trades**) |
-| `terms` | list | a basket or ad-hoc scope only: its top-level parts `[{op: "+" or "-", scope, word}]` (a saved basket's from its definition), which the basket tray loads |
+| `terms` | list | a basket or ad-hoc scope only: its top-level parts `[{op: "+" or "-", scope, word}]` (a saved basket's from its definition) |
 | `basket` | object | a saved basket only: `{id, name, owner, scope, sharedWith, version}` |
 | `sumStandalone` | integer or null | Σ standalone VaR of every default part ([section 11.1](#111-the-endpoints): never cut by `max-parts`) |
 | `diversification` | integer or null | `sumStandalone − var` (two parts or more) |
@@ -1859,6 +1915,24 @@ Rows are sorted by `componentVar` descending, or by `scenarioPnl` ascending when
 Default parts (`by=child`): a node with children → its child nodes the viewer sees; a childless node (a book) → its positions; a position
 → its trades; a trade → none; any other scope → its positions. Positions and trades are listed only to a viewer at `positions` level.
 
+**VaR by a trade column (`by=attribute:<COLUMN>`).** Every trade of the scope goes into the group of its value of the column, and each
+group's vector is summed over **all** its trades in the server (never only the largest: `max-parts` does not cut the groups), so the
+groups partition the scope and their component VaR adds up to the scope's VaR. The first use is `by=attribute:TRADER_ID`, the Trading
+landing's VaR by trader. The column is the VaR book's own (a column of the P&L vectors' rows such as `COUNTERPARTY` or `STRATEGY`, a
+hierarchy's level column such as `LIMIT_LETTER`) or else one the trade valuations keep (`drishti.var.kinds.valuation`, `trade-valuation`:
+`TRADER_ID`, `NETTING_SET`, `BUY_SELL_CODE` …), joined by `TRADE_ID` on the business date. A trade without a value is in the group
+*no TRADER_ID* (key empty). The answer has `by: attribute`, `attribute` (the column), `masked` (false), and per row `key` (the value),
+`label`, `kind: attribute`, `trades` (the group's trade count) and the figures of the table above; `truncated` is false and `total` the
+number of groups. A column that is neither is `400` in words; more than 10,000 values is `400` (*ask by=trade*).
+
+The column's field mask is honoured as for the valuations: a role that sees it masked (`drishti.security.redact` names it and the role
+has no `raw`) gets the scope's `var` and `es`, `masked: true`, no rows and the note *TRADER_ID is masked for your role: VaR by TRADER_ID
+needs a role that sees it*.
+
+```bash
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" "http://localhost:18480/api/v1/var/scope/contributions?scope=DESK:DESK-RATES&by=attribute:TRADER_ID"
+```
+
 ### 11.4 History, the tree and the status
 
 **`GET /scope/history`:** `mode` (`official`, `replay`), `note`, `backtest` `{days, exceptions, light, kupiecLr, kupiecPValue,
@@ -1877,7 +1951,7 @@ example is in [section 26.7](#267-what-the-status-shows).
 
 ## 12. Settings
 
-`drishti.var.*` in the server's `application.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
+`drishti.var.*` in the engine's own file, `config/engines/var.yaml` (its switch `drishti.engines.var.enabled`; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) ([CONFIGURATION.md](../admin/CONFIGURATION.md#drishtivar--the-var-engine)), bound
 by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var/status` shows the effective values.
 
 | Setting | application.yaml | Default when unset or invalid | Meaning |
@@ -1938,16 +2012,9 @@ by `VarProperties` (`@ConfigurationProperties("drishti.var")`); `GET /api/v1/var
 | `drishti.var.tier.keep-on-shutdown` | `false` | `false` | keep the hot files when the server stops for the next start (reused when their digest matches; else they are deleted then, and any left over at start) |
 | `drishti.var.tier.close-grace-seconds` | `60` | 60 (below 0) | how long an evicted date stays mapped for the requests still reading it |
 
-The compute pool `var` of `config/compute/compute.yaml` (workers `DRISHTI_COMPUTE_VAR_WORKERS`, 4) runs the Python engine:
-
-```yaml
-pools:
-  var:
-    type: python
-    engines: [drishti_compute.var.whatif:VarWhatIfEngine]
-    environment: system            # standard library only: no package to approve
-    workers: { min: 0, max: ${DRISHTI_COMPUTE_VAR_WORKERS:4} }
-```
+VaR needs no compute workers: every figure, the what-if included, is the server's ([section 8.3](#83-where-it-runs-the-java-engine)).
+`drishti.var.kinds.valuation` (`trade-valuation`) names the trade valuations a VaR by a trade column the vectors do not carry joins
+([section 11.3](#113-path-and-contributions)).
 
 ## 13. Troubleshooting
 
@@ -1962,14 +2029,14 @@ pools:
 | a warning that the date before was answered (`DRS-5203`) | the date's rows come from two runs or scenario sets | restate the date as one run; the signal reloads it |
 | *… need N MB; the vector store's budget is M MB* (503 `DRS-5204`) | a heap-tier date exceeds `drishti.var.memory-budget-mb` | raise the budget or the heap, or use the mapped tier |
 | *the VaR hot file of … needs about X GB more, Y GB free in …* (503 `DRS-5204`) | the disk ran out while the date's rows streamed in (mapped tier) | free disk in `drishti.var.tier.dir`, lower other folders' caps, or purge a date (Admin → Caches); asked again within `refusal-ttl-seconds` the date is refused at once with `Retry-After` |
-| *the what-if runs in the Python VaR engine …, which is not running on this server* (503 `DRS-5205`) | the basket tray's what-if, with the compute workers off | start them (`DRISHTI_COMPUTE_ENABLED=true`, pool `var`) |
 | *TRD:… is not a live trade on … (no P&L vector)*, **No trades** | the id is not in the day's vectors: unknown, matured or cancelled (a status or maturity the load left out is named) | check the id and the business date; a matured or cancelled trade has no VaR |
 | *the VaR hot folder … cannot be written* | `tier.dir` missing, read-only or full | point `DRISHTI_VAR_HOT_DIR` at writable local disk with room for `disk-dates` files |
 | *the hot file … is not usable* in the log | a damaged or old-format file | nothing: the date is read from the lake and the file rebuilt |
 | *the vectors of … were unloaded while this answer was computed; ask again* | a request outlived its date's eviction plus the grace | ask again; raise `close-grace-seconds` or `hot-dates` if it recurs |
 | the first request of a date is slow | the date is read from the lake and its hot file built | expected once per date and set of inputs; later requests map the file |
 | disk fills up | many dates kept, or a million-trade bank (about 2.4 GB a date) | lower `disk-dates`; keep `keep-on-shutdown: false` |
-| `var-whatif` answers *could not start* | the compute workers are off or the pool `var` has no worker | `DRISHTI_COMPUTE_ENABLED=true`; Admin → Compute |
+| *TRADER_ID is masked for your role: VaR by TRADER_ID needs a role that sees it* | VaR by a trade column the role sees masked | a role with `raw`, or a column that is not in `drishti.security.redact` |
+| *X is not a column of the VaR book's trades (…) nor a column the trade valuations (trade-valuation) keep* | `by=attribute:X` names a column neither keeps | a column the message lists, or promote it in the connector's layout |
 | *Unknown ids* in the provenance | ids not in the date's batch (matured, cancelled, typed wrong) | check them; nothing else changes |
 | the history says *Replay* | the scope is not one node, you see the node in part, or it has one official date | as designed: the replay is in-sample |
 | other numbers than this guide's | the lake was built with `--as-of today`: trades matured since 2026-09-30 drop out | rebuild with `--as-of data` |
@@ -1994,17 +2061,17 @@ guide's sections.
 `data/testdata/market-risk/` and its entries in `data/testdata/testdata.yaml`; `drishti-compute` (packages
 `com.ash.drishti.compute.vector` and `com.ash.drishti.compute.var`); `drishti-server` (package `com.ash.drishti.server.var`); the Delta
 plugin's vector reader (`DeltaTable.vectors`, `DeltaSourcePlugin.vectorColumns`); `tools/lake/stage.py` and `tools/lake/writers.py`;
-`drishti.var` in `drishti-server/src/main/resources/application.yaml`; the market-risk pack's `positions:` section.
+`drishti.var` in `config/engines/var.yaml` (and its jar copy); the market-risk pack's `positions:` section.
 
 **Commands and pages.** `VAR <word> <id> <GO>` opens the VaR explorer at a scope (`VAR DESK RATES <GO>`, `VAR BANK <GO>`,
-`VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and portfolio pages; `VRES` and `VWIF` the computed kinds; the
+`VAR CAPTURE CAP-20260930-1 <GO>`); `POS` and `PORT` open the position and portfolio pages; `VRES` the computed kind; the
 API is `/api/v1/var`.
 
 **Status.** The engine is **built** and tested: there is no stored `var` or `var-node` kind, no input or fundamental kind carries a VaR figure, positions are
 derived by Drishti, the test data holds every live trade, official end-of-day captures are taken and published, the data-load signal
 reloads the engine, the risk lake keeps 7 years, the gaps of section 20 are closed; each loaded date is a memory-mapped float32
 hot file with the aggregates in float64, history dates open from their file, the benchmark is measured and extrapolated, and VaR is
-also served as the computed kinds `var-result` (Java) and `var-whatif` (Python) through reactive connectors. What is still
+also served as the computed kind `var-result` through a reactive connector; the what-if is the same engine's. What is still
 **PLANNED** is marked so (names may still change; the decisions are in
 [section 23](#23-decisions-and-open-questions)).
 
@@ -2029,7 +2096,8 @@ also served as the computed kinds `var-result` (Java) and `var-whatif` (Python) 
 | The benchmark 1 M trades × 50 dates (`VarTierBenchmark`, opt-in): measured at 100,000 trades × 5 dates, extrapolated | Built (measured locally; the full run is for a server) | [BENCHMARK.md section 5.2](../admin/BENCHMARK.md#52-the-tiered-store-vartierbenchmark) |
 | Sharding the hot store across Drishti*net nodes | Built (off by default: the pack's `sharding:` block) | §28, [VAR_SHARDING.md](../architecture/VAR_SHARDING.md) |
 | The common risk lake (domain `risk`, one connector `risk-store` for every risk pack) | PLANNED (VaR's tables already there) | §15.1 |
-| The computed kinds `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and `var-whatif` (`VWIF`, the Python VaR engine in the compute pool `var` through `var-whatif`: hypothetical trades from a private sandbox, the stressed window) | Built | §8 |
+| The computed kind `var-result` (`VRES`, the Java engine through the reactive connector `var-engine`) and the pre-deal what-if (`POST /api/v1/var/what-if`, the same engine: copies of booked trades or scopes, trades priced elsewhere, the stressed window) | Built | §8 |
+| VaR by a trade column (`by=attribute:TRADER_ID`), summed over every trade of the scope, the column's mask honoured | Built | §11.3 |
 | The command line `drishti.py var` (show, parts, path, history, tree, status, captures, baskets, official, reload, whatif) | Built | §10 |
 | What-if pricing of amended or new trades over the scenarios (QLRisk) | PLANNED (parked until QLRisk's API is stable; a what-if trade's vector is supplied) | §8.4 |
 | Scope words `GROUP:` and `NSET:` | Not built | §5.5 |
@@ -2451,8 +2519,8 @@ Markets, the bank). On the default demo lake (2026-10-26, 8,566 live trades) the
 ### 15.10 Reporting currency
 
 Every answer of the engine takes a **reporting currency**, `ccy=EUR` (none: USD), and says it in `currency`: the headline and its
-provenance, the path, the contributions, the history, the tree, the hints, captures and compare, the pre-deal what-if, `var-result` and
-`var-whatif` (the parameter `ccy`: `VRES DESK:RATES~ccy=EUR`), and the official record (`GET /official?ccy=EUR`). The command line takes
+provenance, the path, the contributions, the history, the tree, the hints, captures and compare, the pre-deal what-if, `var-result`
+(the parameter `ccy`: `VRES DESK:RATES~ccy=EUR`), and the official record (`GET /official?ccy=EUR`). The command line takes
 `--ccy` ([section 10](#10-the-command-line)); the console's **Reporting currency** picker and `VAR … IN EUR`, the currencies built ahead and
 the per-trade-currency totals are [section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker).
 
@@ -2546,7 +2614,7 @@ The provenance's `tier` says `per-trade-currency totals of the USD book (float64
 **The picker (the console, mock-up A).** The VaR page's header strip has **Reporting currency**: the listed currencies, then
 **More…**, which adds every other currency with scenario FX on the date (`GET /api/v1/var/currencies`: `listed`, `available`,
 `ready`). The whole page follows it: the tiles (`VaR 99% · 1 day · EUR`), the limit (`set in USD, at today's rate`), the P&L path,
-the history, the contributions, the scope tree (`VaR EUR`), captures and the basket tray. The choice stays for the browser tab's session
+the history, the contributions, the scope tree (`VaR EUR`), captures and the basket's sheet. The choice stays for the browser tab's session
 and goes into the link (`/var?scope=DESK:DESK-RATES&ccy=EUR`); the command line says the same, **`VAR DESK DESK-RATES IN EUR`** (any
 VAR command ends with `IN <currency>`). The provenance says the reporting currency, the input form (`P&L vectors (USD) and scenario PVs
 in each trade's currency (1199 of 8566 trades)`), the scenario FX (`supplied`, `derived`) and `Cross rates: via USD`.
@@ -3169,8 +3237,8 @@ the normal set's (`data/testdata/market-risk/<kind>/stress-cob-2026-09-30…`).
 The stressed 1-day VaR is 1.9 times the normal one. Note that with 250 days, ES at 97.5% (the mean of the 7 worst) is close to VaR at
 99% (the 3rd worst) and may fall either side of it, as it does for a normal distribution (2.34 σ against 2.33 σ).
 
-**Not to be confused with** the Python what-if's **stressed window** ([section 8.2](#82-var-whatif-the-python-engine)): the largest VaR
-over every run of `stress-window` consecutive days **inside the date's own (normal) scenario set**, an analysis of the recent history
+**Not to be confused with** the what-if's **stressed VaR** ([section 8.2](#82-the-what-if-the-java-engine)): the largest VaR
+over every run of 250 consecutive days **inside the date's own (normal) scenario set**, an analysis of the recent history
 that cannot reach a 2008 or 2020 period unless that set holds it. Stressed VaR uses a separate scenario set of the stress period, sent by
 the pricing system.
 
@@ -3181,6 +3249,41 @@ input table changed by any of it), `VarComputeFirstTest` (the demo figures above
 250 days, every trade once in its own form, its base PV and FX), the console's `test_var_routes.py` (`SVAR`, `set=stressed`, the picker).
 
 ### 18.9 Choosing the stress window
+
+**In plain words.**
+
+- **What it is.** Stressed VaR asks: *how much could today's portfolio lose on a bad day, if markets behaved as they did in the worst
+  year we know?* The answer depends entirely on **which year** is used: the *stress window*. Regulators (Basel 2.5 stressed VaR, and
+  the FRTB reduced-set stress period) require the bank to use the 12-month period that is **most painful for the portfolio it holds
+  today**, and to show, periodically and with evidence, that the chosen period is still the right one. As the portfolio changes (a
+  desk grows its commodity book, rates exposure flips sign), a different crisis can become the worst one: 2008 for credit, 2022 for
+  rates, 2020 for equities.
+- **What the screen shows.** Today's positions, replayed through every business day since 2007. For **every possible 250-day
+  window** (2007-01-02 to 2007-12-28, then one day later, and so on) it computes the stressed VaR that window would give. The chart
+  is that figure against the window's first day: peaks are the periods that hurt today's portfolio most. The **worst** window and the
+  **current** window (the one the stressed VaR uses now) are marked. The dashed line is today's normal VaR, for scale.
+- **The question it answers.** *Is our current stress window still the worst for what we hold?* If another window gives a stressed
+  VaR more than 5% higher (the threshold is configurable), the screen raises an **alert**. That is the trigger to review the window
+  and possibly change it.
+- **The data it uses.** One input: the **long-history P&L of each hierarchy node** (kind `pnl-history`, `PNLH`). Today's portfolio,
+  revalued by the pricing system under each historical day's market moves, summed to each node (bank, division, desk). It is
+  about 5,000 numbers per node, produced monthly, not per trade. In the demo this history is **synthetic** (see below), so the
+  periods and figures show how the tool works, not real market history.
+- **Where it is useful.**
+  1. **The periodic stress-period review** that market risk and model validation owe the regulator: an evidenced, repeatable
+     analysis instead of a spreadsheet.
+  2. **Early warning:** the alert says when the portfolio has drifted towards a different crisis.
+  3. **Per desk:** each desk can see which crisis hurts *it* most (the **By node** table), even though one window is approved
+     for the whole bank.
+  4. **Governance:** *Freeze and propose* keeps the exact analysis with its inputs, and a second person approves it
+     (maker-checker). The approved window instructs the pricing system's next stress scenario set, and every step is audited.
+- **How to read the example screen** (`SWIN BANK`, 250 days): the worst window starts 2007-11-30 (Bear Stearns into the autumn
+  of 2008) at 249m against the current window's 214m: **+16.8%**, above the 5% threshold, hence the alert. The next candidates
+  (late 2008 to 2010, the 2022 rates shock, the 2011 euro crisis) are all lower than the current window. **Window** switches to
+  125 or 500 days; the node chips (or `SWIN DESK DESK-STRUCT`, `SWIN LE LE-NY LEGAL`) repeat the analysis for one desk or legal
+  entity. A desk's own worst period often differs from the bank's.
+
+**In detail.**
 
 Stressed VaR (section 18.8) values today's portfolio over **one fixed 12-month stress period**. Which period? The rule is the one that is
 worst for **today's** portfolio, reviewed periodically. The **stress window selection** answers it: today's portfolio revalued over a
@@ -3290,7 +3393,7 @@ ties), `VarStressWindowApiTest` (the analysis against hand-computed windows, the
 candidates apart, today's VaR from the last days, the node table, refusals in words, a role that does not see every node refused,
 freeze and propose with the data version, the proposer refused, another person approves, a second decision refused, the approval named
 beside the current window), `test_stress_data.py` (the committed history: every node above the books, every day since 2007, the stress
-and normal days giving 213,637,794 and 112,041,646, a node the sum of its children), the console's `test_stress_window_routes.py`.
+and normal days giving 213,637,794 and 112,041,646, a node the sum of its children), the console's `test_stress_window_routes.py` and `test_stress_window_browser.py` (the page drawn across its width, with no script error).
 
 ### 18.10 Period statistics
 
@@ -3564,7 +3667,6 @@ not a list of numbers`). A `null` element inside a vector is accepted and stays 
 | 422 | `DRS-5203` | the date is not one run and no earlier date has vectors (else the earlier date is answered, with the warning); intraday rows (`RUN_KIND: INTRADAY`) are not a second run | *the VaR inputs of <date> are not loaded: the vectors come from 2 runs (BATCH_ID …)* |
 | 502 | `DRS-1003` | the vectors cannot be read; no connector keeps `pnl-vector.PNL` as a vector column with the columns asked | *the P&L vectors of <date> could not be read: …*; *no connector keeps pnl-vector.PNL as a vector column with the columns …* |
 | 503 | `DRS-5204` | a date's vectors exceed `memory-budget-mb` (capacity: decided, open question 9) | *<n> vectors of 509 values need <m> MB; the vector store's budget is <b> MB …: the engine has no room for this date now; raise …* |
-| 503 | `DRS-5205` | `POST /what-if` without the Python VaR engine (the compute workers off), or it did not answer in 30 s | *the what-if runs in the Python VaR engine (the reactive connector var-whatif …), which is not running on this server …* |
 | 422 | `DRS-5207` | `ccy` names a currency with no scenario FX on the date | *no CHF FX for the scenarios of <date>: CHF: no scenario rates supplied and no FX history to derive them from; the currencies with FX on the date: …* |
 | 400 | `DRS-5001` | `ccy` is not a three-letter code; a compare of two captures in different currencies | *ccy is a currency's ISO code (USD, EUR, CAD ...), not EURO*; *… is in EUR and … in USD: a compare reads two captures in one currency* |
 | 422 | `DRS-5210` | one source system sent two forms or grains on the date, or a supplied position covers a trade also sent on its own (section 15.13) | *the inputs of 2026-09-30 are not loaded: MUREX sent {PNL/POSITION=1, PNL/TRADE=7}; one source system sends one form and one grain on one date* |
@@ -3776,7 +3878,7 @@ the position rules and the measures.
 | 9 | **Decided and built (2026-10-25):** `by=node` accepted (`400` off a node); the memory budget answers `503 DRS-5204` (capacity); the largest parts by gross size when they exceed `max-parts` | §11.1, §20 |
 | 10 | **Decided (product owner, 2026-10-25): vectors are kept for 7 years** in the lake (Delta `VACUUM` and log retention set so that 7 years of dates and their time travel stay readable). Official end-of-day captures follow the same 7 years. Built: the lake writers set 7-year log and file retention on `risk` and `risk-results` tables, and `lake maintain` never vacuums them below it ([section 15.1](#151-where-they-live)) | §19 |
 | 11 | **Decided and built (2026-10-25):** the platform's field masks apply to contribution rows (`•••`); `CPTY:` is refused to a viewer who sees the counterparty masked | §9 |
-| 12 | **Decided and built (2026-10-26):** `var-result` (`VRES`) and `var-whatif` (`VWIF`); fields `VAR` and `ES` with `CONFIDENCE` and `ES_CONFIDENCE`, never `VAR_99`; paths and histories are not separate kinds | §8 |
+| 12 | **Decided and built (2026-10-26):** `var-result` (`VRES`); fields `VAR` and `ES` with `CONFIDENCE` and `ES_CONFIDENCE`, never `VAR_99`; paths and histories are not separate kinds | §8 |
 | 13 | **Decided (2026-10-25): kept and documented**: the light scales with the days it has; screens show its days, and it is not a regulatory zone before 250 days | §7 |
 | 14 | **Decided (product owner, 2026-10-25): `LE:` is the bank's legal entity.** The trade's booking `LEGAL_ENTITY` is the source of truth; the `LEGAL` hierarchy rolls up from it, and a trade whose `LEGAL_ENTITY` disagrees with its book's place in the `LEGAL` hierarchy is reported as a data-quality warning in the answer's provenance | §5.5 |
 
@@ -3822,10 +3924,10 @@ recommended defaults unless the product owner said otherwise):
 | Scope sections | the shared rules' sections 4 and 8 pointed to *VAR.md section 9* (scopes) and *section 11* (memory) | scopes are [section 5](#5-scopes-portfolios-and-baskets) of this guide and memory [section 26](#26-the-tiered-memory-and-the-hot-file) |
 | Hot file (proposed in 1.3) | `<data folder>/var/hot/<date>/<SCENARIO_SET_ID>.vhot`, a `STRS` section of every dictionary, `NODE` with member runs over position rows, `TMAT` of every trade | `<date>/inputs-<16 hex of the inputs' digest>.vhot` (the set id is in the header); each column section carries its dictionaries; `NODE` holds books (runs come from `BOOK`); `META`, `SCEN`, `AKEY`, `TMAP` added; `TMAT` holds only the trades of fungible positions |
 | Sharding | each node maps the shards it owns | built ([section 28](#28-sharding-across-drishtinet)): each owner builds and maps only its shards; every member holds the date's skeleton and node aggregates |
-| Computed kinds | `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if` | `var-result` and `var-whatif`; parts and worst scenarios inside `var-result` |
-| Where the engine runs | a reactive connector `var-engine` over a Python package `compute/drishti-var` | base VaR in the server's JVM (additions and sorts next to the data); the reactive connectors and the Python engine (part 2) serve the computed kinds ([section 24](#24-where-the-engine-lives)) |
+| Computed kinds | `var-result`, `var-contribution`, `var-path`, `var-history`, `what-if` | `var-result`; parts and worst scenarios inside `var-result`; the what-if is the VaR API's (`POST /what-if`) |
+| Where the engine runs | a reactive connector `var-engine` over a Python package `compute/drishti-var` | every figure in the server's JVM (additions and sorts next to the data), the what-if included; the reactive connector `var-engine` serves the computed kind ([section 24](#24-where-the-engine-lives)) |
 | The explorer | a Sutra of the market-risk pack, opened by `VARX <scope>` | a console page (`/var`), opened by `VAR` ([section 24](#24-where-the-engine-lives)) |
-| API paths | `/api/v1/var/scopes/{scope}`, `/path`, `/history`, `/contributions?by=child\|position\|risk-class`, `PATCH /baskets/{id}`, `/sandboxes` | `GET /scope?scope=` (and `/scopes/{scope}` for a scope without a slash) with `/scope/path`, `/scope/history`, `/scope/contributions`; baskets by owner and name; sandboxes are the compute API's ([section 11](#11-the-api)) |
+| API paths | `/api/v1/var/scopes/{scope}`, `/path`, `/history`, `/contributions?by=child\|position\|risk-class`, `PATCH /baskets/{id}`, `/sandboxes` | `GET /scope?scope=` (and `/scopes/{scope}` for a scope without a slash) with `/scope/path`, `/scope/history`, `/scope/contributions`; baskets by owner and name; `POST /what-if` ([section 11](#11-the-api)) |
 
 ## Part III · How the engine works and stores data
 
@@ -3844,10 +3946,10 @@ as the viewer; packs stay declarative.
 
 | Part | Implementation |
 |---|---|
-| the pack | the **market-risk** pack: the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, and `position` to the `var-positions` connector (the engine's derived positions); the computed kinds `var-result` and `var-whatif` on the reactive connectors `var-engine` and `var-whatif`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VRES`, `VWIF`; Sutras for `portfolio` and `position` |
+| the pack | the **market-risk** pack: the kinds `position`, `portfolio`, `pnl-vector`, `scenario-set`, `risk-hierarchy` (`tools/packgen/banking/var_kinds.py`, written into `pack.yaml` by `make_packs.py`), routed to `risk-store`, and `position` to the `var-positions` connector (the engine's derived positions); the computed kind `var-result` on the reactive connector `var-engine`; mnemonics `POS`, `PORT`, `PNLV`, `SSET`, `HIER`, `VRES`; Sutras for `portfolio` and `position` |
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
 | the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-server` (`com.ash.drishti.server.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
-| the Python engine | `drishti_compute.var` in the compute pool `var`, for what does not add ([section 8.3](#83-where-it-runs-the-java-engine-and-the-python-engine)) |
+| the what-if | `VarWhatIf` (`drishti-server`) over `VarWhatIfMath` (`drishti-compute`): copies of booked trades or scopes and vectors priced elsewhere added to a scope, before and after ([section 8.2](#82-the-what-if-the-java-engine)) |
 | the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/var-explorer.js`, `var-charts.js`, `web/static/css/var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
 
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
@@ -3855,8 +3957,8 @@ as the viewer; packs stay declarative.
 [section 8.4](#84-what-if-pricing-and-intraday-recomputes)) is a separate request of whole trades to price, which the compute
 workers of [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) serve: any number of workers (their count is configuration, never
 code), one trade or a batch each, the 509 values each returns joining as a vector. Nothing in the engine assumes one worker or calls
-one in its request path. Moving gigabytes of vectors into a Python worker for every query would be too slow; the Python engine receives
-only the small vectors it needs.
+one in its request path. Moving gigabytes of vectors into a Python worker for every query would be too slow; every VaR figure is the
+server's.
 
 ## 25. One business date in memory
 
@@ -4616,8 +4718,8 @@ wholly inside, so 8,420 leaves are summed (about 34 MB, about 10 ms); the stamp 
 | V1 | the engine: scope algebra, VaR, ES, path, contributions by child; the VaR explorer. Accepted: any node and any scope of the grammar shows headline, path (table and charts) and contributions; components add up | built (in the server, not as a reactive connector) |
 | V2 | history and backtesting: exceptions, traffic light, Kupiec and Christoffersen. Accepted: the history tab shows 250 days for any node with exceptions marked | built (from part 1 on official captures) |
 | V3 | baskets, entitlements by node (`positions`, `aggregate`), audit entries, official numbers; captures (new, product owner 2026-10-24). Accepted: an aggregate-only viewer sees a division's numbers and never a position; every answer is audited | built |
-| *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kinds and the Python engine, `drishti.py var` (part 2) | built |
-| V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: hypothetical vectors in a sandbox; pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
+| *VaR complete* parts 1 and 2 | retired stored kinds, derived positions, official captures and their publication, 7-year retention (part 1); the tiered memory, the benchmark, the computed kind, the what-if, `drishti.py var` (part 2) | built |
+| V4 | what-if: sandboxes, unwind and linear scaling, the reprice check; pricing through QLRisk if its API is stable; the QuantLib-Java parity. Accepted: a sandbox removing three trades matches the scope minus those trades exactly; with QLRisk, a new swap's incremental VaR in under 3 s | partly: copies of booked trades and vectors priced elsewhere ([section 8.2](#82-the-what-if-the-java-engine)); pricing planned ([section 8.4](#84-what-if-pricing-and-intraday-recomputes)) |
 | V5 | intraday: `write-back` and `data-version` triggers, the intraday layer, per-event impacts, pushes ([WRITE_BACK.md › The design and its reasons, section 18](WRITE_BACK.md#18-saving-through-connectors-triggers-and-viewers)). Accepted: two traders' amendments to one book: each sees their own impact, both see one shared number stamped with both events | planned |
 | V6 | scale: sharding across Drishti\*net, the targets measured on a real server. Accepted: the measured numbers published; any target missed has a stated reason and plan | the hot store built (part 2); sharding built ([section 28](#28-sharding-across-drishtinet)) |
 
@@ -4637,13 +4739,16 @@ never share a cached result); intraday (incremental equals full recompute); the 
   mapped dates: the same trades, positions, nodes and float64 aggregates to the bit; every scope within the float32 bound; a reopened
   file answers the same; a damaged section refused; closing unmaps and deletes), `VarTestDataPrecisionTest` (the committed test data:
   exact; scaled × 1,000.37: within 5.86 × 10⁻⁸ of the VaR), `VarScaleBenchmark` and `VarTierBenchmark` (opt-in);
-  `drishti-compute/src/test/python/test_var_engine.py` (the worked example's numbers, the what-if, the stressed window, refusals).
+  `VarWhatIfMathTest` (the what-if: the Python engine's answers on the demo's DESK-RATES, frozen in `var/whatif-parity.json`, given
+  again to the cent; the worked example's hedge put back; the stressed window; refusals).
 - `plugins/drishti-plugin-delta`: `DeltaVectorColumnTest` (a vector column written and read back to the bit, in bulk and in a document);
   `tools/lake/test_vectors.py`, `tools/lake/test_retention.py`; `LakeWriterTest` (the lake writer's table properties).
 - `drishti-server`: `VarApiTest` (a hand-computed lake: every measure, portfolios and overlaps, contributions, history, entitlements,
   baskets, a capture read back after the data changes; official captures, publishing and restatement, the load signal, page figures, a
   date that is not one run, duplicates; the date's hot file under the data folder, reopened after a reload, `provenance.tier`, no hidden
-  files; `var-result` read as two viewers, refusals), `ViewPipelineTest` (augmenters).
+  files; `var-result` read as two viewers, refusals; the what-if by hand), `VarByAttributeApiTest` (VaR by trader: the groups add up
+  to the scope's VaR over more trades than the page, the column joined from the trade valuations, a masked role), `ViewPipelineTest`
+  (augmenters).
 - `tools/test_contracts.py` (`TheRetiredStoredVersions`), `tools/packgen/var/test_var_data.py`, `tools/test_varcli.py`;
   `drishti-console/tests/test_var_routes.py` (old ids) and `test_var_explorer_browser.py` (the command, a drill from bank to trade in
   place with the paint time, the tabs, an ad-hoc basket saved and captured, the portfolio and position pages, a phone), with the demo
@@ -4691,8 +4796,8 @@ annual report's trading VaR table (built); the US needs 10-day VaR and stressed 
 
 | Where | Status | What it shows of VaR |
 |---|---|---|
-| **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kinds `VRES` and `VWIF`; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
-| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VWIF`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([EDITIONS.md](../admin/EDITIONS.md#7-drishti-risks-home-three-landings), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
+| **The full product** (no edition) | built | the VaR explorer (`VAR BANK <GO>`, [section 3](#3-the-explorer-screen-by-screen)) with the Horizon, Confidence, ES and Reporting currency pickers; the position and portfolio pages; the computed kind `VRES` and the what-if under the basket's sheet; the scenario matrix `SMAT`; the official records (`VOFF`); BI's VaR datasets; the API and the CLI |
+| **Drishti Risk** (edition `risk`, risk managers) | built | the same engine and commands (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`, `SMAT`); the three landings: the Risk desk's VaR and ES tiles, the backtest and VaR by desk with limit use; the command landing's VaR chips and baskets; the risk map's hierarchy with VaR and limit use per node ([EDITIONS.md](../admin/EDITIONS.md#7-drishti-risks-home-three-landings), [RISK_LENS.md](../lenses/RISK_LENS.md#31-var)) |
 | **Drishti Trading** (edition `trading`, traders and desk heads) | built | "my book's" VaR, path and contributions; VaR limits; `SMAT`; the **new-trade check** from one VaR what-if and one pre-deal check ([TRADING_LENS.md](../lenses/TRADING_LENS.md#44-the-new-trade-check)); no `SPV`, `FXS`, `SSET` or `VOFF` |
 | **Drishti Market** and **Drishti World** | built | no VaR (`VAR` and `SMAT` off) |
 | A phone | built | the explorer's phone layout ([section 3.8](#38-on-a-phone)); the configured phone tiers are a design ([MOBILE_DISPLAY.md](../architecture/MOBILE_DISPLAY.md)) |

@@ -71,7 +71,7 @@ public final class NetSchema {
     // -- node.yaml ----------------------------------------------------------------------------------------------------
 
     public Parsed<NodeSettings> node(String file, Map<String, Object> m, String text) {
-        Ctx c = new Ctx(file, text, m, Set.of("enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls", "gossip-port"));
+        Ctx c = new Ctx(file, text, m, Set.of("enabled", "node-id", "advertise-url", "tags", "peer-only-packs", "secret", "previous-secret", "tls", "gossip-port", "memory-stores"));
         boolean enabled = c.bool("enabled", false);
         String nodeId = c.string("node-id", "");
         if (!nodeId.isEmpty() && !NodeIdentity.ID.matcher(nodeId).matches()) {
@@ -87,6 +87,7 @@ public final class NetSchema {
         }
         List<String> tags = c.tags("tags");
         List<String> peerOnly = c.list("peer-only-packs");
+        List<String> memoryStores = c.list("memory-stores");
         String secret = c.secret("secret");
         String previous = c.secret("previous-secret");
         Map<String, String> tls = c.flat("tls");
@@ -117,7 +118,7 @@ public final class NetSchema {
         if (!previous.isEmpty() && previous.equals(secret)) {
             c.warning("previous-secret", "is the same as secret: remove it once every node has the new key");
         }
-        return c.done(new NodeSettings(enabled, nodeId, url, tags, peerOnly, secret, previous, tls, gossipPort));
+        return c.done(new NodeSettings(enabled, nodeId, url, tags, peerOnly, secret, previous, tls, gossipPort, memoryStores));
     }
 
     // -- peers/<name>.yaml --------------------------------------------------------------------------------------------

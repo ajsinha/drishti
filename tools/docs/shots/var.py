@@ -18,7 +18,7 @@ Run it on its own (it builds its own lake and starts its own scratch server and 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide var
 
 The pictures, in the guide's order: the explorer on a desk (the three columns), a scenario's contributors, the history with its
-backtest, a desk's contributions, a book's positions, Construct your basket, a capture compared with now, the provenance
+backtest, a desk's contributions, a book's positions, Construct your basket (its sheet), a capture compared with now, the provenance
 column, the portfolio and position pages, the explorer on a phone, var-result read as an ordinary kind, and an id that is not a live trade."""
 from __future__ import annotations
 
@@ -74,24 +74,32 @@ def book_positions(c: Ctx):
 
 
 def basket_pick(c: Ctx, text: str) -> None:
-    """Types into the basket tray and picks the engine's first hint."""
+    """Types into the basket sheet's Find and add and picks the engine's first hint (it lands in its kind's column)."""
     c.page.locator("[data-vb-find]").fill("")
     c.page.locator("[data-vb-find]").type(text, delay=20)
     c.until("document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
-    scope = c.page.locator("[data-vb-hint]").first.get_attribute("data-vb-hint")
+    n = c.page.evaluate("window.VarBasket.parts()")
     c.page.locator("[data-vb-find]").press("Enter")
-    c.until("!!document.querySelector('[data-vb-chip=%s]')" % repr(scope).replace("'", '"'))
+    c.until("window.VarBasket.parts() > %d" % n)
 
 
 def basket_live(c: Ctx) -> None:
-    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.scope === window.VarBasket.compose()"
+    """Waits until the sheet shows the server's answer for what it holds now."""
+    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.VarBasket.signature()"
             " && !l.classList.contains('computing'); })()", 60)
+
+
+def basket_paste(c: Ctx, key: str, row: int, text: str) -> None:
+    """Pastes Excel's text into the sheet at a cell, as Ctrl+V does."""
+    c.page.locator(f'[data-vb-cell="{key}:{row}"]').click()
+    c.page.evaluate("""(t) => { const dt = new DataTransfer(); dt.setData('text/plain', t);
+        document.querySelector('[data-vb-sheet]').dispatchEvent(new ClipboardEvent('paste', {clipboardData: dt, bubbles: true, cancelable: true})); }""", text)
 
 
 @shot("06-basket.jpg")
 def basket(c: Ctx):
     open_var(c, "/var?scope=BOOK:BOOK-RATES-1")
-    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
     c.page.reload()
     painted(c, "BOOK:BOOK-RATES-1")
     tab(c, "contrib")
@@ -99,19 +107,12 @@ def basket(c: Ctx):
     c.page.locator('[data-vx-ctable] tbody tr[data-scope^="POS:"]').first.locator("[data-vx-add]").click()
     basket_pick(c, "pf-usd")
     c.page.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"] [data-vx-add]').click(force=True)
-    basket_pick(c, "-MX-30000121")
+    trades = c.page.evaluate("fetch('/api/var/scope/contributions?scope=PORT:PF-USD-RATES&by=trade').then(r => r.json()).then(d => d.rows.slice(0, 3).map(r => r.key))")
+    basket_paste(c, "TRD", 0, f"{trades[0]}\n{trades[1]}\n-MX-30000121\n10000000\n")
     basket_live(c)
-    c.page.locator("[data-vb-open]").click()
-    c.until("window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'"
-            " && document.querySelector('[data-var]').dataset.painted === window.VarBasket.compose()", 60)
-    tab(c, "contrib")
-    basket_live(c)
-    c.page.locator("[data-vb-find]").fill("aldersh")
-    c.until("document.querySelector('[data-vb-hints]').dataset.q === 'aldersh' && document.querySelectorAll('[data-vb-hint]').length > 0", 30)
     c.page.wait_for_timeout(600)
-    c.save("06-basket.jpg")
-    c.page.locator("[data-vb-find]").fill("")
-    c.page.evaluate("localStorage.removeItem('drishti.varBasket')")
+    c.save("06-basket.jpg", locator="[data-var-basket]")
+    c.page.evaluate("localStorage.removeItem('drishti.varBasket2')")
 
 
 @shot("13-not-live.jpg")

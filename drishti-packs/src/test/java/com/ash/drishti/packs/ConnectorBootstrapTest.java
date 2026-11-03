@@ -55,6 +55,28 @@ class ConnectorBootstrapTest {
     }
 
     @Test
+    void aConnectorThePackRetiredGoesWhenNobodyEditedItAndStaysWhenEdited(@TempDir Path dir) throws Exception {
+        String two = RISK + "  what-if:\n    plugin: delta\n    kinds: [var]\n    settings:\n      domain: what-if\n";
+        ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));
+        assertThat(ConnectorBootstrap.run(packs(dir, two), files, null, true).generated()).containsExactly("risk-lake", "what-if");
+        ConnectorBootstrap.Result r = ConnectorBootstrap.run(packs(dir, RISK), files, null, true);   // the pack retired what-if
+        assertThat(files.exists("what-if")).isFalse();
+        assertThat(r.messages()).anyMatch(m -> m.startsWith("connector file what-if.yaml removed: pack 'risk' no longer has its template"));
+        try (var s = Files.list(dir.resolve("config/connectors"))) {
+            assertThat(s.map(p -> p.getFileName().toString())).anyMatch(n -> n.startsWith("what-if.yaml.retired-"));
+        }
+        assertThat(files.exists("risk-lake")).isTrue();
+
+        ConnectorBootstrap.run(packs(dir, two), files, null, true);
+        files.write("what-if", files.text("what-if") + "# mine\n");                          // edited: kept, never removed
+        ConnectorBootstrap.run(packs(dir, RISK), files, null, true);
+        assertThat(files.exists("what-if")).isTrue();
+        files.write("own", "plugin: delta\nsettings:\n  root: /my/lake\n");                  // the site's own file: never touched
+        ConnectorBootstrap.run(packs(dir, RISK), files, null, true);
+        assertThat(files.exists("own")).isTrue();
+    }
+
+    @Test
     void aChangedTemplateRegeneratesAnUneditedFileAndFlagsAnEditedOne(@TempDir Path dir) throws Exception {
         ConnectorFiles files = new ConnectorFiles(dir.resolve("config/connectors"));
         ConnectorBootstrap.run(packs(dir, RISK), files, null, true);

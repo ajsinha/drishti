@@ -61,12 +61,13 @@ menus:
           - { id: var-explorer, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or ad-hoc set of trades", requires: [word:VAR] }
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
-          - { id: var-whatif, cmd: VWIF, icon: sliders, label: What-if, desc: "The VaR change of adding or removing trades", requires: [cmd:VWIF] }
           - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, a position or a scope", match: /smat, requires: [word:SMAT] }
           - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
       - title: Check and report
         items:
           - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every VaR figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
+          - { id: frsa, cmd: FRSA BANK, icon: bank2, label: FRTB-SA capital, desc: "Market-risk capital by the standardised approach for any scope", match: /frtb, requires: [word:VAR, route:/frtb] }
+          - { id: play-frtb, cmd: PLAY FRTB EXAMPLE, icon: calculator, label: FRTB-SA Playground, desc: "Every method choice a switch, compared and reproduced; a workbook of formulas", match: /play/frtb, requires: [word:VAR, word:PLAY, route:/play/frtb] }
           - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the day's P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
           - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
   - id: exposure
@@ -79,6 +80,8 @@ menus:
           - { id: exp-explorer, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
           - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
           - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
+          - { id: simm, cmd: SIMM, icon: shield-lock, label: SIMM initial margin, desc: "ISDA SIMM per netting set, collect and post, against the counterparty's call", match: /simm, requires: [word:SIMM, engine:simm, route:/simm] }
+          - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, engine:simm, route:/play/simm] }
           - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
   - id: blotter
     label: Blotter
@@ -111,7 +114,6 @@ menus:
         items:
           - { id: my-var, cmd: VAR, icon: shield-check, label: My VaR, desc: "The VaR of the books you trade", match: /var, requires: [word:VAR] }
           - { id: vlim, cmd: VLIM, icon: speedometer2, label: VaR limits, desc: "Each limit and how much of it is used", requires: [cmd:VLIM] }
-          - { id: vwif, cmd: VWIF, icon: sliders, label: VaR what-if, desc: "The VaR change of adding or removing trades", requires: [cmd:VWIF] }
           - { id: tval, cmd: TVAL, icon: currency-exchange, label: Trade valuations, desc: "Each trade's value and its sensitivities", requires: [cmd:TVAL] }
           - { id: pnlv, cmd: PNLV, icon: bar-chart, label: P&L vectors, desc: "Each position's P&L under every scenario", requires: [cmd:PNLV] }
   - id: counterparties
@@ -257,6 +259,7 @@ menus:
           - { id: collab, href: /admin/collab, icon: chat-square-text, label: Collaboration, desc: "Moderation, legal holds, export, mail outbox, bridges", match: /admin/collab, requires: [admin, admin-page:collab, feature:collaboration] }
           - { id: embedding, href: /admin/embedding, icon: window-stack, label: Embedding, desc: Host applications that show views in their own pages, match: /admin/embedding, requires: [admin, admin-page:embedding] }
           - { id: net, href: /admin/net, icon: diagram-3, label: Net, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
+          - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (VaR, exposure, FRTB-SA, SIMM, the in-memory lake), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
           - { id: health, href: /admin/health, icon: heart-pulse, label: Health, desc: "Connectors, packs, live streams", match: /admin/health, requires: [admin, admin-page:health] }
           - { id: caches, href: /admin/caches, icon: hdd-stack, label: Caches, desc: "What each cache holds; purge", match: /admin/caches, requires: [admin, admin-page:caches] }
           - { id: capacity, href: /admin/capacity, icon: speedometer, label: Capacity, desc: "Today against the plan: headroom, what breaks first, growth; the planner", match: /admin/capacity, requires: [admin, admin-page:capacity] }

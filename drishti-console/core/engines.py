@@ -1,0 +1,153 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+"""Compute engines in the console (docs/architecture/COMPUTE_ENGINES.md section 5.2): an engine that runs on no server of the cluster
+disappears everywhere: its command words, menu items, Help pages, Home cards, pages and playgrounds. What runs is learned from the server's
+about answer (``engines``: ``[{id, title, here, cluster}]``, polled by core/backend_watch.py with the edition); what each engine brings to
+the screen is the engine catalogue (config/engines.yaml, the server's engines/catalogue.yaml byte for byte). Until the server has said
+(an older server, no answer yet) nothing is hidden. One helper, :func:`engine_available`, answers for every place; the others are built on it.
+"""
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+
+import yaml
+
+LOG = logging.getLogger("drishti.console.engines")
+CATALOGUE = Path(__file__).resolve().parent.parent / "config" / "engines.yaml"
+
+_entries: list[dict] | None = None
+_available: dict[str, bool] | None = None          # id -> runs somewhere in the cluster; None: not learned, nothing hidden
+_here: dict[str, bool] = {}
+
+
+def entries() -> list[dict]:
+    """The catalogue's engines, in its order (read once)."""
+    global _entries
+    if _entries is None:
+        try:
+            _entries = list((yaml.safe_load(CATALOGUE.read_text(encoding="utf-8")) or {}).get("engines") or [])
+        except (OSError, yaml.YAMLError) as e:
+            LOG.warning("engines: cannot read %s (%s); nothing is hidden", CATALOGUE, e)
+            _entries = []
+    return _entries
+
+
+def entry(engine_id: str) -> dict | None:
+    return next((e for e in entries() if e.get("id") == engine_id), None)
+
+
+def reset() -> None:
+    """Forget what the server said (a new console process, a test's new app): nothing hidden until it says again."""
+    global _available, _here
+    _available = None
+    _here = {}
+
+
+def learn(engines) -> bool:
+    """The about answer's ``engines``; True when what is available changed. ``None`` (an older server): nothing is hidden."""
+    global _available, _here
+    if engines is None:
+        changed = _available is not None
+        reset()
+        return changed
+    avail = {str(e.get("id")): bool(e.get("cluster", e.get("here"))) for e in engines if isinstance(e, dict) and e.get("id")}
+    here = {str(e.get("id")): bool(e.get("here")) for e in engines if isinstance(e, dict) and e.get("id")}
+    changed = avail != _available
+    if changed and _available is not None:
+        LOG.warning("engines: now available %s; not available %s", sorted(k for k, v in avail.items() if v), sorted(k for k, v in avail.items() if not v))
+    _available, _here = avail, here
+    return changed
+
+
+def engine_available(engine_id: str) -> bool:
+    """Whether the engine runs on this server or on any server of the cluster (True until the server has said)."""
+    if _available is None:
+        return True
+    return _available.get(engine_id, True)
+
+
+def engine_here(engine_id: str) -> bool:
+    return _here.get(engine_id, engine_available(engine_id))
+
+
+def off() -> list[dict]:
+    """The catalogue entries of the engines available nowhere."""
+    return [e for e in entries() if not engine_available(str(e.get("id")))]
+
+
+def title(engine_id: str) -> str:
+    e = entry(engine_id)
+    return str((e or {}).get("title") or engine_id)
+
+
+def _words(e: dict) -> list[str]:
+    return [str(w).upper() for w in e.get("words") or []]
+
+
+def word_hidden(word: str) -> bool:
+    """A command word (FRSA, VAR) that belongs to an engine available nowhere. A two-word entry (PLAY VAR) hides only the phrase."""
+    w = str(word or "").strip().upper()
+    return bool(w) and any(w in _words(e) for e in off())
+
+
+def typed_engine(text: str) -> dict | None:
+    """The engine, available nowhere, whose words start the typed command (``PLAY FRTB EXAMPLE`` -> frtb-sa), or None."""
+    parts = str(text or "").replace("<GO>", "").replace("<go>", "").upper().split()
+    if not parts:
+        return None
+    for e in off():
+        for w in _words(e):
+            ws = w.split()
+            if parts[:len(ws)] == ws:
+                return e
+    return None
+
+
+def refusal(e: dict) -> str:
+    """The words of an engine available nowhere, as the server says them (DRS-1020)."""
+    return (f"DRS-1020 {e.get('title') or e.get('id')} is not running on this server, and no other server of this cluster runs it. "
+            "An administrator can turn it on in Admin → Engines.")
+
+
+def menu_hidden(item_id: str) -> bool:
+    return any(item_id in (e.get("menus") or []) for e in off())
+
+
+def help_hidden(slug: str) -> bool:
+    return any(slug in (e.get("help") or []) for e in off())
+
+
+def tile_hidden(title_: str) -> bool:
+    return any(title_ in (e.get("tiles") or []) for e in off())
+
+
+def lens_hidden(name: str) -> bool:
+    return any(name in (e.get("lenses") or []) for e in off())
+
+
+def path_engine(path: str) -> dict | None:
+    """The engine available nowhere whose console page or API the path is (the longest prefix of any engine wins, so
+    /api/frtb/sensitivities is the sensitivities' and not FRTB-SA's); ``=/play`` is that path only."""
+    best, length = None, -1
+    for e in entries():
+        for p in e.get("console") or []:
+            p = str(p)
+            exact = p.startswith("=")
+            p = p.lstrip("=")
+            hit = path == p.rstrip("/") or path == p if exact else (path == p.rstrip("/") or path.startswith(p if p.endswith("/") else p + "/"))
+            if hit and len(p) > length:
+                best, length = e, len(p)
+    return best if best is not None and not engine_available(str(best.get("id"))) else None

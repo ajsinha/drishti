@@ -15,11 +15,204 @@
 -->
 # Changelog
 
-## Unreleased (on develop, after 2.9.10.a)
+## Unreleased (on develop, after 2.9.11)
 
+- **The release drill is faster and stops sooner (tools/drill.sh; PACK_DEVELOPER_GUIDE.md §2.6, TOOLS.md).** A gate of a few
+  minutes runs first, every job at once: the licence headers, the generated documents and data that must be current (settings
+  catalogue, data contracts and their pages, data samples, the packs' generated content, the Python API reference), the docs and
+  help console tests, and one Java 21 build of the working tree (Javadoc with doclint, Spotless, Maven threads) that runs only the
+  rule tests: every `drishti-it` test, `TokenScopeGuardTest` and `ArrowAnswersTest`; its jar is the one the console starts. Its first
+  failure stops the drill. Then everything else at once: the console suite in a browser lane (few workers, normal priority) and an
+  other lane (more workers, lower priority), each giving its files to the workers longest first from the durations the last runs
+  recorded (`data/drill/durations.json`); the Python tool tests; the Java 21 verify in a copy of the committed tree (its `config/`
+  and `data/` compared by content before and after); and the Java 25 verify, in its own copy, once the lighter jobs have finished.
+  A failed console test runs once more file by file and every failed file is re-run (two at a time in the other lane, one in the
+  browser lane), each under a time limit of twice the file's recorded time, at least ten minutes; tests listed in
+  `tools/drill-known.txt` are reported as accepted and do not fail the drill. The first failure no re-run can change stops the other
+  jobs (`--keep-going` runs them to the end). **Fixed:** every command of the Python tool tests and of the Java runs now fails the
+  drill when it fails; before, a job ran as `job || ...`, where bash ignores errexit, so only each job's last command counted (the
+  trading pack's generated Sutra fragments and `data/testdata/testdata.yaml` had been reported stale in the tool log without
+  failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
+  checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
+
+## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-03)
+
+- **Fixed (drill): the release drill's console findings.** The sign-in page, which sends its form in the background for busy protection,
+  marks the page while the form is on its way (`html[data-signing-in]`), and the browser tests wait on it as on a navigation (they had
+  run on before the sign-in was answered, then read the sign-in page). The basket workbook (`POST /api/var/basket/sheet.xlsx`) answers a
+  body that is not a JSON object with 400 or 415 in words, never 500. Admin → Engines' switches fill with the fill tokens and its data
+  travel in an attribute (no inline script); the SIMM screen names the product from `ui.product`. `POST /net/engines` is in the API
+  guide. `make_sutras.py` writes the phone layouts of the shared deal fragments, the counterparty, the netting set and the Endur commodity
+  swap (they had been added by hand, so `--check` failed); `testdata.yaml` regenerated. Tutorials 30 to 32 gain their pictures
+  (`screenshots.py --guide t30`, `t31`, `t32`), what you should see at every step and their next steps; the tutorials card counts
+  past thirty. FRSA's capital stack draws each bar to its length (the width was a style attribute, which the console's CSP blocks).
+  The SIMM screen's list of netting sets follows the page's date (`asOf`), as its breakdown did. Admin → Health no longer fails (500)
+  when the in-memory lake is on: a memory store's gauge reads its use against its cap. The example memory connector
+  (`config/connectors.examples/memory/news-store.yaml`) says `domain: ""`: without it the pack's template added `domain: news` and the
+  connector looked under `mem://news/news`, so every news page read *no source holds*.
+- **Fixed: the stress window page read the current window a month late on a demo lake.** `lake demo` moved a stress scenario set's
+  window and days with the business dates (HS-STRESS-2008 became 2008-08-01 to 2009-07-31 on a lake ending 2026-11-02) while the long
+  history's days stay as they are; a stress set's period of history now stays 2008-07-01 to 2009-06-30, as VAR_GUIDE.md section 18.9
+  says, and only its business date moves.
+- **The stress window page draws across the page again:** its outer box used the class `sw`, which the terminal style sheet also uses for a
+  small legend swatch (14 by 3 pixels), so the page shrank to a narrow column; the box is now `sw-page`. New browser test
+  `test_stress_window_browser.py`. VAR_GUIDE.md section 18.9 opens with a plain-words explanation: what the stress window is, what the
+  screen shows, the data it uses and where it is useful.
+- **Forms, write-back:** a form opened before the page knew whether its person may submit (a quick open, a phone) now gets its Submit
+  button and its note when that answer arrives; before, it stayed without Submit until the page was reloaded.
+- **VaR, Ad-hoc scopes:** a saved basket's or portfolio's name stays visible; its Edit, Delete and + basket buttons sit after the name
+  instead of over it, on one line: showing them never changes the row's height, so the rows below never move under the pointer.
+
+- **Busy protection judges memory by what is left, not only a share:** new heavy work waits for memory only when the heap after a collection is past its level **and** less than `memory-free-min-mb` (768 MB) is left; `DRISHTI_ADMISSION_ENABLED` switches it off (the console's own tests do, their servers running a 768 MB heap).
+
+- **Compute engines on or off per server, each with its own configuration file (2.9.11 row 14; COMPUTE_ENGINES.md, OPERATIONS.md
+  section 21).** VaR (with regulatory VaR), exposure, the position sensitivities, FRTB-SA, SIMM and the in-memory lake each have a file,
+  `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`; the same file inside the jar), holding the switch `drishti.engines.<engine>.enabled`
+  and every setting under its old key; `application.yaml` imports them and no longer holds them; SA-CCR, FVA and the two cubes have their
+  file and switch, shown "not installed". The old switch names (`drishti.var.enabled`, `drishti.ccr.exposure.enabled`,
+  `drishti.frtb.enabled`, `drishti.simm.enabled`) still decide when a site sets them, with one warning at start (DRS-1024); the
+  environment variables are unchanged; an edition's `var: off` presets the new switch; nothing is required on upgrade. Off, an engine is
+  not started (no date, cache, thread or capture), its API answers `404 DRS-1020` in words (was 403), and when no server of the cluster
+  runs it its words, menus, Help pages, Home cards, pages, playgrounds, BI datasets and `drishti.py` commands (exit 3) disappear.
+  Dependencies are enforced with words (FRTB-SA needs VaR and the sensitivities, SIMM the sensitivities; DRS-1021; a server started with
+  a need off starts with the engine `blocked`, DRS-1022). **Admin → Engines** (mock-up A): the engines with switch, state, memory,
+  threads, needs, used by and where each switch is set; a staged change reviewed in a side panel (dependency check, what disappears,
+  live or restart) and applied with a required reason, written to the engine's file (only `enabled` and `changed`, comments kept,
+  atomic, refused when edited by hand since, DRS-1023), audited, in History; off is live with a 30 s drain, on is live except the
+  in-memory lake ("restart needed"); an edit of the file by hand takes effect too. In a cluster each node publishes its engines in its
+  digest, an engine's request goes to a node that runs it, and the Cluster tab changes another node's engine (signed, audited on both).
+  `drishti.py server engines list|show|on|off|history` (`admin engines` the same). CONFIGURATION.md has an Engines area, checked.
+- **Docs: the pivot engine designed (design, not built; PIVOT_ENGINE.md, mock-ups A, B and C in docs/architecture/mockups/pivot/,
+  the plan's proposed 2.9.11.a).** One generalised, very large-scale pivot for all of Drishti in a new `drishti-bicompute` module:
+  measure providers (DuckDB tabular, VaR vectors, FRTB-SA, SIMM, later CCR), mergeable, sketch and holistic measures, custom
+  aggregation functions (start, add, merge, finish) with a split-and-merge harness and a playground, expand and collapse, charts,
+  Excel and CSV export, BI and the MR cube on it; the MR cube (2.9.11 row 3) moved to after it.
+- **Construct your basket is one sheet like Excel; baskets are edited, amended and deleted (2.9.11 rows 10 and 12; VAR_GUIDE.md
+  sections 3.5 and 5.8, tutorial 25 steps 5 and 7).** The chip tray is retired (mock-up D): a column per kind of part (trade, position,
+  portfolio, book, desk, each configured hierarchy's word such as the limit letter, counterparty) and the Op column (+ or −), filled by
+  typing, by the type-ahead (a hint lands in its kind's column), by **+ basket** on any explorer row, or by pasting whole columns from
+  Excel (a first row of headings places each column); only the rows in view are drawn, so 10,000 ids scroll as fast as ten. **Start from
+  the whole bank** is one checkbox (`BANK - DESK:COMM - TRD:XYZ`); a minus in the Op column or a leading `-` takes away, and a minus that
+  takes nothing away, or a + row under the whole bank, is flagged in words. Every check and figure is the server's: `POST
+  /api/v1/var/basket/sheet` takes the columns as lists and answers each cell found or not found with the reason (not live, outside your
+  view, a masked counterparty, one id a cell) and the basket's VaR, ES, sum of the parts, diversification and trades; **Remove the not
+  found**; **Download as .xlsx** (`POST /api/v1/var/basket/sheet.xlsx`). A saved basket keeps the sheet's lists (to 20,000 rows; its
+  scope composed when read) and opens back into the sheet column by column (`GET /api/v1/var/basket/sheet?scope=`). In *Ad-hoc scopes* a
+  basket of yours has **Edit** (Save keeps its name as the next version; a basket changed since is `409`) and **Delete**; an
+  administrator edits anyone's, saved under its owner, audited (`var-basket-edit`) and told in the owner's inbox; a portfolio (the bank's
+  feed) and a basket shared with you have **Edit a copy**. The what-if trades, save with read-only sharing, Open without saving, Alt+B and
+  the count on the link are kept.
+- **Designs: IFRS 9 expected credit loss and financial crime (docs only; product owner, 2026-11-02).**
+  [IFRS9_ECL.md](docs/architecture/IFRS9_ECL.md) designs the impairment engine (staging with SICR, backstop, exemption and cure; PD from
+  curves or migration matrices; LGD with collateral; EAD with CCF; EIR discounting; weighted scenarios; overlays with four eyes; POCI;
+  why the provision moved in exact steps; contracts, playground, hand-built cases). [FINANCIAL_CRIME.md](docs/architecture/FINANCIAL_CRIME.md)
+  designs the FCU engines (trade surveillance, transaction monitoring with threshold tuning, network analytics, customer risk rating,
+  sanctions and PEP screening, fraud scoring, alerts and cases, FINTRAC STR, LCTR and EFTR, rule effectiveness, data protection). The
+  plan proposes 2.9.20 (IFRS 9) and 2.9.21 and 2.9.22 (financial crime, split in two), placement to confirm.
+- **VaR by trader on the server (2.9.11 row 9; [VAR_GUIDE.md section 11.3](docs/guides/VAR_GUIDE.md#113-path-and-contributions)).**
+  `GET /api/v1/var/scope/contributions?by=attribute:<COLUMN>` groups every trade of the scope by its value of a trade column and sums
+  each group's vector in Java over all its trades (never cut to `max-parts`), so the groups' component VaR adds up to the scope's VaR. The
+  column is the VaR book's own (`COUNTERPARTY`, `STRATEGY`, a hierarchy's level column) or one the trade valuations keep (`TRADER_ID`,
+  joined by trade id; the new setting `drishti.var.kinds.valuation`, `trade-valuation`). A role that sees the column masked gets no groups,
+  `masked: true` and a note. The Trading landing's VaR by trader asks it (`by=attribute:TRADER_ID`) and only shows the rows: a desk with
+  more trades than the contributions page now counts every trade.
+- **The VaR what-if in Java (2.9.11 row 11; [VAR_GUIDE.md section 8.2](docs/guides/VAR_GUIDE.md#82-the-what-if-the-java-engine)).**
+  `POST /api/v1/var/what-if` keeps its request and answer and is computed by the server's VaR engine (`VarWhatIfMath`: before and after
+  VaR, ES and stressed VaR, each trade's standalone, incremental and component VaR), with no sandbox and no compute workers, so it answers
+  with `DRISHTI_COMPUTE_ENABLED=false`. Parity with the Python engine it replaces: its answers on the demo's DESK-RATES (three trades:
+  an unwind, a half, a double) are frozen in a test and given again to the cent. An item may also copy any scope (`"copyOf":
+  "BOOK:BOOK-RATES-3"`) or bring a vector priced elsewhere (`"pnl": [...]`); `drishti.py var whatif SCOPE --copy TRADE=FACTOR
+  [--trades FILE.json]` posts to it. **Retired:** the Python VaR engine (`drishti_compute.var`, its tests and the compute pool `var`,
+  `DRISHTI_COMPUTE_VAR_WORKERS`), the computed kind `var-whatif` with its connector, contract and command `VWIF` (the menus' *What-if*
+  entries, the editions' lists and chips; the Trading landing's new-trade check now needs the word `VAR` and `XWIF`), and `DRS-5205`.
+  **Upgrade:** a connector file generated from a pack's template that the pack no longer has and that nobody edited is removed at start
+  (kept beside it as `.retired-<time>.bak` and in the history); an edited `var-whatif.yaml` stays, its kind listed as obsolete under
+  Admin → Connectors → Template updates.
+
+- **ISDA SIMM, computed per netting set, collect and post (2.9.11 row 4; [SIMM_GUIDE.md](docs/guides/SIMM_GUIDE.md), tutorial 32).** The
+  server's Java engine computes SIMM from the same position sensitivities as FRTB-SA: each netting set's trades from the netting-set
+  records, its CSA's version, regimes, calculation currency and add-ons when the CSA carries them; delta, vega, curvature and base
+  correlation per risk class with the concentration factor at the rules' grain (per currency for rates, per issuer and seniority for
+  credit, per factor otherwise), f_kl and g_bc, every bucket's net capped at its K, the residual buckets outside the root, vega σ from the
+  risk weight × HVR, HVR_IR⁻² on rates curvature; the risk classes within a product class with ψ and the four product classes added; the
+  CSA's fixed, notional and multiplier add-ons. Post is every sensitivity negated. **ISDA's numbers are licensed: none ships.** The bank
+  installs one parameter file a version in `drishti.simm.parameters-dir` (the structure `docs/architecture/capital-parameters/simm.yaml`,
+  every number empty); a version with a number missing is refused (`DRS-5333`) and every figure carries the version and the file's
+  SHA-256. `SIMM` opens the netting-set list with each one's breakdown and the margin against the counterparty's call (`crif-external`);
+  netting sets without sensitivities show the stored figure, labelled; any VaR scope is an analytic. `PLAY SIMM <netting set>`: the
+  Choices panel (the version, concentration, HVR), the side, a switch compared in words, recipes replayed to the cent (`PLAY SIMM RUN
+  <id>`), and the workbook of live formulas with the switches and the side as Config cells (recalculated by LibreOffice in the tests and
+  equal to the engine to the cent); the template workbook has every parameter cell empty. API `/api/v1/simm/...`; CLI `drishti.py simm`,
+  `play simm`; settings `drishti.simm.*` (`enabled` switches it off); codes `DRS-5331` to `DRS-5336`. The tests use a toy parameter file
+  (not ISDA's).
+- **FRTB-SA, computed for any scope (2.9.11 rows 1 and 2; [FRTB_SA_GUIDE.md](docs/guides/FRTB_SA_GUIDE.md), tutorial 30).** Position
+  sensitivities (`SENS`) and the factor dictionary (`RFAC`) are kinds of the market-risk pack, served by risk-store and loaded by `lake
+  demo`; the server's Java engine computes the FRTB standardised approach from them: the sensitivities-based method (delta, vega and
+  curvature per risk class with the two curvature sides, the three correlation scenarios and the binding one, the alternative
+  specification), the default risk charge (from the `default-risk` input; *not computed* without it) and the residual risk add-on
+  (from the `residual-risk` input, or derived from the positions' product types and notionals), with Euler contributions that add up.
+  Parameters are the market-risk pack's `capital/frtb-sa-sbm.yaml` and `frtb-sa-drc-rrao.yaml` (MAR21.46's published GIRR table by
+  default), checked at start and hashed into every answer. `FRSA <scope>` opens the capital screen (the stack, the scenarios, the bucket
+  drill, the contributions); `PLAY FRTB <scope>` the playground: every method choice a switch, a switch compared side by side with the
+  difference explained by step, the workbook of live formulas with the switches as Config cells (recalculated by LibreOffice in the tests
+  and equal to the engine to the cent, with the defaults and each switch flipped), and recipes replayed to the cent (`PLAY FRTB RUN <id>`).
+  API `/api/v1/sensitivities`, `/api/v1/risk-factors`, `/api/v1/frtb/...`; CLI `drishti.py sens`, `frtb`, `play frtb`; settings
+  `drishti.frtb.*`. The factor names give GIRR curvature per currency (`IR/CURVE/<ccy>`) and commodity curvature per commodity
+  (`CM/PRICE/<commodity>`), with the cross-currency basis and inflation without a tenor; vega horizons follow MAR21.92. Planned
+  contracts `default-risk` (DRCI) and `residual-risk` (RRAI); the capital-input regime `BCBS-MAR`. Refusal codes `DRS-5321` to `DRS-5329`.
+- **The in-memory lake: data that never touches a disk** (2.9.11 row 13, on Java 21; docs/guides/IN_MEMORY_LAKE_GUIDE.md, tutorial 30).
+  Feeds that may not, by contract, be saved on a disk are held as ordinary Delta tables whose files live in the server's memory: a
+  `MemoryStorage` for `mem://<store>/…` beside local disk and S3 (direct buffers in a reused 1 MB chunk pool under a hard cap per store,
+  released explicitly on Java 21, reference-counted files so readers on an old version finish, truly exclusive commits; the same Storage
+  contract suite as local disk). The native Delta engine, the lake writer (rows from memory, no staged file; zstd by default, byte-equal
+  Parquet with `codec: snappy`) and Iceberg's file access read and write it; the Delta connector with `root: mem://<store>` reads it
+  unchanged. **Replenish jobs** (`drishti.lake.memory.tables`) fill each table from a URL, a file, a connector's documents or the news
+  connector by ids, in `replace`, `append` or `merge` mode, on a schedule or cron, on the source's signal, at start in warm-up order,
+  after an eviction and on demand; every run is in a values-free history. The **eviction ladder** frees old versions, then whole unpinned
+  tables least recently read first, then refuses the write with the table whole at its previous version. **Automated compaction** merges
+  small files, drops replaced rows and re-sorts appends, only with headroom under the cap. **The guard** (`DRS-5219`): a memory-only
+  connector keeps no disk cache, id-map files or index segments; scheduled reports, a share's picture or e-mail, notes copying values and
+  Ask are refused; BI run results are not stored; DuckDB does not spill; a user's download is allowed, streamed and audited without
+  values. **News first**: `config/connectors.examples/memory/news-store.yaml` and `config/examples/in-memory-lake.yaml` move the
+  news-and-markets pack to `mem://news`; the sentinel scan (markers through pages, a download and a refused report, then the data folder,
+  the temporary folder and the logs searched) finds none. Admin → Lakes and Health (store use, refusals, pinned tables, the direct-memory
+  limit against the caps, swap, heap dumps, JFR, the temporary folder), a gauge per store in busy protection, the off-heap pool in the
+  memory budget; `drishti.py lake memory status|jobs|refill`; node.yaml `memory-stores` binds a store and its pack to its owner node and
+  the others forward; the launchers raise `-XX:MaxDirectMemorySize` by the stores' caps (`tools/lake/memory_caps.py`,
+  `DRISHTI_LAKE_MEMORY_MB`). Measured on the demo tables: 4 to 42 times smaller than the decoded rows, 1.6 to 3.9 times smaller than the
+  disk lake (RESOURCES_AND_SCALE.md 5.8).
+
+- **Busy protection: refuse politely, never fall over** (2.9.11 row 8; mock-up A). One gate in front of new sign-ins, VaR and exposure
+  date loads, Data view downloads, BI runs and bulk loads reads the heap after the last collection, each engine's loads against
+  `load-threads`, the open dates' heap against their safety net, the requests answered at once and the free disk; past a wait level the
+  new work is answered `503` with `Retry-After` and `DRS-9501` (sign-in), `DRS-9502` (a date), `DRS-9503` (a download), `DRS-9504` (a BI
+  run) or `DRS-9505` (a bulk load), in calm words. Defaults: new heavy work waits over 85% of the heap after a collection, new sign-ins over
+  92%; people signed in keep working (open dates are never gated). A refusal is remembered for its `Retry-After`, so a crowd gets one
+  decision; it lifts as soon as its cause clears. The console shows the message in place with a countdown ring, Try now and Cancel, and
+  tries again by itself three times (sign-in, the VaR and exposure panels, the Data view's Download card); nothing else on the screen
+  changes. `drishti.py data get --wait` (and `DRISHTI_WAIT_BUSY=1` for every command) waits and tries again, printing the same words.
+  Admin → Health gains the Busy protection card (memory after clean-up, loads running, request handlers busy, disk, with warn and wait
+  markers; the last refusals) and the operator override (Automatic, Let everything through, Hold all new heavy work; a reason required,
+  ends by itself, audited as `busy-override`); `GET /api/v1/admin/busy`, `PUT /api/v1/admin/busy/override`. Settings `drishti.admission.*`
+  (OPERATIONS.md 12.5, CONFIGURATION.md).
 - **One competitive analysis.** The older comparison page (`/about/competitive`, from `drishti-console/config/competitive.yaml`: product categories, no vendors) is retired; its address leads to the Help guide *Competitive analysis* (`docs/strategy/COMPETITIVE_ANALYSIS.md`, vendor by vendor, administrators only). Administrators reach it from the Help menu, the Help centre and About; the footer link is gone; `competitive.yaml` and its CONFIGURATION entry removed.
 - **Why it moved follows the active theme.** The VaR page's *Why it moved* view drew in the renderer library's own default palette (parchment whenever the computer was in light mode) instead of the theme picked in the console; it now takes the active theme and follows a switch at once.
 - **Construct your basket opens only when asked** (the link, Alt+B or + basket), never by itself when a basket kept in the browser or a saved basket opens.
+- **Sensitivities and market-risk capital (design):** checked against Basel MAR21–23 and ISDA SIMM 2.8+2512 before the engine is
+  built. Curvature now takes an up and a down term per factor with the larger bucket charge kept, floors the across-bucket sum at zero
+  and applies the correlation scenarios to the squared correlations; the curvature factors and shocks are stated per class (commodity
+  added to the parallel shift); the estimate from gamma is written out as a second-order approximation; the FX ÷ 1.5 is limited to
+  options not referencing the reporting currency. SIMM concentration is applied per currency, per issuer or per factor (not per bucket),
+  with the f and g adjustments, the always-capped bucket net, residual buckets and the equity/FX/commodity vega volatility; the SIMM
+  parameter file no longer carries a correlation across product classes (they add). DRC and RRAO paragraph references corrected; RRAO's
+  listed/cleared exclusion limited to other residual risks. Hand-built cases 9 to 11 added; cases 1 to 6 recomputed unchanged. The
+  playground explanations follow. A new section *Checked against the rules* lists each point.
+- **FRTB and SIMM data contracts (design):** `docs/contracts/FRTB.md` and `SIMM.md` rewritten to the sensitivities design: the shared
+  input is `position-sensitivity` (SENS) with the `risk-factor` dictionary (RFAC), replacing the earlier per-trade `sensitivity` table;
+  units, signs and the per-class delivery rules; draft default-risk and residual-risk inputs; the parameter files with version and hash;
+  the method switches, the playground recipe and workbook; refusals with their words; sizing at 300,000 trades and 2.3 million positions.
+  New `FRTB_DATA_STRUCTURES.md`: every field, the naming standard, the bucket grids, the computed records, worked JSON Lines records of
+  each kind and the mapping from CRIF and bump reports. SIMM follows 2.8+2512 with its numbers shipped empty.
 - **Drill:** stops at once with the remedy when `drishti-console/.venv` is missing (a new worktree).
 - **Decks:** the roadmap as it stands (built: the regulatory foundation, the VaR Playground, why VaR moved, the Data view, the phone; next: sensitivities and market-risk capital), hot-dates 10, the 200K and 1M benchmarks measured.
 - **Tests:** the direct-memory soak test no longer calls AssertJ from its 72 worker threads (on Java 25 they waited on its class initialisation for ever).

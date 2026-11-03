@@ -32,9 +32,11 @@ import java.util.Map;
  * @param tls mutual TLS settings ({@code tls.keystore.path}, ...), flattened; empty for none
  * @param gossipPort the port of the node's own gossip connector (2.6.7): {@link #GOSSIP_AUTO} (0, the default: a free port chosen when the
  *     node joins, advertised through gossip), {@link #GOSSIP_OFF} (-1: gossip on the server's port, as before 2.6.7) or a port number
+ * @param memoryStores the in-memory lake's stores this node owns (docs/architecture/IN_MEMORY_LAKE.md section 9): it fills them and binds
+ *     their packs; the other nodes forward the packs' requests here. Empty: each store's own {@code owner} setting decides
  */
 public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,
-        String previousSecret, Map<String, String> tls, int gossipPort) {
+        String previousSecret, Map<String, String> tls, int gossipPort, List<String> memoryStores) {
 
     /** {@code gossip-port: auto}: a free port chosen when the node joins. */
     public static final int GOSSIP_AUTO = 0;
@@ -48,6 +50,11 @@ public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, 
         this(enabled, nodeId, advertiseUrl, tags, peerOnlyPacks, secret, previousSecret, tls, GOSSIP_AUTO);
     }
 
+    public NodeSettings(boolean enabled, String nodeId, String advertiseUrl, List<String> tags, List<String> peerOnlyPacks, String secret,
+            String previousSecret, Map<String, String> tls, int gossipPort) {
+        this(enabled, nodeId, advertiseUrl, tags, peerOnlyPacks, secret, previousSecret, tls, gossipPort, List.of());
+    }
+
     public NodeSettings {
         nodeId = nodeId == null ? "" : nodeId.trim();
         advertiseUrl = advertiseUrl == null ? "" : advertiseUrl.trim().replaceAll("/+$", "");
@@ -57,6 +64,7 @@ public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, 
         previousSecret = previousSecret == null ? "" : previousSecret;
         tls = tls == null ? Map.of() : Map.copyOf(tls);
         gossipPort = gossipPort < GOSSIP_OFF || gossipPort > 65535 ? GOSSIP_AUTO : gossipPort;
+        memoryStores = memoryStores == null ? List.of() : List.copyOf(memoryStores);
     }
 
     /** Never prints the keys. */
@@ -64,6 +72,6 @@ public record NodeSettings(boolean enabled, String nodeId, String advertiseUrl, 
     public String toString() {
         return "NodeSettings[enabled=" + enabled + ", nodeId=" + nodeId + ", advertiseUrl=" + advertiseUrl + ", tags=" + tags
                 + ", peerOnlyPacks=" + peerOnlyPacks + ", secret=" + (secret.isEmpty() ? "unset" : "set")
-                + ", previousSecret=" + (previousSecret.isEmpty() ? "unset" : "set") + ", tls=" + tls.keySet() + ", gossipPort=" + gossipPort + "]";
+                + ", previousSecret=" + (previousSecret.isEmpty() ? "unset" : "set") + ", tls=" + tls.keySet() + ", gossipPort=" + gossipPort + ", memoryStores=" + memoryStores + "]";
     }
 }

@@ -80,7 +80,12 @@ mkdir -p "$D/data/logs" "$D/data/dumps"
 # the stop hook (CD2, CLUSTER_DEPLOYMENT.md section 4.6): on ECS's SIGTERM the node drains first (forwarded work and VaR shards handed over,
 # at most DRISHTI_DRAIN_WAIT, 90 s, inside the task's stopTimeout of 120 s), then Java gets the signal and shuts down gracefully. The
 # drain needs DRISHTI_DRAIN_TOKEN (a personal API token with node:drain, from Secrets Manager); the rolling runner drains before the stop
-exec "$D/bin/drishti-node.sh" run java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData -XX:MaxDirectMemorySize=256m -XX:TrimNativeHeapInterval=60000 \
+# the in-memory lake (IN_MEMORY_LAKE.md section 3a): its stores live in direct memory, so a task with memory stores sets
+# DRISHTI_LAKE_MEMORY_MB to their max-mb added up and the limit becomes 256 MB plus that (the later flag wins); Health turns red when short
+DIRECT="-XX:MaxDirectMemorySize=256m"
+if [ "${DRISHTI_LAKE_MEMORY_MB:-0}" -gt 0 ] 2>/dev/null; then DIRECT="$DIRECT -XX:MaxDirectMemorySize=$((256 + DRISHTI_LAKE_MEMORY_MB))m"; fi
+# shellcheck disable=SC2086
+exec "$D/bin/drishti-node.sh" run java "$@" -Xmx"${DRISHTI_HEAP:-8g}" -XX:+UseZGC -XX:-UsePerfData $DIRECT -XX:TrimNativeHeapInterval=60000 \
   -Djdk.nio.maxCachedBufferSize=262144 -XX:NativeMemoryTracking=summary \
   -Djava.io.tmpdir="$TMPDIR" -Duser.home="$HOME" \
   -XX:ErrorFile="$D/data/logs/hs_err_pid%p.log" -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath="$D/data/dumps" \

@@ -28,7 +28,7 @@ same machine. Replace `localhost` if yours run elsewhere.
 | [Signing in](#signing-in) | no sign-in page, wrong password, locked, signed in but bounced back |
 | [The console and the server](#the-console-and-the-server) | backend unreachable, `/readyz` says 503, the server's readiness is DOWN or OUT_OF_SERVICE, the Live button has an amber ring, typing does nothing |
 | [Commands and views](#commands-and-views) | cannot read command, *Nothing matches*, DRS-1001, may not open, no suggestions, No data available, pending links, blank charts |
-| [Large books](#large-books-timeouts-grouped-pages-and-caches) | DRS-1004 on a trade, a counterparty or portfolio page slow or empty, grouped pages out of memory, only 1,000 trades listed, disk caches |
+| [Large books](#large-books-timeouts-grouped-pages-and-caches) | "the server is very busy" or a panel counting down (DRS-9501 to DRS-9505), DRS-1004 on a trade, a counterparty or portfolio page slow or empty, grouped pages out of memory, only 1,000 trades listed, disk caches |
 | [Pick lists and tables](#pick-lists-and-tables) | a pick list instead of the entity, only ids in the list, only 25 rows, keys do nothing |
 | [Live and dates](#live-updates-and-business-dates) | view does not tick, no data held for a date, DRS-4003, known at has no effect, DRS-1007, DRS-1001 naming a store that holds the date |
 | [Search](#search) | DRS-4004, empty results, partial results |
@@ -147,7 +147,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -165,7 +165,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -187,7 +187,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-2.9.10.a-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-2.9.11-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -293,7 +293,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.10.a-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
@@ -618,6 +618,19 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 - **Fix:** allow the console's own `/static/` path through the proxy or extension; hard-refresh.
 
 ## Large books: timeouts, grouped pages and caches
+
+### "The server is very busy right now", or a panel counting down (503 `DRS-9501` to `DRS-9505`)
+
+- **Cause:** busy protection asked new work to wait so the server does not run out of memory: memory after clean-up is over its wait
+  level (85% for new loads, downloads, BI runs and bulk loads; 92% for new sign-ins), an engine's date loads are full, the open dates are
+  well over their safety net, too many requests are answered at once, or the data folder's disk is nearly full. Work already open is not
+  affected: a date already open keeps answering.
+- **Check:** Admin → Health → Busy protection: which reading is past its wait marker, and the last refusals (who, what, why). The
+  server log has one line when waits start (`busy protection: new ... waits: ...`) and one when work is let in again.
+- **Fix:** nothing, for a short peak: the page tries again by itself after the countdown (three times), and `drishti.py ... --wait` does
+  the same. If it happens daily, give the server more heap or another member, lower `drishti.var.hot-dates`, or move the levels
+  (`drishti.admission.*`, [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over)). For an
+  urgent sign-off an administrator can let everything through for a few minutes (Health, Operator override, a reason required).
 
 ### "DRS-1004 … timed out" opening a trade
 
@@ -1486,6 +1499,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-1012` | history queries: the kind keeps no daily history here. Cause: its pack says `history: {<kind>: {enabled: false}}`, `drishti.history.enabled` is off, or every connector of the kind holds today's data only (REST, a feed) and the pack declares no embedded `series:`. Fix: route the kind to a dated store (Delta Lake, a dated folder, a database with a date column) or add `series:` to the kind's `history:` block |
 | `DRS-1013` | history queries: the entity has no data in the range. Fix: widen the range (`TRD X 3M`), or move the date box to a date the entity has data |
 | `DRS-1014` | history queries: the connector did not answer within `drishti.history.timeout` (10 s), or `drishti.history.max-concurrent` history requests were running. With some days read the page shows them and says which days are missing. Fix: a shorter range, or raise `timeout` and look at the connector on Admin → Health |
+| `DRS-1020` | a compute engine runs on no server of the cluster (HTTP 404): its words, menus, Help pages and pages are gone and its API answers "<engine> is not running on this server". Cause: its switch is off (Admin → Engines, `config/engines/<engine>.yaml`, an old name such as `drishti.var.enabled` in `application.local.yaml`, the environment, or the edition), or it is `blocked` because an engine it needs is off (DRS-1022 in the start log). Fix: Admin → Engines or `drishti.py server engines on <engine> --with-needs --reason ...`; the row's "Switch set in" says which setting decides ([OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)) |
 | `DRS-1016` | a command an administrator turned off (HTTP 403): its page shows "<CMD> is not active on this server", links to it are struck through, and its panels on other pages say "not active (turned off by an administrator)". Cause: an administrator's switch on Functions (`FUNC`; or `drishti.py server commands off`). Fix: an administrator turns it on again there; the history says who turned it off, when and why. On a cluster every server follows within seconds; a server shown "catching up" on Admin → Commands has not had the change yet |
 | `DRS-1017` | a pack refused by the server's edition (HTTP 403): Admin → Packs, Deploy archive or the registry tried to load a pack the edition does not list, and its packs are allow-only. Fix: add the pack to the edition's `packs.enabled`, or set `drishti.edition-spec.packs.allow-only: false` ([EDITIONS.md section 9](../admin/EDITIONS.md#9-troubleshooting)) |
 | `DRS-4023` | a command the edition (or your lens) hides (HTTP 404): typed, opened by its page or asked of the type-ahead. Fix: `FUNC` lists what you can use; an administrator adds it with `drishti.edition-spec.commands.also-allow` ([EDITIONS.md section 6](../admin/EDITIONS.md#6-customise-it-without-forking-and-white-label-it)), or you leave the lens |
@@ -1504,6 +1518,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-5201` | a row of the date's P&L vectors was rejected when the VaR engine loaded the date (wrong length, a null or NaN, not USD): the answer's provenance lists the trade and the reason; fix the row upstream and reload the date |
 | `DRS-5204` | a VaR date cannot be built for room: on the mapped tier (the default) its hot file would leave the disk under the free-space guard (free disk where `drishti.var.tier.dir` points); on the heap tier its vectors exceed `drishti.var.memory-budget-mb` (raise it or the heap, or lower `drishti.var.hot-dates`). Remembered with `Retry-After` for `refusal-ttl-seconds`. Heap sizing: [VaR: OutOfMemoryError](#var-outofmemoryerror-with-dates-open-or-503-drs-5204-opening-a-date) |
 | `DRS-5218` | not enough free disk to build a date: the disk would fall under the guard (`drishti.disk.min-free-percent`, `min-free-gb`). See Admin → Health → Disk for which folder holds what; free space on that disk, lower a folder's cap (`drishti.var.tier.max-disk-gb`, `drishti.ccr.exposure.max-disk-gb`, `drishti.bi.query.store-max-gb`, a connector's `id-map-disk.max-gb`) or purge a date in Admin → Caches. The dates already open keep answering |
+| `DRS-5219` | the data is held in memory only by contract (an in-memory lake, `mem://`), and this would keep it: a scheduled report, a picture or an e-mail of a share, a note copying its values, an Ask about the page. Nothing was written; download the rows instead (the one way out, audited). See [the in-memory lake guide](IN_MEMORY_LAKE_GUIDE.md) |
 | `DRS-5208` | a PV record does not say what it is: add `VALUE_TYPE`, `GRAIN`, the id, `CURRENCY` and `SOURCE_SYSTEM` at the source, or `drishti.py var convert FILE --set ...` for an older file; if every record of a date is refused, check that the connector's layout promotes those columns (a `config/connectors/risk-store.yaml` from an older template: VAR_GUIDE.md section 8.4) |
 | `DRS-5209` | a record disagrees with its system's pin (`drishti.var.inputs`): the source changed what it sends, or the pin is wrong; fix one of them (the pin is read at start) |
 | `DRS-5212` | a `var-limit` row names a node the date does not have (a warning in the provenance; the row is unused): check its `NODE_ID` against the tree (`LL~LL-0003/DESK-RATES`; path ids unless the hierarchy says `ids: leaf`) |
@@ -1517,6 +1532,7 @@ Every code, with its HTTP status and what it means, is in one table: [API guide,
 | `DRS-5033` | no connector of that name (HTTP 404): check the spelling with `drishti.py connector list`; the file name is the name |
 | `DRS-5040` | Admin → Artifacts: no such installed pack, connector or BI file, or no such archive (HTTP 404): check the name in the list; an archive older than `drishti.admin.uninstalled-keep` is pruned |
 | `DRS-9203` | a compute pool is busy (HTTP 429): its queue for the request's class is full; try again in a moment, or raise `workers.max` or the queue |
+| `DRS-9501`–`DRS-9505` | busy protection: a new sign-in (9501), date (9502), download (9503), BI run (9504) or bulk load (9505) waits because the server is short of memory, load slots, request handlers or disk (HTTP 503 with `Retry-After`); see ["The server is very busy right now"](#the-server-is-very-busy-right-now-or-a-panel-counting-down-503-drs-9501-to-drs-9505) |
 | `DRS-9304` | the record's lane holds more changes than `lanes.max-lane-depth`: try again in a moment; the draft is kept (HTTP 503) |
 | `DRS-7003` | too many shares or directory searches in a minute (or shares today); wait the `Retry-After` seconds (HTTP 429). Limits are `drishti.collab.limits.*` |
 | `DRS-8001` | an embedded view or its token request was refused (HTTP 401, or 400 `invalid_grant`/`invalid_target` at the token endpoint): the embed token is missing, malformed, expired or for another audience, or embedding is off (`drishti.embed.enabled`); also the console's own check: a signature the server's key does not make (a token from another server, or the server's key changed and `embed.jwks_min_refetch_seconds` has not passed), a token for an audience not in the console's `embed.audiences`, or a live stream whose token expired and no fresh one reached `POST /embed/v1/channel/{cid}/token` within `embed.token_grace_seconds` (the element renews itself; a host whose `tokenProvider` fails or returns the same token ends the stream). The host's backend gets a new token (they last 5 minutes); check that its `audience` is one of `drishti.embed.audiences` and that the clocks agree; the server must run with a persistent `drishti.embed.signing-key` |

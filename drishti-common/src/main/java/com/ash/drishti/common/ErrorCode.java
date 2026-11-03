@@ -48,6 +48,19 @@ public enum ErrorCode {
      * {@code allow-only}, so Admin → Packs, Deploy archive and the registry may not load another one.
      */
     EDITION_PACK_REFUSED("DRS-1017", 403),
+    /**
+     * A compute engine is not running on this server and no other server of the cluster runs it (docs/architecture/COMPUTE_ENGINES.md
+     * section 5.1): its API answers 404 in words, never 403 (nothing is forbidden; the engine is not here).
+     */
+    ENGINE_OFF("DRS-1020", 404),
+    /** An engine change refused by a dependency: turning on an engine whose needs are off, or off an engine another running one needs. */
+    ENGINE_DEPENDENCY("DRS-1021", 409),
+    /** An engine switched on in its file but not started: an engine it needs is off on this server (logged at start, shown on Health). */
+    ENGINE_BLOCKED("DRS-1022", 503),
+    /** The engine's file changed on disk since the page read it, or its folder cannot be written (DRISHTI_ENGINES_DIR). */
+    ENGINE_FILE_CONFLICT("DRS-1023", 409),
+    /** An old switch name still in use ({@code drishti.var.enabled} for {@code drishti.engines.var.enabled}): a warning at start, never an answer. */
+    ENGINE_OLD_KEY("DRS-1024", 400),
     SUTRA_PARSE("DRS-2001", 422),
     SUTRA_INVALID("DRS-2002", 422),
     SUTRA_NOT_FOUND("DRS-2003", 404),
@@ -128,11 +141,6 @@ public enum ErrorCode {
     /** VaR: a date's vectors need more memory than the engine's budget (drishti.var.memory-budget-mb): capacity, try later or raise it. */
     VAR_CAPACITY("DRS-5204", 503),
     /**
-     * VaR: a pre-deal what-if (a copy of a booked trade, scaled, added to a scope) runs in the Python VaR engine, the reactive connector
-     * {@code var-whatif} (compute pool {@code var}); it is not running on this server (the compute workers are off) or did not answer in time.
-     */
-    VAR_WHATIF_UNAVAILABLE("DRS-5205", 503),
-    /**
      * VaR: a trade's scenario PVs (the {@code scenario-pv} kind) hold a scenario that failed to price (a null or NaN PV): the trade is not
      * loaded, never filled with zero. Counted and listed in the answer's provenance with the scenarios, not thrown.
      */
@@ -194,6 +202,12 @@ public enum ErrorCode {
      * cap. Nothing was written; a date already open keeps answering; the answer says what is free, what was needed and the guard.
      */
     DISK_GUARD("DRS-5218", 503),
+    /**
+     * The in-memory lake's guard (docs/architecture/IN_MEMORY_LAKE.md section 8): the data is held in memory only by contract, and this
+     * place would keep it (a scheduled report, a mail attachment, an inbox or share item with rows, a saved result, an outside AI provider).
+     * Only a user's download may leave; the answer names the data and its contract.
+     */
+    MEMORY_ONLY("DRS-5219", 403),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**
@@ -541,7 +555,17 @@ public enum ErrorCode {
     /** Write-back: no such change. */
     EDIT_NOT_FOUND("DRS-9305", 404),
     /** Write-back: edits are paused (the edit primary is not reachable, or this cluster has no shared edit log); reading is not affected. */
-    EDIT_PAUSED("DRS-9306", 503);
+    EDIT_PAUSED("DRS-9306", 503),
+    /** Busy protection (docs/admin/OPERATIONS.md, "Busy protection"): the server is very busy, a new sign-in waits; people signed in keep working. */
+    BUSY_SIGN_IN("DRS-9501", 503),
+    /** Busy protection: a business date cannot be opened just yet (memory, the loads running, the open dates' memory, disk); open dates keep working. */
+    BUSY_LOAD("DRS-9502", 503),
+    /** Busy protection: a Data view download did not start; the selection is kept. */
+    BUSY_DOWNLOAD("DRS-9503", 503),
+    /** Busy protection: a BI run did not start. */
+    BUSY_BI_RUN("DRS-9504", 503),
+    /** Busy protection: a bulk load of a pack's data did not start. */
+    BUSY_BULK_LOAD("DRS-9505", 503);
 
     private final String code;
     private final int httpStatus;

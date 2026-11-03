@@ -323,6 +323,27 @@ kinds:
       ACTUAL_PNL: { term: "Actual P&L", means: "The desk's P&L of the day from the bank's books, without fees, commissions, reserves and net interest income.", unit: "the row's currency" }
       HYPOTHETICAL_PNL: { term: "Hypothetical P&L", means: "Yesterday's positions revalued at today's market: the P&L had nothing been traded.", unit: "the row's currency" }
       FEES_AND_COMMISSIONS: { term: "Fees and commissions", means: "Left out of the actual P&L that backtesting uses; shown for reconciliation.", unit: "the row's currency" }
+  position-sensitivity:
+    title: Position sensitivities
+    about: >-
+      The sensitivities of ${$.POSITION_ID} on ${$.BUSINESS_DATE} from ${$.SOURCE_SYSTEM} (batch ${$.BATCH_ID}): how much it gains or
+      loses when each standard risk factor moves one small step. FRTB-SA weighs and adds them up for any scope (FRSA); the bank's pricing
+      systems deliver them, Drishti never computes them.
+    guide: market-risk
+    glossary:
+      SENSITIVITIES: { term: "Sensitivities", means: "One element per risk factor and measure: DV01, CS01, IE01 per basis point, DELTA per 1% move, VEGA per volatility point, CURVATURE_UP and CURVATURE_DOWN for the regulatory shock, or GAMMA." }
+      GRAIN: { term: "Grain", means: "Whether the record is a position (as the pack's position rules derive it) or a trade." }
+      VOL_CONVENTION: { term: "Volatility convention", means: "LOGNORMAL (the default) or NORMAL: how a source delivers rates vegas; normal ones are converted on load." }
+  risk-factor:
+    title: Risk factor
+    about: >-
+      ${$.RISK_FACTOR}: a ${$.RISK_CLASS} factor of type ${$.FACTOR_TYPE}, in FRTB bucket ${$.FRTB_BUCKET} and SIMM bucket
+      ${$.SIMM_BUCKET}. Every sensitivity names its factor by this standard name; the source systems' own names map to it.
+    guide: market-risk
+    glossary:
+      FRTB_BUCKET: { term: "FRTB bucket", means: "Where the factor falls in the Basel grid (MAR21): a currency for GIRR and FX, a number for credit, equity and commodity." }
+      SOURCE_NAMES: { term: "Source names", means: "The names the source systems give the factor; each maps to exactly one factor, an unknown name is refused, never guessed." }
+      LIQUIDITY_HORIZON: { term: "Liquidity horizon", means: "Days to hedge the factor in a stress: MAR21.92's vega horizons for volatilities, MAR33.12's for the others." }
   pnl-history:
     title: Long-history P&L of a hierarchy node
     about: >-
@@ -395,16 +416,3 @@ kinds:
       LIMIT_USE: { term: "Limit use", means: "The VaR over the node's VaR limit." }
       EXCEPTIONS_250: { term: "Backtest exceptions", means: "Days in the official history (up to 250) whose loss exceeded the VaR of the day before." }
       TRAFFIC_LIGHT: { term: "Traffic light", means: "The Basel backtesting zone: green, amber or red." }
-  var-whatif:
-    title: VaR what-if
-    about: >-
-      ${$.CANONICAL} on ${$.BUSINESS_DATE}: VaR ${fmt($.BEFORE_VAR, 'compact')} USD before and ${fmt($.AFTER_VAR, 'compact')} USD after the
-      ${$.ITEMS} hypothetical trade(s) of your sandbox, computed by the Python VaR engine; the stressed window over
-      ${$.STRESS_WINDOW} scenario days.
-    guide: market-risk
-    glossary:
-      BEFORE_VAR: { term: "VaR before", means: "The scope's 1-day 99% VaR as booked.", unit: "USD" }
-      AFTER_VAR: { term: "VaR after", means: "The scope's VaR with the sandbox's hypothetical trades added.", unit: "USD" }
-      CHANGE_VAR: { term: "Change in VaR", means: "VaR after minus VaR before: what the trades do to the scope's VaR.", unit: "USD" }
-      STRESSED_VAR_BEFORE: { term: "Stressed VaR", means: "The largest VaR over every run of the stress window's consecutive scenario days.", unit: "USD" }
-      ITEMS: { term: "What-if trades", means: "The hypothetical trades of your private sandbox, each with its P&L over the scenarios." }

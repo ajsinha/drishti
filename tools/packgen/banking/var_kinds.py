@@ -17,15 +17,15 @@ taxonomy's kinds. The engine's inputs (P&L vectors, scenario set, hierarchies, p
 tools/packgen/var/make_var_data.py into data/testdata/market-risk/ and served by the pack's Delta connector risk-store, the P&L vectors
 as a list<double> column (``vectors:``). Positions are Drishti's: derived from the trades by the pack's rules when a date loads and
 served from the engine by the var-positions connector. No kind stores a VaR figure: the pages show the engine's, computed when opened.
-The computed kinds (VAR_GUIDE.md section 8) are served by reactive connectors: var-result by the server's Java engine (var-engine), var-whatif
-by the Python engine in the compute pool "var" (var-whatif), each read as the viewer. The published official end-of-day results
+The computed kind var-result (VAR_GUIDE.md section 8) is served by the reactive connector var-engine, the server's Java engine, read as the
+viewer; the pre-deal what-if is the same engine's (POST /api/v1/var/what-if), not a kind. The published official end-of-day results
 (risk-results/var-official, written by the server's VarPublisher) are the read-only kind var-official of the Delta connector var-results,
 for BI and other readers only: no engine reads it (tools/test_contracts.py).
 
 Since 2.9.4 a bank may send a trade's scenario P&L as **scenario PVs** instead of a P&L vector: the trade's PV under each scenario and its
 base PV, in the trade's own currency (``scenario-pv``, the vector column SCENARIO_PV), with each currency's scenario FX when the batch
 supplies it (``fx-scenario``; else the server derives it from the FX history of the market-data pack's fx-spot). The server converts them to
-USD P&L when the date loads, and every VaR answer takes a reporting currency (the parameter ccy of var-result and var-whatif).
+USD P&L when the date loads, and every VaR answer takes a reporting currency (the parameter ccy of var-result).
 
 Since 2.9.5 the hierarchies are configured (the manifest's ``hierarchies:`` block, kept/market-risk.yaml): MGMT and LEGAL from the
 ``risk-hierarchy`` rows, and LL, the limit letters, built by the server from the rows' ``LIMIT_LETTER`` and ``DESK`` columns (promoted in
@@ -49,9 +49,13 @@ KINDS = {
     "desk-pnl": ("DPNL", "Desk P&L: actual and hypothetical (daily)", "^DPNL-", "DESK_PNL_ID"),
     # the long-history P&L of today's portfolio per hierarchy node, for the stress window selection (VAR_GUIDE.md section 18.9)
     "pnl-history": ("PNLH", "Long-history P&L of a hierarchy node (stress window selection)", "^PNLH-", "HISTORY_ID"),
+    # 2.9.11: the positions' sensitivities to the standard risk factors and the factor dictionary (SENSITIVITIES_AND_FRTB_SA.md sections 2
+    # and 3), read by the server's FRTB-SA engine; a factor's id is its standard name (IR/CURVE/USD/SOFR/10Y)
+    "position-sensitivity": ("SENS", "Position sensitivities (delta, vega, curvature by risk factor)", "^SENS-", "SENSITIVITY_ID"),
+    "risk-factor": ("RFAC", "Risk factor (the factor dictionary: FRTB and SIMM mapping, source names)", "^(IR|INF|CR|FX|EQ|CM|VOL)/",
+                    "RISK_FACTOR"),
     # the computed kinds: the id is a scope (DESK:RATES), so no id pattern claims them
     "var-result": ("VRES", "VaR of a scope (computed)", None, None),
-    "var-whatif": ("VWIF", "VaR what-if (computed, Python)", None, None),
     # the published official results: one row per node, business date and result version (id <NODE_ID>@<date>#v<n>); no pattern
     "var-official": ("VOFF", "VaR official results (published)", None, None),
     # 2.9.7: the bank's stress P&L per scenario, the desks' results added (COMPUTED_ATTRIBUTES.md section 8.2, Q4); its id is the
@@ -61,7 +65,7 @@ KINDS = {
 #: id patterns that must come before the taxonomy's (2.9.5): a P&L vector's PNL-<trade>-<set> id before pnl-explain's ^PNL-
 ID_PATTERNS_FIRST = [{"pattern": "^PNL-.+-HS-[0-9]+$", "kind": "pnl-vector"}]
 #: kinds not served by risk-store: the connector each is routed to
-SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-whatif": "var-whatif", "var-official": "var-results",
+SERVED_BY = {"position": "var-positions", "var-result": "var-engine", "var-official": "var-results",
              "stress-scenario-pnl": "mr-derived"}
 _INPUTS = ["pnl-vector", "scenario-pv", "fx-scenario", "risk-hierarchy", "scenario-set", "portfolio", "var-limit"]
 #: the reporting currency every VaR answer takes (2.9.4): USD unless asked, any currency with scenario FX on the date
@@ -122,28 +126,11 @@ CONNECTORS = {
         "cache": {"results": 2000, "ttl": "1h"},
         "limits": {"timeout": "60s", "wait": "5s", "max-inflight-per-user": 4},
     },
-    "var-whatif": {
-        "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_VAR_ENABLED:true}",
-        "description": "A scope's VaR before and after hypothetical trades (a private sandbox) and its stressed window, computed by the "
-                       "Python VaR engine in the compute pool var from the scope's var-result: VWIF <scope> <GO>",
-        "kinds": {"var-whatif": {"compute": "var-whatif",
-                                 "params": {**_CCY, "sandbox": {"type": "sandbox-ref"},
-                                            "stress-window": {"type": "int", "default": 250, "min": 0, "max": 5000},
-                                            "component-window": {"type": "int", "default": 5, "min": 1, "max": 51}},
-                                 "result": {"required": ["BEFORE_VAR", "AFTER_VAR"],
-                                            "types": {"BEFORE_VAR": "number", "AFTER_VAR": "number"}}}},
-        "reads": [{"kind": "var-result", "as": "base", "id": "{id}~ccy={params.ccy}"}],
-        "engine": {"type": "python", "entry": "drishti_compute.var.whatif:VarWhatIfEngine", "pool": "var", "version": "1.0"},
-        "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
-        "coalesce": {"quiet": "250ms", "max-wait": "2s"},
-        "cache": {"results": 500, "ttl": "1h"},
-        "limits": {"timeout": "60s", "wait": "250ms", "max-inflight-per-user": 2},
-    },
 }
 #: link fields the kinds carry (field -> (kind, label)); the hierarchy fields (TT_BOOK, LEGAL_ENTITY, COUNTERPARTY) link through the
 #: core and trading packs' own fields
 FIELDS = {"POSITION_ID": ("position", "Position"), "PORTFOLIO_ID": ("portfolio", "Portfolio"), "NODE_ID": ("risk-hierarchy", "Hierarchy node"),
-          "TRADE_IDS": ("trade", "Trade"),
+          "TRADE_IDS": ("trade", "Trade"), "RISK_FACTOR": ("risk-factor", "Risk factor"),
           # a trade page's Risk links (risk-links@1): set on the view by the VaR engine when the trade is live
           "PNL_VECTOR_ID": ("pnl-vector", "P&L vector"), "SCENARIO_PV_ID": ("scenario-pv", "Scenario PVs"),
           "VAR_RESULT_ID": ("var-result", "VaR of this trade")}
@@ -170,6 +157,10 @@ LAYOUT = {
     # one row per node and date: the day-by-day P&L a vector column, its dates in the document
     "pnl-history": {"columns": ["HIERARCHY", "NODE_ID", "LEVEL", "CURRENCY", "FIRST_DAY", "LAST_DAY", "DAY_COUNT"], "vectors": ["PNL"]},
     "portfolio": {"columns": ["PORTFOLIO_ID", "NAME", "TYPE", "OWNER"]},
+    # 2.9.11: the sparse SENSITIVITIES list stays in the document; the columns are the contract's storage columns
+    "position-sensitivity": {"columns": ["SENSITIVITY_ID", "GRAIN", "POSITION_ID", "TRADE_ID", "SOURCE_SYSTEM", "BATCH_ID", "STATUS", "DESK", "TT_BOOK",
+                                         "PRODUCT_TYPE", "CURRENCY"]},
+    "risk-factor": {"columns": ["RISK_FACTOR", "FACTOR_TYPE", "RISK_CLASS", "QUALIFIER", "TENOR", "FRTB_BUCKET", "SIMM_RISK_CLASS", "SIMM_BUCKET"]},
 }
 #: the search form (FORM market-risk) of each kind: its key columns
 FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CURRENCY", "SECURITY_ID"],
@@ -183,10 +174,12 @@ FORM_COLUMNS = {"position": ["DIRECTION", "DESK", "TT_BOOK", "PRODUCT_TYPE", "CU
                 "desk-pnl": ["DESK_ID", "BUSINESS_DATE", "ACTUAL_PNL", "HYPOTHETICAL_PNL"],
                 "pnl-history": ["HIERARCHY", "NODE_ID", "FIRST_DAY", "LAST_DAY"],
                 "var-official": ["NODE_ID", "HIERARCHY", "LEVEL", "NODE_NAME", "RESULT_VERSION", "TRAFFIC_LIGHT"],
-                "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"]}
+                "stress-scenario-pnl": ["SCENARIO_NAME", "PNL", "DESK_COUNT", "BREACHES"],
+                "position-sensitivity": ["POSITION_ID", "DESK", "TT_BOOK", "PRODUCT_TYPE", "SOURCE_SYSTEM"],
+                "risk-factor": ["RISK_CLASS", "FACTOR_TYPE", "QUALIFIER", "FRTB_BUCKET"]}
 BADGES = {"position": "fmt($.QUANTITY, 'compact')", "portfolio": "$.TYPE"}
 #: the computed kinds' fields (VAR_GUIDE.md section 8): read as an ordinary kind, never stored
-COMPUTED = ("var-result", "var-whatif")
+COMPUTED = ("var-result",)
 EXAMPLES = [("PORT PF-RATES-DESK", "Portfolio · its positions, longs and shorts, VaR and component VaR (computed as you open it)"),
             ("PORT PF-ASHA-UNWIND", "A basket of positions and trades · overlaps the rates desk"),
             ("VRES DESK:RATES", "The rates desk's VaR as an ordinary kind (computed when asked, as you; the explorer is VAR DESK:RATES)"),

@@ -88,7 +88,7 @@ Cadence: whenever its inputs change (the reactive triggers, §9.4). Due: after t
 | `credit-curve` | `CDS-<issuer>` | spreads, hazards, survival, recovery |
 | the bank's own curve | `drishti.ccr.cva.own-curve` | DVA, bilateral CVA, FBA |
 | `ir-curve` | `drishti.ccr.cva.discount-curve` | DF(t) |
-| funding curve | `drishti.ccr.cva.funding-spread` (a curve id or a flat spread) | FVA |
+| funding curve | `drishti.ccr.fva.funding-spread` (a curve id; the demo's synthetic, labelled `CRV-USD-FUNDING` in the market-data pack; a flat spread as the fallback) | FVA (computed by the xVA engine into `fva-result`, §9.1) |
 
 ## 5. Conventions specific to CVA
 
@@ -222,7 +222,8 @@ by trade (EXPOSURE_GUIDE.md section 18.6, giving each trade's CVA contribution: 
 |---|---|---|---|
 | `SCOPE`, `CANONICAL`, `SCOPE_KIND`, `LABEL`, `BUSINESS_DATE` | | | |
 | `MODE` | text | | `unilateral` or `bilateral` |
-| `CVA`, `DVA`, `FCA`, `FBA`, `FVA`, `BCVA` (= CVA + DVA) | amount | USD | §6.3 |
+| `CVA`, `DVA`, `BCVA` (= CVA + DVA) | amount | USD | §6.3 |
+| `FCA`, `FBA`, `FVA` | amount | USD | §6.3; **read by reference** from `fva-result` for the same scope, date and run, never a second copy |
 | `KVA`, `MVA` | amount | USD | hooks (empty when off) |
 | `CS01`, `REC01`, `DVA_CS01` | amount | USD per bp / per % | §6.4 |
 | `BA_CVA` | amount | USD | K_BA-CVA over the scope's counterparties |
@@ -230,6 +231,12 @@ by trade (EXPOSURE_GUIDE.md section 18.6, giving each trade's CVA contribution: 
 | `PROFILE` | record list | | per primary date: `TENOR`, `T`, `DF`, `EE`, `ENE`, `PD` (ΔPD_C), `SURVIVAL`, `CVA_CONTRIBUTION`, `DVA_CONTRIBUTION` |
 | `BY_COUNTERPARTY`, `BY_NETTING_SET` | record list | | `ID`, `CVA`, `DVA`, `FVA`, `CS01`, `BA_CVA_SCVA` |
 | `PROVENANCE` | record | | NSET's, plus EXP's run, the curves (id, date, proxy) and the settings used |
+
+**FVA comes first, in its own kind** (product owner, 2026-11-02, [COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions), decision 9). Before the CVA family is built, FCA, FBA and
+FVA are computed by the xVA engine (`drishti_ccr.xva:XvaEngine`) into the computed kind `fva-result` with its own API `/api/v1/fva`
+(scope, date, run; per netting set and summed). FVA is computed on the collateralised EE and ENE, funding symmetric (FBA reported) and not
+survival-weighted by default, and refused on a `REAL_WORLD` run in production (decisions 10, 11, 13). When CVA and DVA join the same
+engine, `cva-result` reads these three fields from `fva-result` rather than computing them again.
 
 ### 9.2 The API (`/api/v1/cva`, planned)
 
@@ -398,6 +405,7 @@ counterparty K_reduced = SCVA × √(0.25 + 0.75) = 541,755; **K_BA-CVA = 0.65 �
 | Version | Date | Change |
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
+| 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): FVA computed first into its own kind `fva-result` (`/api/v1/fva`) and read by reference by `cva-result`; FVA on the collateralised profile, symmetric, not survival-weighted; the demo funding curve is a synthetic, labelled curve |
 
 ---
 

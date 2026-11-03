@@ -160,8 +160,8 @@ you are on is highlighted.
 
 | Edition or lens | Menus |
 |---|---|
-| Drishti Risk | Views · **VaR** (*VaR explorer* `VAR BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *What-if* `VWIF`, *Scenario matrix* `SMAT`, *Hierarchies and limit letters* `HIER`; Check and report: *VaR Playground* `PLAY VAR`, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`) · **Exposure** (*Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF`) · BI · Admin · Help |
-| Drishti Trading | Views · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `VWIF`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
+| Drishti Risk | Views · **VaR** (*VaR explorer* `VAR BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Scenario matrix* `SMAT`, *Hierarchies and limit letters* `HIER`; Check and report: *VaR Playground* `PLAY VAR`, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`) · **Exposure** (*Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF`) · BI · Admin · Help |
+| Drishti Trading | Views · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
@@ -321,10 +321,17 @@ column, so its VaR is still the VaR page's. **Export to Excel** downloads the sa
 says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
 ([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 25, step 18](../tutorials/25-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
 
-**Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket tray across its top: the VaR
-of any mix of portfolios, trades and counterparties; type for hints, **+ / −** each part, the selection's VaR live, a pre-deal what-if,
-**Save basket and open VaR**. It is on the VaR page only; what it holds stays in your browser, so it is
-there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
+**Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket's sheet across its top, one
+sheet like Excel: the VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, a column per kind
+and the Op column (+ adds, − takes away). Type in a cell, pick a hint (it lands in its kind's column), use **+ basket** on any row, or
+paste whole columns from Excel; **Start from the whole bank** makes the basket the bank and the rows refine it. The server checks every
+cell (a red cell says why it is not found) and computes the basket's VaR, ES, sum of the parts and diversification under the sheet; then
+a pre-deal what-if, **Save basket and open VaR** and **Download as .xlsx**. It is on the VaR page only; what it holds stays in your
+browser, so it is there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
+
+**Editing your baskets.** Under *Ad-hoc scopes* each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
+keeps its name as a new version. A portfolio (the bank's) and a basket shared with you have **Edit a copy**: it opens as your own basket,
+to save under your own name. An administrator may edit anyone's basket; you get a notice in your inbox saying who.
 
 **Deleting your ad-hoc scopes.** The baskets you saved are listed under *Ad-hoc scopes* on the VaR page as `★ name`. Point at one (or
 Tab to it) and press **Delete**: a dialog names the basket and whom you shared it with (they lose it too) and asks first; **Keep it** or

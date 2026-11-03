@@ -79,6 +79,22 @@ public class HealthController {
         this.disk = d;
     }
 
+    /** Busy protection (OPERATIONS.md, "Busy protection"): its card on Health; absent in a test that makes the controller itself. */
+    private com.ash.drishti.server.admission.AdmissionGate busy;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void busy(com.ash.drishti.server.admission.AdmissionGate g) {
+        this.busy = g;
+    }
+
+    /** The in-memory lake (IN_MEMORY_LAKE.md section 12): its stores, pinned tables and host checks on Health; absent in such a test. */
+    private com.ash.drishti.server.memlake.MemoryLake memoryLake;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void memoryLake(com.ash.drishti.server.memlake.MemoryLake m) {
+        this.memoryLake = m;
+    }
+
     /** The platform alerts (OPERATIONS.md section 13.6): the open ones on Health; absent in a test that makes the controller itself. */
     private com.ash.drishti.server.metrics.PlatformAlerts alerts;
 
@@ -185,10 +201,20 @@ public class HealthController {
         out.put("summary", Map.of("sources", sources.size(), "sourcesDown", down, "sourcesDegraded", degraded, "failedToStart", failures.size(),
                 "packs", packRows.size(), "packsWithProblems", packProblems));
         out.put("server", server());
+        if (busy != null) {
+            out.put("busy", busy.describe());                          // busy protection: the readings against their levels, the last refusals
+        }
         if (disk != null) {
             Map<String, Object> d = disk.describe();                    // O7: every folder against its cap, free space against the guard
             out.put("disk", d);
             if ("red".equals(d.get("state")) && "OK".equals(out.get("status"))) {
+                out.put("status", "DEGRADED");
+            }
+        }
+        if (memoryLake != null && memoryLake.configured()) {
+            Map<String, Object> m = memoryLake.health();                // amber: a store over 85% or a refused write; red: a pinned table empty,
+            out.put("memoryLake", m);                                   // the direct-memory limit below the stores' caps
+            if ("red".equals(m.get("state")) && "OK".equals(out.get("status"))) {
                 out.put("status", "DEGRADED");
             }
         }

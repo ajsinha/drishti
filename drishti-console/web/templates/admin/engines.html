@@ -1,0 +1,89 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Engines · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-engines.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{# Admin -> Engines (docs/architecture/COMPUTE_ENGINES.md section 8; mock-up A, docs/architecture/mockups/engines/A.html, with C as the
+   Cluster tab): one table of the engines on this server, a change staged and reviewed in the side panel (dependencies, what disappears for
+   people, live or restart, the reason), History below. admin-engines.js draws everything from the JSON below and the page's API. #}
+<div class="adm eng" data-engines>
+  <h1>Engines</h1>
+  {% with tab='engines' %}{% include "admin/_nav.html" %}{% endwith %}
+  <div class="eng-head">
+    <h2>Admin → Engines</h2>
+    <span class="eng-meta" data-eng-meta role="status" aria-live="polite"></span>
+  </div>
+  <div class="eng-tabs" role="tablist" aria-label="Engines">
+    <button type="button" role="tab" aria-selected="true" data-eng-tab="server">This server</button>
+    <button type="button" role="tab" aria-selected="false" data-eng-tab="cluster" data-eng-cluster-tab>Cluster</button>
+    <button type="button" role="tab" aria-selected="false" data-eng-tab="history">History</button>
+  </div>
+  <p class="eng-error" data-eng-error role="alert" hidden></p>
+  <p class="eng-done" data-eng-done role="status" hidden></p>
+
+  <div class="eng-grid">
+    <div class="eng-main">
+      <section class="eng-card" data-eng-view="server" aria-label="Engines on this server">
+        <h3>Engines on this server <span>a change is staged until you review it; nothing changes yet</span></h3>
+        <div class="eng-scroll"><table class="eng-tbl" data-eng-table>
+          <thead><tr><th class="l">Engine</th><th class="l">Switch</th><th class="l">State</th><th class="l">Memory now</th><th>Threads</th>
+            <th class="l">Needs</th><th class="l">Used by</th><th class="l">Switch set in</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+        <p class="eng-note" data-eng-notes></p>
+      </section>
+      <section class="eng-card" data-eng-view="cluster" aria-label="The cluster" hidden>
+        <h3>The cluster <span>each node's engines; an engine is available to people when any node runs it</span></h3>
+        <div class="eng-scroll"><table class="eng-tbl" data-eng-matrix></table></div>
+        <p class="eng-note">A change to another node's engine is sent to that node, signed with the cluster key; it writes its own file and both
+          nodes audit it.</p>
+      </section>
+      <section class="eng-card" data-eng-view="history" data-eng-history-card aria-label="History">
+        <h3>History <span>newest first · also in the audit log</span></h3>
+        <div class="eng-scroll"><table class="eng-tbl" data-eng-history>
+          <thead><tr><th class="l">When</th><th class="l">Engine</th><th class="l">Change</th><th class="l">Who</th><th class="l">Why</th><th class="l">Node</th><th class="l">Outcome</th></tr></thead>
+          <tbody></tbody>
+        </table></div>
+      </section>
+    </div>
+
+    <aside class="eng-panel" data-eng-panel aria-label="Review the change" hidden>
+      <h3 data-eng-panel-title>Review</h3>
+      <p class="eng-muted"><span data-eng-staged-count></span> · <button type="button" class="eng-link" data-eng-undo>Undo</button></p>
+      <h4>Dependencies</h4>
+      <div data-eng-deps></div>
+      <h4>What disappears for people</h4>
+      <div data-eng-hides></div>
+      <h4>On the server</h4>
+      <div data-eng-effect></div>
+      <label class="eng-reason-l" for="eng-reason">Reason (required)</label>
+      <input id="eng-reason" class="eng-reason" data-eng-reason maxlength="500" autocomplete="off" placeholder="Why: kept in History and the audit log">
+      <div class="eng-actions">
+        <button type="button" class="btn-pill eng-primary" data-eng-apply disabled>Apply</button>
+        <button type="button" class="btn-pill btn-ghost" data-eng-cancel>Cancel</button>
+      </div>
+      <p class="eng-muted eng-writes" data-eng-writes></p>
+    </aside>
+  </div>
+  <div hidden data-eng-json="{{ {"engines": e, "history": history} | tojson | forceescape }}"></div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-engines.js?v={{ ASSET_V }}"></script>{% endblock %}

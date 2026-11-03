@@ -20300,6 +20300,30 @@ datasets:
   - cob-2026-09-30.part-004.jsonl.gz
   - cob-2026-09-30.part-005.jsonl.gz
   bytes: 6019069
+- folder: market-risk/position-sensitivity
+  pack: market-risk
+  kind: position-sensitivity
+  connector: risk-store
+  key: SENSITIVITY_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 8052
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 426106
+- folder: market-risk/risk-factor
+  pack: market-risk
+  kind: risk-factor
+  connector: risk-store
+  key: RISK_FACTOR
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 867
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 21745
 - samples: config/packs/world-economy/samples
   pack: world-economy
   kind: economic-forecast

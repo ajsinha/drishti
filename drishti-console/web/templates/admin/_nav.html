@@ -34,6 +34,7 @@
   {% if _ed.admin_page_shown('net') %}  <a href="/admin/net"{% if tab == 'net' %} aria-current="page"{% endif %}><i class="bi bi-diagram-3" aria-hidden="true"></i> Net</a>{% endif %}
   {% if _ed.admin_page_shown('edits') %}  <a href="/admin/edits"{% if tab == 'edits' %} aria-current="page"{% endif %}><i class="bi bi-pencil-square" aria-hidden="true"></i> Edits</a>{% endif %}
   {% if _ed.admin_page_shown('compute') %}  <a href="/admin/compute"{% if tab == 'compute' %} aria-current="page"{% endif %}><i class="bi bi-cpu" aria-hidden="true"></i> Compute</a>{% endif %}
+  {% if _ed.admin_page_shown('engines') %}  <a href="/admin/engines"{% if tab == 'engines' %} aria-current="page"{% endif %} title="Compute engines on or off on this server, each with its own file"><i class="bi bi-gear-wide-connected" aria-hidden="true"></i> Engines</a>{% endif %}
   {% if _ed.admin_page_shown('health') %}  <a href="/admin/health"{% if tab == 'health' %} aria-current="page"{% endif %}><i class="bi bi-heart-pulse" aria-hidden="true"></i> Health</a>{% endif %}
   {% if _ed.admin_page_shown('caches') %}  <a href="/admin/caches"{% if tab == 'caches' %} aria-current="page"{% endif %}><i class="bi bi-hdd-stack" aria-hidden="true"></i> Caches</a>{% endif %}
   {% if _ed.admin_page_shown('capacity') %}  <a href="/admin/capacity"{% if tab == 'capacity' %} aria-current="page"{% endif %} title="Today against the plan: headroom, what breaks first, growth; the single-node planner"><i class="bi bi-speedometer" aria-hidden="true"></i> Capacity</a>{% endif %}

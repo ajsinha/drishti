@@ -12,20 +12,20 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# Planned data contract of the position-sensitivity input (proposed command SENS): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md
+# Data contract of the position-sensitivity input (command SENS): docs/architecture/SENSITIVITIES_AND_FRTB_SA.md
 # section 2; the MR cube's D8 (docs/lenses/MR_CUBE_LENS.md section 7.9). Demo data: tools/packgen/sensitivity/make_sensitivity_data.py.
 kind: position-sensitivity
 mnemonic: SENS
 pack: market-risk
 version: '1.0'
 class: input
-status: planned
+status: active
 title: 'Position sensitivities'
 description: 'The first-order and curvature sensitivities of each position (or trade) to the standard risk factors, as the bank''s
   pricing or risk system computes them after the close: rate, inflation and credit-spread sensitivities per basis point, spot and price
   deltas per one per cent, vegas per volatility point, and the curvature results of the regulatory shocks. One table feeds the FRTB
   standardised approach (the sensitivities-based method, Basel MAR21), ISDA SIMM, the MR cube''s ladders and heat maps, sensitivity
-  limits and P&L explain. Planned: no command and no engine reads it yet (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md).'
+  limits and P&L explain. Read by the server''s FRTB-SA engine (docs/guides/FRTB_SA_GUIDE.md); SENS <scope> sums it by factor or bucket.'
 source: The bank's pricing and risk systems (the same run that produces the scenario PVs or P&L vectors)
 grain: One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID
   (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure.
@@ -55,6 +55,8 @@ storage:
   - TT_BOOK
   - PRODUCT_TYPE
   - CURRENCY
+  test-data:
+  - data/testdata/market-risk/position-sensitivity
 fields:
 - name: SENSITIVITY_ID
   type: id
@@ -78,6 +80,7 @@ fields:
     record the position the trade belongs to when the source knows it.
   example: POS-BOOK-RATES-1~MX-20000002
   pattern: ^POS-
+  link: position
 - name: TRADE_ID
   type: id
   presence: optional
@@ -89,6 +92,7 @@ fields:
   presence: optional
   description: The trades a position record covers (for drill-through and the completeness check against the vectors).
   example: MX-20000002
+  link: trade
 - name: SOURCE_SYSTEM
   type: text
   presence: required
@@ -206,6 +210,15 @@ fields:
   presence: required
   description: The position's own currency (ISO 4217); each element carries the currency of its VALUE.
   example: EUR
+- name: VOL_CONVENTION
+  type: text
+  presence: optional
+  description: 'How the record''s rates vegas are delivered (decision 3): LOGNORMAL (the default, absent means it) or NORMAL (VEGA per basis
+    point of normal volatility, IMPLIED_VOL in basis points); one source declares one convention.'
+  example: LOGNORMAL
+  enum:
+  - LOGNORMAL
+  - NORMAL
 - name: SENSITIVITIES
   type: record list
   presence: required
@@ -216,9 +229,11 @@ nested:
   - name: RISK_FACTOR
     type: id
     presence: required
-    description: 'The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, INF/<index>/<tenor>,
-      CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>, CM/PRICE/<underlying>/<location>/<tenor>,
-      VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the curve or spot without a tenor. A bank''s own
+    description: 'The risk factor by the naming standard (the risk-factor dictionary): IR/CURVE/<ccy>/<curve>/<tenor>, IR/BASIS/<ccy>,
+      INF/<index>[/<tenor>], CR/SPREAD/<issuer>/<BOND or CDS>/<tenor>, FX/SPOT/<ccy>, EQ/SPOT/<underlying>, EQ/REPO/<name>,
+      CM/PRICE/<underlying>/<location>/<tenor>, VOL/<class>/<underlying>/<expiry>[/<underlying tenor>]; a curvature element names the
+      curvature factor: IR/CURVE/<ccy> (the currency), CR/SPREAD/<issuer>, EQ/SPOT/<underlying>, CM/PRICE/<underlying> (the commodity),
+      FX/SPOT/<ccy>. A bank''s own
       names are mapped to these by the dictionary''s SOURCE_NAMES; a name that is not mapped is refused, never guessed.'
     example: IR/CURVE/USD/SOFR/10Y
     link: risk-factor
@@ -226,9 +241,13 @@ nested:
     type: text
     presence: required
     description: 'What VALUE measures: DV01, CS01, IE01 (P&L for +1 basis point of the rate, spread or inflation rate); DELTA (P&L for
-      a +1% relative move of the spot or price); VEGA (P&L for +1 volatility point, 0.01 of implied volatility); CURVATURE_UP and
-      CURVATURE_DOWN (the change in value for the regulatory curvature shock up and down, SHOCK_SIZE, delta included: V(x+shock) − V(x)
-      and V(x−shock) − V(x), MAR21.5). GAMMA, BETA and BASE_CORR are reserved for the SIMM base-correlation and equity-beta inputs.'
+      a +1% relative move of the spot or price, and for an equity repo, EQ/REPO, the P&L for +1 basis point of the repo rate, MAR21.20);
+      VEGA (P&L for +1 volatility point: 0.01 of lognormal implied volatility, or 1 basis point of normal volatility for a source whose
+      record declares VOL_CONVENTION NORMAL); CURVATURE_UP and CURVATURE_DOWN (the change in value for the regulatory curvature shock up
+      and down, SHOCK_SIZE, delta included: V(x+shock) − V(x) and V(x−shock) − V(x), MAR21.5); GAMMA (decisions 2 and 7: from a source
+      that cannot revalue, the second derivative of the position''s value to a parallel shift of the curvature factor, per basis point
+      squared for a curve (IR/CURVE/<ccy> or a curve point, per currency; CR/SPREAD/<issuer>) and per (1%) squared for a spot or price;
+      Drishti estimates curvature from it as −½ · Γ · h², labelled an estimate). BETA and BASE_CORR are reserved for SIMM.'
     example: DV01
     enum:
     - DV01
@@ -339,7 +358,13 @@ validation:
   - POSITION
   - TRADE
 - rule: link
+  field: POSITION_ID
+  kind: position
+- rule: link
   field: TRADE_ID
+  kind: trade
+- rule: link
+  field: TRADE_IDS
   kind: trade
 - rule: enum
   field: RUN_KIND
@@ -361,6 +386,11 @@ validation:
 - rule: link
   field: TT_BOOK
   kind: book
+- rule: enum
+  field: VOL_CONVENTION
+  values:
+  - LOGNORMAL
+  - NORMAL
 - rule: link
   field: SENSITIVITIES[].RISK_FACTOR
   kind: risk-factor
@@ -393,12 +423,13 @@ notes:
   (the element); a currency without FX on the date (the element); the same factor and measure twice (the record); a second full run of
   a source on a date (the run). Warnings: a curvature without SHOCK_SIZE or with a shock other than the bucket''s; a position with
   vectors and no sensitivities, or the reverse (completeness, by desk); a bucket that differs from the dictionary''s.'
+- 'Decided (2026-11-01, decision 3): rates vega in lognormal volatility points by default; a source sending normal volatility declares
+  VOL_CONVENTION NORMAL on its records (VEGA per basis point of normal volatility, IMPLIED_VOL in basis points) and is converted on load:
+  the vega risk sensitivity is VEGA × IMPLIED_VOL.'
+- 'Decided (2026-11-01 and 2026-11-02, decisions 2 and 7): curvature is revalued (CURVATURE_UP and CURVATURE_DOWN) where the source can;
+  a source that cannot sends GAMMA and the curvature Drishti derives is an estimate, an analysis figure until the supervisor accepts it.'
 - 'Conventions turned into the regulatory sensitivities by Drishti (docs/architecture/SENSITIVITIES_AND_FRTB_SA.md section 2.3): FRTB
   s_k = DV01 × 10,000 (MAR21.8''s per-unit definition), s_k = DELTA × 100, the vega risk sensitivity VEGA × 100 × IMPLIED_VOL; SIMM takes
   DV01 and CS01 per basis point and DELTA per one per cent as delivered.'
 review:
-- 'Whether the bank''s systems deliver vega per volatility point of lognormal volatility for rates options, or per basis point of normal
-  volatility (then IMPLIED_VOL in basis points and a conversion rule per source).'
-- 'Whether curvature comes from the source (CURVATURE_UP and CURVATURE_DOWN revalued) or is to be estimated from delta and gamma for
-  some sources (then GAMMA elements, labelled as an estimate).'
 - 'The due time of the full run and of intraday batches at the bank.'
