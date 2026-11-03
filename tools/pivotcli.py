@@ -14,7 +14,7 @@
 
 """`drishti.py pivot ...`: the pivot engine from the command line (docs/guides/PIVOT_GUIDE.md; the API: /api/v1/pivot), as the token's user
 sees it: a view's answer (pivot run), its scan estimate (pivot estimate), an export (pivot export), the sources and a source's fields (pivot
-sources, pivot fields) and saved views (pivot views, pivot save). Every figure is the server's. Exit codes: 0, 1 (the server said no),
+sources, pivot fields) and saved views (pivot views, pivot save); custom functions, explain and what-if are tools/pivotfncli.py's. Every figure is the server's. Exit codes: 0, 1 (the server said no),
 2 (usage)."""
 from __future__ import annotations
 
@@ -28,7 +28,11 @@ EPILOG = ("examples:\n  drishti.py pivot sources\n  drishti.py pivot fields trad
           "  drishti.py pivot run --view asha/desk-risk --csv out.csv\n"
           "  drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx\n"
           "  drishti.py pivot export --source trade --rows productType --values \"count()\" --what definition -o view.yaml\n"
-          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views")
+          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views\n"
+          "  drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK\n"
+          "  drishti.py pivot functions approve asha/wret@1 --reason \"reviewed\" --scope group:rates\n"
+          "  drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-30 --to 2026-10-30 --by BOOK\n"
+          "  drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17")
 
 
 def fmt(v) -> str:
@@ -207,3 +211,9 @@ def register(groups, srv, ctx: dict) -> None:
     view_args(sv)
     sv.add_argument("--share", action="append", metavar="WHO", help="a person or role:<role>, repeatable")
     sv.set_defaults(func=cmd, pivot_cmd="save")
+    import importlib.util  # noqa: WPS433 (custom functions, explain and what-if: tools/pivotfncli.py)
+    import os  # noqa: WPS433
+    spec = importlib.util.spec_from_file_location("pivotfncli", os.path.join(os.path.dirname(os.path.abspath(__file__)), "pivotfncli.py"))
+    fncli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fncli)
+    fncli.register(ps, srv, ctx, view_args, body)
