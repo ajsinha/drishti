@@ -327,6 +327,11 @@ final class LoadReport {
         written.put(date.toString(), f);
     }
 
+    /** A date this load's batch had appended already (load-mode append): skipped, nothing written. */
+    synchronized void skippedBatch(LocalDate date) {
+        commits.put(date.toString(), JSON.createObjectNode().put("skipped", "batch appended already").put("files", 0).put("rows", 0).put("bytes", 0));
+    }
+
     void meters(Map<String, Meter> m) {
         meters = m;
     }

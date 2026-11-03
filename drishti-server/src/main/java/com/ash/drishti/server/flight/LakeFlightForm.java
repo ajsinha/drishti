@@ -21,6 +21,9 @@ import com.ash.drishti.compute.arrow.ArrowTable;
 import com.ash.drishti.flight.FlightBackend;
 import com.ash.drishti.flight.FlightRefusal;
 import com.ash.drishti.flight.FlightRequest;
+import com.ash.drishti.lakeconfig.Lake;
+import com.ash.drishti.lakeconfig.LakeTable;
+import com.ash.drishti.lakeconfig.Lakes;
 import com.ash.drishti.memlake.MemoryLake;
 import com.ash.drishti.server.data.DataViewController;
 import com.ash.drishti.server.security.Principal;
@@ -35,7 +38,7 @@ import org.apache.arrow.vector.VectorSchemaRoot;
 import org.apache.arrow.vector.types.pojo.Schema;
 
 /**
- * {@code form: lake}: a table of a lake named by the lake configuration ({@link FlightLakes}, LAKE_CONFIG.md), read as its kind with every
+ * {@code form: lake}: a table of a lake named by the lake configuration (the lake files, {@link Lakes}; LAKE_CONFIG.md, never a connector's settings), read as its kind with every
  * check of {@code form: kind}. Request: {@code {"lake": "feeds", "kind": "news.headlines", "paths": [...], "where": [...], "cursor":
  * "SEQ"}}. A table of the in-memory lake ({@code mem://<store>}) is answered by the node that owns its store (the endpoint names it). With
  * {@code stream: true} and a {@code cursor} (a whole-number column that grows with each append: a sequence, an epoch time), new rows are
@@ -44,12 +47,15 @@ import org.apache.arrow.vector.types.pojo.Schema;
  */
 final class LakeFlightForm implements FlightForm {
 
-    private final FlightLakes lakes;
+    private final java.util.function.Supplier<Lakes> lakes;
+
+    /** A table and the lake it is in. */
+    record Found(Lake lake, LakeTable table) {}
     private final KindFlightForm kinds;
     private final DataViewController data;
     private final MemoryLake memory;
 
-    LakeFlightForm(FlightLakes lakes, KindFlightForm kinds, DataViewController data, MemoryLake memory) {
+    LakeFlightForm(java.util.function.Supplier<Lakes> lakes, KindFlightForm kinds, DataViewController data, MemoryLake memory) {
         this.lakes = lakes;
         this.kinds = kinds;
         this.data = data;
@@ -63,28 +69,39 @@ final class LakeFlightForm implements FlightForm {
 
     @Override
     public String domain(Principal p, FlightRequest r) {
-        return table(r).lake();
+        return table(r).lake().name();
     }
 
-    FlightLakes.LakeTable table(FlightRequest r) {
+    Found table(FlightRequest r) {
         JsonNode q = r.request();
         if (!q.isObject() || !q.path("lake").isTextual() || !q.path("kind").isTextual()) {
             throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "form lake: request is {\"lake\": ..., \"kind\": ..., \"paths\", \"where\", \"cursor\"}");
         }
         String lake = q.get("lake").asText();
         String kind = q.get("kind").asText();
-        if (lakes.lakes().isEmpty()) {
-            throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "this server has no lake configuration (config/lakes/, LAKE_CONFIG.md): read the kind "
+        Lakes all = lakes.get();
+        if (all.all().isEmpty()) {
+            throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "this server has no lake files (config/lakes/, LAKE_GUIDE.md): read the kind "
                     + "with form kind");
         }
-        return lakes.table(lake, kind).orElseThrow(() -> new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "the lake '" + lake + "' has no table for "
-                + kind + (lakes.lakes().contains(lake) ? "" : ": the lakes are " + String.join(", ", lakes.lakes()))));
+        Lake l = all.find(lake).orElseThrow(() -> new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "no lake '" + lake + "': the lakes are "
+                + String.join(", ", all.all().keySet())));
+        int dot = kind.indexOf('.');
+        LakeTable t;
+        try {
+            t = (dot > 0 ? l.table(kind.substring(0, dot), kind.substring(dot + 1)) : l.table(kind)).orElseThrow(() -> new FlightRefusal(
+                    ErrorCode.FLIGHT_BAD_TICKET, "the lake '" + lake + "' has no table for " + kind + " (its tables: " + l.tables().keySet() + ")"));
+        } catch (IllegalArgumentException e) {                       // several tables of one kind: the lake says which to name
+            throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, e.getMessage());
+        }
+        return new Found(l, t);
     }
 
     /** The same request as {@code form: kind} (the kind's part after its domain, as the Data view names it). */
-    private FlightRequest asKind(FlightRequest r, FlightLakes.LakeTable t, List<String> extraWhere) {
+    private FlightRequest asKind(FlightRequest r, Found f, List<String> extraWhere) {
+        LakeTable t = f.table();
         ObjectNode o = r.request().deepCopy();
-        String kind = t.kind().contains(".") ? t.kind().substring(t.kind().indexOf('.') + 1) : t.kind();
+        String kind = t.kind();
         o.put("kind", kind);
         o.remove("lake");
         o.remove("cursor");
@@ -104,30 +121,30 @@ final class LakeFlightForm implements FlightForm {
 
     @Override
     public FlightBackend.Plan plan(Principal p, FlightRequest r, FlightNodes nodes) {
-        FlightLakes.LakeTable t = table(r);
+        Found t = table(r);
         FlightBackend.Plan k = kinds.plan(p, asKind(r, t, List.of()), nodes);
         List<FlightBackend.Node> at = new ArrayList<>();
-        if (t.inMemory()) {
-            if (memory != null && memory.owns(t.store())) {
+        if (t.lake().inMemory()) {
+            if (memory != null && memory.owns(t.lake().store())) {
                 at.add(nodes.self());
             }
             at.addAll(nodes.peers());                                    // the owner when it is not this node; a peer holding a copy
         } else {
             at.addAll(nodes.anyMember());
         }
-        return new FlightBackend.Plan(k.schema(), List.of(new FlightBackend.Part(t.lake() + "/" + t.kind(), at, -1)), -1, -1);
+        return new FlightBackend.Plan(k.schema(), List.of(new FlightBackend.Part(t.lake().name() + "/" + t.table().name(), at, -1)), -1, -1);
     }
 
     @Override
     public FlightBackend.BatchSource open(Principal p, FlightRequest r, int part, int batchRows) {
-        FlightLakes.LakeTable t = table(r);
+        Found t = table(r);
         String cursor = r.request().path("cursor").asText("");
         return kinds.open(p, asKind(r, t, r.resume() >= 0 && !cursor.isEmpty() ? List.of(cursor + " > " + r.resume()) : List.of()), part, batchRows);
     }
 
     @Override
     public FlightBackend.Subscription subscribe(Principal p, FlightRequest r, int part, int batchRows) {
-        FlightLakes.LakeTable t = table(r);
+        Found t = table(r);
         String cursor = r.request().path("cursor").asText("");
         if (cursor.isEmpty()) {
             throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "a live lake stream needs cursor: a whole-number column that grows with each append");
@@ -186,10 +203,11 @@ final class LakeFlightForm implements FlightForm {
     @Override
     public List<FlightRequest> catalogue(Principal p) {
         List<FlightRequest> out = new ArrayList<>();
-        for (String lake : lakes.lakes()) {
-            for (FlightLakes.LakeTable t : lakes.tables(lake)) {
+        for (Lake l : lakes.get().all().values()) {
+            String lake = l.name();
+            for (LakeTable t : l.tables().values()) {
                 out.add(new FlightRequest(FlightRequest.Form.LAKE,
-                        JsonNodeFactory.instance.objectNode().put("lake", lake).put("kind", t.kind()), -1, false, -1));
+                        JsonNodeFactory.instance.objectNode().put("lake", lake).put("kind", t.domain() + "." + t.kind()), -1, false, -1));
             }
         }
         return out;

@@ -1001,6 +1001,13 @@ says how Drishti reads them, which plugin to choose, and what to do when a table
 linked at each step: [DELTA_CONNECTOR.md](../connectors/DELTA_CONNECTOR.md), [ICEBERG_CONNECTOR.md](../connectors/ICEBERG_CONNECTOR.md)
 and [CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-b-drishti-on-aws-ecs-efs-and-s3).
 
+### 0. Describe the lake once
+
+Each lake is one file, `config/lakes/<lake>.yaml`: where it is (a folder, `s3://`, `mem://`), how to reach it, and every table in it
+(path, partitions after `business_date`, promoted columns, vectors, id, date, replace or append). The loader, the data inbox, `lake
+build`, the demo lakes and the Delta and Iceberg connectors all refer to it by name, so a table is described in one place:
+[LAKE_GUIDE.md](LAKE_GUIDE.md).
+
 ### 1. No code, only configuration
 
 What Drishti needs is the table's **shape**, not the product that wrote it. It reads Delta and Iceberg with its own readers (Delta

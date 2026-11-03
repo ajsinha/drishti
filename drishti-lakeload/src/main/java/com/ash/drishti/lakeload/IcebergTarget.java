@@ -211,9 +211,32 @@ final class IcebergTarget implements TableTarget {
     public long commit(LocalDate date, List<WrittenFile> files) {
         List<DataFile> add = new ArrayList<>();
         files.forEach(f -> add.add((DataFile) f.handle()));
-        Snapshot s = Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, Map.of("drishti.business-dates", date.toString(),
-                "drishti.loader", "parallel")).orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
+        Map<String, String> summary = new LinkedHashMap<>(Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel"));
+        Snapshot s;
+        if (cfg.target().appends()) {                     // append: the date's earlier files stay; the batch is named in the snapshot
+            summary.put(BATCH, batchKey(date));
+            s = Operations.append(table, add, summary).orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
+        } else {
+            s = Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, summary)
+                    .orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
+        }
         return s.snapshotId();
+    }
+
+    /** The snapshot summary key that names an append's batch and date. */
+    static final String BATCH = "drishti.batch";
+
+    @Override
+    public boolean appended(LocalDate date) {
+        if (!cfg.target().appends() || table == null) {
+            return false;
+        }
+        String key = batchKey(date);
+        return table.metadata().snapshots().stream().anyMatch(x -> x.summary() != null && key.equals(x.summary().get(BATCH)));
+    }
+
+    private String batchKey(LocalDate date) {
+        return cfg.target().batchId() + ":" + date;
     }
 
     @Override

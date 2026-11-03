@@ -54,7 +54,7 @@ public record DataLoadSettings(Boolean owner, String dir, Duration interval, Int
         rejectMaxPercent = rejectMaxPercent == null || rejectMaxPercent < 0 ? 0.0 : Math.min(100.0, rejectMaxPercent);
         reloadDuplicates = reloadDuplicates != null && reloadDuplicates;
         keepOutboxDays = keepOutboxDays == null || keepOutboxDays < 0 ? 30 : keepOutboxDays;
-        lake = blank(lake) ? "./data/delta" : lake.trim();
+        lake = blank(lake) ? "demo" : lake.trim();         // a lake of config/lakes/ (a folder is the old form, read with one warning)
         rulesFile = blank(rulesFile) ? "./config/dataload.yaml" : rulesFile.trim();
         nice = nice == null || nice;
     }

@@ -107,24 +107,18 @@ public class FlightConfiguration {
         return new FlightNodes(net.getIfAvailable(), settings.advertiseHost(), settings.port());
     }
 
-    /** Where Flight finds lake tables: the lake configuration once it is on this server (LAKE_CONFIG.md); none until then. */
-    @Bean
-    public FlightLakes flightLakes() {
-        return FlightLakes.NONE;
-    }
-
     @Bean
     public ServerFlightBackend flightBackend(FlightSettings settings, FlightNodes nodes, ApiTokenStore tokens, UserService users,
             ObjectProvider<AuditLog> audit, ObjectProvider<AdmissionGate> gate, ObjectProvider<DataViewController> data,
             ObjectProvider<ModelCatalog> catalog, ObjectProvider<MqService> mq, ObjectProvider<BiService> bi, ObjectProvider<PivotController> pivot,
-            ObjectProvider<MemoryLake> memory, FlightLakes lakes, ObjectProvider<FlightForm> measures,
+            ObjectProvider<MemoryLake> memory, ObjectProvider<FlightForm> measures,
             ObjectProvider<com.ash.drishti.server.embed.EmbedTokenService> embed) {
         List<FlightForm> forms = new ArrayList<>(measures.orderedStream().toList());                 // the engines' own forms (VaR's measure form)
         DataViewController dv = data.getIfAvailable();
         if (dv != null) {
             KindFlightForm kinds = new KindFlightForm(dv);
             forms.add(kinds);
-            forms.add(new LakeFlightForm(lakes, kinds, dv, memory.getIfAvailable()));
+            forms.add(new LakeFlightForm(com.ash.drishti.lakeconfig.Lakes::current, kinds, dv, memory.getIfAvailable()));   // the lake files (LAKE_CONFIG.md)
         }
         if (catalog.getIfAvailable() != null && mq.getIfAvailable() != null && bi.getIfAvailable() != null) {
             forms.add(new AnswerFlightForms.Model(catalog.getObject(), mq.getObject(), bi.getObject()));

@@ -1,0 +1,210 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/lakes/demo.yaml: the demo lake (docs/guides/LAKE_GUIDE.md section 3). The demo lake is a lake like any other: drishti.py lake
+# demo, tools/build_demo_lakes.py, the data inbox and the demo's connectors all write and read through this file. Every table is
+# partitioned by business_date first, always; partition-by names only what comes after it. A table's entry is the truth: an administrator
+# edits it here, never in a connector file or on a command line (a --partition-by that disagrees is refused, naming both).
+lake: demo
+format: delta
+root: ${DRISHTI_DELTA_ROOT:./data/delta}
+defaults: {load-mode: replace}
+tables:
+  trading.trade_endur:
+    kind: trade
+    partition-by: [PRODUCT_TYPE]
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY,
+      PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
+    id: TRADE_ID
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+  trading.trade_calypso:
+    kind: trade
+    partition-by: [PRODUCT_TYPE]
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY,
+      PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
+    id: TRADE_ID
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+  trading.trade_murex:
+    kind: trade
+    partition-by: [PRODUCT_TYPE]
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY, TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY,
+      PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
+    id: TRADE_ID
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+  legal.agreement: {id: AGREEMENT_ID}
+  market.bond: {id: ISIN}
+  reference.book: {id: BOOK_ID}
+  reference.calendar: {id: CALENDAR_ID}
+  market.cap-vol-surface: {id: SURFACE_ID}
+  reference.ccp: {id: CCP_ID}
+  reference.clearing-account: {id: ACCOUNT_ID}
+  collateral.collateral-balance: {id: BALANCE_ID}
+  market.commodity: {id: COMMODITY_ID}
+  market.commodity-curve: {id: CURVE_ID}
+  market.commodity-vol-surface: {id: SURFACE_ID}
+  market.correlation-matrix: {id: MATRIX_ID}
+  reference.counterparty: {id: COUNTERPARTY_ID}
+  reference.counterparty-group: {id: GROUP_ID}
+  market.credit-curve: {id: CURVE_ID}
+  credit.credit-limit: {id: LIMIT_ID}
+  legal.csa: {id: CSA_ID}
+  credit.cva: {id: RESULT_ID}
+  reference.desk: {id: DESK_ID}
+  market.dividend-curve: {id: CURVE_ID}
+  market.equity: {id: TICKER}
+  market.equity-index: {id: INDEX_ID}
+  market.equity-vol-surface: {id: SURFACE_ID}
+  risk.frtb-sensitivity: {id: RESULT_ID}
+  market.fx-forward-curve: {id: CURVE_ID}
+  market.fx-spot: {id: PAIR}
+  market.fx-vol-surface: {id: SURFACE_ID}
+  market.inflation-curve: {id: CURVE_ID}
+  market.inflation-index: {id: INDEX_ID}
+  market.ir-curve: {id: CURVE_ID}
+  market.ir-vol-cube: {id: CUBE_ID}
+  reference.issuer: {id: ISSUER_ID}
+  reference.legal-entity: {id: ENTITY_ID}
+  collateral.margin-call: {id: CALL_ID}
+  credit.netting-set: {id: NETTING_SET_ID}
+  risk.pnl-explain: {id: RESULT_ID}
+  market.rate-fixing: {id: INDEX_ID}
+  market.repo-curve: {id: CURVE_ID}
+  credit.sa-ccr: {id: CALC_ID}
+  collateral.simm: {id: CALC_ID}
+  risk.stress-result: {id: RESULT_ID}
+  risk.stress-scenario: {id: SCENARIO_ID}
+  risk.trade-valuation:
+    promote: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_GROUP, PORTFOLIO, DESK, COUNTERPARTY, NETTING_SET, TRADER_ID, BUY_SELL_CODE, TRADE_STATUS, CURRENCY, NOTIONAL, MTM, MTM_CURRENCY,
+      PNL_1D, DV01, TRADE_DATE, MATURITY_DATE, VALUATION_DATE]
+    id: VALUATION_ID
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+  reference.trader: {id: TRADER_ID}
+  risk.risk-hierarchy:
+    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
+    id: NODE_ID
+    date: BUSINESS_DATE
+  risk.scenario-set: {id: SCENARIO_SET_ID, date: BUSINESS_DATE}
+  risk.pnl-vector:
+    promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE,
+      COUNTERPARTY, DIRECTION, QUANTITY, PV, TAGS, TRADE_STATUS, MATURITY_DATE, STATUS, REPORTING_CCY, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS, TRADE_CURRENCY]
+    vectors: [PNL]
+    id: VECTOR_ID
+    date: BUSINESS_DATE
+  risk.scenario-pv:
+    promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK, LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE,
+      COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE, TAGS, TRADE_STATUS, MATURITY_DATE, STATUS, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS]
+    vectors: [SCENARIO_PV]
+    id: SCENARIO_PV_ID
+    date: BUSINESS_DATE
+  risk.fx-scenario:
+    promote: [CURRENCY, RATE, SCENARIO_SET_ID]
+    id: FX_SCENARIO_ID
+    date: BUSINESS_DATE
+  risk.portfolio:
+    promote: [PORTFOLIO_ID, NAME, TYPE, OWNER]
+    id: PORTFOLIO_ID
+    date: BUSINESS_DATE
+  risk.var-limit:
+    promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
+    id: LIMIT_ID
+    date: BUSINESS_DATE
+  risk.desk-pnl:
+    promote: [DESK_PNL_ID, DESK_ID, LEGAL_ENTITY, ACTUAL_PNL, HYPOTHETICAL_PNL, FEES_AND_COMMISSIONS, CURRENCY, SOURCE, AS_OF]
+    id: DESK_PNL_ID
+    date: BUSINESS_DATE
+  risk.pnl-history:
+    promote: [HIERARCHY, NODE_ID, LEVEL, CURRENCY, FIRST_DAY, LAST_DAY, DAY_COUNT]
+    vectors: [PNL]
+    id: HISTORY_ID
+    date: BUSINESS_DATE
+  risk.simulation-run:
+    promote: [RUN_ID, CALIBRATION, PATHS, STATUS, BATCH_ID]
+    id: RUN_ID
+    date: BUSINESS_DATE
+  risk.exposure-path:
+    promote: [TRADE_ID, NETTING_SET, COUNTERPARTY, LEGAL_ENTITY, DESK, TT_BOOK, LIMIT_LETTER, ASSET_CLASS, PRODUCT, SOURCE_SYSTEM, MATURITY_DATE, NOTIONAL, GRID_INDEX, GRID_DATE, RUN_ID, BATCH_ID, STATUS]
+    vectors: [MTM]
+    id: PATH_ROW_ID
+    date: BUSINESS_DATE
+  risk.position-sensitivity:
+    promote: [SENSITIVITY_ID, GRAIN, POSITION_ID, TRADE_ID, SOURCE_SYSTEM, BATCH_ID, STATUS, DESK, TT_BOOK, PRODUCT_TYPE, CURRENCY]
+    id: SENSITIVITY_ID
+    date: BUSINESS_DATE
+  risk.risk-factor:
+    promote: [RISK_FACTOR, FACTOR_TYPE, RISK_CLASS, QUALIFIER, TENOR, FRTB_BUCKET, SIMM_RISK_CLASS, SIMM_BUCKET]
+    id: RISK_FACTOR
+    date: BUSINESS_DATE
+  macro.economic-forecast: null
+  macro.economy:
+    promote: [NAME, ISO3, REGION_NAME, INCOME_NAME, GDP_USD_BN, GDP_PER_CAPITA, GROWTH, INFLATION, UNEMPLOYMENT, POPULATION_M]
+  civic.election: null
+  macro.fiscal-position: null
+  civic.jurisdiction: null
+  macro.labour-market: null
+  macro.macro-indicator: null
+  civic.office-holder: null
+  civic.party: null
+  civic.region: null
+  macro.region-economy:
+    promote: [ISO3, COUNTRY_NAME, REGION_CODE, NAME, POPULATION, GDP_USD_BN, GDP_PER_CAPITA, YEAR, SOURCE]
+  civic.social-indicator: null
+  news.listed-company: null
+  news.news-topic: null
+  compute-demo.path-book:
+    promote: [BOOK_ID, NAME, DESK, STRIP_COUNT]
+  compute-demo.path-strip:
+    promote: [STRIP_ID, BOOK_ID, INSTRUMENT, DAYS]
+  news.quote: {id: QUOTE_ID}
+  news.news: {id: NEWS_ID}
+  us-equities.us-company:
+    promote: [TICKER, NAME, LEI_LEGAL_NAME, CIK, LEI, EXCHANGE, INDEX_TEXT, SECTOR, SIC, SIC_DESCRIPTION, STATE_OF_INCORPORATION, REVENUE]
+    id: TICKER
+  us-equities.index-membership:
+    promote: [INDEX, NAME, MEMBERS]
+    id: INDEX
+  us-equities.filing-feed:
+    promote: [FEED, NAME, FILINGS]
+    id: FEED
+  us-equities.filing:
+    promote: [ACCESSION, COMPANY, COMPANY_NAME, FORM, FILED, REPORT_DATE]
+    id: ACCESSION
+  us-equities.financial-fact:
+    promote: [FACT_ID, COMPANY, COMPANY_NAME, CONCEPT, LABEL, LATEST, LATEST_YEAR]
+    id: FACT_ID
+  gleif.lei-entity:
+    promote: [LEI, NAME, LEI_COUNTRY, LEGAL_CITY, LEGAL_FORM, REGISTRATION_STATUS, RENEWAL_LATE, SEGMENT, NEXT_RENEWAL, US_COMPANY]
+    id: LEI
+  gleif.lei-relationship:
+    promote: [RELATIONSHIP_ID, LEVEL, CHILD_ENTITY, PARENT_ENTITY, RELATIONSHIP_STATUS]
+    id: RELATIONSHIP_ID
+  gleif.lei-mapping:
+    promote: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
+    id: IDENTIFIER
+  funds.fund:
+    promote: [TICKER, NAME, TYPE, TICKERS, ADVISER, INDEX_ID, NET_ASSETS, EXPENSE_RATIO, HOLDING_COUNT, REPORT_DATE, RANK]
+    id: TICKER
+  funds.fund-holder:
+    promote: [TICKER, NAME, FUNDS, TOTAL_VALUE, PCT_OF_SHARES]
+    id: TICKER
+  funds.index-funds:
+    promote: [INDEX, NAME, FUNDS, TOTAL_NET_ASSETS]
+    id: INDEX

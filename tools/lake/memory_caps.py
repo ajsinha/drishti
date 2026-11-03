@@ -17,6 +17,9 @@
 limit must have, 256 (the server's own buffers) plus every memory store's max-mb, read from the configuration the server reads
 (application.local.yaml in the working folder, then the files named on the command line), with ${VAR:default} resolved from the
 environment and DRISHTI_LAKE_MEMORY_<STORE>_MAX_MB overriding a store. DRISHTI_LAKE_MEMORY_MB, when set, is the stores' sum itself.
+A store is a lake (config/lakes/<store>.yaml, root: mem://<store>, memory.max-mb; docs/guides/LAKE_GUIDE.md section 6), and the old place,
+drishti.lake.memory.stores, still counts. This is the one place the lake files are read without the Java reader (tools/lake/lakeconfig.py):
+the launcher runs before any JVM, to size the JVM, and reads two keys only (root and memory.max-mb).
 
     python3 tools/lake/memory_caps.py                 -> 256 with no stores, else 256 + the caps
     python3 tools/lake/memory_caps.py --stores-only   -> the caps alone (0 with none)
@@ -50,10 +53,32 @@ def stores_of(files: list[Path]) -> dict[str, int]:
                 out[name] = int(float(resolve((s or {}).get("max-mb", 0)) or 0))
             except ValueError:
                 out[name] = 0
+    for name, mb in lake_stores().items():
+        out[name] = mb
     for name in list(out):
         env = os.environ.get("DRISHTI_LAKE_MEMORY_" + re.sub(r"[^A-Za-z0-9]", "_", name).upper() + "_MAX_MB")
         if env:
             out[name] = int(env)
+    return out
+
+
+def lake_stores() -> dict[str, int]:
+    """The memory stores the lake files describe: each lake whose root is mem://<store>, its memory.max-mb."""
+    import yaml
+    folder = Path(os.environ.get("DRISHTI_LAKES_DIR") or "config/lakes")
+    out: dict[str, int] = {}
+    if not folder.is_dir():
+        return out
+    for f in sorted(folder.glob("*.yaml")):
+        doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        root = resolve(doc.get("root") or "")
+        if not root.startswith("mem://"):
+            continue
+        name = root[len("mem://"):].split("/")[0]
+        try:
+            out[name] = int(float(resolve((doc.get("memory") or {}).get("max-mb", 0)) or 0))
+        except ValueError:
+            out[name] = 0
     return out
 
 
