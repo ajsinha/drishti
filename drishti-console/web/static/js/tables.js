@@ -79,7 +79,7 @@
   }
   /** Opens a source (an adapter, or a function of the kit that makes one) as a chart; opener gets the focus back. */
   function openChart(make, opener) {
-    return chartKit().then(function (k) { return k.open(typeof make === 'function' ? make(k.sources) : make, { opener: opener }); }, function (e) {
+    return chartKit().then(function (k) { return k.open(typeof make === 'function' ? make(k.sources) : make, { opener: opener, fetchJson: fetchJson }); }, function (e) {
       window.alert('The chart could not open: ' + e.message);
     });
   }

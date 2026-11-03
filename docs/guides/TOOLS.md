@@ -1433,6 +1433,28 @@ drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --c
 drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot.xlsx
 ```
 
+### 5.16 pivot
+
+The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)); every figure is the server's:
+
+- `pivot sources`: the tables (and `var`) you may pivot. `pivot fields SOURCE [--date]`: its fields with their types, its own measures,
+  the built-in functions, what is masked for you.
+- `pivot run`: a view's answer, the rows as shown (indented by level, `+` on a closed member), every column's figures and the totals. The
+  view is `--view owner/name` (a saved one), `--json-view FILE` (the API's JSON), or flags: `--source`, `--date`, `--rows A,B` (a date
+  groups as `TRADE_DATE:month`), `--cols`, `--values "sum(X)"` (repeatable), `--filter FIELD=V1,V2`, `--open DIM=V[/DIM=V]` (a node
+  opened, lazily computed), `--level N`, `--top FIELD=N`. `--csv FILE` writes the grid; `--json` the whole answer.
+- `pivot estimate`: what the view reads before it runs.
+- `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
+  and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
+- `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py pivot fields trade
+drishti-console/.venv/bin/python tools/drishti.py pivot run --source trade --rows productType,counterparty --values "count()" --open productType=IRS
+drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows DESK --cols CURRENCY --values "var()" --values "es()"
+drishti-console/.venv/bin/python tools/drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
+```
+
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a

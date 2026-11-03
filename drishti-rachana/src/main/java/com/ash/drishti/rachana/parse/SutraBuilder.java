@@ -336,7 +336,7 @@ final class SutraBuilder {
             });
             if (options.containsKey("levels") && (options.containsKey("children") || options.containsKey(Panel.PIVOT))) {
                 problem("DRS-2029", "a table with 'levels' drills into its rows level by level; it cannot also have "
-                        + (options.containsKey("children") ? "'children' (a tree)" : "a Pivot tab"), m.get("levels"));
+                        + (options.containsKey("children") ? "'children' (a tree)" : "Pivot (the pivot screen)"), m.get("levels"));
             }
             for (String req : kind.required()) {
                 if (!m.containsKey(req)) {
@@ -404,7 +404,7 @@ final class SutraBuilder {
                 problem("DRS-2023", "a '" + part.kind().id() + "' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric, line, area, timeline", n);
             }
             if (part.options().containsKey(Panel.PIVOT)) {
-                problem("DRS-2023", "a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own", n);
+                problem("DRS-2023", "a panel inside a tab cannot have Pivot (the pivot screen); put the table in a panel of its own", n);
             }
             if (!ids.add(part.id())) {
                 problem("DRS-2024", "two panels of this tab are called '" + part.id() + "'", n);

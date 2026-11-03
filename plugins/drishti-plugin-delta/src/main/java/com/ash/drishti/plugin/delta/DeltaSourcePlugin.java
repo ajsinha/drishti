@@ -92,8 +92,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private record Part(Map<String, String> docs, Map<String, Set<String>> refs) {}
 
     // concurrent: a reindex adds tables that appeared in the lake while reads go on
-    private final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
+    final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
+    final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
     private Engine engine;
     private String idColumn;
     private String docColumn;
@@ -621,7 +621,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
-    private Map<String, String> promotedColumns(String kind, DeltaTable.Layout l) {
+    Map<String, String> promotedColumns(String kind, DeltaTable.Layout l) {
         Map<String, String> out = new LinkedHashMap<>();
         for (String path : promoted.getOrDefault(kind, List.of())) {
             String column = path.replace(".", "__");
@@ -657,7 +657,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** Partitions to look in for {@code date}, newest first. */
-    private List<LocalDate> candidates(String kind, DeltaTable.Layout l, LocalDate date) {
+    List<LocalDate> candidates(String kind, DeltaTable.Layout l, LocalDate date) {
         var head = date == null ? l.files().descendingKeySet() : l.files().headMap(date, true).descendingKeySet();
         List<LocalDate> out = new ArrayList<>();
         boolean effective = "effective".equals(modes.get(kind));
@@ -679,7 +679,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** The table's layout, recording a log that cannot be read (health says so) and rethrowing: a failure, not "not held". */
-    private Optional<DeltaTable.Layout> readableLayout(String kind, Instant knownAt) {
+    Optional<DeltaTable.Layout> readableLayout(String kind, Instant knownAt) {
         try {
             return layout(kind, knownAt);
         } catch (RuntimeException e) {
@@ -1260,6 +1260,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
                     .replace("{\"$vector\": \"" + e.getKey() + "\"}", a.toString());
         }
         return out;
+    }
+
+    /** The date's Parquet files and the promoted columns, for the pivot engine's direct lake route ({@link DeltaLakeFiles}). */
+    @Override
+    public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
+        return DeltaLakeFiles.of(this, kind, asOf);
     }
 
     @Override

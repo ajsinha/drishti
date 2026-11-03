@@ -374,6 +374,17 @@ class BackendClient:
         sent as a repeated parameter (``override``). The netting-set list computes every netting set of the date: this waits up to a minute."""
         return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
 
+    async def pivot(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
+        """The pivot engine (/api/v1/pivot, docs/guides/PIVOT_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
+        ``raw`` returns the bytes and headers of an export. A table's first pivot reads it through its connector: this waits up to two
+        minutes."""
+        kw: dict[str, Any] = {"params": {k: v for k, v in params.items() if v not in (None, "")}, "timeout": 120.0}
+        if body is not None:
+            kw["json"] = body
+        if raw:
+            kw.update(raw=True, with_headers=True)
+        return await self._send(method, "/pivot" + path, ident, **kw)
+
     async def exposure(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
         """The exposure engine (/api/v1/exposure, docs/guides/EXPOSURE_GUIDE.md section 11), as the user. The first answer of a business
         date loads its paths (or maps its hot file): it may take longer than a page read, so this waits up to a minute."""
@@ -562,32 +573,6 @@ class BackendClient:
     async def promote_layout(self, sutra: str, kind: str, note: str, drop_hidden: bool, ident) -> dict:
         return await self._send("POST", f"/me/layouts/{quote(sutra, safe='')}/{quote(kind, safe='')}/promotion", ident,
                                 json={"note": note, "dropHidden": bool(drop_hidden)})
-
-    # -- the Pivot tab ----------------------------------------------------------------------------
-    async def panel_records(self, kind: str, id_: str, panel: str, ident) -> dict:
-        """Every row of a table or ladder whose Sutra says pivot:, as raw values of its fields."""
-        where, q = entity_path(kind, id_)
-        return await self._send("GET", f"/views/{where}/panels/{quote(panel, safe='')}/records", ident, params=q, timeout=30.0)
-
-    async def search_pivot(self, kind: str, body: dict, ident, part: str = "") -> dict:
-        """The server engine of a search's Pivot tab: the cube (part ""), a cell's entities ("drill") or a field's values."""
-        # the first read of a business day loads its columns (the server waits up to drishti.pivot.budget, 20 s)
-        return await self._send("POST", f"/search/pivot/{quote(kind, safe='')}" + (f"/{part}" if part else ""), ident, json=body,
-                                timeout=45.0)
-
-    async def pivots(self, ident) -> dict:
-        """The user's saved pivots, and whether they may promote one to a Sutra."""
-        return await self._get("/me/pivots", ident)
-
-    async def saved_pivot(self, method: str, scope: str, ident, body: dict | None = None) -> dict | None:
-        """GET, PUT or DELETE a saved pivot: scope is ``panel/<sutra>/<panel>`` or ``search/<kind>`` (already quoted)."""
-        return await self._send(method, f"/me/pivots/{scope}", ident, **({"json": body} if body is not None else {}))
-
-    async def pivot_promotion(self, scope: str, ident, note: str | None = None) -> dict:
-        """What promoting a panel's saved pivot would propose (note None), or the proposal itself."""
-        if note is None:
-            return await self._get(f"/me/pivots/{scope}/promotion", ident)
-        return await self._send("POST", f"/me/pivots/{scope}/promotion", ident, json={"note": note})
 
     # -- workspaces -------------------------------------------------------------------------------
     async def workspaces(self, ident) -> list:

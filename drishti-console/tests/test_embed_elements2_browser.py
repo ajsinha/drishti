@@ -84,7 +84,7 @@ def test_the_first_view_is_live_drawn_from_the_view_model_under_the_host_s_csp(h
     h = host()
     before = len(json.loads(urllib.request.urlopen(E.HOST + "/api/csp-reports").read()))
     h.open()
-    assert h.js("window.DrishtiElements.version") == "2.1.0" and h.js("window.DrishtiElements.renderer") == rd.VERSION
+    assert h.js("window.DrishtiElements.version") == "2.2.0" and h.js("window.DrishtiElements.renderer") == rd.VERSION
     assert h.title() == E.MAIN_ID
     assert "MTM" in h.js("document.querySelector('#main').shadowRoot.querySelector('.strip').innerText")
     h.until(lambda: len(h.events("tick", "main")) >= 2, 25, "two ticks of the main view")
@@ -125,11 +125,8 @@ def test_the_console_s_behaviours_run_inside_the_element_and_about_comes_as_json
     E.show(h, "netting-set", E.NETTING_SET)
     root = "document.querySelector('#main').shadowRoot"
     h.until(lambda: h.js(f"!!{root}.querySelector('th .cf-btn')"), 15, "the column funnels")
-    tab = h.page.locator("#main [data-pv-tab='pivot']").first
-    if tab.count():
-        tab.click()
-        h.until(lambda: h.js(f"!!{root}.querySelector('.pv-host table')"), 20, "the Pivot tab's grid")
-        assert [r for r in h.requests if "/embed/v2/views/" in r[1] and "/records" in r[1]], "the pivot's rows come from the embed API v2"
+    # a table's Pivot opens the console's pivot screen (the pivot engine) in a window of its own; nothing is pivoted in the element
+    assert not [r for r in h.requests if "/records" in r[1]], "no panel rows are read for a pivot inside the element"
     h.page.locator("#main [data-r-about]").click()
     h.until(lambda: h.js(f"!!{root}.querySelector('.r-about .about-card')"), 15, "About this page")
     assert [r for r in h.requests if "/embed/v2/views/" in r[1] and "/about" in r[1]]

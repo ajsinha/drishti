@@ -14,7 +14,7 @@
 
 """Chart any table in a real browser (Chromium; docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.3): the Chart button and K on an
 entity page's table, a search's results and a pick list, Shift+K on the history page, the records of a table with a Pivot tab, the
-type switcher, the pickers, Top N, a masked column never plotted, Chart all N through the search pivot, View as table, the CSV
+type switcher, the pickers, Top N, a masked column never plotted, Chart all N through the pivot engine, View as table, the CSV
 export, point navigation by keyboard, Esc with the focus returned, empty, single-row and big tables, a phone, and every console
 theme (colours from the theme's tokens only). The console runs in-process against a stand-in server with synthetic data
 (table_chart_backend.py); skipped when Playwright's Chromium is not installed."""
@@ -69,6 +69,7 @@ def open_view(ctx, stack, path=VIEW, wait="#p-flows [data-table-chart]"):
 
 def drawn(page):
     page.wait_for_selector(DLG + " .tc-canvas svg path", state="attached", timeout=15000)
+    page.wait_for_selector("dialog.tc-dlg:not([aria-busy])", state="attached", timeout=15000)   # the engine has answered the last change
     return page.evaluate("""(() => { const c = window.drishtiTableChart.current();
         return { type: c.settings.type, x: c.settings.x.field, series: c.option.series.map(s => s.name), kinds: c.option.series.map(s => s.type),
                  sum: document.querySelector('.tc-sum').textContent, status: document.querySelector('[data-tc-status]').textContent,
@@ -151,7 +152,7 @@ def test_a_masked_column_is_offered_greyed_and_never_plotted(ctx, stack):
     assert "•••" not in page.evaluate("JSON.stringify(window.drishtiTableChart.current().gridData())")
 
 
-def test_search_results_chart_the_raw_values_and_chart_all_asks_the_search_pivot(ctx, stack):
+def test_search_results_chart_the_raw_values_and_chart_all_asks_the_pivot_engine(ctx, stack):
     url, backend = stack
     page = open_view(ctx, stack, "/s?q=TRD%20where%20notional%20%3E%200", "table[data-chart-rows] ~ * , [data-table-chart]")
     page.click("[data-table-chart]")
@@ -170,7 +171,8 @@ def test_search_results_chart_the_raw_values_and_chart_all_asks_the_search_pivot
     allb.click()
     page.wait_for_function("document.querySelector('[data-tc-status]').textContent.includes('Every match')")
     assert len(backend.pivot_calls) == before + 1
-    assert backend.pivot_calls[-1]["rows"] == ["desk"] and backend.pivot_calls[-1]["values"] == [{"field": "notional", "agg": "sum"}]
+    assert backend.pivot_calls[-1]["source"] == "trade" and backend.pivot_calls[-1]["rows"] == ["desk"]
+    assert backend.pivot_calls[-1]["values"] == [{"measure": "sum(notional)", "as": "v0"}]
     assert page.evaluate("window.drishtiTableChart.current().last.series[0].data").count(None) == 0
     assert "Chart the shown rows" in allb.inner_text()
     page.select_option('[data-tc-k="split"]', "Currency")                     # a change while charting all asks the server again
@@ -178,16 +180,23 @@ def test_search_results_chart_the_raw_values_and_chart_all_asks_the_search_pivot
     assert len(backend.pivot_calls) == before + 2 and backend.pivot_calls[-1]["columns"] == ["currency"]
     page.click(".tc-all")                                                      # back to the shown rows
     page.select_option('[data-tc-k="x"]', "Trade date")                       # not a pivot field: Chart all stands down, with the reason
+    page.wait_for_selector("dialog.tc-dlg:not([aria-busy])", state="attached")
     assert allb.is_disabled() and "pivot" in allb.get_attribute("title")
 
 
-def test_a_table_with_a_pivot_tab_charts_its_raw_records(ctx, stack):
+def test_a_table_that_offers_pivot_charts_every_row_through_the_pivot_engine(ctx, stack):
     url, backend = stack
     page = open_view(ctx, stack, "/v/netting-set/NS-NORTH-01", "#p-trades [data-table-chart]")
+    assert page.locator("#p-trades .pv-open a").get_attribute("href").startswith("/pivot?source=panel")
     page.click("#p-trades [data-table-chart]")
     d = drawn(page)
-    assert backend.record_calls and backend.record_calls[-1][2] == "trades"
-    assert "figures as displayed" not in d["status"] and d["series"] == ["MTM (USD) (sum)"] and d["x"] == "Maturity"
+    assert d["series"] == ["MTM (USD) (sum)"] and d["x"] == "Maturity"
+    before = len(backend.pivot_calls)
+    page.click(".tc-all")
+    page.wait_for_function(f"() => true", timeout=2000)
+    page.wait_for_timeout(1500)
+    assert backend.record_calls and backend.record_calls[-1] == "panel/netting-set/trades/NS-NORTH-01"
+    assert len(backend.pivot_calls) == before + 1 and backend.pivot_calls[-1]["source"] == "panel/netting-set/trades/NS-NORTH-01"
 
 
 def test_the_history_page_opens_with_shift_k_and_plain_k_stays_the_previous_day(ctx, stack):

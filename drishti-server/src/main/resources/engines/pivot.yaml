@@ -1,0 +1,44 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/pivot.yaml: the pivot engine (docs/guides/PIVOT_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
+# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    pivot:
+      enabled: ${DRISHTI_PIVOT_ENGINE_ENABLED:true}   # run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -> Pivot, drishti.py pivot (live); its old name drishti.pivot.enabled still works
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  pivot:                             # the pivot engine (docs/guides/PIVOT_GUIDE.md); the Pivot tab's keys stay in application.yaml
+    max-cells: 20000                 # visible cells a view may have, totals included; over it: refused with the count (DRS-5702), never cut short
+    max-holistic-cells: 5000         # the same for a view with a holistic measure (VaR, an exact median, an exact distinct count)
+    busy-cells: 2000                 # a view of more cells asks busy protection before it opens deeper levels (DRS-9507)
+    cache-mb: 512                    # the partial-state cache, weighed in bytes, in the one memory budget (pivot.states)
+    provenance-kept: 500             # answers whose provenance (per cell) is kept for the popover
+    local-shards: 1                  # split a mergeable plan into this many parts on this node and merge them in a fixed order (1: one pass)
+    stage-max-rows: 5000000          # the most rows of one table read for a pivot (a table over it is refused in words, never cut short)
+    stage-keep: 16                   # tables read for pivots kept in the executor (least recently used dropped)
+    duckdb:
+      connections: 0                 # statements at once (0: one per four cores)
+      threads: 0                     # DuckDB's threads per statement (0: its default)
+      memory-limit-mb: 4096          # DuckDB's memory limit
+      temp-directory: ""             # where DuckDB may spill (blank: nowhere, so memory-only data is never written)
+    estimate:
+      confirm-above-seconds: 60      # an estimate over this asks the person first
+      confirm-above-rows: 500000000  # an estimate over this many rows asks the person first
+    aggregate-only:
+      min-members-per-cell: 1        # a cell with fewer members shows no figures (1: no limit; a site may set 5)
+    export:
+      xlsx-max-rows: 1000000         # the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered
+      rows-max: 1000000              # the most member rows an export of the underlying rows writes

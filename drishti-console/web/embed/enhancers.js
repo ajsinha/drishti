@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The ES-module face of the console's enhancer scripts (static/js: view, charts, tables, tree-rows, pivot, about, about-hints). Each is
+/* The ES-module face of the console's enhancer scripts (static/js: view, charts, tables, tree-rows, about, about-hints). Each is
    a script that registers `window.drishtiModules.<name> = {init(root, options)}`; this module loads them once per page (assets.js) and
    starts them on one element's shadow root, with fetches that carry the bearer and go to the embed API, and writes that are sanitised.
    The console's own pages keep loading the same scripts as classic scripts and start them on `document` (nothing there changes). */
@@ -41,10 +41,6 @@ export function boot(host, view, server, reload, extra = {}) {
   const kind = view.getAttribute('data-kind'), id = view.getAttribute('data-id');
   const base = server + API;
   const fetcher = (u, o) => authed(u, o, undefined);
-  const toUrl = (p) => {                          // the console's relative paths, as embed API calls
-    const m = /^\/api\/pivot\/records\/(.+)\/([^/]+)$/.exec(p);
-    return m ? base + '/views/' + m[1] + '/panels/' + m[2] + '/records' : p;
-  };
   const holder = document.createElement('div');
   setHtml(holder, drawerHtml(base, kind, id));
   root.appendChild(holder.firstChild);
@@ -70,7 +66,6 @@ export function boot(host, view, server, reload, extra = {}) {
       afterSwap: (fresh) => { host.absolutise(fresh); m.view && m.view.enhance(fresh); m.charts && m.charts.draw(); m.hints && m.hints.refresh(); }
     });
   }
-  m.pivot = start('pivot', root, { fetch: fetcher, url: toUrl, save: false, exports: false });
   m.about = start('about', root, { fetch: fetcher, guideKey: false, reload, setHtml });
   m.hints = m.about ? start('aboutHints', root, { about: m.about, open: (h) => window.open(h.startsWith('/') ? server + h : h, '_blank', 'noopener') }) : null;
   root.addEventListener('drishti:about', () => {
@@ -87,7 +82,7 @@ export function boot(host, view, server, reload, extra = {}) {
 
 /** Ends what `boot` started: observers, listeners and chart instances. */
 export function dispose(mods, root) {
-  if (mods) { for (const k of ['controls', 'zoom', 'pivot', 'tree', 'tables', 'about', 'hints', 'charts', 'view']) { mods[k] && mods[k].dispose && mods[k].dispose(); } }
+  if (mods) { for (const k of ['controls', 'zoom', 'tree', 'tables', 'about', 'hints', 'charts', 'view']) { mods[k] && mods[k].dispose && mods[k].dispose(); } }
   const e = window.echarts;
   if (e && root) { root.querySelectorAll('.chart, .xchart, .surface').forEach((el) => { const c = e.getInstanceByDom(el); c && !c.isDisposed() && c.dispose(); }); }
 }

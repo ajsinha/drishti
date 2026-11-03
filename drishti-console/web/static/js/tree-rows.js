@@ -17,14 +17,16 @@
    1. A table or ladder whose Sutra says children: (table.tbl-tree): the ▸/▾ button of a row opens and closes the rows under
       it, any number of levels deep; the filter box and the column filters (colfilter.js) keep the rows that match and the
       ancestors of those rows: a parent shows, open, when any row below it matches.
-   2. A pivot by a list of fields (div.pv-tree-host): the nested rows are drawn by the Pivot tab's grid (pivot-grid.js, the
-      same ▸/▾ groups and subtotals) from the panel's own data, so there is one renderer for collapsible row groups.
+   2. A pivot by a list of fields (div.pv-tree-host): the nested rows are drawn by the pivot grid (pivot-grid.js, the Pivot
+      screen's: + and − on the groups, subtotals, the grand total) from the panel's own data, every figure the pivot engine's
+      (ChartBinder computes them with drishti-bicompute) and shown as the server's text; one renderer for pivot rows.
    Both are plain buttons, so Tab, Enter and Space work; the state is aria-expanded. Live updates replace panels: new ones
    are enhanced when they appear (data-tree-ready marks the ones already done). */
 (function () {
   'use strict';
   var me = document.currentScript, reg0 = window.drishtiModules || {};
-  var E = reg0.pivotEngine || window.drishtiPivotEngine, G = reg0.pivotGrid || window.drishtiPivotGrid;
+  var ROOT = me && /\/js\/tree-rows\.js/.test(me.src || '') ? me.src.replace(/js\/tree-rows\.js.*$/, '') : '/static/';
+  var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
 
   var treeState = {};                                      // a tree's filters by panel, so a live patch that replaces the table keeps them
   var openMem = {};                                        // the rows a reader opened, by table: a live patch repaints the panel, and what was opened stays open
@@ -124,62 +126,78 @@
     paint();
   }
 
-  // ---- a pivot by several fields, drawn by the Pivot tab's grid ---------------------------------------------------
-  /** The panel's nested rows as the cube the grid draws: the cells hold the server's own text (formats, masks and all). */
-  function cubeOf(d) {
-    var cells = {}, leaves = [], cols = d.columns || [], levels = d.levels;
+  // ---- a pivot by several fields, drawn by the pivot grid -------------------------------------------------------------
+  /** The grid's sheet (css/pivot-screen.css), once per document or shadow root that shows a nested pivot. */
+  function sheet(host) {
+    var at = host.getRootNode ? host.getRootNode() : document, into = at === document || !at.host ? document.head : at;
+    if (into.querySelector('link[data-pivot-grid-css]')) { return; }
+    var l = document.createElement('link');
+    l.rel = 'stylesheet'; l.href = ROOT + 'css/pivot-screen.css' + (VER ? '?v=' + VER : ''); l.setAttribute('data-pivot-grid-css', '');
+    into.appendChild(l);
+  }
+  var US = '\u001f';
+  /**
+   * The panel's nested rows as a pivot answer the grid draws: each group a node (open or closed), its rows under it while open, the
+   * columns of `across` and the total; every cell keeps the server's text and tone (formats, masks), its figure for the heat.
+   */
+  function answerOf(d, closed) {
+    var cols = (d.columns || []).map(function (c) { return { kind: 'node', key: 'c' + US + c, label: c }; });
+    if (d.totals) { cols.push({ kind: 'grand', key: '*', label: 'Total' }); }
+    var label = { sum: 'Sum', count: 'Count', avg: 'Average', min: 'Min', max: 'Max' }[d.agg] || d.agg || 'Value';
+    var rows = [], cells = {}, hidden = null, fmt = {};
+    fmt[label] = { style: 'scale' };
+    function cell(v, c) {                                  // the measure's figure (for the heat), the server's text and tone
+      var o = { values: {}, texts: {}, tones: {} };
+      o.values[label] = typeof v === 'number' ? v : null; o.texts[label] = c ? c.text : ''; o.tones[label] = c && c.tone ? 't-' + c.tone : '';
+      return o;
+    }
     (d.rows || []).forEach(function (r) {
-      cells[E.cellKey(r.path, [])] = [r.total ? r.total.text : null];
-      cols.forEach(function (c, i) { var x = r.cells[i] && r.cells[i].text; cells[E.cellKey(r.path, [c])] = [x === '' || x === undefined ? null : x]; });
-      if (!r.group) { leaves.push(r.path); }
+      var path = r.path || [r.label], key = path.join(US);
+      if (hidden !== null && key.indexOf(hidden + US) === 0) { return; }
+      hidden = null;
+      if (r.group && closed[key]) { hidden = key; }
+      rows.push({ kind: 'node', key: key, label: r.label, depth: path.length, expandable: !!r.group, expanded: !!r.group && !closed[key] });
+      (r.cells || []).forEach(function (c, i) {
+        if (!cols[i]) { return; }
+        cells[key + '|' + cols[i].key] = cell((r['values'] || [])[i], c);
+      });
+      if (r.total) { cells[key + '|*'] = cell(null, r.total); }
     });
     if (d.totals) {
-      cols.forEach(function (c, i) { cells[E.cellKey([], [c])] = [d.totals[i] ? d.totals[i].text : null]; });
-      cells[E.RS] = [d.totals[cols.length] ? d.totals[cols.length].text : null];
+      rows.push({ kind: 'grand', key: '*', label: 'Total', depth: 0 });
+      d.totals.forEach(function (c, i) {
+        var k = i < (d.columns || []).length ? cols[i].key : '*';
+        cells['*|' + k] = cell(null, c);
+      });
     }
-    return { rows: levels, columns: d.across ? [d.across] : [''], values: [{ field: null, agg: d.agg, show: 'value', label: E.AGG_LABEL[d.agg] || d.agg }],
-      rowKeys: leaves, columnKeys: cols.map(function (c) { return [c]; }), cells: cells };
+    return { rowDimensions: d.levels || [], columns: cols, rows: rows, cells: cells, measures: [{ id: d.agg || 'value', label: label, kind: 'mergeable' }],
+      view: d.heat ? { formats: fmt } : {} };
   }
 
   function pivotTree(host) {
-    if (!E || !G) { return; }
-    var d = JSON.parse(host.getAttribute('data-pv-tree'));
-    var cube = cubeOf(d), fields = [], st = { collapsedRows: {}, collapsedCols: {}, sort: null, totals: !!d.totals, heat: false };
+    var PG = reg0.pivotGrid || window.PivotCore || (window.drishtiModules || {}).pivotGrid;
+    if (!PG) { return; }
+    var d = JSON.parse(host.getAttribute('data-pv-tree')), closed = {};
     (d.rows || []).forEach(function (r) {                  // the groups shown closed at first: those at or below `expand` levels
-      if (r.group && r.path.length >= d.expand) { st.collapsedRows[r.path.join(E.US)] = true; }
+      if (r.group && (r.path || []).length >= d.expand) { closed[(r.path || []).join(US)] = true; }
     });
-    var out = null;
+    sheet(host);
     function draw(focusKey) {
-      out = G.render(host, cube, st, fields);
-      host.querySelectorAll('td.pv-c').forEach(function (td) { td.removeAttribute('title'); td.tabIndex = -1; });
-      var first = host.querySelector('td.pv-c');
-      if (first) { first.tabIndex = 0; }
+      var a = answerOf(d, closed), box = host.querySelector('.pv-tree-grid');
+      if (!box) { box = document.createElement('div'); box.className = 'pv-tree-grid pv-scroll'; host.textContent = ''; host.appendChild(box); }
+      PG.render(box, a, {
+        onToggle: function (row) {
+          if (!row || !row.expandable) { return; }
+          if (closed[row.key]) { delete closed[row.key]; } else { closed[row.key] = true; }
+          draw(row.key);
+        }
+      });
       if (focusKey != null) {
-        var again = Array.prototype.filter.call(host.querySelectorAll('.pv-tog'), function (x) { return out.toggles[+x.getAttribute('data-t')].key === focusKey; })[0];
+        var again = Array.prototype.filter.call(box.querySelectorAll('[data-pv-toggle]'), function (x) {
+          return a.rows[+x.getAttribute('data-pv-toggle')].key === focusKey;
+        })[0];
         if (again) { again.focus(); }
       }
-    }
-    host.addEventListener('click', function (e) {
-      var b = e.target.closest('.pv-tog');
-      if (b) {
-        var key = out.toggles[+b.getAttribute('data-t')].key, map = st.collapsedRows;
-        if (map[key]) { delete map[key]; } else { map[key] = true; }
-        draw(key);
-        return;
-      }
-      var th = e.target.closest('th.pv-sortable');
-      if (th) { sortBy(th); }
-    });
-    host.addEventListener('keydown', function (e) {
-      var th = e.target.closest && e.target.closest('th.pv-sortable');
-      if (th && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); sortBy(th); }
-    });
-    function sortBy(th) {
-      var s = out.lay.slots[+th.getAttribute('data-si')], c = s.path.join(E.US);
-      if (st.sort && st.sort.c === c) { st.sort.dir = st.sort.dir === 1 ? -1 : st.sort.dir === -1 ? 0 : 1; } else { st.sort = { c: c, v: 0, dir: 1 }; }
-      draw();
-      var again = host.querySelector('th.pv-sortable[data-si="' + th.getAttribute('data-si') + '"]');
-      if (again) { again.focus(); }
     }
     draw();
     host.setAttribute('data-tree-ready', '');

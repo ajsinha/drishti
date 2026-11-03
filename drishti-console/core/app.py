@@ -450,6 +450,13 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["smat_on"] = _smat_on
 
+    def _pivot_on() -> bool:
+        """The pivot screen (PIVOT) as this request's person sees it: offered where the edition or lens has the word."""
+        from core import edition as _ed
+        return app.state.editions.for_request(_ed.current_lens()).word_on("PIVOT")
+
+    templates.env.globals["pivot_on"] = _pivot_on
+
     def _play_on() -> bool:
         """The VaR Playground (PLAY) as this request's person sees it: offered where the edition or lens has the word and VaR."""
         from core import edition as _ed
@@ -563,8 +570,6 @@ def create_app(settings: Settings) -> FastAPI:
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings, stamps)
-    from core.pivots import Pivots
-    app.state.pivots = Pivots(stamps, user_ttl)
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
@@ -605,7 +610,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(layout_routes.router)
     app.include_router(designer_routes.router)          # the Sutra designer (ui.designer, off by default)
     app.include_router(designer_grid_routes.router)     # its Grid mode
-    app.include_router(pivot_routes.router)
+    app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (PIVOT_GUIDE.md)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)

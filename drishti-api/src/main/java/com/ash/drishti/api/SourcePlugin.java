@@ -134,6 +134,16 @@ public interface SourcePlugin extends AutoCloseable {
     }
 
     /**
+     * The kind's data files on a date, for an engine that reads them itself (the pivot engine's direct lake route): local Parquet files and
+     * the column of each field. Empty (the default) when the source cannot hand its files over (an object store, deletion vectors, a table
+     * whose rows of a date are spread over earlier partitions, a source that is not a lake); the reader then goes through {@link #scan}.
+     * Must read no data file.
+     */
+    default Optional<LakeFiles> lakeFiles(String kind, AsOf asOf) {
+        return Optional.empty();
+    }
+
+    /**
      * How many rows one business date of the kind holds, from the source's metadata only (a Delta table's add-action statistics, an Iceberg
      * snapshot's manifests), or empty when it cannot say without reading data (the default). Must read no data file: the BI runs planner asks it
      * for every date of a question before anything runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 4.1).

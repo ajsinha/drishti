@@ -192,7 +192,7 @@ def filename(*parts: str) -> str:
     return re.sub(r"[^A-Za-z0-9._-]+", "_", "-".join(p for p in parts if p)).strip("_") + ".csv"
 
 
-# ---- Excel: a grid as an .xlsx workbook (the Pivot tab's export), written with the standard library -----------------------
+# ---- Excel: a grid as an .xlsx workbook (Pivot (the pivot screen)'s export), written with the standard library -----------------------
 _XML_BAD = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f]")
 
 
@@ -282,7 +282,7 @@ def to_xlsx(header: list, rows: list[list], sheet: str = "Pivot") -> bytes:
 
 
 def grid(body: dict) -> tuple[str, list, list[list]]:
-    """A grid the page posts (the Pivot tab's export): its name, header and rows, bounded, every value plain."""
+    """A grid the page posts (Pivot (the pivot screen)'s export): its name, header and rows, bounded, every value plain."""
     raw_header = body.get("header") if isinstance(body.get("header"), list) else []
     header = ["" if h is None else str(h)[:200] for h in raw_header[:2000]]
     rows = []

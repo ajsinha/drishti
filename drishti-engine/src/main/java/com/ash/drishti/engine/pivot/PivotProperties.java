@@ -15,40 +15,27 @@
  */
 package com.ash.drishti.engine.pivot;
 
-import java.time.Duration;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * The interactive pivot (USER_GUIDE.md, The Pivot tab): offered only where a Sutra ({@code pivot:} on a table or ladder)
- * or a pack ({@code pivot:} beside a kind's {@code columns:}) opts in. These are its limits.
+ * The pivot of a panel (PIVOT_GUIDE.md, a panel's Pivot): offered only where a Sutra ({@code pivot:} on a table or ladder) or a pack
+ * ({@code pivot:} beside a kind's {@code columns:}) opts in; its rows are read by the view pipeline and pivoted by the pivot engine.
  *
- * @param enabled false hides every Pivot tab, whatever Sutras and packs say (default true)
- * @param maxRecords rows of a panel the browser receives to pivot (default 50,000; the rest are left out, and it says so)
- * @param maxRowKeys row groups a pivot shows at the innermost level (default 2,000; further ones are counted in the totals)
- * @param maxColumnKeys column groups a pivot shows (default 200)
- * @param documentScan entities a search pivot reads as documents when a field is not kept as a column and the user asks
- *     for it (default 20,000; more makes the result partial)
- * @param drillPage the most underlying rows one drill-down page returns (default 200)
- * @param budget how long a search pivot may wait for a business day's columns or documents (default 20 s)
+ * @param enabled false offers no Pivot on any panel (the old name of the pivot engine's switch; default true)
+ * @param maxRecords the most rows of a panel a pivot of it reads (default 50,000; a panel of more is refused, never cut short)
  */
 @ConfigurationProperties("drishti.pivot")
-public record PivotProperties(Boolean enabled, Integer maxRecords, Integer maxRowKeys, Integer maxColumnKeys, Integer documentScan,
-        Integer drillPage, Duration budget) {
+public record PivotProperties(Boolean enabled, Integer maxRecords) {
 
     @org.springframework.boot.context.properties.bind.ConstructorBinding
     public PivotProperties {
         enabled = enabled == null || enabled;
         maxRecords = positive(maxRecords, 50_000);
-        maxRowKeys = positive(maxRowKeys, 2_000);
-        maxColumnKeys = positive(maxColumnKeys, 200);
-        documentScan = positive(documentScan, 20_000);
-        drillPage = positive(drillPage, 200);
-        budget = budget == null || budget.isNegative() || budget.isZero() ? Duration.ofSeconds(20) : budget;
     }
 
     /** The defaults. */
     public static PivotProperties defaults() {
-        return new PivotProperties(null, null, null, null, null, null, null);
+        return new PivotProperties(null, null);
     }
 
     private static int positive(Integer v, int fallback) {

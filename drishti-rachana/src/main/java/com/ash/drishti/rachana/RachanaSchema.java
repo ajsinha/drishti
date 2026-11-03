@@ -441,7 +441,7 @@ public final class RachanaSchema {
             PanelKind.TABS, Map.of("layout", List.of("tabs", "columns")),
             PanelKind.SURFACE, Map.of("view", List.of("heatmap", "3d")));
 
-    /** {@code pivot}: true, or the fields a user may pivot by and the arrangement the Pivot tab opens with. */
+    /** {@code pivot}: true, or the fields a user may pivot by and the arrangement Pivot (the pivot screen) opens with. */
     private static Map<String, Object> pivot() {
         List<String> aggs = com.ash.drishti.rachana.model.PivotSpec.AGGREGATIONS;
         Map<String, Object> field = new LinkedHashMap<>();
@@ -477,7 +477,7 @@ public final class RachanaSchema {
         props.put("totals", Map.of("type", "boolean", "description", "false hides subtotals and grand totals"));
         Map<String, Object> o = new LinkedHashMap<>();
         o.put("type", List.of("boolean", "object"));
-        o.put("description", "Offer a Pivot tab: true (by the panel's columns), or { fields, rows, columns, values, filters, heat, chart }");
+        o.put("description", "Offer Pivot (the pivot screen): true (by the panel's columns), or { fields, rows, columns, values, filters, heat, chart }");
         o.put("properties", props);
         o.put("additionalProperties", false);
         return o;

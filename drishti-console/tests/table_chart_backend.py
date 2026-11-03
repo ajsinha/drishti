@@ -25,6 +25,7 @@ import time
 
 from conftest import CONSOLE, FIXTURES
 from core.backend import BackendError
+from engine_standin import inline_answer  # noqa: F401  (pivot_screen_backend imports it from here)
 from test_live_tabs_browser import TickingBackend, _free_port
 
 MASK = "•••"
@@ -83,6 +84,7 @@ class ChartBackend(TickingBackend):
     def __init__(self):
         super().__init__()
         self.pivot_calls = []
+        self.inline_calls = []                             # the shown rows the chart asked the engine to aggregate
         self.record_calls = []
 
     async def stream(self, kind, id_, ident=None, opened=None):
@@ -101,19 +103,32 @@ class ChartBackend(TickingBackend):
         if (kind, id_) == ("netting-set", "NS-NORTH-01"):
             vm["provenance"]["sutra"] = "netting-set"
             trades = next(p for p in vm["panels"] if p["id"] == "trades")
-            trades["data"]["pivot"] = copy.deepcopy(SPEC)
+            trades["data"]["pivot"] = {**copy.deepcopy(SPEC), "source": "panel/netting-set/trades/NS-NORTH-01"}
         return vm
 
-    async def pivots(self, ident=None):
-        return {"enabled": True, "promote": False, "review": False, "pivots": []}
-
-    async def panel_records(self, kind, id_, panel, ident):
-        self.record_calls.append((kind, id_, panel))
-        if panel != "trades":
-            raise BackendError(404, "DRS-1001", f"the view of {id_} has no panel '{panel}' that offers a pivot")
-        rows = [[["Interest rate swap", "Cross-currency swap", "FX forward"][i % 3], f"20{30 + i % 5}-0{1 + i % 9}-15", (i - 3) * 125_000.0]
-                for i in range(9)]
-        return {"fields": SPEC["fields"], "rows": rows, "total": len(rows), "truncated": False}
+    async def pivot(self, method, path, ident, body=None, raw=False, **params):
+        """The pivot engine as the chart's Chart all N asks it: a source's fields, and one level of rows aggregated (the engine's answer shape)."""
+        if path == "/catalogue":
+            source = params.get("source", "")
+            self.record_calls.append(source)
+            if source.startswith("panel/"):
+                return {"source": source, "fields": [{"name": f["name"], "label": f.get("label", f["name"]), "type": "string"} for f in SPEC["fields"]]}
+            return {"source": source, "fields": [{"name": n, "label": n, "type": "string"} for n in ("desk", "currency", "notional")]}
+        if path == "/query":
+            view = (body or {}).get("view") or {}
+            self.pivot_calls.append(view)
+            x = (view.get("rows") or [None])[0]
+            keys = DESKS if x == "desk" else CCY
+            rows = [{"key": f"{x}={k}", "kind": "node", "value": k, "depth": 1, "path": [[x, k]]} for k in keys]
+            rows.append({"key": "*", "kind": "grand", "value": None, "depth": 0, "path": []})
+            cells = {}
+            for i, k in enumerate(keys):
+                cells[f"{x}={k}|*"] = {"values": {v["as"]: float((i + 1) * 100_000_000) for v in view.get("values") or []}}
+            return {"source": view.get("source"), "rows": rows, "columns": [{"key": "*", "kind": "grand"}], "cells": cells}
+        if path == "/inline":
+            self.inline_calls.append(len((body or {}).get("rows") or []))
+            return inline_answer(body or {})
+        raise BackendError(404, "DRS-1001", "no such pivot call in the stand-in")
 
     async def search(self, q, ident=None):
         if not q.upper().startswith("TRD"):
@@ -121,17 +136,8 @@ class ChartBackend(TickingBackend):
         return {"kind": "trade", "mnemonic": "TRD", "columns": ["desk", "currency", "notional", "mtm", "tradeDate"],
                 "labels": {"desk": "Desk", "currency": "Currency", "notional": "Notional", "mtm": "MTM", "tradeDate": "Trade date"},
                 "matched": 500, "scanned": 500, "elapsedMs": 3, "partial": False, "rows": copy.deepcopy(SEARCH_ROWS),
-                "pivot": {"fields": [{"name": "desk"}, {"name": "currency"}, {"name": "notional"}]}}
+                "pivot": {"source": "trade", "fields": ["desk", "currency", "notional"]}}
 
-    async def search_pivot(self, kind, body, ident, part=""):
-        self.pivot_calls.append(body)
-        x = body["rows"][0]
-        keys = DESKS if x == "desk" else CCY
-        cells = {}
-        for i, k in enumerate(keys):
-            cells[k + "\u001e"] = [float((i + 1) * 100_000_000)] * len(body["values"])
-        return {"rowKeys": [[k] for k in keys], "columnKeys": [] if not body.get("columns") else [], "cells": cells, "count": 500, "total": 500,
-                "source": "columns", "partial": False, "masked": []}
 
 
 def serve(backend=None):

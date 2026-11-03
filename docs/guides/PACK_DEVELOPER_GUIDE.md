@@ -118,7 +118,7 @@ better, and each piece is optional.
 
 Four kinds: **ticket** (`TKT`), **agent** (`AGT`), **client** (`CLI`) and **agent-load** (`LOAD`), a *derived* kind:
 nothing stores it, the server sums each agent's open tickets. The pack has links with badges, impact (F8), pick-list
-columns and a Pivot tab, two roles, an alert suggestion, a vocabulary, About text, a Sutra with tests, a guide, a starter
+columns and Pivot, two roles, an alert suggestion, a vocabulary, About text, a Sutra with tests, a guide, a starter
 workspace and monitor, a Calc snippet, a file connector for real data and a signed registry entry. It is small enough to
 read in one sitting and uses every part of a pack except the lake layout (the shipped packs show that:
 [Large kinds](#large-kinds-the-lake-layout)).
@@ -345,7 +345,7 @@ through the tickets' `CLIENT` field. That answers *which clients are affected if
 dependents through the sources' reverse lookups; the demo source has them, as do the file, lake and database connectors.
 See the [Impact guide](USER_GUIDE.md#f8--impact).
 
-### Step 8. Pick-list columns and a Pivot tab
+### Step 8. Pick-list columns and Pivot
 
 ```yaml
 columns:                          # key fields beside each id in pick lists and searches
@@ -353,7 +353,7 @@ columns:                          # key fields beside each id in pick lists and 
   agent:  [NAME, TEAM, OPEN_TICKETS]
   client: [NAME, TIER, COUNTRY]
 
-pivot:                            # a Pivot tab on the kind's search results
+pivot:                            # Pivot on the kind's search results
   ticket:
     fields: [STATUS, PRIORITY, ASSIGNEE, CLIENT, AGE_HOURS]
     rows: [ASSIGNEE]
@@ -362,7 +362,7 @@ pivot:                            # a Pivot tab on the kind's search results
 ```
 
 `TKT TKT-100` now answers with exactly those five columns (`['$.SUBJECT', '$.STATUS', '$.PRIORITY', '$.ASSIGNEE', '$.AGE_HOURS']`,
-three tickets, and a `pivot` block for the Pivot tab). The server's reply to `TKT STATUS=open` (one match, so the ticket opens at once
+three tickets, and a `pivot` block for Pivot). The server's reply to `TKT STATUS=open` (one match, so the ticket opens at once
 in the terminal) lists them with their labels, the field the command names first:
 
 ```bash
@@ -374,8 +374,8 @@ curl -s -G $B/search --data-urlencode 'q=TKT STATUS=open' | python3 -c 'import j
 {'$.STATUS': 'Status', '$.SUBJECT': 'Subject', '$.PRIORITY': 'Priority', '$.ASSIGNEE': 'Agent', '$.AGE_HOURS': 'Age (h)'}
 ```
 
-(*Agent* and *Age (h)* come from the vocabulary of step 10.) Details, and how the Pivot tab computes on the server:
-[`columns`](#columns-the-key-fields-of-a-pick-list) and [`pivot`](#pivot-a-pivot-tab-on-search-results).
+(*Agent* and *Age (h)* come from the vocabulary of step 10.) Details, and how Pivot computes on the server:
+[`columns`](#columns-the-key-fields-of-a-pick-list) and [`pivot`](#pivot-pivot-on-search-results).
 
 ### Step 9. Roles, field masks and an alert suggestion
 
@@ -819,7 +819,7 @@ this guide.
 | 3 | `samples/catalog.jsonl`, `samples/<kind>.jsonl` | data with no database, a live ticking age |
 | 6 | `graph.fields`, `graph.badges` | links between tickets, agents and clients, with badges |
 | 7 | `graph.impact` | F8 on an agent: tickets, then clients |
-| 8 | `columns`, `pivot` | useful pick lists and a Pivot tab |
+| 8 | `columns`, `pivot` | useful pick lists and Pivot |
 | 9 | `roles`, `alerts` | access control, `raw`, Calc rights; one-click alert rules |
 | 10 | `config/formats.yaml`, `config/semantics.yaml` | `30 h`, *Age (h)* |
 | 10b | `config/about.yaml` | a sentence about the ticket and the meaning of its fields in the *About this page* drawer |
@@ -855,7 +855,7 @@ data from `config/packs/counterparty-risk/pack.yaml`. Every key here is read eit
 | `graph.badges` | server | `agent: "$.OPEN_TICKETS + ' open'"` | Text shown beside a link, read from the target | below |
 | `graph.impact` | server | `follow: [CLIENT]`, `measures: { ticket: "$.AGE_HOURS" }` | What F8 rolls up and sums | below |
 | `columns` | server | `ticket: [SUBJECT, STATUS, PRIORITY]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
-| `pivot` | server | `trade: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM] }` | A Pivot tab on the kind's search results and pick lists | [pivot](#pivot-a-pivot-tab-on-search-results) |
+| `pivot` | server | `trade: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM] }` | A Pivot on the kind's search results and pick lists | [pivot](#pivot-pivot-on-search-results) |
 | `form` | server | `trade: [ { path: QUANTITY, type: amount } ]` | The search form of each kind (`FORM <pack>`): its fields, their types and operators | [form](#form-the-search-form-of-a-kind) |
 | `history` | server | `equity: { chart: [PRICE] }` | How a kind looks over time (`EQ EQ-CSCA 3M`): its columns, parts, chart fields and limits; never needed, any dated kind has a history | [history](#history-a-kind-over-time) |
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles-and-field-masks) |
@@ -916,7 +916,7 @@ routes:
 
 columns:                        # pick-list and search columns per kind
   trade: [SOURCE_SYSTEM, PRODUCT_TYPE, TRADE_STATUS, TRADE_DATE, BUY_SELL_CODE, CURRENCY, QUANTITY, MATURITY_DATE, PORTFOLIO, COUNTERPARTY]
-pivot:                          # a Pivot tab on trade searches (below)
+pivot:                          # Pivot on trade searches (below)
   trade: { fields: [SOURCE_SYSTEM, PORTFOLIO, CURRENCY, …], rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM],
            values: [{ field: QUANTITY, agg: sum }], filters: [PRODUCT_GROUP, TRADE_STATUS] }
 form:                           # FORM TRDS: the search form (below)
@@ -1027,12 +1027,11 @@ curl -s -G $B/search --data-urlencode 'q=BOOK limit 1' | python3 -c 'import json
 
 You should see `['$.NAME', '$.DESK_NAME', '$.TRADE_COUNT', '$.MTM', '$.DV01']`.
 
-### `pivot`: a Pivot tab on search results
+### `pivot`: Pivot on search results
 
-A kind's search results and pick lists can offer the same **Table | Pivot** switch a Sutra gives a table
-([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). It is offered **only** for the kinds a pack names
-under `pivot:`, beside `columns:`; every other kind's results stay a plain list. From `config/packs/trading/pack.yaml`
-(generated):
+A kind's search results and pick lists can offer **Pivot**, the pivot screen on the kind ([PIVOT_GUIDE.md](PIVOT_GUIDE.md),
+[USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)). It is offered **only** for the kinds a pack names under `pivot:`, beside
+`columns:`; every other kind's results stay a plain list. From `config/packs/trading/pack.yaml` (generated):
 
 ```yaml
 pivot:                          # KIND: true, or { fields, rows, columns, values, filters, heat, chart }
@@ -1045,25 +1044,18 @@ pivot:                          # KIND: true, or { fields, rows, columns, values
     filters: [PRODUCT_GROUP, TRADE_STATUS]
 ```
 
-The value is the same as a Sutra's [`pivot` option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder),
-with one difference: fields are **document paths** (`INDEX.NAME`; `$.` may be written), never
-expressions (`bind` is refused). `pivot: { trade: true }` offers the kind's `columns:` as the fields. `false` (or no
-entry) offers nothing.
+The value is the same as a Sutra's [`pivot` option](RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder), with one difference:
+fields are **document paths** (`INDEX.NAME`; `$.` may be written), never expressions (`bind` is refused). `pivot: { trade: true }` offers
+the kind's `columns:` as the fields. `false` (or no entry) offers nothing. The arrangement is the view the pivot screen opens with.
 
-Unlike a panel's pivot, which the browser computes from one document's rows, a search's pivot is computed **on the
-server** over every entity the search matches on the business date (not only the page shown), from the day's
-**columns**: the fields its store keeps beside each document ([Large kinds](#large-kinds-the-lake-layout)). So choose
-fields the connector's `layout.<kind>.columns` lists; the trading pack's pivot fields are all among its trade tables'
-columns. A field that no source keeps as a column is marked *doc* in the field list; using it, the server refuses with the reason
-and the user may ask for a **document read** instead (at most `drishti.pivot.document-scan`, 20,000 documents; marked
-partial beyond). The sample data (the demo plugin) keeps no columns, so on samples every search pivot is a document
-read.
-
-Fields the user's role may not see are masked exactly as in a search: grouped under `•••`, never added up.
+The pivot is computed by the server's pivot engine over every row of the kind on the business date (not only the page shown), as the
+Data view reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
+the connector keeps ([Large kinds](#large-kinds-the-lake-layout)). So choose fields the connector's `layout.<kind>.columns` lists. Fields the
+user's role may not see are not read at all: they are not offered and cannot be grouped, summed or filtered.
 
 The server keeps each kind's declaration as `drishti.search.pivot.<kind>`: `true`, or the mapping as JSON. A site may
 set it directly in its configuration, as `true` or a JSON string (`drishti.search.pivot.trade: '{"rows": ["PRODUCT_TYPE"]}'`). A
-declaration the server cannot read is logged (*no Pivot tab for trade: …*) and that kind offers no Pivot tab; a value
+declaration the server cannot read is logged (*no Pivot for trade: …*) and that kind offers no Pivot; a value
 that is neither `true`, `false` nor a mapping stops the pack from loading. In a generated pack, set it in the
 generator: `PIVOTS` in `tools/packgen/banking/make_packs.py`.
 
@@ -1738,7 +1730,7 @@ You should see two columns, *Leg 1 · FIXED* and *Leg 2 · FLOAT*: the first wit
 available*: a fixed leg has none) and 7 flows; the second with its notional line, the AONIA fixings known so far, and 28 flows, each
 opening (▸) to its two resets. `children` makes a table a tree: a row whose `@.RESETS` is a list gets a ▸ that opens them. A panel
 inside a tab is a `kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`, `line`, `area` or `timeline`, needs an `id`, and
-cannot have `span`, `height` or a Pivot tab. [Panels inside a tab](/help/rachana-reference#panels-inside-a-tab) lists the rules.
+cannot have `span`, `height` or Pivot. [Panels inside a tab](/help/rachana-reference#panels-inside-a-tab) lists the rules.
 
 ##### 6. A whole Sutra over a nested trade
 
@@ -3533,7 +3525,7 @@ product and sub type they book).
 **Pages over many trades** (derived kinds, rebuilt from the trades of every system by the `trade-pages` connector when a load
 changes the data; kept on disk, `store: disk`, so they are complete at any number of trades and served at once after a restart):
 `CTRD <counterparty>`, `PTRD <book>`, `LTRD <legal entity>`, `ITRD <index>`. Each shows the live trades (at most 1,000 listed; the
-count and every total cover all of them; with a Pivot tab by product and system), payments in the next 7, 30 and 90 days (over every
+count and every total cover all of them; with Pivot by product and system), payments in the next 7, 30 and 90 days (over every
 trade) and the upcoming ones listed, notional by product type (a donut), by index, the
 maturity ladder by year and payments by month. On the demo lakes the pack overview (`TRDS <GO>`) counts 15,000 trades, 24
 counterparties, 30 portfolios, 4 legal entities and 57 indexes.

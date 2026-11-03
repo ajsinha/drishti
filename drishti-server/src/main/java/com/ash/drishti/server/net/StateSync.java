@@ -51,7 +51,7 @@ public final class StateSync implements AutoCloseable {
 
     private static final Logger LOG = LoggerFactory.getLogger(StateSync.class);
     /** The namespaces copied: what follows a user, not what acts. */
-    public static final Set<String> NAMESPACES = Set.of("settings", "layouts", "pivots", "workspaces");
+    public static final Set<String> NAMESPACES = Set.of("settings", "layouts", "workspaces");
     private static final int MAX_PENDING = 10_000;
     private static final int BATCH = 200;
 

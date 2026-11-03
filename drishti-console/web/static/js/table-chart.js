@@ -25,6 +25,7 @@
 (function () {
   'use strict';
   function E() { return window.drishtiTableChartEngine; }
+  function PE() { return window.drishtiPivotEngine || (window.drishtiModules || {}).pivotEngine; }
   var MEMO = {};                                      // identity -> the settings a reader chose, for the tab's life
   var TYPES = [['line', 'Line', 'graph-up'], ['bar', 'Bar', 'bar-chart'], ['area', 'Area', 'graph-up-arrow'], ['pie', 'Pie', 'pie-chart'],
     ['scatter', 'Scatter', 'dot'], ['combo', 'Combo', 'bar-chart-line']];
@@ -136,9 +137,8 @@
       self.notes = d.notes || [];
       self.settings = d.settings;
       self.renderPane();
-      self.draw();
       self.focusType();
-      self.say(self.sum.textContent + ' Settings on the right.');
+      return self.draw().then(function () { self.say(self.sum.textContent + ' Settings on the right.'); });
     }).catch(function (err) {
       self.status.textContent = '';
       self.message('The rows could not be read: ' + (err && err.message ? err.message : err), true);
@@ -303,8 +303,8 @@
       this.scope = 'shown'; this.allData = null; this.draw();
       if (this.src.all && !this.allBtn.disabled) { this.toggleAll(); return; }
     }
-    this.draw();
-    this.say(words || this.sum.textContent);
+    var self = this;
+    this.draw().then(function () { self.say(words || self.sum.textContent); });
   };
   Dialog.prototype.setType = function (type) {
     var self = this, used = {};
@@ -356,19 +356,46 @@
     if (this.src.identity) { delete MEMO[this.src.identity]; }
     if (!this.defaults) { return; }
     this.settings = E().defaults(this.cols, {}).settings;
-    this.renderPane(); this.draw(); this.say('Back to the defaults. ' + this.sum.textContent);
+    var self = this;
+    this.renderPane(); this.draw().then(function () { self.say('Back to the defaults. ' + self.sum.textContent); });
   };
 
   // ---- drawing -------------------------------------------------------------------------------------------------------------------
+  /**
+   * The drawn model, as a promise: every figure from the pivot engine (the server's every-row cube for Chart all, else the shown rows
+   * aggregated by POST /api/pivot/inline). The last answer is kept per settings, so a theme change or a resize never asks again.
+   */
   Dialog.prototype.model = function () {
-    var s = this.settings, all = this.scope === 'all' ? this.allData : null;
-    if (all && all.cube) { return E().fromCube(all.cube, s, this.cols, {}); }
-    return E().build(all && all.records ? all.records : this.data, this.cols, s, {});
+    var self = this, s = this.settings, all = this.scope === 'all' ? this.allData : null;
+    if (all && all.cube) { return Promise.resolve().then(function () { return E().fromCube(all.cube, s, self.cols, {}); }); }
+    var recs = all && all.records ? all.records : this.data, key = JSON.stringify([this.scope, s]);
+    if (this.memo && this.memo.key === key && this.memo.recs === recs) { return this.memo.model; }
+    var model = Promise.resolve().then(function () {
+      var p = E().plan(recs, self.cols, s, {});
+      if (p.model) { return p.model; }
+      if (!p.prep.records.rows.length) { return E().finish(p, { rowKeys: [], columnKeys: [], cells: {} }, s, self.cols, {}); }
+      return PE().inline(p.prep.records, p.arrangement, self.opts.fetchJson).then(function (c) { return E().finish(p, c, s, self.cols, {}); });
+    });
+    this.memo = { key: key, recs: recs, model: model };
+    model.catch(function () { if (self.memo && self.memo.model === model) { self.memo = null; } });
+    return model;
   };
+  /** Draws the chart (or its table) once the engine answers; a newer draw wins over an older answer. Returns a promise. */
   Dialog.prototype.draw = function () {
-    if (!this.settings || this.closed) { return; }
-    var self = this, s = this.settings, m;
-    try { m = this.model(); } catch (err) { this.message('This chart cannot be drawn: ' + err.message, true); return; }
+    if (!this.settings || this.closed) { return Promise.resolve(); }
+    var self = this, seq = this.seq = (this.seq || 0) + 1;
+    this.dlg.setAttribute('aria-busy', 'true');                          // the engine is answering; cleared when this draw is the last
+    var done = function () { if (seq === self.seq) { self.dlg.removeAttribute('aria-busy'); } };
+    return this.model().then(function (m) {
+      if (seq === self.seq && !self.closed) { self.paint(m); }
+      done();
+    }, function (err) {
+      if (seq === self.seq && !self.closed) { self.message('This chart cannot be drawn: ' + (err && err.message ? err.message : err), true); }
+      done();
+    });
+  };
+  Dialog.prototype.paint = function (m) {
+    var self = this, s = this.settings;
     this.last = m;
     var shown = this.scope === 'all' ? (this.allData && this.allData.records ? this.allData.records.rows.length : m.rows) : this.src.shown;
     var info = { shown: shown, total: this.src.total, filters: this.src.filters };
@@ -418,22 +445,22 @@
     bits = bits.concat(this.notes || [], m.notes || []);
     if (m.moreRows) { bits.push('more X values than a chart holds: the first ' + group(m.x.length)); }
     this.status.textContent = bits.join(' · ');
-    var can = src.all && src.total != null && src.total > src.shown, why = can && src.allFor ? src.allFor(this.settings) : null;
+    var can = src.all && (src.everyRow || src.total != null && src.total > src.shown), why = can && src.allFor ? src.allFor(this.settings) : null;
     this.allBtn.hidden = !can;
     this.allBtn.disabled = !!why && this.scope !== 'all';
     this.allBtn.title = why || '';
-    this.allBtn.textContent = this.scope === 'all' ? 'Chart the shown rows' : 'Chart all ' + group(src.total) + ' rows';
+    this.allBtn.textContent = this.scope === 'all' ? 'Chart the shown rows' : src.everyRow ? 'Chart every row' : 'Chart all ' + group(src.total) + ' rows';
   };
   Dialog.prototype.toggleAll = function () {
     var self = this;
-    if (this.scope === 'all') { this.scope = 'shown'; this.allData = null; this.draw(); this.say(this.sum.textContent); return; }
+    if (this.scope === 'all') { this.scope = 'shown'; this.allData = null; this.draw().then(function () { self.say(self.sum.textContent); }); return; }
     if (!this.src.all || this.allBtn.disabled) { return; }
-    this.status.textContent = (this.src.kind === 'search' ? 'Aggregating every match on the server…' : 'Reading ' + group(this.src.total) + ' rows…');
+    this.status.textContent = this.src.kind === 'search' ? 'Aggregating every match on the server…' : this.src.everyRow ? 'Aggregating every row on the server…' : 'Reading ' + group(this.src.total) + ' rows…';
     this.allBtn.disabled = true;
     var arr = E().toArrangement(this.settings, null).arrangement;
     Promise.resolve(this.src.all(this.settings, arr)).then(function (ans) {
       self.allData = ans; self.scope = 'all'; self.allBtn.disabled = false;
-      self.draw(); self.say(self.sum.textContent);
+      self.draw().then(function () { self.say(self.sum.textContent); });
     }, function (err) {
       self.allBtn.disabled = false; self.draw();
       self.status.textContent += ' · Chart all failed: ' + (err && err.message ? err.message : err);
@@ -459,8 +486,8 @@
     this.tableBox.hidden = this.view !== 'table';
     this.tableBtn.setAttribute('aria-pressed', this.view === 'table' ? 'true' : 'false');
     this.tableBtn.lastChild.textContent = this.view === 'table' ? ' View as chart' : ' View as table';
-    this.draw();
-    this.say(this.view === 'table' ? 'The chart’s data as a table.' : 'The chart.');
+    var self = this;
+    this.draw().then(function () { self.say(self.view === 'table' ? 'The chart’s data as a table.' : 'The chart.'); });
   };
 
   // ---- the chart from the keyboard -----------------------------------------------------------------------------------------------
@@ -546,7 +573,7 @@
     }, function () { self.status.textContent += ' · Export failed: the console could not be reached'; });
   };
 
-  /** Opens the chart of a source (table-chart-sources.js). options: opener (focus returns there), root, exports (false: none). */
+  /** Opens the chart of a source (table-chart-sources.js). options: opener (focus returns there), root, exports (false: none), fetchJson (the pivot engine's calls). */
   function open(source, options) {
     if (current) { current.close(); }
     current = new Dialog(source, options);

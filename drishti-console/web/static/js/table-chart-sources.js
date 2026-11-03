@@ -17,8 +17,9 @@
    dialog (table-chart.js), which never looks at a table's DOM itself. Every adapter answers the same small interface:
    {identity, title, context, filters, shown, total, approximate, rows() -> Promise<{fields, rows}>, all(settings) -> Promise|null}.
    - search: a search's results and pick lists, from the raw values search.html writes in data-chart-rows (the shown page); every
-     match through the search pivot (/api/pivot/search/{kind}) when the kind's pack says pivot: and the chart's fields are its fields.
-   - records: a Sutra table whose panel offers a Pivot tab: its raw rows from /api/pivot/records/... (all of them on Chart all N).
+     match aggregated by the pivot engine (/api/pivot/query on the kind) when the kind's pack says pivot: and the chart's fields are its fields.
+   - records: a Sutra table whose panel offers Pivot: the shown cells, and every row of the panel aggregated by the pivot engine
+     (/api/pivot/query on the panel's source) on Chart all N.
    - history: an entity over time, from the raw values history.html writes in data-hx-chart.
    - bi: a BI table or matrix visual, from its last answer (columns with type and masked, rows).
    - dom: any other table, from the cells' text through colfilter.js's parser (1.5m -> 1,500,000): figures as displayed.
@@ -103,32 +104,33 @@
     return (fields || []).map(function (f, i) { return Object.assign({}, f, { name: names[i], path: f.name }); });
   }
 
-  // ---- records: a Sutra table that offers a Pivot tab ----------------------------------------------------------------------------
-  function records(t, o, view, panelId, fetchJson) {
-    var base = dom(t, o), cache = null;
-    var url = '/api/pivot/records/' + encodeURIComponent(view.getAttribute('data-kind')) + '/' + encodeURIComponent(view.getAttribute('data-id')) + '/' + encodeURIComponent(panelId);
-    function read() {
-      if (!cache) {
-        cache = fetchJson(url).then(function (b) {
-          if (!b || !Array.isArray(b.rows)) { throw new Error((b && (b.detail || b.message)) || 'The panel’s rows could not be read'); }
-          return b;
+  // ---- the pivot engine: every row aggregated by the server, as the cube the chart engine draws (pivot-engine.js) -----------------
+  function engineCube(source, arrangement, field, fetchJson) {
+    var PE = window.drishtiPivotEngine || (window.drishtiModules || {}).pivotEngine;
+    return PE.query(source, arrangement, field, fetchJson).then(function (cube) { return { cube: cube }; });
+  }
+
+  // ---- records: a Sutra table that offers Pivot ------------------------------------------------------------------------------------
+  function records(t, o, view, source, fetchJson) {
+    var base = dom(t, o), fields = null;
+    function catalogue() {
+      if (!fields) {
+        fields = fetchJson('/api/pivot/catalogue?source=' + encodeURIComponent(source)).then(function (c) {
+          var byLabel = {};
+          (c.fields || []).forEach(function (f) { byLabel[norm(f.label)] = f.name; byLabel[norm(f.name)] = f.name; });
+          return byLabel;
         });
-        cache.catch(function () { cache = null; });
+        fields.catch(function () { fields = null; });
       }
-      return cache;
+      return fields;
     }
     var src = Object.assign({}, base, {
-      kind: 'records', identity: 'panel:' + (view.getAttribute('data-sutra') || view.getAttribute('data-kind')) + '/' + panelId, approximate: !!o.filtered,
+      kind: 'records', identity: source, approximate: !!o.filtered, everyRow: !o.filtered,     // the panel may hold more rows than the table shows
       context: { kind: view.getAttribute('data-kind'), id: view.getAttribute('data-id'), asOf: view.getAttribute('data-page-asof') || null },
-      rows: function () {
-        if (o.filtered) { return base.rows(); }                   // the reader's filters are on the cells: chart what the table counts
-        return read().then(function (b) {
-          src.total = b.total != null ? b.total : b.rows.length;
-          return { fields: byLabel(b.fields), rows: b.rows.slice(0, Math.max(base.shown, 0)), truncated: false };
-        }, function () { src.approximate = true; return base.rows(); });
-      },
-      all: o.filtered ? null : function () {
-        return read().then(function (b) { return { records: { fields: byLabel(b.fields), rows: b.rows, total: b.total, truncated: !!b.truncated } }; });
+      all: o.filtered ? null : function (settings, arrangement) {
+        return catalogue().then(function (names) {
+          return engineCube(source, arrangement, function (n) { return names[norm(n)] || null; }, fetchJson);
+        });
       }
     });
     return src;
@@ -154,7 +156,7 @@
       kind: 'search', identity: data.kind ? 'search:' + data.kind : null, title: o.title || ('Search: ' + (data.q || '')), context: { kind: data.kind || null },
       filters: filterWords(o.filtered), shown: visible().length, total: data.matched != null ? data.matched : rows.length, approximate: false,
       rows: function () { var idx = visible(); return Promise.resolve({ fields: fields, rows: idx.map(function (i) { return rows[i]; }) }); },
-      /** Every match on the business date, aggregated by the search pivot (the pack's pivot: is its consent); null when it cannot. */
+      /** Every match on the business date, aggregated by the pivot engine (the pack's pivot: is its consent); null when it cannot. */
       allFor: function (settings) {
         if (!data.pivot || !data.kind || o.filtered) { return 'Charting every match needs the pack’s pivot:'; }
         if (settings.type === 'scatter' && (settings.series[0] || {}).agg === 'none') { return 'A scatter of points charts the shown rows only'; }
@@ -168,12 +170,7 @@
         return null;
       },
       all: !data.pivot || !data.kind ? null : function (settings, arrangement) {
-        var body = { q: data.q, rows: arrangement.rows.map(asPivot), columns: arrangement.columns.map(asPivot),
-          values: arrangement.values.map(function (v) { return { field: v.field === '·rows' ? asPivot(settings.x.field) : asPivot(v.field), agg: v.field === '·rows' ? 'count' : v.agg }; }), filters: [] };
-        return fetchJson('/api/pivot/search/' + encodeURIComponent(data.kind), { method: 'POST', body: body }).then(function (b) {
-          if (!b || !Array.isArray(b.rowKeys)) { throw new Error((b && (b.detail || b.message)) || 'The search pivot did not answer'); }
-          return { cube: b };
-        });
+        return engineCube(data.kind, arrangement, asPivot, fetchJson);
       }
     };
     return src;
@@ -202,8 +199,9 @@
     var raw = t.getAttribute('data-chart-rows');
     if (raw) { try { return search(t, o, JSON.parse(raw), fetchJson); } catch (e) { /* the page's own data is broken: chart the cells */ } }
     var panel = t.closest('section.pnl[data-panel]'), view = t.closest('.view[data-view]');
-    var host = panel && panel.querySelector('[data-pivot-panel]');
-    if (host && view && panel.querySelectorAll('table.tbl:not([data-plain])').length === 1) { return records(t, o, view, panel.getAttribute('data-panel'), fetchJson); }
+    var link = panel && panel.querySelector('.pv-open a[href*="source=panel"]');
+    var source = link ? new URLSearchParams(link.getAttribute('href').split('?')[1] || '').get('source') : null;
+    if (source && view && panel.querySelectorAll('table.tbl:not([data-plain])').length === 1) { return records(t, o, view, source, fetchJson); }
     return dom(t, o);
   }
 
