@@ -19,7 +19,7 @@
 should have a document with examples". This is the catalogue to review **before** the functions are built: every function Drishti has
 or will have, under its **one** name, with what it means, an example on the demo data's names, its Excel and SAS equivalents, where it
 runs and its status. The design is [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (section 7); when the functions are built this becomes the user's
-guide (Help → Functions, `FUNC`), each example then shown with its real result on the demo lake.*
+guide, each example then shown with its real result on the demo lake.*
 
 **How to read the tables.**
 
@@ -117,7 +117,7 @@ values (bounded by the engine's holistic limits, exact on request, or a sketch w
 | `median(x)`, `percentile(x, p)` | middle, p-quantile (continuous) | `percentile(trades.NOTIONAL, 0.95)` | `MEDIAN`, `PERCENTILE.INC` / `MEDIAN`, `P95` | holistic (sketch: KLL) | built |
 | `mode(x)` | most frequent | `mode($.LEGS[*].CURRENCY)` | `MODE.SNGL` / `MODE` | holistic | T1 |
 | `iqr(x)` | p75 − p25 | `iqr(trades.PRICE)` | `QUARTILE(3)-QUARTILE(1)` / `QRANGE` | holistic | T1 |
-| `variance(x)`, `stddev(x)` (sample; `_pop` for population) | spread | `stddev(trades.PNL)` | `VAR.S`, `STDEV.S` / `VAR`, `STD` | mergeable (moments) | built (engine) |
+| `variance(x)`, `stddev(x)` (sample), `variance_pop(x)`, `stddev_pop(x)` (population) | spread | `stddev(trades.PNL)` | `VAR.S`, `STDEV.S` / `VAR`, `STD` | mergeable (moments) | built (engine) |
 | `stderr(x)`, `cv(x)` | standard error, coefficient of variation | `cv(trades.PNL)` | `STDEV/SQRT(n)` / `STDERR`, `CV` | mergeable | T1 |
 | `skewness(x)`, `kurtosis(x)` | shape | `skewness(trades.PNL)` | `SKEW`, `KURT` / `SKEWNESS`, `KURTOSIS` | mergeable (moments to 4) | T1 |
 | `geomean(x)`, `harmean(x)` | means for rates | `geomean(1 + trades.RETURN) - 1` | `GEOMEAN`, `HARMEAN` / `GEOMEAN`, `HARMEAN` | mergeable (log sum, reciprocal sum) | T1 |
@@ -126,7 +126,7 @@ values (bounded by the engine's holistic limits, exact on request, or a sketch w
 | `slope(y, x)`, `intercept(y, x)`, `rsq(y, x)` | least-squares line | `slope(trades.PNL, trades.QUANTITY)` | `SLOPE`, `INTERCEPT`, `RSQ` / PROC REG | mergeable | T1 |
 | `ratio(num, den)` | num / den, null on 0 | `ratio(sum(trades.PNL), sum(trades.NOTIONAL))` | `IFERROR(a/b, "")` | of its parts | built (DEL) |
 | `sum_once(x)`, `count_once(x)`, `avg_once(x)` | a coarser figure counted once per parent (a trade's in a per-leg view) | `sum_once($.QUANTITY)` beside `count($.LEGS[*])` | none | mergeable by parent id | built (engine) |
-| `group(list, key, [agg])` | grouping inside one document | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` | `GROUPBY` / PROC MEANS `CLASS` | the engine's grouping | built (Rachana, moves to E) |
+| `group(list, key, [agg])` | grouping inside one document | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` | `GROUPBY` / PROC MEANS `CLASS` | the engine's grouping | built (engine: Rachana reads the key and the inputs, the engine groups) |
 
 ## 5. Shares, ranks and windows (over the cells of an answer)
 
@@ -170,8 +170,8 @@ values (bounded by the engine's holistic limits, exact on request, or a sketch w
 | `fx(ccy, to, [at])` | an FX rate | `fx('EUR', 'USD')` | none | R | built (DEL) |
 | `convert(agg, [to], [at])` | an aggregate of many currencies in one | `convert(sum(trades.NOTIONAL), 'USD')` | none | E | built (DEL) |
 | `related(alias.column)` | a column of the row a reference points at | `related(counterparties.RATING)` | `XLOOKUP` / a `MERGE` | E | built (DEL) |
-| `measure(name, [scope], [options])` | a model measure, or a computed measure from its own engine, exactly | `measure('VAR', 'DESK:DESK-COMM')` | none | M | built for model measures (DEL); for engine measures planned (ONE_GRAMMAR part 3) |
-| `cell(view, coordinates)` | a cell of a saved pivot, linked back | `cell('desk-pnl', DESK: 'DESK-COMM', month: '2026-09')` | `GETPIVOTDATA` | E | planned (ONE_GRAMMAR part 3) |
+| `measure(name, [scope], [options])` | a compute engine's measure for one scope, exactly from its engine (never summed); model measures through it with DEL's fold (part 4) | `measure('VAR', 'DESK:DESK-COMM')` | none | M | built (engine, answered by the server's pivot engine for the person; model measures: DEL) |
+| `cell(view, field, member, ...)` | a cell of a saved pivot view, as the view computes it for the person | `cell('owner/desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')` | `GETPIVOTDATA` | E | built (engine, answered by the server's pivot engine) |
 
 ## 8. Finance on given flows (tier 2)
 

@@ -84,6 +84,36 @@ public final class Functions {
     public record Entry(String name, String family, String runs, String source, String args, String form, String description) {}
 
     /**
+     * An expression that is one call of a provided aggregate over expressions of {@code @}, as a Sutra pivot panel's {@code value}
+     * writes it ({@code sum(@.MTM)}, {@code percentile(@.PNL, 0.99)}, {@code count(@)}): the pivot engine aggregates the rows, Rachana
+     * reads each row's input.
+     *
+     * @param name the aggregate's name
+     * @param input the expression read from each row (the call's first argument)
+     * @param options the call's further arguments, each written as a literal ({@code 0.99})
+     */
+    public record AggregateCall(String name, Expr input, List<Object> options) {}
+
+    /**
+     * {@code e} as an aggregate call, or empty when it is not one (a field, a path, a scalar function); a call whose further arguments
+     * are not literals is not one either.
+     */
+    public static java.util.Optional<AggregateCall> aggregateCall(Expr e) {
+        if (!(e instanceof Expr.Call call) || call.args().isEmpty() || "measure".equals(call.name()) || "cell".equals(call.name())
+                || !(Aggregates.EXPECTED.contains(call.name()) || Aggregates.all().containsKey(call.name()))) {
+            return java.util.Optional.empty();
+        }
+        List<Object> options = new java.util.ArrayList<>();
+        for (Expr a : call.args().subList(1, call.args().size())) {
+            if (!(a instanceof Expr.Lit lit)) {
+                return java.util.Optional.empty();
+            }
+            options.add(lit.value());
+        }
+        return java.util.Optional.of(new AggregateCall(call.name(), call.args().get(0), Collections.unmodifiableList(options)));
+    }
+
+    /**
      * Every function of the table under its one name (old spellings left out), in name order: what the generated function catalogue
      * lists. {@code min} and {@code max} are listed once, as the engine's aggregates over one list; {@code group} as the engine's.
      */
@@ -100,6 +130,12 @@ public final class Functions {
                 continue;
             }
             String source = Aggregates.source(name);
+            if ("group".equals(name)) {
+                out.add(new Entry(name, "aggregates", "E", source == null ? "none on the class path" : source, "list, key, [aggregate], [by]",
+                        "the engine's grouping", "one row {label, value, count} per key, the aggregate over each group (sum of a quoted field, "
+                        + "or any aggregate over @)"));
+                continue;
+            }
             out.add(new Entry(name, "aggregates", "E", source == null ? "none on the class path" : source,
                     p == null ? "" : p.args(), p == null ? "" : p.form(), p == null ? "" : p.description()));
         }

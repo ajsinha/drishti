@@ -421,17 +421,45 @@ final class ChartBinder {
     }
 
     /**
+     * The pivot engine's function of a pivot panel's {@code value} written as a Rachana aggregate over the row ({@code sum(@.MTM)},
+     * {@code percentile(@.PNL, 0.99)}; ONE_GRAMMAR.md part 3), over the value column {@code v}; refused in words for an aggregate of
+     * two inputs or of text, which a panel's one value column cannot carry.
+     */
+    private static String measure(com.ash.drishti.rachana.el.Functions.AggregateCall call) {
+        String args = call.options().isEmpty() ? "" : ", " + String.join(", ", call.options().stream().map(String::valueOf).toList());
+        return switch (call.name()) {
+            case "count" -> "sum(v)";                                     // v is 1 for a row whose input is not empty, else 0
+            case "sum", "avg", "min", "max", "median", "percentile", "variance", "stddev", "variance_pop", "stddev_pop" ->
+                    ("variance_pop".equals(call.name()) ? "var_pop" : call.name()) + "(v" + args + ")";
+            default -> throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.EL_EVAL, "a pivot panel's value is "
+                    + "one aggregate of one number per row (sum, count, avg, min, max, median, percentile, variance, stddev); "
+                    + call.name() + " is not (use a table's pivot: for it)");
+        };
+    }
+
+    /** A grouping as its header shows it: a plain path over the row ({@code @.BOOK}, {@code @.LEG.CURRENCY}) by its field; else as written. */
+    static String shown(String spec) {
+        return spec != null && spec.matches("@\\.[A-Za-z_][A-Za-z0-9_.]*") ? spec.substring(2) : spec;
+    }
+
+    /**
      * A pivot panel (Rachana {@code kind: pivot}): its rows grouped by {@code by} (nested when a list) and {@code across}, every cell,
      * subtotal and total computed by the pivot engine (drishti-bicompute; PIVOT_ENGINE.md section 13: nothing else aggregates) over the
-     * rows held in memory, each from its own rows. The groups keep the order the rows first show them; at most {@code pivotColumns}
-     * columns are drawn (the rest still count in the row totals and the grand total) and {@code pivotRows} leaf rows.
+     * rows held in memory, each from its own rows. {@code by}, {@code across} and {@code value} take field names or Rachana paths over
+     * the row ({@code "@.BOOK"}, {@code upper(@.DESK)}); {@code value} may be an aggregate of the engine written in Rachana
+     * ({@code sum(@.MTM)}, {@code percentile(@.PNL, 0.99)}), which then replaces {@code agg}. The groups keep the order the rows first
+     * show them; at most {@code pivotColumns} columns are drawn (the rest still count in the row totals and the grand total) and
+     * {@code pivotRows} leaf rows.
      */
     PanelData pivot(Panel p, BindContext c) {
         DataNode rows = list(p, "rows", c);
         List<String> bys = pivotBy(p);
         String across = p.option("across").orElseThrow();
         String value = p.option("value").orElse(null);
-        String agg = value == null ? "count" : p.option("agg").orElse("sum");
+        com.ash.drishti.rachana.el.Functions.AggregateCall call = value != null && value.indexOf('(') > 0
+                ? com.ash.drishti.rachana.el.Functions.aggregateCall(binder.compile(value)).orElse(null) : null;
+        String agg = call != null ? call.name() : value == null ? "count" : p.option("agg").orElse("sum");
+        String engineFunction = call != null ? measure(call) : measure(agg);
         String fmt = agg.equals("count") ? null : p.option("fmt").orElse(null);
         String tone = p.option("tone").orElse(null);
         boolean heat = Boolean.TRUE.equals(p.options().get("heat"));
@@ -451,7 +479,13 @@ final class ChartBinder {
         boolean masked = false;
         for (int i = 0; i < n; i++) {
             DataNode row = rows.get(i);
-            Object x = value == null ? 1 : field(value, row, i, c);
+            Object x;
+            if (call != null) {
+                Object in = call.input().eval(c.eval().withRow(row, i));
+                x = "count".equals(call.name()) && !Values.masked(in) ? (Values.isNull(in) ? 0 : 1) : in;
+            } else {
+                x = value == null ? 1 : field(value, row, i, c);
+            }
             boolean hidden = Values.masked(x);
             masked |= hidden;
             double v = hidden ? 0 : Values.number(x);         // its group still shows; the values are masked below
@@ -477,7 +511,7 @@ final class ChartBinder {
             r[k + 1] = v;
             data.add(r);
         }
-        Map<String, Map<String, Object>> cells = engineCells(fields, data, k, agg);
+        Map<String, Map<String, Object>> cells = engineCells(fields, data, k, engineFunction);
         List<String> cols = List.copyOf(columns);
         List<PanelData.PivotRow> out = new ArrayList<>();
         double[] range = {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
@@ -492,14 +526,14 @@ final class ChartBinder {
             foot.add(cell(figure(cells, "*", "*"), fmt, tone));
         }
         int more = leaves[1] - leaves[0];
-        List<String> levels = nested ? List.copyOf(bys) : null;
+        List<String> levels = nested ? bys.stream().map(ChartBinder::shown).toList() : null;
         Integer expand = nested ? expandLevels(p) : null;
-        String by = String.join(" › ", bys);
+        String by = String.join(" › ", bys.stream().map(ChartBinder::shown).toList());
         if (masked) {
-            return maskedPivot(by, cols, out, foot, agg, more, levels, expand, nested ? across : null);
+            return maskedPivot(by, cols, out, foot, agg, more, levels, expand, nested ? shown(across) : null);
         }
         return new PanelData.Pivot(by, cols, out, foot, agg, heat, Double.isFinite(range[0]) ? range[0] : null,
-                Double.isFinite(range[1]) ? range[1] : null, more, levels, expand, nested ? across : null);
+                Double.isFinite(range[1]) ? range[1] : null, more, levels, expand, nested ? shown(across) : null);
     }
 
     /** The column of the rows past the drawn columns (never a value a row has: the key text never starts with a NUL). */
@@ -508,7 +542,7 @@ final class ChartBinder {
     /** Every cell, subtotal and total of the rows, by the pivot engine: {@code rowKey|colKey} to the cell's entry. */
     @SuppressWarnings("unchecked")
     private static Map<String, Map<String, Object>> engineCells(List<com.ash.drishti.bicompute.spi.PivotProvider.Field> fields, List<Object[]> data,
-            int k, String agg) {
+            int k, String function) {
         List<Object> rowDims = new ArrayList<>();
         for (int j = 0; j < k; j++) {
             rowDims.add("b" + j);
@@ -517,7 +551,7 @@ final class ChartBinder {
         view.put("source", "panel");
         view.put("rows", rowDims);
         view.put("columns", List.of("x"));
-        view.put("values", List.of(Map.of("measure", measure(agg), "as", "v")));
+        view.put("values", List.of(Map.of("measure", function, "as", "v")));
         view.put("expandTo", Map.of("rows", Math.max(1, k), "columns", 1));
         com.ash.drishti.bicompute.core.PivotCore core = new com.ash.drishti.bicompute.core.PivotCore(
                 List.of(new com.ash.drishti.bicompute.rows.RowsProvider("panel", "panel", fields, data)),

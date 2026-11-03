@@ -81,7 +81,7 @@ public final class EngineFunctions implements FunctionProvider {
         agg(out, "avg_once", 2, 3, "list, field, parentField | xs, parents", "holistic", "the mean over the parents, each once",
                 "avg_once($.LEGS, 'QUANTITY', 'TRADE_ID')");
         out.add(new Provided("measure", 1, 3, "name, [scope], [options]", "measure",
-                "a model measure or a compute engine's measure for one scope, exactly from its engine (never summed)",
+                "a compute engine's measure for one scope (VaR, ES …), exactly from its engine, never summed",
                 "measure('VAR', 'DESK:DESK-COMM')", (a, c) -> measure(a)));
         out.add(new Provided("cell", 1, 33, "view, [field, member] ...", "measure", "a cell of a saved pivot view, as the view computes it",
                 "cell('desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')", (a, c) -> cell(a)));
