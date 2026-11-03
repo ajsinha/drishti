@@ -778,6 +778,15 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 | 6 | The benchmark: Java 21, Java 25 `off`, Java 25 `auto` | the gain of the JVM and of the accelerated paths, separately, in BENCHMARK.md |
 | 7 | **The VaR heap a date, the rest (from 2.9.9; moved from the oversight release by the product owner, 2026-11-01)** | hot-file format 3: per-currency totals (`CTOT`) mapped, per-book sums spilled and node sums streamed at build; columns, ids, `IdIndex` and string tables mapped (F3 to F5 of the investigation); vector kinds out of type-ahead (G2); footers left uncached on the bulk vector read; Admin → VaR (pinned dates, open dates, refusals), mock-ups first | One hot-file format change together with the `MemorySegment` reads of row 1 |
 
+## Database-driven roles and access (proposed; product owner 2026-11-02; after the counterparty engines)
+
+*A release of its own after 2.9.12, before or as 2.9.14 is scheduled (placement to confirm).* Fine-grained roles and access held in the
+Drishti database (SQLite by default on one server, PostgreSQL for a cluster, per the database rules: two complete schema files, no
+migrations): roles, permissions per engine, command word, pack, kind, page, API path and action (read, run, save, approve, administer),
+row rules and column masks by role, groups and role inheritance, time-bound grants, an administrator screen to edit them (mock-ups first),
+an audit of every change, the API and CLI, and today's configuration-file roles moved in once (one place, no dual machinery). The engine
+switches decide what runs on a server; roles decide who may use it: the Engines menu, commands, Help and API all follow both.
+
 ## 2.9.14: oversight (proposed)
 
 | # | Part | What |
