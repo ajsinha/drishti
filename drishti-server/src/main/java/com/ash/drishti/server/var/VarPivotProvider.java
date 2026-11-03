@@ -231,11 +231,13 @@ public final class VarPivotProvider implements PivotProvider {
             for (String l : VarPivotCodes.levels(book)) {
                 out.put(l, "hierarchy");
             }
-            out.put(VarPivotCodes.RISK_CLASS, "string");
         }
         Columns pc = book.positions();
         if (!o.base.view().seesPositions(o.base.set())) {
-            return out;
+            return out;                                                   // aggregate only: a rule over positions would probe them
+        }
+        if (mr()) {
+            out.put(VarPivotCodes.RISK_CLASS, "string");
         }
         for (String c : pc == null ? List.<String>of() : pc.textColumns()) {
             if (!svc.access().masked(o.p, c)) {
@@ -265,7 +267,7 @@ public final class VarPivotProvider implements PivotProvider {
         notes.put("scenarios", o.book.width() + " scenarios, set " + o.book.scenarioSet());
         notes.put("hidden", o.base.hidden() == 0 ? "none" : o.base.hidden() + " trade(s) not visible to you are left out of every cell");
         if (!o.base.view().seesPositions(o.base.set())) {
-            notes.put("aggregate", mr() ? "your role sees the bank in aggregate only: pivot it by hierarchy levels and the risk class"
+            notes.put("aggregate", mr() ? "your role sees the bank in aggregate only: pivot it by hierarchy levels"
                     : "your role sees the bank in aggregate only: no dimension is offered (hierarchy levels come with the MR cube)");
         }
         if (mr()) {
@@ -487,7 +489,7 @@ public final class VarPivotProvider implements PivotProvider {
             }
             if (!o.base.view().seesPositions(o.base.set())) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, "your role sees " + o.base.res().canonical() + " in aggregate only: pivot it by "
-                        + "hierarchy levels and the risk class, not by " + d + ", which would name positions or trades");
+                        + "hierarchy levels, not by " + d + ", which would name positions or trades");
             }
             if (svc.access().masked(o.p, d)) {
                 throw new DrishtiException(ErrorCode.PIVOT_MASKED, d + " is masked for your role: the VaR source does not pivot by it");

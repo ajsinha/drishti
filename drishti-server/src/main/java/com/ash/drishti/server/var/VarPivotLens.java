@@ -17,7 +17,6 @@ package com.ash.drishti.server.var;
 
 import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.common.DrishtiException;
-import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.compute.frtb.FrtbChoices;
 import com.ash.drishti.compute.var.Columns;
 import com.ash.drishti.compute.var.VarBook;
