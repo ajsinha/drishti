@@ -1,0 +1,97 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+# Hand-written (docs/guides/FVA_GUIDE.md section 6.1): the computed kind fva-result, a scope's FVA answered by the server's FVA engine (the
+# reactive connector fva-engine) when the page opens, never stored. The FVA screen (FVA <scope> <GO>) is the main screen; this page is the kind.
+rachana: 1
+sutra: fva-result
+version: 1
+description: "The funding cost and benefit (FCA, FBA, FVA) of any counterparty scope, computed from the exposure engine's profile."
+doc:
+  summary: "FVA of a scope as a kind, computed when asked."
+  description: >-
+    One page per scope: the strip gives FVA, FCA, FBA, EPE over the life, the funding spread and the run; the terms by future date (the
+    funding cost below the line, the benefit above); the netting sets of a counterparty or larger scope sorted by FVA; how the figures
+    were made. CVA is planned.
+  params: {}
+  emits: []
+  expects: []
+  examples:
+    - "/v/fva-result/NSET:NS-ALDERSHOT-FRA"
+    - "FVAR NSET:NS-ALDERSHOT-FRA"
+    - "FVAR CPTY:CP-ALDERSHOT"
+  since: "2.9.12"
+match: { kind: fva-result, priority: 10 }
+title: { pill: Exposure and capital · FVA (computed), id: $.SCOPE }
+strip:
+  - { label: FVA, bind: $.FVA, fmt: signed0, tone: sign, emphasis: true }
+  - { label: FCA (funding cost), bind: $.FCA, fmt: signed0, tone: sign }
+  - { label: FBA (funding benefit), bind: $.FBA, fmt: signed0, tone: sign }
+  - { label: EPE over the life, bind: $.EPE_LIFE, fmt: compact }
+  - { label: Funding spread, bind: $.FUNDING_SPREAD }
+  - { label: CVA, bind: $.CVA_STATUS }
+  - { label: Run, bind: $.RUN_ID }
+  - { label: Status, bind: $.STATUS, tone: status }
+panels:
+  - id: terms
+    kind: area
+    title: "FVA by future date: the funding cost (FCA) and benefit (FBA) of each period, discounted (USD)"
+    key: F2
+    rows: $.TERMS
+    x: TENOR
+    series:
+      - { label: FCA (funding cost), value: FCA, tone: sign }
+      - { label: FBA (funding benefit), value: FBA, tone: pos }
+  - id: dates
+    kind: table
+    title: By primary date
+    key: F3
+    rows: $.TERMS
+    columns:
+      - { label: Tenor, bind: "@.TENOR" }
+      - { label: Date, bind: "@.DATE", fmt: date }
+      - { label: DF, bind: "@.DF", fmt: price4 }
+      - { label: Borrowing spread, bind: "@.SB", fmt: pct2 }
+      - { label: EE, bind: "@.EE", fmt: compact }
+      - { label: ENE, bind: "@.ENE", fmt: compact }
+      - { label: FCA, bind: "@.FCA", fmt: signed0, total: true }
+      - { label: FBA, bind: "@.FBA", fmt: signed0, total: true }
+  - id: sets
+    kind: table
+    title: Netting sets, the costliest first
+    when: "size($.BY_NETTING_SET) > 1"          # a single netting set's answer lists only itself
+    key: F4
+    rows: $.BY_NETTING_SET
+    columns:
+      - { label: Netting set, bind: "@.NETTING_SET", link: true }
+      - { label: Counterparty, bind: "@.NAME" }
+      - { label: CSA, bind: "@.CSA" }
+      - { label: FCA, bind: "@.FCA", fmt: signed0, total: true }
+      - { label: FBA, bind: "@.FBA", fmt: signed0, total: true }
+      - { label: FVA, bind: "@.FVA", fmt: signed0, total: true }
+  - id: how
+    kind: kv
+    title: How it was computed
+    area: right
+    columns:
+      - { label: Scope, bind: $.SCOPE }
+      - { label: Kind, bind: $.SCOPE_KIND }
+      - { label: Business date, bind: $.BUSINESS_DATE, fmt: date }
+      - { label: Calibration, bind: $.CALIBRATION }
+      - { label: EE point, bind: $.EE_POINT }
+      - { label: Survival weighting, bind: $.FUNDING_SURVIVAL }
+      - { label: FBA, bind: $.FBA_ON }
+      - { label: Netting sets, bind: $.NETTING_SETS, fmt: amount0 }
+      - { label: Flags, bind: $.FLAGS }
+  - { use: data-provenance@1 }
+keys: { F9: raw }

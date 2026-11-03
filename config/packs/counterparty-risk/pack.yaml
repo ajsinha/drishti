@@ -35,6 +35,7 @@ kinds:
 - exposure-path
 - exposure-result
 - exposure-whatif
+- fva-result
 - exposure-official-cpty
 - nset-mtm
 - cpty-mtm
@@ -80,6 +81,9 @@ mnemonics:
   XWIF:
     kind: exposure-whatif
     label: Exposure what-if before dealing (computed, Python)
+  FVAR:
+    kind: fva-result
+    label: FVA of a scope (computed)
   XOFC:
     kind: exposure-official-cpty
     label: Exposure official results by netting set and counterparty (published)
@@ -432,6 +436,73 @@ connectors:
       timeout: 60s
       wait: 5s
       max-inflight-per-user: 4
+  fva-engine:
+    plugin: reactive
+    mode: reactive
+    enabled: ${DRISHTI_FVA_ENABLED:true}
+    description: 'FVA (FCA + FBA) of any counterparty scope, computed when asked by the server''s FVA engine from the exposure engine''s EE and
+      ENE profile, the funding spread and the discount curve, as the viewer: FVAR <scope> <GO> (docs/guides/FVA_GUIDE.md)'
+    kinds:
+      fva-result:
+        compute: fva-result
+        params:
+          eePoint:
+            type: enum
+            options:
+            - end
+            - mid
+            default: end
+          fba:
+            type: enum
+            options:
+            - 'on'
+            - 'off'
+            default: 'on'
+          survival:
+            type: enum
+            options:
+            - 'on'
+            - 'off'
+            default: 'off'
+          spread:
+            type: text
+            default: ''
+        result:
+          required:
+          - SCOPE
+          - STATUS
+          - FVA
+          types:
+            FVA: number
+            FCA: number
+            FBA: number
+    engine:
+      type: java
+      class: com.ash.drishti.server.exposure.FvaResultEngine
+      version: '1.0'
+    triggers:
+    - 'on': data-version
+      kinds:
+      - simulation-run
+      - exposure-path
+      - netting-set
+      - csa
+      - collateral-balance
+      - trade-valuation
+      - credit-limit
+      - ir-curve
+      - credit-curve
+      affects: all
+    coalesce:
+      quiet: 1s
+      max-wait: 10s
+    cache:
+      results: 1000
+      ttl: 1h
+    limits:
+      timeout: 60s
+      wait: 5s
+      max-inflight-per-user: 4
   exposure-whatif:
     plugin: reactive
     mode: reactive
@@ -515,6 +586,7 @@ routes:
   exposure-path: exposure-store
   exposure-result: exposure-engine
   exposure-whatif: exposure-whatif
+  fva-result: fva-engine
   exposure-official-cpty: exposure-results
   nset-mtm: ccr-derived
   cpty-mtm: ccr-derived
@@ -795,6 +867,8 @@ console:
     - Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths
   - - EXP CPTY:CP-ALDERSHOT
     - A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)
+  - - FVAR NSET:NS-ALDERSHOT-FRA
+    - 'FVA of a netting set as a kind · FCA, FBA and FVA with the terms by date (the FVA screen: FVA NSET:…)'
   help: config/help.yaml
 python:
   enabled: true

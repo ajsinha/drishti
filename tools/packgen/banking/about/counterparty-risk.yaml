@@ -104,6 +104,17 @@ kinds:
         unit: "USD"
         sign: "Never negative."
       FVA_ENGINE.STATUS: { term: "FVA status", means: "Whether the FVA engine computed the figures: ok, or unavailable with the reason." }
+      FVA_ENGINE.CVA_STATUS: { term: "CVA (computed)", means: "planned: the CVA family joins the FVA engine later, on the same EE profile; the stored CVA is shown beside." }
+      FVA_ENGINE.FUNDING_CURVE: { term: "Funding curve", means: "The curve (or flat spread) of the bank's borrowing spread over OIS that priced the funding cost." }
+      FVA_ENGINE.TERMS.TENOR: { term: "Tenor", means: "The future date of the exposure run's grid, as a tenor from the business date." }
+      FVA_ENGINE.TERMS.FCA:
+        term: "FCA term"
+        means: "The period's funding cost: −EE × DF × borrowing spread × the period's length."
+        unit: "USD"
+      FVA_ENGINE.TERMS.FBA:
+        term: "FBA term"
+        means: "The period's funding benefit: |ENE| × DF × lending spread × the period's length."
+        unit: "USD"
       LIMIT: { term: "Credit limit", means: "The limit on the counterparty's peak potential future exposure approved for this netting set.", unit: "USD" }
       CVA:
         term: "Credit valuation adjustment"
@@ -190,6 +201,27 @@ kinds:
       BY_NETTING_SET.PFE_CONTRIBUTION: { term: "PFE contribution", means: "The netting set's share of the scope's peak PFE: its mean exposure on the paths around the quantile at the peak date, scaled so the shares add up to the peak.", unit: "USD" }
     panels:
       profile: { about: "The expected exposure and the 95% and 99% potential future exposure at each primary date, computed from the simulated paths after netting and collateral." }
+  fva-result:
+    title: FVA of a scope
+    about: >-
+      ${$.LABEL} on ${$.BUSINESS_DATE}: funding valuation adjustment ${fmt($.FVA, 'signed0')} USD, the funding cost
+      ${fmt($.FCA, 'signed0')} on the expected exposure and the benefit ${fmt($.FBA, 'signed0')} on the expected negative exposure, by the
+      funding spread ${$.FUNDING_SPREAD}, computed by the FVA engine from the exposure engine's profile of run ${$.RUN_ID} when asked, never
+      stored.
+    guide: counterparty-risk
+    glossary:
+      SCOPE: { term: "Scope", means: "What FVA is computed for, in the exposure engine's scope grammar: a netting set (NSET:), a counterparty (CPTY:), a group (GROUP:), a legal entity (LE:), the bank (BANK)." }
+      STATUS: { term: "Status", means: "ok when computed; a run that is not risk-neutral is refused or flagged REAL_WORLD_RUN by the setting." }
+      FVA: { term: "Funding valuation adjustment (FVA)", means: "FCA + FBA: the funding cost and benefit of the scope over its life; adds over netting sets.", unit: "USD", sign: "Negative is a cost." }
+      FCA: { term: "Funding cost adjustment (FCA)", means: "The cost of funding the expected positive exposure at the bank's borrowing spread, period by period, discounted.", unit: "USD", sign: "Never positive." }
+      FBA: { term: "Funding benefit adjustment (FBA)", means: "The benefit of the expected negative exposure at the bank's lending spread, discounted.", unit: "USD", sign: "Never negative." }
+      EPE_LIFE: { term: "EPE over the life", means: "The expected exposure averaged over the whole life of the scope (FCA = −spread × life × EPE over the life, before discounting).", unit: "USD" }
+      FUNDING_SPREAD: { term: "Funding spread", means: "The curve (or flat spread) of the bank's borrowing spread over OIS that priced the funding cost." }
+      CVA_STATUS: { term: "CVA (computed)", means: "planned: the CVA family joins the FVA engine later, on the same EE profile." }
+      RUN_ID: { term: "Simulation run", means: "The upstream exposure simulation the profile is computed from." }
+      TERMS.TENOR: { term: "Future date", means: "A primary date of the run's grid, labelled by the nearest standard tenor." }
+      TERMS.FCA: { term: "FCA term", means: "The period's funding cost: −EE × DF × borrowing spread × the period's length.", unit: "USD" }
+      TERMS.FBA: { term: "FBA term", means: "The period's funding benefit: |ENE| × DF × lending spread × the period's length.", unit: "USD" }
   exposure-whatif:
     title: Exposure what-if before dealing
     about: >-

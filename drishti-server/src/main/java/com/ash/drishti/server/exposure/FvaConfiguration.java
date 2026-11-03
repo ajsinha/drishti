@@ -31,7 +31,9 @@ public class FvaConfiguration {
 
     @Bean
     FvaService fvaService(ExposureService exposure, FvaProperties props) {
-        return new FvaService(exposure, props);
+        FvaService svc = new FvaService(exposure, props);
+        FvaResultEngine.install(svc);                                  // the computed kind fva-result (the reactive connector fva-engine)
+        return svc;
     }
 
     /** FVA's figures on the netting-set and counterparty pages (the decided mock-up A), after the exposure engine's. */

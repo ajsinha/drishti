@@ -34,6 +34,7 @@ kinds:
 - exposure-path
 - exposure-result
 - exposure-whatif
+- fva-result
 - exposure-official-cpty
 - nset-mtm
 - cpty-mtm
@@ -51,6 +52,7 @@ commands:
   XPATH: exposure-path
   EXP: exposure-result
   XWIF: exposure-whatif
+  FVAR: fva-result
   XOFC: exposure-official-cpty
   NSMTM: nset-mtm
   CPMTM: cpty-mtm
@@ -66,6 +68,7 @@ depends-on:
   - exposure-results
   - exposure-store
   - exposure-whatif
+  - fva-engine
   - legal-store
   plugins:
   - delta
@@ -75,6 +78,7 @@ depends-on:
   - DRISHTI_CCR_DERIVED_ENABLED
   - DRISHTI_DELTA_ROOT
   - DRISHTI_EXPOSURE_ENABLED
+  - DRISHTI_FVA_ENABLED
   - DRISHTI_LAKE_ENABLED
 sources:
 - name: Synthetic sample data (tools/packgen/banking)
@@ -517,6 +521,52 @@ About: Exposure what-if before dealing.
 
 No samples ship: documents are read live from its connector `exposure-whatif` (plugin `reactive`).
 
+### `fva-result`
+
+**FVA of a scope (computed)** · mnemonic `FVAR` · read through connector `fva-engine`.
+
+About: FVA of a scope.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `fva-engine` (plugin `reactive`). The fields its screens show:
+
+| Field | Shown as |
+|---|---|
+| `BUSINESS_DATE` | Business date |
+| `BY_NETTING_SET[].CSA` | CSA |
+| `BY_NETTING_SET[].FBA` | FBA |
+| `BY_NETTING_SET[].FCA` | FCA |
+| `BY_NETTING_SET[].FVA` | FVA |
+| `BY_NETTING_SET[].NAME` | Counterparty |
+| `BY_NETTING_SET[].NETTING_SET` | Netting set |
+| `CALIBRATION` | Calibration |
+| `CVA_STATUS` | CVA |
+| `EE_POINT` | EE point |
+| `EPE_LIFE` | EPE over the life |
+| `FBA` | FBA (funding benefit) |
+| `FBA_ON` | FBA |
+| `FCA` | FCA (funding cost) |
+| `FLAGS` | Flags |
+| `FUNDING_SPREAD` | Funding spread |
+| `FUNDING_SURVIVAL` | Survival weighting |
+| `FVA` | FVA |
+| `NETTING_SETS` | Netting sets |
+| `RUN_ID` | Run |
+| `SCOPE` | Scope |
+| `SCOPE_KIND` | Kind |
+| `STATUS` | Status |
+| `TERMS[].DATE` | Date |
+| `TERMS[].DF` | DF |
+| `TERMS[].EE` | EE |
+| `TERMS[].ENE` | ENE |
+| `TERMS[].FBA` | FBA |
+| `TERMS[].FCA` | FCA |
+| `TERMS[].SB` | Borrowing spread |
+| `TERMS[].TENOR` | Tenor |
+
+Links: `NETTING_SETS` → `netting-set`, `RUN_ID` → `simulation-run`.
+
 ### `exposure-official-cpty`
 
 **Exposure official results by netting set and counterparty (published)** · mnemonic `XOFC` · read through connector `exposure-results`.
@@ -564,6 +614,7 @@ No samples ship: documents are read live from its connector `ccr-derived` (plugi
 | `XPATH` | `exposure-path` | Exposure path (a trade's MtM on every path at a grid date) |
 | `EXP` | `exposure-result` | Exposure profile of a scope (computed) |
 | `XWIF` | `exposure-whatif` | Exposure what-if before dealing (computed, Python) |
+| `FVAR` | `fva-result` | FVA of a scope (computed) |
 | `XOFC` | `exposure-official-cpty` | Exposure official results by netting set and counterparty (published) |
 | `NSMTM` | `nset-mtm` | Netting-set MtM totals (derived from the trade valuations) |
 | `CPMTM` | `cpty-mtm` | Counterparty MtM totals (derived from the trade valuations) |
@@ -580,6 +631,7 @@ Examples:
 | `SACCR SACCR-SUMMIT-NY` | SA-CCR exposure at default |
 | `EXP NSET:NS-ALDERSHOT-FRA` | Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths |
 | `EXP CPTY:CP-ALDERSHOT` | A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs) |
+| `FVAR NSET:NS-ALDERSHOT-FRA` | FVA of a netting set as a kind · FCA, FBA and FVA with the terms by date (the FVA screen: FVA NSET:…) |
 
 Screens (Sutras):
 
@@ -593,6 +645,7 @@ Screens (Sutras):
 | `credit-limit` | `credit-limit` | PFE limit by tenor bucket for a counterparty, with utilisation. |
 | `cva` | `cva` | Credit, debit and funding valuation adjustments with sensitivities. |
 | `exposure-result` | `exposure-result` | The exposure profile of any counterparty scope (a netting set, a counterparty, a group, a legal entity, a trade alone), computed from the simulated paths. |
+| `fva-result` | `fva-result` | The funding cost and benefit (FCA, FBA, FVA) of any counterparty scope, computed from the exposure engine's profile. |
 | `netting-set` | `netting-set` | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
 | `sa-ccr` | `sa-ccr` | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
 
@@ -619,9 +672,10 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `exposure-results` | `delta` | `exposure-official-cpty` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-store` | `delta` | `simulation-run`, `exposure-path` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
+| `fva-engine` | `reactive` | `fva-result` | `${DRISHTI_FVA_ENABLED:true}` |
 | `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

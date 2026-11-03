@@ -218,8 +218,8 @@ engines:
     bi: []
     cli: [fva, play fva]
     playgrounds: [fva]
-    connectors: []
-    kinds: []
+    connectors: [fva-engine]
+    kinds: [fva-result]
     inputs: [ir-curve]
     ai-tools: []
   - id: mr-cube
