@@ -51,6 +51,9 @@ public class CachesConfiguration {
         MemoryBudget b = ctx.getBean(MemoryBudget.class);
         ctx.getBeanProvider(com.ash.drishti.server.var.VarCaches.class).ifAvailable(v -> v.join(b));
         ctx.getBeanProvider(com.ash.drishti.server.exposure.ExposureCaches.class).ifAvailable(x -> x.join(b));
+        ctx.getBeanProvider(com.ash.drishti.server.pivot.PivotConfiguration.States.class).ifAvailable(s -> b.join("engine.answers",
+                MemoryBudget.of(com.ash.drishti.server.pivot.PivotConfiguration.CACHE, s.caffeine(),
+                        (long) ctx.getBean(com.ash.drishti.server.pivot.PivotProperties.class).cacheMb() << 20)));
         ctx.getBeanProvider(com.ash.drishti.server.bi.engine.QueryService.class).ifAvailable(q -> {
             if (q.resultCache() != null) {
                 b.join("engine.answers", MemoryBudget.of("bi.results", q.resultCache(), q.props().cacheMaxBytes()));

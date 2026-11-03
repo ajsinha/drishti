@@ -428,10 +428,10 @@ def test_the_same_tab_flow_comes_back_to_the_page(stack, visit):
     assert v.windows == []
 
 
-def test_elements_2_1_signs_in_through_the_window_too(stack, visit):
+def test_elements_2_signs_in_through_the_window_too(stack, visit):
     v = visit(path="/elements.html").open()
     v.until(lambda: v.page.evaluate("document.querySelector('#main').state") == "sign-in", what="the element's sign-in state")
-    assert v.page.evaluate("window.DrishtiElements.version") == "2.1.0"
+    assert v.page.evaluate("window.DrishtiElements.version") == "2.2.0"     # the newest Elements 2: 2.2 signs in as 2.1 did
     v.sign_in("#main")
     v.until(lambda: v.page.evaluate("document.querySelector('#main').state") in ("live", "static"), what="the element drawn")
     assert TRADE in v.page.evaluate("document.querySelector('#main').shadowRoot.querySelector('.view').innerText")

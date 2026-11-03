@@ -246,7 +246,7 @@ async def echarts_js(request: Request):
 
 # The console's own enhancer scripts, root-scoped (static/js; CLIENT_RENDERER.md › Drishti Elements: the design, section 12): the element loads these, with
 # data-manual so they do not start by themselves, and calls init(shadowRoot, options) on each.
-ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls",
+ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pivot-engine", "pivot-grid", "about", "about-hints", "zoom", "multiselect", "controls",
              "bi-lib", "bi-visuals", "bi-visuals-format", "bi-grids", "bi-matrix", "bi-multiples", "bi-frame", "bi-live", "bi-phone")
 
 
@@ -256,18 +256,6 @@ async def enhancer_js(request: Request, name: str):
         return await refuse(request, 404, "DRS-9404", f"no such script: {name}")
     path = WEB / "static/js" / f"{name}.js"
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
-
-
-@router.get("/views/{kind}/{id_:path}/panels/{panel}/records")
-async def pivot_records(request: Request, kind: str, id_: str, panel: str):
-    """The rows a pivot is computed from (the console's /api/pivot/records, for the embed caller's masked identity)."""
-    try:
-        me, _claims = await identity(request)
-        return await reply(request, json.dumps(await request.app.state.backend.panel_records(kind, id_, panel, me), ensure_ascii=False), "application/json")
-    except EmbedError as e:
-        return await refuse(request, e.status, e.code, e.detail, e.retry_after)
-    except BackendError as e:
-        return await refuse(request, e.page_status, e.code, e.detail)
 
 
 @router.get("/views/{kind}/{id_:path}/about")

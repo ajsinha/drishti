@@ -370,6 +370,9 @@ public class DataViewService {
                 Object doc = (redactor == null ? d.data() : redactor.apply(d.data())).unwrap();
                 Map<?, ?> m = doc instanceof Map<?, ?> mm ? mm : Map.of();
                 java.util.function.Function<String, Object> value = f -> {
+                    if (DOCUMENT.equals(f)) {
+                        return m;                                 // the whole document, as the person may see it (the pivot's paths)
+                    }
                     Object v = path(m, f);
                     return v == null && f.equals(ds.key()) ? d.ref().id() : tidy(v);
                 };
@@ -422,6 +425,9 @@ public class DataViewService {
             }
         }
     }
+
+    /** The output column that is the whole document (masks applied), for a reader of paths into it (the pivot engine's documents). */
+    public static final String DOCUMENT = "$doc";
 
     private static Object path(Map<?, ?> m, String field) {
         Object v = m.get(field);

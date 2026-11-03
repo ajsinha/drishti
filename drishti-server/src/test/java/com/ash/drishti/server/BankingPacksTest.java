@@ -19,6 +19,7 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
 import static org.hamcrest.Matchers.hasItems;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,7 +50,7 @@ class BankingPacksTest {
     }
 
     /**
-     * The Pivot tab where the generators opt in, with trader-sensible openings: a netting set's and a clearing account's
+     * Pivot (the pivot engine on a panel's rows or a kind) where the generators opt in, with trader-sensible openings: a netting set's and a clearing account's
      * trades by notional, product × maturity bucket; a book's by MTM, product × currency; a desk's trades and its derived
      * P&L by MTM, book × currency; a trade's cash flows by PV, type × leg; the trade search by MTM, book × currency.
      */
@@ -60,10 +61,13 @@ class BankingPacksTest {
                 .andExpect(jsonPath(trades + ".columns[0]").value(hasItem("MATURITY_BUCKET")))
                 .andExpect(jsonPath(trades + ".values[0].field").value(hasItem("NOTIONAL")))
                 .andExpect(jsonPath("$.panels[?(@.id == 'exposure')].data.pivot").value(org.hamcrest.Matchers.empty()));
-        mvc.perform(get("/api/v1/views/netting-set/NS-ALDERSHOT-LDN/panels/trades/records")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.fields[4].name").value("MATURITY_BUCKET"))
-                .andExpect(jsonPath("$.rows[0][4]").value(org.hamcrest.Matchers.oneOf("0-1Y", "1-2Y", "2-5Y", "5-10Y", "10Y+")))
-                .andExpect(jsonPath("$.fields[8].kind").value("trade"));
+        mvc.perform(get("/api/v1/pivot/catalogue").param("source", "panel/netting-set/trades/NS-ALDERSHOT-LDN")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.fields[*].name").value(hasItems("MATURITY_BUCKET", "NOTIONAL")))
+                .andExpect(jsonPath("$.defaultView.columns[0]").value("MATURITY_BUCKET"))
+                .andExpect(jsonPath("$.defaultView.values[0].measure").value("sum(NOTIONAL)"));
+        mvc.perform(post("/api/v1/pivot/query").contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("{\"source\":\"panel/netting-set/trades/NS-ALDERSHOT-LDN\",\"rows\":[\"MATURITY_BUCKET\"],\"values\":[\"count()\"]}"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.rows[0].value").value(org.hamcrest.Matchers.oneOf("0-1Y", "1-2Y", "2-5Y", "5-10Y", "10Y+")));
         mvc.perform(get("/api/v1/views/clearing-account/CLR-CME-1")).andExpect(jsonPath(trades + ".rows[0]").value(hasItem("PRODUCT")));
         mvc.perform(get("/api/v1/views/desk/DESK-RATES"))
                 .andExpect(jsonPath("$.panels[?(@.id == 'positions')].data.pivot.columns[0]").value(hasItem("CURRENCY")))
@@ -71,8 +75,9 @@ class BankingPacksTest {
         mvc.perform(get("/api/v1/views/trade/MX-20000001")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.panels[?(@.id == 'legs')].data.layout").value(hasItem("columns")));
         mvc.perform(get("/api/v1/search").param("q", "TRD where QUANTITY > 0")).andExpect(status().isOk())
-                .andExpect(jsonPath("$.pivot.rows[0]").value("PRODUCT_TYPE")).andExpect(jsonPath("$.pivot.columns[0]").value("SOURCE_SYSTEM"))
-                .andExpect(jsonPath("$.pivot.fields[*].name").value(hasItems("PORTFOLIO", "SOURCE_SYSTEM", "COUNTERPARTY", "QUANTITY")));
+                .andExpect(jsonPath("$.pivot.source").value("trade"))
+                .andExpect(jsonPath("$.pivot.view.rows[0]").value("PRODUCT_TYPE")).andExpect(jsonPath("$.pivot.view.columns[0]").value("SOURCE_SYSTEM"))
+                .andExpect(jsonPath("$.pivot.fields").value(hasItems("PORTFOLIO", "SOURCE_SYSTEM", "COUNTERPARTY", "QUANTITY")));
     }
 
     /** Each of the seven chart and aggregate kinds on a sample the generators wrote for it: drawn, with the numbers expected. */

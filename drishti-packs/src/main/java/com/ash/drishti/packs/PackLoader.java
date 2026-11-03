@@ -264,7 +264,7 @@ public final class PackLoader {
                 }
                 offer(claims, overrides, lineage, "columns " + e.getKey(), pack.name(), props);
             }
-            // pivot: the kinds whose search results and pick lists offer a Pivot tab (true, or { fields, rows, columns,
+            // pivot: the kinds whose search results and pick lists offer Pivot (the pivot screen) (true, or { fields, rows, columns,
             // values, filters, heat, chart }); kept as JSON, read and checked by the search engine (SearchProperties#pivotOf)
             for (Map.Entry<String, Object> e : map(m.get("pivot")).entrySet()) {
                 Object v = e.getValue();

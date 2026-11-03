@@ -63,17 +63,17 @@ class NetUserStateTest {
         var json = new ObjectMapper();
         PreferenceStore onA = cluster.node("a").bean(PreferenceStore.class);
         onA.put("rita", "layouts", "trade-view.trade", json.readTree("{\"order\":[\"risk\",\"cashflows\"]}"));
-        onA.put("rita", "pivots", "search.trade", json.readTree("{\"rows\":[\"DESK\"],\"values\":[\"NOTIONAL\"]}"));
+        onA.put("rita", "layouts", "search.trade", json.readTree("{\"rows\":[\"DESK\"],\"values\":[\"NOTIONAL\"]}"));
         onA.put("rita", "alerts", "big-mtm", json.readTree("{\"when\":\"mtm > 1m\"}"));
         PreferenceStore onB = cluster.node("b").bean(PreferenceStore.class);
-        assertThat(NetNodes.await(3_000, () -> onB.get("rita", "pivots", "search.trade").isPresent())).isTrue();
+        assertThat(NetNodes.await(3_000, () -> onB.get("rita", "layouts", "search.trade").isPresent())).isTrue();
         var settings = cluster.call("GET", cluster.node("b").url() + "/api/v1/me/settings", null, "X-Drishti-User", "rita");
         assertThat(settings.body()).contains("Big trades");
         assertThat(onB.get("rita", "layouts", "trade-view.trade")).hasValueSatisfying(v -> assertThat(v.toString()).contains("cashflows"));
         assertThat(onB.get("rita", "alerts", "big-mtm")).as("alerts act: never copied").isEmpty();
         // a change and a delete follow too, the newest winning
-        onB.put("rita", "pivots", "search.trade", json.readTree("{\"rows\":[\"BOOK\"]}"));
-        assertThat(NetNodes.await(3_000, () -> onA.get("rita", "pivots", "search.trade").map(v -> v.toString().contains("BOOK")).orElse(false))).isTrue();
+        onB.put("rita", "layouts", "search.trade", json.readTree("{\"rows\":[\"BOOK\"]}"));
+        assertThat(NetNodes.await(3_000, () -> onA.get("rita", "layouts", "search.trade").map(v -> v.toString().contains("BOOK")).orElse(false))).isTrue();
         onA.delete("rita", "layouts", "trade-view.trade");
         assertThat(NetNodes.await(3_000, () -> onB.get("rita", "layouts", "trade-view.trade").isEmpty())).isTrue();
 
@@ -91,7 +91,7 @@ class NetUserStateTest {
         // a node that joins later is given what it does not have
         cluster.start("c", NetNodes.PORTS[2]);
         PreferenceStore onC = cluster.node("c").bean(PreferenceStore.class);
-        assertThat(NetNodes.await(8_000, () -> onC.get("rita", "pivots", "search.trade").isPresent())).isTrue();
+        assertThat(NetNodes.await(8_000, () -> onC.get("rita", "layouts", "search.trade").isPresent())).isTrue();
         SessionStore sessC = cluster.node("c").bean(SessionStore.class);
         assertThat(NetNodes.await(8_000, () -> sessC.find(s2.id()).isPresent())).as("the sessions standing are given to a node that joins").isTrue();
         assertThat(sessC.find(s1.id())).isEmpty();

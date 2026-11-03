@@ -398,7 +398,7 @@ click on a point, a node or a place that names an entity opens it in place.
 | tree rows | `tree-rows.js` | open and close, the filter box keeping ancestors |
 | drill-down | `drill.js` (levels, crumbs, Esc; the address `?dr.<panel>=` and Back) | levels, crumbs, Up and Esc **in place**: the host's address never changes |
 | sorting, filtering, paging | `tables.js` + `colfilter.js` (funnels, per-column filters, the chart button, the address) | `'library'`: heading buttons (ascending, descending, the server's order, the console's value rules), one filter box, 25 a page with a pager; **`'console'` (1.0.0): the console's funnels, per-column filters and Chart any table** (the chart dialog opens over the host's page, never a window) |
-| the Pivot tab | `pivot.js` (1,000 lines, its records through the panel's records URL) | `'library'`: the switch and a `drishti:pivot` event; **`'console'`: the console's grid** (`pivot-engine.js`, `pivot-grid.js`, `pivot.js`), its rows read as the person (`recordsUrl`; the embed API v2 for Elements 2.0); saving an arrangement stays a console feature |
+| Pivot (a table whose Sutra says `pivot:`) | a link to the pivot screen (`/pivot?source=panel/…`) | both modes: the link; the pivot screen itself is a console screen (every figure the server's pivot engine); a nested `pivot` panel is redrawn by `pivot-grid.js` in `'console'` mode |
 | nested pivot rows | `tree-rows.js` redraws them with the Pivot grid | the macro's plain table; **`'console'`: the Pivot grid** (`tree-rows.js` from `data-pv-tree`) |
 | the drill's address | `drill.js` keeps `?dr.<panel>=` and Back | the console's page: the same (`behaviours: 'host'`); another host: `drill.js` in place, the host's address untouched (`address: false`) |
 | About this page | `about.js` fetches the drawer's HTML | **drawn by the library from JSON** (`?format=json`, `m/about.js`): the console's drawer on its client pages, a side sheet in the container elsewhere |
@@ -613,7 +613,7 @@ a new folder and a new version (`tools/render_sheet.py` writes the current versi
 |---|---|---|
 | `/static/render/<version>/…` | the library on the console's own origin (the console's pages, same-origin hosts) | as `/static/` |
 | `/embed/v2/render/<version>/…` | the same files for other origins: CORS for the origins of the registered host applications; a partial version (`1`, `1.0`) answers `302` to the exact one; a version this console does not serve answers `410 DRS-8006` | `immutable`, one year |
-| `/embed/v2/elements/<2, 2.1, 2.1.0, 2.0, 2.0.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to `/embed/v2/render/<renderer>/drishti-elements.js` (Elements 2.1.0 is carried by renderer 1.1.0, 2.0.0 by 1.0.0; `2` answers the newest) | 60 s |
+| `/embed/v2/elements/<2, 2.2, 2.2.0, 2.1, 2.1.0, 2.0, 2.0.0>/drishti-elements.js` | Elements 2.x by its own version: a `302` to `/embed/v2/render/<renderer>/drishti-elements.js` (Elements 2.2.0 is carried by renderer 1.2.0, 2.1.0 by 1.1.0, 2.0.0 by 1.0.0; `2` answers the newest) | 60 s |
 | `/embed/v2/sign-in`, `/check`, `/callback`, `/refresh`, `/redeem` | the sign-in window of `auth: 'popup'` (section 10.1) | `no-store` |
 | `/embed/v2/js/<name>.js`, `/embed/v2/vendor/…`, `/embed/v2/css/table-chart.css` | what the library loads from beside itself (it finds `/embed/v2/` from its own URL as it finds `/static/` on the console): the console's behaviour scripts, ECharts and ECharts GL, the map shapes, the icon font, the chart dialog's sheet; allow-listed | revalidated |
 | `/embed/v2/views/{kind}/{id}` (+ `/about`, `/panels`, `/panels/{panel}/records`), `/embed/v2/channel`, `/embed/v2/resolve` | the embed API v2: the ViewModel as JSON (with its contract), About and panels as JSON, a pivot's rows, the live channel (`vm:` subscriptions: panels as JSON) | `no-store` |
@@ -678,7 +678,7 @@ widths.
 | A panel header in a tabbed grid area is a `banner` landmark on the console page and generic in the library | the console's script turns the section into a tabpanel after parsing and Chromium then exposes the header as a banner; the library sets the role before the panel is in the page, and HTML-AAM says a header inside a section is generic |
 | An outside URL in the data: the console opens it in a new tab (`target="_blank"`); the library sends `drishti:navigate` | in place by default (section 12); `outsideLinks: 'new-window'` gives the console's behaviour |
 | Console-only affordances: the download menu, Customize, the arrange handles, the pivot's saved arrangements, the address state of drills and filters | console features, not part of a screen; kept by the console when it is the host (phase 2) |
-| A nested pivot is the plain table, and the Pivot tab's grid is not built by the library | `pivot.js`, `pivot-grid.js` and `tree-rows.js`'s pivot redraw are phase 2 (section 7.4); the parity page draws neither, the console page with them redraws the same rows as a collapsible grid |
+| A nested pivot is the plain table in `'library'` mode | `tree-rows.js`'s redraw with `pivot-grid.js` is a console behaviour; the parity page draws the plain table, the console page redraws the same rows (the engine's figures) as a collapsible grid |
 | Tables sort with heading buttons, one filter box and a pager, not the console's per-column funnels and chart button | phase 1 ports the sort rules exactly (`test_a_column_sorts_as_the_console_sorts_it` compares the order with `tables.js`'s); the funnels and Chart any table come with phase 2 |
 
 ### 14.2 Results
@@ -786,7 +786,7 @@ second request.
 | Customize and layout mode | `designer.js`, `layout.js` find the drawn panels | not offered (a console feature) | layout mode in both modes; Customize in the client-mode run of `test_designer_browser.py` |
 | The download menu | drawn by the library (`chrome: true`), named by `view.js` | not offered (a console feature) | both modes: the same files |
 | About this page | drawn by the library from JSON in the console's drawer | drawn by the library in a side sheet in the container (`about: true`) | both modes: the same text, JSON asked on the client page; library; Elements 2.0 |
-| The Pivot tab's grid | `pivot-engine.js`, `pivot-grid.js`, `pivot.js` | the same, its rows read as the person (`recordsUrl`; the embed API v2) | both modes: the same grid; library; Elements 2.0 |
+| The nested pivot panel's grid | `pivot-grid.js`, `tree-rows.js` | the same; every figure computed by the server's pivot engine | both modes: the same grid; library; Elements 2.0 |
 | The nested-pivot grid | `tree-rows.js` from `data-pv-tree` | the same | both modes; library |
 | Controls, row events, refresh, computing | `controls.js`, `sutra-wire.js`, `refresh.js`, `compute.js`; swapped panels drawn from JSON | controls (`panelsUrl`); row events as `drishti:row-click` | both modes: a tick and a control move the same panels |
 
@@ -891,7 +891,7 @@ This is the developer's reference and cookbook. The design and its history are i
 3. **Give your page a token provider** that asks *your own backend* for a token (section 2), and add the one script line and an element:
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.3/drishti-elements.js" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.4/drishti-elements.js" crossorigin="anonymous"></script>
 <script type="module">
   DrishtiElements.configure({
     tokenProvider: async () => {                      // your backend, not Drishti: it holds your client secret
@@ -982,7 +982,7 @@ sign-in and comes back.
 <!-- the renderer: one call (the library from the console's embed path; your page needs no server) -->
 <div id="risk"></div>
 <script type="module">
-  import { render } from 'https://drishti.bank.example/embed/v2/render/1.1.0/drishti-render.js';
+  import { render } from 'https://drishti.bank.example/embed/v2/render/1.2.0/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: '1000008' },
                       { auth: 'popup', server: 'https://drishti.bank.example' });
   const el = view.container;
@@ -1022,8 +1022,8 @@ The console serves the library at an **exact semantic version**, immutably, and 
 
 | URL | What |
 |---|---|
-| `/embed/v1/elements/1.4.3/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
-| `/embed/v1/elements/1.4.3/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
+| `/embed/v1/elements/1.4.4/drishti-elements.js` | the entry (imports `./m/<name>.js`, which are served beside it) |
+| `/embed/v1/elements/1.4.4/integrity.json` | `{"name", "version", "api", "files": {"drishti-elements.js": {"integrity": "sha384-…", "bytes": 2500}, "m/report.js": …}}` |
 | `/embed/v1/elements/1/…`, `/embed/v1/elements/1.1/…` | `302` to the exact version (for a host that accepts updates; SRI needs the exact one) |
 | `/embed/v1/drishti-elements.js` | the console's current library, revalidated on each load (a host that follows the console) |
 
@@ -1441,12 +1441,12 @@ as well as `drishti-elements`. Try it with the demo host: `python3 tools/element
 and navigation mode, lists the events, and prints the quick start for what is on screen. It opens on an entity your server holds and you
 may open (the first of a common kind, in your lens), says which lens you are inside, and says why when there is nothing to draw.
 
-**One import, one call** (on the console's origin; another origin imports `/embed/v2/render/1.1.0/drishti-render.js` with a token, or `auth: 'popup'`):
+**One import, one call** (on the console's origin; another origin imports `/embed/v2/render/1.2.0/drishti-render.js` with a token, or `auth: 'popup'`):
 
 ```html
 <div id="risk"></div>
 <script type="module">
-  import { render } from '/static/render/1.1.0/drishti-render.js';
+  import { render } from '/static/render/1.2.0/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' }, { behaviours: 'console', about: true });
   view.container.addEventListener('drishti:navigate', (e) => console.log('opened', e.detail.kind, e.detail.id));
 </script>
@@ -1476,7 +1476,7 @@ unless you ask), `drishti:row-click`, `drishti:select`, `drishti:loaded`, `drish
 
 **Versions:** one immutable folder per version (`/static/render/<version>/`, and `/embed/v2/render/<version>/` for other origins; `1`
 or `1.0` answers `302` to the exact one) with `integrity.json` (SHA-384 of every file) for subresource integrity:
-`<script type="module" src="/static/render/1.1.0/drishti-render.js" integrity="sha384-…">`. 1.0.0 (the first release, Elements 2.0) and 0.1.0 (the preview) stay served, unchanged.
+`<script type="module" src="/static/render/1.2.0/drishti-render.js" integrity="sha384-…">`. 1.2.0 draws a table that offers Pivot as the table and a link to the pivot screen (the Table | Pivot switch is gone; `recordsUrl` is accepted and unused); 1.1.0 (Elements 2.1, whose Pivot opens the pivot screen in a new window), 1.0.0 (the first release, Elements 2.0) and 0.1.0 (the preview) stay served, unchanged.
 
 ## 20. Drishti Elements: the design
 
@@ -1589,7 +1589,7 @@ The direction was checked against the code. The parts the element reuses, and th
 | Charts | `view.js` (line/area: `drawCharts`, `updateChart`), `charts.js` (waterfall, histogram, scatter, candlestick, graph from `data-xchart`), surfaces (ECharts GL loaded on demand) | ECharts with SVG renderer; colours from `--d-*` tokens | `getComputedStyle(document.documentElement)`, `document.querySelectorAll`, `window.resize`, links built as `/v/…` |
 | Panel zoom | `zoom.js` (root-scoped `init(root)`): a `pnl-zoom` class lifts one panel over the view; in the element the host (`contain: content`) makes it fill the element's own box; no hash, no page scroll lock there | CSS classes and attributes only | `document` listeners and `location.hash` are used only when `root` is the document |
 | Table behaviour | `tables.js` (sort, filter, page, keys), `tree-rows.js` | everything a table does | a `MutationObserver` on `document.body`: it never sees inside a shadow root |
-| Pivots | `pivot-engine.js` (pure), `pivot-grid.js` (DOM, mostly local), `pivot.js` (975 lines; `fetch('/api/pivot/…')`, saved arrangements) | the Pivot tab | relative URLs, cookie fetches, writes |
+| Pivots | `pivot-engine.js` (the engine's client), `pivot-grid.js` (DOM, mostly local), `pivot.js` (975 lines; `fetch('/api/pivot/…')`, saved arrangements) | the Pivot tab | relative URLs, cookie fetches, writes |
 | About | `about.js`, `about-hints.js`, `GET /v/{kind}/{id}/about` (fragment) | the drawer, panel `?` popovers, field hints | `document.getElementById('aboutDrawer')`, document-wide `keydown` |
 | Masks | server: `Entitlements.redactor`, `DataNode.masked()`; config `drishti.security.redact` | masked fields read `•••` everywhere, for roles without `raw` | the ViewModel does not say *how many* fields were masked |
 | Tokens | server: `TokenVerifier` (console HS256), `TokenScopes` (personal `drk_` tokens; GET always readable), `IdTokenVerifier` (OIDC) | three kinds of bearer today | no audience-bound, host-bound token kind |
@@ -2314,8 +2314,8 @@ console keeps working by calling them with `document` and the console's context 
 | `charts.js` | 298 | `draw(root)` already takes a root; change `tokens()` to `ctx.host`, `open()` to `ctx.emit('navigate', link)` (console: the hidden-link click it does now), the `drishti:theme` listener to the module's caller | low |
 | `tables.js` | 252 | the `MutationObserver` on `document.body` becomes `observe(root)`; `document.querySelectorAll('table.tbl')` (index for remembered state) → the root; the page-size event goes to the root; remembered page size in `localStorage` is namespaced per origin anyway | medium: `MutationObserver` must also watch swapped panels (it does when attached to the root) |
 | `tree-rows.js` | 163 | same `MutationObserver` change | low |
-| `pivot-engine.js` | 290 | none (pure, no DOM) | none |
-| `pivot-grid.js` | 331 | `document.createElement` is fine in a shadow root; no change but module export | low |
+| `pivot-engine.js` | 150 | none (the pivot engine's client: fetches, no DOM) | none |
+| `pivot-grid.js` | 175 | `innerHTML` of its own box, fine in a shadow root; its sheet linked into the shadow root by `tree-rows.js` | low |
 | `pivot.js` | 975 | `json()` through `ctx.fetch` with URLs from `ctx.resolveUrl('records', …)`; saving arrangements behind `ctx.canSave` (false in the element); the modal shade and `keydown` capture (`document.addEventListener('keydown', esc, true)`) attached to the root; grid export (`/export/grid.*`) hidden when not offered | **high**: largest file, near the 1,500-line cap; split while refactoring (engine, grid, chooser, persistence) |
 | `about.js` | 183 | the drawer is found in `root` (the element renders its own drawer markup); fetch through `ctx`; the document-wide `?`/`F1`/`Esc` keys go on the root; F1 (screen guide) not bound in the element | medium |
 | `about-hints.js` | 229 | panel `?` popovers and field hints: `document` queries and two `keydown` listeners → root; it is fed by the same About fetch | medium |
@@ -2889,7 +2889,7 @@ one visual without chrome, the phone layout in the element and the console, the 
 
 **Built, beside Elements 1.x** ([ADR-022](adr/022-one-renderer-in-the-browser.md),
 [section 13](#13-the-elements-versioning-and-distribution)). Elements 1.x (this document's sections 1
-to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.3. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
+to 18) is unchanged: HTML over `/embed/v1/`, version 1.4.4. Elements 2.0 keeps 1.x's element API and changes only the inside: the element
 draws with Drishti Render 1.0.0 from the ViewModel the embed API v2 answers as JSON. A page uses one major or the other.
 **Elements 2.1** (renderer 1.1.0; `/embed/v2/elements/2/` answers it, 2.0 stays at `/embed/v2/elements/2.0/`) adds
 `auth="popup"` and `DrishtiElements.configure({ auth: 'popup' })`: a page with no backend signs its user in through the console's single
@@ -2898,7 +2898,7 @@ sign-on in a window opened on a click, and the element shows the state `sign-in`
 
 | | Elements 1.x | Elements 2.0 |
 |---|---|---|
-| Import | `/embed/v1/drishti-elements.js` (or `/embed/v1/elements/1.4.3/…`) | `/embed/v2/elements/2/drishti-elements.js` (a `302` to `/embed/v2/render/1.0.0/drishti-elements.js`) |
+| Import | `/embed/v1/drishti-elements.js` (or `/embed/v1/elements/1.4.4/…`) | `/embed/v2/elements/2/drishti-elements.js` (a `302` to `/embed/v2/render/1.0.0/drishti-elements.js`) |
 | The view | `GET /embed/v1/views/{kind}/{id}`: head, banners and panels as the console's HTML, sanitised | `GET /embed/v2/views/{kind}/{id}`: the ViewModel (`"contract": "1.0"`), drawn by the renderer; `Drishti-Subscribe` names its live key |
 | Parts | `…/panels` and `…/about` as HTML | `…/panels` (panels and strip cells) and `…/about` (`{explain, index}`) as JSON; `…/panels/{panel}/records` as in 1.x |
 | Live | `/embed/v1/channel`, `view:` keys, panel patches as HTML | `/embed/v2/channel` (the same channel code), `vm:` keys, panel patches as panels |
@@ -3022,7 +3022,7 @@ screen is bound to. Everything after that is Drishti's ordinary machinery.
 | Time travel | `AsOf(businessDate, knownAt, live)`, `AsOfResolver` | `asOf` and `knownAt` on a GenUI URL | none |
 | Live views | `StreamController` (`GET /api/v1/views/{kind}/{id}/stream`, SSE: `view`, `frame`, `: hb`), `ViewStream`, `TopicHub`, `FrameMailbox`, `LiveStreamSlots` | ticks on a composed screen | `ViewStream` rebuilds with `pipeline.view(ref, …)` or `pipeline.build(main, …)`, i.e. with the *registered* Sutra (`ViewStream.java` line 144): a composed Sutra needs a rebuild that keeps it |
 | Console channel | `drishti-console/core/channel.py` (`view:kind/id?ctl.…` keys), `routes/api_routes.py` `channel()`, `_panel_html` | one connection per page; panels as HTML | only `view:` keys |
-| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.3 (`web/elements/package/package.json`) | the host-side renderer, styles (`web/static/css/tokens.css`, `theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
+| Elements | `drishti-console/web/embed/element.js`, `panel.js`, `report.js`, `search.js`, `about.js`; `routes/embed_routes.py` (`/embed/v1/views/{kind}/{id}`, `/embed/v1/channel`); library 1.4.4 (`web/elements/package/package.json`) | the host-side renderer, styles (`web/static/css/tokens.css`, `theme.css`, `--d-*` properties), charts, CSP and SRI story | no element for a composed screen |
 | Embed tokens | `EmbedTokenService`, `EmbedController` (`POST /api/v1/embed/token`, RFC 8693), `EmbedProperties` (scopes to `METHOD path` patterns), `RateWindows`, `EmbedUsage`; console `core/embed_auth.py`, `core/embed_limits.py` | scoping a host application | no `embed:genui` scope |
 | Query by form | `FormController` (`GET /api/v1/forms/{pack}`, `POST /api/v1/forms/{pack}/{kind}/compile`), `FormSpec`, `FormField`, `FormCompiler`; the pack's `form:` section; console `core/forms.py`, `routes/form_routes.py`, `css/form.css` | form fragments compile to the same search command | the form is a page, not a panel |
 | Search | `SearchController` (`GET /api/v1/search`, `/csv`, `/compare`) | result rows for a search binding | rows are not an `EntityDocument` |

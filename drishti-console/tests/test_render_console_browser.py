@@ -251,14 +251,12 @@ def test_about_this_page_says_the_same_and_is_drawn_from_json_on_a_client_page(b
     assert any("format=json" in u for u in asked["client"]) and not any("format=json" in u for u in asked["server"]), asked
 
 
-def test_the_pivot_tab_builds_the_same_grid(browser, console):
-    seen = {}
+def test_a_table_that_offers_pivot_opens_the_pivot_screen_on_its_rows(browser, console):
+    # the server-drawn page and the client renderer (1.2.0) both carry the Pivot link to the pivot screen on the panel's rows
     for mode, page in each_mode(browser, f"{console}/v/netting-set/NS-NORTH-01"):
-        page.locator("#p-trades [data-pv-tab='pivot']").click()
-        page.wait_for_selector("#p-trades .pv-host table", timeout=10000)
-        page.wait_for_timeout(200)
-        seen[mode] = page.locator("#p-trades .pv-host table").first.inner_text()
-    assert seen["server"] == seen["client"] and "Interest rate swap" in seen["client"], seen
+        link = page.locator("#p-trades .pv-open a")
+        assert link.count() == 1, mode
+        assert link.first.get_attribute("href") == "/pivot?source=panel/netting-set/trades/NS-NORTH-01", mode
 
 
 def test_a_nested_pivot_is_drawn_as_the_same_grid(browser, console):

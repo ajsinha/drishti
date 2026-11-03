@@ -36,7 +36,7 @@ import java.util.Optional;
 
 /**
  * The interactive pivot of a table or ladder: what the view says about it (its fields and the arrangement it opens
- * with, carried by the table's data) and, when a user opens the Pivot tab, the panel's rows as raw values, every row up
+ * with, carried by the table's data) and, when a user opens Pivot (the pivot screen), the panel's rows as raw values, every row up
  * to {@link PivotProperties#maxRecords()} (a table's {@code limit} only shortens the table). Stateless and thread-safe.
  */
 public final class PivotBinder {
@@ -50,7 +50,8 @@ public final class PivotBinder {
      * @param total rows the panel has
      * @param truncated true when only the first {@code limit} rows are given
      */
-    public record Records(String panel, List<Map<String, Object>> fields, List<List<Object>> rows, int total, boolean truncated, int limit) {}
+    public record Records(String panel, List<Map<String, Object>> fields, List<List<Object>> rows, int total, boolean truncated, int limit,
+            Map<String, Object> arrangement) {}
 
     private final ElCompiler el;
     private final ReferenceCatalog catalog;
@@ -64,8 +65,11 @@ public final class PivotBinder {
         this.props = props;
     }
 
-    /** What the table's data carries: the fields offered and the arrangement the tab opens with; empty when not opted in. */
-    Optional<Map<String, Object>> view(Panel p) {
+    /**
+     * What the table's data carries: the fields offered, the arrangement the pivot opens with, and the pivot engine's source of the panel's
+     * rows ({@code panel/<kind>/<panel>/<id>}, PIVOT_GUIDE.md: Pivot opens the pivot screen on it); empty when not opted in.
+     */
+    Optional<Map<String, Object>> view(Panel p, com.ash.drishti.api.EntityRef ref) {
         if (!props.enabled()) {
             return Optional.empty();
         }
@@ -83,6 +87,9 @@ public final class PivotBinder {
             }
             out.put("fields", fields);
             out.put("maxRows", props.maxRecords());
+            if (ref != null) {
+                out.put("source", "panel/" + ref.kind() + "/" + p.id() + "/" + ref.id());
+            }
             return out;
         });
     }
@@ -91,7 +98,7 @@ public final class PivotBinder {
     Records records(Panel p, BindContext c) {
         if (!props.enabled()) {
             throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN,
-                    "the Pivot tab is switched off on this server (drishti.pivot.enabled)");
+                    "Pivot (the pivot screen) is switched off on this server (drishti.pivot.enabled)");
         }
         PivotSpec spec = p.pivot().orElseThrow(() -> new IllegalArgumentException("panel '" + p.id() + "' does not offer a pivot"));
         DataNode rows = binder.eval(p.option("rows").orElseThrow(), c.eval()) instanceof DataNode n ? n : DataNode.missing();
@@ -142,7 +149,7 @@ public final class PivotBinder {
             }
             fields.add(m);
         }
-        return new Records(p.id(), fields, out, total, total > limit, limit);
+        return new Records(p.id(), fields, out, total, total > limit, limit, spec.arrangementMap());
     }
 
     /** The field's own label, else that of the column bound to the same expression, else its name in words. */

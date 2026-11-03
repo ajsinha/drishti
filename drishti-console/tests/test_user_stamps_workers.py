@@ -23,7 +23,6 @@ from core.auth import Auth
 from core.bi import BiMe
 from core.layouts import Layouts
 from core.packs import Packs
-from core.pivots import Pivots
 from core.settings import UserSettings
 from core.user_stamps import UserStamps
 
@@ -120,19 +119,16 @@ def test_the_pack_switcher_follows_a_choice_made_through_another_worker(tmp_path
     assert [names(c, OTHER) for c in caches] == [["core", "market-data"]] * 4
 
 
-def test_a_saved_or_reset_layout_and_pivot_show_on_every_worker(tmp_path):
+def test_a_saved_or_reset_layout_shows_on_every_worker(tmp_path):
     server = Server()
     stamps = workers(tmp_path)
     layouts = [Layouts(Settings(), s) for s in stamps]
-    pivots = [Pivots(s, 30.0) for s in stamps]
     assert all(run(c.state(server, ME))["layouts"] == [] for c in layouts)
-    assert all(run(c.state(server, ME))["pivots"] == [] for c in pivots)
     saved = {"sutra": "endur-comswap", "kind": "trade", "panels": [{"id": "p1", "hidden": True}]}
-    server.layout, server.saved_pivots = [saved], [{"scope": "search", "kind": "trade", "rows": ["book"]}]
+    server.layout = [saved]
     time.sleep(0.01)
     layouts[0].forget("trader1")                                                        # PUT /api/layout on worker 1 (QA3A-03)
     assert all(Layouts.find(run(c.state(server, ME)), "endur-comswap", "trade") == saved for c in layouts)
-    assert all(Pivots.saved_search(run(c.state(server, ME)), "trade") == {"rows": ["book"]} for c in pivots)   # the same user's stamp
     server.layout = []
     time.sleep(0.01)
     layouts[3].forget("trader1")                                                        # reset on worker 4

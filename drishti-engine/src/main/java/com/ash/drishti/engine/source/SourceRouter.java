@@ -903,6 +903,35 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
      * The version of the data the kind reads on the date, across the sources a whole-kind read takes it from (a load makes a
      * new one); empty when one of them cannot say.
      */
+    /**
+     * The kind's data files on a date when one source holds the whole kind and can hand them over (the pivot engine's direct lake route,
+     * docs/architecture/PIVOT_ENGINE.md section 6.2); empty otherwise. Reads no data file.
+     */
+    public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
+        List<SourcePlugin> sources = wholeKindSources(kind, asOf);
+        if (sources.size() != 1) {
+            return Optional.empty();
+        }
+        try {
+            return sources.get(0).lakeFiles(kind, asOf);
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
+    /** The rows a date of the kind holds, from its one source's metadata (no data read); empty when it cannot say. */
+    public Optional<com.ash.drishti.api.RowEstimate> rowEstimate(String kind, java.time.LocalDate date) {
+        List<SourcePlugin> sources = wholeKindSources(kind, date == null ? AsOf.LATEST : AsOf.of(date));
+        if (sources.size() != 1) {
+            return Optional.empty();
+        }
+        try {
+            return sources.get(0).rowEstimate(kind, date);
+        } catch (RuntimeException e) {
+            return Optional.empty();
+        }
+    }
+
     public Optional<String> dataVersion(String kind, AsOf asOf) {
         List<SourcePlugin> sources = wholeKindSources(kind, asOf);
         if (sources.isEmpty()) {

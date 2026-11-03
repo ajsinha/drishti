@@ -62,7 +62,7 @@
       {% else %}
       <div class="dv-card dv-facts">
         <div class="dv-facts-h"><h2>{{ chosen.kind }}</h2><span class="text-muted-d">{{ chosen.pack }} pack{% if chosen.description %} · {{ chosen.description }}{% endif %}</span>
-          <span class="dv-links">{% if chosen.contract %}<a href="{{ chosen.contract }}">data contract</a> · {% endif %}<a href="/what?q={{ chosen.title | urlencode }}">Knowledge</a> · <a href="/datamap?kind={{ chosen.kind | urlencode }}">DATAMAP</a></span></div>
+          <span class="dv-links">{% if chosen.contract %}<a href="{{ chosen.contract }}">data contract</a> · {% endif %}<a href="/what?q={{ chosen.title | urlencode }}">Knowledge</a> · <a href="/datamap?kind={{ chosen.kind | urlencode }}">DATAMAP</a>{% if pivot_on is defined and pivot_on() %} · <a href="/pivot?source={{ chosen.kind | urlencode }}" title="Pivot this table: PIVOT {{ chosen.kind }} &lt;GO&gt;">Pivot</a>{% endif %}</span></div>
         <dl class="dv-dl">
           <dt>Source</dt><dd>connector {{ chosen.connector }} ({{ chosen.format | lower }}){% if chosen.table %} · table <span class="mono">{{ chosen.table }}</span>{% endif %}</dd>
           <dt>Format</dt><dd>{{ chosen.format }}</dd>

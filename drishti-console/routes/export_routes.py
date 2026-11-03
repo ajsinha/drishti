@@ -80,7 +80,7 @@ async def _grid(request: Request):
 
 @router.post("/export/grid.csv")
 async def grid_csv(request: Request):
-    """A grid the page computed (the Pivot tab, as shown): ``{"name", "header", "rows"}`` as CSV. Text a spreadsheet would
+    """A grid the page computed (Pivot (the pivot screen), as shown): ``{"name", "header", "rows"}`` as CSV. Text a spreadsheet would
     run as a formula is prefixed so it stays text."""
     name, header, rows = await _grid(request)
     safe = [[("'" + v) if isinstance(v, str) and v[:1] in ("=", "+", "-", "@") and plain(v) == v else v for v in r] for r in rows]

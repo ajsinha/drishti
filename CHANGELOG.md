@@ -107,6 +107,51 @@
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
+## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
+
+- **Pivots over entity documents (PIVOT_ENGINE.md 6.7; PIVOT_GUIDE.md, Documents).** A pivot field is a Rachana path, parsed by
+  Rachana's own parser: `$.PRODUCT_TYPE`, `$.LEGS[0].CURRENCY`, `$.LEGS[*].NOTIONAL` (one row per leg), `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL`,
+  `size($.LEGS)`. The field list follows the documents' shape (each list a grain of its own) and takes a typed path; a view has one grain,
+  the finest list it uses; a coarser figure counts each parent once (new built-ins `sum_once`, `count_once`, `avg_once`); two separate lists
+  are refused; a filter on a list keeps the parents with any (or, with `~all`, all) elements matching. Three routes, fastest first: a
+  promoted column, a BI dataset table's cached layer, DuckDB JSON over the documents; the cell's provenance names it. An administrator sees
+  the most used typed paths with Promote and Add to dataset (`GET /api/v1/pivot/paths`). The guide's six worked examples and tutorial 33's
+  new step carry the demo lake's real figures and pictures (`tools/docs/shots/t33.py`).
+- **Chart any table: Top N, Others and the split cap by the pivot engine.** The chart asks the engine for a level's top N (`top: {field:
+  {n, by}}`) and draws its *Others* member, whose figures come from its own rows; the browser merges no cells any more (its `combine`
+  and the extra sum and count of an average are gone).
+- **Client renderer 1.2.0.** A table that offers Pivot is the table and a link to the pivot screen, as the console draws it (the Table |
+  Pivot switch, `pivotTab` and the `pivot` behaviour module are gone); 1.1.0, 1.0.0 and 0.1.0 stay served, unchanged. The pivot grid sets
+  its indents and conditional formats through the CSSOM, so a host's CSP that refuses inline styles is respected.
+- **Nothing else aggregates: the Sutra `pivot` panel and Chart any table on the pivot engine.** A `pivot` panel's cells, subtotals and
+  totals are computed by the engine's in-memory provider (`RowsProvider`, the built-ins' own states; equal to the tabular provider on the same
+  rows) and its nested rows drawn by the one pivot grid (`pivot-grid.js`, the Pivot screen's, which now replaces `pivot-core.js`). *Chart any
+  table* sends the shown rows' chart fields to the new `POST /api/v1/pivot/inline` (at most 100,000 rows) and draws the engine's answer;
+  *Chart all N* on a panel offers *Chart every row*. `pivot-engine.js` is now only the engine's browser client (query, inline, layout,
+  formats): its in-browser `cube` and filters are deleted, as is the old nested grid.
+- **One pivot: the old Pivot tab retired onto the pivot engine (product owner, 2026-11-02: no dual machinery).** A table or ladder whose
+  Sutra says `pivot:` and a search whose kind's pack says `pivot:` now carry **Pivot**, which opens the pivot screen on the panel's own rows
+  (`panel/<kind>/<panel>/<id>`) or on the kind, with the Sutra's or the pack's arrangement as the opening view; an author promotes a page
+  table's view to its Sutra at `/api/v1/pivot/promote`; *Chart all N* asks the pivot engine. Retired: the browser-computed Pivot tab
+  (`pivot.js` of the tab, its saved arrangements `/api/v1/me/pivots`), the search pivot (`/api/v1/search/pivot/**`, `SearchPivot`,
+  `PivotCube`) and the panel records endpoint; the pivot screen now owns `/api/pivot` and `static/js/pivot.js`. `drishti.pivot.enabled` is
+  the old name of the engine's switch (`config/engines/pivot.yaml`); `drishti.pivot.max-row-keys`, `max-column-keys`, `document-scan`,
+  `drill-page` and `budget` are gone. Embedded views: Elements 1.4.4.
+- **The pivot engine as a compute engine; the direct lake route; currencies and units.** `config/engines/pivot.yaml` with its catalogue
+  entry (the MR cube needs it); large Delta and Iceberg tables read straight from their Parquet files by DuckDB (masked columns never
+  read, the filters repeated on the raw columns for statistics skipping); money converted at the view's rates or refused per cell when it
+  mixes currencies, a sum of a rate or percentage refused; the architecture rule test (only `drishti-bicompute` aggregates for a pivot).
+- **The pivot engine, phase P1 (2.9.11.a; PIVOT_GUIDE.md, tutorial 33, PIVOT_ENGINE.md).** A new module `drishti-bicompute` (plain
+  Java): views of declarative cell sets compiled to one `GROUP BY GROUPING SETS` statement per restriction, functions with start, add,
+  merge and finish (mergeable: sum, count, avg, min, max, wavg, variance and standard deviation; holistic and exact: median, percentile,
+  distinct count), partial states merged in a fixed order, a partial-state cache in the one memory budget (`pivot.states`), the
+  split-and-merge harness. Any Data view table (read for the person, masks applied, staged in memory) or VaR (`source: var`, every cell the
+  VaR engine's answer for its scope) as a pivot: `PIVOT <GO>`, Views → Pivot, Pivot on a Data view table; nested rows opened lazily (only
+  open nodes computed), expand by another field per member, top N with an Others of its own members, sorting per level, the provenance of
+  every cell, the scan estimate, a chart that never stacks a non-additive measure, Excel with outline levels, SUM formulas only where a
+  figure adds up and a Provenance sheet, CSV, Arrow, saved and shared views, cell references, compare two dates. `/api/v1/pivot`,
+  `drishti.py pivot`, `drishti.pivot.*` settings, codes DRS-5701 to DRS-5705 and DRS-9507.
+
 ## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-03)
 
 - **Fixed (drill): the release drill's console findings.** The sign-in page, which sends its form in the background for busy protection,
@@ -5203,7 +5248,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
     `description`, `kinds` and `example` lines; `make_packs.py` refuses one over 60 lines and `--check` also fails on a
     generated snippet whose source is gone.
 - **The Pivot tab: an Excel-style pivot, only where a Sutra or pack asks for it**
-  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). A **Table | Pivot** switch on the
+  ([USER_GUIDE.md](docs/guides/PIVOT_GUIDE.md)). A **Table | Pivot** switch on the
   tables and ladders whose Sutra says `pivot:`, and on the search results and pick lists of kinds whose pack says
   `pivot:`; nowhere else. A field list and four zones, Rows, Columns (several levels each), Values (sum, count, avg,
   min, max, distinct count; shown as the value or % of row, column or total) and Filters (a pick list of values, or a
@@ -5215,7 +5260,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Rachana:** the `pivot` option of `table` and `ladder` panels, `true` or `{ fields, rows, columns, values, filters,
     heat, chart, totals }` (fields as row paths or `{ field, bind, label, fmt }`), with problem code `DRS-2031`
     (`DRS-2023` on other kinds); in the JSON Schema, so Studio completes and checks it
-    ([reference](docs/guides/RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+    ([reference](docs/guides/PIVOT_GUIDE.md)).
   - **Engines:** a panel's pivot runs in the browser over **all** its rows (`GET /api/v1/views/{kind}/{id}/panels/{panel}/records`,
     beyond the table's `limit`, up to `drishti.pivot.max-records`); a search's pivot runs on the server over every
     match of the business date from the day's promoted columns (`POST /api/v1/search/pivot/{kind}`, `/drill`,
@@ -5224,7 +5269,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Saved pivots** per (Sutra, panel) and per kind (`/api/v1/me/pivots`, preference namespace `pivots`); no new
     power: opening the kind is enough. **Promote to Sutra:** an author's pivot becomes the panel's `pivot:` in the
     Sutra's next version (only that key rewritten, shown as the changes and a diff), proposed through review.
-  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)).
+  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PIVOT_GUIDE.md)).
     The banking generators opt in a netting set's and a clearing account's trades (notional by product and maturity
     bucket), a book's largest trades (MTM by product and currency), a desk's new *Trades by book* table and the trading
     pack's new desk P&L Sutra (MTM by book and currency), collateral positions, a trade's cash flows (PV by type and

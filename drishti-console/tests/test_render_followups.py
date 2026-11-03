@@ -102,16 +102,18 @@ def test_the_playground_names_no_made_up_entity_and_shows_the_lens():
 
 
 def test_the_versions_1_1_0_current_1_0_0_and_0_1_0_unchanged_elements_2_1_beside_2_0(backend, client):
-    assert rd.VERSION == "1.1.0" and {"0.1.0", "1.0.0", "1.1.0"} <= set(rd.versions())
+    assert rd.VERSION == "1.2.0" and {"0.1.0", "1.0.0", "1.1.0", "1.2.0"} <= set(rd.versions())
     for v in ("0.1.0", "1.0.0", "1.1.0"):
         assert client.get(f"/static/render/{v}/drishti-render.js").status_code == 200
         assert json.loads((rd.ROOT / v / rd.RECORD).read_text()) == rd.record(v)
     assert "m/signin.js" in rd.record()["files"] and "m/signin.js" not in rd.record("1.0.0")["files"]
-    assert embed_v2_routes.ELEMENTS == {"2.0.0": "1.0.0", "2.1.0": "1.1.0"}
+    assert embed_v2_routes.ELEMENTS == {"2.0.0": "1.0.0", "2.1.0": "1.1.0", "2.2.0": "1.2.0"}
     embed = make_client(backend)
     two = embed.get("/embed/v2/elements/2/drishti-elements.js", follow_redirects=False)
-    assert two.headers["location"] == "/embed/v2/render/1.1.0/drishti-elements.js"
+    assert two.headers["location"] == "/embed/v2/render/1.2.0/drishti-elements.js"
+    pinned = embed.get("/embed/v2/elements/2.1/drishti-elements.js", follow_redirects=False)
+    assert pinned.headers["location"] == "/embed/v2/render/1.1.0/drishti-elements.js"
     old = embed.get("/embed/v2/elements/2.0/drishti-elements.js", follow_redirects=False)
     assert old.headers["location"] == "/embed/v2/render/1.0.0/drishti-elements.js"
     text = (rd.FOLDER / "m" / "elements.js").read_text(encoding="utf-8")
-    assert "ELEMENTS_VERSION = '2.1.0'" in text
+    assert "ELEMENTS_VERSION = '2.2.0'" in text
