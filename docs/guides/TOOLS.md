@@ -1423,8 +1423,16 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.
   view is `--view owner/name` (a saved one), `--json-view FILE` (the API's JSON), or flags: `--source`, `--date`, `--rows A,B` (a date
   groups as `TRADE_DATE:month`), `--cols`, `--values "sum(X)"` (repeatable), `--filter FIELD=V1,V2`, `--open DIM=V[/DIM=V]` (a node
   opened, lazily computed), `--level N`, `--top FIELD=N`. `--csv FILE` writes the grid; `--json` the whole answer. `--exact` asks
-  every sketch exactly (exact on request); `--approximate` answers distinct counts and percentiles by their sketches at any size
-  ([PIVOT_GUIDE.md section 23](PIVOT_GUIDE.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster)).
+  every sketch exactly (exact on request); `--approximate` answers distinct counts and percentiles by their sketches at any size and
+  chooses a level's top N by a count with a Space-Saving summary; `--no-rollups` reads the table even when a rollup covers the view; the
+  line `computed as:` says how the answer was computed
+  ([PIVOT_GUIDE.md sections 23 and 24](PIVOT_GUIDE.md#24-the-screens-switches-exact-or--progressive-rollups)).
+- `pivot live start [view flags] [--approximate]`: a live pivot (its id, the node that holds it, how it is kept current);
+  `pivot live list` (yours: recomputes, unchanged checks, streaming or not); `pivot live stop ID`
+  ([PIVOT_GUIDE.md section 25](PIVOT_GUIDE.md#25-live-pivots)).
+- `pivot comments OWNER/NAME [--cell DIM=V,...] [--open]`: a saved view's cell comments; `--add TEXT --cell DIM=V,... [--measure M]`
+  adds one (`--cell '*'`: the grand total); `--resolve ID`, `--reopen ID`, `--delete ID` (its author or the view's owner)
+  ([PIVOT_GUIDE.md section 26](PIVOT_GUIDE.md#26-cell-comments)).
 - `pivot estimate`: what the view reads before it runs.
 - `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
   and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
@@ -1446,6 +1454,8 @@ drishti-console/.venv/bin/python tools/drishti.py pivot run --source trade --row
 drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows DESK --cols CURRENCY --values "var()" --values "es()"
 drishti-console/.venv/bin/python tools/drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
 drishti-console/.venv/bin/python tools/drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
+drishti-console/.venv/bin/python tools/drishti.py pivot live start --view asha/desk-risk
+drishti-console/.venv/bin/python tools/drishti.py pivot comments asha/desk-risk --cell DESK=RATES --add "checked with the desk" --measure Notional
 drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
 ```
 
@@ -1590,6 +1600,7 @@ of Parquet.
 | `tools/drill.sh` | "Drill it" ([PACK_DEVELOPER_GUIDE.md §2.6](PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane and an other lane (files longest first), the Python tool tests, and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure. Once per release wave. |
 | `tools/drillkit/drill_plan.py` | the drill's console planner: `lanes` (the browser lane holds every file that drives a browser or uses the scratch ports, the other lane the rest; each longest first from `data/drill/durations.json`), `merge` (a run's per-file seconds into the durations), `rerun` (each failed test once more, file by file, under a time limit of twice the file's recorded time and at least ten minutes; every outcome reported; known failures from `tools/drill-known.txt` accepted) |
 | `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
+| `tools/bicompute-unit.sh` | a light check of the pivot engine while a drill or a benchmark holds the machine: `javac` and the JUnit launcher at `-Xmx768m`, no Maven, against the jars of the last release installed in `~/.m2` (`DRISHTI_M2_VERSION`) and this checkout's `ErrorCode`; with test class names (`LivePivotTest ScaleSwitchesTest`) it runs them; `--server` also compiles the server's pivot package; its temporary folder is removed on exit. Never instead of the Maven build |
 | `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
 | `tools/sizing_planner.py` | reads the planner's one file, `drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)), the server's workbook template (`drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [CLI_GUIDE.md](CLI_GUIDE.md) |

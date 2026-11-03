@@ -202,6 +202,10 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 | `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
 | `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |
 | `bi:admin` | change a workspace and the BI settings | the workspace admin role or `bi-admin` |
+| `pivot:write` | end your live pivots; save a custom function's new version and submit it ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) | any user of the pivot engine |
+| `pivot:comment` | comment on cells of saved views you may open; resolve, reopen and delete your comments | the view's owner for others' comments |
+| `pivot:approve` | approve or revoke someone else's custom function | the `pivot-approver` role or admin |
+| `pivot:admin` | define, remove and refresh pivot rollups | the admin role |
 | `ai:use`, `ai:admin` | call the configured models and MCP tools; send a test call to a model | the admin role for `ai:admin` |
 | `node:drain` | drain a server before it stops and take it back (the stop hooks and the rolling upgrade runner) | the admin role |
 
@@ -2056,6 +2060,8 @@ and the fix for the codes that need more than the meaning.
 | DRS-5715 | 403 | pivot: official | a custom function in an official run, report or sign-off, or named as an official measure |
 | DRS-5716 | 400 | pivot: explain | an explanation or a what-if the engine cannot make as asked (no `by`, a cell that already fixes it, an empty overlay, a what-if on VaR) |
 | DRS-5720 | 504 | pivot: a node's share missing | a view computed across the cluster where a node's share had no answer by `drishti.pivot.cluster.deadline-seconds` and no other node could answer it: no figure is shown, never one from the other nodes alone |
+| DRS-5721 | 422 | pivot: live | a live pivot refused or ended: live pivots off (`drishti.pivot.live.enabled`), the caller's or the server's live views at their most (`drishti.pivot.live.max-per-person`, `drishti.pivot.live.max-total`), over `drishti.pivot.live.max-cells`, an exact live view estimated over `drishti.pivot.live.max-rows`, a view pinned to a past version (`asOf`) |
+| DRS-5722 | 400 | pivot: comment | a cell comment refused: empty or over 2,000 characters, a dimension or measure not of the view, an Others cell, a change by someone who is neither its author nor the view's owner, a view at 1,000 comments |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
 | DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
@@ -3305,6 +3311,14 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample: each cell `approximate: true`, `intervals` per measure, "computing" notes for what a sample cannot state; never for VaR or a holistic measure; only when the estimate is over `progressive.after-ms`), then `exact`; `error` with `{error, code}` |
 | `GET /api/v1/pivot/rollups` | `{definitions, built: [{id, source, grain, functions, date, version, refreshedAt, lastRefresh, rows, bytes, partitions}], advice: [{source, grain, functions, asked, averageMs, words}]}` |
 | `POST /api/v1/pivot/rollups`, `DELETE /api/v1/pivot/rollups/{id}`, `POST /api/v1/pivot/rollups/{id}/refresh?date=` | administrators: define `{id, source, grain, functions, dates: latest\|all, title}` (refreshed at once in the background), remove, refresh now (`{words}`: what the incremental refresh did); audited |
+| `POST /api/v1/pivot/query` with `"rollups": false`, `"progressive": false` | the screen's switches as options: no rollup answers (the table is read), no ≈ first answer. Every answer carries `computedAs`: `{asked: {exact: exact\|auto\|approximate, progressive, rollups}, sketches: [{measure, error}], topChosen: [words], routes: [words], sampled, exact, words}` (`words`: `exact`, `≈ from a sketch (D)`, `from rollup desk-month`, `rollups off`, ...) |
+| `POST /api/v1/pivot/live` | `{view, exact, rollups}`: a live pivot → `{id, node, answer, options, limits, words}` (exact unless `"exact": false`; never sampled); `422 DRS-5721` past a limit; audited `pivot.live.start` |
+| `GET /api/v1/pivot/live` | the caller's live pivots: `{live: [{id, source, date, since, options, seq, recomputes, unchanged, streaming}], limits}` |
+| `GET /api/v1/pivot/live/{id}/events` | server-sent events on the node named by `node`: `answer` `{id, seq, answer}` first; `patch` `{kind, cells: {rowKey\|colKey: cell}, removed: [keys], changed, seq, causes, provenance, computedAs, ...}`; `reshape` `{answer}`; `status` (nothing moved, and the heartbeat); `error`; `ended` `{why}`; another person's id: `404 DRS-5704` |
+| `DELETE /api/v1/pivot/live/{id}` | ends the caller's live pivot (`204`); audited `pivot.live.end` |
+| `GET /api/v1/pivot/views/{owner}/{name}/comments?cell=&open=` | a saved view's cell comments, oldest first: `{id, version, open, comments: [{id, cell, cellId, coords, label, measure, text, by, at, version, resolved: {by, at} \| null, older}]}`; `cell` is the coordinates' text (`DESK=RATES`, `*`) or the answer's cell key |
+| `POST /api/v1/pivot/views/{owner}/{name}/comments` | `{coords: {DIM: V}, measure, text}`: a comment by anyone who may open the view; `400 DRS-5722` when refused; audited `pivot.comment.add` (never the text) |
+| `POST .../comments/{id}/resolve`, `POST .../comments/{id}/reopen`, `DELETE .../comments/{id}` | the author or the view's owner; audited |
 | `POST /api/v1/net/pivot/partials` | the cluster's nodes only (signed, on behalf of the person): `{plan, parts}` or a plan with its shard; the node's partial states per cell set and key (`{sets: [[{key, members, states: [base64], scope, notes}]], stats}`) |
 
 The estimate also answers `range` (half to twice its seconds), `nodes`, `rollup` (the rollup that covers the view, or null) and `options`
@@ -3318,7 +3332,9 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
   -d '{"view":"asha/desk-risk","format":"xlsx"}' -o desk-risk.xlsx
 ```
 
-Refusals: `DRS-5701` to `DRS-5705`, `DRS-5720` and `DRS-9507` ([the error code table](#error-code-table)).
+Refusals: `DRS-5701` to `DRS-5705`, `DRS-5720` to `DRS-5722` and `DRS-9507` ([the error code table](#error-code-table)). A personal
+token reads, queries, starts and streams live pivots with any scope; ending a live pivot needs `pivot:write`, changing comments
+`pivot:comment`, rollups `pivot:admin`, approving functions `pivot:approve`; saving and restoring a view are console-only.
 
 ### Pivot: custom functions, explain and what-if
 

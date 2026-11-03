@@ -713,7 +713,7 @@ Distinct counts and percentiles are expensive exactly and cheap approximately. S
 |---|---|---|---|
 | HyperLogLog (distinct count) | 2^p registers (p = 12 by default; 11 to 16) | in SQL, in the same `GROUPING SETS` statement: `hash(x)` (64 bits); the first p bits pick the register, the rank of the first 1-bit in the rest is its value (its bit length found exactly); the cell's distinct (register, rank) pairs, the maximum per register taken in Java | register-wise maximum: exact for the sketch, associative and commutative to the byte; two hash families (DuckDB's and Java's) never merge |
 | KLL (percentiles) | a summary of about 3k values (k = 200 by default) | built in Java (decision 6) from the cell's quantile points (`quantile_disc` at 2k + 1 fractions) and its count, each point weighted by the values it stands for (adding at most 1/(4k) to the rank error); written in the module, as Apache DataSketches (decision 2) is not resolvable in the offline build (only `com.yahoo.datasketches` 0.9.0, without KLL) | KLL merge (Karnin, Lang, Liberty, 2016), its coin a hash of the sketch's own count so a fixed order repeats to the byte |
-| Space-Saving (top N) | 10 × n counters and a floor (the most any value not listed may count) | from the cell's `histogram` of values, kept to its counters | counts added (a missing value counts the other's floor), the largest kept; commutative to the byte |
+| Space-Saving (top N) | 10 × n counters and a floor (the most any value not listed may count) | from the cell's `histogram` of values, kept to its counters; as built, a level's top N by a count of rows is chosen by it when the view asks ≈ (`TopFirst`: one summary for the parent's cell, then only the chosen members' cells are read; figures exact, membership within the floor) | counts added (a missing value counts the other's floor), the largest kept; commutative to the byte |
 
 The stated error is printed with every ≈ value; on request the exact answer runs ([section 5.3](#53-exact-on-request-without-giving-up-scale)).
 Rollups may hold sketch states, so a distinct count by desk and month comes from the rollup.
@@ -791,15 +791,51 @@ phases.
 | 2 | **Time travel and diff** | any view as of any business date and any **data version** (a Delta version or an Iceberg snapshot, `as-of`); **compare** two dates or versions side by side or as a diff grid with changed cells highlighted and new and gone members marked; each side's provenance names its versions | P1 | M |
 | 3 | **What-if inside the pivot** | an **overlay**: exclude members (a book), scale or override an input column (a price, a weight, a notional), add hypothetical rows; the tabular provider joins the overlay into the plan, the VaR provider uses its what-if arithmetic (`VarWhatIfMath`); only affected cells recompute; the original stays beside the what-if with the difference; an overlay is private, saved with the view, never written to the lake | P2 | M to L |
 | 4 | **Cell provenance and lineage** | every cell's popover: the data versions read, files or shards and nodes, rows counted, filters and row rules applied (in words), functions with their versions, the layer (rollup or scan), exact or ≈ with the error, time taken; one click to the rows (drill-through, paged, as the person may see them) | P1 | M |
-| 5 | **Live pivots** | on streaming tables (BI's live tables, the Kafka PV stream, intraday files) the engine keeps **mergeable states per cell** and applies each batch as a merge (BI's `LiveAggregate` does this for rollups today); holistic cells recompute at most once per batch, coalesced; cells tick with a flash and a freshness age; a cell more than one batch behind says so | P3 | M |
+| 5 | **Live pivots** | on streaming tables (BI's live tables, the Kafka PV stream, intraday files) the engine keeps **mergeable states per cell** and applies each batch as a merge (BI's `LiveAggregate` does this for rollups today); holistic cells recompute at most once per batch, coalesced; cells tick with a flash and a freshness age; a cell more than one batch behind says so (as built: [section 10.1](#101-as-built-live-pivots-the-screens-switches-and-cell-comments)) | P3 | M |
 | 6 | **Ask in words** | "VaR by desk and currency for last quarter, top 10" → the AI layer (when on) **proposes** a view definition; the person sees the definition (rows, columns, values, filters) before it runs, edits it, and nothing is hidden; the AI never computes a figure | P4 | S to M |
 | 7 | **Automatic insights** | on request or as a toggle: outliers (robust z-score against the cell's peers), sudden changes (against the cell's own history), concentration (a member's share above a threshold), flagged in the grid with the reason in words; computed by the engine, never guessed | P4 | M |
 | 8 | **Robust references to cells** | a stable name for a cell: `pivot://asha/desk-risk@4/Notional[DESK=RATES-NY, month=2026-10]` (view, version, measure, coordinates); survives re-sorting, new columns and a new date (it names coordinates, not positions); usable in DEL formulas (`pivot_ref(...)`), alerts, report cards and the Excel export (named ranges); a reference whose coordinate is gone says "not in the view", never 0 | P1 (names), P4 (formulas, Excel) | S, then M |
 | 9 | **Correctness Excel lacks** | non-additive totals right, currencies converted explicitly, units respected, masks before aggregation, no silent truncation, exact or ≈ always shown ([section 5.4](#54-correctness-excel-does-not-have)) | P1 | M (in the core) |
-| 10 | **Collaboration** | shared live views (the reader's entitlements), comments anchored to a cell's coordinates (survive re-sorts and new dates; [COLLABORATION.md](COLLABORATION.md)), **view versions** with a diff of definitions and restore | P2 | S to M |
+| 10 | **Collaboration** | shared live views (the reader's entitlements), comments anchored to a cell's coordinates (survive re-sorts and new dates; [COLLABORATION.md](COLLABORATION.md)), **view versions** with a diff of definitions and restore (as built: [section 10.1](#101-as-built-live-pivots-the-screens-switches-and-cell-comments)) | P2 | S to M |
 | 11 | **Terminal-grade experience** | keyboard first (`PIVOT <GO>`, every action a key, the Bloomberg-bar standard), instant first answers on big data through progressive answers and rollups | P1 (keys), P3 (progressive) | S, then in P3 |
 | 12 | **Expand and collapse, better than Excel** | nested rows and columns, lazy evaluation per expanded node, "expand by" a different dimension per member, ragged hierarchies, correct Others, inline drill to the rows ([section 11](#11-expand-and-collapse-nested-levels-better-than-excel)) | P1 (core), P2 (expand by, Others for holistic) | M, then M |
 | 13 | **Pick-and-choose charts** | select cells, a row, a column, a range or a level and chart it; the chart is suggested from the selection's shape, linked both ways to the pivot, and never stacks a non-additive measure ([section 14.3](#143-pivot-charts-pick-and-choose)) | P1 (pick, suggest, link), P4 (Excel charts bound to the PivotTable) | M, then S |
+
+### 10.1 As built: live pivots, the screen's switches and cell comments
+
+**Live pivots (item 5).** Built on the existing change signals and the one core, with no second aggregation path: `LivePivots`
+(module `live`) holds each live view (its person, view and options) and, on a **signal**, computes the touched views again through
+`PivotCore.query`. Signals come from the server's existing channels: `LoadService.onReady` (a data load of a kind for a business date,
+the signal BI's layers rebuild on) and the `TopicHub` (a page panel's rows, `panel/<kind>/<panel>/<id>`, followed through the channel the
+Sutra live views stream from; one hub subscription per live panel while a live view reads it). A view on another source or date is not
+touched; a view on the latest date is touched by any load of its source. Only what moved is read again: the partial-state cache is keyed
+by each date's data version, so the sets of untouched dates come from the cache, and before the recompute the rollups of the signal's
+source are refreshed for its dates (their new files' states merged), so a rollup-answered view moves with the load. `AnswerPatch` compares
+the new answer with the last one: no cell moved (`status`), only cells moved (`patch`: those cells whole, the cells gone, the new
+provenance and `computedAs`), or the rows, columns or measures changed (`reshape`: the whole answer). The patch applied to the last
+answer equals a fresh query, cell by cell (`LivePivotTest`). Recomputes are coalesced per view (`drishti.pivot.live.min-interval-ms`), run one at a time
+per view so patches leave in order, and are **exact** unless the view asked ≈ (`ScaleOptions.live()`: never sampled, never progressive).
+Limits are refused in words (`DRS-5721`): the switch, per person, per node, `drishti.pivot.live.max-cells`, `drishti.pivot.live.max-rows` for an exact live view, a
+view pinned with `asOf`; a view nobody streams ends after `drishti.pivot.live.idle-seconds`. The API is BI's standing-query shape: `POST
+/api/v1/pivot/live` (the first answer, its id, the node that holds it), `GET /live/{id}/events` (SSE: `answer`, `patch`, `reshape`,
+`status`, `error`, `ended`), `DELETE /live/{id}`. The batch-as-merge form of the item (per-cell states updated from a stream's rows
+without a query) is not built: a live table's update is a recompute through the cache.
+
+**The screen's switches.** Exact / Auto / ≈, Progressive and Use rollups are `ScaleOptions` (`exact`, `progressive`, `rollups`) beside the
+view, never in it; `rollups: false` makes `AggregateAwareness` step aside. Every answer carries `computedAs` (what was asked; the measures
+answered by sketches with their errors; the levels whose top N a summary chose; the routes that answered, a rollup or the cluster; the
+sample; one line of words), which the screen shows beside the switches and in the provenance popover. The browser computes nothing.
+
+**A level's top N by Space-Saving.** `TopFirst` (core): when the view asks ≈ and a level's top N is ranked by a count of rows on a plain
+text field, the parent's cell is asked for one Space-Saving summary of the field (through the hooks, so a rollup or the cluster may
+answer it), its top n become the level (`Axis.Group.only`: one restricted cell set per member) and the rest one Others (`exclude`), its
+words in `computedAs.topChosen`. Exact (the default) ranks every member as before. Bounds tested in `ScaleSwitchesTest`.
+
+**Cell comments (item 10).** `PivotCellComments` keeps a saved view's comments beside its numbered versions
+(`pivot/view-versions/<owner>/<name>/comments.json`, one document changed atomically); each names its cell by coordinates (readable
+`cell`, and `cellId`, the answer's cell key the screen marks), an optional measure, who, when, the text, resolved by whom and when, and the
+view version it was written on (`older` once the view is saved again). Readers of the view comment; the author or the owner resolves,
+reopens and deletes. Audited without the text. Token scope `pivot:comment`.
 
 ## 11. Expand and collapse: nested levels, better than Excel
 
@@ -953,6 +989,8 @@ fails any new class outside it that implements the function SPI's steps or emits
 | conditional formats | colour scales, data bars, icon sets and rules, on figures; a ≈ figure keeps its marker |
 | double-click a value to see its rows | drill-through inline or in a side panel, paged, as the person may see them |
 | refresh | live refresh, time travel, compare |
+| (none) | the switches Exact / Auto / ≈, Progressive, Use rollups and Live, with how the answer was computed beside them ([section 10.1](#101-as-built-live-pivots-the-screens-switches-and-cell-comments)) |
+| comments | comments on a saved view's cells by coordinates, a marker on the cell, listed in the provenance popover, kept with the view's versions |
 
 ### 14.2 Phone tiers
 
@@ -1249,9 +1287,9 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] pivot charts (section 14.3), linked both ways, stacking rule (built: chart of a selection, the stacking rule, a click opens the member; not yet: pinned charts, PNG and SVG export)
 - [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts (built: xlsx with outline, formulas and Provenance, csv, Arrow, rows, definition)
 - [x] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` (the compute SDK's guard and Arrow codec)
-- [ ] explain the difference; what-if overlays; view versions; cell comments (built: explain, what-if and view versions with a diff of definitions and restore; not yet: cell comments, what-if on VaR through the engine)
+- [ ] explain the difference; what-if overlays; view versions; cell comments (built: explain, what-if, view versions with a diff of definitions and restore, cell comments kept with the versions (section 10.1); not yet: what-if on VaR through the engine)
 - [ ] BI parity tests against recorded figures, models as sources, measures as functions, the old aggregation deleted (built: totals and subtotals of matrices, tables and model queries on the engine, measures as functions, additivity, the old per-level queries deleted, the parity recorder and `BiParityTest`; not yet: the fixtures recorded, models as pivot sources on the pivot screen, the Slice, rollups of states)
-- [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots (built on `wip/pivot-c`, tests written and not yet run: HyperLogLog, KLL and Space-Saving with exact on request and exact or ≈ by size; rollups of partial states per partition, refreshed by version checks with only new files read, aggregate awareness with date coarsening, advice; progressive answers from a sample with intervals; estimates from measured rates with options; not yet: live pivots, the screen's controls for exact and progressive)
+- [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots (built on `wip/pivot-c`, tests written and not yet run: HyperLogLog, KLL and Space-Saving with exact on request and exact or ≈ by size; rollups of partial states per partition, refreshed by version checks with only new files read, aggregate awareness with date coarsening, advice; progressive answers from a sample with intervals; estimates from measured rates with options; live pivots on data loads and live panels through the cache, patches and reshapes (`LivePivotTest`, run); the screen's switches exact / auto / ≈, progressive, use rollups and live with `computedAs` (`ScaleSwitchesTest`, run); a level's top N by Space-Saving when ≈ is asked (section 10.1); not yet: the batch-as-merge form of live pivots on streams)
 - [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md (P3: `SketchErrorTest`, `RollupTest`, `ClusterMergeTest`, `ProgressiveTest` written; the harness `tools/bench/pivot_bench.py` and BENCHMARK.md section 16 written; the runs to be made)

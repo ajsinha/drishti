@@ -55,7 +55,7 @@
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
-## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale (unreleased, on wip/pivot-b and wip/pivot-c)
+## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale (unreleased, on wip/pivot-b, wip/pivot-c and wip/pivot-c-rest)
 
 - **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 36).** Custom aggregation functions in four
   languages with the four steps start, add, merge and finish: a formula of the built-ins (DEL's syntax: `sum(PNL, where=PNL < 0) /
@@ -85,7 +85,7 @@
   Sketches as the ≈ forms of functions with one name (FUNCTION_CATALOGUE.md), each with a stated error and exact on request: `distinct`
   by HyperLogLog (written in the module, made in SQL from DuckDB's hash, ±1.6% at 4,096 registers), `median` and `percentile` by KLL
   (written in the module, as Apache DataSketches is not resolvable offline; ±1.65% of rank at k = 200); the Space-Saving state for a
-  level's ≈ Top N (built and tested, not yet used by Top N). They answer by their sketch when the view reads more than
+  level's ≈ Top N. They answer by their sketch when the view reads more than
   `sketches.approximate-above-rows` (10 million rows) or `"exact": false` is asked, with a note; exact with `"exact": true` (`drishti.py
   pivot run --exact` / `--approximate`); never VaR, a provider's own measure, a once-per-parent form or a custom function. Rollups of
   partial states per partition (`distinct(COUNTERPARTY) ≈` keeps the sketch; document sources by path at their grain), refreshed on load by
@@ -97,7 +97,34 @@
   hedged after 20 s, refused in words past the deadline (DRS-5720). Estimates from measured scan rates, as a range, with options (run,
   narrow, use the rollup, background). The benchmark harness `tools/bench/pivot_bench.py` (5, 25 and 75 GB measured, at most 25 GB a node,
   on the data disk with 150 GB free, the data deleted afterwards; 100 GB to 3 TB extrapolated). Settings `drishti.pivot.sketches.*`,
-  `progressive.*`, `rollups.*`, `cluster.*`. Not yet: live pivots, the screen's controls for exact, progressive and rollups.
+  `progressive.*`, `rollups.*`, `cluster.*`.
+- **Live pivots (PIVOT_GUIDE.md section 25; PIVOT_ENGINE.md section 10.1).** A pivot view kept current: `POST /api/v1/pivot/live`
+  answers its first answer, its id and the node that holds it; `GET /api/v1/pivot/live/{id}/events` streams `answer`, then `patch` (only
+  the cells that moved), `reshape` (the whole answer when members came or went), `status` and `ended`; `DELETE` ends it. A data load of the
+  view's table for its date (`LoadService.onReady`) or a live panel's update (the `TopicHub` channel the Sutra live views use) computes the
+  touched views again through the one engine: the cache keeps every untouched date's sets and the source's rollups are refreshed first, so
+  only what moved is read; the patch applied to the last answer equals a fresh query (`LivePivotTest`). Exact unless ≈ was asked, never a
+  sample; coalesced per view; refused in words past its limits (DRS-5721: the switch, 5 per person, 200 per node, 5,000 cells, 50 million
+  rows for an exact live view, a view pinned with `asOf`); ended when nobody streams it for a minute. Settings `drishti.pivot.live.*`;
+  `drishti.py pivot live start|list|stop`; audited `pivot.live.start|end`.
+- **The pivot screen's switches (PIVOT_GUIDE.md section 24).** Exact / Auto / ≈, Progressive, Use rollups and Live under the toolbar,
+  each a request option (`exact`, `progressive`, `rollups`), with how the answer was computed beside them from the answer's new
+  `computedAs` ("exact", "≈ from a sketch (D)", "from rollup desk-month", "top N ≈ by a summary, figures exact", "rollups off", "live ·
+  checked …"); also in the provenance popover. `rollups: false` reads the table; progressive draws the ≈ answer and then the exact one
+  (the console relays the server's stream). Keyboard (`L` live) and phone-safe; the browser computes nothing. `drishti.py pivot run
+  --no-rollups` prints the same line.
+- **A level's top N by Space-Saving when ≈ is asked (PIVOT_GUIDE.md section 6).** A level ranked by a count of rows on a text field is
+  chosen before it is read: one Space-Saving summary (10·n counters) of the parent's cell picks the members, only their cells are read,
+  their figures exact; the bound is in the answer's notes and `computedAs.topChosen`; Others says "≈". Exact ranks every member as before.
+- **Cell comments on saved pivot views (PIVOT_GUIDE.md section 26).** A comment on a cell by its coordinates (who, when, the text, the
+  measure, resolved), kept beside the view's versions and marked when written on an older one; a marker on the cell and the comments in
+  the provenance popover (`M` to write); readers comment, the author or the owner resolves, reopens and deletes; audited without the text;
+  `/api/v1/pivot/views/{owner}/{name}/comments`, `drishti.py pivot comments`; DRS-5722.
+- **Token scopes for the pivot engine.** `pivot:write` (end a live pivot, save and submit a custom function), `pivot:comment`,
+  `pivot:approve`, `pivot:admin` (rollups); a token reads, queries, explains, runs a what-if, tests a function in the playground and
+  starts a live pivot with any scope; restoring a saved view's version is console-only.
+- **`tools/bicompute-unit.sh`**: a light javac and JUnit check of `drishti-bicompute` (and `--server`, the server's pivot package) against
+  the installed release's jars, for when a drill holds the machine.
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 

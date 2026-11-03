@@ -46,6 +46,9 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom funct
 - [21. What-if](#21-what-if)
 - [22. BI on the pivot engine](#22-bi-on-the-pivot-engine)
 - [23. Scale: sketches, rollups, progressive answers and the cluster](#23-scale-sketches-rollups-progressive-answers-and-the-cluster)
+- [24. The screen's switches: exact or ≈, progressive, rollups](#24-the-screens-switches-exact-or--progressive-rollups)
+- [25. Live pivots](#25-live-pivots)
+- [26. Cell comments](#26-cell-comments)
 
 ## 1. Open it
 
@@ -166,6 +169,15 @@ A level may show its top N members by a measure and one **Others** member: "Othe
 members** (the rows of the members not shown), for every measure: a median of Others is the median of those rows, never total minus the
 top N. Others is not opened further (its rows can be exported).
 
+**Top N when you ask ≈.** With the screen's **≈** switch on (or `"exact": false`), a level whose top N is ranked by a count of rows
+(`count()`, or `count(x)` of the level's own field) and whose field is plain text is chosen **before** the level is read: one Space-Saving
+summary of the field (10·n counters) is made for the parent's cell, the members it ranks first are the level, and only their cells are
+read. The figures shown are exact, each from its own rows; only the choice of members is ≈, within a stated bound: every count the summary
+keeps is over by at most its floor, and a member holding more than 1/(10·n) of the rows is always listed. Others then reads "Others (≈: the
+rest after a top N chosen by a summary)" and its figures are still its own members' exactly. A top N ranked by anything else (a sum, an
+average, a VaR), a grouped date or number bins, and every view not asking ≈ rank every member exactly; the answer's notes say which.
+Use it for a level with very many members (counterparties, instruments) where reading every member's cell would be the cost.
+
 Each level sorts on its own: by label in the field's type order (numbers by value, dates by time, text alphabetically, `(blank)` last),
 or by a measure, ascending or descending. A sort never moves a child out of its parent.
 
@@ -226,6 +238,7 @@ differences.
 **Versions.** Every save of a view is kept: `GET /api/v1/pivot/views/{owner}/{name}/versions` lists them, `/diff?from=1&to=2` says what
 changed in the definition (rows, columns, values, filters, open nodes, sorts, top N, date) and `POST /api/v1/pivot/views/{name}/restore`
 with `{"version": 1}` saves an old one again as the next version (the versions between stay). A view keeps its definition, never numbers.
+Comments on its cells are kept beside its versions ([section 26](#26-cell-comments)).
 
 ## 12. Who sees what
 
@@ -280,6 +293,9 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 23.1](#231-sketches-with-a-stated-error-and-exact-on-request)) |
 | `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample, with intervals) then `exact` |
 | `GET, POST /api/v1/pivot/rollups`, `DELETE /rollups/{id}`, `POST /rollups/{id}/refresh` | rollups: list with advice; define, remove, refresh (administrators) |
+| `POST /api/v1/pivot/query` with `"rollups": false`, `"progressive": false` | the screen's switches as options: no rollup answers, no ≈ first answer; every answer's `computedAs` says what was asked and what answered ([section 24](#24-the-screens-switches-exact-or--progressive-rollups)) |
+| `POST /api/v1/pivot/live`, `GET /live`, `GET /live/{id}/events`, `DELETE /live/{id}` | a live pivot: started (its first answer, id and node), listed, streamed (`answer`, `patch`, `reshape`, `status`), ended ([section 25](#25-live-pivots)) |
+| `GET, POST /api/v1/pivot/views/{owner}/{name}/comments`, `POST /comments/{id}/resolve`, `/reopen`, `DELETE /comments/{id}` | a saved view's cell comments ([section 26](#26-cell-comments)) |
 
 Details and the error codes: [API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot).
 
@@ -333,6 +349,8 @@ the scale keys of [section 23.6](#236-settings); and `drishti.admission.retry-af
 | DRS-5714 | 422 | a custom function past a limit: a state over its bound, a call over its time, every worker busy |
 | DRS-5715 | 403 | a custom function in an official run, or an official measure's name |
 | DRS-5716 | 400 | an explanation or a what-if it cannot make as asked |
+| DRS-5721 | 422 | a live pivot refused or ended: live pivots off, your or the server's live views at their most, over the live cell budget, an exact live view over `drishti.pivot.live.max-rows`, a view pinned to a past version |
+| DRS-5722 | 400 | a cell comment refused: empty or over 2,000 characters, a cell or measure not of the view, an Others cell, not the author's or the owner's to change |
 
 ## 18. How it is built
 
@@ -464,7 +482,7 @@ keep the two forms apart.
 |---|---|---|---|
 | `distinct(x)` | HyperLogLog | 2^p registers (p = 12: 4,096 bytes) | ±1.04/√m: **±1.6%** at p = 12, ±0.8% at p = 14 (one standard error) |
 | `median(x)`, `percentile(x, q)` | KLL | about 3k values (k = 200) | **±1.65% of rank** at k = 200; ±1.8% when made from DuckDB's quantile points |
-| `top_n` of a level | Space-Saving | 10·n counters | each count over by at most the smallest counter; never under (the state is built and tested; a level's Top N does not use it yet: it ranks exactly) |
+| `top_n` of a level | Space-Saving | 10·n counters | each count over by at most the summary's floor, never under; a member over 1/(10·n) of the rows always listed (a level's top N by a count, when ≈ is asked: [section 6](#6-top-n-others-and-sorting)) |
 
 **Never approximate:** VaR, ES and every provider's own measure, the once-per-parent forms, custom functions: they have no sketch.
 
@@ -474,8 +492,8 @@ the provenance popover.
 
 **Exact or ≈ is chosen by size, and you may always ask.** A view that reads more than `sketches.approximate-above-rows` rows (10 million)
 answers `distinct`, `median` and `percentile` by their sketches, with a note saying so; under it they are exact (cheap there). Ask
-for exact with `"exact": true` beside the view, or for ≈ at any size with `"exact": false` (the screen's control for it comes with the
-screen's scale part; the API and the command line have it now):
+for exact with `"exact": true` beside the view, or for ≈ at any size with `"exact": false` (on the screen: the Exact / Auto / ≈ switch,
+[section 24](#24-the-screens-switches-exact-or--progressive-rollups)):
 
 ```json
 { "view": { "source": "trade", "rows": ["DESK"], "values": [{"measure": "distinct(COUNTERPARTY)", "as": "Counterparties"}] },
@@ -572,7 +590,113 @@ Under `drishti.pivot` in `config/engines/pivot.yaml`, in [CONFIGURATION.md](../a
 `sketches.kll-k` (200), `sketches.top-capacity-factor` (10), `sketches.approximate-above-rows` (10,000,000), `progressive.enabled`,
 `progressive.after-ms` (2000), `progressive.sample-fraction` (0.02), `rollups.enabled`, `rollups.refresh-seconds` (60),
 `rollups.advise-after-scans` (10), `rollups.dir`, `rollups.definitions`, `cluster.enabled`, `cluster.hedge-after-seconds` (20),
-`cluster.deadline-seconds` (300), `cluster.min-rows` (5,000,000).
+`cluster.deadline-seconds` (300), `cluster.min-rows` (5,000,000); live pivots ([section 25](#25-live-pivots)): `drishti.pivot.live.enabled`,
+`drishti.pivot.live.max-per-person` (5), `drishti.pivot.live.max-total` (200), `drishti.pivot.live.min-interval-ms` (1000), `drishti.pivot.live.max-cells` (5,000), `drishti.pivot.live.max-rows` (50,000,000),
+`drishti.pivot.live.idle-seconds` (60), `drishti.pivot.live.heartbeat-seconds` (15).
 
 The benchmark of these at 5, 25 and 75 GB, one node and three, cold and warm, with and without a rollup, is
 [BENCHMARK.md section 16](../admin/BENCHMARK.md#16-the-pivot-engine-at-scale).
+
+## 24. The screen's switches: exact or ≈, progressive, rollups
+
+Under the toolbar, four switches say how the figures are computed. Each is an option of the request (never part of the saved view: a
+view says what is shown, these say how it is computed), and the line beside them says how the answer **was** computed, from the answer's
+`computedAs`:
+
+```
+ [ Exact | Auto | ≈ ]  [x] Progressive  [x] Use rollups  [ ] Live L     from rollup desk-month; ≈ from a sketch (Counterparties)
+```
+
+| Switch | On the request | What it does |
+|---|---|---|
+| **Exact** | `"exact": true` | every figure from its values at any size: distinct counts and percentiles exact, every top N ranked over every member |
+| **Auto** (the default) | `"exact": "auto"` | distinct counts and percentiles exact on small data and ≈ by their sketches above `sketches.approximate-above-rows` (the note says so) |
+| **≈** | `"exact": false` | distinct counts and percentiles by their sketches with their stated error at any size, and a level's top N by a count chosen by a summary ([section 6](#6-top-n-others-and-sorting)) |
+| **Progressive** | `"progressive": true` | a view estimated over `progressive.after-ms` shows ≈ from a sample first, then the exact answer replaces it ([section 23.3](#233-progressive-answers--first-then-exact)) |
+| **Use rollups** | `"rollups": false` when off | on: a covering rollup may answer (the same figures, faster); off: the table is read, for a check against the rollup |
+| **Live** | `POST /api/v1/pivot/live` | the view kept current ([section 25](#25-live-pivots)) |
+
+Changing a switch asks again. The line reads, joined by `;`: `exact`; `≈ from a 2% sample` (a progressive first answer);
+`≈ from a sketch (<measures>)`; `top N ≈ by a summary, figures exact`; `from rollup <id>` (or the node route, on a cluster);
+`rollups off`; `live · checked 10:31:02`. Its tooltip lists each sketch's error and each route in full; the provenance popover of a cell
+repeats it ("Answered"). VaR, ES and every provider's own measure are exact whatever the switch says.
+
+Keyboard: the switches are ordinary radio buttons and check boxes in the tab order; `L` turns Live on and off. On a phone they wrap
+under the toolbar and grow to a comfortable tap size; the line moves to its own row. The browser computes nothing: every figure, ≈ or
+exact, is the server's.
+
+The same as JSON and on the command line:
+
+```json
+{ "view": "asha/desk-risk", "exact": false, "progressive": false, "rollups": false }
+```
+
+```
+drishti.py pivot run --view asha/desk-risk --approximate          # ≈
+drishti.py pivot run --view asha/desk-risk --exact                # exact on request
+```
+
+## 25. Live pivots
+
+**Live** keeps a view current. When the data under it moves, the engine computes the view again and sends only the cells that changed;
+the screen puts them in place and flashes them. Nothing else is redrawn unless members came or went.
+
+**What moves it.** A **data load** of the view's table for the view's business date (the same signal the packs' loads give BI: a view
+on the latest date moves with a load of any date), and a **live table's update**: a page panel's rows (`panel/<kind>/<panel>/<id>`) are
+followed through the same live channel the page's own live view streams from. A load of another table or another date computes nothing.
+
+**What is computed again.** The view, through the one engine and its partial-state cache: the sets of dates and data versions that did not
+move come from the cache, so only the touched date's sets (or, when a rollup answers, the rollup refreshed with the load's new files'
+states first) are read again. A live recompute is **exact**, never a sample and never progressive, unless the view asked ≈: a live
+figure is never an estimate you did not ask for.
+
+**What is sent** (server-sent events on `GET /api/v1/pivot/live/{id}/events`):
+
+| Event | Carries |
+|---|---|
+| `answer` | first: the current answer |
+| `patch` | the cells whose figures, members or notes moved (whole, by `rowKey|colKey`), the cells gone (`removed`), the new provenance id and `computedAs`, `seq`, `causes` ("a load of trade for 2026-10-30") |
+| `reshape` | the whole answer, when the rows, columns or measures changed (a member came or went, the latest date moved on) |
+| `status` | nothing moved after a check, and the heartbeat every `drishti.pivot.live.heartbeat-seconds` |
+| `error`, `ended` | a recompute that failed (the view stays live), the view ended (stopped, idle, over the live cell budget, the engine stopped) |
+
+A patch applied to the last answer equals a fresh query of the view, cell by cell (`LivePivotTest`).
+
+**Limits, refused in words** (`422 DRS-5721`): live pivots switched off (`drishti.pivot.live.enabled`); `drishti.pivot.live.max-per-person` (5) live views per
+person and `drishti.pivot.live.max-total` (200) per server; `drishti.pivot.live.max-cells` (5,000) visible cells; an exact live view estimated over `drishti.pivot.live.max-rows`
+(50 million rows: ask ≈ for a live view of its sketches, or narrow it); a view pinned to a past version (`asOf`), which never changes.
+Changes are coalesced: at most one recompute per view every `drishti.pivot.live.min-interval-ms` (1 s), the latest data wins. A live view nobody
+streams ends after `drishti.pivot.live.idle-seconds` (60). A live view is its person's: only they stream or end it.
+
+```
+POST /api/v1/pivot/live            {"view": "asha/desk-risk", "exact": true}
+  → {"id": "lp-3f2a…", "node": "10.0.4.17:18480", "answer": {…}, "options": {"exact": true, "progressive": false, "rollups": true}}
+GET  /api/v1/pivot/live/lp-3f2a…/events           (on that node; the console opens it there)
+DELETE /api/v1/pivot/live/lp-3f2a…
+```
+
+A personal API token may start and stream a live pivot (it reads only); ending one needs the `pivot:write` scope. Starting and ending
+are audited (`pivot.live.start`, `pivot.live.end`).
+
+## 26. Cell comments
+
+On a **saved** view, anyone who may open the view may comment on a cell: click the cell, and the provenance popover lists the cell's
+comments and has a box to add one (`M` puts the cursor there), about the whole cell or one measure. A commented cell shows a marker in
+its corner (dimmed when every comment on it is resolved).
+
+- **What is kept:** who, when, the text (1 to 2,000 characters), the measure if one, the cell by its **coordinates**
+  (`productType=IRS`; the grand total `*`), resolved or open (by whom, when), and the view's **version** it was written on. A cell is
+  named by its coordinates, not its place on the screen, so the comment stays on its cell when the view is rearranged.
+- **Kept with the view's versions** (`pivot/view-versions/<owner>/<name>/comments.json`, beside the numbered versions): saving the view
+  again keeps every comment; one written on an earlier version says so ("on an older version").
+- **Who changes one:** its author or the view's owner resolves, reopens and deletes it (`400 DRS-5722` for anyone else). Others' cells
+  take no comments (their members move with the top N). A view keeps at most 1,000 comments.
+- **Audited** (`pivot.comment.add`, `resolve`, `reopen`, `delete`) with the view, the cell and the comment's id, never its text.
+- A personal API token reads comments with any scope and changes them with the `pivot:comment` scope.
+
+```
+GET    /api/v1/pivot/views/asha/desk-risk/comments?open=true            the open comments ({cell}: one cell's)
+POST   /api/v1/pivot/views/asha/desk-risk/comments   {"coords": {"DESK": "RATES"}, "measure": "Notional", "text": "checked with the desk"}
+POST   /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…/resolve      (and /reopen)
+DELETE /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…
+```
