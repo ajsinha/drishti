@@ -1,0 +1,152 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The data inbox's board (mock-up A), from GET /api/v1/admin/dataload as `st`: every count, size, time and duration is the server's
+   words (InboxStatus); this template only places them. Redrawn whole by admin-inbox.js (?partial=1). #}
+{% set PILL = {'ready': 'st-ok', 'ready-all': 'st-ok', 'not-stable': 'st-warn', 'next-cycle': 'st-warn', 'no-marker': '', 'refused': 'st-bad',
+               'loaded': 'st-ok', 'skipped': 'st-warn', 'failed': 'st-bad', 'failed-files': 'st-bad', 'loading': 'st-warn', 'duplicate': '', 'nothing': '',
+               'returned': 'st-warn', 'committed': 'st-ok', 'waiting': ''} %}
+{% set b = st.board or {} %}
+{% set run = st.running %}
+<div class="ib-board" data-inbox-board data-running="{{ 1 if run else 0 }}">
+{% if error %}
+  <p class="adm-warn" role="alert" data-inbox-error><i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+    The server did not give the inbox's status: {{ error.detail or error }}{% if error.status == 404 %} (is the data inbox on? Admin → <a href="/admin/engines">Engines</a> → Data inbox){% endif %}.</p>
+{% else %}
+  <section class="ib-top" aria-label="The data inbox">
+    <div class="ib-fact"><span class="ib-k">Data inbox</span> <span class="st {{ 'st-ok' if st.on else 'st-warn' }}" data-inbox-on>{{ 'on' if st.on else 'off' }}</span></div>
+    <div class="ib-fact"><span class="ib-k">Owner node</span> <span class="mono" data-inbox-owner>{{ st.ownerText or st.node }}</span></div>
+    <div class="ib-fact"><span class="ib-k">Lock</span> <span class="mono" data-inbox-lock>{{ st.lockText or 'free' }}</span></div>
+    <div class="ib-fact"><span class="ib-k">Next cycle</span> <span data-inbox-next>{{ st.nextCycleText or '-' }}</span></div>
+    <div class="ib-actions">
+      <button type="button" class="btn-pill btn-accent ib-btn" data-inbox-run{% if not st.on %} disabled aria-describedby="ib-off"{% endif %}><i class="bi bi-play-fill" aria-hidden="true"></i> Load now</button>
+      <a class="btn-pill ib-btn" href="#ib-settings">Settings</a>
+    </div>
+    {% if not st.on %}<p class="text-muted-d ib-wide" id="ib-off">The inbox is off on this server: turn it on in Admin → <a href="/admin/engines">Engines</a> → Data inbox.</p>{% endif %}
+  </section>
+
+  <div class="ib-cols">
+    {# 1. Waiting: inbox/ #}
+    <details class="ib-col" data-col="waiting" open>
+      <summary><span class="ib-h">Waiting</span> <span class="ib-n" data-count>{{ b.waitingCount or 0 }}</span> <span class="mono text-muted-d">inbox/</span>
+        {% if b.readyAll %}<span class="st st-ok">ready.all</span>{% endif %}</summary>
+      {% if b.readyAll %}<div class="ib-card" data-ready-all><div><span class="mono"><b>ready.all</b></span> <span class="text-muted-d">{{ b.readyAll.sinceText }}</span></div>
+        <div class="text-muted-d">{{ b.readyAll.text }}</div></div>{% endif %}
+      {% for w in b.waiting or [] %}
+      <div class="ib-card" data-waiting="{{ w.file }}" data-code="{{ w.code }}">
+        <div class="ib-line"><span class="mono ib-name">{{ w.file }}</span> <span class="text-muted-d">{{ w.sizeText }}</span></div>
+        <div><span class="st {{ PILL.get(w.code, '') }}">{{ w.label }}</span> <span class="text-muted-d">{{ w.detail }}</span></div>
+        {% if w.rule %}<div class="{{ 'ib-warn' if w.rule.error else 'text-muted-d' }}" data-rule>{{ w.rule.text }}</div>{% endif %}
+        <div class="text-muted-d">{{ w.next }}</div>
+      </div>
+      {% else %}<p class="text-muted-d">{{ b.waitingText or 'Nothing waiting: inbox/ is empty.' }}</p>{% endfor %}
+      {% for m in st.markersWithoutFile or [] %}<div class="ib-card"><span class="mono ib-name">{{ m }}</span> <span class="text-muted-d">a marker without its file</span></div>{% endfor %}
+    </details>
+
+    {# 2. Loading: inprocess/<run>/ #}
+    <details class="ib-col" data-col="loading" open>
+      <summary><span class="ib-h">Loading</span> <span class="ib-n" data-count>{{ run.fileCount if run else 0 }}</span>
+        <span class="mono text-muted-d">{{ run.folder if run else 'inprocess/' }}</span>{% if run %} <span class="text-muted-d">{{ run.elapsedText }} · {{ run.tableText }}</span>{% endif %}</summary>
+      {% if run %}
+      <div class="ib-card" data-run="{{ run.run }}">
+        <div class="mono ib-name"><b>{{ run.run }}</b></div>
+        <div class="text-muted-d">{{ run.summaryText }}</div>
+      </div>
+      {% for t in run.tables or [] %}
+      <div class="ib-card" data-table="{{ t.n }}" data-state="{{ t.state }}">
+        <div class="ib-line"><span class="st {{ PILL.get(t.state, '') }}">{{ t.state }}</span> <span>{{ t.name }}</span> <span class="text-muted-d">{{ t.timeText }}</span></div>
+        <div class="text-muted-d">{{ t.position }}</div>
+        <ul class="ib-files">{% for f in t.files %}<li><span class="mono ib-name">{{ f.file }}</span> <span class="text-muted-d">{{ f.sizeText }}</span></li>{% endfor %}</ul>
+        <div class="{{ 'ib-warn' if t.state in ('failed', 'returned') else 'text-muted-d' }}">{{ t.detail }}</div>
+      </div>
+      {% endfor %}
+      <p class="text-muted-d">loader process · heap {{ run.heap }}{% if run.nice %} · nice{% endif %}. {{ run.note }}</p>
+      {% else %}
+      <p class="text-muted-d" data-loading-empty>Nothing loading: inprocess/ is empty and the lock is free.</p>
+      {% endif %}
+    </details>
+
+    {# 3. Last cycles: outbox/ #}
+    {% set cycles = st.lastCycles or [] %}
+    <details class="ib-col" data-col="cycles" open>
+      <summary><span class="ib-h">Last cycles</span> <span class="ib-n" data-count>{{ cycles[0].todayCount if cycles else 0 }}</span>
+        <span class="mono text-muted-d">{{ (st.folders or {}).outbox or 'outbox/' }}</span>
+        {% if cycles and cycles[0].skippedToday %}<span class="st st-warn">{{ cycles[0].skippedToday }} skipped</span>{% endif %}</summary>
+      {% for c in cycles %}
+      <div class="ib-card" data-cycle="{{ c.outcome }}">
+        <div class="ib-line"><span class="mono">{{ c.time }}</span> <span class="st {{ PILL.get(c.outcome, '') }}">{{ c.label }}</span>{% if c.run %} <span class="mono text-muted-d ib-name">{{ c.run }}</span>{% endif %}</div>
+        {% if c.text %}<div class="text-muted-d">{{ c.text }}</div>{% endif %}
+        {% if c.versionsText %}<div class="mono text-muted-d">{{ c.versionsText }}</div>{% endif %}
+        {% for n in c.notices or [] %}<div class="ib-warn">notice: {{ n }}</div>{% endfor %}
+      </div>
+      {% else %}<p class="text-muted-d">No cycle has run today since the server started; the ledger keeps every one.</p>{% endfor %}
+      <p class="text-muted-d">Every cycle: <span class="mono">{{ (st.folders or {}).ledger or 'ledger/' }}</span> and the <a href="/admin/loads">Loads</a> tab (source <span class="mono">inbox:</span>).</p>
+    </details>
+  </div>
+
+  {# Failures, needing a person #}
+  <section class="ib-sec" data-failures aria-labelledby="ib-fail-h">
+    <h2 class="ib-h2" id="ib-fail-h">Failures <span class="st {{ 'st-bad' if b.failures else 'st-ok' }}">{{ b.failedTotal if b.failures else 'none' }}</span></h2>
+    <p class="text-muted-d">{{ b.failedText }}</p>
+    {% for f in b.failures or [] %}
+    <div class="ib-card ib-fail" data-failed="{{ f.file }}">
+      <div class="ib-line"><span class="st st-bad">failed</span> <span class="mono ib-name"><b>{{ f.file }}</b></span></div>
+      <div class="text-muted-d">run <span class="mono">{{ f.run }}</span>{% if f.atText %} · {{ f.atText }}{% endif %}{% if f.pack %} · {{ f.pack }} / {{ f.kind }}{% endif %}</div>
+      <div data-reason>{{ f.reason }}</div>
+      {% if f.rejectsText %}<div class="text-muted-d">{{ f.rejectsText }}</div>{% endif %}
+      <div class="ib-line"><a class="mono ib-name" href="/admin/api/dataload/report?path={{ f.report | urlencode }}" data-report>{{ f.report }}</a></div>
+      <div class="ib-actions"><button type="button" class="btn-pill ib-btn" data-retry="{{ f.file }}"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i> Retry</button></div>
+      <p class="text-muted-d">{{ f.retryText }}</p>
+    </div>
+    {% endfor %}
+  </section>
+
+  {# Duplicates today #}
+  <section class="ib-sec" data-duplicates aria-labelledby="ib-dup-h">
+    <h2 class="ib-h2" id="ib-dup-h">Duplicates today <span class="ib-n">{{ b.duplicatesCount or 0 }}</span></h2>
+    {% for d in b.duplicates or [] %}
+    <div class="ib-card" data-duplicate="{{ d.file }}">
+      <div class="ib-line"><span class="st">duplicate</span> <span class="mono ib-name">{{ d.file }}</span></div>
+      <div class="text-muted-d">{{ d.text }}</div>
+      <div class="text-muted-d">{{ d.reason }}</div>
+    </div>
+    {% else %}<p class="text-muted-d">None today: a file whose SHA-256 was loaded before goes to the outbox and is not loaded again.</p>{% endfor %}
+  </section>
+
+  {# Routing rules, read-only #}
+  {% set rules = st.rules or {} %}
+  <section class="ib-sec" data-rules aria-labelledby="ib-rules-h">
+    <h2 class="ib-h2" id="ib-rules-h">Routing rules in effect <span class="st">read-only</span></h2>
+    {% if st.rulesError %}<p class="ib-warn" role="alert">{{ st.rulesError }}</p>{% endif %}
+    <div class="tbl-wrap"><table class="tbl adm-tbl ib-tbl">
+      <caption class="visually-hidden">The routing rules: which pack, kind and table a file name goes to</caption>
+      <thead><tr><th scope="col">#</th><th scope="col">Match (file name)</th><th scope="col">Pack / kind</th><th scope="col">Table</th><th scope="col">Business date</th></tr></thead>
+      <tbody>{% for r in rules.rules or [] %}
+        <tr><td>{{ r.n }}</td><td class="mono">{{ r.match }}</td><td>{{ r.pack }} / {{ r.kind }}</td><td class="mono">{{ r.table }}</td><td>{{ r.date }}</td></tr>
+      {% endfor %}
+        <tr><td>-</td><td colspan="4" class="text-muted-d">{{ rules.unmatchedText or 'anything else: unmatched: fail, to failed/ with the reason, never guessed' }}</td></tr></tbody>
+    </table></div>
+    <p class="text-muted-d">{{ rules.note }}</p>
+  </section>
+
+  <section class="ib-sec" id="ib-settings" data-settings aria-labelledby="ib-set-h">
+    <h2 class="ib-h2" id="ib-set-h">Settings</h2>
+    <p class="mono ib-wrap">{{ (st.settings or {}).text }}</p>
+    <p class="text-muted-d">Folders and reports: <span class="mono">{{ (st.folders or {}).outbox }}</span> · <span class="mono">{{ (st.folders or {}).failed }}</span> ·
+      <span class="mono">{{ (st.folders or {}).ledger }}</span> under <span class="mono ib-wrap">{{ st.dir }}</span>. Change them in
+      <span class="mono">config/engines/dataload.yaml</span> and the rules in <span class="mono">config/dataload.yaml</span>; Admin → <a href="/admin/engines">Engines</a> → Data inbox.</p>
+  </section>
+{% endif %}
+</div>

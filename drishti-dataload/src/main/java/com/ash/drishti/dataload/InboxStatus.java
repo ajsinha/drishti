@@ -273,7 +273,9 @@ final class InboxStatus {
         m.put("state", state);
         m.put("pack", t.path("pack").asText());
         m.put("kind", t.path("kind").asText());
-        m.put("label", state + " " + t.path("n").asInt() + " of " + count + " · " + t.path("pack").asText() + " / " + t.path("kind").asText());
+        m.put("position", state + " " + t.path("n").asInt() + " of " + count);
+        m.put("name", t.path("pack").asText() + " / " + t.path("kind").asText());
+        m.put("label", m.get("position") + " · " + m.get("name"));
         Instant s = instant(t.path("startedAt"));
         Instant e = instant(t.path("finishedAt"));
         m.put("timeText", s == null ? "" : duration(Duration.between(s, e == null ? now : e)));
