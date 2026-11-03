@@ -226,3 +226,11 @@
   .vw-bar .vx-seg { display: none; }                  /* a phone draws the answer and the steps whatever the view */
   .vw-dates { width: 100%; }
 }
+/* An ad-hoc row (portfolios, saved baskets): the name shortens, its buttons sit after it and show on hover or for the open scope */
+.vx-adhoc-row .nm { display: flex; align-items: center; min-width: 0; }
+.vx-adhoc-row .nm .lbl { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vx-adhoc-row .vx-acts { flex: none; display: none; gap: 3px; margin-left: 4px; }
+.vx-adhoc-row:hover .vx-acts, .vx-adhoc-row:focus-within .vx-acts, .vx-adhoc-row[aria-current="true"] .vx-acts { display: inline-flex; }
+@media (hover: none) { .vx-adhoc-row .vx-acts { display: inline-flex; } }
+.vx-adhoc-row .vx-acts .vx-add { position: static; transform: none; opacity: 1; margin-left: 0; }
+
