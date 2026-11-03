@@ -5165,7 +5165,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
     `description`, `kinds` and `example` lines; `make_packs.py` refuses one over 60 lines and `--check` also fails on a
     generated snippet whose source is gone.
 - **The Pivot tab: an Excel-style pivot, only where a Sutra or pack asks for it**
-  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). A **Table | Pivot** switch on the
+  ([USER_GUIDE.md](docs/guides/PIVOT_GUIDE.md)). A **Table | Pivot** switch on the
   tables and ladders whose Sutra says `pivot:`, and on the search results and pick lists of kinds whose pack says
   `pivot:`; nowhere else. A field list and four zones, Rows, Columns (several levels each), Values (sum, count, avg,
   min, max, distinct count; shown as the value or % of row, column or total) and Filters (a pick list of values, or a
@@ -5177,7 +5177,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Rachana:** the `pivot` option of `table` and `ladder` panels, `true` or `{ fields, rows, columns, values, filters,
     heat, chart, totals }` (fields as row paths or `{ field, bind, label, fmt }`), with problem code `DRS-2031`
     (`DRS-2023` on other kinds); in the JSON Schema, so Studio completes and checks it
-    ([reference](docs/guides/RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+    ([reference](docs/guides/PIVOT_GUIDE.md)).
   - **Engines:** a panel's pivot runs in the browser over **all** its rows (`GET /api/v1/views/{kind}/{id}/panels/{panel}/records`,
     beyond the table's `limit`, up to `drishti.pivot.max-records`); a search's pivot runs on the server over every
     match of the business date from the day's promoted columns (`POST /api/v1/search/pivot/{kind}`, `/drill`,
@@ -5186,7 +5186,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Saved pivots** per (Sutra, panel) and per kind (`/api/v1/me/pivots`, preference namespace `pivots`); no new
     power: opening the kind is enough. **Promote to Sutra:** an author's pivot becomes the panel's `pivot:` in the
     Sutra's next version (only that key rewritten, shown as the changes and a diff), proposed through review.
-  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)).
+  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PIVOT_GUIDE.md)).
     The banking generators opt in a netting set's and a clearing account's trades (notional by product and maturity
     bucket), a book's largest trades (MTM by product and currency), a desk's new *Trades by book* table and the trading
     pack's new desk P&L Sutra (MTM by book and currency), collateral positions, a trade's cash flows (PV by type and

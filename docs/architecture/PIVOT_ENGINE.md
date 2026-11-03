@@ -400,7 +400,7 @@ says when it is needed, and decision 8 asks whether to keep it parked.
 ## 7. From the MR cube's core to the pivot engine: what is kept, what changes
 
 The paused branch `wip/mr-cube` (at `17a4af0ea`; compiles; its fifteen server tests pass) holds the shared cube core in
-`drishti-server/src/main/java/com/ash/drishti/server/cube/` (`CubeView` with the `MCUBE` text grammar, `CubeMeasure` with
+its `drishti-server` package `com.ash.drishti.server.cube` (on that branch only: `CubeView` with the `MCUBE` text grammar, `CubeMeasure` with
 `Kind {ADDITIVE, VECTOR, FORMULA}` and `needs`, `CubeDimension`, the `CubeSource<A>` and `Universe<A>` SPI on `OrdinalSet` members,
 `CubeEngine` evaluating one batch of R × C + R + C + 1 sets with totals, diversification, the cell budget, busy protection and a
 byte-weighed cache `cube.cells`, `CubeViews` for saved and shared views, `CubeExport`, `CubeController` at `/api/v1/cube`), the VaR
@@ -1012,11 +1012,13 @@ Errors are in words with a `DRS-` code assigned when built and listed in API_GUI
 ## 18. The command line
 
 ```
-drishti.py pivot query  --source trading.trades --rows DESK --cols month:TRADE_DATE --values "sum(NOTIONAL_USD)" --date 2026-10-30 [--csv|--arrow out.arrow]
+drishti.py pivot sources
+drishti.py pivot fields trade
+drishti.py pivot run --source trade --rows DESK --cols TRADE_DATE:month --values "sum(NOTIONAL_USD)" --date 2026-10-30 [--csv out.csv]
 drishti.py pivot estimate --view asha/desk-risk
-drishti.py pivot views list | show asha/desk-risk | export asha/desk-risk --xlsx out.xlsx [--native-pivot]
-drishti.py pivot explain --view asha/desk-risk --cell "DESK=EMEA" --from 2026-09-30 --to 2026-10-30
-drishti.py pivot functions list | test fn.py --sample rows.csv | submit asha/trimmed_mean | approve asha/trimmed_mean@3 --reason "..."
+drishti.py pivot export --view asha/desk-risk --format xlsx -o out.xlsx      (also csv, arrow; --what rows --cell DESK=EMEA; --what definition)
+drishti.py pivot views
+drishti.py pivot save desk-risk --source trade --rows DESK --values "sum(NOTIONAL_USD)" --share role:risk
 ```
 
 The same words as the API; `--wait` for background runs; a refused view prints the same sentence as the screen.
