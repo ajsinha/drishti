@@ -15,7 +15,7 @@
 -->
 # The MR Cube: a market risk cube lens that answers what FIS Adaptiv's artiQ answers, and shows why
 
-**Status: analysis and product description; design, not built.** Nothing in this document is built unless a row of
+**Status: analysis and product description; the MR cube is building on the pivot engine** (2.9.11.a, branch `wip/mr-cube-2`: the pivot, non-additive totals from vectors, components, limits, the lens, landing A with tabs B and C, explain, the ladder, the heat map and the what-if; [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md)). Nothing else in this document is built unless a row of
 [section 5](#5-what-drishti-has-today) says so and cites the guide it was read from (2026-10-31). Every phase named here is a **proposal**, not a commitment. The rows it proposes are candidates in the
 [implementation plan](../architecture/IMPLEMENTATION_PLAN.md#risk-cubes-candidates-not-started) (MC1 to MC13; the proof-of-concept rows MCP1 to MCP6, section 12), not started.
 

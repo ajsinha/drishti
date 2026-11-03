@@ -17,6 +17,19 @@
 
 ## Unreleased (on develop, after 2.9.11)
 
+- **The MR cube on the pivot engine (2.9.11.a; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot
+  engine's VaR source becomes the market-risk cube when engine `mr-cube` runs (`config/engines/mr-cube.yaml`, installed and on; needs
+  `var` and `pivot`, uses `sensitivities` and `frtb-sa`). Dimensions: every hierarchy level (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`,
+  `LL.LIMIT_LETTER`), the positions' and trades' columns, `RISK_CLASS` (from the product group, `drishti.cube.mr.risk-classes`),
+  `POSITION` and `TRADE`; measures `var()`, `es()`, `pv()`, `trades()`, `comp_var()`, `comp_es()`, `incr_var()`, `limit()`,
+  `limit_use()`, `svar()`, `dv01()`, `cs01()`, `sbm()`; the scope and the lens (horizon, method, confidences, stress set, currency) as
+  the view's `options` (a new part of every pivot view and plan, in the cache key). Every cell's vector of a plan is summed in one batch
+  (`VarBook.vectors`, `ShardedVectors.sumSets`: one call per remote shard for all the cells), every figure the VaR engine's for the
+  cell's scope to the cent. The MR lens's endpoints `/api/v1/pivot/mr/headline|detail|history|versions|explain|sensitivities|what-if`;
+  `MCUBE` opens the pivot screen with the MR lens (landing A: headline, lens controls, slider, sparklines in the cells, a cell's tail and
+  explain; tab B: components, waterfall, histogram, heat map; tab C: the DV01 ladder, the what-if side by side); the catalogue's
+  `defaultView` opens any source on its landing; `drishti.py pivot --option` and `pivot mr ...`. The paused `wip/mr-cube` branch's cube
+  core (`/api/v1/cube`, codes DRS-5601 to DRS-5604, DRS-9506) is not brought back: the pivot engine's codes and busy protection apply.
 - **One pivot: the old Pivot tab retired onto the pivot engine (product owner, 2026-11-02: no dual machinery).** A table or ladder whose
   Sutra says `pivot:` and a search whose kind's pack says `pivot:` now carry **Pivot**, which opens the pivot screen on the panel's own rows
   (`panel/<kind>/<panel>/<id>`) or on the kind, with the Sutra's or the pack's arrangement as the opening view; an author promotes a page

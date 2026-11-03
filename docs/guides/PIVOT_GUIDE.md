@@ -216,7 +216,7 @@ differences.
 - A table is read through the Data view's own read for you: a table you may not open is not offered; a **masked column is not read at
   all**, so it cannot be a dimension, a measure's input or a filter (`403 DRS-5705`).
 - The VaR source applies the VaR engine's own entitlements: trades you may not see are left out of every cell; a role that sees the bank only
-  in aggregate is offered no dimension (hierarchy levels come with the MR cube).
+  in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)).
 - `drishti.pivot.aggregate-only.min-members-per-cell` (1 as shipped) hides the figures of a cell with fewer members.
 - Every view run, rows read and export is audited without values.
 

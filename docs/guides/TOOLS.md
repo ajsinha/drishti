@@ -1427,12 +1427,19 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.
 - `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
   and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
 - `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
+- `--option KEY=V` (repeatable): a provider's option; the VaR source's (the MR cube, [MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)) are `scope`,
+  `horizon`, `method`, `confidence`, `esConfidence`, `set` and `ccy`.
+- `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/pivot/mr`): the view's headline, a cell's
+  tail (`--cell DIM=V,...`), the slider's dates, why a scope moved (`--scope`, `--from`, `--to`), the DV01 ladder (`--grid`), the heat
+  map (`--by QUALIFIER,TENOR`), the what-if side by side (`--copy TRADE --factor -1`).
 
 ```bash
 drishti-console/.venv/bin/python tools/drishti.py pivot fields trade
 drishti-console/.venv/bin/python tools/drishti.py pivot run --source trade --rows productType,counterparty --values "count()" --open productType=IRS
 drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows DESK --cols CURRENCY --values "var()" --values "es()"
 drishti-console/.venv/bin/python tools/drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
+drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows MGMT.DESK --cols RISK_CLASS --values "comp_var()" --option horizon=10d
+drishti-console/.venv/bin/python tools/drishti.py pivot mr ladder --scope DESK:RATES --grid FRTB-GIRR
 ```
 
 ## 6. Store loaders: `tools/load-*.sh`
