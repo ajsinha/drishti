@@ -33,12 +33,18 @@ public final class FlightNodes {
 
     private final NetService net;
     private final String advertise;
-    private final int port;
+    private volatile java.util.function.IntSupplier port;
 
     public FlightNodes(NetService net, String advertise, int port) {
         this.net = net;
         this.advertise = advertise == null ? "" : advertise.trim();
-        this.port = port;
+        this.port = () -> port;
+    }
+
+    /** The port in use, once the service has opened it (a configured port of 0 takes any free one). */
+    public FlightNodes port(java.util.function.IntSupplier inUse) {
+        this.port = inUse;
+        return this;
     }
 
     /** This node's id: its cluster id, else the host's name. */
@@ -57,7 +63,7 @@ public final class FlightNodes {
             host = HostAddress.primary().orElse(host.isEmpty() ? "localhost" : host);
         }
         String id = net == null || net.nodeId() == null || net.nodeId().isBlank() ? host : net.nodeId();
-        return new FlightBackend.Node(id, host, port);
+        return new FlightBackend.Node(id, host, port.getAsInt());
     }
 
     /** The live members of the cluster other than this node, by their real addresses. */
@@ -71,7 +77,7 @@ public final class FlightNodes {
             if (m.nodeId().equals(me) || m.drained()) {
                 continue;
             }
-            hostOf(m.url()).filter(h -> !HostAddress.loopbackOrWildcard(h)).ifPresent(h -> out.add(new FlightBackend.Node(m.nodeId(), h, port)));
+            hostOf(m.url()).filter(h -> !HostAddress.loopbackOrWildcard(h)).ifPresent(h -> out.add(new FlightBackend.Node(m.nodeId(), h, port.getAsInt())));
         }
         return out;
     }

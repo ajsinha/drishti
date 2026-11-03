@@ -283,6 +283,7 @@ def create_app(settings: Settings) -> FastAPI:
                         ai_routes)
 
     from routes import edition_routes, trading_routes
+    from routes import data_out_routes
     from routes import render_routes
     from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
@@ -472,6 +473,8 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
     templates.env.globals["engines_panel"] = _menus.engines_panel  # the Engines menu's panel: search, Admin -> Engines, engines not running
+    from core import engines as _engines_state
+    templates.env.globals["engine_available"] = _engines_state.engine_available   # an engine running here or on a peer (Admin -> Data out: flight)
     from core import phone as _phone
     templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (MOBILE_DISPLAY.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
@@ -621,6 +624,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(data_routes.router)              # the Data view: DATA, every dataset and a day as .jsonl.gz (DATA_GUIDE.md)
     app.include_router(compute_admin_routes.router)     # Admin -> Compute (docs/admin/OPERATIONS.md)
     app.include_router(admin_engines_routes.router)     # Admin -> Engines: compute engines on or off per server (COMPUTE_ENGINES.md)
+    app.include_router(data_out_routes.router)          # Admin -> Data out: Arrow Flight, the page and the map (FLIGHT_GUIDE.md)
     app.include_router(connector_routes.router)
     app.include_router(artifact_routes.router)
     app.include_router(lake_routes.router)

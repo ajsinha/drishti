@@ -139,7 +139,9 @@ public class FlightConfiguration {
 
     @Bean(destroyMethod = "close")
     public FlightService flightService(FlightSettings settings, ServerFlightBackend backend) {
-        return new FlightService(settings, backend, Clock.systemUTC());
+        FlightService service = new FlightService(settings, backend, Clock.systemUTC());
+        backend.nodes().port(service::port);                             // the endpoints name the port in use (0 in the file: any free one)
+        return service;
     }
 
     /** Arrow Flight as a compute engine (COMPUTE_ENGINES.md): off stops the port live; on needs a restart. */

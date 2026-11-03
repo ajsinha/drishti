@@ -376,7 +376,7 @@ engines:
     needs: []
     uses: []
     api: [/api/v1/admin/data-out]
-    console: [/admin/api/data-out]
+    console: [/admin/data-out, /admin/api/data-out]
     words: []
     menus: []
     help: [flight-guide]

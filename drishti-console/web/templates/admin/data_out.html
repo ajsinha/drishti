@@ -1,0 +1,79 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{% extends "base.html" %}
+{% block title %}Data out · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-data-out.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+{# Admin -> Data out (docs/guides/FLIGHT_GUIDE.md section 9): one screen, two views of the same answer (GET /admin/api/data-out), switched by
+   the toggle: the page (mock-up A, the default) and the map of clients and nodes (mock-up B). The service bar, the node cards, the stream
+   detail and Stop are shared by both views; admin-data-out.js draws everything from the JSON below and refreshes it every 5 seconds. #}
+<div class="adm dout" data-dout data-dout-view="{{ view }}">
+  <h1>Data out</h1>
+  {% with tab='data-out' %}{% include "admin/_nav.html" %}{% endwith %}
+  <div class="dout-head">
+    <h2>Admin → Data out</h2>
+    <span class="dout-meta">Arrow Flight for Python, Java, C#, R, Go and JDBC clients · <a href="/help/flight-guide">guide</a></span>
+    <div class="dout-toggle" role="radiogroup" aria-label="View">
+      <button type="button" role="radio" data-dout-switch="page" aria-checked="{{ 'true' if view == 'page' else 'false' }}"><i class="bi bi-list-ul" aria-hidden="true"></i> Page</button>
+      <button type="button" role="radio" data-dout-switch="map" aria-checked="{{ 'true' if view == 'map' else 'false' }}"><i class="bi bi-diagram-2" aria-hidden="true"></i> Map</button>
+    </div>
+  </div>
+  <p class="dout-error" data-dout-error role="alert" hidden></p>
+  <p class="dout-done" data-dout-done role="status" hidden></p>
+
+  {# shared: the service bar #}
+  <section class="dout-service" data-dout-service aria-label="The Flight service"></section>
+
+  {# view A: the page, read top to bottom #}
+  <div class="dout-view" data-dout-pane="page"{% if view != 'page' %} hidden{% endif %}>
+    <div class="dout-grid21">
+      <section class="dout-card" aria-label="Nodes"><h3>Nodes <span data-dout-nodes-count></span></h3>
+        <div class="dout-nodes" data-dout-nodes></div>
+        <p class="dout-note">Each node advertises its real address; GetFlightInfo lists the endpoints and a client reads them in parallel.</p>
+      </section>
+      <section class="dout-card" aria-label="Arrow memory"><h3>Memory <span>Arrow, off-heap</span></h3><div data-dout-gauge></div></section>
+    </div>
+    <section class="dout-card" aria-label="Live streams"><h3>Live reads <span data-dout-live-count></span></h3>
+      <div class="dout-scroll"><table class="dout-tbl" data-dout-live></table></div></section>
+    <section class="dout-card" aria-label="Readers"><h3>Readers <span>the last day · refusals first</span></h3>
+      <div class="dout-scroll"><table class="dout-tbl" data-dout-recent></table></div></section>
+    <div class="dout-grid2">
+      <section class="dout-card" aria-label="Tokens"><h3>Tokens with Flight scopes <span data-dout-tokens-count></span></h3>
+        <div class="dout-scroll"><table class="dout-tbl" data-dout-tokens></table></div>
+        <p class="dout-note">Revoke a token on <a href="/admin/tokens">Admin → Tokens</a>; its sessions end at once.</p></section>
+      <section class="dout-card" aria-label="Limits per role"><h3>Limits per role <span>config/engines/flight.yaml</span></h3>
+        <div class="dout-scroll"><table class="dout-tbl" data-dout-limits></table></div></section>
+    </div>
+  </div>
+
+  {# view B: the map of clients and nodes, a line per live read, the selected one's detail #}
+  <div class="dout-view" data-dout-pane="map"{% if view != 'map' %} hidden{% endif %}>
+    <div class="dout-mapgrid">
+      <section class="dout-card" aria-label="Clients and nodes"><h3>Clients and nodes <span>a line per live read · select one</span></h3>
+        <div class="dout-mapwrap"><svg class="dout-map" data-dout-map role="img" aria-label="Clients on the left, nodes on the right, a line per live read"></svg></div>
+        <p class="dout-note" data-dout-map-empty hidden>No live read now. The last day's readers are on the page view.</p>
+      </section>
+      <aside class="dout-card dout-detail" data-dout-detail aria-label="The selected read" aria-live="polite">
+        <h3>Selected read</h3><p class="dout-note">Select a line of the map.</p></aside>
+    </div>
+  </div>
+  <div hidden data-dout-json="{{ d | tojson | forceescape }}"></div>
+</div>
+<script src="/static/js/admin-data-out.js?v={{ ASSET_V }}" defer></script>
+{% endblock %}
