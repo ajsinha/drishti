@@ -395,6 +395,73 @@ When one table is far beyond what a few Drishti nodes scan in minutes (tens of t
 answers come back as mergeable states, and the core is unchanged. Not in this design's build; [section 9.10](#910-duckdbs-limits-stated-honestly)
 says when it is needed, and decision 8 asks whether to keep it parked.
 
+### 6.7 Documents: paths, arrays and grains
+
+*Product owner, 2026-11-03: "our data in lake is in json format so then how pivot will work on it?"; the design below, recommended and
+asked for.*
+
+**How the lake holds an entity.** A kind of reference or numeric data (a risk vector, a scenario PV, a limit) is stored as typed
+columns. An **entity document** (a trade, a counterparty, a netting set) is stored as the whole source document in a text column, `doc`
+(JSON), beside a few **promoted** columns that the pack names in the connector's `layout.<kind>.columns` (for trades `TRADE_ID`,
+`PRODUCT_TYPE`, `COUNTERPARTY`, `PORTFOLIO` …, holding exactly the document's values). A trade from Calypso carries nested parts inside
+`doc`: `LEGS` (a list; each leg has `LEG_ID`, `LEG_TYPE`, `CURRENCY`, `NOTIONAL`, an `INDEX` object …) and `EVENTS` (a list; each event
+has `EVENT_TYPE`, `EVENT_DATE`, `AMOUNT`, `CURRENCY` …).
+
+**Three routes from a document field to a pivot, chosen per field, fastest first:**
+
+| Route | What it reads | Cost | When |
+|---|---|---|---|
+| **promoted column** | a typed column of the table | a column scan: fast at any size | the field is in the connector's `layout.<kind>.columns` |
+| **dataset column** | a BI dataset's column (a `path:` into the document, or an `each:` table), extracted once per business date into the BI `cached` layer (Parquet) | a column scan after the first build | the field is declared in a dataset ([BI_GUIDE.md](../guides/BI_GUIDE.md), "Tables and columns") |
+| **ad-hoc path** | DuckDB's JSON functions over `doc` at query time (`json_extract_string(doc, '$.LEGS[*].CURRENCY')`) | every document parsed for the scanned dates | anything else; the scan estimate ([section 9.7](#97-scan-estimates-before-anything-runs)) shows the cost first, and a large one is refused with the cheaper route named ("promote `LEGS.CURRENCY`, or add it to the trades dataset") |
+
+The person never chooses the route: the field list shows the field once, and the engine takes the fastest route that holds it. An
+administrator sees, per pack, the ad-hoc paths people use most with **Promote** and **Add to dataset** buttons.
+
+**The field list follows the document's shape.** It is built from the kind's data contract (every field, its type and meaning) and,
+where the contract is silent, from a sample of documents:
+
+```
+Trade                         (grain: one row per trade)
+  TRADE_ID, TRADE_DATE, PRODUCT_TYPE, COUNTERPARTY, PORTFOLIO, CURRENCY, QUANTITY, PRICE …
+  Legs                        (grain: one row per leg; a list in the document)
+    LEG_ID, LEG_TYPE, LEG_ECONOMIC_TYPE, CURRENCY, NOTIONAL, SETTLEMENT_TYPE
+    Index                     (an object inside the leg: one value per leg)
+      NAME, TENOR …
+  Events                      (grain: one row per event)
+    EVENT_TYPE, EVENT_DATE, AMOUNT, CURRENCY
+```
+
+A **nested object** (a value, not a list) is just more fields of its parent, named by their path (`LEGS.INDEX.NAME` shows as
+*Legs › Index › Name*). A **list** is a **grain** of its own.
+
+**One grain per view, and figures never counted twice.**
+
+1. **The view's grain is the finest one its rows, columns and values use.** Rows *Desk* and values *Sum of Legs › Notional* is a leg-grain
+   view: one row per leg is aggregated. The grid's header says so: *per leg*.
+2. **A coarser figure in a finer view is counted once per parent.** *Sum of Quantity* (a trade field) in a leg-grain view sums each trade's
+   quantity once, by its id, never once per leg; the header says *per trade, once*. A trade with three legs adds its quantity once. The
+   engine compiles it as an aggregate over the distinct parents in each cell (a grouping on the parent id first, then the cell), which
+   the split-and-merge harness tests.
+3. **Two different lists are never crossed.** Legs and Events of the same trade are independent lists: a view that would put a leg field
+   and an event field on the same row is refused with the reason ("Legs and Events are separate lists of a trade; pick one, or compare
+   them side by side as two values"), because crossing them multiplies rows (three legs and four events would give twelve).
+4. **Filters say which grain they mean.** *Legs › Currency = JPY* on a trade-grain view keeps the trades **with any** JPY leg (shown as
+   *trades with a leg in JPY*); on a leg-grain view it keeps the JPY legs. A filter with *all legs* is offered for the trade grain too.
+5. **Masks and row rules apply per path**: a masked field is not offered, at any depth; the trade's row rules decide its legs and events.
+
+**Worked examples on the demo lake** (the pivot guide carries each one with its real figures, its screen, its command line and its
+saved view in YAML, all produced by running it on `drishti.py lake demo`):
+
+| Question | Rows × columns | Values | Grain |
+|---|---|---|---|
+| Notional by desk and month | Desk × Trade date (month) | Sum of Legs › Notional | leg |
+| How many trades have a JPY leg, by product | Product | Count of trades, filter *Legs › Currency = JPY* | trade |
+| Fixed against floating legs per counterparty | Counterparty × Legs › Leg type | Count of legs, Sum of Legs › Notional | leg |
+| Quantity per desk without double counting | Desk | Sum of Quantity (*per trade, once*) beside Count of legs | leg, the quantity once per trade |
+| Booking events this week by type | Events › Event type × Events › Event date (day) | Count of events | event |
+| VaR beside notional | Desk | VaR (the VaR provider), Sum of Legs › Notional | trade and leg: two providers side by side, each exact |
+
 ## 7. From the MR cube's core to the pivot engine: what is kept, what changes
 
 The paused branch `wip/mr-cube` (at `17a4af0ea`; compiles; its fifteen server tests pass) holds the shared cube core in
@@ -1126,6 +1193,8 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
 - [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine
+- [ ] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators
+- [ ] the pivot guide's worked examples of section 6.7, each with its real figures from the demo lake, a screenshot, the command line and the saved view's YAML
 
 ## 25. Mock-ups: the screens to build
 
