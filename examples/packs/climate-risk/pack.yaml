@@ -81,8 +81,8 @@ connectors:
     - physical-asset
     - taxonomy-alignment
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: climate
+      lake: demo
+      lake-tables: climate.climate-profile,climate.financed-emissions,climate.climate-scenario,climate.climate-stress,climate.physical-asset,climate.taxonomy-alignment
 routes:
   climate-profile: climate-store
   financed-emissions: climate-store
@@ -271,3 +271,11 @@ roles:
     - desk
     - legal-entity
     raw: true
+lake:
+  tables:
+    climate.climate-profile: null
+    climate.financed-emissions: null
+    climate.climate-scenario: null
+    climate.climate-stress: null
+    climate.physical-asset: null
+    climate.taxonomy-alignment: null

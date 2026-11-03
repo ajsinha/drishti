@@ -113,6 +113,28 @@ class LakesTest {
     }
 
     @Test
+    void referencesNestAndADottedNameIsReadAsTheServerReadsIt() {
+        Function<String, String> env = Map.of("DRISHTI_DATA_DIR", "/srv/drishti")::get;
+        Lake l = Lakes.parse("lake: main\nroot: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n", "main", env);
+        assertEquals("/srv/drishti/delta", l.root());
+        assertEquals("./data/delta", Lakes.parse("lake: main\nroot: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n", "main",
+                k -> null).root());
+    }
+
+    @Test
+    void aCatalogLakeNeedsNoRootAndTheDemoLakeIsShipped() {
+        Lake rest = Lakes.parse("lake: main\nformat: iceberg\ncatalog: {type: rest, uri: 'http://c:8181', namespace: risk}\n"
+                + "tables:\n  risk.trade: {}\n", "main", ENV);
+        Map<String, String> s = ConnectorLake.expand("t", "iceberg", List.of("trade"), Map.of("lake", "main"), () -> Lakes.of(rest), x -> { });
+        assertFalse(s.containsKey("root"));
+        assertEquals("rest", s.get("catalog"));
+        assertEquals("http://c:8181", s.get("uri"));
+        assertEquals("risk", s.get("domain"));
+        Lake demo = Lakes.read(tmp.resolve("no-such-folder"), k -> null).get("demo");      // the jar's copy of config/lakes/demo.yaml
+        assertEquals(List.of("business_date", "PRODUCT_TYPE"), demo.require("trading", "trade", "trade_endur").partitionColumns());
+    }
+
+    @Test
     void anInMemoryStoreIsALake() {
         Lake l = Lakes.parse("lake: feeds\nroot: mem://feeds\nmemory:\n  max-mb: 512\n  contract: vendor-no-disk\ntables:\n  news.news: {}\n",
                 "feeds", ENV);

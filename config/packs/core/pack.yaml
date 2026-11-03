@@ -154,8 +154,8 @@ connectors:
     - calendar
     - clearing-account
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: reference
+      lake: demo
+      lake-tables: reference.counterparty,reference.counterparty-group,reference.issuer,reference.ccp,reference.legal-entity,reference.book,reference.desk,reference.trader,reference.calendar,reference.clearing-account
       mode.counterparty: effective
       mode.counterparty-group: effective
       mode.issuer: effective
@@ -380,3 +380,15 @@ console:
   help: config/help.yaml
 python:
   enabled: true
+lake:
+  tables:
+    reference.counterparty: null
+    reference.counterparty-group: null
+    reference.issuer: null
+    reference.ccp: null
+    reference.legal-entity: null
+    reference.book: null
+    reference.desk: null
+    reference.trader: null
+    reference.calendar: null
+    reference.clearing-account: null

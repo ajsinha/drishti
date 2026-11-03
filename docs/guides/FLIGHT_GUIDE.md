@@ -22,7 +22,7 @@ belongs to, without a JSON step and without copying the lake: the kinds of every
 vectors and the in-memory lake, each with the same entitlements, masks, busy protection and audit as the screens.
 
 The exact form of every request, its schema and its errors are in the [reference](FLIGHT_REFERENCE.md); a hands-on walk from a token to a
-pandas DataFrame is [tutorial 34](../tutorials/34-data-out-with-arrow-flight.md); the clients have their own pages
+pandas DataFrame is [tutorial 35](../tutorials/35-data-out-with-arrow-flight.md); the clients have their own pages
 ([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [JDBC](flight/JDBC.md), [ODBC](flight/ODBC.md)).
 Later: C#/.NET, R and Go client pages (the service already answers any Flight client). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
 

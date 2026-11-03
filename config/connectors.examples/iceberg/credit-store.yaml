@@ -13,6 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: copy to config/connectors/credit-store.yaml to read the credit-store data from iceberg. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+# The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
+# config/lakes/iceberg.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - netting-set
@@ -21,9 +23,5 @@ kinds:
 - sa-ccr
 description: credit-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
-  domain: credit
-  catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
-  uri: ${DRISHTI_ICEBERG_URI:}
-  warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
-  credential: ${DRISHTI_ICEBERG_CREDENTIAL:}
+  lake: iceberg
+  lake-tables: credit.netting-set,credit.credit-limit,credit.cva,credit.sa-ccr

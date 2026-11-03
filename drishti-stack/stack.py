@@ -297,6 +297,9 @@ def node_env(stack: dict, node: dict, keys: dict) -> tuple[dict, Path]:
     (home / "data").mkdir(parents=True, exist_ok=True)
     (home / "connectors").mkdir(parents=True, exist_ok=True)
     env.update(DRISHTI_DATA_DIR=str(home / "data"), DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"))
+    # the node's demo lake is the repository's lake file, config/lakes/demo.yaml (docs/guides/LAKE_GUIDE.md): the same tables, partitions
+    # and promoted columns as every node; its root, ${DRISHTI_DELTA_ROOT:...}, is the node's synthetic lake (stack.yaml lakes)
+    env["DRISHTI_LAKES_DIR"] = str(ROOT / "config" / "lakes")
     if node.get("lake"):
         env["DRISHTI_DELTA_ROOT"] = str(lake_dir(node["lake"]))
     return env, home

@@ -1,0 +1,60 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/lakes.examples/s3tables/s3tables.yaml: an example lake file (docs/guides/LAKE_GUIDE.md), the lake the connector files of
+# config/connectors.examples/s3tables/ name. Copy it to config/lakes/s3tables.yaml. Secrets only as ${ENV} or file:/path references.
+lake: s3tables
+format: iceberg
+catalog: {type: s3tables, table-bucket-arn: '${DRISHTI_S3TABLES_ARN:}'}
+tables:
+  risk.stress-scenario: null
+  risk.stress-result: null
+  risk.frtb-sensitivity: null
+  risk.pnl-explain: null
+  risk.trade-valuation:
+    promote: [VALUATION_ID, TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_GROUP, PORTFOLIO, DESK, COUNTERPARTY, NETTING_SET, TRADER_ID, BUY_SELL_CODE,
+      TRADE_STATUS, CURRENCY, NOTIONAL, MTM, MTM_CURRENCY, PNL_1D, DV01, TRADE_DATE, MATURITY_DATE, VALUATION_DATE]
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000
+  risk.portfolio:
+    promote: [PORTFOLIO_ID, NAME, TYPE, OWNER]
+  risk.pnl-vector:
+    promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
+      LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, PV, TAGS, TRADE_STATUS, MATURITY_DATE,
+      STATUS, REPORTING_CCY, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS, TRADE_CURRENCY]
+    vectors: [PNL]
+  risk.scenario-pv:
+    promote: [VALUE_TYPE, GRAIN, TRADE_ID, POSITION_ID, CURRENCY, SOURCE_SYSTEM, SECURITY_ID, INSTRUMENT, LEGAL_ENTITY, DIVISION, DESK, TT_BOOK,
+      LIMIT_LETTER, PORTFOLIO, STRATEGY, PRODUCT_GROUP, PRODUCT_TYPE, COUNTERPARTY, DIRECTION, QUANTITY, BASE_PV, VALUATION_DATE, BASE_VALUATION_DATE,
+      TAGS, TRADE_STATUS, MATURITY_DATE, STATUS, SCENARIO_SET_ID, BATCH_ID, RUN_KIND, COMPUTED_AT, TRADE_IDS]
+    vectors: [SCENARIO_PV]
+  risk.fx-scenario:
+    promote: [CURRENCY, RATE, SCENARIO_SET_ID]
+  risk.scenario-set: null
+  risk.risk-hierarchy:
+    promote: [NODE_ID, HIERARCHY, LEVEL, PARENT_ID, NAME]
+  risk.var-limit:
+    promote: [LIMIT_ID, HIERARCHY, NODE_ID, LIMIT_VAR, CURRENCY]
+  risk.desk-pnl:
+    promote: [DESK_PNL_ID, DESK_ID, LEGAL_ENTITY, ACTUAL_PNL, HYPOTHETICAL_PNL, FEES_AND_COMMISSIONS, CURRENCY, SOURCE, AS_OF]
+  risk.pnl-history:
+    promote: [HIERARCHY, NODE_ID, LEVEL, CURRENCY, FIRST_DAY, LAST_DAY, DAY_COUNT]
+    vectors: [PNL]
+  trading.trade:
+    promote: [TRADE_ID, SOURCE_SYSTEM, PRODUCT_TYPE, PRODUCT_SUB_TYPE, PRODUCT_GROUP, TRADE_STATUS, TRADE_VERSION, BUY_SELL_CODE, CURRENCY, QUANTITY,
+      TRADE_DATE, MATURITY_DATE, COUNTERPARTY, LEGAL_ENTITY, PORTFOLIO, TRADER_ID, NOTIONAL, INDEX_NAME]
+    sort-by: [id]
+    file-rows: 250000
+    row-group-rows: 1000

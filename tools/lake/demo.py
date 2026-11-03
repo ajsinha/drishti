@@ -124,7 +124,9 @@ class Packs:
     def __init__(self, packs_dir: pathlib.Path):
         import yaml
         self.dir = packs_dir
-        self.specs = {p.name: yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8"))
+        sys.path.insert(0, str(ROOT / "tools"))
+        import packlake                               # a lake-form template read with the pack's lake: entries
+        self.specs = {p.name: packlake.view(yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")))
                       for p in sorted(packs_dir.iterdir()) if (p / "pack.yaml").is_file()}
 
     def connector(self, pack: str, name: str) -> dict:

@@ -204,14 +204,28 @@ def _resolve(value: str, data: pathlib.Path, env: str) -> pathlib.Path:
     return (p if p.is_absolute() else ROOT / p).resolve()
 
 
+def _template(pack: dict, name: str, store: str, lake: pathlib.Path, data: pathlib.Path) -> dict:
+    """A pack's template for the store: as it is (``lake: demo``) for Delta at the demo lake's own root; for Iceberg or another folder,
+    its tables written out from the pack's lake: entries with that root (the older form: the server says so once, and
+    ``drishti.py lake migrate-config`` can describe that store as a lake of its own)."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    import packlake
+    raw = pack["connectors"][name]
+    if store == "delta" and lake.resolve() == _resolve(DELTA_DEFAULT, data, "DRISHTI_DELTA_ROOT"):
+        return raw
+    return packlake.view(pack)["connectors"][name]
+
+
 def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path) -> str:
     """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
     plugin and root set; ``engine: native`` for Iceberg."""
     import yaml
     pack = yaml.safe_load((ROOT / "config" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
-    tpl = pack["connectors"][f"trade-{system}"]
+    tpl = _template(pack, f"trade-{system}", store, lake, data)
     settings = dict(tpl.get("settings") or {})
-    if store == "iceberg":
+    if "lake" in settings:                            # the demo lake in Delta: the template as it is (lake: demo)
+        where = f"{system.upper()}'s trades in Delta ({lake / DOMAIN / f'trade_{system}'}, config/lakes/demo.yaml)"
+    elif store == "iceberg":
         root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
         settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
         where = f"{system.upper()}'s trades in Iceberg ({ice / DOMAIN / f'trade_{system}'})"
@@ -284,9 +298,11 @@ def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: path
     import yaml
     pack_name, name = pair or DOMAIN_STORES[domain][0]
     pack = yaml.safe_load((ROOT / "config" / "packs" / pack_name / "pack.yaml").read_text(encoding="utf-8"))
-    tpl = pack["connectors"][name]
+    tpl = _template(pack, name, store, lake, data)
     settings = dict(tpl.get("settings") or {})
-    if store == "iceberg":
+    if "lake" in settings:                            # the demo lake in Delta: the template as it is (lake: demo)
+        where = f"every {domain} table in Delta ({lake / domain}, config/lakes/demo.yaml)"
+    elif store == "iceberg":
         root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
         settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
         where = f"every {domain} table in Iceberg ({ice / domain})"

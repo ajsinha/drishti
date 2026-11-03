@@ -43,10 +43,14 @@ def start_servers(work) -> list:
     connectors.mkdir(parents=True, exist_ok=True)
     shutil.copy(ROOT / "config" / "connectors.examples" / "memory" / "news-store.yaml", connectors / "news-store.yaml")
     shutil.copy(ROOT / "config" / "examples" / "in-memory-lake.yaml", work / "application.local.yaml")
+    lakes = work / "lakes"                              # the demo lake and the store news (a lake: config/lakes.examples/memory/news.yaml)
+    lakes.mkdir(parents=True, exist_ok=True)
+    shutil.copy(ROOT / "config" / "lakes" / "demo.yaml", lakes / "demo.yaml")
+    shutil.copy(ROOT / "config" / "lakes.examples" / "memory" / "news.yaml", lakes / "news.yaml")
     (work / "data").mkdir(parents=True, exist_ok=True)
     if not (work / "data" / "testdata").exists():
         (work / "data" / "testdata").symlink_to(ROOT / "data" / "testdata")
-    procs = _start(work, {**SERVER_ENV, "DRISHTI_CONNECTORS_DIR": str(connectors), "DRISHTI_MEMORY_LAKE_ENABLED": "true",
+    procs = _start(work, {**SERVER_ENV, "DRISHTI_CONNECTORS_DIR": str(connectors), "DRISHTI_LAKES_DIR": str(lakes), "DRISHTI_MEMORY_LAKE_ENABLED": "true",
                           "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"})
     deadline = time.monotonic() + 240
     while time.monotonic() < deadline:

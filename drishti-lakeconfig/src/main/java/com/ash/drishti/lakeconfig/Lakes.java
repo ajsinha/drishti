@@ -52,7 +52,8 @@ public final class Lakes {
     /** At most this many partition columns after {@code business_date}. */
     public static final int MAX_PARTITIONS = 4;
 
-    private static final Pattern REF = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::-?([^}]*))?}");
+    /** A reference with no reference inside its default: resolved innermost first, so {@code ${A:${B:x}/delta}} nests. */
+    private static final Pattern REF = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)(?::-?([^}$]*))?}");
     private static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9_-]*");
     private static final Set<String> SECRETS = Set.of("access-key", "secret-key", "session-token", "credential", "token", "password",
             "client-secret", "s3.access-key", "s3.secret-key", "s3.session-token");
@@ -75,9 +76,23 @@ public final class Lakes {
     public static Path dir() {
         String p = System.getProperty(PROPERTY);
         if (p == null || p.isBlank()) {
-            p = System.getenv(ENV);
+            p = properties.apply(PROPERTY);
+        }
+        if (p == null || p.isBlank()) {
+            p = properties.apply(ENV);
         }
         return Path.of(p == null || p.isBlank() ? DEFAULT_DIR : p.strip());
+    }
+
+    private static volatile Function<String, String> properties = System::getenv;
+
+    /**
+     * How a lake file's references are resolved by {@link #current()}: the server installs its own settings (its environment, system
+     * properties and configuration, as it resolves a connector file's references), so {@code ${DRISHTI_DELTA_ROOT}} given as a server
+     * setting is seen; null: the process's environment.
+     */
+    public static void useProperties(Function<String, String> lookup) {
+        properties = lookup == null ? System::getenv : lookup;
     }
 
     /** The lakes of {@link #dir()} with the process's environment. */
@@ -85,40 +100,12 @@ public final class Lakes {
         return read(dir(), System::getenv);
     }
 
-    private static final java.util.concurrent.atomic.AtomicReference<Object[]> CURRENT = new java.util.concurrent.atomic.AtomicReference<>();
-
     /**
-     * The lakes of {@link #dir()} as they are now: read again only when the folder, a file's time or the number of files changed since
-     * the last read (a connector's start, Admin -> Lakes and the checks all ask; an edited lake file is seen at the next ask).
+     * The lakes of {@link #dir()} as they are now, references resolved with the server's settings ({@link #useProperties}): read at
+     * every ask (a connector's start, Admin -> Lakes, the checks), so an edited lake file is seen at once; a few small files.
      */
     public static Lakes current() {
-        Path d = dir();
-        String stamp = stamp(d);
-        Object[] held = CURRENT.get();
-        if (held != null && held[0].equals(stamp)) {
-            return (Lakes) held[1];
-        }
-        Lakes fresh = read(d, System::getenv);
-        CURRENT.set(new Object[] {stamp, fresh});
-        return fresh;
-    }
-
-    private static String stamp(Path d) {
-        StringBuilder sb = new StringBuilder(d.toAbsolutePath().normalize().toString());
-        if (Files.isDirectory(d)) {
-            try (Stream<Path> files = Files.list(d)) {
-                files.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().forEach(f -> {
-                    try {
-                        sb.append('|').append(f.getFileName()).append('@').append(Files.getLastModifiedTime(f).toMillis()).append('#').append(Files.size(f));
-                    } catch (IOException e) {
-                        sb.append('|').append(f.getFileName()).append("@?");
-                    }
-                });
-            } catch (IOException e) {
-                sb.append("|unlistable");
-            }
-        }
-        return sb.toString();
+        return read(dir(), properties);
     }
 
     /** Every {@code *.yaml} of {@code dir} (none when the folder does not exist: a server with no lake file). */
@@ -134,8 +121,23 @@ public final class Lakes {
                 throw new UncheckedIOException("cannot list the lake folder " + dir + ": " + e.getMessage(), e);
             }
         }
+        for (String name : SHIPPED) {                   // the shipped lakes (the demo lake) when the folder has no file of theirs:
+            if (!out.containsKey(name)) {               // a server started in another working folder, a container, a stack node
+                String res = "drishti/lakes/" + name + ".yaml";
+                try (java.io.InputStream in = Lakes.class.getClassLoader().getResourceAsStream(res)) {
+                    if (in != null) {
+                        out.put(name, parse(new YAMLMapper().readTree(in), name, null, env));
+                    }
+                } catch (IOException e) {
+                    throw new UncheckedIOException("cannot read the shipped lake " + res + ": " + e.getMessage(), e);
+                }
+            }
+        }
         return new Lakes(out, dir);
     }
+
+    /** The lakes shipped in this module's jar ({@code drishti/lakes/<name>.yaml}, a copy of {@code config/lakes/<name>.yaml}). */
+    static final List<String> SHIPPED = List.of("demo");
 
     /** Lakes built in code (tests, a tool that was handed one lake). */
     public static Lakes of(Lake... lakes) {
@@ -180,10 +182,7 @@ public final class Lakes {
             throw new IllegalArgumentException(where + ": lake: " + name + " differs from the file's name " + expected + ".yaml");
         }
         String format = format(where, "format", v.text(root, "format", "delta"));
-        String rootPath = v.text(root, "root", null);
-        if (rootPath == null || rootPath.isBlank()) {
-            throw new IllegalArgumentException(where + ": root: where the lake is (a folder, s3://bucket/prefix, or mem://<store>)");
-        }
+        String rootPath = v.text(root, "root", "");
         Map<String, String> storage = v.map(root.path("storage"), "storage");
         secrets(where, "storage", root.path("storage"), storage);
         Map<String, String> catalog = new LinkedHashMap<>();
@@ -200,6 +199,9 @@ public final class Lakes {
         }
         if (format.equals("delta") && !ctype.equals("none")) {
             throw new IllegalArgumentException(where + ": catalog: is Iceberg's; a Delta lake's tables are paths under its root");
+        }
+        if (rootPath.isBlank() && !Set.of("rest", "glue", "s3tables").contains(ctype)) {      // a catalog says where its tables are
+            throw new IllegalArgumentException(where + ": root: where the lake is (a folder, s3://bucket/prefix, or mem://<store>)");
         }
         Map<String, String> memory = v.map(root.path("memory"), "memory");
         unknown(where, "memory.", root.path("memory"), MEMORY);
@@ -342,7 +344,7 @@ public final class Lakes {
 
     private static void secrets(String where, String block, JsonNode raw, Map<String, String> resolved) {
         for (String k : resolved.keySet()) {
-            if (SECRETS.contains(k) && !REF.matcher(raw.path(k).asText()).find()) {
+            if (SECRETS.contains(k) && !REF.matcher(raw.path(k).asText()).find() && !raw.path(k).asText().startsWith("file:")) {
                 throw new IllegalArgumentException(where + ": " + block + "." + k + ": a secret is never written in a lake file; give "
                         + "${AN_ENVIRONMENT_VARIABLE} or use the platform's role");
             }
@@ -363,21 +365,40 @@ public final class Lakes {
             if (raw == null) {
                 return null;
             }
-            Matcher m = REF.matcher(raw);
-            StringBuilder out = new StringBuilder();
-            while (m.find()) {
-                String val = env.apply(m.group(1));
-                if (val == null || val.isEmpty()) {
-                    val = m.group(2);
+            String now = raw;
+            for (int round = 0; round < 8 && REF.matcher(now).find(); round++) {
+                Matcher m = REF.matcher(now);
+                StringBuilder out = new StringBuilder();
+                while (m.find()) {
+                    String val = lookup(m.group(1));
+                    if (val == null || val.isEmpty()) {
+                        val = m.group(2);
+                    }
+                    if (val == null) {
+                        throw new IllegalArgumentException(where + ": " + key + ": the environment variable " + m.group(1) + " is not set and "
+                                + "the reference gives no default (${" + m.group(1) + ":default})");
+                    }
+                    m.appendReplacement(out, Matcher.quoteReplacement(val));
                 }
-                if (val == null) {
-                    throw new IllegalArgumentException(where + ": " + key + ": the environment variable " + m.group(1) + " is not set and "
-                            + "the reference gives no default (${" + m.group(1) + ":default})");
-                }
-                m.appendReplacement(out, Matcher.quoteReplacement(val));
+                m.appendTail(out);
+                now = out.toString();
             }
-            m.appendTail(out);
-            return out.toString();
+            return now;
+        }
+
+        /**
+         * A variable: the environment; a dotted name ({@code drishti.data.dir}) also as a system property and as its environment form
+         * ({@code DRISHTI_DATA_DIR}), as the server resolves it.
+         */
+        private String lookup(String name) {
+            String v = env.apply(name);
+            if ((v == null || v.isEmpty()) && (name.contains(".") || name.contains("-"))) {
+                v = System.getProperty(name);
+                if (v == null || v.isEmpty()) {
+                    v = env.apply(name.toUpperCase(java.util.Locale.ROOT).replace('.', '_').replace('-', '_'));
+                }
+            }
+            return v;
         }
 
         String text(JsonNode parent, String key, String dflt) {

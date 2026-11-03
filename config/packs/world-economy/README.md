@@ -59,7 +59,6 @@ depends-on:
   - delta
   - derived
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
 sources:
 - name: World Bank World Development Indicators and Worldwide Governance Indicators
@@ -654,7 +653,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `civic-store` | `delta` | `jurisdiction`, `party`, `office-holder`, `election`, `region`, `social-indicator` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `macro-groupings` | `derived` | `country-group` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 

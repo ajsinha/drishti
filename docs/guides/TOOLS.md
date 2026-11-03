@@ -147,7 +147,8 @@ the Delta connector reads:
 columns, vectors, id, date, latest-by and load mode come from the file, read by the one lake reader (`tools/lake/lakeconfig.py` runs
 drishti-lakeconfig's `LakesCli`). A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
 the file has no entry for is refused. `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--lake DIR`
-alone is the older form: the options and the pack decide.
+alone is the older form: the options and the pack decide. A table whose lake file says `load-mode: append` is written by the parallel
+loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
 
 ```bash
 python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack config/packs/trading \

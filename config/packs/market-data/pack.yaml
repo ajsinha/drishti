@@ -278,8 +278,8 @@ connectors:
     - bond
     - correlation-matrix
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: market
+      lake: demo
+      lake-tables: market.ir-curve,market.repo-curve,market.fx-spot,market.fx-forward-curve,market.fx-vol-surface,market.ir-vol-cube,market.cap-vol-surface,market.equity,market.equity-index,market.dividend-curve,market.equity-vol-surface,market.credit-curve,market.inflation-index,market.inflation-curve,market.commodity,market.commodity-curve,market.commodity-vol-surface,market.rate-fixing,market.bond,market.correlation-matrix
   nyfed-sofr-feed:
     plugin: feed
     enabled: ${DRISHTI_FEED_NYFED_SOFR:false}
@@ -827,6 +827,28 @@ console:
   help: config/help.yaml
 python:
   enabled: true
+lake:
+  tables:
+    market.ir-curve: null
+    market.repo-curve: null
+    market.fx-spot: null
+    market.fx-forward-curve: null
+    market.fx-vol-surface: null
+    market.ir-vol-cube: null
+    market.cap-vol-surface: null
+    market.equity: null
+    market.equity-index: null
+    market.dividend-curve: null
+    market.equity-vol-surface: null
+    market.credit-curve: null
+    market.inflation-index: null
+    market.inflation-curve: null
+    market.commodity: null
+    market.commodity-curve: null
+    market.commodity-vol-surface: null
+    market.rate-fixing: null
+    market.bond: null
+    market.correlation-matrix: null
 
 # History queries (TRD 1000015 30, docs/architecture/DATA_ARCHITECTURE.md › History queries: an entity over time, section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.

@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 34 · Data out: from a token to a pandas DataFrame of a desk's VaR scenario P&L
+# Tutorial 35 · Data out: from a token to a pandas DataFrame of a desk's VaR scenario P&L
 
 In this tutorial you turn Arrow Flight on, make a token that may read data, read a desk's VaR scenario P&L into pandas, read the same
 from Java and from a JDBC tool, follow a live intraday stream, and see your reads on Admin → Data out. Each step shows the UI, the command
@@ -34,7 +34,7 @@ About 20 minutes.
 
 ## Step 1 · Turn Flight on
 
-**UI.** Admin → Engines → Arrow Flight → On, reason "tutorial 34"; restart the server.
+**UI.** Admin → Engines → Arrow Flight → On, reason "tutorial 35"; restart the server.
 **File.** `config/engines/flight.yaml`: `enabled: true`, `tls.certificate` and `tls.private-key` naming your PEM files.
 **Check.** Admin → Data out shows *Running, port 18815, TLS*.
 
