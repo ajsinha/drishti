@@ -74,6 +74,7 @@ given"): it is not a setting and cannot be turned off; `partition-by` names only
 |---|---|
 | `id`, `date` | the id field and the business-date field of the kind's documents (today a load's `--key` and `--date`) |
 | `latest-by` | which of two rows of one id on one date wins (today the loader's `latest-by`) |
+| `load-mode` | **`replace`** (the default): a load replaces each business date it holds, in one commit per date, so repeating a load leaves the same data; **`append`**: a load adds its rows to the dates it holds (product owner, 2026-11-03: "replace by default, but it can be append if so configured in the lake config"). Append keeps the same safety: each load carries a batch id recorded in the table's commit, and a batch already committed is never appended twice (a repeated file, a crash and retry); two rows of one id on one date are resolved by `latest-by` when read |
 | `compression`, `vector-compression`, `file-size-mb`, `row-group-mb` | file layout |
 | `retention` | how many business dates or years are kept; older dates removed by the maintenance job |
 | `maintenance` | compaction (small files of a date merged), vacuum or expire-snapshots age, checkpoint interval, statistics columns |

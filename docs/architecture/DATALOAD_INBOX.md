@@ -62,7 +62,7 @@ file dropped twice cannot be handled safely (sections 7 and 8).
 4. Names: visible names only (no leading dot), no links (refused into `failed/`), extensions `.jsonl`, `.ndjson`, `.json`, each plain or
    `.gz`/`.zst`, `.zip`, `.tar`, `.tar.gz`/`.tgz`. Anything else is moved to `failed/` with the reason.
 5. **Optional contents of `.ready`** (YAML or JSON; empty is fine): `pack`, `kind`, `table`, `business-date`, `mode`
-   (`replace` the dates it holds, the default, or `append`), `sha256` and `rows` (checked before and after loading). They override the
+   (`replace` the dates it holds, or `append`; the default is the table's `load-mode` in the lake configuration, LAKE_CONFIG.md, and `replace` until that exists), `sha256` and `rows` (checked before and after loading). They override the
    routing of section 5 for that file.
 
 ## 4. One cycle
