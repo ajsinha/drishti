@@ -179,7 +179,13 @@ final class RowExpr {
                 if (Double.isNaN(x)) {
                     return null;
                 }
-                return num(new java.math.BigDecimal(Double.toString(x)).setScale(digits, java.math.RoundingMode.HALF_EVEN).doubleValue());
+                return num(new java.math.BigDecimal(Double.toString(x)).setScale(digits, java.math.RoundingMode.HALF_UP).doubleValue());
+            }
+            case "ratio" -> {
+                return num(arith("/", toNum(a.get(0)), toNum(a.get(1))));
+            }
+            case "power" -> {
+                return num(arith("**", toNum(a.get(0)), toNum(a.get(1))));
             }
             default -> { }
         }
@@ -187,11 +193,11 @@ final class RowExpr {
         double v = switch (s.name()) {
             case "abs" -> Math.abs(x);
             case "sqrt" -> x < 0 ? Double.NaN : Math.sqrt(x);
-            case "log", "ln" -> x <= 0 ? Double.NaN : Math.log(x);
+            case "ln" -> x <= 0 ? Double.NaN : Math.log(x);
             case "log10" -> x <= 0 ? Double.NaN : Math.log10(x);
             case "exp" -> Math.exp(x);
             case "floor" -> Math.floor(x);
-            case "ceil" -> Math.ceil(x);
+            case "ceiling" -> Math.ceil(x);
             case "sign" -> Math.signum(x);
             default -> Double.NaN;
         };
@@ -382,9 +388,12 @@ final class RowExpr {
         return switch (s.name()) {
             case "coalesce" -> "coalesce(" + String.join(", ", a) + ")";
             case "greatest", "least" -> s.name() + "(" + String.join(", ", a) + ")";
-            case "round" -> "round_even(" + a.get(0) + ", " + (a.size() > 1 ? "CAST(" + a.get(1) + " AS INTEGER)" : "0") + ")";
+            case "round" -> "round(" + a.get(0) + ", " + (a.size() > 1 ? "CAST(" + a.get(1) + " AS INTEGER)" : "0") + ")";
+            case "ratio" -> "(" + a.get(0) + " / NULLIF(" + a.get(1) + ", 0))";
+            case "power" -> "power(" + a.get(0) + ", " + a.get(1) + ")";
+            case "ceiling" -> "ceil(" + a.get(0) + ")";
             case "sqrt" -> "(CASE WHEN " + a.get(0) + " >= 0 THEN sqrt(" + a.get(0) + ") END)";
-            case "log", "ln" -> "(CASE WHEN " + a.get(0) + " > 0 THEN ln(" + a.get(0) + ") END)";
+            case "ln" -> "(CASE WHEN " + a.get(0) + " > 0 THEN ln(" + a.get(0) + ") END)";
             case "log10" -> "(CASE WHEN " + a.get(0) + " > 0 THEN log10(" + a.get(0) + ") END)";
             case "sign" -> "CAST(sign(" + a.get(0) + ") AS DOUBLE)";
             default -> s.name() + "(" + a.get(0) + ")";

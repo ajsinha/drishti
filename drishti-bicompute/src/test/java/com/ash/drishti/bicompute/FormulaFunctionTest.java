@@ -69,7 +69,7 @@ class FormulaFunctionTest {
     void formulasPassTheHarness() {
         Batch rows = FunctionsTest.rows(10_000, 11);
         Batch xw = new Batch(rows.rows(), new Object[] {rows.columns()[0], rows.columns()[1]});
-        for (String text : List.of("sum(x) / sum(abs(x))", "sum(x * w) / sum(w)", "count(where=x < 0) / count()", "stddev_samp(x) / avg(w)",
+        for (String text : List.of("sum(x) / sum(abs(x))", "sum(x * w) / sum(w)", "count(where=x < 0) / count()", "stddev(x) / avg(w)",
                 "sum(x, where=w > 50) - sum(x, where=w <= 50)")) {
             FormulaFunction f = FormulaFunction.of(null, text, List.of("x", "w"));
             FunctionCheck.Verdict v = FunctionCheck.run(f, xw, FunctionCheck.Options.defaults());

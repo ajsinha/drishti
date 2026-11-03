@@ -113,7 +113,8 @@ public final class FormulaFunction implements AggFunction<Object> {
             f = Functions.builtIn("count", a.where() == null ? List.of() : List.of("x"), List.of()).orElseThrow();
         } else {
             try {
-                f = Functions.builtIn(fn, placeholder, a.numbers()).orElseThrow(() -> new FormulaParser.FormulaException("no aggregate " + fn, -1));
+                String engine = FormulaParser.ENGINE_NAME.getOrDefault(fn, fn);
+                f = Functions.builtIn(engine, placeholder, a.numbers()).orElseThrow(() -> new FormulaParser.FormulaException("no aggregate " + fn, -1));
             } catch (IllegalArgumentException e) {
                 throw new FormulaParser.FormulaException(fn + ": " + e.getMessage(), -1);
             }

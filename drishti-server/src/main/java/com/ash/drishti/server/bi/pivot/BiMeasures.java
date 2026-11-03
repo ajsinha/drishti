@@ -42,7 +42,7 @@ public final class BiMeasures {
 
     /** DEL aggregates and their pivot spelling. */
     private static final Map<String, String> AGGREGATES = Map.of("sum", "sum", "avg", "avg", "min", "min", "max", "max", "count", "count",
-            "distinct", "count_distinct", "percentile", "percentile", "median", "median");
+            "distinct", "distinct", "percentile", "percentile", "median", "median");
 
     /**
      * A measure as a pivot function.

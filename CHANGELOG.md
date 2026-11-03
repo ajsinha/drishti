@@ -74,6 +74,13 @@
   (one statement instead of one query per level); a model's measures are pivot functions and whether a measure adds up is the engine's
   answer. The console no longer adds totals up: a sum's total is the engine's too, and a matrix without `subtotals` gets its totals from the
   engine. A measure that reads beyond its group's rows (time intelligence, running, context, Python) has no total; the answer says why.
+  Parity is proved by `BiParityTest` against figures recorded from the code before the switch (`BiParityRecorder`, one grouped query per
+  level; five cases, every level and measure of the test lake), and BI's old total planning (`Totals.java`, the per-level queries of
+  reports and model queries, the console's adding up) is deleted in the same release; measures of two facts get one statement per fact.
+- **Custom functions follow the function catalogue's one names** (FUNCTION_CATALOGUE.md): `distinct`, `variance`, `stddev` (`_pop`
+  for population), `wavg`, `percentile`, `ratio`, `ceiling`, `ln`, `power`, `sum_once`, `count_once`, `avg_once`; `round` rounds half away
+  from zero. Formulas and custom functions over entity documents take Rachana paths (`sum($.LEGS[*].NOTIONAL) / count()`), each turned
+  into its field; a formula that would count a coarser figure many times is refused with the once-per-parent functions named.
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 

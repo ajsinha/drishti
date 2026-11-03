@@ -42,17 +42,27 @@ public final class FormulaParser {
     public static final int MAX_LENGTH = 2000;
     public static final int MAX_DEPTH = 64;
 
-    /** The aggregate names (the built-ins of PIVOT_ENGINE.md section 5.2, with their DEL spellings) and their row inputs. */
+    /**
+     * The aggregates, under their one name each (FUNCTION_CATALOGUE.md section 4), and their row inputs (-1: none, the rows, or one). Each
+     * maps to the engine's built-in of {@link #ENGINE_NAME}.
+     */
     public static final Map<String, Integer> AGGREGATES = Map.ofEntries(Map.entry("sum", 1), Map.entry("count", -1), Map.entry("avg", 1),
-            Map.entry("mean", 1), Map.entry("min", 1), Map.entry("max", 1), Map.entry("wavg", 2), Map.entry("weighted_avg", 2),
-            Map.entry("var", 1), Map.entry("variance", 1), Map.entry("var_samp", 1), Map.entry("var_pop", 1), Map.entry("stddev", 1),
-            Map.entry("stddev_samp", 1), Map.entry("stddev_pop", 1), Map.entry("median", 1), Map.entry("percentile", 1),
-            Map.entry("quantile", 1), Map.entry("count_distinct", 1), Map.entry("distinct", 1));
+            Map.entry("min", 1), Map.entry("max", 1), Map.entry("wavg", 2), Map.entry("variance", 1), Map.entry("variance_pop", 1),
+            Map.entry("stddev", 1), Map.entry("stddev_pop", 1), Map.entry("median", 1), Map.entry("percentile", 1), Map.entry("distinct", 1),
+            Map.entry("sum_once", 2), Map.entry("count_once", 2), Map.entry("avg_once", 2));
 
-    /** The scalar functions of row values, and how many arguments each takes (-1: one or more). */
-    public static final Map<String, Integer> SCALARS = Map.ofEntries(Map.entry("abs", 1), Map.entry("sqrt", 1), Map.entry("log", 1),
-            Map.entry("ln", 1), Map.entry("log10", 1), Map.entry("exp", 1), Map.entry("floor", 1), Map.entry("ceil", 1), Map.entry("sign", 1),
-            Map.entry("round", -1), Map.entry("coalesce", -1), Map.entry("greatest", -1), Map.entry("least", -1));
+    /** The engine's built-in each catalogue name is computed by. */
+    public static final Map<String, String> ENGINE_NAME = Map.of("variance", "var_samp", "variance_pop", "var_pop", "stddev", "stddev_samp",
+            "distinct", "count_distinct");
+
+    /**
+     * The scalar functions of row values (and, outside an aggregate, of figures), under their one name each (FUNCTION_CATALOGUE.md sections
+     * 1 and 4), and how many arguments each takes (-1: one or more).
+     */
+    public static final Map<String, Integer> SCALARS = Map.ofEntries(Map.entry("abs", 1), Map.entry("sqrt", 1), Map.entry("ln", 1),
+            Map.entry("log10", 1), Map.entry("exp", 1), Map.entry("power", 2), Map.entry("floor", 1), Map.entry("ceiling", 1),
+            Map.entry("sign", 1), Map.entry("round", -1), Map.entry("coalesce", -1), Map.entry("greatest", -1), Map.entry("least", -1),
+            Map.entry("ratio", 2));
 
     private static final Set<String> REFUSED = Set.of("lambda", "for", "import", "from", "await", "yield", "def", "class", "del", "global",
             "nonlocal", "return", "assert", "with", "try", "while", "raise", "pass", "is");
@@ -443,7 +453,7 @@ public final class FormulaParser {
             throw new FormulaException(w + " takes " + (n < 0 ? "no row value (count of rows) or one" : n + " row value" + (n == 1 ? "" : "s"))
                     + ", not " + args.size(), t.start());
         }
-        if ((fn.equals("percentile") || fn.equals("quantile")) && numbers.size() != 1) {
+        if (fn.equals("percentile") && numbers.size() != 1) {
             throw new FormulaException(w + "(x, q): q between 0 and 1", t.start());
         }
         return new FormulaAst.Agg(fn, args, numbers, where);
