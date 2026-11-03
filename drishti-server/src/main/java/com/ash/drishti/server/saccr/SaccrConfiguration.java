@@ -43,6 +43,7 @@ public class SaccrConfiguration {
         SaccrData data = new SaccrData(reader, props);
         VarService v = var.getIfAvailable();
         SaccrService svc = new SaccrService(data, v == null ? null : v::scopeMembers, props);
+        SaccrResultEngine.install(svc);                                // the computed kind saccr-result (the reactive connector saccr-engine)
         LoadService l = loads.getIfAvailable();
         if (l != null) {
             l.onReady(r -> {

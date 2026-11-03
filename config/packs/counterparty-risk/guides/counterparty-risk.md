@@ -18,7 +18,7 @@
 
 ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, margin calls and SIMM.
 
-**Extends:** `trading` · **Extended by:** none · **Kinds:** 9
+**Extends:** `trading` · **Extended by:** none · **Kinds:** 8
 
 Enable it with `DRISHTI_PACKS=counterparty-risk` (the packs it extends come with it; where they differ, the more specific wins).
 
@@ -42,7 +42,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 | Connector | Folder | Domain | Tables | Kinds |
 |---|---|---|---|---|
 | `legal-store` | `data/delta/legal/` | Legal agreements: ISDA masters and credit support annexes | effective (a row when an entity changes) | `agreement`, `csa` |
-| `credit-store` | `data/delta/credit/` | Counterparty-credit results: exposure, CVA, SA-CCR, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `cva`, `sa-ccr` |
+| `credit-store` | `data/delta/credit/` | Counterparty-credit results: exposure, CVA, limits | snapshot (every business date) | `netting-set`, `credit-limit`, `cva` |
 | `collateral-store` | `data/delta/collateral/` | Collateral and margin: balances, calls, SIMM | snapshot (every business date) | `collateral-balance`, `margin-call`, `simm` |
 
 ### Exposure: the exposure engine
@@ -62,7 +62,6 @@ Load real data into each domain's folder, or point a domain at a database instea
 | `netting-set` | Netting set | `NSET` | `NS-…` | `NETTING_SET_ID` | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
 | `credit-limit` | Credit limit | `LIM` | `LIM-…` | `LIMIT_ID` | PFE limit by tenor bucket for a counterparty, with utilisation. |
 | `cva` | CVA / XVA | `CVA` | `CVA-…` | `RESULT_ID` | Credit, debit and funding valuation adjustments with sensitivities. |
-| `sa-ccr` | SA-CCR exposure | `SACCR` | `SACCR-…` | `CALC_ID` | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
 | `collateral-balance` | Collateral balance | `COLL` | `COLL-…` | `BALANCE_ID` | Collateral held and posted under a CSA, by asset, after haircuts. |
 | `margin-call` | Margin call | `MC` | `MC-…` | `CALL_ID` | A variation or initial margin call and its settlement status. |
 | `simm` | ISDA SIMM initial margin | `SIMM` | `SIMM-…` | `CALC_ID` | Initial margin by risk class and product class. |
@@ -89,7 +88,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 
 **Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`.
 
-**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CVA_RESULT` → CVA (`cva`), `SACCR` → SA-CCR (`sa-ccr`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
+**Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CVA_RESULT` → CVA (`cva`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
 
 ### Credit limit (`credit-limit`)
 
@@ -106,14 +105,6 @@ Credit, debit and funding valuation adjustments with sensitivities.
 **Fields its Sutra reads:** `CVA`, `DVA`, `FVA`, `KVA`, `CS01`, `COMPONENTS`, `SENSITIVITIES`.
 
 **Links:** `NETTING_SET` → Netting set (`netting-set`), `CREDIT_CURVE` → Counterparty curve (`credit-curve`).
-
-### SA-CCR exposure (`sa-ccr`)
-
-Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
-
-**Fields its Sutra reads:** `REPLACEMENT_COST`, `ADD_ON`, `MULTIPLIER`, `EAD`, `RWA`, `ADD_ONS`, `HEDGING_SETS`.
-
-**Links:** `NETTING_SET` → Netting set (`netting-set`).
 
 ### Collateral balance (`collateral-balance`)
 
@@ -158,7 +149,6 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `NSET` | `netting-set` | fundamental | `NETTING_SET_ID` | One row per netting set per business date, keyed by NETTING_SET_ID. | 31 |
 | `LIM` | `credit-limit` | fundamental | `LIMIT_ID` | One row per credit limit per business date, keyed by LIMIT_ID. | 15 |
 | `CVA` | `cva` | fundamental | `RESULT_ID` | One row per cva / xva per business date, keyed by RESULT_ID. | 15 |
-| `SACCR` | `sa-ccr` | fundamental | `CALC_ID` | One row per sa-ccr exposure per business date, keyed by CALC_ID. | 16 |
 | `COLL` | `collateral-balance` | fundamental | `BALANCE_ID` | One row per collateral balance per business date, keyed by BALANCE_ID. | 13 |
 | `MC` | `margin-call` | fundamental | `CALL_ID` | One row per margin call per business date, keyed by CALL_ID. | 14 |
 | `SIMM` | `simm` | fundamental | `CALC_ID` | One row per isda simm initial margin per business date, keyed by CALC_ID. | 10 |
@@ -169,6 +159,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `XOFC` | `exposure-official-cpty` | computed | `NODE_ID`, `RESULT_VERSION` | One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 32 |
 | `NSMTM` | `nset-mtm` | computed | `NETTING_SET_ID` | One record per NETTING_SET_ID of the trade-valuation records, computed when asked. | 32 |
 | `CPMTM` | `cpty-mtm` | computed | `COUNTERPARTY` | One record per COUNTERPARTY of the trade-valuation records, computed when asked. | 20 |
+| `SACCR` | `sa-ccr` | fundamental | `CALC_ID` | One row per sa-ccr exposure per business date, keyed by CALC_ID. | 16 |
 
 *Class*: **fundamental** data is delivered by a source system and stored; **input** is stored data an engine reads; **computed** is worked out by Drishti when asked and never stored by a source; **drishti-owned** is kept by Drishti itself.
 
@@ -375,47 +366,6 @@ Nested `SENSITIVITIES[]`:
 | `DELTA` | integer |  | required | USD | `0` |  | The change in the adjustment for the bump. |
 
 **Links:** `NETTING_SET` → `netting-set`, `CREDIT_CURVE` → `credit-curve`.
-
-- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
-
-### SACCR: SA-CCR exposure (`sa-ccr`)
-
-Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
-
-**Class** fundamental · **Key** `CALC_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` · **Ids** `^SACCR-`.
-
-**Grain:** One row per sa-ccr exposure per business date, keyed by CALC_ID. **Contract:** `contracts/sa-ccr.contract.yaml` ([full contract page](../../../../docs/contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)).
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `CALC_ID` | id | key | required |  | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) |  | The record's id (the business key) |
-| `REPLACEMENT_COST` | amount |  | required | USD | `0` |  | The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero. |
-| `ADD_ON` | amount |  | required | USD | `791562` |  | The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations. |
-| `MULTIPLIER` | rate |  | required | factor | `0.933` |  | A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative. |
-| `EAD` | amount |  | required | USD | `1033938` |  | The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on. |
-| `RWA` | amount |  | required | USD | `206788` |  | The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it. |
-| `ADD_ONS` | record list |  | required |  |  |  | The potential-future-exposure add-ons, one element per asset class present (Interest rate, Foreign exchange, Credit, Equity, Commodity): ASSET_CLASS and ADD_ON in USD. |
-| `HEDGING_SETS` | record list |  | required |  |  |  | The hedging sets of the calculation, one element per asset class and hedging set (a currency for rates and FX): EFFECTIVE_NOTIONAL in USD and the supervisory factor SF (a fraction). |
-| `NETTING_SET` | id |  | required |  | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` | The netting set the calculation is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). |
-| `ALPHA` | rate |  | required | factor | `1.4` |  | The SA-CCR alpha multiplier applied to replacement cost plus PFE (regulatory 1.4). |
-
-Nested `ADD_ONS[]`:
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `ASSET_CLASS` | text |  | required |  | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  | The SA-CCR asset class: Interest rate, Foreign exchange, Credit, Equity or Commodity. |
-| `ADD_ON` | amount |  | required | USD | `791562` |  | The asset class's aggregate add-on (sum of its hedging sets' effective notionals times their supervisory factors). |
-
-Nested `HEDGING_SETS[]`:
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `ASSET_CLASS` | text |  | required |  | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  | The regulatory asset class: interest rate, FX, credit, equity or commodity. |
-| `HEDGING_SET` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The group of trades within an asset class that can offset one another, for example by currency for interest rates. |
-| `EFFECTIVE_NOTIONAL` | amount |  | required | USD | `-89605479` |  | The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set. |
-| `SF` | amount |  | required | fraction of the effective notional (0.005 is 0.5%) | `0.005` |  | The supervisory factor, as a fraction, applied to the effective notional to get the add-on. |
-
-**Links:** `NETTING_SET` → `netting-set`.
 
 - Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
 
@@ -823,6 +773,47 @@ Nested `TRADES[]`:
 - Derived, never stored: built from the trade valuations directly, not from nset-mtm (a derived kind cannot read another derived kind of its connector: COMPUTED_ATTRIBUTES.md section 8.1, check (a)); the per-set positive parts come from group() over its rows.
 - Shown on the counterparty page beside the stored NET_MTM with the difference; retires when NSET computes counterparty scopes.
 
+### SACCR: SA-CCR exposure (`sa-ccr`)
+
+Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier.
+
+**Class** fundamental · **Key** `CALC_ID` · **Dated by** `business_date` · **Cadence** daily · **Stored by** connector `credit-store` (plugin `delta`), table `<root>/credit/sa-ccr/` · **Ids** `^SACCR-`.
+
+**Grain:** One row per sa-ccr exposure per business date, keyed by CALC_ID. **Contract:** `contracts/sa-ccr.contract.yaml` ([full contract page](../../../../docs/contracts/packs/counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `CALC_ID` | id | key | required |  | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) |  | The record's id (the business key) |
+| `REPLACEMENT_COST` | amount |  | required | USD | `0` |  | The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero. |
+| `ADD_ON` | amount |  | required | USD | `791562` |  | The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations. |
+| `MULTIPLIER` | rate |  | required | factor | `0.933` |  | A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative. |
+| `EAD` | amount |  | required | USD | `1033938` |  | The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on. |
+| `RWA` | amount |  | required | USD | `206788` |  | The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it. |
+| `ADD_ONS` | record list |  | required |  |  |  | The potential-future-exposure add-ons, one element per asset class present (Interest rate, Foreign exchange, Credit, Equity, Commodity): ASSET_CLASS and ADD_ON in USD. |
+| `HEDGING_SETS` | record list |  | required |  |  |  | The hedging sets of the calculation, one element per asset class and hedging set (a currency for rates and FX): EFFECTIVE_NOTIONAL in USD and the supervisory factor SF (a fraction). |
+| `NETTING_SET` | id |  | required |  | `NS-ALDERSHOT-FRA` (pattern `^NS-`) | `netting-set` | The netting set the calculation is for: a NETTING_SET_ID of the netting-set kind (NS-<counterparty>-<legal entity>). |
+| `ALPHA` | rate |  | required | factor | `1.4` |  | The SA-CCR alpha multiplier applied to replacement cost plus PFE (regulatory 1.4). |
+
+Nested `ADD_ONS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ASSET_CLASS` | text |  | required |  | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  | The SA-CCR asset class: Interest rate, Foreign exchange, Credit, Equity or Commodity. |
+| `ADD_ON` | amount |  | required | USD | `791562` |  | The asset class's aggregate add-on (sum of its hedging sets' effective notionals times their supervisory factors). |
+
+Nested `HEDGING_SETS[]`:
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `ASSET_CLASS` | text |  | required |  | `Commodity`, `Credit`, `Equity`, `Foreign exchange`, `Interest rate` |  | The regulatory asset class: interest rate, FX, credit, equity or commodity. |
+| `HEDGING_SET` | text |  | required |  | `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` |  | The group of trades within an asset class that can offset one another, for example by currency for interest rates. |
+| `EFFECTIVE_NOTIONAL` | amount |  | required | USD | `-89605479` |  | The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set. |
+| `SF` | amount |  | required | fraction of the effective notional (0.005 is 0.5%) | `0.005` |  | The supervisory factor, as a fraction, applied to the effective notional to get the add-on. |
+
+**Links:** `NETTING_SET` → `netting-set`.
+
+- Dated by the lake's business_date partition: `drishti.py lake build` writes each test-data file's day into it; the documents carry no date field of their own.
+
 ## Data retrieval
 
 Where each kind's data comes from, how it reaches the lake and how to check it. Three origins: **external** data, fetched from a public source by the pack's refresh script (each source, its licence and worked examples on the [External data](../../../../docs/guides/EXTERNAL_DATA.md) help page); **synthetic** test data (or hand-written reference data), written by a generator with fictitious names; **computed** by a Drishti engine when it is asked, never stored by a source.
@@ -834,7 +825,6 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `NSET` | `netting-set` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/netting-set/` → `lake demo` → connector `credit-store` |
 | `LIM` | `credit-limit` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/credit-limit/` → `lake demo` → connector `credit-store` |
 | `CVA` | `cva` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/cva/` → `lake demo` → connector `credit-store` |
-| `SACCR` | `sa-ccr` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/sa-ccr/` → `lake demo` → connector `credit-store` |
 | `COLL` | `collateral-balance` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/collateral-balance/` → `lake demo` → connector `collateral-store` |
 | `MC` | `margin-call` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/margin-call/` → `lake demo` → connector `collateral-store` |
 | `SIMM` | `simm` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/simm/` → `lake demo` → connector `collateral-store` |
@@ -845,6 +835,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `XOFC` | `exposure-official-cpty` | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty; see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/exposure-official-cpty/` |
 | `NSMTM` | `nset-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
 | `CPMTM` | `cpty-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
+| `SACCR` | `sa-ccr` | synthetic: `python3 tools/testdata/make_testdata.py` (and `python3 tools/packgen/banking/make_data.py` for samples/) | `data/testdata/counterparty-risk/sa-ccr/` → `lake demo` → connector `credit-store` |
 
 ### Generators
 

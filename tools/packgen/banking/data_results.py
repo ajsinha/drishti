@@ -35,9 +35,6 @@ import data_trades as TR  # noqa: E402
 TENORS = ["0", "1M", "3M", "6M", "1Y", "2Y", "3Y", "5Y", "7Y", "10Y"]
 SF = {"Rates": 0.005, "Inflation": 0.005, "Money market": 0.005, "Fixed income": 0.005, "Securities financing": 0.005, "FX": 0.04,
       "Credit": 0.05, "Equity": 0.32, "Structured": 0.32, "Commodity": 0.18}
-SACCR_CLASS = {"Rates": "Interest rate", "Inflation": "Interest rate", "Money market": "Interest rate", "Fixed income": "Interest rate",
-               "Securities financing": "Interest rate", "FX": "Foreign exchange", "Credit": "Credit", "Equity": "Equity", "Structured": "Equity",
-               "Commodity": "Commodity"}
 
 
 # ISO 3166 alpha-2 -> alpha-3, for the counterparties' countries of risk (the world-economy pack's ids are ECON-<alpha-3>)
@@ -153,7 +150,7 @@ def credit_results(trades: dict, docs: dict) -> None:
             "trades": [trade_row(t) for t in sorted(members, key=lambda t: -abs(t["mtm"]))][:MEMBER_ROWS],
             "byAsset": [{"asset": a, "mtm": round(v)} for a, v in sorted(by_asset.items(), key=lambda x: -abs(x[1]))],
             "counterparty": f"CP-{cp}", "agreement": f"AGR-{cp}-ISDA", "csa": f"CSA-{tag}", "creditLimit": f"LIM-{cp}",
-            "cvaResult": f"CVA-{tag}", "saccr": f"SACCR-{tag}", "simm": f"SIMM-{cp}",
+            "cvaResult": f"CVA-{tag}", "simm": f"SIMM-{cp}",
             "collateralBalance": f"COLL-{tag}", "legalEntity": {"NY": "LE-NY", "LDN": "LE-LDN", "FRA": "LE-FRA", "TKY": "LE-TKY"}[ns.rsplit("-", 1)[1]],
             "nettingEnforceable": True, "_meta": {"source": "xva-engine", "generation": 1, "live": True, "walk": {"netMtm": max(1000, abs(net) // 500)}}}
         dva = round(-cva * 0.35 * rating_pd("A") / pd) if pd else 0
@@ -165,23 +162,8 @@ def credit_results(trades: dict, docs: dict) -> None:
                               [("Counterparty spread", "+1 bp", 0.018), ("USD rates", "+1 bp", -0.004), ("EUR rates", "+1 bp", -0.002),
                                ("FX vol", "+1 vol", 0.03), ("Recovery", "+1%", -0.017)]],
             "nettingSet": ns, "creditCurve": f"CDS-{cp}" if cp in N.ISSUERS else None, "_meta": {"source": "xva-engine", "generation": 1}}
-        add = defaultdict(float)
-        hs = defaultdict(float)
-        for t in members:
-            eff = t["notional"] * min(1.0, max(years(t["maturityDate"]), 0.1)) * (1 if "Pay" in t["direction"] or t["direction"] in ("Buy", "Long") else -1)
-            hs[(SACCR_CLASS[t["assetClass"]], t["currency"])] += eff
-        for (ac, h), e in hs.items():
-            add[ac] += abs(e) * SF_BY_CLASS[ac]
-        rc = max(net - coll, 0)
-        addon = fsum(add.values())
-        mult = round(min(1.0, 0.05 + 0.95 * math.exp((net - coll) / (2 * 0.95 * max(addon, 1)))), 4)
-        ead = round(1.4 * (rc + mult * addon))
-        docs["sa-ccr"][f"SACCR-{tag}"] = {
-            "calcId": f"SACCR-{tag}", "replacementCost": round(rc), "addOn": round(addon), "multiplier": mult, "ead": ead,
-            "rwa": round(ead * {"A": 0.5, "A+": 0.5, "A-": 0.5, "AA": 0.2, "AA-": 0.2, "AAA": 0.2}.get(rating, 1.0)),
-            "addOns": [{"assetClass": a, "addOn": round(v)} for a, v in add.items()],
-            "hedgingSets": [{"assetClass": a, "hedgingSet": h, "effectiveNotional": round(e), "sf": SF_BY_CLASS[a]} for (a, h), e in hs.items()],
-            "nettingSet": ns, "alpha": 1.4, "_meta": {"source": "capital-engine", "generation": 1}}
+        # no SA-CCR figure: the SA-CCR engine computes EAD from the classification rows (saccr-trade, tools/packgen/ccr/make_saccr_data.py;
+        # docs/guides/SACCR_GUIDE.md); the stored sa-ccr kind was retired in 2.9.12
         docs["collateral-balance"][f"COLL-{tag}"] = {
             "balanceId": f"COLL-{tag}", "held": held, "posted": posted, "net": held - posted, "asOf": iso(N.AS_OF), "positions": positions,
             "csa": f"CSA-{tag}", "nettingSet": ns, "_meta": {"source": "collateral-system", "generation": 1}}
@@ -219,9 +201,6 @@ def credit_results(trades: dict, docs: dict) -> None:
             "calcId": f"SIMM-{cp}", "total": im, "posted": round(im * 0.97), "received": round(im * 1.02), "version": "ISDA SIMM 2.7",
             "riskClasses": [{"riskClass": c, "im": round(im * w)} for c, w in classes], "nettingSet": sets[0]["nettingSetId"],
             "counterparty": f"CP-{cp}", "_meta": {"source": "margin-engine", "generation": 1}}
-
-
-SF_BY_CLASS = {"Interest rate": 0.005, "Foreign exchange": 0.04, "Credit": 0.05, "Equity": 0.32, "Commodity": 0.18}
 
 
 # ---- market risk -----------------------------------------------------------------------------------------------

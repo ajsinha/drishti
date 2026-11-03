@@ -26,7 +26,7 @@ DOMAINS = {"reference": "Reference data: parties, organisation, calendars",
            "market": "Market data: curves, surfaces, prices, fixings",
            "trading": "Trades in every product",
            "risk": "Market-risk results: VaR, stress, FRTB, P&L explain",
-           "credit": "Counterparty-credit results: exposure, CVA, SA-CCR, limits",
+           "credit": "Counterparty-credit results: exposure, CVA, limits",
            "collateral": "Collateral and margin: balances, calls, SIMM"}
 
 PACKS = {
@@ -57,7 +57,7 @@ PACKS = {
         "description": "ISDA master agreements and CSAs, netting sets, exposure and PFE, CVA/XVA, SA-CCR, credit limits, collateral, "
                        "margin calls and SIMM.",
         "kinds": {"legal": ["agreement", "csa"],
-                  "credit": ["netting-set", "credit-limit", "cva", "sa-ccr"],
+                  "credit": ["netting-set", "credit-limit", "cva"],
                   "collateral": ["collateral-balance", "margin-call", "simm"]}},
 }
 

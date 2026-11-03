@@ -121,13 +121,6 @@ fields:
   example: CVA-ALDERSHOT-FRA
   pattern: ^CVA-
   link: cva
-- name: SACCR
-  type: id
-  presence: required
-  description: 'The set''s SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…).'
-  example: SACCR-ALDERSHOT-FRA
-  pattern: ^SACCR-
-  link: sa-ccr
 - name: SIMM
   type: id
   presence: required
@@ -254,8 +247,6 @@ links:
   kind: credit-limit
 - field: CVA_RESULT
   kind: cva
-- field: SACCR
-  kind: sa-ccr
 - field: SIMM
   kind: simm
 - field: COLLATERAL_BALANCE
@@ -284,7 +275,6 @@ validation:
   - CSA
   - CREDIT_LIMIT
   - CVA_RESULT
-  - SACCR
   - SIMM
   - COLLATERAL_BALANCE
   - LEGAL_ENTITY
@@ -314,9 +304,6 @@ validation:
 - rule: link
   field: CVA_RESULT
   kind: cva
-- rule: link
-  field: SACCR
-  kind: sa-ccr
 - rule: link
   field: SIMM
   kind: simm

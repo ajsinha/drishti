@@ -253,35 +253,40 @@ kinds:
       SENSITIVITIES.FACTOR: { term: "Market factor", means: "The market input that is bumped to see how the adjustment changes." }
       SENSITIVITIES.BUMP: { term: "Bump", means: "The size of the move applied to the factor." }
       SENSITIVITIES.DELTA: { term: "Change in CVA", means: "The change in the adjustment for the bump.", unit: "USD" }
-  sa-ccr:
-    title: SA-CCR exposure
+  saccr-result:
+    title: SA-CCR exposure at default of a scope
     about: >-
-      The regulatory exposure at default of ${$.NETTING_SET} is ${fmt($.EAD, 'compact')} USD: replacement cost ${fmt($.REPLACEMENT_COST, 'compact')}
-      plus an add-on of ${fmt($.ADD_ON, 'compact')} scaled by a multiplier of ${fmt($.MULTIPLIER, 'price2')}; its risk-weighted assets are
-      ${fmt($.RWA, 'compact')}.
+      ${$.SCOPE} on ${$.BUSINESS_DATE}: exposure at default ${fmt($.EAD, 'compact')} USD over ${$.NETTING_SETS} netting set(s), replacement
+      cost ${fmt($.RC, 'compact')} plus potential future exposure ${fmt($.PFE, 'compact')}, times 1.4; computed by the SA-CCR engine from the
+      classification rows when asked, never stored (SACCR ${$.SCOPE}).
     guide: counterparty-risk
     glossary:
-      REPLACEMENT_COST:
-        term: "Replacement cost"
-        means: "The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero."
-        unit: "USD"
-      ADD_ON:
-        term: "Aggregate add-on"
-        means: "The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations."
-        unit: "USD"
-      MULTIPLIER:
-        term: "PFE multiplier"
-        means: "A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative."
-        unit: "factor"
-      EAD:
-        term: "Exposure at default"
-        means: "The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on."
-        unit: "USD"
-      RWA: { term: "Risk-weighted assets", means: "The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it.", unit: "USD" }
-      HEDGING_SETS.ASSET_CLASS: { term: "Asset class", means: "The regulatory asset class: interest rate, FX, credit, equity or commodity." }
-      HEDGING_SETS.HEDGING_SET: { term: "Hedging set", means: "The group of trades within an asset class that can offset one another, for example by currency for interest rates." }
-      HEDGING_SETS.EFFECTIVE_NOTIONAL: { term: "Effective notional", means: "The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set.", unit: "USD", sign: "Positive is net long, negative net short." }
-      HEDGING_SETS.SF: { term: "Supervisory factor", means: "The regulatory percentage applied to the effective notional to get the add-on.", unit: "% of effective notional" }
+      SCOPE: { term: "Scope", means: "What the EAD is computed for: a netting set (NSET:), a counterparty (CPTY:), a legal entity (LE:) or the bank (BANK); EAD adds over whole netting sets." }
+      EAD: { term: "Exposure at default", means: "1.4 times (replacement cost + potential future exposure), per netting set (a margined set capped at its unmargined EAD), summed over the scope's sets (CRE52.1).", unit: "USD" }
+      RC: { term: "Replacement cost", means: "What the counterparty owes today net of collateral; margined, at least the threshold plus the minimum transfer amount less the independent collateral (CRE52.10, CRE52.18).", unit: "USD" }
+      PFE: { term: "Potential future exposure", means: "The multiplier times the aggregate add-on (CRE52.20).", unit: "USD" }
+      ADD_ON: { term: "Aggregate add-on", means: "The add-ons of the five asset classes added (CRE52.24).", unit: "USD" }
+      MULTIPLIER: { term: "Multiplier", means: "min(1, 5 % + 95 % exp((V − C) / (2 × 95 % × add-on))): below 1 when the set is out of the money or over-collateralised (CRE52.23)." }
+      CAPPED: { term: "Capped", means: "True when a margined set's EAD is its unmargined EAD, the lower of the two (CRE52.1)." }
+      EXCLUDED_TRADES: { term: "Excluded trades", means: "Live members that are not derivatives under CRE52 (securities financing, cash products): left out, counted." }
+      UNCLASSIFIED_TRADES: { term: "Unclassified trades", means: "Live derivatives without a classification row: left out, the set marked incomplete." }
+      RWA: { term: "Risk-weighted assets (hook)", means: "EAD times the configured risk weight: informational, the bank's capital engine owns RWA.", unit: "USD" }
+  saccr-trade:
+    title: SA-CCR classification row
+    about: >-
+      How ${$.TRADE_ID} (driver ${$.DRIVER}) is classified for SA-CCR on ${$.BUSINESS_DATE}: asset class ${$.ASSET_CLASS}, hedging set
+      ${$.HEDGING_SET}, a ${$.TRANSACTION_TYPE} transaction in netting set ${$.NETTING_SET}. Every figure that follows (supervisory duration,
+      delta, maturity factor, add-ons, EAD) is computed by the SA-CCR engine when asked: SACCR NSET:${$.NETTING_SET}.
+    guide: counterparty-risk
+    glossary:
+      ASSET_CLASS: { term: "Asset class", means: "IR, FX, CREDIT, EQUITY or COMMODITY: the class of the trade's primary risk driver (CRE52.25)." }
+      HEDGING_SET: { term: "Hedging set", means: "The trades that may offset one another: IR the currency, FX the pair, credit and equity one set, commodity energy, metals, agricultural or other; a basis or volatility transaction its own (CRE52.27 to CRE52.29)." }
+      TRANSACTION_TYPE: { term: "Transaction type", means: "LINEAR, OPTION, CDO_TRANCHE, BASIS or VOLATILITY: how the supervisory delta and factor are taken." }
+      REFERENCE: { term: "Reference", means: "Credit and equity: the entity or index; commodity: the commodity type (ELECTRICITY has its own factor)." }
+      DIRECTION: { term: "Direction", means: "LONG or SHORT in the primary risk factor: a payer swap and sold protection are long; a receiver swap and bought protection short." }
+      NOTIONAL_USD: { term: "Notional", means: "The adjusted-notional basis: IR and credit the trade notional, FX the foreign leg, equity and commodity units times price.", unit: "USD" }
+      DRIVER: { term: "Risk driver", means: "0 the primary risk driver; 1, 2 … further drivers of a complex trade, each its own row." }
+      DERIVED_BY: { term: "Derived by", means: "upstream (the bank's capital process delivered the row) or rules (derived from the trade master by configured rules)." }
   collateral-balance:
     title: Collateral balance
     about: >-

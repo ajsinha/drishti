@@ -1,0 +1,157 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the saccr-result kind (command SACCR): docs/contracts/README.md section 16; the measure's contract is
+# docs/contracts/SACCR.md (section 9.1) and docs/guides/SACCR_GUIDE.md. Drafted by `drishti.py contract bootstrap saccr-result`, completed by hand.
+kind: saccr-result
+mnemonic: SACCR
+pack: counterparty-risk
+version: '1.0'
+class: computed
+status: active
+title: SA-CCR exposure at default of a scope (computed)
+description: SA-CCR exposure at default (Basel CRE52) of a netting set, counterparty, legal entity or the bank, computed when asked by the server's
+  SA-CCR engine from the classification rows (saccr-trade), the live members' MTM, the CSAs and the collateral, as the person asking; never stored.
+source: 'computed by Drishti: the reactive connector saccr-engine (java engine com.ash.drishti.server.saccr.SaccrResultEngine)'
+grain: One answer per question (the scope asked for and the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the date's inputs load (data-version trigger)
+storage:
+  connector: saccr-engine
+  plugin: reactive
+fields:
+- name: STATUS
+  type: text
+  presence: required
+  description: 'ok when computed.'
+  enum: [ok]
+- name: SCOPE
+  type: text
+  presence: required
+  description: 'The scope as asked (the id): NSET:<netting set>, CPTY:<counterparty>, LE:<legal entity> or BANK.'
+  example: NSET:NS-ALDERSHOT-NY
+- name: SCOPE_KIND
+  type: text
+  presence: required
+  description: 'netting set, counterparty, legal entity or bank.'
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+  description: 'The business date of the inputs.'
+- name: NETTING_SETS
+  type: integer
+  presence: required
+  description: 'Netting sets summed (EAD adds over whole sets).'
+- name: TRADES
+  type: integer
+  presence: required
+  description: 'Classification rows computed.'
+- name: EXCLUDED_TRADES
+  type: integer
+  presence: required
+  description: 'Live members that are not derivatives under CRE52 (SFTs, cash products): left out, counted.'
+- name: UNCLASSIFIED_TRADES
+  type: integer
+  presence: required
+  description: 'Live derivatives without a DRIVER 0 row: left out, their sets incomplete.'
+- name: RC
+  type: amount
+  presence: required
+  description: 'Replacement cost summed over the sets (USD).'
+- name: PFE
+  type: amount
+  presence: required
+  description: 'Potential future exposure summed over the sets (USD).'
+- name: EAD
+  type: amount
+  presence: required
+  description: 'Exposure at default: 1.4 (RC + PFE) per set, a margined set capped at its unmargined EAD, summed over the sets (USD).'
+  example: 948761509.37
+- name: RISK_WEIGHT
+  type: rate
+  presence: required
+  description: 'The configured risk weight of the RWA hook (drishti.ccr.saccr.risk-weight).'
+- name: RWA
+  type: amount
+  presence: required
+  description: 'EAD times the risk weight: informational (USD).'
+- name: V
+  type: amount
+  presence: optional
+  description: 'One netting set: the sum of the classified derivatives'' MTM (USD).'
+- name: C
+  type: amount
+  presence: optional
+  description: 'One netting set: collateral held net, after haircut, NICA included (USD).'
+- name: NICA
+  type: amount
+  presence: optional
+  description: 'One netting set: the net independent collateral amount (USD).'
+- name: ADD_ON
+  type: amount
+  presence: optional
+  description: 'One netting set: the aggregate add-on of the basis the EAD was taken from (USD).'
+- name: MULTIPLIER
+  type: rate
+  presence: optional
+  description: 'One netting set: the PFE multiplier.'
+- name: EAD_UNMARGINED
+  type: amount
+  presence: optional
+  description: 'One netting set: the EAD computed unmargined (USD).'
+- name: CAPPED
+  type: boolean
+  presence: optional
+  description: 'One netting set: true when the unmargined EAD is the lower (CRE52.1).'
+- name: ALPHA
+  type: rate
+  presence: optional
+  description: 'One netting set: alpha from the parameter file (1.4).'
+- name: MPOR_DAYS
+  type: integer
+  presence: optional
+  description: 'One netting set: the margin period of risk in business days (0 unmargined).'
+- name: MARGINED
+  type: boolean
+  presence: optional
+  description: 'One netting set: margined by a VM CSA with its terms.'
+- name: ADD_ONS
+  type: record list
+  presence: optional
+  description: 'One netting set: per asset class ASSET_CLASS, ADD_ON.'
+- name: HEDGING_SETS
+  type: record list
+  presence: optional
+  description: 'One netting set: per hedging set ASSET_CLASS, HEDGING_SET, EFFECTIVE_NOTIONAL (IR), ADD_ON.'
+- name: BY_NETTING_SET
+  type: record list
+  presence: required
+  description: 'Per set NETTING_SET, COUNTERPARTY, STATUS, RC, PFE, MULTIPLIER, EAD, MARGINED.'
+- name: PROVENANCE
+  type: record
+  presence: required
+  description: 'The date, the inputs read, the parameter file and its SHA-256, the choices, the engine.'
+links: []
+validation:
+- rule: required
+  fields:
+  - SCOPE
+  - STATUS
+  - EAD
+notes:
+- 'No stored key: an answer''s id is the scope asked. EAD adds over netting sets; nothing below a set adds (SACCR_GUIDE.md section 1).'
+review: []
