@@ -347,7 +347,7 @@ the Tokyo set, the ids as links that open `NSET NS-MERIDIAN-RE-FRA` and `AGR AGR
 `_ID` or `_REF` (`@.TRADE_ID`, `$.BOOK_REF`) is linked without it; `@.ID` is too short a name for that rule, so it needs `link: true`.
 
 A table can also offer its rows as an interactive pivot. Add one line, `pivot: true`, and the panel gets a **Table | Pivot** switch: under **Pivot**, a reader drags the table's columns into rows,
-columns, values and filters, with totals, a chart and a drill-down to the rows under any cell ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). To choose the fields and how it
+columns, values and filters, with totals, a chart and a drill-down to the rows under any cell ([USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)). To choose the fields and how it
 opens:
 
 ```yaml
@@ -357,7 +357,7 @@ opens:
       values: [{ field: NET_MTM, agg: sum }]
 ```
 
-Without `pivot:` there is no switch: a Sutra decides where a pivot helps ([reference](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+Without `pivot:` there is no switch: a Sutra decides where a pivot helps ([reference](RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder)).
 
 ### Step 8: a chart
 
@@ -1274,8 +1274,8 @@ drill down level by level](RACHANA_REFERENCE.md#levels-drill-down-level-by-level
 
 Which to use: a pivot **aggregates** rows by fields you name (the data is flat and you group it); a tree table or `levels` **shows** a hierarchy the document already has. Runnable, self-contained
 versions: [pivot-row-groups](examples/pivot-row-groups.md) and [tree-table](examples/tree-table.md). The options and limits are in the reference ([`table`](RACHANA_REFERENCE.md#table),
-[`pivot`](RACHANA_REFERENCE.md#pivot)); do not confuse the **`pivot` panel kind** with the **`pivot:` option** that gives a table a user-driven Pivot tab ([the
-option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+[`pivot`](RACHANA_REFERENCE.md#pivot)); do not confuse the **`pivot` panel kind** with the **`pivot:` option** that gives a table a user-driven Pivot ([the
+option](RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder)).
 
 For documents that are trees all the way down (legs holding cash flows holding resets), the [nested documents tutorial](PACK_DEVELOPER_GUIDE.md#sutras-over-deep-documents) shows how paths, tables and tabs go as deep as the data.
 
@@ -1346,7 +1346,7 @@ You should see `Member trades (343 of 343) · Rates 55`.
 **View state.** The values live in the address (`?ctl.asset=Rates&ctl.minNotional=250000000`, written once the reader has set one; a control left at its default is not written), so a link or the Share
 button reproduces the screen. `remember: user` keeps the last choice in the browser. A **sent share** keeps the reader's view state, the control values and the column filters (`f.<panel>.<column>`),
 up to `drishti.collab.share.max-view-state` characters (4000); the recipient opens the same view with the same values, under their own rights. The server serves it as `GET
-/api/v1/views/{kind}/{id}?ctl.<id>=...` (add `&panels=a,b` for only those panels). Not built yet: options from a Rūpaka dataset, a Pivot tab or CSV export that follows the controls, and control values
+/api/v1/views/{kind}/{id}?ctl.<id>=...` (add `&panels=a,b` for only those panels). Not built yet: options from a Rūpaka dataset, Pivot or CSV export that follows the controls, and control values
 stored with a scheduled subscription.
 
 **Query by form** is not a Sutra feature: the search form of a kind (`FORM trading <GO>`) is declared in the pack's `form:` section, see
@@ -1435,7 +1435,7 @@ Before you propose a Sutra:
 **Problem codes you will meet** (the full list is in the [reference](RACHANA_REFERENCE.md#problem-codes)): `DRS-2001` YAML syntax; `DRS-2004` a file in a Sutra folder that is not a `*.sutra.yaml`;
 `DRS-2009` missing or unknown `rachana:` version; `DRS-2010` missing key; `DRS-2011` unknown key; `DRS-2012` wrong type; `DRS-2020` bad name or version; `DRS-2021` unknown panel kind;
 `DRS-2022`/`DRS-2023` a missing or invalid panel option; `DRS-2024` duplicate panel id; `DRS-2025` function-key clash; `DRS-2026` strip longer than 8; `DRS-2027` bad area; `DRS-2028` `name@version`
-defined twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS-2031` a `pivot` the Pivot tab cannot use; `DRS-2033` a key written twice; `DRS-2034`-`DRS-2039` a control that
+defined twice; `DRS-2029` an option value of the wrong kind; `DRS-2030` bad `span`; `DRS-2031` a `pivot` Pivot cannot use; `DRS-2033` a key written twice; `DRS-2034`-`DRS-2039` a control that
 is malformed, duplicated, reads a missing parent or control, or has a default it cannot hold; `DRS-2048` a `use:` of a block that does not exist; `DRS-2101` an expression that does not compile.
 
 ## Where next

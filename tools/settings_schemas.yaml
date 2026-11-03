@@ -249,7 +249,7 @@ schemas:
       - { key: "graph.impact.formats.<name>", type: string, meaning: "One kind's format" }
       - { key: columns, type: map, default: "{}", meaning: "kind -> the key fields of its pick lists and search results" }
       - { key: "columns.<name>", type: list, meaning: "One kind's key fields" }
-      - { key: pivot, type: map, default: "{}", meaning: "kind -> a Pivot tab on its search results: rows, columns, values, filters, fields" }
+      - { key: pivot, type: map, default: "{}", meaning: "kind -> Pivot (the pivot screen on the kind) on its search results: rows, columns, values, filters, fields" }
       - { key: "pivot.<name>", type: map, meaning: "One kind's pivot" }
       - { key: "pivot.<name>.rows", type: list, meaning: "Fields down the side" }
       - { key: "pivot.<name>.columns", type: list, meaning: "Fields across the top" }
