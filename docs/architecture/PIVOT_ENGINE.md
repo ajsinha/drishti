@@ -857,18 +857,30 @@ statement runs in BI's engine, where the model's layers are, so no row leaves it
 engine reads each set's states (`fromSql`) and finishes them. Measures of several facts get one statement per fact (a measure aggregates its own fact's rows), the levels joined. A masked field is never grouped (that level is not made); a masked measure's
 total is empty. A dataset read directly from its source (`mode: direct`) gets no engine totals (they would read every row back).
 
-### 12.4 What changed for readers
+### 12.4 Nothing breaks: the migration
 
-- Totals of averages, ratios, distinct counts and percentiles: unchanged (they were already true totals, now made in one statement instead
-  of one query per level).
-- Totals of sums and counts: computed by the engine instead of added up in the browser (the same figures; a count is now a number with a
-  decimal point in the JSON).
-- A matrix without `format.subtotals` gets its grand total and row totals from the engine too.
-- A total of a time-intelligence, running or context measure: none (a dash), with the reason in the answer's warnings.
+*One path, migrated cleanly (product owner, 2026-11-02: "No need to keep BI on old engine ... do a clean migration"; no dual machinery).*
+
+1. **Parity proved by tests before the switch**, on the branch that moves BI, not by running two paths in production: every BI test
+   suite and every shipped sample report is answered by the pivot engine and compared with the figures the current code gives, recorded
+   once from it before the move (a fixture per report, visual and cell); any difference beyond float tolerance (1e-9 relative; exact
+   for counts and decimals) fails, naming the report, visual, cell and both values.
+2. **Known, intended differences** (listed, reviewed, each with a test): none for sums, counts, minimums and maximums; averages and
+   ratios identical (they were already true totals, now one statement instead of one query per level); a distinct count stays
+   **exact**. The answer's shape: every measure that is a pivot function has a total (a sum's total is the engine's, the console adds
+   nothing up; a count is a number with a decimal point in the JSON); a matrix without `format.subtotals` gets its grand total and row
+   totals from the engine too; a time-intelligence, running, context or Python measure has no total (a dash), with the reason in the
+   answer's warnings.
+3. **One switch, for everything, in the same release**: when the parity tests pass, BI's totals and subtotals and its measures' additivity
+   run on the engine and **BI's old aggregation code for them is deleted** in the same change (the history keeps it); rollups move with
+   P3's rollups of partial states, the same way. No setting chooses between two paths;
+   a model's YAML needs no change.
+4. **The release's drills** run every BI suite on the new path only.
 
 ### 12.5 When
 
-Built in 2.9.11.b with phase P2 ([section 22](#22-phases-and-sizes)). Rollups of partial states and the Slice follow in P3.
+Phase **PB**, after P1 and P2 ([section 22](#22-phases-and-sizes)): the engine first proves itself on the pivot screen and the MR cube; BI
+then moves, its parity proved by tests and the old code deleted (section 12.4). Size L.
 
 ## 13. The module: drishti-bicompute
 
@@ -1153,6 +1165,7 @@ The same words as the API; `--wait` for background runs; a refused view prints t
 | `ExplainAddsUpTest` | the steps of every explanation add up to the difference |
 | `ChartStackingTest` | a non-additive measure is never stacked; diversification drawn as its own segment |
 | `XlsxPivotTableTest` | the native PivotTable opens with the view's layout and its totals equal the engine's; non-mergeable measures are not data fields |
+| `BiParityTest` (phase PB) | every BI test suite and shipped report equal to the figures recorded from the code it replaces |
 | `TrueTotalsTest`, `MqEngineTest`, `BiReportApiTest` (phase PB) | every BI total and subtotal from the engine's one statement equals the brute-force figure over the rows of its group |
 | `FormulaFunctionTest`, `CustomFunctionsTest`, `test_pivot_fn.py` | formulas equal in Java and SQL; the harness gate, versions, approval, withdrawal, official runs; Python's four steps and sandbox |
 | `PivotOffTest` | the engine switched off: 404 in words, the words gone everywhere, the cubes refused |
@@ -1180,7 +1193,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 | **P1: the core, the tabular provider, the built-ins and the screen** | the module `drishti-bicompute` with the core migrated from `wip/mr-cube` (section 7) and DEL moved from BI; cell keys and grouping sets; mergeable and exact holistic built-ins; the tabular provider (BI layers, lake scans, memory-only); the VaR provider moved; the partial-state cache, budgets, busy protection, the cluster merge; correctness (item 9); provenance (4); time travel and compare (2); cell reference names (8); expand and collapse (section 11, P1 part); the pivot screen of the chosen mock-up with show-as, grouping, slicers, conditional formats, drill-through; pick-and-choose charts (14.3, P1 part); exports xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; the engine switch; API and CLI | XL (two large parts: the core and provider; the screen) | 2.9.11.a |
 | **MR cube on the engine** | the paused branch resumed: its VaR source as a provider, its landings A, B and C on the pivot screen's grid, its tests unchanged; FRTB-SA and SIMM providers when those engines ship | L | 2.9.11.a |
 | **P2: custom functions, explain, what-if** | the four languages, the harness, the playground, versions, approval, audit; Python in the per-node pool (shipped off); explain the difference (1); what-if (3); view versions and cell comments (10); expand by and holistic Others (section 11, P2 part) | L | 2.9.11.b |
-| **PB: BI on the pivot engine** | section 12: BI's totals and subtotals in one engine statement over the model's rows, measures as functions, additivity from the engine; the old per-level queries and the console's adding up removed | L | 2.9.11.b |
+| **PB: BI on the pivot engine** | section 12: parity proved by tests, models as sources, measures as functions, one switch with the old code deleted | L | 2.9.11.b |
 | **P3: scale** | sketches (HLL, KLL, Space-Saving) and exact on request; rollups of partial states refreshed incrementally; aggregate awareness; progressive answers; scan estimates with options; scatter and gather of tabular partials across nodes with hedging; live pivots (5); the benchmark B1 to B3 | L | 2.9.11.c |
 | **P4: Excel and advice** | the native PivotTable export and charts bound to it; references in formulas and Excel (8); Python functions on by default where approved; layout advice; ask in words (6); automatic insights (7) | M to L | unscheduled candidate |
 
@@ -1198,7 +1211,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 | 6 | Percentile partials across nodes: KLL built in Java from streamed values, or per-node `approx_quantile` points merged | KLL in Java (a stated, tested error); revisit if the benchmark shows the stream costs too much |
 | 7 | Progressive answers on by default for views estimated over 2 s | yes; sampled figures always marked ≈ with their interval; never for VaR |
 | 8 | A distributed SQL backend (Trino, StarRocks, ClickHouse) | parked; revisit only if B3 shows common views over 5 min on 3 nodes |
-| 9 | BI on the engine | in 2.9.11.b, a clean migration where it makes sense: no shadow mode, no old path kept (product owner, 2026-11-02: no users depend on the old one); BI's test suites pass, expected values changed only where the engine is more correct |
+| 9 | BI on the engine | in 2.9.11.b: parity proved by tests against recorded figures, then one switch with BI's old aggregation deleted in the same release (product owner, 2026-11-02 and 2026-11-03: no dual machinery) |
 | 10 | Where the screen lives | `PIVOT <GO>`, Views → Pivot, and **Pivot** on every table, model and cube |
 | 11 | The mock-up | A ([section 25](#25-mock-ups-the-screens-to-build)) |
 | 12 | Aggregate-only roles: minimum members per cell | 1 as shipped (no change for anyone); a site may raise it |
@@ -1223,7 +1236,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts (built: xlsx with outline, formulas and Provenance, csv, Arrow, rows, definition)
 - [x] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` (the compute SDK's guard and Arrow codec)
 - [ ] explain the difference; what-if overlays; view versions; cell comments (built: explain, what-if and view versions with a diff of definitions and restore; not yet: cell comments, what-if on VaR through the engine)
-- [ ] BI on the engine (built: totals and subtotals of matrices, tables and model queries, measures as functions, additivity; not yet: models as pivot sources on the pivot screen, the Slice, rollups of states)
+- [ ] BI parity tests against recorded figures, models as sources, measures as functions, the old aggregation deleted (built: totals and subtotals of matrices, tables and model queries on the engine, measures as functions, additivity, the old per-level queries deleted, the parity recorder and `BiParityTest`; not yet: the fixtures recorded, models as pivot sources on the pivot screen, the Slice, rollups of states)
 - [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots
 - [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
