@@ -765,7 +765,7 @@ the in-memory lake), with the same entitlements, masks, busy protection and audi
 named for parallel reads; snapshots and live streams. The first use: VaR scenario P&L (a scope's vector computed when asked and never
 stored, per-position P&L in batches, live intraday), exactly the engine's figures. The official Arrow Java library replaces the
 hand-written Arrow writers, and the console's own JSON-to-Arrow conversion goes; browsers keep Arrow over HTTP and live views over
-Server-Sent Events. Size L.
+Server-Sent Events. The design questions, each with a recommendation: [ARROW_FLIGHT.md](ARROW_FLIGHT.md). Size L.
 
 ## 2.9.11.d: client examples (planned)
 
