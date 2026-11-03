@@ -46,7 +46,8 @@ GRID = {"canonical": "NODE:MGMT~DESK-RATES", "label": "DESK-RATES", "businessDat
     ("PLAY VAR POS-10442 T-1001", "/play?ids=POS-10442%2CT-1001"),
     ("PLAY VAR POS-10442 95", "/play?ids=POS-10442&q=0.95"),
     ("PLAY VAR DESK:RATES + POS:X", "/play?scope=DESK%3ARATES+%2B+POS%3AX"),
-    ("PLAY EXP NS-1", None),
+    ("PLAY EXP NS-1", "/play/exp?nettingSet=NS-1"),          # the Exposure Playground (routes/exposure_play_routes.py)
+    ("PLAY FVA NS-1", None),
     ("VAR BANK", None),
 ])
 def test_the_command_and_its_forms(typed, where):

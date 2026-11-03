@@ -149,7 +149,8 @@ public class ExposurePlaygroundController {
         out.put("contributions", cb);
         out.put("runFigures", ab.runFigures());
         out.put("provenance", ab.provenance());
-        out.put("explainSteps", template.explain().stream().map(s -> Map.of("title", s[0], "text", s[1])).toList());
+        out.put("formulas", ExposurePlaygroundBook.formulas());
+        out.put("explainSteps",template.explain().stream().map(s -> Map.of("title", s[0], "text", s[1])).toList());
         Map<String, Object> ex = new LinkedHashMap<>();
         ex.put("choices", pp.exportChoices());
         ex.put("default", pp.exportDefault());

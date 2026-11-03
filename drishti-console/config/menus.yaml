@@ -87,6 +87,7 @@ menus:
           - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
           - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
           - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
+          - { id: play-exp, cmd: PLAY EXP EXAMPLE, icon: calculator, label: Exposure Playground, desc: "EE, PFE and EPE of a netting set worked from its paths in formulas", match: /play/exp, requires: [word:EXP, word:PLAY, route:/play/exp] }
       - engine: frtb-sa
         title: FRTB-SA
         word: FRSA

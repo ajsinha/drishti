@@ -127,6 +127,34 @@ final class ExposurePlaygroundBook {
                 refused);
     }
 
+    /** The formula behind each column the screen shows, as the workbook writes it (the screen's formula bar). */
+    static Map<String, String> formulas() {
+        Map<String, String> f = new LinkedHashMap<>();
+        f.put("v", "Netting: =SUM(Data!<the date's trade columns>)");
+        f.put("l", "Netting, the look-back column: =SUM(Data!<the look-back date's trade columns>)");
+        f.put("target", "Collateral: =MAX(L-ThThem,0)-MAX(-L-ThUs,0)+IA");
+        f.put("rounded", "Collateral: =IF(Rounding>0,C0+IF(target-C0>0,ROUNDUP((target-C0)/Rounding,0),ROUNDDOWN((target-C0)/Rounding,0))*Rounding,target)");
+        f.put("c", "Collateral: =IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),0,IF(Margined<>\"yes\",IA,IF(CollateralModel=\"current\",C0,"
+                + "IF(rounded>0,MAX(rounded-MtaThem,0),rounded))))");
+        f.put("e", "Exposure: =MAX(V-C-IF(CollateralModel=\"none\",0,IM),0)");
+        f.put("n", "Exposure: =MIN(V-C,0)");
+        f.put("uncollateralised", "Exposure: =MAX(V,0)");
+        f.put("ee", "Stats: =AVERAGE(Exposure!<E at the date, every path>)");
+        f.put("ene", "Stats: =AVERAGE(Exposure!<N at the date, every path>)");
+        f.put("pfe", "Stats: =IF(RankRule=\"interpolated\",(1-w)*SMALL(E,lo)+w*SMALL(E,hi),SMALL(E,MAX(1,MIN(P,ROUNDUP(P*q-1E-9,0)))))");
+        f.put("eee", "Stats: =MAX(<the previous date's EEE, or CE>,EE)");
+        f.put("eeUncollateralised", "Stats: =AVERAGE(Exposure!<max(V, 0) at the date>)");
+        f.put("collateralEffect", "Stats: =EE-EE uncollateralised");
+        f.put("weight", "Stats: =MAX(0,MIN(t,T)-t_previous)");
+        f.put("ce", "Main: =IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),MAX(V0,0),MAX(V0-IF(Margined=\"yes\",C0,IA)-IM,0))");
+        f.put("epe", "Main: =IF(T>0,SUMPRODUCT(Stats!EE,Stats!weight)/T,0)");
+        f.put("eepe", "Main: =IF(T>0,SUMPRODUCT(Stats!EEE,Stats!weight)/T,0)");
+        f.put("peakPfe", "Main: =MAX(Stats!PFE) and its date =INDEX(Stats!Date,MATCH(MAX(Stats!PFE),Stats!PFE,0))");
+        f.put("eadImm", "Main: =Alpha*EEPE");
+        f.put("eeShare", "Contributions: =AVERAGE(a) with a = MTM*IF(AND(E>0,V<>0),1-(C+IM)/V,0) on each path");
+        return f;
+    }
+
     // ---- helpers ---------------------------------------------------------------------------------------------------------------------
 
     private Double c(double v) {
