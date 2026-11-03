@@ -2114,7 +2114,8 @@ Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 Put JSON Lines files (or archives of them) in one folder, add a `.ready` file beside each when it is complete, and the server loads them
 into the lake by itself, every ten minutes: the parallel lake loader writes them (one commit per business date), the files move to an
 outbox with a report, and the pack's connectors, checks, alerts and notices run as for any [data-load signal](#1-telling-drishti-new-data-has-landed).
-The design, with every decision, is [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md).
+The design, with every decision, is [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md); the hands-on walk-through, every step in
+the UI, on the command line and in YAML, is [tutorial 36](../tutorials/36-load-files-with-the-data-inbox.md).
 
 ### 1. Turning it on
 
