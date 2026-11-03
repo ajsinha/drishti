@@ -340,7 +340,7 @@ reads FVA by reference to `fva-result` rather than carrying a second copy ([CVA.
 ### 5.5 As built (FVA)
 
 Built for 2.9.12 on branch `wip/fva`; the reference is [FVA_GUIDE.md](../guides/FVA_GUIDE.md) and the tutorial
-[34](../tutorials/34-fva-funding-cost-and-benefit.md).
+[34](../tutorials/41-fva-funding-cost-and-benefit.md).
 
 | Part | As built |
 |---|---|

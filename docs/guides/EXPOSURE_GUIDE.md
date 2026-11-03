@@ -28,7 +28,7 @@ guide. Where the original proposal said otherwise, the code wins and the differe
 VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
 FVA, the funding cost and benefit of a netting set, is priced from this engine's EE and ENE profile (after the CSA) by its own compute
-engine `fva`, which needs this one: [FVA_GUIDE.md](FVA_GUIDE.md) and tutorial 34.
+engine `fva`, which needs this one: [FVA_GUIDE.md](FVA_GUIDE.md) and tutorial 41.
 
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
 headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:

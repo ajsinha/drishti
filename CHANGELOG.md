@@ -44,7 +44,7 @@
 - **`drishti.py fva show|sets|status` and `drishti.py play fva`** (tools/fvacli.py).
 - **Tests by hand:** `FvaMathTest` (case F1 (a) to (d) and the CVA.md cross-check to the cent), `FvaApiTest` (the exposure lake fixture:
   NS-X FVA −1,750, CP-1 −3,250), `FvaPlaygroundWorkbookTest`, `test_fvacli.py`, `test_fva.py`.
-- **Docs:** the FVA guide and tutorial 34, API_GUIDE, CONFIGURATION.md, COUNTERPARTY_ENGINES.md section 5.5.
+- **Docs:** the FVA guide and tutorial 41 (number final at merge), API_GUIDE, CONFIGURATION.md, COUNTERPARTY_ENGINES.md section 5.5.
 - **Light checks without Maven:** `tools/dev/junit_light.sh` runs a few JUnit tests with plain javac; `tools/dev/javac_against_jar.sh`
   compiles changed files against an unpacked server jar.
 

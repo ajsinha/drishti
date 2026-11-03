@@ -211,7 +211,7 @@ engines:
     console: [/fva, /play/fva, /api/fva/]
     words: [FVA, "PLAY FVA"]
     menus: [fva, play-fva]
-    help: [docs-guides-fva-guide, docs-tutorials-34-fva-funding-cost-and-benefit]
+    help: [docs-guides-fva-guide, docs-tutorials-41-fva-funding-cost-and-benefit]
     landings: []
     tiles: []
     lenses: []

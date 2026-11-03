@@ -19,7 +19,7 @@ Drishti computes FVA, the funding valuation adjustment, the way it computes VaR 
 scope, never stored as a figure.** FVA reads the expected exposure (EE) and expected negative exposure (ENE) profile that the exposure
 engine already computes for each netting set from the bank's simulated paths, after the CSA, and prices it with the bank's funding spread
 and the discount curve. There is one calculation, in Java on the server, and one answer that every screen, the command line, the
-playground and its workbook read. The tutorial is [tutorial 34](../tutorials/34-fva-funding-cost-and-benefit.md); the exposure engine is
+playground and its workbook read. The tutorial is [tutorial 41](../tutorials/41-fva-funding-cost-and-benefit.md); the exposure engine is
 [EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md); the design and its decisions are
 [COUNTERPARTY_ENGINES.md section 5](../architecture/COUNTERPARTY_ENGINES.md#5-fva-funding-cost-and-benefit) and
 [section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions); the formulas beside CVA are in [CVA.md section 6.3](../contracts/CVA.md#63-cva-dva-fva).

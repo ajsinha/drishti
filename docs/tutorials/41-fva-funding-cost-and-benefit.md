@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 34 · FVA: funding cost and benefit
+# Tutorial 41 · FVA: funding cost and benefit
 
 FVA, the funding valuation adjustment, is what it costs the bank to fund a netting set's trades over their life, net of the funding they
 provide: the funding cost (FCA) on the expected exposure and the funding benefit (FBA) on the expected negative exposure, discounted, by
