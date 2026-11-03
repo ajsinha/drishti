@@ -268,7 +268,13 @@ final class FvaService {
 
     private Map<String, DataNode> curveDocs(LocalDate day) {
         return curves.get(day, d -> {
-            Map<String, DataNode> m = exposure.loader().documents(props.curveKind(), AsOf.of(d));
+            Map<String, DataNode> m;
+            try {
+                m = exposure.loader().documents(props.curveKind(), AsOf.of(d));
+            } catch (RuntimeException e) {                         // no curves: the configured curve or the flat setting answers, flagged
+                org.slf4j.LoggerFactory.getLogger(FvaService.class).warn("fva: the {} of {} not read: {}", props.curveKind(), d, e.getMessage());
+                m = Map.of();
+            }
             Map<String, DataNode> out = new java.util.HashMap<>();
             m.forEach((k, v) -> {
                 String id = v.get("CURVE_ID").asText();

@@ -196,13 +196,13 @@ engines:
     ai-tools: []
   - id: fva
     title: FVA
-    about: "Funding cost and benefit (the xVA engine; CVA and DVA join later) and its playground"
+    about: "Funding cost and benefit (FCA, FBA, FVA) per netting set from the exposure profile, and its playground (the xVA engine; CVA and DVA join later)"
     file: fva.yaml
     switch: drishti.engines.fva.enabled
     env: DRISHTI_FVA_ENABLED
     aliases: []
-    shipped: false
-    installed: false
+    shipped: true
+    installed: true
     live-on: true
     prefixes: [drishti.ccr.fva]
     needs: [exposure]
@@ -211,16 +211,16 @@ engines:
     console: [/fva, /play/fva, /api/fva/]
     words: [FVA, "PLAY FVA"]
     menus: [fva, play-fva]
-    help: []
+    help: [docs-guides-fva-guide, docs-tutorials-34-fva-funding-cost-and-benefit]
     landings: []
     tiles: []
     lenses: []
     bi: []
-    cli: [fva]
+    cli: [fva, play fva]
     playgrounds: [fva]
     connectors: []
-    kinds: [fva-result]
-    inputs: []
+    kinds: []
+    inputs: [ir-curve]
     ai-tools: []
   - id: mr-cube
     title: MR cube

@@ -60,6 +60,7 @@ final class FvaPlaygroundBook {
     private final String user;
     private final String now;
     private final int k;
+    private final boolean cached;
 
     // ---- the plan: where everything is ----
     private static final int CH = 4;            // Config: EePoint B4, FundingSurvival B5, IncludeFba B6, hazards B7 and B8, flat flag B9
@@ -73,6 +74,12 @@ final class FvaPlaygroundBook {
     private static final int SET0 = 7;         // Terms: the first set's first column (EE*, ENE*, FCA, FBA per set)
 
     FvaPlaygroundBook(Input in, PlaygroundTemplate t, String user, String now) {
+        this(in, t, user, now, true);
+    }
+
+    /** {@code cached} false: no cached results (a reader must recalculate: the tests' own check by LibreOffice). */
+    FvaPlaygroundBook(Input in, PlaygroundTemplate t, String user, String now, boolean cached) {
+        this.cached = cached;
         this.in = in;
         this.t = t;
         this.user = user;
@@ -85,6 +92,14 @@ final class FvaPlaygroundBook {
         lendLast = lendFirst + Math.max(1, nl) - 1;
         dfFirst = lendLast + 4;
         dfLast = dfFirst + dfPoints().size();      // the anchor (0, 1) first
+    }
+
+    private Double c(double v) {
+        return cached && Double.isFinite(v) ? v : null;
+    }
+
+    private String ct(String v) {
+        return cached ? v : null;
     }
 
     private static String col(int c) {
@@ -180,7 +195,7 @@ final class FvaPlaygroundBook {
         int tot = first + n;
         int addUp = tot + 1;
         String checks = "J" + first + ":J" + addUp;
-        s.row(3).formulaText(0, "IF(SUMPRODUCT((" + checks + "=\"" + FAIL + "\")*1)=0,\"" + ALL_PASS + "\",\"A CHECK FAILS\")", ALL_PASS, "band");
+        s.row(3).formulaText(0, "IF(SUMPRODUCT((" + checks + "=\"" + FAIL + "\")*1)=0,\"" + ALL_PASS + "\",\"A CHECK FAILS\")", ct(ALL_PASS), "band");
         s.checks("A3", ALL_PASS);
         s.row(5).text(0, "Netting set", "head").text(1, "Counterparty", "head").text(2, "CSA", "head").text(3, "FCA", "head").text(4, "FCA engine", "head")
                 .text(5, "FBA", "head").text(6, "FBA engine", "head").text(7, "FVA", "head").text(8, "FVA engine", "head").text(9, "Check", "head");
@@ -189,38 +204,37 @@ final class FvaPlaygroundBook {
             SetIn si = in.sets().get(j);
             int fc = SET0 + 4 * j + 2;
             s.row(row).text(0, si.id(), "label").text(1, si.counterparty() == null ? "" : si.counterparty(), "text").text(2, si.csa(), "text");
-            s.formula(3, "SUM(" + range("Terms", fc, D0, last()) + ")", si.r().fca(), "money");
+            s.formula(3, "SUM(" + range("Terms", fc, D0, last()) + ")", c(si.r().fca()), "money");
             s.number(4, si.r().fca(), "money");
-            s.formula(5, "SUM(" + range("Terms", fc + 1, D0, last()) + ")", si.r().fba(), "money");
+            s.formula(5, "SUM(" + range("Terms", fc + 1, D0, last()) + ")", c(si.r().fba()), "money");
             s.number(6, si.r().fba(), "money");
-            s.formula(7, "D" + row + "+F" + row, si.r().fva(), "money.bold");
+            s.formula(7, "D" + row + "+F" + row, c(si.r().fva()), "money.bold");
             s.number(8, si.r().fva(), "money.bold");
-            s.formulaText(9, check("D" + row, "E" + row, "F" + row, "G" + row, "H" + row, "I" + row), PASS, "check");
+            s.formulaText(9, check("D" + row, "E" + row, "F" + row, "G" + row, "H" + row, "I" + row), ct(PASS), "check");
             row++;
         }
         s.row(tot).text(0, n == 1 ? "The netting set" : "The scope (the sets added)", "label").text(1, in.scope(), "text");
-        s.formula(3, n == 0 ? "0" : "SUM(D" + first + ":D" + (tot - 1) + ")", in.total().fca(), "total");
+        s.formula(3, n == 0 ? "0" : "SUM(D" + first + ":D" + (tot - 1) + ")", c(in.total().fca()), "total");
         s.number(4, in.total().fca(), "total");
-        s.formula(5, n == 0 ? "0" : "SUM(F" + first + ":F" + (tot - 1) + ")", in.total().fba(), "total");
+        s.formula(5, n == 0 ? "0" : "SUM(F" + first + ":F" + (tot - 1) + ")", c(in.total().fba()), "total");
         s.number(6, in.total().fba(), "total");
-        s.formula(7, "D" + tot + "+F" + tot, in.total().fva(), "total");
+        s.formula(7, "D" + tot + "+F" + tot, c(in.total().fva()), "total");
         s.number(8, in.total().fva(), "total");
-        s.formulaText(9, check("D" + tot, "E" + tot, "F" + tot, "G" + tot, "H" + tot, "I" + tot), PASS, "check");
+        s.formulaText(9, check("D" + tot, "E" + tot, "F" + tot, "G" + tot, "H" + tot, "I" + tot), ct(PASS), "check");
         s.row(addUp).text(0, "FVA = FCA + FBA; the engine's parts add up", "label");
-        s.formulaText(9, check("H" + tot, "D" + tot + "+F" + tot, "I" + tot, "E" + tot + "+G" + tot), PASS, "check");
+        s.formulaText(9, check("H" + tot, "D" + tot + "+F" + tot, "I" + tot, "E" + tot + "+G" + tot), ct(PASS), "check");
         s.checks(checks, PASS);
         // the EPE reading (an explanation, not a result)
         int r0 = addUp + 2;
         String ee = sumEeDt();
         s.row(r0).text(0, "The EPE reading (before discounting)", "head").text(1, "Value", "head").text(2, "What it is", "head");
-        s.row(r0 + 1).text(0, "Σ EE × Δt", "label").formula(1, ee, in.total().sumEeDt(), "money").text(2, "the exposure over the life, in dollar-years", "text");
-        s.row(r0 + 2).text(0, "T_life", "label").formula(1, "Terms!$B$" + last(), in.total().life(), "rate").text(2, "the last primary date, in years", "text");
-        s.row(r0 + 3).text(0, "EPE_life", "label").formula(1, "IF(B" + (r0 + 2) + ">0,B" + (r0 + 1) + "/B" + (r0 + 2) + ",0)", in.total().epeLife(), "money")
+        s.row(r0 + 1).text(0, "Σ EE × Δt", "label").formula(1, ee, c(in.total().sumEeDt()), "money").text(2, "the exposure over the life, in dollar-years", "text");
+        s.row(r0 + 2).text(0, "T_life", "label").formula(1, "Terms!$B$" + last(), c(in.total().life()), "rate").text(2, "the last primary date, in years", "text");
+        s.row(r0 + 3).text(0, "EPE_life", "label").formula(1, "IF(B" + (r0 + 2) + ">0,B" + (r0 + 1) + "/B" + (r0 + 2) + ",0)", c(in.total().epeLife()), "money")
                 .text(2, "EE averaged over the whole life (not the regulatory first year)", "text");
         boolean flat = in.borrow().isFlat();
         s.row(r0 + 4).text(0, "s_F × T_life × EPE_life", "label");
-        s.formula(1, "IF(Config!$B$" + (CH + 5) + "=\"yes\",Config!$C$" + borrowFirst + "*B" + (r0 + 2) + "*B" + (r0 + 3) + ",0)",
-                flat ? in.borrow().v()[0] * in.total().life() * in.total().epeLife() : 0.0, "money");
+        s.formula(1, "IF(Config!$B$" + (CH + 5) + "=\"yes\",Config!$C$" + borrowFirst + "*B" + (r0 + 2) + "*B" + (r0 + 3) + ",0)", c(flat ? in.borrow().v()[0] * in.total().life() * in.total().epeLife() : 0.0), "money");
         s.text(2, flat ? "with no discounting this is −FCA: FVA in one line" : "the spread is a curve: no one-line reading", "text");
         s.row(r0 + 6).text(0, "CVA", "label").text(1, "planned", "text").text(2, "the CVA family joins this engine later, on the same EE profile", "text");
     }
@@ -266,7 +280,7 @@ final class FvaPlaygroundBook {
         for (int i = 0; i < Math.max(1, l.t().length); i++) {
             s.row(lendFirst + i).text(0, i < l.tenors().size() ? l.tenors().get(i) : "flat", "label");
             if (in.lend() == null) {
-                s.formula(1, "B" + (borrowFirst + i), l.t()[i], "rate").formula(2, "C" + (borrowFirst + i), l.v()[i], "rate");
+                s.formula(1, "B" + (borrowFirst + i), c(l.t()[i]), "rate").formula(2, "C" + (borrowFirst + i), c(l.v()[i]), "rate");
             } else {
                 s.number(1, l.t()[i], "input.dec").number(2, l.v()[i], "input.rate");
             }
@@ -341,27 +355,27 @@ final class FvaPlaygroundBook {
             double tt = i < 0 ? 0 : in.t()[i];
             double df = i < 0 ? 1 : in.total().df()[i];
             double w = i < 0 || !in.survival() || in.total().survival() == null ? 1.0 : in.total().survival()[i];
-            s.row(r).number(0, i + 1, "text").formula(1, "Data!$C$" + r, tt, "rate");
-            s.formula(2, i < 0 ? "0" : "B" + r + "-B" + (r - 1), i < 0 ? 0 : in.total().dt()[i], "rate");
-            s.formula(3, logLinear(x), df, "rate");
-            s.formula(4, linear(x, bt, bv, nb), i < 0 ? in.borrow().linear(0) : in.total().sb()[i], "rate");
-            s.formula(5, linear(x, lt, lv, nl), i < 0 ? lc.linear(0) : in.total().sl()[i], "rate");
-            s.formula(6, "IF(" + surv + ",EXP(-(Config!$B$" + (CH + 3) + "+Config!$B$" + (CH + 4) + ")*" + x + "),1)", w, "rate");
+            s.row(r).number(0, i + 1, "text").formula(1, "Data!$C$" + r, c(tt), "rate");
+            s.formula(2, i < 0 ? "0" : "B" + r + "-B" + (r - 1), c(i < 0 ? 0 : in.total().dt()[i]), "rate");
+            s.formula(3, logLinear(x), c(df), "rate");
+            s.formula(4, linear(x, bt, bv, nb), c(i < 0 ? in.borrow().linear(0) : in.total().sb()[i]), "rate");
+            s.formula(5, linear(x, lt, lv, nl), c(i < 0 ? lc.linear(0) : in.total().sl()[i]), "rate");
+            s.formula(6, "IF(" + surv + ",EXP(-(Config!$B$" + (CH + 3) + "+Config!$B$" + (CH + 4) + ")*" + x + "),1)", c(w), "rate");
             for (int j = 0; j < in.sets().size(); j++) {
                 SetIn si = in.sets().get(j);
                 int c = SET0 + 4 * j;
                 String ec = col(c);
                 String nc = col(c + 1);
-                s.formula(c, "Data!" + col(3 + 2 * j) + r + "*$D" + r, i < 0 ? si.ce() : si.r().eeStar()[i], "money");
-                s.formula(c + 1, "Data!" + col(4 + 2 * j) + r + "*$D" + r, i < 0 ? si.nce() : si.r().eneStar()[i], "money");
+                s.formula(c, "Data!" + col(3 + 2 * j) + r + "*$D" + r, c(i < 0 ? si.ce() : si.r().eeStar()[i]), "money");
+                s.formula(c + 1, "Data!" + col(4 + 2 * j) + r + "*$D" + r, c(i < 0 ? si.nce() : si.r().eneStar()[i]), "money");
                 if (i < 0) {
-                    s.formula(c + 2, "0", 0.0, "money").formula(c + 3, "0", 0.0, "money");
+                    s.formula(c + 2, "0", c(0.0), "money").formula(c + 3, "0", c(0.0), "money");
                     continue;
                 }
                 String eePt = "IF(" + mid + ",(" + ec + (r - 1) + "+" + ec + r + ")/2," + ec + r + ")";
                 String enePt = "IF(" + mid + ",(ABS(" + nc + (r - 1) + ")+ABS(" + nc + r + "))/2,ABS(" + nc + r + "))";
-                s.formula(c + 2, "-" + eePt + "*$E" + r + "*$G" + r + "*$C" + r, si.r().fcaTerm()[i], "money");
-                s.formula(c + 3, "IF(" + fba + "," + enePt + "*$F" + r + "*$G" + r + "*$C" + r + ",0)", si.r().fbaTerm()[i], "money");
+                s.formula(c + 2, "-" + eePt + "*$E" + r + "*$G" + r + "*$C" + r, c(si.r().fcaTerm()[i]), "money");
+                s.formula(c + 3, "IF(" + fba + "," + enePt + "*$F" + r + "*$G" + r + "*$C" + r + ",0)", c(si.r().fbaTerm()[i]), "money");
             }
         }
     }
