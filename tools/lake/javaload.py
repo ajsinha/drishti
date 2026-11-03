@@ -130,11 +130,18 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         src["as-of"] = as_of.isoformat()
     else:
         src["date"] = p["date"]
-    target = {"format": "iceberg" if iceberg else "delta", "lake": lake, "domain": p["domain"], "kind": p["kind"]}
+    path = lake.rstrip("/") + "/" + p["domain"] + "/" + (p.get("table") or p["kind"])
+    if p.get("lake_name") and not getattr(a, "lake_root", None):
+        # a lake of config/lakes/ (lake build --lake NAME): the loader reads the same lake file, by name; the layout is the file's
+        target = {"lake": p["lake_name"], "kind": p["kind"]}
+        for k in ("promote", "vectors", "flatten", "partition-by", "latest-by", "id"):
+            src.pop(k, None)
+    else:                                          # a folder (--lake DIR, or --lake-root): the table's path, its layout given here
+        target = {"format": "iceberg" if iceberg else "delta", "path": path, "domain": p["domain"], "kind": p["kind"]}
     if p.get("table"):
         target["table"] = p["table"]
     if not iceberg:
-        props = writers.retention_properties(lake.rstrip("/") + "/" + p["domain"] + "/" + (p.get("table") or p["kind"]))
+        props = writers.retention_properties(path)
         if props:
             target["properties"] = props
     ice = {}

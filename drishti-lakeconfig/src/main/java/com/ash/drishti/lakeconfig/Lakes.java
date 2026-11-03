@@ -135,8 +135,23 @@ public final class Lakes {
                 throw new UncheckedIOException("cannot list the lake folder " + dir + ": " + e.getMessage(), e);
             }
         }
+        for (String name : SHIPPED) {                   // the shipped lakes (the demo lake) when the folder has no file of theirs:
+            if (!out.containsKey(name)) {               // a server started in another working folder, a container, a stack node
+                String res = "drishti/lakes/" + name + ".yaml";
+                try (java.io.InputStream in = Lakes.class.getClassLoader().getResourceAsStream(res)) {
+                    if (in != null) {
+                        out.put(name, parse(new YAMLMapper().readTree(in), name, null, env));
+                    }
+                } catch (IOException e) {
+                    throw new UncheckedIOException("cannot read the shipped lake " + res + ": " + e.getMessage(), e);
+                }
+            }
+        }
         return new Lakes(out, dir);
     }
+
+    /** The lakes shipped in this module's jar ({@code drishti/lakes/<name>.yaml}, a copy of {@code config/lakes/<name>.yaml}). */
+    static final List<String> SHIPPED = List.of("demo");
 
     /** Lakes built in code (tests, a tool that was handed one lake). */
     public static Lakes of(Lake... lakes) {

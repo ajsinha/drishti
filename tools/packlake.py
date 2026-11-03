@@ -129,8 +129,8 @@ def settings_view(manifest: dict, connector: dict) -> dict:
             table[kind] = folder
         lay = layout.setdefault(kind, {})
         for src, dst in ENTRY_KEYS.items():
-            if dst in e:
-                lay[src] = e[dst]
+            if dst in e:                                # sort-by as the older form wrote it: one text (id, or A,B)
+                lay[src] = ",".join(_list(e[dst])) if src == "sort-by" else e[dst]
     if table:
         out["table"] = table
     if layout:

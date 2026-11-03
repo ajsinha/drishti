@@ -234,7 +234,7 @@ schemas:
     area: connectors
     title: "A lake file: `config/lakes/<lake>.yaml` (docs/guides/LAKE_GUIDE.md)"
     file: "config/lakes/*.yaml"
-    files: ["config/lakes/*.yaml"]
+    files: ["config/lakes/*.yaml", "config/lakes.examples/*/*.yaml"]
     applies: every writer and reader of the lake
     change: "live for connectors (read again when a file changes); the next load for writers"
     keys:
@@ -356,6 +356,8 @@ schemas:
       - { key: routes, type: map, default: "{}", meaning: "kind -> the connector that answers it (drishti.sources.routes)" }
       - { key: "routes.<name>", type: string, meaning: "One kind's connector" }
       - { key: ingest, type: map, default: "{}", meaning: "For the tools only (drishti.py data ingest --pack, lake build --pack, pack check): each kind's id and business-date fields; ignored by the server" }
+      - { key: lake, type: map, default: none, meaning: "The tables the pack recommends (docs/guides/LAKE_GUIDE.md section 7): lake.tables, the shape of a lake file's tables:, copied into a lake file the first time a writer meets the kind; its Delta and Iceberg templates name lake: and lake-tables:" }
+      - { key: "lake.*", type: map, meaning: "lake.tables.<domain>.<table>: one recommended entry (kind, path, partition-by, promote, vectors, sort-by, file-rows, row-group-rows, flatten, ...)" }
       - { key: "ingest.<name>", type: map, meaning: "One kind" }
       - { key: "ingest.<name>.key", type: string, meaning: "Its id field" }
       - { key: "ingest.<name>.date", type: string, default: BUSINESS_DATE, meaning: "Its business-date field" }

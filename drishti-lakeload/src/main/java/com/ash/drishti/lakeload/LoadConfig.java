@@ -540,7 +540,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The lake root (for the run log and the lock): {@code lake}, else the table's grandparent. */
     String lakeRoot() {
-        if (target.lake() != null) {
+        if (target.lake() != null && target.path() == null) {           // a lake by name has its table's path: its grandparent below
             return trim(target.lake());
         }
         String p = tablePath();
