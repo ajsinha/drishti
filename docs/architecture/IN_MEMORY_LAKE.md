@@ -45,15 +45,17 @@ memory efficient; (2) users may download what they see; (3) a server job repleni
 13a. [Automated compaction: the memory optimizes itself](#13a-automated-compaction-the-memory-optimizes-itself)
 14. [Decisions for the product owner](#14-decisions-for-the-product-owner)
 15. [The build checklist](#15-the-build-checklist)
+16. [The module: drishti-memlake](#16-the-module-drishti-memlake)
 
 ## 1. The idea in one paragraph
 
 A table of a memory-only feed is an ordinary **Delta table** (its `_delta_log` and its Parquet files) whose files live in the server's
 memory instead of on a disk or in S3. Every Java reader and writer of Drishti already reaches a lake through one interface,
 `com.ash.drishti.lakeio.Storage` (`LocalStorage` for disk, `S3Storage` for S3); a third implementation, **`MemoryStorage`**, answers
-paths of the scheme **`mem://`** from off-heap memory under a **hard byte cap**. A server **replenish job** reads the feed (any connector)
-and writes the table with the Java lake writer, exactly as it writes a disk lake; the Delta connector reads it with `root: mem://…` like
-any other. When memory runs short the store gives up what it can lose without harm, in a fixed order, and asks the job to refill it; it
+paths of the scheme **`mem://`** from off-heap memory under a **hard byte cap**. It lives in its own module, `drishti-memlake`, and the
+readers find it through `drishti-lakeio`'s storage providers ([section 16](#16-the-module-drishti-memlake)). A server **replenish
+job** reads the feed (any connector) and writes the table with the Java lake writer, exactly as it writes a disk lake; the Delta
+connector reads it with `root: mem://…` like any other. When memory runs short the store gives up what it can lose without harm, in a fixed order, and asks the job to refill it; it
 never writes a byte to disk, and a guard refuses every other way the data could reach one.
 
 ## 2. Why Parquet on an in-memory file system
@@ -313,8 +315,8 @@ All taken by the product owner on 2026-11-02:
 
 | # | Part | Size | Built (2.9.11) |
 |---|---|---|---|
-| 1 | `MemoryStorage` (`mem://`): chunks off the heap, the cap, exclusive creates, reference-counted files, tests against the `Storage` contract that `LocalStorage` and `S3Storage` pass | M | built: `drishti-lakeio` `com.ash.drishti.lakeio.mem` (`ChunkPool`, `MemoryStorage`, `MemoryStores`); the contract suite (`StorageContract`) passes on local disk and in memory; the Delta engine, the lake writer and Iceberg's file access take `mem://` |
-| 2 | Replenish jobs: config, schedule, signals, warm-up, modes replace, append and merge, history, `drishti.py lake memory` | M | built: `drishti-server` `memlake` (`MemoryLake`, `ReplenishSource`); sources by URL, file, a connector's documents, or a connector by ids; cron as well as `every`; a signal is a file's time or a connector's last update (a Kafka message signals through its connector's state) |
+| 1 | `MemoryStorage` (`mem://`): chunks off the heap, the cap, exclusive creates, reference-counted files, tests against the `Storage` contract that `LocalStorage` and `S3Storage` pass | M | built: `drishti-memlake` `com.ash.drishti.memlake.store` (`ChunkPool`, `MemoryStorage`, `MemoryStores`, `MemoryStorageProvider`); the contract suite (`StorageContract`) passes on local disk and in memory; the Delta engine, the lake writer and Iceberg's file access take `mem://` through `drishti-lakeio`'s `StorageProviders` |
+| 2 | Replenish jobs: config, schedule, signals, warm-up, modes replace, append and merge, history, `drishti.py lake memory` | M | built: `drishti-memlake` `com.ash.drishti.memlake` (`MemoryLake`, `ReplenishSource`; the server's `server.memlake` wires them); sources by URL, file, a connector's documents, or a connector by ids; cron as well as `every`; a signal is a file's time or a connector's last update (a Kafka message signals through its connector's state) |
 | 3 | The eviction ladder and the off-heap pool in `MemoryBudget`; Capacity and the planner | S to M | built, but for the planner: the sizing workbook does not have a line for the stores yet; the decoded-column cache (step 2) is not built, so the ladder goes from old versions to whole tables |
 | 3a | Automated compaction (section 13a): the scoring, the headroom rule, merge, dead rows, re-sort, dictionary rebuild, expiry and checkpoints; bytes saved on Admin → Lakes | M | built (`MemoryCompactor`), but for the dictionary rebuild trigger (a rewrite rebuilds dictionaries, but a fallen-back dictionary is not detected yet); checkpoints are Kernel's every 10 commits |
 | 3b | The owner node binds the pack: `node.yaml` `memory-stores`, forwarding of the pack's reads over Drishti\*net with memory-only forwarding caches, the *restarting* words | S to M | built: `memory-stores`, local routing and the digest leave the kinds to the owner (`MemoryBinding`); forwarding keeps nothing on disk (it caches nothing on disk today); the cluster-wide *its node is restarting* words are not built (a peer's screen shows the usual peer-unavailable words) |
@@ -328,3 +330,32 @@ All taken by the product owner on 2026-11-02:
 
 About L to XL in all with compaction, the owner binding and Iceberg; built in 2.9.11, on Java 21 (section 3a), with the direct-memory
 limit in every launcher as part of item 1 (`tools/lake/memory_caps.py`, `DRISHTI_LAKE_MEMORY_MB`).
+
+## 16. The module: drishti-memlake
+
+The in-memory lake is one Maven module, **`drishti-memlake`**, in plain Java (no Spring; `ArchitectureRulesTest.memoryLakeIsPlainJava`):
+
+| Package | What is in it |
+|---|---|
+| `com.ash.drishti.memlake.store` | the storage, `mem://`: `MemoryStores` (the stores of the JVM by name), `MemoryStorage` (one store: the `Storage` contract over chunks), `ChunkPool` (off-heap chunks under the hard cap), `MemoryStoreFullException`, and `MemoryStorageProvider` (the scheme `mem` for the lake engines) |
+| `com.ash.drishti.memlake` | the service: `MemoryLake` (stores, tables, schedules, warm-up, the eviction ladder, what Admin shows), `MemoryTable`, `ReplenishSource` (what a job reads), `MemoryCompactor` (section 13a), `MemoryUpkeep` (old versions expired), `MemoryBinding` (the owner node binds the pack, section 9), `Retention` (the guard, section 8), `HostChecks` (section 8's host checks), `MemoryLakeSettings` (the `drishti.lake.memory.*` values, a plain record) |
+
+**The server keeps only the wiring**, in `com.ash.drishti.server.memlake`: `MemoryLakeConfiguration` binds `drishti.lake.memory.*` onto
+`MemoryLakeSettings`, makes the beans (the lake, the guard, the controller), hands the lake the server's cron parser (a table's `cron`
+line) and joins it to the memory budget and busy protection; `MemoryLakeController` is Admin, Lakes' REST API. The engine switch
+(`config/engines/memory-lake.yaml`) acts there too.
+
+**Which way the dependencies go.** `drishti-memlake` depends on `drishti-lakeio` and `drishti-deltalake` (it writes its tables with the
+lake writer and reads them back with Delta Kernel) and on the engine's connector registry (what its jobs read and its guard checks). The
+lake readers must reach `mem://` without depending on it, which would be a cycle. So `drishti-lakeio` defines a small service interface,
+**`StorageProvider`** (a scheme, the storage for a path, whether the scheme is memory-only), and **`StorageProviders`**, which finds the
+providers on the class path once, with Java's `ServiceLoader`. `drishti-memlake` lists `MemoryStorageProvider` in
+`META-INF/services/com.ash.drishti.lakeio.StorageProvider`. The native Delta engine, the lake writer, the Iceberg engine's file access
+and the Delta and Iceberg connectors ask `StorageProviders` for a path's storage and whether it is memory-only; none of them names a class
+of `drishti-memlake` (`ArchitectureRulesTest.lakeReadersDoNotSeeTheMemoryLake`). Why this way round:
+
+- **No cycle, one direction:** the lake engines stay below the in-memory lake, which builds on them.
+- **One code path for every storage:** the readers do not change for `mem://`; local disk and S3 stay `drishti-lakeio`'s own, and a later
+  scheme would be one more provider.
+- **Fails closed:** `mem://` works exactly where `drishti-memlake` is on the class path (the server). A tool built without it cannot read
+  or write a memory table at all; it gets an error naming the missing module, never a quiet detour through a disk.

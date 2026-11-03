@@ -209,7 +209,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             java.lang.System.getLogger(IcebergSourcePlugin.class.getName()).log(java.lang.System.Logger.Level.WARNING, "{0}: {1}",
                     sourceName, relocateIgnored);
         }
-        this.memoryOnly = com.ash.drishti.lakeio.mem.MemoryStores.isMemory(root) || com.ash.drishti.lakeio.mem.MemoryStores.isMemory(ctx.setting("warehouse", ""));
+        this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root) || com.ash.drishti.lakeio.StorageProviders.memoryOnly(ctx.setting("warehouse", ""));
         this.dated = new DatedHitIndex(memoryOnly ? null : sourceName, memoryOnly ? null : DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
             return v == null ? null : "s" + v;
