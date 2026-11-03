@@ -123,8 +123,14 @@
       var m = /^(\w+)\((.*)\)$/.exec(x.measure);
       var sel = m && FUNCS.indexOf(m[1]) >= 0 && m[2] ? '<select data-func="' + i + '" aria-label="Summarise by">' + FUNCS.map(function (f) {
         return '<option' + (f === m[1] ? " selected" : "") + '>' + f + '</option>'; }).join("") + '</select> ' : "";
-      return chip(x.as || x.measure, "values", i, sel);
+      var label = x.as || x.measure;
+      var cur = ((v.formats || {})[label] || {}).style || "";
+      var fmt = '<select data-format="' + i + '" aria-label="Format of ' + esc(label) + '"><option value=""' + (cur ? "" : " selected") + '>plain</option>'
+        + '<option value="scale"' + (cur === "scale" ? " selected" : "") + '>colour scale</option><option value="bars"' + (cur === "bars" ? " selected" : "")
+        + '>data bars</option></select> ';
+      return chip(label, "values", i, sel + fmt);
     }).join("");
+    root.querySelector('[data-pv-zone="slicers"] [data-pv-zone-items]').innerHTML = (v.slicers || []).map(function (d, i) { return chip(d, "slicers", i, ""); }).join("");
   }
 
   function add(zone, field, isNative) {
@@ -136,6 +142,8 @@
     } else if (isNative) {
       notice(field + " is a measure: drop it on Values");
       return;
+    } else if (zone === "slicers") {
+      v.slicers = (v.slicers || []).filter(function (d) { return d !== field; }).concat([field]);
     } else if (zone === "filters") {
       var vals = window.prompt("Keep which values of " + field + "? (comma-separated; blank: all)", "");
       if (vals === null) { return; }
@@ -153,6 +161,7 @@
     var p = spec.split(":");
     var v = state.view;
     if (p[0] === "filters") { delete v.filters[Object.keys(v.filters)[+p[1]]]; }
+    else if (p[0] === "slicers") { var gone = v.slicers.splice(+p[1], 1)[0]; if (v.filters[gone]) { delete v.filters[gone]; } }
     else { v[p[0]].splice(+p[1], 1); }
     if (p[0] === "rows" || p[0] === "columns") { v.expanded = []; }
     if (!v.values.length) { v.values.push({measure: state.catalogue.provider === "var" ? "var()" : "count()"}); }
@@ -204,6 +213,36 @@
     state.grid = window.PivotCore.render($("[data-pv-grid]"), a, {diff: state.diff, onToggle: toggle, onCell: provenance, onSelect: function (s) { state.selection = s; }, onRows: rows});
     drawZones();
     drawFields();
+    drawSlicers();
+  }
+
+  // ---- slicers: a field's members as buttons, each a filter of the view (the members are the engine's, as the person may see them) ------
+  function drawSlicers() {
+    var box = $("[data-pv-slicers]");
+    var list = state.view.slicers || [];
+    box.hidden = !list.length;
+    if (!list.length) { box.innerHTML = ""; return; }
+    box.innerHTML = list.map(function (f, i) { return '<div class="pv-slicer" data-slicer="' + i + '"><b>' + esc(f) + '</b><span class="pv-sub">…</span></div>'; }).join("");
+    list.forEach(function (f, i) {
+      var others = {};
+      Object.keys(state.view.filters || {}).forEach(function (k) { if (k !== f) { others[k] = state.view.filters[k]; } });
+      var q = { source: state.view.source, date: state.view.date, rows: [f], values: ["count()"], filters: others, sort: {} };
+      q.sort[f] = { by: "label" };
+      call("POST", "/query", { view: q }).then(function (a) {
+        var kept = ((state.view.filters || {})[f] || {}).in || [];
+        var members = (a.rows || []).filter(function (r) { return r.kind === "node"; });
+        var el = box.querySelector('[data-slicer="' + i + '"]');
+        if (!el) { return; }
+        el.innerHTML = '<b>' + esc(f) + '</b><button type="button" class="pv-sl" data-sl-all="' + esc(f) + '" aria-pressed="' + (!kept.length) + '">All</button>'
+          + members.slice(0, 60).map(function (r) {
+            return '<button type="button" class="pv-sl" data-sl-field="' + esc(f) + '" data-sl-value="' + esc(r.value) + '" aria-pressed="' + (kept.indexOf(r.value) >= 0) + '">'
+              + esc(r.value) + '</button>';
+          }).join("") + (members.length > 60 ? '<span class="pv-sub">' + (members.length - 60) + ' more: use a filter</span>' : "");
+      }).catch(function (e) {
+        var el = box.querySelector('[data-slicer="' + i + '"]');
+        if (el) { el.querySelector(".pv-sub").textContent = e.message; }
+      });
+    });
   }
 
   function toggle(row, collapse, all) {
@@ -451,7 +490,33 @@
     if (f) { state.focusField = f; root.querySelectorAll(".pv-field.on").forEach(function (x) { x.classList.remove("on"); }); f.classList.add("on"); f.focus();
       if (e.target.tagName === "INPUT" || e.detail === 2) { add(f.getAttribute("data-native") === "1" || f.getAttribute("data-type") === "number" ? "values" : "rows", f.getAttribute("data-field"), f.getAttribute("data-native") === "1"); } }
   });
+  root.addEventListener("click", function (e) {
+    var sl = e.target.closest("[data-sl-field], [data-sl-all]");
+    if (!sl) { return; }
+    var v = state.view;
+    v.filters = v.filters || {};
+    if (sl.hasAttribute("data-sl-all")) {
+      delete v.filters[sl.getAttribute("data-sl-all")];
+    } else {
+      var f = sl.getAttribute("data-sl-field"), val = sl.getAttribute("data-sl-value");
+      var kept = ((v.filters[f] || {}).in || []).slice();
+      var at = kept.indexOf(val);
+      if (at >= 0) { kept.splice(at, 1); } else { kept.push(val); }
+      if (kept.length) { v.filters[f] = { in: kept }; } else { delete v.filters[f]; }
+    }
+    run();
+  });
   root.addEventListener("change", function (e) {
+    var fmt = e.target.closest("[data-format]");
+    if (fmt) {
+      var x = state.view.values[+fmt.getAttribute("data-format")];
+      var label = x.as || x.measure;
+      state.view.formats = state.view.formats || {};
+      if (fmt.value) { state.view.formats[label] = { style: fmt.value }; } else { delete state.view.formats[label]; }
+      state.grid = window.PivotCore.render($("[data-pv-grid]"), Object.assign({}, state.answer, { view: state.view }), {
+        diff: state.diff, onToggle: toggle, onCell: provenance, onSelect: function (s) { state.selection = s; }, onRows: rows });
+      return;
+    }
     var fs = e.target.closest("[data-func]");
     if (fs) {
       var i = +fs.getAttribute("data-func");
@@ -479,9 +544,9 @@
     var tag = (e.target.tagName || "").toLowerCase();
     if (tag === "input" || tag === "select" || tag === "textarea" || e.ctrlKey || e.metaKey || e.altKey) { return; }
     var k = e.key.toLowerCase();
-    if (state.focusField && document.activeElement === state.focusField && "rcvf".indexOf(k) >= 0) {
+    if (state.focusField && document.activeElement === state.focusField && "rcvfs".indexOf(k) >= 0) {
       e.preventDefault();
-      add({r: "rows", c: "columns", v: "values", f: "filters"}[k], state.focusField.getAttribute("data-field"), state.focusField.getAttribute("data-native") === "1");
+      add({r: "rows", c: "columns", v: "values", f: "filters", s: "slicers"}[k], state.focusField.getAttribute("data-field"), state.focusField.getAttribute("data-native") === "1");
       return;
     }
     if (!state.answer) { return; }

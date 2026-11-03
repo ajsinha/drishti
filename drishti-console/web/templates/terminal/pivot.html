@@ -42,6 +42,7 @@
     <button type="button" class="pv-chip" data-pv-save title="Save the view (private until shared)">Save view</button>
     <button type="button" class="pv-chip" data-pv-share title="Save and share with people or roles">Share</button>
   </div>
+  <div class="pv-slicers" data-pv-slicers role="group" aria-label="Slicers" hidden></div>
   <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
   <p class="pv-notice" data-pv-notice role="alert" hidden></p>
   <div class="pv-main">
@@ -61,8 +62,10 @@
           <div class="pv-zone" data-pv-zone="columns"><h3>Columns</h3><div data-pv-zone-items></div></div>
           <div class="pv-zone" data-pv-zone="rows"><h3>Rows</h3><div data-pv-zone-items></div></div>
           <div class="pv-zone" data-pv-zone="values"><h3>Values</h3><div data-pv-zone-items></div></div>
+          <div class="pv-zone pv-zone-wide" data-pv-zone="slicers"><h3>Slicers</h3><div data-pv-zone-items></div></div>
         </div>
-        <p class="pv-hint">Drag a field to a zone, or select it and press <kbd>R</kbd>, <kbd>C</kbd>, <kbd>V</kbd> or <kbd>F</kbd>.</p>
+        <p class="pv-hint">Drag a field to a zone, or select it and press <kbd>R</kbd>, <kbd>C</kbd>, <kbd>V</kbd>, <kbd>F</kbd> or <kbd>S</kbd> (a slicer). A value's
+          format (colour scale, data bars) is drawn from its figures and kept with the view.</p>
       </section>
       <section class="pv-card pv-export" data-pv-export hidden aria-labelledby="pvExportTitle">
         <h2 id="pvExportTitle">Export <span class="pv-sub">as you see it, masks applied</span></h2>

@@ -57,7 +57,21 @@ import java.util.Set;
  */
 public record PivotView(String source, String date, String asOf, List<Dim> rows, List<Dim> columns, List<Value> values,
         Map<String, AggregationPlan.Filter> filters, List<Expansion> expanded, int expandRows, int expandColumns, Map<String, Sort> sort,
-        Map<String, Top> top, String subtotals, Currency currency) {
+        Map<String, Top> top, String subtotals, Currency currency, List<String> slicers, Map<String, Format> formats) {
+
+    /**
+     * A conditional format of a measure (PIVOT_ENGINE.md section 14.1): drawn by the screen from the finished figures (a colour scale or
+     * data bars over a level's cells), never changing a figure; kept with the view.
+     *
+     * @param style {@code scale} or {@code bars}
+     */
+    public record Format(String style) {
+        public Format {
+            if (!"scale".equals(style) && !"bars".equals(style)) {
+                throw bad("a format is scale or bars, not " + style);
+            }
+        }
+    }
 
     /**
      * The explicit conversion of money (PIVOT_ENGINE.md section 5.4): every amount of a money field is converted from the currency of its
@@ -131,6 +145,8 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
         expanded = List.copyOf(expanded);
         sort = Map.copyOf(sort);
         top = Map.copyOf(top);
+        slicers = slicers == null ? List.of() : List.copyOf(slicers);
+        formats = formats == null ? Map.of() : Map.copyOf(formats);
         subtotals = "above".equals(subtotals) ? "above" : "below";
         expandRows = Math.max(1, expandRows);
         expandColumns = Math.max(1, expandColumns);
@@ -243,8 +259,16 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
             ccy = new Currency(str(cm.get("report")) == null ? null : str(cm.get("report")).toUpperCase(Locale.ROOT), str(cm.get("field")), rates,
                     str(cm.get("source")));
         }
+        List<String> slicers = new ArrayList<>();
+        if (m.get("slicers") instanceof List<?> sl) {
+            sl.forEach(x -> slicers.add(Dim.parse(x).id()));
+        }
+        Map<String, Format> formats = new LinkedHashMap<>();
+        if (m.get("formats") instanceof Map<?, ?> fm) {
+            fm.forEach((k, v) -> formats.put(String.valueOf(k), new Format(v instanceof Map<?, ?> x ? str(x.get("style")) : str(v))));
+        }
         return new PivotView(str(m.get("source")), str(m.get("date")), str(m.get("asOf")), rows, cols, values, filters, exp, er, ec, sort, top,
-                str(m.get("subtotals")), ccy);
+                str(m.get("subtotals")), ccy, slicers, formats);
     }
 
     /** The view as its JSON map (what a saved view stores). */
@@ -311,6 +335,14 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
         });
         m.put("top", t);
         m.put("subtotals", subtotals);
+        if (!slicers.isEmpty()) {
+            m.put("slicers", slicers);
+        }
+        if (!formats.isEmpty()) {
+            Map<String, Object> f2 = new LinkedHashMap<>();
+            formats.forEach((k, v) -> f2.put(k, Map.of("style", v.style())));
+            m.put("formats", f2);
+        }
         if (currency != null) {
             Map<String, Object> c = new LinkedHashMap<>();
             c.put("report", currency.report());
@@ -326,12 +358,13 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
 
     /** The same view on another date (compare, time travel). */
     public PivotView on(String otherDate) {
-        return new PivotView(source, otherDate, asOf, rows, columns, values, filters, expanded, expandRows, expandColumns, sort, top, subtotals, currency);
+        return new PivotView(source, otherDate, asOf, rows, columns, values, filters, expanded, expandRows, expandColumns, sort, top, subtotals,
+                currency, slicers, formats);
     }
 
     /** The same view with other nodes open. */
     public PivotView withExpanded(List<Expansion> e, int er, int ec) {
-        return new PivotView(source, date, asOf, rows, columns, values, filters, e, er, ec, sort, top, subtotals, currency);
+        return new PivotView(source, date, asOf, rows, columns, values, filters, e, er, ec, sort, top, subtotals, currency, slicers, formats);
     }
 
     private static List<Dim> dims(Object o) {

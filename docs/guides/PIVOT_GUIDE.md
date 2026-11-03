@@ -49,6 +49,8 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md).
 | The command line | `PIVOT <GO>` (choose a source), `PIVOT trade <GO>` (a table), `PIVOT trade 2026-10-30 <GO>` (a table on a date), `PIVOT var <GO>` (VaR), `PIVOT @asha/desk-risk <GO>` (a saved view) |
 | The menu | **Views → Pivot** |
 | A table | **Pivot** in the Data view's facts of the table (`DATA trade <GO>`, then Pivot) |
+| A page's table | **Pivot** under a table or ladder whose Sutra says `pivot:` (the source `panel/<kind>/<panel>/<id>`: the panel's own rows, the Sutra's arrangement as the opening view) |
+| Search results | **Pivot** above the results of a kind whose pack says `pivot:` (the kind, the pack's arrangement as the opening view) |
 
 The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md)):
 switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_ENGINE_ENABLED`), from Admin → Engines or
@@ -66,6 +68,8 @@ as people know it, with what Excel lacks in the places Excel's equivalents would
 | Scan-estimate bar | what the view reads before it runs ("This pivot reads ≈2,000 rows (≈94 KB, 3 of 8 columns), ≈under a second."); a large one asks first, with **Run** |
 | The grid | rows in display order: a member with **+** (closed) or a header with **−** (open), its children indented, then its total (subtotals below; above puts the total on the member's own line); Others; the grand total. Columns × measures; a holistic measure's header carries **H**, an approximate figure **≈** |
 | Fields | every field you may use, with its type (string, date, number), and the source's own measures (VaR, ES); search with `/` |
+| Slicers | a strip above the grid: each slicer field's members as buttons (read from the engine, as you may see them); a button keeps or drops its member (a filter of the view), **All** clears it. Add one by dragging a field to **Slicers** or pressing `S` on it |
+| Conditional formats | on a value's chip: **colour scale** or **data bars**, drawn from the figures shown over the members' cells (never changing a figure), kept with the view |
 | Four zones | Filters, Columns, Rows, Values. Drag a field onto a zone, or select it and press `R`, `C`, `V` or `F`; double-click puts a number into Values and a text into Rows. A value's chip has a function picker (sum, count, avg, min, max, median, count_distinct, var_samp, stddev_samp) |
 | Provenance popover | click a cell: its figure, exact or ≈, the function and how its totals are made, the members counted, the condition (or VaR scope) that selects them, the data version, the filters, what was computed and what came from the cache, its reference; **Rows** lists the members, **Ask the VaR engine** opens the cell's scope in VAR |
 | Chart | a chart of the selected cells (or the top level), linked to the grid: a click on a bar opens that member |
@@ -81,13 +85,34 @@ exports. The help line under the grid shows them.
 |---|---|---|---|
 | A table (`trade`, `position`, any stored kind) | the Data view's table, read for you through its connector on the date | its columns, typed from the data contract (`string`, `date`, `number`) | the built-in functions over any field |
 | `var` | the VaR engine's book of the date | the positions' text columns (DESK, CURRENCY, PRODUCT_GROUP …) | `var()`, `es()`, `pv()`, `trades()` |
+| `panel/<kind>/<panel>/<id>` | a table's or ladder's rows on its page: the same document, Sutra and business date | the fields of its Sutra's `pivot:` (masked ones left out) | the built-in functions |
 
 A date field groups as `TRADE_DATE:day`, `:week`, `:month`, `:quarter` or `:year`; a number as `NOTIONAL_USD:width=1000000` (buckets of a
 width, labelled by their lower edge). A missing value is the member `(blank)`.
 
-A table is read once per date, data version and mask signature and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep`
-tables); a table over `drishti.pivot.stage-max-rows` rows is refused in words, never cut short. Memory-only data is never written: the
-executor has no spill folder unless `drishti.pivot.duckdb.temp-directory` names one.
+How a table is read, chosen per table:
+
+| Route | When | How |
+|---|---|---|
+| **Direct lake** | the kind's one source is a Delta or Iceberg table on a local disk, a snapshot table (one partition holds the date), without deletion vectors or delete files, and every field you may use is a column it keeps | DuckDB reads the date's Parquet files itself: only the columns a statement uses (column pruning), the filters repeated on the raw columns so row groups and files are skipped by their statistics; masked columns are never named, so never read; no staging cap |
+| **Staged** | any other table (a document store, an object store, masks that also change values inside other fields, memory-only data) | read once per date, data version and mask signature through the Data view's own read and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep` tables); over `drishti.pivot.stage-max-rows` rows refused in words, never cut short |
+
+Memory-only data is never written: the executor has no spill folder unless `drishti.pivot.duckdb.temp-directory` names one. The estimate
+of a lake table comes from its metadata (the files' bytes, the manifests' or add-actions' row counts); nothing is read.
+
+### Currencies and units
+
+A field has a **unit**: an `amount` of the data contract is **money** in the currency of the row's currency field (`CURRENCY`, `CCY`,
+`*_CCY`); a `rate` or a name ending `_PCT` is never summed (a sum of it is refused, with `avg` or `wavg` offered). A money total over
+several currencies is **never added raw**: such a cell shows no figure and says *mixed currencies (EUR to USD)*; a cell in one currency
+shows its figure and its currency. To add them, convert in the view:
+
+```json
+"currency": {"report": "USD", "rates": {"EUR": 1.08, "GBP": 1.27, "JPY": 0.0066}, "source": "ECB close 2026-10-30"}
+```
+
+Every money figure is then in USD (each row converted at its currency's rate before any aggregation; a row in a currency without a rate is
+left out), the measures' unit says USD, and the provenance names the rates and their source. Counts stay counts.
 
 ## 4. Measures and how each total is made
 
@@ -183,6 +208,11 @@ what, the format, the size), never its values.
 **Save view** keeps the definition (never the numbers) under your name, each save a new version; **Share** adds people or roles
 (`role:risk`). A reader opens a shared view with their own entitlements and masks. `PIVOT @owner/name <GO>` opens one.
 
+On a page's table, an author may **promote** the view to the Sutra (`POST /api/v1/pivot/promote` `{"sutra", "view", "note", "preview"}`):
+the Sutra's next version with the panel's `pivot:` arrangement, through review when review is on; a view the arrangement cannot say (a
+grouped date, a median, a filter that leaves values out) is refused in words and stays a saved view
+([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder)).
+
 **Compare** picks another date: each cell shows its change (▲/▼) and new or gone cells are marked; the API answers both sides and the
 differences.
 
@@ -226,6 +256,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `GET /api/v1/pivot/cells?ref=` | a cell by reference |
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's or a cell's provenance |
 | `GET, POST /api/v1/pivot/views`, `GET /views/{owner}/{name}`, `DELETE /views/{name}` | saved views |
+| `POST /api/v1/pivot/promote` | a page table's view as its Sutra's `pivot:` arrangement (an author; `preview: true` shows the next version) |
 | `POST /api/v1/pivot/export` | `{view, what: pivot|rows|definition, format: xlsx|csv|arrow, shape: cells|grid, delimiter, bom, coords}`, streamed |
 | `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 19.1](#191-sketches-with-a-stated-error-and-exact-on-request)) |
 | `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample, with intervals) then `exact` |

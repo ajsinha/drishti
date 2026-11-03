@@ -838,12 +838,12 @@ new kind: [Panels: the twenty-two kinds, and developing a new one](#panels-the-t
 | Kind | Required options | Optional options | Renders | Uses `columns` |
 |---|---|---|---|---|
 | [`kv`](#kv) | | `rows`, `columns`, `fields` | label/value grid | yes |
-| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand`, [`levels`, `crumb`, `root`](#levels-drill-down-level-by-level), `empty` | table with optional total row and "N more"; a tree with `children`; a drill-down with `levels` | yes |
+| [`table`](#table) | `rows` | `totalLabel`, `limit`, `moreLabel`, `link`, `search`, [`pivot`](#pivot-pivot-on-a-table-or-ladder), `children`, `expand`, [`levels`, `crumb`, `root`](#levels-drill-down-level-by-level), `empty` | table with optional total row and "N more"; a tree with `children`; a drill-down with `levels` | yes |
 | [`tabs`](#tabs) | `each` | `tabTitle`, `layout`, `body`, [`panels`](#panels-inside-a-tab) | one sub-panel (or several panels) per element, as tabs or side by side | in `body` |
 | [`line`](#line) | | `rows`, `x`, `y`, `mark`, `footer`, `unit`, `fmt`, `step` | line chart | no |
 | [`area`](#area) | `rows` | `x`, `series`, `limit`, `limitLabel`, `unit` | area chart, several series, dashed limit | no |
 | [`hbar`](#hbar) | `rows` | `label`, `value`, `fmt`, `tone`, `shape` | horizontal bars, or a donut of shares | no |
-| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight`, `search`, [`pivot`](#pivot-a-pivot-tab-on-a-table-or-ladder), `children`, `expand`, [`levels`, `crumb`, `root`](#levels-drill-down-level-by-level), `empty` | table with highlighted rows | yes |
+| [`ladder`](#ladder) | `rows` | `totalLabel`, `highlight`, `search`, [`pivot`](#pivot-pivot-on-a-table-or-ladder), `children`, `expand`, [`levels`, `crumb`, `root`](#levels-drill-down-level-by-level), `empty` | table with highlighted rows | yes |
 | [`links`](#links) | | | linked entities with badges | no |
 | [`status`](#status) | | `fields` | label/value grid, coloured by meaning | no (uses `fields`) |
 | [`provenance`](#provenance) | | | how the view was built | no |
@@ -1045,7 +1045,7 @@ One row per element of `rows`.
 | `root` | | the panel title | With `levels`: an expression, read against the document, for the first step of the breadcrumb (`"'Deal ' + $.TRADE_ID"`). |
 | `empty` | | `No data available` | The words shown when there are no rows (the list is missing, null or empty): `empty: No events booked`. |
 | `search` | | `true` | `false` hides the filter box (and the per-column filters) in the panel's heading, for a table too small or too fixed to need one. Table and ladder panels take it; on any other kind it is a problem (`DRS-2023`, *option 'search' applies only to panels that show a table*). `true` or `false` only (`search: maybe` is `DRS-2029`). |
-| `pivot` | | none | Offers a **Pivot** tab beside the table: `true`, or the fields a user may pivot by and the arrangement it opens with ([below](#pivot-a-pivot-tab-on-a-table-or-ladder)). Without it there is no Pivot tab. |
+| `pivot` | | none | Offers **Pivot** (the pivot screen on the table's rows): `true`, or the fields a user may pivot by and the arrangement it opens with ([below](#pivot-pivot-on-a-table-or-ladder)). Without it there is no Pivot. |
 
 Totals: when at least one column says `total: true`, a total row is added. It sums that column's numbers over **all** rows, including
 those hidden by `limit` (values that are not numbers count as 0), formats the sum with the column's `fmt` and `tone`, and puts
@@ -1074,21 +1074,22 @@ This is the counterparty-risk pack's *Member trades* table with a limit and a ne
 trade ids as links, a `Net` row of `+99,704,064` (all 343, not the four shown), and `339 more trades`. The data is
 `{"columns": [...], "numeric": [false, false, true, false, true], "rows": [{"cells": [...], "highlight": false, "path": "$.TRADES[0]"}], "total": {...}, "more": "…"}`.
 
-#### `pivot`: a Pivot tab on a table or ladder
+#### `pivot`: Pivot on a table or ladder
 
-> This is the **`pivot:` option**, which gives a `table` or `ladder` an interactive Pivot tab the user drives. It is not the **`pivot`
+> This is the **`pivot:` option**, which gives a `table` or `ladder` a **Pivot** button that opens the pivot screen on its rows. It is not the **`pivot`
 > panel kind** (a fixed aggregate grid the Sutra defines: [`kind: pivot`](#pivot)). To choose between them, see the
 > [Sutra developer guide](SUTRA_DEVELOPER_GUIDE.md#12-expandable-row-groups-pivot-by-lists-and-tree-tables).
 
-A table or ladder may offer its rows as an interactive, Excel-style pivot: a **Table | Pivot** switch in the panel, where a user drags
-fields into rows, columns, values and filters, with subtotals, totals, a chart, a drill-down to the rows under any cell, and export
-([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). It is **opt-in**: only a panel whose Sutra says `pivot:` has the
-tab, and only the fields the Sutra offers can be used. Every other table stays a table.
+A table or ladder may offer its rows as an Excel-style pivot: a **Pivot** button under the table opens the pivot screen
+([PIVOT_GUIDE.md](PIVOT_GUIDE.md), [USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)) on the source
+`panel/<kind>/<panel>/<id>`: the panel's own rows, aggregated by the server's pivot engine, where a user drags fields into rows, columns,
+values and filters, opens nested rows, charts a selection, drills to a cell's rows and exports. It is **opt-in**: only a panel whose Sutra
+says `pivot:` offers it, and only the fields the Sutra offers can be used. Every other table stays a table.
 
 ```yaml
-pivot: true                     # the panel's own columns are the fields; the tab opens with nothing arranged
-pivot: false                    # the same as leaving it out: no Pivot tab
-pivot:                          # the fields on offer, and the arrangement the tab opens with
+pivot: true                     # the panel's own columns are the fields; the pivot screen opens with nothing arranged
+pivot: false                    # the same as leaving it out: no Pivot
+pivot:                          # the fields on offer, and the arrangement the pivot screen opens with
   fields: [PRODUCT, ASSET_CLASS, CURRENCY, BOOK, MATURITY_BUCKET, { field: MATURITY, label: Maturity date },
            { field: NOTIONAL, fmt: compact }, { field: MTM, label: MTM (USD), fmt: signed0 }, TRADE_ID]
   rows: [PRODUCT]
@@ -1106,9 +1107,9 @@ pivot:                          # the fields on offer, and the arrangement the t
 | `columns` | none | Field names across the top, outermost first; at most 4. A field may not be in both. |
 | `values` | none | The numbers in the cells, at most 6, each `{ field, agg, show }`. `agg`: `sum` (the default), `count` (rows with a value), `avg`, `min`, `max` or `distinct` (how many different values). `show`: `value` (the default), `pctRow`, `pctColumn` or `pctTotal` (the cell as a share of its row's total, its column's total or the grand total). |
 | `filters` | none | Fields offered as filters: a name (every value kept), `{ field, values: [USD, EUR] }` (only those values) or `{ field, min, max }` (an inclusive range of numbers, or of ISO dates written as text). Not both `values` and a range. |
-| `heat` | `false` | Open with the cells shaded by their value. |
-| `chart` | none | Open with a `bar`, `line` or `heatmap` chart of the result. |
-| `totals` | `true` | `false` opens without subtotals and grand totals. |
+| `heat` | `false` | Kept for the arrangement; the pivot screen's conditional formats replace it. |
+| `chart` | none | Kept for the arrangement; the pivot screen charts a selection (`G`). |
+| `totals` | `true` | Kept for the arrangement; the pivot screen always shows the totals, each made from its own rows. |
 
 With `pivot: true`, or a mapping without `fields`, the fields are the panel's columns: a column bound to a row path (`"@.MTM"`) is named
 by the path (`MTM`); any other column by its label in kebab case (`Notional in USD` is `notional-in-usd`, `col3` when the label gives
@@ -1117,27 +1118,31 @@ nothing), and a repeated name gets `-2`. Write `rows`, `columns`, `values` and `
 Group keys are values as text (`(blank)` for a missing one) in natural order: numbers by value, and text with numbers in it by those
 numbers (`2-5Y` before `10Y+`, `BOOK-9` before `BOOK-10`).
 
-What a user arranges is kept for them (per Sutra and panel) and never changes the Sutra; an author may **promote** it, which writes this
-option into the Sutra's next version through review: only that panel's `pivot:` key is rewritten (as a block mapping), its `fields` and
-`totals` stay as written, and every other line and comment of the file is kept.
+The arrangement becomes the pivot screen's opening view: `agg` is the engine's function (`distinct` is `count_distinct`), `show` its
+show-as (`pctRow` is `pct-row`, `pctColumn` `pct-column`, `pctTotal` `pct-grand`), a filter with `values` an `in` filter. What a user
+arranges they keep as a saved view (never in the Sutra); an author may **promote** a panel's view (`POST /api/v1/pivot/promote`), which
+writes this option into the Sutra's next version through review: only that panel's `pivot:` key is rewritten (as a block mapping), its
+`fields` and `totals` stay as written, and every other line and comment of the file is kept. A view the option cannot say (a grouped date,
+a median, a filter that leaves values out) is refused in words; keep it as a saved view.
 
-The pivot reads **every row** of the panel (the browser receives them when the tab is first shown, up to `drishti.pivot.max-records`,
-50,000), not only the first `limit` the table shows. It sees what the table sees: the same document, business date and Sutra.
+The pivot reads **every row** of the panel (up to `drishti.pivot.max-records`, 50,000; a panel of more is refused in words, never cut
+short), not only the first `limit` the table shows. It sees what the table sees: the same document, business date and Sutra; a field masked
+for the reader is not read at all.
 
 The shipped `netting-set` Sutra (counterparty-risk pack) offers this pivot on its *Member trades* (the `pivot:` above without `heat`
-and `chart`). You should see, for `NS-MERIDIAN-RE-NY`, a **Table | Pivot** switch above the table; **Pivot** shows notional by product
+and `chart`). You should see, for `NS-MERIDIAN-RE-NY`, a **Pivot** button under the table; it opens the pivot screen with notional by product
 down the side and the maturity buckets across, with row and column totals, over all 343 trades. In the view JSON the table's data
 carries the offer: `"pivot": {"fields": [{"name": "PRODUCT", "label": "Product", "numeric": false, "fmt": null}, …],
 "rows": ["PRODUCT"], "columns": ["MATURITY_BUCKET"], "values": [{"field": "NOTIONAL", "agg": "sum"}], "filters": [...], "heat": false,
-"chart": null, "totals": true, "maxRows": 50000}`.
+"chart": null, "totals": true, "maxRows": 50000, "source": "panel/netting-set/trades/NS-MERIDIAN-RE-NY"}`.
 
 Mistakes are `DRS-2031` with the reason (*pivot rows name 'DESK', which is not one of its fields (ID, TRADES)*, *pivot value 'agg' must
 be one of sum, count, avg, min, max, distinct, not 'median'*, *a pivot has at most 4 row fields and 4 column fields*); `pivot` on any
 kind but `table` and ladder is `DRS-2023`; a field's `bind` that does not compile is `DRS-2101` when the Sutra loads. The JSON Schema
 describes the option, so the workbench completes its keys, `agg`, `show` and `chart` and checks them as you type.
 
-A pack opts a kind's **search results and pick lists** into the same Pivot tab with `pivot:` beside `columns:` in `pack.yaml`
-([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)).
+A pack opts a kind's **search results and pick lists** into Pivot (the pivot screen on the kind) with `pivot:` beside `columns:` in `pack.yaml`
+([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pivot-pivot-on-search-results)).
 
 #### tabs
 
@@ -1246,7 +1251,7 @@ The tabs come from `each`, one per element, **whatever the count** (a cap has on
 |---|---|
 | the kind is `kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`, `line`, `area` or `timeline` | the other charts, `links`, `pivot` and `provenance` draw things of the whole view (`DRS-2023`); a line, area or timeline of one element (a leg's notional profile, its fixings) is drawn in its tab, and with `layout: columns` the legs stand side by side, each with its own charts |
 | no `tabs` inside a tab | one level of tabs; deeper structure is a tree table (below) or a table that drills level by level ([`levels`](#levels-drill-down-level-by-level)) (`DRS-2023`) |
-| no `pivot:` on a table inside a tab | the Pivot tab reads the whole panel by its id (`DRS-2023`) |
+| no `pivot:` on a table inside a tab | Pivot reads the whole panel by its id (`DRS-2023`) |
 | no `span` or `height` | the panels take the size of their tabs panel (`DRS-2030`) |
 | an `id` on each, unique within the tab (`DRS-2010`, `DRS-2024`) | the live view and the CSV name the panels by it |
 | `panels:` on any other kind | `DRS-2023`: only `tabs` take it |
@@ -1573,7 +1578,7 @@ A table whose rows can be highlighted: settlement ladders, lifecycle events, the
 | `children` | | none | As for `table`: the rows nested under each row, a tree. |
 | `expand` | | `1` | As for `table`. |
 | `levels`, `crumb`, `root`, `empty` | | | As for `table`. |
-| `pivot` | | none | As for `table`: a [Pivot tab](#pivot-a-pivot-tab-on-a-table-or-ladder) over the ladder's rows. |
+| `pivot` | | none | As for `table`: [Pivot](#pivot-pivot-on-a-table-or-ladder) over the ladder's rows. |
 
 A ladder does not accept `limit` or `moreLabel` (`DRS-2023`): it always shows every row.
 
@@ -2174,7 +2179,7 @@ on 2025-07-25 to the last payment of 2032, each payment with its type and signed
 
 #### pivot
 
-A two-dimensional aggregate of the rows: one row group per `by` field value (a list gives nested groups with subtotals), one column per `across` value, totals, and an optional heat scale. Not to be confused with the **Pivot tab** of a table (`pivot:` on a `table`), which re-slices the rows in the browser.
+A two-dimensional aggregate of the rows: one row group per `by` field value (a list gives nested groups with subtotals), one column per `across` value, totals, and an optional heat scale. Not to be confused with the **Pivot** of a table (`pivot:` on a `table`), which re-slices the rows in the browser.
 
 ![A pivot panel](img/panels/kind-pivot.jpg)
 
@@ -2188,7 +2193,7 @@ A two-dimensional aggregate of the rows: one row group per `by` field value (a l
 - **Phone:** scrolls sideways inside its panel.
 - **CSV:** the `by` field, one column per column key, Total; then the Total row.
 
-The two pivots are told apart in [the reference](#pivot-a-pivot-tab-on-a-table-or-ladder) (the table option) and [here](#pivot) (the kind).
+The two pivots are told apart in [the reference](#pivot-pivot-on-a-table-or-ladder) (the table option) and [here](#pivot) (the kind).
 
 From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 
@@ -2200,7 +2205,7 @@ From [all-panels-showcase](examples/all-panels-showcase.sutra.yaml):
 **The keys of `pivot`.**
 
 > This is the **`pivot` panel kind**: a fixed grid the Sutra defines, written `kind: pivot`. For a table that lets the user pivot its own
-> rows, see the [`pivot:` option](#pivot-a-pivot-tab-on-a-table-or-ladder) of `table` and `ladder`.
+> rows, see the [`pivot:` option](#pivot-pivot-on-a-table-or-ladder) of `table` and `ladder`.
 
 The rows aggregated by one field (down the side) across another (along the top), with row and column totals. Totals are aggregates of
 the underlying rows (an `avg` total is the average of all its rows, not of the cells).
@@ -2564,7 +2569,7 @@ On `NS-MERIDIAN-RE-NY`, `?ctl.asset=Rates&ctl.minNotional=250000000` gives the t
 ### What is not built yet
 
 Options from a dataset column (a Rūpaka dataset), the Sutra-level view `title:` reading a control (a panel's `title` does; a control that
-the view `title` reads reloads the page), a Pivot tab and a CSV export that follow the controls (they read every row), and control values
+the view `title` reads reloads the page), Pivot and a CSV export that follow the controls (they read every row), and control values
 stored with a *scheduled subscription* (there is no scheduled delivery yet; a **sent** share carries them, see below).
 
 ### Column filters (`f.<panel>.<column>`)
@@ -3123,7 +3128,7 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-
 | `DRS-2020` | `name 'IRS_Vanilla' must be lower-case kebab, 2-64 characters`, `version must be a positive integer up to 2147483647, not '0'` | bad name or version (also a version too large for any number, which is not reported as YAML syntax) | `irs-vanilla`; `version: 3` unquoted |
 | `DRS-2021` | `unknown panel kind 'chart'; expected one of kv, table, tabs, line, area, hbar, ladder, links, status, provenance, markdown, gauge, surface, waterfall, histogram, scatter, candlestick, graph, timeline, pivot, metric, map` | a kind that does not exist | use one of the 22 kinds |
 | `DRS-2022` | `'table' panel 'flows' needs option 'rows'` | a required option is missing | add it (see each kind's table) |
-| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `only 'tabs' panels take 'panels'`, `a 'surface' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric, line, area, timeline`, `a panel inside a tab cannot hold tabs of its own`, `a panel inside a tab cannot have a Pivot tab; put the table in a panel of its own`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
+| `DRS-2023` | `option 'limit' is not valid for 'ladder' panels`, `only 'tabs' panels take a 'body'`, `only 'tabs' panels take 'panels'`, `a 'surface' panel cannot sit inside a tab; use one of kv, status, table, ladder, hbar, markdown, metric, line, area, timeline`, `a panel inside a tab cannot hold tabs of its own`, `a panel inside a tab cannot have Pivot; put the table in a panel of its own`, `option 'pivot' applies only to panels that show a table (table, ladder), not 'kv'` | an option the kind does not accept | remove it, or change the kind |
 | `DRS-2024` | `duplicate panel id 'legs'`, `two panels of this tab are called 'terms'` | two panels with one id | rename one |
 | `DRS-2025` | `'F13' is not a function key (F1-F12)`, `function key F2 is used twice` | a bad or repeated key | use `F1`–`F12` once each, across panels and `keys` |
 | `DRS-2026` | `the strip holds at most 8 figures, found 9` | more than 8 strip items | move figures into a `kv` panel |
@@ -3131,7 +3136,7 @@ family (`DRS-2040` to `DRS-2047`), shared blocks (`DRS-2048`), docstrings (`DRS-
 | `DRS-2028` | `trade-x@2 is already defined in /…/trade-x.v2.sutra.yaml` | two files define one `name@version` | raise the version, or remove the duplicate |
 | `DRS-2029` | `option 'agg' of 'pivot' panels must be one of sum, count, avg, min, max, not 'median'`, `option 'heat' of 'pivot' panels must be true or false, not 'yes'`, `option 'bins' of 'histogram' panels must be a whole number from 1 to 200, not '0'`, `each histogram marker must be a mapping with a 'value' expression …`, `option 'layout' of 'graph' panels must be one of tree, force, not 'circle'`, `option 'colors' of 'waterfall' panels must be one of gain-loss, theme, not 'rainbow'`, `option 'rows' of 'table' panels is an expression written as text (such as $.cashflows), not '5'`, `option 'limit' of 'table' panels must be a whole number of rows, 1 or more, not 'many'`, `option 'search' of 'table' panels must be true or false, not 'maybe'`, `option 'fields' of 'status' panels must be a list of { label, bind, fmt, tone }, not '5'`, `option 'series' of 'area' panels must be a list of { label, value, tone }, not '5'`, `option 'text' of 'markdown' panels is text (a template with ${expression} parts), not '[1, 2]'` | an option value the kind does not allow, or of the wrong type | use one of the values listed, or the type named |
 | `DRS-2030` | `span must be a whole number from 1 to 12 (columns of the 12-column grid), not '13'`, `height must be a whole number from 1 to 24 (grid rows), not '30'`, `'span' sizes a whole panel: a tabs body takes the size of its panel` | a size outside the grid, not a whole number, or on a `tabs` body or a panel inside a tab | a whole number in range, on the panel itself |
-| `DRS-2031` | `'pivot' is true, false, or a mapping of fields, rows, columns, values, filters, heat, chart, totals; not 'yes please'`, `pivot rows name 'desk', which is not one of its fields (currency, mtm, product)`, `pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'`, `pivot value 'show' must be one of value, pctRow, pctColumn, pctTotal, not 'pctBook'`, `pivot field 'a' is in both rows and columns`, `a pivot has at most 4 row fields and 4 column fields`, `a pivot shows at most 6 values, found 7`, `pivot field '$.book' is not a field path (letters, digits, _ and dots); for an expression write { field: name, bind: <expression> }`, `pivot field 'a' is listed twice`, `unknown key 'colour' in pivot`, `pivot 'chart' must be one of bar, line, heatmap, not 'pie'`, `pivot 'heat' is true or false, not 'maybe'`, `a pivot filter keeps either 'values' or a range ('min', 'max'), not both`, `pivot 'fields' is a non-empty list of field paths (or { field, bind, label, fmt })` | a `pivot:` the Pivot tab cannot use | use the names its fields have, the values listed, or `pivot: true` ([the option](#pivot-a-pivot-tab-on-a-table-or-ladder)) |
+| `DRS-2031` | `'pivot' is true, false, or a mapping of fields, rows, columns, values, filters, heat, chart, totals; not 'yes please'`, `pivot rows name 'desk', which is not one of its fields (currency, mtm, product)`, `pivot value 'agg' must be one of sum, count, avg, min, max, distinct, not 'median'`, `pivot value 'show' must be one of value, pctRow, pctColumn, pctTotal, not 'pctBook'`, `pivot field 'a' is in both rows and columns`, `a pivot has at most 4 row fields and 4 column fields`, `a pivot shows at most 6 values, found 7`, `pivot field '$.book' is not a field path (letters, digits, _ and dots); for an expression write { field: name, bind: <expression> }`, `pivot field 'a' is listed twice`, `unknown key 'colour' in pivot`, `pivot 'chart' must be one of bar, line, heatmap, not 'pie'`, `pivot 'heat' is true or false, not 'maybe'`, `a pivot filter keeps either 'values' or a range ('min', 'max'), not both`, `pivot 'fields' is a non-empty list of field paths (or { field, bind, label, fmt })` | a `pivot:` Pivot cannot use | use the names its fields have, the values listed, or `pivot: true` ([the option](#pivot-pivot-on-a-table-or-ladder)) |
 | `DRS-2032` | `the file could not be loaded: <reason>` (for example `it is nested too deeply to read (StackOverflowError)`) | a failure while reading the file that none of the other checks foresee; the server log has the stack trace | simplify the file; if it looks valid, report the log entry. The other Sutras load and hot reload carries on |
 | `DRS-2033` | `duplicate key 'version' (first written at line 3): YAML would keep only the last, so write each key once`, `a second YAML document (after '---'): a Sutra file holds exactly one, and the rest would be ignored`, `YAML tag '!panel' is not allowed in a Sutra: write the value plainly` | YAML that is valid but would not be read as written: a key twice in one mapping, a second document, a tag other than the core ones (`!!str`, `!!int`, …) | write each key once, one document per file, no tags |
 | `DRS-2034` | `unknown control kind 'knob'; expected one of dropdown, multi-select, ...`, `a dropdown control needs 'options': a list, an expression such as $.legs[*].id, or { kind: <entity kind> }`, `control id '9x' must be a letter, then letters, digits and underscores`, `a search control takes no 'options'`, `placement must be strip, header or side`, `a control placed in a panel header names the panel`, `remember is user or none`, `a Sutra has at most 12 controls` | a control that is not well formed | follow the message; the keys are in [Controls](#controls) |
@@ -3387,9 +3392,9 @@ wrote, comments included; then it reloads. A `name@version` already defined by a
 | `config/packs/trading/sutras/common/*.v1.block.yaml` | (used by every trade Sutra) | blocks with parameters; tabs holding panels; a tree of cash flows and resets; timeline; payment ladder |
 | `config/packs/trading/sutras/pages/counterparty-trades.v1.sutra.yaml` | `/v/counterparty-trades/CP-NORTHPLAINS` | metric tiles, a donut, ladders over many trades |
 | `config/packs/core/sutras/counterparty-and-legal/counterparty.v1.sutra.yaml` | `CPTY CP-MERIDIAN-RE` | table with totals, kv, graph |
-| `config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, a Pivot tab, automatic id links |
+| `config/packs/counterparty-risk/sutras/exposure-and-capital/netting-set.v1.sutra.yaml` | `NSET NS-MERIDIAN-RE-NY` | area with a limit, four controls, `on-select`, Pivot, automatic id links |
 | `config/packs/market-data/sutras/market-data/equity-vol-surface.v1.sutra.yaml` | `EQV EQV-CSCA` | surface, table, line |
-| `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, a Pivot tab |
+| `config/packs/market-risk/sutras/market-risk/portfolio.v1.sutra.yaml` | `PORT PF-RATES-DESK` | the engine's figures on a page, a P&L distribution, ranked bars, Pivot |
 | `config/packs/world-economy/sutras/economics/economy.v1.sutra.yaml` | `ECON ECON-AUS` | map with a shade and a link |
 | `docs/guides/examples/*.sutra.yaml` | Help → Examples | twelve self-contained examples with their own small documents, every kind |
 
@@ -3448,7 +3453,7 @@ Each kind below says what is special to it. These hold for all of them.
 - **Live.** A live view sends only the panels that changed. A `line` or `area` patch carries data and moves the existing chart; every other kind is re-rendered by the same macro as the first paint, so it looks identical after a tick.
 - **Phone.** Below 640 px every panel takes the whole width, one per row; tables scroll sideways inside their panel, charts resize, and a chart's numbers are in a collapsed **Data** section under it.
 - **Accessibility.** Charts are `role="img"` with a label that says what they show; colour is never alone (a tone always has a sign or a word); tables take the keyboard (arrows, PgUp/PgDn, Home/End, Enter). Contrast is checked for every theme by `drishti-console/tests/test_contrast.py`.
-- **Download.** The ↓ in a panel's heading opens a small menu: **CSV** (numbers as numbers) or **JSON Lines** (one row a line, [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each kind lists its columns below. One button, so a zoomed panel's heading stays on one line on a phone. A table's Pivot tab has its own CSV and Excel buttons.
+- **Download.** The ↓ in a panel's heading opens a small menu: **CSV** (numbers as numbers) or **JSON Lines** (one row a line, [DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)); each kind lists its columns below. One button, so a zoomed panel's heading stays on one line on a phone. A table's Pivot has its own CSV and Excel buttons.
 - **Limits.** Long lists are bounded by `drishti.panels` (nodes, events, points, pivot rows, tree depth): see [CONFIGURATION.md](../admin/CONFIGURATION.md).
 - **Keys every panel takes** (`id`, `kind`, `title`, `description`, `key`, `code`, `area`, `span`, `height`, `infer`): [Keys every panel takes](#keys-every-panel-takes).
 
@@ -6267,7 +6272,7 @@ no new framework.
   (`sample`) is a label, not a permission. Saving, proposing, approving and deleting stay with the `author`, `approve` and
   admin powers. Data access is not design: a preview against a stored entity needs the right to its kind, and any panel
   with `source: link(id, kind)` is bound only when the caller may open `kind` (otherwise the panel shows "no access to kind", with none of
-  that entity's values), in views, previews (stored and pasted), the Pivot tab's records, live streams and the builder's previews.
+  that entity's values), in views, previews (stored and pasted), a pivot of a panel's rows, live streams and the builder's previews.
 - **Limits** (all settings): 50 samples, 5 MB per file, 25 MB per set, nesting depth 64 (JSON parsing reuses the
   connectors' hardened reader: bad lines counted and skipped, NaN as no value). Sample sets expire after 24 hours
   unless saved; saved sets count against a per-user quota.
@@ -7222,8 +7227,8 @@ docs; see [section 24](#24-the-console-wiring-c3-c6-c7). **Not built yet (server
 endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), Open in BI (C9), Chart all N through BI runs; their release is not decided.
 Feature decided by the product owner, beside BI runs
 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)). Written
-2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the Pivot tab
-(`pivot.js`, `pivot-engine.js`, `pivot-grid.js`; [USER_GUIDE › The Pivot tab](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)),
+2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
+(`pivot-engine.js`, `pivot-grid.js`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)),
 the chart panels (`charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3) and
 history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
@@ -7290,7 +7295,7 @@ The product owner, 2026-10-20: **every table can be charted.**
 |---|---|---|---|---|---|---|---|
 | Sutra `table`, `ladder` (and a drill's current level) | `panels.html` + `tables.js` | `tables.js` heading strip | `/api/pivot/records/…?for=chart` (C3) | records beyond `limit`, up to 50,000 | `panel:<sutra>/<panel>` | **yes** (authors) | no (section 12.4) |
 | A Sutra `pivot` table (`by: [a, b]`) | `panels.html` `pivot_table`, `tree-rows.js` | `tables.js` | its rows as shown (already aggregated) | no | `panel:<sutra>/<panel>` | yes | no |
-| The Pivot tab | `pivot.js` | not offered: it has its own chart menu | | | | | |
+| The pivot screen | `pivot.js` | not offered: it charts a selection itself (`G`) | | | | | |
 | Search results and pick lists | `terminal/search.html` + `tables.js` | `tables.js` | the page's rows (search answer) | `/api/pivot/search/{kind}` when the pack says `pivot:` | `search:<kind>` | no | when a BI dataset serves the kind |
 | History | `terminal/history.html` + `history-page.js` (`data-plain`) | `history-page.js` (beside **Export**) | `/export/history/{kind}/{id}.json?{range}` | the whole range (≤ 366 days, in the browser) | `history:<kind>/<shape>` | no | no |
 | BI table, matrix, "rows behind", a chart visual shown as a table | `bi-grids.js`, `bi-matrix.js`, `bi-report.js` | the visual's action bar (`mk('bi-chart', 'bar-chart', …)`) | the visual's answer | **BI runs** | `bi:<report>/<page>/<visual>` | no | **yes** (authors) |
@@ -7493,7 +7498,7 @@ agg}]`** (`count` with no field). Date bucketing is done before the cube by deri
 browser, or by the server pivot's existing date grain when the search pivot has it (else the search path buckets in the browser from the
 day cube). Scatter without aggregation skips the cube and reads the points directly.
 
-`pivot-grid.js`'s `chart()` stays the Pivot tab's; the new option builder is separate because it needs time axes, two value axes, combo,
+`pivot-grid.js`'s `chart()` draws the nested-pivot panels' grid; the new option builder is separate because it needs time axes, two value axes, combo,
 stacking, pie and scatter. Both use `charts.js`'s `tokens`, `palette`, `compact`, `axis` and `tooltip`, which `charts.js` exports on
 `window.drishtiCharts` (C1 adds them to its public object).
 
@@ -7568,7 +7573,7 @@ writes them. Tables of the `dom` adapter are not saved (no stable identity); the
 
 | Table | Server path | Why this one |
 |---|---|---|
-| Sutra table, ladder | **`GET /api/pivot/records/…?for=chart`** (the rows; the browser aggregates with `pivot-engine.js`) | A panel's rows are one document's, already computed for the view; the endpoint already returns every row up to `drishti.pivot.max-records` (50,000) with the view's date and masks. Aggregating 50,000 rows in the browser takes tens of milliseconds (the Pivot tab does it today). Neither the search pivot (it aggregates entities of a kind, not a document's rows) nor BI runs (no model) apply. |
+| Sutra table, ladder | **`POST /api/pivot/query`** on the panel's source `panel/<kind>/<panel>/<id>` (Chart all N: the pivot engine aggregates every row on the server) | A panel's rows are one document's, already computed for the view; the engine reads every row up to `drishti.pivot.max-records` (50,000) with the view's date and masks, refused in words over it. The shown rows are charted from the cells, as any table. |
 | Search results, pick lists | **`POST /api/pivot/search/{kind}`** (the cube) | The search pivot already aggregates every match of the business date on the server, masked, from columns, with its budget (`drishti.pivot.budget`, 20 s) and limits, across Drishti\*net shards through the search's scatter. A search is a terminal question, not a BI question, so it does not belong in BI runs. It answers the pivot's cube, which the component consumes as is. Offered only for kinds whose pack says `pivot:` (the pack owner's consent to server aggregation over the day) and only over its `pivot:` fields; otherwise **Chart all** is absent and the status line says *Charting every match needs the pack's `pivot:`*. |
 | BI table, matrix | **BI runs** (`POST /api/v1/bi/runs`, source `mq`) | BI_RUNS decides that every BI query goes through one bounded pipeline; a chart over every row of a BI table can be an ad-hoc heavy question (182 dates of trades). The run gives the estimate, the confirmation above the threshold, the inline wait, fairness, reuse by fingerprint and masks per runner. |
 | History | **`GET /export/history/{kind}/{id}.json?{range}`** (the rows; the browser aggregates) | A range is at most `max-days` (366) rows: small, already served whole, masked. |
@@ -7610,7 +7615,7 @@ supersedes: "<report>/<page>/<visual>/chart", title: "Chart of … from <visual>
 | **SVG** | `getDataURL({type: 'svg'})` of the SVG instance; the theme's colours are written in, so the file stands alone | `<table>-chart-<date>.svg` |
 | **CSV**, **Excel** | `POST /export/grid.csv` / `/export/grid.xlsx` with `{name, header, rows}`: X, then one column per drawn series (split values become columns), *Others* as a row; formula-safe; numbers as numbers | the existing `filename(name, date)` |
 
-Downloads are a `Blob` and a temporary link for PNG and SVG (no server round trip), and a form post for CSV and Excel, as the Pivot tab
+Downloads are a `Blob` and a temporary link for PNG and SVG (no server round trip), and a form post for CSV and Excel, as the pivot screen's export
 does. Exports are of the chart's **aggregated data as drawn** (masked values left out, Top N applied). `exports: false` (an embedded view)
 hides them.
 
@@ -7691,7 +7696,7 @@ dropped with a note. A field Y with an aggregation becomes a local measure (`sum
 | A focused table enhanced by `tables.js` (panels, search results, pick lists, admin lists) | **K** (either case) | the table's keydown handles arrows, PgUp/PgDn, Home/End and Enter only; Alt+Shift+X is the root's; Z is `zoom.js` on the panel |
 | The history page | **Shift+K** | `history-page.js` binds lowercase `k` to *previous day* (with `j`); `K` (Shift) is unbound; the key line and the `?` card list it |
 | A BI report, focus inside a table or matrix visual | **K** | `bi-report-board.js` binds K (either case) at document level to **kiosk** when the report has pages. The visual's handler runs first (bubbling), opens the chart and calls `preventDefault()`; the kiosk handler gains `if (e.defaultPrevented) return;`. K elsewhere on the report still toggles kiosk |
-| The Pivot tab | none | the tab has its own chart menu; R, C, V, F are its zone keys |
+| The pivot screen | none | it charts a selection itself (`G`); R, C, V, F are its zone keys |
 | While typing in a field | none | ignored, as every key handler here does |
 
 **Inside the popup** (a native `<dialog>`; the focus is trapped and returns to the opener on close, as `share.js` does):
@@ -7868,7 +7873,7 @@ A user whose role masks `MTM` and a row-level rule on one desk:
 
 | Doc | What |
 |---|---|
-| [USER_GUIDE.md](USER_GUIDE.md) | a new section *Chart any table* (the icon and K, types, X, series, split, sort and Top N, chart all N, masks, save, export, keys, phone), linked from the table and Pivot tab sections and the history section |
+| [USER_GUIDE.md](USER_GUIDE.md) | a new section *Chart any table* (the icon and K, types, X, series, split, sort and Top N, chart all N, masks, save, export, keys, phone), linked from the table and Pivot sections and the history section |
 | [BI_GUIDE.md](BI_GUIDE.md) | charting a BI table, chart all N as a run, Open in BI and the combo axis rule, K beside kiosk |
 | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one) | the Chart icon on tables (*How a panel behaves*), `chart: false` on a table, and the new `chart` panel kind with its options, states and CSV |
 | this document, [SUTRA_DEVELOPER_GUIDE.md](SUTRA_DEVELOPER_GUIDE.md) | the `chart` kind's options; promotion from the popup |
@@ -7903,7 +7908,7 @@ Reading the code on `develop` changed the agreed outline in these places:
    pivot arrangement and promotes from it; charts get the same mechanism under `charts`, and `StateSync.NAMESPACES` must list it or a
    saved chart would not follow the user across nodes.
 8. **`pivot-grid.js`'s chart is too narrow to extend in place** (no time axis, one value axis, cuts at 200 lines and 40 series); a separate
-   option builder keeps the Pivot tab's behaviour unchanged.
+   option builder leaves the pivot screen's charts to it.
 9. **A BI measure must not be re-aggregated.** A BI table's measure column (a ratio, an average) summed again by X would be wrong; the BI
    path asks the engine for the measure at the chart's grain, and only fields get an aggregation menu.
 
@@ -7969,14 +7974,14 @@ What building it settled:
 * **Nothing to chart is said in the dialog, not on the button.** Knowing that every column is hidden or an identifier needs the rows,
   which the button does not read until it is pressed (the scripts load lazily); the dialog then says *Nothing to chart: …* and why.
 * **Embedded views** (`<drishti-view>`) have no chart button yet: the lazy loading reads the console's own `/static` paths.
-* **Not wired yet:** a Sutra `pivot` table with `by: [a, b]` (a tree table, `data-plain`, drawn by `tree-rows.js`) and the Pivot tab's
+* **Not wired yet:** a Sutra `pivot` table with `by: [a, b]` (a tree table, `data-plain`, drawn by `tree-rows.js`) and the pivot screen's
   own grid (which keeps its own chart menu) have no chart button.
 
 Tests: `tests/test_table_chart.py` (the raw rows of search and history pages, masks kept, the button and keys on those pages, the help
 address, the lazy loading, the BI K beside kiosk, the palette's contrast in all ten themes) and `tests/test_table_chart_browser.py`
 (Chromium against a stand-in server with synthetic data, `tests/table_chart_backend.py`: the button and K on a view's table, the type
 switcher, X, split, a second series on the right axis, Top N with Others, a masked column greyed and refused even when forced, a search
-charting raw values and Chart all through the search pivot, a table with a Pivot tab reading its records, Shift+K on history, View as
+charting raw values and Chart all through the pivot engine, a table that offers Pivot charted through the engine, Shift+K on history, View as
 table, CSV, PNG and SVG downloads, point navigation, empty, single-row and 600-row tables, a phone, and every theme drawing with its own
 tokens only). Pictures: `tests/table_chart_shots.py` makes `docs/guides/img/table-chart/`.
 

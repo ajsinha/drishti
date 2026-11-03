@@ -415,7 +415,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_EXPOSURE_OFFICIAL` | `drishti.ccr.exposure.official.enabled` | `true` | Capture every netting set, counterparty, group and hierarchy node officially at the end of each loaded date, and publish to `risk-results/exposure-official` and `exposure-official-cpty`. |
 | `DRISHTI_COMPUTE_EXPOSURE_WORKERS` | `compute.pools.exposure.workers.max` (`config/compute/compute.yaml`) | `4` | Python workers of the compute pool `exposure` (the Python exposure engine: the exact pre-deal what-if, method `paths`) on this node; the compute workers run only with `DRISHTI_COMPUTE_ENABLED=true`, else the exact what-if answers `503 DRS-5446`. |
 | `DRISHTI_LAYOUTS_ENABLED` | `drishti.layouts.enabled` | `true` | Allow personal layouts. |
-| `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | Allow the Pivot tab. |
+| `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | The old name of the pivot engine's switch (`DRISHTI_PIVOT_ENGINE_ENABLED`, `drishti.engines.pivot.enabled`). |
 | `DRISHTI_ASK_ENABLED` | `drishti.explain.ask.enabled` | `false` | Turn on Ask about this page (also list packs in `drishti.explain.ask.packs`). |
 | `DRISHTI_ASK_ENDPOINT` | `drishti.explain.ask.endpoint` | empty | **Deprecated** (a provider file in `config/ai` replaces it; it still works, as provider `ask`, with a start-up warning). The model endpoint URL for Ask. |
 | `DRISHTI_ASK_MODEL` | `drishti.explain.ask.model` | empty | The model Ask uses: a logical model of the AI layer (`provider/model`); with the deprecated `endpoint`, the model id sent to it. |
@@ -1135,7 +1135,7 @@ done once, on the server, before anything reads the document, so it is the same 
 - raw JSON (`F9`), search rows, search CSV, compare, history and its diff, Calc's columns and documents;
 - pivots: a masked field groups under `•••` and is never added up;
 - views: the header strip, the title, tables and their totals, key/value panels, tabs, charts, links and function keys,
-  the panel records behind the Pivot tab, and any value a Sutra computes from a masked field (`fmt($.mtm, …)`,
+  a pivot of a panel's rows, and any value a Sutra computes from a masked field (`fmt($.mtm, …)`,
   `$.mtm / 1e6`, a link built from a masked id); a chart leaves masked points out;
 - the live stream, monitors, the console's panel CSV export and Sutra Studio previews;
 - Impact (`F8`): an entity tied to the analysed one only through a masked field is not listed (a search on that field
@@ -1519,7 +1519,7 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
 | `columns.<kind>` | from packs | A kind's key fields in pick lists and searches (`columns:` in `pack.yaml`). |
-| `pivot.<kind>` | from packs | A Pivot tab on the kind's results: `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)). |
+| `pivot.<kind>` | from packs | Pivot on the kind's results (the pivot screen on the kind): `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-pivot-on-search-results)). |
 
 ### `drishti.calc` — Python in the browser
 
@@ -2114,22 +2114,18 @@ applied by the console when it draws that user's views. Who may is a role power 
 Promoting a layout to a Sutra also needs `drishti.rachana.studio-save: true` and a role with `author`; it is reviewed
 as any Studio save (`drishti.governance`).
 
-### `drishti.pivot` — the Pivot tab
+### `drishti.pivot` — the pivot engine
 
-The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) appears only where a
-Sutra (`pivot:` on a table or ladder) or a pack (`pivot:` beside a kind's `columns:`) opts in; these keys bound it.
-There is no role power: anyone who may open a kind may pivot and save; promoting a pivot to a Sutra needs `author`,
-`drishti.rachana.studio-save` and goes through review. Saved pivots live in the preference store (namespace `pivots`).
+The pivot engine ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)) is a compute engine with its own file, `config/engines/pivot.yaml`
+(`drishti.engines.pivot.enabled`, live; every `drishti.pivot.*` setting below is listed in [Every setting](#every-setting)). Pivot is
+offered on a table or ladder whose Sutra says `pivot:` and on the search results of a kind whose pack says `pivot:` beside `columns:`;
+both open the pivot screen. There is no role power: anyone who may open a kind may pivot it and save views; promoting a panel's view to its
+Sutra needs `author`, `drishti.rachana.studio-save` and goes through review. Saved views live in the content store (`pivot/views/`).
 
 | Key | Default | Meaning |
 |---|---|---|
-| `enabled` | `true` (`DRISHTI_PIVOT_ENABLED`) | Off: no Pivot tab anywhere (the view's table data and search results carry no `pivot`), and `/api/v1/views/…/records`, `/api/v1/search/pivot/**` and `/api/v1/me/pivots/**` refuse. |
-| `max-records` | `50000` | Rows of one panel sent to the browser to pivot, whatever the table's `limit`; beyond it the pivot says *the first 50000 of N rows*. |
-| `max-row-keys` | `2000` | Innermost row groups a pivot shows; further groups are left out of the grid but counted in the totals (`moreRows`). |
-| `max-column-keys` | `200` | Column groups a pivot shows (`moreColumns`). |
-| `document-scan` | `20000` | Entities a search pivot reads as documents, when a field is not kept as a column and the user asks for a document read; more makes the result partial. |
-| `drill-page` | `200` | Underlying entities one drill-down page of a search pivot returns, at most. |
-| `budget` | `20s` | How long a search pivot waits for a business day's columns (the first read of a day loads them) or for its documents. |
+| `enabled` | `true` (`DRISHTI_PIVOT_ENABLED`) | The old name of the pivot engine's switch: off, no Pivot anywhere (tables and search results carry no `pivot`) and `/api/v1/pivot` answers `404 DRS-1020`. |
+| `max-records` | `50000` | Rows of one panel a pivot of it reads, whatever the table's `limit`; a panel of more is refused in words, never cut short. |
 
 ### `drishti.panels` — chart and aggregate panel limits
 
@@ -5286,7 +5282,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `graph.impact.formats.<name>` | string | none |  | the pack | One kind's format | live |  |
 | `columns` | map | `{}` |  | the pack | kind -&gt; the key fields of its pick lists and search results | live |  |
 | `columns.<name>` | list | none |  | the pack | One kind's key fields | live |  |
-| `pivot` | map | `{}` |  | the pack | kind -&gt; a Pivot tab on its search results: rows, columns, values, filters, fields | live |  |
+| `pivot` | map | `{}` |  | the pack | kind -&gt; Pivot (the pivot screen on the kind) on its search results: rows, columns, values, filters, fields | live |  |
 | `pivot.<name>` | map | none |  | the pack | One kind's pivot | live |  |
 | `pivot.<name>.rows` | list | none |  | the pack | Fields down the side | live |  |
 | `pivot.<name>.columns` | list | none |  | the pack | Fields across the top | live |  |
