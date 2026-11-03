@@ -67,6 +67,8 @@ as people know it, with what Excel lacks in the places Excel's equivalents would
 | Scan-estimate bar | what the view reads before it runs ("This pivot reads ≈2,000 rows (≈94 KB, 3 of 8 columns), ≈under a second."); a large one asks first, with **Run** |
 | The grid | rows in display order: a member with **+** (closed) or a header with **−** (open), its children indented, then its total (subtotals below; above puts the total on the member's own line); Others; the grand total. Columns × measures; a holistic measure's header carries **H**, an approximate figure **≈** |
 | Fields | every field you may use, with its type (string, date, number), and the source's own measures (VaR, ES); search with `/` |
+| Slicers | a strip above the grid: each slicer field's members as buttons (read from the engine, as you may see them); a button keeps or drops its member (a filter of the view), **All** clears it. Add one by dragging a field to **Slicers** or pressing `S` on it |
+| Conditional formats | on a value's chip: **colour scale** or **data bars**, drawn from the figures shown over the members' cells (never changing a figure), kept with the view |
 | Four zones | Filters, Columns, Rows, Values. Drag a field onto a zone, or select it and press `R`, `C`, `V` or `F`; double-click puts a number into Values and a text into Rows. A value's chip has a function picker (sum, count, avg, min, max, median, count_distinct, var_samp, stddev_samp) |
 | Provenance popover | click a cell: its figure, exact or ≈, the function and how its totals are made, the members counted, the condition (or VaR scope) that selects them, the data version, the filters, what was computed and what came from the cache, its reference; **Rows** lists the members, **Ask the VaR engine** opens the cell's scope in VAR |
 | Chart | a chart of the selected cells (or the top level), linked to the grid: a click on a bar opens that member |
@@ -87,9 +89,29 @@ exports. The help line under the grid shows them.
 A date field groups as `TRADE_DATE:day`, `:week`, `:month`, `:quarter` or `:year`; a number as `NOTIONAL_USD:width=1000000` (buckets of a
 width, labelled by their lower edge). A missing value is the member `(blank)`.
 
-A table is read once per date, data version and mask signature and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep`
-tables); a table over `drishti.pivot.stage-max-rows` rows is refused in words, never cut short. Memory-only data is never written: the
-executor has no spill folder unless `drishti.pivot.duckdb.temp-directory` names one.
+How a table is read, chosen per table:
+
+| Route | When | How |
+|---|---|---|
+| **Direct lake** | the kind's one source is a Delta or Iceberg table on a local disk, a snapshot table (one partition holds the date), without deletion vectors or delete files, and every field you may use is a column it keeps | DuckDB reads the date's Parquet files itself: only the columns a statement uses (column pruning), the filters repeated on the raw columns so row groups and files are skipped by their statistics; masked columns are never named, so never read; no staging cap |
+| **Staged** | any other table (a document store, an object store, masks that also change values inside other fields, memory-only data) | read once per date, data version and mask signature through the Data view's own read and kept in the engine's in-memory DuckDB (`drishti.pivot.stage-keep` tables); over `drishti.pivot.stage-max-rows` rows refused in words, never cut short |
+
+Memory-only data is never written: the executor has no spill folder unless `drishti.pivot.duckdb.temp-directory` names one. The estimate
+of a lake table comes from its metadata (the files' bytes, the manifests' or add-actions' row counts); nothing is read.
+
+### Currencies and units
+
+A field has a **unit**: an `amount` of the data contract is **money** in the currency of the row's currency field (`CURRENCY`, `CCY`,
+`*_CCY`); a `rate` or a name ending `_PCT` is never summed (a sum of it is refused, with `avg` or `wavg` offered). A money total over
+several currencies is **never added raw**: such a cell shows no figure and says *mixed currencies (EUR to USD)*; a cell in one currency
+shows its figure and its currency. To add them, convert in the view:
+
+```json
+"currency": {"report": "USD", "rates": {"EUR": 1.08, "GBP": 1.27, "JPY": 0.0066}, "source": "ECB close 2026-10-30"}
+```
+
+Every money figure is then in USD (each row converted at its currency's rate before any aggregation; a row in a currency without a rate is
+left out), the measures' unit says USD, and the provenance names the rates and their source. Counts stay counts.
 
 ## 4. Measures and how each total is made
 
