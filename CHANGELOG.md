@@ -46,6 +46,9 @@
 
 ## 2.9.11.a
 
+- **Pivot: a JSON Lines export** (PIVOT_GUIDE.md, Export). The pivot screen and `POST /api/v1/pivot/export` offer `jsonl` beside Excel, CSV and
+  Arrow: one object a cell and measure, and the rows of a cell one object a row, so every export of the console offers the data standard.
+
 - **One Engines menu (mock-up engines-menu/A; USER_GUIDE.md, The top bar).** The Engines menu replaces the VaR and Exposure top-level
   menus (and the VaR and Exposure entries of Views): a column per compute engine running in the cluster (VaR `VAR`, Exposure `EXP`,
   FRTB-SA `FRSA`, SIMM `SIMM`), its command word in the column's head, every page one click away with its command on the right. It is
@@ -85,6 +88,7 @@
   `RetentionTest`, `MemoryStorageTest`, `MemoryStorageContractTest`); `drishti-lakeio` and `drishti-deltalake` publish test jars for them.
 
 ## Unreleased (on develop, after 2.9.11)
+
 
 - **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
   screen; it had been drawn flush left. The VaR card and the risk area name the basket sheet, which replaced the selection tray.

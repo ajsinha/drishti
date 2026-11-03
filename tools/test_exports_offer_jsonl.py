@@ -78,7 +78,7 @@ class Console(unittest.TestCase):
 
     #: every UI menu or button that offers CSV or Excel: the file and what proves JSON Lines is offered beside it
     UI = {"web/static/js/table-chart.js": "self.grid('jsonl')",
-          "web/static/js/pivot.js": "self.exportAs('jsonl')",
+          "web/templates/terminal/pivot.html": 'data-pv-export="jsonl"',
           "web/static/js/bi-runs.js": "b('jsonl', 'Export JSONL')",
           "web/templates/bi/report.html": 'data-export-fmt="jsonl"',
           "web/static/js/bi-statement.js": "'.jsonl?page='",

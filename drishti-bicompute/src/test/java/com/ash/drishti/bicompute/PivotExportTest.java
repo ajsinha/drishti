@@ -69,6 +69,33 @@ class PivotExportTest {
         }
     }
 
+    @Test
+    void jsonLinesHasOneObjectACellAndMeasureEqualToTheCsv() throws Exception {
+        try (PivotFixture fx = new PivotFixture(1_000, StateCache.none(), PivotCore.Settings.defaults())) {
+            PivotView v = PivotView.parse(Map.of("source", "trades", "rows", List.of("REGION", "DESK"), "expandTo", Map.of("rows", 2),
+                    "values", List.of(Map.of("measure", "sum(NOTIONAL)", "as", "Notional"), Map.of("measure", "median(PNL)", "as", "Median"))));
+            Map<String, Object> a = fx.core.query(Viewer.of("rita"), v);
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            PivotExport.jsonl(a, out);
+            String[] lines = out.toString(StandardCharsets.UTF_8).split("\n");
+            assertThat(lines).hasSize(2 * ((Map<?, ?>) a.get("cells")).size());
+            com.fasterxml.jackson.databind.ObjectMapper json = new com.fasterxml.jackson.databind.ObjectMapper();
+            ByteArrayOutputStream csv = new ByteArrayOutputStream();
+            PivotExport.csv(a, csv, "cells", ',', false);
+            String[] rows = csv.toString(StandardCharsets.UTF_8).split("\r\n");
+            for (int i = 0; i < lines.length; i++) {
+                Map<?, ?> o = json.readValue(lines[i], Map.class);
+                assertThat(new java.util.ArrayList<Object>(o.keySet())).containsExactly("row", "column", "coords", "measure", "value", "exact", "members", "kind");
+                assertThat(new java.util.ArrayList<Object>(((Map<?, ?>) o.get("coords")).keySet())).containsExactly("REGION", "DESK");
+                String[] c = rows[i + 1].split(",", -1);
+                assertThat(String.valueOf(o.get("measure"))).isEqualTo(c[4]);
+                if (!c[5].isEmpty()) {
+                    assertThat(((Number) o.get("value")).doubleValue()).isCloseTo(Double.parseDouble(c[5]), org.assertj.core.data.Offset.offset(1e-6));
+                }
+            }
+        }
+    }
+
     static Map<String, String> unzip(byte[] b) throws Exception {
         Map<String, String> out = new HashMap<>();
         try (ZipInputStream z = new ZipInputStream(new ByteArrayInputStream(b))) {
