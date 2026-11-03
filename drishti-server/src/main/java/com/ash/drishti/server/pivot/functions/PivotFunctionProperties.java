@@ -46,12 +46,10 @@ public record PivotFunctionProperties(Boolean formula, Boolean sqlMacros, Boolea
      * @param interpreter the Python to run (blank: python3, python on Windows)
      * @param workers worker processes in the {@code pivot-fn} pool
      * @param timeoutSeconds the longest one call (a batch, a merge) may take
-     * @param viewTimeoutSeconds the longest a view's calls may take together
      * @param memoryMb memory per worker
      * @param batchRows rows in each batch a function is fed
      */
-    public record Python(Boolean enabled, String interpreter, Integer workers, Integer timeoutSeconds, Integer viewTimeoutSeconds, Integer memoryMb,
-            Integer batchRows) {}
+    public record Python(Boolean enabled, String interpreter, Integer workers, Integer timeoutSeconds, Integer memoryMb, Integer batchRows) {}
 
     /** {@code drishti.pivot.functions.java}: plug-in jars in {@code dir}. */
     public record Java(Boolean enabled, String dir) {}
@@ -66,11 +64,10 @@ public record PivotFunctionProperties(Boolean formula, Boolean sqlMacros, Boolea
         harness = harness == null ? new Harness(null, null, null) : harness;
         harness = new Harness(harness.tolerance() == null || harness.tolerance() <= 0 ? 1e-12 : harness.tolerance(),
                 harness.seeds() == null || harness.seeds() <= 0 ? 5 : harness.seeds(), harness.maxNsPerRow() == null ? 2000L : harness.maxNsPerRow());
-        python = python == null ? new Python(false, "", 2, 30, 300, 1024, 65_536) : python;
+        python = python == null ? new Python(false, "", 2, 30, 1024, 65_536) : python;
         python = new Python(Boolean.TRUE.equals(python.enabled()), python.interpreter() == null ? "" : python.interpreter(),
                 python.workers() == null || python.workers() <= 0 ? 2 : python.workers(),
                 python.timeoutSeconds() == null || python.timeoutSeconds() <= 0 ? 30 : python.timeoutSeconds(),
-                python.viewTimeoutSeconds() == null || python.viewTimeoutSeconds() <= 0 ? 300 : python.viewTimeoutSeconds(),
                 python.memoryMb() == null || python.memoryMb() <= 0 ? 1024 : python.memoryMb(),
                 python.batchRows() == null || python.batchRows() <= 0 ? 65_536 : python.batchRows());
         java = java == null ? new Java(false, "./plugins/pivot-functions") : java;
