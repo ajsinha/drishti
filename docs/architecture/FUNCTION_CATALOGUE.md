@@ -84,7 +84,7 @@ list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control the
 | `trim(s)`, `pad(s, n, [char], [side])` | spaces, width | `pad($.LEG_ID, 3, '0')` | `TRIM`, `TEXT` / `STRIP`, `PUT` | R | built (Rachana) |
 | `regex_extract(s, regex, [group])` | the matching part | `regex_extract($.INSTRUMENT, '20[0-9]{2}-[0-9]{2}')` | `REGEXEXTRACT` / `PRXCHANGE` | R | built (Rachana) |
 | `fmt(x, format)` | a pack's display format | `fmt(trades.NOTIONAL, 'amount0')` | `TEXT` / `PUT` | R | built (Rachana) |
-| `string_agg(x, sep, [distinct])` | the group's texts joined | `string_agg($.LEGS[*].CURRENCY, ', ', true)` | `TEXTJOIN` / `CATX` over a group | E | T1 |
+| `string_agg(x, sep, [distinct])` | the group's texts joined in text order (distinct: each once); at most 1,000 values, past that no figure, said in words | `string_agg($.LEGS[*].CURRENCY, ', ', true)` | `TEXTJOIN` / `CATX` over a group | E | built (engine) |
 
 ## 3. Dates, on the bank's calendars (scalars)
 
@@ -105,43 +105,61 @@ list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control the
 Each runs in the engine. *Mergeable* means a cluster or a pivot total combines partial results exactly; *holistic* means it needs the
 values (bounded by the engine's holistic limits, exact on request, or a sketch when the person accepts ≈).
 
+**How the statistics are kept.** One implementation each in `drishti-bicompute` (`functions.Moments`, `functions.Comoments`,
+`functions.Holistics`), registered into Rachana, so a pivot cell, a Rachana list (`skewness($.TRADES[*].PNL)`) and BI later run the
+same code. `stderr`, `cv`, `skewness` and `kurtosis` keep the central moments to the fourth order (n, mean, M2, M3, M4), each batch's in two
+passes and merged by Pébay's formulas; `corr`, `covar`, `slope`, `intercept` and `rsq` keep the co-moments (n, the two means, the two sums
+of squares and the cross sum) merged by Chan's; `geomean` and `harmean` a compensated sum of ln x or 1/x; every one of them passes the
+split-and-merge harness (2, 3 and 16 parts, five seeds, states serialised) within the configured 1e-12. `mode` and `string_agg` keep a
+count per distinct value, whose merge is exact; `iqr`, `trimmean`, `kth_largest` and `kth_smallest` keep the values. On a table the SQL
+engine computes the states where SQL can (`nmiss`, `range`, `stderr`, `cv`, `geomean`, `harmean`, the co-moments, `iqr`); the rest are fed
+the cell's rows. `mode` of names and `string_agg` answer text.
+
 | Function | Means | Example | Excel / SAS | Form | Status |
 |---|---|---|---|---|---|
 | `sum(x, [where])` | total | `sum($.LEGS[*].NOTIONAL)`, `sum(trades.NOTIONAL, where = trades.DESK == 'DESK-COMM')` | `SUM`, `SUMIFS` / PROC MEANS `SUM` | mergeable | built (all three) |
 | `count(x \| alias, [where])` | values not null, or rows | `count($.EVENTS[?@.EVENT_TYPE == 'BOOKED'])` | `COUNT`, `COUNTIFS` / `N` | mergeable | built |
-| `nmiss(x)` | nulls | `nmiss($.LEGS[*].DISCOUNT_INDEX)` | `COUNTBLANK` / `NMISS` | mergeable | T1 |
+| `nmiss(x)` | nulls | `nmiss($.LEGS[*].DISCOUNT_INDEX)` | `COUNTBLANK` / `NMISS` | mergeable | built (engine) |
 | `avg(x, [where])` | mean | `avg(trades.PRICE)` | `AVERAGE`, `AVERAGEIFS` / `MEAN` | mergeable (sum, count) | built |
 | `wavg(x, w)` | weighted mean | `wavg(trades.PRICE, trades.QUANTITY)` | `SUMPRODUCT/SUM` / `MEAN` with `WEIGHT` | mergeable | built (engine) |
 | `min(x)`, `max(x)` | extremes (numbers, dates, text) | `max($.EVENTS[*].EVENT_DATE)` | `MIN`, `MAX`, `MAXIFS` / `MIN`, `MAX` | mergeable | built |
-| `range(x)` | max − min | `range(trades.PRICE)` | `MAX-MIN` / `RANGE` | mergeable | T1 |
+| `range(x)` | max − min | `range(trades.PRICE)` | `MAX-MIN` / `RANGE` | mergeable | built (engine) |
 | `distinct(x)` | how many different values (exact; ≈ by sketch when asked) | `distinct(trades.COUNTERPARTY)` | `COUNTA(UNIQUE())` / PROC SQL `COUNT(DISTINCT)` | holistic (sketch: HLL) | built |
 | `median(x)`, `percentile(x, p)` | middle, p-quantile (continuous) | `percentile(trades.NOTIONAL, 0.95)` | `MEDIAN`, `PERCENTILE.INC` / `MEDIAN`, `P95` | holistic (sketch: KLL) | built |
-| `mode(x)` | most frequent | `mode($.LEGS[*].CURRENCY)` | `MODE.SNGL` / `MODE` | holistic | T1 |
-| `iqr(x)` | p75 − p25 | `iqr(trades.PRICE)` | `QUARTILE(3)-QUARTILE(1)` / `QRANGE` | holistic | T1 |
+| `mode(x)` | most frequent, a number or a name; ties to the smallest (SAS's rule; Excel takes the first met); none when no value repeats (Excel's #N/A) | `mode($.LEGS[*].CURRENCY)` | `MODE.SNGL` / `MODE` | holistic | built (engine) |
+| `iqr(x)` | p75 − p25, linear interpolation (Excel's `QUARTILE.INC`; SAS's `QRANGE` uses its definition 5, so small samples can differ) | `iqr(trades.PRICE)` | `QUARTILE(3)-QUARTILE(1)` / `QRANGE` | holistic | built (engine) |
 | `variance(x)`, `stddev(x)` (sample), `variance_pop(x)`, `stddev_pop(x)` (population) | spread | `stddev(trades.PNL)` | `VAR.S`, `STDEV.S` / `VAR`, `STD` | mergeable (moments) | built (engine) |
-| `stderr(x)`, `cv(x)` | standard error, coefficient of variation | `cv(trades.PNL)` | `STDEV/SQRT(n)` / `STDERR`, `CV` | mergeable | T1 |
-| `skewness(x)`, `kurtosis(x)` | shape | `skewness(trades.PNL)` | `SKEW`, `KURT` / `SKEWNESS`, `KURTOSIS` | mergeable (moments to 4) | T1 |
-| `geomean(x)`, `harmean(x)` | means for rates | `geomean(1 + trades.RETURN) - 1` | `GEOMEAN`, `HARMEAN` / `GEOMEAN`, `HARMEAN` | mergeable (log sum, reciprocal sum) | T1 |
-| `trimmean(x, pct)` | mean without the tails | `trimmean(trades.PRICE, 0.1)` | `TRIMMEAN` / PROC UNIVARIATE `TRIMMED=` | holistic | T1 |
-| `corr(x, y)`, `covar(x, y)` | correlation, covariance | `corr(trades.PNL, trades.NOTIONAL)` | `CORREL`, `COVARIANCE.S` / PROC CORR | mergeable (sums of products) | T1 |
-| `slope(y, x)`, `intercept(y, x)`, `rsq(y, x)` | least-squares line | `slope(trades.PNL, trades.QUANTITY)` | `SLOPE`, `INTERCEPT`, `RSQ` / PROC REG | mergeable | T1 |
+| `stderr(x)`, `cv(x)` | standard error s/√n, coefficient of variation s/mean (SAS's `CV` is 100 times it); none under two values | `cv(trades.PNL)` | `STDEV/SQRT(n)` / `STDERR`, `CV` | mergeable | built (engine) |
+| `skewness(x)`, `kurtosis(x)` | shape: Excel's sample forms (kurtosis in excess of 3), SAS's with `VARDEF=DF`; none under three (four) values or without spread | `skewness(trades.PNL)` | `SKEW`, `KURT` / `SKEWNESS`, `KURTOSIS` | mergeable (moments to 4) | built (engine) |
+| `geomean(x)`, `harmean(x)` | means for rates; positive values only (a value ≤ 0 leaves no figure, Excel's #NUM!) | `geomean(1 + trades.RETURN) - 1` | `GEOMEAN`, `HARMEAN` / `GEOMEAN`, `HARMEAN` | mergeable (log sum, reciprocal sum) | built (engine) |
+| `trimmean(x, pct)` | mean without ⌊n·pct/2⌋ values at each end (Excel's rule) | `trimmean(trades.PRICE, 0.1)` | `TRIMMEAN` / PROC UNIVARIATE `TRIMMED=` | holistic | built (engine) |
+| `corr(x, y)`, `covar(x, y)` | correlation, sample covariance, over the pairs where both are present | `corr(trades.PNL, trades.NOTIONAL)` | `CORREL`, `COVARIANCE.S` / PROC CORR | mergeable (sums of products) | built (engine) |
+| `slope(y, x)`, `intercept(y, x)`, `rsq(y, x)` | least-squares line of y on x (y first, as Excel); none when x does not vary | `slope(trades.PNL, trades.QUANTITY)` | `SLOPE`, `INTERCEPT`, `RSQ` / PROC REG | mergeable | built (engine) |
 | `ratio(num, den)` | num / den, null on 0 | `ratio(sum(trades.PNL), sum(trades.NOTIONAL))` | `IFERROR(a/b, "")` | of its parts | built (DEL) |
 | `sum_once(x)`, `count_once(x)`, `avg_once(x)` | a coarser figure counted once per parent (a trade's in a per-leg view) | `sum_once($.QUANTITY)` beside `count($.LEGS[*])` | none | mergeable by parent id | built (engine) |
 | `group(list, key, [agg])` | grouping inside one document | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` | `GROUPBY` / PROC MEANS `CLASS` | the engine's grouping | built (engine: Rachana reads the key and the inputs, the engine groups) |
 
 ## 5. Shares, ranks and windows (over the cells of an answer)
 
+**On the pivot (built in the engine):** a value written around an aggregate, `pct_of_total(sum(NOTIONAL))`, `ntile(sum(NOTIONAL), 4)`,
+`diff(sum(PNL), 1, TRADE_DATE:month)`. The aggregate is computed as every other value; the share, bucket or change is then computed from
+the finished figures of the answer's cells, beside Top N and Others (`core.ShowAs`, "show values as"), so a total is never broken and no
+row is read again. The header is the text as written; the raw figure stays beside the shown one. They are pivot values, not Rachana list
+functions (a list has no rows and columns); Rachana reads a pivot's figure through `cell(...)`. `ntile`, `diff` and `pct_change` leave the
+grand total and Others without a figure (an open member's total is that member, among its siblings); the order of `diff` and
+`pct_change` is a dimension on the rows or the columns.
+
 | Function | Means | Example | Excel / SAS | Status |
 |---|---|---|---|---|
-| `pct_of_total(agg)`, `pct_of_row(agg)`, `pct_of_column(agg)` | share of the grand, row or column total | `pct_of_total(sum(trades.NOTIONAL))` | PivotTable "% of grand total" / TABULATE `PCTSUM` | T1 (DEL `share_of` covers part) |
-| `pct_of_parent(agg, [hierarchy])` | share of the parent level | `pct_of_parent(sum(trades.NOTIONAL), 'MGMT')` | "% of parent row" / `ROWPCTSUM` | built (DEL `parent_of`) |
+| `pct_of_total(agg)`, `pct_of_row(agg)`, `pct_of_column(agg)` | share of the grand, row or column total | `pct_of_total(sum(trades.NOTIONAL))` | PivotTable "% of grand total" / TABULATE `PCTSUM`, `ROWPCTSUM`, `COLPCTSUM` | built (engine; DEL `share_of` stays until 2.9.11.e) |
+| `pct_of_parent(agg, [hierarchy])` | share of the parent level | `pct_of_parent(sum(trades.NOTIONAL), 'MGMT')` | "% of parent row" / `ROWPCTSUM` | built (engine: the level above on the rows; a named hierarchy with DEL `parent_of` until 2.9.11.e) |
 | `share_of(agg, over)` | share with chosen fields ignored | `share_of(sum(trades.NOTIONAL), over = [trades.DESK])` | none | built (DEL) |
 | `rank(agg, [desc], [by])`, `dense_rank`, `percent_rank` | position | `rank(sum(trades.NOTIONAL), by = [trades.DESK])` | `RANK.EQ`, `PERCENTRANK` / PROC RANK | built (DEL) |
-| `ntile(agg, n)` | deciles, quartiles … | `ntile(sum(trades.NOTIONAL), 10)` | `QUARTILE` buckets / PROC RANK `GROUPS=10` | T1 |
-| `kth_largest(x, k)`, `kth_smallest(x, k)` | k-th value | `kth_largest(trades.NOTIONAL, 3)` | `LARGE`, `SMALL` / PROC UNIVARIATE extremes | T1 |
-| `top_n(n, agg)`, `bottom_n(n, agg)` with Others | the n leading members, the rest as Others | `top_n(10, sum(trades.NOTIONAL))` | PivotTable Top 10 filter | built (engine, Top N and Others) |
+| `ntile(agg, n)` | the bucket 1..n among the siblings, ascending, ties at their mean rank: SAS's ⌊rank·n/(count+1)⌋ plus one | `ntile(sum(trades.NOTIONAL), 10)` | `QUARTILE` buckets / PROC RANK `GROUPS=10` | built (engine) |
+| `kth_largest(x, k)`, `kth_smallest(x, k)` | k-th value | `kth_largest(trades.NOTIONAL, 3)` | `LARGE`, `SMALL` / PROC UNIVARIATE extremes | built (engine, an aggregate: section 4) |
+| `top_n(n, agg)`, `bottom_n(n, agg)` with Others | the n leading members, the rest as Others | `top_n(10, sum(trades.NOTIONAL))` | PivotTable Top 10 filter | built (the pivot view's `top`: Top N and Others) |
 | `lag(agg, n, order)`, `lead(agg, n, order)` | n cells before or after | `lag(sum(trades.PNL), 1, trades.TRADE_DATE.month)` | `OFFSET` / `LAG` | built (DEL) |
-| `diff(agg, [n], order)`, `pct_change(agg, [n], order)` | change from n cells before | `pct_change(sum(trades.NOTIONAL), 1, month)` | `B2-B1` / `DIF` | T1 |
+| `diff(agg, [n], order)`, `pct_change(agg, [n], order)` | change from n members before along the order dimension (rows or columns, members in natural order); `pct_change` over the earlier figure, none where it is 0 | `pct_change(sum(trades.NOTIONAL), 1, month)` | `B2-B1` / `DIF` | built (engine) |
 | `moving_avg`, `moving_sum`, `moving_min`, `moving_max` (agg, n, order) | rolling windows | `moving_avg(sum(trades.PNL), 20, day)` | `AVERAGE(OFFSET())` / PROC EXPAND | built (DEL) |
 | `running(agg, date)` | running total | `running(sum(trades.PNL), trades.TRADE_DATE)` | running total / `RETAIN` | built (DEL; `cumulative` folds in) |
 | `ytd`, `mtd`, `qtd`, `fiscal_ytd` (agg, date) | to date | `ytd(sum(trades.PNL), trades.TRADE_DATE)` | none / `INTNX` windows | built (DEL) |

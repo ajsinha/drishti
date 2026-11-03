@@ -130,6 +130,18 @@
   Rachana; Rachana never depends on the engine; only Rachana parses expressions, DEL and its kin listed until 2.9.11.e) and a console
   check that lists every aggregation in console code with its reason (layout, the console's own data, or a debt to move to the server).
   The function catalogue page is generated from the registries (Help → Functions) and checked against FUNCTION_CATALOGUE.md.
+- **The engine's tier-1 statistics, shares and windows (front-loaded from 2.9.11.e; FUNCTION_CATALOGUE.md sections 4 and 5,
+  FUNCTIONS.md, PIVOT_GUIDE.md section 4).** In `drishti-bicompute`, once each, registered into Rachana: `nmiss`, `range`, `stderr`,
+  `cv`, `skewness`, `kurtosis` (central moments to the fourth order, merged by Pébay's formulas), `geomean`, `harmean`, `corr`, `covar`,
+  `slope`, `intercept`, `rsq` (co-moments, Chan's merge), every one mergeable and through the split-and-merge harness at 1e-12; `mode`
+  (a number or a name), `iqr`, `trimmean`, `kth_largest`, `kth_smallest` and `string_agg` (in text order, at most 1,000 values) holistic.
+  Excel's documented examples (`SKEW`, `KURT`, `CORREL`, `COVARIANCE.S`, `SLOPE`, `INTERCEPT`, `RSQ`, `TRIMMEAN`, `GEOMEAN`, `HARMEAN`,
+  `MODE.SNGL`, `LARGE`, `SMALL`, `QUARTILE.INC`) give their printed digits. A pivot value may be written around an aggregate:
+  `pct_of_total`, `pct_of_row`, `pct_of_column`, `pct_of_parent` (the level above on the rows; a named hierarchy with DEL's
+  `parent_of` in 2.9.11.e), `ntile(agg, n)`, `diff(agg, [n], order)`, `pct_change(agg, [n], order)`, computed from the answer's
+  finished cells beside Top N and Others (`core.ShowAs`). A function may answer text (`AggFunction.result`) and name its unit
+  (`resultUnit`); a measure may take a quoted text (`string_agg(CCY, ', ', true)`). Fixed: a show-as on a view with two or more row or
+  column dimensions read the wrong total (a cell's key was split at the first `|`, which a key of several coordinates also has).
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 

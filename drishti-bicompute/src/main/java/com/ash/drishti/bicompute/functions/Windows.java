@@ -57,7 +57,7 @@ public final class Windows {
             new Info("pct_of_parent", "agg", "the cell's share of its parent on the rows (the level above); the grand total's is 1",
                     "pct_of_parent(sum(NOTIONAL))", "PivotTable: % of Parent Row Total", "PROC TABULATE PCTSUM<parent>"),
             new Info("ntile", "agg, n", "the bucket 1..n of the cell among its siblings (the rows under the same parent, in the same column), "
-                    + "ascending, ties at their mean rank: SAS's GROUPS=n plus one; empty for a total, Others and an empty figure",
+                    + "ascending, ties at their mean rank: SAS's GROUPS=n plus one; empty for the grand total, Others and an empty figure",
                     "ntile(sum(NOTIONAL), 4)", "none (QUARTILE as bounds)", "PROC RANK GROUPS=n TIES=MEAN (0-based)"),
             new Info("diff", "agg, [n], order", "the cell's figure less the figure n members before along the order dimension (rows or "
                     + "columns, members in their natural order); empty for the first n and where either figure is empty",
