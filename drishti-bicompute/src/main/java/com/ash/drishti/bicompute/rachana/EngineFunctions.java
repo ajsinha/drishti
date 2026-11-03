@@ -80,6 +80,43 @@ public final class EngineFunctions implements FunctionProvider {
                 "count_once($.LEGS, 'QUANTITY', 'TRADE_ID')");
         agg(out, "avg_once", 2, 3, "list, field, parentField | xs, parents", "holistic", "the mean over the parents, each once",
                 "avg_once($.LEGS, 'QUANTITY', 'TRADE_ID')");
+        agg(out, "nmiss", 1, 2, "list, [field]", "mergeable", "how many values are missing (null or absent); 0 for an empty list",
+                "nmiss($.LEGS, 'DISCOUNT_INDEX')");
+        agg(out, "range", 1, 2, "list, [field]", "mergeable", "max − min; empty when there is no number", "range($.TRADES[*].PRICE)");
+        agg(out, "stderr", 1, 2, "list, [field]", "mergeable", "the standard error of the mean, s / √n; empty under two numbers",
+                "stderr($.TRADES[*].PNL)");
+        agg(out, "cv", 1, 2, "list, [field]", "mergeable", "the coefficient of variation, s / mean; empty under two numbers or a mean of 0",
+                "cv($.TRADES[*].PNL)");
+        agg(out, "skewness", 1, 2, "list, [field]", "mergeable", "the sample skewness (Excel's SKEW); empty under three numbers or no spread",
+                "skewness($.TRADES[*].PNL)");
+        agg(out, "kurtosis", 1, 2, "list, [field]", "mergeable",
+                "the sample excess kurtosis (Excel's KURT); empty under four numbers or no spread", "kurtosis($.TRADES[*].PNL)");
+        agg(out, "geomean", 1, 2, "list, [field]", "mergeable", "the geometric mean; empty when a number is 0 or less (Excel's #NUM!)",
+                "geomean($.RETURNS[*].GROWTH)");
+        agg(out, "harmean", 1, 2, "list, [field]", "mergeable", "the harmonic mean; empty when a number is 0 or less (Excel's #NUM!)",
+                "harmean($.LEGS[*].PRICE)");
+        agg(out, "corr", 2, 3, "list, xField, yField | xs, ys", "mergeable", "Pearson's correlation over the pairs where both are numbers",
+                "corr($.TRADES, 'PNL', 'NOTIONAL')");
+        agg(out, "covar", 2, 3, "list, xField, yField | xs, ys", "mergeable", "the sample covariance (Excel's COVARIANCE.S)",
+                "covar($.TRADES, 'PNL', 'NOTIONAL')");
+        agg(out, "slope", 2, 3, "list, yField, xField | ys, xs", "mergeable", "the least-squares slope of y on x (Excel's SLOPE, y first)",
+                "slope($.TRADES, 'PNL', 'QUANTITY')");
+        agg(out, "intercept", 2, 3, "list, yField, xField | ys, xs", "mergeable", "the least-squares intercept of y on x (Excel's INTERCEPT)",
+                "intercept($.TRADES, 'PNL', 'QUANTITY')");
+        agg(out, "rsq", 2, 3, "list, yField, xField | ys, xs", "mergeable", "r², the square of the correlation (Excel's RSQ)",
+                "rsq($.TRADES, 'PNL', 'QUANTITY')");
+        agg(out, "mode", 1, 2, "list, [field]", "holistic",
+                "the most frequent value, a number or a name; ties to the smallest; empty when no value repeats", "mode($.LEGS[*].CURRENCY)");
+        agg(out, "iqr", 1, 2, "list, [field]", "holistic", "p75 − p25 (Excel's QUARTILE.INC)", "iqr($.TRADES[*].PRICE)");
+        agg(out, "trimmean", 2, 3, "list, [field], pct", "holistic", "the mean without ⌊n·pct/2⌋ values at each end (Excel's TRIMMEAN)",
+                "trimmean($.TRADES[*].PRICE, 0.1)");
+        agg(out, "kth_largest", 2, 3, "list, [field], k", "holistic", "the k-th largest number (Excel's LARGE); empty when fewer than k",
+                "kth_largest($.TRADES[*].NOTIONAL, 3)");
+        agg(out, "kth_smallest", 2, 3, "list, [field], k", "holistic", "the k-th smallest number (Excel's SMALL); empty when fewer than k",
+                "kth_smallest($.TRADES[*].NOTIONAL, 3)");
+        agg(out, "string_agg", 2, 4, "list, [field], sep, [distinct]", "holistic",
+                "the values joined by sep in text order (distinct true: each once); empty past 1,000 values",
+                "string_agg($.LEGS[*].CURRENCY, ', ', true)");
         out.add(new Provided("measure", 1, 3, "name, [scope], [options]", "measure",
                 "a compute engine's measure for one scope (VaR, ES …), exactly from its engine, never summed",
                 "measure('VAR', 'DESK:DESK-COMM')", (a, c) -> measure(a)));

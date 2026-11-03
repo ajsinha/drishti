@@ -89,7 +89,7 @@ final class PivotAnswer {
                 cells.put(r.get("key") + "|" + col.get("key"), e);
             }
         }
-        showAs(c, rows, cols, cells);
+        ShowAs.apply(c, rows, cols, cells);
         diversification(c, rows, cells, cols);
         out.put("rows", rows);
         out.put("columns", cols);
@@ -139,8 +139,11 @@ final class PivotAnswer {
                 notes.put(f.label(), cell.notes.get(i));
                 continue;
             }
-            Double v = st == null ? null : f.fn().finish(st);
-            vals.put(f.label(), v == null || v.isNaN() || v.isInfinite() ? null : v);
+            Object v = st == null ? null : f.fn().result(st);
+            if (v instanceof Double d && (d.isNaN() || d.isInfinite())) {
+                v = null;
+            }
+            vals.put(f.label(), v);
             if (v == null) {
                 notes.put(f.label(), st == null ? "not computed" : f.fn().emptyNote());
             }
@@ -233,7 +236,7 @@ final class PivotAnswer {
     }
 
     @SuppressWarnings("unchecked")
-    private static Double v(Map<String, Map<String, Object>> cells, String key, String label) {
+    static Double v(Map<String, Map<String, Object>> cells, String key, String label) {
         Map<String, Object> e = cells.get(key);
         if (e == null) {
             return null;
@@ -241,81 +244,6 @@ final class PivotAnswer {
         Object raw = ((Map<String, Object>) e.getOrDefault("raw", Map.of())).get(label);
         Object x = raw != null ? raw : ((Map<String, Object>) e.get("values")).get(label);
         return x instanceof Number n ? n.doubleValue() : null;
-    }
-
-    /** Show values as (section 14.1): each from finished figures, so a total is never broken. */
-    @SuppressWarnings("unchecked")
-    private static void showAs(PivotCore.Computation c, List<Map<String, Object>> rows, List<Map<String, Object>> cols,
-            Map<String, Map<String, Object>> cells) {
-        String grandRow = c.rows.root.key();
-        String grandCol = c.cols.root.key();
-        for (PivotView.Value pv : c.view.values()) {
-            String how = PivotView.low(pv.showAs());
-            if (how == null) {
-                continue;
-            }
-            String label = pv.label();
-            Map<String, Double> rawAll = new LinkedHashMap<>();
-            cells.forEach((k, e) -> rawAll.put(k, v(cells, k, label)));
-            for (Map.Entry<String, Map<String, Object>> x : cells.entrySet()) {
-                String[] rc = x.getKey().split("\\|", 2);
-                Double raw = rawAll.get(x.getKey());
-                Double base = switch (how) {
-                    case "pct-grand" -> rawAll.get(grandRow + "|" + grandCol);
-                    case "pct-row" -> rawAll.get(rc[0] + "|" + grandCol);
-                    case "pct-column" -> rawAll.get(grandRow + "|" + rc[1]);
-                    case "pct-parent-row" -> rawAll.get(parentKey(rows, rc[0]) + "|" + rc[1]);
-                    default -> null;
-                };
-                Double shown;
-                if ("rank".equals(how)) {
-                    shown = rank(rows, rawAll, rc[0], rc[1]);
-                } else if (how.startsWith("pct-")) {
-                    shown = raw == null || base == null || base == 0 ? null : raw / base;
-                } else {
-                    throw PivotView.bad("show-as '" + pv.showAs() + "': pct-grand, pct-row, pct-column, pct-parent-row or rank");
-                }
-                Map<String, Object> e = x.getValue();
-                ((Map<String, Object>) e.computeIfAbsent("raw", k -> new LinkedHashMap<>())).put(label, raw);
-                ((Map<String, Object>) e.get("values")).put(label, shown);
-            }
-        }
-    }
-
-    private static String parentKey(List<Map<String, Object>> rows, String key) {
-        for (Map<String, Object> r : rows) {
-            if (key.equals(r.get("key"))) {
-                @SuppressWarnings("unchecked")
-                List<List<String>> path = (List<List<String>>) r.get("path");
-                if (path.isEmpty()) {
-                    return key;
-                }
-                Map<String, String> m = new TreeMap<>();
-                path.subList(0, path.size() - 1).forEach(p -> m.put(p.get(0), p.get(1)));
-                return CellKey.of(m).canonical();
-            }
-        }
-        return key;
-    }
-
-    private static Double rank(List<Map<String, Object>> rows, Map<String, Double> raw, String rowKey, String colKey) {
-        String parent = parentKey(rows, rowKey);
-        Double mine = raw.get(rowKey + "|" + colKey);
-        if (mine == null || parent.equals(rowKey)) {
-            return mine == null ? null : 1.0;
-        }
-        int r = 1;
-        for (Map<String, Object> other : rows) {
-            String k = String.valueOf(other.get("key"));
-            if (!k.equals(rowKey) && !"header".equals(other.get("kind")) && !"total".equals(other.get("kind")) && parent.equals(parentKey(rows, k))
-                    && !k.equals(parent)) {
-                Double v = raw.get(k + "|" + colKey);
-                if (v != null && v > mine) {
-                    r++;
-                }
-            }
-        }
-        return (double) r;
     }
 
     /** Σ children − node for every holistic measure of every open row node, at the column total (the gap a holistic total shows). */
