@@ -30,7 +30,7 @@ About 25 minutes.
 - [Tutorial 33](33-the-pivot-engine.md) done: `PIVOT trade <GO>` answers with the demo trades.
 - Two users: you (an analyst) and a second user in the role `pivot-approver` (or an administrator) for step 4
   ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)).
-- A token for the command line (`drishti.py login`, [TOOLS.md](../guides/TOOLS.md)).
+- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
 
 ## What you will learn
 
