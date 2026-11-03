@@ -15,8 +15,6 @@
  */
 package com.ash.drishti.deltalake.write;
 
-import com.ash.drishti.lakeio.FileEntry;
-import com.ash.drishti.lakeio.mem.MemoryStorage;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.delta.kernel.Scan;
@@ -40,29 +38,24 @@ import io.delta.kernel.types.StructType;
 import io.delta.kernel.utils.CloseableIterator;
 import io.delta.kernel.utils.FileStatus;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * The upkeep of a Delta table held in memory (docs/architecture/IN_MEMORY_LAKE.md, sections 5, 6 and 13a): its rows read back as staged
- * lines (a merge, a compaction), its old versions expired the moment they are past {@code keep-versions} (a version still readable holds
- * its files; one past it costs memory for nothing), its files measured. The caller holds the table's write lock: a file written but not
- * committed yet would otherwise look unreferenced.
+ * The upkeep of a Delta table that is rewritten in place (the in-memory lake's merges and compactions, docs/architecture/IN_MEMORY_LAKE.md
+ * sections 5 and 13a): its rows read back as staged lines, its columns and partition columns, its files measured. Freeing what old versions
+ * held is the in-memory lake's own ({@code drishti-memlake}), since only a memory store frees files that way.
  */
 public final class TableUpkeep {
 
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final Pattern LOG_FILE = Pattern.compile("^(\\d{20})\\..*");
 
     private TableUpkeep() {}
 
@@ -172,23 +165,8 @@ public final class TableUpkeep {
         return Table.forPath(engine, table).getLatestSnapshot(engine).getPartitionColumnNames();
     }
 
-    /** The data files of a version, as qualified paths of {@code store}. */
-    static Set<String> filesOf(Engine engine, MemoryStorage store, Snapshot s) throws IOException {
-        Set<String> out = new HashSet<>();
-        try (CloseableIterator<FilteredColumnarBatch> files = s.getScanBuilder().build().getScanFiles(engine)) {
-            while (files.hasNext()) {
-                try (CloseableIterator<Row> rows = files.next().getRows()) {
-                    while (rows.hasNext()) {
-                        out.add(store.qualify(InternalScanFileUtils.getAddFileStatus(rows.next()).getPath()));
-                    }
-                }
-            }
-        }
-        return out;
-    }
-
     /** The table's shape now: version, data files and their bytes, files under {@code smallBytes}, rows (from the files' statistics). */
-    public static Shape shape(Engine engine, MemoryStorage store, String table, long smallBytes) throws IOException {
+    public static Shape shape(Engine engine, String table, long smallBytes) throws IOException {
         Snapshot s = Table.forPath(engine, table).getLatestSnapshot(engine);
         int files = 0;
         int small = 0;
@@ -214,56 +192,5 @@ public final class TableUpkeep {
             }
         }
         return new Shape(s.getVersion(), files, bytes, small, files > 0 && rows == 0 ? -1 : rows);   // -1: the scan carried no statistics
-    }
-
-    /**
-     * Frees what versions past {@code keepVersions} held: data files no kept version references (and files of writes that never
-     * committed), and the log before the newest checkpoint at or below the oldest kept version. Returns the bytes freed (chunks).
-     */
-    public static long expire(Engine engine, MemoryStorage store, String table, int keepVersions) throws IOException {
-        Table t = Table.forPath(engine, table);
-        Snapshot latest = t.getLatestSnapshot(engine);
-        long v = latest.getVersion();
-        long oldest = Math.max(0, v - Math.max(1, keepVersions) + 1);
-        Set<String> live = new HashSet<>(filesOf(engine, store, latest));
-        for (long x = oldest; x < v; x++) {
-            live.addAll(filesOf(engine, store, t.getSnapshotAsOfVersion(engine, x)));
-        }
-        String root = store.qualify(table);
-        String log = root + "/_delta_log/";
-        long freed = 0;
-        for (FileEntry f : store.filesIn(table)) {
-            if (f.path().startsWith(log) || live.contains(f.path())) {
-                continue;
-            }
-            freed += chunked(store, f.size());
-            store.delete(f.path());
-        }
-        long checkpoint = lastCheckpoint(store, log);
-        if (checkpoint > 0 && checkpoint <= oldest) {
-            for (FileEntry f : store.filesIn(root + "/_delta_log")) {
-                String name = f.path().substring(log.length());
-                Matcher m = LOG_FILE.matcher(name);
-                if (m.matches() && Long.parseLong(m.group(1)) < checkpoint) {
-                    freed += chunked(store, f.size());
-                    store.delete(f.path());
-                }
-            }
-        }
-        return freed;
-    }
-
-    private static long chunked(MemoryStorage store, long length) {
-        int c = store.pool().chunkBytes();
-        return (length + c - 1) / c * c;
-    }
-
-    private static long lastCheckpoint(MemoryStorage store, String log) {
-        try {
-            String text = new String(store.readAll(log + "_last_checkpoint"), StandardCharsets.UTF_8);
-            return JSON.readTree(text).path("version").asLong(-1);
-        } catch (IOException e) {
-            return -1;
-        }
     }
 }

@@ -13,14 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.deltalake.write.TableUpkeep;
-import com.ash.drishti.lakeio.mem.MemoryStorage;
-import com.ash.drishti.lakeio.mem.MemoryStoreFullException;
-import com.ash.drishti.lakeio.mem.MemoryStores;
+import com.ash.drishti.memlake.store.MemoryStorage;
+import com.ash.drishti.memlake.store.MemoryStoreFullException;
+import com.ash.drishti.memlake.store.MemoryStores;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
@@ -48,7 +48,6 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.scheduling.support.CronExpression;
 
 /**
  * The in-memory lake of this node (docs/architecture/IN_MEMORY_LAKE.md): its memory stores, the tables their replenish jobs fill (on a
@@ -58,17 +57,24 @@ import org.springframework.scheduling.support.CronExpression;
  */
 public final class MemoryLake implements AutoCloseable {
 
+    /** A cron line's next firing after {@code after}; null when it never fires again. Throws when the line is not a cron line. */
+    @FunctionalInterface
+    public interface Cron {
+        ZonedDateTime next(String line, ZonedDateTime after);
+    }
+
     private static final Logger LOG = LoggerFactory.getLogger(MemoryLake.class);
     private static final ObjectMapper JSON = new ObjectMapper();
 
-    private final MemoryLakeProperties props;
+    private final MemoryLakeSettings props;
     private final ReplenishSource source;
     private final Map<String, MemoryTable> tables = new LinkedHashMap<>();
-    private final Map<String, MemoryLakeProperties.Store> stores = new LinkedHashMap<>();
+    private final Map<String, MemoryLakeSettings.Store> stores = new LinkedHashMap<>();
     private final Set<String> owned = new HashSet<>();
     private final ScheduledExecutorService clock;
     private final ExecutorService jobs;
     private final MemoryCompactor compactor;
+    private final Cron cron;
     private volatile boolean warm;
     private volatile Runnable changed = () -> { };
     private volatile Instant lastActivity = Instant.now();
@@ -78,10 +84,14 @@ public final class MemoryLake implements AutoCloseable {
      * @param source what the jobs read
      * @param ownedHere the stores this node owns (node.yaml {@code memory-stores}); null: every store whose {@code owner} is true
      * @param quiet whether no request is being answered now (compaction's {@code idle-only})
+     * @param cron the next time a table's {@code cron} line fires (the server's cron parser: this module has none of its own); null when
+     *     no table has a cron line
      */
-    MemoryLake(MemoryLakeProperties props, ReplenishSource source, Set<String> ownedHere, java.util.function.BooleanSupplier quiet) {
+    public MemoryLake(MemoryLakeSettings props, ReplenishSource source, Set<String> ownedHere, java.util.function.BooleanSupplier quiet,
+            Cron cron) {
         this.props = props;
         this.source = source;
+        this.cron = cron;
         props.stores().forEach((name, s) -> {
             stores.put(name, s);
             boolean mine = ownedHere == null ? s.owner() : ownedHere.contains(name);
@@ -91,7 +101,7 @@ public final class MemoryLake implements AutoCloseable {
                 st.roomMaker(this::makeRoom);
             }
         });
-        for (MemoryLakeProperties.TableSpec t : props.tables()) {
+        for (MemoryLakeSettings.TableSpec t : props.tables()) {
             if (t.name() == null || t.name().isBlank() || t.store() == null || !stores.containsKey(t.store())) {
                 throw new IllegalArgumentException("drishti.lake.memory.tables: table " + t.name() + " names no store of drishti.lake.memory.stores ("
                         + stores.keySet() + ")");
@@ -139,7 +149,7 @@ public final class MemoryLake implements AutoCloseable {
     }
 
     /** What runs after a table changed (a fill, a compaction, an eviction): the memory-only connectors look for the new version at once. */
-    void onChange(Runnable r) {
+    public void onChange(Runnable r) {
         this.changed = r == null ? () -> { } : r;
     }
 
@@ -173,7 +183,10 @@ public final class MemoryLake implements AutoCloseable {
                 clock.scheduleWithFixedDelay(() -> refill(t.name(), "schedule"), every.toMillis(), every.toMillis(), TimeUnit.MILLISECONDS);
                 t.nextRefill = Instant.now().plus(every);
             } else if (t.spec.cron() != null && !t.spec.cron().isBlank()) {
-                scheduleCron(t, CronExpression.parse(t.spec.cron()));
+                if (cron == null) {
+                    throw new IllegalStateException("drishti.lake.memory.tables: table " + t.name() + " has a cron line, and no cron parser was given");
+                }
+                scheduleCron(t, t.spec.cron().trim());
             }
         }
         clock.scheduleWithFixedDelay(this::signals, 10, 10, TimeUnit.SECONDS);
@@ -182,8 +195,8 @@ public final class MemoryLake implements AutoCloseable {
         jobs.execute(this::warmUp);
     }
 
-    private void scheduleCron(MemoryTable t, CronExpression cron) {
-        ZonedDateTime next = cron.next(ZonedDateTime.now(ZoneId.systemDefault()));
+    private void scheduleCron(MemoryTable t, String line) {
+        ZonedDateTime next = cron.next(line, ZonedDateTime.now(ZoneId.systemDefault()));
         if (next == null) {
             return;
         }
@@ -191,7 +204,7 @@ public final class MemoryLake implements AutoCloseable {
         long delay = Math.max(1, Duration.between(Instant.now(), next.toInstant()).toMillis());
         clock.schedule(() -> {
             refill(t.name(), "schedule");
-            scheduleCron(t, cron);
+            scheduleCron(t, line);
         }, delay, TimeUnit.MILLISECONDS);
     }
 
@@ -228,7 +241,7 @@ public final class MemoryLake implements AutoCloseable {
     private void trimIdle() {
         Instant idleSince = lastActivity;
         for (String name : owned) {
-            MemoryLakeProperties.Store s = stores.get(name);
+            MemoryLakeSettings.Store s = stores.get(name);
             if (Duration.between(idleSince, Instant.now()).toMinutes() >= s.idleTrimMinutes()) {
                 MemoryStores.store(name).pool().trim(0);                     // idle: free chunks go back to the operating system
             }
@@ -307,7 +320,7 @@ public final class MemoryLake implements AutoCloseable {
     private record Written(long version, long bytes) {}
 
     private Written write(MemoryTable t, List<ObjectNode> docs) throws Exception {
-        MemoryLakeProperties.TableSpec spec = t.spec;
+        MemoryLakeSettings.TableSpec spec = t.spec;
         String path = spec.path();
         MemoryStorage store = MemoryStores.store(spec.store());
         long before = store.bytesWritten();
@@ -365,7 +378,7 @@ public final class MemoryLake implements AutoCloseable {
         stats.addAll(spec.columns());
         LakeManifest m = new LakeManifest(path, List.of("business_date"), columns, spec.columns(), mode, 5_000, stats, parts);
         LakeWriter.Result r = LakeWriter.forTable(path, settings).write(m, n -> { });
-        TableUpkeep.expire(engine, store, path, spec.keepVersions());
+        MemoryUpkeep.expire(engine, store, path, spec.keepVersions());
         t.rows = spec.mode().equals("append") ? t.rows + r.rows() : byId.size();
         t.decodedBytes = spec.mode().equals("append") ? t.decodedBytes + decoded : decoded;
         return new Written(r.version(), store.bytesWritten() - before);
@@ -388,7 +401,7 @@ public final class MemoryLake implements AutoCloseable {
         }
     }
 
-    private static Row row(MemoryLakeProperties.TableSpec spec, ObjectNode d) {
+    private static Row row(MemoryLakeSettings.TableSpec spec, ObjectNode d) {
         String id;
         if (spec.key().isEmpty()) {
             id = Integer.toHexString(d.toString().hashCode());
@@ -468,7 +481,7 @@ public final class MemoryLake implements AutoCloseable {
         for (MemoryTable t : mine) {
             if (t.lock.tryLock()) {
                 try {
-                    freed += TableUpkeep.expire(LakeWriter.engineFor(t.spec.path(), Map.of()), store, t.spec.path(), t.spec.keepVersions());
+                    freed += MemoryUpkeep.expire(LakeWriter.engineFor(t.spec.path(), Map.of()), store, t.spec.path(), t.spec.keepVersions());
                 } catch (Exception e) {
                     // not a table yet, or being replaced: nothing to expire
                 } finally {
@@ -535,11 +548,18 @@ public final class MemoryLake implements AutoCloseable {
         return tables.get(name);
     }
 
-    Map<String, MemoryLakeProperties.Store> stores() {
+    /** Whether a table of this name is configured (held here or by its owner node). */
+    public boolean hasTable(String name) {
+        return tables.containsKey(name);
+    }
+
+    /** The stores configured, by name. */
+    public Map<String, MemoryLakeSettings.Store> stores() {
         return stores;
     }
 
-    boolean owns(String store) {
+    /** Whether this node owns the store (holds its memory, runs its jobs). */
+    public boolean owns(String store) {
         return owned.contains(store);
     }
 
@@ -565,7 +585,7 @@ public final class MemoryLake implements AutoCloseable {
     public Map<String, Object> describe() {
         Map<String, Object> out = new LinkedHashMap<>();
         List<Map<String, Object>> ss = new ArrayList<>();
-        for (Map.Entry<String, MemoryLakeProperties.Store> e : stores.entrySet()) {
+        for (Map.Entry<String, MemoryLakeSettings.Store> e : stores.entrySet()) {
             String name = e.getKey();
             boolean mine = owned.contains(name);
             MemoryStorage st = mine ? MemoryStores.store(name) : null;
@@ -598,7 +618,7 @@ public final class MemoryLake implements AutoCloseable {
 
     private Map<String, Object> table(MemoryTable t) {
         Map<String, Object> m = new LinkedHashMap<>();
-        MemoryLakeProperties.TableSpec s = t.spec;
+        MemoryLakeSettings.TableSpec s = t.spec;
         m.put("name", t.name());
         m.put("store", s.store());
         m.put("path", s.path());

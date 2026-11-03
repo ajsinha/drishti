@@ -95,7 +95,7 @@ public final class FileAccess implements AutoCloseable {
     public static boolean supports(String path) {
         String scheme = LocalPaths.scheme(path);
         return scheme.equals("file") || S3_SCHEMES.contains(scheme.toLowerCase(Locale.ROOT))
-                || scheme.equals(com.ash.drishti.lakeio.mem.MemoryStorage.SCHEME);
+                || com.ash.drishti.lakeio.StorageProviders.supports(path);
     }
 
     /** {@code path} with the first matching {@code relocate} folder replaced (both in one form: {@link Relocation}). */
@@ -117,8 +117,8 @@ public final class FileAccess implements AutoCloseable {
         if (S3_SCHEMES.contains(scheme)) {
             return s3();
         }
-        if (scheme.equals(com.ash.drishti.lakeio.mem.MemoryStorage.SCHEME)) {
-            return com.ash.drishti.lakeio.mem.MemoryStores.forPath(path);     // a warehouse in memory (IN_MEMORY_LAKE.md section 7)
+        if (com.ash.drishti.lakeio.StorageProviders.supports(path)) {
+            return com.ash.drishti.lakeio.StorageProviders.storage(path);    // mem://, a warehouse in memory (IN_MEMORY_LAKE.md section 7)
         }
         throw new UnsupportedOperationException("drishti-iceberg reads local disk, S3 (s3://, s3a://) and memory (mem://), not " + scheme
                 + "://; set the connector's engine: library for this table");

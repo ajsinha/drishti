@@ -13,16 +13,16 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * The in-memory lake, {@code drishti.lake.memory.*} (docs/architecture/IN_MEMORY_LAKE.md section 11; docs/guides/IN_MEMORY_LAKE_GUIDE.md):
- * the memory stores (each a hard cap of off-heap memory), the tables their replenish jobs fill, and the automated compaction.
+ * the memory stores (each a hard cap of off-heap memory), the tables their replenish jobs fill, and the automated compaction. Plain values:
+ * the server binds {@code drishti.lake.memory.*} onto this record ({@code MemoryLakeConfiguration}); this module reads no configuration.
  *
  * @param stores the memory stores by name ({@code mem://<name>/…})
  * @param tables the tables and their replenish jobs
@@ -30,10 +30,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param historyKeep the runs kept per table for Admin, Lakes and {@code drishti.py lake memory jobs} (50)
  * @param jobThreads the replenish jobs that may run at once (2; one per table at most)
  */
-@ConfigurationProperties("drishti.lake.memory")
-public record MemoryLakeProperties(Map<String, Store> stores, List<TableSpec> tables, Compaction compaction, Integer historyKeep, Integer jobThreads) {
+public record MemoryLakeSettings(Map<String, Store> stores, List<TableSpec> tables, Compaction compaction, Integer historyKeep, Integer jobThreads) {
 
-    public MemoryLakeProperties {
+    public MemoryLakeSettings {
         stores = stores == null ? Map.of() : Map.copyOf(stores);
         tables = tables == null ? List.of() : List.copyOf(tables);
         compaction = compaction == null ? Compaction.defaults() : compaction;
@@ -42,8 +41,8 @@ public record MemoryLakeProperties(Map<String, Store> stores, List<TableSpec> ta
     }
 
     /** No stores, no tables: the in-memory lake is unused. */
-    public static MemoryLakeProperties none() {
-        return new MemoryLakeProperties(null, null, null, null, null);
+    public static MemoryLakeSettings none() {
+        return new MemoryLakeSettings(null, null, null, null, null);
     }
 
     /**
@@ -117,7 +116,7 @@ public record MemoryLakeProperties(Map<String, Store> stores, List<TableSpec> ta
      *     document field)
      * @param columns document fields promoted beside the document as string columns (searches and aggregates read them)
      * @param every how often the job runs ({@code 15m}, {@code 30s}, {@code 1h}); blank: only at start, on a signal and on demand
-     * @param cron a Spring cron line instead of {@code every} ({@code 0 0/15 * * * *})
+     * @param cron a cron line (six fields, seconds first) instead of {@code every} ({@code 0 0/15 * * * *})
      * @param signal run when the source changes (a file's time, a connector's last update), checked every 10 s (true)
      * @param warmUp the start-up order (1 first); blank: after the numbered ones
      * @param pin never evicted (a pinned table that is empty turns Health red)

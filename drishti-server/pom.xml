@@ -31,6 +31,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-engine</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-net</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-compute</artifactId></dependency>
+    <!-- the in-memory lake (mem://): the server keeps only its Spring wiring (server.memlake) -->
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-memlake</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-identity</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-packs</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-ai</artifactId></dependency>

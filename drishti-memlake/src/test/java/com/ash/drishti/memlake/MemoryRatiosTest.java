@@ -13,14 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.memlake;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
-import com.ash.drishti.lakeio.mem.MemoryStorage;
-import com.ash.drishti.lakeio.mem.MemoryStores;
+import com.ash.drishti.memlake.store.MemoryStorage;
+import com.ash.drishti.memlake.store.MemoryStores;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;

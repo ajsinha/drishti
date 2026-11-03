@@ -15,6 +15,23 @@
 -->
 # Changelog
 
+## 2.9.11.a
+
+- **The in-memory lake is its own module, `drishti-memlake` (IN_MEMORY_LAKE.md section 16; ARCHITECTURE.md §13,
+  PACK_DEVELOPER_GUIDE.md §1.1 and §1.3).** Plain Java with no Spring: the `mem://` storage (`ChunkPool`, `MemoryStorage`,
+  `MemoryStores`, from `drishti-lakeio` `com.ash.drishti.lakeio.mem`, now `com.ash.drishti.memlake.store`) and the service (`MemoryLake`,
+  `MemoryTable`, `ReplenishSource`, `MemoryCompactor`, `MemoryBinding`, `Retention`, `HostChecks`, from `drishti-server`
+  `com.ash.drishti.server.memlake`, now `com.ash.drishti.memlake`). The settings record is `MemoryLakeSettings` (was the server's
+  `MemoryLakeProperties`); the server keeps only `MemoryLakeConfiguration` (binds `drishti.lake.memory.*`, the beans, the cron parser, the
+  memory budget and busy protection) and `MemoryLakeController`. Expiring a memory table's old versions moved from the Delta writer's
+  `TableUpkeep` to `memlake.MemoryUpkeep` (`TableUpkeep.shape` no longer takes a store). The settings and the REST API are unchanged.
+- **The lake engines reach `mem://` through `drishti-lakeio`'s storage providers.** New `lakeio.StorageProvider` (a scheme, its storage,
+  whether it is memory-only) and `lakeio.StorageProviders` (found with `ServiceLoader`); `drishti-memlake` registers `mem`. The native
+  Delta engine, the lake writer, the Iceberg engine's file access and the Delta and Iceberg connectors ask `StorageProviders` and never
+  name the module; two new rules in `ArchitectureRulesTest` (`memoryLakeIsPlainJava`, `lakeReadersDoNotSeeTheMemoryLake`) keep it so. The
+  memory-lake tests moved with the code (`DeltaInMemoryTest`, `IcebergInMemoryTest`, `MemoryRatiosTest`, `MemoryLakeTest`,
+  `RetentionTest`, `MemoryStorageTest`, `MemoryStorageContractTest`); `drishti-lakeio` and `drishti-deltalake` publish test jars for them.
+
 ## Unreleased (on develop, after 2.9.11)
 
 - **The release drill is faster and stops sooner (tools/drill.sh; PACK_DEVELOPER_GUIDE.md §2.6, TOOLS.md).** A gate of a few

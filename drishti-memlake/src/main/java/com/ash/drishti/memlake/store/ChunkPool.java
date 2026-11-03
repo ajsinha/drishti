@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.lakeio.mem;
+package com.ash.drishti.memlake.store;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;

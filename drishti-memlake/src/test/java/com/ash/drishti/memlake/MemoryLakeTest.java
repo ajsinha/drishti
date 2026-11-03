@@ -13,14 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.deltalake.write.TableUpkeep;
-import com.ash.drishti.lakeio.mem.MemoryStorage;
-import com.ash.drishti.lakeio.mem.MemoryStores;
+import com.ash.drishti.memlake.store.MemoryStorage;
+import com.ash.drishti.memlake.store.MemoryStores;
 import com.sun.net.httpserver.HttpServer;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
@@ -77,15 +77,15 @@ class MemoryLakeTest {
         return b.toString();
     }
 
-    private MemoryLakeProperties.TableSpec table(String name, String mode, boolean pin) {
-        return new MemoryLakeProperties.TableSpec(name, "vx", null, new MemoryLakeProperties.Source(null, null, null, url(), null, null, null), mode,
+    private MemoryLakeSettings.TableSpec table(String name, String mode, boolean pin) {
+        return new MemoryLakeSettings.TableSpec(name, "vx", null, new MemoryLakeSettings.Source(null, null, null, url(), null, null, null), mode,
                 List.of("INSTRUMENT_ID"), null, "2026-11-02", List.of("DESK"), null, null, false, null, pin, 2, null, null);
     }
 
-    private MemoryLake lake(int maxMb, List<MemoryLakeProperties.TableSpec> tables) {
-        MemoryLakeProperties p = new MemoryLakeProperties(Map.of("vx", new MemoryLakeProperties.Store(maxMb, 64, "VX-2026-07", true, null, null)),
-                tables, new MemoryLakeProperties.Compaction(false, false, null, 0, 1, null, 3, null), null, 1);
-        return new MemoryLake(p, new ReplenishSource(null), null, () -> true);
+    private MemoryLake lake(int maxMb, List<MemoryLakeSettings.TableSpec> tables) {
+        MemoryLakeSettings p = new MemoryLakeSettings(Map.of("vx", new MemoryLakeSettings.Store(maxMb, 64, "VX-2026-07", true, null, null)),
+                tables, new MemoryLakeSettings.Compaction(false, false, null, 0, 1, null, 3, null), null, 1);
+        return new MemoryLake(p, new ReplenishSource(null), null, () -> true, null);
     }
 
     private static int rows(String path) throws Exception {
