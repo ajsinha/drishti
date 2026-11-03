@@ -2213,10 +2213,10 @@ the underlying rows (an `avg` total is the average of all its rows, not of the c
 | Option | Required | Default | Meaning |
 |---|---|---|---|
 | `rows` | yes | | Expression giving the rows. |
-| `by` | yes | | Field whose values are the row keys (first-seen order), or a **list of fields** (`by: [BOOK, FAMILY]`, at most 6) for nested groups: each group row shows the subtotal of the rows in it and a ▸/▾ toggle opens it. A string keeps working. A number, an empty list or a list of non-names is `DRS-2029`. |
-| `across` | yes | | Field whose values are the column keys (first-seen order). |
-| `value` | | | Field aggregated; without it the pivot counts rows. Rows whose value is not a number are left out. |
-| `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max`. |
+| `by` | yes | | Field whose values are the row keys (first-seen order), or a **list of fields** (`by: [BOOK, FAMILY]`, at most 6) for nested groups: each group row shows the subtotal of the rows in it and a ▸/▾ toggle opens it. A field may be written as a Rachana path or expression over the row (`"@.BOOK"`, `"upper(@.DESK)"`; quote it in YAML); a plain path is headed by its field (`BOOK`). A string keeps working. A number, an empty list or a list of non-names is `DRS-2029`. |
+| `across` | yes | | Field (or a Rachana path over the row, `"@.CURRENCY"`) whose values are the column keys (first-seen order). |
+| `value` | | | Field aggregated; without it the pivot counts rows. Rows whose value is not a number are left out. Or one of the pivot engine's aggregates written in Rachana over the row: `sum(@.MTM)`, `avg(@.PRICE)`, `percentile(@.PNL, 0.99)`, `median`, `variance`, `stddev`, `count(@.X)` (the rows whose `X` is not empty); written so, it replaces `agg`. An aggregate of two inputs (`wavg`, the `_once` forms) or of text (`distinct`) is refused in words: use a table's `pivot:` for it. |
+| `agg` | | `sum` | `sum`, `count`, `avg`, `min` or `max` (with `value` a field). |
 | `fmt`, `tone` | | | Format (default: six significant digits) and tone of every cell (counts are shown as whole numbers). |
 | `heat` | | `false` | Shade each cell by its value, from the smallest to the largest. |
 | `totals` | | `true` | `false` hides the total column and row (and the subtotal rows of nested groups). |
@@ -2224,7 +2224,7 @@ the underlying rows (an `avg` total is the average of all its rows, not of the c
 
 ```yaml
   - { id: mtmGrid, kind: pivot, title: "MTM grid (by book and currency, USD)", code: PIV, key: F3, rows: $.POSITIONS,
-      by: BOOK, across: CURRENCY, value: MTM, agg: sum, heat: true, fmt: compact, tone: sign }
+      by: "@.BOOK", across: "@.CURRENCY", value: sum(@.MTM), heat: true, fmt: compact, tone: sign }
 ```
 
 This is the `core` pack's `desk` Sutra. You should see (`DESK DESK-RATES`) three books across seven currencies (`EUR`, `USD`, `CHF`,
@@ -2980,10 +2980,24 @@ The set is closed (`Functions.java` holds the one table; the families `LogicFunc
 clamp, …`, in alphabetical order), and so is a wrong number of arguments (`size takes 1 argument(s), got 2`, `link takes 1-3
 argument(s), got 4`). The schema lists them with their argument counts (`x-rachana-functions`; an old spelling carries
 `oldSpellingOf`, and the editor checks it but never offers it). The whole catalogue, with each
-function's Excel and SAS equivalents and what is still to come, is [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md).
-Rachana has scalar functions only (one value from values); aggregates over many rows belong to the pivot engine
-([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)), and `sum`, `min`/`max` over a list and `group` are the list forms Rachana had before,
-kept with their names and results until they move there.
+function's Excel and SAS equivalents and what is still to come, is [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md);
+the list generated from the registries, every function once with where it runs, is [FUNCTIONS.md](FUNCTIONS.md) (Help → Functions).
+
+**Aggregates come from the pivot engine.** Rachana's own functions are scalars (one value from values). Every aggregate is the pivot
+engine's (`drishti-bicompute`), registered into Rachana's one table when it starts ([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)
+parts 1 to 3): the same function a pivot cell runs, with one treatment of empty values and masks. They are `sum`, `count`, `avg`,
+`min` and `max` over one list (with several arguments `min` and `max` are the old spelling of `least` and `greatest`), `median`,
+`percentile`, `distinct`, `wavg`, `variance`, `stddev`, `variance_pop`, `stddev_pop`, the once-per-parent `sum_once`, `count_once`
+and `avg_once`, the grouping behind `group`, and `measure` and `cell`. Each is written over a list (`sum($.LEGS[*].NOTIONAL)`), over a
+field of each element (`sum($.LEGS, 'NOTIONAL')`, a dotted path), or for two inputs over two lists of one length
+(`wavg($.LEGS[*].PRICE, $.LEGS[*].QUANTITY)`) or two fields (`wavg($.LEGS, 'PRICE', 'QUANTITY')`); a number is the function's parameter
+(`percentile($.TRADES[*].NOTIONAL, 0.95)`). Text that reads as a number counts; anything else that is not a number is skipped; a masked
+value makes the result masked; `sum` and `count` of nothing are `0`, every other aggregate of nothing is empty. `sum`, `min`, `max` and
+`group` keep the names and the results they always had: a test evaluates every one of them in every shipped Sutra on every test case of
+its pack, before and after, and finds the same figures (a total of fractional numbers is now compensated, so it can differ from the old
+plain sum in the last binary digit, never in a figure shown). Where the engine is not on the class path (a tool that loads Rachana
+alone), an aggregate still compiles, so a Sutra loads, and is refused with the reason when evaluated (`DRS-2102 sum: an aggregate …
+comes only from the pivot engine (drishti-bicompute), which is not on the class path here`).
 
 **The rules every function keeps.**
 
@@ -3091,8 +3105,22 @@ the document); `reduce` also binds `@acc`, the value so far.
 | `sequence(n, start?, step?)` | 1–3 | `n` numbers (at most 10,000) from `start` (1) by `step` (1), in decimal: `sequence(3, 0.1, 0.1)` is `0.1, 0.2, 0.3` |
 | `map(list, expr)` | 2 | `expr` for each element, as a list |
 | `reduce(list, init, expr)` | 3 | the list folded: starting from `init`, `expr` for each element in turn with `@acc` the value so far; the last value. An `expr` that adds or subtracts `@acc` with `+` or `-` (a sum written by hand, or text joined with `+`) does not compile: a total is `sum(...)` and text is joined with `concat(...)` |
-| `sum(list, 'field'?)` | 1–2 | the sum of `field` over the list's elements (or of the elements themselves); non-numbers are skipped; `0` when `list` is not a list |
-| `group(list, 'key', 'value'?, 'by'?)` | 2–4 | the list's elements grouped by the field `key` (a dotted path), one row `{label, value, count}` per distinct key in key order: `value` the sum of the field `value` over the group (number-like text counts; without a value field, the count), `count` its elements; `by` cuts an ISO date key to its `month` (2026-10) or `year` (2026) first. Elements without a key are left out; at most 500 groups. Feeds a chart: `rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT')"` is a payment ladder |
+
+#### Aggregates (the pivot engine's)
+
+| Function | Arguments | Gives |
+|---|---|---|
+| `sum(list, 'field'?)` | 1–2 | the total of `field` over the list's elements (or of the elements themselves), compensated; non-numbers are skipped; `0` when `list` is not a list or holds no number |
+| `count(list, 'field'?)` | 1–2 | the elements (or the values of `field`) that are not empty; `0` for nothing |
+| `avg`, `median`, `variance`, `stddev`, `variance_pop`, `stddev_pop` `(list, 'field'?)` | 1–2 | the mean (from the list's own sum and count), the exact middle, the sample or population variance and standard deviation; empty for nothing |
+| `min(list)`, `max(list)` | 1 | the smallest or largest number of one list (with several arguments: `least`, `greatest`) |
+| `percentile(list, 'field'?, p)` | 2–3 | the exact `p`-quantile, `p` from 0 to 1 (linear interpolation, Excel's `PERCENTILE.INC`) |
+| `distinct(list, 'field'?)` | 1–2 | how many different values |
+| `wavg(list, 'x', 'w')`, `wavg(xs, ws)` | 2–3 | Σwx / Σw |
+| `sum_once`, `count_once`, `avg_once` `(list, 'field', 'parent')`, `(xs, parents)` | 2–3 | `field` counted once per `parent` (a trade's quantity on each of its legs counted once) |
+| `group(list, key, aggregate?, 'by'?)` | 2–4 | one row `{label, value, count}` per distinct key, in key order, `count` its elements. The key is a field in quotes (a dotted path), as every shipped Sutra writes it, or an expression over `@`: `group($.LEGS, @.CURRENCY, sum(@.NOTIONAL))`. The aggregate is a field in quotes, summed over the group (number-like text counts; a group with a masked value has no value; without a value field, the count), or any aggregate above over expressions of `@`: `avg(@.PRICE)`, `percentile(@.NOTIONAL, 0.95)`, `wavg(@.PRICE, @.QUANTITY)`, `count(@)` (then a masked value masks its group's value). `by` cuts an ISO date key to its `month` (2026-10) or `year` (2026) first. Elements without a key are left out; at most 500 groups. Rachana reads the key and the inputs; the engine groups and aggregates. Feeds a chart: `rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT')"` is a payment ladder |
+| `measure(name, scope?, options?)` | 1–3 | a compute engine's measure for one scope, exactly as its engine computes it, never summed: `measure('VAR', 'DESK:DESK-COMM')`, `measure('ES', 'DESK:DESK-COMM', 'date=2026-09-30')`. Answered by the server's pivot engine for the person viewing (their entitlements and masks); options `date` and `source` (when two engines offer the name). Refused with the reason where no server answers (a tool) or the pivot engine is off |
+| `cell(view, field, member, ...)` | 1–33 | a cell of a saved pivot view the person may open, as the view computes it: `cell('ann/desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')`; a field left out reads its total; `'value', '<label>'` picks one of several values (the first by default) |
 
 #### Examples
 

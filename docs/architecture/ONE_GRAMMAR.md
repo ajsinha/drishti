@@ -17,8 +17,8 @@
 
 *Product owner, 2026-11-03: "I want all BI related functions including pivot to concentrate in one module and Rachana and Sutra use it
 and other code can use it too"; "I want to ensure we are not coding the same functionality in more than one place and that we reuse what
-we have". The design below is the recommendation the product owner accepted. Status: **designed, not built**; the build is planned in
-2.9.11.b (parts 1 to 3 and 5) and in a release of its own after 2.9.11.d (part 4), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).*
+we have". The design below is the recommendation the product owner accepted. Status: parts 1 to 3 and 5 **built** in 2.9.11.b (as
+built: section 8); part 4 designed, built in a release of its own after 2.9.11.d, [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).*
 
 **Read with:** [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) (the grammar), [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (the engine,
 section 6.7 for paths into documents), [BI_DESIGN.md](BI_DESIGN.md) (section 3.3, DEL).
@@ -59,8 +59,8 @@ Every function below has one implementation, in the engine, and one documentatio
 | `sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinctCount` … over a list | the engine's built-ins on the list's values | `sum($.LEGS[*].NOTIONAL)`, `count($.EVENTS[?@.EVENT_TYPE == 'BOOKED'])` |
 | `group(list, key, aggregate)` | grouping inside one document, the engine's grouping | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` |
 | `measure(name, scope, options?)` | a computed measure from its own engine, exactly (never summed) | `measure('VAR', 'DESK:DESK-COMM')` |
-| `cell(view, coordinates)` | a cell of a saved pivot view, linked back to it | `cell('desk-pnl', DESK: 'DESK-COMM', month: '2026-09')` |
-| a **pivot panel** in a Sutra | rows, columns and values written as Rachana paths, answered by the engine | `pivot: { rows: [$.DESK], values: [sum($.LEGS[*].NOTIONAL)] }` |
+| `cell(view, field, member, ...)` | a cell of a saved pivot view, as the view computes it | `cell('ann/desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')` |
+| a **pivot panel** in a Sutra | its groupings and value written as Rachana paths and an aggregate, answered by the engine | `kind: pivot`, `by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)` |
 
 Today's Rachana `sum`, `min`, `max` over lists and `group` keep their names and results; their implementation moves to the engine, and a
 test proves every shipped Sutra draws the same figures before and after.
@@ -80,7 +80,8 @@ a second expression syntax, and Python is the open-ended escape, sandboxed. Size
   engine's SPI as the only way), and no module other than `drishti-rachana` parses an expression.
 - A console check: no console Python or JavaScript sums, averages or groups risk or BI figures (the server computes; the console
   displays), listed exceptions only for layout arithmetic.
-- The function catalogue is one generated page (Help → Functions, `FUNC`), listing each function once with where it can be used.
+- The function catalogue is one generated page (Help → Functions, [FUNCTIONS.md](../guides/FUNCTIONS.md)), listing each function once
+  with where it runs. (`FUNC` stays the command directory it already was.)
 
 ## 6. The order of work
 
@@ -181,3 +182,48 @@ has the reference BLAS and LAPACK, not OpenBLAS: the system package `libopenblas
 | 2 | M | the release after, coordinated with the QLRisk boundary |
 | 3 | per function | candidates |
 | matrix functions (7.3a) | M | with the Java 25 activation (2.9.13 or later), after the BLAS benchmark's go |
+
+## 8. As built (2.9.11.b: parts 1 to 3 and 5)
+
+**Parts 1 and 2: the table open to providers.** `drishti-rachana` declares `rachana.el.FunctionProvider` (its functions with their
+arguments, form and description, and the `Grouping` behind `group`); `Aggregates` finds the providers once by `ServiceLoader` when the
+table is built and registers their functions into `Functions`, the one table. `drishti-bicompute` provides them
+(`bicompute.rachana.EngineFunctions`, listed in `META-INF/services`): `sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`,
+`distinct`, `wavg`, `variance`, `stddev`, `variance_pop`, `stddev_pop`, `sum_once`, `count_once`, `avg_once` (`ListAggregates`: the
+list's values made a `Batch` and run through the very `AggFunction` a pivot cell runs), the grouping (`ListGrouping`), `measure` and
+`cell`. Rachana's own list aggregates are deleted (`ListFunctions.sum` and `group`'s sums, `min`/`max` over one list); `min` and `max`
+stay Rachana's entries for several arguments (the old spelling of `least`/`greatest`) and hand the one-list form to the engine; `group`
+is a Rachana form (it binds `@` for the key and the inputs) that hands the grouping to the engine. Without the engine on the class path an
+aggregate compiles and is refused with the reason when evaluated (`DRS-2102`). The dependency is one way: `drishti-bicompute` depends on
+`drishti-rachana` (without its Spring wiring), never the reverse.
+
+**Parity.** `SutraAggregateParityTest` (drishti-bicompute) evaluates every call of `sum`, `min`, `max` and `group` written in every Sutra
+and fragment of `config/packs/*/sutras` on every test case of its pack (`tests/<sutra>/cases.jsonl`), at the document's root and on every
+element of every list in it, through the engine and through the old code kept as the test's record of "before"
+(`LegacyListAggregates`, test code only, deleted after 2.9.11.b). On the shipped packs: 39 calls, 153,888 comparisons, 62,623 of them
+with a figure, no figure different; 30 totals of fractional numbers differ in the last binary digit only (the engine's sum is
+compensated, `0.110261` where the plain sum gave `0.11026100000000001`), never in a figure shown.
+
+**Part 3.** `group(list, key, aggregate)` takes the quoted form every Sutra has (`group($.TRADES, 'PRODUCT_TYPE', 'NOTIONAL')`, results
+unchanged) and expressions over `@` with any engine aggregate (`group($.LEGS, @.CURRENCY, percentile(@.NOTIONAL, 0.95))`).
+`measure(name, scope?, options?)` and `cell(view, field, member, ...)` go through the engine's SPI `bicompute.spi.FigureSource`, which the
+server implements (`server.pivot.RachanaFigures`, registered at start): `measure` asks the compute engine whose pivot provider offers the
+name as its own measure (the VaR engine's `var`, `es`, `pv`, `trades`) for one cell, its scope's members, exactly as that engine computes
+it; `cell` opens a saved pivot view the person may open and reads one cell. Both answer for the person of the request (their
+entitlements and masks), are refused with the reason when the pivot engine is switched off or no server answers, and never sum a
+figure. Model measures (BI's) through `measure(...)` arrive with part 4. The Sutra pivot panel (`kind: pivot`, computed by the engine
+since P1) takes Rachana paths for `by` and `across` and an engine aggregate as its `value` (`value: sum(@.MTM)`,
+`percentile(@.PNL, 0.99)`); the `desk` Sutra's MTM grid is written so (`Functions.aggregateCall` gives the engine the call, Rachana
+the per-row input).
+
+**Part 5.** `OneGrammarRulesTest` (drishti-it, ArchUnit): no class outside `drishti-bicompute` implements `AggFunction` or
+`FunctionProvider`; Rachana never depends on the engine; only `drishti-rachana` parses expressions, with the listed exceptions until
+2.9.11.e: DEL (`server.bi.expr`), BI's dataset expressions (`ExprParser`), model calculations (`CalculationParser`), the pivot's formulas
+in DEL syntax (`bicompute.formula`) and the VaR scope selector (`ScopeExpr`). The console check
+(`drishti-console/tests/test_console_does_not_aggregate.py`) finds every aggregation idiom in console Python and JavaScript and lets
+through plain counting, sizes and promise plumbing; every other one is listed with its reason: layout arithmetic, the console's own data
+(usage, rows loaded, a person's own Python cell), or a **debt** the server is to take over, never to grow: the trading landing's MTM and
+DV01 totals, the market landing's medians, sigma and group sums, the FACT expressions' evaluator, the quant stand-in's prices, a column
+filter's average, the pivot chart's diversification bar. The function catalogue page is generated from the registries
+(`FunctionCataloguePage`, [FUNCTIONS.md](../guides/FUNCTIONS.md)) and checked against [FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md)'s
+names (`FunctionCataloguePageTest`).

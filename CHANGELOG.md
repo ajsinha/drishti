@@ -72,7 +72,7 @@
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
-## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale (unreleased, on wip/pivot-b and wip/pivot-c)
+## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; one grammar (unreleased, on wip/pivot-b, wip/pivot-c and wip/one-grammar)
 
 - **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 36).** Custom aggregation functions in four
   languages with the four steps start, add, merge and finish: a formula of the built-ins (DEL's syntax: `sum(PNL, where=PNL < 0) /
@@ -115,6 +115,21 @@
   narrow, use the rollup, background). The benchmark harness `tools/bench/pivot_bench.py` (5, 25 and 75 GB measured, at most 25 GB a node,
   on the data disk with 150 GB free, the data deleted afterwards; 100 GB to 3 TB extrapolated). Settings `drishti.pivot.sketches.*`,
   `progressive.*`, `rollups.*`, `cluster.*`. Not yet: live pivots, the screen's controls for exact, progressive and rollups.
+- **One grammar, one engine: parts 1 to 3 and 5 (2.9.11.b; ONE_GRAMMAR.md section 8, RACHANA_REFERENCE.md › Functions, FUNCTIONS.md).**
+  Rachana's function table is open to providers found once by ServiceLoader (`rachana.el.FunctionProvider`), and the pivot engine
+  registers every aggregate into it: `sum`, `count`, `avg`, `min` and `max` over a list, `median`, `percentile`, `distinct`, `wavg`,
+  `variance`, `stddev`, `variance_pop`, `stddev_pop`, `sum_once`, `count_once`, `avg_once`, run by the same `AggFunction` a pivot cell
+  runs. Rachana's own list aggregates are deleted; `sum`, `min`, `max` and `group` keep their names and results, shown by a test over every
+  aggregate call in every shipped Sutra on every test case (39 calls, 153,888 comparisons, no figure different; a fractional total is now
+  compensated, so it may differ in the last binary digit only). Where the engine is not on the class path an aggregate is refused with the
+  reason. `group(list, key, aggregate)` also takes expressions over `@` with any engine aggregate (`group($.LEGS, @.CURRENCY,
+  percentile(@.NOTIONAL, 0.95))`); `measure('VAR', 'DESK:DESK-COMM')` reads a compute engine's measure for one scope exactly, and
+  `cell('ann/desk-pnl', 'DESK', 'DESK-COMM')` a saved pivot view's cell, both answered by the server's pivot engine for the person viewing
+  (`FigureSource`, `RachanaFigures`). The Sutra `pivot` panel takes Rachana paths and an engine aggregate (`by: "@.BOOK"`, `value:
+  sum(@.MTM)`; the `desk` Sutra's MTM grid). Guards: ArchUnit rules (only the engine implements an aggregate or adds functions to
+  Rachana; Rachana never depends on the engine; only Rachana parses expressions, DEL and its kin listed until 2.9.11.e) and a console
+  check that lists every aggregation in console code with its reason (layout, the console's own data, or a debt to move to the server).
+  The function catalogue page is generated from the registries (Help → Functions) and checked against FUNCTION_CATALOGUE.md.
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 
