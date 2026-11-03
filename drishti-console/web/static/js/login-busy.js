@@ -33,7 +33,14 @@
     button.textContent = on ? "Waiting to sign you in…" : label;
   }
 
+  // while the form is on its way the page says so (html[data-signing-in]): the page that follows has no such mark, and a busy answer
+  // takes it away as the countdown shows; a script driving the page (the browser tests) waits on it as on a navigation
+  function sending(on) {
+    if (on) { document.documentElement.setAttribute("data-signing-in", "1"); } else { document.documentElement.removeAttribute("data-signing-in"); }
+  }
+
   function send() {
+    sending(true);
     var body = new URLSearchParams(new FormData(form));
     return fetch(form.action || "/login", {
       method: "POST", credentials: "same-origin", redirect: "follow",
@@ -43,6 +50,7 @@
         return r.json().then(function (b) {
           var p = window.DrishtiBusy.problem(b);
           if (!p) { location.reload(); return; }
+          sending(false);
           waiting(true);
           window.DrishtiBusy.render(host, p, { retry: send, keep: "keep this page open.",
             cancel: function () { window.DrishtiBusy.done(host); host.textContent = ""; waiting(false); } });
@@ -50,7 +58,7 @@
       }
       if (r.redirected) { location.assign(r.url); return; }
       return r.text().then(function (html) { document.open(); document.write(html); document.close(); });
-    }).catch(function () { window.DrishtiBusy.done(host); waiting(false); form.submit(); });
+    }).catch(function () { sending(false); window.DrishtiBusy.done(host); waiting(false); form.submit(); });
   }
 
   form.addEventListener("submit", function (e) {

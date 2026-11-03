@@ -109,7 +109,7 @@
   function against() {
     if (!ns) { $("[data-sm-against]").innerHTML = "<tbody><tr><td>Select a netting set.</td></tr></tbody>"; return; }
     getJson("/api/simm/against?" + query().toString()).then(function (c) {
-      var h = '<thead><tr><th class="l">Side</th><th class="l">Risk class</th><th>Drishti</th><th>Their call</th><th>Difference</th><th class="l">Status</th></tr></thead><tbody>';
+      var h = '<thead><tr><th class="l">Side</th><th class="l">Risk class</th><th>' + esc((document.body && document.body.dataset.product) || "Ours") + '</th><th>Their call</th><th>Difference</th><th class="l">Status</th></tr></thead><tbody>';
       c.rows.forEach(function (r) {
         h += '<tr class="tot"><td class="l">' + esc(r.direction) + '</td><td class="l">total</td><td class="mono">' + money(r.drishti) + '</td><td class="mono">' + money(r.theirs)
           + '</td><td class="mono">' + money(r.difference) + '</td><td class="l">' + esc(r.status) + "</td></tr>";
