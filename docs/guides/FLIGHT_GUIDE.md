@@ -226,8 +226,14 @@ gets `DRS-5610`).
 ## 10. Operations
 
 **Sizing.** A read holds about two batches of Arrow memory at once (`batch-rows` × the row's width; 65,536 rows of 20 numeric columns
-≈ 10 MB a batch). `memory.request-mb` caps one read, `memory.total-mb` the node; the direct-memory limit of the JVM must leave room for
-them beside the in-memory lake's stores. (measured figures: to be filled in the heavy run)
+≈ 10 MB a batch). `memory.request-mb` caps one read, `memory.total-mb` (`DRISHTI_FLIGHT_MEMORY_MB`) the node. Arrow's buffers are direct
+memory, so the shipped launchers raise the JVM's `-XX:MaxDirectMemorySize` for them at start, from `tools/lake/memory_caps.py`: 256 MB,
+plus the in-memory lake's stores, plus Arrow's budget (512 MB for the compute exchange and BI answers, `DRISHTI_ARROW_EXCHANGE_MB`, plus
+`memory.total-mb` when Flight is on), and set Arrow's own cap (`-Ddrishti.arrow.max-bytes`) to that budget. With Flight on and the
+defaults: 256 + 512 + 4,096 = 4,864 MB. Check it with `python3 tools/lake/memory_caps.py --arrow-only`; on ECS set `DRISHTI_ARROW_MB` to
+what it prints ([OPERATIONS.md](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run), section 12.1a); the host must
+have that memory beside the heap. Changing `memory.total-mb` needs a restart (the limit is set at start). (measured figures: to be filled
+in the heavy run)
 
 **The port.** Open TCP 18815 between clients and every node (each node is read directly). A load balancer passes it through as TCP (TLS
 ends on the node, HTTP/2 inside); it must not terminate TLS, since the endpoints name the nodes themselves.

@@ -23,7 +23,10 @@ import org.apache.arrow.memory.RootAllocator;
  * codec ({@link ArrowIpc}) takes a short-lived child per table, Arrow Flight takes one per stream under its own capped child. Busy protection
  * reads {@link #allocated()} and {@link #peak()} so Arrow's off-heap memory is counted with the rest (docs/architecture/ARROW_FLIGHT.md Q8).
  *
- * <p>The cap is {@code drishti.arrow.max-bytes} (a system property, bytes; default: no cap beyond the JVM's direct memory). Arrow's memory
+ * <p>The cap is {@code drishti.arrow.max-bytes} (a system property, bytes; default: no cap beyond the JVM's direct memory). Arrow's buffers
+ * are direct memory: the launchers size both from one place, {@code tools/lake/memory_caps.py} (the exchange's budget,
+ * {@code DRISHTI_ARROW_EXCHANGE_MB}, 512, plus Arrow Flight's {@code memory.total-mb} when its engine is on), adding it to
+ * {@code -XX:MaxDirectMemorySize} and passing the same figure here, so Arrow never takes more than the limit was raised for. Arrow's memory
  * module needs {@code --add-opens=java.base/java.nio=ALL-UNNAMED}: the server jar's manifest carries it and the test forks pass it.
  */
 public final class ArrowMemory {

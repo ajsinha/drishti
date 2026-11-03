@@ -39,6 +39,13 @@
   in time by a BI run now reaches the browser as JSON, which `drishtiFetchTable` reads as well); the scenario matrix's Arrow download is the
   server's stream. Python reads Drishti's data through `clients/python/drishti_flight.py`, a one-file client over `pyarrow.flight`
   (parallel parts, a node down served by the next, streams with resume, Drishti's codes on refusals, a command line).
+- **Direct memory for Arrow's buffers.** The official Arrow library keeps its buffers in direct memory, so the launchers now size it
+  from the one place that already sized the in-memory lake's stores, `tools/lake/memory_caps.py`: Arrow's budget (`--arrow-only`) is
+  512 MB for the compute exchange and BI answers (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (now
+  `${DRISHTI_FLIGHT_MEMORY_MB:4096}`) when its engine is on; the stack, `start-server.ps1`, the ECS entrypoint (`DRISHTI_ARROW_MB`, no
+  Python in the image) and the IDE run configurations add it to `-XX:MaxDirectMemorySize` (the later flag wins) and pass it as Arrow's own
+  cap, `-Ddrishti.arrow.max-bytes`; the run configurations also carry `--add-opens=java.base/java.nio=ALL-UNNAMED` (they start from
+  classes). Tested by `tools/lake/test_memory_caps.py` (OPERATIONS.md 12.1a, FLIGHT_GUIDE.md section 10, CONFIGURATION.md).
 - New module `drishti-flight` (plain Java: `FlightService`, `DrishtiFlightProducer`, `TokenAuthenticator`, `FlightRequest`,
   `FlightBackend`, `FlightActivity`, `FlightLimits`); the server's wiring is `server.flight` (`FlightConfiguration`, `ServerFlightBackend`,
   the forms, `DataOutController`). Tests: `FlightServiceTest`, `FlightServerTest`, `ArrowIpcTest`, the console's `test_flight_client.py`.
