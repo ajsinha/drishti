@@ -32,6 +32,10 @@
   class for both), as the owner node: `node:<id>` with the service role, signed with the cluster key; the receiving `LoadController`
   takes such a signed node signal as an administrator's. A file of lake rows or loader rows is refused with the reason (`RowForms`): the
   parallel loader has no reader for those forms.
+- **A data-load signal makes a new table readable at once (the Delta connector).** A connector whose domain had no table when it started
+  (the first load into an empty lake) found the new table only at its next periodic reindex, so the signal's verify said *not found*;
+  the signal's refresh (`purgeCaches`, `refreshVersions`) now looks for new tables and lists one it finds at once. Found by the data
+  inbox's end-to-end check.
 - New module `drishti-dataload` (plain Java: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess`, `Outbox`, `Recovery`,
   `Cycle`, `DataInbox`); the server's wiring is `server.dataload` (`DataLoadConfiguration`, `DataLoadController`). New engine `dataload`
   in the catalogue, `config/engines/dataload.yaml` (off as shipped; every key in CONFIGURATION.md), `config/dataload.yaml` (the routing

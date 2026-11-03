@@ -32,7 +32,6 @@ import java.time.Clock;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
@@ -60,9 +59,11 @@ public final class Ledger {
 
     private final Path dir;
     private final Clock clock;
-    private final Map<String, JsonNode> loadedBySha = new HashMap<>();
-    private final Map<String, JsonNode> lastByRunFile = new HashMap<>();
-    private final Map<String, Integer> lockedBySha = new HashMap<>();
+    private final Map<String, JsonNode> loadedBySha = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, JsonNode> lastByRunFile = new java.util.concurrent.ConcurrentHashMap<>();
+    private final Map<String, Integer> lockedBySha = new java.util.concurrent.ConcurrentHashMap<>();
+    /** One append at a time (a lock, not synchronized: the append blocks on the disk, which would pin a virtual thread). */
+    private final java.util.concurrent.locks.ReentrantLock appends = new java.util.concurrent.locks.ReentrantLock();
 
     public Ledger(Path dir, Clock clock) throws IOException {
         this.dir = dir;
@@ -124,7 +125,16 @@ public final class Ledger {
     }
 
     /** Appends one line ({@code at} added) and forces it to disk before returning. */
-    public synchronized ObjectNode write(String run, String file, String outcome, ObjectNode fields) throws IOException {
+    public ObjectNode write(String run, String file, String outcome, ObjectNode fields) throws IOException {
+        appends.lock();
+        try {
+            return append(run, file, outcome, fields);
+        } finally {
+            appends.unlock();
+        }
+    }
+
+    private ObjectNode append(String run, String file, String outcome, ObjectNode fields) throws IOException {
         ObjectNode n = JSON.createObjectNode().put("at", clock.instant().toString()).put("run", run).put("file", file).put("outcome", outcome);
         if (fields != null) {
             n.setAll(fields);
@@ -139,22 +149,22 @@ public final class Ledger {
     }
 
     /** The {@code loaded} line of a file with this SHA-256, or null. */
-    public synchronized JsonNode loaded(String sha256) {
+    public JsonNode loaded(String sha256) {
         return loadedBySha.get(sha256);
     }
 
     /** The last line written for {@code file} in {@code run}, or null. */
-    public synchronized JsonNode last(String run, String file) {
+    public JsonNode last(String run, String file) {
         return lastByRunFile.get(run + "/" + file);
     }
 
     /** How many cycles in a row found this file's table locked (since it was last loaded or failed). */
-    public synchronized int lockedTimes(String sha256) {
+    public int lockedTimes(String sha256) {
         return lockedBySha.getOrDefault(sha256, 0);
     }
 
     /** The newest {@code limit} lines, newest first (Admin and {@code drishti.py dataload status}). */
-    public synchronized List<JsonNode> recent(int limit) throws IOException {
+    public List<JsonNode> recent(int limit) throws IOException {
         List<Path> files = new ArrayList<>();
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir, "ledger-*.jsonl")) {
             ds.forEach(files::add);

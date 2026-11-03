@@ -57,8 +57,10 @@ public final class DataInbox {
     private final Signal signal;
     private final Supplier<String> busy;
     private final Deque<Cycle.Report> history = new ArrayDeque<>();
-    private ScheduledExecutorService ticker;
-    private java.util.concurrent.ExecutorService worker;
+    private volatile ScheduledExecutorService ticker;
+    private volatile java.util.concurrent.ExecutorService worker;
+    /** Start, stop and Load now one at a time (a lock, not synchronized: stopping waits on the loader, which would pin a virtual thread). */
+    private final java.util.concurrent.locks.ReentrantLock guard = new java.util.concurrent.locks.ReentrantLock();
     private final java.util.concurrent.atomic.AtomicBoolean busyRun = new java.util.concurrent.atomic.AtomicBoolean();
     private volatile Instant next;
     private volatile Instant current;
@@ -84,7 +86,16 @@ public final class DataInbox {
      * Starts the schedule (the engine turned on): the first cycle a minute after (or one interval, if shorter), then every interval. A
      * cycle due while a run still loads is not started: it is recorded as skipped, with the run and how long it has loaded.
      */
-    public synchronized void start() {
+    public void start() {
+        guard.lock();
+        try {
+            startLocked();
+        } finally {
+            guard.unlock();
+        }
+    }
+
+    private void startLocked() {
         if (ticker != null) {
             return;
         }
@@ -101,7 +112,16 @@ public final class DataInbox {
     }
 
     /** Stops the schedule and a load that runs now (the engine turned off, the server stopping). Files claimed go back at the next start. */
-    public synchronized void stop() {
+    public void stop() {
+        guard.lock();
+        try {
+            stopLocked();
+        } finally {
+            guard.unlock();
+        }
+    }
+
+    private void stopLocked() {
         if (ticker == null) {
             return;
         }
@@ -115,7 +135,7 @@ public final class DataInbox {
         next = null;
     }
 
-    public synchronized boolean started() {
+    public boolean started() {
         return ticker != null;
     }
 
@@ -128,7 +148,16 @@ public final class DataInbox {
     }
 
     /** Starts a cycle on the worker, or records it as skipped while a run loads (runs never overlap); null when it started. */
-    private synchronized String startOrSkip(String trigger) {
+    private String startOrSkip(String trigger) {
+        guard.lock();
+        try {
+            return startOrSkipLocked(trigger);
+        } finally {
+            guard.unlock();
+        }
+    }
+
+    private String startOrSkipLocked(String trigger) {
         if (worker == null) {
             return "the data inbox is off on this server";
         }
