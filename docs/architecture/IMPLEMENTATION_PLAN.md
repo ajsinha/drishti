@@ -783,6 +783,13 @@ every 10 minutes by the existing Java loader, moved to the outbox with their mar
 signal; crash-safe, duplicate-safe, owner node only, a module `drishti-dataload` run as a server thread with the load in a child
 process. The design and its questions: [DATALOAD_INBOX.md](DATALOAD_INBOX.md). Size M.
 
+## The PostgreSQL wire protocol (planned, after 2.9.11.d; designed first)
+
+*Product owner, 2026-11-03.* Drishti answers on a port of its own as if it were PostgreSQL, so `psql`, psycopg, DBeaver, Tableau, Power
+BI, Grafana and anything with a Postgres driver can connect: read-only SQL over BI models and virtual tables, compiled to the same plans
+as Flight SQL (no second query engine), the password an API token with its scopes, entitlements, masks and audit, off by default. For
+tools and modest queries; large reads go through Arrow Flight. Size M to L.
+
 ## The lake configuration (planned; in 2.9.11.c, built before Arrow Flight)
 
 *Product owner, 2026-11-03.* One configuration per lake (`config/lakes/<lake>.yaml`, planned): where it is, its format and storage, and
