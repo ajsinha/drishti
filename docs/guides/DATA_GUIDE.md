@@ -19,7 +19,8 @@ Getting data into Drishti and keeping it current, for the people who load it: **
 one call from your ETL, the Data loads page, expectations and late data), **the data formats** (section 2: JSON Lines is the standard;
 Arrow to the browser where it pays), **reading the lake you already have** (section 3: Databricks Delta Lake or Apache Iceberg, by
 configuration), **external data** (section 4: every public source of every pack, its licence and its refresh script, with worked
-examples), and **a pack from a schema** (section 5: JSON Schema files or a folder of JSON Lines in, a pack out); and taking data out, **the Data view** (section 6: every dataset, a simple selection, a day downloaded as `.jsonl.gz`).
+examples), and **a pack from a schema** (section 5: JSON Schema files or a folder of JSON Lines in, a pack out); and taking data out, **the Data view** (section 6: every dataset, a simple selection, a day downloaded as `.jsonl.gz`); and
+**the data inbox** (section 7: drop files in a folder with a `.ready` marker, and they are loaded into the lake by themselves).
 
 Connecting a store is [CONNECTORS.md](../connectors/CONNECTORS.md) and [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md); the
 shape of each command's data is its [contract](../contracts/packs/README.md); how the data layer is built (live updates, history
@@ -79,6 +80,14 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [5. The API](#5-the-api)
     - [6. The command line](#6-the-command-line)
     - [7. Settings](#7-settings)
+7. [The data inbox: drop files and they load](#7-the-data-inbox-drop-files-and-they-load)
+    - [1. Turning it on](#1-turning-it-on)
+    - [2. Dropping files](#2-dropping-files)
+    - [3. Routing: which table a file goes to](#3-routing-which-table-a-file-goes-to)
+    - [4. What one cycle does](#4-what-one-cycle-does)
+    - [5. Where to look](#5-where-to-look)
+    - [6. Failures, Retry and duplicates](#6-failures-retry-and-duplicates)
+    - [7. Settings and the API](#7-settings-and-the-api)
 
 ## 1. Telling Drishti new data has landed
 
@@ -2098,3 +2107,142 @@ python3 tools/drishti.py data get trade-valuation --date 2026-09-30 \
 | console `data_view.*` | 30, 90, 300 s | how long the console waits for the list, a count, and between two parts of a download |
 
 Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+
+## 7. The data inbox: drop files and they load
+
+Put JSON Lines files (or archives of them) in one folder, add a `.ready` file beside each when it is complete, and the server loads them
+into the lake by itself, every ten minutes: the parallel lake loader writes them (one commit per business date), the files move to an
+outbox with a report, and the pack's connectors, checks, alerts and notices run as for any [data-load signal](#1-telling-drishti-new-data-has-landed).
+The design, with every decision, is [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md).
+
+### 1. Turning it on
+
+The inbox is an engine, off as shipped: **Admin → Engines → Data inbox**, or `drishti.py server engines on dataload --reason "..."`, or
+`enabled: true` in `config/engines/dataload.yaml` (`DRISHTI_DATALOAD_ENABLED=true`). In a cluster turn it on, with `owner: true`, on one
+node (the folder lock keeps a second runner out anyway). The folders are made under the data folder, `<data>/dataload` (`dir`):
+
+| Folder | Holds |
+|---|---|
+| `inbox/` | the files you drop, their `.ready` markers, `ready.all` |
+| `inprocess/<run>/` | the files a run has claimed, while they load (a run id is its start time and node: `20261103T150000Z-drishti-main`) |
+| `outbox/<day>/<run>/` | each loaded file, its `.ready`, its report `<file>.loaded.json`, and the loader's files under `loads/` |
+| `failed/<day>/<run>/` | a file that could not be loaded, its `.ready` and `<file>.failed.json` with the reason |
+| `ledger/` | one line per step of every file (`ledger-<yyyy-MM>.jsonl`), kept for ever |
+
+Keep the folders on one file system (a move is then an atomic rename). Outbox and failed day folders older than `keep-outbox-days` (30)
+are deleted; the ledger stays.
+
+### 2. Dropping files
+
+1. Copy the data file into `inbox/`: `.jsonl`, `.ndjson` or `.json` (JSON Lines), plain, `.gz` or `.zst`, or an archive `.zip`, `.tar`,
+   `.tar.gz`, `.tgz` ([section 2.7](#7-archives-zip-and-tarballs)).
+2. When it is complete, create an empty `<file>.ready` beside it. A file without its marker is never touched.
+3. Or create one `ready.all`: every data file in the inbox is ready for the next cycle, with or without its own marker; `ready.all`
+   then moves to that run's outbox folder, so it applies once.
+
+A file (and its marker) must also be unchanged for `stable-seconds` (30) before it is taken. Names starting with a dot are never looked
+at; a link, a folder or a name the loader does not read goes to `failed/` once marked ready.
+
+```bash
+cp /landing/trades-endur-2026-11-03.jsonl.gz data/dataload/inbox/
+touch data/dataload/inbox/trades-endur-2026-11-03.jsonl.gz.ready
+```
+
+The `.ready` file may stay empty, or say (YAML or JSON) how to load this one file, over the rules:
+
+```yaml
+pack: trading               # the pack and kind (routing, section 3)
+kind: trade
+connector: trade-endur      # the pack's Delta connector whose table is written
+business-date: 2026-11-03   # every row's business date (else each row's date field)
+date-field: COB_DATE        # the field holding each row's date
+sha256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08   # checked before loading: a file cut short is refused
+rows: 48213                 # the documents the file holds: checked by the loader before anything is written
+mode: replace               # each business date the file holds replaces that date's rows (the only mode)
+```
+
+### 3. Routing: which table a file goes to
+
+A file goes where its `.ready` says; else where the **first rule** in `config/dataload.yaml` (`rules-file`) whose `match` fits its name
+says. The rule names the pack and kind; the loader takes the table, its layout, its id and its date field from the pack. A file that no
+rule matches and whose marker names no pack and kind goes to `failed/`: **never guessed**. The rules are read again every cycle.
+
+```yaml
+dataload:
+  rules:
+    - match: "trades-endur-*.jsonl.gz"     # a glob on the file name
+      pack: trading
+      kind: trade
+      connector: trade-endur               # the table that connector reads (trading/trade_endur)
+      date-from: name                      # the YYYY-MM-DD in the name is every row's business date
+    - match: "scenario-pv-*.jsonl.gz"
+      pack: market-risk
+      kind: scenario-pv
+      date-field: BUSINESS_DATE            # date-from: field (the default): each row's date field
+  unmatched: fail
+```
+
+A file of *lake rows* or *loader rows* ([section 2.2](#2-the-row-forms)) is refused with the reason: the parallel loader reads
+documents and has no reader for those forms. Load lake rows with `tools/samplegen/load_rows.py` and loader rows with the store's own loader,
+or drop the documents themselves.
+
+Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table`, `date-from` (`field` or `name`), `date-field`,
+`key` (the id field), `lake` (over `drishti.dataload.lake`), `format` (`delta` or `iceberg`). The shipped file lists them, with the
+examples above commented out.
+
+### 4. What one cycle does
+
+Every `interval` (10 minutes), on the owner node:
+
+1. **Skipped** when busy protection says the server is short of memory or disk, or while an earlier run still loads (runs never
+   overlap): the cycle is recorded as *skipped: run 20261103T150000Z-drishti-main still loading (12 min)*.
+2. **The whole ready batch** (every ready, stable file at that moment, oldest first) is moved at once into `inprocess/<run>/`. Files that
+   become ready during the run wait for the next cycle. `max-files` and `max-gb` (off by default) bound one run when set.
+3. **The same file again** (the same SHA-256 as a file loaded before) goes straight to the outbox, *already loaded in run …*, and is not
+   loaded again. A changed file with the same name is loaded (its dates replaced).
+4. **Loaded**: the files of one table go to one loader run, one table after another. The loader is the parallel lake loader
+   ([TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader)), started as a separate Java process with its own heap
+   (`loader-heap`, 4g), so a large or broken file never takes the server's memory. Each business date is one commit.
+5. **Moved** with the marker and the report into `outbox/<day>/<run>/`.
+6. **Told**: one data-load signal per pack, kind and business date, as `POST /api/v1/packs/{pack}/loads` makes it; the load is on
+   Admin → Data loads with *inbox:* and its files, made by `dataload`. In a cluster the signal is passed on to every other live member,
+   as an announcement is ([section 1](#1-telling-drishti-new-data-has-landed)), made as the owner node (`node:<id>`), so every member
+   refreshes its own caches and engines.
+
+A server stopped in the middle finishes the run at its next cycle: files only claimed go back to the inbox, a load that had committed is
+completed (never loaded twice), files not yet moved are moved, signals not yet sent are sent.
+
+### 5. Where to look
+
+```bash
+drishti.py dataload status        # the files waiting and why, the failures with their reasons, the last cycles, the lock, the next cycle
+drishti.py dataload run           # Load now (or: skipped, a run still loads)
+```
+
+- The report of a file: `outbox/<day>/<run>/<file>.loaded.json` (the route, the table, each date's version and rows, the loader's
+  summary) or `failed/<day>/<run>/<file>.failed.json` (the reason in words).
+- The loader's own output: `outbox/<day>/<run>/loads/load-<n>.log` and `.summary.json`.
+- Every step of every file: `ledger/ledger-<yyyy-MM>.jsonl`.
+- The data loads it made: Admin → Data loads.
+
+### 6. Failures, Retry and duplicates
+
+| Case | What happens |
+|---|---|
+| Rows rejected within `reject-max-percent` (0) | loaded with rejects (listed in the report) |
+| More rejects, or the loader fails | nothing committed for that file; to `failed/` with the loader's reason. When several files of one table were loaded together, each is loaded again alone, so only the bad one fails |
+| The table locked by another load | back to the inbox; tried again next cycle; after three cycles a notice in the status |
+| The load runs past `load-timeout` (2h) | stopped; its files go back to the inbox |
+| `sha256` or `rows` in the `.ready` do not match | `failed/` before anything is written |
+| No rule, an unknown pack or kind, a link, a name the loader does not read, a file of lake rows or loader rows | `failed/` with the reason |
+
+**Retry** puts a failed file and its marker back in the inbox (an empty marker when it had none): `drishti.py dataload retry <file>`;
+the next cycle, or Load now, loads it. Fix the file or the rules first.
+
+### 7. Settings and the API
+
+The inbox's settings are in `config/engines/dataload.yaml` (`drishti.dataload.*`: `owner`, `dir`, `interval`, `stable-seconds`,
+`max-files`, `max-gb`, `loader-heap`, `load-timeout`, `reject-max-percent`, `reload-duplicates`, `keep-outbox-days`, `lake`,
+`rules-file`, `nice`), the rules in `config/dataload.yaml`; every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md). The API is
+for administrators ([API_GUIDE.md](API_GUIDE.md)): `GET /api/v1/admin/dataload` (status), `POST /api/v1/admin/dataload/run` (Load now),
+`POST /api/v1/admin/dataload/retry` with `{"file": "<name>"}`; a personal token needs `loads:write` for the last two.

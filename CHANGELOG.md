@@ -15,6 +15,35 @@
 -->
 # Changelog
 
+## 2.9.11.f
+
+- **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;
+  OPERATIONS.md 11.4; TOOLS.md 5.3a; API_GUIDE.md, Data loads).** Put JSON Lines files or archives (`.jsonl`, `.ndjson`, `.json`; plain,
+  `.gz`, `.zst`; `.zip`, `.tar`, `.tar.gz`, `.tgz`) in `<data>/dataload/inbox` with a `<file>.ready` beside each (or one `ready.all`);
+  every `interval` (10 minutes) the owner node takes the whole ready, stable batch at once into `inprocess/<run>/` (a run id is its start
+  time and node, `20261103T150000Z-drishti-main`), skips a file whose SHA-256 was loaded before, routes each file by its `.ready` or the
+  first rule of `config/dataload.yaml`, loads the files of each table with the parallel lake loader (`LakeLoad`) started as a child Java
+  process with its own heap (`loader-heap`), records every step in `ledger/`, moves each file with its marker and a report to
+  `outbox/<day>/<run>/` (or `failed/` with the reason), and announces each pack, kind and business date through `LoadService`, as
+  `POST /api/v1/packs/{pack}/loads` does. Runs never overlap: a cycle due while a run loads is recorded as *skipped: run … still loading
+  (n min)*, and Load now says the same. Crash-safe: a stopped server's run is finished at the next cycle, never loaded twice. One runner
+  per folder (`owner`, plus `inbox.lock` with a heartbeat). Busy protection skips a cycle when the server is short. In a cluster
+  every signal is passed on to the other live members by `loads.LoadForwarding` (the path a person's announcement already took, now one
+  class for both), as the owner node: `node:<id>` with the service role, signed with the cluster key; the receiving `LoadController`
+  takes such a signed node signal as an administrator's. A file of lake rows or loader rows is refused with the reason (`RowForms`): the
+  parallel loader has no reader for those forms.
+- **A data-load signal makes a new table readable at once (the Delta connector).** A connector whose domain had no table when it started
+  (the first load into an empty lake) found the new table only at its next periodic reindex, so the signal's verify said *not found*;
+  the signal's refresh (`purgeCaches`, `refreshVersions`) now looks for new tables (`NewTables`, tested by `NewTablesTest`) and lists one it finds at once. Found by the data
+  inbox's end-to-end check.
+- New module `drishti-dataload` (plain Java: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess`, `Outbox`, `Recovery`,
+  `Cycle`, `DataInbox`); the server's wiring is `server.dataload` (`DataLoadConfiguration`, `DataLoadController`). New engine `dataload`
+  in the catalogue, `config/engines/dataload.yaml` (off as shipped; every key in CONFIGURATION.md), `config/dataload.yaml` (the routing
+  rules; the demo packs' rules commented). New endpoints `GET /api/v1/admin/dataload`, `POST /api/v1/admin/dataload/run` and
+  `POST /api/v1/admin/dataload/retry` (administrators; the `POST`s in the `loads:write` scope). New command `drishti.py dataload
+  status|run|retry`. `LakeLoad.reads(name)` tells whether the loader reads a file name. Two new rules in `ArchitectureRulesTest`
+  (`dataInboxIsPlainJava`, `dataInboxWritesNoTable`). The Admin screen comes after its mock-ups.
+
 ## 2.9.11.a
 
 - **One Engines menu (mock-up engines-menu/A; USER_GUIDE.md, The top bar).** The Engines menu replaces the VaR and Exposure top-level

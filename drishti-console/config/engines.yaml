@@ -306,3 +306,31 @@ engines:
     kinds: []
     inputs: []
     ai-tools: []
+  - id: dataload
+    title: Data inbox
+    about: "Files dropped in the inbox folder with a .ready marker, loaded into the lake every interval"
+    file: dataload.yaml
+    switch: drishti.engines.dataload.enabled
+    env: DRISHTI_DATALOAD_ENABLED
+    aliases: []
+    shipped: false
+    installed: true
+    live-on: true
+    prefixes: [drishti.dataload]
+    needs: []
+    uses: []
+    api: [/api/v1/admin/dataload]
+    console: []
+    words: []
+    menus: []
+    help: []
+    landings: []
+    tiles: []
+    lenses: []
+    bi: []
+    cli: [dataload]
+    playgrounds: []
+    connectors: []
+    kinds: []
+    inputs: []
+    ai-tools: []
