@@ -101,6 +101,13 @@ menus:
         items:
           - { id: simm, cmd: SIMM, icon: shield-lock, label: Netting sets, desc: "Initial margin per netting set, collect and post", match: /simm, requires: [word:SIMM, route:/simm] }
           - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, route:/play/simm] }
+      - engine: sa-ccr
+        title: SA-CCR
+        word: SACCR
+        opens: [role:credit-risk, pack:counterparty-risk]
+        items:
+          - { id: saccr, cmd: SACCR BANK, icon: bank, label: SA-CCR exposure, desc: "Exposure at default of every netting set: the waterfall, the list, a counterparty's sets", match: /saccr, requires: [word:SACCR, route:/saccr] }
+          - { id: play-saccr, cmd: PLAY SACCR EXAMPLE, icon: calculator, label: SA-CCR Playground, desc: "Every SA-CCR figure worked in a grid and a workbook of formulas", match: /play/saccr, requires: [word:PLAY, route:/play/saccr] }
   # The subject menus of the lenses (docs/lenses/README.md, the lens menus): drawn only where an edition (or a lens) names them in its
   # menus.top. An item's cmd: and fill: as in the Engines menu above.
   - id: blotter
@@ -279,7 +286,7 @@ menus:
           - { id: collab, href: /admin/collab, icon: chat-square-text, label: Collaboration, desc: "Moderation, legal holds, export, mail outbox, bridges", match: /admin/collab, requires: [admin, admin-page:collab, feature:collaboration] }
           - { id: embedding, href: /admin/embedding, icon: window-stack, label: Embedding, desc: Host applications that show views in their own pages, match: /admin/embedding, requires: [admin, admin-page:embedding] }
           - { id: net, href: /admin/net, icon: diagram-3, label: Net, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
-          - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (VaR, exposure, FRTB-SA, SIMM, the in-memory lake), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
+          - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (VaR, exposure, FRTB-SA, SIMM, SA-CCR, the in-memory lake), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
           - { id: health, href: /admin/health, icon: heart-pulse, label: Health, desc: "Connectors, packs, live streams", match: /admin/health, requires: [admin, admin-page:health] }
           - { id: caches, href: /admin/caches, icon: hdd-stack, label: Caches, desc: "What each cache holds; purge", match: /admin/caches, requires: [admin, admin-page:caches] }
           - { id: capacity, href: /admin/capacity, icon: speedometer, label: Capacity, desc: "Today against the plan: headroom, what breaks first, growth; the planner", match: /admin/capacity, requires: [admin, admin-page:capacity] }

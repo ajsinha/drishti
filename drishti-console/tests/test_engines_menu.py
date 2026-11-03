@@ -71,11 +71,11 @@ def test_an_administrator_sees_every_running_engine_with_its_word_and_admin_engi
     app = _app(backend, monkeypatch)
     page = _client(app).get("/t").text
     assert _top(page)[:2] == ["Views", "Engines"]
-    assert _engines(page) == ["VaR", "Exposure", "FRTB-SA", "SIMM"]
+    assert _engines(page) == ["VaR", "Exposure", "FRTB-SA", "SIMM", "SA-CCR"]
     words = re.findall(r'<code class="eng-word mono">([^<]+)</code>', page)
-    assert words == ["VAR", "EXP", "FRSA", "SIMM"]
+    assert words == ["VAR", "EXP", "FRSA", "SIMM", "SACCR"]
     assert 'href="/admin/engines"' in page[page.index("data-engines-panel"):] and "data-engines-admin" in page
-    assert "data-engines-q" not in page                                                # four engines: no search box (search-over: 4)
+    assert "data-engines-q" in page                                                    # five engines: past search-over (4), the search box
 
 
 def test_a_role_sees_only_the_engines_it_opens_and_no_admin_link(backend, monkeypatch):
@@ -85,7 +85,7 @@ def test_a_role_sees_only_the_engines_it_opens_and_no_admin_link(backend, monkey
     mira = _client(app, "mira").get("/t").text
     assert _engines(mira) == ["VaR", "FRTB-SA", "SIMM"] and "data-engines-admin" not in mira and "data-engines-off" not in mira
     cole = _client(app, "cole").get("/t").text
-    assert _engines(cole) == ["Exposure", "SIMM"]
+    assert _engines(cole) == ["Exposure", "SIMM", "SA-CCR"]
 
 
 def test_a_role_that_opens_no_engine_has_no_engines_menu_but_reads_every_running_engines_help(backend, monkeypatch):
@@ -158,7 +158,7 @@ def test_an_engine_running_nowhere_leaves_the_menu_and_an_administrator_sees_it_
     engines.learn(_about({"simm"}))
     try:
         page = _client(app).get("/t").text
-        assert _engines(page) == ["VaR", "Exposure", "FRTB-SA"]
+        assert _engines(page) == ["VaR", "Exposure", "FRTB-SA", "SA-CCR"]
         off = page[page.index("data-engines-off"):]
         assert "SIMM" in off[:off.index("</div>")] and 'href="/simm"' not in page
         risk = _client(app).get("/help/section/risk").text
@@ -182,7 +182,7 @@ def test_the_search_box_shows_past_search_over_engines(backend, monkeypatch, tmp
     monkeypatch.setattr(menus, "_console_dir", lambda request: tmp_path)
     app = _app(backend, monkeypatch)
     page = _client(app).get("/t").text
-    assert "data-engines-q" in page and 'placeholder="Search' in page and "pages of 4 engines" in page
+    assert "data-engines-q" in page and 'placeholder="Search' in page and "pages of 5 engines" in page
 
 
 def test_the_risk_edition_draws_engines_in_place_of_var_and_exposure(backend, monkeypatch):

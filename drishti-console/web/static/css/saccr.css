@@ -1,0 +1,42 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* SA-CCR (terminal/saccr.html): the tiles, the EAD waterfall (A, and small in C's columns), the side-by-side columns. Colours from the
+   theme's variables, dark and light alike. */
+.sc .sc-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin: 8px 0; }
+.sc .tile { border: 1px solid var(--bs-border-color, #26345a); border-radius: 8px; padding: 10px 12px; }
+.sc .tile .k { font-size: 12px; opacity: .75; }
+.sc .tile .v { font-size: 20px; font-weight: 700; margin-top: 2px; }
+.sc .tile .s { font-size: 11.5px; opacity: .7; margin-top: 2px; }
+.sc .tile.ead { border-color: var(--d-amber, #e8a33a); }
+.sc .sc-h { font-size: 14px; margin: 6px 0; }
+.sc .sc-wf { display: flex; align-items: stretch; gap: 8px; height: 220px; padding: 8px 4px; }
+.sc .sc-wf.small { height: 140px; gap: 4px; }
+.sc .sc-step { flex: 1 1 0; display: flex; flex-direction: column; align-items: center; min-width: 46px; }
+.sc .sc-bar { position: relative; flex: 1 1 auto; width: 70%; }
+.sc .sc-bar i { position: absolute; left: 0; right: 0; border-radius: 3px; background: var(--d-link, #7fb2ff); }
+.sc .sc-step.rc .sc-bar i { background: var(--bs-body-color, #e7ecf5); }
+.sc .sc-step.subtotal .sc-bar i { background: var(--d-muted, #93a0b8); }
+.sc .sc-step.alpha .sc-bar i { background: var(--d-warn, #f2c14e); }
+.sc .sc-step.total .sc-bar i { background: var(--d-amber, #e8a33a); }
+.sc .sc-val { font-size: 11.5px; }
+.sc .sc-lab { font-size: 11px; opacity: .8; text-align: center; margin-top: 4px; }
+.sc .sc-cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 12px; }
+.sc .sc-col { border: 1px solid var(--bs-border-color, #26345a); border-radius: 8px; padding: 10px 12px; }
+.sc .sc-formula { white-space: pre-wrap; font-size: 12.5px; }
+.sc .sc-prov { margin-top: 10px; }
+.sc .small { font-size: 11.5px; }
+.sc .bad { color: var(--d-bad, #ff7a7a); }
+.sc .badge { font-size: 11px; padding: 1px 6px; border-radius: 8px; border: 1px solid currentColor; opacity: .8; }

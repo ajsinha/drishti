@@ -284,7 +284,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     from routes import edition_routes, trading_routes
     from routes import render_routes
-    from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
+    from routes import admin_commands_routes, admin_engines_routes, artifact_routes, changes_routes, compute_admin_routes, data_routes, datamap_routes, drafts_routes, exposure_routes, functions_routes, history_routes, phone_routes, lake_maint_routes, lake_routes, net_routes, play_routes, frtb_routes, saccr_routes, simm_routes, smat_routes, var_regulatory_routes, var_routes
 
     def _lake_schedules(app):
         from core.lake_maint import maintenance
@@ -580,6 +580,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(var_routes.router)              # the VaR explorer (/var) and its JSON (/api/var/...)
     app.include_router(smat_routes.router)             # the scenario matrix (/smat, SMAT <id> [N]) and its JSON, CSV and Arrow (/api/smat/...)
     app.include_router(frtb_routes.router)             # FRTB-SA: FRSA <scope> (the capital screen), PLAY FRTB <scope> (its playground), /api/frtb/...
+    app.include_router(saccr_routes.router)            # SA-CCR: SACCR <scope> (the page: views A, B, C), PLAY SACCR <netting set> (its playground), /api/saccr/...
     app.include_router(simm_routes.router)             # ISDA SIMM: SIMM <netting set> (the screen), PLAY SIMM <netting set> (its playground), /api/simm/...
     app.include_router(play_routes.router)             # the VaR Playground (/play, PLAY VAR <scope or ids>), its grid and the .xlsx export (/api/play/...)
     app.include_router(exposure_routes.router)         # the exposure explorer (/exposure) and its JSON (/api/exposure/...)

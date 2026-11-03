@@ -374,6 +374,11 @@ class BackendClient:
         sent as a repeated parameter (``override``). The netting-set list computes every netting set of the date: this waits up to a minute."""
         return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
 
+    async def saccr(self, method: str, path: str, ident, /, **params) -> Any:
+        """SA-CCR (/api/v1/saccr; docs/guides/SACCR_GUIDE.md section 9), as the user. ``path`` starts at /api/v1 (``/saccr/scope``). The bank's
+        scope computes every netting set of the date: this waits up to a minute."""
+        return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
+
     async def pivot(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
         """The pivot engine (/api/v1/pivot, docs/guides/PIVOT_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
         ``raw`` returns the bytes and headers of an export. A table's first pivot reads it through its connector: this waits up to two

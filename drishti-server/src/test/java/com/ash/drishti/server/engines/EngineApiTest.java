@@ -64,7 +64,8 @@ class EngineApiTest {
         String admin = as("drishti-dev-admin", "admin");
         mvc.perform(get("/public/about")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.engines[?(@.id == 'frtb-sa')].here").value(true))
-                .andExpect(jsonPath("$.engines[?(@.id == 'sa-ccr')].here").value(false));
+                .andExpect(jsonPath("$.engines[?(@.id == 'sa-ccr')].here").value(true))
+                .andExpect(jsonPath("$.engines[?(@.id == 'fva')].here").value(false));
         mvc.perform(get("/api/v1/admin/engines").header("Authorization", as("tina", "trader"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/admin/engines").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.engines[?(@.id == 'var')].state").value("running"))

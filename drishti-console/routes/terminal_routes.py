@@ -33,6 +33,7 @@ from routes.var_routes import redirect_for as var_redirect
 from routes.var_routes import retired_link as var_retired_link
 from routes.exposure_routes import redirect_for as exp_redirect
 from routes.frtb_routes import redirect_for as frsa_redirect
+from routes.saccr_routes import redirect_for as saccr_redirect
 from routes.simm_routes import redirect_for as simm_redirect
 from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
@@ -148,6 +149,8 @@ async def go(request: Request, q: str = ""):
         return to_play
     if ed.word_on("VAR") and ed.word_on("FRSA") and (to_frsa := frsa_redirect(typed)) is not None:   # FRSA <scope>: FRTB-SA capital (frtb_routes.py)
         return to_frsa
+    if ed.word_on("SACCR") and (to_saccr := saccr_redirect(typed)) is not None:       # SACCR [<netting set> | CPTY <id> | LE:<id> | BANK]: SA-CCR (saccr_routes.py)
+        return to_saccr
     if ed.word_on("SIMM") and (to_simm := simm_redirect(typed)) is not None:          # SIMM [<netting set> | CPTY <id>]: ISDA SIMM (simm_routes.py)
         return to_simm
     if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_routes.py)
