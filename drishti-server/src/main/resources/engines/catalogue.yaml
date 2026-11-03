@@ -183,7 +183,7 @@ engines:
     console: [/saccr, /play/saccr, /api/saccr/]
     words: [SACCR, "PLAY SACCR"]
     menus: [saccr, play-saccr]
-    help: [docs-guides-saccr-guide, docs-tutorials-34-saccr-from-the-cases-to-a-counterparty]
+    help: [docs-guides-saccr-guide, docs-tutorials-39-saccr-from-the-cases-to-a-counterparty]
     landings: []
     tiles: []
     lenses: []

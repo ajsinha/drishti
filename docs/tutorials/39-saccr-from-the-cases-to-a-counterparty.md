@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 34 · SA-CCR from the hand-built cases to a counterparty
+# Tutorial 39 · SA-CCR from the hand-built cases to a counterparty
 
 SA-CCR, the regulator's standard measure of a derivative netting set's exposure at default, computed by Drishti from one classification
 row per trade. In this tutorial you read the parameter file, run the hand-built cases (small enough to check with a calculator), open a

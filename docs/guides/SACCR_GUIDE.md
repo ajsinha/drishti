@@ -21,7 +21,7 @@ direction, notional, dates and, for an option, its strike and forward. Everythin
 factor, effective notional, the add-ons, replacement cost, the multiplier, PFE and EAD) is computed by the server's Java engine, from a
 parameter file that names the Basel paragraph of every value. Every figure opens in a playground that shows the same calculation as
 spreadsheet formulas, checked against the engine to the cent. The tutorial is
-[tutorial 34](../tutorials/34-saccr-from-the-cases-to-a-counterparty.md); the data contract is [SACCR.md](../contracts/SACCR.md); the
+[tutorial 39](../tutorials/39-saccr-from-the-cases-to-a-counterparty.md); the data contract is [SACCR.md](../contracts/SACCR.md); the
 design behind it is [COUNTERPARTY_ENGINES.md section 3](../architecture/COUNTERPARTY_ENGINES.md#3-sa-ccr-end-to-end).
 
 ## Contents
