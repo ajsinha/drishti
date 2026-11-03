@@ -204,6 +204,23 @@ public final class ExposureCalc {
         return new Result(b, trades, standalone, prm, pieces, e, n, pos, st, flags);
     }
 
+    /**
+     * One piece's EE and ENE profile, read from what {@link #evaluate} already holds (the piece's own matrices, or the set's precomputed
+     * ones in the book): {@code {EE, ENE}} at the primary dates. FVA reads it (FvaMath); nothing is computed again from the paths.
+     */
+    public static double[][] profile(Result r, Piece pc) {
+        int gp = r.book.grid().primaryCount();
+        int p = r.book.paths();
+        if (pc.e != null) {
+            return new double[][] {ExposureMath.means(pc.e, gp, p), ExposureMath.means(pc.n, gp, p)};
+        }
+        double[] e = new double[gp * p];
+        double[] n = new double[gp * p];
+        r.book.addExposure(pc.set, e);
+        r.book.addNegative(pc.set, n);
+        return new double[][] {ExposureMath.means(e, gp, p), ExposureMath.means(n, gp, p)};
+    }
+
     private static double[] sum(Map<String, double[]> tp, ExposureBook b, int[] trades, int len) {
         double[] v = new double[len];
         for (int t : trades) {
