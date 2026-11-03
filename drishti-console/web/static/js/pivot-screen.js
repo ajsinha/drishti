@@ -473,5 +473,12 @@
       if (by) { expandBy(row, by.trim()); }
     }
   });
+  // the custom functions, explain and what-if cards (pivot-functions.js) read the view, its answer and the selection; they never aggregate
+  window.PivotScreen = {
+    view: function () { return state.view; },
+    answer: function () { return state.answer; },
+    selection: function () { return state.selection; },
+    notice: notice
+  };
   boot();
 })();

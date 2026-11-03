@@ -95,7 +95,7 @@ async def catalogue(request: Request, source: str = "", date: str = ""):
 
 @router.post("/api/pivot-engine/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "views"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "views", "explain", "whatif", "functions"):
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 
@@ -140,3 +140,27 @@ async def export(request: Request):
     keep = {k: v for k, v in headers.items() if k.lower() in ("content-type", "content-disposition")}
     keep["Cache-Control"] = "no-store"
     return Response(content=content, headers=keep)
+
+
+# ---- custom functions (PIVOT_GUIDE.md, custom functions): the playground's check, the list, a version, approval -----------------------------
+
+@router.get("/api/pivot-engine/functions")
+async def functions(request: Request):
+    return await _call(request, "GET", "/functions")
+
+
+@router.post("/api/pivot-engine/functions/test")
+async def function_test(request: Request):
+    return await _call(request, "POST", "/functions/test", await _body(request))
+
+
+@router.get("/api/pivot-engine/functions/{owner}/{name}")
+async def function_get(request: Request, owner: str, name: str, version: str = ""):
+    return await _call(request, "GET", f"/functions/{owner}/{name}", version=version)
+
+
+@router.post("/api/pivot-engine/functions/{owner}/{ref}/{op}")
+async def function_op(request: Request, owner: str, ref: str, op: str):
+    if op not in ("submit", "approve", "revoke"):
+        return JSONResponse({"detail": "no such function action"}, status_code=404)
+    return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))

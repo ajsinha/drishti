@@ -41,6 +41,9 @@
     <button type="button" class="pv-chip" data-pv-export-open title="Export (X)" aria-expanded="false">Export <kbd>X</kbd></button>
     <button type="button" class="pv-chip" data-pv-save title="Save the view (private until shared)">Save view</button>
     <button type="button" class="pv-chip" data-pv-share title="Save and share with people or roles">Share</button>
+    <button type="button" class="pv-chip" data-pf-open="explain" title="Why did it move? The difference in steps that add up (W)">Why <kbd>W</kbd></button>
+    <button type="button" class="pv-chip" data-pf-open="whatif" title="What-if: leave members out, scale a field, add rows (I)">What-if <kbd>I</kbd></button>
+    <button type="button" class="pv-chip" data-pf-open="functions" title="Custom functions: the playground, versions, approval (U)">Functions <kbd>U</kbd></button>
   </div>
   <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
   <p class="pv-notice" data-pv-notice role="alert" hidden></p>
@@ -80,6 +83,52 @@
       </section>
     </aside>
   </div>
+  <section class="pv-card pf-card" data-pf-card="explain" hidden aria-labelledby="pfExplainTitle">
+    <h2 id="pfExplainTitle">Why did it move? <span class="pv-sub">the difference in steps that add up</span></h2>
+    <div class="pf-form">
+      <label>First cell <input class="pv-input" data-pf-from placeholder="DESK=EMEA (blank: the grand total)" aria-label="First cell"></label>
+      <label>Second cell <input class="pv-input" data-pf-to placeholder="the same cell" aria-label="Second cell"></label>
+      <label>First date <input class="pv-input" data-pf-from-date placeholder="YYYY-MM-DD" aria-label="First date"></label>
+      <label>Second date <input class="pv-input" data-pf-to-date placeholder="YYYY-MM-DD" aria-label="Second date"></label>
+      <label>Split by <select data-pf-by aria-label="Split the difference by"></select></label>
+      <label>Order <select data-pf-order aria-label="Order of the steps"><option value="member">by member</option><option value="size">largest first</option></select></label>
+      <button type="button" class="pv-btn primary" data-pf-explain>Explain</button>
+    </div>
+    <p class="pf-words" data-pf-words aria-live="polite"></p>
+    <div class="pf-waterfall" data-pf-waterfall role="img" aria-label="Waterfall of the steps"></div>
+  </section>
+  <section class="pv-card pf-card" data-pf-card="whatif" hidden aria-labelledby="pfWhatifTitle">
+    <h2 id="pfWhatifTitle">What-if <span class="pv-sub">private, never written to the lake</span></h2>
+    <div class="pf-form">
+      <label>Leave out <input class="pv-input" data-pf-exclude placeholder="BOOK=B-17,B-18" aria-label="Members to leave out"></label>
+      <label>Change <input class="pv-input" data-pf-change placeholder="PRICE*1.1 where DESK=RATES  or  NOTIONAL=0 where TRADE_ID=T-1" aria-label="A change of a number field"></label>
+      <label class="pf-wide">Add rows (JSON) <textarea class="pv-input" data-pf-add rows="2" placeholder='[{"DESK": "RATES", "NOTIONAL": 5000000}]' aria-label="Hypothetical rows"></textarea></label>
+      <button type="button" class="pv-btn primary" data-pf-whatif>Run the what-if</button>
+    </div>
+    <div class="pf-result" data-pf-whatif-result aria-live="polite"></div>
+  </section>
+  <section class="pv-card pf-card" data-pf-card="functions" hidden aria-labelledby="pfFunctionsTitle">
+    <h2 id="pfFunctionsTitle">Custom functions <span class="pv-sub" data-pf-langs></span></h2>
+    <div class="pf-list" data-pf-list></div>
+    <h3>Playground</h3>
+    <div class="pf-form">
+      <label>Name <input class="pv-input" data-pf-name value="wret" aria-label="Function name"></label>
+      <label>Language <select data-pf-lang aria-label="Language"><option value="formula">formula (DEL)</option><option value="sql">SQL macro</option><option value="python">Python</option><option value="java">Java plug-in</option></select></label>
+      <label>Inputs <input class="pv-input" data-pf-inputs value="r, w" aria-label="Inputs, comma separated"></label>
+      <label>Kind <select data-pf-kind aria-label="Kind"><option>mergeable</option><option>sketch</option><option>holistic</option></select></label>
+      <label>Entry <input class="pv-input" data-pf-entry placeholder="Python: the class; Java: the jar" aria-label="Entry"></label>
+      <label class="pf-wide">Code <textarea class="pv-input pf-code" data-pf-code rows="6" aria-label="Code">sum(r * w) / sum(w)</textarea></label>
+      <label class="pf-wide">Sample rows (CSV with a header) <textarea class="pv-input pf-code" data-pf-sample rows="5" aria-label="Sample rows">r,w,g
+0.012,3,A
+-0.004,1,B
+0.020,2,A
+0.001,5,B</textarea></label>
+      <label>Try in a pivot by <input class="pv-input" data-pf-group value="g" aria-label="Group column"></label>
+      <button type="button" class="pv-btn primary" data-pf-check>Check</button>
+      <button type="button" class="pv-btn" data-pf-save>Save version</button>
+    </div>
+    <div class="pf-result" data-pf-check-result aria-live="polite"></div>
+  </section>
   <section class="pv-card pv-chartcard" data-pv-chartcard hidden aria-labelledby="pvChartTitle">
     <h2 id="pvChartTitle"><span data-pv-chart-title>Chart of the selection</span> <span class="pv-sub" data-pv-chart-sub></span></h2>
     <div class="pv-chart" data-pv-chart-box></div>
@@ -87,4 +136,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-core.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-screen.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-core.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-screen.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% endblock %}
