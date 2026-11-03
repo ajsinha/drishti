@@ -407,6 +407,32 @@ columns. An **entity document** (a trade, a counterparty, a netting set) is stor
 `doc`: `LEGS` (a list; each leg has `LEG_ID`, `LEG_TYPE`, `CURRENCY`, `NOTIONAL`, an `INDEX` object …) and `EVENTS` (a list; each event
 has `EVENT_TYPE`, `EVENT_DATE`, `AMOUNT`, `CURRENCY` …).
 
+**One notation: Rachana's paths** (product owner, 2026-11-03: *"$.ABC.DEF kind of Sutra-like notation for nested columns ... keeps our
+pivot and BI in sync"*; *"Rachana grammar can be part of our pivot design"*). Every pivot field is a Rachana path or expression
+([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), the document `$`, the element `@`), exactly as a Sutra binds it and as a BI
+dataset column's `path:` names it. The field list writes the path for a person who picks from it; a person may also type one.
+
+| Path | Means | Grain |
+|---|---|---|
+| `$.PRODUCT_TYPE` | a top-level field | trade |
+| `$.LEGS[0].CURRENCY` | the first leg's currency: one value per trade | trade |
+| `$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME` | the floating leg's index, wherever the leg sits | trade |
+| `size($.LEGS)` | how many legs a trade has (a Rachana function) | trade |
+| `$.LEGS[*].NOTIONAL` | every leg's notional | **leg** (the `[*]` makes the grain) |
+| `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL` | the fixed legs' notionals | leg |
+| `$.LEGS[*].CASH_FLOWS[*].AMOUNT` | every cash flow of every leg | **cash flow** (two `[*]`: a list inside a list) |
+| `$.EVENTS[*].EVENT_TYPE` | every event's type | **event** |
+
+**The grain comes from the path:** no `[*]` is the entity's grain; each `[*]` steps into a list, and the deepest list a view uses is its
+grain. Two paths whose `[*]` lists are not one inside the other (`$.LEGS[*]` and `$.EVENTS[*]`) are separate lists and are never crossed.
+
+**One parser, no second dialect.** The pivot engine parses paths with Rachana's own expression parser (the `drishti-rachana` module) and
+compiles them: a path a promoted or dataset column holds reads that column; anything else becomes DuckDB JSON over `doc`
+(`json_extract`, `unnest` for `[*]`, `list_filter` for `[?...]`). A Rachana function with no SQL form is refused for a pivot with the
+reason, never evaluated a second way. BI datasets name document columns with the same paths: `path: $.LEGS[0].CURRENCY`, and
+`each: $.LEGS` is `$.LEGS[*]`; the BI guide's examples use the `$.` form, and BI's older dotted form (`LEGS.0.CURRENCY`) is read as the
+same path for existing datasets.
+
 **Three routes from a document field to a pivot, chosen per field, fastest first:**
 
 | Route | What it reads | Cost | When |
@@ -455,11 +481,11 @@ saved view in YAML, all produced by running it on `drishti.py lake demo`):
 
 | Question | Rows × columns | Values | Grain |
 |---|---|---|---|
-| Notional by desk and month | Desk × Trade date (month) | Sum of Legs › Notional | leg |
-| How many trades have a JPY leg, by product | Product | Count of trades, filter *Legs › Currency = JPY* | trade |
-| Fixed against floating legs per counterparty | Counterparty × Legs › Leg type | Count of legs, Sum of Legs › Notional | leg |
-| Quantity per desk without double counting | Desk | Sum of Quantity (*per trade, once*) beside Count of legs | leg, the quantity once per trade |
-| Booking events this week by type | Events › Event type × Events › Event date (day) | Count of events | event |
+| Notional by desk and month | `$.DESK` × `$.TRADE_DATE` (month) | Sum of `$.LEGS[*].NOTIONAL` | leg |
+| How many trades have a JPY leg, by product | `$.PRODUCT_TYPE` | Count of trades, filter `$.LEGS[*].CURRENCY = 'JPY'` (any leg) | trade |
+| Fixed against floating legs per counterparty | `$.COUNTERPARTY` × `$.LEGS[*].LEG_TYPE` | Count of legs, Sum of `$.LEGS[*].NOTIONAL` | leg |
+| Quantity per desk without double counting | `$.DESK` | Sum of `$.QUANTITY` (*per trade, once*) beside Count of legs | leg, the quantity once per trade |
+| Booking events this week by type | `$.EVENTS[*].EVENT_TYPE` × `$.EVENTS[*].EVENT_DATE` (day) | Count of events | event |
 | VaR beside notional | Desk | VaR (the VaR provider), Sum of Legs › Notional | trade and leg: two providers side by side, each exact |
 
 ## 7. From the MR cube's core to the pivot engine: what is kept, what changes
@@ -1193,6 +1219,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
 - [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine
+- [ ] Rachana paths as the field notation (one parser, compiled to columns or DuckDB JSON; the grain from `[*]`); BI's examples in the `$.` form
 - [ ] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators
 - [ ] the pivot guide's worked examples of section 6.7, each with its real figures from the demo lake, a screenshot, the command line and the saved view's YAML
 
