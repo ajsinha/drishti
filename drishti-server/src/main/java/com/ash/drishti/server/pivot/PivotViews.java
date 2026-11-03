@@ -75,12 +75,19 @@ public final class PivotViews {
         Object shared = body.get("sharedWith");
         b.put("sharedWith", shared instanceof List<?> l ? l.stream().map(String::valueOf).toList() : List.of());
         b.put("updatedAt", Instant.now().toString());
-        return docs.update(key(p.user(), name), Map.class, old -> {
+        Map<String, Object> saved = docs.update(key(p.user(), name), Map.class, old -> {
             Map<String, Object> m = new LinkedHashMap<>(b);
             m.put("createdAt", old == null ? m.get("updatedAt") : old.get("createdAt"));
             m.put("version", old == null ? 1 : ((Number) old.getOrDefault("version", 0)).intValue() + 1);
             return m;
         });
+        docs.putLatest(PivotViewVersions.key(p.user(), name, ((Number) saved.get("version")).intValue()), saved);   // every version kept
+        return saved;
+    }
+
+    /** The store's documents (the view versions read them). */
+    ContentDocs docs() {
+        return docs;
     }
 
     /** A view by id ({@code owner/name}) the caller may read: theirs, or shared with them or one of their roles. */

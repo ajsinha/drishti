@@ -15,6 +15,23 @@
 -->
 # Changelog
 
+## 2.9.11.a
+
+- **The in-memory lake is its own module, `drishti-memlake` (IN_MEMORY_LAKE.md section 16; ARCHITECTURE.md §13,
+  PACK_DEVELOPER_GUIDE.md §1.1 and §1.3).** Plain Java with no Spring: the `mem://` storage (`ChunkPool`, `MemoryStorage`,
+  `MemoryStores`, from `drishti-lakeio` `com.ash.drishti.lakeio.mem`, now `com.ash.drishti.memlake.store`) and the service (`MemoryLake`,
+  `MemoryTable`, `ReplenishSource`, `MemoryCompactor`, `MemoryBinding`, `Retention`, `HostChecks`, from `drishti-server`
+  `com.ash.drishti.server.memlake`, now `com.ash.drishti.memlake`). The settings record is `MemoryLakeSettings` (was the server's
+  `MemoryLakeProperties`); the server keeps only `MemoryLakeConfiguration` (binds `drishti.lake.memory.*`, the beans, the cron parser, the
+  memory budget and busy protection) and `MemoryLakeController`. Expiring a memory table's old versions moved from the Delta writer's
+  `TableUpkeep` to `memlake.MemoryUpkeep` (`TableUpkeep.shape` no longer takes a store). The settings and the REST API are unchanged.
+- **The lake engines reach `mem://` through `drishti-lakeio`'s storage providers.** New `lakeio.StorageProvider` (a scheme, its storage,
+  whether it is memory-only) and `lakeio.StorageProviders` (found with `ServiceLoader`); `drishti-memlake` registers `mem`. The native
+  Delta engine, the lake writer, the Iceberg engine's file access and the Delta and Iceberg connectors ask `StorageProviders` and never
+  name the module; two new rules in `ArchitectureRulesTest` (`memoryLakeIsPlainJava`, `lakeReadersDoNotSeeTheMemoryLake`) keep it so. The
+  memory-lake tests moved with the code (`DeltaInMemoryTest`, `IcebergInMemoryTest`, `MemoryRatiosTest`, `MemoryLakeTest`,
+  `RetentionTest`, `MemoryStorageTest`, `MemoryStorageContractTest`); `drishti-lakeio` and `drishti-deltalake` publish test jars for them.
+
 ## Unreleased (on develop, after 2.9.11)
 
 - **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
@@ -38,9 +55,9 @@
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
-## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
+## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale (unreleased, on wip/pivot-b and wip/pivot-c)
 
-- **The MR cube on the pivot engine (2.9.11.a; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot
+- **The MR cube on the pivot engine (2.9.11.b, moved from 2.9.11.a by the product owner on 2026-11-03; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot
   engine's VaR source becomes the market-risk cube when engine `mr-cube` runs (`config/engines/mr-cube.yaml`, installed and on; needs
   `var` and `pivot`, uses `sensitivities` and `frtb-sa`). Dimensions: every hierarchy level (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`,
   `LL.LIMIT_LETTER`), the positions' and trades' columns, `RISK_CLASS` (from the product group, `drishti.cube.mr.risk-classes`),
@@ -53,6 +70,50 @@
   explain; tab B: components, waterfall, histogram, heat map; tab C: the DV01 ladder, the what-if side by side); the catalogue's
   `defaultView` opens any source on its landing; `drishti.py pivot --option` and `pivot mr ...`. The paused `wip/mr-cube` branch's cube
   core (`/api/v1/cube`, codes DRS-5601 to DRS-5604, DRS-9506) is not brought back: the pivot engine's codes and busy protection apply.
+- **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 36).** Custom aggregation functions in four
+  languages with the four steps start, add, merge and finish: a formula of the built-ins (DEL's syntax: `sum(PNL, where=PNL < 0) /
+  sum(abs(PNL))`, mergeable when its parts are, computed in the same `GROUPING SETS` statement), a DuckDB SQL macro (rewritten into the
+  built-ins' states when it is a formula, else holistic), Python (the node's sandboxed `pivot-fn` workers from the compute SDK: no
+  network, processes or writes, imports from an allow-list, Arrow batches over a pipe; off as shipped; never on memory-only data) and Java
+  plug-ins (a jar pinned by its SHA-256; off as shipped). The harness (one pass, batches, 2, 3 and 16 random parts merged two ways under
+  five seeds with every state read back, empty, nulls, one row, equal rows, infinities, determinism, cost, state size) gates every save;
+  the playground shows the states part by part, the cost and a pivot of the sample; versions; sharing needs an approver who is not the
+  author; a withdrawn function says so in its cells; everything audited; never in an official run. Explain the difference between two cells
+  or a cell on two dates in steps that add up (a waterfall; price and quantity effects); what-if overlays (members left out, fields scaled
+  or set, rows added) beside the original. Saved views keep every version, with a diff of definitions and restore. `/api/v1/pivot/functions`, `/explain`, `/whatif`; `drishti.py pivot functions|explain|whatif`;
+  the pivot screen's Why (`W`), What-if (`I`) and Functions (`U`); settings under `drishti.pivot.functions`; codes DRS-5710 to DRS-5716.
+- **BI on the pivot engine (PB).** Every total and subtotal of a matrix, a table's total row and a model query's `totals` come from one
+  grouping-sets statement of the pivot engine over the model's rows as the reader sees them, run in BI's engine where the layers are
+  (one statement instead of one query per level); a model's measures are pivot functions and whether a measure adds up is the engine's
+  answer. The console no longer adds totals up: a sum's total is the engine's too, and a matrix without `subtotals` gets its totals from the
+  engine. A measure that reads beyond its group's rows (time intelligence, running, context, Python) has no total; the answer says why.
+  Parity is proved by `BiParityTest` against figures recorded from the code before the switch (`BiParityRecorder`, one grouped query per
+  level; five cases, every level and measure of the test lake), and BI's old total planning (`Totals.java`, the per-level queries of
+  reports and model queries, the console's adding up) is deleted in the same release; measures of two facts get one statement per fact.
+- **Custom functions follow the function catalogue's one names** (FUNCTION_CATALOGUE.md): `distinct`, `variance`, `stddev` (`_pop`
+  for population), `wavg`, `percentile`, `ratio`, `ceiling`, `ln`, `power`, `sum_once`, `count_once`, `avg_once`; `round` rounds half away
+  from zero. Formulas and custom functions over entity documents take Rachana paths (`sum($.LEGS[*].NOTIONAL) / count()`), each turned
+  into its field; a formula that would count a coarser figure many times is refused with the once-per-parent functions named.
+- **The pivot engine, phase P3: scale (2.9.11.b; PIVOT_GUIDE.md section 23, PIVOT_ENGINE.md section 9, BENCHMARK.md section 16).**
+  Sketches as the ≈ forms of functions with one name (FUNCTION_CATALOGUE.md), each with a stated error and exact on request: `distinct`
+  by HyperLogLog (written in the module, made in SQL from DuckDB's hash, ±1.6% at 4,096 registers), `median` and `percentile` by KLL
+  (written in the module, as Apache DataSketches is not resolvable offline; ±1.65% of rank at k = 200); the Space-Saving state for a
+  level's ≈ Top N (built and tested, not yet used by Top N). They answer by their sketch when the view reads more than
+  `sketches.approximate-above-rows` (10 million rows) or `"exact": false` is asked, with a note; exact with `"exact": true` (`drishti.py
+  pivot run --exact` / `--approximate`); never VaR, a provider's own measure, a once-per-parent form or a custom function. Rollups of
+  partial states per partition (`distinct(COUNTERPARTY) ≈` keeps the sketch; document sources by path at their grain), refreshed on load by
+  version checks reading only the files a load added (a restated partition rebuilt), kept on disk, chosen automatically for a person who
+  reads every row (aggregate awareness, a day grain answering week to year), with advice; `/api/v1/pivot/rollups`, `drishti.py pivot
+  rollups`. Progressive answers: ≈ first from a sample with 95% intervals ("computing" where a sample cannot say), then exact
+  (`?progressive=true`, server-sent events; never for VaR). The cluster: a large mergeable view's partial states computed on every node
+  (files assigned by rendezvous hashing on a direct lake route, else row shards; `/api/v1/net/pivot/partials`) and merged in node order,
+  hedged after 20 s, refused in words past the deadline (DRS-5720). Estimates from measured scan rates, as a range, with options (run,
+  narrow, use the rollup, background). The benchmark harness `tools/bench/pivot_bench.py` (5, 25 and 75 GB measured, at most 25 GB a node,
+  on the data disk with 150 GB free, the data deleted afterwards; 100 GB to 3 TB extrapolated). Settings `drishti.pivot.sketches.*`,
+  `progressive.*`, `rollups.*`, `cluster.*`. Not yet: live pivots, the screen's controls for exact, progressive and rollups.
+
+## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
+
 - **Chart any table: Top N, Others and the split cap by the pivot engine.** The chart asks the engine for a level's top N (`top: {field:
   {n, by}}`) and draws its *Others* member, whose figures come from its own rows; the browser merges no cells any more (its `combine`
   and the extra sum and count of an average are gone).

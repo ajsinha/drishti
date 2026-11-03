@@ -42,6 +42,7 @@ public final class Sdk {
             "drishti_compute/engine.py",
             "drishti_compute/guard.py",
             "drishti_compute/worker.py",
+            "drishti_compute/pivot_fn.py",
             "drishti_compute/samples/__init__.py",
             "drishti_compute/samples/vectors.py",
             "drishti_compute/samples/paths.py",

@@ -414,7 +414,7 @@ class BiReportApiTest {
     static final String AT = ", at: { x: 0, y: 0, w: 12, h: 6 }";
 
     @Test @Order(8)
-    void aMatrixWithSubtotalsCarriesTheEnginesTotalsForTheMeasuresThatDoNotAddUp() throws Exception {
+    void aMatrixCarriesThePivotEnginesTotalsForEveryMeasure() throws Exception {
         JsonNode a = draft(wes(), "{ id: m, type: matrix" + AT + ", wells: { rows: [trades.desk], columns: [trades.currency], values: [Notional, Average notional, Largest] }, format: { subtotals: true } }", "m", DAY);
         JsonNode totals = a.path("totals");
         assertThat(totals).isNotEmpty();
@@ -428,15 +428,18 @@ class BiReportApiTest {
             }
         }
         assertThat(grand).isNotNull();
-        assertThat(grand.path("columns").toString()).isEqualTo("[\"Average notional\",\"Largest\"]");           // Notional adds up: the client sums it
-        assertThat(grand.path("rows").get(0).get(0).asDouble()).isEqualTo(notional(i -> true, 1) / 24, org.assertj.core.data.Offset.offset(1e-9));
-        assertThat(grand.path("rows").get(0).get(1).asDouble()).isEqualTo(24000.0);                               // a largest is a largest, not a sum of largests
+        assertThat(grand.path("columns").toString()).isEqualTo("[\"Notional\",\"Average notional\",\"Largest\"]");   // every measure: the pivot engine's
+        assertThat(grand.path("rows").get(0).get(0).asDouble()).isEqualTo(notional(i -> true, 1), org.assertj.core.data.Offset.offset(1e-6));
+        assertThat(grand.path("rows").get(0).get(1).asDouble()).isEqualTo(notional(i -> true, 1) / 24, org.assertj.core.data.Offset.offset(1e-9));
+        assertThat(grand.path("rows").get(0).get(2).asDouble()).isEqualTo(24000.0);                               // a largest is a largest, not a sum of largests
         assertThat(a.path("rows").size()).isEqualTo(6);
         // the rows of the matrix itself are untouched, and a person without the raw power gets totals under the same rules as the rows
         String hanaTotals = draft(wes(), "{ id: m, type: table" + AT + ", wells: { columns: [trades.desk, Trades, Average notional] }, format: { totals: true } }", "m", DAY).path("totals").toString();
         assertThat(hanaTotals).contains("Trades").contains("Average notional");
         JsonNode plain = draft(wes(), "{ id: m, type: matrix" + AT + ", wells: { rows: [trades.desk], values: [Average notional] } }", "m", DAY);
-        assertThat(plain.has("totals")).as("no subtotals asked for, no totals computed").isFalse();
+        assertThat(plain.path("totals").get(0).path("by").isEmpty()).as("a matrix's grand total is the engine's, subtotals or not").isTrue();
+        assertThat(plain.path("totals").get(0).path("rows").get(0).get(0).asDouble()).isEqualTo(notional(i -> true, 1) / 24,
+                org.assertj.core.data.Offset.offset(1e-9));
     }
 
     @Test @Order(9)

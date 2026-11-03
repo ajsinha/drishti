@@ -188,7 +188,7 @@ public final class KindSources implements TabularSource.Resolver {
         String fullVersion = version + "|" + (day == null ? "current" : day) + "|" + masks;
         String table = "pv_" + Integer.toHexString((source + "|" + fullVersion).hashCode()).replace('-', 'n');
         List<String> dates = d.dated() ? data.dates(source).stream().map(LocalDate::toString).toList() : List.of();
-        boolean memoryOnly = com.ash.drishti.server.memlake.Retention.current().memoryOnly(source);
+        boolean memoryOnly = com.ash.drishti.memlake.Retention.current().memoryOnly(source);
         com.ash.drishti.api.LakeFiles lake = memoryOnly ? null : lake(d, day, fields, p);
         long estimate = -1;
         if (lake == null) {
@@ -265,7 +265,7 @@ public final class KindSources implements TabularSource.Resolver {
     }
 
     /** One table opened for one person on one date. */
-    private final class Kind implements TabularSource {
+    private final class Kind implements TabularSource, com.ash.drishti.bicompute.rollup.TabularRollupSource.Parted {
         final DataViewService.Dataset d;
         final LocalDate day;
         final List<PivotProvider.Field> fields;
@@ -364,6 +364,7 @@ public final class KindSources implements TabularSource.Resolver {
             }
             m.put("masks", masked == 0 ? "none" : masked + " column(s) masked for you: not read, not usable");
             m.put("rowRules", "the Data view's: you see the rows of " + d.kind() + " your role may open");
+            m.put(com.ash.drishti.bicompute.sql.TabularSource.USER_CODE, !memoryOnly);   // decision 4: no Python functions on memory-only data
             Map<String, Object> dv = defaultView(d.kind(), date());
             if (dv != null) {
                 m.put("defaultView", dv);
@@ -381,6 +382,12 @@ public final class KindSources implements TabularSource.Resolver {
         }
 
         /** True when the plan reads a document path (or a parent key): the documents are staged and unnested for it. */
+        /** A plan is read file by file only on the direct lake route and only when it reads no document path (those are staged whole). */
+        @Override
+        public boolean parted(com.ash.drishti.bicompute.core.AggregationPlan plan) {
+            return lake != null && !readsDocuments(plan);
+        }
+
         private boolean readsDocuments(com.ash.drishti.bicompute.core.AggregationPlan plan) {
             java.util.function.Predicate<String> doc = id -> docs.containsKey(id) || id.endsWith(DocView.ALL) || id.startsWith("_p");
             return plan.dims().values().stream().anyMatch(x -> doc.test(x.field()))
@@ -480,12 +487,61 @@ public final class KindSources implements TabularSource.Resolver {
          * read); DuckDB reads only the columns a statement uses and skips row groups by their statistics.
          */
         private Relation lakeRelation() {
+            return lakeRelation(lake.files());
+        }
+
+        /**
+         * The parts of a direct lake route (its Parquet files; phase P3): rollups refresh only the files a load added, and the cluster
+         * assigns files to nodes. A file's partition is its {@code date=} (or last {@code key=value}) folder, else the business day.
+         */
+        @Override
+        public List<com.ash.drishti.bicompute.rollup.RollupSource.Part> parts() {
+            if (lake == null) {
+                return List.of();
+            }
+            List<com.ash.drishti.bicompute.rollup.RollupSource.Part> out = new ArrayList<>();
+            for (String f : lake.files()) {
+                String partition = day == null ? "*" : day.toString();
+                for (String seg : f.replace('\\', '/').split("/")) {
+                    if (seg.contains("=")) {
+                        partition = seg;
+                        if (seg.toLowerCase(Locale.ROOT).contains("date=")) {
+                            break;
+                        }
+                    }
+                }
+                long bytes;
+                try {
+                    bytes = java.nio.file.Files.size(java.nio.file.Path.of(f));
+                } catch (java.io.IOException | RuntimeException e) {
+                    bytes = -1;
+                }
+                out.add(new com.ash.drishti.bicompute.rollup.RollupSource.Part(f, partition, -1, bytes));
+            }
+            return out;
+        }
+
+        @Override
+        public Relation relation(DuckDbExecutor e, List<String> parts) {
+            exec = e;
+            if (lake == null) {
+                throw new IllegalStateException(d.kind() + " is not read from its lake files here: it has no parts");
+            }
+            java.util.Set<String> known = new java.util.HashSet<>(lake.files());
+            List<String> some = parts.stream().filter(known::contains).toList();
+            if (some.size() != parts.size()) {
+                throw new IllegalStateException(d.kind() + ": " + (parts.size() - some.size()) + " of the files asked are not in the version read");
+            }
+            return lakeRelation(some);
+        }
+
+        private Relation lakeRelation(List<String> paths) {
             List<String> cols = new ArrayList<>();
             for (PivotProvider.Field f : fields) {
                 String phys = f.name().equals(d.key()) && !lake.columns().containsKey(f.name()) ? lake.idColumn() : lake.columns().get(f.name());
                 cols.add(DuckDbExecutor.quote(phys) + " AS " + DuckDbExecutor.quote(f.name()));
             }
-            List<String> files = lake.files().stream().map(x -> "'" + x.replace("'", "''") + "'").toList();
+            List<String> files = paths.stream().map(x -> "'" + x.replace("'", "''") + "'").toList();
             return new Relation("(SELECT " + (cols.isEmpty() ? "1 AS \"_\"" : String.join(", ", cols)) + " FROM read_parquet([" + String.join(", ", files)
                     + "], union_by_name = true))", List.of(), null, List.of());
         }

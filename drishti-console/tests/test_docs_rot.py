@@ -407,12 +407,16 @@ def server_keys() -> frozenset[str]:
 
 @functools.lru_cache(maxsize=None)
 def properties_prefixes() -> dict[str, str]:
-    """prefix -> the text of every @ConfigurationProperties class bound to it."""
+    """prefix -> the text of every class bound to it: a @ConfigurationProperties class, or a plain record the server binds
+    with Spring's ``Binder`` (``Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class)``: the in-memory
+    lake's settings live in the Spring-free drishti-memlake)."""
     out: dict[str, str] = {}
     for p in tracked():
         if p.endswith(".java") and "/src/main/" in p:
             text = read(p)
             for m in re.finditer(r"@ConfigurationProperties\(\s*(?:prefix\s*=\s*)?\"([^\"]+)\"", text):
+                out[m.group(1)] = out.get(m.group(1), "") + text
+            for m in re.finditer(r"\bBinder\.get\([^)]*\)\s*\.bind\(\s*\"([^\"]+)\"", text):
                 out[m.group(1)] = out.get(m.group(1), "") + text
     return out
 

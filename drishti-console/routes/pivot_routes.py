@@ -106,7 +106,7 @@ async def export(request: Request):
 
 @router.post("/api/pivot/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "explain", "whatif", "functions"):
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 
@@ -144,3 +144,27 @@ async def delete_view(request: Request, name: str):
         return Response(status_code=204)
     except BackendError as e:
         return _problem(e)
+
+
+# ---- custom functions (PIVOT_GUIDE.md, custom functions): the playground's check, the list, a version, approval -----------------------------
+
+@router.get("/api/pivot/functions")
+async def functions(request: Request):
+    return await _call(request, "GET", "/functions")
+
+
+@router.post("/api/pivot/functions/test")
+async def function_test(request: Request):
+    return await _call(request, "POST", "/functions/test", await _body(request))
+
+
+@router.get("/api/pivot/functions/{owner}/{name}")
+async def function_get(request: Request, owner: str, name: str, version: str = ""):
+    return await _call(request, "GET", f"/functions/{owner}/{name}", version=version)
+
+
+@router.post("/api/pivot/functions/{owner}/{ref}/{op}")
+async def function_op(request: Request, owner: str, ref: str, op: str):
+    if op not in ("submit", "approve", "revoke"):
+        return JSONResponse({"detail": "no such function action"}, status_code=404)
+    return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))

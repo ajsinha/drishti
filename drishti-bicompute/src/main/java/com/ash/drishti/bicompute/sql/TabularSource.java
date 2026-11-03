@@ -55,6 +55,12 @@ public interface TabularSource {
     /** What every cell shares in its provenance (the route, the connector, the row rules in words). */
     Map<String, Object> notes();
 
+    /**
+     * The note that says whether user code (Python custom functions) may read the source's rows ({@code false} for memory-only data,
+     * PIVOT_ENGINE.md decision 4); absent: allowed.
+     */
+    String USER_CODE = "userCode";
+
     /** The relation the plan reads, made ready in the executor if it must be (a staged table is read once and kept). */
     Relation relation(DuckDbExecutor exec);
 

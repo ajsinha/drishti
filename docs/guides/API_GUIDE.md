@@ -2048,6 +2048,14 @@ and the fix for the codes that need more than the meaning.
 | DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
 | DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
 | DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
+| DRS-5710 | 400 | pivot: function invalid | a custom function refused as written: its definition, code, inputs, kind or name ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)) |
+| DRS-5711 | 422 | pivot: harness failed | a custom function whose harness did not pass (split-and-merge differs from one pass, not deterministic, too slow, too large): not saved, with the first failure |
+| DRS-5712 | 403 | pivot: approval | the author approving their own function, someone who is not an approver, a function not approved for the caller, a plug-in jar changed since its approval |
+| DRS-5713 | 404 | pivot: function language off | the function's language is switched off on this server (Python and Java plug-ins as shipped), or Python asked to read memory-only data |
+| DRS-5714 | 422 | pivot: function limit | a custom function past a limit: a state over its bound, a call over its time (its worker stopped), every worker busy |
+| DRS-5715 | 403 | pivot: official | a custom function in an official run, report or sign-off, or named as an official measure |
+| DRS-5716 | 400 | pivot: explain | an explanation or a what-if the engine cannot make as asked (no `by`, a cell that already fixes it, an empty overlay, a what-if on VaR) |
+| DRS-5720 | 504 | pivot: a node's share missing | a view computed across the cluster where a node's share had no answer by `drishti.pivot.cluster.deadline-seconds` and no other node could answer it: no figure is shown, never one from the other nodes alone |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
 | DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
@@ -3293,6 +3301,15 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
 | `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |
 | `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
+| `POST /api/v1/pivot/query` with `"exact": true` or `false` beside the view | `distinct`, `median` and `percentile` exact on request at any size, or by their sketches (≈) at any size (by default ≈ above `sketches.approximate-above-rows`; never VaR); a sketched measure carries `kind: sketch`, an id ending in `≈`, `error` (`±1.6% (HyperLogLog, 4,096 registers, one standard error)`) and `exact: false` |
+| `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample: each cell `approximate: true`, `intervals` per measure, "computing" notes for what a sample cannot state; never for VaR or a holistic measure; only when the estimate is over `progressive.after-ms`), then `exact`; `error` with `{error, code}` |
+| `GET /api/v1/pivot/rollups` | `{definitions, built: [{id, source, grain, functions, date, version, refreshedAt, lastRefresh, rows, bytes, partitions}], advice: [{source, grain, functions, asked, averageMs, words}]}` |
+| `POST /api/v1/pivot/rollups`, `DELETE /api/v1/pivot/rollups/{id}`, `POST /api/v1/pivot/rollups/{id}/refresh?date=` | administrators: define `{id, source, grain, functions, dates: latest\|all, title}` (refreshed at once in the background), remove, refresh now (`{words}`: what the incremental refresh did); audited |
+| `POST /api/v1/net/pivot/partials` | the cluster's nodes only (signed, on behalf of the person): `{plan, parts}` or a plan with its shard; the node's partial states per cell set and key (`{sets: [[{key, members, states: [base64], scope, notes}]], stats}`) |
+
+The estimate also answers `range` (half to twice its seconds), `nodes`, `rollup` (the rollup that covers the view, or null) and `options`
+(`run`, `narrow`, `rollup`, `background`, `cancel`, each with `words` and `seconds`); its seconds come from this node's measured scan rate
+once it has one.
 
 ```bash
 curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
@@ -3301,7 +3318,35 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
   -d '{"view":"asha/desk-risk","format":"xlsx"}' -o desk-risk.xlsx
 ```
 
-Refusals: `DRS-5701` to `DRS-5705` and `DRS-9507` ([the error code table](#error-code-table)).
+Refusals: `DRS-5701` to `DRS-5705`, `DRS-5720` and `DRS-9507` ([the error code table](#error-code-table)).
+
+### Pivot: custom functions, explain and what-if
+
+Custom aggregation functions ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)), the difference between two cells in steps
+that add up (section 20) and what-if overlays (section 21). A view uses a function as a value `fn:owner/name@version(FIELD, ...)`.
+
+| Call | Does |
+|---|---|
+| `GET /api/v1/pivot/functions` | `{functions: [{id, ref, owner, name, version, language, kind, inputs, status, approvals, withdrawn, harness, versions, mine, label}], languages: {formula, sql, python, java}, requireApproval}`: yours and those approved for you |
+| `GET /api/v1/pivot/functions/{owner}/{name}?version=` | one version, its code included |
+| `POST /api/v1/pivot/functions/test` | `{name, language: formula\|sql\|python\|java, code, entry, inputs: [name \| {name, type: number\|text}], kind, params, tolerance, stateBytes, sketchError, description, sample: [{...}] \| {columns, rows}, group, parts, projectRows, nodes}` → `{definition, harness: {passed, firstFailure, checks, runs, worst, onePass, nsPerRow, stateBytes}, playground: {steps, onePass, final, same, cost, pivot}}`; nothing saved; audited |
+| `POST /api/v1/pivot/functions` | the same body: a new version after the harness passes (`DRS-5711` with the first failure otherwise); private |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit` | `{note}`: the author asks for sharing |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/approve` | `{scope: everyone\|group:<name>, reason}`: an approver who is not the author (a Java plug-in: an administrator, its jar's SHA-256 pinned) |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/revoke` | `{reason}`: withdrawn; its cells say so |
+| `POST /api/v1/pivot/explain` | `{view, measure, from: {DIM: V}, to: {DIM: V}, fromDate, toDate, by, order: member\|size, price, quantity}` → `{measure, kind, by, from, to, difference, method, order, steps: [{member, cause: new\|gone\|changed\|residual\|price\|quantity\|cross, from, to, step, cumulative}], residual: {value, name}, addsUp, words}` |
+| `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude: {FIELD: [values]}, changes: [{field, scale \| set, where: {FIELD: [values]}}], add: [{FIELD: value}]}}` → `{whatIf, original, diff, overlay, note}` (per cell of `diff`: `delta` per measure, what-if minus original, or `status`) |
+| `GET /api/v1/pivot/views/{owner}/{name}/versions`, `GET .../versions/{n}`, `GET .../diff?from=&to=` | a saved view's versions (newest first), one version, the definition's changes between two (`{changes: [{key, from, to}], words}`) |
+| `POST /api/v1/pivot/views/{name}/restore` | `{version}`: the caller's old version saved again as the next version; audited `pivot.view.restore` |
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/functions/test \
+  -d '{"name":"wret","language":"formula","code":"sum(r * w) / sum(w)","inputs":["r","w"],"sample":[{"r":0.01,"w":2},{"r":-0.02,"w":1}]}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/explain \
+  -d '{"view":{"source":"trade","rows":["productType"],"values":["sum(notional)"]},"from":{"productType":"IRS"},"to":{"productType":"FXFWD"},"by":"counterparty"}'
+```
+
+Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
 
 ### The MR cube: `/api/v1/pivot/mr`
 

@@ -47,6 +47,8 @@ public final class TabularProvider implements PivotProvider {
 
     private final DuckDbExecutor exec;
     private final TabularSource.Resolver resolver;
+    private volatile int feedBatchRows = 65_536;
+    private volatile long feedHolisticMaxRows = 5_000_000L;
 
     public TabularProvider(DuckDbExecutor exec, TabularSource.Resolver resolver) {
         this.exec = exec;
@@ -55,6 +57,11 @@ public final class TabularProvider implements PivotProvider {
 
     public DuckDbExecutor executor() {
         return exec;
+    }
+
+    /** The resolver of its sources (what-if overlays, sampled reads and parted reads wrap it). */
+    public TabularSource.Resolver resolver() {
+        return resolver;
     }
 
     @Override
@@ -110,6 +117,29 @@ public final class TabularProvider implements PivotProvider {
 
     @Override
     public Partials evaluate(Viewer v, AggregationPlan plan) {
+        List<Integer> fed = RowFed.fed(plan);
+        if (!fed.isEmpty()) {
+            TabularSource s = resolver.open(v, plan.source(), plan.date());
+            boolean python = fed.stream().anyMatch(i -> plan.functions().get(i).fn() instanceof com.ash.drishti.bicompute.python.PythonFunction);
+            if (python && Boolean.FALSE.equals(s.notes().get(TabularSource.USER_CODE))) {
+                throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_OFF, s.id() + " is memory-only data: Python custom functions do not read it "
+                        + "(user code is off for memory-only stores); use a formula, an SQL macro or an approved Java plug-in");
+            }
+            return RowFed.evaluate(plan, fed, p -> evaluateSql(v, p), exec, s.relation(exec), types(s), feedBatchRows, feedHolisticMaxRows);
+        }
+        return evaluateSql(v, plan);
+    }
+
+    /**
+     * How functions without an SQL form (Python, Java plug-ins) are fed (PIVOT_ENGINE.md sections 8.4 and 8.5): rows in each batch, and the
+     * most rows of one cell a holistic one receives.
+     */
+    public void feed(int batchRows, long holisticMaxRows) {
+        this.feedBatchRows = Math.max(1, batchRows);
+        this.feedHolisticMaxRows = holisticMaxRows;
+    }
+
+    private Partials evaluateSql(Viewer v, AggregationPlan plan) {
         long t0 = System.nanoTime();
         TabularSource s = resolver.open(v, plan.source(), plan.date());
         Map<String, String> types = types(s);

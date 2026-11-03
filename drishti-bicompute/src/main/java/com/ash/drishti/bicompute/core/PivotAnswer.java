@@ -52,7 +52,11 @@ final class PivotAnswer {
             m.put("label", f.label());
             m.put("kind", f.fn().kind().word());
             m.put("plainSum", f.fn().plainSum());
-            m.put("exact", f.fn().kind() != Kind.SKETCH);
+            m.put("exact", f.fn().kind() != Kind.SKETCH && c.work.sampled == 0);
+            if (f.fn() instanceof com.ash.drishti.bicompute.functions.Sketches.Sketch sk) {
+                m.put("error", sk.error());
+                m.put("errorValue", sk.errorValue());
+            }
             m.put("showAs", view.values().get(i).showAs());
             m.put("unit", c.unit(f));
             measures.add(m);
@@ -100,9 +104,12 @@ final class PivotAnswer {
         computed.put("providerMs", c.work.providerMs);
         computed.put("ms", c.millis());
         computed.put("lazy", "only open nodes are computed; closed nodes' children are not");
+        if (c.work.sampled > 0) {
+            computed.put("sampled", c.work.sampled);
+        }
         out.put("computed", computed);
         boolean anySketch = c.functions.stream().anyMatch(f -> f.fn().kind() == Kind.SKETCH);
-        out.put("exactness", anySketch ? "partial" : "exact");
+        out.put("exactness", c.work.sampled > 0 ? "approximate" : anySketch ? "partial" : "exact");
         String id = "pv:" + (c.catalogue.date() == null ? "current" : c.catalogue.date()) + ":"
                 + CellKey.hash(view.toMap().toString() + System.nanoTime()).substring(0, 10);
         out.put("provenance", id);
@@ -389,7 +396,8 @@ final class PivotAnswer {
             m.put("kind", f.fn().kind().word());
             m.put("how", switch (f.fn().kind()) {
                 case MERGEABLE -> "each cell and total from its own rows' state; exact";
-                case SKETCH -> "a sketch with a stated error";
+                case SKETCH -> "a sketch with a stated error" + (f.fn() instanceof com.ash.drishti.bicompute.functions.Sketches.Sketch sk
+                        ? ": " + sk.error() : "") + "; exact on request";
                 case HOLISTIC -> "each cell and total recomputed from its own members, never from other cells' figures";
             });
             fns.add(m);
@@ -417,7 +425,7 @@ final class PivotAnswer {
 
     /** Two answers of one view on two dates: the differences per cell and measure, new and gone cells marked. */
     @SuppressWarnings("unchecked")
-    static Map<String, Object> compare(Map<String, Object> a, Map<String, Object> b) {
+    public static Map<String, Object> compare(Map<String, Object> a, Map<String, Object> b) {
         Map<String, Map<String, Object>> ca = (Map<String, Map<String, Object>>) a.get("cells");
         Map<String, Map<String, Object>> cb = (Map<String, Map<String, Object>>) b.get("cells");
         Map<String, Object> diff = new LinkedHashMap<>();

@@ -628,28 +628,33 @@ public final class BiReportService {
     }
 
     /**
-     * The true totals of a matrix with subtotals and of a table with {@code totals}: one query per level (see {@link Totals}), as the reader, under the same
+     * The true totals of a matrix with subtotals and of a table with {@code totals}: every level in one statement of the pivot engine
+     * ({@link com.ash.drishti.server.bi.pivot.BiAggregate}) over the model's rows as the reader may see them, under the same
      * filters. A level the engine refuses is left out and the client shows {@code –} for it.
      */
     private List<Map<String, Object>> totals(Principal p, Prepared pre) {
         Report.Visual v = pre.visual();
-        List<Totals.Level> levels = "matrix".equals(v.type()) ? Totals.matrix(pre.dataset(), v, pre.built().query(), props.totalsMaxRows())
-                : "table".equals(v.type()) ? Totals.table(pre.dataset(), v, pre.built().query(), props.totalsMaxRows()) : List.of();
-        List<Map<String, Object>> out = new ArrayList<>();
-        for (Totals.Level level : levels) {
-            try {
-                Map<String, Object> j = datasets.json(datasets.ask(p, pre.dsItem(), level.query(), false));
-                Map<String, Object> t = new LinkedHashMap<>();
-                t.put("by", level.by());
-                t.put("columns", ((List<?>) j.get("columns")).stream().map(c -> ((Map<?, ?>) c).get("name")).toList());
-                t.put("masked", ((List<?>) j.get("columns")).stream().filter(c -> Boolean.TRUE.equals(((Map<?, ?>) c).get("masked"))).map(c -> ((Map<?, ?>) c).get("name")).toList());
-                t.put("rows", j.get("rows"));
-                out.add(t);
-            } catch (DrishtiException e) {                           // a model query refusal is one too
-                // the figure stays a dash on the screen; the visual's own answer is unaffected
-            }
+        List<List<String>> levels;
+        List<String> measures;
+        if ("matrix".equals(v.type())) {                            // every total and subtotal row a matrix may show: the engine's figures
+            levels = com.ash.drishti.server.bi.pivot.BiAggregate.matrixLevels(v.well("rows"), v.well("columns"));
+            measures = v.well("values");
+        } else if ("table".equals(v.type()) && Boolean.TRUE.equals(v.format().get("totals"))) {
+            levels = List.of(List.of());
+            measures = v.well("columns").stream().filter(pre.dataset().measures()::containsKey).toList();
+        } else {
+            return List.of();
         }
-        return out;
+        if (measures.isEmpty()) {
+            return List.of();
+        }
+        try {
+            com.ash.drishti.server.bi.pivot.BiAggregate.Totals t = com.ash.drishti.server.bi.pivot.BiAggregate.totals(pre.dataset(), levels, measures,
+                    pre.built().query(), props.totalsMaxRows() * levels.size(), q -> datasets.detail(p, pre.dsItem(), q));
+            return t.levels().stream().map(com.ash.drishti.server.bi.pivot.BiAggregate.Level::toReport).toList();
+        } catch (DrishtiException e) {                               // refused (too many groups, a direct dataset): the totals stay dashes
+            return List.of();                                         // on the screen; the visual's own answer is unaffected
+        }
     }
 
     /** The rows of one visual as an Arrow IPC stream (for Perspective), with the live state in the headers' place: {@code meta} and {@code live}. */

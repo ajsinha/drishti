@@ -15,7 +15,9 @@
 -->
 # The pivot engine: one generalised, very large-scale pivot for all of Drishti
 
-**Status: phase P1 partly built (2.9.11.a, unreleased); the rest design, not built.** Built, and described for users in
+**Status: phase P1 partly built (2.9.11.a, unreleased) and phase P3 partly built (2.9.11.b, on `wip/pivot-c`, its tests written and
+not yet run: sketches, rollups and aggregate awareness, progressive answers, the cluster's partial states, refined estimates, the benchmark
+harness); the rest design, not built.** Built, and described for users in
 [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md): the module `drishti-bicompute` (the core with declarative cell sets, the provider and function
 SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over the Data view's tables, the
 ordered merge, the partial-state cache, the split-and-merge harness, xlsx and CSV export), the VaR provider on the new SPI, the API, the
@@ -264,10 +266,14 @@ that ([section 6.3](#63-the-var-vector-provider)). An exact median has no small 
 | `var(x)`, `stddev(x)` (sample and population) | mergeable | (n, mean, M2), merged by Chan's formula | M2 / (n − 1) | values only |
 | `ratio(sum(a), sum(b))` and any DEL of mergeable parts | mergeable | each part's state | the formula | a calculated field when every part is a sum |
 | `first(x by t)`, `last(x by t)` | mergeable | (t, x) of the extreme t | x | values only |
-| `count_distinct(x)` | sketch (HLL), exact on request | 2^p registers (p = 12: 4,096 bytes) | the HLL estimate | values only |
-| `percentile(x, q)`, `median(x)` | sketch (KLL, k = 200), exact on request | a KLL summary | the rank query | values only |
-| `top(x, n by m)` | sketch (Space-Saving, capacity 10 × n) | counters | the n largest, each with its error bound | values only |
-| `median(x, exact)`, `percentile(x, q, exact)`, `mode(x)` | holistic | the values | exact | values only |
+| `distinct(x)` (`count_distinct`) | holistic, exact; ≈ form: sketch (HLL) | the values; ≈: 2^p registers (p = 12: 4,096 bytes) | the count; ≈: the HLL estimate | values only |
+| `percentile(x, q)`, `median(x)` | holistic, exact; ≈ form: sketch (KLL, k = 200) | the values; ≈: a KLL summary | the quantile; ≈: the rank query | values only |
+| `top_n` of a level | the engine's Top N, exact; ≈ form: sketch (Space-Saving, capacity 10 × n), state built, not yet used by a level | counters | the n largest, each with its error bound | values only |
+| `mode(x)` | holistic | the values | exact | values only |
+
+**One name each; the sketch is a form, not a function** (FUNCTION_CATALOGUE.md, 2026-11-03). Which form answers is the request's
+(`"exact": true` or `false`) or, by default, the size's (`sketches.approximate-above-rows`); a sketched call's id carries `≈`. The earlier
+spellings of this section (`median(x, exact)`, separate approximate names) are not used.
 | `var(c, h)`, `es(c, h)`, stressed VaR, component VaR | holistic (VaR provider) | the scenario vector | rank or tail mean | values only, with the vector sheet when asked |
 | `sbm()`, `drc()`, `simm()` | holistic (formula providers) | sensitivities at the formula's grain | the regulatory formula | values only |
 
@@ -599,25 +605,25 @@ suggests a sketch or a mergeable form. Holistic functions never run on cluster p
 
 ### 8.5 Python: the sandbox and the worker pool
 
-Python custom functions **reuse the sandbox BI's Python measures run in today** (the same guards, the same tests,
-[BI_GUIDE.md, the sandbox](../guides/BI_GUIDE.md#7-the-sandbox-exactly)), hosted in the **compute worker pools** of the server's own node
-([PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool)) so the rows never leave the node that scanned them:
+Python custom functions run in the node's **`pivot-fn` pool** (`drishti_compute.pivot_fn`, part of the compute SDK: its audit-hook
+guard and its Arrow codec, [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool)), so the rows never leave the node that
+scanned them:
 
 | Guard | How (unchanged from BI and compute unless said) |
 |---|---|
-| process | a worker per request (fork-server on Linux, warm and reset on Windows), `python -I`, an empty environment |
-| no network | a network namespace with no interfaces where the machine allows it, and the audit hook refusing every socket |
+| process | warm workers (`functions.python.workers`), `python -I`, an empty environment; one call at a time; a worker serves **one function version only** (a function's rows never meet another function's code); a call past its time stops its worker |
+| no network | the audit hook refusing every socket |
 | no files | no reads outside the Python installation; no writes at all for pivot functions (they receive batches and return states; no scratch writes) |
 | no processes | the audit hook refuses `subprocess`, `os.system`, `exec*`, `fork`, `ctypes` |
 | packages | the pool's allow-list (numpy, pyarrow, scipy, pandas, polars by default) and safe standard-library modules; `exec`, `eval`, `compile` not given |
-| CPU, wall time, memory | per call and per view: `functions.python.timeout-seconds` (default 30 per batch, 300 per view), `memory-mb` (default 1,024) |
+| wall time, memory | per call: `functions.python.timeout-seconds` (default 30); per worker: `memory-mb` (default 1,024, the process's address space) |
 | inputs | only the declared input columns of the cell's rows, already filtered, ruled and masked for the reader |
 | output | a state within its declared size; validated by the server before it is merged or cached |
 
-**Transport.** Batches go to the worker as Arrow IPC over the worker's pipe or a shared-memory segment (`memfd` on Linux), not the
-scratch-folder files compute uses for its engines, so nothing is written for a function call. **Memory-only stores**: user code is
-**off by default per store** (`mem://` stores set `user-code: allow` to permit it), and when on, the data reaches the worker in memory only
-(pipe or shared memory, never a file, never spilled); the never-on-disk guard checks it ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)).
+**Transport.** Batches go to the worker as Arrow IPC stream bytes over its pipe (length-prefixed frames: a JSON header, a body), never
+the scratch-folder files compute uses for its engines, so nothing is written for a function call; a state comes back as bytes (exact JSON,
+floats to the bit). **Memory-only stores**: Python functions never read them (the source says so and the view is refused in words;
+[IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)).
 
 **Throughput.** Per node, the pool's worker count (configuration only) times the per-worker rate; a vectorised `add` over 64K-row batches
 runs at numpy speed (tens to hundreds of millions of values a second per worker for simple arithmetic), so Python functions scale with
@@ -705,9 +711,9 @@ Distinct counts and percentiles are expensive exactly and cheap approximately. S
 
 | Sketch | State | How a node makes it | Merge |
 |---|---|---|---|
-| HyperLogLog (distinct count) | 2^p registers (p = 12 by default) | in SQL: `hash(x)` (64 bits); the first p bits pick the register, the rank of the first 1-bit in the rest is its value; `max(rank)` per (cell, register) | register-wise maximum: exact for the sketch |
-| KLL (percentiles) | a summary of about 3k values (k = 200 by default) | in Java from the values DuckDB streams per cell, or (decision 6) DuckDB's `approx_quantile` per node turned into weighted points | KLL merge (Karnin, Lang, Liberty, 2016) |
-| Space-Saving (top N) | 10 × n counters | DuckDB's `approx_top_k` (Filtered Space-Saving) per node with counts | counter merge with error bounds |
+| HyperLogLog (distinct count) | 2^p registers (p = 12 by default; 11 to 16) | in SQL, in the same `GROUPING SETS` statement: `hash(x)` (64 bits); the first p bits pick the register, the rank of the first 1-bit in the rest is its value (its bit length found exactly); the cell's distinct (register, rank) pairs, the maximum per register taken in Java | register-wise maximum: exact for the sketch, associative and commutative to the byte; two hash families (DuckDB's and Java's) never merge |
+| KLL (percentiles) | a summary of about 3k values (k = 200 by default) | built in Java (decision 6) from the cell's quantile points (`quantile_disc` at 2k + 1 fractions) and its count, each point weighted by the values it stands for (adding at most 1/(4k) to the rank error); written in the module, as Apache DataSketches (decision 2) is not resolvable in the offline build (only `com.yahoo.datasketches` 0.9.0, without KLL) | KLL merge (Karnin, Lang, Liberty, 2016), its coin a hash of the sketch's own count so a fixed order repeats to the byte |
+| Space-Saving (top N) | 10 × n counters and a floor (the most any value not listed may count) | from the cell's `histogram` of values, kept to its counters | counts added (a missing value counts the other's floor), the largest kept; commutative to the byte |
 
 The stated error is printed with every ≈ value; on request the exact answer runs ([section 5.3](#53-exact-on-request-without-giving-up-scale)).
 Rollups may hold sketch states, so a distinct count by desk and month comes from the rollup.
@@ -818,52 +824,69 @@ Phase P1 builds 1, 2, 4, 6, 7, 8 and 9 (size M); P2 builds 3, 5 (for holistic me
 
 ## 12. BI on the pivot engine
 
-Product owner (2026-11-02): the pivot engine should also be used by the existing BI. BI's own design stays: datasets and data models
-(D1), one model per report (D2), pack-generated datasets (D3), **MQ as the one way to ask a model for data** (D5), time modes (D6)
-([BI_DESIGN.md section 14](BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6)), its logical plan and its security rewriter.
-What changes is **who aggregates**: one engine, one set of aggregation functions, the same correctness and provenance.
+Product owner (2026-11-02): the pivot engine is also BI's; there is no shadow mode and no old path kept: BI moves onto the engine where it
+makes sense and the aggregation code it replaces is removed. BI's own design stays: datasets and data models (D1), one model per report
+(D2), pack-generated datasets (D3), **MQ as the one way to ask a model for data** (D5), time modes (D6)
+([BI_DESIGN.md section 14](BI_DESIGN.md#14-the-model-architecture-decisions-d1-to-d6)), its compiler of a model's rows (row rules,
+masks, joins, layers, dates) and its security. What changes is **who aggregates**: one engine, one set of aggregation functions, the same
+correctness. Drishti's BI is Power BI-like, not a replica: where a Power BI semantic would cost scale or reuse, the engine's design is
+chosen and said here.
 
-### 12.1 What moves onto the engine
+### 12.1 What is on the engine
 
-| BI today | On the pivot engine | Unchanged |
+| BI | On the pivot engine | Unchanged |
 |---|---|---|
-| the `matrix` visual's totals and subtotals (one more query per level, [BI_GUIDE.md](../guides/BI_GUIDE.md#32-true-totals)) | the plan's `Aggregate` and `Totals` nodes lowered by the engine's grouping-sets compiler: cells, subtotals and totals in one query, states merged where mergeable | the visual's YAML, wells and format |
-| Analyse's Slice (`POST /bi/explore/pivot`) and the Pivot tab | a pivot view over the model or the panel's rows | their screens, until the person opens them in the pivot screen |
-| the semantic model's measures (DEL) | each measure becomes a **pivot function**: a built-in, a DEL formula, an SQL macro, a Python or a Java function ([section 12.2](#122-a-measure-defined-once)) | the measure's name, text and the model's YAML |
-| rollups storing sums, counts, minimums, maximums | rollups storing partial states of any mergeable or sketch function, refreshed incrementally on load | the rollup YAML (`by`, `measures`) |
-| Python measures (`compute(table, params)` per group, on the console's runner) | a holistic Python function in the engine's worker pool; a measure that also defines `merge` becomes mergeable after its harness passes | the item, its manifest and its review |
-| answers' `meta` (layer, rollup, cache) | the engine's provenance id per answer, with the same fields and more | the `meta` keys already read by the console |
+| a **matrix**'s totals and subtotals (every total row and column), a **table**'s total row (`format.totals`), a model query's `totals` (grand, subtotals, explicit levels) | every level in **one** `GROUP BY GROUPING SETS` statement of the engine's function states, over the model's rows as the reader may see them; each level from its own rows | the visual's YAML, wells and format; MQ's `totals` request and answer |
+| the measures' additivity (`additive` in MQ's columns, the matrix's adding up) | the engine's own answer for the measure's function (`plainSum`: sums and counts added and subtracted) | an author's explicit `additive:` |
+| the console adding up a matrix's additive totals | nothing: every total is the engine's | the matrix as drawn |
+| a model's measures (DEL) | each measure that is an expression of aggregates of one fact's rows is a **pivot function** ([section 12.2](#122-a-measure-defined-once)) | the measure's name, text and the model's YAML |
+
+What stays the model's own query: a visual's grouped cells (BI's compiler already computes them in one statement, with joins across facts,
+filter contexts, time intelligence and windows), rollups and live aggregates (their state arithmetic moves with phase P3's rollups of
+partial states), standing queries' incremental maintenance, and Analyse's Slice over an extract (to be a pivot view over the model with
+P3).
 
 ### 12.2 A measure defined once
 
-A model's measure is **a function**, defined once and used everywhere: in a BI report, the pivot screen, the MR and CCR cubes (as an
-extra column beside VaR), alerts, exports and the API. The model's measure list and the engine's function catalogue are the same list for
-a model source: `sum(trades.MTM, where=...)` is a DEL formula of built-ins (mergeable), `distinct(trades.COUNTERPARTY_ID)` a sketch with
-exact on request, a Python measure a custom function with its author and version. The DEL compiler stays the one compiler; it moves into
-the module ([section 13](#13-the-module-drishti-bicompute)) so every user of the engine compiles DEL the same way.
+A model's measure is **a function**: `sum(trades.MTM)`, `avg(...)`, `min`, `max`, `count(trades)` (rows), `distinct(...)` (an exact
+distinct count), `percentile(x, q)`, `ratio(a, b)`, `where=` conditions, arithmetic, row functions (`abs`, `round`, ...) and other measures
+by `measure('Name')` translate to the engine's formula of built-ins, with its kind and states. A measure that reads beyond the rows of its
+group is not a pivot function and has no total: time intelligence (`ytd`, `prior_period`, ...), running and analytic functions (a running
+sum or a rank has no total that means anything), filter contexts (`calc`, `share_of`, ...), balances and Python measures. The answer says
+so in its warnings ("no total for YTD: ...").
 
-### 12.3 Models as sources
+### 12.3 How a total is computed
 
-A data model is a **pivot source**: the tabular provider reads the model's datasets through BI's plan (`SecureScan` per dataset with the
-reader's row rules and masks, `SemiJoin` along relationships, per-fact `Aggregate`, `Meet` on shared fields), so many-to-one paths,
-multi-fact queries and fan-out guards behave exactly as in BI. A pivot view over a model compiles to **MQ v2** with grouping sets
-(D5 holds: the pivot screen asks the model in MQ like any consumer); the engine executes MQ's aggregation nodes.
+BI's compiler writes the model's **detail** query as the reader (row rules, masks, joins along many-to-one paths, the layers and dates of
+the question) and **does not run it**: it becomes the FROM item of the engine's `GROUPING SETS` statement (`QueryService.Outer`). The
+statement runs in BI's engine, where the model's layers are, so no row leaves it and a billion-row model is totalled by one scan; the
+engine reads each set's states (`fromSql`) and finishes them. Measures of several facts get one statement per fact (a measure aggregates its own fact's rows), the levels joined. A masked field is never grouped (that level is not made); a masked measure's
+total is empty. A dataset read directly from its source (`mode: direct`) gets no engine totals (they would read every row back).
 
 ### 12.4 Nothing breaks: the migration
 
-1. **Shadow mode**: the engine computes every BI query beside the current path (a setting, `drishti.pivot.bi.shadow`), on the BI test
-   suites and the shipped sample reports; a comparison test fails on any difference beyond float tolerance (1e-9 relative; exact for
-   counts and decimals), reporting the report, visual, cell and both values.
-2. **Known, intended differences** (listed, reviewed, each with a test): none expected for sums, counts, minimums and maximums; averages and
-   ratios identical (they are already true totals); a distinct count stays **exact** in BI unless the model's author opts into ≈.
-3. **Switch per model**: `engine: pivot` in a model's YAML (default after the parity gate), with `engine: duckdb` kept as the old path for
-   one release, then removed.
-4. **The parity gate**: every BI test suite and every shipped report equal on both paths, on the drill machine, before the default flips.
+*One path, migrated cleanly (product owner, 2026-11-02: "No need to keep BI on old engine ... do a clean migration"; no dual machinery).*
+
+1. **Parity proved by tests before the switch**, on the branch that moves BI, not by running two paths in production: every BI test
+   suite and every shipped sample report is answered by the pivot engine and compared with the figures the current code gives, recorded
+   once from it before the move (a fixture per report, visual and cell); any difference beyond float tolerance (1e-9 relative; exact
+   for counts and decimals) fails, naming the report, visual, cell and both values.
+2. **Known, intended differences** (listed, reviewed, each with a test): none for sums, counts, minimums and maximums; averages and
+   ratios identical (they were already true totals, now one statement instead of one query per level); a distinct count stays
+   **exact**. The answer's shape: every measure that is a pivot function has a total (a sum's total is the engine's, the console adds
+   nothing up; a count is a number with a decimal point in the JSON); a matrix without `format.subtotals` gets its grand total and row
+   totals from the engine too; a time-intelligence, running, context or Python measure has no total (a dash), with the reason in the
+   answer's warnings.
+3. **One switch, for everything, in the same release**: when the parity tests pass, BI's totals and subtotals and its measures' additivity
+   run on the engine and **BI's old aggregation code for them is deleted** in the same change (the history keeps it); rollups move with
+   P3's rollups of partial states, the same way. No setting chooses between two paths;
+   a model's YAML needs no change.
+4. **The release's drills** run every BI suite on the new path only.
 
 ### 12.5 When
 
 Phase **PB**, after P1 and P2 ([section 22](#22-phases-and-sizes)): the engine first proves itself on the pivot screen and the MR cube; BI
-then moves with the shadow comparison. Size L.
+then moves, its parity proved by tests and the old code deleted (section 12.4). Size L.
 
 ## 13. The module: drishti-bicompute
 
@@ -1071,14 +1094,14 @@ drishti:
       require-approval: true         # sharing a function needs an approver who is not its author
       holistic-max-rows: 5000000
       holistic-max-mb: 512
-      harness: { tolerance: 1.0e-12, splits: [2, 3, 16], seeds: 5, max-ns-per-row: 2000 }
-      python: { enabled: false, pool: pivot-fn, timeout-seconds: 30, view-timeout-seconds: 300, memory-mb: 1024, batch-rows: 65536 }
+      harness: { tolerance: 1.0e-12, seeds: 5, max-ns-per-row: 2000 }
+      approver-role: pivot-approver  # members of this role approve; administrators always may
+      python: { enabled: false, interpreter: "", workers: 2, timeout-seconds: 30, memory-mb: 1024, batch-rows: 65536 }
       java: { enabled: false, dir: ./plugins/pivot-functions }
-    bi: { shadow: false }            # phase PB: compute BI queries on both paths and compare
 ```
 
-Memory-only stores add `user-code: allow` in their store entry (`config/engines/memory-lake.yaml`) to let custom Python functions read
-them (off by default). Every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md) when built.
+Python custom functions never read memory-only data (decision 4: the source says `userCode: false` and the view is refused in words);
+a per-store allowance is a later step. Every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md) when built.
 
 ## 17. The API
 
@@ -1148,7 +1171,9 @@ The same words as the API; `--wait` for background runs; a refused view prints t
 | `ExplainAddsUpTest` | the steps of every explanation add up to the difference |
 | `ChartStackingTest` | a non-additive measure is never stacked; diversification drawn as its own segment |
 | `XlsxPivotTableTest` | the native PivotTable opens with the view's layout and its totals equal the engine's; non-mergeable measures are not data fields |
-| `BiShadowParityTest` (phase PB) | every BI test suite and shipped report equal on both paths |
+| `BiParityTest` (phase PB) | every BI test suite and shipped report equal to the figures recorded from the code it replaces |
+| `TrueTotalsTest`, `MqEngineTest`, `BiReportApiTest` (phase PB) | every BI total and subtotal from the engine's one statement equals the brute-force figure over the rows of its group |
+| `FormulaFunctionTest`, `CustomFunctionsTest`, `test_pivot_fn.py` | formulas equal in Java and SQL; the harness gate, versions, approval, withdrawal, official runs; Python's four steps and sandbox |
 | `PivotOffTest` | the engine switched off: 404 in words, the words gone everywhere, the cubes refused |
 | browser test | the screen of the chosen mock-up: drag, expand, chart, provenance, playground; dark and light; phone width |
 
@@ -1159,9 +1184,17 @@ Results go to [BENCHMARK.md](../admin/BENCHMARK.md) when the runs are made (one 
 
 | Run | Data | Nodes | Cache | Rollups | Views |
 |---|---|---|---|---|---|
-| B1 | 100 GB of synthetic trades (Parquet in Delta, about 1 billion rows, 40 columns, 5 years of business dates) | 1, then 3 | cold, then warm | without, then with `DESK × month × CURRENCY` | V1 sum by desk × month; V2 + distinct counterparties (≈ and exact); V3 + p99 of P&L (≈ and exact); V4 a 6-level expansion; V5 a Python mergeable function |
-| B2 | 1 TB (about 10 billion rows) | 1, then 3 | cold, warm | without, with | V1 to V5 |
-| B3 | 3 TB (about 30 billion rows), on S3 and on local disk | 3 | cold, warm | without, with | V1 to V5, and 20 people at once on V1 and V4 |
+| B1 (warm-up) | 5 GB of synthetic trades (Parquet in Delta, 40 columns, 5 years of business dates) | 1, then 3 | cold, then warm | without, then with `DESK × month × CURRENCY` | V1 sum by desk × month; V2 + distinct counterparties (≈ and exact); V3 + p99 of P&L (≈ and exact); V4 a 6-level expansion; V5 a Python mergeable function |
+| B2 | 25 GB | 1, then 3 | cold, warm | without, with | V1 to V5 |
+| B3 | 75 GB (25 GB a node) | 3 | cold, warm | without, with | V1 to V5 |
+| 100 GB, 1 TB, 3 TB | **EXTRAPOLATED** from B1 to B3 (a straight line through the measured points), labelled so, never presented as measured | 1 and 3 | | | |
+
+**The sizes (product owner, 2026-11-02).** The benchmark machine's disk is limited: at most 25 GB read by one node and about 75 GB of
+lake in all (three nodes), with a smaller warm-up size first. The data goes on the data disk under a folder the runner is given (never
+`/tmp`, a 31 GB tmpfs shared with RAM); the runner refuses to start under 150 GB free and deletes what it generated when the run ends
+(`--keep` keeps it). The earlier plan of 100 GB, 1 TB and 3 TB runs (3 TB on S3, 20 people at once) waits for machines that hold them;
+until then those sizes are extrapolations. The harness is `tools/bench/pivot_bench.py`
+([BENCHMARK.md section 16](../admin/BENCHMARK.md#16-the-pivot-engine-at-scale)).
 
 Measured: time to the first (≈) and the exact answer, bytes read against the estimate, the estimate's error, peak memory per node,
 spill bytes, the cache's hit rate, the merge's share of the time, and the cost of each function per billion rows. The synthetic trades
@@ -1174,8 +1207,8 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 | **P1: the core, the tabular provider, the built-ins and the screen** | the module `drishti-bicompute` with the core migrated from `wip/mr-cube` (section 7) and DEL moved from BI; cell keys and grouping sets; mergeable and exact holistic built-ins; the tabular provider (BI layers, lake scans, memory-only); the VaR provider moved; the partial-state cache, budgets, busy protection, the cluster merge; correctness (item 9); provenance (4); time travel and compare (2); cell reference names (8); expand and collapse (section 11, P1 part); the pivot screen of the chosen mock-up with show-as, grouping, slicers, conditional formats, drill-through; pick-and-choose charts (14.3, P1 part); exports xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; the engine switch; API and CLI | XL (two large parts: the core and provider; the screen) | 2.9.11.a |
 | **MR cube on the engine** | the paused branch resumed: its VaR source as a provider, its landings A, B and C on the pivot screen's grid, its tests unchanged; FRTB-SA and SIMM providers when those engines ship | L | 2.9.11.a |
 | **P2: custom functions, explain, what-if** | the four languages, the harness, the playground, versions, approval, audit; Python in the per-node pool (shipped off); explain the difference (1); what-if (3); view versions and cell comments (10); expand by and holistic Others (section 11, P2 part) | L | 2.9.11.b |
-| **PB: BI on the pivot engine** | section 12: shadow mode, the parity gate, models as sources, measures as functions, the switch per model | L | 2.9.11.b |
-| **P3: scale** | sketches (HLL, KLL, Space-Saving) and exact on request; rollups of partial states refreshed incrementally; aggregate awareness; progressive answers; scan estimates with options; scatter and gather of tabular partials across nodes with hedging; live pivots (5); the benchmark B1 to B3 | L | 2.9.11.c |
+| **PB: BI on the pivot engine** | section 12: parity proved by tests, models as sources, measures as functions, one switch with the old code deleted | L | 2.9.11.b |
+| **P3: scale** | sketches (HLL, KLL, Space-Saving) and exact on request; rollups of partial states refreshed incrementally; aggregate awareness; progressive answers; scan estimates with options; scatter and gather of tabular partials across nodes with hedging; live pivots (5); the benchmark B1 to B3 | L | 2.9.11.b |
 | **P4: Excel and advice** | the native PivotTable export and charts bound to it; references in formulas and Excel (8); Python functions on by default where approved; layout advice; ask in words (6); automatic insights (7) | M to L | unscheduled candidate |
 
 ## 23. Decisions
@@ -1192,7 +1225,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 | 6 | Percentile partials across nodes: KLL built in Java from streamed values, or per-node `approx_quantile` points merged | KLL in Java (a stated, tested error); revisit if the benchmark shows the stream costs too much |
 | 7 | Progressive answers on by default for views estimated over 2 s | yes; sampled figures always marked ≈ with their interval; never for VaR |
 | 8 | A distributed SQL backend (Trino, StarRocks, ClickHouse) | parked; revisit only if B3 shows common views over 5 min on 3 nodes |
-| 9 | BI on the engine | in 2.9.11.b behind shadow mode; default flips per model after the parity gate; the old path kept one release |
+| 9 | BI on the engine | in 2.9.11.b: parity proved by tests against recorded figures, then one switch with BI's old aggregation deleted in the same release (product owner, 2026-11-02 and 2026-11-03: no dual machinery) |
 | 10 | Where the screen lives | `PIVOT <GO>`, Views → Pivot, and **Pivot** on every table, model and cube |
 | 11 | The mock-up | A ([section 25](#25-mock-ups-the-screens-to-build)) |
 | 12 | Aggregate-only roles: minimum members per cell | 1 as shipped (no change for anyone); a site may raise it |
@@ -1208,20 +1241,20 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: the Data view's tables staged in memory, direct Delta and Iceberg lake reads of local Parquet files with pruning and skipping, a panel's rows; not yet: BI layers, object stores)
 - [ ] VaR provider (built: `VarPivotProvider`, each cell the engine's scope; `VarCubeSource`'s batching, hierarchy levels and measures with the MR cube); FRTB-SA and SIMM providers with their engines
 - [ ] partial-state cache, cell budgets, busy protection, per-person limits (built: all but the per-person limit)
-- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs and the ordered merge of local shards)
+- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs, the ordered merge of local shards; P3 on `wip/pivot-c`: the plan and partial-state codec, `/api/v1/net/pivot/partials`, files by rendezvous hashing or row shards, the gather in node order with hedging and a deadline; a node with no answer refuses the whole view (DRS-5720) rather than marking its cells)
 - [ ] correctness: currencies, units, masks, no truncation, exact or ≈ (built: masks before aggregation, no truncation, exact or holistic marked, currencies (explicit conversion, mixed refused per cell), units (rates and percentages never summed, units on headers))
 - [x] provenance per answer and cell; time travel (by business date; data versions pinned with P3); compare; cell references
 - [x] expand and collapse (section 11, P1 part and expand by), lazy, saved in views and links
 - [ ] the screen (chosen mock-up), show-as, grouping, slicers, conditional formats, drill-through, keyboard, phone tiers (built: mock-up A, show-as in the API, grouping, slicers, conditional formats (colour scale, data bars), drill-through, keyboard; not yet: phone tiers)
 - [ ] pivot charts (section 14.3), linked both ways, stacking rule (built: chart of a selection, the stacking rule, a click opens the member; not yet: pinned charts, PNG and SVG export)
 - [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts (built: xlsx with outline, formulas and Provenance, csv, Arrow, rows, definition)
-- [ ] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` with the BI sandbox
-- [ ] explain the difference; what-if overlays; view versions; cell comments
-- [ ] BI shadow mode, parity gate, models as sources, measures as functions
-- [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots
+- [x] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` (the compute SDK's guard and Arrow codec)
+- [ ] explain the difference; what-if overlays; view versions; cell comments (built: explain, what-if and view versions with a diff of definitions and restore; not yet: cell comments, what-if on VaR through the engine)
+- [ ] BI parity tests against recorded figures, models as sources, measures as functions, the old aggregation deleted (built: totals and subtotals of matrices, tables and model queries on the engine, measures as functions, additivity, the old per-level queries deleted, the parity recorder and `BiParityTest`; not yet: the fixtures recorded, models as pivot sources on the pivot screen, the Slice, rollups of states)
+- [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots (built on `wip/pivot-c`, tests written and not yet run: HyperLogLog, KLL and Space-Saving with exact on request and exact or ≈ by size; rollups of partial states per partition, refreshed by version checks with only new files read, aggregate awareness with date coarsening, advice; progressive answers from a sample with intervals; estimates from measured rates with options; not yet: live pivots, the screen's controls for exact and progressive)
 - [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
-- [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
+- [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md (P3: `SketchErrorTest`, `RollupTest`, `ClusterMergeTest`, `ProgressiveTest` written; the harness `tools/bench/pivot_bench.py` and BENCHMARK.md section 16 written; the runs to be made)
 - [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)
 - [ ] Rachana paths as the field notation (one parser, compiled to columns or DuckDB JSON; the grain from `[*]`); BI's examples in the `$.` form
 - [ ] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators

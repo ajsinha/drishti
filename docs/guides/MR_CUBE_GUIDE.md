@@ -77,6 +77,8 @@ adds one cell's figure to another's; each cell and each total is computed from i
 | `cs01()` | yes | the cell's credit-spread delta sensitivities |
 | `sbm()` | no | FRTB-SA sensitivities-based capital of the cell's own scope ([FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)), for the first `sbm-max-cells` cells |
 
+**Always exact.** The cube's measures have one name each and no ≈ form: the pivot engine's sketches (≈ distinct counts and percentiles) and its progressive first answer from a sample never apply to them; a large view waits for its exact figures, or is refused by the budget with its count.
+
 *Plain sum* says only how an Excel export writes a total: as a `SUM` formula of its cells where the figure adds up, as the server's value
 where it does not. `dv01()`, `cs01()` and `sbm()` are offered only when the FRTB-SA engine runs here. With the MR cube off, the source offers
 `var()`, `es()`, `pv()` and `trades()` only.

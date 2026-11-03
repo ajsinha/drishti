@@ -22,6 +22,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.ash.drishti.memlake.MemoryLake;
 import com.ash.drishti.server.PinnedBusinessDate;
 import com.ash.drishti.server.security.TokenVerifier;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -279,10 +280,10 @@ class NewsInMemorySentinelTest {
         // a refill runs again from the feed (the store refills after a restart or an eviction the same way)
         mvc.perform(post("/api/v1/admin/lakes/memory/refill/news").header("Authorization", admin())).andExpect(status().isOk());
         long until = System.currentTimeMillis() + 30_000;
-        while (lake.table("news").history().size() < 2 && System.currentTimeMillis() < until) {
+        while (lake.jobs("news", 100).size() < 2 && System.currentTimeMillis() < until) {
             Thread.sleep(100);
         }
-        assertThat(lake.table("news").history().get(0).outcome()).isEqualTo("ok");
+        assertThat(lake.jobs("news", 100).get(0).get("outcome")).isEqualTo("ok");
 
         // nothing of it on a disk: the run's folder (data, caches, indexes, stores, audit, BI, reports), the process's temporary folder, the logs
         List<String> leaks = new ArrayList<>();
@@ -290,6 +291,6 @@ class NewsInMemorySentinelTest {
         leaks.addAll(found(com.ash.drishti.common.TempFiles.root()));
         assertThat(leaks).as("files holding a marker").isEmpty();
         assertThat(output.getAll()).as("the logs").doesNotContain(MARK);
-        assertThat(com.ash.drishti.lakeio.mem.MemoryStores.store("news").pool().inUseBytes()).isGreaterThan(0);
+        assertThat(com.ash.drishti.memlake.store.MemoryStores.store("news").pool().inUseBytes()).isGreaterThan(0);
     }
 }

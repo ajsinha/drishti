@@ -44,6 +44,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 13. [The soak: flat memory and flat disk](#13-the-soak-flat-memory-and-flat-disk)
 14. [Reading the numbers, and their limits](#14-reading-the-numbers-and-their-limits)
 15. [Raw results](#15-raw-results)
+16. [The pivot engine at scale](#16-the-pivot-engine-at-scale)
 
 ## 1. What is measured, and why
 
@@ -58,6 +59,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 | Java versions | Java 21 and 25 under the same load of 200 clients | [10](#10-java-21-and-25-under-200-clients) |
 | Memory | heap after collection, resident memory, what the heap holds | [11](#11-memory-and-heap) |
 | Scale | the formulas from the measured points to 2.3M and 10M positions | [12](#12-scaling-fits-and-extrapolation-to-23m-and-10m-positions) |
+| The pivot engine | a pivot of 5 to 75 GB on one node and three, cold and warm, with and without a rollup; ≈ first and exact; 100 GB to 3 TB extrapolated | [16](#16-the-pivot-engine-at-scale) |
 
 **Why.** Two kinds of question decide a deployment: *will it answer in time* (latency at a given load) and *what does it need* (heap,
 disk, CPU, cluster members). Each benchmark answers one of them for one area, at a size one workstation can hold, and states the formula
@@ -75,6 +77,7 @@ three opt-in Java benchmarks that are never part of the default test run. Each i
 |---|---|
 | `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py` | the store benchmark ([9](#9-the-stores-compared-10000-to-50000-trades-a-day)): one store, one size; `report.py` writes the tables, the variance, a linear fit per measure and its value at a million, labelled |
 | `trades.py`, `users.py` | trades at scale ([8](#8-trades-at-scale)): synthetic trades of the real ENDUR, CALYPSO and MUREX shapes loaded day by day; simultaneous users against a server or a console |
+| `pivot_bench.py` | the pivot engine at scale ([16](#16-the-pivot-engine-at-scale)): synthetic trades into a Delta lake of 5, 25 and 75 GB, views V1 to V5 on one node and three, cold and warm, with and without a rollup; the report with 100 GB to 3 TB extrapolated |
 | `vargen.py`, `var_bench.py`, `jfr_summary.py` | the VaR run ([4](#4-the-200000-position-var-and-cluster-run)): synthetic VaR inputs; loader timing and the single and cluster runs with profiling; what the JFR recordings say |
 | `charts.py` | the charts of this document, drawn as SVG from the VaR run's results files into `docs/admin/images/benchmark/`; rerun after every run |
 | `pinning.sh` (`pinload.py`, `mqpublish.py`, `pinned_summary.py`) | Java 21 against 25 under 200 clients, and virtual-thread pinning ([10](#10-java-21-and-25-under-200-clients)) |
@@ -1474,3 +1477,94 @@ the Drishti\*net soak on real processes is [OPERATIONS.md › section 13](OPERAT
 
 `python3 tools/bench/report.py <results.jsonl …>` turns the store lines into the tables of section 9; lines without a `store` (the VaR
 run's) are counted and skipped. `python3 tools/bench/charts.py <results.jsonl …>` draws the charts of sections 4 and 7 from the VaR run's lines.
+
+## 16. The pivot engine at scale
+
+**Status: the plan and the harness; to be measured.** Nothing in this section is measured yet; every cell below is filled by the run
+of 16.3, and the larger sizes of 16.4 are EXTRAPOLATED from those measured points, labelled so wherever they appear. The design is
+[PIVOT_ENGINE.md section 21](../architecture/PIVOT_ENGINE.md#21-the-benchmark-plan); what it measures is
+[PIVOT_GUIDE.md section 23](../guides/PIVOT_GUIDE.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster).
+
+### 16.1 What is measured
+
+| Run | Lake | Nodes | Cache | Rollup | Views |
+|---|---|---|---|---|---|
+| P1 (warm-up) | 5 GB | 1, then 3 | cold, then warm | without, then with `DESK × month × CURRENCY` | V1 to V5 |
+| P2 | 25 GB | 1, then 3 | cold, warm | without, with | V1 to V5 |
+| P3 | 75 GB (25 GB a node) | 3 | cold, warm | without, with | V1 to V5 |
+| 100 GB, 1 TB, 3 TB | **EXTRAPOLATED** from P1 to P3, never run here | 1 and 3 | | | |
+
+The machine's disk is limited (product owner, 2026-11-02): at most 25 GB read by one node, about 75 GB of lake in all, so one node runs
+at 5 and 25 GB and three nodes at 5, 25 and 75 GB, all on the same lake (it grows by appending days). The views: **V1** `sum` by desk ×
+month; **V2** V1 and the distinct counterparties, ≈ (HyperLogLog) and exact; **V3** V1 and the p99 of the day's P&L, ≈ (KLL) and exact;
+**V4** a six-level expansion (region, legal entity, desk, product group, product type, currency) with `sum` and `count`; **V5** a Python
+mergeable function (only where Python functions are on, phase P2; otherwise recorded as not answered).
+
+For each: the time to the first (≈) answer and to the exact one, the estimate's rows, bytes and seconds against what was read and how long
+it took, the cells, the statements, whether a rollup answered, how many nodes computed it, and (from the servers' own measures, as in
+section 4) peak heap and DuckDB memory per node, spill bytes and the cache's hit rate.
+
+### 16.2 The data
+
+`tools/bench/pivot_bench.py generate` writes synthetic trades of a flat 40-column table, `bench_trade` (ids, five dates, desk, book, legal
+entity, region, product group and type, instrument, currency, counterparty with its rating and country, trader, strategy, status, side;
+notional and its USD value, price, quantity, MTM, P&L for the day, month and year, DV01, CS01, vega, delta, gamma, the FX rate, tenor,
+coupon, spread, version, update time), five years of business dates, 250,000 counterparties, clustered by date and desk. It writes one
+day as gzipped JSON Lines, loads it into Delta with the project's loader (`tools/ingest_jsonl.py`, domain `bench`), deletes the day's
+file and goes on until the lake reaches the size; the next size appends days, never rewriting one. The same seed makes the same rows.
+
+**Where.** A folder the operator names on the data disk (`--data-dir`): never `/tmp` (on this machine a 31 GB tmpfs shared with RAM),
+never a memory-backed filesystem, never inside the repository. The runner refuses to start under **150 GB free** there, stops when the
+disk falls under 20 GB free, and **deletes what it generated when the run ends** (`--keep` keeps it; `clean` deletes it later).
+
+**Serving it.** The server reads the lake as the kind `bench_trade` of domain `bench` (a pack declaring it, made from the JSON Lines by
+`tools/packgen/pack_from_jsonl.py`, with `DRISHTI_DELTA_ROOT` at `<data-dir>/delta`), on the direct lake route; the three servers of a
+cluster read the same folder (shared storage). The one-node runs use a server with `drishti.pivot.cluster.enabled: false` on the same
+lake (`--single`).
+
+### 16.3 How to run it
+
+```bash
+# what would run, and the disk it needs (nothing written)
+python3 tools/bench/pivot_bench.py plan --nodes 3
+# everything: 5, 25 and 75 GB, every configuration, the report; the data deleted at the end (--keep keeps it)
+drishti-console/.venv/bin/python tools/bench/pivot_bench.py all --data-dir /data/drishti-bench/pivot --nodes 3 \
+    --servers http://<node-1>:18480,http://<node-2>:18480,http://<node-3>:18480 --single http://<node-1>:18490 \
+    --token-file token.txt --cold-cmd "<restart the servers and drop the page cache>" --out tools/bench/results/pivot-2.9.11c.jsonl
+# or step by step
+drishti-console/.venv/bin/python tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
+python3 tools/bench/pivot_bench.py run --servers http://<node-1>:18480 --token-file token.txt --gb 5 --nodes 1 --cache warm --rollups with
+python3 tools/bench/pivot_bench.py report tools/bench/results/pivot-2.9.11c.jsonl > pivot-report.md
+python3 tools/bench/pivot_bench.py clean --data-dir /data/drishti-bench/pivot
+```
+
+`--cold-cmd` is the operator's: a cold view comes after the servers restarted (their caches and DuckDB's empty) and the operating system's
+page cache was dropped (`sync; echo 3 > /proc/sys/vm/drop_caches`, as root). A warm view is run once untimed first. Each result is one
+JSON line:
+
+```json
+{"view": "V2", "exact_asked": false, "estimate_s": 41.2, "estimate_rows": 191000000, "estimate_bytes": 4800000000, "first_s": 1.1,
+ "exact_s": 38.7, "estimate_ms": 12.0, "cells": 744, "rows_read": 191000000, "provider_ms": 37900, "from_cache": 0, "sets": 4,
+ "rollup": null, "nodes": "computed on 3 nodes (a, b, c), one row shard each, partial states merged in node order", "error": null,
+ "label": "25GB-3n", "gb": 25, "nodes": 3, "cache": "cold", "rollups": "without", "at": "2026-11-03T10:12:00-0500"}
+```
+
+(The figures in that line show its shape only; none is measured.)
+
+### 16.4 Results
+
+**Measured** (to be measured: filled by the run of 16.3, the `report` command's first table).
+
+| Lake | Nodes | Cache | Rollup | View | First (≈) s | Exact s | Estimate s | Rows read |
+|---|---|---|---|---|---|---|---|---|
+| 5 GB | 1 | cold | without | V1 | *to be measured* | | | |
+
+**EXTRAPOLATED** (a straight line through the measured 5, 25 and 75 GB points, the `report` command's second table; never measured):
+
+| Nodes | Cache | Rollup | View | 100 GB (EXTRAPOLATED) | 1 TB (EXTRAPOLATED) | 3 TB (EXTRAPOLATED) |
+|---|---|---|---|---|---|---|
+| 3 | cold | without | V1 | *after the run* | | |
+
+Read the extrapolations as section 14 says: straight lines through three points, orders of magnitude. Past what one node's disk and
+memory hold, other effects (spill, object-store bandwidth, more files than the disk cache) bend the line; the decision on a distributed
+SQL backend (PIVOT_ENGINE.md decision 8) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
