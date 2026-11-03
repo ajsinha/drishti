@@ -555,7 +555,7 @@ functions:
   edge-cases: {empty: 'null (a count: 0) when no row is in the window.', types: date is a date or timestamp field of the aggregate's dataset.}
 - name: lag
   family: windows
-  runs: R
+  runs: E
   signature: lag(agg, n, order, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -571,7 +571,7 @@ functions:
   edge-cases: {nulls: null on the first n rows of each partition., masked: A masked field is never a partition; ordering along a masked field is DRS-9021.}
 - name: lead
   family: windows
-  runs: R
+  runs: E
   signature: lead(agg, n, order, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -587,7 +587,7 @@ functions:
   edge-cases: {nulls: null on the last n rows of each partition.}
 - name: rank
   family: windows
-  runs: R
+  runs: E
   signature: rank(agg, desc = true, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -602,7 +602,7 @@ functions:
   edge-cases: {nulls: null values rank last.}
 - name: dense_rank
   family: windows
-  runs: R
+  runs: E
   signature: dense_rank(agg, desc = true, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -617,7 +617,7 @@ functions:
   edge-cases: {nulls: null values rank last.}
 - name: percent_rank
   family: windows
-  runs: R
+  runs: E
   signature: percent_rank(agg, desc = true, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -632,7 +632,7 @@ functions:
   edge-cases: {empty: 0 for a single row.}
 - name: moving_avg
   family: windows
-  runs: R
+  runs: E
   signature: moving_avg(agg, n, order, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -648,7 +648,7 @@ functions:
   edge-cases: {nulls: The first rows average over what is there.}
 - name: moving_sum
   family: windows
-  runs: R
+  runs: E
   signature: moving_sum(agg, n, order, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -664,7 +664,7 @@ functions:
   edge-cases: {nulls: null values are skipped.}
 - name: moving_min
   family: windows
-  runs: R
+  runs: E
   signature: moving_min(agg, n, order, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -680,7 +680,7 @@ functions:
   edge-cases: {nulls: null values are skipped.}
 - name: moving_max
   family: windows
-  runs: R
+  runs: E
   signature: moving_max(agg, n, order, by = [fields])
   params:
   - {name: agg, type: aggregate}
@@ -873,7 +873,7 @@ functions:
   edge-cases: {types: Always a date., folded: 'today() is read as asof() (Q7): both are the view''s or the query''s as-of date.'}
 - name: measure
   family: measure reference
-  runs: R
+  runs: E
   signature: measure('name') | measure('VAR', 'DESK:DESK-COMM', [options])
   params:
   - {name: name, type: string-literal}

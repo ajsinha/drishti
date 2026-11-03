@@ -160,7 +160,8 @@ public final class SqlLowering {
                     : "(CAST(" + l + " AS DOUBLE) - CAST(" + r + " AS DOUBLE))";
             case "+", "*" -> "(CAST(" + l + " AS DOUBLE) " + b.op() + " CAST(" + r + " AS DOUBLE))";
             case "/" -> "(CAST(" + l + " AS DOUBLE) / NULLIF(CAST(" + r + " AS DOUBLE), 0))";
-            case "%" -> "fmod(CAST(" + l + " AS DOUBLE), NULLIF(CAST(" + r + " AS DOUBLE), 0))";
+            case "%" -> "(CAST(" + l + " AS DOUBLE) - CAST(" + r + " AS DOUBLE) * trunc(CAST(" + l + " AS DOUBLE) / NULLIF(CAST(" + r
+                    + " AS DOUBLE), 0)))";                                     // the remainder with the dividend's sign, as Rachana's (Java's) %
             default -> throw new IllegalArgumentException("operator " + b.op() + " has no SQL form");
         };
     }
@@ -231,7 +232,8 @@ public final class SqlLowering {
             case "power" -> "(CASE WHEN CAST(" + a.get(0) + " AS DOUBLE) = 0 AND CAST(" + a.get(1) + " AS DOUBLE) < 0 THEN NULL ELSE power(CAST("
                     + a.get(0) + " AS DOUBLE), CAST(" + a.get(1) + " AS DOUBLE)) END)";
             case "floor" -> a.size() < 2 || a.get(1) == null ? "floor(CAST(" + a.get(0) + " AS DOUBLE))"
-                    : "(CASE WHEN CAST(" + a.get(1) + " AS DOUBLE) = 0 THEN CAST(0 AS DOUBLE) ELSE floor(CAST(" + a.get(0) + " AS DOUBLE) / abs(CAST("
+                    : "(CASE WHEN " + a.get(0) + " IS NULL THEN NULL WHEN CAST(" + a.get(1) + " AS DOUBLE) = 0 THEN CAST(0 AS DOUBLE) ELSE floor(CAST("
+                            + a.get(0) + " AS DOUBLE) / abs(CAST("
                             + a.get(1) + " AS DOUBLE))) * abs(CAST(" + a.get(1) + " AS DOUBLE)) END)";
             case "least", "greatest" -> fn + "(" + String.join(", ", a.stream().map(x -> "CAST(" + x + " AS DOUBLE)").toList()) + ")";
             case "switch" -> switchOf(a);
@@ -282,11 +284,11 @@ public final class SqlLowering {
         String days = "(" + weekdays(to) + " - " + weekdays(from) + ")";
         List<String> hs = new ArrayList<>();
         int year = (options.asOf() == null ? LocalDate.now() : options.asOf()).getYear();
-        for (int y = year - HOLIDAY_YEARS; y <= year + HOLIDAY_YEARS; y++) {
-            for (LocalDate h : new java.util.TreeSet<>(cal.holidays(y))) {
-                if (h.getDayOfWeek() != DayOfWeek.SATURDAY && h.getDayOfWeek() != DayOfWeek.SUNDAY) {
-                    hs.add("DATE '" + h + "'");
-                }
+        // the weekdays the calendar closes (observed holidays included), exactly the days Rachana's isBusinessDay refuses
+        LocalDate end = LocalDate.of(year + HOLIDAY_YEARS, 12, 31);
+        for (LocalDate h = LocalDate.of(year - HOLIDAY_YEARS, 1, 1); !h.isAfter(end); h = h.plusDays(1)) {
+            if (h.getDayOfWeek() != DayOfWeek.SATURDAY && h.getDayOfWeek() != DayOfWeek.SUNDAY && !cal.isBusinessDay(h)) {
+                hs.add("DATE '" + h + "'");
             }
         }
         if (hs.isEmpty()) {

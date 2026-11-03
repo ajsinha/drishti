@@ -40,7 +40,7 @@ final class MathFunctions {
     static final int MAX_EXACT_EXPONENT = 64;
 
     static void register(Functions.Table t) {
-        t.fn("abs", 1, 1, (a, c) -> Values.normalise(Math.abs(Values.number(a.get(0)))));
+        t.fn("abs", 1, 1, (a, c) -> Values.isNull(a.get(0)) ? null : Values.normalise(Math.abs(Values.number(a.get(0)))));   // null in, null out
         t.fn("round_up", 1, 2, (a, c) -> round("round_up", a, RoundingMode.UP));
         t.fn("round_down", 1, 2, (a, c) -> round("round_down", a, RoundingMode.DOWN));
         t.fn("mround", 2, 2, (a, c) -> mround(a));
