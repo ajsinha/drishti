@@ -40,6 +40,8 @@ final class DocView {
 
     /** The suffix of a filter that keeps an entity only when ALL of its elements match ({@code LEGS.CURRENCY~all}). */
     static final String ALL = "~all";
+    /** The engine field that carries a view's grain into each of its plans. */
+    static final String GRAIN = "_grain";
     private static final Pattern CALL = Pattern.compile("\\s*([A-Za-z_][A-Za-z0-9_]*)\\s*\\((.*)\\)\\s*", Pattern.DOTALL);
     private static final Set<String> ONCE = Set.of("sum", "count", "avg");
     private static final Set<String> SAME_ONCE = Set.of("min", "max", "count_distinct", "distinct");
@@ -67,6 +69,7 @@ final class DocView {
     static List<com.ash.drishti.bicompute.spi.PivotProvider.Field> engineFields(Map<String, DocPath> paths, Map<String, String> types) {
         List<com.ash.drishti.bicompute.spi.PivotProvider.Field> out = new ArrayList<>();
         int deepest = paths.values().stream().mapToInt(p -> p.grainLevels().size()).max().orElse(0);
+        out.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field(GRAIN, "string", "grain", "the view's grain (every plan of the view reads at it)"));
         for (int i = 0; i <= deepest; i++) {
             out.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("_p" + i, "string", "parent key " + i, "the key of each parent at depth "
                     + i + " (once-per-parent figures)"));
@@ -185,7 +188,7 @@ final class DocView {
             if (!prefix(e.getValue(), grain)) {
                 String a = top(e.getValue());
                 String b = top(grain);
-                throw PivotView.bad(words(a) + " and " + words(b) + " are separate lists" + (a.equals(b) ? "" : " of each " + v.source())
+                throw PivotView.bad(list(a) + " and " + list(b) + " are separate lists of each " + v.source()
                         + ": a view that crossed them would count every pair (three legs and four events make twelve rows). Pick one, or "
                         + "compare them side by side as two views");
             }
@@ -217,6 +220,11 @@ final class DocView {
                 ? pp : prepend(dim(Dim.parse(pp.get(0))).id(), pp.subList(1, pp.size()))).toList(), e.by() == null ? null : dim(Dim.parse(e.by())).id()))
                 .toList();
         List<String> slicers = v.slicers().stream().map(s -> dim(Dim.parse(s)).id()).toList();
+        if (!grain.isEmpty()) {
+            // every plan of the view reads at the view's grain (a ranking or a total asks fewer fields): the grain rides along as a filter
+            // that keeps every row, on a column the relation fills with the grain itself
+            filters.put(GRAIN, new AggregationPlan.Filter(List.of(), List.of("\u0000" + grain)));
+        }
         return new PivotView(v.source(), v.date(), v.asOf(), rows, cols, once, filters, exp, v.expandRows(), v.expandColumns(), sort, top,
                 v.subtotals(), v.currency(), slicers, v.formats());
     }
@@ -232,6 +240,12 @@ final class DocView {
         return grain.isEmpty() ? "" : grain.split("\\.")[0];
     }
 
+    /** A list's name as a reader says it: {@code LEGS} is Legs, {@code CASH_FLOWS} Cash flows. */
+    static String list(String grain) {
+        String last = grain.substring(grain.lastIndexOf('.') + 1).toLowerCase(Locale.ROOT).replace('_', ' ');
+        return last.isEmpty() ? "the " + grain : Character.toUpperCase(last.charAt(0)) + last.substring(1);
+    }
+
     /** {@code LEGS} as words: legs; the entity itself: the entity. */
     static String words(String grain) {
         if (grain.isEmpty()) {
@@ -243,6 +257,10 @@ final class DocView {
 
     /** The finest grain a plan reads (its grouped and filtered fields of a grain on the way down, and its functions' inputs). */
     String grain(AggregationPlan plan) {
+        AggregationPlan.Filter carried = plan.filters().get(GRAIN);
+        if (carried != null && !carried.notIn().isEmpty()) {
+            return carried.notIn().get(0).substring(1);
+        }
         String grain = "";
         List<String> ids = new ArrayList<>();
         plan.dims().values().forEach(d -> ids.add(d.field()));
@@ -335,6 +353,7 @@ final class DocView {
     private String select(String from, int depth, AggregationPlan plan, List<String> fields, Map<String, String> types, String grain,
             Map<String, String> fromLayer) {
         List<String> cols = new ArrayList<>();
+        cols.add(DocPath.lit(grain) + " AS \"" + GRAIN + "\"");
         cols.add("CAST(\"_id\" AS VARCHAR) AS \"_p0\"");
         for (int i = 1; i <= depth; i++) {
             String prev = "CAST(\"_id\" AS VARCHAR)";
@@ -344,6 +363,9 @@ final class DocView {
             cols.add(prev + " AS \"_p" + i + "\"");
         }
         for (String f : fields) {
+            if (f.startsWith("_")) {
+                continue;                                         // the engine's own: the grain and the parent keys, written above
+            }
             if (promoted.contains(f)) {
                 cols.add(DuckDbExecutor.quote(f));
                 continue;

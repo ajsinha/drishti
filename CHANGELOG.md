@@ -40,6 +40,14 @@
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 
+- **Pivots over entity documents (PIVOT_ENGINE.md 6.7; PIVOT_GUIDE.md, Documents).** A pivot field is a Rachana path, parsed by
+  Rachana's own parser: `$.PRODUCT_TYPE`, `$.LEGS[0].CURRENCY`, `$.LEGS[*].NOTIONAL` (one row per leg), `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL`,
+  `size($.LEGS)`. The field list follows the documents' shape (each list a grain of its own) and takes a typed path; a view has one grain,
+  the finest list it uses; a coarser figure counts each parent once (new built-ins `sum_once`, `count_once`, `avg_once`); two separate lists
+  are refused; a filter on a list keeps the parents with any (or, with `~all`, all) elements matching. Three routes, fastest first: a
+  promoted column, a BI dataset table's cached layer, DuckDB JSON over the documents; the cell's provenance names it. An administrator sees
+  the most used typed paths with Promote and Add to dataset (`GET /api/v1/pivot/paths`). The guide's six worked examples and tutorial 33's
+  new step carry the demo lake's real figures and pictures (`tools/docs/shots/t33.py`).
 - **Chart any table: Top N, Others and the split cap by the pivot engine.** The chart asks the engine for a level's top N (`top: {field:
   {n, by}}`) and draws its *Others* member, whose figures come from its own rows; the browser merges no cells any more (its `combine`
   and the extra sum and count of an average are gone).

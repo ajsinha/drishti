@@ -238,6 +238,8 @@
   function show(a) {
     state.answer = a;
     state.view = a.view;
+    // the engine's own filters (a document view's grain) are the server's to add again; the person's zones never show them
+    Object.keys(state.view.filters || {}).forEach(function (k) { if (k.charAt(0) === "_") { delete state.view.filters[k]; } });
     var comp = a.computed || {};
     $("[data-pv-meta]").textContent = (a.title || a.source) + " · " + (a.date ? "business date " + a.date : "current") + " · "
       + a.cellCount + " cells · " + comp.sets + " sets (" + comp.fromCache + " from the cache) · " + comp.queries + " queries · " + comp.ms + " ms";

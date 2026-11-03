@@ -87,7 +87,7 @@ public final class KindSources implements TabularSource.Resolver {
     }
 
     /** How many documents the field list samples. */
-    static final int SAMPLE = 200;
+    static final int SAMPLE = 1_000;
 
     public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props,
             com.ash.drishti.engine.search.SearchProperties search) {
@@ -359,6 +359,9 @@ public final class KindSources implements TabularSource.Resolver {
                     : "read through the " + d.format() + " connector (" + d.connector() + ") for you, staged in the pivot executor's DuckDB "
                     + "in memory" + (memoryOnly ? "; memory-only data, never written to a disk" : ""));
             m.put("pack", d.pack());
+            if (sampled.containsKey(d.kind())) {
+                m.put("documentFields", sampled.get(d.kind()));
+            }
             if (lastRoute.containsKey(d.kind())) {
                 m.put("documents", "document fields read through " + lastRoute.get(d.kind()));
             }
@@ -382,7 +385,8 @@ public final class KindSources implements TabularSource.Resolver {
 
         /** True when the plan reads a document path (or a parent key): the documents are staged and unnested for it. */
         private boolean readsDocuments(com.ash.drishti.bicompute.core.AggregationPlan plan) {
-            java.util.function.Predicate<String> doc = id -> docs.containsKey(id) || id.endsWith(DocView.ALL) || id.startsWith("_p");
+            java.util.function.Predicate<String> doc = id -> docs.containsKey(id) || id.endsWith(DocView.ALL) || id.startsWith("_p")
+                    || DocView.GRAIN.equals(id);
             return plan.dims().values().stream().anyMatch(x -> doc.test(x.field()))
                     || plan.functions().stream().anyMatch(f -> f.inputs().stream().anyMatch(doc));
         }
@@ -535,6 +539,8 @@ public final class KindSources implements TabularSource.Resolver {
 
     // ---- documents (PIVOT_ENGINE.md section 6.7) ------------------------------------------------------------------------------
 
+    /** Per source: what the field list's sample of documents found (the provenance's words). */
+    private final Map<String, String> sampled = new ConcurrentHashMap<>();
     /** The types the sample saw, per source version and path. */
     private final Map<String, String> sampledTypes = new ConcurrentHashMap<>();
 
@@ -553,24 +559,27 @@ public final class KindSources implements TabularSource.Resolver {
         try {
             data.walk(d, day, DataSelection.parse(List.of(), List.of()), List.of(DataViewService.DOCUMENT), entitlements.masks(p) ? entitlements.redactor(p)
                     : null, false, 0, row -> {
-                        if (row.get(DataViewService.DOCUMENT) instanceof Map<?, ?> m) {
+                        if (docs.size() < SAMPLE && row.get(DataViewService.DOCUMENT) instanceof Map<?, ?> m) {
                             docs.add(m);
                         }
-                        return docs.size() < SAMPLE;
+                        return true;                              // never stopped early: a source of several connectors takes a stop as a failure
                     });
         } catch (java.io.IOException | RuntimeException e) {
+            sampled.put(d.kind(), "no sample of its documents: " + e.getMessage());
             return Map.of();                                      // no sample: the promoted columns alone, typed paths still work
         }
         Map<String, DocPath> out = new LinkedHashMap<>();
+        int[] refused = {0};
         DocFields.of(docs, promoted, n -> entitlements.masked(p, n)).forEach((path, seen) -> {
             try {
                 DocPath dp = DocPath.parse(path);
                 out.putIfAbsent(dp.id(), dp);
                 sampledTypes.put(key + "|" + dp.text(), seen.type());
             } catch (RuntimeException e) {
-                // a name the parser does not take is left out of the list
+                refused[0]++;                                     // a name the parser does not take is left out of the list
             }
         });
+        sampled.put(d.kind(), docs.size() + " documents sampled: " + out.size() + " path fields" + (refused[0] > 0 ? ", " + refused[0] + " names left out" : ""));
         if (shapes.size() > 64) {
             shapes.clear();
         }

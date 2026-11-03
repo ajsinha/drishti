@@ -1226,9 +1226,9 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
 - [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)
-- [ ] Rachana paths as the field notation (one parser, compiled to columns or DuckDB JSON; the grain from `[*]`); BI's examples in the `$.` form
-- [ ] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators
-- [ ] the pivot guide's worked examples of section 6.7, each with its real figures from the demo lake, a screenshot, the command line and the saved view's YAML
+- [ ] Rachana paths as the field notation (one parser, compiled to columns or DuckDB JSON; the grain from `[*]`); BI's examples in the `$.` form (built: the pivot side; the BI datasets' `$.` form to come)
+- [x] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators
+- [x] the pivot guide's worked examples of section 6.7, each with its real figures from the demo lake, a screenshot, the command line and the saved view's YAML
 
 ## 25. Mock-ups: the screens to build
 
