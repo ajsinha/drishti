@@ -102,7 +102,7 @@ def test_the_playground_names_no_made_up_entity_and_shows_the_lens():
 
 
 def test_the_versions_1_1_0_current_1_0_0_and_0_1_0_unchanged_elements_2_1_beside_2_0(backend, client):
-    assert rd.VERSION == "1.1.0" and {"0.1.0", "1.0.0", "1.1.0"} <= set(rd.versions())
+    assert rd.VERSION == "1.2.0" and {"0.1.0", "1.0.0", "1.1.0", "1.2.0"} <= set(rd.versions())
     for v in ("0.1.0", "1.0.0", "1.1.0"):
         assert client.get(f"/static/render/{v}/drishti-render.js").status_code == 200
         assert json.loads((rd.ROOT / v / rd.RECORD).read_text()) == rd.record(v)

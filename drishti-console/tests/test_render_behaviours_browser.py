@@ -120,9 +120,9 @@ def test_the_pivot_tab_of_a_published_renderer_opens_the_pivot_screen_on_the_pan
     tab = lab.locator("#host #p-trades [data-pv-tab='pivot']")
     if tab.count() == 0:
         return
-    with lab.expect_popup() as popup:
-        tab.click()
-    assert "/pivot?source=" in popup.value.url
+    tab.click()
+    opened = lab.evaluate("() => window.__opened.splice(0)")                  # the lab records window.open (and keeps the host's page)
+    assert opened and opened[0][0] == "/pivot?source=" + "panel%2Ftrade%2Ftrades%2FIRS-48213"
 
 
 def test_the_nested_pivot_is_drawn_as_the_pivot_grid(lab):

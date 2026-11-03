@@ -398,7 +398,7 @@ click on a point, a node or a place that names an entity opens it in place.
 | tree rows | `tree-rows.js` | open and close, the filter box keeping ancestors |
 | drill-down | `drill.js` (levels, crumbs, Esc; the address `?dr.<panel>=` and Back) | levels, crumbs, Up and Esc **in place**: the host's address never changes |
 | sorting, filtering, paging | `tables.js` + `colfilter.js` (funnels, per-column filters, the chart button, the address) | `'library'`: heading buttons (ascending, descending, the server's order, the console's value rules), one filter box, 25 a page with a pager; **`'console'` (1.0.0): the console's funnels, per-column filters and Chart any table** (the chart dialog opens over the host's page, never a window) |
-| the Pivot tab | `pivot.js` (1,000 lines, its records through the panel's records URL) | `'library'`: the switch and a `drishti:pivot` event; **`'console'`: the console's grid** (`pivot-engine.js`, `pivot-grid.js`, `pivot.js`), its rows read as the person (`recordsUrl`; the embed API v2 for Elements 2.0); saving an arrangement stays a console feature |
+| Pivot (a table whose Sutra says `pivot:`) | a link to the pivot screen (`/pivot?source=panel/…`) | both modes: the link; the pivot screen itself is a console screen (every figure the server's pivot engine); a nested `pivot` panel is redrawn by `pivot-grid.js` in `'console'` mode |
 | nested pivot rows | `tree-rows.js` redraws them with the Pivot grid | the macro's plain table; **`'console'`: the Pivot grid** (`tree-rows.js` from `data-pv-tree`) |
 | the drill's address | `drill.js` keeps `?dr.<panel>=` and Back | the console's page: the same (`behaviours: 'host'`); another host: `drill.js` in place, the host's address untouched (`address: false`) |
 | About this page | `about.js` fetches the drawer's HTML | **drawn by the library from JSON** (`?format=json`, `m/about.js`): the console's drawer on its client pages, a side sheet in the container elsewhere |
@@ -678,7 +678,7 @@ widths.
 | A panel header in a tabbed grid area is a `banner` landmark on the console page and generic in the library | the console's script turns the section into a tabpanel after parsing and Chromium then exposes the header as a banner; the library sets the role before the panel is in the page, and HTML-AAM says a header inside a section is generic |
 | An outside URL in the data: the console opens it in a new tab (`target="_blank"`); the library sends `drishti:navigate` | in place by default (section 12); `outsideLinks: 'new-window'` gives the console's behaviour |
 | Console-only affordances: the download menu, Customize, the arrange handles, the pivot's saved arrangements, the address state of drills and filters | console features, not part of a screen; kept by the console when it is the host (phase 2) |
-| A nested pivot is the plain table, and the Pivot tab's grid is not built by the library | `pivot.js`, `pivot-grid.js` and `tree-rows.js`'s pivot redraw are phase 2 (section 7.4); the parity page draws neither, the console page with them redraws the same rows as a collapsible grid |
+| A nested pivot is the plain table in `'library'` mode | `tree-rows.js`'s redraw with `pivot-grid.js` is a console behaviour; the parity page draws the plain table, the console page redraws the same rows (the engine's figures) as a collapsible grid |
 | Tables sort with heading buttons, one filter box and a pager, not the console's per-column funnels and chart button | phase 1 ports the sort rules exactly (`test_a_column_sorts_as_the_console_sorts_it` compares the order with `tables.js`'s); the funnels and Chart any table come with phase 2 |
 
 ### 14.2 Results
@@ -786,7 +786,7 @@ second request.
 | Customize and layout mode | `designer.js`, `layout.js` find the drawn panels | not offered (a console feature) | layout mode in both modes; Customize in the client-mode run of `test_designer_browser.py` |
 | The download menu | drawn by the library (`chrome: true`), named by `view.js` | not offered (a console feature) | both modes: the same files |
 | About this page | drawn by the library from JSON in the console's drawer | drawn by the library in a side sheet in the container (`about: true`) | both modes: the same text, JSON asked on the client page; library; Elements 2.0 |
-| The Pivot tab's grid | `pivot-engine.js`, `pivot-grid.js`, `pivot.js` | the same, its rows read as the person (`recordsUrl`; the embed API v2) | both modes: the same grid; library; Elements 2.0 |
+| The nested pivot panel's grid | `pivot-grid.js`, `tree-rows.js` | the same; every figure computed by the server's pivot engine | both modes: the same grid; library; Elements 2.0 |
 | The nested-pivot grid | `tree-rows.js` from `data-pv-tree` | the same | both modes; library |
 | Controls, row events, refresh, computing | `controls.js`, `sutra-wire.js`, `refresh.js`, `compute.js`; swapped panels drawn from JSON | controls (`panelsUrl`); row events as `drishti:row-click` | both modes: a tick and a control move the same panels |
 
@@ -982,7 +982,7 @@ sign-in and comes back.
 <!-- the renderer: one call (the library from the console's embed path; your page needs no server) -->
 <div id="risk"></div>
 <script type="module">
-  import { render } from 'https://drishti.bank.example/embed/v2/render/1.1.0/drishti-render.js';
+  import { render } from 'https://drishti.bank.example/embed/v2/render/1.2.0/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: '1000008' },
                       { auth: 'popup', server: 'https://drishti.bank.example' });
   const el = view.container;
@@ -1441,12 +1441,12 @@ as well as `drishti-elements`. Try it with the demo host: `python3 tools/element
 and navigation mode, lists the events, and prints the quick start for what is on screen. It opens on an entity your server holds and you
 may open (the first of a common kind, in your lens), says which lens you are inside, and says why when there is nothing to draw.
 
-**One import, one call** (on the console's origin; another origin imports `/embed/v2/render/1.1.0/drishti-render.js` with a token, or `auth: 'popup'`):
+**One import, one call** (on the console's origin; another origin imports `/embed/v2/render/1.2.0/drishti-render.js` with a token, or `auth: 'popup'`):
 
 ```html
 <div id="risk"></div>
 <script type="module">
-  import { render } from '/static/render/1.1.0/drishti-render.js';
+  import { render } from '/static/render/1.2.0/drishti-render.js';
   const view = render(document.getElementById('risk'), { kind: 'trade', id: 'IRS-48213' }, { behaviours: 'console', about: true });
   view.container.addEventListener('drishti:navigate', (e) => console.log('opened', e.detail.kind, e.detail.id));
 </script>
@@ -1476,7 +1476,7 @@ unless you ask), `drishti:row-click`, `drishti:select`, `drishti:loaded`, `drish
 
 **Versions:** one immutable folder per version (`/static/render/<version>/`, and `/embed/v2/render/<version>/` for other origins; `1`
 or `1.0` answers `302` to the exact one) with `integrity.json` (SHA-384 of every file) for subresource integrity:
-`<script type="module" src="/static/render/1.1.0/drishti-render.js" integrity="sha384-…">`. 1.0.0 (the first release, Elements 2.0) and 0.1.0 (the preview) stay served, unchanged.
+`<script type="module" src="/static/render/1.2.0/drishti-render.js" integrity="sha384-…">`. 1.2.0 draws a table that offers Pivot as the table and a link to the pivot screen (the Table | Pivot switch is gone; `recordsUrl` is accepted and unused); 1.1.0 (Elements 2.1, whose Pivot opens the pivot screen in a new window), 1.0.0 (the first release, Elements 2.0) and 0.1.0 (the preview) stay served, unchanged.
 
 ## 20. Drishti Elements: the design
 

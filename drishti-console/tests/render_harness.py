@@ -134,6 +134,10 @@ class Site:
             return route.abort()
         path = u.path
         headers = {"Content-Security-Policy": CSP, "X-Content-Type-Options": "nosniff"}
+        if path == "/api/pivot/inline" and route.request.method == "POST":     # the pivot engine, stood in (Chart any table on the shown rows)
+            from engine_standin import inline_answer
+            return route.fulfill(status=200, body=json.dumps(inline_answer(route.request.post_data_json or {})),
+                                 headers={**headers, "Content-Type": "application/json; charset=utf-8"})
         if path in self.pages or (path + "?" + u.query) in self.pages:
             path = path if path in self.pages else path + "?" + u.query
             body = self.pages[path]

@@ -17,6 +17,9 @@
 
 ## Unreleased (on develop, after 2.9.11)
 
+- **Client renderer 1.2.0.** A table that offers Pivot is the table and a link to the pivot screen, as the console draws it (the Table |
+  Pivot switch, `pivotTab` and the `pivot` behaviour module are gone); 1.1.0, 1.0.0 and 0.1.0 stay served, unchanged. The pivot grid sets
+  its indents and conditional formats through the CSSOM, so a host's CSP that refuses inline styles is respected.
 - **Nothing else aggregates: the Sutra `pivot` panel and Chart any table on the pivot engine.** A `pivot` panel's cells, subtotals and
   totals are computed by the engine's in-memory provider (`RowsProvider`, the built-ins' own states; equal to the tabular provider on the same
   rows) and its nested rows drawn by the one pivot grid (`pivot-grid.js`, the Pivot screen's, which now replaces `pivot-core.js`). *Chart any

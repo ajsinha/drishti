@@ -32,7 +32,7 @@
         var host = box && box.querySelector('[data-pivot]');
         var spec = {};
         try { spec = host ? JSON.parse(host.getAttribute('data-pivot') || '{}') : {}; } catch (err) { spec = {}; }
-        var view = b.closest('.view[data-view], [data-kind]');
+        var view = b.closest('.view[data-view]') || b.closest('[data-kind]');   // the view's own kind and id, not a panel's kind
         var panel = host ? host.getAttribute('data-pivot-panel') : null;
         var source = spec.source || (view && panel ? 'panel/' + view.getAttribute('data-kind') + '/' + panel + '/' + view.getAttribute('data-id') : null);
         if (!source) { return; }

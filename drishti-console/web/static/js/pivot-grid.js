@@ -97,7 +97,7 @@
       var label = '<span class="pv-lab">' + esc(r.label) + '</span>' + (kind === "others" ? "" : by);
       var div = r.diversification ? ' <span class="pv-div" title="Σ children − this total, for each holistic measure">Σ−total ' + Object.keys(r.diversification).map(function (k) { return esc(k) + " " + fmt(r.diversification[k], {}); }).join(", ") + '</span>' : "";
       h.push('<tr class="pv-r pv-' + kind + '" data-row="' + ri + '" aria-level="' + Math.max(1, depth) + '">');
-      h.push('<th class="pv-rowhead" scope="row" style="padding-left:' + (8 + Math.max(0, depth - 1) * 16) + 'px">' + toggle + label + div + '</th>');
+      h.push('<th class="pv-rowhead" scope="row" data-pad="' + (8 + Math.max(0, depth - 1) * 16) + '">' + toggle + label + div + '</th>');
       cols.forEach(function (c, ci) {
         var key = r.key + "|" + c.key;
         var cell = kind === "header" ? null : cells[key];
@@ -114,7 +114,7 @@
           if (fr && r.kind === "node" && c.kind !== "grand" && c.kind !== "total" && typeof v === "number") {
             var f = fr.hi === fr.lo ? 1 : (v - fr.lo) / (fr.hi - fr.lo);
             cls += fr.style === "bars" ? " pv-bars" : " pv-scale";
-            style = ' style="--pv-f:' + f.toFixed(3) + '"';
+            style = ' data-f="' + f.toFixed(3) + '"';
           }
           h.push('<td class="' + cls + '"' + style + ' data-cell="' + esc(key) + '" data-m="' + mi + '" data-c="' + ci + '" tabindex="-1"' + title + '>' + text
             + (d != null && d !== 0 ? '<span class="pv-delta ' + (d > 0 ? "up" : "down") + '">' + (d > 0 ? "+" : "") + fmt(d, m) + '</span>' : "")
@@ -125,6 +125,9 @@
     });
     h.push('</tbody></table>');
     el.innerHTML = h.join("");
+    // indents and conditional formats through the CSSOM, never a style attribute (a page's CSP may refuse inline styles)
+    el.querySelectorAll("th[data-pad]").forEach(function (t) { t.style.paddingLeft = t.getAttribute("data-pad") + "px"; });
+    el.querySelectorAll("td[data-f]").forEach(function (t) { t.style.setProperty("--pv-f", t.getAttribute("data-f")); });
 
     var selected = [];
     function select(td, add) {

@@ -70,5 +70,5 @@ def test_a_field_moved_to_columns_with_the_keyboard_asks_the_engine_again(page):
 
 def test_the_export_panel_opens(page):
     page.click("[data-pv-export-open]")
-    assert page.locator("[data-pv-export]").is_visible()
+    assert page.locator("section[data-pv-export]").is_visible()
     assert not page.errors, page.errors

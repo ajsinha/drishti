@@ -56,7 +56,7 @@ def main(out: Path) -> None:
             print(out / "pivot-screen-columns-light.png")
             page.click("[data-pv-export-open]")
             page.wait_for_timeout(150)
-            page.locator("[data-pv-export]").screenshot(path=str(out / "pivot-export-panel.png"))
+            page.locator("section[data-pv-export]").screenshot(path=str(out / "pivot-export-panel.png"))
             print(out / "pivot-export-panel.png")
             browser.close()
     finally:
