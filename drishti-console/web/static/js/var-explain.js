@@ -20,7 +20,7 @@
 
    It is not drawn by the VaR page's own charts: the answer is turned into a ViewModel of the standard panel kinds (metric, waterfall,
    table, hbar, markdown; docs/architecture/VIEWMODEL.md) and painted by the one renderer of every screen, Drishti Render
-   (static/render/1.1.0, vendored with the console; CLIENT_RENDERER.md), so it looks and behaves like the rest of the product.
+   (static/render/1.2.0, vendored with the console; CLIENT_RENDERER.md), so it looks and behaves like the rest of the product.
    Every step is a row of the Steps table that opens its drivers (drishti:row-click). On a phone (MOBILE_DISPLAY.md section 3) the answer
    in words is must, the steps as horizontal bars glance, the selected step's drivers more; the states and the matrix are desk. */
 (function () {
@@ -39,7 +39,7 @@
   var shown = null;                                              // the drawn view, to follow a change of theme
   function activeTheme() { return document.documentElement.getAttribute("data-theme") || "terminal"; }
   document.addEventListener("drishti:theme", function () { if (shown && shown.setTheme) shown.setTheme(activeTheme()); });
-  function renderer() { return lib || (lib = import("/static/render/1.1.0/drishti-render.js")); }
+  function renderer() { return lib || (lib = import("/static/render/1.2.0/drishti-render.js")); }
   var phone = function () { return window.matchMedia && window.matchMedia("(max-width: 640px)").matches; };
 
   // ---- numbers ----------------------------------------------------------------------------------------------------------------
