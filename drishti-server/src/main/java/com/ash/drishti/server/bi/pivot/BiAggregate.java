@@ -179,7 +179,7 @@ public final class BiAggregate {
             this.sets = cs;
             this.calls = fc;
             AggregationPlan plan = new AggregationPlan("bi", null, null, Map.of(), dimMap, fc, cs.isEmpty() ? List.of(CellSet.of(List.of(), Map.of()))
-                    : cs, null, maxGroups);
+                    : cs, null, maxGroups, null);
             TabularSource.Relation rel = new TabularSource.Relation("(" + detail.sql() + ")", detail.params(), null, List.of());
             List<GroupingSetsCompiler.Compiled> stmts = GroupingSetsCompiler.compile(plan, rel, types);
             GroupingSetsCompiler.Compiled c = stmts.get(0);     // the sets share one shape (no restriction): one statement
