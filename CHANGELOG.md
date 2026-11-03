@@ -44,6 +44,29 @@
   status|run|retry`. `LakeLoad.reads(name)` tells whether the loader reads a file name. Two new rules in `ArchitectureRulesTest`
   (`dataInboxIsPlainJava`, `dataInboxWritesNoTable`). The Admin screen comes after its mock-ups.
 
+## 2.9.11.e
+
+- **The table layer's foundation: virtual tables and models in a module of their own (BI_FOUNDATION_2911E.md sections 3 to 5 and 9;
+  TABLES_GUIDE.md; VIRTUAL_TABLES.md).** New module `drishti-tables` (plain Java, on Rachana and the pivot engine; `drishti-server`
+  depends on it; `ArchitectureRulesTest` holds the direction): the catalogue of `config/tables/<domain>/<name>.table.yaml` and
+  `.model.yaml` and of stored items (`ItemStore`, kinds `table` and `model`), the definitions with every key of BI's datasets and models
+  (names `<domain>.<name>`, `was:` for one release, built-in columns `id`, `business_date`, `index`, `update_seq`, `updated_at`, rules
+  and masks on the table, model aliases, summary tables, `materialize: none | on-load | { live }`, `related(...)`), the checks of a table,
+  a model and the catalogue (codes `DRS-9600` to `DRS-9616`), lineage, a preview over JSONL samples with the grain expanded and
+  `$`, `@`, `^` walked, and the materialisation's API with its store layout. `FileSwap` moved from BI into the layer. BI does not read the
+  layer yet (the switch).
+- **`drishti.py tables list | check | preview | lineage | migrate`** (CLI_GUIDE.md section 7; `java -jar drishti-server-*-exec.jar tables`,
+  no server): `check` exits 1 on an error and takes `--sample TABLE=FILE.jsonl`; `migrate` turns `config/bi`'s datasets and models into
+  tables and layer models with `--dry-run` (the unified diff and the report), `--check`, `--report`, `--audit`, `--moved-to`, refusing by
+  name (`DRS-9195`). Expressions go through a pluggable DEL translator (the language step provides it; a token stand-in does the mechanical
+  part now), then columns to paths, date parts and Q1's null rule: `a != b` becomes `a != b && a != null` where `a` may be missing, so
+  every figure stays the same (`trading-risk`'s *Open MTM*). Idempotent.
+- **The parity recorder of the release** (`BiFoundationRecorder`, `BiFoundationCases`, `BiFoundationLive`, `BiFoundationParityTest`): every
+  shipped model and report, seven persons (a desk-head with two desks and one with none, risk, an analyst, an administrator, a reader
+  without the raw power, a role no rule names), three times, each alias's rows per person, and a live replay; recorded on the tree before
+  anything moves, compared at 1e-9 relative for floating point and exactly for everything else. The parity test is skipped until the
+  fixtures are committed.
+
 ## 2.9.11.a
 
 - **Pivot: a JSON Lines export** (PIVOT_GUIDE.md, Export). The pivot screen and `POST /api/v1/pivot/export` offer `jsonl` beside Excel, CSV and
