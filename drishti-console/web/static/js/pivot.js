@@ -50,7 +50,14 @@
   var esc = window.PivotCore.esc;
   var fmt = window.PivotCore.fmt;
   var API = "/api/pivot";
-  var state = {view: null, catalogue: null, answer: null, diff: null, grid: null, selection: [], focusField: null, chart: null};
+  var state = {view: null, catalogue: null, answer: null, diff: null, grid: null, selection: [], focusField: null, chart: null, savedView: null};
+  // the screen's switches (pivot-switches.js): exact / auto / ≈, progressive, use rollups, live; each is a request option the server answers
+  var sw = function () { return window.PivotSwitches || null; };
+  function asked(b) {
+    var o = sw() ? sw().options() : {};
+    Object.keys(o).forEach(function (k) { b[k] = o[k]; });
+    return b;
+  }
 
   function notice(msg) {
     var n = $("[data-pv-notice]");
@@ -229,13 +236,18 @@
     estimate().then(function (e) {
       if (e && e.confirm && !force) { $("[data-pv-meta]").textContent = "large: press Run to compute it"; return; }
       var cmp = $("[data-pv-compare]").value;
-      var p = cmp ? call("POST", "/compare", {view: viewBody(), otherDate: cmp}).then(function (c) { state.diff = c.diff; return c.answer; })
-        : call("POST", "/query", {view: viewBody()}).then(function (a) { state.diff = null; return a; });
+      if (!cmp && sw() && sw().progressiveOn()) {
+        state.diff = null;
+        return sw().progressive(asked({view: viewBody()}), show);   // ≈ first (when the view is large), then exact, each drawn as it comes
+      }
+      var p = cmp ? call("POST", "/compare", asked({view: viewBody(), otherDate: cmp})).then(function (c) { state.diff = c.diff; return c.answer; })
+        : call("POST", "/query", asked({view: viewBody()})).then(function (a) { state.diff = null; return a; });
       return p.then(show);
     }).catch(function (err) { $("[data-pv-meta]").textContent = ""; notice(err.message); });
   }
 
-  function show(a) {
+  function show(a, how) {
+    a.savedView = a.savedView || state.savedView;
     state.answer = a;
     state.view = a.view;
     var comp = a.computed || {};
@@ -245,6 +257,8 @@
     $("[data-pv-grid-sub]").textContent = "rows " + ((a.rowDimensions || []).join(" › ") || "—") + (a.columnDimensions && a.columnDimensions.length ? " · columns " + a.columnDimensions.join(" › ") : "")
       + " · subtotals " + (a.view.subtotals || "below") + " · lazy: closed nodes are not computed · " + a.exactness;
     state.grid = window.PivotCore.render($("[data-pv-grid]"), a, {diff: state.diff, onToggle: toggle, onCell: provenance, onSelect: function (s) { state.selection = s; }, onRows: rows});
+    if (sw()) { sw().shown(a, how || {}); }      // the computed-as line, the live stream, the comment markers
+    if (how && how.patched) { return; }          // a live patch: the cells moved, nothing else did
     drawZones();
     drawFields();
     drawSlicers();
@@ -340,6 +354,7 @@
         + '</dl><div class="pv-pop-b"><button type="button" class="pv-btn" data-pop-rows>Rows (' + esc(cell.members) + ')</button>'
         + (cell.scope && p.provider === "var" ? ' <a class="pv-btn" href="/var?scope=' + encodeURIComponent(cell.scope) + '">Ask the VaR engine</a>' : "")
         + (ref ? ' <button type="button" class="pv-btn" data-pop-copy>Copy reference</button>' : "") + '</div><div data-pop-rowsbox></div>';
+      if (sw()) { sw().popover(pop, key, m, cell); }   // the cell's comments, and how the answer was computed
       pop.hidden = false;
       var r = td.getBoundingClientRect();
       var host = $(".pv-gridcard").getBoundingClientRect();
@@ -452,7 +467,9 @@
     var with_ = share ? window.prompt("Share with (people or role:<role>, comma-separated)", "") : "";
     call("POST", "/views", {name: name, view: viewBody(), sharedWith: (with_ || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean)})
       .then(function (v) {
+        state.savedView = v.id;
         state.answer.savedView = v.id;
+        if (sw()) { sw().shown(state.answer, {saved: true}); }
         $("[data-pv-title]").textContent = v.id + " @" + v.version;
         notice("saved as " + v.id + " (version " + v.version + ")" + (v.sharedWith && v.sharedWith.length ? ", shared with " + v.sharedWith.join(", ") : "") + ": PIVOT @" + v.id);
       }).catch(function (e) { notice(e.message); });
@@ -490,6 +507,7 @@
       if (id) {
         return call("GET", "/views/" + id).then(function (v) {
           $("[data-pv-title]").textContent = v.id + " @" + v.version;
+          state.savedView = v.id;
           return open(v.view.source, v.view.date, v.view).then(function () { if (state.answer) { state.answer.savedView = v.id; } });
         });
       }
@@ -602,7 +620,14 @@
     view: function () { return state.view; },
     answer: function () { return state.answer; },
     selection: function () { return state.selection; },
-    notice: notice
+    notice: notice,
+    // for the switches, live pivots and comments (pivot-switches.js): the request body as asked, the server, a redraw, a fresh run
+    body: function () { return asked({view: viewBody()}); },
+    call: call,
+    show: show,
+    run: function () { run(true); },
+    savedView: function () { return state.savedView; },
+    grid: function () { return $("[data-pv-grid]"); }
   };
   boot();
 })();

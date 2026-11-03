@@ -45,6 +45,17 @@
     <button type="button" class="pv-chip" data-pf-open="whatif" title="What-if: leave members out, scale a field, add rows (I)">What-if <kbd>I</kbd></button>
     <button type="button" class="pv-chip" data-pf-open="functions" title="Custom functions: the playground, versions, approval (U)">Functions <kbd>U</kbd></button>
   </div>
+  <div class="pv-switches" data-pv-switches role="group" aria-label="How the figures are computed">
+    <span class="pv-seg" role="radiogroup" aria-label="Exact or approximate">
+      <label title="Every figure from its values, at any size"><input type="radio" name="pvExact" value="exact"> Exact</label>
+      <label title="Distinct counts and percentiles exact on small data, ≈ by their sketches above the server's size"><input type="radio" name="pvExact" value="auto" checked> Auto</label>
+      <label title="≈ by sketches with their stated error; a level's top N by a count chosen by a summary"><input type="radio" name="pvExact" value="approximate"> ≈</label>
+    </span>
+    <label class="pv-chip" title="A large view answers ≈ from a sample first, then exact"><input type="checkbox" data-pv-progressive checked> Progressive</label>
+    <label class="pv-chip" title="A covering rollup may answer (the same figures, faster); off: the table is read"><input type="checkbox" data-pv-rollups checked> Use rollups</label>
+    <label class="pv-chip" title="Keep the view current: only the cells that moved are sent (L)"><input type="checkbox" data-pv-live> Live <kbd>L</kbd></label>
+    <span class="pv-computed" data-pv-computed aria-live="polite" title="How the answer was computed"></span>
+  </div>
   <div class="pv-slicers" data-pv-slicers role="group" aria-label="Slicers" hidden></div>
   <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
   <p class="pv-notice" data-pv-notice role="alert" hidden></p>
@@ -52,7 +63,7 @@
     <section class="pv-card pv-gridcard" aria-labelledby="pvGridTitle">
       <h2 id="pvGridTitle"><span data-pv-grid-title>Pivot</span> <span class="pv-sub" data-pv-grid-sub></span></h2>
       <div class="pv-scroll" data-pv-grid tabindex="0" aria-label="The pivot: arrows move, right arrow opens a row, left closes it, Shift+right opens every level below, Enter shows the rows"></div>
-      <p class="pv-keys"><kbd>→</kbd> expand · <kbd>←</kbd> collapse · <kbd>Shift</kbd>+<kbd>→</kbd> all below · <kbd>1</kbd>–<kbd>9</kbd> to level · <kbd>E</kbd> expand by… · <kbd>Enter</kbd> rows · <kbd>G</kbd> chart · <kbd>X</kbd> export</p>
+      <p class="pv-keys"><kbd>→</kbd> expand · <kbd>←</kbd> collapse · <kbd>Shift</kbd>+<kbd>→</kbd> all below · <kbd>1</kbd>–<kbd>9</kbd> to level · <kbd>E</kbd> expand by… · <kbd>Enter</kbd> rows · <kbd>G</kbd> chart · <kbd>X</kbd> export · <kbd>L</kbd> live · <kbd>M</kbd> comment (in a cell's popover)</p>
       <div class="pv-pop" data-pv-pop role="dialog" aria-label="Cell provenance" hidden></div>
     </section>
     <aside class="pv-side">
@@ -139,4 +150,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% endblock %}

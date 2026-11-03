@@ -79,7 +79,7 @@ public final class PivotCellComments {
     }
 
     /**
-     * The view's comments, oldest first ({@code cell}: one cell's, by its key; {@code open}: only those not resolved), each with
+     * The view's comments, oldest first ({@code cell}: one cell's, by its coordinates' text or the answer's cell key; {@code open}: only those not resolved), each with
      * {@code older: true} when it was written on an earlier version of the view.
      */
     public Map<String, Object> list(Principal p, String id, String cell, boolean open) {
@@ -87,7 +87,7 @@ public final class PivotCellComments {
         int version = ((Number) v.getOrDefault("version", 1)).intValue();
         List<Map<String, Object>> out = new ArrayList<>();
         for (Map<String, Object> c : stored(v)) {
-            if (cell != null && !cell.isBlank() && !cell.strip().equals(c.get("cell"))) {
+            if (cell != null && !cell.isBlank() && !cell.strip().equals(c.get("cell")) && !cell.strip().equals(c.get("cellId"))) {
                 continue;
             }
             if (open && c.get("resolved") != null) {
@@ -137,7 +137,8 @@ public final class PivotCellComments {
         }
         Map<String, Object> c = new LinkedHashMap<>();
         c.put("id", "c-" + UUID.randomUUID().toString().substring(0, 12));
-        c.put("cell", CellKey.of(coords).id());
+        c.put("cell", CellKey.of(coords).canonical());           // readable: productType=IRS (the grand total: *)
+        c.put("cellId", CellKey.of(coords).id());                // the answer's cell key, for the screen's marker
         c.put("coords", coords);
         c.put("label", coords.isEmpty() ? "grand total" : String.join(" · ", coords.values()));
         if (measure != null) {

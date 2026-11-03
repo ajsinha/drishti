@@ -19,10 +19,11 @@ nested rows opened with + and −, the scan-estimate bar, the provenance popover
 the server's (``/api/v1/pivot``, asked as the person through the same-origin proxy ``/api/pivot/...``); the console only draws."""
 from __future__ import annotations
 
-from urllib.parse import urlencode
+import json
+from urllib.parse import quote, urlencode
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse, RedirectResponse, Response
+from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
 
 from core.backend import BackendError
 from core.csrf import json_body
@@ -106,7 +107,7 @@ async def export(request: Request):
 
 @router.post("/api/pivot/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "explain", "whatif", "functions"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "explain", "whatif", "functions", "live"):
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 
@@ -168,3 +169,76 @@ async def function_op(request: Request, owner: str, ref: str, op: str):
     if op not in ("submit", "approve", "revoke"):
         return JSONResponse({"detail": "no such function action"}, status_code=404)
     return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))
+
+
+# ---- the screen's switches, live pivots and cell comments (PIVOT_GUIDE.md: the screen's switches, live pivots, cell comments) -------------
+
+_SSE = {"Cache-Control": "no-cache", "X-Accel-Buffering": "no"}
+
+
+def _relay(request: Request, pairs) -> StreamingResponse:
+    """Server-sent events relayed as they come; a refusal is one ``error`` event with the server's code and words."""
+    async def events():
+        try:
+            async for event, data in pairs:
+                if await request.is_disconnected():
+                    break
+                yield f"event: {event}\ndata: {data}\n\n"
+        except BackendError as e:
+            yield f"event: error\ndata: {json.dumps({'code': e.code, 'error': e.detail})}\n\n"
+
+    return StreamingResponse(events(), media_type="text/event-stream", headers=_SSE)
+
+
+def _view_path(owner: str, name: str) -> str:
+    return f"/views/{quote(owner, safe='')}/{quote(name, safe='')}"
+
+
+@router.post("/api/pivot/query/progressive")
+async def progressive(request: Request):
+    """Progressive on: the server's ``POST /api/v1/pivot/query?progressive=true`` relayed, ``approximate`` (≈ from a sample, with intervals)
+    then ``exact``; the screen draws each as it comes and computes nothing."""
+    body = await _body(request)
+    return _relay(request, request.app.state.backend.sse_post("/pivot/query?progressive=true", ident(request), body))
+
+
+@router.get("/api/pivot/live")
+async def live_list(request: Request):
+    return await _call(request, "GET", "/live")
+
+
+@router.get("/api/pivot/live/{lid}/events")
+async def live_events(request: Request, lid: str, node: str = ""):
+    """A live pivot's stream (answer, then patch, reshape, status), opened on the node that holds it."""
+    return _relay(request, request.app.state.backend.sse(f"/pivot/live/{quote(lid, safe='')}/events", ident(request), node=node or None))
+
+
+@router.delete("/api/pivot/live/{lid}")
+async def live_end(request: Request, lid: str):
+    try:
+        await request.app.state.backend.pivot("DELETE", f"/live/{quote(lid, safe='')}", ident(request))
+        return Response(status_code=204)
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/pivot/views/{owner}/{name}/comments")
+async def comments(request: Request, owner: str, name: str, cell: str = "", open: str = ""):
+    return await _call(request, "GET", _view_path(owner, name) + "/comments", cell=cell, open=open)
+
+
+@router.post("/api/pivot/views/{owner}/{name}/comments")
+async def comment_add(request: Request, owner: str, name: str):
+    return await _call(request, "POST", _view_path(owner, name) + "/comments", await _body(request))
+
+
+@router.post("/api/pivot/views/{owner}/{name}/comments/{cid}/{op}")
+async def comment_op(request: Request, owner: str, name: str, cid: str, op: str):
+    if op not in ("resolve", "reopen"):
+        return JSONResponse({"detail": "no such comment action"}, status_code=404)
+    return await _call(request, "POST", f"{_view_path(owner, name)}/comments/{quote(cid, safe='')}/{op}", {})
+
+
+@router.delete("/api/pivot/views/{owner}/{name}/comments/{cid}")
+async def comment_delete(request: Request, owner: str, name: str, cid: str):
+    return await _call(request, "DELETE", f"{_view_path(owner, name)}/comments/{quote(cid, safe='')}")
