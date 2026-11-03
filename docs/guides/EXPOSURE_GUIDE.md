@@ -27,6 +27,9 @@ Each measure has exactly two documents, the guide and one tutorial, and two help
 guide. Where the original proposal said otherwise, the code wins and the difference is stated (**Implementation:**).
 VaR follows the same rule: [VAR_GUIDE.md](VAR_GUIDE.md) and tutorial 25.
 
+FVA, the funding cost and benefit of a netting set, is priced from this engine's EE and ENE profile (after the CSA) by its own compute
+engine `fva`, which needs this one: [FVA_GUIDE.md](FVA_GUIDE.md) and tutorial 34.
+
 For the proposed counterparty credit risk cube on this engine (allocated exposure, the GLEIF group roll-up, limits by tenor with
 headroom, CVA, SA-CCR, SIMM, wrong-way risk, pre-deal pricing on paths, every data contract), see the design:
 [CCR_CUBE_LENS.md](../lenses/CCR_CUBE_LENS.md).

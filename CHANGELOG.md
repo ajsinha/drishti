@@ -15,6 +15,39 @@
 -->
 # Changelog
 
+## 2.9.12 — Counterparty engines (in progress)
+
+### FVA: funding cost and benefit, with its playground
+
+- **FVA per netting set and for any exposure scope, computed in Java on the server (FVA_GUIDE.md; COUNTERPARTY_ENGINES.md section 5.5).**
+  FCA = −Σ EE·DF·s_B·Δt on the expected exposure, FBA = Σ |ENE|·DF·s_L·Δt on the expected negative exposure, FVA = FCA + FBA, over every
+  primary date of the exposure run, after the CSA. `FvaMath` (drishti-compute, beside `ExposureMath`) prices the EE and ENE profile that
+  `ExposureCalc.profile` reads from the matrices the exposure answer already holds: never a second exposure computation. The scope's
+  figures are the sum of its sets' (FVA adds over sets and counterparties). The funding spread is a curve id read from the `ir-curve`
+  kind (points `TENOR`, `SPREAD`), else a curve of that id in the settings (the demo's synthetic, labelled `CRV-USD-FUNDING`), else the
+  flat `fallback-spread` (flagged `FUNDING_FALLBACK`); a lending spread of its own for FBA, symmetric by default; discounting by
+  `CRV-USD-OIS` of the date, log-linear in DF (no curve: a flat `discount-rate`, flagged `FLAT_DISCOUNT`); the period's end or mid
+  point; FBA on or off; survival weighting from flat hazards (off by default). A run that is not `RISK_NEUTRAL` is refused with
+  `DRS-5447` (409) when `require-risk-neutral` is true; the demo computes it and flags `REAL_WORLD_RUN`. CVA is shown as planned.
+- **Its own compute engine `fva` (`config/engines/fva.yaml`, on by default), needing the exposure engine.** Off, `/api/v1/fva`, the words
+  `FVA` and `PLAY FVA`, the screen, the playground, the Engines menu's FVA column and the Help pages are gone.
+- **`/api/v1/fva`: `scope`, `status`, `playground`, `playground.xlsx`, `playground/template` (API_GUIDE.md).** All reads, under the
+  `read` token scope. One answer carries the figures, the EPE reading, the terms per date, every netting set's figures and term bars, the
+  counterparties' sums, the curves used and the provenance.
+- **One FVA screen, the decided mock-ups A, B and C as views of the one answer.** `FVA NSET:<id>` opens A (the tiles, the term bars by future
+  date, the formula), `FVA BANK` B (the netting sets by FVA), `FVA CPTY:<id>` C (a counterparty's sets side by side); the browser computes
+  nothing. The netting-set page shows FVA in its strip, its term bars and a Funding panel (`FVA_ENGINE` on the netting-set and counterparty
+  documents).
+- **The FVA Playground (`PLAY FVA`) and its workbook of live formulas.** The Choices, the terms by date with the formula bar, the
+  explanation; the workbook (Main, Config, Data, Terms, Explain, Provenance) recalculated by LibreOffice equals the engine to the cent
+  (`FvaPlaygroundWorkbookTest`); the example workbook is case F1 (b). `LN` joins the common set of workbook functions.
+- **`drishti.py fva show|sets|status` and `drishti.py play fva`** (tools/fvacli.py).
+- **Tests by hand:** `FvaMathTest` (case F1 (a) to (d) and the CVA.md cross-check to the cent), `FvaApiTest` (the exposure lake fixture:
+  NS-X FVA −1,750, CP-1 −3,250), `FvaPlaygroundWorkbookTest`, `test_fvacli.py`, `test_fva.py`.
+- **Docs:** the FVA guide and tutorial 34, API_GUIDE, CONFIGURATION.md, COUNTERPARTY_ENGINES.md section 5.5.
+- **Light checks without Maven:** `tools/dev/junit_light.sh` runs a few JUnit tests with plain javac; `tools/dev/javac_against_jar.sh`
+  compiles changed files against an unpacked server jar.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox
