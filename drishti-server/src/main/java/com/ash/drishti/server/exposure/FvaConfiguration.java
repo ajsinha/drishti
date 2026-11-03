@@ -34,6 +34,20 @@ public class FvaConfiguration {
         return new FvaService(exposure, props);
     }
 
+    /** FVA's figures on the netting-set and counterparty pages (the decided mock-up A), after the exposure engine's. */
+    @Bean
+    FvaFigures fvaFigures(FvaService svc, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.ViewPipeline> pipeline,
+            ExposureFigures afterThese) {
+        FvaFigures f = new FvaFigures(svc);
+        com.ash.drishti.engine.ViewPipeline p = pipeline.getIfAvailable();
+        if (p != null) {
+            java.util.List<com.ash.drishti.engine.ViewAugmenter> all = new java.util.ArrayList<>(p.augmenters());
+            all.add(f);
+            p.augmenters(all);
+        }
+        return f;
+    }
+
     /** FVA as a compute engine (docs/architecture/COMPUTE_ENGINES.md): off, its API answers 404 DRS-1020 and the curves it read are released. */
     @Bean
     public com.ash.drishti.server.engines.BasicEngine fvaComputeEngine(FvaService svc, Environment env) {
