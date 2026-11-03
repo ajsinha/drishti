@@ -350,7 +350,7 @@ def main(argv: list[str] | None = None) -> int:
         for day, path in files:
             run([py, str(DRISHTI), "lake", "build", "--from", str(path), "--as-of", day,
                  "--pack", str(ROOT / "config" / "packs" / "trading"), "--connector", f"trade-{system}", "--key", "TRADE_ID",
-                 "--partition-by", "PRODUCT_TYPE", "--mode", "overwrite-dates", "--lake", str(into)], a.dry_run,
+                 "--mode", "overwrite-dates", "--lake", "demo", "--lake-root", str(into)], a.dry_run,     # the layout: config/lakes/demo.yaml
                 f"2/3 {path.name} ({day})", into / "trading" / f"trade_{system}")
         if iceberg:
             plan.to_iceberg(system, into / "trading" / f"trade_{system}", replace=False)
