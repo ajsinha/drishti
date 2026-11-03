@@ -116,7 +116,8 @@ public final class ArrowIpcWriter {
                         values.setValueCount(index.size());
                         dictVectors.add(values);
                         provider.put(new Dictionary(values, enc));
-                        fields.add(new Field(col.name(), new FieldType(true, ArrowType.Utf8.INSTANCE, enc), null));
+                        // the root holds the indices (Arrow Java's in-memory form); the writer puts the values' type in the message
+                        fields.add(new Field(col.name(), new FieldType(true, enc.getIndexType(), enc), null));
                         indexes.add(index);
                     } else {
                         fields.add(new Field(col.name(), FieldType.nullable(type(col.kind())), null));
