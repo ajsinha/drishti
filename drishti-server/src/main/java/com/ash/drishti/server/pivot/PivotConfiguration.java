@@ -26,7 +26,9 @@ import com.ash.drishti.server.admission.AdmissionGate;
 import com.ash.drishti.server.admission.Work;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.edition.EditionCommands;
+import com.ash.drishti.server.frtb.FrtbService;
 import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.var.MrCubeProperties;
 import com.ash.drishti.server.var.VarPivotProvider;
 import com.ash.drishti.server.var.VarService;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -40,7 +42,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * The pivot engine's beans (PIVOT_GUIDE.md): the node's DuckDB executor, the tabular provider over the Data view's tables, the VaR provider
- * when the VaR engine runs here, the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
+ * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, MR_CUBE_GUIDE.md), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
  * The engine itself is the {@code drishti-bicompute} module's {@link PivotCore}; nothing here aggregates.
  */
 @Configuration
@@ -134,15 +136,16 @@ public class PivotConfiguration {
 
     @Bean
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, States states,
-            ObjectProvider<VarService> var,
+            ObjectProvider<VarService> var, ObjectProvider<MrCubeProperties> mr, ObjectProvider<FrtbService> frtb,
+            org.springframework.core.env.Environment env,
             ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         List<PivotProvider> providers = new ArrayList<>();
         VarService v = var.getIfAvailable();
         if (v != null) {
-            providers.add(new VarPivotProvider(v, () -> {
-                com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
-                return r == null || !r.known("var") || r.running("var");
-            }));
+            boolean mrSwitch = env.getProperty("drishti.engines.mr-cube.enabled", Boolean.class, false);
+            providers.add(new VarPivotProvider(v, () -> running(engines, "var", true), () -> running(engines, "mr-cube", mrSwitch),
+                    mr.getIfAvailable(MrCubeProperties::defaults), () -> running(engines, "frtb-sa", true)
+                            ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null));
         }
         providers.add(new TabularProvider(exec, both(kinds, panels)));
         PivotCore core = new PivotCore(providers, states, props.core());
@@ -151,6 +154,12 @@ public class PivotConfiguration {
             core.admission((viewer, what) -> g.admit(Work.PIVOT_VIEW, viewer.user(), what));
         }
         return core;
+    }
+
+    /** True when an engine runs here ({@code dflt} without the registry: tests and tools that start no engines). */
+    static boolean running(ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, String id, boolean dflt) {
+        com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
+        return r == null ? dflt : !r.known(id) || r.running(id);
     }
 
     /**

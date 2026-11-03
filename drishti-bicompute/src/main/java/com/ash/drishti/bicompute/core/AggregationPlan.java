@@ -33,9 +33,16 @@ import java.util.TreeMap;
  * @param sets the cell sets
  * @param shard this node's part of the rows (null: all of them)
  * @param maxGroups the most groups a query may return before the view is refused (the cell budget's guard; 0: no guard)
+ * @param options the view's provider options (the VaR provider's scope and lens), by name
  */
 public record AggregationPlan(String source, String date, String asOf, Map<String, Filter> filters, Map<String, Dim> dims,
-        List<FunctionCall> functions, List<CellSet> sets, Shard shard, int maxGroups, Money money) {
+        List<FunctionCall> functions, List<CellSet> sets, Shard shard, int maxGroups, Money money, Map<String, String> options) {
+
+    /** A plan without provider options. */
+    public AggregationPlan(String source, String date, String asOf, Map<String, Filter> filters, Map<String, Dim> dims,
+            List<FunctionCall> functions, List<CellSet> sets, Shard shard, int maxGroups, Money money) {
+        this(source, date, asOf, filters, dims, functions, sets, shard, maxGroups, money, Map.of());
+    }
 
     /**
      * Money in the plan (PIVOT_ENGINE.md section 5.4).
@@ -67,6 +74,7 @@ public record AggregationPlan(String source, String date, String asOf, Map<Strin
 
     public AggregationPlan {
         money = money == null ? Money.none() : money;
+        options = java.util.Collections.unmodifiableMap(new TreeMap<>(options == null ? Map.of() : options));
         filters = java.util.Collections.unmodifiableMap(new TreeMap<>(filters == null ? Map.of() : filters));
         dims = Map.copyOf(dims);
         functions = List.copyOf(functions);
@@ -75,12 +83,12 @@ public record AggregationPlan(String source, String date, String asOf, Map<Strin
 
     /** The same plan for other sets (the cache's misses) or other functions. */
     public AggregationPlan with(List<CellSet> s, List<FunctionCall> f) {
-        return new AggregationPlan(source, date, asOf, filters, dims, f, s, shard, maxGroups, money);
+        return new AggregationPlan(source, date, asOf, filters, dims, f, s, shard, maxGroups, money, options);
     }
 
     /** The same plan for one shard of the rows. */
     public AggregationPlan on(Shard s) {
-        return new AggregationPlan(source, date, asOf, filters, dims, functions, sets, s, maxGroups, money);
+        return new AggregationPlan(source, date, asOf, filters, dims, functions, sets, s, maxGroups, money, options);
     }
 
     /** The canonical text of the filters (part of every cache key). */

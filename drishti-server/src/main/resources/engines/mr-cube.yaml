@@ -12,11 +12,22 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/mr-cube.yaml: the market-risk cube (not installed in this release). Read at start, imported by application.yaml after the jar's copy of this
-# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
-# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+# config/engines/mr-cube.yaml: the market-risk cube (docs/guides/MR_CUBE_GUIDE.md): the pivot engine's VaR source with the MR lens. Read at
+# start, imported by application.yaml after the jar's copy of this file, so a key here wins over the shipped one and application.local.yaml
+# and the environment win over both (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only;
+# every other key is edited here.
 drishti:
   engines:
     mr-cube:
-      enabled: ${DRISHTI_MR_CUBE_ENABLED:false}   # run the market-risk cube on this node once it is installed (its settings will live under drishti.cube.mr.*)
+      enabled: ${DRISHTI_MR_CUBE_ENABLED:true}   # run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  cube:
+    mr:                              # the market-risk cube's settings (MR_CUBE_GUIDE.md section 9); the cell budget and cache are the pivot engine's (drishti.pivot.*)
+      sbm-max-cells: 60              # the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope)
+      stressed-max-cells: 100        # the most cells whose stressed VaR one view computes, scope by scope
+      sparkline-dates: 20            # the open business dates a sparkline reads (a date not open here is not opened for one)
+      sparkline-max-cells: 600       # the most cells of a view that get a sparkline
+      what-if-rows: 40               # the most rows the what-if side by side computes (the total always added)
+      # risk-classes: { IR: [Rates, Inflation, Money market, Securities financing], CR: [Credit, Fixed income, Structured], FX: [FX], EQ: [Equity, Equity derivatives], CM: [Commodity] }
+      # grids: { BANK-IR-TENOR: { 0-2Y: "0-2", 2-5Y: "2-5", 5-10Y: "5-10", 10Y+: "10-" } }   # the ladders' bucket grids, in years
+      # ladder-limits: { "USD 2-5Y": 1500000 }   # two-sided DV01 limits per currency and bucket; none: no limit bars

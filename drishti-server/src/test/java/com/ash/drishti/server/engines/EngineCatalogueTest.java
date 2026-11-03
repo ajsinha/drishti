@@ -39,13 +39,13 @@ class EngineCatalogueTest {
     void theProductsCatalogueHoldsTheTenEnginesInOrderWithTheirLinks() {
         EngineCatalogue c = EngineCatalogue.load();
         assertThat(c.all()).extracting(EngineCatalogue.Entry::id).containsExactly("var", "exposure", "sensitivities", "frtb-sa", "simm", "sa-ccr",
-                "fva", "mr-cube", "ccr-cube", "memory-lake");
+                "fva", "mr-cube", "ccr-cube", "memory-lake", "pivot");
         assertThat(c.get("frtb-sa").orElseThrow().needs()).containsExactly("var", "sensitivities");
         assertThat(c.get("simm").orElseThrow().needs()).containsExactly("sensitivities");
         assertThat(c.neededBy("exposure")).containsExactly("fva", "ccr-cube");
         assertThat(c.usedBy("sa-ccr")).containsExactly("ccr-cube");
         assertThat(c.get("memory-lake").orElseThrow().liveOn()).isFalse();
-        assertThat(c.all().stream().filter(e -> !e.installed()).map(EngineCatalogue.Entry::id)).containsExactly("sa-ccr", "fva", "mr-cube", "ccr-cube");
+        assertThat(c.all().stream().filter(e -> !e.installed()).map(EngineCatalogue.Entry::id)).containsExactly("sa-ccr", "fva", "ccr-cube");
         assertThat(c.forPath("/api/v1/frtb/sa").orElseThrow().id()).isEqualTo("frtb-sa");
         assertThat(c.forPath("/api/v1/sensitivities").orElseThrow().id()).isEqualTo("sensitivities");
         assertThat(c.forPath("/api/v1/variance")).isEmpty();

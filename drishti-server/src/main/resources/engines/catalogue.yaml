@@ -224,27 +224,27 @@ engines:
     ai-tools: []
   - id: mr-cube
     title: MR cube
-    about: "The market-risk cube: pivot, ladders, heat map, explain the move"
+    about: "The market-risk cube on the pivot engine: VaR by hierarchy and risk class, components, ladders, heat map, what-if, explain the move"
     file: mr-cube.yaml
     switch: drishti.engines.mr-cube.enabled
     env: DRISHTI_MR_CUBE_ENABLED
     aliases: []
-    shipped: false
-    installed: false
+    shipped: true
+    installed: true
     live-on: true
     prefixes: [drishti.cube.mr]
     needs: [var, pivot]
     uses: [sensitivities, frtb-sa]
-    api: [/api/v1/cube/mr]
-    console: [/mcube, /api/mcube/]
+    api: [/api/v1/pivot/mr]
+    console: [/mcube, /api/pivot/mr/]
     words: [MCUBE]
     menus: [mcube]
-    help: []
+    help: [docs-guides-mr-cube-guide, docs-tutorials-38-the-mr-cube-on-the-pivot-engine]
     landings: [mr-cube]
     tiles: []
     lenses: [mr-cube]
     bi: []
-    cli: [cube mr]
+    cli: [pivot mr]
     playgrounds: []
     connectors: []
     kinds: []
