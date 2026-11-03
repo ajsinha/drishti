@@ -162,11 +162,15 @@ def test_f1_opens_the_screens_guide(browser, console_url):
     ctx = _context(browser, 1280, "terminal")
     page = ctx.new_page()
     try:
-        for start in ("/help", "/help/section/risk", "/t"):
+        # each screen's own guide, as help.yaml's contextual: says (a pack may name its own: the stand-in's finance pack names
+        # getting-started for the help pages and the terminal); the help hub and a section's page are the "help" screen
+        for start, screen in (("/help", "help"), ("/help/section/risk", "help"), ("/t", "terminal")):
+            target = page.request.get(console_url + f"/help/context/{screen}", max_redirects=0).headers["location"].split("#")[0]
+            assert target.startswith("/help/") and target != "/help/", target
             page.goto(console_url + start, wait_until="load")
             page.locator("body").click(position={"x": 5, "y": 400})
             page.keyboard.press("F1")
-            page.wait_for_url("**/help/user-guide**", timeout=10000)
+            page.wait_for_url("**" + target + "**", timeout=10000)
     finally:
         ctx.close()
 

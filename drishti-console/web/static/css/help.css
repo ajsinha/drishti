@@ -112,7 +112,8 @@
 .hub-tile-f { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; font-size: .82rem; margin-top: .3rem; }
 .hub-tile-n { color: var(--d-muted); font-family: var(--d-font-mono); }
 .hub-open { color: var(--d-link); font-weight: 600; }
-.hub-links { display: flex; flex-wrap: wrap; gap: 1.2rem; margin-top: 1.4rem; font-size: .88rem; }
+.hub-links { display: flex; flex-wrap: wrap; gap: .4rem 1.2rem; margin-top: 1.4rem; font-size: .88rem; }
+.hub-links a { display: inline-flex; align-items: center; gap: .35rem; min-height: 44px; }        /* a finger tall on a phone */
 .sec-search { max-width: 760px; margin-bottom: 1rem; }
 .sec-scope { flex: 0 0 auto; color: var(--d-muted); font-size: .8rem; white-space: nowrap; }
 .sec-group { margin: 1.2rem 0 0; }
@@ -139,7 +140,7 @@
   .hub-tiles { grid-template-columns: minmax(0, 1fr); }
   .sec-search { flex-wrap: wrap; border-radius: 12px; }
   .sec-scope { flex-basis: 100%; white-space: normal; }
-  .sec-link { min-height: 44px; }
+  .sec-link { min-height: 44px; min-width: 44px; }                    /* a short title (API) is still a finger wide */
 }
 /* Competitive landscape */
 .cmp-page .pnl { margin-bottom: .9rem; }

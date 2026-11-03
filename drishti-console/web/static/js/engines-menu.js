@@ -74,12 +74,17 @@
         var first = panel.querySelector('.eng-col:not([hidden]) .mega-item:not([hidden])');
         e.preventDefault();
         if (first) { first.click(); }
-      } else if (e.key === 'Escape' && q.value) {
-        e.stopPropagation();
-        q.value = '';
-        filter();
       }
     });
+    /* Escape with words in the box clears them and keeps the menu open (a second Escape closes it). Caught on the window before
+       Bootstrap's dropdown, which listens on the document in the capture phase and stops the key there to close the menu. */
+    window.addEventListener('keydown', function (e) {
+      if (e.key !== 'Escape' || e.target !== q || !q.value) { return; }
+      e.preventDefault();
+      e.stopPropagation();
+      q.value = '';
+      filter();
+    }, true);
     menu.addEventListener('shown.bs.dropdown', function () {
       if (!narrow.matches) { q.focus(); }
     });

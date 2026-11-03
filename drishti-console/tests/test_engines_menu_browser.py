@@ -259,11 +259,12 @@ def test_f1_opens_the_screens_help_with_the_engines_menu_in_the_bar(browser, con
     ctx = _context(browser, 1280, "terminal")
     page = ctx.new_page()
     try:
+        # the terminal's own guide, as help.yaml's contextual: says (a pack may name its own: the stand-in's finance pack, getting-started)
+        target = page.request.get(console + "/help/context/terminal", max_redirects=0).headers["location"]
         page.goto(console + "/t", wait_until="load")
         page.locator("body").click(position={"x": 5, "y": 300})
         page.keyboard.press("F1")
-        page.wait_for_url("**/help/**", timeout=10000)
-        assert "/help/user-guide" in page.url
+        page.wait_for_url("**" + target.split("#")[0] + "**", timeout=10000)
         assert page.locator("[data-engines-menu]").count() == 1                  # the same bar on the help pages
     finally:
         ctx.close()
