@@ -281,12 +281,6 @@ public final class Lakes {
             }
         }
         List<String> promote = v.list(pick.apply("promote"));
-        for (String p : partition) {
-            if (!promote.isEmpty() && !promote.contains(p)) {
-                promote = new ArrayList<>(promote);
-                promote.add(0, p);                             // a partition column is a promoted column too
-            }
-        }
         return new LakeTable(domain, name, kind, path, format, partition, promote, v.list(pick.apply("vectors")),
                 v.map(pick.apply("flatten"), "flatten"), v.text(pick.apply("id"), null), v.text(pick.apply("date"), null),
                 v.text(pick.apply("latest-by"), null), mode, v.list(pick.apply("sort-by")), layout, v.text(pick.apply("retention"), null),

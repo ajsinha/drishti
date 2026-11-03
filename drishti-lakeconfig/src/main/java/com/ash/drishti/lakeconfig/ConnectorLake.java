@@ -22,7 +22,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -34,7 +33,7 @@ import java.util.function.Consumer;
  * from.
  *
  * <p>A connector that still carries the lake's keys itself ({@code root}, {@code domain}, {@code table.<kind>}, {@code layout.<kind>.*})
- * starts as before, with one warning per connector naming {@code drishti.py lake migrate-config} (L4: the one configuration alias, read
+ * starts as before, with one warning (the first such connector named) naming {@code drishti.py lake migrate-config} (L4: the one configuration alias, read
  * for one release). A connector that names a lake and also carries one of those keys is refused, naming both.
  */
 public final class ConnectorLake {
@@ -46,7 +45,7 @@ public final class ConnectorLake {
     /** The plugins whose settings a lake supplies. */
     public static final Set<String> PLUGINS = Set.of("delta", "iceberg");
 
-    private static final Set<String> WARNED = ConcurrentHashMap.newKeySet();
+    private static final java.util.concurrent.atomic.AtomicBoolean WARNED = new java.util.concurrent.atomic.AtomicBoolean();
 
     private ConnectorLake() {
     }
@@ -81,9 +80,9 @@ public final class ConnectorLake {
         }
         String name = settings.get(LAKE);
         if (name == null || name.isBlank()) {
-            if (legacy(settings) && WARNED.add(connector)) {
-                warn.accept("connector " + connector + " describes its lake itself (root, domain, table.<kind>, layout.<kind>.*): run "
-                        + "drishti.py lake migrate-config to move that into config/lakes/ (read this way for one more release)");
+            if (legacy(settings) && WARNED.compareAndSet(false, true)) {
+                warn.accept("connector " + connector + " (and any other like it) describes its lake itself (root, domain, table.<kind>, "
+                        + "layout.<kind>.*): run drishti.py lake migrate-config to move that into config/lakes/ (read this way for one more release)");
             }
             return settings;
         }

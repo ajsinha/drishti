@@ -109,8 +109,9 @@ public final class LakeFiles {
     /**
      * Migrates the Delta and Iceberg connector files of {@code connectorsDir}: each distinct (plugin, root) becomes a lake file in
      * {@code lakesDir} (named after the root's last folder, made unique), each of its tables an entry from the connector's
-     * {@code domain}, {@code table.<kind>} and {@code layout.<kind>.*}; each connector is rewritten to {@code lake: <name>}. A lake file
-     * that exists already is never overwritten: its tables gain the entries they lack. With {@code write} false nothing is written.
+     * {@code domain}, {@code table.<kind>} and {@code layout.<kind>.*}; each connector is rewritten to {@code lake: <name>} (and
+     * {@code lake-tables:} when a table is not named after its kind). A lake file that exists already is never overwritten: the new one
+     * gets another name. With {@code write} false nothing is written.
      */
     public static Migration migrate(Path connectorsDir, Path lakesDir, boolean write) throws IOException {
         Map<Path, String> lakes = new LinkedHashMap<>();
@@ -155,9 +156,13 @@ public final class LakeFiles {
                 }
             });
             ObjectNode tables = lake.with("tables");
+            List<String> mine = new ArrayList<>();
+            boolean named = false;
             for (String kind : kinds) {
                 String folder = flat.getOrDefault("table." + kind, kind);
                 String tname = (domain.isEmpty() ? plugin : domain) + "." + folder;
+                mine.add(tname);
+                named |= !folder.equals(kind);
                 if (tables.has(tname)) {
                     continue;
                 }
@@ -202,6 +207,9 @@ public final class LakeFiles {
             ObjectNode rewritten = ((ObjectNode) c).deepCopy();
             ObjectNode ns = JsonNodeFactory.instance.objectNode();
             ns.put(ConnectorLake.LAKE, name);
+            if (named) {                                       // a table not named after its kind (trade_endur): the connector names its entries
+                ns.put(ConnectorLake.TABLES, String.join(",", mine));
+            }
             ns.setAll(keep);
             rewritten.set("settings", ns);
             connectors.put(f, comments(f) + YAML.writeValueAsString(rewritten));
