@@ -197,7 +197,7 @@ class ScaleSwitchesTest {
         SpaceSaving a = new SpaceSaving(m);
         SpaceSaving b = new SpaceSaving(m);
         for (long i = 0; i < total; i++) {
-            int z = (int) Math.floor(Math.pow(1000, r.nextDouble())) ;   // heavy-tailed: a few values hold most rows
+            int z = (int) Math.floor(Math.pow(1000, r.nextDouble()));   // heavy-tailed: a few values hold most rows
             String v = "v" + z;
             truth.merge(v, 1L, Long::sum);
             (i % 2 == 0 ? a : b).add(v, 1);
