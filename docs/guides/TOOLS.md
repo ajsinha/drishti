@@ -1422,6 +1422,12 @@ drishti-console/.venv/bin/python tools/drishti.py exposure parts NSET:NS-ALDERSH
 drishti-console/.venv/bin/python tools/drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --set NS-ALDERSHOT-FRA
 ```
 
+The what-if's parity tools (`tools/ccr/`, standard library only): `record_whatif_parity.py <out.json>` wrote the reference answers of
+`ExposureWhatIfMathTest` (`ccr/whatif-parity.json`) from the earlier Python engine (run it with a 2.9.11.a checkout's
+`drishti-compute/src/main/python` on `PYTHONPATH`); `whatif_api_parity.py record --repo . --server <url> --user rita --out before.json`
+records the API's what-if answers on the demo's CP-ALDERSHOT from one server, and `check ... --against before.json` asks another server
+the same and compares every field (±1 USD, `engine` and `note` aside); exit 0 when equal.
+
 ### 5.14 sens, frtb and play frtb
 
 Position sensitivities and FRTB-SA as the token's user sees them (`tools/frtbcli.py`; [FRTB_SA_GUIDE.md](FRTB_SA_GUIDE.md)):
