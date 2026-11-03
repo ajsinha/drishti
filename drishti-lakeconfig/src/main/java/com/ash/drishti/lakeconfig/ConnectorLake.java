@@ -41,6 +41,8 @@ public final class ConnectorLake {
 
     /** The connector setting that names the lake. */
     public static final String LAKE = "lake";
+    /** The connector setting that names its tables when a kind has several in the lake ({@code trading.trade_endur}). */
+    public static final String TABLES = "lake-tables";
     /** The plugins whose settings a lake supplies. */
     public static final Set<String> PLUGINS = Set.of("delta", "iceberg");
 
@@ -69,11 +71,11 @@ public final class ConnectorLake {
      * @param plugin    its plugin
      * @param kinds     the kinds it serves (empty: every table the lake describes)
      * @param settings  its settings, environment references resolved
-     * @param lakes     the lakes the server knows
+     * @param lakes     the lakes the server knows (read only for a connector that names one)
      * @param warn      where the one migration warning goes
      */
     public static Map<String, String> expand(String connector, String plugin, Collection<String> kinds, Map<String, String> settings,
-            Lakes lakes, Consumer<String> warn) {
+            java.util.function.Supplier<Lakes> lakes, Consumer<String> warn) {
         if (!PLUGINS.contains(plugin)) {
             return settings;
         }
@@ -90,13 +92,21 @@ public final class ConnectorLake {
             throw new IllegalArgumentException("connector " + connector + " names lake " + name + " and also sets " + clash + ": those are the "
                     + "lake file's (config/lakes/" + name + ".yaml); remove them from the connector");
         }
-        Lake lake = lakes.get(name.strip());
+        Lake lake = lakes.get().get(name.strip());
         if (!lake.format().equals(plugin) && lake.tables().values().stream().noneMatch(t -> t.format().equals(plugin))) {
             throw new IllegalArgumentException("connector " + connector + " (plugin " + plugin + ") names lake " + name + ", a " + lake.format()
                     + " lake: use the " + lake.format() + " plugin");
         }
         List<LakeTable> tables = new ArrayList<>();
-        if (kinds == null || kinds.isEmpty()) {
+        String named = settings.getOrDefault(TABLES, "");
+        if (!named.isBlank()) {                               // lake-tables: the entries by name, where a kind has several tables
+            for (String n : named.split(",")) {
+                if (!n.isBlank()) {
+                    tables.add(lake.entry(n.trim()).orElseThrow(() -> new IllegalArgumentException("connector " + connector + ": lake " + name
+                            + " has no table " + n.trim() + " (" + lake.tables().keySet() + ")")));
+                }
+            }
+        } else if (kinds == null || kinds.isEmpty()) {
             tables.addAll(lake.tables().values());
         } else {
             for (String k : kinds) {
@@ -111,6 +121,7 @@ public final class ConnectorLake {
         }
         Map<String, String> out = new LinkedHashMap<>(settings);
         out.remove(LAKE);
+        out.remove(TABLES);
         // the plugins read <root>/<domain>/<folder>: the table's parent folder's last segment is the domain, the rest goes to the root
         String parent = parents.isEmpty() ? "" : parents.iterator().next();
         int cut = parent.lastIndexOf('/');

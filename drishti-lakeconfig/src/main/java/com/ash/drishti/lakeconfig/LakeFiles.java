@@ -67,7 +67,10 @@ public final class LakeFiles {
     /** One table's entry as a lake file writes it (only what differs from the defaults). */
     static ObjectNode entry(LakeTable t) {
         ObjectNode e = JsonNodeFactory.instance.objectNode();
-        if (!t.path().equals(t.domain() + "/" + t.kind())) {
+        if (!t.kind().equals(t.table())) {
+            e.put("kind", t.kind());
+        }
+        if (!t.path().equals(t.domain() + "/" + t.table())) {
             e.put("path", t.path());
         }
         list(e, "partition-by", t.partitionBy());
@@ -153,12 +156,15 @@ public final class LakeFiles {
             });
             ObjectNode tables = lake.with("tables");
             for (String kind : kinds) {
-                String tname = (domain.isEmpty() ? plugin : domain) + "." + kind;
+                String folder = flat.getOrDefault("table." + kind, kind);
+                String tname = (domain.isEmpty() ? plugin : domain) + "." + folder;
                 if (tables.has(tname)) {
                     continue;
                 }
                 ObjectNode e = tables.putObject(tname);
-                String folder = flat.getOrDefault("table." + kind, kind);
+                if (!folder.equals(kind)) {
+                    e.put("kind", kind);
+                }
                 String path = (domain.isEmpty() ? "" : domain + "/") + folder;
                 if (!path.equals(tname.replace('.', '/'))) {
                     e.put("path", path);

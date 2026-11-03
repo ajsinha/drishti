@@ -57,7 +57,7 @@ public final class Lakes {
     private static final Set<String> SECRETS = Set.of("access-key", "secret-key", "session-token", "credential", "token", "password",
             "client-secret", "s3.access-key", "s3.secret-key", "s3.session-token");
     private static final Set<String> TOP = Set.of("lake", "format", "root", "storage", "catalog", "defaults", "tables", "memory", "description");
-    static final Set<String> TABLE = Set.of("path", "format", "partition-by", "promote", "vectors", "flatten", "id", "date", "latest-by",
+    static final Set<String> TABLE = Set.of("kind", "path", "format", "partition-by", "promote", "vectors", "flatten", "id", "date", "latest-by",
             "load-mode", "sort-by", "file-rows", "row-group-rows", "file-size-mb", "row-group-mb", "compression", "vector-compression",
             "retention", "maintenance", "time-travel", "properties");
     static final Set<String> LAYOUT = Set.of("file-rows", "row-group-rows", "file-size-mb", "row-group-mb", "compression", "vector-compression");
@@ -83,6 +83,42 @@ public final class Lakes {
     /** The lakes of {@link #dir()} with the process's environment. */
     public static Lakes load() {
         return read(dir(), System::getenv);
+    }
+
+    private static final java.util.concurrent.atomic.AtomicReference<Object[]> CURRENT = new java.util.concurrent.atomic.AtomicReference<>();
+
+    /**
+     * The lakes of {@link #dir()} as they are now: read again only when the folder, a file's time or the number of files changed since
+     * the last read (a connector's start, Admin -> Lakes and the checks all ask; an edited lake file is seen at the next ask).
+     */
+    public static Lakes current() {
+        Path d = dir();
+        String stamp = stamp(d);
+        Object[] held = CURRENT.get();
+        if (held != null && held[0].equals(stamp)) {
+            return (Lakes) held[1];
+        }
+        Lakes fresh = read(d, System::getenv);
+        CURRENT.set(new Object[] {stamp, fresh});
+        return fresh;
+    }
+
+    private static String stamp(Path d) {
+        StringBuilder sb = new StringBuilder(d.toAbsolutePath().normalize().toString());
+        if (Files.isDirectory(d)) {
+            try (Stream<Path> files = Files.list(d)) {
+                files.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().forEach(f -> {
+                    try {
+                        sb.append('|').append(f.getFileName()).append('@').append(Files.getLastModifiedTime(f).toMillis()).append('#').append(Files.size(f));
+                    } catch (IOException e) {
+                        sb.append('|').append(f.getFileName()).append("@?");
+                    }
+                });
+            } catch (IOException e) {
+                sb.append("|unlistable");
+            }
+        }
+        return sb.toString();
     }
 
     /** Every {@code *.yaml} of {@code dir} (none when the folder does not exist: a server with no lake file). */
@@ -192,7 +228,8 @@ public final class Lakes {
     static LakeTable table(Values v, String where, String lakeFormat, String key, JsonNode own, JsonNode defaults) {
         int dot = key.indexOf('.');
         if (dot <= 0 || dot == key.length() - 1) {
-            throw new IllegalArgumentException(where + ": tables." + key + ": a table is named <domain>.<kind> (trading.trade)");
+            throw new IllegalArgumentException(where + ": tables." + key + ": a table is named <domain>.<kind> (trading.trade), or "
+                    + "<domain>.<table> with kind: when a kind has several tables (trading.trade_endur, kind: trade)");
         }
         String at = where + ": tables." + key;
         if (own != null && !own.isNull() && !own.isObject()) {
@@ -202,8 +239,9 @@ public final class Lakes {
         unknown(where, "tables." + key + ".", t, TABLE);
         Function<String, JsonNode> pick = k -> t.has(k) ? t.get(k) : defaults.path(k);
         String domain = key.substring(0, dot);
-        String kind = key.substring(dot + 1);
-        String path = v.text(pick.apply("path"), domain + "/" + kind);
+        String name = key.substring(dot + 1);
+        String kind = v.text(t.path("kind"), name);
+        String path = v.text(t.path("path"), domain + "/" + name);
         if (path.startsWith("/") || path.contains("..") || path.contains("\\")) {
             throw new IllegalArgumentException(at + ".path " + path + ": a folder under the lake's root (trading/trade_endur)");
         }
@@ -249,7 +287,7 @@ public final class Lakes {
                 promote.add(0, p);                             // a partition column is a promoted column too
             }
         }
-        return new LakeTable(domain, kind, path, format, partition, promote, v.list(pick.apply("vectors")),
+        return new LakeTable(domain, name, kind, path, format, partition, promote, v.list(pick.apply("vectors")),
                 v.map(pick.apply("flatten"), "flatten"), v.text(pick.apply("id"), null), v.text(pick.apply("date"), null),
                 v.text(pick.apply("latest-by"), null), mode, v.list(pick.apply("sort-by")), layout, v.text(pick.apply("retention"), null),
                 v.map(pick.apply("maintenance"), "maintenance"), v.text(pick.apply("time-travel"), null), v.map(pick.apply("properties"), "properties"));

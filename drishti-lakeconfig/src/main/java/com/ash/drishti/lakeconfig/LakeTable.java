@@ -24,7 +24,9 @@ import java.util.Map;
  * applied. Every table is partitioned by {@code business_date} first, always: {@link #partitionBy()} names only what comes after it.
  *
  * @param domain      the domain ({@code trading} of {@code trading.trade})
- * @param kind        the kind ({@code trade})
+ * @param table       the entry's name within its domain ({@code trade} of {@code trading.trade}; {@code trade_endur} of
+ *                    {@code trading.trade_endur}, a second table of one kind, which then says {@code kind: trade})
+ * @param kind        the kind ({@code trade}: the entry's {@code kind:}, else its {@code table})
  * @param path        the table's folder under the lake's root ({@code trading/trade_endur}; default {@code <domain>/<kind>})
  * @param format      delta or iceberg (the lake's unless the table says otherwise)
  * @param partitionBy the partition columns after {@code business_date} (at most four; Delta only)
@@ -44,7 +46,7 @@ import java.util.Map;
  * @param timeTravel  how long old versions stay readable; null: the format's default
  * @param properties  Delta or Iceberg table properties passed through as they are
  */
-public record LakeTable(String domain, String kind, String path, String format, List<String> partitionBy, List<String> promote,
+public record LakeTable(String domain, String table, String kind, String path, String format, List<String> partitionBy, List<String> promote,
         List<String> vectors, Map<String, String> flatten, String id, String date, String latestBy, String loadMode, List<String> sortBy,
         Map<String, String> layout, String retention, Map<String, String> maintenance, String timeTravel, Map<String, String> properties) {
 
@@ -66,9 +68,9 @@ public record LakeTable(String domain, String kind, String path, String format, 
         properties = java.util.Collections.unmodifiableMap(new LinkedHashMap<>(properties));
     }
 
-    /** {@code <domain>.<kind>}, the table's name in its lake file. */
+    /** {@code <domain>.<table>}, the table's name in its lake file. */
     public String name() {
-        return domain + "." + kind;
+        return domain + "." + table;
     }
 
     /** Every partition column in order: {@code business_date}, then {@link #partitionBy()}. */
@@ -107,6 +109,7 @@ public record LakeTable(String domain, String kind, String path, String format, 
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("name", name());
         m.put("domain", domain);
+        m.put("table", table);
         m.put("kind", kind);
         m.put("path", path);
         m.put("format", format);

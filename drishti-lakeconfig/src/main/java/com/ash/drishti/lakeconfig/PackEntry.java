@@ -49,7 +49,11 @@ public record PackEntry(String domain, String table, String key, String date, Li
         for (var it = m.path("lake").path("tables").fields(); it.hasNext(); ) {
             var e = it.next();
             int dot = e.getKey().indexOf('.');
-            if (dot > 0 && e.getKey().substring(dot + 1).equals(kind)) {
+            String entryKind = e.getValue().path("kind").asText(dot > 0 ? e.getKey().substring(dot + 1) : "");
+            String folder = dot > 0 ? e.getKey().substring(dot + 1) : "";
+            // several tables of one kind (trade_endur, trade_calypso): the connector's table picks; else the first of the kind
+            String wanted = connector == null ? null : tableOf(m, connector, kind);
+            if (entryKind.equals(kind) && (wanted == null || wanted.equals(folder) || e.getValue().path("path").asText("").endsWith("/" + wanted))) {
                 LakeTable t = Lakes.table(new Lakes.Values(file.toString(), System::getenv), file.toString(), "delta", e.getKey(), e.getValue(),
                         JsonNodeFactory.instance.objectNode());
                 return new PackEntry(t.domain(), t.folder().equals(kind) ? null : t.folder(), t.id() != null ? t.id() : text(ingest, "key"),
@@ -108,8 +112,16 @@ public record PackEntry(String domain, String table, String key, String date, Li
             return entry;
         }
         String folder = table == null ? kind : table;
-        return new LakeTable(domain, kind, domain + "/" + folder, "delta", List.of(), promote, vectors, flatten, key, date, latestBy,
+        return new LakeTable(domain, folder, kind, domain + "/" + folder, "delta", List.of(), promote, vectors, flatten, key, date, latestBy,
                 LakeTable.REPLACE, sortBy, Map.of(), null, Map.of(), null, Map.of());
+    }
+
+    /** The {@code table.<kind>} folder a pack's connector template names (null: none, the kind's own name). */
+    private static String tableOf(JsonNode pack, String connector, String kind) {
+        JsonNode defs = pack.path("connectors").isObject() ? pack.path("connectors") : pack.path("connector-templates");
+        JsonNode st = defs.path(connector).path("settings");
+        JsonNode t = st.path("table").isObject() ? st.path("table").path(kind) : st.path("table." + kind);
+        return t.isTextual() && !t.asText().isBlank() ? t.asText() : null;
     }
 
     private static String text(JsonNode n, String key) {

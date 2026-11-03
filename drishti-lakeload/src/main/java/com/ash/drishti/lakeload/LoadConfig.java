@@ -330,7 +330,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             if (kind == null) {
                 throw new IllegalArgumentException("target.kind: name the kind whose table of lake " + lakeRef + " this load writes");
             }
-            entry = lake.require(r.text(t, "domain", null), kind);
+            entry = lake.require(r.text(t, "domain", null), kind, r.text(t, "table", null));
             date = agree(entry, "date", date, entry.date());
             if (s.has("partition-by")) {
                 agree(entry, "partition-by", r.list(s, "partition-by"), entry.partitionBy());

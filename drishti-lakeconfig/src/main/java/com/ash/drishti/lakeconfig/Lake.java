@@ -59,34 +59,62 @@ public record Lake(String name, String format, String root, Map<String, String> 
         return inMemory() ? root.substring(MEMORY_SCHEME.length()).replaceAll("/.*$", "") : "";
     }
 
-    /** The table of {@code <domain>.<kind>}. */
+    /** The entry named {@code <domain>.<table>}. */
+    public Optional<LakeTable> entry(String name) {
+        return Optional.ofNullable(tables.get(name));
+    }
+
+    /** The table of {@code <domain>.<kind>} (the entry of that name, else the one entry of the domain whose kind it is). */
     public Optional<LakeTable> table(String domain, String kind) {
-        return Optional.ofNullable(tables.get(domain + "." + kind));
+        return find(domain, kind, null);
+    }
+
+    /** The table of a kind in whatever domain: the one entry whose kind it is (several are refused, naming them). */
+    public Optional<LakeTable> table(String kind) {
+        return find(null, kind, null);
     }
 
     /**
-     * The table of a kind in whatever domain: the one entry whose kind it is. Two domains with the same kind are refused here, naming
-     * both, so a caller that knows the domain asks {@link #table(String, String)}.
+     * The one entry for a kind: {@code table} (a folder such as trade_endur, or an entry's name) picks among several tables of the kind;
+     * {@code domain} narrows to a domain. More than one left is refused, naming them.
      */
-    public Optional<LakeTable> table(String kind) {
+    public Optional<LakeTable> find(String domain, String kind, String table) {
+        boolean anyDomain = domain == null || domain.isBlank();
+        if (table != null && !table.isBlank()) {
+            for (LakeTable t : tables.values()) {
+                if ((anyDomain || t.domain().equals(domain)) && (t.table().equals(table) || t.folder().equals(table))
+                        && (kind == null || t.kind().equals(kind))) {
+                    return Optional.of(t);
+                }
+            }
+            return Optional.empty();
+        }
+        if (!anyDomain && tables.containsKey(domain + "." + kind)) {
+            return Optional.of(tables.get(domain + "." + kind));
+        }
         List<LakeTable> hits = new ArrayList<>();
         for (LakeTable t : tables.values()) {
-            if (t.kind().equals(kind)) {
+            if (t.kind().equals(kind) && (anyDomain || t.domain().equals(domain))) {
                 hits.add(t);
             }
         }
         if (hits.size() > 1) {
-            throw new IllegalArgumentException("lake " + name + ": the kind " + kind + " is in more than one domain ("
-                    + hits.stream().map(LakeTable::name).toList() + "): name the domain");
+            throw new IllegalArgumentException("lake " + name + ": the kind " + kind + " has more than one table ("
+                    + hits.stream().map(LakeTable::name).toList() + "): name the table (a connector's lake-tables:, a load's target.table)");
         }
         return hits.stream().findFirst();
     }
 
     /** The table of a kind, or a refusal naming the lake file: a writer never creates a table the lake file has no entry for. */
     public LakeTable require(String domain, String kind) {
-        Optional<LakeTable> t = domain == null || domain.isBlank() ? table(kind) : table(domain, kind);
-        return t.orElseThrow(() -> new IllegalArgumentException("lake " + name + " has no table " + (domain == null || domain.isBlank() ? kind
-                : domain + "." + kind) + ": add its entry to " + (file == null ? "the lake file" : file) + " (tables: " + tables.keySet()
+        return require(domain, kind, null);
+    }
+
+    /** As {@link #require(String, String)}, {@code table} picking among several tables of the kind. */
+    public LakeTable require(String domain, String kind, String table) {
+        return find(domain, kind, table).orElseThrow(() -> new IllegalArgumentException("lake " + name + " has no table for "
+                + (domain == null || domain.isBlank() ? "" : domain + ".") + kind + (table == null || table.isBlank() ? "" : " (" + table + ")")
+                + ": add its entry to " + (file == null ? "the lake file" : file) + " (tables: " + tables.keySet()
                 + "); a writer never creates a table the lake file does not describe"));
     }
 
