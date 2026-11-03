@@ -230,6 +230,8 @@ public final class PivotCore {
         long providerMs;
         final List<String> statements = new ArrayList<>();
         final List<String> notes = new ArrayList<>();
+        /** How plans were answered other than by the provider (a rollup, the cluster), for the answer's "computed as". */
+        final List<String> routes = new ArrayList<>();
     }
 
     /** A view being computed: its provider, catalogue, functions, axes, the cells known and the work done. */
@@ -251,6 +253,8 @@ public final class PivotCore {
         boolean uncacheable;
         final Map<String, String> units = new HashMap<>();
         final AggregationPlan.Money money;
+        /** Levels whose top N a Space-Saving summary chose first (parent node key and dimension), with the words for provenance. */
+        final Map<String, String> topChosen = new LinkedHashMap<>();
 
         Computation(Viewer viewer, PivotView asked) {
             this(viewer, asked, ScaleOptions.AUTO);
@@ -451,17 +455,19 @@ public final class PivotCore {
                 if (++round > 64) {
                     throw PivotView.bad("the view opens more than 64 levels");
                 }
+                newRows = TopFirst.choose(this, newRows, Axis.Group.total(cols.root));
+                newCols = TopFirst.choose(this, newCols, Axis.Group.total(rows.root));
                 LinkedHashSet<CellSet> sets = new LinkedHashSet<>();
                 List<Axis.Group> colsNow = new ArrayList<>(allCols);
                 colsNow.addAll(newCols);
                 for (Axis.Group r : newRows) {
                     for (Axis.Group c : colsNow) {
-                        sets.add(r.cross(c));
+                        sets.addAll(r.crossAll(c));
                     }
                 }
                 for (Axis.Group c : newCols) {
                     for (Axis.Group r : allRows) {
-                        sets.add(r.cross(c));
+                        sets.addAll(r.crossAll(c));
                     }
                 }
                 evaluate(new ArrayList<>(sets));
@@ -499,7 +505,8 @@ public final class PivotCore {
                 }
                 if (g.others()) {
                     if (!values.isEmpty()) {
-                        Axis.Node o = g.parent().child(g.dim(), CellKey.OTHERS, true, g.parent().levelMembers - g.kept().size());
+                        boolean sketched = topChosen.containsKey(g.parent().key() + "\u0001" + g.dim());
+                        Axis.Node o = g.parent().child(g.dim(), CellKey.OTHERS, true, sketched ? -1 : g.parent().levelMembers - g.kept().size());
                         o.childDim = null;
                     }
                     continue;
@@ -654,7 +661,7 @@ public final class PivotCore {
         }
 
         /** The plan run: one pass, or split into this node's shards and merged in order (mergeable plans of a provider that shards). */
-        private Partials run(AggregationPlan p) {
+        Partials run(AggregationPlan p) {
             long t = System.nanoTime();
             Partials out = route(p);
             for (Hooks h : scale.sampled() ? List.<Hooks>of() : hooks) {
@@ -673,6 +680,7 @@ public final class PivotCore {
                 if (r.isPresent()) {
                     if (!work.notes.contains(r.get().how())) {
                         work.notes.add(r.get().how());
+                        work.routes.add(r.get().how());
                     }
                     uncacheable |= !r.get().cacheable();
                     return r.get().partials();

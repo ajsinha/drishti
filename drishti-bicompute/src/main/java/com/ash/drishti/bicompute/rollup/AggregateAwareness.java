@@ -80,8 +80,8 @@ public final class AggregateAwareness implements PivotCore.Hooks {
 
     @Override
     public Optional<PivotCore.Routed> route(Viewer v, PivotProvider p, AggregationPlan plan, ScaleOptions o) {
-        if (plan.asOf() != null || plan.shard() != null || o.sampled()) {
-            return Optional.empty();
+        if (plan.asOf() != null || plan.shard() != null || o.sampled() || !o.rollups()) {
+            return Optional.empty();                                    // "use rollups" off: the source answers (the screen's switch)
         }
         RollupSource src = rollups.sources().get(p.id());
         if (src == null || !src.unrestricted(v, plan.source(), plan.date())) {

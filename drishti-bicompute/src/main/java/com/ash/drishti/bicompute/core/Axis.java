@@ -116,14 +116,45 @@ public final class Axis {
     }
 
     /**
-     * The children of {@code parent} by {@code dim}, as a cell set; {@code othersOf}: the Others of that level (its members are the level's
-     * less {@code kept}).
+     * The children of {@code parent} by {@code dim}, as a cell set; {@code others}: the Others of that level (its members are the level's
+     * less {@code kept}); {@code only}: when not null, just these members of the level (a top N chosen before the level is read, by a
+     * Space-Saving summary when the view asked ≈), one restricted set each.
      */
-    record Group(Node parent, String dim, boolean others, List<String> kept) {
+    record Group(Node parent, String dim, boolean others, List<String> kept, List<String> only) {
+
+        Group(Node parent, String dim, boolean others, List<String> kept) {
+            this(parent, dim, others, kept, null);
+        }
 
         /** The axis total's group (the root itself, no dimension). */
         static Group total(Node root) {
             return new Group(root, null, false, List.of());
+        }
+
+        /**
+         * This group crossed with another axis's group: one cell set, or one per member when either names {@code only} (each restricted to
+         * its member, so a top N chosen first never reads the rest of its level).
+         */
+        List<CellSet> crossAll(Group o) {
+            List<CellSet> out = new ArrayList<>();
+            for (String a : only == null ? java.util.Collections.<String>singletonList(null) : only) {
+                for (String b : o.only == null ? java.util.Collections.<String>singletonList(null) : o.only) {
+                    CellSet s = cross(o);
+                    if (a == null && b == null) {
+                        out.add(s);
+                        continue;
+                    }
+                    Map<String, String> at = new LinkedHashMap<>(s.at());
+                    if (a != null) {
+                        at.put(dim, a);
+                    }
+                    if (b != null) {
+                        at.put(o.dim, b);
+                    }
+                    out.add(new CellSet(s.grouping(), at, s.exclude(), s.marks()));
+                }
+            }
+            return out;
         }
 
         List<String> grouping() {
