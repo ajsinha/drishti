@@ -755,7 +755,13 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 (from `drishti-lakeio`) and the service (from `drishti-server`); the server keeps only its wiring. The Delta and Iceberg readers reach it
 through the shared storage interface. The old code is removed in the same change. Size S.
 
-## 2.9.11.c: Arrow Flight, Drishti's data to any client (planned)
+## 2.9.11.c: the lake configuration, Arrow Flight and the client examples (planned)
+
+*Product owner, 2026-11-03: 2.9.11.c and 2.9.11.d merged into one release with one drill pair (the examples read through Flight and the
+lake configuration). Built in this order, each branch gated before it merges: the lake configuration, Arrow Flight, the client
+examples; two drills and the VaR check before the tag.*
+
+### Arrow Flight, Drishti's data to any client
 
 *Product owner, 2026-11-03: "Arrow flight is a good idea"; release 2.9.11.c, picked up after 2.9.11.b is released; the design is
 discussed with the product owner first, then mock-ups, then the build.*
@@ -768,7 +774,7 @@ stored, per-position P&L in batches, live intraday), exactly the engine's figure
 hand-written Arrow writers, and the console's own JSON-to-Arrow conversion goes; browsers keep Arrow over HTTP and live views over
 Server-Sent Events. The design questions, each with a recommendation: [ARROW_FLIGHT.md](ARROW_FLIGHT.md). Size L.
 
-## 2.9.11.d: client examples (planned)
+### The client examples (in 2.9.11.c)
 
 *Product owner, 2026-11-03.* Examples in several languages and technologies, led by Python notebooks: read-only (they never write to
 Drishti), querying through Arrow Flight by default; examples that read the lake directly are marked for people who already hold lake
@@ -798,7 +804,7 @@ BI, Grafana and anything with a Postgres driver can connect: read-only SQL over 
 as Flight SQL (no second query engine), the password an API token with its scopes, entitlements, masks and audit, off by default. For
 tools and modest queries; large reads go through Arrow Flight. Size M to L.
 
-## The lake configuration (planned; in 2.9.11.c, built before Arrow Flight)
+## The lake configuration (planned; in 2.9.11.c, built first)
 
 *Product owner, 2026-11-03.* One configuration per lake (`config/lakes/<lake>.yaml`, planned): where it is, its format and storage, and
 every table's settings (partitioning after `business_date`, which is always first; promoted columns, vectors, id and date fields, file

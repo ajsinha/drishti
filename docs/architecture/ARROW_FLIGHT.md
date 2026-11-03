@@ -18,7 +18,7 @@
 *Release 2.9.11.c (product owner, 2026-11-03), picked up after 2.9.11.b is released. Status: **designed, not built**: every question of section 2 decided as
 recommended by the product owner (2026-11-03: "I am aligned with all of them, but good documentation is the key").*
 
-**Read with:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2.9.11.c and 2.9.11.d), [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (requests are
+**Read with:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2.9.11.c: the lake configuration, Flight and the client examples), [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (requests are
 written in Rachana), [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (section 10, the console's Python), [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md).
 
 ## 1. Decided
@@ -28,12 +28,12 @@ written in Rachana), [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (section 10, the con
    query logic is written twice.
 2. **Any client:** Python (`pyarrow.flight`), Java, C#, R, Go; JDBC and ODBC tools through Flight SQL. Browsers keep Arrow over HTTP and
    live views over Server-Sent Events.
-3. **Read only for clients** (2.9.11.d's examples never write to Drishti).
+3. **Read only for clients** (the client examples never write to Drishti).
 4. **The first use:** VaR scenario P&L: a scope's vector computed when asked and never stored, per-position P&L in batches, live intraday
    updates, exactly the engine's figures.
 5. **No dual machinery:** the official Arrow Java library replaces the hand-written Arrow writers (compute `ArrowIpc`, `ArrowTable`;
    server `ArrowIpcWriter`, `ArrowAnswers`), and the console's own JSON-to-Arrow conversion goes; no HTTP Python reader is built.
-6. **The client examples** (2.9.11.d) use Flight by default; examples that read the lake directly are labelled for people who already hold
+6. **The client examples** (in 2.9.11.c) use Flight by default; examples that read the lake directly are labelled for people who already hold
    lake access.
 
 ## 2. Decisions (product owner, 2026-11-03: all as recommended)

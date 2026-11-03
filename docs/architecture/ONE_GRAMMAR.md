@@ -18,7 +18,7 @@
 *Product owner, 2026-11-03: "I want all BI related functions including pivot to concentrate in one module and Rachana and Sutra use it
 and other code can use it too"; "I want to ensure we are not coding the same functionality in more than one place and that we reuse what
 we have". The design below is the recommendation the product owner accepted. Status: **designed, not built**; the build is planned in
-2.9.11.b (parts 1 to 3 and 5) and in a release of its own after 2.9.11.d (part 4), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).*
+2.9.11.b (parts 1 to 3 and 5) and in a release of its own after 2.9.11.c (part 4: 2.9.11.e), [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md).*
 
 **Read with:** [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) (the grammar), [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (the engine,
 section 6.7 for paths into documents), [BI_DESIGN.md](BI_DESIGN.md) (section 3.3, DEL).
@@ -89,7 +89,7 @@ a second expression syntax, and Python is the open-ended escape, sandboxed. Size
 | 1 and 2 | Rachana's function table open to providers; the engine registers its aggregates; Rachana's own list aggregates removed; parity test on every shipped Sutra | S to M | 2.9.11.b |
 | 3 | `measure`, `cell`, `group` on the engine, the Sutra pivot panel in paths, the catalogue page | M | 2.9.11.b |
 | 5 | the guards | S | 2.9.11.b |
-| 4 | DEL folded into Rachana, its parity proof, DEL deleted | L | a release of its own after 2.9.11.d, designed first |
+| 4 | DEL folded into Rachana, its parity proof, DEL deleted | L | 2.9.11.e, designed first |
 
 ## 7. The function catalogue: what to add, from Excel and SAS
 
