@@ -42,6 +42,22 @@
     var rows = a.rows || [];
     var cells = a.cells || {};
     var diff = opts.diff || null;
+    // conditional formats (drawn from the figures shown, never changing one): per measure, its range over the members' cells
+    var formats = (a.view && a.view.formats) || {};
+    var ranges = {};
+    measures.forEach(function (m) {
+      if (!formats[m.label]) { return; }
+      var lo = Infinity, hi = -Infinity;
+      rows.forEach(function (r) {
+        if (r.kind !== "node") { return; }
+        cols.forEach(function (c) {
+          var cell = cells[r.key + "|" + c.key];
+          var v = cell && cell.values ? cell.values[m.label] : null;
+          if (typeof v === "number" && isFinite(v)) { lo = Math.min(lo, v); hi = Math.max(hi, v); }
+        });
+      });
+      if (hi >= lo) { ranges[m.label] = { lo: lo, hi: hi, style: formats[m.label].style }; }
+    });
     var h = [];
     h.push('<table class="pv-table" role="grid"><thead>');
     if (cols.length > 1 || (cols[0] && cols[0].kind !== "grand")) {
@@ -91,7 +107,13 @@
           var d = diff && diff[key] && diff[key].delta ? diff[key].delta[m.label] : null;
           var cls = "pv-c" + (c.kind === "grand" || c.kind === "total" ? " pv-coltotal" : "") + (m.kind === "holistic" ? " pv-hol" : "");
           var title = note ? ' title="' + esc(note) + '"' : "";
-          h.push('<td class="' + cls + '" data-cell="' + esc(key) + '" data-m="' + mi + '" data-c="' + ci + '" tabindex="-1"' + title + '>' + text
+          var fr = ranges[m.label], style = "";
+          if (fr && r.kind === "node" && c.kind !== "grand" && c.kind !== "total" && typeof v === "number") {
+            var f = fr.hi === fr.lo ? 1 : (v - fr.lo) / (fr.hi - fr.lo);
+            cls += fr.style === "bars" ? " pv-bars" : " pv-scale";
+            style = ' style="--pv-f:' + f.toFixed(3) + '"';
+          }
+          h.push('<td class="' + cls + '"' + style + ' data-cell="' + esc(key) + '" data-m="' + mi + '" data-c="' + ci + '" tabindex="-1"' + title + '>' + text
             + (d != null && d !== 0 ? '<span class="pv-delta ' + (d > 0 ? "up" : "down") + '">' + (d > 0 ? "+" : "") + fmt(d, m) + '</span>' : "")
             + (diff && diff[key] && diff[key].status ? '<span class="pv-delta">' + esc(diff[key].status) + '</span>' : "") + '</td>');
         });

@@ -229,6 +229,7 @@ public final class PivotCore {
                 }
             }
             view.filters().keySet().forEach(k -> dim(Dim.parse(k)));
+            view.slicers().forEach(k -> dim(Dim.parse(k)));
             for (Map.Entry<String, PivotView.Sort> s : view.sort().entrySet()) {
                 measureIndex(s.getValue().by(), true);
             }
