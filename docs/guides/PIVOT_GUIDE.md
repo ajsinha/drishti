@@ -425,7 +425,7 @@ BI's totals and subtotals are the pivot engine's. Every total row and column of 
 of the engine's function states over the model's rows as the reader may see them: BI's compiler writes those rows (row rules, masks,
 joins, layers, dates) as the statement's FROM item and the statement runs in BI's engine, where the model's layers are, so no row leaves
 it. Each level is computed from its own rows: an average, a ratio, a distinct count and a percentile are right at every level, and a
-sum's total is the engine's too (the console adds nothing up).
+sum's total is the engine's too (the console adds nothing up). Measures of two facts get one statement per fact.
 
 A model's measure is a pivot function when its DEL is an expression of aggregates of one fact's rows: `sum`, `avg`, `min`, `max`, `count`,
 `distinct`, `percentile`, `ratio`, `where=` conditions, arithmetic, row functions and other measures by `measure('Name')`. Whether a

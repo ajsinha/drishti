@@ -761,7 +761,7 @@ so in its warnings ("no total for YTD: ...").
 BI's compiler writes the model's **detail** query as the reader (row rules, masks, joins along many-to-one paths, the layers and dates of
 the question) and **does not run it**: it becomes the FROM item of the engine's `GROUPING SETS` statement (`QueryService.Outer`). The
 statement runs in BI's engine, where the model's layers are, so no row leaves it and a billion-row model is totalled by one scan; the
-engine reads each set's states (`fromSql`) and finishes them. A masked field is never grouped (that level is not made); a masked measure's
+engine reads each set's states (`fromSql`) and finishes them. Measures of several facts get one statement per fact (a measure aggregates its own fact's rows), the levels joined. A masked field is never grouped (that level is not made); a masked measure's
 total is empty. A dataset read directly from its source (`mode: direct`) gets no engine totals (they would read every row back).
 
 ### 12.4 What changed for readers
