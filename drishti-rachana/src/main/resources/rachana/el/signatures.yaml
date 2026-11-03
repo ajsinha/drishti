@@ -894,7 +894,7 @@ functions:
   - {name: x, type: number}
   - {name: y, type: number}
   returns: decimal
-  scopes: &id001 [row, rule, aggregate]
+  scopes: [row, rule, aggregate]
   description: x to the power y (DEL's x ** y), worked in decimal for a whole y.
   examples:
   - {expr: 'power(1.1, 2)', says: '1.21'}
@@ -908,7 +908,7 @@ functions:
   - {name: x, type: number}
   - {name: step, type: number, default: '1'}
   returns: same
-  scopes: *id001
+  scopes: [row, rule, aggregate]
   description: The largest multiple of step (1 by default) not above x; DEL's x // y is floor(x / y).
   examples:
   - {expr: floor(trades.NOTIONAL / 1000), says: whole thousands of notional}
@@ -923,7 +923,7 @@ functions:
   - {name: a, type: any}
   - {name: b, type: any, default: 'null'}
   returns: same
-  scopes: *id001
+  scopes: [row, rule, aggregate]
   description: 'a when the condition is true, else b (null when b is left out): the function form of c ? a : b.'
   examples:
   - {expr: 'if(trades.MTM > 0, trades.MTM, 0)', says: 'the positive MTM, else 0'}
@@ -937,7 +937,7 @@ functions:
   - {name: x, type: any}
   - {name: cases, type: any, variadic: true}
   returns: any
-  scopes: *id001
+  scopes: [row, rule, aggregate]
   description: The result paired with the first value equal to x; the last odd argument is the result when none is.
   examples:
   - {expr: 'switch(payments.CURRENCY, ''JPY'', 1 / 148.2, ''EUR'', 1.174, 1)', says: 'a rate per currency, 1 otherwise'}
@@ -950,7 +950,7 @@ functions:
   params:
   - {name: values, type: number, variadic: true}
   returns: same
-  scopes: *id001
+  scopes: [row, rule, aggregate]
   description: The smallest of its arguments that are not null.
   examples:
   - {expr: 'least(trades.MTM, 0)', says: 'the loss, or 0'}
@@ -963,7 +963,7 @@ functions:
   params:
   - {name: values, type: number, variadic: true}
   returns: same
-  scopes: *id001
+  scopes: [row, rule, aggregate]
   description: The largest of its arguments that are not null.
   examples:
   - {expr: 'greatest(trades.MTM, 0)', says: 'the gain, or 0'}
