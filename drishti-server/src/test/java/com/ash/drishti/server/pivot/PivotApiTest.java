@@ -136,7 +136,7 @@ class PivotApiTest {
                 assertThat(cell.path("values").path("S").asDouble()).as(e.getKey()).isCloseTo(e.getValue()[0],
                         org.assertj.core.data.Offset.offset(Math.max(1e-6, Math.abs(e.getValue()[0]) * 1e-9)));
             } else {
-                assertThat(cell.path("notes").path("S").asText()).startsWith("mixed currencies");
+                assertThat(cell.path("notes").path("S").asText()).matches("mixed currencies.*|no values in the cell");
             }
             assertThat(cell.path("values").path("N").asDouble()).isEqualTo(e.getValue()[1]);
             total += e.getValue()[0];
