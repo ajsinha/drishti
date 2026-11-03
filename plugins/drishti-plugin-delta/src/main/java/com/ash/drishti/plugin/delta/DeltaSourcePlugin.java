@@ -92,8 +92,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private record Part(Map<String, String> docs, Map<String, Set<String>> refs) {}
 
     // concurrent: a reindex adds tables that appeared in the lake while reads go on
-    private final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
+    final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
+    final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
     private Engine engine;
     private String idColumn;
     private String docColumn;
@@ -632,7 +632,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
-    private Map<String, String> promotedColumns(String kind, DeltaTable.Layout l) {
+    Map<String, String> promotedColumns(String kind, DeltaTable.Layout l) {
         Map<String, String> out = new LinkedHashMap<>();
         for (String path : promoted.getOrDefault(kind, List.of())) {
             String column = path.replace(".", "__");
@@ -668,7 +668,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** Partitions to look in for {@code date}, newest first. */
-    private List<LocalDate> candidates(String kind, DeltaTable.Layout l, LocalDate date) {
+    List<LocalDate> candidates(String kind, DeltaTable.Layout l, LocalDate date) {
         var head = date == null ? l.files().descendingKeySet() : l.files().headMap(date, true).descendingKeySet();
         List<LocalDate> out = new ArrayList<>();
         boolean effective = "effective".equals(modes.get(kind));
@@ -690,7 +690,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** The table's layout, recording a log that cannot be read (health says so) and rethrowing: a failure, not "not held". */
-    private Optional<DeltaTable.Layout> readableLayout(String kind, Instant knownAt) {
+    Optional<DeltaTable.Layout> readableLayout(String kind, Instant knownAt) {
         try {
             return layout(kind, knownAt);
         } catch (RuntimeException e) {
@@ -1273,48 +1273,10 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return out;
     }
 
-    /**
-     * The date's Parquet files and the promoted columns, for the pivot engine's direct lake route: only for a snapshot table (one partition
-     * holds the date) on a local disk, without deletion vectors (a reader of the bare files would see deleted rows). No data file is read.
-     */
+    /** The date's Parquet files and the promoted columns, for the pivot engine's direct lake route ({@link DeltaLakeFiles}). */
     @Override
     public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
-        if ("effective".equals(modes.get(kind)) || tables.get(kind) == null) {
-            return Optional.empty();
-        }
-        Optional<DeltaTable.Layout> l = readableLayout(kind, asOf.knownAt());
-        if (l.isEmpty() || l.get().deletionVectors()) {
-            return Optional.empty();
-        }
-        List<LocalDate> dates = candidates(kind, l.get(), asOf.businessDate());
-        if (dates.isEmpty()) {
-            return Optional.empty();
-        }
-        LocalDate d = dates.get(0);
-        List<String> files = new ArrayList<>();
-        long bytes = 0;
-        for (io.delta.kernel.data.Row r : l.get().files().getOrDefault(d, List.of())) {
-            io.delta.kernel.utils.FileStatus fs = io.delta.kernel.internal.InternalScanFileUtils.getAddFileStatus(r);
-            String path = fs.getPath();
-            if (path.startsWith("file:")) {
-                path = java.nio.file.Path.of(java.net.URI.create(path)).toString();
-            } else if (path.contains("://")) {
-                return Optional.empty();                       // an object store: the connector reads it
-            }
-            files.add(path);
-            bytes += fs.getSize();
-        }
-        if (files.isEmpty()) {
-            return Optional.empty();
-        }
-        long rows = -1;
-        try {
-            rows = rowEstimate(kind, d).map(com.ash.drishti.api.RowEstimate::rows).orElse(-1L);
-        } catch (RuntimeException e) {
-            rows = -1;
-        }
-        return Optional.of(new com.ash.drishti.api.LakeFiles("delta", files, promotedColumns(kind, l.get()), tables.get(kind).idColumn(), d,
-                bytes, rows));
+        return DeltaLakeFiles.of(this, kind, asOf);
     }
 
     @Override

@@ -1420,11 +1420,10 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("computecli", "computecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # compute run|cancel|event (2.8.0)
     load_module("changecli", "changecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})     # change propose|submit|approve..., edits status (2.8.0)
     play_ctx = {"Api": Api, "CliError": CliError, "say_json": say_json}
-    for mod in ("varcli", "expcli", "frtbcli", "simmcli"):   # var show|parts|path|whatif; exposure; sens, frtb, play frtb; simm, play simm
+    for mod in ("varcli", "expcli", "frtbcli", "simmcli", "pivotcli"):   # var show|parts|path|whatif; exposure; sens, frtb, play frtb; simm, play simm
         load_module(mod, mod + ".py").register(groups, srv, play_ctx)
     adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.11)
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
-    load_module("pivotcli", "pivotcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # pivot run|estimate|export|views|save (2.9.11.a)
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
