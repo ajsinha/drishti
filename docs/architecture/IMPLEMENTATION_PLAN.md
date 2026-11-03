@@ -765,7 +765,7 @@ the in-memory lake), with the same entitlements, masks, busy protection and audi
 named for parallel reads; snapshots and live streams. The first use: VaR scenario P&L (a scope's vector computed when asked and never
 stored, per-position P&L in batches, live intraday), exactly the engine's figures. The official Arrow Java library replaces the
 hand-written Arrow writers, and the console's own JSON-to-Arrow conversion goes; browsers keep Arrow over HTTP and live views over
-Server-Sent Events. Size L.
+Server-Sent Events. The design questions, each with a recommendation: [ARROW_FLIGHT.md](ARROW_FLIGHT.md). Size L.
 
 ## 2.9.11.d: client examples (planned)
 
@@ -775,12 +775,19 @@ access (no entitlements or masks, no in-memory tables, no computed figures). Jav
 tool and the browser. Each example runs as a test on the demo lake. Size M.
 
 
+## 2.9.11.f: the data inbox (planned)
+
+*Product owner, 2026-11-03.* Files dropped in `<data>/dataload/inbox` with a `.ready` marker (or a `ready.all`) are loaded into the lake
+every 10 minutes by the existing Java loader, moved to the outbox with their marker, and the server is told through the data-load
+signal; crash-safe, duplicate-safe, owner node only, a module `drishti-dataload` run as a server thread with the load in a child
+process. The design and its questions: [DATALOAD_INBOX.md](DATALOAD_INBOX.md). Size M.
+
 ## 2.9.11.e: DEL folded into Rachana (planned)
 
 *Product owner, 2026-11-03: one grammar and no functionality coded twice.* BI's measures, derived columns, filters and row rules written in
 Rachana expressions, DEL's filter-context rules carried over as Rachana functions, every model, report and row rule migrated by a tool
 and proved equal (figures and the rows each person sees) to the current code, then DEL's parser, checker and lowering deleted
-([ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). Designed in detail first. Size L.
+([ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). With it, the function catalogue's tier 1 ([section 7.1](ONE_GRAMMAR.md#71-tier-1-the-everyday-analysts-set-excels-and-sas-proc-meanstabulaterank-core)): conditional aggregates, descriptive and two-variable statistics, shares of totals, ranks, windows and time on the engine; math, logic, text, lists and calendar dates in Rachana; each with its Excel equivalent. Designed in detail first. Size L.
 
 ## 2.9.12: counterparty engines (proposed)
 

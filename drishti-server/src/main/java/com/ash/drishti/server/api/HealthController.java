@@ -88,10 +88,10 @@ public class HealthController {
     }
 
     /** The in-memory lake (IN_MEMORY_LAKE.md section 12): its stores, pinned tables and host checks on Health; absent in such a test. */
-    private com.ash.drishti.server.memlake.MemoryLake memoryLake;
+    private com.ash.drishti.memlake.MemoryLake memoryLake;
 
     @org.springframework.beans.factory.annotation.Autowired(required = false)
-    void memoryLake(com.ash.drishti.server.memlake.MemoryLake m) {
+    void memoryLake(com.ash.drishti.memlake.MemoryLake m) {
         this.memoryLake = m;
     }
 

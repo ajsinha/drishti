@@ -17,36 +17,50 @@ package com.ash.drishti.server.memlake;
 
 import com.ash.drishti.engine.command.Mnemonics;
 import com.ash.drishti.engine.source.SourceRegistry;
+import com.ash.drishti.memlake.MemoryBinding;
+import com.ash.drishti.memlake.MemoryLake;
+import com.ash.drishti.memlake.MemoryLakeSettings;
+import com.ash.drishti.memlake.ReplenishSource;
+import com.ash.drishti.memlake.Retention;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.context.properties.bind.Binder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.env.Environment;
+import org.springframework.scheduling.support.CronExpression;
 
 /**
- * The in-memory lake (docs/architecture/IN_MEMORY_LAKE.md): its stores and replenish jobs, the guard that keeps memory-only data off every
- * disk, and the joins to the memory budget (an off-heap pool) and busy protection. The stores are defined when the bean is made, before
- * the connectors read them; the warm-up starts when the server is ready.
+ * The server's wiring of the in-memory lake (docs/architecture/IN_MEMORY_LAKE.md; the lake itself is the plain-Java module
+ * {@code drishti-memlake}): {@code drishti.lake.memory.*} bound onto {@link MemoryLakeSettings}, the stores and replenish jobs, the guard
+ * that keeps memory-only data off every disk, the cron parser, and the joins to the memory budget (an off-heap pool) and busy protection.
+ * The stores are defined when the bean is made, before the connectors read them; the warm-up starts when the server is ready.
  */
 @Configuration
-@EnableConfigurationProperties(MemoryLakeProperties.class)
 public class MemoryLakeConfiguration {
 
+    /** {@code drishti.lake.memory.*}, bound onto the module's settings record (none configured: no stores, no tables). */
+    @Bean
+    public MemoryLakeSettings memoryLakeSettings(Environment env) {
+        return Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class).orElseGet(MemoryLakeSettings::none);
+    }
+
     @Bean(destroyMethod = "close")
-    public MemoryLake memoryLake(MemoryLakeProperties configured, SourceRegistry registry,
+    public MemoryLake memoryLake(MemoryLakeSettings configured, SourceRegistry registry,
             ObjectProvider<com.ash.drishti.server.net.NetService> net,
             ObjectProvider<com.ash.drishti.server.admission.RequestsInFlight> inFlight,
             ObjectProvider<com.ash.drishti.server.engines.EngineSwitches> switches) {
         // off (config/engines/memory-lake.yaml, COMPUTE_ENGINES.md): no store, no table, no job; on needs a restart (the direct-memory limit)
         com.ash.drishti.server.engines.EngineSwitches sw = switches.getIfAvailable();
-        MemoryLakeProperties props = sw == null || sw.of("memory-lake").on() ? configured : MemoryLakeProperties.none();
+        MemoryLakeSettings props = sw == null || sw.of("memory-lake").on() ? configured : MemoryLakeSettings.none();
         Set<String> owned = ownedHere(net.getIfAvailable());
         com.ash.drishti.server.admission.RequestsInFlight f = inFlight.getIfAvailable();
-        MemoryLake lake = new MemoryLake(props, new ReplenishSource(registry), owned, () -> f == null || f.counter().get() <= 1);
+        MemoryLake lake = new MemoryLake(props, new ReplenishSource(registry), owned, () -> f == null || f.counter().get() <= 1,
+                (line, after) -> CronExpression.parse(line).next(after));
         MemoryBinding.install(lake, registry);
         lake.onChange(() -> registry.plugins().stream().filter(com.ash.drishti.api.SourcePlugin::memoryOnly)
                 .forEach(com.ash.drishti.api.SourcePlugin::refreshVersions));
@@ -73,7 +87,7 @@ public class MemoryLakeConfiguration {
     }
 
     @Bean
-    public Retention retention(SourceRegistry registry, ObjectProvider<Mnemonics> mnemonics, MemoryLakeProperties props) {
+    public Retention retention(SourceRegistry registry, ObjectProvider<Mnemonics> mnemonics, MemoryLakeSettings props) {
         Mnemonics m = mnemonics.getIfAvailable();
         Retention r = new Retention(registry, m == null ? k -> null : m::codeFor,
                 store -> props.stores().containsKey(store) ? props.stores().get(store).contract() : "");
@@ -100,8 +114,8 @@ public class MemoryLakeConfiguration {
         ctx.getBeanProvider(com.ash.drishti.server.admission.AdmissionGate.class).ifAvailable(g -> {
             for (String store : lake.stores().keySet()) {
                 if (lake.owns(store)) {
-                    g.memoryStore(store, () -> com.ash.drishti.lakeio.mem.MemoryStores.store(store).pool().allocatedBytes(),
-                            () -> com.ash.drishti.lakeio.mem.MemoryStores.store(store).pool().capBytes());
+                    g.memoryStore(store, () -> com.ash.drishti.memlake.store.MemoryStores.store(store).pool().allocatedBytes(),
+                            () -> com.ash.drishti.memlake.store.MemoryStores.store(store).pool().capBytes());
                 }
             }
         });

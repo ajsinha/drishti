@@ -18,6 +18,8 @@ package com.ash.drishti.server.memlake;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.memlake.MemoryLake;
+import com.ash.drishti.memlake.Retention;
 import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.util.LinkedHashMap;
@@ -72,7 +74,7 @@ public class MemoryLakeController {
     @PostMapping("/api/v1/admin/lakes/memory/refill/{table}")
     public Map<String, Object> refill(@PathVariable("table") String table, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        if (lake.table(table) == null) {
+        if (!lake.hasTable(table)) {
             throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, "no memory table '" + table + "' (drishti.lake.memory.tables)");
         }
         if (!lake.refill(table, "by " + p.user())) {

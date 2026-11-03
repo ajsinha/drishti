@@ -198,12 +198,12 @@ public final class ShareService {
         }
         // data held in memory only (IN_MEMORY_LAKE.md section 8): a share is a link, never its rows: no picture, no e-mail, no copied values
         List<String> kinds = gate == null ? List.of(kind) : List.of(kind, gate);
-        com.ash.drishti.server.memlake.Retention retention = com.ash.drishti.server.memlake.Retention.current();
+        com.ash.drishti.memlake.Retention retention = com.ash.drishti.memlake.Retention.current();
         if (picture) {
-            retention.require(com.ash.drishti.server.memlake.Retention.Sink.INBOX, kinds, "This picture");
+            retention.require(com.ash.drishti.memlake.Retention.Sink.INBOX, kinds, "This picture");
         }
         if (wantsEmail(req)) {
-            retention.require(com.ash.drishti.server.memlake.Retention.Sink.EMAIL, kinds, "This share");
+            retention.require(com.ash.drishti.memlake.Retention.Sink.EMAIL, kinds, "This share");
         }
         String note = cleanNote(req.note());
         String view = cleanView(req.view());
@@ -217,7 +217,7 @@ public final class ShareService {
         List<String> warnings = new ArrayList<>();
         List<Share.Span> spans = threads.copies(sender, "note", kind, entityId, note, entitlements.maskedValues(doc.data()), warnings);
         if (!spans.isEmpty()) {
-            retention.require(com.ash.drishti.server.memlake.Retention.Sink.INBOX, kinds, "This note's copied values");
+            retention.require(com.ash.drishti.memlake.Retention.Sink.INBOX, kinds, "This note's copied values");
         }
         rateLimit(sender.user());                      // after every check that can fail: a refused share costs nothing
         Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
