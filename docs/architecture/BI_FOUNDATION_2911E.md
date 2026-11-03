@@ -15,7 +15,7 @@
 -->
 # BI's foundation (2.9.11.e): DEL into Rachana, and virtual tables
 
-*Status: **design; part B's foundation built** ([section 9](#9-as-built-part-b-foundation)); the switch not yet. **Decided by the product owner on 2026-11-03**: every recommendation of section 8 accepted, except Q1, decided the other way (Rachana's null rule, below). Earlier wording: a design draft for discussion, nothing decided beyond what the documents it reads already
+*Status: **part A (the language) built** on `wip/bi-foundation`, see [section 9](#9-as-built-part-a-the-language); part B's foundation (the table layer, the migration, the parity proof) built on `wip/bi-foundation-tables`, see [section 10](#10-as-built-part-b-the-table-layer); the switch not yet. **Decided by the product owner on 2026-11-03**: every recommendation of section 8 accepted, except Q1, decided the other way (Rachana's null rule, below). Earlier wording: a design draft for discussion, nothing decided beyond what the documents it reads already
 record as decided (the release and its scope, product owner 2026-11-03; [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md) V6;
 [ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). Every command, path, setting, key and error code below that does not exist today is
 planned and says so on its line. Section 8 lists the questions, each with a recommendation. Nothing is coded until the discussion is
@@ -37,7 +37,8 @@ and 12), [LAKE_CONFIG.md](LAKE_CONFIG.md), [ARROW_FLIGHT.md](ARROW_FLIGHT.md), [
 6. [Arrow Flight, client notebooks, Help and docs](#6-arrow-flight-client-notebooks-help-and-docs)
 7. [Risks, size, order of work, drills](#7-risks-size-order-of-work-drills)
 8. [Decisions](#8-decisions-product-owner-2026-11-03-every-recommendation-accepted-q1-decided-as-rachanas-rule)
-9. [As built (part B foundation)](#9-as-built-part-b-foundation)
+9. [As built (part A): the language](#9-as-built-part-a-the-language)
+10. [As built (part B): the table layer](#10-as-built-part-b-the-table-layer)
 
 ## 1. The goal in one page
 
@@ -715,7 +716,50 @@ Each with a recommendation. Q30 collects what this deeper look suggests changing
 | Q29 | **`related`** in a table (no aliases there) | **`related(table.COLUMN, on = key)`**; in a model `related(alias.COLUMN)` along the active relationship |
 | Q30 | **Changes to VIRTUAL_TABLES.md V1 to V5** | **V1** yes, the module named `drishti-tables` (planned), not depending on BI; **V2** yes, with the item store of Q16 and the history of Q17; **V3** amended by Q13 (summary tables are a model's answer) and Q21; **V4** amended by Q14; **V5** narrowed for this release by Q22, and section 7 changed by Q9 |
 
-## 9. As built (part B foundation)
+## 9. As built (part A): the language
+
+Part A of the order of work (7.3, step 2: Rachana's syntax, checked mode, scopes, the null rule, the functions; the filter-context
+functions moved into the engine; the one compiler and its differential test) is built on `wip/bi-foundation`. DEL is **not** deleted and
+BI is **not** switched: both happen with the migration and the parity proof (part B). DEL stays `OneGrammarRulesTest`'s listed exception.
+
+### 9.1 What is built
+
+| Design | Built | Where |
+|---|---|---|
+| 2.1 list literals, strict `in` / `not in`, `^` (and `^^`), named arguments, `**` and `//` refused with their Rachana form, chained comparisons refused in checked mode | as designed | `drishti-rachana` `el.Lexer`, `el.Parser`, `el.Expr` (`ListLit`, `In`, `Parent`, `Absent`; `Call` carries its named arguments); `EvalContext.withRow` binds the parent, `withRows` a grain's chain |
+| 2.1 checked mode, DEL's codes | `DelChecker` **moved** into Rachana: `el.check.Checker` (with `ElType`, `Scope`, `Fields`, `Problem`, `Signatures`, `Spelling`), `el.CheckedMode` (parse, check, require); DEL's checker now maps its tree to Rachana's (`server.bi.expr.DelToRachana`) and calls it with DEL's wording; `DelType`, `Scope`, `Fields` and `DelException.Problem` deleted from the server | `drishti-rachana` `el.check`; `drishti-server` `bi.expr.DelChecker` |
+| 2.2 the four scopes and their refusals | row, rule, aggregate, context, each with DEL's messages; a path of the source in a measure refused (Q21); `ctl.x`, `@panel`, `$src`, `#index` refused in tables and models | `el.check.Checker` |
+| 2.3 the filter-context algebra in the engine, **moved** word for word | `context.FilterContext` (the four layers, the edited question of each function, nesting at most three, the average, join and read of a sub-plan, `parent_of`'s level, masked fields never a group) and `context.Periods` (closing days, opening day, periods); BI's `Contexts` and `ContextFunctions` keep only their binding to BI's SQL compiler and ask the engine | `drishti-bicompute` `context`; BI's `FilterContextTest` and `BalancesTest` pass unchanged on the moved algebra |
+| 2.5 the 59 functions | the 53 of DEL's catalogue under Rachana names plus `power`, `floor`, `if`, `switch`, `least`, `greatest` (Q23) in one signature file; **R**: `round`, `len`, `date`, `timestamp`, `year`, `quarter`, `month`, `week`, `day`, `business_days_between`, `shift_date`, `asof` (`today()` its old spelling, Q7) in Rachana; **E**: `ratio`, `avg_by`, `avg_over`, `calc`, `share_of`, `parent_of`, `as_of`, the time functions, windows and balances (`latest`, `earliest`, Q5), `convert`, `related` provided by the engine | `rachana/el/signatures.yaml`; `el.DatePartFunctions`; `bicompute.rachana.EngineFunctions` |
+| Q1, Rachana's null rule | `==`/`!=` as Rachana always had them; arithmetic and the text functions null in, null out (they gave `NaN` or `''`); `date - date` is days | `el.Expr`, `el.TextFunctions`, `el.MathFunctions` |
+| 2.6 one compiler | `lang.Compiler` (row expressions, the engine's aggregates with `where =`, measures, `ratio` and measure-level shapes, context sub-plans, windows, time and balances, `convert`), `lang.SqlLowering` (Rachana's values in SQL), `lang.RowsEvaluator` (Java over rows in memory), `lang.ScanEvaluator` (SQL over a scan, the engine's `sqlState`) | `drishti-bicompute` `lang` |
+| 2.6 the differential test | `DifferentialTest`: every operator, every R function, the engine's aggregates with and without `where =`, and the shipped models' expressions, on a table of edges, Java against SQL value for value; `ShippedInRachanaTest` reads every shipped expression as Rachana, checks it in its scope and compiles it | `drishti-bicompute`, `drishti-server` tests |
+| the migration's text | `el.Printer`: a tree in the one spelling, parentheses only where needed (print, parse, print gives the same text) | `drishti-rachana` |
+
+### 9.2 What the design did not foresee, and what was decided
+
+| Found | Decided (part A) |
+|---|---|
+| `ContextFunctions` and `Contexts` are written against BI's own SQL compiler (`SqlEmitter`, `Node`, `Resolver`, `Dataset`), which the engine cannot depend on | the **algebra** moved (what is dropped, kept, joined, averaged, nested, dated); the binding to BI's compiler stays in the server until part B replaces that compiler with the layer's, which will call the same `FilterContext` |
+| Rachana's arithmetic on an empty value gave `NaN` (and `null + 1` gave the text `1`), the text functions `''`: the Java form could not agree with SQL | null in, null out for arithmetic, `upper`, `lower`, `abs` and the new functions; `+` still joins a text with an empty value (Sutras' labels unchanged) |
+| the differential test found DuckDB's `%` and `fmod` keep the divisor's sign for doubles where Java keeps the dividend's | the compiler writes `x - y * trunc(x / y)`; DEL's own `%` (SQL) and `RowEval` (Java) still differ on negative doubles: a figure part B's parity proof should watch |
+| the calendar's `holidays(year)` and `isBusinessDay` disagree on some days (observed holidays), so a weekday count less the holiday list differs by one from counting business days | the compiler lists the weekdays the calendar closes; DEL's `business_days_between` in SQL uses `holidays(year)` and can differ from its live-table form by a day: for part B's parity |
+| `date(x)` of a column: DEL's signature takes only a written text | kept (checked mode refuses `date(TRADE_DATE)`); a column is already a date |
+| the pivot's document paths (`server.pivot.DocPath`) lower Rachana filters to SQL with SQL's null rule (`@.X != 'A'` is false for a missing X), a second lowering beside the one compiler | not changed in part A (the pivot over documents is not BI); repoint `DocPath` at `lang.SqlLowering` with part B so a filter means what Rachana means |
+| `fx` needs the installation's FX source (Q15), which the table layer brings | Rachana parses and checks `fx`; its Java and SQL forms are refused in words until part B |
+| `related` resolves through a model's relationships or a table's key | parsed and checked; lowered by the layer's joins in part B |
+| DEL's `x // y` was typed integer; Rachana's `floor(x / y)` is typed as `x / y` (decimal) | checked mode types it decimal; DEL's tests say so |
+| a few tests of `drishti-bicompute` fail on `wip/engine-functions` already (`FormulaFunctionTest` two cases, `ExplainAddsUpTest` what-if, `SketchErrorTest` one seed), unrelated to part A | listed for the heavy run; not changed here |
+
+### 9.3 Left for part B
+
+The table layer (`drishti-tables`), the migration tool (it reuses `DelToRachana` and `Printer`, and adds the null-rule rewrite of Q1:
+`a != b` becomes `a != b && a != null` where `a` may be null; the shipped set has fewer than ten such comparisons, listed by
+`ShippedInRachanaTest`), the parity proof, BI's switch onto the layer, the deletion of DEL (`server.bi.expr`, `bi/expr/functions.yaml`,
+`ExprParser`, `Node`, `CalculationParser`, `FormulaParser`, `RowEval`) with `OneGrammarRulesTest`'s exceptions, `fx` and `related`'s
+lowerings, `DocPath` on the one compiler.
+
+## 10. As built (part B): the table layer
 
 Part B's foundation (sections 3, 4 and 5) is built on `wip/bi-foundation-tables` beside part A (the language, `wip/bi-foundation`). BI does
 not read the layer yet: that is the switch (section 7.3, step 5). The reference for every key, check and command is

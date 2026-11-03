@@ -13,16 +13,17 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.bi.expr;
+package com.ash.drishti.rachana.el.check;
 
 import java.util.Locale;
 
 /**
- * The types of DEL values (docs/architecture/BI_DESIGN.md section 3.3.3): no implicit casts, integer with decimal gives decimal, {@code date - date} gives
- * integer days, booleans only where a condition is expected. {@link #NUMBER} is a number whose kind is not known (a measure), {@link #ANY} a value whose
- * type is not known (a field when the expression is checked without a model).
+ * The types of checked mode (BI_FOUNDATION_2911E.md 2.1; moved from DEL's {@code DelType}, BI_DESIGN.md section 3.3.3): no implicit
+ * casts, integer with decimal gives decimal, {@code date - date} gives integer days, booleans only where a condition is expected.
+ * {@link #NUMBER} is a number whose kind is not known (a measure), {@link #ANY} a value whose type is not known (a field when the
+ * expression is checked without a table or model).
  */
-public enum DelType {
+public enum ElType {
     INTEGER, DECIMAL, NUMBER, STRING, BOOLEAN, DATE, TIMESTAMP, NONE, LIST, TABLE, ANY;
 
     public String word() {
@@ -38,7 +39,7 @@ public enum DelType {
     }
 
     /** True when a value of this type can stand where {@code want} is expected ({@link #ANY} and {@link #NONE} fit anywhere). */
-    public boolean fits(DelType want) {
+    public boolean fits(ElType want) {
         if (this == ANY || want == ANY || this == NONE) {
             return true;
         }
@@ -52,12 +53,12 @@ public enum DelType {
     }
 
     /** True when two values may be compared or stand in the two branches of a conditional. */
-    public boolean comparable(DelType other) {
+    public boolean comparable(ElType other) {
         return fits(other) || other.fits(this);
     }
 
     /** The type of {@code a op b} for {@code + - * %}: integer only when both are. */
-    public static DelType arithmetic(DelType a, DelType b) {
+    public static ElType arithmetic(ElType a, ElType b) {
         if (a == ANY || b == ANY) {
             return a.numeric() || b.numeric() ? NUMBER : ANY;
         }
@@ -71,7 +72,7 @@ public enum DelType {
     }
 
     /** The type of a column type word ({@code string}, {@code integer}, {@code decimal}, {@code boolean}, {@code date}, {@code timestamp}). */
-    public static DelType ofColumn(String type) {
+    public static ElType ofColumn(String type) {
         if (type == null) {
             return ANY;
         }
@@ -87,7 +88,7 @@ public enum DelType {
     }
 
     /** The type a catalogue {@code returns:} word names; {@code same} is resolved by the caller. */
-    public static DelType ofReturn(String word) {
+    public static ElType ofReturn(String word) {
         return switch (word == null ? "" : word) {
             case "integer" -> INTEGER;
             case "decimal" -> DECIMAL;

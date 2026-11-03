@@ -33,6 +33,16 @@ final class Aggregates {
     static final List<String> EXPECTED = List.of("sum", "count", "avg", "min", "max", "median", "percentile", "distinct", "wavg",
             "variance", "stddev", "variance_pop", "stddev_pop", "sum_once", "count_once", "avg_once", "measure", "cell");
 
+    /**
+     * The functions of a model's measures the engine computes over an answer, never over a list (BI_FOUNDATION_2911E.md 2.5, runs E):
+     * the filter context ({@code calc}, {@code share_of}, {@code parent_of}, {@code as_of}, {@code avg_by}, {@code avg_over}), time
+     * intelligence, windows, balances, conversion and lookup. Rachana parses and checks them; the engine's compiler lowers them.
+     */
+    static final List<String> MEASURE_LEVEL = List.of("ratio", "convert", "related", "fx", "avg_by", "avg_over", "calc", "share_of",
+            "parent_of", "as_of", "ytd", "mtd", "qtd", "prior_period", "same_period_last_year", "running", "fiscal_ytd", "lag", "lead",
+            "rank", "dense_rank", "percent_rank", "moving_avg", "moving_sum", "moving_min", "moving_max", "latest", "earliest", "opening",
+            "closing");
+
     /** Names whose one-list form a provider computes while Rachana keeps their several-argument form (old least/greatest). */
     static final List<String> SHARED = List.of("min", "max");
 
@@ -81,6 +91,13 @@ final class Aggregates {
         }
         for (String name : EXPECTED) {
             if (!PROVIDED.containsKey(name) && !SHARED.contains(name)) {
+                t.fn(name, 0, 64, (a, c) -> {
+                    throw refused(name);
+                });
+            }
+        }
+        for (String name : MEASURE_LEVEL) {
+            if (!PROVIDED.containsKey(name)) {
                 t.fn(name, 0, 64, (a, c) -> {
                     throw refused(name);
                 });

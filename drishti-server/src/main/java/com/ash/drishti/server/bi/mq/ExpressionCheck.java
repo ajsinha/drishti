@@ -15,6 +15,9 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.rachana.el.check.Fields;
+import com.ash.drishti.rachana.el.check.Problem;
+import com.ash.drishti.rachana.el.check.Scope;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.expr.DelAst;
@@ -22,8 +25,6 @@ import com.ash.drishti.server.bi.expr.DelChecker;
 import com.ash.drishti.server.bi.expr.DelException;
 import com.ash.drishti.server.bi.expr.DelParser;
 import com.ash.drishti.server.bi.expr.Expressions;
-import com.ash.drishti.server.bi.expr.Fields;
-import com.ash.drishti.server.bi.expr.Scope;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -42,7 +43,7 @@ final class ExpressionCheck {
     private ExpressionCheck() {}
 
     static Map<String, Object> run(String expr, Scope scope, Fields fields, Dataset flat, Map<String, String> ids) {
-        List<DelException.Problem> problems = new ArrayList<>();
+        List<Problem> problems = new ArrayList<>();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("expr", expr);
         out.put("scope", scope.word());
@@ -59,7 +60,7 @@ final class ExpressionCheck {
                 } catch (DelException e) {
                     problems.add(e.problem());
                 }
-                problems.add(new DelException.Problem(Expressions.OLD_SYNTAX, DelException.Problem.WARNING,
+                problems.add(new Problem(Expressions.OLD_SYNTAX, Problem.WARNING,
                         "old expression syntax (read until the end of wave A, then refused): run the converter", converted == null ? null : "write: " + converted, 0, expr.length()));
             } else {
                 tree = parsed.del();
@@ -78,7 +79,7 @@ final class ExpressionCheck {
         if (tree != null) {
             DelChecker.Checked c = DelChecker.check(tree, scope, fields);
             boolean shifted = converted != null;
-            c.problems().forEach(x -> problems.add(shifted ? new DelException.Problem(x.code(), x.level(), x.message() + " (in the converted text)", x.fix(), 0, expr.length()) : x));
+            c.problems().forEach(x -> problems.add(shifted ? new Problem(x.code(), x.level(), x.message() + " (in the converted text)", x.fix(), 0, expr.length()) : x));
             out.put("type", c.type().word());
             out.put("uses", Map.of("functions", c.functions(), "fields", c.fields(), "measures", c.measures()));
             if (c.ok() && flat != null && scope == Scope.AGGREGATE) {
@@ -89,19 +90,19 @@ final class ExpressionCheck {
         if (converted != null) {
             out.put("converted", converted);
         }
-        out.put("valid", problems.stream().noneMatch(DelException.Problem::error));
-        out.put("problems", problems.stream().map(DelException.Problem::toMap).toList());
+        out.put("valid", problems.stream().noneMatch(Problem::error));
+        out.put("problems", problems.stream().map(Problem::toMap).toList());
         return out;
     }
 
     /** The model's own checks of a measure (what publish runs), on a copy of the model with the expression as one more measure. */
-    private static void engineChecks(String expr, Dataset flat, int length, List<DelException.Problem> problems) {
+    private static void engineChecks(String expr, Dataset flat, int length, List<Problem> problems) {
         Map<String, Dataset.Measure> measures = new LinkedHashMap<>(flat.measures());
         measures.put(PROBE, new Dataset.Measure(PROBE, expr, null, "being checked", null));
         Dataset ds = flat.withMeasures(measures);
         for (DatasetParser.Problem p : DatasetParser.check(ds)) {
             if (p.error() && (p.path().equals("measures." + PROBE) || p.path().startsWith("measures." + PROBE + "."))) {
-                problems.add(new DelException.Problem("DRS-9127", DelException.Problem.ERROR, p.message().replace(PROBE, "this measure"), null, 0, length));
+                problems.add(new Problem("DRS-9127", Problem.ERROR, p.message().replace(PROBE, "this measure"), null, 0, length));
                 return;
             }
         }
@@ -112,7 +113,7 @@ final class ExpressionCheck {
                     Map.of(), com.ash.drishti.server.bi.engine.SqlCompiler.Masks.NONE));
         } catch (com.ash.drishti.common.DrishtiException e) {
             if (e.errorCode() == com.ash.drishti.common.ErrorCode.QUERY_INVALID) {
-                problems.add(new DelException.Problem("DRS-9156", DelException.Problem.ERROR, "a model query would refuse this measure: "
+                problems.add(new Problem("DRS-9156", Problem.ERROR, "a model query would refuse this measure: "
                         + e.getMessage().replace(PROBE, "this measure").replaceFirst("^DRS-\\d+ ", ""), "aggregate each fact in a measure of its own, or join the facts through a shared dimension",
                         0, length));
             }

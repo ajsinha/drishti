@@ -25,7 +25,7 @@ Arrow Flight serves them. Section 10 lists the questions with a recommendation e
 **The deeper design for 2.9.11.e** (DEL into Rachana, every dataset and model key mapped, the migration tool, the parity proof, Flight's
 `table` and `model` forms, and questions Q1 to Q30, some of which refine V1 to V5 below): [BI_FOUNDATION_2911E.md](BI_FOUNDATION_2911E.md),
 decided by the product owner on 2026-11-03 (Q30 amends V1 to V5 below: the module is `drishti-tables`; rules and masks are on the table;
-`live` materialisation; summary tables). The layer's foundation is built ([section 9 there](BI_FOUNDATION_2911E.md#9-as-built-part-b-foundation));
+`live` materialisation; summary tables). The layer's foundation is built ([section 9 there](BI_FOUNDATION_2911E.md#10-as-built-part-b-the-table-layer));
 its reference is [TABLES_GUIDE.md](../guides/TABLES_GUIDE.md).
 
 ## 1. The idea

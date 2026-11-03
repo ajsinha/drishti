@@ -15,6 +15,44 @@
 -->
 # Changelog
 
+## 2.9.11.e — BI's foundation, part A: DEL's language in Rachana (unreleased, on wip/bi-foundation)
+
+- **Rachana gains DEL's language (BI_FOUNDATION_2911E.md section 2 and 9; RACHANA_REFERENCE.md "Lists, membership and the parent",
+  "Named arguments", "Checked mode").** List literals (`['DESK-COMM', 'DESK-RATES']`, at most 1,000 values); a strict `in` and `not in`
+  (an empty list holds nothing; `one_of` keeps its control meaning, where an empty choice holds everything); the parent path `^` (and
+  `^^`): in `$.LEGS[*].CASH_FLOWS[?^.LEG_TYPE == 'FIXED']`, the leg (`EvalContext.withRow` binds it, `withRows` binds a grain's chain);
+  named arguments bound by the function's signature (`round(x, n = 2)`, `shift_date(asof(), -1, unit = 'week')`; the engine's keep
+  theirs: `sum(trades.MTM, where = ...)`, `calc(..., ignore = [...])`); DEL's `**` and `//` refused with their Rachana form (`power`,
+  `floor(x / y)`); `today()` read as `asof()` (Q7). The null rule (Q1, Rachana's): `null != 'X'` is true, arithmetic on an empty value
+  is empty (it showed `NaN`; `null + 1` was the text `1`), `upper`, `lower` and `abs` of an empty value are empty, `date - date` is the
+  days between.
+- **Checked mode** (`drishti-rachana` `el.check`, `el.CheckedMode`): DEL's type checker moved into Rachana and DEL now calls it
+  (`DelChecker` maps its tree with `DelToRachana`; `DelType`, `Scope`, `Fields` and `DelException.Problem` are Rachana's `ElType`,
+  `Scope`, `Fields`, `Problem`). Where the types are known it refuses with DEL's codes: `DRS-9127` (types, scopes, chained comparisons,
+  paths in measures, a screen's controls in a table or model, nesting of the filter-context functions past three), `DRS-9129` (not yet
+  in a table or model), `DRS-9152` (unknown name), `DRS-9161` (a filter on a masked field). The four scopes: row, rule, aggregate,
+  context. The signatures of the 53 DEL functions under Rachana names (`starts_with`, `ends_with`, `latest`, `earliest`; `cumulative`
+  folded into `running`) and `power`, `floor`, `if`, `switch`, `least`, `greatest` (`rachana/el/signatures.yaml`).
+- **The DEL functions in Rachana and the engine (2.5).** In Rachana: `round`, `len`, `date`, `timestamp`, `year`, `quarter`, `month`,
+  `week` (ISO), `day`, `business_days_between`, `shift_date`, `asof`. From the engine: `ratio`, `avg_by`, `avg_over`, `calc`,
+  `share_of`, `parent_of`, `as_of`, `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`, `fiscal_ytd`, `lag`,
+  `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `latest`, `earliest`,
+  `opening`, `closing`, `convert`, `related`, `fx` (over a list they are refused in words; `fx` and `related` are lowered with the table
+  layer).
+- **The filter-context algebra moved into the engine** (`drishti-bicompute` `context.FilterContext`, `context.Periods`): the edited
+  question of each function (BI_DESIGN 3.3.5, rules 1 to 7, word for word), the sub-plan's average, join and read, nesting at most three,
+  `parent_of`'s level, the balances' dates. BI's `Contexts` and `ContextFunctions` ask it.
+- **One compiler from Rachana's tree to the engine** (`drishti-bicompute` `lang.Compiler`, `lang.SqlLowering`, `lang.RowsEvaluator`,
+  `lang.ScanEvaluator`): a row expression in Java (Rachana's evaluator) and in SQL, an aggregate as the engine's own function with its
+  `where =`, measure-level shapes, context sub-plans, windows, time and balances. `DifferentialTest` proves Java and SQL agree value for
+  value over every operator, every Rachana function, the engine's aggregates and the shipped models' expressions on a table of edges; it
+  found, and the compiler fixes, `%` of a negative double, business days on observed holidays, `abs(null)` and `floor(null, 0)`.
+  `ShippedInRachanaTest` reads every expression of `config/bi/models` and `config/bi/datasets` as Rachana (`el.Printer`, the one
+  spelling), checks it in its scope and compiles it.
+- FUNCTION_CATALOGUE.md's statuses (and `pct_of_parent` is no longer called DEL's `parent_of`, Q6); FUNCTIONS.md regenerated;
+  `OneGrammarRulesTest`'s exceptions say where DEL (part B) and `ScopeExpr` (Q20) go. DEL is not deleted and BI is not switched: that is
+  part B, with the migration and the parity proof.
+
 ## 2.9.11.f
 
 - **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;
