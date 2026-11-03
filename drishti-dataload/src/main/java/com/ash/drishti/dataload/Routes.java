@@ -25,8 +25,10 @@ import java.nio.file.PathMatcher;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -151,6 +153,80 @@ public final class Routes {
     /** How many rules there are (status). */
     public int size() {
         return rules.size();
+    }
+
+    /** Where the rules come from ({@code config/dataload.yaml}, or that it is not there). */
+    public String source() {
+        return source;
+    }
+
+    /**
+     * The rules in effect, read-only (the Admin screen): each rule's number, glob, pack and kind, the table (its connector or table, or the
+     * pack's), and where the business date comes from, in words; then {@code unmatched}.
+     */
+    public List<Map<String, Object>> describe() {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (int i = 0; i < rules.size(); i++) {
+            Rule r = rules.get(i);
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("n", i + 1);
+            m.put("match", r.match());
+            m.put("pack", r.pack());
+            m.put("kind", r.kind());
+            m.put("connector", r.connector());
+            m.put("table", tableText(r.connector(), r.table()));
+            m.put("date", r.dateFrom().equals("name") ? "from the name" : "each row's " + (r.dateField() == null ? "date field (the pack's)" : r.dateField()));
+            m.put("format", r.format());
+            m.put("lake", r.lake() == null ? defaultLake : r.lake());
+            out.add(m);
+        }
+        return out;
+    }
+
+    /** The rule {@code unmatched} says ({@code fail}: a file no rule matches goes to {@code failed/}, never guessed). */
+    public String unmatched() {
+        return unmatched;
+    }
+
+    /**
+     * What would route a waiting file, before it is taken (the Admin screen's preview): the rule's number (0: its {@code .ready} file), the
+     * pack and kind, the table and the business date in words; or {@code error} with the reason it would fail. Nothing is moved.
+     */
+    public Map<String, Object> preview(String fileName, ReadyNote note) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        try {
+            Route r = route(fileName, note);
+            int n = 0;
+            for (int i = 0; i < rules.size(); i++) {
+                if (rules.get(i).glob().matches(Path.of(fileName))) {
+                    n = i + 1;
+                    break;
+                }
+            }
+            boolean byNote = note != null && (note.pack() != null || note.kind() != null);
+            m.put("n", byNote ? 0 : n);
+            m.put("by", r.by());
+            m.put("pack", r.pack());
+            m.put("kind", r.kind());
+            m.put("table", tableText(r.connector(), r.table()));
+            m.put("date", r.asOf() != null ? r.asOf() + (note != null && note.businessDate() != null ? " from the .ready file" : " from the name")
+                    : "each row's " + (r.dateField() == null ? "date field (the pack's)" : r.dateField()));
+            m.put("text", (byNote ? "the .ready file" : "rule " + n) + " → " + r.pack() + " / " + r.kind() + " · " + m.get("table") + " · " + m.get("date"));
+        } catch (Unrouted e) {
+            m.put("error", e.getMessage());
+            m.put("text", "no rule matches this name: once ready it would go to failed/ (never guessed)");
+            if (e.getMessage() != null && !e.getMessage().startsWith("no routing rule")) {
+                m.put("text", "it would go to failed/: " + e.getMessage());
+            }
+        }
+        return m;
+    }
+
+    private static String tableText(String connector, String table) {
+        if (table != null) {
+            return table;
+        }
+        return connector != null ? connector : "the pack's";
     }
 
     /** Where {@code fileName} goes, its {@code .ready} keys over the first rule that matches. */
