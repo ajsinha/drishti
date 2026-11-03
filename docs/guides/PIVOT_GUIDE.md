@@ -389,4 +389,4 @@ Under `drishti.pivot` in `config/engines/pivot.yaml`, in [CONFIGURATION.md](../a
 `cluster.deadline-seconds` (300), `cluster.min-rows` (5,000,000).
 
 The benchmark of these at 5, 25 and 75 GB, one node and three, cold and warm, with and without a rollup, is
-[BENCHMARK.md section 11](../admin/BENCHMARK.md#11-the-pivot-engine-at-scale).
+[BENCHMARK.md section 16](../admin/BENCHMARK.md#16-the-pivot-engine-at-scale).

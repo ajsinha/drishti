@@ -2130,6 +2130,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
 | DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
 | DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
+| DRS-5720 | 504 | pivot: a node's share missing | a view computed across the cluster where a node's share had no answer by `drishti.pivot.cluster.deadline-seconds` and no other node could answer it: no figure is shown, never one from the other nodes alone |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
 | DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
@@ -3372,6 +3373,15 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
 | `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |
 | `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
+| `POST /api/v1/pivot/query` with `"exact": true` or `false` beside the view | exact on request (every sketch computed exactly), or distinct counts and percentiles by their sketches at any size; a sketch measure carries `error` (`±1.6% (HyperLogLog, 4,096 registers, one standard error)`) and `exact: false` |
+| `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample: each cell `approximate: true`, `intervals` per measure, "computing" notes for what a sample cannot state; never for VaR or a holistic measure; only when the estimate is over `progressive.after-ms`), then `exact`; `error` with `{error, code}` |
+| `GET /api/v1/pivot/rollups` | `{definitions, built: [{id, source, grain, functions, date, version, refreshedAt, lastRefresh, rows, bytes, partitions}], advice: [{source, grain, functions, asked, averageMs, words}]}` |
+| `POST /api/v1/pivot/rollups`, `DELETE /api/v1/pivot/rollups/{id}`, `POST /api/v1/pivot/rollups/{id}/refresh?date=` | administrators: define `{id, source, grain, functions, dates: latest\|all, title}` (refreshed at once in the background), remove, refresh now (`{words}`: what the incremental refresh did); audited |
+| `POST /api/v1/net/pivot/partials` | the cluster's nodes only (signed, on behalf of the person): `{plan, parts}` or a plan with its shard; the node's partial states per cell set and key (`{sets: [[{key, members, states: [base64], scope, notes}]], stats}`) |
+
+The estimate also answers `range` (half to twice its seconds), `nodes`, `rollup` (the rollup that covers the view, or null) and `options`
+(`run`, `narrow`, `rollup`, `background`, `cancel`, each with `words` and `seconds`); its seconds come from this node's measured scan rate
+once it has one.
 
 ```bash
 curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
@@ -3380,7 +3390,7 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
   -d '{"view":"asha/desk-risk","format":"xlsx"}' -o desk-risk.xlsx
 ```
 
-Refusals: `DRS-5701` to `DRS-5705` and `DRS-9507` ([the error code table](#error-code-table)).
+Refusals: `DRS-5701` to `DRS-5705`, `DRS-5720` and `DRS-9507` ([the error code table](#error-code-table)).
 
 ## Embedding views in another web application
 

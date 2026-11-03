@@ -27,6 +27,20 @@
   every cell, the scan estimate, a chart that never stacks a non-additive measure, Excel with outline levels, SUM formulas only where a
   figure adds up and a Provenance sheet, CSV, Arrow, saved and shared views, cell references, compare two dates. `/api/v1/pivot`,
   `drishti.py pivot`, `drishti.pivot.*` settings, codes DRS-5701 to DRS-5705 and DRS-9507.
+- **The pivot engine, phase P3: scale (2.9.11.c, on `wip/pivot-c`; PIVOT_GUIDE.md section 19, PIVOT_ENGINE.md section 9).** Sketches with
+  a stated error and exact on request: `approx_count_distinct` (HyperLogLog written in the module, made in SQL from DuckDB's hash, ±1.6% at
+  4,096 registers), `approx_median` and `approx_percentile` (KLL written in the module, as Apache DataSketches is not resolvable offline;
+  ±1.65% of rank at k = 200), `top` and `top_exact` (Space-Saving); `count_distinct`, `median` and `percentile` answer by their sketches
+  above `sketches.approximate-above-rows` (10 million rows) with a note, exact below and whenever `"exact": true` (`drishti.py pivot run
+  --exact`). Rollups of partial states per partition, refreshed on load by version checks reading only the files a load added (a restated
+  partition rebuilt), kept on disk, chosen automatically for a person who reads every row (aggregate awareness, a day grain answering
+  week to year), with advice; `/api/v1/pivot/rollups`, `drishti.py pivot rollups`. Progressive answers: ≈ first from a sample with 95%
+  intervals ("computing" where a sample cannot say), then exact (`?progressive=true`, server-sent events; never for VaR or a holistic
+  measure). The cluster: a large mergeable view's partial states computed on every node (files assigned by rendezvous hashing on a direct
+  lake route, else row shards; `/api/v1/net/pivot/partials`) and merged in node order, hedged after 20 s, refused in words past the
+  deadline (DRS-5720). Estimates from measured scan rates, as a range, with options (run, narrow, use the rollup, background). The
+  benchmark harness `tools/bench/pivot_bench.py` (5, 25 and 75 GB measured; 100 GB to 3 TB extrapolated; BENCHMARK.md section 16, to be
+  measured). Settings `drishti.pivot.sketches.*`, `progressive.*`, `rollups.*`, `cluster.*`. The Java tests are written and not yet run.
 
 ## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)
 

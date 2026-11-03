@@ -15,7 +15,9 @@
 -->
 # The pivot engine: one generalised, very large-scale pivot for all of Drishti
 
-**Status: phase P1 partly built (2.9.11.a, unreleased); the rest design, not built.** Built, and described for users in
+**Status: phase P1 partly built (2.9.11.a, unreleased) and phase P3 partly built (2.9.11.c, on `wip/pivot-c`, its tests written and
+not yet run: sketches, rollups and aggregate awareness, progressive answers, the cluster's partial states, refined estimates, the benchmark
+harness); the rest design, not built.** Built, and described for users in
 [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md): the module `drishti-bicompute` (the core with declarative cell sets, the provider and function
 SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over the Data view's tables, the
 ordered merge, the partial-state cache, the split-and-merge harness, xlsx and CSV export), the VaR provider on the new SPI, the API, the
@@ -612,9 +614,9 @@ Distinct counts and percentiles are expensive exactly and cheap approximately. S
 
 | Sketch | State | How a node makes it | Merge |
 |---|---|---|---|
-| HyperLogLog (distinct count) | 2^p registers (p = 12 by default) | in SQL: `hash(x)` (64 bits); the first p bits pick the register, the rank of the first 1-bit in the rest is its value; `max(rank)` per (cell, register) | register-wise maximum: exact for the sketch |
-| KLL (percentiles) | a summary of about 3k values (k = 200 by default) | in Java from the values DuckDB streams per cell, or (decision 6) DuckDB's `approx_quantile` per node turned into weighted points | KLL merge (Karnin, Lang, Liberty, 2016) |
-| Space-Saving (top N) | 10 × n counters | DuckDB's `approx_top_k` (Filtered Space-Saving) per node with counts | counter merge with error bounds |
+| HyperLogLog (distinct count) | 2^p registers (p = 12 by default; 11 to 16) | in SQL, in the same `GROUPING SETS` statement: `hash(x)` (64 bits); the first p bits pick the register, the rank of the first 1-bit in the rest is its value (its bit length found exactly); the cell's distinct (register, rank) pairs, the maximum per register taken in Java | register-wise maximum: exact for the sketch, associative and commutative to the byte; two hash families (DuckDB's and Java's) never merge |
+| KLL (percentiles) | a summary of about 3k values (k = 200 by default) | built in Java (decision 6) from the cell's quantile points (`quantile_disc` at 2k + 1 fractions) and its count, each point weighted by the values it stands for (adding at most 1/(4k) to the rank error); written in the module, as Apache DataSketches (decision 2) is not resolvable in the offline build (only `com.yahoo.datasketches` 0.9.0, without KLL) | KLL merge (Karnin, Lang, Liberty, 2016), its coin a hash of the sketch's own count so a fixed order repeats to the byte |
+| Space-Saving (top N) | 10 × n counters and a floor (the most any value not listed may count) | from the cell's `histogram` of values, kept to its counters | counts added (a missing value counts the other's floor), the largest kept; commutative to the byte |
 
 The stated error is printed with every ≈ value; on request the exact answer runs ([section 5.3](#53-exact-on-request-without-giving-up-scale)).
 Rollups may hold sketch states, so a distinct count by desk and month comes from the rollup.
@@ -1064,9 +1066,17 @@ Results go to [BENCHMARK.md](../admin/BENCHMARK.md) when the runs are made (one 
 
 | Run | Data | Nodes | Cache | Rollups | Views |
 |---|---|---|---|---|---|
-| B1 | 100 GB of synthetic trades (Parquet in Delta, about 1 billion rows, 40 columns, 5 years of business dates) | 1, then 3 | cold, then warm | without, then with `DESK × month × CURRENCY` | V1 sum by desk × month; V2 + distinct counterparties (≈ and exact); V3 + p99 of P&L (≈ and exact); V4 a 6-level expansion; V5 a Python mergeable function |
-| B2 | 1 TB (about 10 billion rows) | 1, then 3 | cold, warm | without, with | V1 to V5 |
-| B3 | 3 TB (about 30 billion rows), on S3 and on local disk | 3 | cold, warm | without, with | V1 to V5, and 20 people at once on V1 and V4 |
+| B1 (warm-up) | 5 GB of synthetic trades (Parquet in Delta, 40 columns, 5 years of business dates) | 1, then 3 | cold, then warm | without, then with `DESK × month × CURRENCY` | V1 sum by desk × month; V2 + distinct counterparties (≈ and exact); V3 + p99 of P&L (≈ and exact); V4 a 6-level expansion; V5 a Python mergeable function |
+| B2 | 25 GB | 1, then 3 | cold, warm | without, with | V1 to V5 |
+| B3 | 75 GB (25 GB a node) | 3 | cold, warm | without, with | V1 to V5 |
+| 100 GB, 1 TB, 3 TB | **EXTRAPOLATED** from B1 to B3 (a straight line through the measured points), labelled so, never presented as measured | 1 and 3 | | | |
+
+**The sizes (product owner, 2026-11-02).** The benchmark machine's disk is limited: at most 25 GB read by one node and about 75 GB of
+lake in all (three nodes), with a smaller warm-up size first. The data goes on the data disk under a folder the runner is given (never
+`/tmp`, a 31 GB tmpfs shared with RAM); the runner refuses to start under 150 GB free and deletes what it generated when the run ends
+(`--keep` keeps it). The earlier plan of 100 GB, 1 TB and 3 TB runs (3 TB on S3, 20 people at once) waits for machines that hold them;
+until then those sizes are extrapolations. The harness is `tools/bench/pivot_bench.py`
+([BENCHMARK.md section 16](../admin/BENCHMARK.md#16-the-pivot-engine-at-scale)).
 
 Measured: time to the first (≈) and the exact answer, bytes read against the estimate, the estimate's error, peak memory per node,
 spill bytes, the cache's hit rate, the merge's share of the time, and the cost of each function per billion rows. The synthetic trades
@@ -1113,7 +1123,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: the Data view's tables read through their connectors and staged in memory; not yet: BI layers, direct lake scans with shipped extensions)
 - [ ] VaR provider (built: `VarPivotProvider`, each cell the engine's scope; `VarCubeSource`'s batching, hierarchy levels and measures with the MR cube); FRTB-SA and SIMM providers with their engines
 - [ ] partial-state cache, cell budgets, busy protection, per-person limits (built: all but the per-person limit)
-- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs and the ordered merge of local shards)
+- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs, the ordered merge of local shards; P3 on `wip/pivot-c`: the plan and partial-state codec, `/api/v1/net/pivot/partials`, files by rendezvous hashing or row shards, the gather in node order with hedging and a deadline; a node with no answer refuses the whole view (DRS-5720) rather than marking its cells)
 - [ ] correctness: currencies, units, masks, no truncation, exact or ≈ (built: masks before aggregation, no truncation, exact or holistic marked; not yet: currencies and units)
 - [x] provenance per answer and cell; time travel (by business date; data versions pinned with P3); compare; cell references
 - [x] expand and collapse (section 11, P1 part and expand by), lazy, saved in views and links
@@ -1123,10 +1133,10 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` with the BI sandbox
 - [ ] explain the difference; what-if overlays; view versions; cell comments
 - [ ] BI shadow mode, parity gate, models as sources, measures as functions
-- [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots
+- [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots (built on `wip/pivot-c`, tests written and not yet run: HyperLogLog, KLL and Space-Saving with exact on request and exact or ≈ by size; rollups of partial states per partition, refreshed by version checks with only new files read, aggregate awareness with date coarsening, advice; progressive answers from a sample with intervals; estimates from measured rates with options; not yet: live pivots, the screen's controls for exact and progressive)
 - [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
-- [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
+- [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md (P3: `SketchErrorTest`, `RollupTest`, `ClusterMergeTest`, `ProgressiveTest` written; the harness `tools/bench/pivot_bench.py` and BENCHMARK.md section 16 written; the runs to be made)
 - [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)
 
 ## 25. Mock-ups: the screens to build

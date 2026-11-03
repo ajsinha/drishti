@@ -13,7 +13,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot engine's benchmark (docs/admin/BENCHMARK.md, section 11; docs/architecture/PIVOT_ENGINE.md, section 21): synthetic trades
+"""The pivot engine's benchmark (docs/admin/BENCHMARK.md, section 16; docs/architecture/PIVOT_ENGINE.md, section 21): synthetic trades
 generated as JSON Lines and loaded into Delta day by day, then the five views V1 to V5 against one server or three, cold and warm, without
 and with a rollup, and the report with the measured points and the larger sizes EXTRAPOLATED from them (labelled so, never as measured).
 
@@ -25,7 +25,7 @@ from the measured 5, 25 and 75 GB points, labelled so, never presented as measur
     python3 tools/bench/pivot_bench.py plan --nodes 3
     # the warm-up lake of 5 GB under a folder on the data disk; refuses under 150 GB free, never under /tmp
     drishti-console/.venv/bin/python tools/bench/pivot_bench.py generate --data-dir /data/drishti-bench/pivot --gb 5
-    # the views against the servers (the bench lake wired as the kind bench_trade, see BENCHMARK.md 11.2), cold then warm, no rollup
+    # the views against the servers (the bench lake wired as the kind bench_trade, see BENCHMARK.md 16.2), cold then warm, no rollup
     python3 tools/bench/pivot_bench.py run --servers http://10.0.0.11:18480,http://10.0.0.12:18480,http://10.0.0.13:18480 \\
         --token-file token.txt --gb 5 --nodes 3 --cache cold --rollups without --out results/pivot.jsonl
     # the tables for BENCHMARK.md, with the extrapolated sizes
