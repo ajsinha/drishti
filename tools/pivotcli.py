@@ -14,7 +14,8 @@
 
 """`drishti.py pivot ...`: the pivot engine from the command line (docs/guides/PIVOT_GUIDE.md; the API: /api/v1/pivot), as the token's user
 sees it: a view's answer (pivot run), its scan estimate (pivot estimate), an export (pivot export), the sources and a source's fields (pivot
-sources, pivot fields) and saved views (pivot views, pivot save). Every figure is the server's. Exit codes: 0, 1 (the server said no),
+sources, pivot fields), saved views (pivot views, pivot save) and the MR cube's lens on source var (pivot mr headline|cell|versions|explain|
+ladder|heat|whatif; docs/guides/MR_CUBE_GUIDE.md, the API /api/v1/pivot/mr). Every figure is the server's. Exit codes: 0, 1 (the server said no),
 2 (usage)."""
 from __future__ import annotations
 
@@ -28,7 +29,13 @@ EPILOG = ("examples:\n  drishti.py pivot sources\n  drishti.py pivot fields trad
           "  drishti.py pivot run --view asha/desk-risk --csv out.csv\n"
           "  drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx\n"
           "  drishti.py pivot export --source trade --rows productType --values \"count()\" --what definition -o view.yaml\n"
-          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views")
+          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views\n"
+          "  drishti.py pivot run --source var --rows MGMT.DESK --cols RISK_CLASS --values \"var()\" --values \"comp_var()\" --option horizon=10d\n"
+          "  drishti.py pivot mr headline --source var --option scope=DESK:RATES\n"
+          "  drishti.py pivot mr cell --source var --rows MGMT.DESK --cell MGMT.DESK=DESK-RATES\n"
+          "  drishti.py pivot mr explain --scope DESK:RATES --from 2026-09-29\n"
+          "  drishti.py pivot mr ladder --scope BANK --grid BANK-IR-TENOR\n"
+          "  drishti.py pivot mr whatif --source var --rows MGMT.DESK --copy MX-20000001 --factor -1")
 
 
 def fmt(v) -> str:
@@ -53,6 +60,9 @@ def build_view(a) -> dict:
                "filters": {}, "expanded": []}
     if a.date:
         v["date"] = a.date
+    for o in getattr(a, "option", None) or []:
+        k, _, val = o.partition("=")
+        v.setdefault("options", {})[k.strip()] = val.strip()
     for f in a.filter or []:
         k, _, vals = f.partition("=")
         v["filters"][k] = {"in": [x for x in vals.split(",") if x]}
@@ -158,6 +168,8 @@ def register(groups, srv, ctx: dict) -> None:
             else:
                 for v in res["views"]:
                     print(f"{v['id']:<32} @{v.get('version')} {v['view']['source']}  (shared with: {', '.join(v.get('sharedWith') or []) or 'nobody'})")
+        elif c == "mr":
+            return mr(api, a)
         elif c == "save":
             v = build_view(a)
             res = api.json("POST", "/api/v1/pivot/views", {"name": a.name, "view": v, "sharedWith": a.share or []})
@@ -176,6 +188,45 @@ def register(groups, srv, ctx: dict) -> None:
         p.add_argument("--open", action="append", metavar="DIM=V[/DIM=V]", help="open a row node (lazily computed); repeatable")
         p.add_argument("--level", type=int, help="open every row node down to this level")
         p.add_argument("--top", action="append", metavar="FIELD=N", help="the top N of a level, the rest in Others")
+        p.add_argument("--option", action="append", metavar="KEY=V", help="a provider option; the VaR source's: scope, horizon (1d, 10d), "
+                       "method (sqrt10, sum), confidence, esConfidence, set (normal, stressed), ccy; repeatable")
+
+    def mr(api, a) -> int:
+        w = a.what
+        if w in ("headline", "cell", "whatif"):
+            b = body(a)
+            if w == "cell":
+                b["coords"] = dict(p.partition("=")[::2] for p in (a.cell or "").split(",") if p)
+            if w == "whatif":
+                if not a.copy:
+                    raise SystemExit("pivot mr whatif: name a booked trade to copy (--copy MX-1) and its --factor")
+                b["items"] = [{"copyOf": a.copy, "factor": a.factor}]
+            res = api.json("POST", "/api/v1/pivot/mr/" + {"headline": "headline", "cell": "detail", "whatif": "what-if"}[w], b)
+        elif w == "versions":
+            res = api.json("GET", "/api/v1/pivot/mr/versions")
+        else:
+            q = {"scope": a.scope or "BANK"}
+            if w == "explain":
+                q.update({k: v for k, v in (("from", a.from_), ("to", a.to)) if v})
+                path = "/api/v1/pivot/mr/explain?"
+            else:
+                q.update({k: v for k, v in (("grid", a.grid), ("asOf", a.date)) if v})
+                if w == "heat":
+                    q["by"] = a.by or "QUALIFIER,TENOR"
+                path = "/api/v1/pivot/mr/sensitivities?"
+            res = api.json("GET", path + urllib.parse.urlencode(q))
+        if a.json or w in ("versions", "ladder", "heat", "explain"):
+            say_json(res)
+        elif w == "headline":
+            print(f"{res['scope']} · {res['date']} · {res['lens']}: VaR {fmt(res['var'])}  ES {fmt(res['es'])}"
+                  + (f"  limit use {res['limitUse']:.1%}" if res.get("limitUse") is not None else "") + f"  · {res['trades']:,} trades")
+        elif w == "cell":
+            print(f"{res.get('scope') or 'no scope text'} · VaR {fmt(res['var'])} (#{res['k']} of {res['scenarios']}, {res.get('varDate')})  "
+                  f"ES {fmt(res['es'])} · {res['trades']} trades in {res['positions']} positions")
+        else:
+            for r in res["rows"]:
+                print(f"{r['label'][:32]:<34}" + (r.get("note") or f"{fmt(r.get('before')):>18}{fmt(r.get('after')):>18}{fmt(r.get('incremental')):>18}"))
+        return 0
 
     pv = groups.add_parser("pivot", help="pivot: any table or VaR as a pivot computed by the server: run, estimate, export, saved views",
                            epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -200,6 +251,19 @@ def register(groups, srv, ctx: dict) -> None:
     x.add_argument("--cell", metavar="DIM=V,DIM=V", help="with --what rows: the cell whose rows are exported")
     x.add_argument("-o", "--out", required=True, metavar="FILE")
     x.set_defaults(func=cmd, pivot_cmd="export")
+    m = ps.add_parser("mr", help="the MR cube's lens on source var: headline, a cell's tail, the slider's dates, explain, the DV01 ladder, the "
+                      "heat map, the what-if side by side", parents=[srv])
+    m.add_argument("what", choices=["headline", "cell", "versions", "explain", "ladder", "heat", "whatif"])
+    view_args(m)
+    m.add_argument("--cell", metavar="DIM=V,DIM=V", help="mr cell: the cell's coordinates")
+    m.add_argument("--scope", help="mr explain, ladder, heat: a scope (BANK, DESK:RATES, a cell's scope text)")
+    m.add_argument("--from", dest="from_", metavar="YYYY-MM-DD", help="mr explain: the earlier date (default: the date before)")
+    m.add_argument("--to", metavar="YYYY-MM-DD", help="mr explain: the later date (default: the latest)")
+    m.add_argument("--grid", help="mr ladder: the bucket grid (BANK-IR-TENOR, FRTB-GIRR)")
+    m.add_argument("--by", help="mr heat: two factor parts, rows then columns (QUALIFIER,TENOR)")
+    m.add_argument("--copy", help="mr whatif: a booked trade whose vector is copied")
+    m.add_argument("--factor", type=float, default=-1.0, help="mr whatif: the copy's scale (default -1: unwind)")
+    m.set_defaults(func=cmd, pivot_cmd="mr")
     vs = ps.add_parser("views", help="your saved views and those shared with you", parents=[srv])
     vs.set_defaults(func=cmd, pivot_cmd="views")
     sv = ps.add_parser("save", help="save a view under a name (private, or shared with --share)", parents=[srv])
