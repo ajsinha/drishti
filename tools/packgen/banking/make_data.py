@@ -155,7 +155,7 @@ def title(kind: str, d: dict) -> tuple[str, str]:
 # ---- checks ----------------------------------------------------------------------------------------------------
 PATH = re.compile(r"\$\.([A-Za-z_][A-Za-z0-9_]*)")
 #: fields a page reads that the server adds as it opens (the VaR engine's figures on a desk, docs/guides/VAR_GUIDE.md section 21.3)
-AUGMENTED = {"varEngine", "VAR_ENGINE", "exposureEngine", "EXPOSURE_ENGINE"}
+AUGMENTED = {"varEngine", "VAR_ENGINE", "exposureEngine", "EXPOSURE_ENGINE", "fvaEngine", "FVA_ENGINE"}
 
 
 def check(docs: dict) -> list[str]:

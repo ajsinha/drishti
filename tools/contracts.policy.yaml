@@ -147,6 +147,7 @@ engine-columns:
   var: [VAR_99, ES_975, COMPONENT_VAR, BOOK_VAR, PCT_OF_BOOK_VAR, PCT_OF_VAR, HYPO_PNL, EXCEPTIONS_250, VAR_RESULT, VAR_ENGINE,
         "BOOKS[].VAR"]   # a path (A[].B: B of every element of A) where the plain name is too common to guard (legal-entity, 2.9.2)
   exposure: [EPE, EEPE, PFE_PEAK, EE_PEAK, PEAK_PFE, PEAK_EE, EAD_IMM, PFE_95, PFE_99, EXPOSURE_ENGINE, EXPOSURE_PROFILE]
+  fva: [FVA_ENGINE]   # FVA computed as the netting-set and counterparty pages open (docs/guides/FVA_GUIDE.md section 5.1); the stored cva kind keeps its own FVA field, not read
   correlation: [RHO, SHRINKAGE, MIN_RHO, MAX_RHO, FACTOR_STATS]
 
 notes:

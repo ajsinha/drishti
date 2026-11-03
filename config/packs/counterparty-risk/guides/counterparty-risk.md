@@ -87,7 +87,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 Trades that net on close-out under one agreement and CSA, with exposure and collateral.
 
-**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`.
+**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `FVA_ENGINE`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`.
 
 **Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CVA_RESULT` → CVA (`cva`), `SACCR` → SA-CCR (`sa-ccr`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
 
