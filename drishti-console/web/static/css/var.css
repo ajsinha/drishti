@@ -227,8 +227,9 @@
   .vw-dates { width: 100%; }
 }
 /* An ad-hoc row (portfolios, saved baskets): the name shortens, its buttons sit after it and show on hover or for the open scope */
-.vx-adhoc-row .nm { display: flex; flex-wrap: wrap; align-items: center; min-width: 0; }   /* the buttons go under the name when the column is narrow */
-.vx-adhoc-row .nm .lbl { flex: 1 1 6em; min-width: 6em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.vx-adhoc-row .nm { display: flex; flex-wrap: nowrap; align-items: center; min-width: 0; }   /* one line always: showing the buttons
+   never changes a row's height, so the rows below never move under the pointer (a wrapped line did, and a click landed beside its button) */
+.vx-adhoc-row .nm .lbl { flex: 1 1 4em; min-width: 4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vx-adhoc-row .vx-acts { flex: none; display: none; gap: 3px; margin-left: 4px; }
 .vx-adhoc-row:hover .vx-acts, .vx-adhoc-row:focus-within .vx-acts, .vx-adhoc-row[aria-current="true"] .vx-acts { display: inline-flex; }
 @media (hover: none) { .vx-adhoc-row .vx-acts { display: inline-flex; } }

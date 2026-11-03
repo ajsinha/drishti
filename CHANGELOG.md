@@ -59,7 +59,7 @@
   `test_stress_window_browser.py`. VAR_GUIDE.md section 18.9 opens with a plain-words explanation: what the stress window is, what the
   screen shows, the data it uses and where it is useful.
 - **VaR, Ad-hoc scopes:** a saved basket's or portfolio's name stays visible; its Edit, Delete and + basket buttons sit after the name
-  instead of over it.
+  instead of over it, on one line: showing them never changes the row's height, so the rows below never move under the pointer.
 
 - **Busy protection judges memory by what is left, not only a share:** new heavy work waits for memory only when the heap after a collection is past its level **and** less than `memory-free-min-mb` (768 MB) is left; `DRISHTI_ADMISSION_ENABLED` switches it off (the console's own tests do, their servers running a 768 MB heap).
 
