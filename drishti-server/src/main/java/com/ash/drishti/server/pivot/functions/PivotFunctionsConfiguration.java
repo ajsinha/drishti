@@ -109,6 +109,11 @@ public class PivotFunctionsConfiguration {
         return fns;
     }
 
+    @Bean
+    public com.ash.drishti.server.pivot.PivotViewVersions pivotViewVersions(com.ash.drishti.server.pivot.PivotViews views) {
+        return new com.ash.drishti.server.pivot.PivotViewVersions(views);
+    }
+
     /** A holistic macro's body over a cell's rows, in the pivot executor: the rows staged as a VALUES list of bound parameters. */
     static Double runMacro(DuckDbExecutor exec, String body, List<String> params, int rows, Object[] columns) {
         if (rows == 0) {

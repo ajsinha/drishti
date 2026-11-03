@@ -3322,6 +3322,8 @@ that add up (section 20) and what-if overlays (section 21). A view uses a functi
 | `POST /api/v1/pivot/functions/{owner}/{name}@{v}/revoke` | `{reason}`: withdrawn; its cells say so |
 | `POST /api/v1/pivot/explain` | `{view, measure, from: {DIM: V}, to: {DIM: V}, fromDate, toDate, by, order: member\|size, price, quantity}` → `{measure, kind, by, from, to, difference, method, order, steps: [{member, cause: new\|gone\|changed\|residual\|price\|quantity\|cross, from, to, step, cumulative}], residual: {value, name}, addsUp, words}` |
 | `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude: {FIELD: [values]}, changes: [{field, scale \| set, where: {FIELD: [values]}}], add: [{FIELD: value}]}}` → `{whatIf, original, diff, overlay, note}` (per cell of `diff`: `delta` per measure, what-if minus original, or `status`) |
+| `GET /api/v1/pivot/views/{owner}/{name}/versions`, `GET .../versions/{n}`, `GET .../diff?from=&to=` | a saved view's versions (newest first), one version, the definition's changes between two (`{changes: [{key, from, to}], words}`) |
+| `POST /api/v1/pivot/views/{name}/restore` | `{version}`: the caller's old version saved again as the next version; audited `pivot.view.restore` |
 
 ```bash
 curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/functions/test \

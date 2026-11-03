@@ -152,4 +152,21 @@ class PivotFunctionsApiTest {
         double wi = w.path("whatIf").path("cells").path("*|*").path("values").path("sum(" + num + ")").asDouble();
         assertThat(wi).isCloseTo(2 * orig, org.assertj.core.data.Offset.offset(1e-6 * Math.max(1, Math.abs(orig))));
     }
+
+    @Test
+    void everySaveOfAViewIsKeptDiffedAndRestored() throws Exception {
+        Map<String, Object> v1 = Map.of("source", "trade", "rows", List.of("productType"), "values", List.of("count()"));
+        Map<String, Object> v2 = Map.of("source", "trade", "rows", List.of("productType"), "values", List.of("count()", "count_distinct(productType)"));
+        call("asha", "analyst", post("/api/v1/pivot/views"), Map.of("name", "versions-demo", "view", v1), 200);
+        call("asha", "analyst", post("/api/v1/pivot/views"), Map.of("name", "versions-demo", "view", v2), 200);
+        JsonNode list = call("asha", "analyst", get("/api/v1/pivot/views/asha/versions-demo/versions"), null, 200);
+        assertThat(list.path("versions").size()).isEqualTo(2);
+        assertThat(list.path("versions").get(0).path("version").asInt()).isEqualTo(2);
+        JsonNode d = call("asha", "analyst", get("/api/v1/pivot/views/asha/versions-demo/diff").param("from", "1").param("to", "2"), null, 200);
+        assertThat(d.path("changes").toString()).contains("values").contains("count_distinct");
+        JsonNode r = call("asha", "analyst", post("/api/v1/pivot/views/versions-demo/restore"), Map.of("version", 1), 200);
+        assertThat(r.path("version").asInt()).isEqualTo(3);
+        assertThat(r.path("view").path("values").toString()).doesNotContain("count_distinct");
+        call("raj", "analyst", get("/api/v1/pivot/views/asha/versions-demo/versions"), null, 404);
+    }
 }

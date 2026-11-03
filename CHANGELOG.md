@@ -27,7 +27,7 @@
   the playground shows the states part by part, the cost and a pivot of the sample; versions; sharing needs an approver who is not the
   author; a withdrawn function says so in its cells; everything audited; never in an official run. Explain the difference between two cells
   or a cell on two dates in steps that add up (a waterfall; price and quantity effects); what-if overlays (members left out, fields scaled
-  or set, rows added) beside the original. `/api/v1/pivot/functions`, `/explain`, `/whatif`; `drishti.py pivot functions|explain|whatif`;
+  or set, rows added) beside the original. Saved views keep every version, with a diff of definitions and restore. `/api/v1/pivot/functions`, `/explain`, `/whatif`; `drishti.py pivot functions|explain|whatif`;
   the pivot screen's Why (`W`), What-if (`I`) and Functions (`U`); settings under `drishti.pivot.functions`; codes DRS-5710 to DRS-5716.
 - **BI on the pivot engine (PB).** Every total and subtotal of a matrix, a table's total row and a model query's `totals` come from one
   grouping-sets statement of the pivot engine over the model's rows as the reader sees them, run in BI's engine where the layers are

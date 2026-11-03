@@ -1127,7 +1127,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [ ] pivot charts (section 14.3), linked both ways, stacking rule (built: chart of a selection, the stacking rule, a click opens the member; not yet: pinned charts, PNG and SVG export)
 - [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts (built: xlsx with outline, formulas and Provenance, csv, Arrow, rows, definition)
 - [x] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` (the compute SDK's guard and Arrow codec)
-- [ ] explain the difference; what-if overlays; view versions; cell comments (built: explain and what-if; not yet: view versions, cell comments, what-if on VaR through the engine)
+- [ ] explain the difference; what-if overlays; view versions; cell comments (built: explain, what-if and view versions with a diff of definitions and restore; not yet: cell comments, what-if on VaR through the engine)
 - [ ] BI on the engine (built: totals and subtotals of matrices, tables and model queries, measures as functions, additivity; not yet: models as pivot sources on the pivot screen, the Slice, rollups of states)
 - [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots
 - [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)

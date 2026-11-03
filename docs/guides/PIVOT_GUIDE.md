@@ -216,6 +216,10 @@ grouped date, a median, a filter that leaves values out) is refused in words and
 **Compare** picks another date: each cell shows its change (▲/▼) and new or gone cells are marked; the API answers both sides and the
 differences.
 
+**Versions.** Every save of a view is kept: `GET /api/v1/pivot/views/{owner}/{name}/versions` lists them, `/diff?from=1&to=2` says what
+changed in the definition (rows, columns, values, filters, open nodes, sorts, top N, date) and `POST /api/v1/pivot/views/{name}/restore`
+with `{"version": 1}` saves an old one again as the next version (the versions between stay). A view keeps its definition, never numbers.
+
 ## 12. Who sees what
 
 - A table is read through the Data view's own read for you: a table you may not open is not offered; a **masked column is not read at
@@ -264,6 +268,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit`, `/approve`, `/revoke` | sharing: approval by someone who is not the author, withdrawal |
 | `POST /api/v1/pivot/explain` | `{view, from, to, fromDate, toDate, by, order, price, quantity}`: the difference in steps that add up (section 20) |
 | `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude, changes, add}}`: the view with the overlay beside the original (section 21) |
+| `GET /api/v1/pivot/views/{owner}/{name}/versions`, `/versions/{n}`, `/diff?from=&to=`; `POST /views/{name}/restore` `{version}` | a saved view's versions (every save kept), one version, what changed between two, an old one restored as the next version |
 
 Details and the error codes: [API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot).
 

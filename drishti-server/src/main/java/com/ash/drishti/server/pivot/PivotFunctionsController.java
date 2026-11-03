@@ -57,12 +57,47 @@ public class PivotFunctionsController {
     private final PivotCore core;
     private final CustomFunctions functions;
     private final AuditLog audit;
+    private final PivotViewVersions versions;
 
-    public PivotFunctionsController(PivotController pivot, PivotCore core, CustomFunctions functions, AuditLog audit) {
+    public PivotFunctionsController(PivotController pivot, PivotCore core, CustomFunctions functions, AuditLog audit, PivotViewVersions versions) {
         this.pivot = pivot;
         this.core = core;
         this.functions = functions;
         this.audit = audit;
+        this.versions = versions;
+    }
+
+    // ---- view versions --------------------------------------------------------------------------------------------------------------
+
+    @GetMapping("/views/{owner}/{name}/versions")
+    public Map<String, Object> versions(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String name) {
+        pivot.on(p);
+        return Map.of("id", owner + "/" + name, "versions", versions.list(p, owner + "/" + name));
+    }
+
+    @GetMapping("/views/{owner}/{name}/versions/{version}")
+    public Map<String, Object> version(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String name,
+            @PathVariable int version) {
+        pivot.on(p);
+        return versions.version(p, owner + "/" + name, version);
+    }
+
+    @GetMapping("/views/{owner}/{name}/diff")
+    public Map<String, Object> diff(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String name,
+            @RequestParam int from, @RequestParam int to) {
+        pivot.on(p);
+        return versions.diff(p, owner + "/" + name, from, to);
+    }
+
+    /** {@code {version}}: the caller's old version saved again as the next one. Audited. */
+    @PostMapping("/views/{name}/restore")
+    public Map<String, Object> restore(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String name,
+            @RequestBody Map<String, Object> body) {
+        pivot.on(p);
+        int v = body.get("version") instanceof Number n ? n.intValue() : -1;
+        Map<String, Object> out = versions.restore(p, name, v);
+        audit.record(p.user(), "pivot.view.restore", String.valueOf(out.get("id")), "from version " + v + " as version " + out.get("version"));
+        return out;
     }
 
     // ---- custom functions -----------------------------------------------------------------------------------------------------------
