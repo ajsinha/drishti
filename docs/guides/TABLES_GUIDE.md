@@ -180,6 +180,9 @@ The model query (MQ, `mq: 1` and `mq: 2`) asks a model as it always has; a table
 | `on-load` | Parquet per business date under `<store>/<domain>/<name>/v<major>/<date>/part-*.parquet`, rebuilt when the source's data-load signal arrives; a query reading the previous file goes on (each build writes a file of its own) |
 | `{ live: { rows, age } }` | in memory by key, maintained from what the source pushes; bounded by `rows` and `age` (`30s`, `15m`, `2h`, `1d`, or ISO-8601); needs `keys`; only over a kind |
 
+A live table's rows are worked out from each pushed entity through the table's own definition; a row whose values did not change keeps its
+`update_seq`. An on-load build writes a new file and moves it in, so a query reading the previous file goes on.
+
 Materialised files are a cache: rebuilt at will, never the truth, never written into a lake's own tables. A model's `rollups:` keep partial
 states per date. The store's folder is a setting of the layer (planned: `drishti.tables.store-dir`, by default `<data>/tables`).
 
@@ -242,7 +245,7 @@ $ drishti.py tables migrate --report migration.txt --audit data/audit/tables-mig
 |---|---|
 | read | `config/bi/datasets/*.dataset.yaml` and `config/bi/models/*.model.yaml` (`--bi` for another folder), `rachana: 1` and `2` |
 | map | every key of a dataset to its table key (the source to `from`, `each` to `grain`, a column without a path to `$.NAME` or `@.NAME`, dotted indexes to brackets, `derive` and calculated columns to `expr`, `where` to `filter`, `grain.one-row-per` and `keep: latest by` to `keys` and `keep`, the time mode to `materialize`, `security.rows` to `rules`, `security.masked` to `masked: true`); every key of a model (`datasets` to `tables`, aliases kept, `via` to `calc(..., via = ...)`, a live table's `history` to the model) |
-| translate | each DEL expression to Rachana through the pluggable translator: the words (`True`, `None`, `and`, `or`), quotes, numbers, `x is None`, chained comparisons, the renamed functions (`startswith` is `starts_with`, `last` and `first` of a balance are `latest` and `earliest`, `cumulative` is `running`) |
+| translate | each DEL expression read by DEL's parser and mapped to Rachana's tree (section 2.4 of the design): the words (`True`, `None`, `and`, `or`, `not`), `a if c else b` as `c ? a : b`, `**` and `//` as `power` and `floor`, chained comparisons, `x is None`, the renamed functions (`startswith` is `starts_with`, `last` and `first` of a balance are `latest` and `earliest`, `cumulative` is `running`) |
 | rewrite | a bare column to its path (`MTM / 1000000` is `$.MTM / 1000000`); `alias.COLUMN.month` in a measure to `month(alias.COLUMN)`; the null rule (below) |
 | check | the result through the layer's checks, as `tables check` would |
 | write | the files under `config/tables/bi/`, each with the source file's licence lines and a line naming the file it came from; one audit line per file (`tables-migrate`: who, when, the file, the SHA-256 of before and after); the BI files stay until BI reads the layer (`--moved-to DIR` moves them) |
@@ -256,15 +259,23 @@ rewrites every comparison whose meaning would change, so every figure stays the 
 | `a != b` (both may be missing) | `a != b && a != null && b != null` |
 | `trades.DESK == books.DESK` | `trades.DESK == books.DESK && trades.DESK != null` |
 | `DESK not in ['A', 'B']` | `$.DESK not in ['A', 'B'] && $.DESK != null` |
-| `not (DESK == 'FX')` (with the language step's translator) | `$.DESK != 'FX' && $.DESK != null` |
+| `not (DESK == 'FX')` | `$.DESK != 'FX' && $.DESK != null` |
 | `trades.DESK == 'FX'`, `x in [...]`, `x is None` | unchanged in meaning (`x == null` for the last) |
 
 A key column and a literal are never missing, so they gain no guard. Running the migration again changes nothing.
 
+**Grouped datasets and consumers.** A dataset with `group:` becomes two tables: its rows (`bi.<name>_rows`) and a summary table under its
+name whose rows are that table's implicit model's answer (`from: { model: table:bi.<name>_rows, query }`). The consumers in `config/bi`
+(reports, boards, alerts, notebooks) are rewritten in place, comments and layout kept: a binding to a version-1 dataset becomes its model
+(`model: live-trading@1`), and every `expr:` and `define:` entry is translated as a measure.
+
+**Stored items.** The server migrates the item store's datasets and models at its first start (once BI reads the layer): every version of
+every item rewritten in place under its number, the draft too, the text before kept as a saved state of the item's history, one event and
+one audit line per item; an item that cannot be migrated is left as it was with the reason on its page.
+
 **What it refuses** (`DRS-9195`, the item named in the report, nothing written for it): an expression the translator cannot keep the
-meaning of yet (`a if c else b`, `not x`, `**`, `//`, a `#` comment: the DEL translator of the language step converts these), two items
-that give one name (a `rachana: 1` original beside its converted form), a pack-generated dataset (regenerated, never migrated), a
-`group:` dataset (a summary table) and a Drishti SQL source (summary tables).
+meaning of, two items that give one name and differ (a `rachana: 1` original whose converted form ships beside it with the same tables and
+measures is recognised, not refused), a pack-generated dataset (regenerated, never migrated) and a model SQL source.
 
 The report:
 

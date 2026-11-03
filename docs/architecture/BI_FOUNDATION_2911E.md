@@ -761,32 +761,34 @@ lowerings, `DocPath` on the one compiler.
 
 ## 10. As built (part B): the table layer
 
-Part B's foundation (sections 3, 4 and 5) is built on `wip/bi-foundation-tables` beside part A (the language, `wip/bi-foundation`). BI does
-not read the layer yet: that is the switch (section 7.3, step 5). The reference for every key, check and command is
-[TABLES_GUIDE.md](../guides/TABLES_GUIDE.md).
+Part B (sections 3, 4 and 5) is built on `wip/bi-foundation-tables`, on part A (merged: Rachana's tree, printer and checked mode, the one
+compiler). BI does not read the layer yet: the switch (section 7.3, step 5) flips it in one change once the parity proof passes. The
+reference for every key, check and command is [TABLES_GUIDE.md](../guides/TABLES_GUIDE.md); the walk-through is the
+[virtual tables tutorial](../tutorials/virtual-tables-and-models.md).
 
 | Part | Built | Where |
 |---|---|---|
-| The module | `drishti-tables`, plain Java, depending on `drishti-rachana` and `drishti-bicompute`; `drishti-server` depends on it; `ArchitectureRulesTest` holds both directions (the layer never reads BI or the server; nothing beneath it reads the layer) | `com.ash.drishti.tables` |
-| Definitions | `TableDef`, `ColumnDef`, `ModelDef` with every key of sections 3.1 and 3.3; names (Q11) and references with a major; built-in columns (Q12); `was:` (Q18) | `tables.def` |
-| Files | `.table.yaml` and `.model.yaml` read with every problem by key, and written in one canonical form (`rachana: 3`, Q25); an old form refused with the command (`DRS-9614`) | `tables.yaml` |
-| Catalogue | files by domain folder and stored items through `ItemStore` (Q16; the server's implementation over `drishti_bi_item` comes with the switch); `was:` names; a table over a table with its base's columns, rules and keys; lineage, with `Lineage.Consumers` for BI, alerts and Flight to register | `tables.catalog` |
-| Checks | every table (grain, paths and their roots, columns, types, keys, `keep`, materialisation including live, rules, tests, masks derived from paths), every model (aliases Q10, tables at their major, relationships and their types, measures in aggregate scope, no path in a measure Q21, `measure('…')`, hierarchies, security, a live `history:` Q14), the catalogue (duplicates, references, `related(…)` Q29, cycles); expressions through `ExpressionChecker`, the seam where part A's checked mode is chained (`andThen`); what only checked mode decides is `DRS-9612` (information) until then | `tables.check` |
-| Preview | rows over JSONL samples: the grain expanded, `$`, `@`, `^`, `^^` walked, filters and calculated columns by Rachana (`RowEvaluator`, replaced by part A's evaluator); sample checks (keys unique, empty paths) | `tables.preview` |
-| Materialisation | the API (`Materialization.OnLoad`, `Materialization.Live`, `LiveBounds`) and the store layout (`StoreLayout`: `<store>/<domain>/<name>/v<major>/<date>/part-*.parquet`, retention); `FileSwap` moved from BI (BI's `Layers`, `TableBuilder` and the runs store use it from the layer) | `tables.materialize` |
-| Command line | `drishti.py tables` with `list`, `check`, `preview`, `lineage` and `migrate`, run as `java -jar drishti-server-*-exec.jar tables …` (no server, no Spring) | `tables.cli.TablesCli`, `tools/tablescli.py` |
-| Migration | section 4's tool for files: every dataset and model key the shipped items use, `rachana: 1` datasets into tables and a model (Q19), the dry run's unified diff, `--check`, the report, the audit (`tables-migrate`), idempotent, refusals by name (`DRS-9195`); DEL into Rachana through `DelTranslator` (part A's translator plugs in; `TokenTranslator` stands in for the mechanical part and refuses `a if c else b`, `not`, `**`, `//` and comments by name), then the layer's rewrites on Rachana's tree: columns to paths (3.2), date parts, and **Q1's null rule** (`a != b` becomes `a != b && a != null` where `a` may be missing; `==` with both sides missable, `not in`, negations pushed inward; keys and literals never guarded; idempotent) | `tables.migrate` |
-| Parity recorder | `BiFoundationRecorder` (enabled by `-Ddrishti.bi.foundation.record=true`), `BiFoundationCases`, `BiFoundationLive` and `BiFoundationParityTest` (skipped until the fixtures exist): every shipped model × the seven persons × three times × the grand total and each hierarchy level (rows and totals), each alias's rows per person (count, hash, masks), every model-bound report's visuals per person, the live replay; values compared exactly except floating point (1e-9 relative). Uses only BI's APIs before the switch and compiles against develop's server | `drishti-server` tests, `bi.mq` and `bi.engine` |
+| The module | `drishti-tables`, plain Java, on `drishti-rachana` and `drishti-bicompute`; `drishti-server` depends on it; `ArchitectureRulesTest` holds both directions | `com.ash.drishti.tables` |
+| Definitions and files | `TableDef`, `ColumnDef`, `ModelDef` with every key of 3.1 and 3.3 (Q9 to Q14, Q29); `.table.yaml` and `.model.yaml` read by key and written in one canonical form (`rachana: 3`, Q25) | `tables.def`, `tables.yaml` |
+| Expressions | Rachana's tree and printer (the layer has no reader of its own); checked mode with `Fields` built from a table's source paths (typed as the columns that read them) or a model's `alias.COLUMN`, aliases, measures and parameters; a definition reads the source unmasked (masks are its readers'); the layer adds two rules (a bare column is refused with its path; `@` and `^` need a grain) | `tables.lang.Trees`, `tables.check` |
+| `fx` and `related` | lowered by the layer (Q15, Q29): each call becomes a column of the row worked out before the expression runs (the installation's one FX source at the row's date; another table's row by its key; in a model `related(alias.COLUMN)` is the join) | `tables.lang.LateBound` |
+| Catalogue | files by domain folder and stored items (`ItemStore`; the server's `BiItemTableStore` over `drishti_bi_item`, Q16); `was:`; a table over a table with its base's columns, rules and keys; a summary table's implicit model (`table:<name>`); lineage | `tables.catalog`, `server.tables` |
+| Pack tables | a pack's kinds and the lists it names regenerated as tables (`trading.trade`, `trading.trade_legs`, 3.6), never migrated | `tables.catalog.PackTables` |
+| Answers | a model query answered by the layer in memory (3.5): each table as the reader may see it (rules, masks, the model's own rules, may-see-all), joined many-to-one from each measure's fact, filtered, grouped (fields and date parts), every measure compiled by part A's `Compiler` and evaluated by the engine's `RowsEvaluator`; measures of measures in order; what needs an answer (windows, context functions, time intelligence, `convert`) refused by name for the scan route | `tables.answer.ModelAnswers` |
+| Materialisation | `LiveStore` (live by key from pushed entities through the table's definition; sequences, deletions, retention by rows and age) and `ParquetOnLoad` (a date's rows as Parquet under `StoreLayout`, each build its own file moved in with `FileSwap` and swept); the API `Materialization` | `tables.materialize` |
+| Preview | rows over JSONL samples through Rachana's evaluator with the grain's parents; `fx` and `related` from a source and another table | `tables.preview` |
+| Migration | files: every dataset and model key; `rachana: 1` datasets (Q19), a version-1 original beside its converted form recognised; `group:` as rows plus a summary table (Q13); consumers rewritten in place (a binding to a version-1 dataset, `expr:` and `define:`); DEL into Rachana by part A's `DelToRachana` (`server.bi.expr.DelTablesTranslator`, handed to the command line by the server); columns to paths, date parts and Q1's null rule on Rachana's tree; dry run, `--check`, report, audit, idempotent. Stored items: `StoredTablesMigration`, every version of every dataset and model rewritten in place, the draft too, the text before kept as saved states, an event and an audit line per item, a refused item left with its reason | `tables.migrate`, `server.tables` |
+| Parity recorder | `BiFoundationRecorder`, `BiFoundationCases`, `BiFoundationLive`, `BiFoundationParityTest` (5.3) | `drishti-server` tests |
 
-On the shipped `config/bi`, the dry run converts 31 of 34 items and refuses three by name: `trading-cashflows`' currency chains
-(`a if c else b`: part A's translator) and the two `rachana: 1` live originals, whose converted forms ship beside them. `trading-risk`'s
-*Open MTM* is the null rule's worked case.
+On the shipped `config/bi` all 34 items convert (`trading-cashflows`' chains as `c ? a : b`; the two live originals are the converted
+forms that ship beside them), the outputs pass the layer's checks, the two live reports bind their models, and a second run changes nothing.
 
-**What remains for the switch.** Part A's translator (`DelTranslator`) and checked mode (`ExpressionChecker`), and Rachana's own tree and
-printer in place of the layer's reader (`tables.expr`, listed in `OneGrammarRulesTest`'s exceptions); BI's `Layers`, `TableBuilder`,
-`DatasetRefresher`, `Rollups`, `LiveTables`, `LiveTable`, `LiveFeed`, `LiveHistory` and `LiveAggregate` behind `Materialization` (they read
-BI's `Dataset` and DEL's `Node` today, so they move when BI reads the layer's definitions); the compiler (MQ answered by the layer, section
-3.5); the server's `ItemStore` over `drishti_bi_item` and the first-start migration of stored items, every version (Q17); reports, boards,
-alerts, notebooks and golden questions in the migration; `group:` and Drishti SQL sources as summary tables; pack-generated tables (3.6);
-the fixtures recorded on develop and committed, then the parity test green on the new path; the old files deleted; the server's refusal of
-an old file (`DRS-9196`); the layer's settings (the store folder) and the editors.
+**What the switch does, in one change, after the parity proof passes on the heavy run.** BI reads the layer: `MqService` answers a model
+through the layer (the in-memory route above for live tables; the scan route, the same compiled plan over `ParquetOnLoad`'s files or a
+connector's scan with part A's `ScanEvaluator`, written then); the first-start migration (`StoredTablesMigration`) and the server's refusal of
+an old file (`DRS-9196`) wired at start; `BiItemTableStore` in the catalogue; `PackTables` fed by the server's pack descriptions; and BI's own
+machinery deleted with DEL: `Layers`, `TableBuilder`, `DatasetRefresher`, `bi.dataset.Rollups`, `LiveTables`, `LiveTable`, `LiveFeed`,
+`LiveHistory`, `LiveAggregate`, `server.bi.expr` (except the migration's reader, kept to 2.9.14), `ExprParser`, `Node`, `CalculationParser`,
+`RowEval`, `config/bi/datasets` and `config/bi/models` (their outputs committed under `config/tables`). Until then those BI classes stay
+compiled and in use by BI, which is unavoidable: moving them means BI reads the layer's definitions, which is the switch itself. The
+editors and the layer's settings (the store folder) come with it.

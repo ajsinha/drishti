@@ -99,6 +99,15 @@
   name (`DRS-9195`). Expressions go through a pluggable DEL translator (the language step provides it; a token stand-in does the mechanical
   part now), then columns to paths, date parts and Q1's null rule: `a != b` becomes `a != b && a != null` where `a` may be missing, so
   every figure stays the same (`trading-risk`'s *Open MTM*). Idempotent.
+- **The table layer on part A, and the rest of part B before the switch (BI_FOUNDATION_2911E.md section 10).** The layer's expressions
+  are Rachana's tree, printer and checked mode (its own reader is gone); `fx` (the installation's one FX source, Q15) and `related` (Q29) are
+  lowered by the layer; a model query is answered by the layer in memory through part A's one compiler (`ModelAnswers`: rules, masks and the
+  model's rules per reader, joins, filters, fields and date parts, measures of measures); `LiveStore` and `ParquetOnLoad` materialise a
+  table from its own definition; `PackTables` regenerates a pack's kinds and lists as tables. `tables migrate` reads DEL with part A's
+  `DelToRachana` (all 34 shipped items convert, `trading-cashflows`' chains included), turns a grouped dataset into its rows and a summary
+  table, and rewrites consumers in place (a report bound to a version-1 dataset binds its model; `expr:` and `define:` translated). Stored
+  items: `BiItemTableStore` over `drishti_bi_item` and `StoredTablesMigration` (every version rewritten in place, the text before kept,
+  audited). BI does not read the layer yet: the switch flips it in one change after the parity proof.
 - **The parity recorder of the release** (`BiFoundationRecorder`, `BiFoundationCases`, `BiFoundationLive`, `BiFoundationParityTest`): every
   shipped model and report, seven persons (a desk-head with two desks and one with none, risk, an analyst, an administrator, a reader
   without the raw power, a role no rule names), three times, each alias's rows per person, and a live replay; recorded on the tree before
