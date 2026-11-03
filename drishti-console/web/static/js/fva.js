@@ -233,7 +233,7 @@
     if (pick) { e.preventDefault(); state.selected = pick.dataset.pick; view = view === "c" ? "a" : view; draw(); return; }
     var td = e.target.closest("[data-cell]");
     if (td) { var p = td.dataset.cell.split(","); cell(+p[0], +p[1]); return; }
-    if (e.target.closest("[data-fv-export]")) { window.location.href = "/api/fva/export.xlsx?" + query().toString(); }
+    if (e.target.closest("[data-fv-export]")) { var md = $("[data-fv-mode]"); window.location.href = "/api/fva/export.xlsx?" + query({ mode: md ? md.value : "" }).toString(); }
   });
   root.addEventListener("change", function (e) {
     var c = e.target.closest("[data-ch]");

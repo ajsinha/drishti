@@ -22,7 +22,7 @@ import urllib.parse
 EPILOG_FVA = ("examples:\n  drishti.py fva show NSET:NS-ALDERSHOT-FRA\n  drishti.py fva show CPTY:CP-ALDERSHOT\n  drishti.py fva sets BANK\n"
               "  drishti.py fva show NSET:NS-ALDERSHOT-FRA --spread 0.006 --fba off\n  drishti.py fva status")
 EPILOG_PLAY = ("examples:\n  drishti.py play fva NSET:NS-ALDERSHOT-FRA\n  drishti.py play fva CPTY:CP-ALDERSHOT --xlsx aldershot-fva.xlsx\n"
-               "  drishti.py play fva --example --xlsx fva-example.xlsx")
+               "  drishti.py play fva NSET:NS-ALDERSHOT-FRA --mode paths --xlsx fva-paths.xlsx\n  drishti.py play fva --example --xlsx fva-example.xlsx")
 
 
 def money(v) -> str:
@@ -61,7 +61,7 @@ def register(groups, srv, ctx: dict) -> None:
 
     def params(a, **more) -> list:
         q = [(k, v) for k, v in more.items() if v not in (None, "")]
-        for attr, name in (("date", "asOf"), ("ee_point", "eePoint"), ("fba", "fba"), ("survival", "survival"), ("spread", "spread")):
+        for attr, name in (("date", "asOf"), ("ee_point", "eePoint"), ("fba", "fba"), ("survival", "survival"), ("spread", "spread"), ("mode", "mode")):
             if getattr(a, attr, None):
                 q.append((name, getattr(a, attr)))
         return q
@@ -147,4 +147,5 @@ def register(groups, srv, ctx: dict) -> None:
     choices(pp)
     pp.add_argument("--xlsx", metavar="FILE.xlsx", help="write the workbook of live formulas")
     pp.add_argument("--example", action="store_true", help="the hand-built case F1 (b) instead of a scope (with --xlsx)")
+    pp.add_argument("--mode", choices=["profile", "paths"], help="the workbook's mode: profile (EE and ENE as data, the default) or paths (their means over the paths)")
     pp.set_defaults(func=cmd, fva_cmd="play")

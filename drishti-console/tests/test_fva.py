@@ -72,14 +72,14 @@ def test_the_pages_and_the_api_are_read_as_the_person(backend, monkeypatch):
     page = c.get("/fva", params={"scope": "BANK", "view": "c"}).text
     assert 'data-view="c"' in page
     page = c.get("/play/fva", params={"scope": "NSET:NS-X"}).text
-    assert 'data-mode="play"' in page and "data-fv-choices" in page and "Export to Excel" in page and "data-fv-terms" in page
+    assert 'data-mode="play"' in page and "data-fv-choices" in page and "Export to Excel" in page and "data-fv-terms" in page and "data-fv-mode" in page
     j = c.get("/api/fva/scope", params={"scope": "CPTY:CP-X", "fba": "off", "spread": "0.006", "eePoint": "mid", "junk": "x"})
     assert j.status_code == 200 and j.json()["figures"]["fva"] == -1750.0
     assert sent[-1] == ("GET", "/fva/scope", "alice", {"scope": "CPTY:CP-X", "eePoint": "mid", "fba": "off", "spread": "0.006"})
     assert c.get("/api/fva/playground", params={"scope": "NSET:NS-X"}).status_code == 200
     assert sent[-1][1] == "/fva/playground"
-    x = c.get("/api/fva/export.xlsx", params={"scope": "NSET:NS-X", "survival": "on"})
+    x = c.get("/api/fva/export.xlsx", params={"scope": "NSET:NS-X", "survival": "on", "mode": "paths"})
     assert x.status_code == 200 and x.content.startswith(b"PK")
-    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/fva/playground.xlsx?") and "survival=on" in sent[-1][1]
+    assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/fva/playground.xlsx?") and "survival=on" in sent[-1][1] and "mode=paths" in sent[-1][1]
     x = c.get("/api/fva/example.xlsx")
     assert x.status_code == 200 and sent[-1][1] == "/fva/playground/template"

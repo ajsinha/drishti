@@ -126,8 +126,9 @@ class FvaCli(unittest.TestCase):
         self.assertIn("2026-12-12", out)
         with tempfile.TemporaryDirectory() as d:
             f = os.path.join(d, "x.xlsx")
-            code, out = run("play", "fva", "NSET:NS-X", "--xlsx", f)
+            code, out = run("play", "fva", "NSET:NS-X", "--xlsx", f, "--mode", "paths")
             self.assertTrue(FakeApi.calls[-1][1].startswith("/api/v1/fva/playground.xlsx?"))
+            self.assertIn(("mode", "paths"), query(FakeApi.calls[-1][1]))
             self.assertEqual(Path(f).read_bytes()[:2], b"PK")
             code, out = run("play", "fva", "--example", "--xlsx", f)
             self.assertEqual(FakeApi.calls[-1][1], "/api/v1/fva/playground/template")

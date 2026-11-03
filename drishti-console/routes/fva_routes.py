@@ -32,7 +32,7 @@ router = APIRouter(include_in_schema=False)
 WORD = "FVA"
 SCOPE_WORDS = ("NSET", "CPTY", "GROUP", "LE", "DESK", "BOOK", "TRD")
 #: the query words the pages pass through to the server
-KEEP = ("scope", "eePoint", "fba", "survival", "spread", "run", "asOf")
+KEEP = ("scope", "eePoint", "fba", "survival", "spread", "run", "mode", "asOf")
 
 
 def scope_of(words: list[str]) -> str:
@@ -127,7 +127,7 @@ async def playground(request: Request):
 async def export(request: Request):
     """The workbook of live formulas for what is on screen (its choices), streamed from the server."""
     from routes.play_routes import _stream
-    q = _params(request, ("scope", "eePoint", "fba", "survival", "spread", "asOf"))
+    q = _params(request, ("scope", "eePoint", "fba", "survival", "spread", "mode", "asOf"))
     return await _stream(request, "/fva/playground.xlsx" + ("?" + urlencode(q) if q else ""), {}, "fva-playground.xlsx")
 
 
