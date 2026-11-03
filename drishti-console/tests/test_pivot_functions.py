@@ -39,16 +39,16 @@ def test_the_cards_and_their_calls_are_the_persons(backend, monkeypatch):
                    "data-pf-waterfall", "data-pf-by", "data-pf-exclude", "data-pf-change", "data-pf-code", "data-pf-sample", "data-pf-check",
                    "data-pf-save"):
         assert marker in page, marker
-    assert c.post("/api/pivot-engine/explain", json={"view": {"source": "trade"}, "by": "DESK"}).status_code == 200
+    assert c.post("/api/pivot/explain", json={"view": {"source": "trade"}, "by": "DESK"}).status_code == 200
     assert sent[-1][:4] == ("POST", "/explain", "alice", {"view": {"source": "trade"}, "by": "DESK"})
-    assert c.post("/api/pivot-engine/whatif", json={"view": {}, "whatIf": {"exclude": {"BOOK": ["B-17"]}}}).status_code == 200
+    assert c.post("/api/pivot/whatif", json={"view": {}, "whatIf": {"exclude": {"BOOK": ["B-17"]}}}).status_code == 200
     assert sent[-1][1] == "/whatif"
-    assert c.get("/api/pivot-engine/functions").status_code == 200 and sent[-1][:2] == ("GET", "/functions")
-    assert c.post("/api/pivot-engine/functions", json={"name": "wret"}).status_code == 200 and sent[-1][:2] == ("POST", "/functions")
-    assert c.post("/api/pivot-engine/functions/test", json={"name": "wret"}).status_code == 200 and sent[-1][1] == "/functions/test"
-    c.get("/api/pivot-engine/functions/asha/wret", params={"version": "2"})
+    assert c.get("/api/pivot/functions").status_code == 200 and sent[-1][:2] == ("GET", "/functions")
+    assert c.post("/api/pivot/functions", json={"name": "wret"}).status_code == 200 and sent[-1][:2] == ("POST", "/functions")
+    assert c.post("/api/pivot/functions/test", json={"name": "wret"}).status_code == 200 and sent[-1][1] == "/functions/test"
+    c.get("/api/pivot/functions/asha/wret", params={"version": "2"})
     assert sent[-1][1] == "/functions/asha/wret" and sent[-1][4] == {"version": "2"}
-    no = c.post("/api/pivot-engine/functions/asha/wret@1/approve", json={"reason": "mine", "scope": "everyone"})
+    no = c.post("/api/pivot/functions/asha/wret@1/approve", json={"reason": "mine", "scope": "everyone"})
     assert no.status_code == 403 and no.json()["code"] == "DRS-5712"
-    assert c.post("/api/pivot-engine/functions/asha/wret@1/revoke", json={"reason": "x"}).status_code == 200
-    assert c.post("/api/pivot-engine/functions/asha/wret@1/delete", json={}).status_code == 404
+    assert c.post("/api/pivot/functions/asha/wret@1/revoke", json={"reason": "x"}).status_code == 200
+    assert c.post("/api/pivot/functions/asha/wret@1/delete", json={}).status_code == 404

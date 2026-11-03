@@ -16,11 +16,11 @@
 # @drishti/elements
 
 Drishti's live views and BI reports inside other web applications, as Web Components with a Shadow DOM and no iframes.
-Version 1.4.3; embed API contract 1.0. Proprietary: see LICENSE in the Drishti repository.
+Version 1.4.4; embed API contract 1.0. Proprietary: see LICENSE in the Drishti repository.
 
 ```html
-<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.3/drishti-elements.js"
-        integrity="sha384-2cQspo3VarSJX5MIfkYIPn43k7CsAqLLB5W2XbKmiKj0yJdeMf/WAhFiCySQLVGD" crossorigin="anonymous"></script>
+<script type="module" src="https://drishti.bank.example/embed/v1/elements/1.4.4/drishti-elements.js"
+        integrity="sha384-tFFD9jmASJEaSIhTYr+1L3aqiPf33ZUG36na7exr+UtKIYHd0lQ5Cnq0LtEozz5S" crossorigin="anonymous"></script>
 <drishti-view kind="trade" entity="MX-20000001" theme="light"></drishti-view>
 <drishti-report report="file:report:trades-overview" theme="light"></drishti-report>
 ```
@@ -40,10 +40,10 @@ The element sheets, the icon font and the chart code are fetched from the consol
 
 | File | What |
 |---|---|
-| `dist/drishti-elements.js`, `dist/m/*.js` | the library: plain ES modules, the same bytes the console serves for version 1.4.3 |
+| `dist/drishti-elements.js`, `dist/m/*.js` | the library: plain ES modules, the same bytes the console serves for version 1.4.4 |
 | `types/index.d.ts` | classes, event detail types, `HTMLElementTagNameMap`, `HTMLElementEventMap` |
 | `types/react.d.ts` | `JSX.IntrinsicElements` entries for React |
-| `integrity.json` | SHA-384 of every file (subresource integrity), also served at `/embed/v1/elements/1.4.3/integrity.json` |
+| `integrity.json` | SHA-384 of every file (subresource integrity), also served at `/embed/v1/elements/1.4.4/integrity.json` |
 
 ## Reference
 

@@ -191,6 +191,25 @@ public final class TabularProvider implements PivotProvider {
                     continue;
                 }
                 Object[] states = null;
+                Map<Integer, String> notes = Map.of();
+                String scope = null;
+                if (plan.money().guard()) {
+                    int at = nd + 3 + c.stateColumns();
+                    String lo = rs.getString(at);
+                    String hi = rs.getString(at + 1);
+                    if (lo != null && hi != null && !lo.equals(hi)) {
+                        Map<Integer, String> n = new HashMap<>();
+                        for (int f = 0; f < plan.functions().size(); f++) {
+                            if (plan.money().money(plan.functions().get(f))) {
+                                n.put(f, "mixed currencies (" + lo + " to " + hi + "): convert them to add them (the view's currency: report "
+                                        + "and rates); amounts are never added raw");
+                            }
+                        }
+                        notes = n;
+                    } else if (lo != null) {
+                        scope = "currency " + lo;
+                    }
+                }
                 for (CellSet set : sets) {
                     boolean match = true;
                     for (Map.Entry<String, String> at : set.at().entrySet()) {
@@ -209,7 +228,7 @@ public final class TabularProvider implements PivotProvider {
                     for (String d : set.grouping()) {
                         grouped.put(d, vals[c.dims().indexOf(d)]);
                     }
-                    out.get(set).put(set.key(grouped), new Partials.Entry(members, states));
+                    out.get(set).put(set.key(grouped), new Partials.Entry(members, states, scope, notes));
                 }
             }
             return null;

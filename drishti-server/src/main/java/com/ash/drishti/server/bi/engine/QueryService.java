@@ -299,7 +299,7 @@ public final class QueryService implements AutoCloseable {
     /**
      * The aggregation the pivot engine asks over a model's rows (PIVOT_ENGINE.md section 12): {@code detail} is a query of shape rows (no
      * measures) whose SQL, compiled as the reader (row rules, masks, joins, layers, dates) but not run, becomes the FROM item of the
-     * statement {@code outer} writes (one {@code GROUP BY GROUPING SETS} of the engine's function states). The statement runs here, in the
+     * statement {@code outer} writes (one grouping-sets statement of the engine's function states). The statement runs here, in the
      * engine that holds the model's layers, so no row leaves it; the answer is the statement's columns.
      */
     public interface Outer {
@@ -695,7 +695,7 @@ public final class QueryService implements AutoCloseable {
         Outer outer = OUTER.get();
         SqlCompiler.Compiled c = probe.compile(plan, reader, from, outer == null ? cap : Integer.MAX_VALUE, components, timeContext(d, q, dates), more);
         if (outer != null) {
-            c = outer.wrap(c);                                                    // the pivot engine's grouping sets over the reader's rows
+            c = outer.wrap(c);                                                    // the pivot engine's grouping-sets statement over the reader's rows
             cap = outer.maxRows() + 1;
         }
         AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, timeout());
@@ -758,7 +758,7 @@ public final class QueryService implements AutoCloseable {
                 SqlCompiler.Compiled c = probe.compile(plan, reader, Map.of(table, src), outer == null ? cap : Integer.MAX_VALUE, null, time);
                 int max = cap;
                 if (outer != null) {
-                    c = outer.wrap(c);                                        // the pivot engine's grouping sets over the frame's rows
+                    c = outer.wrap(c);                                        // the pivot engine's grouping-sets statement over the frame's rows
                     max = outer.maxRows() + 1;
                 }
                 long t0 = System.nanoTime();

@@ -41,7 +41,8 @@ public class SearchController {
     private final StructuredSearch search;
     private final Entitlements entitlements;
     private final Mnemonics mnemonics;
-    private final com.ash.drishti.engine.search.SearchPivot pivot;
+    private final com.ash.drishti.engine.search.SearchProperties searchProps;
+    private final com.ash.drishti.engine.pivot.PivotProperties pivots;
     private final com.ash.drishti.engine.source.SourceRouter router;
     private final com.ash.drishti.engine.time.BusinessDates dates;
 
@@ -54,14 +55,16 @@ public class SearchController {
     }
 
     public SearchController(StructuredSearch search, Entitlements entitlements, Mnemonics mnemonics,
-            com.ash.drishti.engine.search.SearchPivot pivot, com.ash.drishti.engine.source.SourceRouter router,
+            com.ash.drishti.engine.search.SearchProperties searchProps, com.ash.drishti.engine.pivot.PivotProperties pivots,
+            com.ash.drishti.engine.source.SourceRouter router,
             com.ash.drishti.engine.time.BusinessDates dates) {
         this.search = search;
         this.router = router;
         this.dates = dates;
         this.entitlements = entitlements;
         this.mnemonics = mnemonics;
-        this.pivot = pivot;
+        this.searchProps = searchProps;
+        this.pivots = pivots;
     }
 
     @GetMapping
@@ -106,7 +109,7 @@ public class SearchController {
         // the sources that failed or did not answer in time, and why: a partial answer says what it is missing
         out.put("failed", r.failed().entrySet().stream().map(e -> Map.of("source", e.getKey(), "reason", e.getValue())).toList());
         out.put("elapsedMs", r.elapsedMs());
-        out.put("pivot", offered(r.kind()));               // the Pivot tab, when the kind's pack opts in (null otherwise)
+        out.put("pivot", offered(r.kind()));               // Pivot (the pivot engine on the kind), when the kind's pack opts in (null otherwise)
         noData(r, asOf).ifPresent(n -> out.put("noData", n));
         if (r.listsMatches()) {
             out.put(com.ash.drishti.server.net.SearchScatter.MATCHED_IDS, r.matchedIds());
@@ -135,12 +138,24 @@ public class SearchController {
                 .map(latest -> Map.of("businessDate", day.toString(), "latestDate", latest.toString()));
     }
 
-    /** What the Pivot tab of this kind's results offers; null when its pack does not opt in (or says what cannot be read). */
+    /**
+     * What this kind's results offer to pivot (PIVOT_GUIDE.md section 1: Pivot opens the pivot screen on the kind, with its pack's
+     * arrangement as the view): {@code {source, fields, view}}; null when its pack does not opt in (or says what cannot be read).
+     */
     private Map<String, Object> offered(String kind) {
+        if (!pivots.enabled()) {
+            return null;
+        }
         try {
-            return pivot.describe(kind).orElse(null);
+            return searchProps.pivotOf(kind).map(spec -> {
+                Map<String, Object> m = new java.util.LinkedHashMap<>();
+                m.put("source", kind);
+                m.put("fields", spec.fields().stream().map(com.ash.drishti.rachana.model.PivotSpec.Field::name).toList());
+                m.put("view", com.ash.drishti.server.pivot.SpecViews.view(kind, null, spec.arrangementMap()));
+                return m;
+            }).orElse(null);
         } catch (IllegalArgumentException e) {
-            org.slf4j.LoggerFactory.getLogger(SearchController.class).warn("no Pivot tab for {}: {}", kind, e.getMessage());
+            org.slf4j.LoggerFactory.getLogger(SearchController.class).warn("no Pivot for {}: {}", kind, e.getMessage());
             return null;
         }
     }

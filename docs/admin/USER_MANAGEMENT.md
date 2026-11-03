@@ -330,7 +330,7 @@ hide a view's panels for themselves. What an administrator needs to know:
 
 ## Pivots
 
-The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)), offered where a Sutra
+The Pivot ([USER_GUIDE.md](../guides/USER_GUIDE.md#pivot-slice-a-table-your-way)), offered where a Sutra
 or a pack opts in, has **no power of its own**:
 
 - **Who:** anyone who may open the kind may pivot its tables and search results and save their arrangement, as they

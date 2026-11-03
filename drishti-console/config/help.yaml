@@ -52,7 +52,7 @@ categories:
     icon: terminal
     blurb: "Working in the console: commands, views, forms, reports, sharing, and Python on any screen."
     guides:
-      - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, the Pivot tab, business dates, Compare, workspaces, monitors, alerts, a page on a phone, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
+      - { slug: user-guide, doc: guides/USER_GUIDE.md, title: User guide, icon: terminal, summary: "Home and its fact of the day, the top bar, commands, type-ahead, every key, tables, filters, controls, layout mode, Pivot (the pivot screen), business dates, Compare, workspaces, monitors, alerts, a page on a phone, the ten themes and how to choose one, settings, and what changes (nothing) when several servers act as one." }
       - { slug: sharing-and-discussion, title: Sharing and collaboration, icon: chat-square-text, summary: "Send a view with a note, read your inbox, discuss a number: what travels is your words and a link, and everyone sees the view with their own permissions." }
       # VaR is two pages (product owner, 2026-10-26): the one reference and the one tutorial. Their path slugs are kept, so the
       # explorer's F1 (contextual var below) and the tutorials page's links open the same pages.
@@ -193,7 +193,7 @@ moved:
   phone: user-guide#on-a-phone                                          # the phone display: must, glance, More on this page, On desktop (MOBILE_DISPLAY.md)
   on-a-phone: user-guide#on-a-phone
   lens-menu: user-guide#on-a-phone                                      # the lens menus folded into one on a phone (LX1 option C)
-  pivot-tab: user-guide#the-pivot-tab-slice-a-table-your-way
+  pivot-tab: user-guide#pivot-slice-a-table-your-way
   bi-runs: bi-guide#28-background-runs-long-bi-questions                                       # BI runs, the guide (docs/guides/BI_GUIDE.md, 2.6.7)
   runs-tab: bi-guide#the-runs-tab                                           # the Runs tab of a BI workspace (2.6.7)
   run-card: bi-guide#the-run-card                                           # a visual's run card (2.6.7)

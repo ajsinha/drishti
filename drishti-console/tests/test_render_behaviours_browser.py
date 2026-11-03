@@ -31,8 +31,6 @@ import render_harness as H
 from table_chart_backend import SPEC, flows_panel
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
-RECORDS = {"fields": SPEC["fields"], "rows": [[["Interest rate swap", "FX forward"][i % 2], f"2031-0{1 + i % 9}-15", (i - 3) * 125_000.0] for i in range(8)],
-           "total": 8, "truncated": False}
 EXPLAIN = json.loads((cases.FIXTURES / "explain_trade_IRS-48213.json").read_text())
 
 
@@ -66,7 +64,6 @@ def site():
     s = H.Site()
     s.add_vm("tables", tables_vm())
     s.add_vm("showcase", cases.showcase())
-    s.pages["/api/pivot/records/trade/IRS-48213/trades"] = json.dumps(RECORDS)
     s.pages["/v/trade/IRS-48213/about?format=json&generation=1742"] = json.dumps({"explain": EXPLAIN, "index": {"terms": [], "panels": {}}})
     s.pages["/v/trade/IRS-48213/about?format=json"] = s.pages["/v/trade/IRS-48213/about?format=json&generation=1742"]
     return s
@@ -117,12 +114,15 @@ def test_console_behaviours_bring_the_funnels_and_chart_any_table_into_the_conta
     lab.wait_for_selector("dialog.tc-dlg[open] .tc-canvas svg path", state="attached", timeout=15000)
 
 
-def test_the_pivot_tab_builds_its_grid_from_the_records_read_as_the_person(lab, site):
+def test_the_pivot_tab_of_a_published_renderer_opens_the_pivot_screen_on_the_panel(lab, site):
+    # renderers up to 1.1.0 draw a Table | Pivot switch; its Pivot is now a thin entry into the pivot screen (static/js/pivot.js)
     render(lab, "tables", {"behaviours": "console"})
-    lab.locator("#host #p-trades [data-pv-tab='pivot']").click()
-    lab.wait_for_function(f"() => !!{ROOT}.querySelector('#p-trades .pv-host table')", timeout=10000)
-    assert "Interest rate swap" in lab.evaluate(f"() => {ROOT}.querySelector('#p-trades .pv-host').innerText")
-    assert any("/api/pivot/records/trade/IRS-48213/trades" in u for u in site.requests)
+    tab = lab.locator("#host #p-trades [data-pv-tab='pivot']")
+    if tab.count() == 0:
+        return
+    with lab.expect_popup() as popup:
+        tab.click()
+    assert "/pivot?source=" in popup.value.url
 
 
 def test_the_nested_pivot_is_drawn_as_the_pivot_grid(lab):

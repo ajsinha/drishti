@@ -114,7 +114,7 @@ public record EmbedProperties(Boolean enabled, String issuer, List<String> audie
         tokenMaxSeconds = tokenMaxSeconds == null ? 900 : Math.max(30, tokenMaxSeconds);
         mask = mask == null || mask.isBlank() ? "always" : mask;
         scopes = scopes == null || scopes.isEmpty() ? Map.of(
-                VIEW, List.of("GET /api/v1/views/*/*", "GET /api/v1/views/*/*/stream", "GET /api/v1/views/*/*/panels/*/records",
+                VIEW, List.of("GET /api/v1/views/*/*", "GET /api/v1/views/*/*/stream",
                         "GET /api/v1/embed/check", "POST /api/v1/command"),
                 ABOUT, List.of("GET /api/v1/views/*/*/explain"),
                 REPORT, List.of("GET /api/v1/bi/reports/*", "POST /api/v1/bi/reports/*/query", "GET /api/v1/bi/reports/*/live"),

@@ -320,7 +320,7 @@ engines:
     needs: []
     uses: [var]
     api: [/api/v1/pivot]
-    console: [/pivot, /api/pivot-engine/, /api/pivot-engine-export]
+    console: [/pivot, /api/pivot/]
     words: [PIVOT]
     menus: [pivot]
     help: [docs-guides-pivot-guide, docs-tutorials-33-the-pivot-engine]

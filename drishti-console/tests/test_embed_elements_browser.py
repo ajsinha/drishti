@@ -665,23 +665,14 @@ def test_tree_row_expands_inside_the_element(host):
     expect(t.locator(".tr-tog")).to_have_attribute("aria-expanded", "true")
 
 
-def test_pivot_regroups_without_saving_inside_the_element(host):
+def test_a_tables_pivot_inside_the_element_is_a_link_to_the_console_s_pivot_screen(host):
     h = host()
     h.open()
-    box = h.page.locator("#main").locator(".pv-box").first
-    show(h, "netting-set", NETTING_SET)                                    # its member trades have a pivot
-    expect(box).to_be_attached(timeout=15000)
-    assert box.count() == 1, "the netting set has no pivot panel"
-    box.locator("[data-pv-tab=pivot]").click()
-    expect(box.locator(".pv-host table").first).to_be_visible(timeout=20000)
-    before = box.locator(".pv-host").inner_text()
-    assert any("/panels/" in r[1] and r[1].endswith("/records") for r in h.requests), "the rows were not fetched through the embed API"
-    chip = box.locator(".pv-fields .pv-chip").first          # regroup with the console's own key: C puts the field in Columns
-    chip.focus()
-    h.page.keyboard.press("c")
-    expect(box.locator(".pv-host")).not_to_have_text(before, timeout=10000)
-    assert box.locator("[data-pv-save], [data-pv-reset], [data-pv-promote], [data-pv-export]").count() == 0        # layouts are the Sutra's only
-    assert not [r for r in h.requests if r[0] in ("PUT", "DELETE") or "/api/pivot" in r[1]]
+    show(h, "netting-set", NETTING_SET)                                    # its member trades offer a pivot
+    link = h.page.locator("#main").locator(".pv-open a").first
+    expect(link).to_be_attached(timeout=15000)
+    assert "/pivot?source=panel" in link.get_attribute("href")
+    assert not [r for r in h.requests if r[1].endswith("/records") or "/api/pivot" in r[1]], "nothing is pivoted inside the element"
 
 
 def test_panel_help_popover_and_the_about_drawer_inside_the_element(host):

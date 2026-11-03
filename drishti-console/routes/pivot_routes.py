@@ -12,163 +12,155 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The Pivot tab's same-origin JSON (USER_GUIDE.md, The Pivot tab). Every read goes through the server with the user's own
-identity, business date and roles, as the view or search it belongs to does: a panel's rows for the browser's engine, the
-server engine of a search's pivot (its cells, a cell's entities, a field's values), the user's saved arrangements, and an
-author's promotion of a panel's pivot to the Sutra's next version (with the diff, as layout promotion shows it). Problems
-come back as ``{"code", "detail"}`` with the server's status."""
+"""The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/PIVOT_ENGINE.md section 25): ``PIVOT <GO>``,
+``PIVOT <table> <GO>`` (a table of the Data view, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
+table. The page is a shell that web/static/js/pivot-core.js and pivot.js fill: the field list and its four zones on the right, the grid with
+nested rows opened with + and −, the scan-estimate bar, the provenance popover, a chart of a selection and the Export menu. Every figure is
+the server's (``/api/v1/pivot``, asked as the person through the same-origin proxy ``/api/pivot/...``); the console only draws."""
 from __future__ import annotations
 
-from urllib.parse import quote
+from urllib.parse import urlencode
 
 from fastapi import APIRouter, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response
 
-from core.csrf import json_body
 from core.backend import BackendError
-from core.pivots import ARRANGEMENT
-from routes.common import ident
-from core import sutra_diff
+from routes.common import ident, render
 
-router = APIRouter(prefix="/api/pivot", include_in_schema=False)
-SEARCH_KEYS = ("q", "documents", "cell", "offset", "size", "field") + ARRANGEMENT
+router = APIRouter(include_in_schema=False)
+
+WORD = "PIVOT"
+
+
+def pivot_command(words: list[str]) -> str | None:
+    """Where ``PIVOT ...`` goes, or None when it is not the command: ``PIVOT @owner/name`` a saved view, ``PIVOT <table> [date]`` a table."""
+    if words and words[-1].upper() == "<GO>":
+        words = words[:-1]
+    if not words or words[0].upper() != WORD:
+        return None
+    if len(words) == 1:
+        return "/pivot"
+    if words[1].startswith("@") and "/" in words[1]:
+        return "/pivot?" + urlencode({"view": words[1][1:]})
+    q = {"source": words[1]}
+    if len(words) > 2:
+        q["date"] = words[2]
+    return "/pivot?" + urlencode(q)
+
+
+def redirect_for(typed: str):
+    where = pivot_command(typed.split())
+    return RedirectResponse(where, status_code=303) if where else None
 
 
 def _problem(e: BackendError) -> JSONResponse:
-    return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
+    from core.busy import problem as busy_problem
+
+    return busy_problem(e, e.status if 400 <= (e.status or 0) < 600 else 502)
+
+
+@router.get("/pivot")
+async def page(request: Request, source: str = "", view: str = "", date: str = ""):
+    """PIVOT: the pivot screen."""
+    text = f"{WORD} @{view}" if view else f"{WORD} {source} {date}".strip()
+    return render(request, "terminal/pivot.html", screen="pivot", source=source.strip(), view_id=view.strip(), date=date.strip(),
+                  command_text=text)
+
+
+async def _call(request: Request, method: str, path: str, body=None, **params):
+    try:
+        return JSONResponse(await request.app.state.backend.pivot(method, path, ident(request), body=body, **params),
+                            headers={"Cache-Control": "no-store"})
+    except BackendError as e:
+        return _problem(e)
 
 
 async def _body(request: Request) -> dict:
     try:
-        body = await json_body(request)
+        b = await request.json()
     except ValueError:
-        body = {}
-    return body if isinstance(body, dict) else {}
+        b = {}
+    return b if isinstance(b, dict) else {}
 
 
-def _forget(request: Request) -> None:
-    me = ident(request)
-    request.app.state.pivots.forget(me.user if me else "")
+@router.get("/api/pivot/sources")
+async def sources(request: Request):
+    return await _call(request, "GET", "/sources")
 
 
-def _panel(sutra: str, panel: str) -> str:
-    return f"panel/{quote(sutra, safe='')}/{quote(panel, safe='')}"
+@router.get("/api/pivot/catalogue")
+async def catalogue(request: Request, source: str = "", date: str = ""):
+    return await _call(request, "GET", "/catalogue", source=source, date=date)
 
 
-def _search(kind: str) -> str:
-    return f"search/{quote(kind, safe='')}"
-
-
-# ---- the browser's engine: a panel's rows ------------------------------------------------------------------------
-@router.get("/records/{kind}/{id_:path}/{panel}")
-async def records(request: Request, kind: str, id_: str, panel: str):
-    """Every row of a table or ladder whose Sutra says pivot: (beyond the table's limit, up to the server's cap)."""
+@router.post("/api/pivot/export")
+async def export(request: Request):
+    """An export made by the server (xlsx with outline and formulas only where a measure adds up, CSV, Arrow, the definition), passed
+    through as a download."""
     try:
-        return await request.app.state.backend.panel_records(kind, id_, panel, ident(request))
+        content, headers = await request.app.state.backend.pivot("POST", "/export", ident(request), body=await _body(request), raw=True)
+    except BackendError as e:
+        return _problem(e)
+    keep = {k: v for k, v in headers.items() if k.lower() in ("content-type", "content-disposition")}
+    keep["Cache-Control"] = "no-store"
+    return Response(content=content, headers=keep)
+
+
+@router.post("/api/pivot/{action}")
+async def post(request: Request, action: str):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "views", "promote", "explain", "whatif", "functions"):
+        return JSONResponse({"detail": "no such pivot action"}, status_code=404)
+    return await _call(request, "POST", "/" + action, await _body(request))
+
+
+@router.get("/api/pivot/provenance/{pid}")
+async def provenance(request: Request, pid: str, cell: str = ""):
+    return await _call(request, "GET", f"/provenance/{pid}", cell=cell)
+
+
+@router.get("/api/pivot/cells")
+async def cells(request: Request, ref: str = ""):
+    return await _call(request, "GET", "/cells", ref=ref)
+
+
+@router.get("/api/pivot/views")
+async def views(request: Request):
+    return await _call(request, "GET", "/views")
+
+
+@router.get("/api/pivot/views/{owner}/{name}")
+async def get_view(request: Request, owner: str, name: str):
+    return await _call(request, "GET", f"/views/{owner}/{name}")
+
+
+@router.delete("/api/pivot/views/{name}")
+async def delete_view(request: Request, name: str):
+    try:
+        await request.app.state.backend.pivot("DELETE", f"/views/{name}", ident(request))
+        return Response(status_code=204)
     except BackendError as e:
         return _problem(e)
 
 
-# ---- the server's engine: a search's pivot ------------------------------------------------------------------------
-async def _search_pivot(request: Request, kind: str, part: str):
-    body = {k: v for k, v in (await _body(request)).items() if k in SEARCH_KEYS}
-    try:
-        return await request.app.state.backend.search_pivot(kind, body, ident(request), part)
-    except BackendError as e:
-        return _problem(e)
+# ---- custom functions (PIVOT_GUIDE.md, custom functions): the playground's check, the list, a version, approval -----------------------------
+
+@router.get("/api/pivot/functions")
+async def functions(request: Request):
+    return await _call(request, "GET", "/functions")
 
 
-@router.post("/search/{kind}")
-async def search_cube(request: Request, kind: str):
-    """The cells of a search's pivot over every match of the day: ``{"q", "rows", "columns", "values", "filters", "documents"}``."""
-    return await _search_pivot(request, kind, "")
+@router.post("/api/pivot/functions/test")
+async def function_test(request: Request):
+    return await _call(request, "POST", "/functions/test", await _body(request))
 
 
-@router.post("/search/{kind}/drill")
-async def search_drill(request: Request, kind: str):
-    """The entities behind one cell, a page at a time: the same body plus ``cell``, ``offset`` and ``size``."""
-    return await _search_pivot(request, kind, "drill")
+@router.get("/api/pivot/functions/{owner}/{name}")
+async def function_get(request: Request, owner: str, name: str, version: str = ""):
+    return await _call(request, "GET", f"/functions/{owner}/{name}", version=version)
 
 
-@router.post("/search/{kind}/values")
-async def search_values(request: Request, kind: str):
-    """A field's values among the matches, with counts, for a filter: ``{"q", "field", "documents"}``."""
-    return await _search_pivot(request, kind, "values")
-
-
-# ---- saved arrangements --------------------------------------------------------------------------------------------
-async def _saved(request: Request, method: str, scope: str):
-    body = None
-    if method == "PUT":
-        raw = await _body(request)
-        body = {k: raw[k] for k in ARRANGEMENT if k in raw}
-    try:
-        kept = await request.app.state.backend.saved_pivot(method, scope, ident(request), body)
-    except BackendError as e:
-        if method == "DELETE" and e.status == 404:          # nothing to forget is not an error
-            _forget(request)
-            return {"ok": True}
-        return _problem(e)
-    if method != "GET":
-        _forget(request)
-    return kept if kept is not None else {"ok": True}
-
-
-@router.get("/saved/panel/{sutra}/{panel}")
-async def get_panel(request: Request, sutra: str, panel: str):
-    return await _saved(request, "GET", _panel(sutra, panel))
-
-
-@router.put("/saved/panel/{sutra}/{panel}")
-async def put_panel(request: Request, sutra: str, panel: str):
-    """Keeps the user's arrangement of a panel's pivot: ``{"rows", "columns", "values", "filters", "heat", "chart"}``."""
-    return await _saved(request, "PUT", _panel(sutra, panel))
-
-
-@router.delete("/saved/panel/{sutra}/{panel}")
-async def delete_panel(request: Request, sutra: str, panel: str):
-    """Back to the Sutra's arrangement."""
-    return await _saved(request, "DELETE", _panel(sutra, panel))
-
-
-@router.get("/saved/search/{kind}")
-async def get_search(request: Request, kind: str):
-    return await _saved(request, "GET", _search(kind))
-
-
-@router.put("/saved/search/{kind}")
-async def put_search(request: Request, kind: str):
-    return await _saved(request, "PUT", _search(kind))
-
-
-@router.delete("/saved/search/{kind}")
-async def delete_search(request: Request, kind: str):
-    return await _saved(request, "DELETE", _search(kind))
-
-
-# ---- promotion (authors) --------------------------------------------------------------------------------------------
-@router.get("/saved/panel/{sutra}/{panel}/promotion")
-async def promotion(request: Request, sutra: str, panel: str):
-    """What promoting the saved pivot would propose: the changes in words and the diff against the latest version."""
-    try:
-        p = await request.app.state.backend.pivot_promotion(_panel(sutra, panel), ident(request))
-    except BackendError as e:
-        return _problem(e)
-    d = sutra_diff.review(p.get("base") or "", p.get("text") or "")
-    return {"sutra": p.get("sutra"), "panel": p.get("panel"), "fromVersion": p.get("fromVersion"), "version": p.get("version"),
-            "review": p.get("review"), "changes": p.get("changes") or [], "moves": [m["text"] for m in d["moves"]], "edits": d["edits"],
-            "diff": d["full"]}
-
-
-@router.post("/saved/panel/{sutra}/{panel}/promotion")
-async def promote(request: Request, sutra: str, panel: str):
-    """Proposes it (``{"note": "…"}``): a proposal to review, or (review off) the new version, live."""
-    body = await _body(request)
-    try:
-        r = await request.app.state.backend.pivot_promotion(_panel(sutra, panel), ident(request), str(body.get("note") or "")[:500])
-    except BackendError as e:
-        return _problem(e)
-    _forget(request)
-    if r.get("proposal"):
-        return {**r, "href": f"/build/reviews/{r['proposal'].get('id')}"}
-    return r
+@router.post("/api/pivot/functions/{owner}/{ref}/{op}")
+async def function_op(request: Request, owner: str, ref: str, op: str):
+    if op not in ("submit", "approve", "revoke"):
+        return JSONResponse({"detail": "no such function action"}, status_code=404)
+    return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))

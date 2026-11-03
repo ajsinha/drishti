@@ -25,7 +25,7 @@
   var S = window.PivotScreen;
   var esc = window.PivotCore.esc;
   var fmt = window.PivotCore.fmt;
-  var API = "/api/pivot-engine";
+  var API = "/api/pivot";
   var $ = function (s) { return document.querySelector(s); };
 
   function call(method, path, body) {

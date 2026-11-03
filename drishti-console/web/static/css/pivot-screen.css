@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The pivot screen (terminal/pivot_screen.html, pivot-core.js, pivot-screen.js), after mock-up A: the grid on the left, the field list and
+/* The pivot screen (terminal/pivot.html, pivot-core.js, pivot.js), after mock-up A: the grid on the left, the field list and
    its four zones on the right, the estimate bar above, the chart below; the theme's tokens for every colour, so every theme reads; the
    kind of a figure (≈, holistic) is a mark, never colour alone. On a phone the grid first, the field list under it. */
 .pv { padding: 10px 14px 18px; color: var(--d-ink); font-size: 13px; max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
@@ -91,6 +91,16 @@
 .pv-radio { border: 0; padding: 0; margin: 0 0 8px; display: flex; flex-direction: column; gap: 3px; font-size: 12.5px; }
 .pv-formats { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 6px; }
 .pv-chart { width: 100%; height: 280px; }
+.pv-zone-wide { grid-column: 1 / -1; }
+.pv-slicers { display: flex; flex-direction: column; gap: 6px; }
+.pv-slicers[hidden] { display: none; }
+.pv-slicer { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 6px; padding: 5px 8px; }
+.pv-slicer b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--d-accent); margin-right: 6px; }
+.pv-sl { background: none; border: 1px solid var(--d-border); border-radius: 12px; padding: 1px 9px; font-size: 12px; color: var(--d-muted); cursor: pointer; }
+.pv-sl[aria-pressed="true"] { color: var(--d-ink); border-color: var(--d-accent); box-shadow: inset 0 -2px 0 var(--d-accent); }
+.pv-sl:focus-visible { outline: 2px solid var(--d-link); outline-offset: 1px; }
+.pv-c.pv-scale { background: color-mix(in srgb, var(--d-accent) calc(var(--pv-f) * 45%), transparent); }
+.pv-c.pv-bars { background: linear-gradient(to left, color-mix(in srgb, var(--d-link) 35%, transparent) calc(var(--pv-f) * 100%), transparent 0); }
 @media (max-width: 900px) {
   .pv-main { grid-template-columns: minmax(0, 1fr); }
   .pv-pop { width: auto; left: 8px !important; right: 8px; }

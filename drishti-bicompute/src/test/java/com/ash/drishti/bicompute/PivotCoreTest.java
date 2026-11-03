@@ -265,6 +265,21 @@ class PivotCoreTest {
         assertThat(((Number) cast(cast(diff.get("REGION=EMEA|*")).get("delta")).get("count()")).doubleValue()).isZero();
     }
 
+    @Test
+    void slicersAndFormatsTravelWithTheViewAndASlicerMustBeAField() {
+        PivotView v = PivotView.parse(view("rows", List.of("REGION"), "values", List.of(Map.of("measure", "sum(NOTIONAL)", "as", "N")),
+                "slicers", List.of("CCY"), "formats", Map.of("N", Map.of("style", "bars"))));
+        PivotView back = PivotView.parse(v.toMap());
+        assertThat(back.slicers()).containsExactly("CCY");
+        assertThat(back.formats().get("N").style()).isEqualTo("bars");
+        Map<String, Object> a = fx.core.query(rita, back);
+        assertThat(cast(cast(a.get("view")).get("formats")).get("N")).isEqualTo(Map.of("style", "bars"));
+        assertThatThrownBy(() -> fx.core.query(rita, PivotView.parse(view("values", List.of("count()"), "slicers", List.of("NOPE")))))
+                .isInstanceOf(DrishtiException.class);
+        assertThatThrownBy(() -> PivotView.parse(view("values", List.of("count()"), "formats", Map.of("x", "rainbow"))))
+                .isInstanceOf(DrishtiException.class);
+    }
+
     @SuppressWarnings("unchecked")
     static Map<String, Object> cast(Object o) {
         return (Map<String, Object>) o;

@@ -58,8 +58,8 @@ const script = (url) => memo('script:' + url, () => new Promise((resolve, reject
   document.head.appendChild(s);
 }));
 
-// the console's own scripts, in order: the engine before the grid before the pivot (served from the allow-list in routes/embed_routes.py)
-export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'pivot', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
+// the console's own scripts, in order: the table engine before the grid it draws nested rows with (served from the allow-list in routes/embed_routes.py)
+export const ENHANCERS = ['pivot-engine', 'pivot-grid', 'view', 'geomap', 'charts', 'colfilter', 'tables', 'tree-rows', 'about', 'about-hints', 'zoom', 'multiselect', 'controls'];
 export const chartLibs = (server) => memo('charts:' + server, async () => {
   await script(server + API + '/echarts.js');
   quietDispose();

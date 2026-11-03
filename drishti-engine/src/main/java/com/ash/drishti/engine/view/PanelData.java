@@ -35,7 +35,7 @@ public sealed interface PanelData {
      * @param total total row, or null
      * @param more "N more trades", or null
      * @param search the panel offers a filter box in its heading (Sutra option {@code search: false} turns it off)
-     * @param pivot the Pivot tab the Sutra opts into ({@code pivot:}): its fields and the arrangement it opens with; null without one
+     * @param pivot Pivot (the pivot screen) the Sutra opts into ({@code pivot:}): its fields and the arrangement it opens with; null without one
      * @param expand levels shown open at first (Sutra {@code expand}); present only on a tree, a table whose Sutra says {@code children}
      * @param levels the deeper levels a row drills into (Sutra {@code levels}): each level's title and columns; null for a plain table
      * @param root the first step of the breadcrumb (Sutra {@code root}, read against the document), or null

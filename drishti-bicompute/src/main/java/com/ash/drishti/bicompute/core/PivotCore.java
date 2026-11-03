@@ -159,6 +159,7 @@ public final class PivotCore {
         m.put("functions", p.capabilities().builtIns() ? Functions.describe() : List.of());
         m.put("masked", c.masked());
         m.put("notes", c.notes());
+        m.put("defaultView", c.notes() == null ? null : c.notes().get("defaultView"));
         m.put("capabilities", p.capabilities());
         m.put("limits", Map.of("maxCells", settings.maxCells(), "maxHolisticCells", settings.maxHolisticCells(), "busyCells", settings.busyCells()));
         return m;
@@ -200,13 +201,18 @@ public final class PivotCore {
         final Work work = new Work();
         final long t0 = System.nanoTime();
         final boolean holistic;
+        final Map<String, String> units = new HashMap<>();
+        final AggregationPlan.Money money;
 
         Computation(Viewer viewer, PivotView view) {
             this.viewer = viewer;
             this.view = view;
             this.provider = provider(view.source());
             this.catalogue = provider.catalogue(viewer, view.source(), view.date());
-            catalogue.fields().forEach(f -> types.put(f.name(), f.type()));
+            catalogue.fields().forEach(f -> {
+                types.put(f.name(), f.type());
+                units.put(f.name(), f.unit());
+            });
             for (PivotView.Value v : view.values()) {
                 FunctionCall f = Functions.parse(v.measure(), v.label(), provider, resolver, viewer);
                 for (String in : f.inputs()) {
@@ -229,6 +235,7 @@ public final class PivotCore {
                 }
             }
             view.filters().keySet().forEach(k -> dim(Dim.parse(k)));
+            view.slicers().forEach(k -> dim(Dim.parse(k)));
             for (Map.Entry<String, PivotView.Sort> s : view.sort().entrySet()) {
                 measureIndex(s.getValue().by(), true);
             }
@@ -238,6 +245,62 @@ public final class PivotCore {
             this.rows = new Axis("rows", view.rows());
             this.cols = new Axis("columns", view.columns());
             this.holistic = functions.stream().anyMatch(f -> f.fn().kind() == Kind.HOLISTIC);
+            this.money = money();
+            for (FunctionCall f : functions) {
+                for (String in : f.inputs()) {
+                    String u = units.getOrDefault(in, "");
+                    if (("rate".equals(u) || "pct".equals(u)) && (f.fn().plainSum() || "wavg".equals(f.fn().name()) && f.inputs().indexOf(in) == 1)) {
+                        throw PivotView.bad(f.id() + ": " + in + " is a " + ("pct".equals(u) ? "percentage" : "rate") + "; a sum of it means "
+                                + "nothing. Use avg(" + in + ") or wavg(" + in + ", <a weight>), which are right at every level");
+                    }
+                }
+            }
+        }
+
+        /** Money in this view: the source's money fields, its currency field, the view's conversion (section 5.4). */
+        private AggregationPlan.Money money() {
+            java.util.Set<String> fields = new java.util.LinkedHashSet<>();
+            String ccyField = null;
+            for (PivotProvider.Field f : catalogue.fields()) {
+                if ("money".equals(f.unit())) {
+                    fields.add(f.name());
+                } else if ("currency".equals(f.unit()) && ccyField == null) {
+                    ccyField = f.name();
+                }
+            }
+            PivotView.Currency conv = view.currency();
+            if (conv != null) {
+                if (conv.field() != null) {
+                    field(conv.field());
+                    ccyField = conv.field();
+                }
+                if (ccyField == null) {
+                    throw PivotView.bad("currency: " + catalogue.source() + " has no currency field; name it (currency.field)");
+                }
+            }
+            return new AggregationPlan.Money(ccyField, fields, conv);
+        }
+
+        /** What a measure's figures are in: the report currency, a unit, or blank. */
+        String unit(FunctionCall f) {
+            if (money.money(f)) {
+                return money.conversion() != null ? money.conversion().report() : "money";
+            }
+            if ("count".equals(f.fn().name()) || "count_distinct".equals(f.fn().name())) {
+                return "count";
+            }
+            for (String in : f.inputs()) {
+                String u = units.getOrDefault(in, "");
+                if (!u.isEmpty() && !"currency".equals(u)) {
+                    return u;
+                }
+            }
+            for (PivotProvider.Native n : catalogue.measures()) {
+                if (f.id().startsWith(n.name() + "(")) {
+                    return n.unit() == null ? "" : n.unit();
+                }
+            }
+            return "";
         }
 
         private void field(String name) {
@@ -277,7 +340,7 @@ public final class PivotCore {
 
         AggregationPlan plan(List<CellSet> sets) {
             return new AggregationPlan(view.source(), catalogue.date(), view.asOf(), view.filters(), dims, functions, sets, null,
-                    Math.max(1_000, settings.maxCells()) * 50);
+                    Math.max(1_000, settings.maxCells()) * 50, money);
         }
 
         int expandTo(Axis a) {
@@ -468,7 +531,8 @@ public final class PivotCore {
                 return;
             }
             String prefix = provider.id() + "|" + provider.version(viewer, view.source(), catalogue.date()) + "|" + view.source() + "|"
-                    + catalogue.date() + "|" + view.asOf() + "|" + plan(List.of()).filterSignature() + "|";
+                    + catalogue.date() + "|" + view.asOf() + "|" + plan(List.of()).filterSignature() + "|" + (view.currency() == null ? ""
+                            : view.currency().toString()) + "|";
             Map<List<Integer>, List<CellSet>> byMissing = new LinkedHashMap<>();
             for (CellSet s : sets) {
                 work.setsAsked++;

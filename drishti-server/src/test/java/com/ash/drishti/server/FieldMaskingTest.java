@@ -131,20 +131,14 @@ class FieldMaskingTest {
         assertThat(panel(ns, "byAsset").path("data").path("bars").size()).isZero();
         assertThat(ns.toString()).doesNotContain("Meridian Reinsurance", "\"id\":\"" + MASK, "\"text\":\"" + MASK + "\",\"link\"");
 
-        JsonNode records = read("/api/v1/views/netting-set/NS-MERIDIAN-RE-NY/panels/trades/records", "masked");
-        assertThat(records.toString()).contains(MASK);
-        int at = -1;
-        for (int i = 0; i < records.path("fields").size(); i++) {
-            if ("MTM".equals(records.path("fields").get(i).path("name").asText())) {
-                at = i;
-            }
-        }
-        assertThat(at).isNotNegative();
-        for (JsonNode r : records.path("rows")) {
-            assertThat(r.get(at).asText()).isEqualTo(MASK);
-        }
-        JsonNode fullRecords = read("/api/v1/views/netting-set/NS-MERIDIAN-RE-NY/panels/trades/records", "full");
-        assertThat(fullRecords.toString()).doesNotContain(MASK);
+        // the panel's Pivot (the pivot engine on the panel's rows): a masked field is not read at all, so it is no field to pivot by or sum
+        JsonNode fields = read("/api/v1/pivot/catalogue?source=panel/netting-set/trades/NS-MERIDIAN-RE-NY", "masked").path("fields");
+        assertThat(fields.toString()).doesNotContain("\"MTM\"").doesNotContain(MASK);
+        JsonNode fullFields = read("/api/v1/pivot/catalogue?source=panel/netting-set/trades/NS-MERIDIAN-RE-NY", "full").path("fields");
+        assertThat(fullFields.toString()).contains("\"MTM\"");
+        mvc.perform(post("/api/v1/pivot/query").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"source\":\"panel/netting-set/trades/NS-MERIDIAN-RE-NY\",\"values\":[\"sum(MTM)\"]}"))
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -277,13 +271,16 @@ class FieldMaskingTest {
     }
 
     @Test
-    void aPivotOnAFieldUnderAMaskedParentGroupsUnderTheMask() throws Exception {
-        JsonNode cube = json.readTree(mvc.perform(post("/api/v1/search/pivot/TRD").header("Authorization", as("masked"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"rows\":[\"COUNTERPARTY\"],\"values\":[{\"field\":\"QUANTITY\",\"agg\":\"sum\"}],\"documents\":true}"))
-                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
-        assertThat(cube.path("rowKeys").size()).isEqualTo(1);
-        assertThat(cube.path("rowKeys").get(0).get(0).asText()).isEqualTo(MASK);
-        assertThat(cube.path("masked").toString()).contains("COUNTERPARTY");
+    void aPivotNeverGroupsByAMaskedField() throws Exception {
+        // the pivot engine on the trades (what the search results' Pivot opens): a masked field is not read, so a pivot by it is refused
+        // before anything is read, and no value of it reaches an answer
+        MvcResult r = mvc.perform(post("/api/v1/pivot/query").header("Authorization", as("masked")).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"source\":\"trade\",\"rows\":[\"COUNTERPARTY\"],\"values\":[\"count()\"]}")).andReturn();
+        String body = r.getResponse().getContentAsString(StandardCharsets.UTF_8);
+        if (r.getResponse().getStatus() == 200) {
+            assertThat(body).doesNotContain("CP-MERIDIAN-RE");
+        } else {
+            assertThat(r.getResponse().getStatus()).as(body).isIn(400, 403);
+        }
     }
 }

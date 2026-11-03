@@ -31,7 +31,7 @@
     ['status', 'check2-circle', 'Statuses and flags, each coloured by its state', 'facts'],
     ['provenance', 'clock-history', 'Where the data came from: sources, times and versions', 'facts'],
     ['markdown', 'markdown', 'A note or explanation in plain text', 'facts'],
-    ['table', 'table', 'Rows and columns from a list; filter, totals, sub-rows, a pivot tab', 'tables'],
+    ['table', 'table', 'Rows and columns from a list; filter, totals, sub-rows, Pivot (the pivot screen)', 'tables'],
     ['ladder', 'distribute-vertical', 'A table with a highlighted row, for ladders and buckets', 'tables'],
     ['pivot', 'grid-3x3', 'A pivot of a list: rows, columns and a measure', 'tables'],
     ['tabs', 'columns-gap', 'One panel per row of a list, each in its own tab', 'tables'],

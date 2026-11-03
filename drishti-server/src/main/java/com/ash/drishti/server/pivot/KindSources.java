@@ -55,12 +55,15 @@ public final class KindSources implements TabularSource.Resolver {
     private final Entitlements entitlements;
     private final EditionCommands edition;
     private final PivotProperties props;
+    private final com.ash.drishti.engine.search.SearchProperties search;
     /** Staged table name to its row count, in least-recently-used order. */
     private final Map<String, Long> staged = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
     private volatile DuckDbExecutor exec;
 
-    public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props) {
+    public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props,
+            com.ash.drishti.engine.search.SearchProperties search) {
+        this.search = search;
         this.data = data;
         this.router = router;
         this.entitlements = entitlements;
@@ -107,6 +110,29 @@ public final class KindSources implements TabularSource.Resolver {
         return "string";
     }
 
+    /**
+     * What a column's values are (PIVOT_ENGINE.md section 5.4), from its contract type and name: an {@code amount} is money in the row's
+     * currency, a {@code rate} or a name ending {@code _PCT} or {@code PERCENT} is never summed, a text column named {@code CURRENCY},
+     * {@code CCY} or ending {@code _CCY} or {@code _CURRENCY} holds the row's currency.
+     */
+    static String unit(DataViewService.Column c) {
+        String t = c.type() == null ? "" : c.type().toLowerCase(Locale.ROOT);
+        String n = c.name().toUpperCase(Locale.ROOT);
+        if ("amount".equals(t)) {
+            return "money";
+        }
+        if ("rate".equals(t)) {
+            return "rate";
+        }
+        if (n.endsWith("_PCT") || n.endsWith("PERCENT")) {
+            return "pct";
+        }
+        if (!NUMBER.contains(t) && (n.equals("CURRENCY") || n.equals("CCY") || n.endsWith("_CCY") || n.endsWith("_CURRENCY"))) {
+            return "currency";
+        }
+        return "";
+    }
+
     @Override
     public TabularSource open(Viewer v, String source, String date) {
         Principal p = principal(v);
@@ -122,7 +148,7 @@ public final class KindSources implements TabularSource.Resolver {
                 continue;
             }
             fields.add(new PivotProvider.Field(c.name(), type(c), c.name().toLowerCase(Locale.ROOT).replace('_', ' '),
-                    c.description() == null ? "" : c.description()));
+                    c.description() == null ? "" : c.description(), unit(c)));
         }
         String version;
         try {
@@ -289,6 +315,10 @@ public final class KindSources implements TabularSource.Resolver {
             m.put("masks", masked == 0 ? "none" : masked + " column(s) masked for you: not read, not usable");
             m.put("rowRules", "the Data view's: you see the rows of " + d.kind() + " your role may open");
             m.put(com.ash.drishti.bicompute.sql.TabularSource.USER_CODE, !memoryOnly);   // decision 4: no Python functions on memory-only data
+            Map<String, Object> dv = defaultView(d.kind(), date());
+            if (dv != null) {
+                m.put("defaultView", dv);
+            }
             return m;
         }
 
@@ -379,6 +409,18 @@ public final class KindSources implements TabularSource.Resolver {
             } catch (RuntimeException ex) {
                 // already gone
             }
+        }
+    }
+
+    /** The view a kind opens with: its pack's {@code pivot:} arrangement (what the search results' Pivot offered), or null. */
+    Map<String, Object> defaultView(String kind, String date) {
+        if (search == null) {
+            return null;
+        }
+        try {
+            return search.pivotOf(kind).map(spec -> SpecViews.view(kind, date, spec.arrangementMap())).orElse(null);
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

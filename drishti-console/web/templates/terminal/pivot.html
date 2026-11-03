@@ -17,7 +17,7 @@
    list and its four zones (Filters, Columns, Rows, Values) on the right; the grid with nested rows opened lazily with + and −, ≈ and exact
    markers, the provenance popover of a cell; the scan-estimate bar above; a chart of the selection below (a non-additive measure is never
    stacked); the Export menu (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). A shell:
-   pivot-core.js (the grid) and pivot-screen.js (the screen) fill it from /api/pivot-engine/...; every figure is the server's. #}
+   pivot-core.js (the grid) and pivot.js (the screen) fill it from /api/pivot/...; every figure is the server's. #}
 {% extends "base.html" %}
 {% block title %}Pivot{% if source %} · {{ source }}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
@@ -25,7 +25,7 @@
 {% block head %}<link rel="stylesheet" href="/static/css/pivot-screen.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="pv" data-pivot data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}">
+<div class="pv" data-pivot-screen data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}">
   <div class="pv-head">
     <h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
       <span data-pv-title>{{ view_id or source or 'choose a table' }}</span></h1>
@@ -45,6 +45,7 @@
     <button type="button" class="pv-chip" data-pf-open="whatif" title="What-if: leave members out, scale a field, add rows (I)">What-if <kbd>I</kbd></button>
     <button type="button" class="pv-chip" data-pf-open="functions" title="Custom functions: the playground, versions, approval (U)">Functions <kbd>U</kbd></button>
   </div>
+  <div class="pv-slicers" data-pv-slicers role="group" aria-label="Slicers" hidden></div>
   <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
   <p class="pv-notice" data-pv-notice role="alert" hidden></p>
   <div class="pv-main">
@@ -64,8 +65,10 @@
           <div class="pv-zone" data-pv-zone="columns"><h3>Columns</h3><div data-pv-zone-items></div></div>
           <div class="pv-zone" data-pv-zone="rows"><h3>Rows</h3><div data-pv-zone-items></div></div>
           <div class="pv-zone" data-pv-zone="values"><h3>Values</h3><div data-pv-zone-items></div></div>
+          <div class="pv-zone pv-zone-wide" data-pv-zone="slicers"><h3>Slicers</h3><div data-pv-zone-items></div></div>
         </div>
-        <p class="pv-hint">Drag a field to a zone, or select it and press <kbd>R</kbd>, <kbd>C</kbd>, <kbd>V</kbd> or <kbd>F</kbd>.</p>
+        <p class="pv-hint">Drag a field to a zone, or select it and press <kbd>R</kbd>, <kbd>C</kbd>, <kbd>V</kbd>, <kbd>F</kbd> or <kbd>S</kbd> (a slicer). A value's
+          format (colour scale, data bars) is drawn from its figures and kept with the view.</p>
       </section>
       <section class="pv-card pv-export" data-pv-export hidden aria-labelledby="pvExportTitle">
         <h2 id="pvExportTitle">Export <span class="pv-sub">as you see it, masks applied</span></h2>
@@ -136,4 +139,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-core.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-screen.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-core.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% endblock %}
