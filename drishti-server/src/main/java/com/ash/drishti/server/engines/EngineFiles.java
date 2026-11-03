@@ -123,7 +123,7 @@ public final class EngineFiles {
             List<String> lines = Files.isRegularFile(f) ? new ArrayList<>(Files.readAllLines(f, StandardCharsets.UTF_8)) : shippedLines(e);
             List<String> out = edit(lines, e, on, by, at, reason);
             Files.createDirectories(dir);
-            Path tmp = Files.createTempFile(dir, e.id() + "-writing-", ".tmp");   // visible, beside the file (a rename within one folder)
+            Path tmp = com.ash.drishti.common.TempFiles.createFile(dir, e.id() + "-writing-", ".tmp");   // visible, beside the file (a rename within one folder)
             try {
                 Files.writeString(tmp, String.join("\n", out) + "\n", StandardCharsets.UTF_8);
                 try {

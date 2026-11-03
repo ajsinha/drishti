@@ -150,7 +150,7 @@ public class SimmController {
         m.put("parametersDir", Path.of(svc.props().parametersDir()).toAbsolutePath().toString());
         m.put("default", svc.defaultVersion().isBlank() ? null : svc.defaultVersion());
         m.put("versions", rows);
-        m.put("licence", "ISDA's SIMM parameters are licensed: Drishti ships none; the bank installs one file a version (docs/guides/SIMM_GUIDE.md section 4)");
+        m.put("licence", "ISDA's SIMM parameters are licensed: " + com.ash.drishti.common.Branding.name("the product") + " ships none; the bank installs one file a version (docs/guides/SIMM_GUIDE.md section 4)");
         return m;
     }
 
