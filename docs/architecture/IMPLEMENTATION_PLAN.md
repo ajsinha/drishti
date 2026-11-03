@@ -782,7 +782,7 @@ every 10 minutes by the existing Java loader, moved to the outbox with their mar
 signal; crash-safe, duplicate-safe, owner node only, a module `drishti-dataload` run as a server thread with the load in a child
 process. The design and its questions: [DATALOAD_INBOX.md](DATALOAD_INBOX.md). Size M.
 
-## The lake configuration (planned; a release of its own after 2.9.11.b)
+## The lake configuration (planned; in 2.9.11.c, built before Arrow Flight)
 
 *Product owner, 2026-11-03.* One configuration per lake (`config/lakes/<lake>.yaml`, planned): where it is, its format and storage, and
 every table's settings (partitioning after `business_date`, which is always first; promoted columns, vectors, id and date fields, file
