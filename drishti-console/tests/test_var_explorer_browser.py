@@ -346,6 +346,9 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     kept = pg.evaluate("(id) => fetch('/api/var/baskets/' + id).then(r => r.json())", basket)
     assert kept["sheet"]["TRD"][:2] == trades[:2] and kept["version"] == 1
     wait(pg, "document.querySelectorAll('[data-vx-adhoc] [data-vx-edit=\"BASKET:%s\"]').length > 0" % basket)
+    # the saved basket's row shows its name; its buttons sit after the name, shown on hover (never drawn over it)
+    row = pg.locator(".vx-adhoc-row", has=pg.locator(f'[data-vx-edit="BASKET:{basket}"]'))
+    assert row.locator(".lbl").is_visible() and "rates-mix" in row.locator(".lbl").inner_text()
     shot(pg, "basket-saved")
     # captured, and the capture reopened with its numbers
     pg.locator('.vx-tab[data-tab="captures"]').click()
@@ -385,10 +388,12 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarBasket.parts() === 5", 60)
     assert pg.locator("[data-vx-basket]").is_hidden()                       # kept, not opened: only the link opens it
     # a portfolio is the bank's: Edit a copy opens its parts as your own unsaved basket
+    pg.locator(".vx-adhoc-row", has=pg.locator('[data-vx-edit="PORT:PF-USD-RATES"]')).hover()   # its buttons show on hover
     pg.locator('[data-vx-adhoc] [data-vx-edit="PORT:PF-USD-RATES"]').click()
     wait(pg, "window.VarBasket.state.copyOf === 'PF-USD-RATES' && !document.querySelector('[data-vx-basket]').hidden")
     assert "your own basket" in pg.locator("[data-vb-save]").inner_text()
     # Delete, through the confirm dialog
+    pg.locator(".vx-adhoc-row", has=pg.locator(f'[data-vx-delete="{basket}"]')).hover()
     pg.locator(f'[data-vx-adhoc] [data-vx-delete="{basket}"]').click()
     pg.locator("[data-sd-dialog]").wait_for(state="visible")
     pg.locator("[data-sd-yes]").click()

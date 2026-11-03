@@ -92,6 +92,8 @@
   function sets() {
     var q = new URLSearchParams();
     if (cpty) { q.set("counterparty", cpty); }
+    var asOf = new URLSearchParams(window.location.search).get("asOf");   // the list follows the page's date, as the breakdown does
+    if (asOf) { q.set("asOf", asOf); }
     getJson("/api/simm/netting-sets?" + q.toString()).then(function (l) {
       var h = '<thead><tr><th class="l">Netting set</th><th class="l">Counterparty</th><th>IM collect</th><th>IM post</th><th class="l">Version</th><th class="l">Status</th><th>Their call</th></tr></thead><tbody>';
       l.rows.forEach(function (r) {

@@ -85,23 +85,23 @@ def lakes(c: Ctx):
 
 @shot("03-news.jpg")
 def news(c: Ctx):
-    _open(c, "/go?q=NEWS+Apple", 4000)
+    _open(c, "/v/news/NEWS-Apple", 4000)
     c.save("03-news.jpg")
 
 
 @shot("04-quote.jpg")
 def quote(c: Ctx):
-    _open(c, "/go?q=QUOTE+AAPL", 4000)
+    _open(c, "/v/quote/QUOTE-AAPL", 4000)
     c.save("04-quote.jpg")
 
 
 @shot("05-data.jpg")
 def data(c: Ctx):
-    _open(c, "/data", 4000)
+    _open(c, "/data?find=news", 4000)
     c.save("05-data.jpg")
 
 
 @shot("06-health.jpg")
 def health(c: Ctx):
     _open(c, "/admin/health", 4000)
-    c.save("06-health.jpg")
+    c.save("06-health.jpg", locator="[data-health-busy]")          # the busy protection card with the store's gauge

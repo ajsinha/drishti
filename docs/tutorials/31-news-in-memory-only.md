@@ -51,6 +51,7 @@ plugin: delta
 kinds: [news-topic, listed-company, news, quote]
 settings:
   root: mem://news
+  domain: ""          # the tables sit at mem://news/<kind>: without it the pack's template adds domain: news
 ```
 
 **The UI.** Admin → Connectors → `news-store` shows the same text and its origin *your file*. Until the store exists the connector's health
@@ -150,9 +151,9 @@ python3 tools/drishti.py view get listed-company/CO-AAPL
 
 **You should see** the same pages as on the disk lake, and the four datasets in the Data view.
 
-![NEWS Apple read from memory](img/t31/03-news.jpg)
+![The Apple headlines (NEWS-Apple) read from memory](img/t31/03-news.jpg)
 
-![QUOTE AAPL read from memory](img/t31/04-quote.jpg)
+![The Apple quote (QUOTE-AAPL) read from memory](img/t31/04-quote.jpg)
 
 ![The Data view: the news datasets, a day downloaded from memory](img/t31/05-data.jpg)
 
@@ -210,7 +211,7 @@ Put `max-mb: 256` back.
 
 **You should see** with `max-mb: 1` an eviction or a refused write in `lake memory status` and Admin → Health turn amber; with 256 back, green again.
 
-![Admin → Health: the in-memory lake's checks](img/t31/06-health.jpg)
+![Admin → Health, Busy protection: the news store's gauge beside the server's own](img/t31/06-health.jpg)
 
 ## Step 8 · Go back to the disk lake
 

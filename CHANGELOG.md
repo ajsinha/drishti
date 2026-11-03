@@ -26,6 +26,10 @@
   swap (they had been added by hand, so `--check` failed); `testdata.yaml` regenerated. Tutorials 30 to 32 gain their pictures
   (`screenshots.py --guide t30`, `t31`, `t32`), what you should see at every step and their next steps; the tutorials card counts
   past thirty. FRSA's capital stack draws each bar to its length (the width was a style attribute, which the console's CSP blocks).
+  The SIMM screen's list of netting sets follows the page's date (`asOf`), as its breakdown did. Admin → Health no longer fails (500)
+  when the in-memory lake is on: a memory store's gauge reads its use against its cap. The example memory connector
+  (`config/connectors.examples/memory/news-store.yaml`) says `domain: ""`: without it the pack's template added `domain: news` and the
+  connector looked under `mem://news/news`, so every news page read *no source holds*.
 - **Fixed: the stress window page read the current window a month late on a demo lake.** `lake demo` moved a stress scenario set's
   window and days with the business dates (HS-STRESS-2008 became 2008-08-01 to 2009-07-31 on a lake ending 2026-11-02) while the long
   history's days stay as they are; a stress set's period of history now stays 2008-07-01 to 2009-06-30, as VAR_GUIDE.md section 18.9
