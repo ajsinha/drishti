@@ -142,7 +142,11 @@ public final class BiFoundationCases {
         return new QueryService(props, live, new DuckDbEngine(props), lake, Clock.systemUTC());
     }
 
-    /** Every case of one model: by person, time and grouping, the rows and totals of all its measures; then each alias's rows per person. */
+    /**
+     * Every case of one model, per person: each measure alone (a model with several facts refuses a field one fact does not reach, so all
+     * measures at once would record refusals), on the later date by no field and by each hierarchy level with its grand total, and on the
+     * earlier date and the window by no field; then each alias's rows.
+     */
     static Map<String, Object> model(QueryService service, ModelView v, SampleLake lake, MqService mq) {
         Map<String, Object> out = new TreeMap<>();
         List<String> measures = v.def().measures().values().stream().filter(m -> m.python() == null).map(ModelDef.Meas::name).toList();
@@ -155,11 +159,13 @@ public final class BiFoundationCases {
         }));
         for (Map.Entry<String, MqHarness.Reader> p : persons(lake)) {
             Map<String, Object> mine = new TreeMap<>();
-            for (Map.Entry<String, String> t : TIMES.entrySet()) {
-                for (List<String> by : groupings) {
-                    String q = "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(by) + ", measures: " + ConvertedSamplesTest.list(measures)
-                            + " }, " + t.getValue() + (by.isEmpty() ? "" : ", totals: grand") + " }";
-                    mine.put(t.getKey() + " by " + (by.isEmpty() ? "(none)" : by.get(0)), answer(service, v, q, p.getValue(), mq));
+            for (String measure : measures) {
+                for (Map.Entry<String, String> t : TIMES.entrySet()) {
+                    for (List<String> by : t.getKey().equals("as-of-day2") ? groupings : List.of(List.<String>of())) {
+                        String q = "{ mq: 1, model: x, select: { fields: " + ConvertedSamplesTest.list(by) + ", measures: " + ConvertedSamplesTest.list(List.of(measure))
+                                + " }, " + t.getValue() + (by.isEmpty() ? "" : ", totals: grand") + " }";
+                        mine.put(measure + " | " + t.getKey() + " | by " + (by.isEmpty() ? "(none)" : by.get(0)), answer(service, v, q, p.getValue(), mq));
+                    }
                 }
             }
             for (String alias : v.def().datasets().keySet()) {
