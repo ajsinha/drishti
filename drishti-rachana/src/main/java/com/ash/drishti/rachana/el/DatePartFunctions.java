@@ -30,12 +30,12 @@ import java.util.Set;
  * a date result ISO text; {@code week} is the ISO week; business days are the platform's calendars ({@code USNY} when none is named).
  * The engine's compiler writes the same functions in SQL, and the differential test proves the two agree value for value.
  */
-final class DatePartFunctions {
+public final class DatePartFunctions {
 
     private DatePartFunctions() {}
 
     /** The units of {@code shift_date}. */
-    static final Set<String> UNITS = Set.of("business-day", "day", "week", "month", "quarter", "year");
+    public static final Set<String> UNITS = Set.of("business-day", "day", "week", "month", "quarter", "year");
 
     static void register(Functions.Table t) {
         t.fn("round", 1, 2, (a, c) -> round(a));
@@ -135,7 +135,7 @@ final class DatePartFunctions {
     }
 
     /** A date moved by {@code n} units (business days on the calendar: holidays and weekends skipped). */
-    static LocalDate shift(LocalDate d, int n, String unit, BusinessCalendar cal) {
+    public static LocalDate shift(LocalDate d, int n, String unit, BusinessCalendar cal) {
         return switch (unit) {
             case "day" -> d.plusDays(n);
             case "week" -> d.plusWeeks(n);
