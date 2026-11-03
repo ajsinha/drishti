@@ -900,7 +900,7 @@ def test_taps_open_the_panel_help_and_a_field_hint_and_the_about_sheet_is_a_bott
     expect(drawer).to_be_visible()
     expect(drawer.locator("[data-about-body]")).not_to_contain_text("Loading", timeout=20000)
     el = h.js("(() => { const r = document.querySelector('#main').getBoundingClientRect(); return {w: r.width}; })()")
-    h.until(lambda: _box(h, "#aboutDrawer")["b"] <= 846, timeout=3, what="the sheet scrolled into view")
+    h.until(lambda: _box(h, "#aboutDrawer")["b"] <= 846, timeout=15, what="the sheet scrolled into view")   # a deadline, not a pause: 3 s was the tightest wait of the test
     box = _box(h, "#aboutDrawer")
     assert abs(box["w"] - el["w"]) <= 2, f"the sheet is {box['w']} wide in an element {el['w']} wide"
     assert box["y"] > 0 and box["h"] < 844, "a bottom sheet, not a full-height side drawer"

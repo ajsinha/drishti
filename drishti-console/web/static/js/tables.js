@@ -405,7 +405,9 @@
     (p ? p.querySelectorAll('table.tbl') : []).forEach(function (x) { if (x.__tblFit) { x.__tblFit(on); } });
     if (on && p) { watchFit(p); }
   }
-  function scheduleFit() { if (!fitTimer && zoomFit) { fitTimer = setTimeout(function () { fitTimer = 0; if (zoomFit) { fitAll(true); } }, 100); } }
+  // while a fit waits for the panel's size to settle, the panel says so (data-table-fitting): what reads its rows waits for it to go
+  function fitting(on) { var p = zoomedPanel() || fitSeen; if (p) { if (on) { p.setAttribute('data-table-fitting', ''); } else { p.removeAttribute('data-table-fitting'); } } }
+  function scheduleFit() { if (!fitTimer && zoomFit) { fitting(true); fitTimer = setTimeout(function () { fitTimer = 0; if (zoomFit) { fitAll(true); } fitting(false); }, 100); } }
   function watchFit(p) {
     if (fitSeen === p) { return; }
     unwatchFit();
@@ -430,7 +432,7 @@
   function onFit(e) {
     var on = !!(e.detail && e.detail.on);
     zoomFit = on;
-    if (!on) { if (fitTimer) { clearTimeout(fitTimer); fitTimer = 0; } unwatchFit(); }
+    if (!on) { if (fitTimer) { clearTimeout(fitTimer); fitTimer = 0; } root.querySelectorAll('[data-table-fitting]').forEach(function (x) { x.removeAttribute('data-table-fitting'); }); unwatchFit(); }
     fitAll(on);
   }
   root.addEventListener('drishti:table-fit', onFit);
