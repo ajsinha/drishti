@@ -132,26 +132,26 @@ final class ExposurePlaygroundBook {
         Map<String, String> f = new LinkedHashMap<>();
         f.put("v", "Netting: =SUM(Data!<the date's trade columns>)");
         f.put("l", "Netting, the look-back column: =SUM(Data!<the look-back date's trade columns>)");
-        f.put("target", "Collateral: =MAX(L-ThThem,0)-MAX(-L-ThUs,0)+IA");
-        f.put("rounded", "Collateral: =IF(Rounding>0,C0+IF(target-C0>0,ROUNDUP((target-C0)/Rounding,0),ROUNDDOWN((target-C0)/Rounding,0))*Rounding,target)");
-        f.put("c", "Collateral: =IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),0,IF(Margined<>\"yes\",IA,IF(CollateralModel=\"current\",C0,"
+        f.put("target", "Collateral: =MAX(L-ThThem,0)-MAX(-L-ThUs,0)+IndepAmt");
+        f.put("rounded", "Collateral: =IF(Rounding>0,CollToday+IF(target-CollToday>0,ROUNDUP((target-CollToday)/Rounding,0),ROUNDDOWN((target-CollToday)/Rounding,0))*Rounding,target)");
+        f.put("c", "Collateral: =IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),0,IF(Margined<>\"yes\",IndepAmt,IF(CollateralModel=\"current\",CollToday,"
                 + "IF(rounded>0,MAX(rounded-MtaThem,0),rounded))))");
-        f.put("e", "Exposure: =MAX(V-C-IF(CollateralModel=\"none\",0,IM),0)");
+        f.put("e", "Exposure: =MAX(V-C-IF(CollateralModel=\"none\",0,IMHeld),0)");
         f.put("n", "Exposure: =MIN(V-C,0)");
         f.put("uncollateralised", "Exposure: =MAX(V,0)");
         f.put("ee", "Stats: =AVERAGE(Exposure!<E at the date, every path>)");
         f.put("ene", "Stats: =AVERAGE(Exposure!<N at the date, every path>)");
         f.put("pfe", "Stats: =IF(RankRule=\"interpolated\",(1-w)*SMALL(E,lo)+w*SMALL(E,hi),SMALL(E,MAX(1,MIN(P,ROUNDUP(P*q-1E-9,0)))))");
-        f.put("eee", "Stats: =MAX(<the previous date's EEE, or CE>,EE)");
+        f.put("eee", "Stats: =MAX(<the previous date's EEE, or CurrentExp>,EE)");
         f.put("eeUncollateralised", "Stats: =AVERAGE(Exposure!<max(V, 0) at the date>)");
         f.put("collateralEffect", "Stats: =EE-EE uncollateralised");
-        f.put("weight", "Stats: =MAX(0,MIN(t,T)-t_previous)");
-        f.put("ce", "Main: =IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),MAX(V0,0),MAX(V0-IF(Margined=\"yes\",C0,IA)-IM,0))");
-        f.put("epe", "Main: =IF(T>0,SUMPRODUCT(Stats!EE,Stats!weight)/T,0)");
-        f.put("eepe", "Main: =IF(T>0,SUMPRODUCT(Stats!EEE,Stats!weight)/T,0)");
+        f.put("weight", "Stats: =MAX(0,MIN(t,Horizon)-t_previous)");
+        f.put("ce", "Main: =IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),MAX(ValueToday,0),MAX(ValueToday-IF(Margined=\"yes\",CollToday,IndepAmt)-IMHeld,0))");
+        f.put("epe", "Main: =IF(Horizon>0,SUMPRODUCT(Stats!EE,Stats!weight)/Horizon,0)");
+        f.put("eepe", "Main: =IF(Horizon>0,SUMPRODUCT(Stats!EEE,Stats!weight)/Horizon,0)");
         f.put("peakPfe", "Main: =MAX(Stats!PFE) and its date =INDEX(Stats!Date,MATCH(MAX(Stats!PFE),Stats!PFE,0))");
         f.put("eadImm", "Main: =Alpha*EEPE");
-        f.put("eeShare", "Contributions: =AVERAGE(a) with a = MTM*IF(AND(E>0,V<>0),1-(C+IM)/V,0) on each path");
+        f.put("eeShare", "Contributions: =AVERAGE(a) with a = MTM*IF(AND(E>0,V<>0),1-(C+IMHeld)/V,0) on each path");
         return f;
     }
 
@@ -183,7 +183,7 @@ final class ExposurePlaygroundBook {
     }
 
     private String imEff() {
-        return "IF(CollateralModel=\"none\",0,IM)";
+        return "IF(CollateralModel=\"none\",0,IMHeld)";
     }
 
     private String check(String cell, String engine) {
@@ -221,24 +221,24 @@ final class ExposurePlaygroundBook {
             w.name("CollateralModel", "Main", "$B$" + mModel);
             w.name("ContributionDate", "Main", "$B$" + mDate);
             w.name("P", "Main", "$C$" + mFirst);
-            w.name("T", "Main", "$C$" + (mFirst + 2));
-            w.name("CE", "Main", "$C$" + (mFirst + 1));
+            w.name("Horizon", "Main", "$C$" + (mFirst + 2));
+            w.name("CurrentExp", "Main", "$C$" + (mFirst + 1));
             w.name("CsaPresent", "Config", "$B$" + (C_CSA + 1));
             w.name("Margined", "Config", "$B$" + (C_CSA + 2));
             w.name("ThThem", "Config", "$B$" + (C_CSA + 3));
             w.name("ThUs", "Config", "$B$" + (C_CSA + 4));
             w.name("MtaThem", "Config", "$B$" + (C_CSA + 5));
             w.name("MtaUs", "Config", "$B$" + (C_CSA + 6));
-            w.name("IA", "Config", "$B$" + (C_CSA + 7));
+            w.name("IndepAmt", "Config", "$B$" + (C_CSA + 7));
             w.name("Rounding", "Config", "$B$" + (C_CSA + 8));
-            w.name("C0", "Config", "$B$" + (C_CSA + 14));
-            w.name("IM", "Config", "$B$" + (C_CSA + 15));
+            w.name("CollToday", "Config", "$B$" + (C_CSA + 14));
+            w.name("IMHeld", "Config", "$B$" + (C_CSA + 15));
             w.name("Alpha", "Config", "$B$" + C_RUN);
             w.name("HorizonCap", "Config", "$B$" + (C_RUN + 1));
             w.name("Life", "Config", "$B$" + (C_RUN + 2));
-            w.name("V0", "Config", "$C$" + (C_TRADES + r));
-            w.name("CI", "Contributions", "$D$2");
-            w.name("CK", "Contributions", "$G$2");
+            w.name("ValueToday", "Config", "$C$" + (C_TRADES + r));
+            w.name("ContribPoint", "Contributions", "$D$2");
+            w.name("ContribGrid", "Contributions", "$G$2");
         }
     }
 
@@ -289,9 +289,9 @@ final class ExposurePlaygroundBook {
         s.row(row).text(0, "Paths (P)", "label").text(1, "COUNT of Data's paths", "text");
         s.formula(2, "COUNT(" + pathRange + ")", c(n), "int").number(3, n, "int").formulaText(4, check("C" + row, "D" + row), ct(PASS), "check");
         row++;
-        String held = "IF(Margined=\"yes\",C0,IA)";
+        String held = "IF(Margined=\"yes\",CollToday,IndepAmt)";
         s.row(row).text(0, "CE", "label").text(1, "max(V0 − C0 − IM, 0)", "text");
-        s.formula(2, "IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),MAX(V0,0),MAX(V0-" + held + "-IM,0))", c(m.stats.ce), "money")
+        s.formula(2, "IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),MAX(ValueToday,0),MAX(ValueToday-" + held + "-IMHeld,0))", c(m.stats.ce), "money")
                 .number(3, m.stats.ce, "money").formulaText(4, check("C" + row, "D" + row), ct(PASS), "check");
         row++;
         s.row(row).text(0, "T (years)", "label").text(1, "min(1 year, longest maturity)", "text");
@@ -302,11 +302,11 @@ final class ExposurePlaygroundBook {
         String wts = statsRange(9 + nq);
         String tenorsR = statsRange(0);
         s.row(row).text(0, "EPE", "label").text(1, "Σ EE · weight / T", "text");
-        s.formula(2, "IF(T>0,SUMPRODUCT(" + ee + "," + wts + ")/T,0)", c(m.stats.epe), "money.bold").number(3, m.stats.epe, "money.bold")
+        s.formula(2, "IF(Horizon>0,SUMPRODUCT(" + ee + "," + wts + ")/Horizon,0)", c(m.stats.epe), "money.bold").number(3, m.stats.epe, "money.bold")
                 .formulaText(4, check("C" + row, "D" + row), ct(PASS), "check");
         row++;
         s.row(row).text(0, "EEPE", "label").text(1, "Σ EEE · weight / T", "text");
-        s.formula(2, "IF(T>0,SUMPRODUCT(" + eee + "," + wts + ")/T,0)", c(m.stats.eepe), "money.bold").number(3, m.stats.eepe, "money.bold")
+        s.formula(2, "IF(Horizon>0,SUMPRODUCT(" + eee + "," + wts + ")/Horizon,0)", c(m.stats.eepe), "money.bold").number(3, m.stats.eepe, "money.bold")
                 .formulaText(4, check("C" + row, "D" + row), ct(PASS), "check");
         int eepeRow = row;
         row++;
@@ -583,22 +583,22 @@ final class ExposurePlaygroundBook {
                 int lb = m.grid.lookbackFor(m.grid.primaryAt(i));
                 if (lb >= 0) {
                     String l = "Netting!" + col(1 + lb) + row;
-                    s.formula(1 + i, "MAX(" + l + "-ThThem,0)-MAX(-" + l + "-ThUs,0)+IA", c(m.target[i * n + j]), "money");
+                    s.formula(1 + i, "MAX(" + l + "-ThThem,0)-MAX(-" + l + "-ThUs,0)+IndepAmt", c(m.target[i * n + j]), "money");
                 }
             }
             for (int i = 0; i < gp; i++) {
                 int lb = m.grid.lookbackFor(m.grid.primaryAt(i));
                 if (lb >= 0) {
                     String tg = col(1 + i) + row;
-                    s.formula(1 + gp + i, "IF(Rounding>0,C0+IF(" + tg + "-C0>0,ROUNDUP((" + tg + "-C0)/Rounding,0),ROUNDDOWN((" + tg + "-C0)/Rounding,0))*Rounding,"
+                    s.formula(1 + gp + i, "IF(Rounding>0,CollToday+IF(" + tg + "-CollToday>0,ROUNDUP((" + tg + "-CollToday)/Rounding,0),ROUNDDOWN((" + tg + "-CollToday)/Rounding,0))*Rounding,"
                             + tg + ")", c(m.rounded[i * n + j]), "money");
                 }
             }
             for (int i = 0; i < gp; i++) {
                 int lb = m.grid.lookbackFor(m.grid.primaryAt(i));
                 String rd = col(1 + gp + i) + row;
-                String lagged = lb < 0 ? "C0" : "IF(" + rd + ">0,MAX(" + rd + "-MtaThem,0)," + rd + ")";
-                s.formula(1 + 2 * gp + i, "IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),0,IF(Margined<>\"yes\",IA,IF(CollateralModel=\"current\",C0,"
+                String lagged = lb < 0 ? "CollToday" : "IF(" + rd + ">0,MAX(" + rd + "-MtaThem,0)," + rd + ")";
+                s.formula(1 + 2 * gp + i, "IF(OR(CsaPresent<>\"yes\",CollateralModel=\"none\"),0,IF(Margined<>\"yes\",IndepAmt,IF(CollateralModel=\"current\",CollToday,"
                         + lagged + ")))", c(m.c[i * n + j]), "money");
             }
         }
@@ -682,10 +682,10 @@ final class ExposurePlaygroundBook {
                         + "$" + (SQ + 3) + ")";
                 s.formula(6 + a, "IF(RankRule=\"interpolated\"," + interp + "," + kth + ")", c(m.stats.pfe[a][i]), "money");
             }
-            s.formula(6 + nq, "MAX(" + (i == 0 ? "CE" : col(6 + nq) + (row - 1)) + ",E" + row + ")", c(m.stats.eee[i]), "money");
+            s.formula(6 + nq, "MAX(" + (i == 0 ? "CurrentExp" : col(6 + nq) + (row - 1)) + ",E" + row + ")", c(m.stats.eee[i]), "money");
             s.formula(7 + nq, "AVERAGE(" + uR + ")", c(m.stats.eeUncoll[i]), "money");
             s.formula(8 + nq, "E" + row + "-" + col(7 + nq) + row, c(m.stats.ee[i] - m.stats.eeUncoll[i]), "money");
-            s.formula(9 + nq, "MAX(0,MIN(C" + row + ",T)-" + (i == 0 ? "0" : "C" + (row - 1)) + ")", c(m.weight(i)), "rate");
+            s.formula(9 + nq, "MAX(0,MIN(C" + row + ",Horizon)-" + (i == 0 ? "0" : "C" + (row - 1)) + ")", c(m.weight(i)), "rate");
         }
     }
 
@@ -699,7 +699,7 @@ final class ExposurePlaygroundBook {
         int ck = m.grid.primaryAt(ci);
         s.row(2).text(0, "Date", "label").formulaText(1, "ContributionDate", ct(m.tenor(ci)), "text").text(2, "primary point", "label")
                 .formula(3, "MATCH(ContributionDate,Stats!$A$" + SR + ":$A$" + (SR + gp - 1) + ",0)", c(ci + 1), "int").text(5, "grid k", "label")
-                .formula(6, "INDEX(Stats!$B$" + SR + ":$B$" + (SR + gp - 1) + ",CI)", c(ck + 1), "int");
+                .formula(6, "INDEX(Stats!$B$" + SR + ":$B$" + (SR + gp - 1) + ",ContribPoint)", c(ck + 1), "int");
         s.row(4).text(0, "", "head").text(1, "", "head").text(2, "", "head").text(3, "", "head").text(4, "", "head");
         for (int x = 0; x < r; x++) {
             s.text(5 + x, m.columns.get(x).id(), "head");
@@ -716,7 +716,7 @@ final class ExposurePlaygroundBook {
             s.formula(5 + x, "AVERAGE(" + cc + CR + ":" + cc + (CR + n - 1) + ")", c(m.share[x]), "money.bold");
         }
         s.row(6).text(0, "Engine", "label").text(1, "EE at the date", "label")
-                .formula(2, "INDEX(Stats!$E$" + SR + ":$E$" + (SR + gp - 1) + ",CI)", c(m.stats.ee[ci]), "money");
+                .formula(2, "INDEX(Stats!$E$" + SR + ":$E$" + (SR + gp - 1) + ",ContribPoint)", c(m.stats.ee[ci]), "money");
         for (int x = 0; x < r; x++) {
             s.number(5 + x, m.share[x], "money");
         }
@@ -736,13 +736,13 @@ final class ExposurePlaygroundBook {
             int row = CR + j;
             int pr = PR + j;
             s.row(row).formula(0, "Data!$A$" + pr, c(j + 1), "int");
-            s.formula(1, "INDEX(Netting!$B$" + pr + ":$" + col(g) + "$" + pr + ",1,CK)", c(m.v[ck * n + j]), "money");
-            s.formula(2, "INDEX(Collateral!$" + col(1 + 2 * gp) + "$" + pr + ":$" + col(3 * gp) + "$" + pr + ",1,CI)", c(m.c[ci * n + j]), "money");
-            s.formula(3, "INDEX(Exposure!$B$" + pr + ":$" + col(gp) + "$" + pr + ",1,CI)", c(m.e[ci * n + j]), "money");
+            s.formula(1, "INDEX(Netting!$B$" + pr + ":$" + col(g) + "$" + pr + ",1,ContribGrid)", c(m.v[ck * n + j]), "money");
+            s.formula(2, "INDEX(Collateral!$" + col(1 + 2 * gp) + "$" + pr + ":$" + col(3 * gp) + "$" + pr + ",1,ContribPoint)", c(m.c[ci * n + j]), "money");
+            s.formula(3, "INDEX(Exposure!$B$" + pr + ":$" + col(gp) + "$" + pr + ",1,ContribPoint)", c(m.e[ci * n + j]), "money");
             s.formula(4, "IF(AND(D" + row + ">0,B" + row + "<>0),1-(C" + row + "+" + ime + ")/B" + row + ",0)", c(m.factor[j]), "rate");
             for (int x = 0; x < r; x++) {
                 double val = m.columns.get(x).at(ck, j) * m.factor[j];
-                s.formula(5 + x, "INDEX(Data!$B$" + pr + ":$" + dLast + "$" + pr + ",1,(CK-1)*" + r + "+" + (x + 1) + ")*$E" + row, c(val), "money");
+                s.formula(5 + x, "INDEX(Data!$B$" + pr + ":$" + dLast + "$" + pr + ",1,(ContribGrid-1)*" + r + "+" + (x + 1) + ")*$E" + row, c(val), "money");
             }
         }
     }
