@@ -25,8 +25,9 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
- * The one table of Rachana-EL functions, filled by the families: {@link LogicFunctions}, {@link MathFunctions},
- * {@link TextFunctions}, {@link DateFunctions} and {@link ListFunctions} (FUNCTION_CATALOGUE.md sections 1, 2, 3 and 6).
+ * The one table of Rachana-EL functions, filled by the families: {@link LogicFunctions} and {@link InfoFunctions}, {@link MathFunctions}
+ * and {@link NumberFunctions}, {@link TextFunctions} and {@link TextParts}, {@link DateFunctions} and {@link DateParts}, {@link ListFunctions}
+ * and {@link ListMore}, {@link Distributions} and {@link FinanceFunctions} (FUNCTION_CATALOGUE.md sections 1, 2, 3, 6, 8 and 9).
  * Rachana's own functions are scalars (one value from values). Every aggregate ({@code sum}, {@code count}, {@code avg},
  * {@code min} and {@code max} over one list, {@code median}, {@code percentile} …), the grouping behind {@code group(...)}, and
  * {@code measure(...)} and {@code cell(...)} come from the pivot engine, registered into this table by a {@link FunctionProvider}
