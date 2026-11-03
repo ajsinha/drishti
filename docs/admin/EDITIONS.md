@@ -297,6 +297,12 @@ Then `drishti.edition: my-desk` and restart. **Adding a measure later** (liquidi
 
 ## 8. In a cluster
 
+**Three switches, each with its own job.** The **edition** (or a person's lens) decides which commands and pages people are offered,
+the same on every node; a **command switch** (Functions) turns one mnemonic off for everyone in the cluster; an **engine switch**
+(Admin → Engines, `config/engines/<engine>.yaml`, [OPERATIONS.md section 21](OPERATIONS.md#21-compute-engines-on-or-off)) decides whether a
+compute engine (VaR, exposure, FRTB-SA, SIMM, ...) runs on one node. A word is shown when all three allow it: an engine running somewhere
+in the cluster, the edition offering it, and its command on. An edition's `var: off` or `exposure: off` presets the engine's switch.
+
 Every member must run the same edition: set `DRISHTI_EDITION` on every node (the stack, ECS and Docker sections above do). Each member
 publishes its edition in its capability digest; if they differ, **Admin → Net** shows the warning "the nodes run different editions" with
 the nodes of each, and each member shows and refuses what its own edition says until you fix it. Check each node:

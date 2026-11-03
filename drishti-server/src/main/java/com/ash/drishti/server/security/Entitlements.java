@@ -242,6 +242,14 @@ public final class Entitlements {
      * The principal's field masks as a function on documents: the identity when nothing is masked for them, else a copy of
      * the document with every field named in {@code redact} (at any depth) replaced by {@link DataNode#masked()}.
      */
+    /**
+     * True when masking this person's rows changes values inside unmasked fields too ({@code drishti.security.mask-copies}: a masked value
+     * copied into another field is masked there), so a reader that leaves masked columns out is not enough and the rows must be masked one by one.
+     */
+    public boolean masksValues(Principal p) {
+        return masks(p) && props.maskCopies();
+    }
+
     public UnaryOperator<DataNode> redactor(Principal p) {
         return masks(p) ? this::mask : UnaryOperator.identity();
     }

@@ -43,6 +43,9 @@ public final class GroupingSetsCompiler {
     /** One compiled statement: its SQL, parameters, the dimension columns in order, and the sets it answers. */
     public record Compiled(String sql, List<Object> params, List<String> dims, List<CellSet> sets, int stateColumns) {}
 
+    /** The two guard columns a statement ends with when the plan asks whether each cell is in one currency. */
+    public static final List<String> GUARD = List.of("min(\"_ccy\")", "max(\"_ccy\")");
+
     private GroupingSetsCompiler() {}
 
     /** The statements of a plan: sets grouped by restriction shape, one statement each. */
@@ -99,6 +102,31 @@ public final class GroupingSetsCompiler {
         return f.fn().numeric() ? "TRY_CAST(" + col + " AS DOUBLE)" : col;
     }
 
+    /**
+     * A money input converted into the report currency at the view's rates (codes and rates are checked: three capital letters and positive
+     * numbers, written as literals); a row in a currency without a rate gives no value.
+     */
+    static String converted(AggregationPlan plan, FunctionCall f, String field) {
+        String raw = inputExpr(f, field);
+        AggregationPlan.Money m = plan.money();
+        if (m.conversion() == null || !m.fields().contains(field) || !plan.money().money(f)) {
+            return raw;
+        }
+        String ccyField = m.conversion().field() != null ? m.conversion().field() : m.currencyField();
+        if (ccyField == null) {
+            return raw;
+        }
+        StringBuilder c = new StringBuilder("CASE upper(CAST(" + DuckDbExecutor.quote(ccyField) + " AS VARCHAR))");
+        c.append(" WHEN '").append(m.conversion().report()).append("' THEN 1.0");
+        m.conversion().rates().forEach((k, v) -> {
+            if (!k.equals(m.conversion().report())) {
+                c.append(" WHEN '").append(k).append("' THEN ").append(Double.toString(v));
+            }
+        });
+        c.append(" ELSE NULL END");
+        return "(" + raw + " * " + c + ")";
+    }
+
     /** The base relation: the source with the row rules applied, its dimensions and inputs as columns {@code d0..}, {@code i0..}. */
     static String base(AggregationPlan plan, TabularSource.Relation rel, Map<String, String> types, List<String> dims, List<Object> params,
             List<String> extraWhere) {
@@ -110,8 +138,11 @@ public final class GroupingSetsCompiler {
         int k = 0;
         for (FunctionCall f : plan.functions()) {
             for (String in : f.inputs()) {
-                cols.add(inputExpr(f, in) + " AS \"i" + k++ + "\"");
+                cols.add(converted(plan, f, in) + " AS \"i" + k++ + "\"");
             }
+        }
+        if (plan.money().guard()) {
+            cols.add("CAST(" + DuckDbExecutor.quote(plan.money().currencyField()) + " AS VARCHAR) AS \"_ccy\"");
         }
         cols.add("1 AS \"_one\"");
         params.addAll(rel.params());
@@ -125,6 +156,17 @@ public final class GroupingSetsCompiler {
             List<String> all = new ArrayList<>();
             types.keySet().stream().sorted().forEach(n -> all.add("CAST(" + DuckDbExecutor.quote(n) + " AS VARCHAR)"));
             where.add("hash(" + String.join(", ", all) + ") % " + plan.shard().count() + " = " + plan.shard().index());
+        }
+        // the filters again on the raw columns, so a Parquet reader skips row groups and files by their statistics (the grouped
+        // expressions below are the filter of record; these only let the scan read less)
+        for (Map.Entry<String, AggregationPlan.Filter> f : plan.filters().entrySet()) {
+            Dim d = plan.dims().get(f.getKey());
+            if (d == null || d.group() != null || !"string".equals(types.getOrDefault(d.field(), "string")) || f.getValue().in().isEmpty()
+                    || f.getValue().in().contains(CellKey.BLANK)) {
+                continue;
+            }
+            where.add(DuckDbExecutor.quote(d.field()) + " IN (" + marks(f.getValue().in().size()) + ")");
+            params.addAll(f.getValue().in());
         }
         where.addAll(extraWhere);
         if (!where.isEmpty()) {
@@ -198,6 +240,11 @@ public final class GroupingSetsCompiler {
             }
             for (String p : parts) {
                 select.add(p + " AS \"s" + states++ + "\"");
+            }
+        }
+        if (plan.money().guard()) {
+            for (String g : GUARD) {
+                select.add(g + " AS \"g" + select.size() + "\"");
             }
         }
         Set<String> sets = new LinkedHashSet<>();

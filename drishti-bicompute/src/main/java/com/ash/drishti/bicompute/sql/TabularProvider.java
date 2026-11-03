@@ -42,6 +42,8 @@ public final class TabularProvider implements PivotProvider {
 
     /** Rows a second one DuckDB connection scans in memory, for the estimate (measured scans replace it in phase P3). */
     static final double ROWS_PER_SECOND = 50_000_000;
+    /** Bytes a second one connection reads from a local disk, for an estimate without a row count. */
+    static final double BYTES_PER_SECOND = 500_000_000;
 
     private final DuckDbExecutor exec;
     private final TabularSource.Resolver resolver;
@@ -100,8 +102,8 @@ public final class TabularProvider implements PivotProvider {
         int of = s.fields().size();
         long rows = s.rows();
         long bytes = s.bytes() < 0 || of == 0 ? -1 : s.bytes() * Math.max(1, cols.size()) / of;
-        double secs = rows < 0 ? 0 : rows / ROWS_PER_SECOND;
-        return new Estimate(rows, bytes, cols.size(), of, secs, rows < 0 ? "the source cannot say how many rows it holds without reading them"
+        double secs = rows >= 0 ? rows / ROWS_PER_SECOND : bytes >= 0 ? bytes / BYTES_PER_SECOND : 0;
+        return new Estimate(rows, bytes, cols.size(), of, secs, rows < 0 && bytes < 0 ? "the source cannot say how many rows it holds without reading them"
                 : "the source's row count; " + cols.size() + " of " + of + " columns read; " + (long) ROWS_PER_SECOND / 1_000_000
                         + " million rows a second per connection");
     }
@@ -164,6 +166,25 @@ public final class TabularProvider implements PivotProvider {
                     continue;
                 }
                 Object[] states = null;
+                Map<Integer, String> notes = Map.of();
+                String scope = null;
+                if (plan.money().guard()) {
+                    int at = nd + 3 + c.stateColumns();
+                    String lo = rs.getString(at);
+                    String hi = rs.getString(at + 1);
+                    if (lo != null && hi != null && !lo.equals(hi)) {
+                        Map<Integer, String> n = new HashMap<>();
+                        for (int f = 0; f < plan.functions().size(); f++) {
+                            if (plan.money().money(plan.functions().get(f))) {
+                                n.put(f, "mixed currencies (" + lo + " to " + hi + "): convert them to add them (the view's currency: report "
+                                        + "and rates); amounts are never added raw");
+                            }
+                        }
+                        notes = n;
+                    } else if (lo != null) {
+                        scope = "currency " + lo;
+                    }
+                }
                 for (CellSet set : sets) {
                     boolean match = true;
                     for (Map.Entry<String, String> at : set.at().entrySet()) {
@@ -182,7 +203,7 @@ public final class TabularProvider implements PivotProvider {
                     for (String d : set.grouping()) {
                         grouped.put(d, vals[c.dims().indexOf(d)]);
                     }
-                    out.get(set).put(set.key(grouped), new Partials.Entry(members, states));
+                    out.get(set).put(set.key(grouped), new Partials.Entry(members, states, scope, notes));
                 }
             }
             return null;

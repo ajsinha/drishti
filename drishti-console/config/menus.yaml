@@ -81,6 +81,8 @@ menus:
           - { id: exp-explorer, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
           - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
           - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
+          - { id: simm, cmd: SIMM, icon: shield-lock, label: SIMM initial margin, desc: "ISDA SIMM per netting set, collect and post, against the counterparty's call", match: /simm, requires: [word:SIMM, engine:simm, route:/simm] }
+          - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, engine:simm, route:/play/simm] }
           - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
   - id: blotter
     label: Blotter
@@ -258,6 +260,7 @@ menus:
           - { id: collab, href: /admin/collab, icon: chat-square-text, label: Collaboration, desc: "Moderation, legal holds, export, mail outbox, bridges", match: /admin/collab, requires: [admin, admin-page:collab, feature:collaboration] }
           - { id: embedding, href: /admin/embedding, icon: window-stack, label: Embedding, desc: Host applications that show views in their own pages, match: /admin/embedding, requires: [admin, admin-page:embedding] }
           - { id: net, href: /admin/net, icon: diagram-3, label: Net, desc: "{product}*net: the servers acting as one, their packs and data, routing, access", match: /admin/net, requires: [admin, admin-page:net] }
+          - { id: engines, href: /admin/engines, icon: gear-wide-connected, label: Engines, desc: "Compute engines on or off on this server (VaR, exposure, FRTB-SA, SIMM, the in-memory lake), each with its own file", match: /admin/engines, requires: [admin, admin-page:engines] }
           - { id: health, href: /admin/health, icon: heart-pulse, label: Health, desc: "Connectors, packs, live streams", match: /admin/health, requires: [admin, admin-page:health] }
           - { id: caches, href: /admin/caches, icon: hdd-stack, label: Caches, desc: "What each cache holds; purge", match: /admin/caches, requires: [admin, admin-page:caches] }
           - { id: capacity, href: /admin/capacity, icon: speedometer, label: Capacity, desc: "Today against the plan: headroom, what breaks first, growth; the planner", match: /admin/capacity, requires: [admin, admin-page:capacity] }

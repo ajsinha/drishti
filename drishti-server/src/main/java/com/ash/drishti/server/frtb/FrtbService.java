@@ -137,9 +137,37 @@ public final class FrtbService {
         return drcBytes;
     }
 
+    /** The engine registry's word on FRTB-SA and on the position sensitivities (COMPUTE_ENGINES.md); unset: the old switch, and on. */
+    private volatile java.util.function.BooleanSupplier running;
+    private volatile java.util.function.BooleanSupplier sensitivitiesRunning;
+
+    public void running(java.util.function.BooleanSupplier frtb, java.util.function.BooleanSupplier sensitivities) {
+        this.running = frtb;
+        this.sensitivitiesRunning = sensitivities;
+    }
+
+    /** The old switch, drishti.frtb.enabled (an alias of drishti.engines.frtb-sa.enabled). */
+    boolean switchedOn() {
+        return props.enabled();
+    }
+
+    /** Whether FRTB-SA runs on this node now (config/engines/frtb-sa.yaml). */
+    public boolean running() {
+        java.util.function.BooleanSupplier r = running;
+        return r == null ? props.enabled() : r.getAsBoolean();
+    }
+
+    /** The position sensitivities (SENS sums, the factor dictionary): 404 DRS-1020 when that engine does not run here. */
+    void sensitivities() {
+        java.util.function.BooleanSupplier r = sensitivitiesRunning;
+        if (r != null && !r.getAsBoolean()) {
+            throw new com.ash.drishti.server.engines.EngineOffException("sensitivities", "Sensitivities");
+        }
+    }
+
     void enabled() {
-        if (!props.enabled()) {
-            throw new DrishtiException(ErrorCode.FORBIDDEN, "FRTB-SA is switched off on this server (drishti.frtb.enabled)");
+        if (!running()) {
+            throw new com.ash.drishti.server.engines.EngineOffException("frtb-sa", "FRTB-SA");
         }
         if (problem != null) {
             throw new DrishtiException(ErrorCode.SOURCE_FAILED, problem);
@@ -160,7 +188,7 @@ public final class FrtbService {
 
     /** The records of a scope on a date, as the person may see them. */
     Scoped scoped(Principal p, String scope, AsOf asOf) {
-        enabled();
+        sensitivities();                                                // FRTB-SA itself is checked by run()
         if (scope == null || scope.isBlank()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "give a scope (scope=DESK:RATES, BANK, POS:<id>, or EXAMPLE for the hand-built cases)");
         }

@@ -25,7 +25,7 @@ doc:
     of positions and trades someone picked (BASKET); portfolios may overlap. Only the definition is stored: everything else is the VaR
     engine's, computed as the page opens and as the reader may see it. The strip counts the positions, the longs and the shorts,
     gives the gross and net market value, the VaR and ES of the portfolio and the use of its limit. The positions table (filterable,
-    with a Pivot tab) gives each position's instrument, direction, quantity, market value, currency, book, VaR on its own and
+    with Pivot (the pivot screen)) gives each position's instrument, direction, quantity, market value, currency, book, VaR on its own and
     component VaR (the components add up to the portfolio's VaR); a click opens the position beside with the trades that make it.
     The right column splits the component VaR by product, currency and direction and lists the top contributors. VAR PORT <id> opens
     the portfolio in the VaR explorer.

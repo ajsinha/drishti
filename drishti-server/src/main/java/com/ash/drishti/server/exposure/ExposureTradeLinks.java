@@ -55,7 +55,7 @@ final class ExposureTradeLinks implements ViewAugmenter {
             prior.fields().forEach((k, v) -> links.put(k, v.isNull() ? null : v.asText()));
         }
         try {
-            if (!svc.props().enabled()) {
+            if (!svc.running()) {
                 throw new DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN, "the exposure engine is off on this server");
             }
             java.util.Optional<ExposureDate> loaded = svc.loadedDate(asOf == null ? null : asOf.businessDate());

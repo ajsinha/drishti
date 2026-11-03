@@ -49,8 +49,10 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md).
 | The menu | **Views → Pivot** |
 | A table | **Pivot** in the Data view's facts of the table (`DATA trade <GO>`, then Pivot) |
 
-The engine is a switch: `drishti.pivot.enabled` (default on). Off, `/api/v1/pivot` answers `404 DRS-5703` in words and the Pivot tab of
-Sutras is hidden too (the two share the switch).
+The engine is a compute engine with its own file, `config/engines/pivot.yaml` ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md)):
+switch it with `drishti.engines.pivot.enabled` (on as shipped; `DRISHTI_PIVOT_ENGINE_ENABLED`), from Admin → Engines or
+`drishti.py admin engines`, live. Off, `/api/v1/pivot` answers `404 DRS-1020` in words, and `PIVOT`, Views → Pivot, its Help pages and
+`drishti.py pivot` disappear. The old name `drishti.pivot.enabled` still works (it is also the Pivot tab's switch). The MR cube needs it.
 
 ## 2. The screen
 
@@ -241,7 +243,7 @@ More in [TOOLS.md](TOOLS.md#516-pivot).
 
 ## 16. Settings
 
-All under `drishti.pivot` in `application.yaml`, listed in [CONFIGURATION.md](../admin/CONFIGURATION.md): `enabled`, `max-cells`,
+All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.engines.pivot.enabled` there too), listed in [CONFIGURATION.md](../admin/CONFIGURATION.md): `enabled`, `max-cells`,
 `max-holistic-cells`, `busy-cells`, `cache-mb` (the partial-state cache `pivot.states`, in the one memory budget), `provenance-kept`,
 `local-shards`, `stage-max-rows`, `stage-keep`, `duckdb.connections`, `duckdb.threads`, `duckdb.memory-limit-mb`, `duckdb.temp-directory`,
 `estimate.confirm-above-seconds`, `estimate.confirm-above-rows`, `aggregate-only.min-members-per-cell`, `export.xlsx-max-rows`,
@@ -253,7 +255,7 @@ All under `drishti.pivot` in `application.yaml`, listed in [CONFIGURATION.md](..
 |---|---|---|
 | DRS-5701 | 400 | a view it cannot answer: an unknown field or function, a field twice, a bad grouping, sort or show-as |
 | DRS-5702 | 422 | over the cell budget (with the count), a table over `stage-max-rows`, an xlsx over `xlsx-max-rows` |
-| DRS-5703 | 404 | the engine is switched off here |
+| DRS-1020 | 404 | the engine is switched off here (DRS-5703 when an edition has no PIVOT) |
 | DRS-5704 | 404 | a saved view, provenance id or source that is not there (or not shared with you) |
 | DRS-5705 | 403 | a masked field asked as a dimension, input or filter |
 | DRS-9507 | 503 | busy protection: a large view did not start; `Retry-After` |

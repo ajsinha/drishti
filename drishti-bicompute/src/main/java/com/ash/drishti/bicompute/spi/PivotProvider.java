@@ -95,8 +95,18 @@ public interface PivotProvider {
      * @param type {@code string}, {@code date}, {@code number} or {@code hierarchy}
      * @param label what a chip says
      * @param note where its values come from
+     * @param unit what its values are (PIVOT_ENGINE.md section 5.4): {@code money} (an amount in the currency of the row's {@code currency}
+     *     field), {@code rate} or {@code pct} (never summed), {@code count}, {@code currency} (the field holding a row's currency), or blank
      */
-    record Field(String name, String type, String label, String note) {}
+    record Field(String name, String type, String label, String note, String unit) {
+        public Field {
+            unit = unit == null ? "" : unit;
+        }
+
+        public Field(String name, String type, String label, String note) {
+            this(name, type, label, note, "");
+        }
+    }
 
     /**
      * A provider's own measure ({@code var}, {@code es}).

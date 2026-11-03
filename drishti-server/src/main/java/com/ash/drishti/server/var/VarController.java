@@ -269,7 +269,7 @@ public class VarController {
     public Map<String, Object> status(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         VarProperties pr = svc.props();
         Map<String, Object> m = new LinkedHashMap<>();
-        m.put("enabled", pr.enabled());
+        m.put("enabled", svc.running());
         m.put("confidence", pr.confidence());
         m.put("esConfidence", pr.esConfidence());
         m.put("confidences", pr.confidences());                      // 2.9.7: what a page and a command may choose

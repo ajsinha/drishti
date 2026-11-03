@@ -280,7 +280,8 @@ public final class Rollups {
     static Map<CellKey, Partials.Entry> grain(RollupSource src, RollupDef d, String date, List<FunctionCall> fns, List<String> parts) {
         Map<String, Dim> dims = new LinkedHashMap<>();
         d.grain().forEach(g -> dims.put(g, Dim.parse(g)));
-        AggregationPlan plan = new AggregationPlan(d.source(), date, null, Map.of(), dims, fns, List.of(CellSet.of(d.grain(), Map.of())), null, 0);
+        AggregationPlan plan = new AggregationPlan(d.source(), date, null, Map.of(), dims, fns, List.of(CellSet.of(d.grain(), Map.of())), null, 0,
+                AggregationPlan.Money.none());
         Partials p = src.evaluate(plan, parts);
         return p.sets().isEmpty() ? Map.of() : p.sets().get(0).cells();
     }

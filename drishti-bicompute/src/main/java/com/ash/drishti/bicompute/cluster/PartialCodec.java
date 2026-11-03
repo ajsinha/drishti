@@ -21,6 +21,7 @@ import com.ash.drishti.bicompute.core.CellKey;
 import com.ash.drishti.bicompute.core.CellSet;
 import com.ash.drishti.bicompute.core.Dim;
 import com.ash.drishti.bicompute.core.Partials;
+import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.spi.PivotProvider;
 import java.util.ArrayList;
@@ -66,6 +67,20 @@ public final class PartialCodec {
             m.put("shard", List.of(p.shard().index(), p.shard().count()));
         }
         m.put("maxGroups", p.maxGroups());
+        AggregationPlan.Money money = p.money();
+        Map<String, Object> mm = new LinkedHashMap<>();
+        mm.put("currencyField", money.currencyField());
+        mm.put("fields", new ArrayList<>(new java.util.TreeSet<>(money.fields())));
+        if (money.conversion() != null) {
+            PivotView.Currency c = money.conversion();
+            Map<String, Object> cm = new LinkedHashMap<>();
+            cm.put("report", c.report());
+            cm.put("field", c.field());
+            cm.put("rates", new LinkedHashMap<>(c.rates()));
+            cm.put("source", c.source());
+            mm.put("conversion", cm);
+        }
+        m.put("money", mm);
         return m;
     }
 
@@ -97,7 +112,19 @@ public final class PartialCodec {
             shard = new AggregationPlan.Shard(((Number) l.get(0)).intValue(), ((Number) l.get(1)).intValue());
         }
         int max = m.get("maxGroups") instanceof Number n ? n.intValue() : 0;
-        return new AggregationPlan(str(m.get("source")), str(m.get("date")), str(m.get("asOf")), filters, dims, fns, sets, shard, max);
+        AggregationPlan.Money money = AggregationPlan.Money.none();
+        if (m.get("money") instanceof Map<?, ?> mm) {
+            PivotView.Currency conv = null;
+            if (mm.get("conversion") instanceof Map<?, ?> cm) {
+                Map<String, Double> rates = new TreeMap<>();
+                if (cm.get("rates") instanceof Map<?, ?> rm) {
+                    rm.forEach((k, v) -> rates.put(String.valueOf(k), ((Number) v).doubleValue()));
+                }
+                conv = new PivotView.Currency(str(cm.get("report")), str(cm.get("field")), rates, str(cm.get("source")));
+            }
+            money = new AggregationPlan.Money(str(mm.get("currencyField")), new java.util.LinkedHashSet<>(strings(mm.get("fields"))), conv);
+        }
+        return new AggregationPlan(str(m.get("source")), str(m.get("date")), str(m.get("asOf")), filters, dims, fns, sets, shard, max, money);
     }
 
     // ---- the partial states ------------------------------------------------------------------------------------------------------------

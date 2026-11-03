@@ -107,7 +107,7 @@ public class FrtbController {
 
     @GetMapping("/api/v1/risk-factors")
     public Map<String, Object> riskFactors(@RequestParam(required = false) String q, @RequestParam(defaultValue = "200") int limit, AsOf asOf) {
-        svc.enabled();
+        svc.sensitivities();
         FrtbData.Day day = svc.data().day(new AsOf(date(asOf), null));
         List<Map<String, Object>> rows = new ArrayList<>();
         for (FactorDictionary.Factor f : day.dictionary().search(q, Math.max(1, Math.min(limit, 5000)))) {

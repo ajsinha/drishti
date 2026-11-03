@@ -58,7 +58,7 @@ final class ExposureFigures implements ViewAugmenter {
 
     @Override
     public EntityDocument augment(EntityDocument doc, AsOf asOf) {
-        if (!(doc.data() instanceof DataNode.Obj o) || doc.deleted() || !svc.props().enabled()) {
+        if (!(doc.data() instanceof DataNode.Obj o) || doc.deleted() || !svc.running()) {
             return doc;
         }
         String scope = (doc.ref().kind().equals(svc.props().kinds().nettingSet()) ? "NSET:" : "CPTY:") + doc.ref().id();

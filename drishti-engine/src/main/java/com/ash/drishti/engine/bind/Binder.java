@@ -86,7 +86,7 @@ public final class Binder {
     }
 
     /**
-     * A table's or ladder's rows as raw values of its pivot's fields, for the Pivot tab (every row up to
+     * A table's or ladder's rows as raw values of its pivot's fields, for Pivot (the pivot screen) (every row up to
      * {@code drishti.pivot.max-records}, whatever the table's {@code limit}).
      *
      * @throws IllegalArgumentException when the panel offers no pivot
@@ -387,7 +387,7 @@ public final class Binder {
             more = p.option("moreLabel").map(m -> Values.text(eval(m, c.eval()))).orElse((rows.size() - limit) + " more");
         }
         boolean search = !p.option("search").map(String::trim).filter(v -> v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no")).isPresent();
-        return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p).orElse(null),
+        return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p, c.doc() == null ? null : c.doc().ref()).orElse(null),
                 childrenExpr == null ? null : ChartBinder.expandLevels(p), null, null, p.option("empty").orElse(null));
     }
 

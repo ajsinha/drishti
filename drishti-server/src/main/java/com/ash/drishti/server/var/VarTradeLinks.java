@@ -61,7 +61,7 @@ final class VarTradeLinks implements ViewAugmenter {
             prior.fields().forEach((k, v) -> links.put(k, v.isNull() ? null : v.asText()));
         }
         try {
-            if (!svc.props().enabled()) {
+            if (!svc.running()) {
                 throw new DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN, "the VaR engine is off on this server");
             }
             java.util.Optional<VarDate> loaded = svc.loadedDate(asOf == null ? null : asOf.businessDate());

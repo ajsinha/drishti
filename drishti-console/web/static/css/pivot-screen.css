@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The pivot screen (terminal/pivot_screen.html, pivot-core.js, pivot-screen.js), after mock-up A: the grid on the left, the field list and
+/* The pivot screen (terminal/pivot.html, pivot-core.js, pivot.js), after mock-up A: the grid on the left, the field list and
    its four zones on the right, the estimate bar above, the chart below; the theme's tokens for every colour, so every theme reads; the
    kind of a figure (≈, holistic) is a mark, never colour alone. On a phone the grid first, the field list under it. */
 .pv { padding: 10px 14px 18px; color: var(--d-ink); font-size: 13px; max-width: 1600px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }

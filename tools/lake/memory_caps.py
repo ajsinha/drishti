@@ -64,9 +64,29 @@ def caps_mb(files: list[Path]) -> int:
     return sum(stores_of(files).values())
 
 
+def engine_file() -> Path:
+    """The in-memory lake's own file (docs/architecture/COMPUTE_ENGINES.md): DRISHTI_ENGINES_DIR, default ./config/engines."""
+    return Path(os.environ.get("DRISHTI_ENGINES_DIR") or "config/engines") / "memory-lake.yaml"
+
+
+def engine_on(f: Path) -> bool | None:
+    """The switch in the engine's file (its variable, DRISHTI_MEMORY_LAKE_ENABLED, wins), or None without a file."""
+    import yaml
+    if not f.is_file():
+        return None
+    doc = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+    raw = (((doc.get("drishti") or {}).get("engines") or {}).get("memory-lake") or {}).get("enabled")
+    return str(resolve(raw)).strip().lower() == "true" if raw is not None else None
+
+
 def main(argv: list[str]) -> int:
     only = "--stores-only" in argv
     files = [Path("application.local.yaml")] + [Path(a) for a in argv if not a.startswith("--")]
+    try:
+        if engine_on(engine_file()):                                 # on in its own file: its stores count (off: only the old place's)
+            files = [engine_file()] + files
+    except Exception as e:                                       # noqa: BLE001 - a launcher must still start
+        print(f"memory_caps: {e}", file=sys.stderr)
     try:
         caps = caps_mb(files)
     except Exception as e:                                       # a launcher must still start: the server's Health says if it is short

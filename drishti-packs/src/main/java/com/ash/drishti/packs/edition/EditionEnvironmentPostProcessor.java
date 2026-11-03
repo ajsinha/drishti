@@ -121,14 +121,24 @@ public final class EditionEnvironmentPostProcessor implements EnvironmentPostPro
         return value;
     }
 
-    /** The name of the highest product-default source (an application*.yaml inside a jar or on the class path), or null. */
+    /**
+     * The name of the highest product-default source (an application*.yaml inside a jar or on the class path), or of an engine's file
+     * ({@code config/engines/<id>.yaml}, docs/architecture/COMPUTE_ENGINES.md section 3) when one is higher: an edition's presets sit above
+     * both, so an edition that presets {@code var: off} still turns VaR off; null when there is none.
+     */
     private static String productDefaults(ConfigurableEnvironment env) {
         for (PropertySource<?> ps : env.getPropertySources()) {
-            if (isProductDefaults(ps)) {
+            if (isProductDefaults(ps) || isEngineFile(ps)) {
                 return ps.getName();
             }
         }
         return null;
+    }
+
+    /** A site's engine file, imported by application.yaml from {@code DRISHTI_ENGINES_DIR} (default ./config/engines). */
+    static boolean isEngineFile(PropertySource<?> ps) {
+        String n = ps.getName().replace('\\', '/');
+        return n.startsWith("Config resource") && n.contains("file [") && n.matches("(?s).*engines/[a-z0-9-]+\\.yaml\\].*");
     }
 
     private static boolean isProductDefaults(PropertySource<?> ps) {

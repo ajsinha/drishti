@@ -87,6 +87,9 @@ public final class AggregateAwareness implements PivotCore.Hooks {
         if (src == null || !src.unrestricted(v, plan.source(), plan.date())) {
             return Optional.empty();
         }
+        if ((plan.money().guard() || plan.money().conversion() != null) && plan.functions().stream().anyMatch(f -> plan.money().money(f))) {
+            return Optional.empty();       // money per cell in one currency, or converted: the scan says and converts; a rollup keeps neither
+        }
         for (Rollup r : rollups.current(plan.source(), plan.date())) {
             Map<String, Derivation.Rule> rules = rules(plan, r, p, v);
             int[] fmap = functionMap(plan, r);

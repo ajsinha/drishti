@@ -165,7 +165,8 @@ public class EffectiveSettingsController {
             if (file == null) {
                 return new String[] {name.toLowerCase(Locale.ROOT).contains("pack") ? "pack" : "other", name};
             }
-            return new String[] {file.equals("application.yaml") && name.contains("classpath:") ? "default" : "file", file};
+            boolean shipped = (file.equals("application.yaml") || file.startsWith("engines/")) && name.contains("classpath:");   // an engine's jar copy is a default too
+            return new String[] {shipped ? "default" : "file", file};
         }
         return new String[] {"default", "the code"};
     }
@@ -178,8 +179,9 @@ public class EffectiveSettingsController {
     private static String fileOf(String sourceName) {
         Matcher m = Pattern.compile("\\[([^\\]]+\\.(?:ya?ml|properties))]").matcher(sourceName);
         if (m.find()) {
-            String f = m.group(1);
-            return f.substring(f.lastIndexOf('/') + 1);
+            String f = m.group(1).replace('\\', '/');
+            String base = f.substring(f.lastIndexOf('/') + 1);
+            return f.endsWith("engines/" + base) ? "engines/" + base : base;   // a compute engine's file (COMPUTE_ENGINES.md) keeps its folder
         }
         return null;
     }

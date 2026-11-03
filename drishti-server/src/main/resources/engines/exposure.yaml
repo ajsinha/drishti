@@ -1,0 +1,84 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/exposure.yaml: the exposure engine (docs/guides/EXPOSURE_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
+# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    exposure:
+      enabled: ${DRISHTI_EXPOSURE_ENABLED:true}   # run the exposure engine on this node: /api/v1/exposure, EXP, the exposure-engine connector (live)
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  ccr:
+    exposure:                        # the exposure engine (docs/guides/EXPOSURE_GUIDE.md): EE, ENE, EEE, PFE, EPE, EEPE of any counterparty scope from the exposure paths
+      confidence: [0.95, 0.99]       # PFE confidences computed for every answer (any q in (0.5, 1) may be asked)
+      limit-confidence: 0.95         # the PFE credit limits are set on; the default q of an answer
+      rank-rule: kth                 # kth (the ceil(P q)-th smallest exposure) or interpolated
+      collateral-model: lagged       # lagged (called at the look-back point), current (today's collateral on every path) or none
+      im-model: current              # current (the initial margin held today on every path) or none
+      alpha: 1.4                     # EAD_IMM = alpha x EEPE (informational)
+      contribution-window: 21        # paths around the PFE quantile a PFE contribution averages over
+      hot-dates: ${DRISHTI_EXPOSURE_HOT_DATES:10}   # business dates kept open: the least recently used leaves first; the date just used, the newest business date and the dates pinned in memory always stay (as VaR's)
+      refusal-ttl-seconds: 300       # a date refused for room (capacity, disk) is remembered this long: 503 at once with Retry-After, no lake read (0: not remembered)
+      open-heap-mb: ${DRISHTI_EXPOSURE_OPEN_HEAP_MB:0}   # the byte safety net over the open dates' heap (0: automatic, as VaR's); over it the least recently used dates leave
+      fiscal-year-end: ${DRISHTI_FISCAL_YEAR_END:}     # the bank's fiscal year-end, MM-DD; blank: none
+      pinned:                        # pinned dates, as drishti.var.pinned (docs/guides/VAR_GUIDE.md section 26.8)
+        month-end: { back: 0, keep: disk }        # each month's last business day (back: how many; 0: off)
+        quarter-end: { back: 0, keep: disk }      # March, June, September, December
+        year-end: { back: 0, keep: disk }         # December
+        fiscal-year-end: { back: 0, keep: disk }  # the fiscal year's last business day (needs fiscal-year-end)
+        stress-window: { back: 0, keep: disk }    # exposure has no stress window: unused
+        dates: []                    # any dates the bank names (yyyy-MM-dd)
+        dates-keep: disk             # how the named dates are kept: disk or memory
+      view-cache-mb: 16              # most memory the viewers' views take; idle 1 h, released with the date
+      load-threads: 2                # threads that load dates from the lake: their own pool, never the common pool
+      version-check: ${DRISHTI_EXPOSURE_VERSION_CHECK:30s}   # an open date compares its lake version this often; moved: reloaded in the background (0: off)
+      memory-budget-gb: ${DRISHTI_EXPOSURE_MEMORY_GB:0}   # most memory one date's netting-set matrices take while it loads (0: a quarter of the heap); over it: 503 DRS-5445
+      hot-folder: ${DRISHTI_EXPOSURE_HOT_DIR:${drishti.data.dir:./data}/ccr/hot}   # the hot files, one folder per business date; never under the repository
+      tier: ${DRISHTI_EXPOSURE_TIER:mapped}   # mapped: each date a float32 hot file, memory-mapped; heap: float64 on the heap
+      disk-dates: 60                 # hot files kept on disk (least recently used beyond are deleted, unless the retention keeps them)
+      max-disk-gb: ${DRISHTI_EXPOSURE_MAX_DISK_GB:0}   # most disk the hot files take; 0: a quarter of the disk; it wins over the retention (PO-3)
+      keep-on-shutdown: ${DRISHTI_EXPOSURE_KEEP_HOT_FILES:false}   # false: deleted at shutdown; the server images set true (PO-10)
+      close-grace-seconds: 60        # an evicted date stays mapped this long for the requests still reading it
+      max-scope-netting-sets: 20000  # the most whole netting sets an interactive answer sums (more: 503 DRS-5443; the official capture computes it)
+      max-parts: 5000                # most parts a contribution table computes at once
+      histogram-bins: 42             # bins of an exposure distribution
+      t0-tolerance: 0.10             # a trade's paths' mean at the first grid date is listed when it departs from its MtM today by more (or 5% of notional)
+      kinds:                         # the kinds the engine reads (the counterparty-risk pack's, the core pack's and the market-risk pack's hierarchies)
+        run: simulation-run  # the kind of the simulation runs (a data-load signal of it reloads that date)
+        paths: exposure-path  # the kind of the per-trade exposure paths
+        netting-set: netting-set  # the kind of the netting sets
+        csa: csa  # the kind of the credit support annexes
+        collateral: collateral-balance  # the kind of the collateral balances
+        counterparty: counterparty  # the kind of the counterparties (the core pack's)
+        group: counterparty-group  # the kind of the counterparty groups
+        hierarchy: risk-hierarchy  # the kind of the risk hierarchies (the market-risk pack's)
+        limit: credit-limit          # the stored credit limits, read as stored (the explorer's limit column; LIM stays parked)
+      access: {}                     # per role, per counterparty, group or legal entity: trades | aggregate | none (drishti.ccr.exposure.access.<role>[CP-ALDERSHOT]=aggregate)
+      official:                      # the official end-of-day captures (docs/guides/EXPOSURE_GUIDE.md section 20)
+        enabled: ${DRISHTI_EXPOSURE_OFFICIAL:true}   # capture every netting set, counterparty, group and hierarchy node when a date's run is complete
+        publish: true                # also append them to <root>/risk-results/exposure-official and exposure-official-cpty (append-only)
+        root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # a folder or s3://bucket/prefix
+        format: ${DRISHTI_EXPOSURE_OFFICIAL_FORMAT:delta}   # delta or iceberg; BI's exposure-results connector follows it
+        storage: {}                  # the s3.* settings for an s3:// root, as drishti.var.official.storage
+        retention-years: 7           # the published tables keep their log and removed files (time travel) this long
+        on-start: true               # at start, capture the newest date when it has no official record yet
+        jsonl: true                  # also write each published date as JSON Lines: <root>/risk-results/jsonl/<table>/<date>/
+      retention:                     # what is kept how long (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26)
+        trade-paths-days: 20         # full trade paths: the last 20 business dates ...
+        trade-paths-month-end-years: 1   # ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond)
+        set-matrices-years: 1        # netting-set matrices (the hot files): every date for a year ...
+        set-matrices-month-end-years: 7  # ... and each month-end for seven
+        statistics-years: 7          # the official records (statistics per set, counterparty, group and node): every date, seven years
+        trade-contributions-years: 7 # every trade's EE contributions per primary date: every date, seven years

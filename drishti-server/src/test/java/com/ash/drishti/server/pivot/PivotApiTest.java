@@ -89,11 +89,19 @@ class PivotApiTest {
         return out;
     }
 
+    /** A number field, preferring one that is not money (a money total over several currencies is refused, PIVOT_GUIDE.md section 4). */
     private String numberField(JsonNode catalogue) {
+        String money = null;
         for (JsonNode f : catalogue.path("fields")) {
             if ("number".equals(f.path("type").asText()) && !"dv01".equals(f.path("name").asText())) {
-                return f.path("name").asText();
+                if (!"money".equals(f.path("unit").asText())) {
+                    return f.path("name").asText();
+                }
+                money = money == null ? f.path("name").asText() : money;
             }
+        }
+        if (money != null) {
+            return money;
         }
         throw new AssertionError("no number field in " + catalogue);
     }
@@ -124,15 +132,21 @@ class PivotApiTest {
         for (Map.Entry<String, double[]> e : naive.entrySet()) {
             JsonNode cell = a.path("cells").path("productType=" + e.getKey() + "|*");
             assertThat(cell.isMissingNode()).as(e.getKey()).isFalse();
-            assertThat(cell.path("values").path("S").asDouble()).as(e.getKey()).isCloseTo(e.getValue()[0],
-                    org.assertj.core.data.Offset.offset(Math.max(1e-6, Math.abs(e.getValue()[0]) * 1e-9)));
+            if (cell.path("notes").path("S").isMissingNode()) {          // a money figure over several currencies says so instead
+                assertThat(cell.path("values").path("S").asDouble()).as(e.getKey()).isCloseTo(e.getValue()[0],
+                        org.assertj.core.data.Offset.offset(Math.max(1e-6, Math.abs(e.getValue()[0]) * 1e-9)));
+            } else {
+                assertThat(cell.path("notes").path("S").asText()).startsWith("mixed currencies");
+            }
             assertThat(cell.path("values").path("N").asDouble()).isEqualTo(e.getValue()[1]);
             total += e.getValue()[0];
             count += e.getValue()[1];
         }
         assertThat(a.path("cells").path("*|*").path("values").path("N").asDouble()).isEqualTo(count);
-        assertThat(a.path("cells").path("*|*").path("values").path("S").asDouble()).isCloseTo(total,
-                org.assertj.core.data.Offset.offset(Math.max(1e-6, Math.abs(total) * 1e-9)));
+        if (a.path("cells").path("*|*").path("notes").path("S").isMissingNode()) {
+            assertThat(a.path("cells").path("*|*").path("values").path("S").asDouble()).isCloseTo(total,
+                    org.assertj.core.data.Offset.offset(Math.max(1e-6, Math.abs(total) * 1e-9)));
+        }
         // a masked field: refused as a dimension and as an input, before anything is read
         call("trades-only", post("/api/v1/pivot/query"), Map.of("source", "trade", "rows", List.of("dv01"), "values", List.of("count()")), 403);
         call("trades-only", post("/api/v1/pivot/query"), Map.of("source", "trade", "rows", List.of("productType"), "values",

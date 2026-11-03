@@ -72,20 +72,24 @@ public class PivotController {
     private final AuditLog audit;
     private final EditionCommands edition;
     private final boolean enabled;
+    private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines;
 
     public PivotController(PivotCore core, PivotViews views, PivotProperties props, AuditLog audit, EditionCommands edition,
-            @Value("${drishti.pivot.enabled:true}") boolean enabled) {
+            @Value("${drishti.engines.pivot.enabled:${drishti.pivot.enabled:true}}") boolean enabled,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         this.core = core;
         this.views = views;
         this.props = props;
         this.audit = audit;
         this.edition = edition;
         this.enabled = enabled;
+        this.engines = engines;
     }
 
     private Viewer on(Principal p) {
-        if (!enabled) {
-            throw new DrishtiException(ErrorCode.PIVOT_OFF, "the pivot engine is switched off on this server (drishti.pivot.enabled)");
+        com.ash.drishti.server.engines.EngineRegistry reg = engines.getIfAvailable();
+        if (reg != null ? reg.known("pivot") && !reg.running("pivot") : !enabled) {
+            throw new DrishtiException(ErrorCode.PIVOT_OFF, "the pivot engine is switched off on this server (config/engines/pivot.yaml, drishti.engines.pivot.enabled)");
         }
         if (edition != null && !edition.edition().wordOn(WORD)) {
             throw new DrishtiException(ErrorCode.PIVOT_OFF, "PIVOT is not part of the edition '" + edition.edition().name() + "'");

@@ -17,7 +17,7 @@
    list and its four zones (Filters, Columns, Rows, Values) on the right; the grid with nested rows opened lazily with + and −, ≈ and exact
    markers, the provenance popover of a cell; the scan-estimate bar above; a chart of the selection below (a non-additive measure is never
    stacked); the Export menu (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). A shell:
-   pivot-core.js (the grid) and pivot-screen.js (the screen) fill it from /api/pivot-engine/...; every figure is the server's. #}
+   pivot-core.js (the grid) and pivot.js (the screen) fill it from /api/pivot/...; every figure is the server's. #}
 {% extends "base.html" %}
 {% block title %}Pivot{% if source %} · {{ source }}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
@@ -25,7 +25,7 @@
 {% block head %}<link rel="stylesheet" href="/static/css/pivot-screen.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="pv" data-pivot data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}">
+<div class="pv" data-pivot-screen data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}">
   <div class="pv-head">
     <h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
       <span data-pv-title>{{ view_id or source or 'choose a table' }}</span></h1>
@@ -87,4 +87,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-core.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-screen.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-core.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script>{% endblock %}

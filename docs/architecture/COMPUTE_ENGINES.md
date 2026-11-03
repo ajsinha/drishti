@@ -15,8 +15,9 @@
 -->
 # Compute engines on or off, each with its own configuration file
 
-Status: design, not built. The plan's row is [2.9.11 row 14](IMPLEMENTATION_PLAN.md#2911-sensitivities-and-market-risk-capital-proposed);
-the screen is chosen from three mock-ups ([section 15](#15-mock-ups-admin--engines)) by the product owner before the build.
+Status: built (2.9.11 row 14, [the plan](IMPLEMENTATION_PLAN.md#2911-sensitivities-and-market-risk-capital-released-2026-11-02)); mock-up A, with C as
+its Cluster tab. How it was built, and where it differs from the text below, is [section 17](#17-as-built). The administrator's guide is
+[OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off).
 
 Companion to [EDITIONS.md](../admin/EDITIONS.md) (editions and lenses: what people may see), [USER_MANAGEMENT.md, Functions](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)
 (a command switched off for everyone), [OPERATIONS.md section 18](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)
@@ -47,6 +48,7 @@ their own config yaml file and main application.yaml should refer to these, else
 - [14. Build checklist](#14-build-checklist)
 - [15. Mock-ups: Admin → Engines](#15-mock-ups-admin--engines)
 - [16. Decisions](#16-decisions)
+- [17. As built](#17-as-built)
 
 ## 1. The idea in one page
 
@@ -92,7 +94,8 @@ settings.
 | `simm` | ISDA SIMM initial margin per netting set and regime, its playground | `simm.yaml` | `drishti.simm.*` (new) | `SIMM`, `PLAY SIMM`; the netting set page's IM panel | `sensitivities` | `exposure` (IM in the exposure page's collateral) |
 | `sa-ccr` | SA-CCR exposure at default, its playground | `sa-ccr.yaml` | `drishti.ccr.saccr.*` | `SACCR`, `PLAY SACCR`; the SA-CCR page; BI `counterparty-saccr-*` | none | |
 | `fva` | funding cost and benefit (the xVA engine; CVA and DVA join later), its playground | `fva.yaml` | `drishti.ccr.fva.*` | `FVA`, `PLAY FVA`; FVA on the netting set and counterparty pages | `exposure` | |
-| `mr-cube` | the market-risk cube (pivot, ladders, heat map, explain the move) | `mr-cube.yaml` | `drishti.cube.mr.*` (new) | the MR Cube lens, `/mcube`, its landing and chips | `var` | `sensitivities` (ladders, heat map), `frtb-sa` (the capital measure chip) |
+| `pivot` | the pivot engine: any table or VaR as a pivot, nested rows opened lazily, totals from their own members, exports ([PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md)) | `pivot.yaml` | `drishti.pivot.*` (its old switch name `drishti.pivot.enabled` still works and still hides the Pivot tab) | `PIVOT`, Views → Pivot, Pivot on a Data view table, `drishti.py pivot` | none | `var` (the `var` source) |
+| `mr-cube` | the market-risk cube (pivot, ladders, heat map, explain the move) | `mr-cube.yaml` | `drishti.cube.mr.*` (new) | the MR Cube lens, `/mcube`, its landing and chips | `var`, `pivot` | `sensitivities` (ladders, heat map), `frtb-sa` (the capital measure chip) |
 | `ccr-cube` | the counterparty cube (limit board, allocation, group roll-up, pre-deal overlay) | `ccr-cube.yaml` | `drishti.cube.ccr.*` (new) | the CCR Cube lens, `/ccube`, its landing and chips | `exposure` | `sa-ccr` (the EAD chip, incremental EAD tile), `fva` (the FVA chip and tile) |
 | `memory-lake` | Delta tables held in memory only, with their replenish jobs | `memory-lake.yaml` | `drishti.lake.memory.*` | Admin → Lakes' Memory tab, `drishti.py lake memory`, `mem://` stores | none | |
 
@@ -504,6 +507,27 @@ The mock-up is picked by the product owner before the build.
 | 5 | Regulatory VaR (backtesting, reports, sign-off) as part of `var`, or an engine of its own? | **Part of `var`** for now: it reads only VaR's official records; split when a node needs one without the other |
 
 **All decided by the product owner on 2026-11-02, as recommended; mock-up A picked** ([section 15](#15-mock-ups-admin--engines)).
+
+## 17. As built
+
+| Part | Where | Notes |
+|---|---|---|
+| The catalogue | `drishti-server/src/main/resources/engines/catalogue.yaml`; the console's copy `drishti-console/config/engines.yaml` (same bytes, `EngineCatalogueTest`) | ten entries; `installed: false` for SA-CCR, FVA and the two cubes, whose build adds a `ComputeEngine` bean and flips the flag; the console's paths per engine are its `console:` list (`=/play` is that path only); the longest API prefix wins (`/api/v1/sensitivities` is the sensitivities', not FRTB-SA's) |
+| The files | `config/engines/*.yaml` and `drishti-server/src/main/resources/engines/*.yaml`, imported by `application.yaml` (jar copy, then the site's) | `drishti.engines.{dir, drain, watch-seconds}` stay in `application.yaml`; `drishti.frtb.sensitivity-kind`, `factor-kind`, `cache-minutes` read `drishti.sensitivities.*` through a lowest-precedence alias layer (`EngineKeyAliases`) |
+| Switch and source | `EngineSwitches` | reads Spring's own sources in order; an old name set above the shipped files decides (DRS-1024 logged once); the in-memory lake on when its stores are in the old place; an edition's presets sit above the engine files (`EditionEnvironmentPostProcessor`) |
+| Lifecycle | `ComputeEngine`, `BasicEngine`, `EngineRegistry` | each engine's configuration makes one `BasicEngine` bean (VaR, exposure, sensitivities, FRTB-SA, SIMM, the in-memory lake); the registry finds every `ComputeEngine` bean, so an engine still to come registers by itself. The services keep their beans; their open dates, caches and answers are created on first use and released by `stop` (the Admin, Caches purge of the engine); each service asks the registry before any work and refuses with `EngineOffException` (404 DRS-1020). The in-memory lake off at start is built with no store |
+| The API gate and routing | `EngineGateFilter` (filter order 4, after the caller is known), `EngineCluster` | counts the requests in flight per engine (the drain); not running here: forwarded to the least loaded peer whose digest says it runs the engine (`RunCluster.call`, signed, on behalf of the caller; `X-Drishti-Engine-Node`), else 404 |
+| The digest | the capability digest's `services` map, entry `engines` (`var:running,frtb-sa:off,...`) | no change to the digest's shape, so an older peer reads it; a change announces a new hash at once |
+| About | `/public/about` (what the console polls) and `/api/v1/about` both carry `engines: [{id, title, here, cluster}]` | the console learns it with the edition (`core/engines.py`, `Editions.learn`), and again at once after a change made on Admin → Engines |
+| The console | `core/engines.py`: `engine_available`, `word_hidden`, `typed_engine`, `path_engine`, `menu_hidden`, `help_hidden`, `tile_hidden`, `lens_hidden` | wired into `Edition.word_on`, `command_shown` and `typed_shown` (so FUNC, type-ahead, Home cards and chips follow), the route gate (`core/edition_gate.py`), the menus (`requires: engine:<id>` and the catalogue's `menus:`), Help (`help.yaml engine:` and the catalogue's `help:`), the lens links and `/go` (DRS-1020 in the server's words) |
+| BI | `EditionBi.engines(...)` | a dataset or model whose name starts with an engine's `bi:` prefix, and every item on it, is not offered while the engine runs nowhere |
+| Admin → Engines | `routes/admin_engines_routes.py`, `templates/admin/engines.html`, `static/js/admin-engines.js`, `static/css/admin-engines.css` | mock-up A; the Cluster tab is C's matrix; History below the table and as a tab |
+| The command line | `tools/enginescli.py` | `server engines` and `admin engines`; `problem_error` maps DRS-1020 to exit 3 for every command |
+| Not built here | | the admission check on an engine coming on (DRS-9502) and AI tools per engine wait for their consumers; "saved things that read its kinds" on the impact answer lists the engines that need or use it and the nodes that still run it, not yet the saved BI reports and monitors |
+
+Tests: `EngineCatalogueTest`, `EngineFilesTest`, `EngineRegistryTest`, `EngineApiTest` (a whole server), `EngineClusterTest` (two
+members), `EditionWorldServerTest` (an edition's `var: off`); `tests/test_engine_off_everywhere.py` (generated from the catalogue),
+`tests/test_engines_browser.py` (the page, with the guide's screenshots), `tools/test_enginescli.py`.
 
 ---
 

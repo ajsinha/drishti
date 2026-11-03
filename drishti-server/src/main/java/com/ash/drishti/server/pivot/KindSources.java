@@ -55,12 +55,15 @@ public final class KindSources implements TabularSource.Resolver {
     private final Entitlements entitlements;
     private final EditionCommands edition;
     private final PivotProperties props;
+    private final com.ash.drishti.engine.search.SearchProperties search;
     /** Staged table name to its row count, in least-recently-used order. */
     private final Map<String, Long> staged = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
     private volatile DuckDbExecutor exec;
 
-    public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props) {
+    public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props,
+            com.ash.drishti.engine.search.SearchProperties search) {
+        this.search = search;
         this.data = data;
         this.router = router;
         this.entitlements = entitlements;
@@ -107,6 +110,29 @@ public final class KindSources implements TabularSource.Resolver {
         return "string";
     }
 
+    /**
+     * What a column's values are (PIVOT_ENGINE.md section 5.4), from its contract type and name: an {@code amount} is money in the row's
+     * currency, a {@code rate} or a name ending {@code _PCT} or {@code PERCENT} is never summed, a text column named {@code CURRENCY},
+     * {@code CCY} or ending {@code _CCY} or {@code _CURRENCY} holds the row's currency.
+     */
+    static String unit(DataViewService.Column c) {
+        String t = c.type() == null ? "" : c.type().toLowerCase(Locale.ROOT);
+        String n = c.name().toUpperCase(Locale.ROOT);
+        if ("amount".equals(t)) {
+            return "money";
+        }
+        if ("rate".equals(t)) {
+            return "rate";
+        }
+        if (n.endsWith("_PCT") || n.endsWith("PERCENT")) {
+            return "pct";
+        }
+        if (!NUMBER.contains(t) && (n.equals("CURRENCY") || n.equals("CCY") || n.endsWith("_CCY") || n.endsWith("_CURRENCY"))) {
+            return "currency";
+        }
+        return "";
+    }
+
     @Override
     public TabularSource open(Viewer v, String source, String date) {
         Principal p = principal(v);
@@ -122,7 +148,7 @@ public final class KindSources implements TabularSource.Resolver {
                 continue;
             }
             fields.add(new PivotProvider.Field(c.name(), type(c), c.name().toLowerCase(Locale.ROOT).replace('_', ' '),
-                    c.description() == null ? "" : c.description()));
+                    c.description() == null ? "" : c.description(), unit(c)));
         }
         String version;
         try {
@@ -135,7 +161,43 @@ public final class KindSources implements TabularSource.Resolver {
         String table = "pv_" + Integer.toHexString((source + "|" + fullVersion).hashCode()).replace('-', 'n');
         List<String> dates = d.dated() ? data.dates(source).stream().map(LocalDate::toString).toList() : List.of();
         boolean memoryOnly = com.ash.drishti.server.memlake.Retention.current().memoryOnly(source);
-        return new Kind(d, day, fields, maskedNames.size(), fullVersion, table, dates, memoryOnly, p);
+        com.ash.drishti.api.LakeFiles lake = memoryOnly ? null : lake(d, day, fields, p);
+        long estimate = -1;
+        if (lake == null) {
+            try {
+                estimate = router.rowEstimate(source, day).map(com.ash.drishti.api.RowEstimate::rows).orElse(-1L);
+            } catch (RuntimeException e) {
+                estimate = -1;
+            }
+        }
+        return new Kind(d, day, fields, maskedNames.size(), fullVersion, table, dates, memoryOnly, p, lake, estimate);
+    }
+
+    /**
+     * The direct lake route (PIVOT_ENGINE.md section 6.2): the date's Parquet files when the kind's one source can hand them over and every
+     * field the person may use is a column of them; masks are then applied as columns not read (a masked column is not in the relation),
+     * unless masking also changes values inside other fields ({@link Entitlements#masksValues}), when the rows go through the Data view's
+     * read one by one. Null: the staged route.
+     */
+    private com.ash.drishti.api.LakeFiles lake(DataViewService.Dataset d, LocalDate day, List<PivotProvider.Field> fields, Principal p) {
+        if (entitlements.masksValues(p)) {
+            return null;
+        }
+        java.util.Optional<com.ash.drishti.api.LakeFiles> f;
+        try {
+            f = router.lakeFiles(d.kind(), day == null ? com.ash.drishti.api.AsOf.LATEST : com.ash.drishti.api.AsOf.of(day));
+        } catch (RuntimeException e) {
+            return null;
+        }
+        if (f.isEmpty() || f.get().files().isEmpty()) {
+            return null;
+        }
+        for (PivotProvider.Field field : fields) {
+            if (!f.get().columns().containsKey(field.name()) && !field.name().equals(d.key())) {
+                return null;                                   // a field that is not a column: the connector's read builds it
+            }
+        }
+        return f.get();
     }
 
     /** The day to read: the one asked (one the dataset holds), else its latest; null for an undated dataset. */
@@ -171,9 +233,13 @@ public final class KindSources implements TabularSource.Resolver {
         final List<String> dates;
         final boolean memoryOnly;
         final Principal p;
+        final com.ash.drishti.api.LakeFiles lake;
+        final long estimate;
 
         Kind(DataViewService.Dataset d, LocalDate day, List<PivotProvider.Field> fields, int masked, String version, String table,
-                List<String> dates, boolean memoryOnly, Principal p) {
+                List<String> dates, boolean memoryOnly, Principal p, com.ash.drishti.api.LakeFiles lake, long estimate) {
+            this.lake = lake;
+            this.estimate = estimate;
             this.d = d;
             this.day = day;
             this.fields = fields;
@@ -222,12 +288,18 @@ public final class KindSources implements TabularSource.Resolver {
 
         @Override
         public long rows() {
+            if (lake != null) {
+                return lake.rows();
+            }
             Long n = staged.get(table);
-            return n == null ? -1 : n;
+            return n == null ? estimate : n;
         }
 
         @Override
         public long bytes() {
+            if (lake != null) {
+                return lake.bytes();
+            }
             long r = rows();
             return r < 0 ? -1 : r * Math.max(1, fields.size()) * 12L;
         }
@@ -235,17 +307,26 @@ public final class KindSources implements TabularSource.Resolver {
         @Override
         public Map<String, Object> notes() {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("route", "read through the " + d.format() + " connector (" + d.connector() + ") for you, staged in the pivot executor's DuckDB "
+            m.put("route", lake != null ? "read directly from the " + lake.format() + " table's " + lake.files().size() + " Parquet file(s) of "
+                    + lake.businessDate() + " by the pivot executor's DuckDB: only the columns the view needs, row groups skipped by their statistics"
+                    : "read through the " + d.format() + " connector (" + d.connector() + ") for you, staged in the pivot executor's DuckDB "
                     + "in memory" + (memoryOnly ? "; memory-only data, never written to a disk" : ""));
             m.put("pack", d.pack());
             m.put("masks", masked == 0 ? "none" : masked + " column(s) masked for you: not read, not usable");
             m.put("rowRules", "the Data view's: you see the rows of " + d.kind() + " your role may open");
+            Map<String, Object> dv = defaultView(d.kind(), date());
+            if (dv != null) {
+                m.put("defaultView", dv);
+            }
             return m;
         }
 
         @Override
         public Relation relation(DuckDbExecutor e) {
             exec = e;
+            if (lake != null) {
+                return lakeRelation();
+            }
             Object lock = locks.computeIfAbsent(table, k -> new Object());
             synchronized (lock) {
                 if (!staged.containsKey(table) || !e.exists(table)) {
@@ -254,6 +335,21 @@ public final class KindSources implements TabularSource.Resolver {
                 staged.get(table);
             }
             return new Relation(DuckDbExecutor.quote(table), List.of(), null, List.of());
+        }
+
+        /**
+         * The date's Parquet files as the relation: each field the person may use under its own name, masked columns never named (so never
+         * read); DuckDB reads only the columns a statement uses and skips row groups by their statistics.
+         */
+        private Relation lakeRelation() {
+            List<String> cols = new ArrayList<>();
+            for (PivotProvider.Field f : fields) {
+                String phys = f.name().equals(d.key()) && !lake.columns().containsKey(f.name()) ? lake.idColumn() : lake.columns().get(f.name());
+                cols.add(DuckDbExecutor.quote(phys) + " AS " + DuckDbExecutor.quote(f.name()));
+            }
+            List<String> files = lake.files().stream().map(x -> "'" + x.replace("'", "''") + "'").toList();
+            return new Relation("(SELECT " + (cols.isEmpty() ? "1 AS \"_\"" : String.join(", ", cols)) + " FROM read_parquet([" + String.join(", ", files)
+                    + "], union_by_name = true))", List.of(), null, List.of());
         }
 
         private void stage(DuckDbExecutor e) {
@@ -296,6 +392,34 @@ public final class KindSources implements TabularSource.Resolver {
                     }
                 }
             }
+        }
+    }
+
+    /** Drops every staged table (the engine switched off). */
+    public void release(DuckDbExecutor e) {
+        List<String> names;
+        synchronized (staged) {
+            names = new ArrayList<>(staged.keySet());
+            staged.clear();
+        }
+        for (String t : names) {
+            try {
+                e.drop(t);
+            } catch (RuntimeException ex) {
+                // already gone
+            }
+        }
+    }
+
+    /** The view a kind opens with: its pack's {@code pivot:} arrangement (what the search results' Pivot offered), or null. */
+    Map<String, Object> defaultView(String kind, String date) {
+        if (search == null) {
+            return null;
+        }
+        try {
+            return search.pivotOf(kind).map(spec -> SpecViews.view(kind, date, spec.arrangementMap())).orElse(null);
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

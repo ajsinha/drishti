@@ -34,6 +34,8 @@ from typing import Any
 
 import yaml
 
+from core import engines as _engines
+
 LOG = logging.getLogger("drishti.console.edition")
 LENS_HEADER = "X-Drishti-Lens"                       # the server's EditionContext.HEADER: the person's lens, on every backend call
 _lens: contextvars.ContextVar[str | None] = contextvars.ContextVar("drishti_lens", default=None)
@@ -43,7 +45,7 @@ WORDS = ("BI", "RUPAKA", "FORM", "FUNC", "WHAT", "DATAMAP", "DATA", "VAR", "EXP"
 # The console pages each reserved word, console word and feature opens: hidden ones answer 404 (core/edition_gate.py).
 WORD_PATHS = {"BI": ("/bi",), "FORM": ("/forms", "/form/"), "FUNC": ("/func",), "WHAT": ("/what",), "DATAMAP": ("/datamap",), "DATA": ("/data", "/api/data/"),
               "VAR": ("/var", "/api/var/", "/admin/scopes"), "EXP": ("/exposure", "/api/exposure/"), "SMAT": ("/smat", "/api/smat/"),
-              "PLAY": ("/play", "/api/play/"), "PIVOT": ("/pivot", "/api/pivot-engine/", "/api/pivot-engine-export")}
+              "PLAY": ("/play", "/api/play/"), "PIVOT": ("/pivot", "/api/pivot/")}
 FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "datamap": ("/datamap",), "data": ("/data", "/api/data/"), "workspaces": ("/w",),
                  "monitors": ("/m",), "alerts": ("/alerts",), "build": ("/build", "/review/"), "calc": ("/calc",), "pyconsole": ("/pyconsole",),
                  "studio": ("/studio",), "reports": ("/reports",), "lakes": ("/admin/lakes", "/admin/api/lakes"),
@@ -52,7 +54,7 @@ FEATURE_PATHS = {"bi": ("/bi", "/admin/bi"), "forms": ("/forms", "/form/"), "dat
 # hides them through admin.pages.)
 # Admin pages by id (the edition's admin.pages); the path prefix each owns
 ADMIN_PAGES = ("users", "roles", "packs", "commands", "tokens", "access", "connectors", "artifacts", "ai", "loads", "lakes", "collab",
-               "embedding", "bi", "audit", "net", "edits", "compute", "health", "caches", "capacity", "scopes")
+               "embedding", "bi", "audit", "net", "edits", "compute", "engines", "health", "caches", "capacity", "scopes")
 
 
 # The landings' page (EDITIONS.md › The design as built, section 7): each edition names its own (home.template, home.titles); a file that names none keeps
@@ -156,16 +158,22 @@ class Edition:
         return {str(c).strip().upper() for c in allow if str(c).strip()}
 
     def command_shown(self, code: str | None) -> bool:
+        if code and _engines.word_hidden(code):                  # a word of a compute engine that runs nowhere (COMPUTE_ENGINES.md 5.2)
+            return False
         allow = self.commands() if self.active else set()
         return not allow or not code or code.strip().upper() in allow
 
     def typed_shown(self, text: str) -> bool:
         """Whether a command as typed (``VAR BANK``, ``VRES DESK:RATES``) is offered: a reserved or console word that is on, or a shown
         command (EXP is both: the word decides)."""
+        if _engines.typed_engine(text) is not None:               # PLAY FRTB with FRTB-SA running nowhere
+            return False
         head = str(text or "").split()[0].upper() if str(text or "").split() else ""
         return self.word_on(head) if head in WORDS else self.command_shown(head)
 
     def word_on(self, word: str) -> bool:
+        if _engines.word_hidden(word):                           # the engine runs on no server of the cluster: gone, whatever the edition
+            return False
         if not self.active:
             return True
         words = {str(k).upper(): v for k, v in (self._get("commands.words") or {}).items()}
@@ -290,6 +298,7 @@ class Editions:
         self.lenses: dict[str, Edition] = {}
         self.on_change = on_change
         self._server_brand: dict = {}
+        _engines.reset()                                         # what runs is learned from this process's server, as the edition is
 
     def default_packs(self) -> list[str]:
         """The one default pack list (config/editions/default-packs.yaml), as the server reads it from its jar."""
@@ -328,9 +337,12 @@ class Editions:
         name = str((about.get("edition") or {}).get("name") or "")
         lenses = [str(n) for n in about.get("lenses") or []] if not name else []
         brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
+        engines_changed = _engines.learn(about.get("engines"))  # the compute engines running in the cluster (COMPUTE_ENGINES.md 5.2)
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:
-            return False
+            if engines_changed and self.on_change is not None:
+                self.on_change()
+            return engines_changed
         if name != self.instance.name:
             LOG.warning("the server runs the edition %s: the console follows it", name or "(none: the full Drishti)")
         self.instance = self.load(name) if name else Edition.NONE
