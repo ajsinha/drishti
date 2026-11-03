@@ -20,8 +20,8 @@ will place jsonl, jsonl.gz, tar, tar.gz etc. files there and every file will als
 system should see how many ready files there are and ingest them using Java into Delta. If a file named `ready.all` is there it should
 ingest all files. Once a file is ingested it should be placed in the outbox along with its ready file so the system does not process the
 same file again. Design it in a robust way. Once a file has been loaded and committed to the lake the server also needs to know that
-data has moved. A separate Maven module; it can work as a thread in the server." Status: **designed, not built**; section 13 lists the
-questions with a recommendation each.*
+data has moved. A separate Maven module; it can work as a thread in the server." Status: **designed, not built**; the questions of section 13 were
+decided as recommended by the product owner (2026-11-03).*
 
 ## 1. What is reused, never rewritten
 
@@ -166,9 +166,9 @@ nothing is lost or loaded twice. Integration: a temporary data folder and lake, 
 versions, the outbox, the signal received and the connector refreshed; a three-node test where only the owner loads. Windows: the moves
 and the lock on NTFS (the Windows workflow).
 
-## 13. Questions, with recommendations
+## 13. Decisions (product owner, 2026-11-03: every recommendation accepted)
 
-| # | Question | Recommendation |
+| # | Question | Decided |
 |---|---|---|
 | D1 | `ready.all`: every data file in the inbox, even without its own `.ready`? | **Yes**, with the stability check, and `ready.all` itself moved to the outbox after the cycle |
 | D2 | The extra folders `work/`, `failed/`, `ledger/` | **Yes**: needed for crash safety, bad files and duplicates |
