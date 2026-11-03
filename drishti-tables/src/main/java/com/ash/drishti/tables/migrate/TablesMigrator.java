@@ -177,6 +177,7 @@ public final class TablesMigrator {
         // in order: version-2 datasets (one table each), then models, then version-1 datasets (a table per table and a model), so a version-1
         // original kept beside its converted form (the live samples) is the one refused for the name both give
         Map<String, String> produced = new LinkedHashMap<>();
+        Map<String, Object> producedDefs = new LinkedHashMap<>();
         for (int phase = 0; phase < 3; phase++) {
             if (phase == 1) {
                 for (Map.Entry<String, JsonNode> m : models.entrySet()) {
@@ -195,6 +196,7 @@ public final class TablesMigrator {
                         continue;
                     }
                     produced.put(rel, src);
+                    producedDefs.put(rel, def);
                     out.put(rel, ModelYaml.write(def, header(headers.get(src), src)));
                     outSource.put(rel, src);
                     newModels.add(def);
@@ -217,9 +219,23 @@ public final class TablesMigrator {
                     mine.put(TableName.BI_DOMAIN + "/" + o.model().name() + ".model.yaml", o.model());
                 }
                 String refusal = o.refusal();
+                if (refusal == null && v1 && !mine.isEmpty() && mine.keySet().stream().allMatch(produced::containsKey)) {
+                    // a version-1 original whose converted form ships beside it (the live samples, Q19): the same tables with the same
+                    // columns and the same model with the same measures are already made; nothing more is written for it
+                    String differs = mine.entrySet().stream().filter(e -> !sameShape(e.getValue(), producedDefs.get(e.getKey()))).map(Map.Entry::getKey)
+                            .findFirst().orElse(null);
+                    if (differs == null) {
+                        List<String> notes = new ArrayList<>(o.notes());
+                        notes.add("its converted form already ships (" + String.join(", ", mine.keySet().stream().map(produced::get).distinct().toList())
+                                + "): the same tables, columns and measures; nothing more to write");
+                        items.add(new Item(src, "dataset", "converted", new ArrayList<>(mine.keySet()), notes, null));
+                        continue;
+                    }
+                    refusal = differs + " is also made from " + produced.get(differs) + " and differs from it: rename one";
+                }
                 if (refusal == null) {
                     refusal = mine.keySet().stream().filter(produced::containsKey).findFirst()
-                            .map(rel -> rel + " is also made from " + produced.get(rel) + ": rename one (the converted form is kept)").orElse(null);
+                            .map(rel -> rel + " is also made from " + produced.get(rel) + ": rename one").orElse(null);
                 }
                 if (refusal != null) {
                     items.add(new Item(src, "dataset", "refused", List.of(), o.notes(), refusal));
@@ -229,6 +245,7 @@ public final class TablesMigrator {
                 for (Map.Entry<String, Object> e : mine.entrySet()) {
                     String rel = e.getKey();
                     produced.put(rel, src);
+                    producedDefs.put(rel, e.getValue());
                     outSource.put(rel, src);
                     labels.put(e.getValue(), rel);
                     if (e.getValue() instanceof TableDef t) {
@@ -304,6 +321,17 @@ public final class TablesMigrator {
             }
         }
         return written;
+    }
+
+    /** A version-1 original and the converted form of its name: tables with the same columns; the model holding every measure of the original. */
+    static boolean sameShape(Object a, Object b) {
+        if (a instanceof TableDef x && b instanceof TableDef y) {
+            return x.columns().keySet().equals(y.columns().keySet());
+        }
+        if (a instanceof ModelDef x && b instanceof ModelDef y) {
+            return y.measures().keySet().containsAll(x.measures().keySet());
+        }
+        return false;
     }
 
     /** The report in words: the counts, every item, every expression changed or refused. */
