@@ -36,7 +36,7 @@ and 12), [LAKE_CONFIG.md](LAKE_CONFIG.md), [ARROW_FLIGHT.md](ARROW_FLIGHT.md), [
 5. [The one parity proof](#5-the-one-parity-proof)
 6. [Arrow Flight, client notebooks, Help and docs](#6-arrow-flight-client-notebooks-help-and-docs)
 7. [Risks, size, order of work, drills](#7-risks-size-order-of-work-drills)
-8. [Questions for the product owner](#8-questions-for-the-product-owner)
+8. [Decisions](#8-decisions-product-owner-2026-11-03-every-recommendation-accepted-q1-decided-as-rachanas-rule)
 
 ## 1. The goal in one page
 
