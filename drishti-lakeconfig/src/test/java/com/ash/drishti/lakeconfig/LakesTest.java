@@ -135,6 +135,23 @@ class LakesTest {
     }
 
     @Test
+    void aChildProcessIsHandedTheSettingsTheLakeFilesUse() throws Exception {
+        Path lakes = Files.createDirectories(tmp.resolve("env-lakes"));
+        Files.writeString(lakes.resolve("main.yaml"), "lake: main\nroot: ${SITE_LAKE_ROOT:/x}/delta\n");
+        System.setProperty(Lakes.PROPERTY, lakes.toString());
+        Lakes.useProperties(Map.of("SITE_LAKE_ROOT", "/srv/lake", "UNRELATED", "y")::get);     // as a --setting of the server
+        try {
+            Map<String, String> env = Lakes.environment();
+            assertEquals("/srv/lake", env.get("SITE_LAKE_ROOT"));
+            assertFalse(env.containsKey("UNRELATED"));
+            assertEquals("/srv/lake/delta", Lakes.read(lakes, env::get).get("main").root());   // the child resolves it the same way
+        } finally {
+            Lakes.useProperties(null);
+            System.clearProperty(Lakes.PROPERTY);
+        }
+    }
+
+    @Test
     void anInMemoryStoreIsALake() {
         Lake l = Lakes.parse("lake: feeds\nroot: mem://feeds\nmemory:\n  max-mb: 512\n  contract: vendor-no-disk\ntables:\n  news.news: {}\n",
                 "feeds", ENV);

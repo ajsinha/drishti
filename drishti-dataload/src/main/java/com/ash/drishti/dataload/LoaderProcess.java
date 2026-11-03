@@ -179,6 +179,9 @@ public final class LoaderProcess implements LoadRunner {
             cmd.add(config.toAbsolutePath().toString());
             cmd.addAll(extra);
             ProcessBuilder pb = new ProcessBuilder(cmd).redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.appendTo(log.toFile()));
+            // the settings the lake files refer to, as this server resolves them (a DRISHTI_DELTA_ROOT given as a --setting included):
+            // the loader reads the same lake files through the same reader and lands where this server's connectors read
+            pb.environment().putAll(com.ash.drishti.lakeconfig.Lakes.environment());
             Process p = pb.start();
             running = p;
             boolean done = p.waitFor(settings.loadTimeout().toMillis(), TimeUnit.MILLISECONDS);

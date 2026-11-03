@@ -95,6 +95,50 @@ public final class Lakes {
         properties = lookup == null ? System::getenv : lookup;
     }
 
+    private static final Pattern NAMED = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)");
+
+    /**
+     * The settings the lake files refer to, with the values {@link #useProperties} gives them here: what a process started from this one
+     * (the data inbox's loader) is handed in its environment, so it resolves every lake file exactly as this process does, through the
+     * same reader, whatever was a {@code --setting} here. Only the names the files use; unset ones are left out.
+     */
+    public static Map<String, String> environment() {
+        java.util.Set<String> names = new java.util.TreeSet<>();
+        Path d = dir();
+        if (Files.isDirectory(d)) {
+            try (Stream<Path> files = Files.list(d)) {
+                for (Path f : files.filter(f -> f.getFileName().toString().endsWith(".yaml")).toList()) {
+                    Matcher m = NAMED.matcher(Files.readString(f));
+                    while (m.find()) {
+                        names.add(m.group(1));
+                    }
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException("cannot list the lake folder " + d + ": " + e.getMessage(), e);
+            }
+        }
+        for (String name : SHIPPED) {
+            try (java.io.InputStream in = Lakes.class.getClassLoader().getResourceAsStream("drishti/lakes/" + name + ".yaml")) {
+                if (in != null) {
+                    Matcher m = NAMED.matcher(new String(in.readAllBytes(), java.nio.charset.StandardCharsets.UTF_8));
+                    while (m.find()) {
+                        names.add(m.group(1));
+                    }
+                }
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
+        }
+        Map<String, String> out = new LinkedHashMap<>();
+        for (String n : names) {
+            String v = properties.apply(n);
+            if (v != null && !v.isEmpty()) {
+                out.put(n, v);
+            }
+        }
+        return out;
+    }
+
     /** The lakes of {@link #dir()} with the process's environment. */
     public static Lakes load() {
         return read(dir(), System::getenv);
