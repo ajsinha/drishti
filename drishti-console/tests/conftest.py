@@ -43,6 +43,16 @@ if not os.environ.get("DRISHTI_CONSOLE_DATA_DIR"):
     _DATA = tempfile.mkdtemp(prefix="drishti-console-tests-")
     os.environ["DRISHTI_CONSOLE_DATA_DIR"] = _DATA
     atexit.register(shutil.rmtree, _DATA, True)
+if not os.environ.get("DRISHTI_CONSOLE_TMP_DIR"):
+    # every console a test starts (in this process or as a child, whose workers a test may kill outright) keeps its temp folders in
+    # the test run's own folder, never under the repository's data/tmp/console, which the drill checks is left unchanged
+    import atexit
+    import shutil
+    import tempfile
+
+    _TMP = tempfile.mkdtemp(prefix="drishti-console-tmp-")
+    os.environ["DRISHTI_CONSOLE_TMP_DIR"] = _TMP
+    atexit.register(shutil.rmtree, _TMP, True)
 
 from core.app import create_app  # noqa: E402
 from core.backend import BackendError  # noqa: E402
