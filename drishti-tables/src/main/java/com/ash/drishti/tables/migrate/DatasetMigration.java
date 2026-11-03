@@ -271,7 +271,7 @@ final class DatasetMigration {
             return new TableDef.Source(null, null, s.path("connector").asText(null), null, null, s.path("query").asText(), map(s.path("params")), null, null, null, null);
         }
         if (s.has("sql")) {
-            notes.add("a Drishti SQL source (sql:) is a summary table over its model: converted in the switch step");
+            notes.add("a model SQL source (sql:, DSQL) is a summary table over its model: converted in the switch step");
             return null;
         }
         if (s.has("kind")) {
