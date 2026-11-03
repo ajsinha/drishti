@@ -48,7 +48,7 @@ its paragraph (`alpha` 1.4, CRE52.1; `IR.sf` 0.005, CRE52.72; `mpor-floors-days.
 **From the command line.**
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" http://localhost:18480/api/v1/saccr/parameters | jq '.regulation, .sha256, (.values | length)'
+drishti-console/.venv/bin/python tools/drishti.py saccr parameters
 ```
 
 **In YAML.** The Basel file ships in the jar (`drishti-compute/src/main/resources/saccr/saccr-bcbs.yaml`); a regulation's own file is named
@@ -76,7 +76,8 @@ binds and `CAPPED` is shown.
 **From the command line.**
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/scope?scope=EXAMPLE:S5" | jq '.selected | {EAD, CAPPED, EAD_MARGINED, EAD_UNMARGINED}'
+drishti-console/.venv/bin/python tools/drishti.py saccr show EXAMPLE:S5
+drishti-console/.venv/bin/python tools/drishti.py saccr show EXAMPLE:S5 --no-cap          # the margined EAD, not the regulatory figure
 ```
 
 **In YAML.** Nothing to configure: the cases are part of the engine (`SaccrExamples`, COUNTERPARTY_ENGINES.md section 9).
@@ -92,7 +93,7 @@ margined EAD is far below the unmargined 2,469,382,222, so the cap does not bind
 **From the command line.**
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/scope?scope=NSET:NS-ALDERSHOT-NY" | jq '.selected.formula[]'
+drishti-console/.venv/bin/python tools/drishti.py saccr show NSET:NS-ALDERSHOT-NY
 ```
 
 **In YAML.** The set's CSA terms come from the `csa` kind; C from the collateral balance:
@@ -114,8 +115,8 @@ derivatives* (securities financing only). Choose the **incomplete** filter: `NS-
 **From the command line.**
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/scope?scope=BANK" | jq '.totals'
-curl -s -o /dev/null -w '%{http_code}\n' -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/scope?scope=NS-AURORA-LDN&strict=true"   # 409 DRS-5411
+drishti-console/.venv/bin/python tools/drishti.py saccr show BANK
+drishti-console/.venv/bin/python tools/drishti.py saccr show NS-AURORA-LDN --strict          # refused: DRS-5411, one live derivative has no classification row
 ```
 
 **In YAML.** What counts as excluded rather than unclassified:
@@ -136,7 +137,8 @@ financing). Switch to **A** or **B** with the tabs: the same answer, drawn anoth
 **From the command line.**
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/scope/contributions?scope=CPTY:CP-ALDERSHOT&by=netting-set" | jq '.rows'
+drishti-console/.venv/bin/python tools/drishti.py saccr show CPTY:CP-ALDERSHOT
+drishti-console/.venv/bin/python tools/drishti.py saccr contributions CPTY:CP-ALDERSHOT --by netting-set
 ```
 
 ## Step 6 · The workbook of live formulas, a switch flipped
@@ -149,8 +151,8 @@ engine answered the original question); the add-up checks stay green.
 **From the command line.**
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" -o saccr-ldn.xlsx "http://localhost:18480/api/v1/saccr/playground.xlsx?scope=NSET:NS-ALDERSHOT-LDN"
-curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/scope?scope=NS-ALDERSHOT-LDN&irBucketOffset=false" | jq '.totals.EAD'
+drishti-console/.venv/bin/python tools/drishti.py play saccr NSET:NS-ALDERSHOT-LDN --xlsx saccr-ldn.xlsx
+drishti-console/.venv/bin/python tools/drishti.py saccr show NSET:NS-ALDERSHOT-LDN --no-ir-offset   # the server's figure with the offsets off
 ```
 
 ## Step 7 · A new trade's incremental EAD
@@ -160,11 +162,14 @@ curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/s
 **From the command line.** Add a 100m five-year USD receiver swap at market to NS-ALDERSHOT-NY:
 
 ```bash
-curl -s -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -X POST http://localhost:18480/api/v1/saccr/what-if -d '{
-  "nettingSet": "NS-ALDERSHOT-NY",
-  "candidates": [{"ASSET_CLASS": "IR", "HEDGING_SET": "USD", "TRANSACTION_TYPE": "LINEAR", "DIRECTION": "SHORT", "NOTIONAL_USD": 100000000,
-                  "START_DATE": "2026-09-30", "END_DATE": "2031-09-30", "MATURITY_DATE": "2031-09-30", "MTM": 0}]}' | jq '{eadBefore, eadAfter, incrementalEad}'
+cat > new-swap.json <<'JSON'
+{"ASSET_CLASS": "IR", "HEDGING_SET": "USD", "TRANSACTION_TYPE": "LINEAR", "DIRECTION": "SHORT", "NOTIONAL_USD": 100000000,
+ "START_DATE": "2026-09-30", "END_DATE": "2031-09-30", "MATURITY_DATE": "2031-09-30", "MTM": 0}
+JSON
+drishti-console/.venv/bin/python tools/drishti.py saccr what-if NS-ALDERSHOT-NY --candidates new-swap.json
 ```
+
+The same through the API: `POST /api/v1/saccr/what-if` with `{"nettingSet": "NS-ALDERSHOT-NY", "candidates": [<the row>]}`.
 
 The answer gives EAD, RC, PFE and the multiplier before and after, and each hedging set's add-on before and after: where the set is long USD
 rates the receiver swap offsets and the USD add-on falls, and the answer shows by how much. Nothing is stored.

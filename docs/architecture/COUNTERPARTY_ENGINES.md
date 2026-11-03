@@ -942,10 +942,10 @@ Built in 2.9.12 as designed in sections 3, 8.1, 9 and 11.1, with these choices m
 | Members | the trade valuations of a live status not past maturity (the exposure engine's rule); V over the classified members; a member without a row is *excluded* (configured non-derivative product groups and types) or *unclassified* |
 | Sets without derivatives | `no derivatives`: EAD 0 (their collateral belongs to their other trades); the demo has 38 such sets of 76 (securities financing only) |
 | Kinds | input `saccr-trade` (exposure-store, risk domain); computed `saccr-result` (mnemonic `SACCR`, reactive connector `saccr-engine`, `SaccrResultEngine`); the stored `sa-ccr` retired with its Sutra, contract, samples and snippet |
-| Screens | one page, views A (default), B and C over `GET /api/v1/saccr/scope` (section 12); `PLAY SACCR` on the VaR Playground's frame |
+| Screens | one page, views A (default), B and C over `GET /api/v1/saccr/scope` (section 12); `PLAY SACCR` on the VaR Playground's frame; `drishti.py saccr` and `play saccr` |
 | Playground | Main, Config, Data, Trades, Hedging sets, Explain, Provenance (section 8.1); `NORMSDIST` (not `NORM.S.DIST`: no `_xlfn.` prefix in the file), `LN`, `SUMIFS`, `COUNTIFS`; Data holds the times in years as the engine read them |
 | Tests | cases S1 to S7 and SACCR.md section 15 to the cent; every demo set against `saccrmath.py`; the workbook recalculated by LibreOffice; the BCBS 279 Annex 4 sets in the engine but skipped until their inputs are checked against the publication (section 9, case S8) |
-| Not built | official captures (`saccr-official`, SACCR.md section 9.5), a CLI, alpha overrides and per-counterparty risk weights, OSFI's file |
+| Not built | official captures (`saccr-official`, SACCR.md section 9.5), alpha overrides and per-counterparty risk weights, OSFI's file |
 
 ---
 

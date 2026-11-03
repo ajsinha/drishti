@@ -34,7 +34,7 @@ design behind it is [COUNTERPARTY_ENGINES.md section 3](../architecture/COUNTERP
 - [6. Scopes, the what-if and a trade alone](#6-scopes-the-what-if-and-a-trade-alone)
 - [7. The SA-CCR page: views A, B and C](#7-the-sa-ccr-page-views-a-b-and-c)
 - [8. The SA-CCR Playground (PLAY SACCR)](#8-the-sa-ccr-playground-play-saccr)
-- [9. API and settings](#9-api-and-settings)
+- [9. API, command line and settings](#9-api-command-line-and-settings)
 - [10. The hand-built cases](#10-the-hand-built-cases)
 - [11. Refusals and error codes](#11-refusals-and-error-codes)
 - [12. What is not built yet](#12-what-is-not-built-yet)
@@ -224,7 +224,7 @@ engine to the cent. The playground holds up to 20 sets of a counterparty side by
 (`drishti.ccr.saccr.max-sets`, `max-trades`); the browser grid shows up to 500 rows. `GET /api/v1/saccr/playground/template` is the
 workbook of the hand-built cases.
 
-## 9. API and settings
+## 9. API, command line and settings
 
 | Method and path | Answer |
 |---|---|
@@ -241,6 +241,10 @@ curl -s -H "Authorization: Bearer $TOKEN" "http://localhost:18480/api/v1/saccr/s
 curl -s -H "Authorization: Bearer $TOKEN" -H 'Content-Type: application/json' -X POST http://localhost:18480/api/v1/saccr/what-if \
   -d '{"nettingSet":"NS-ALDERSHOT-NY","candidates":[{"ASSET_CLASS":"IR","HEDGING_SET":"USD","TRANSACTION_TYPE":"LINEAR","DIRECTION":"SHORT","NOTIONAL_USD":100000000,"START_DATE":"2026-09-30","END_DATE":"2031-09-30","MATURITY_DATE":"2031-09-30","MTM":0}]}' | jq '.incrementalEad'
 ```
+
+From the command line (`tools/saccrcli.py`, [TOOLS.md section 5.15a](TOOLS.md#515a-saccr-and-play-saccr)): `drishti.py saccr show SCOPE`,
+`saccr contributions SCOPE --by …`, `saccr trade TRADE-ID`, `saccr what-if NETTING-SET --candidates FILE.json`, `saccr parameters`,
+`play saccr SCOPE --xlsx FILE`.
 
 The settings are `drishti.ccr.saccr.*` in [config/engines/sa-ccr.yaml](../../config/engines/sa-ccr.yaml) (every key in
 [CONFIGURATION.md](../admin/CONFIGURATION.md)); the engine's switch is `drishti.engines.sa-ccr.enabled` (Admin → Engines; off, every
@@ -284,7 +288,6 @@ each input is checked against the publication.
 
 - The official captures (`saccr-official`, `saccr-official-cpty`, SACCR.md section 9.5) and the `saccr-result` kind in BI; the CCR cube's
   EAD measure reads this engine when the cube is built.
-- A command-line `drishti.py saccr`; the API and the console cover every answer today.
 - OSFI CAR chapter 4's parameter file (next), then the US and EU variants when a client asks.
 - Per-counterparty alpha overrides and risk weights for the RWA hook (one configured risk weight today).
 

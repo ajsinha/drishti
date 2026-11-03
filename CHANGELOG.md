@@ -53,6 +53,7 @@
   cent in the engine and through the service (`SaccrDemoParityTest`, `SaccrServiceTest`); the workbook recalculated by LibreOffice
   (`SaccrPlaygroundWorkbookTest`). The Basel Committee's Annex 4 netting sets (BCBS 279) are in the engine but skipped: their inputs are
   not yet checked against the publication.
+- **The command line:** `drishti.py saccr show|contributions|trade|what-if|parameters` and `play saccr` (TOOLS.md 5.15a).
 - **Docs:** the SA-CCR guide and tutorial 34, a Help pair; SACCR.md, COUNTERPARTY_ENGINES.md ("As built"), CONFIGURATION.md, the API guide.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)

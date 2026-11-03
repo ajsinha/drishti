@@ -361,7 +361,7 @@ classes → hedging sets → sub-keys → trades (drill: each level shows its ad
 | `BY_NETTING_SET` | record list | | above a set: `NETTING_SET`, `RC`, `PFE`, `MULTIPLIER`, `EAD`, `MARGINED` |
 | `PROVENANCE` | record | | NSET's, plus `SUPERVISORY_TABLE` (the regulation and version), `DERIVED_ROWS` |
 
-### 9.2 The API (`/api/v1/saccr`, built; the full list in [SACCR_GUIDE.md section 9](../guides/SACCR_GUIDE.md#9-api-and-settings))
+### 9.2 The API (`/api/v1/saccr`, built; the full list in [SACCR_GUIDE.md section 9](../guides/SACCR_GUIDE.md#9-api-command-line-and-settings))
 
 | Method and path | Parameters | Answer |
 |---|---|---|

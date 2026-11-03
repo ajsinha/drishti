@@ -188,7 +188,7 @@ engines:
     tiles: []
     lenses: []
     bi: [counterparty-saccr-]
-    cli: [saccr]
+    cli: [saccr, play saccr]
     playgrounds: [saccr]
     connectors: []
     kinds: [saccr-result]

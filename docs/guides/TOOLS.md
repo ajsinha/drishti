@@ -118,6 +118,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `var` | `var show`, `var parts`, `var path`, `var history`, `var tree`, `var matrix`, `var stress-window`, `var status`, `var shards`, `var capture`, `var captures`, `var compare`, `var basket`, `var baskets`, `var basket-delete`, `var official`, `var backtest`, `var stats`, `var report`, `var reload`, `var intraday`, `var convert`, `var whatif`, `var playground`, `var explain` | [5.12](#512-var) |
 | `sens`, `frtb`, `play` | `sens show`, `sens factors`, `frtb sa`, `frtb explain`, `frtb contributions`, `play frtb` | [5.14](#514-sens-frtb-and-play-frtb) |
 | `simm`, `play` | `simm show`, `simm list`, `simm explain`, `simm against`, `simm versions`, `play simm` | [5.15](#515-simm-and-play-simm) |
+| `saccr`, `play` | `saccr show`, `saccr contributions`, `saccr trade`, `saccr what-if`, `saccr parameters`, `play saccr` | [5.15a](#515a-saccr-and-play-saccr) |
 | `exposure` | `exposure show`, `exposure parts`, `exposure tree`, `exposure profile`, `exposure distribution`, `exposure status`, `exposure capture`, `exposure captures`, `exposure compare`, `exposure official`, `exposure retention`, `exposure reload`, `exposure whatif` | [5.13](#513-exposure) |
 | `completion` | `drishti.py completion bash` (also `zsh`, `powershell`) | [5.8](#58-view-and-completion) |
 
@@ -1431,6 +1432,24 @@ drishti-console/.venv/bin/python tools/drishti.py simm versions
 drishti-console/.venv/bin/python tools/drishti.py simm show NS-ALDERSHOT-LDN
 drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --compare concentration=off
 drishti-console/.venv/bin/python tools/drishti.py play simm NS-ALDERSHOT-LDN --side post --xlsx aldershot.xlsx
+```
+
+### 5.15a saccr and play saccr
+
+SA-CCR as the token's user sees it (`tools/saccrcli.py`; [SACCR_GUIDE.md](SACCR_GUIDE.md)); every figure is the server's:
+
+- `saccr show SCOPE [--set NS-...] [--strict]`: a scope's EAD (`NSET:`, `CPTY:`, `LE:`, `BANK`, `EXAMPLE`), RC, PFE, the counts, one line per
+  netting set (margining, RC, add-on, multiplier, PFE, EAD, status) and the selected set's formula with its figures. `saccr contributions
+  SCOPE --by netting-set|asset-class|hedging-set|trade`: the scope's parts (by trade with the standalone EAD). `saccr trade TRADE-ID`: a
+  trade's terms per driver. `saccr what-if NETTING-SET --candidates FILE.json [--remove TRADE-ID]`: EAD before and after candidate rows.
+  `saccr parameters`: every parameter with its CRE52 paragraph. `show`, `contributions` and `play saccr` take `--no-ir-offset`, `--no-cap`
+  (not the regulatory figure) and `--date`.
+- `play saccr [SCOPE] [--xlsx FILE]`: the playground's rows, or the workbook of live formulas.
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py saccr show CPTY:CP-ALDERSHOT
+drishti-console/.venv/bin/python tools/drishti.py saccr contributions NSET:NS-ALDERSHOT-NY --by hedging-set
+drishti-console/.venv/bin/python tools/drishti.py play saccr NSET:NS-ALDERSHOT-LDN --xlsx ldn.xlsx
 ```
 
 ### 5.16 pivot

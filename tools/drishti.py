@@ -1419,7 +1419,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("computecli", "computecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # compute run|cancel|event (2.8.0)
     load_module("changecli", "changecli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})     # change propose|submit|approve..., edits status (2.8.0)
     play_ctx = {"Api": Api, "CliError": CliError, "say_json": say_json}
-    for mod in ("varcli", "expcli", "frtbcli", "simmcli", "pivotcli"):   # var show|parts|path|whatif; exposure; sens, frtb, play frtb; simm, play simm
+    for mod in ("varcli", "expcli", "frtbcli", "simmcli", "saccrcli", "pivotcli"):   # var show|parts|path|whatif; exposure; sens, frtb, play frtb; simm, play simm; saccr, play saccr
         load_module(mod, mod + ".py").register(groups, srv, play_ctx)
     adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.11)
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
