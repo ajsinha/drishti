@@ -77,22 +77,24 @@ FCA + FBA (step 8).
 A flag on every figure computed from a run that is not risk-neutral (step 13).
 ## Term (Main): Engine, Check, Checks, CHECK FAILED, ALL CHECKS PASS
 Engine is the figure Drishti's FVA engine reported for the same scope, date, run and settings, typed in so the workbook can be compared with it; the workbook never uses it in its own calculation. Each check compares a computed figure with the engine's (equal to the cent) or confirms that parts add up. ALL CHECKS PASS means every one holds.
-## Term (Config): Funding spread (flat or points)
-The bank's funding spread over the risk-free rate, a single value or tenor points in decimals, with its source (step 4).
+## Term (Config): Borrowing spread (flat or points)
+The bank's funding (borrowing) spread over the risk-free rate, s_B, a single value or tenor points in decimals, with its source (step 4). FCA uses it.
+## Term (Config): Lending spread
+The spread FBA uses, s_L. With symmetric funding (the default) its cells are formulas that follow the borrowing spread; a bank that lends at another spread names its own curve.
 ## Term (Config): Spread interpolation
 linear in time between the points, flat before the first and after the last.
 ## Term (Config): Discount curve and its points
 The curve's id (the USD overnight-index swap curve by default) and its points (tenor, discount factor), log-linear between them (step 3).
-## Term (Config): Counterparty and bank survival points
-The survival probabilities by tenor from the counterparty's credit curve and the bank's own, used only when FundingSurvival is on (step 10).
-## Term (Config): ee-point, funding-survival, fba
-The three choices of Main as configured (steps 2, 10 and 11).
+## Term (Config): Hazard rates h_C and h_B
+The counterparty's and the bank's flat hazard rates per year; S_C(t) · S_B(t) = e^(−(h_C + h_B) t), used only when FundingSurvival is on (step 10).
+## Term (Config): EePoint, FundingSurvival, IncludeFba
+The three choices, each a drop-down: end or mid, on or off, on or off (steps 2, 10 and 11). Change one and FVA recomputes.
 ## Term (Config): Sign convention
 Valuation adjustments from the bank's side: costs negative, benefits positive, as CVA and DVA.
 ## Term (Data): t, EE, ENE
-Each primary date in years and the exposure engine's EE and ENE at it, after collateral, in USD of that date (step 1).
-## Term (Terms): Δt, DF, s_F, S_C, S_B
-The period, the discount factor, the funding spread and the two survival probabilities at each date (steps 2 to 4 and 10).
+Each primary date in years and the exposure engine's EE and ENE at it for each netting set, after collateral, in USD of that date (step 1). The first row is today: the current exposure and its negative, read only with the mid point.
+## Term (Terms): Δt, DF, s_B, s_L, S_C·S_B
+The period, the discount factor, the borrowing and lending spreads and the product of the two survival probabilities (1 when survival weighting is off) at each date (steps 2 to 4 and 10).
 ## Term (Terms): EE*, ENE*, FCA term, FBA term
 The discounted exposures and each date's share of FCA and FBA (steps 5 to 7).
 ## Term (Provenance): Sources and flags
