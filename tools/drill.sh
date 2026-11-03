@@ -333,11 +333,11 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
 # Java 21 in a copy, every test and the containers (Testcontainers), as production runs; its cluster tests on their own ports.
 java21_verify() { copy_verify java21 "$JAVA21_HOME" 20783,20784,20785 check -P api-docs; }
 # Java 21 and newer are supported: the same tests again on Java 25, so a library that breaks on a newer JVM (Hadoop and the
-# removed Security Manager, Unsafe memory access) fails the drill. It starts once the other console lane and the tool tests have
-# finished, or Java 21 has (the lighter load the browser lane then shares), at lower priority, with two test forks. Docker is
+# removed Security Manager, Unsafe memory access) fails the drill. It starts once the browser lane has
+# finished and Java 21 has (with three heavy jobs at once a 61 GB machine ran short of memory), at lower priority, with two test forks. Docker is
 # hidden from it: the container tests ran on 21 and test the brokers, not the JVM.
 java25_verify() {
-  after 3600 "$LOGS/console-other.secs" "$LOGS/tools.secs" , "$LOGS/java21.secs"
+  after 5400 "$LOGS/console-browser.secs" "$LOGS/java21.secs"   # never beside both heavy lanes: three JVM-heavy jobs at once ran a 61 GB machine short of memory
   echo "drill: java25 starts at $(date +%T)"
   export DOCKER_HOST=unix:///nonexistent/drill-java25 TESTCONTAINERS_RYUK_DISABLED=true
   copy_verify java25 "$JAVA25_HOME" 19783,19784,19785 none -Ddrishti.test.forks=2
