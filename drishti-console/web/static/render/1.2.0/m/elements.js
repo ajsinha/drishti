@@ -21,7 +21,7 @@ import { render } from '../drishti-render.js';
 import { embedRecords } from './console.js';
 import { signInFor } from './signin.js';
 
-export const ELEMENTS_VERSION = '2.1.0';
+export const ELEMENTS_VERSION = '2.2.0';
 export const API = '/embed/v2';
 const MODULE_ORIGIN = new URL(import.meta.url).origin;
 export const cfg = { server: MODULE_ORIGIN, tokenProvider: null, auth: null, retryMinMs: 2000, retryMaxMs: 30000, silenceMs: 30000, closeGraceMs: 1500 };

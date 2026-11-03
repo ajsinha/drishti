@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Drishti Elements 2.1: <drishti-view>, <drishti-panel> and the alias <drishti-screen>, drawn by the client-side renderer (this folder) from
+/* Drishti Elements 2.2 (2.1 with renderer 1.2.0: a table that offers Pivot links to the pivot screen): <drishti-view>, <drishti-panel> and the alias <drishti-screen>, drawn by the client-side renderer (this folder) from
    the embed API v2. One import:
 
      <script type="module" src="(the console)/embed/v2/elements/2/drishti-elements.js"></script>
