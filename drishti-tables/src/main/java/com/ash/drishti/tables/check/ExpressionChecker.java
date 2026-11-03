@@ -21,11 +21,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Checks one expression of a table or model in its scope (BI_FOUNDATION_2911E.md section 2.2). The layer's own checker
- * ({@link LayerExpressionChecker}) decides what the layer owns: scope rules, names, display functions, paths in measures. <b>Rachana's
- * checked mode</b> (part A of 2.9.11.e: types, {@code in}, {@code ^}, lists, named arguments, the filter-context functions) plugs in
- * through this interface: {@link #andThen} chains it after the layer's, so a definition gets both sets of problems, and the layer's
- * {@code DRS-9612} ("decided by checked mode") disappears once checked mode is chained.
+ * Checks one expression of a table or model in its scope (BI_FOUNDATION_2911E.md section 2.2). {@link LayerExpressionChecker} is
+ * <b>Rachana's checked mode</b> (part A of 2.9.11.e: types, scopes, {@code in}, {@code ^}, lists, named arguments, the filter-context
+ * functions) with the names of the table or model, plus the layer's own two rules; {@link #andThen} chains another checker after it.
  */
 public interface ExpressionChecker {
 

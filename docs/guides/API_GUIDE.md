@@ -2254,11 +2254,8 @@ and the fix for the codes that need more than the meaning.
 | DRS-9609 | — | Table reference | a table, model, column, measure or alias the catalogue does not hold |
 | DRS-9610 | — | Duplicate table | two definitions with one name, or one `was:` name given by two tables |
 | DRS-9611 | — | Table cycle | tables over tables that come back to themselves |
-| DRS-9612 | — | Waits for checked mode | (information) an expression using what Rachana's checked mode adds (`in`, lists, named arguments, `^`): decided once it lands |
 | DRS-9613 | — | Sample check | `tables check --sample`: keys that are not unique in the sample, a path empty in every sample row, a value not computed |
 | DRS-9614 | — | Old form | a BI dataset or model (`rachana: 2`, `dataset:`, `datasets:`) where the table layer reads: migrate it |
-| DRS-9615 | — | Display in data | `ctl.x`, `link(...)` or `fmt(...)` in a table or model: a column or measure has a `format` |
-| DRS-9616 | — | Path in a measure | a document path inside a measure: add it as a table's column, defined once |
 | DRS-9170 | 422 | SQL syntax | a Drishti SQL statement that is not one (HTTP 422): a syntax error at the position given, two statements, or a write (`INSERT`, `DELETE`, `CREATE`, `ATTACH`, `COPY`, `PRAGMA`, `SET` ...): the dialect is one read-only `SELECT` ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)) |
 | DRS-9171 | 422 | SQL name | a table that is not one of the model's aliases, or a column it lacks for you (a hidden column is not found, on purpose); a bare column in two tables (say which); a column of a table the statement does not read (`JOIN` it) |
 | DRS-9172 | 422 | SQL join | A join whose `ON` is not a relationship of the model (or a comma, `RIGHT`, `FULL`, `CROSS` or `NATURAL` join): write `JOIN t` without `ON`, or ask the model owner for a relationship |

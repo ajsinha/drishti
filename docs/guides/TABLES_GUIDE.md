@@ -18,7 +18,8 @@
 A **virtual table** is a named, typed table defined once by configuration over any kind any connector serves (a lake table, a database
 table, an in-memory table), a SQL query, a Python transform, a model's answer or another virtual table. A **model** relates virtual tables
 and defines measures over them. Every consumer reads them the same way: BI, the pivot, Arrow Flight and alerts. This guide is the
-reference: every key, every check, the command line and the migration of BI's datasets and models. The design, with its decisions, is
+reference: every key, every check, the command line and the migration of BI's datasets and models; the hands-on walk-through is the
+[virtual tables tutorial](../tutorials/virtual-tables-and-models.md). The design, with its decisions, is
 [BI_FOUNDATION_2911E.md](../architecture/BI_FOUNDATION_2911E.md) and [VIRTUAL_TABLES.md](../architecture/VIRTUAL_TABLES.md).
 
 Examples marked *(filled in the heavy run)* are replaced by real output from the demo lake when the release's examples are run; the YAML and
@@ -121,7 +122,7 @@ A path holds one value: a list (`[*]`) in a column is refused (`DRS-9603`); an a
 
 A **calculated column** (`expr`) and the `filter` are row-scope Rachana over the **source**, never over another column: write
 `$.MTM / 1000000`, not `MTM / 1000000` (`DRS-9127`), so a column means the same whatever order columns are read in. Aggregates of rows
-belong in a model's measures (`DRS-9127`); `ctl.x`, `link(...)` and `fmt(...)` are display concerns (`DRS-9615`); `user.x` belongs in a
+belong in a model's measures (`DRS-9127`); `ctl.x` and the other display concerns of a Sutra are refused (`DRS-9127`); `user.x` belongs in a
 rule. A look-up of another table is `related(core.desks.NAME, on = $.DESK)`.
 
 A column whose expression reads a masked column's path is masked too.
@@ -129,9 +130,11 @@ A column whose expression reads a masked column's path is masked too.
 **The null rule.** A comparison with a missing value follows Rachana: `null != 'X'` is true, `null == 'X'` is false, `null == null` is
 true. Write `$.STATUS != 'MATURED' && $.STATUS != null` to leave rows with no status out.
 
-**What waits for checked mode.** `in` and `not in`, list literals, named arguments and `^` are read and checked by the layer now; their
-types and values are decided by Rachana's checked mode, so the checks report such an expression as `DRS-9612` (information) and a preview
-leaves its value empty, until checked mode is chained in.
+**Checked mode.** Every expression of a table or model is checked by Rachana's checked mode, with the types of the table's columns (a
+path a column reads has that column's type) or the model's `alias.COLUMN`: the scope's rules, the types, `in` and lists, named arguments,
+`^`. Its codes are the language's: `DRS-9127` (type or scope), `DRS-9129` (not yet), `DRS-9152` (unknown name). A definition reads the
+source as it is: masks are its readers'. An aggregate is a measure's, not a column's: `greatest(a, b)` is the larger of two values in a
+row.
 
 ## 5. A model, key by key
 
@@ -161,7 +164,7 @@ security:
 |---|---|---|
 | `tables` | alias to `{ table, role }` (`fact` or `dimension`) | measures, fields and rules name `alias.COLUMN` |
 | `relationships` | `{ id, from, to, cardinality, direction, active, name }`, from the many side | both ends real columns of one type (`DRS-9122`); one active relationship per pair of aliases |
-| `measures` | name to `{ expr, format, description, currency, additive, id, title, display, folder, hidden }`, or a Python measure `{ python, inputs, by }` | aggregate scope: `alias.COLUMN` inside aggregates, `measure('name')`, `param.x`; no document path (`DRS-9616`); an inactive relationship is `calc(..., via = 'r_5')` |
+| `measures` | name to `{ expr, format, description, currency, additive, id, title, display, folder, hidden }`, or a Python measure `{ python, inputs, by }` | aggregate scope: `alias.COLUMN` inside aggregates, `measure('name')`, `param.x`; no document path (`DRS-9127`); an inactive relationship is `calc(..., via = 'r_5')` |
 | `hierarchies` | name to its levels (`trades.TRADE_DATE.month` is a field) | |
 | `security` | `rows` per alias, `masked`, `may-see-all`, `propagate` | only tightens what the tables' rules allow |
 | `calc-groups`, `parameters`, `calendars`, `fx`, `tests`, `rollups`, `history` | as BI's models have them | `history` samples measures of a live table |
@@ -285,10 +288,7 @@ The report:
 | `DRS-9609` | a table, model, column, measure or alias the catalogue does not hold |
 | `DRS-9610` | two definitions with one name, or one `was:` name twice |
 | `DRS-9611` | tables over tables in a circle |
-| `DRS-9612` | (information) decided by Rachana's checked mode |
 | `DRS-9613` | a sample check |
 | `DRS-9614` | BI's old form where the layer reads |
-| `DRS-9615` | a display concern in data |
-| `DRS-9616` | a document path in a measure |
-| `DRS-9127`, `DRS-9152`, `DRS-9122` | the language's: an aggregate in row scope, an unknown name, a relationship's ends |
+| `DRS-9127`, `DRS-9129`, `DRS-9152`, `DRS-9122` | the language's (checked mode): a type or scope, not yet, an unknown name; a relationship's ends |
 | `DRS-9195` | the migration refused an item or an expression |

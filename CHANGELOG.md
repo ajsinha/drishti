@@ -90,7 +90,7 @@
   `.model.yaml` and of stored items (`ItemStore`, kinds `table` and `model`), the definitions with every key of BI's datasets and models
   (names `<domain>.<name>`, `was:` for one release, built-in columns `id`, `business_date`, `index`, `update_seq`, `updated_at`, rules
   and masks on the table, model aliases, summary tables, `materialize: none | on-load | { live }`, `related(...)`), the checks of a table,
-  a model and the catalogue (codes `DRS-9600` to `DRS-9616`), lineage, a preview over JSONL samples with the grain expanded and
+  a model and the catalogue (codes `DRS-9600` to `DRS-9614`), lineage, a preview over JSONL samples with the grain expanded and
   `$`, `@`, `^` walked, and the materialisation's API with its store layout. `FileSwap` moved from BI into the layer. BI does not read the
   layer yet (the switch).
 - **`drishti.py tables list | check | preview | lineage | migrate`** (CLI_GUIDE.md section 7; `java -jar drishti-server-*-exec.jar tables`,
