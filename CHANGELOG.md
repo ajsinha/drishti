@@ -35,7 +35,7 @@
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
-## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)
+## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-03)
 
 - **Fixed (drill): the release drill's console findings.** The sign-in page, which sends its form in the background for busy protection,
   marks the page while the form is on its way (`html[data-signing-in]`), and the browser tests wait on it as on a navigation (they had
