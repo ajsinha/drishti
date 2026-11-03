@@ -118,7 +118,7 @@ public final class BiMeasures {
         path.add(measure);
         DelAst tree;
         try {
-            Expressions.Parsed p = Expressions.parse(m.expr());
+            Expressions.Parsed p = Expressions.read(m.expr());
             tree = p.del() != null ? p.del() : DelParser.parse(DelPrinter.print(p.node()));
         } catch (RuntimeException e) {
             throw new NotPivot(measure + ": " + e.getMessage());
