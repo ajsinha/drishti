@@ -77,12 +77,59 @@ SEARCH_ROWS = [{"ref": {"kind": "trade", "id": f"TR-{2000 + i}"}, "title": f"TR-
                            "tradeDate": f"2026-{(i % 9) + 1:02d}-15"}} for i in range(30)]
 
 
+def inline_answer(body):
+    """The engine's answer to POST /api/v1/pivot/inline in the stand-in (the real one is proved by PivotApiTest and RowsProviderTest): one level of
+    rows and of columns, each cell's figure from its own rows, blanks left out of every function."""
+    import re
+    names = [f["name"] for f in body.get("fields") or []]
+    view = body.get("view") or {}
+    rd, cd = (view.get("rows") or [None])[0], (view.get("columns") or [None])[0]
+    at = {n: i for i, n in enumerate(names)}
+
+    def key(dim, v):
+        return "*" if dim is None or v is None else f"{dim}={v}"
+
+    groups = {}
+    for row in body.get("rows") or []:
+        r = None if rd is None else (row[at[rd]] if row[at[rd]] is not None else "(blank)")
+        c = None if cd is None else (row[at[cd]] if row[at[cd]] is not None else "(blank)")
+        for rk in {key(rd, r), "*"}:
+            for ck in {key(cd, c), "*"}:
+                groups.setdefault(f"{rk}|{ck}", []).append(row)
+
+    def figure(fn, arg, rows):
+        vals = [r[at[arg]] for r in rows if r[at[arg]] is not None] if arg else rows
+        if fn == "count":
+            return len(vals)
+        if fn == "count_distinct":
+            return len(set(vals))
+        nums = [v for v in vals if isinstance(v, (int, float))]
+        if not nums:
+            return None
+        return {"sum": sum(nums), "avg": sum(nums) / len(nums), "min": min(nums), "max": max(nums)}[fn]
+
+    cells = {}
+    for k, rows in groups.items():
+        values = {}
+        for m in view.get("values") or []:
+            fn, arg = re.match(r"(\w+)\((\w*)\)", m["measure"]).groups()
+            values[m["as"]] = figure(fn, arg or None, rows)
+        cells[k] = {"values": values, "members": len(rows)}
+
+    def axis(dim, pos):
+        seen = sorted({k.split("|")[pos] for k in cells} - {"*"}, key=lambda x: x.split("=", 1)[1])
+        return [{"key": k, "kind": "node", "value": k.split("=", 1)[1], "depth": 1} for k in seen] + [{"key": "*", "kind": "grand", "value": None, "depth": 0}]
+
+    return {"source": "inline", "rows": axis(rd, 0), "columns": axis(cd, 1), "cells": cells}
+
+
 class ChartBackend(TickingBackend):
     """The stand-in server of the chart tests: quiet live views, a search, the search pivot and panel records."""
 
     def __init__(self):
         super().__init__()
         self.pivot_calls = []
+        self.inline_calls = []                             # the shown rows the chart asked the engine to aggregate
         self.record_calls = []
 
     async def stream(self, kind, id_, ident=None, opened=None):
@@ -123,6 +170,9 @@ class ChartBackend(TickingBackend):
             for i, k in enumerate(keys):
                 cells[f"{x}={k}|*"] = {"values": {v["as"]: float((i + 1) * 100_000_000) for v in view.get("values") or []}}
             return {"source": view.get("source"), "rows": rows, "columns": [{"key": "*", "kind": "grand"}], "cells": cells}
+        if path == "/inline":
+            self.inline_calls.append(len((body or {}).get("rows") or []))
+            return inline_answer(body or {})
         raise BackendError(404, "DRS-1001", "no such pivot call in the stand-in")
 
     async def search(self, q, ident=None):

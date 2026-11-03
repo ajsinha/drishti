@@ -15,7 +15,7 @@
  */
 /* Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 6 to 15): pure functions, no DOM. It classifies a
    table's columns (date, number, text; masked; identifiers), picks the smart defaults, normalises a settings document,
-   maps the settings onto the pivot engine (X -> rows, split -> columns, series -> values), turns the cube into drawn
+   maps the settings onto the pivot engine (X -> rows, split -> columns, series -> values; the server's engine aggregates), turns its cube into drawn
    series (date buckets, Top N with Others, split cap, sort, percent, gaps), refuses what cannot be drawn honestly (a pie
    with negative values, 100% of percentages), and builds the ECharts option from the theme tokens it is given (never a
    literal colour). Also the text summary (caption, aria-label) and the export grid. Masks hold: a masked column is never
@@ -303,12 +303,25 @@
     });
     return { arrangement: { rows: [prep ? prep.xKey : settings.x.field], columns: settings.split ? [settings.split] : [], values: values }, slots: at };
   }
-  /** The cube of the prepared rows (the pivot engine's own aggregation; the chart never aggregates on its own). */
-  function cube(prep, settings, opts) {
-    var L = limits(opts), a = toArrangement(settings, prep);
-    var c = PE().cube(prep.records, a.arrangement, { maxRowKeys: L.rowKeys, maxColumnKeys: L.columnKeys });
-    c.slots = a.slots;
-    return c;
+  /**
+   * The rows ready for the pivot engine: the prepared rows and the arrangement to ask of it (POST /api/pivot/inline through
+   * pivot-engine.js), or, for a scatter of points, the drawn model at once (points are not aggregated). The chart never adds up a figure.
+   */
+  function plan(records, cols, settings, opts) {
+    var prep = prepare(records, settings, cols, opts);
+    if (settings.type === 'scatter' && (settings.series[0] || {}).agg === 'none') { return { prep: prep, model: points(prep, settings, cols, opts) }; }
+    var a = toArrangement(settings, prep);
+    return { prep: prep, arrangement: a.arrangement, slots: a.slots, model: null };
+  }
+  /** The engine's cube of a plan, drawn: at most rowKeys X values and columnKeys split values are kept (the rest is said). */
+  function finish(p, engineCube, settings, cols, opts) {
+    if (p.model) { return p.model; }
+    var L = limits(opts), c = Object.assign({}, engineCube, { slots: p.slots });
+    c.count = c.count != null ? c.count : p.prep.notes.kept;                // the rows the engine aggregated, of the rows shown
+    c.total = p.prep.notes.rows;
+    if (c.rowKeys.length > L.rowKeys) { c.rowKeys = c.rowKeys.slice(0, L.rowKeys); c.moreRows = true; }
+    if (c.columnKeys.length > L.columnKeys) { c.columnKeys = c.columnKeys.slice(0, L.columnKeys); }
+    return series(c, settings, cols, p.prep, opts);
   }
 
   // ---- cube -> drawn series -----------------------------------------------------------------------------------------
@@ -467,11 +480,13 @@
         field: e.field, agg: 'none', axis: 'left', type: 'scatter', data: groups[g], fmt: (find(cols, e.field) || {}).fmt || null, sized: zi != null }; }),
       notes: notes.concat(exclusions(prep, cols)), refusal: null, empty: !n, single: n === 1, rows: n, total: prep.notes.rows, settings: settings };
   }
-  /** One call: rows -> prepared -> cube (or points) -> drawn model. */
+  /**
+   * One call, for a caller that holds the engine's cube at once (opts.cube(records, arrangement) -> cube): rows -> plan -> the engine's
+   * cube (or points) -> drawn model. The dialog asks the server asynchronously (plan, then finish).
+   */
   function build(records, cols, settings, opts) {
-    var prep = prepare(records, settings, cols, opts);
-    if (settings.type === 'scatter' && (settings.series[0] || {}).agg === 'none') { return points(prep, settings, cols, opts); }
-    return series(cube(prep, settings, opts), settings, cols, prep, opts);
+    var p = plan(records, cols, settings, opts);
+    return p.model || finish(p, opts.cube(p.prep.records, p.arrangement), settings, cols, opts);
   }
   /** A server-aggregated cube (search pivot) drawn the same way; its values must be laid out as toArrangement asks. */
   function fromCube(serverCube, settings, cols, opts) {
@@ -611,7 +626,7 @@
   var api = { MASK: MASK, OTHERS: OTHERS, TYPES: TYPES, AGGS: AGGS, BUCKETS: BUCKETS, LIMITS: LIMITS,
     toNumber: toNumber, isDate: isDate, dayOf: dayOf, bucketOf: bucketOf, autoBucket: autoBucket, businessDays: businessDays,
     classify: classify, chartable: chartable, types: types, normalise: normalise, defaults: defaults,
-    prepare: prepare, toArrangement: toArrangement, cube: cube, combine: combine, series: series, points: points, build: build, fromCube: fromCube,
+    prepare: prepare, toArrangement: toArrangement, plan: plan, finish: finish, combine: combine, series: series, points: points, build: build, fromCube: fromCube,
     option: option, palette: palette, summary: summary, trend: trend, exportGrid: exportGrid };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else {
     (root.drishtiModules = root.drishtiModules || {}).tableChartEngine = api;

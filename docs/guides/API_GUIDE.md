@@ -3285,6 +3285,7 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `POST /api/v1/pivot/expand` | `{view, axis: rows, path: [[dim, value], ...], by}`: the view with that node open (only its children computed; the rest from the cache) |
 | `POST /api/v1/pivot/compare` | `{view, otherDate}`: `{answer, other, diff}` (per cell: `delta` per measure, or `status` new or gone) |
 | `POST /api/v1/pivot/rows` | `{view, coords, offset, limit}`: a cell's member rows, as the caller may see them |
+| `POST /api/v1/pivot/inline` | `{fields: [{name, type}], rows: [[…]], view}`: rows the caller already holds (a chart of a table's shown rows; at most 100,000) aggregated by the engine's built-ins; a bad field or too many rows is DRS-5701 |
 | `GET /api/v1/pivot/cells?ref=pivot://owner/name@v/Measure[DIM=V, ...]` | one cell of a saved view by reference: `value`, `found` (false with "not in the view"), `newerVersion` |
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
 | `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |

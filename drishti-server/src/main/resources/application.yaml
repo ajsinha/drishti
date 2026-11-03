@@ -340,6 +340,7 @@ drishti:
       - /api/v1/pivot/compare
       - /api/v1/pivot/rows
       - /api/v1/pivot/export
+      - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
       - /api/v1/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
       - /api/v1/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
       - /api/v1/command

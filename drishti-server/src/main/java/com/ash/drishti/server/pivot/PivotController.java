@@ -226,6 +226,54 @@ public class PivotController {
         return cell(p, "pivot://" + owner + "/" + name + URLDecoder.decode(rest, StandardCharsets.UTF_8));
     }
 
+    /** The most rows an inline pivot takes (a chart of a table's shown rows is a page, never a lake). */
+    static final int INLINE_MAX_ROWS = 100_000;
+    private static final Pattern INLINE_FIELD = Pattern.compile("[A-Za-z_][A-Za-z0-9_]{0,63}");
+
+    /**
+     * A pivot of rows the caller already holds and may see (a chart of a table's shown rows: PIVOT_GUIDE.md, Rows held in memory):
+     * {@code {fields: [{name, type}], rows: [[...]], view}}, aggregated here by the engine's own functions so the browser never adds up a
+     * figure. The rows come from the caller, so nothing is read and no mask is needed beyond the ones they already carry.
+     */
+    @PostMapping("/inline")
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> inline(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Viewer v = on(p);
+        List<PivotProvider.Field> fields = new ArrayList<>();
+        for (Object o : body.get("fields") instanceof List<?> l ? l : List.of()) {
+            Map<String, Object> f = o instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
+            String name = String.valueOf(f.get("name"));
+            String type = String.valueOf(f.getOrDefault("type", "string"));
+            if (!INLINE_FIELD.matcher(name).matches() || !List.of("string", "number", "date").contains(type)) {
+                throw new DrishtiException(ErrorCode.PIVOT_BAD_VIEW, "an inline field is {name: letters, digits and _, type: string, number or date}: " + f);
+            }
+            fields.add(new PivotProvider.Field(name, type, String.valueOf(f.getOrDefault("label", name)), ""));
+        }
+        List<?> raw = body.get("rows") instanceof List<?> l ? l : List.of();
+        if (fields.isEmpty() || raw.size() > INLINE_MAX_ROWS) {
+            throw new DrishtiException(ErrorCode.PIVOT_BAD_VIEW, "an inline pivot needs its fields and at most " + INLINE_MAX_ROWS + " rows (it has "
+                    + raw.size() + "): chart every row with the source's own pivot instead");
+        }
+        List<Object[]> rows = new ArrayList<>(raw.size());
+        for (Object r : raw) {
+            List<?> cells = r instanceof List<?> l ? l : List.of();
+            Object[] row = new Object[fields.size()];
+            for (int i = 0; i < row.length && i < cells.size(); i++) {
+                Object x = cells.get(i);
+                row[i] = x instanceof Number || x == null ? x : String.valueOf(x);
+            }
+            rows.add(row);
+        }
+        Map<String, Object> spec = new LinkedHashMap<>(body.get("view") instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of());
+        spec.put("source", "inline");
+        PivotView view = PivotView.parse(spec);
+        PivotCore inline = new PivotCore(List.of(new com.ash.drishti.bicompute.rows.RowsProvider("inline", "Rows", fields, rows)),
+                com.ash.drishti.bicompute.cache.StateCache.none(), PivotCore.Settings.defaults());
+        Map<String, Object> a = inline.query(v, view);
+        audited(p, "pivot.inline", view, "; rows=" + rows.size() + "; cells=" + a.get("cellCount"));
+        return a;
+    }
+
     /** A cell's member rows (drill-through), paged: {@code {view, coords: {DIM: value}, offset, limit}}. */
     @PostMapping("/rows")
     @SuppressWarnings("unchecked")

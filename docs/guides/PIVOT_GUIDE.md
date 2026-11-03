@@ -86,6 +86,11 @@ exports. The help line under the grid shows them.
 | `var` | the VaR engine's book of the date | the positions' text columns (DESK, CURRENCY, PRODUCT_GROUP …) | `var()`, `es()`, `pv()`, `trades()` |
 | `panel/<kind>/<panel>/<id>` | a table's or ladder's rows on its page: the same document, Sutra and business date | the fields of its Sutra's `pivot:` (masked ones left out) | the built-in functions |
 
+**Rows held in memory.** Two components pivot rows they already hold, and both ask the engine rather than add up a figure: a Sutra's
+`pivot` panel (its document's rows, grouped by `by` and `across` with the panel's `agg`; ChartBinder hands them to the engine's in-memory
+provider) and *Chart any table* on the shown rows (the page sends only the chart's fields to `POST /api/v1/pivot/inline`, at most 100,000
+rows). The in-memory provider makes every state with the same built-in functions as the tabular provider, so the figures are equal.
+
 A date field groups as `TRADE_DATE:day`, `:week`, `:month`, `:quarter` or `:year`; a number as `NOTIONAL_USD:width=1000000` (buckets of a
 width, labelled by their lower edge). A missing value is the member `(blank)`.
 
@@ -248,6 +253,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `POST /api/v1/pivot/expand` | `{view, axis, path, by}`: the view with that node open; only its children computed |
 | `POST /api/v1/pivot/compare` | `{view, otherDate}`: both answers and the differences per cell |
 | `POST /api/v1/pivot/rows` | `{view, coords, offset, limit}`: a cell's member rows |
+| `POST /api/v1/pivot/inline` | `{fields: [{name, type}], rows: [[…]], view}`: rows the caller already holds (at most 100,000; field names of letters, digits and `_`; type `string`, `number` or `date`), aggregated by the engine; the view's `source` is ignored |
 | `GET /api/v1/pivot/cells?ref=` | a cell by reference |
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's or a cell's provenance |
 | `GET, POST /api/v1/pivot/views`, `GET /views/{owner}/{name}`, `DELETE /views/{name}` | saved views |
@@ -296,6 +302,8 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 The engine is the Maven module `drishti-bicompute` (plain Java, no Spring): the pivot model (views, cell keys, nested axes), the provider
 SPI (`PivotProvider`: catalogue, estimate, evaluate a plan of declarative cell sets into partial states, drill), the function SPI
 (`AggFunction`: start, add a columnar batch, merge, finish; mergeable, sketch or holistic; each with its SQL state form), the built-ins,
-the `GROUP BY GROUPING SETS` compiler and the DuckDB tabular provider, partial states merged in a fixed order (`OrderedMerge`), the
+the `GROUP BY GROUPING SETS` compiler and the DuckDB tabular provider, the in-memory provider (`RowsProvider`: rows held in memory, the
+same states by the functions' own `add`), partial states merged in a fixed order (`OrderedMerge`), the
 partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
-REST, busy protection, saved views and audit. The console only draws.
+REST, busy protection, saved views and audit. The console only draws: `pivot-engine.js` asks the engine and lays its answer out,
+`pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.

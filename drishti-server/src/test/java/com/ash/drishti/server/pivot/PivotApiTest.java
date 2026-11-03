@@ -193,4 +193,19 @@ class PivotApiTest {
         assertThat(gone.path("found").asBoolean()).isFalse();
         assertThat(gone.path("note").asText()).startsWith("not in the view");
     }
+
+    @Test
+    void inlineRowsAreAggregatedByTheEngineAndABadFieldIsRefused() throws Exception {
+        Map<String, Object> body = Map.of("fields", List.of(Map.of("name", "d0", "type", "string"), Map.of("name", "v0", "type", "number")),
+                "rows", List.of(List.of("EUR", 10), List.of("EUR", 5), List.of("USD", 7), java.util.Arrays.asList(null, 1)),
+                "view", Map.of("rows", List.of("d0"), "values", List.of(Map.of("measure", "sum(v0)", "as", "S"), Map.of("measure", "avg(v0)", "as", "A")),
+                        "expandTo", Map.of("rows", 1)));
+        JsonNode a = ok("trades-only", post("/api/v1/pivot/inline"), body);
+        assertThat(a.path("cells").path("d0=EUR|*").path("values").path("S").asDouble()).isEqualTo(15.0);
+        assertThat(a.path("cells").path("d0=EUR|*").path("values").path("A").asDouble()).isEqualTo(7.5);
+        assertThat(a.path("cells").path("d0=(blank)|*").path("values").path("S").asDouble()).isEqualTo(1.0);
+        assertThat(a.path("cells").path("*|*").path("values").path("S").asDouble()).isEqualTo(23.0);
+        call("admin", post("/api/v1/pivot/inline"), Map.of("fields", List.of(Map.of("name", "x; drop", "type", "string")), "rows", List.of(),
+                "view", Map.of("rows", List.of("x"))), 400);
+    }
 }

@@ -17,6 +17,12 @@
 
 ## Unreleased (on develop, after 2.9.11)
 
+- **Nothing else aggregates: the Sutra `pivot` panel and Chart any table on the pivot engine.** A `pivot` panel's cells, subtotals and
+  totals are computed by the engine's in-memory provider (`RowsProvider`, the built-ins' own states; equal to the tabular provider on the same
+  rows) and its nested rows drawn by the one pivot grid (`pivot-grid.js`, the Pivot screen's, which now replaces `pivot-core.js`). *Chart any
+  table* sends the shown rows' chart fields to the new `POST /api/v1/pivot/inline` (at most 100,000 rows) and draws the engine's answer;
+  *Chart all N* on a panel offers *Chart every row*. `pivot-engine.js` is now only the engine's browser client (query, inline, layout,
+  formats): its in-browser `cube` and filters are deleted, as is the old nested grid.
 - **One pivot: the old Pivot tab retired onto the pivot engine (product owner, 2026-11-02: no dual machinery).** A table or ladder whose
   Sutra says `pivot:` and a search whose kind's pack says `pivot:` now carry **Pivot**, which opens the pivot screen on the panel's own rows
   (`panel/<kind>/<panel>/<id>`) or on the kind, with the Sutra's or the pack's arrangement as the opening view; an author promotes a page
