@@ -57,7 +57,9 @@ public final class DataInbox {
     private final Signal signal;
     private final Supplier<String> busy;
     private final Deque<Cycle.Report> history = new ArrayDeque<>();
-    private ScheduledExecutorService exec;
+    private ScheduledExecutorService ticker;
+    private java.util.concurrent.ExecutorService worker;
+    private final java.util.concurrent.atomic.AtomicBoolean busyRun = new java.util.concurrent.atomic.AtomicBoolean();
     private volatile Instant next;
     private volatile Instant current;
     private volatile String currentTrigger;
@@ -78,46 +80,91 @@ public final class DataInbox {
         return settings;
     }
 
-    /** Starts the schedule (the engine turned on): the first cycle a minute after (or one interval, if shorter), then every interval. */
+    /**
+     * Starts the schedule (the engine turned on): the first cycle a minute after (or one interval, if shorter), then every interval. A
+     * cycle due while a run still loads is not started: it is recorded as skipped, with the run and how long it has loaded.
+     */
     public synchronized void start() {
-        if (exec != null) {
+        if (ticker != null) {
             return;
         }
-        exec = Executors.newSingleThreadScheduledExecutor(Thread.ofPlatform().name("dataload-cycle").daemon(true).factory());
+        ticker = Executors.newSingleThreadScheduledExecutor(Thread.ofPlatform().name("dataload-clock").daemon(true).factory());
+        worker = Executors.newSingleThreadExecutor(Thread.ofPlatform().name("dataload-cycle").daemon(true).factory());
         long first = Math.min(settings.interval().toMillis(), Duration.ofMinutes(1).toMillis());
         next = clock.instant().plusMillis(first);
-        exec.scheduleWithFixedDelay(() -> cycle("schedule"), first, settings.interval().toMillis(), TimeUnit.MILLISECONDS);
+        ticker.scheduleAtFixedRate(() -> {
+            next = clock.instant().plus(settings.interval());
+            startOrSkip("schedule");
+        }, first, settings.interval().toMillis(), TimeUnit.MILLISECONDS);
         LOG.info("data inbox: on ({}), a cycle every {}{}", Path.of(settings.dir()).toAbsolutePath().normalize(), settings.interval(),
                 settings.owner() ? "" : "; this node is not the owner, so cycles are skipped");
     }
 
     /** Stops the schedule and a load that runs now (the engine turned off, the server stopping). Files claimed go back at the next start. */
     public synchronized void stop() {
-        if (exec == null) {
+        if (ticker == null) {
             return;
         }
-        exec.shutdownNow();
+        ticker.shutdownNow();
+        worker.shutdownNow();
         if (runner instanceof LoaderProcess p) {
             p.stopRunning();
         }
-        exec = null;
+        ticker = null;
+        worker = null;
         next = null;
     }
 
     public synchronized boolean started() {
-        return exec != null;
+        return ticker != null;
     }
 
-    /** Load now: a cycle queued on the inbox's thread (after the one running, if any); false when the inbox is not started. */
-    public synchronized boolean runNow(String by) {
-        if (exec == null) {
-            return false;
+    /**
+     * Load now: a cycle started at once on the inbox's thread. Answers null when it started, else why not: the inbox is off, or a run
+     * still loads ({@code skipped: run <id> still loading (12 min)}, recorded as a skipped cycle).
+     */
+    public String runNow(String by) {
+        return startOrSkip("by " + by);
+    }
+
+    /** Starts a cycle on the worker, or records it as skipped while a run loads (runs never overlap); null when it started. */
+    private synchronized String startOrSkip(String trigger) {
+        if (worker == null) {
+            return "the data inbox is off on this server";
         }
-        exec.execute(() -> cycle("by " + by));
-        return true;
+        if (!busyRun.compareAndSet(false, true)) {
+            String why = loadingNow();
+            record(new Cycle.Report("-", trigger, clock.instant(), clock.instant(), "skipped", why, List.of(), List.of(), 0));
+            LOG.info("data inbox: cycle skipped: {}", why);
+            return "skipped: " + why;
+        }
+        try {
+            worker.execute(() -> {
+                try {
+                    cycle(trigger);
+                } finally {
+                    busyRun.set(false);
+                }
+            });
+        } catch (RuntimeException e) {
+            busyRun.set(false);
+            throw e;
+        }
+        return null;
     }
 
-    /** Runs one cycle on the calling thread (the schedule's thread; a test). */
+    /** The run that loads now, in words: from the inbox lock (its run id and start), else from this server's own clock. */
+    private String loadingNow() {
+        JsonNode h = new Claims(Path.of(settings.dir()), clock).holder();
+        if (h != null && !h.path("run").asText("").isEmpty()) {
+            return Cycle.stillLoading(h, clock.instant());
+        }
+        Instant since = current;
+        long min = since == null ? 0 : Math.max(0, Duration.between(since, clock.instant()).toMinutes());
+        return "a run started at " + (since == null ? "?" : since.toString()) + " still loading (" + min + " min)";
+    }
+
+    /** Runs one cycle on the calling thread (the worker; a test). */
     public Cycle.Report cycle(String trigger) {
         current = clock.instant();
         currentTrigger = trigger;
@@ -130,17 +177,18 @@ public final class DataInbox {
         } finally {
             current = null;
             currentTrigger = null;
-            if (trigger.equals("schedule")) {
-                next = clock.instant().plus(settings.interval());
-            }
         }
+        record(r);
+        return r;
+    }
+
+    private void record(Cycle.Report r) {
         synchronized (history) {
             history.addFirst(r);
             while (history.size() > HISTORY) {
                 history.removeLast();
             }
         }
-        return r;
     }
 
     /** Retry: a failed file and its marker back into the inbox (the next cycle loads it); recorded in the ledger. */

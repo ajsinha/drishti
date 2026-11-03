@@ -71,7 +71,10 @@ public final class Inbox {
         return dir;
     }
 
-    /** The inbox as it is at {@code now}: files whose time is at least {@code stable} old are stable. */
+    /**
+     * The inbox as it is at {@code now}: files whose time is at least {@code stable} old are stable. The whole ready batch is taken
+     * (greedy), oldest first; {@code maxFiles} (0: no limit) and {@code maxBytes} bound it only when an administrator set them.
+     */
     public Found look(Instant now, Duration stable, int maxFiles, long maxBytes) throws IOException {
         List<Ready> ready = new ArrayList<>();
         List<Refused> refused = new ArrayList<>();
@@ -132,8 +135,8 @@ public final class Inbox {
         List<Ready> taken = new ArrayList<>();
         long bytes = 0;
         for (Ready r : ready) {
-            if (taken.size() >= maxFiles || (!taken.isEmpty() && bytes + r.size() > maxBytes)) {
-                waiting.add(new Waiting(r.name(), r.size(), r.modified(), "the next cycle: this one took its most files or bytes"));
+            if ((maxFiles > 0 && taken.size() >= maxFiles) || (!taken.isEmpty() && bytes + r.size() > maxBytes)) {
+                waiting.add(new Waiting(r.name(), r.size(), r.modified(), "the next cycle: this run took its most files or bytes (max-files, max-gb)"));
                 continue;
             }
             taken.add(r);

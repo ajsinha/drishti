@@ -24,7 +24,7 @@ import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-/** The work folder, the folder lock (two runners, a stale lock, a holder whose process ended) and the ledger (duplicates, a restart). */
+/** The in-process folder, the folder lock (two runners, a stale lock, a holder whose process ended) and the ledger (duplicates, a restart). */
 class ClaimsAndLedgerTest {
 
     @TempDir Path tmp;
@@ -91,9 +91,9 @@ class ClaimsAndLedgerTest {
         Fixture f = new Fixture(tmp);
         Path d = f.drop("trades-a.jsonl", Fixture.rows("2026-11-02", "1"), "pack: demo-pack");
         Inbox.Ready r = new Inbox.Ready(d, f.inbox().resolve("trades-a.jsonl.ready"), Files.size(d), f.clock.instant());
-        Path[] claimed = new Claims(f.root, f.clock).claim(r, "20261103-150000-abcd");
-        assertThat(claimed[0]).isEqualTo(f.root.resolve("work/20261103-150000-abcd/trades-a.jsonl")).exists();
-        assertThat(claimed[1]).isEqualTo(f.root.resolve("work/20261103-150000-abcd/trades-a.jsonl.ready")).exists();
+        Path[] claimed = new Claims(f.root, f.clock).claim(r, "20261103T150000Z-node-a");
+        assertThat(claimed[0]).isEqualTo(f.root.resolve("inprocess/20261103T150000Z-node-a/trades-a.jsonl")).exists();
+        assertThat(claimed[1]).isEqualTo(f.root.resolve("inprocess/20261103T150000Z-node-a/trades-a.jsonl.ready")).exists();
         assertThat(f.inbox().resolve("trades-a.jsonl")).doesNotExist();
     }
 

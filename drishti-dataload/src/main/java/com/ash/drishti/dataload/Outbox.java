@@ -39,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Where a handled file ends (DATALOAD_INBOX.md section 2): {@code outbox/<day>/<run>/} with its {@code .ready} and its report
  * {@code <file>.loaded.json}, or {@code failed/<day>/<run>/} with {@code <file>.failed.json} (the reason in words and the loader's
- * report). The report is written first and the data file moved last, so a file still in {@code work/} is a file not yet moved. Also: a
+ * report). The report is written first and the data file moved last, so a file still in {@code inprocess/} is a file not yet moved. Also: a
  * file put back in the inbox, Retry (a failed file and its marker back), and the retention ({@code keep-outbox-days}; the ledger is kept).
  */
 public final class Outbox {

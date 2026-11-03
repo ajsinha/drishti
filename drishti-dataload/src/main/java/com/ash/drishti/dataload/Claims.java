@@ -34,9 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * The work folder and the folder lock (DATALOAD_INBOX.md sections 4.1 and 4.4). A run's files are renamed into {@code work/<run>/} (one
+ * The in-process folder and the folder lock (DATALOAD_INBOX.md sections 4.1 and 4.4). A run's files are renamed into {@code inprocess/<run>/} (one
  * file system: a rename is atomic, so a file is either in the inbox or claimed, never both). {@code inbox.lock} is created atomically and
- * holds the node, the process and a heartbeat the holder refreshes while it runs; a lock whose heartbeat is older than three intervals,
+ * holds the run, the node, the process and a heartbeat the holder refreshes while it runs; a lock whose heartbeat is older than three intervals,
  * or whose process on this same node has ended, is taken over (and the takeover logged), so two servers on one shared folder never both run.
  */
 public final class Claims {
@@ -54,12 +54,12 @@ public final class Claims {
         this.clock = clock;
     }
 
-    public Path work() {
-        return root.resolve("work");
+    public Path inprocess() {
+        return root.resolve("inprocess");
     }
 
     public Path run(String run) {
-        return work().resolve(run);
+        return inprocess().resolve(run);
     }
 
     /** The lock's holder as its file says (node, pid, heartbeat), or null when nobody holds it. */
@@ -79,12 +79,17 @@ public final class Claims {
      * than this is a holder gone. The returned lock refreshes its heartbeat every {@code beat} until closed.
      */
     public Lock lock(String node, Duration stale, Duration beat) throws IOException {
+        return lock("", node, stale, beat);
+    }
+
+    /** {@link #lock(String, Duration, Duration)} for the run {@code run} (named in the lock, so a cycle due meanwhile can say which run loads). */
+    public Lock lock(String run, String node, Duration stale, Duration beat) throws IOException {
         Files.createDirectories(root);
         Path f = root.resolve(LOCK);
         for (int attempt = 0; attempt < 2; attempt++) {
             try {
-                Files.writeString(f, body(node, clock.instant(), clock.instant()).toString(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
-                return new Lock(f, node, beat);
+                Files.writeString(f, body(run, node, clock.instant(), clock.instant()).toString(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+                return new Lock(f, run, node, beat);
             } catch (FileAlreadyExistsException e) {
                 JsonNode h = holder();
                 if (h == null) {
@@ -128,13 +133,13 @@ public final class Claims {
         return null;
     }
 
-    private static ObjectNode body(String node, Instant since, Instant beat) {
-        return JSON.createObjectNode().put("node", node).put("pid", ProcessHandle.current().pid()).put("since", since.toString())
+    private static ObjectNode body(String run, String node, Instant since, Instant beat) {
+        return JSON.createObjectNode().put("run", run).put("node", node).put("pid", ProcessHandle.current().pid()).put("since", since.toString())
                 .put("heartbeat", beat.toString());
     }
 
     /**
-     * Claims a file and its marker into {@code work/<run>/} (the marker first renamed beside it, so a crash between the two leaves the
+     * Claims a file and its marker into {@code inprocess/<run>/} (the marker first renamed beside it, so a crash between the two leaves the
      * file in the inbox without its marker and never loaded half-claimed). Returns the claimed file and marker (null when it had none).
      */
     public Path[] claim(Inbox.Ready r, String run) throws IOException {
@@ -162,14 +167,16 @@ public final class Claims {
     public final class Lock implements AutoCloseable {
 
         private final Path file;
+        private final String run;
         private final String node;
         private final Instant since;
         private final AtomicBoolean lost = new AtomicBoolean();
         private final Thread beater;
         private volatile boolean closed;
 
-        Lock(Path file, String node, Duration beat) {
+        Lock(Path file, String run, String node, Duration beat) {
             this.file = file;
+            this.run = run;
             this.node = node;
             this.since = clock.instant();
             this.beater = Thread.ofVirtual().name("dataload-lock-heartbeat").start(() -> {
@@ -198,7 +205,7 @@ public final class Claims {
             }
             try {
                 Path tmp = file.resolveSibling(LOCK + "-" + ProcessHandle.current().pid() + ".new");
-                Files.writeString(tmp, body(node, since, clock.instant()).toString());
+                Files.writeString(tmp, body(run, node, since, clock.instant()).toString());
                 move(tmp, file);
             } catch (IOException e) {
                 LOG.warn("data inbox: the folder lock's heartbeat could not be written: {}", e.getMessage());

@@ -16,7 +16,7 @@
 "The data inbox"; the API: /api/v1/admin/dataload, administrators, or a token with loads:write for run and retry).
 
     status [--json]          the files waiting and why, the last cycles, the failures with their reasons, the lock, the next cycle
-    run                      Load now: a cycle queued at once (after the one running, if any)
+    run                      Load now: a cycle at once; while a run still loads, none starts and it says so
     retry <file>             a failed file and its .ready back into the inbox; the next cycle (or run) loads it
 
 Exit codes: 0 done, 1 the server said no, 2 usage, 3 the inbox is off on every server (DRS-1020)."""
@@ -94,8 +94,10 @@ def register(groups, srv, ctx: dict) -> None:
                 res = api.json("POST", "/api/v1/admin/dataload/run", {})
                 if a.json:
                     say_json(res)
+                elif res.get("started"):
+                    print("Load now: a cycle started (drishti.py dataload status shows it).")
                 else:
-                    print("Load now: a cycle is queued (drishti.py dataload status shows it).")
+                    print(f"Load now: {res.get('skipped')} (runs never overlap; the next cycle checks again).")
                 return 0
             if act == "retry":
                 res = api.json("POST", "/api/v1/admin/dataload/retry", {"file": a.file})

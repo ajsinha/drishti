@@ -22,11 +22,11 @@ import java.time.Duration;
  * the server binds the keys onto this record; this module reads no configuration of its own but the routing rules' file.
  *
  * @param owner whether this node runs the inbox (true; in a cluster exactly one node should)
- * @param dir the inbox's folder ({@code <data>/dataload}): {@code inbox/}, {@code work/}, {@code outbox/}, {@code failed/}, {@code ledger/}
+ * @param dir the inbox's folder ({@code <data>/dataload}): {@code inbox/}, {@code inprocess/}, {@code outbox/}, {@code failed/}, {@code ledger/}
  * @param interval how often a cycle runs (10 minutes)
  * @param stableSeconds a file is taken once its size and time have not changed for this long (30)
- * @param maxFiles the most files one cycle takes (500)
- * @param maxGb the most gigabytes one cycle takes (50; the first file is always taken)
+ * @param maxFiles the most files one run takes (0, the default: no limit; the whole ready batch is taken)
+ * @param maxGb the most gigabytes one run takes (0, the default: no limit; when set, the first file is always taken)
  * @param loaderHeap the loader's heap, the child process's {@code -Xmx} (4g)
  * @param loadTimeout the longest one load may take before it is stopped and its files go back (2 hours)
  * @param rejectMaxPercent the share of rejected rows a load may have and still commit (0: none)
@@ -44,8 +44,8 @@ public record DataLoadSettings(Boolean owner, String dir, Duration interval, Int
         dir = blank(dir) ? "./data/dataload" : dir.trim();
         interval = interval == null || interval.isNegative() || interval.isZero() ? Duration.ofMinutes(10) : interval;
         stableSeconds = stableSeconds == null || stableSeconds < 0 ? 30 : stableSeconds;
-        maxFiles = maxFiles == null || maxFiles < 1 ? 500 : maxFiles;
-        maxGb = maxGb == null || maxGb <= 0 ? 50.0 : maxGb;
+        maxFiles = maxFiles == null || maxFiles < 0 ? 0 : maxFiles;
+        maxGb = maxGb == null || maxGb < 0 ? 0.0 : maxGb;
         loaderHeap = blank(loaderHeap) ? "4g" : loaderHeap.trim();
         if (!loaderHeap.matches("[0-9]+[kKmMgG]?")) {
             throw new IllegalArgumentException("drishti.dataload.loader-heap " + loaderHeap + ": a size as java -Xmx takes it (4g, 512m)");
@@ -70,9 +70,9 @@ public record DataLoadSettings(Boolean owner, String dir, Duration interval, Int
                 keepOutboxDays, lake, rulesFile, nice);
     }
 
-    /** {@link #maxGb} in bytes. */
+    /** {@link #maxGb} in bytes ({@link Long#MAX_VALUE}: no limit). */
     public long maxBytes() {
-        return (long) (maxGb * 1024 * 1024 * 1024);
+        return maxGb <= 0 ? Long.MAX_VALUE : (long) (maxGb * 1024 * 1024 * 1024);
     }
 
     private static boolean blank(String s) {

@@ -92,7 +92,7 @@ final class Fixture {
                       date-from: name
                   unmatched: fail
                 """);
-        settings = new DataLoadSettings(true, root.toString(), Duration.ofMinutes(10), 30, 500, 50.0, "256m", Duration.ofMinutes(5), 0.0, false, 30,
+        settings = new DataLoadSettings(true, root.toString(), Duration.ofMinutes(10), 30, null, null, "256m", Duration.ofMinutes(5), 0.0, false, 30,
                 lake.toString(), rules.toString(), false);
     }
 
@@ -195,7 +195,7 @@ final class Fixture {
         }
         try (var s = Files.walk(d)) {
             return s.filter(Files::isRegularFile).map(p -> root.relativize(p).toString().replace('\\', '/'))
-                    .map(p -> p.replaceAll("/\\d{8}-\\d{6}-[0-9a-f]{4}/", "/RUN/")).sorted().toList();
+                    .map(p -> p.replaceAll("/\\d{8}T\\d{6}Z-node-a(-\\d+)?/", "/RUN/")).sorted().toList();
         }
     }
 

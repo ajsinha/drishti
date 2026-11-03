@@ -123,7 +123,7 @@ class DataInboxLoaderTest {
         assertThat(failed.path("reason").asText()).as(failed.toPrettyString()).isNotBlank();
         assertThat(failed.path("load").path("rejected").asLong()).isEqualTo(1);
         assertThat(f.tree("inbox")).isEmpty();
-        assertThat(f.tree("work")).isEmpty();
+        assertThat(f.tree("inprocess")).isEmpty();
         assertThat(inbox.status()).containsEntry("on", false).containsKey("cycles");
     }
 

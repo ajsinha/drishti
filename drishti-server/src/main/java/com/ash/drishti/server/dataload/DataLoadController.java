@@ -70,16 +70,23 @@ public class DataLoadController {
         return out;
     }
 
-    /** Load now: a cycle queued (after the one running, if any). */
+    /**
+     * Load now: a cycle started at once; while a run still loads, none is started and the answer says so ({@code started: false},
+     * {@code skipped: run <id> still loading (12 min)}): runs never overlap.
+     */
     @PostMapping("/api/v1/admin/dataload/run")
     public Map<String, Object> run(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        if (!inbox.runNow(p.user())) {
+        if (!inbox.started()) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the data inbox is off on this server: turn it on in Admin, Engines (dataload)");
         }
-        record(p, "dataload.run", "inbox", "Load now");
+        String skipped = inbox.runNow(p.user());
+        record(p, "dataload.run", "inbox", skipped == null ? "Load now" : "Load now " + skipped);
         Map<String, Object> out = new LinkedHashMap<>();
-        out.put("queued", true);
+        out.put("started", skipped == null);
+        if (skipped != null) {
+            out.put("skipped", skipped);
+        }
         out.put("by", p.user());
         return out;
     }

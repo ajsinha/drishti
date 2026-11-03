@@ -50,7 +50,7 @@ class CycleTest {
                 "outbox/2026-11-03/RUN/trades-a.jsonl", "outbox/2026-11-03/RUN/trades-a.jsonl.loaded.json", "outbox/2026-11-03/RUN/trades-a.jsonl.ready",
                 "outbox/2026-11-03/RUN/trades-b.jsonl", "outbox/2026-11-03/RUN/trades-b.jsonl.loaded.json", "outbox/2026-11-03/RUN/trades-b.jsonl.ready");
         assertThat(f.tree("inbox")).as("a file without its marker is never touched").containsExactly("inbox/trades-c.jsonl");
-        assertThat(f.tree("work")).isEmpty();
+        assertThat(f.tree("inprocess")).isEmpty();
         assertThat(f.signals).extracting(Signal.Landed::pack, Signal.Landed::kind, Signal.Landed::date, Signal.Landed::rows).containsExactly(
                 org.assertj.core.groups.Tuple.tuple("demo-pack", "trade", LocalDate.parse("2026-11-02"), 2L),
                 org.assertj.core.groups.Tuple.tuple("demo-pack", "trade", LocalDate.parse("2026-11-03"), 1L));
@@ -187,7 +187,7 @@ class CycleTest {
         try (Claims.Lock held = new Claims(f.root, f.clock).lock("node-b", Duration.ofHours(1), Duration.ofMinutes(1))) {
             Cycle.Report r = f.run();
             assertThat(r.state()).isEqualTo("skipped");
-            assertThat(r.why()).startsWith("another runner holds the folder lock: node-b since");
+            assertThat(r.why()).isEqualTo("run of node-b still loading (0 min)");
         }
         assertThat(f.loads).isEmpty();
         assertThat(f.tree("inbox")).hasSize(2);

@@ -31,15 +31,14 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * One run of the inbox (DATALOAD_INBOX.md section 4): the owner only, not while busy protection says the server is short, under the folder
- * lock; the stopped runs finished ({@link Recovery}); the ready, stable files found ({@link Inbox}), claimed into {@code work/<run>/}
- * ({@link Claims}), duplicates skipped by SHA-256 ({@link Ledger}), routed ({@link Routes}) and loaded, the files of one table in one
+ * lock; the stopped runs finished ({@link Recovery}); the whole batch of ready, stable files found ({@link Inbox}) and claimed at once into
+ * {@code inprocess/<run>/} ({@link Claims}; files that become ready meanwhile wait for the next cycle), duplicates skipped by SHA-256 ({@link Ledger}), routed ({@link Routes}) and loaded, the files of one table in one
  * loader run ({@link LoaderProcess}), one table after another; recorded, moved with their reports ({@link Outbox}) and, last, the server
  * told ({@link Signal}). Every step is written to the ledger before it is acted on.
  */
@@ -47,7 +46,7 @@ public final class Cycle {
 
     private static final Logger LOG = LoggerFactory.getLogger(Cycle.class);
     private static final ObjectMapper JSON = new ObjectMapper();
-    private static final DateTimeFormatter RUN = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
+    private static final DateTimeFormatter RUN = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(java.time.ZoneOffset.UTC);
 
     /** What became of one file. */
     public record FileOutcome(String file, String outcome, String reason, String pack, String kind, Map<String, Long> versions, long rows, long rejected) {}
@@ -99,9 +98,34 @@ public final class Cycle {
         this.faults = faults == null ? Faults.NONE : faults;
     }
 
-    /** A new run id: {@code 20261103-101500-a3f9} (visible, sortable). */
+    /**
+     * A new run id: its start time (UTC) and node, {@code 20261103T120000Z-drishti-main} (visible, sortable); {@code -2}, {@code -3} when a
+     * run of the same second has a folder already.
+     */
     String newRun() {
-        return RUN.format(clock.instant().atZone(zone)) + "-" + Integer.toHexString(0x1000 + ThreadLocalRandom.current().nextInt(0xF000));
+        String id = RUN.format(clock.instant()) + "-" + node.replaceAll("[^A-Za-z0-9._-]", "-");
+        String day = java.time.LocalDate.now(clock.withZone(zone)).toString();
+        String out = id;
+        for (int n = 2; Files.exists(root.resolve("inprocess").resolve(out)) || Files.exists(root.resolve("outbox").resolve(day).resolve(out))
+                || Files.exists(root.resolve("failed").resolve(day).resolve(out)); n++) {
+            out = id + "-" + n;
+        }
+        return out;
+    }
+
+    /** What a cycle due while {@code holder} holds the lock says: {@code skipped: run <id> still loading (12 min)}. */
+    static String stillLoading(JsonNode holder, Instant now) {
+        if (holder == null) {
+            return "another run holds the inbox lock";
+        }
+        long min = 0;
+        try {
+            min = Math.max(0, Duration.between(Instant.parse(holder.path("since").asText()), now).toMinutes());
+        } catch (RuntimeException e) {
+            // an unreadable time: the minutes are left out
+        }
+        String run = holder.path("run").asText("");
+        return "run " + (run.isEmpty() ? "of " + holder.path("node").asText("?") : run) + " still loading (" + min + " min)";
     }
 
     /** Runs the cycle; {@code trigger} says who asked ({@code schedule}, {@code by a.sinha}). */
@@ -121,14 +145,12 @@ public final class Cycle {
         Claims.Lock lock;
         try {
             Files.createDirectories(root.resolve("inbox"));
-            lock = claims.lock(node, stale, beat);
+            lock = claims.lock(run, node, stale, beat);
         } catch (IOException e) {
             return skipped(run, trigger, t0, "the folder lock could not be taken: " + e.getMessage());
         }
         if (lock == null) {
-            JsonNode h = claims.holder();
-            return skipped(run, trigger, t0, "another runner holds the folder lock: " + (h == null ? "?" : h.path("node").asText("?") + " since "
-                    + h.path("since").asText("?")));
+            return skipped(run, trigger, t0, stillLoading(claims.holder(), clock.instant()));
         }
         List<FileOutcome> files = new ArrayList<>();
         List<String> notices = new ArrayList<>();
@@ -151,11 +173,16 @@ public final class Cycle {
                 outbox.failed(run, r.file(), r.marker(), report(r.file().getFileName().toString(), run, Ledger.FAILED).put("reason", r.reason()));
                 files.add(new FileOutcome(r.file().getFileName().toString(), Ledger.FAILED, r.reason(), null, null, Map.of(), 0, 0));
             }
-            Map<String, List<Claimed>> groups = new LinkedHashMap<>();
+            // the whole batch claimed in one step, before anything is read: a file is in the inbox or in this run's folder, never both
+            List<Path[]> claimed = new ArrayList<>();
             for (Inbox.Ready r : found.ready()) {
                 ledger.write(run, r.name(), Ledger.CLAIMED, JSON.createObjectNode().put("size", r.size()).put("node", node));
-                Path[] c = claims.claim(r, run);
-                Claimed cl = examine(run, r.name(), c[0], c[1], r.size(), ledger, outbox, routes, files);
+                claimed.add(claims.claim(r, run));
+            }
+            Map<String, List<Claimed>> groups = new LinkedHashMap<>();
+            for (int i = 0; i < claimed.size(); i++) {
+                Inbox.Ready r = found.ready().get(i);
+                Claimed cl = examine(run, r.name(), claimed.get(i)[0], claimed.get(i)[1], r.size(), ledger, outbox, routes, files);
                 if (cl != null) {
                     groups.computeIfAbsent(cl.route().group(), k -> new ArrayList<>()).add(cl);
                 }

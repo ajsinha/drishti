@@ -65,7 +65,7 @@ class RecoveryTest {
         assertThat(next.state()).isEqualTo("done");
         assertThat(runs.get()).as("loaded once, whatever the step").isEqualTo(1);
         assertThat(f.tree("inbox")).isEmpty();
-        assertThat(f.tree("work")).isEmpty();
+        assertThat(f.tree("inprocess")).isEmpty();
         assertThat(f.tree("outbox")).contains("outbox/2026-11-03/RUN/trades-a.jsonl", "outbox/2026-11-03/RUN/trades-a.jsonl.ready",
                 "outbox/2026-11-03/RUN/trades-a.jsonl.loaded.json", "outbox/2026-11-03/RUN/trades-b.jsonl", "outbox/2026-11-03/RUN/trades-b.jsonl.ready");
         assertThat(f.signals).as("told of the date").isNotEmpty().allMatch(l -> l.date().equals(LocalDate.parse("2026-11-02")) && l.rows() == 3);
@@ -88,9 +88,9 @@ class RecoveryTest {
         };
         new Cycle(f.settings, "node-a", f.clock, Fixture.ZONE, f.packs(), f.fakeLoader(), flaky, null, null).run("t");
         assertThat(f.signals).isEmpty();
-        assertThat(f.tree("work")).as(refused ? "nothing pending" : "the signal pending").hasSize(refused ? 0 : 1);
+        assertThat(f.tree("inprocess")).as(refused ? "nothing pending" : "the signal pending").hasSize(refused ? 0 : 1);
         new Cycle(f.settings, "node-a", f.clock, Fixture.ZONE, f.packs(), f.fakeLoader(), flaky, null, null).run("t");
         assertThat(f.signals).hasSize(refused ? 0 : 1);
-        assertThat(f.tree("work")).isEmpty();
+        assertThat(f.tree("inprocess")).isEmpty();
     }
 }

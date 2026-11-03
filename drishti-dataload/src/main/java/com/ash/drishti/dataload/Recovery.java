@@ -35,13 +35,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Crash safety (DATALOAD_INBOX.md section 7): every step can be repeated. Before a cycle looks at the inbox, every {@code work/<run>/}
+ * Crash safety (DATALOAD_INBOX.md section 7): every step can be repeated. Before a cycle looks at the inbox, every {@code inprocess/<run>/}
  * folder a stopped server left is finished by what the ledger and the loader's own files say:
  *
  * <ul>
  *   <li>a file only claimed: when its load's summary (the loader writes it after its commits) says it loaded, the ledger is completed, the
  *       file moved and the signal sent, so nothing is loaded twice; otherwise it goes back to the inbox;</li>
- *   <li>a file the ledger says was loaded, skipped as a duplicate or failed, still in {@code work/}: it is moved;</li>
+ *   <li>a file the ledger says was loaded, skipped as a duplicate or failed, still in {@code inprocess/}: it is moved;</li>
  *   <li>signals written but not all sent ({@code signals.jsonl}): sent (the server records each pack, kind, date and batch once).</li>
  * </ul>
  * A date's commit replaces that date's rows of the table, so even a file loaded again after a crash in the loader's own write leaves the
@@ -68,14 +68,14 @@ public final class Recovery {
         this.signal = signal;
     }
 
-    /** Finishes every run a stopped server left in {@code work/}; returns what became of each file. */
+    /** Finishes every run a stopped server left in {@code inprocess/}; returns what became of each file. */
     public List<Cycle.FileOutcome> run() throws IOException {
         List<Cycle.FileOutcome> out = new ArrayList<>();
-        if (!Files.isDirectory(claims.work())) {
+        if (!Files.isDirectory(claims.inprocess())) {
             return out;
         }
         List<Path> runs = new ArrayList<>();
-        try (DirectoryStream<Path> ds = Files.newDirectoryStream(claims.work(), Files::isDirectory)) {
+        try (DirectoryStream<Path> ds = Files.newDirectoryStream(claims.inprocess(), Files::isDirectory)) {
             ds.forEach(runs::add);
         }
         runs.sort(Path::compareTo);
@@ -135,7 +135,7 @@ public final class Recovery {
         return out;
     }
 
-    /** A run's end: its pending signals sent, the loader's files kept beside its outbox, its work folder removed when empty. */
+    /** A run's end: its pending signals sent, the loader's files kept beside its outbox, its in-process folder removed when empty. */
     public int finish(String run) throws IOException {
         Path dir = claims.run(run);
         if (!Files.isDirectory(dir)) {
