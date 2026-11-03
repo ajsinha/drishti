@@ -17,7 +17,7 @@
 
 *Product owner, 2026-11-03: "it should not be in connector config: theoretically we can have a Delta lake anywhere. We should have one
 global and separate config for the lake. Everyone else, including the Delta connector, should refer to it." Status: **designed, not
-built**; section 8 lists the questions with a recommendation each. (planned)*
+built**; the questions of section 8 decided as recommended by the product owner (2026-11-03). (planned)*
 
 ## 1. Where the lake is described today, and why that is wrong
 
@@ -116,9 +116,9 @@ table that has no entry.
 M: the file and its reader (one small plain-Java module or package shared by readers and writers), the connectors and the loaders moved
 onto it, the migration tool, the checks, docs (a lake guide; CONNECTOR docs and DATA_GUIDE updated; CONFIGURATION.md).
 
-## 8. Questions, with recommendations
+## 8. Decisions (product owner, 2026-11-03: every recommendation accepted)
 
-| # | Question | Recommendation |
+| # | Question | Decided |
 |---|---|---|
 | L1 | One file per lake under `config/lakes/` | **Yes** | (planned)
 | L2 | A pack ships recommended entries; the lake file is the truth after install | **Yes** |
