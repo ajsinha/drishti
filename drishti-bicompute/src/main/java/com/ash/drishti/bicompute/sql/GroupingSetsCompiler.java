@@ -192,7 +192,7 @@ public final class GroupingSetsCompiler {
         List<String> ordered = new ArrayList<>(dims.stream().filter(groupedSet::contains).toList());
         dims.stream().filter(d -> !groupedSet.contains(d)).forEach(ordered::add);
         dims = ordered;
-        int k = (int) dims.stream().filter(groupedSet::contains).count();
+        int kg = (int) dims.stream().filter(groupedSet::contains).count();
         List<Object> params = new ArrayList<>();
         String base = base(plan, rel, types, dims, params, List.of());
         List<String> where = new ArrayList<>();
@@ -228,8 +228,8 @@ public final class GroupingSetsCompiler {
             params.addAll(ex.getValue());
         }
         List<String> select = new ArrayList<>();
-        boolean grouped = k > 0;
-        for (int i = 0; i < k; i++) {
+        boolean grouped = kg > 0;
+        for (int i = 0; i < kg; i++) {
             select.add("\"d" + i + "\"");
         }
         select.add(grouped ? "GROUPING(" + String.join(", ", select) + ") AS \"_g\"" : "0 AS \"_g\"");
@@ -275,7 +275,7 @@ public final class GroupingSetsCompiler {
         if (plan.maxGroups() > 0) {
             sql.append("\nLIMIT ").append(plan.maxGroups() + 1);
         }
-        return new Compiled(sql.toString(), params, List.copyOf(dims.subList(0, k)), group, states);
+        return new Compiled(sql.toString(), params, List.copyOf(dims.subList(0, kg)), group, states);
     }
 
     /** The SELECT of a cell's member rows (drill-through): the visible fields, the row rules, the filters and the cell's coordinates. */
