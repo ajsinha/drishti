@@ -437,6 +437,8 @@ class DemoLake:
                     "VALUATION_DATE", "BASE_VALUATION_DATE")
     #: the date lists moved the same way: a scenario set's days, an exposure run's grid
     DATED_LISTS = ("SCENARIO_DATES", "GRID_DATES")
+    #: a stress scenario set's fields that name its historical period: kept as they are
+    STRESS_WINDOW = ("WINDOW_START", "WINDOW_END", "SCENARIO_DATES")
     _ISO = re.compile(r"\d{4}-\d{2}-\d{2}")
 
     def redate_dated(self, doc: dict) -> dict:
@@ -445,11 +447,15 @@ class DemoLake:
         or an exposure grid stays whole and in order."""
         if not self.shift:
             return doc
+        # a stress set's window is a fixed period of market history (HS-STRESS-2008: 2008-07-01 to 2009-06-30), the same days the long
+        # history (pnl-history's HISTORY_DATES, never moved) holds: only its business date moves, or the stress window page would read
+        # a window a month later than the set's own (VAR_GUIDE.md section 18.9)
+        fixed = self.STRESS_WINDOW if doc.get("SET_TYPE") == "STRESS" else ()
         for f in self.DATED_FIELDS:
-            if isinstance(doc.get(f), str):
+            if isinstance(doc.get(f), str) and f not in fixed:
                 doc[f] = self._ISO.sub(lambda m: self.move_day(m.group(0)), doc[f])
         for f in self.DATED_LISTS:
-            if isinstance(doc.get(f), list):
+            if isinstance(doc.get(f), list) and f not in fixed:
                 doc[f] = [self.move_day(d) if isinstance(d, str) else d for d in doc[f]]
         return doc
 

@@ -25,7 +25,11 @@
   guide. `make_sutras.py` writes the phone layouts of the shared deal fragments, the counterparty, the netting set and the Endur commodity
   swap (they had been added by hand, so `--check` failed); `testdata.yaml` regenerated. Tutorials 30 to 32 gain their pictures
   (`screenshots.py --guide t30`, `t31`, `t32`), what you should see at every step and their next steps; the tutorials card counts
-  past thirty.
+  past thirty. FRSA's capital stack draws each bar to its length (the width was a style attribute, which the console's CSP blocks).
+- **Fixed: the stress window page read the current window a month late on a demo lake.** `lake demo` moved a stress scenario set's
+  window and days with the business dates (HS-STRESS-2008 became 2008-08-01 to 2009-07-31 on a lake ending 2026-11-02) while the long
+  history's days stay as they are; a stress set's period of history now stays 2008-07-01 to 2009-06-30, as VAR_GUIDE.md section 18.9
+  says, and only its business date moves.
 - **The stress window page draws across the page again:** its outer box used the class `sw`, which the terminal style sheet also uses for a
   small legend swatch (14 by 3 pixels), so the page shrank to a narrow column; the box is now `sw-page`. New browser test
   `test_stress_window_browser.py`. VAR_GUIDE.md section 18.9 opens with a plain-words explanation: what the stress window is, what the
