@@ -142,6 +142,9 @@
   finished cells beside Top N and Others (`core.ShowAs`). A function may answer text (`AggFunction.result`) and name its unit
   (`resultUnit`); a measure may take a quoted text (`string_agg(CCY, ', ', true)`). Fixed: a show-as on a view with two or more row or
   column dimensions read the wrong total (a cell's key was split at the first `|`, which a key of several coordinates also has).
+  The pivot grid shows a text answer (`string_agg`, the `mode` of names) as its text, escaped (it was blank), and an `ntile` bucket, a
+  rank and a measure whose unit is `count` as whole numbers (an ntile showed two decimals), read from the answer's `unit` and `showAs`
+  (`pivot-grid.js` `fmt`, `tests/test_pivot_grid_fmt.py`).
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 
