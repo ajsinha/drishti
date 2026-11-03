@@ -51,6 +51,15 @@ public interface PivotProvider {
      * One of the provider's native measures as a function ({@code var()}), or empty when the name is not one of them; the core then looks
      * among the built-ins (when {@link Capabilities#builtIns()}).
      */
+    /**
+     * The view as this provider answers it, before anything is planned (PIVOT_ENGINE.md section 6.7): a document source turns Rachana
+     * paths ({@code $.LEGS[*].NOTIONAL}) into its field ids, takes the view's grain and counts a coarser figure once per parent. Refuses in
+     * words ({@code DRS-5701}) what cannot be answered honestly (two separate lists crossed). The default: the view as it is.
+     */
+    default com.ash.drishti.bicompute.core.PivotView prepare(Viewer v, com.ash.drishti.bicompute.core.PivotView view) {
+        return view;
+    }
+
     default Optional<AggFunction<Object>> nativeFunction(String name, List<String> args) {
         return Optional.empty();
     }

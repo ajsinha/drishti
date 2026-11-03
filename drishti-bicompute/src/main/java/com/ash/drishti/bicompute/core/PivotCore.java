@@ -194,10 +194,10 @@ public final class PivotCore {
         final Map<String, String> units = new HashMap<>();
         final AggregationPlan.Money money;
 
-        Computation(Viewer viewer, PivotView view) {
+        Computation(Viewer viewer, PivotView asked) {
             this.viewer = viewer;
-            this.view = view;
-            this.provider = provider(view.source());
+            this.provider = provider(asked.source());
+            this.view = provider.prepare(viewer, asked);             // a document source's paths, grain and once-per-parent figures
             this.catalogue = provider.catalogue(viewer, view.source(), view.date());
             catalogue.fields().forEach(f -> {
                 types.put(f.name(), f.type());

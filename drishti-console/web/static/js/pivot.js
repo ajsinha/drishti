@@ -89,18 +89,36 @@
     var c = state.catalogue;
     var q = ($("[data-pv-field-search]").value || "").toLowerCase();
     var h = [];
-    var groups = [["Fields", (c.fields || []).map(function (f) { return {name: f.name, type: f.type, note: f.note}; })],
-      [c.provider === "var" ? "VaR engine" : "Measures", (c.measures || []).map(function (m) { return {name: m.name, type: m.kind, note: m.description, native: true, label: m.label}; })]];
+    // the entity's fields, then a document's paths by their grain (PIVOT_GUIDE.md, documents): "Each leg (one row per leg)"; the engine's
+    // own fields (a parent key _p0, an all-elements filter ~all) are not offered
+    var plain = [], byGrain = {}, order = [];
+    (c.fields || []).forEach(function (f) {
+      if (/^_|~/.test(f.name)) { return; }
+      var desc = f.description || f.note || "", m = /^path (\S+).*one value per ([\w ]+)/.exec(desc);
+      var item = {name: f.name, type: f.type, note: desc, label: m ? f.label : null};
+      if (!m) { plain.push(item); return; }
+      var g = m[2] === "entity" ? (c.title || c.source) + ": its document" : "Each " + m[2] + " (one row per " + m[2] + ")";
+      if (!byGrain[g]) { byGrain[g] = []; order.push(g); }
+      byGrain[g].push(item);
+    });
+    var groups = [["Fields", plain]].concat(order.map(function (g) { return [g, byGrain[g]]; })).concat([
+      [c.provider === "var" ? "VaR engine" : "Measures", (c.measures || []).map(function (m) { return {name: m.name, type: m.kind, note: m.description, native: true, label: m.label}; })]]);
     groups.forEach(function (g) {
       if (!g[1].length) { return; }
       h.push('<h3>' + esc(g[0]) + '</h3>');
       g[1].forEach(function (f) {
-        if (q && f.name.toLowerCase().indexOf(q) < 0) { return; }
+        if (q && (f.name + " " + (f.label || "")).toLowerCase().indexOf(q) < 0) { return; }
         h.push('<div class="pv-field" draggable="true" tabindex="0" data-field="' + esc(f.name) + '" data-native="' + (f.native ? 1 : 0) + '" data-type="' + esc(f.type) + '" title="' + esc(f.note || "") + '">'
           + '<input type="checkbox" tabindex="-1" aria-hidden="true"' + (inView(f.name) ? " checked" : "") + '> <span>' + esc(f.label || f.name) + '</span>'
           + '<span class="pv-type' + (f.type === "holistic" ? " hol" : "") + '">' + esc(f.type) + '</span></div>');
       });
     });
+    // a Rachana path typed in the search box is a field too ($.LEGS[0].CURRENCY, size($.LEGS)): the server reads it from the documents
+    var typed = ($("[data-pv-field-search]").value || "").trim();
+    if (/^(\$|size\()/.test(typed)) {
+      h.push('<h3>Your path</h3><div class="pv-field" draggable="true" tabindex="0" data-field="' + esc(typed) + '" data-native="0" data-type="path" title="read from each document; drag it to a zone, or select it and press R, C, V or F">'
+        + '<input type="checkbox" tabindex="-1" aria-hidden="true"> <span class="mono">' + esc(typed) + '</span><span class="pv-type">path</span></div>');
+    }
     $("[data-pv-fields]").innerHTML = h.join("") || '<p class="pv-sub">No field you may use.</p>';
     $("[data-pv-fields-sub]").textContent = (c.title || c.source) + (c.masked ? " · " + c.masked + " masked for you" : "");
   }

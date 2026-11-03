@@ -73,10 +73,15 @@ public class PivotController {
     private final EditionCommands edition;
     private final boolean enabled;
     private final org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines;
+    private final KindSources kinds;
+    private final com.ash.drishti.server.security.Entitlements entitlements;
 
     public PivotController(PivotCore core, PivotViews views, PivotProperties props, AuditLog audit, EditionCommands edition,
             @Value("${drishti.engines.pivot.enabled:${drishti.pivot.enabled:true}}") boolean enabled,
-            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, KindSources kinds,
+            com.ash.drishti.server.security.Entitlements entitlements) {
+        this.kinds = kinds;
+        this.entitlements = entitlements;
         this.core = core;
         this.views = views;
         this.props = props;
@@ -224,6 +229,19 @@ public class PivotController {
     public Map<String, Object> cellPath(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String name,
             @PathVariable String rest) {
         return cell(p, "pivot://" + owner + "/" + name + URLDecoder.decode(rest, StandardCharsets.UTF_8));
+    }
+
+    /**
+     * The document paths people typed on a source, most used first, with how each becomes a column read (PIVOT_ENGINE.md section 6.7):
+     * an administrator's suggestions to promote a path in the connector's layout or to add it to a BI dataset.
+     */
+    @GetMapping("/paths")
+    public Map<String, Object> paths(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestParam String source) {
+        on(p);
+        if (kinds == null || !entitlements.isAdmin(p)) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "the most used document paths are an administrator's suggestions");
+        }
+        return Map.of("source", source, "paths", kinds.typedPaths(source));
     }
 
     /** The most rows an inline pivot takes (a chart of a table's shown rows is a page, never a lake). */

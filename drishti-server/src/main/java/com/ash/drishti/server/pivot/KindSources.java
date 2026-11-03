@@ -60,6 +60,25 @@ public final class KindSources implements TabularSource.Resolver {
     private final Map<String, Long> staged = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));
     private final Map<String, Object> locks = new ConcurrentHashMap<>();
     private volatile DuckDbExecutor exec;
+    /** Per source and data version: the document fields a sample of its documents shows (PIVOT_ENGINE.md section 6.7). */
+    private final Map<String, Map<String, DocPath>> shapes = new ConcurrentHashMap<>();
+    /** Per source: the paths people typed (fields beyond the sampled list), and how often each was used, for the administrator. */
+    private final Map<String, Map<String, Typed>> typed = new ConcurrentHashMap<>();
+    private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    /** A typed path and its use. */
+    static final class Typed {
+        final DocPath path;
+        final java.util.concurrent.atomic.AtomicLong uses = new java.util.concurrent.atomic.AtomicLong();
+        volatile String last = "";
+
+        Typed(DocPath path) {
+            this.path = path;
+        }
+    }
+
+    /** How many documents the field list samples. */
+    static final int SAMPLE = 200;
 
     public KindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition, PivotProperties props,
             com.ash.drishti.engine.search.SearchProperties search) {
@@ -170,7 +189,21 @@ public final class KindSources implements TabularSource.Resolver {
                 estimate = -1;
             }
         }
-        return new Kind(d, day, fields, maskedNames.size(), fullVersion, table, dates, memoryOnly, p, lake, estimate);
+        java.util.Set<String> promoted = new java.util.LinkedHashSet<>();
+        fields.forEach(f -> promoted.add(f.name()));
+        Map<String, DocPath> docs = new LinkedHashMap<>(shape(d, day, p, fullVersion, promoted));
+        typed.getOrDefault(source, Map.of()).forEach((k, t) -> docs.putIfAbsent(t.path.id(), t.path));
+        Map<String, String> docTypes = new LinkedHashMap<>();
+        for (DocPath dp : docs.values()) {
+            String type = dp.size() ? "number" : shapeType(source, fullVersion, dp.text());
+            docTypes.put(dp.id(), type);
+            fields.add(new PivotProvider.Field(dp.id(), type, dp.label(), "path " + dp.text() + "; one value per " + DocView.words(dp.grain())
+                    + (dp.size() ? " (a count)" : ""), ""));
+        }
+        if (!docs.isEmpty()) {
+            fields.addAll(DocView.engineFields(docs, docTypes));
+        }
+        return new Kind(d, day, fields, maskedNames.size(), fullVersion, table, dates, memoryOnly, p, lake, estimate, docs, promoted);
     }
 
     /**
@@ -235,9 +268,14 @@ public final class KindSources implements TabularSource.Resolver {
         final Principal p;
         final com.ash.drishti.api.LakeFiles lake;
         final long estimate;
+        final Map<String, DocPath> docs;
+        final java.util.Set<String> promoted;
 
         Kind(DataViewService.Dataset d, LocalDate day, List<PivotProvider.Field> fields, int masked, String version, String table,
-                List<String> dates, boolean memoryOnly, Principal p, com.ash.drishti.api.LakeFiles lake, long estimate) {
+                List<String> dates, boolean memoryOnly, Principal p, com.ash.drishti.api.LakeFiles lake, long estimate, Map<String, DocPath> docs,
+                java.util.Set<String> promoted) {
+            this.docs = docs;
+            this.promoted = promoted;
             this.lake = lake;
             this.estimate = estimate;
             this.d = d;
@@ -321,6 +359,88 @@ public final class KindSources implements TabularSource.Resolver {
             return m;
         }
 
+        private DocView docView() {
+            return new DocView(docs, promoted, text -> typed(d.kind(), text));
+        }
+
+        @Override
+        public com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+            return docView().prepare(view);
+        }
+
+        /** True when the plan reads a document path (or a parent key): the documents are staged and unnested for it. */
+        private boolean readsDocuments(com.ash.drishti.bicompute.core.AggregationPlan plan) {
+            java.util.function.Predicate<String> doc = id -> docs.containsKey(id) || id.endsWith(DocView.ALL) || id.startsWith("_p");
+            return plan.dims().values().stream().anyMatch(x -> doc.test(x.field()))
+                    || plan.functions().stream().anyMatch(f -> f.inputs().stream().anyMatch(doc));
+        }
+
+        @Override
+        public Relation relation(DuckDbExecutor e, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+            if (!readsDocuments(plan)) {
+                return relation(e);
+            }
+            exec = e;
+            String docTable = table + "_d";
+            Object lock = locks.computeIfAbsent(docTable, k -> new Object());
+            synchronized (lock) {
+                if (!staged.containsKey(docTable) || !e.exists(docTable)) {
+                    stageDocuments(e, docTable);
+                }
+                staged.get(docTable);
+            }
+            Map<String, String> types = new LinkedHashMap<>();
+            fields.forEach(f -> types.put(f.name(), f.type()));
+            List<String> names = new ArrayList<>(fields.stream().map(PivotProvider.Field::name).toList());
+            plan.dims().values().stream().map(com.ash.drishti.bicompute.core.Dim::field).filter(f -> f.endsWith(DocView.ALL) && !names.contains(f))
+                    .forEach(names::add);
+            return new Relation(docView().relation(DuckDbExecutor.quote(docTable), plan, names, types), List.of(), null, List.of());
+        }
+
+        /** The promoted columns, the entity's id and its whole document (JSON, masks applied), staged once per version and mask signature. */
+        private void stageDocuments(DuckDbExecutor e, String docTable) {
+            List<String> cols = new ArrayList<>(promoted);
+            List<DuckDbExecutor.Column> dc = new ArrayList<>();
+            fields.stream().filter(f -> promoted.contains(f.name())).forEach(f -> dc.add(new DuckDbExecutor.Column(f.name(), "number".equals(f.type())
+                    ? "number" : "text")));
+            dc.add(new DuckDbExecutor.Column("_id", "text"));
+            dc.add(new DuckDbExecutor.Column("_doc", "text"));
+            List<String> out = new ArrayList<>(cols);
+            if (d.key() != null && !out.contains(d.key())) {
+                out.add(d.key());
+            }
+            out.add(DataViewService.DOCUMENT);
+            long max = props.stageMaxRows();
+            long n = e.stage(docTable, dc, sink -> {
+                long[] seen = {0};
+                data.walk(d, day, DataSelection.parse(List.of(), List.of()), out, entitlements.masks(p) ? entitlements.redactor(p) : null, false, 0,
+                        row -> {
+                            if (++seen[0] > max) {
+                                throw new DrishtiException(ErrorCode.PIVOT_TOO_MANY_CELLS, d.kind() + " has more than " + max + " documents on "
+                                        + (day == null ? "its current data" : day) + " (drishti.pivot.stage-max-rows): a path read from every "
+                                        + "document is too large here; promote the field (the connector's layout." + d.kind() + ".columns) or add "
+                                        + "it to a BI dataset (path:), so it is read as a column");
+                            }
+                            Object[] vals = new Object[cols.size() + 2];
+                            for (int i = 0; i < cols.size(); i++) {
+                                Object o = row.get(cols.get(i));
+                                vals[i] = o == null || o instanceof Number || o instanceof String ? o : String.valueOf(o);
+                            }
+                            Object id = d.key() == null ? null : row.get(d.key());
+                            vals[cols.size()] = id == null ? null : String.valueOf(id);
+                            try {
+                                vals[cols.size() + 1] = JSON.writeValueAsString(row.get(DataViewService.DOCUMENT));
+                                sink.row(vals);
+                            } catch (Exception ex) {
+                                throw new java.io.IOException(ex);
+                            }
+                            return true;
+                        });
+                return seen[0];
+            });
+            staged.put(docTable, n);
+        }
+
         @Override
         public Relation relation(DuckDbExecutor e) {
             exec = e;
@@ -393,6 +513,81 @@ public final class KindSources implements TabularSource.Resolver {
                 }
             }
         }
+    }
+
+    // ---- documents (PIVOT_ENGINE.md section 6.7) ------------------------------------------------------------------------------
+
+    /** The types the sample saw, per source version and path. */
+    private final Map<String, String> sampledTypes = new ConcurrentHashMap<>();
+
+    private String shapeType(String source, String version, String path) {
+        return sampledTypes.getOrDefault(source + "|" + version + "|" + path, "string");
+    }
+
+    /** The document fields of a kind on a date for a person: sampled once per data version and mask signature, then kept. */
+    private Map<String, DocPath> shape(DataViewService.Dataset d, LocalDate day, Principal p, String version, java.util.Set<String> promoted) {
+        String key = d.kind() + "|" + version;
+        Map<String, DocPath> have = shapes.get(key);
+        if (have != null) {
+            return have;
+        }
+        List<Map<?, ?>> docs = new ArrayList<>();
+        try {
+            data.walk(d, day, DataSelection.parse(List.of(), List.of()), List.of(DataViewService.DOCUMENT), entitlements.masks(p) ? entitlements.redactor(p)
+                    : null, false, 0, row -> {
+                        if (row.get(DataViewService.DOCUMENT) instanceof Map<?, ?> m) {
+                            docs.add(m);
+                        }
+                        return docs.size() < SAMPLE;
+                    });
+        } catch (java.io.IOException | RuntimeException e) {
+            return Map.of();                                      // no sample: the promoted columns alone, typed paths still work
+        }
+        Map<String, DocPath> out = new LinkedHashMap<>();
+        DocFields.of(docs, promoted, n -> entitlements.masked(p, n)).forEach((path, seen) -> {
+            try {
+                DocPath dp = DocPath.parse(path);
+                out.putIfAbsent(dp.id(), dp);
+                sampledTypes.put(key + "|" + dp.text(), seen.type());
+            } catch (RuntimeException e) {
+                // a name the parser does not take is left out of the list
+            }
+        });
+        if (shapes.size() > 64) {
+            shapes.clear();
+        }
+        shapes.put(key, out);
+        return out;
+    }
+
+    /** A path a person typed, as a field of the source (kept and counted for the administrator's Promote and Add to dataset). */
+    DocPath typed(String source, String text) {
+        DocPath dp = DocPath.parse(text);
+        Typed t = typed.computeIfAbsent(source, k -> new ConcurrentHashMap<>()).computeIfAbsent(dp.text(), k -> new Typed(dp));
+        t.uses.incrementAndGet();
+        t.last = java.time.Instant.now().toString();
+        return t.path;
+    }
+
+    /**
+     * The paths people typed on a source, most used first (an administrator's suggestions: promote a path the connector's
+     * {@code layout.<kind>.columns} can hold, or add it to a BI dataset as a {@code path:} column; both make it a column read).
+     */
+    public List<Map<String, Object>> typedPaths(String source) {
+        List<Map<String, Object>> out = new ArrayList<>();
+        typed.getOrDefault(source, Map.of()).values().stream().sorted((a, b) -> Long.compare(b.uses.get(), a.uses.get())).forEach(t -> {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("path", t.path.text());
+            m.put("id", t.path.id());
+            m.put("grain", DocView.words(t.path.grain()));
+            m.put("uses", t.uses.get());
+            m.put("lastUsed", t.last);
+            m.put("promote", t.path.grainLevels().isEmpty() ? "add " + t.path.id() + " to layout." + source + ".columns of its connector"
+                    : "a list's field cannot be a promoted column: add it to a BI dataset (each: " + t.path.grainLevels().get(0).name() + ")");
+            m.put("dataset", "a BI dataset column: path: " + t.path.text());
+            out.add(m);
+        });
+        return out;
     }
 
     /** Drops every staged table (the engine switched off). */
