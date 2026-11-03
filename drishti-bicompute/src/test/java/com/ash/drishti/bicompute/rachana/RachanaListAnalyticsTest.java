@@ -136,6 +136,24 @@ class RachanaListAnalyticsTest {
     }
 
     @Test
+    void theReferencesExamplesOnTheDemoTrade() {
+        // RACHANA_REFERENCE.md, "The Excel, SAS and MATLAB set": each example's result on the demo trade MX-20000001
+        DataNode trade = new JsonCodec().read("""
+                {"TRADE_ID":"MX-20000001","QUANTITY":242000000,"TRADE_DATE":"2025-11-21","STRATEGY":null,
+                 "LEGS":[{"LEG_ID":1,"NOTIONAL":242000000},{"LEG_ID":2,"NOTIONAL":242000000}]}""");
+        EvalContext c = EvalContext.of(trade, F);
+        java.util.function.Function<String, Object> ev = src -> Values.simplify(EL.compile(src).eval(c));
+        assertThat(ev.apply("round($.QUANTITY / 1e6, 1)")).isEqualTo(242L);
+        assertThat(ev.apply("is_blank($.STRATEGY)")).isEqualTo(true);
+        assertThat(ev.apply("text($.QUANTITY, '#,##0')")).isEqualTo("242,000,000");
+        assertThat(ev.apply("shift_date($.TRADE_DATE, 2)")).isEqualTo("2025-11-25");
+        assertThat(((DataNode.Arr) ev.apply("cumsum($.LEGS[*].NOTIONAL)")).elements().stream().map(Values::simplify).toList())
+                .containsExactly(242000000L, 484000000L);
+        assertThat(ev.apply("sumproduct($.LEGS, 'NOTIONAL', 'LEG_ID')")).isEqualTo(726000000L);
+        assertThat(ev.apply("norm_s_inv(0.99)")).isEqualTo(2.3263478740408408);
+    }
+
+    @Test
     void masksAndWrongArguments() {
         assertThat(eval("cumsum($.HIDDEN)")).isEqualTo(DataNode.MASK);
         assertThat(eval("movmean($.HIDDEN, 3)")).isEqualTo(DataNode.MASK);

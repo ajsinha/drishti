@@ -3016,6 +3016,11 @@ comes only from the pivot engine (drishti-bicompute), which is not on the class 
   value that may be bad in `iferror(x, fallback)`. A wrong argument written in the expression itself (an unknown day-count basis,
   interval or calendar, a refused pattern, a fill of two characters) is found when the Sutra loads (`DRS-2101`).
 - **Dates** are ISO text (`2026-10-16`; a timestamp counts by its date), and a date result is ISO text, like `today()`.
+- **The null rule.** A missing value is not equal to anything present: `null != 'X'` is `true` and `null == 'X'` is `false`, and a
+  function of a missing value is missing, so `left($.STRATEGY, 2) != 'X'` is `true` for a trade without a strategy. Tests answer true or
+  false, never empty; `is_blank` is the one that is true for an empty value.
+- **Real-number functions** (logarithms, trigonometry, the distributions, discounting) compute in binary floating point, as Excel does;
+  an argument that is already a binary number is taken whole (`sin(pi() / 6)` needs every digit of π).
 
 **Old spellings.** One name per function. These spellings are still read, so existing Sutras keep working, but write the one name in new
 work: `startsWith` (write `starts_with`), `matchesCase` (`matches_case`), `oneOf` (`one_of`), `days` (`days_between`; `days` keeps
@@ -3099,7 +3104,7 @@ the document); `reduce` also binds `@acc`, the value so far.
 | `size(x)` | 1 | elements of a list, fields of an object, characters of a text; `0` for anything else (numbers, empty) |
 | `first(list)`, `last(list)` | 1 | the first or last element; empty for a non-list or an empty list |
 | `flatten(list)` | 1 | a list of lists made one list, in order: `flatten($.LEGS[*].CASH_FLOWS)` is every cash flow of every leg; elements that are not lists are kept; empty for anything but a list. One level only |
-| `sort(list, key?, desc?)` | 1–3 | the elements ordered by `key` (an expression over `@`; the element itself by default), ascending unless `desc` is true: numbers (and number-like text) as numbers and before text, text character by character (ISO dates order); elements with an empty key last either way; equal keys keep their order. Masked when a key is |
+| `sort(list, key?, desc?, key2?, desc2?, …)` | 1–17 | the elements ordered by `key` (an expression over `@`; the element itself by default), ascending unless `desc` is true: numbers (and number-like text) as numbers and before text, text character by character (ISO dates order); elements with an empty key last either way; equal keys keep their order. Further keys order what the earlier leave equal, each with its own direction (MATLAB's `sortrows`): `sort($.TRADES, @.DESK, false, @.NOTIONAL, true)`. Masked when a key is |
 | `unique(list)` | 1 | the distinct elements, the first of each, in order (`1` and `1.0` are one; `'1'` is text) |
 | `take(list, n)`, `drop(list, n)` | 2 | the first `n` elements, or all but the first `n`; negative `n` counts from the end (`take(list, -1)` is the last) |
 | `sequence(n, start?, step?)` | 1–3 | `n` numbers (at most 10,000) from `start` (1) by `step` (1), in decimal: `sequence(3, 0.1, 0.1)` is `0.1, 0.2, 0.3` |
@@ -3121,6 +3126,29 @@ the document); `reduce` also binds `@acc`, the value so far.
 | `group(list, key, aggregate?, 'by'?)` | 2–4 | one row `{label, value, count}` per distinct key, in key order, `count` its elements. The key is a field in quotes (a dotted path), as every shipped Sutra writes it, or an expression over `@`: `group($.LEGS, @.CURRENCY, sum(@.NOTIONAL))`. The aggregate is a field in quotes, summed over the group (number-like text counts; a group with a masked value has no value; without a value field, the count), or any aggregate above over expressions of `@`: `avg(@.PRICE)`, `percentile(@.NOTIONAL, 0.95)`, `wavg(@.PRICE, @.QUANTITY)`, `count(@)` (then a masked value masks its group's value). `by` cuts an ISO date key to its `month` (2026-10) or `year` (2026) first. Elements without a key are left out; at most 500 groups. Rachana reads the key and the inputs; the engine groups and aggregates. Feeds a chart: `rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT')"` is a payment ladder |
 | `measure(name, scope?, options?)` | 1–3 | a compute engine's measure for one scope, exactly as its engine computes it, never summed: `measure('VAR', 'DESK:DESK-COMM')`, `measure('ES', 'DESK:DESK-COMM', 'date=2026-09-30')`. Answered by the server's pivot engine for the person viewing (their entitlements and masks); options `date` and `source` (when two engines offer the name). Refused with the reason where no server answers (a tool) or the pivot engine is off |
 | `cell(view, field, member, ...)` | 1–33 | a cell of a saved pivot view the person may open, as the view computes it: `cell('ann/desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')`; a field left out reads its total; `'value', '<label>'` picks one of several values (the first by default) |
+
+#### The Excel, SAS and MATLAB set
+
+So an analyst coming from Excel, SAS or MATLAB rarely misses a function, Rachana has the families below, each function under one name
+(Excel's, SAS's and MATLAB's names are in [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md) section 12, with what is not
+added and why). Each function's arguments, rules and an example are in the catalogue's sections 1 to 9; the generated list is
+[FUNCTIONS.md](FUNCTIONS.md).
+
+| Family | Functions | Example on the demo trade |
+|---|---|---|
+| Math | `round`, `round_sig`, `log(x, base?)`, `fact`, `combin`, `permut`, `gcd`, `lcm`, `even`, `odd`, `pi`, `sin` … `atan2`, `sinh`, `cosh`, `tanh`, `radians`, `degrees`, `base`, `decimal` | `round($.QUANTITY / 1e6, 1)` is `242` |
+| Information and choice | `is_number`, `is_text`, `is_date`, `is_boolean`, `is_blank`, `is_error`, `type_of`, `choose` | `is_blank($.STRATEGY)` is `true` |
+| Text | `len`, `proper`, `rept`, `exact`, `char`, `code`, `find`, `search` (positions, 0 when not there), `text_before`, `text_after`, `regex_replace`, `reverse`, `clean`, `value` (text to a number), `text` (a number or date with an Excel format code) | `text($.QUANTITY, '#,##0')` is `242,000,000` |
+| Dates | `date(text)`, `date(y, m, d)`, `year`, `quarter`, `month`, `week` (ISO), `day`, `hour`, `minute`, `second`, `weekday(d, type?)`, `days360`, `datedif(a, b, unit)`, `shift_date(d, n, unit?, calendar?)` | `shift_date($.TRADE_DATE, 2)` is `2025-11-25` |
+| Lists (MATLAB's) | `fillmissing`, `interp1`, `polyval`, `trapz`, `cumtrapz`, `union`, `intersect`, `difference`, `is_member`; from the engine: `cumsum`, `cumprod`, `cummax`, `cummin`, `movsum`, `movmean`, `movstd`, `movmedian`, `maxk`, `mink`, `bounds`, `zscore`, `rescale`, `isoutlier`, `polyfit` | `cumsum($.LEGS[*].NOTIONAL)` is `242000000, 484000000` |
+| Aggregates (the engine's) | also `sumproduct`, `sumsq`, `product`, `devsq`, `skewness_pop`, `covar_pop`, `steyx`, `avedev`, `percentile_exc`, `rank_avg`, `percent_rank_of`, `mode_multi` | `sumproduct($.LEGS, 'NOTIONAL', 'LEG_ID')` is `726000000` |
+| Distributions | `norm_dist`, `norm_inv`, `norm_s_dist`, `norm_s_inv`, `lognorm_dist`, `lognorm_inv`, `t_dist`, `t_inv`, `chisq_dist`, `chisq_inv`, `f_dist`, `f_inv`, `binom_dist`, `binom_inv`, `poisson_dist`, `expon_dist`, `gamma_dist`, `gamma_inv`, `gamma`, `gamma_ln`, `beta_dist`, `beta_inv`, `weibull_dist`, `hypgeom_dist`, `negbinom_dist`, `erf`, `erfc`, `standardize`, `confidence_norm`, `confidence_t`, `fisher`, `fisher_inv` | `norm_s_inv(0.99)` is `2.3263478740408408` |
+| Finance on given flows | `npv`, `xnpv`, `irr`, `xirr`, `mirr`, `pv`, `fv`, `pmt`, `ipmt`, `ppmt`, `nper`, `rate`, `cumipmt`, `cumprinc`, `effect`, `nominal`, `fvschedule`, `rri`, `pduration`, `accrued`, `dollarde`, `dollarfr`, `macaulay_duration`, `modified_duration`, `convexity` | `accrued(0.04, $.START_DATE, today())` is the coupon accrued per 1 of par |
+
+`irr`, `xirr` and `rate` find their root by Newton's method from the guess, then by a scan for a change of sign, to 1e-12; when no rate
+makes the value 0 they say so (`DRS-2102 irr: the flows never change sign …`), never a figure that is not a root. A list of flows with an
+empty element gives an empty figure (a missing flow is never skipped); MATLAB's running and moving forms leave a missing place empty and
+carry on. Pricing a trade from market data is QLRisk's, and VaR and its kin come only through `measure(...)`.
 
 #### Examples
 

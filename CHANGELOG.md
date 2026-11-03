@@ -72,6 +72,51 @@
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
+## 2.9.11.e — Functions: Excel, SAS and MATLAB coverage (front-loaded, unreleased, on wip/functions-complete)
+
+- **Excel, SAS and MATLAB/Octave coverage (FUNCTION_CATALOGUE.md section 12).** Every family of Excel's functions, SAS's DATA-step
+  functions and PROC MEANS/UNIVARIATE/FREQ/RANK statistics, and MATLAB's everyday data functions, marked covered (by which Drishti
+  function), added, or not with the reason (non-deterministic, spreadsheet-cell, pricing for QLRisk, the risk engines, the matrix tier,
+  tier 3, locale or legacy, no use yet). 154 functions added, each under its one name; 268 Excel/SAS/MATLAB names were already covered,
+  207 are answered by the added ones, 193 are not added.
+- **Rachana scalars.** Math: `round` (half away from zero, in decimal), `round_sig`, `log(x, base)`, `fact`, `combin`, `permut`, `gcd`,
+  `lcm`, `even`, `odd`, `pi`, `sin` … `atan2`, `sinh`, `cosh`, `tanh`, `radians`, `degrees`, `base`, `decimal`. Information:
+  `is_number`, `is_text`, `is_date`, `is_boolean`, `is_blank`, `is_error`, `type_of`, `choose`. Text: `len`, `proper`, `rept`, `exact`,
+  `char`, `code` (Unicode), `find`, `search` (positions, 0 when not there), `text_before`, `text_after`, `regex_replace` (the linear-time
+  engine; `SafeRegex.replaceAll`), `reverse`, `clean`, `value` (text to a number: groups, currency signs, %, accounting brackets),
+  `text` (a number or a date with an Excel format code). Dates: `date(text)`, `date(y, m, d)` (Excel's carry-over), `year`, `quarter`,
+  `month`, `week` (ISO), `day`, `hour`, `minute`, `second`, `weekday` (Excel's return types), `days360` (US and European), `datedif`,
+  `shift_date` (on the bank's calendars). DEL's `round`, `len`, `date`, `year`, `quarter`, `month`, `week`, `day`, `shift_date` are now
+  also Rachana's, ahead of the fold; DEL keeps its own until then.
+- **Distributions (FUNCTION_CATALOGUE.md section 9).** `norm_dist`, `norm_inv`, `norm_s_dist`, `norm_s_inv`, `lognorm_dist`,
+  `lognorm_inv`, `t_dist`, `t_inv`, `chisq_dist`, `chisq_inv`, `f_dist`, `f_inv`, `binom_dist`, `binom_inv`, `poisson_dist`,
+  `expon_dist`, `gamma_dist`, `gamma_inv`, `gamma`, `gamma_ln`, `beta_dist`, `beta_inv`, `weibull_dist`, `hypgeom_dist`,
+  `negbinom_dist`, `erf`, `erfc`, `standardize`, `confidence_norm`, `confidence_t`, `fisher`, `fisher_inv`, on published numerics
+  (`SpecialFunctions`: Lanczos's gamma, the incomplete gamma and beta by series and continued fractions, erfc from the incomplete
+  gamma, Acklam's inverse normal refined by Halley's step); no library added (commons-math3 is not on Rachana's class path). Every one
+  matches the examples on Excel's own pages.
+- **Finance on given flows (FUNCTION_CATALOGUE.md section 8).** `npv`, `xnpv`, `irr`, `xirr`, `mirr`, `pv`, `fv`, `pmt`, `ipmt`, `ppmt`,
+  `nper`, `rate`, `cumipmt`, `cumprinc`, `effect`, `nominal`, `fvschedule`, `rri`, `pduration`, `accrued` (exact in decimal), `dollarde`,
+  `dollarfr`, `macaulay_duration`, `modified_duration`, `convexity`. `irr`, `xirr` and `rate` find their root by Newton's method, then a
+  scan for a change of sign and bisection, to 1e-12 (`RootFinder`), and say in words when no rate makes the value 0. A missing flow
+  gives an empty figure, never a shifted one. `discount_factor` and `forward_rate` stay planned: Rachana has no clean reader of an
+  `ir-curve` kind.
+- **The engine's aggregates.** `sumproduct`, `sumsq`, `product` (a mantissa and a binary exponent, so a long product never overflows on
+  the way), `devsq`, `skewness_pop`, `covar_pop`, `steyx` (mergeable, each through the split-and-merge harness within 1e-12), `avedev`,
+  `percentile_exc`, `rank_avg`, `percent_rank_of`, `mode_multi` (holistic, merging their values exactly); in a pivot cell and over a
+  Rachana list alike.
+- **MATLAB's list functions.** In Rachana: `fillmissing`, `interp1`, `polyval`, `trapz`, `cumtrapz`, `union`, `intersect`, `difference`,
+  `is_member`, and `sort` by several keys (MATLAB's `sortrows`). From the engine (its aggregates, registered into Rachana): `cumsum`,
+  `cumprod`, `cummax`, `cummin`, `movsum`, `movmean`, `movstd`, `movmedian`, `maxk`, `mink`, `bounds`, `zscore`, `rescale`, `isoutlier`
+  (MATLAB's three scaled MADs), `polyfit` (degree ≤ 6, Householder QR, refused in words when ill-conditioned).
+- **Rules (FUNCTION_CATALOGUE.md, "Rules every function keeps").** The null rule (product owner): `null != 'X'` is true and
+  `null == 'X'` false, a function of a missing value is missing. One rule for text in numbers: no `AVERAGEA`-style forms. No
+  non-deterministic function in a figure.
+- **Docs and tests.** FUNCTION_CATALOGUE.md (sections 1 to 9, the new section 12), FUNCTIONS.md regenerated (253 functions; the
+  catalogue test now checks sections 8 and 9), RACHANA_REFERENCE.md "The Excel, SAS and MATLAB set". Tests: `DistributionsTest`,
+  `FinanceFunctionsTest`, `MoreScalarsTest`, `ListMoreTest` (drishti-rachana), `MoreAggregatesTest`, `RachanaListAnalyticsTest`
+  (drishti-bicompute), each on Excel's or MATLAB's documented examples, with empty, masked and wrong-typed arguments.
+
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; one grammar (unreleased, on wip/pivot-b, wip/pivot-c and wip/one-grammar)
 
 - **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 36).** Custom aggregation functions in four
