@@ -442,7 +442,7 @@ else
   start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-1}"
   start_job console-other niced 5 console_lane other "$other_workers" 2
   start_job tools niced 5 python_tool_tests
-  start_job java21 java21_verify
+  start_job java21 niced 5 java21_verify
   if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
   else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
   rc=0; watch_jobs "${stage2[@]}" || rc=1

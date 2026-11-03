@@ -4564,7 +4564,7 @@ failure that no re-run can change the drill stops the rest, unless `--keep-going
   10-minute `timeout`. (Tools that start worker processes after pyarrow or deltalake have started threads must spawn them, never
   fork: `bulk_trades.py` uses a `spawn` pool.) `tools/lake/test_build.py` is not in the list: run it by hand
   (`cd tools/lake && ../../drishti-console/.venv/bin/python -m unittest test_build`).
-- **Java 21** (`java21.log`), the production runtime: `./mvnw -q -o clean verify -P api-docs`, every test and every rule, containers
+- **Java 21** (`java21.log`, at lower priority, `nice 5`), the production runtime: `./mvnw -q -o clean verify -P api-docs`, every test and every rule, containers
   included, in a **copy of the committed tree** (a `git archive` of `HEAD` beside the repository, in `<repository>-drill-copies`,
   `DRISHTI_DRILL_COPY_DIR`, removed afterwards), so it can neither clean nor replace the jar the console runs from the working tree.
   Test classes run in parallel JVM forks inside each module (`drishti.test.forks`, 4 by default, set in the root `pom.xml`; each fork
