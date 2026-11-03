@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (data-out/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/ARROW_FLIGHT.md (Q3–Q9, Q11: Admin → Data out).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data out: option B, a map of clients and nodes</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:6px 12px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:12.5px;margin-bottom:10px}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber);font-size:12px}
+.cmd{flex:1 1 160px;max-width:340px;white-space:nowrap;overflow:hidden;height:26px;display:flex;align-items:center;padding:0 12px;border:1px solid var(--amber);border-radius:14px;font-family:var(--mono);color:var(--amber);font-size:12px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:12px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink);box-shadow:inset 0 -2px 0 var(--amber)}
+.ph{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:baseline;margin:2px 0 8px}
+.ph h2{margin:0;font-size:17px} .crumbs{font-size:12.5px;color:var(--muted)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:10px;overflow-x:auto}
+.tabs span{padding:7px 14px;font-size:13px;color:var(--muted);white-space:nowrap;border-bottom:2px solid transparent}
+.tabs span.on{color:var(--ink);font-weight:600;border-bottom-color:var(--amber)}
+.tabs span i{font-style:normal;font-family:var(--mono);font-size:11px;margin-left:6px;padding:0 6px;border-radius:8px;background:var(--panel2);color:var(--muted)}
+.tabs span i.r{background:var(--bad-t);color:var(--bad)} .tabs span i.a{background:var(--warn-t);color:var(--warn)}
+.btn{display:inline-block;font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap;min-height:30px;line-height:18px}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.s{font-size:12px;padding:3px 10px;min-height:26px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+.wrap{overflow-x:auto}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:5px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2);vertical-align:top}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)} td.lm{text-align:left}
+td.wr{white-space:normal;min-width:220px}
+.muted{color:var(--muted)} .faint{color:var(--faint)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)} .mono{font-family:var(--mono)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600;white-space:nowrap}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)} .pill.b{background:var(--hl);color:var(--link)}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:12.5px}
+.sw i{display:inline-block;width:34px;height:18px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);position:relative}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.sw.on i{background:var(--amber-t);border-color:var(--amber)} .sw.on i::after{left:18px;background:var(--amber)}
+.msg{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-t);border-radius:8px;padding:8px 12px;font-size:12.5px;line-height:1.5}
+.msg.calm{border-left-color:var(--link);background:var(--hl)} .msg.badm{border-left-color:var(--bad);background:var(--bad-t)} .msg.okm{border-left-color:var(--ok);background:var(--ok-t)}
+.msg b.h{display:block;font-size:13px}
+.prog{display:inline-block;width:110px;height:6px;border-radius:3px;background:var(--panel2);position:relative;overflow:hidden;vertical-align:middle;border:1px solid var(--line)}
+.prog::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--p,40%);background:var(--warn)}
+.prog.g::after{background:var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+.scenes{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;align-items:start}
+.scene{border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg2);min-width:0}
+.scene>.lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.scene>.lbl b{color:var(--amber);font-weight:700;margin-right:6px}
+.links{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px}
+.links a{font-family:var(--mono);font-size:11.5px}
+.rule{font-family:var(--mono);font-size:12px}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.why .card h3{color:var(--amber)}
+.why ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.55}
+footer{font-size:12px;color:var(--faint);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.eng{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;padding:8px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);font-size:12.5px;margin-bottom:10px}
+.eng .k{color:var(--muted);margin-right:4px}
+.eng .acts{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.toast{position:relative;border:1px solid var(--warn);background:var(--panel);border-radius:8px;padding:8px 12px;font-size:12.5px;line-height:1.45;box-shadow:0 8px 24px rgba(0,0,0,.28);max-width:520px}
+.toast b{color:var(--warn)}
+.fn{font-family:var(--mono);font-size:12.5px;word-break:break-all}
+.sub{font-size:11.5px;color:var(--muted);line-height:1.4}
+@media (max-width:900px){.why{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:480px){
+  .page{padding:12px 8px 20px}
+  .menus{display:none}
+  .intro h1{font-size:17px}
+  .rec,.alt{margin-left:0;margin-top:4px}
+  .eng .acts{margin-left:0}
+  .btn{min-height:40px;line-height:28px}
+}
+
+.kpis{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px 12px;min-width:130px;flex:1 1 130px}
+.kpi .k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:18px;margin-top:1px}
+.kpi .s{font-size:11.5px;color:var(--muted)}
+.kpi.a{border-left:3px solid var(--warn)} .kpi.r{border-left:3px solid var(--bad)} .kpi.g{border-left:3px solid var(--ok)}
+.gauge .track{position:relative;height:12px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);margin-top:4px}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px}
+.gauge .mk{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--bad)}
+.gauge .t{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;flex-wrap:wrap}
+.nodes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.node{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel2);font-size:12.5px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.node.down{border-color:var(--bad);background:var(--bad-t)}
+.node .h{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap} .node .h b{font-size:13px}
+.node .ad{font-family:var(--mono);font-size:11.5px;color:var(--link);word-break:break-all}
+tr.hot td{background:var(--bad-t)} tr.live td{background:var(--hl)}
+.req{font-family:var(--mono);font-size:11.5px;color:var(--muted);white-space:normal;word-break:break-all;max-width:420px;display:block}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px}
+.grid21{display:grid;grid-template-columns:minmax(0,2.2fr) minmax(0,1fr);gap:10px}
+.stack{display:flex;flex-direction:column;gap:10px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:3px 10px;font-size:12px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.seg span i{font-style:normal;font-family:var(--mono);margin-left:4px;color:var(--faint)}
+.tbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:6px} .tbar h3{margin:0;font-size:13.5px}
+.tbar .r{margin-left:auto}
+@media (max-width:1000px){.nodes,.grid2,.grid21{grid-template-columns:minmax(0,1fr)}}
+
+.topo{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+svg.map{width:100%;height:auto;display:block}
+svg.map text{font-family:var(--sans);fill:var(--ink);font-size:12px} svg.map .m{font-family:var(--mono);font-size:10.5px;fill:var(--muted)}
+svg.map .box{fill:var(--panel2);stroke:var(--line)} svg.map .boxd{fill:var(--bad-t);stroke:var(--bad)} svg.map .cl{fill:var(--panel);stroke:var(--line)}
+svg.map .ln{stroke:var(--link);stroke-width:2;fill:none} svg.map .lns{stroke:var(--amber);stroke-width:3;fill:none} svg.map .lnr{stroke:var(--bad);stroke-width:2;stroke-dasharray:4 4;fill:none}
+svg.map .lnp{stroke:var(--warn);stroke-width:2;stroke-dasharray:6 3;fill:none}
+.det .kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;font-size:12.5px}
+.det .kv .k{color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Data out: option B, a map of clients and nodes<span class="alt">alternative</span></h1><p>Admin → Data out opens on a <b>map</b>: clients on the left, the nodes on the right with their real addresses and what they serve, a line per live stream (amber: the selected one, dashed amber: served by a peer, dashed red: refused). The selected stream's detail (request, token, endpoints, rows, bytes, rate, limits used) sits beside it with Stop and Revoke; Streams, Readers, Tokens and Limits are tabs (Readers shown below the map). Each mock-up shows two scenes: a quiet morning (one live VaR stream) and a busy afternoon (four streams, one request refused for the rows limit, node drishti-n3 down with its VaR shards served by drishti-n2, Arrow memory at 76 %). Times are the server's, UTC.</p></section>
+<div class="scenes">
+<div class="scene"><p class="lbl"><b>1</b>A quiet morning, 09:12: one live VaR stream, all nodes up</p>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">DATAOUT &lt;GO&gt;</div><div class="menus"><span>Views</span><span>Engines</span><span>BI</span><span>Build</span><span class="on">Admin ▾</span><span>Help</span></div></div>
+<div class="ph"><h2>Data out</h2><span class="crumbs">Admin › <b>Data out</b> · Arrow Flight for Python, Java, C#, R, Go clients</span></div>
+<div class="eng"><span class="sw on"><i></i><b>Flight service on</b></span><span><span class="k">Port</span><b class="mono">18815</b></span><span><span class="k">TLS</span><span class="pill g">on</span> <span class="sub">server certificate, expires 2027-05-14 · mutual TLS off</span></span><span><span class="k">Arrow memory</span><b class="mono">0.4 GB</b> of 8 GB</span><span class="acts"><a class="btn" href="#">Settings ▸</a><a class="btn" href="#">Admin → Engines</a></span></div>
+<div class="tbar"><span class="seg"><span class="on">Map</span><span>Streams<i>1</i></span><span>Readers<i>6</i></span><span>Tokens<i>5</i></span><span>Limits</span></span><span class="r sub">click a line or a client to see its stream</span></div><div class="topo"><div class="card"><h3>Clients and nodes <span>live</span></h3><svg class="map" viewBox="0 0 660 340" role="img" aria-label="clients and nodes"><rect class="cl" x="10" y="30" width="190" height="34" rx="17"/><text x="24" y="51">var-feed · 10.30.8.21</text><rect class="box" x="430" y="20" width="210" height="72" rx="8"/><text x="442" y="42">drishti-main · this node</text><text class="m" x="442" y="60">10.20.4.11:18815</text><text class="m" x="442" y="76">kinds, views, shards 0–3, lake</text><rect class="box" x="430" y="110" width="210" height="62" rx="8"/><text x="442" y="132">drishti-n2</text><text class="m" x="442" y="150">10.20.4.12:18815</text><text class="m" x="442" y="164">VaR shards 4–7</text><rect class="box" x="430" y="200" width="210" height="62" rx="8"/><text x="442" y="222">drishti-n3</text><text class="m" x="442" y="240">10.20.4.13:18815</text><text class="m" x="442" y="254">VaR shards 8–11</text><path class="lns" d="M200 47 C320 47 320 56 430 56"/><path class="lns" d="M200 47 C320 47 320 140 430 140"/><path class="lns" d="M200 47 C320 47 320 230 430 230"/></svg><div class="gauge"><div class="t"><b>Arrow memory (off-heap)</b><span class="mono">0.4 GB of 8 GB cap · 5 %</span></div>
+<div class="track"><div class="fill" style="width:5%;background:var(--ok)"></div><div class="mk" style="left:90%"></div></div>
+<div class="sub">new requests wait above 90 % (busy protection) · peak today 2.3 GB at 07:05</div></div></div><div class="card"><h3>Selected stream <span>var-feed</span></h3><div class="det"><div class="kv">
+<span class="k">Reading</span><span>VaR scenario P&amp;L of <b>DESK:DESK-COMM</b>, per position, live</span>
+<span class="k">Request</span><span class="mono" style="font-size:11.5px;word-break:break-all">measure("VAR", scope="DESK:DESK-COMM", out="scenario-pnl", grain="position", live=true)</span>
+<span class="k">Token</span><span>var-feed · svc-var-intraday · data:read:market-risk · role service</span>
+<span class="k">Client</span><span class="mono">10.30.8.21 · pyarrow 18.1</span>
+<span class="k">Endpoints</span><span>main (shards 0–3), n2 (4–7), n3 (8–11)</span>
+<span class="k">Sent</span><span class="mono">631,160 rows · 4.7 MB · seq 214</span>
+<span class="k">Rate</span><span class="mono">12 kB/s</span>
+<span class="k">Since</span><span class="mono">07:00 (2 h 12 min)</span>
+<span class="k">Limits</span><span>rows 2 % · bytes 0.2 % · memory 140 MB of 2 GB</span></div>
+<p style="margin:10px 0 0"><a class="btn" href="#">Stop this stream</a> <a class="btn" href="#">Revoke var-feed</a></p></div></div></div><div class="card"><h3>Readers <span>the last day</span></h3><div class="wrap"><table><tr><th class="l">time</th><th class="l">token · person</th><th class="l">read</th><th class="l">node</th><th>rows</th><th>bytes</th><th>time</th><th class="l">outcome</th></tr><tr><td class="lm">07:05</td><td class="l">risk-batch<br><span class="sub">svc-frtb</span></td><td class="l wr">VaR vectors of every desk, 2026-11-02</td><td class="lm">main, n2, n3</td><td>9,870,400</td><td>1.6 GB</td><td>41 s</td><td class="l"><span class="pill g">sent</span></td></tr>
+<tr><td class="lm">06:40</td><td class="l">excel-addin<br><span class="sub">for <b>priya.k</b></span></td><td class="l wr">BI model <i>Trading P&amp;L</i>, measure Daily PnL by desk</td><td class="lm">main</td><td>1,240</td><td>96 kB</td><td>0.3 s</td><td class="l"><span class="pill g">sent</span></td></tr>
+<tr><td class="lm">yesterday 22:14</td><td class="l">quant-lab<br><span class="sub">for <b>m.chen</b></span></td><td class="l wr">VaR scenario P&amp;L of DESK:DESK-COMM, 2026-11-02, per position (float32 as stored)</td><td class="lm">main, n2, n3</td><td>631,160</td><td>4.7 MB</td><td>1.2 s</td><td class="l"><span class="pill g">sent</span></td></tr></table></div></div></div>
+<div class="scene"><p class="lbl"><b>2</b>A busy afternoon, 14:35: four streams, one refused for the rows limit, drishti-n3 down with its parts served by drishti-n2</p>
+<div class="bar"><span class="brand">DRISHTI</span><div class="cmd">DATAOUT &lt;GO&gt;</div><div class="menus"><span>Views</span><span>Engines</span><span>BI</span><span>Build</span><span class="on">Admin ▾</span><span>Help</span></div></div>
+<div class="ph"><h2>Data out</h2><span class="crumbs">Admin › <b>Data out</b> · Arrow Flight for Python, Java, C#, R, Go clients</span></div>
+<div class="eng"><span class="sw on"><i></i><b>Flight service on</b></span><span><span class="k">Port</span><b class="mono">18815</b></span><span><span class="k">TLS</span><span class="pill g">on</span> <span class="sub">server certificate, expires 2027-05-14 · mutual TLS off</span></span><span><span class="k">Arrow memory</span><b class="mono warn">6.1 GB</b> of 8 GB</span><span class="acts"><a class="btn" href="#">Settings ▸</a><a class="btn" href="#">Admin → Engines</a></span></div>
+<div class="msg badm" style="margin-bottom:10px"><b class="h">drishti-n3 is down (since 14:18)</b>Its VaR shards 8–11 are served by drishti-n2, which holds a copy; clients were sent the peer's endpoint. One request refused for a limit in the last hour.</div><div class="tbar"><span class="seg"><span class="on">Map</span><span>Streams<i>4</i></span><span>Readers<i>14</i></span><span>Tokens<i>5</i></span><span>Limits</span></span><span class="r sub">click a line or a client to see its stream</span></div><div class="topo"><div class="card"><h3>Clients and nodes <span>live</span></h3><svg class="map" viewBox="0 0 660 340" role="img" aria-label="clients and nodes"><rect class="cl" x="10" y="30" width="190" height="34" rx="17"/><text x="24" y="51">var-feed · 10.30.8.21</text><rect class="cl" x="10" y="100" width="190" height="34" rx="17"/><text x="24" y="121">risk-batch · 10.30.9.40</text><rect class="cl" x="10" y="170" width="190" height="34" rx="17"/><text x="24" y="191">excel-addin · priya.k</text><rect class="cl" x="10" y="240" width="190" height="34" rx="17"/><text x="24" y="261">quant-lab · m.chen</text><rect class="cl" x="10" y="300" width="190" height="34" rx="17"/><text x="24" y="321">excel-addin · a.roy</text><rect class="box" x="430" y="20" width="210" height="72" rx="8"/><text x="442" y="42">drishti-main · this node</text><text class="m" x="442" y="60">10.20.4.11:18815</text><text class="m" x="442" y="76">kinds, views, shards 0–3, lake</text><rect class="box" x="430" y="110" width="210" height="62" rx="8"/><text x="442" y="132">drishti-n2</text><text class="m" x="442" y="150">10.20.4.12:18815</text><text class="m" x="442" y="164">VaR shards 4–7 + 8–11</text><rect class="boxd" x="430" y="200" width="210" height="62" rx="8"/><text x="442" y="222">drishti-n3 · down</text><text class="m" x="442" y="240">10.20.4.13:18815</text><text class="m" x="442" y="254">shards 8–11 → served by n2</text><path class="lns" d="M200 47 C320 47 320 56 430 56"/><path class="lns" d="M200 47 C320 47 320 140 430 140"/><path class="ln" d="M200 117 C320 117 320 60 430 60"/><path class="lnp" d="M200 117 C320 117 320 150 430 150"/><path class="ln" d="M200 187 C320 187 320 70 430 70"/><path class="ln" d="M200 257 C320 257 320 80 430 80"/><path class="lnr" d="M200 317 C300 317 330 86 430 86"/><text x="250" y="334" style="fill:var(--bad);font-size:11px">refused: rows limit</text></svg><div class="gauge"><div class="t"><b>Arrow memory (off-heap)</b><span class="mono">6.1 GB of 8 GB cap · 76 %</span></div>
+<div class="track"><div class="fill" style="width:76%;background:var(--warn)"></div><div class="mk" style="left:90%"></div></div>
+<div class="sub">largest request 2.0 GB (its cap, role service) · new requests wait above 90 % (busy protection) · peak today 6.4 GB at 14:31</div></div></div><div class="card"><h3>Selected stream <span>var-feed</span></h3><div class="det"><div class="kv">
+<span class="k">Reading</span><span>VaR scenario P&amp;L of <b>DESK:DESK-COMM</b>, per position, live</span>
+<span class="k">Request</span><span class="mono" style="font-size:11.5px;word-break:break-all">measure("VAR", scope="DESK:DESK-COMM", out="scenario-pnl", grain="position", live=true)</span>
+<span class="k">Token</span><span>var-feed · svc-var-intraday · data:read:market-risk · role service</span>
+<span class="k">Client</span><span class="mono">10.30.8.21 · pyarrow 18.1</span>
+<span class="k">Endpoints</span><span>main (shards 0–3), n2 (4–7), n2 for n3 (8–11)</span>
+<span class="k">Sent</span><span class="mono">4,212,880 rows · 31.8 MB · seq 1,284</span>
+<span class="k">Rate</span><span class="mono">2.1 MB/s</span>
+<span class="k">Since</span><span class="mono">07:00 (7 h 35 min)</span>
+<span class="k">Limits</span><span>rows 2 % · bytes 0.2 % · memory 140 MB of 2 GB</span></div>
+<p style="margin:10px 0 0"><a class="btn" href="#">Stop this stream</a> <a class="btn" href="#">Revoke var-feed</a></p></div></div></div><div class="card"><h3>Readers <span>the last day</span></h3><div class="wrap"><table><tr><th class="l">time</th><th class="l">token · person</th><th class="l">read</th><th class="l">node</th><th>rows</th><th>bytes</th><th>time</th><th class="l">outcome</th></tr><tr class="hot"><td class="lm">14:33</td><td class="l">excel-addin<br><span class="sub">for <b>a.roy</b> (risk-analyst)</span></td>
+<td class="l wr">Kind trading/trade, every date, all columns<span class="req">kind("trading/trade", columns="*")</span></td><td class="lm">main</td><td>12.6 M asked</td><td>–</td><td>0.2 s</td>
+<td class="l wr"><span class="pill r">refused</span> <b>rows limit</b>: role risk-analyst allows 5,000,000 rows per request; ask for a date range or fewer columns</td></tr>
+<tr><td class="lm">14:21</td><td class="l">var-feed<br><span class="sub">svc-var-intraday</span></td><td class="l wr">VaR scenario P&amp;L of DESK:DESK-COMM, parts of n3<span class="req">endpoint n3 → retried on n2</span></td><td class="lm">n2</td><td>210,388</td><td>1.6 MB</td><td>0.4 s</td><td class="l"><span class="pill a">sent from a peer</span></td></tr>
+<tr class="hot"><td class="lm">13:02</td><td class="l">ops-dash<br><span class="sub">svc-ops</span></td><td class="l wr">Kind market-risk/scenario-pv<span class="req">kind("market-risk/scenario-pv", date="2026-11-03")</span></td><td class="lm">main</td><td>–</td><td>–</td><td>0.0 s</td>
+<td class="l wr"><span class="pill r">refused</span> <b>scope</b>: the token has no <span class="mono">data:read</span> for market-risk</td></tr><tr><td class="lm">07:05</td><td class="l">risk-batch<br><span class="sub">svc-frtb</span></td><td class="l wr">VaR vectors of every desk, 2026-11-02</td><td class="lm">main, n2, n3</td><td>9,870,400</td><td>1.6 GB</td><td>41 s</td><td class="l"><span class="pill g">sent</span></td></tr>
+<tr><td class="lm">06:40</td><td class="l">excel-addin<br><span class="sub">for <b>priya.k</b></span></td><td class="l wr">BI model <i>Trading P&amp;L</i>, measure Daily PnL by desk</td><td class="lm">main</td><td>1,240</td><td>96 kB</td><td>0.3 s</td><td class="l"><span class="pill g">sent</span></td></tr>
+<tr><td class="lm">yesterday 22:14</td><td class="l">quant-lab<br><span class="sub">for <b>m.chen</b></span></td><td class="l wr">VaR scenario P&amp;L of DESK:DESK-COMM, 2026-11-02, per position (float32 as stored)</td><td class="lm">main, n2, n3</td><td>631,160</td><td>4.7 MB</td><td>1.2 s</td><td class="l"><span class="pill g">sent</span></td></tr></table></div></div></div>
+
+</div>
+<div class="why"><div class="card"><h3>How it feels</h3><ul><li>The cluster at a glance: a node down and its parts moved to a peer are a picture, not a sentence.</li><li>The selected stream answers "what is this client doing?" completely.</li></ul></div>
+<div class="card"><h3>Trade-offs</h3><ul><li>Gets busy with many streams (group by token beyond ten lines).</li><li>Tokens and limits are a click away.</li><li>A map is hard on a phone: it falls back to the Streams list there.</li></ul></div>
+<div class="card"><h3>Build</h3><ul><li>The most work: an SVG layout and selection.</li><li>Same data as A.</li></ul></div></div>
+<footer>Mock-up. Design, not built: Admin → Data out for the Arrow Flight service (planned, ARROW_FLIGHT.md; the questions' recommendations are drawn as if accepted). Every name, address and number is invented for the picture; addresses are the nodes' real LAN addresses, never localhost. Stop ends a stream with a reason the client sees; Revoke ends the token's streams too. The command word DATAOUT is illustrative. Phone width: cards stack, tables scroll in their frame. Open with #light for the light theme.</footer>
+</div>
+</body>
+</html>

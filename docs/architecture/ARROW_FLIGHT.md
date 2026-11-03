@@ -53,6 +53,14 @@ written in Rachana), [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (section 10, the con
 | Q11 | **Mock-ups** for Admin → Data out (tokens, live streams, who reads what) | **Two to three mock-ups** before building, as for every new screen |
 | Q12 | **The Arrow library's needs.** `arrow-memory` needs `--add-opens=java.base/java.nio=ALL-UNNAMED` on Java 21 | **Accept**, set in the start scripts and documented; checked by a start-up test |
 
+**Mock-ups** of Admin → Data out (Q11; a planned screen, drawn with the recommendations of Q3–Q9 as if accepted), each with a quiet
+morning and a busy afternoon (four streams, one request refused for the rows limit, a node down with its VaR shards served by a peer,
+Arrow memory near its cap): [A](mockups/data-out/A.html), one page read top to bottom: the service (switch, port, TLS, Arrow memory),
+the nodes with their real addresses and what each serves, live streams with Stop, the last day's readers with refusals and the limit
+hit, tokens with Flight scopes (Revoke) and limits per role (**recommended**: everything an administrator acts on is on one page, in
+order of urgency); [B](mockups/data-out/B.html), a map of clients and nodes with a line per stream and the selected stream's detail;
+[C](mockups/data-out/C.html), table-first: counts, then one requests table (live, last day, refused), nodes, limits and tokens.
+
 ## 3. Size
 
 One large item: the Arrow library replacing the hand-written writers, the Flight service with tickets, endpoints, streams, limits and
