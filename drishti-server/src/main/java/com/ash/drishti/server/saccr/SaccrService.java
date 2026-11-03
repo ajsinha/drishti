@@ -184,7 +184,7 @@ public final class SaccrService {
         for (SaccrExamples.Case c : SaccrExamples.design()) {
             if (only == null || c.name().equalsIgnoreCase(only)) {
                 Saccr.Result r = Saccr.run(c.input(), params, ch);
-                sets.add(new SetRun(c.input().set().id(), "EXAMPLE", null, null, r, "computed", c.input().trades().size(), 0, List.of(), List.of(),
+                sets.add(new SetRun("EX-" + c.name(), "EXAMPLE", null, null, r, "computed", c.input().trades().size(), 0, List.of(), List.of(),
                         "the case's own V and C (" + c.source() + "; published EAD " + Math.round(c.publishedEad()) + ")"));
             }
         }
