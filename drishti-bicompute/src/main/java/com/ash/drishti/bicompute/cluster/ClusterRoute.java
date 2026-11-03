@@ -50,7 +50,7 @@ public final class ClusterRoute implements PivotCore.Hooks {
         List<String> nodes();
 
         /** Asks a node for its share: the request of {@link #request}, as the same person; the node's answer map. */
-        Map<String, Object> ask(String node, Map<String, Object> request, long timeoutMs) throws Exception;
+        Map<String, Object> ask(Viewer v, String node, Map<String, Object> request, long timeoutMs) throws Exception;
     }
 
     /**
@@ -143,7 +143,7 @@ public final class ClusterRoute implements PivotCore.Hooks {
         List<Partials> got = PartialGather.gather(shares, (node, share) -> {
             Map<String, Object> req = requests.get(share.id());
             Partials one = node.equals(peers.self()) ? serve(v, p, src, plan, req) : PartialCodec.partials(plan,
-                    peers.ask(node, req, settings.deadlineMs()));
+                    peers.ask(v, node, req, settings.deadlineMs()));
             return new ArrayList<>(List.of(one));
         }, PartialGather.partials(), exec, settings.hedgeAfterMs(), settings.deadlineMs());
         return Optional.of(new PivotCore.Routed(OrderedMerge.merge(plan, got), how, true));

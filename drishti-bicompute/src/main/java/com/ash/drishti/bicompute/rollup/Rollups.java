@@ -80,6 +80,11 @@ public final class Rollups {
         return sources;
     }
 
+    /** Where rollups are kept on disk (null: memory only). */
+    public Path dir() {
+        return dir;
+    }
+
     /** The rollup source that serves a source, or null. */
     public RollupSource sourceOf(String source) {
         for (RollupSource s : sources.values()) {

@@ -127,7 +127,7 @@ public class PivotController {
     public Map<String, Object> query(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
         Viewer v = on(p);
         PivotView view = view(p, body);
-        Map<String, Object> a = core.query(v, view);
+        Map<String, Object> a = core.query(v, view, com.ash.drishti.bicompute.core.ScaleOptions.parse(body));   // "exact": exact on request
         if (body.get("view") instanceof String id) {
             a.put("savedView", id);
         }

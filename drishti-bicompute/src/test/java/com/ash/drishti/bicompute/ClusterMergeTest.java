@@ -79,7 +79,7 @@ class ClusterMergeTest {
 
                     @Override
                     @SuppressWarnings("unchecked")
-                    public Map<String, Object> ask(String node, Map<String, Object> request, long timeoutMs) throws Exception {
+                    public Map<String, Object> ask(Viewer v, String node, Map<String, Object> request, long timeoutMs) throws Exception {
                         calls.incrementAndGet();
                         if (node.equals(dead)) {
                             throw new IllegalStateException(node + " is down");
