@@ -1,0 +1,37 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/engines/dataload.yaml: the data inbox (docs/architecture/DATALOAD_INBOX.md; docs/guides/DATA_GUIDE.md, "The data inbox"). Read at start, imported by application.yaml after
+# the jar's copy of this file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
+# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+drishti:
+  engines:
+    dataload:
+      enabled: ${DRISHTI_DATALOAD_ENABLED:false}   # run the data inbox on this node: files dropped in <dir>/inbox with a .ready marker are loaded into the lake every interval; off as shipped
+      changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  dataload:                          # the data inbox (DATALOAD_INBOX.md): files found, claimed, routed, loaded by the parallel lake loader in a child Java process, moved to the outbox, the server told
+    owner: ${DRISHTI_DATALOAD_OWNER:true}   # this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out)
+    dir: ${DRISHTI_DATALOAD_DIR:${drishti.data.dir:./data}/dataload}   # the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system
+    interval: 10m                    # how often a cycle runs; a cycle due while a run still loads is skipped (runs never overlap); Load now starts one at once
+    stable-seconds: 30               # a file (and its marker) is taken once unchanged this long, even with its .ready file
+    max-files: 0                     # the most files one run takes, oldest first (0: no limit, the whole ready batch); when set, the rest wait for the next cycle
+    max-gb: 0                        # the most gigabytes one run takes (0: no limit); when set, the first file is always taken
+    loader-heap: ${DRISHTI_DATALOAD_LOADER_HEAP:4g}   # the loader's own heap (the child Java process's -Xmx): a load never uses the server's heap
+    load-timeout: 2h                 # a load running longer is stopped and its files go back to the inbox with the reason
+    reject-max-percent: 0            # the share of rows a load may reject and still commit (exit 2, rejects in the report); over it nothing is committed and the file goes to failed/
+    reload-duplicates: false         # false: a file whose SHA-256 was loaded before is not loaded again (to the outbox, "already loaded"); true: loaded again
+    keep-outbox-days: 30             # outbox/ and failed/ day folders older than this are deleted (0: kept for ever); the ledger is kept
+    lake: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}   # the lake root the tables are written under (a rule's lake: wins for its files)
+    rules-file: ${DRISHTI_DATALOAD_RULES:./config/dataload.yaml}   # the routing rules: a file-name pattern to a pack and kind, read again every cycle
+    nice: true                       # run the loader at a lower priority (nice 10) where the system has nice; never on Windows

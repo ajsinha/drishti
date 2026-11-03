@@ -1987,13 +1987,13 @@ contextual:                     # optional: which guide F1 opens on a screen
   terminal: helpdesk-pack
 ```
 
-The shipped packs file their guides under `category: packs` (*Help → Domain packs*): `core` has `core` and `banking-data-model`, `trading`
+The shipped packs file their guides under `category: packs`, which the help centre reads as its **Data** section (a group *From the packs* at its end): `core` has `core` and `banking-data-model`, `trading`
 has `trading` and `trading-products`, and so on.
 
 | Key | Meaning |
 |---|---|
 | `slug` | the guide's address: `/help/helpdesk-pack`. Must be unique across all packs. |
-| `category` | where the card goes: `start`, `packs`, … (the categories in `drishti-console/config/help.yaml`) |
+| `category` | the help section the guide joins, in its group *From the packs*: a section id of `drishti-console/config/help.yaml` (`get-started`, `data`, `build`, …) or an old name its `aliases:` maps (`start` → Get started, `packs` → Data, `layouts` → Build) |
 | `title`, `summary`, `icon` | the card. `icon` is a Bootstrap Icons name without the `bi-` prefix. |
 | `kind` | `guide` or `tutorial`: the badge shown beside the title |
 | `file` | the Markdown file, relative to the pack folder |

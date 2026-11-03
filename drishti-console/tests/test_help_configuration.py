@@ -149,7 +149,7 @@ def test_searchable_without_the_generated_half_is_the_page_as_it_is():
 
 
 def test_the_help_centre_admin_pages_and_health_link_to_it(client):
-    assert 'href="/help/configuration"' in client.get("/help").text
+    assert 'href="/help/configuration"' in client.get("/help/section/operate").text          # its section of the help centre (2.9.11.a)
     nav = (ROOT / "drishti-console/web/templates/admin/_nav.html").read_text(encoding="utf-8")
     assert 'href="/help/configuration"' in nav
     health = (ROOT / "drishti-console/web/templates/admin/health.html").read_text(encoding="utf-8")

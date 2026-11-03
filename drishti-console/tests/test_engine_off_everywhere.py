@@ -25,7 +25,7 @@ import pytest
 import yaml
 from fastapi.testclient import TestClient
 
-from conftest import CONSOLE, FakeBackend
+from conftest import CONSOLE, FakeBackend, help_pages
 from core import engines
 from core.app import create_app
 from core.auth import Identity
@@ -77,7 +77,7 @@ def test_an_engine_off_everywhere_is_gone_from_every_place(entry, monkeypatch):
     for mid in entry.get("menus") or []:
         if mid in LABELS:
             assert f">{LABELS[mid]}<" not in page and f"{LABELS[mid]}</" not in page, mid
-    lib_page = c.get("/help").text
+    lib_page = help_pages(c)
     for slug in entry.get("help") or []:
         assert f'href="/help/{slug}"' not in lib_page, slug
         assert c.get(f"/help/{slug}").status_code == 404, slug

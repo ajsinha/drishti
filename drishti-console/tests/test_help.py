@@ -18,14 +18,21 @@ import re
 
 import yaml
 
+from conftest import help_pages
+
 CONSOLE = Path(__file__).resolve().parent.parent
+
+
+def _pages(catalogue: dict) -> list:
+    """Every page entry of help.yaml, in order: sections, then groups, then pages (2.9.11.a)."""
+    return [g for s in catalogue["sections"] for grp in s["groups"] for g in grp["guides"]]
 
 
 def test_every_catalogued_guide_exists_and_renders(client):
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    slugs = [g["slug"] for c in catalogue["categories"] for g in c["guides"]]
+    slugs = [g["slug"] for g in _pages(catalogue)]
     index = client.get("/help")
-    assert index.status_code == 200 and "Help &amp; documentation" in index.text
+    assert index.status_code == 200 and "data-help-hub" in index.text and "data-help-tiles" in index.text
     for slug in slugs:
         r = client.get(f"/help/{slug}")
         assert r.status_code == 200, slug
@@ -120,7 +127,7 @@ KINDS = ("kv table tabs line area hbar ladder links status provenance markdown g
 
 def test_the_sutra_developer_guide_is_a_help_card_with_screenshots(client):
     import re
-    index = client.get("/help").text
+    index = help_pages(client)
     assert "Sutra developer guide" in index and "/help/sutra-developer-guide" in index
     page = client.get("/help/sutra-developer-guide")
     assert page.status_code == 200 and "data-unavailable" not in page.text
@@ -194,10 +201,15 @@ developer-guide api how-it-fits elements-guide elements ai-providers mcp-client 
 decisions plan release-notes changelog notices sutra-guide rachana-guide plugins build-a-pack sutra-studio""".split()
 
 
-def test_the_help_centre_has_seven_sections_and_about_sixty_pages():
+def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages():
+    """The decided structure (2.9.11.a, mock-up help-hub/A): eight sections and Internal for administrators."""
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    assert [c["id"] for c in catalogue["categories"]] == ["knowledge", "start", "use", "bi", "data", "build", "operate"]
-    total = sum(len(c["guides"]) for c in catalogue["categories"])
+    assert [c["id"] for c in catalogue["sections"]] == ["get-started", "risk", "analytics", "data", "build", "operate", "reference",
+                                                         "knowledge", "internal"]
+    assert [c["name"] for c in catalogue["sections"]] == ["Get started", "Risk measures", "Analytics and BI", "Data", "Build", "Operate",
+                                                           "Reference", "Knowledge", "Internal"]
+    assert next(c for c in catalogue["sections"] if c["id"] == "internal")["roles"] == ["admin"]
+    total = len(_pages(catalogue))
     # 47: the 45 pages plus VaR's two (the VaR guide and tutorial 25), the product owner's request of 2026-10-26: VaR help is two pages.
     # 49: plus exposure's two (the exposure guide and tutorial 26), the same rule (each measure has exactly two documents and two entries).
     # 51: plus the groupings and analytics' two (the guide and tutorial 27, 2.9.2), the same rule.
@@ -215,7 +227,7 @@ def test_the_help_centre_has_seven_sections_and_about_sixty_pages():
 def test_every_old_help_address_still_opens_something(client):
     """A retired slug answers 301 to the page, and the section of it, that took the subject over; a slug still listed answers 200."""
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    listed = {g["slug"] for c in catalogue["categories"] for g in c["guides"]}
+    listed = {g["slug"] for g in _pages(catalogue)}
     moved = 0
     for slug in OLD_SLUGS:
         r = client.get(f"/help/{slug}", follow_redirects=False)
@@ -252,7 +264,7 @@ def test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_
     import routes.help_routes as hr
     from core.auth import Identity
 
-    entry = next(g for c in yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())["categories"] for g in c["guides"]
+    entry = next(g for g in _pages(yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text()))
                  if g["slug"] == "competitive-analysis")
     assert entry["roles"] == ["admin"]
     page = client.get("/help/competitive-analysis")                  # security off: the acting user is an administrator
@@ -266,7 +278,8 @@ def test_an_admin_only_page_is_shown_to_administrators_and_hidden_from_everyone_
     as_("viewer")
     assert client.get("/help/competitive-analysis").status_code == 404
     centre = client.get("/help").text
-    assert "/help/competitive-analysis" not in centre[centre.index('class="help-hero"'):]   # the page itself (the top bar's menu reads the signed-in user)
+    assert "/help/competitive-analysis" not in centre[centre.index('data-help-hub'):]   # the page itself (the top bar's menu reads the signed-in user)
+    assert 'href="/help/section/internal"' not in centre and client.get("/help/section/internal").status_code == 404   # no Internal tile
     found = client.get("/help/search", params={"q": "competitive analysis"}).text
     assert "/help/competitive-analysis" not in found[found.index('class="help-wrap"'):]
     assert client.get("/help/user-guide").status_code == 200                       # everything else stays open
@@ -287,3 +300,80 @@ def test_a_guide_without_roles_permits_everyone_and_with_roles_only_those(tmp_pa
     viewer, head, admin = (Identity("u", "U", "", r) for r in (("viewer",), ("risk-head",), ("*",)))
     assert open_.permits(None) and open_.permits(viewer)
     assert not closed.permits(None) and not closed.permits(viewer) and closed.permits(head) and closed.permits(admin)
+
+
+# ---- the help hub (2.9.11.a, mock-up help-hub/A) --------------------------------------------------------------------------------------
+
+def test_every_help_page_belongs_to_exactly_one_section():
+    """help.yaml: each page once, in one section and one group; a pair names a tutorial of the same group; a section's id is unique
+    and every alias and document folder names a section."""
+    catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
+    ids = [s["id"] for s in catalogue["sections"]]
+    assert len(ids) == len(set(ids))
+    seen: dict[str, str] = {}
+    for s in catalogue["sections"]:
+        for grp in s["groups"]:
+            slugs = {g["slug"] for g in grp["guides"]}
+            for g in grp["guides"]:
+                assert g["slug"] not in seen, f"{g['slug']} in {seen.get(g['slug'])} and {s['id']}"
+                seen[g["slug"]] = s["id"]
+                if g.get("pair"):
+                    assert g["pair"] in slugs, (g["slug"], g["pair"])
+                    pair = next(x for x in grp["guides"] if x["slug"] == g["pair"])
+                    assert pair.get("kind") == "tutorial" and pair.get("engine") == g.get("engine"), g["slug"]
+    assert set(catalogue["aliases"].values()) <= set(ids) and set(catalogue["documents"].values()) <= set(ids)
+    for m in catalogue["most-used"]:
+        assert m["slug"] in seen, m
+
+
+def test_the_library_puts_every_page_and_pack_guide_in_one_section(client):
+    import asyncio
+
+    from routes.common import library
+
+    class _Req:
+        app = client.app
+        state = type("S", (), {"identity": None})()
+
+    lib = asyncio.run(library(_Req()))
+    listed = [g for c in lib.categories for g in c["guides"]]
+    assert len(listed) == len({g.slug for g in listed}), "a page in two sections"
+    for c in lib.categories:
+        assert all(g.category == c["id"] for g in c["guides"]), c["id"]
+        assert [g for grp in c["groups"] for g in grp["guides"]] == c["guides"], c["id"]
+
+
+def test_the_front_door_has_search_most_used_and_a_tile_per_section(client):
+    hub = client.get("/help").text
+    assert 'action="/help/search"' in hub and "data-help-q" in hub and "F1" in hub
+    most = hub[hub.index("data-help-most"):hub.index("data-help-tiles")]
+    assert re.findall(r'href="/help/([\w-]+)"', most) == ["user-guide", "docs-guides-var-guide", "tutorials", "release-notes"]
+    assert "What&#39;s new" in most or "What's new" in most
+    tiles = re.findall(r'href="/help/section/([\w-]+)"', hub)
+    assert tiles == ["get-started", "risk", "analytics", "data", "build", "operate", "reference", "knowledge", "internal"]
+    assert "data-help-sections=" in hub and "get-started" in hub[hub.index("data-help-sections="):hub.index("data-help-sections=") + 400]
+
+
+def test_a_section_page_pairs_each_guide_with_its_tutorial_and_searches_only_itself(client):
+    page = client.get("/help/section/risk").text
+    assert "Value at risk" in page and "Counterparty" in page and "Capital" in page and ">VAR<" in page
+    row = page[page.index('href="/help/docs-guides-var-guide"'):]
+    row = row[:row.index("</li>")]
+    assert 'href="/help/docs-tutorials-25-var-from-the-bank-to-a-trade"' in row and "data-help-pair" in row
+    assert page.count('href="/help/docs-tutorials-25-var-from-the-bank-to-a-trade"') == 1      # the tutorial has no row of its own
+    assert 'name="section" value="risk"' in page and "each guide beside its tutorial" in page
+    hits = client.get("/help/search", params={"q": "backtesting", "section": "risk"}).text
+    found = set(re.findall(r'<li><a href="/help/([\w-]+)"', hits))
+    risk = {g["slug"] for g in _pages({"sections": [s for s in yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())["sections"]
+                                                    if s["id"] == "risk"]})}
+    assert found and found <= risk, found
+    assert "data-section-search" in hits and 'href="/help/section/risk"' in hits
+
+
+def test_old_section_names_and_addresses_keep_working(client):
+    r = client.get("/help/section/start", follow_redirects=False)
+    assert r.status_code == 301 and r.headers["location"] == "/help/section/get-started"
+    assert client.get("/help/section/no-such-section").status_code == 404
+    guide = client.get("/help/docs-guides-var-guide").text
+    assert 'href="/help/section/risk">Risk measures</a>' in guide                          # the breadcrumb opens its section
+    assert client.get("/help/context/var", follow_redirects=False).headers["location"] == "/help/docs-guides-var-guide"   # F1

@@ -66,18 +66,18 @@ public class LoadController {
         this.expectations = expectations;
         this.entitlements = entitlements;
         this.audit = audit;
-        this.peers = peers.getIfAvailable();
+        this.forwarding = new LoadForwarding(peers.getIfAvailable());
     }
 
-    private final com.ash.drishti.server.net.PeerCalls peers;
-    private static final org.slf4j.Logger LOG = org.slf4j.LoggerFactory.getLogger(LoadController.class);
+    private final LoadForwarding forwarding;
 
     /** Announces that a batch landed (or failed). {@code 201} when new, {@code 200} with {@code duplicate: true} when the same was announced before. */
     @PostMapping("/packs/{pack}/loads")
     public ResponseEntity<Map<String, Object>> announce(@PathVariable String pack, @RequestBody LoadService.Announcement body, HttpServletRequest req,
             @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         Pack found = loads.pack(pack);
-        boolean admin = entitlements.isAdmin(p);
+        // another member's own signal (its data inbox), signed with the cluster key and made as that node: refreshed here as there
+        boolean admin = entitlements.isAdmin(p) || LoadForwarding.fromNode(req, p);
         if (!admin) {
             if (req.getAttribute(TokenFilter.GRANT_ATTRIBUTE) == null) {
                 throw new DrishtiException(ErrorCode.FORBIDDEN, "only an administrator, or a personal API token with the loads:write scope, may announce a load");
@@ -99,25 +99,11 @@ public class LoadController {
             }
         }
         Map<String, Object> out = new java.util.LinkedHashMap<>(view(o.load(), o.duplicate()));
-        // PO-5 (2.9.7): a ready load is passed on once to every other live member, so each refreshes its own caches and engines;
-        // a member that received it from a peer never passes it on again; in the background, so the loader is never held up
-        if (!o.duplicate() && peers != null && !com.ash.drishti.server.net.NetCaller.fromPeer() && peers.clustered()
-                && !"failed".equalsIgnoreCase(String.valueOf(body.status()))) {
-            List<String> to = peers.peers();
+        // PO-5 (2.9.7): a ready load is passed on once to every other live member (LoadForwarding), as the person who announced it
+        if (!o.duplicate()) {
+            List<String> to = forwarding.forward(pack, body, p);
             if (!to.isEmpty()) {
                 out.put("forwardedTo", to);
-                byte[] json;
-                try {
-                    json = JSON.writeValueAsBytes(body);
-                } catch (com.fasterxml.jackson.core.JsonProcessingException e) {
-                    json = new byte[0];
-                }
-                byte[] payload = json;
-                String path = "/api/v1/packs/" + java.net.URLEncoder.encode(pack, java.nio.charset.StandardCharsets.UTF_8) + "/loads";
-                Thread.ofVirtual().name("drishti-load-forward").start(() -> peers.all("POST", path, payload, p, java.time.Duration.ofSeconds(30))
-                        .stream().filter(a -> a.status() >= 300 || a.status() == 0)
-                        .forEach(a -> LOG.warn("data load {} {} {}: member {} did not take it ({}): announce on it by hand", pack, body.kind(),
-                                body.businessDate(), a.node(), a.status() == 0 ? a.body() : a.status() + " " + a.body())));
             }
         }
         return ResponseEntity.status(o.duplicate() ? 200 : 201).body(out);

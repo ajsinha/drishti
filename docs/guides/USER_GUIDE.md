@@ -125,7 +125,7 @@ with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards u
 
 ## The top bar
 
-Every page has the same top bar, on one row: the terminal, the views, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
+Every page has the same top bar, on one row: the terminal, the views, the engines, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
 wordmark (set in Cinzel; the slogan is in the footer, which also carries Help, About, the competitive analysis and the release notes).
 
 The **Drishti name and logo** at its left end always lead to the landing page, also when you are signed in. The
@@ -133,14 +133,14 @@ landing page then shows **← Back to …** (the view, Build, Admin or Help page
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  Engines ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
 free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box.
 Below 1100 pixels wide they move to a line of their own.
 
-**Then the menus**: **Views**, **Build** and **Help** for everyone, **BI** where you hold the `bi` power, **Admin** only for administrators. Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then the menus**: **Views**, **Build** and **Help** for everyone, **Engines** where your role opens a compute engine, **BI** where you hold the `bi` power, **Admin** only for administrators: Views, Engines, BI, Build, Admin, Help for a risk administrator, and Views, BI, Build, Help for a role that opens no engine. Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -148,6 +148,7 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `DATA <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [The Data view](#the-data-view)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
+| **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF` · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
@@ -156,18 +157,20 @@ you are on is highlighted.
 | | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *Health*, *Caches*, *Capacity* (today against the plan; the single-node planner: [OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *About* |
 
-**In an edition or a lens, its own subject menus.** Drishti Risk, Trading, Market and World put their subjects in the bar between **Views** and **BI**, and leave out Build:
+**The Engines menu.** One menu holds every compute engine's pages: a column per engine, its command word (`VAR`, `EXP`, `FRSA`, `SIMM`) in the column's head, each page with its command on the right. It shows only the engines running on a server of the cluster (an engine an administrator turns off in *Admin → Engines* leaves it, with its pages and help) and only those your role opens: a market-risk role sees VaR, FRTB-SA and SIMM, a credit-risk role Exposure and SIMM, an administrator every engine; a role that opens none has no Engines menu at all. The same rule holds on the command line: an engine's command words (`VAR`, `SMAT`, `SWIN`, `PLAY VAR`; `EXP`, `XWIF`; `FRSA`, `PLAY FRTB`; `SIMM`, `PLAY SIMM`) are not offered in the type-ahead to a role that does not open the engine, and typing one says *VaR is not opened for your role; ask an administrator.* instead of running it. Help is not gated: every running engine's guide and tutorial stay open to everyone. With more than four engines running a search box at its top finds a page by its name, description or command (Enter opens the first left). On a phone the columns fold: tap an engine to open its pages, one engine at a time. Who opens which engine is set in `drishti-console/config/menus.yaml` (`opens:` per engine).
+
+**In an edition or a lens, its own subject menus.** Drishti Trading, Market and World put their subjects in the bar between **Views** (and **Engines**) and **BI**, and leave out Build; Drishti Risk keeps Views, Engines, BI, Admin and Help:
 
 | Edition or lens | Menus |
 |---|---|
-| Drishti Risk | Views · **VaR** (*VaR explorer* `VAR BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Scenario matrix* `SMAT`, *Hierarchies and limit letters* `HIER`; Check and report: *VaR Playground* `PLAY VAR`, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`) · **Exposure** (*Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF`) · BI · Admin · Help |
-| Drishti Trading | Views · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
+| Drishti Risk | Views · **Engines** · BI · Admin · Help |
+| Drishti Trading | Views · Engines · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
 Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([EDITIONS.md](../admin/EDITIONS.md)).
 
-**On a phone** the subject menus fold into one menu named after the edition (**Risk**, **Trading**, **Market**, **World**), first in the
+**On a phone** the subject menus fold into one menu named after the edition (**Trading**, **Market**, **World**), first in the
 bar: a column per subject, each entry with its command beside it ([On a phone](#on-a-phone)).
 
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
@@ -1438,13 +1441,12 @@ quick links wait under *More*.
 
 ![The end of the same Home in the light theme: a table at a glance with Show all, the quick links under More on this page](img/phone/07-landing-more-light.png)
 
-**The lens menu.** In Drishti Risk, Trading, Market or World the subject menus (VaR, Exposure; Blotter, Positions, Risk, Counterparties;
+**The lens menu.** In Drishti Trading, Market or World the subject menus (Blotter, Positions, Risk, Counterparties; Curves, Volatility;
 ...) fold into one menu named after the edition, first in the bar. It opens as a list with a heading per subject; each entry runs its
 command as on a desktop, and an entry ending in `…` puts its words in the command line for you to finish.
 
-![Drishti Risk's lens menu on a phone, dark theme: VaR and Exposure in one Risk menu](img/phone/03-lens-menu-dark.png)
-
-![The same menu in the light theme](img/phone/04-lens-menu-light.png)
+**The Engines menu on a phone** opens as a drawer: a row per engine running with its command word, the first open; tap another to open
+its pages (44 px rows, the command on the right), one engine at a time. Engines not running are left out on the phone.
 
 **Who decides.** Every tier is configured, never coded: a panel kind has a default (tables and charts at a glance, provenance and notes
 under *More*, pivot grids on the desktop), a screen's author sets each panel's tier in its Sutra
@@ -2557,8 +2559,16 @@ Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANA
 
 ## Help
 
-- *Help → Help centre* in the top bar, or `F1`, opens the help centre (`/help`): tutorials, guides, every reference
-  document and each pack's guides, with search (`/help/search?q=`). On a page, `F1` opens the guide for that page
+- *Help → Help centre* in the top bar opens the help centre (`/help`). Its front door is a search box over all of Help
+  (`/help/search?q=`), a row of the most used pages (*User guide*, *VaR guide*, *Tutorials*, *What's new*) and a tile per section:
+  **Get started**, **Risk measures**, **Analytics and BI**, **Data**, **Build**, **Operate**, **Reference** and **Knowledge**, with
+  **Internal** for administrators. Each tile says in one line what its section holds and how many pages you can open in it, and opens
+  the section's own page (`/help/section/<id>`): its pages in groups, every guide on one row with its tutorial beside it, and a search
+  box that searches that section only (*all of Help* beside it widens it). Help is documentation, not data: the pages of a compute engine show to anyone who can
+  open Help, signed in or not, whatever their role, while the engine runs on a server; an administrator sees the pages of an
+  engine that runs nowhere greyed, marked *not running on any server*. Every page keeps its address (`/help/<slug>`), and an old
+  address of a section (`/help#cat-use`) opens the section that took it over. On a phone the search comes first, the most used row
+  scrolls sideways and the tiles stand in one column. On a page, `F1` opens the guide for that page
   (`/help/context/<page>`: Build opens the screen designer guide, BI the BI guide, Admin the users and roles guide, Workspaces, Monitors, Alerts and the inbox their own guides); on a view, `F1` opens [About this page](#about-this-page).
 - The **?** in each panel header explains that panel kind.
 - *Help → Developer* (`/help/developer`) gathers the programming references: the server's REST API (OpenAPI), the renderer's TypeScript API, and the Java and Python API references generated from the code (the plugin and connector SPI, the shard machinery, the compute worker SDK, BI Python items, `drishti.py` and its client library, the pack and test-data generator helpers). When the console has none built, the page says how to build them.

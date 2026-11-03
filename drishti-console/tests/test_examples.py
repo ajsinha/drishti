@@ -15,7 +15,7 @@
 """The Rachana examples (docs/guides/examples): the set covers every panel kind, a nested pivot and a tree table, each
 parses, each has its JSON and note; the workbench opens them (by default, by name, from a file) and the help centre lists them."""
 import json
-from conftest import open_studio  # noqa: E402
+from conftest import help_pages, open_studio  # noqa: E402
 from pathlib import Path
 
 import yaml
@@ -125,7 +125,7 @@ def test_the_help_centre_lists_every_example_with_note_yaml_json_and_a_studio_li
     assert "<details>" in page.text and "children:" in page.text and "&#34;EXPOSURE&#34;" in page.text
     assert "data-unavailable" not in page.text, "dead link in the examples page"
     assert 'href="/help/rachana-reference#panels-the-twenty-two-kinds-and-developing-a-new-one"' in page.text
-    assert "/help/examples" in client.get("/help").text
+    assert "/help/examples" in help_pages(client)
 
 
 def test_the_examples_readme_has_no_dead_links_in_help(client):
