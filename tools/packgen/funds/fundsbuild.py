@@ -529,13 +529,13 @@ def _vs_index(docs: dict, all_rows: dict, companies: dict, indexes: dict, holder
         names = set(w_f) | set(w_ix)
         diff = {n: w_f.get(n, 0) - w_ix.get(n, 0) for n in names}
         active = sum(abs(v) for v in diff.values()) / 2
-        cmp_rows = sorted(names, key=lambda n: -max(w_f.get(n, 0), w_ix.get(n, 0)))[:25]
+        cmp_rows = sorted(names, key=lambda n: (-max(w_f.get(n, 0), w_ix.get(n, 0)), n))[:25]   # ties (the Dow's equal-price members) by ticker
         sect_f, sect_i = defaultdict(float), defaultdict(float)
         for n, v in w_f.items():
             sect_f[companies[n].get("SECTOR") or "Unclassified"] += v
         for n, v in w_ix.items():
             sect_i[companies[n].get("SECTOR") or "Unclassified"] += v
-        sectors = sorted(set(sect_f) | set(sect_i), key=lambda s: -sect_i.get(s, 0))
+        sectors = sorted(set(sect_f) | set(sect_i), key=lambda s: (-sect_i.get(s, 0), s))
         big = max(diff, key=lambda n: abs(diff[n])) if diff else ""
         held = sum(1 for n in listed if raw.get(n, 0) > 0)
         d["VS_INDEX"] = {

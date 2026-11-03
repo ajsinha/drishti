@@ -191,8 +191,8 @@ gate_static() {
     "python3 tools/contracts.py check"                 # every command has a data contract that matches its pack and data
     "python3 tools/contracts.py docs --check"          # the contracts' pages are current
     "python3 tools/testdata/sample_docs.py --check"    # the data samples' pages are current
-    "python3 tools/api_docs.py check-python"           # every public Python function, class and method has a docstring and type hints
-    "python3 -m unittest -q tools/test_no_hidden_names.py")   # again in the tool tests, where the server jar is there for its pack-make case
+    "python3 tools/api_docs.py check-python")          # every public Python function, class and method has a docstring and type hints
+  # (tools/test_no_hidden_names.py runs in the tool tests only: its pack-make case needs the server jar, which the gate runs before)
   local gen
   for gen in $(grep -l -- "--check" config/packs/*/tools/make_*.py tools/packgen/*/make*.py 2>/dev/null); do checks+=("python3 $gen --check"); done   # generated pack content is current
   all_of "${checks[@]}"
