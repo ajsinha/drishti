@@ -19,6 +19,7 @@
 #
 #   tools/bicompute-unit.sh                       compile the module's main and test sources
 #   tools/bicompute-unit.sh LivePivotTest ...     and run these test classes (simple names, package com.ash.drishti.bicompute)
+#   tools/bicompute-unit.sh --server [Test ...]   also compile the server's pivot package against the installed release's jars
 #
 # Environment: DRISHTI_M2_VERSION (default: the newest installed drishti-common), JAVA_HOME (default: the PATH's java). Its temporary
 # folder is removed on exit.
@@ -46,6 +47,23 @@ echo "main: compiled"
 "${java_bin}javac" -J-Xmx768m -nowarn -encoding UTF-8 --release 21 -d "$work/test" -cp "$work/main:$cp:$tcp" \
   $(find "$here/drishti-bicompute/src/test/java" -name '*.java')
 echo "test: compiled"
+if [ "${1:-}" = "--server" ]; then
+  # the server's pivot package (and the VaR provider) against the installed release's executable jar and its libraries
+  shift
+  exec_jar="$m2/com/ash/drishti/drishti-server/$ver/drishti-server-$ver-exec.jar"
+  plain_jar="$m2/com/ash/drishti/drishti-server/$ver/drishti-server-$ver.jar"
+  mkdir -p "$work/libs" "$work/server"
+  echo "server: unpacking the libraries of $exec_jar"
+  (cd "$work/libs" && unzip -q -o "$exec_jar" "BOOT-INF/lib/*") || [ -d "$work/libs/BOOT-INF/lib" ]   # unzip may warn (exit 1)
+  echo "server: compiling against $(ls "$work"/libs/BOOT-INF/lib | wc -l) libraries"
+  libs="$(ls "$work"/libs/BOOT-INF/lib/*.jar | grep -v '/drishti-bicompute-[0-9]\|/drishti-common-[0-9]' | tr '\n' ':')" || { echo "no libraries"; exit 1; }
+  "${java_bin}javac" -J-Xmx768m -nowarn -proc:none -encoding UTF-8 --release 21 -d "$work/server" \
+    -cp "$work/main:$plain_jar:$libs:$(jar com/ash/drishti/drishti-common/$ver)" \
+    $(find "$here/drishti-server/src/main/java/com/ash/drishti/server/pivot" -name '*.java') \
+    "$here/drishti-server/src/main/java/com/ash/drishti/server/var/VarPivotProvider.java" \
+    "$here/drishti-server/src/main/java/com/ash/drishti/server/net/PeerCalls.java" || { echo "server pivot package: javac failed ($?)"; exit 1; }
+  echo "server pivot package: compiled"
+fi
 [ $# -eq 0 ] && exit 0
 cat > "$work/Run.java" <<'EOF'
 import org.junit.platform.launcher.*;

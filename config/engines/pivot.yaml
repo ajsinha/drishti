@@ -78,6 +78,15 @@ drishti:
       advise-after-scans: 10         # a grain scanned this many times is proposed as a rollup (GET /api/v1/pivot/rollups, advice)
       dir: ""                        # where rollups are kept (blank: <data dir>/pivot/rollups)
       definitions: []                # rollups: {id, source, grain: [DESK, TRADE_DATE:month], functions: [sum(NOTIONAL_USD), count()], dates: latest|all}
+    live:                            # live pivots: a view kept current, only its moved cells pushed (PIVOT_GUIDE.md, live pivots)
+      enabled: true                  # false: no Live switch, POST /api/v1/pivot/live refused (DRS-5721)
+      max-per-person: 5              # live views one person may hold
+      max-total: 200                 # live views this node holds
+      min-interval-ms: 1000          # the least time between two recomputes of one view; changes in between are coalesced (the latest wins)
+      max-cells: 5000                # the most visible cells a live view keeps current
+      max-rows: 50000000             # the most rows an exact live recompute may read (estimated); a larger view is live only when it asks ≈ (0: no limit)
+      idle-seconds: 60               # a live view no stream reads is ended after this
+      heartbeat-seconds: 15          # a status event to every live stream this often (also when idle views are ended)
     cluster:                         # a view's partial states computed on every node running the engine and merged in node order
       enabled: true                  # false: this node computes its views alone
       hedge-after-seconds: 20        # a node's share not answered by then is asked of the next node too; the first answer wins

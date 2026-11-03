@@ -61,6 +61,9 @@ public final class PivotViewVersions {
         List<Map<String, Object>> out = new ArrayList<>();
         ContentDocs docs = views.docs();
         for (String k : docs.store().list(PREFIX + ContentDocs.name(owner) + "/" + PivotViews.slug(name) + "/")) {
+            if (!k.matches(".*/[0-9]{6}\\.json")) {
+                continue;                                     // the view's cell comments are kept beside its versions
+            }
             docs.value(k, Map.class).map(m -> (Map<String, Object>) m).ifPresent(m -> {
                 Map<String, Object> e = new LinkedHashMap<>();
                 e.put("version", m.get("version"));

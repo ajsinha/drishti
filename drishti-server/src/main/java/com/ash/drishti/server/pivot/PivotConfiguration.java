@@ -174,4 +174,10 @@ public class PivotConfiguration {
     public PivotViews pivotViews(ContentStore store) {
         return new PivotViews(store);
     }
+
+    /** Cell comments, kept with a saved view's versions. */
+    @Bean
+    public PivotCellComments pivotCellComments(PivotViews views) {
+        return new PivotCellComments(views, java.time.Clock.systemUTC());
+    }
 }

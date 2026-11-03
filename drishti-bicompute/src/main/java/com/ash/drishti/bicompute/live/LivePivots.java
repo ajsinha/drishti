@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 
 /**
@@ -128,9 +129,9 @@ public final class LivePivots implements AutoCloseable {
         volatile Consumer<Event> sink;
         volatile long lastRun;
         volatile long detachedAt;
-        volatile long seq;
-        volatile long recomputes;
-        volatile long unchanged;
+        final AtomicLong seq = new AtomicLong();
+        final AtomicLong recomputes = new AtomicLong();
+        final AtomicLong unchanged = new AtomicLong();
         volatile boolean scheduled;
         volatile String failure;
 
@@ -244,7 +245,7 @@ public final class LivePivots implements AutoCloseable {
         l.sink = sink;
         Map<String, Object> a = new LinkedHashMap<>();
         a.put("id", l.id);
-        a.put("seq", l.seq);
+        a.put("seq", l.seq.get());
         a.put("answer", l.last);
         deliver(l, new Event("answer", a));
     }
@@ -286,6 +287,13 @@ public final class LivePivots implements AutoCloseable {
         return lives.size();
     }
 
+    /** The sources at least one live view reads (the host keeps a live table's subscription only while one does). */
+    public Set<String> sources() {
+        Set<String> s = new java.util.TreeSet<>();
+        lives.values().forEach(l -> s.add(l.view.source()));
+        return s;
+    }
+
     private Map<String, Object> describe(Live l) {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("id", l.id);
@@ -293,9 +301,9 @@ public final class LivePivots implements AutoCloseable {
         m.put("date", l.last == null ? l.view.date() : l.last.get("date"));
         m.put("since", l.since.toString());
         m.put("options", l.options.toMap());
-        m.put("seq", l.seq);
-        m.put("recomputes", l.recomputes);
-        m.put("unchanged", l.unchanged);
+        m.put("seq", l.seq.get());
+        m.put("recomputes", l.recomputes.get());
+        m.put("unchanged", l.unchanged.get());
         m.put("streaming", l.sink != null);
         if (l.failure != null) {
             m.put("failure", l.failure);
@@ -356,7 +364,7 @@ public final class LivePivots implements AutoCloseable {
             }
             Map<String, Object> fresh = core.query(l.viewer, l.view, l.options);
             l.lastRun = clock.millis();
-            l.recomputes++;
+            l.recomputes.incrementAndGet();
             int cells = fresh.get("cellCount") instanceof Number n ? n.intValue() : 0;
             if (cells > settings.maxCells()) {
                 lives.remove(l.id);
@@ -374,13 +382,13 @@ public final class LivePivots implements AutoCloseable {
             data.put("causes", signals.stream().map(Signal::detail).distinct().toList());
             String kind = String.valueOf(patch.get("kind"));
             if ("none".equals(kind)) {
-                l.unchanged++;
-                data.put("seq", l.seq);
+                l.unchanged.incrementAndGet();
+                data.put("seq", l.seq.get());
                 Event e = new Event("status", data);
                 deliver(l, e);
                 return e;
             }
-            data.put("seq", ++l.seq);
+            data.put("seq", l.seq.incrementAndGet());
             Event e = new Event("reshape".equals(kind) ? "reshape" : "patch", data);
             deliver(l, e);
             return e;
