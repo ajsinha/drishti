@@ -16,7 +16,7 @@
 section 5.4): each item's ``requires:`` and the edition's (or the person's lens's) ``menus:`` lists decide what one request shows.
 Read again when the file changes. The lens items ("Open Drishti Risk", "Leave Drishti Risk") are added here, from the lenses the server
 offers. The Engines menu (``engines: true``) has a column per compute engine, drawn for the engines running in the cluster that the person's
-role opens (``opens:``); :func:`engine_opened` answers the same for Help."""
+role opens (``opens:``); :func:`engine_refused` applies the same rule to the engine's command words (type-ahead and command line)."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -181,13 +181,33 @@ def _person_opens(request, rules: list, ident=_SIGNED_IN) -> bool:
 
 
 def engine_opened(request, engine_id: str, ident=_SIGNED_IN) -> bool:
-    """Whether this person's role opens the engine (the Engines menu's ``opens:`` of its column): Help leaves out the pages of an engine
-    the person does not open, as the Engines menu leaves out its column. An engine without a column there opens for everyone. ``ident``:
+    """Whether this person's role opens the engine (the Engines menu's ``opens:`` of its column): the one rule of the Engines menu and of
+    the engine's command words (:func:`engine_refused`). An engine without a column there opens for everyone. ``ident``:
     the person asked about (default: the request's)."""
     col = next((c for c in _engines_menu(request).get("columns") or [] if str(c.get("engine") or "") == engine_id), None)
     if col is None:
         return True
     return _person_opens(request, list(col.get("opens") or []), ident)
+
+
+def engine_refused(request, text: str) -> dict | None:
+    """The engine (its catalogue entry) whose command words start the typed text and that this person's role does not open, or None:
+    the command line refuses it and the type-ahead leaves it out, by the same rule as the Engines menu (:func:`engine_opened`)."""
+    e = engines.engine_of(text)
+    return e if e is not None and not engine_opened(request, str(e.get("id") or "")) else None
+
+
+def refusal_for_role(e: dict) -> str:
+    """The calm words the command line says when a person types the command of an engine their role does not open."""
+    return f"{e.get('title') or e.get('id')} is not opened for your role; ask an administrator."
+
+
+def suggestions_opened(request, items: list) -> list:
+    """The type-ahead's suggestions without those of an engine the person's role does not open (a suggestion's ``complete`` or
+    ``mnemonic`` starting with the engine's words)."""
+    if not isinstance(items, list):
+        return items
+    return [s for s in items if not (isinstance(s, dict) and engine_refused(request, str(s.get("complete") or s.get("mnemonic") or "")))]
 
 
 def _engine_columns(request, edition: Edition, menu: dict, ctx: dict, fill: dict) -> list:

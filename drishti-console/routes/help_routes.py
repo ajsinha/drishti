@@ -62,23 +62,16 @@ def _aliases(request) -> dict:
 
 def visible(request, guide) -> bool:
     """Whether this person, in this edition, sees a guide: the edition keeps it (:func:`shown`), the guide's ``roles:`` let them
-    (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis), its engine runs in the cluster and their role
-    opens it (help.yaml ``engine:``; the Engines menu's ``opens:``). A guide they may not see is not listed, not found by search and not
-    reached by its address (404)."""
-    return (guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide)
-            and _engine_opened(request, guide))
+    (help.yaml; ``roles: [admin]`` for an internal page such as the competitive analysis) and its engine runs in the cluster (help.yaml
+    ``engine:``). Help is documentation, not data: a running engine's pages are open to anyone who can open Help, whatever the Engines
+    menu's ``opens:`` say. A guide they may not see is not listed, not found by search and not reached by its address (404)."""
+    return guide.permits(_me(request)) and shown(_edition(request), guide, _aliases(request)) and _engine_on(guide)
 
 
 def _engine_on(guide) -> bool:
     """A guide about a compute engine that runs on no server of the cluster is not shown (help.yaml engine:, the catalogue's help:)."""
     from core import engines
     return (not guide.engine or engines.engine_available(guide.engine)) and not engines.help_hidden(guide.slug)
-
-
-def _engine_opened(request, guide) -> bool:
-    """A guide about an engine the person's role does not open is left out, as the Engines menu leaves out its column (core/menus.py)."""
-    from core import menus
-    return not guide.engine or menus.engine_opened(request, guide.engine, _me(request))
 
 
 def status(request, guide) -> str:
@@ -102,7 +95,7 @@ def _section_open(request, section: dict) -> bool:
 
 def sections_for(request, lib) -> list:
     """The sections this person sees, each with only the guides they see (``guides``, ``groups``) and the count of them; a section with
-    none left is not drawn (Risk measures for a role that opens no engine)."""
+    none left is not drawn (Risk measures while no engine of it runs, for anyone but an administrator)."""
     out = []
     for c in lib.categories:
         if not _section_open(request, c):
@@ -119,14 +112,9 @@ def _engines_line(request, guides) -> dict:
     from core import engines
     ids = list(dict.fromkeys(g.engine for g in guides if g.engine))
     me = _me(request)
-    on = [engines.title(e) for e in ids if engines.engine_available(e) and _engine_opened_id(request, e)]
+    on = [engines.title(e) for e in ids if engines.engine_available(e)]
     off = [engines.title(e) for e in ids if not engines.engine_available(e)] if (me is not None and me.is_admin) else []
     return {"on": on, "off": off}
-
-
-def _engine_opened_id(request, engine_id: str) -> bool:
-    from core import menus
-    return menus.engine_opened(request, engine_id, _me(request))
 
 
 @router.get("/help")

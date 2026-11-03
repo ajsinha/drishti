@@ -272,6 +272,7 @@ is available when it runs on this node or on any node of the cluster.
 |---|---|
 | Command line | its words are unknown, as a word an edition hides: `FRSA DESK-RATES <GO>` answers "FRTB-SA is not running on this server" (`DRS-1020`) |
 | Type-ahead, search hints, FUNC, examples | its words, examples and command rows are not offered |
+| Who opens it (2.9.11.a) | a running engine's column of the Engines menu and its command words follow the column's `opens:` in `menus.yaml` (`role:<name>`, `pack:<name>`; administrators always): a role that does not open it does not see the column, is not offered its words in the type-ahead and is told "<title> is not opened for your role; ask an administrator." when it types one (`core/menus.py` `engine_refused`, one rule for both). Help is documentation and is not gated by it. A console-side check: the server's own entitlements still decide the data |
 | Menus | its column of the Engines menu is not drawn (a column names its engine with `engine: <id>` in `menus.yaml`, and its `opens:` the roles that see it), nor any item of another menu that names it (`requires: engine:<id>`); a menu left empty is not drawn |
 | Help | its pages are not listed in the Help centre, search or contextual help (a Help entry names `engine: <id>` in `help.yaml`); a direct link opens a short page saying the engine is not running here |
 | Home and landings | its tiles and quick cards are not drawn; a landing that is all one engine's (the VaR landing) is not offered on Home's switch |

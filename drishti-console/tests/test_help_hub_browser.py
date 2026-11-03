@@ -18,6 +18,7 @@ static/js/help.js), dark and light:
 - a tile opens its section; the section's rows filter as you type (a group with none left folds away), Enter searches that section only;
 - an old address /help#cat-<id> opens the section that took it over;
 - F1 on the help pages and on the terminal opens the screen's guide;
+- a visitor who is not signed in reads every running engine's guides (Help is documentation), but not Internal;
 - on a phone (390 px): search first, the most used row scrolls sideways inside itself, the tiles stand in one column, every tile and
   row a finger tall, nothing scrolls sideways.
 DRISHTI_HELP_SHOTS=<folder> saves screenshots. Skipped when Playwright or its Chromium is missing."""
@@ -34,6 +35,59 @@ pytestmark = pytest.mark.browser
 THEMES = ("terminal", "light")
 SHOTS = os.environ.get("DRISHTI_HELP_SHOTS")
 TILES = ["Get started", "Risk measures", "Analytics and BI", "Data", "Build", "Operate", "Reference", "Knowledge", "Internal"]
+
+
+@pytest.fixture(scope="module")
+def public_console():
+    """A console nobody is signed in to (the auth gate answers no one): Help as a signed-out visitor sees it."""
+    import threading
+    import time
+
+    import uvicorn
+
+    from conftest import CONSOLE
+    from core import engines
+    from core.app import create_app
+    from core.config import load_settings
+    from test_live_tabs_browser import TickingBackend, _free_port
+
+    engines.reset()
+    app = create_app(load_settings(CONSOLE / "config"))
+    app.state.backend = TickingBackend()
+
+    async def nobody(cookie, _backend):
+        return None
+    app.state.auth.current = nobody
+    port = _free_port()
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
+    threading.Thread(target=server.run, daemon=True).start()
+    deadline = time.monotonic() + 15
+    while not server.started and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert server.started, "the public console did not start"
+    yield f"http://127.0.0.1:{port}"
+    server.should_exit = True
+
+
+@pytest.mark.parametrize("width", (1280, 390))
+def test_a_signed_out_visitor_reads_every_running_engines_help(browser, public_console, width):
+    """Help is documentation, not data (product owner, 2026-11-03): the running engines' guides and tutorials are open to a visitor who
+    is not signed in; Internal is not."""
+    ctx = _context(browser, width, "light")
+    page = ctx.new_page()
+    try:
+        page.goto(public_console + "/help", wait_until="load")
+        tiles = [t.strip() for t in page.locator("[data-help-tiles] .hub-tile-t").all_text_contents()]
+        assert "Risk measures" in tiles and "Internal" not in tiles, tiles
+        page.goto(public_console + "/help/section/risk", wait_until="load")
+        for slug in ("docs-guides-var-guide", "docs-guides-exposure-guide", "docs-guides-frtb-sa-guide", "docs-guides-simm-guide"):
+            assert page.locator(f"a[href='/help/{slug}']").count() == 1, slug
+        page.locator("a[href='/help/docs-guides-exposure-guide']").click()
+        page.wait_for_url("**/help/docs-guides-exposure-guide")
+        assert page.locator(".help-article").is_visible()
+        assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1")
+    finally:
+        ctx.close()
 
 
 def _context(browser, width, theme):

@@ -15,8 +15,9 @@
 """The Engines menu (2.9.11.a, mock-up engines-menu/A; config/menus.yaml, core/menus.py) and the help hub's engine rule, without a
 browser: one top menu in place of the VaR and Exposure menus, a column per running engine with its command word, drawn only for a role
 that opens an engine (opens: in menus.yaml; administrators open all); the search box past search-over engines; Admin -> Engines and the
-engines not running for administrators only; Help leaves out the pages of an engine the person does not open, or that runs nowhere
-(an administrator sees those greyed). The browser side: test_engines_menu_browser.py and test_help_hub_browser.py."""
+engines not running for administrators only; the same rule refuses an engine's command words in words and drops them from the
+type-ahead; Help shows every running engine's pages to anyone who can open Help (signed out too) and leaves out an engine that runs
+nowhere (an administrator sees those greyed). The browser side: test_engines_menu_browser.py and test_help_hub_browser.py."""
 from __future__ import annotations
 
 import re
@@ -87,7 +88,8 @@ def test_a_role_sees_only_the_engines_it_opens_and_no_admin_link(backend, monkey
     assert _engines(cole) == ["Exposure", "SIMM"]
 
 
-def test_a_role_that_opens_no_engine_has_no_engines_menu_and_no_risk_help(backend, monkeypatch):
+def test_a_role_that_opens_no_engine_has_no_engines_menu_but_reads_every_running_engines_help(backend, monkeypatch):
+    """Product owner, 2026-11-03: Help is documentation, not data; only the Engines menu and the commands follow opens:."""
     engines.reset()
     app = _app(backend, monkeypatch)
     _people(app, monkeypatch)
@@ -95,13 +97,60 @@ def test_a_role_that_opens_no_engine_has_no_engines_menu_and_no_risk_help(backen
     page = c.get("/t").text
     assert "Engines" not in _top(page) and "data-engines-menu" not in page and "Admin" not in _top(page)
     hub = c.get("/help").text
-    assert 'href="/help/section/risk"' not in hub and 'href="/help/section/internal"' not in hub
-    assert c.get("/help/section/risk").status_code == 404 and c.get("/help/docs-guides-var-guide").status_code == 404
-    assert 'href="/help/docs-guides-var-guide"' not in hub                              # nor in the most used row
-    assert c.get("/help/user-guide").status_code == 200
-    mira = _client(app, "mira")
-    risk = mira.get("/help/section/risk").text
-    assert 'href="/help/docs-guides-var-guide"' in risk and 'href="/help/docs-guides-exposure-guide"' not in risk   # VaR yes, exposure no
+    assert 'href="/help/section/risk"' in hub and 'href="/help/section/internal"' not in hub
+    assert 'href="/help/docs-guides-var-guide"' in hub                                  # the most used row keeps the VaR guide
+    risk = c.get("/help/section/risk").text
+    for slug in ("docs-guides-var-guide", "docs-guides-exposure-guide", "docs-guides-frtb-sa-guide", "docs-guides-simm-guide"):
+        assert f'href="/help/{slug}"' in risk and c.get(f"/help/{slug}").status_code == 200, slug
+    assert "data-help-off" not in risk
+
+
+def test_a_signed_out_visitor_reads_the_running_engines_help(backend, monkeypatch):
+    engines.reset()
+    app = _app(backend, monkeypatch)
+
+    async def nobody(cookie, _backend):
+        return None
+    monkeypatch.setattr(app.state.auth, "current", nobody)
+    c = _client(app)
+    assert c.get("/help/docs-guides-var-guide").status_code == 200
+    assert 'href="/help/docs-guides-exposure-guide"' in c.get("/help/section/risk").text
+
+
+def test_an_engines_commands_follow_the_same_rule_as_its_menu_column(backend, monkeypatch):
+    """The command words of an engine the role does not open: refused in words on the command line, left out of the type-ahead
+    (core/menus.py engine_refused, the Engines menu's opens:); an engine it opens, and every engine for an administrator, as before."""
+    from urllib.parse import unquote
+
+    from core import menus
+
+    engines.reset()
+    app = _app(backend, monkeypatch)
+    _people(app, monkeypatch)
+    mira = _client(app, "mira")                                                         # market risk: VaR, FRTB-SA, SIMM; not Exposure
+    for typed in ("EXP CPTY:CP-ALDERSHOT", "XWIF", "exp bank"):
+        r = mira.get("/go", params={"q": typed + " <GO>"}, follow_redirects=False)
+        assert r.status_code == 303 and "Exposure is not opened for your role; ask an administrator." in unquote(r.headers["location"]), typed
+    bea = _client(app, "bea")
+    for typed, title in (("VAR BANK", "VaR"), ("PLAY VAR BANK", "VaR"), ("SMAT DESK:RATES 20", "VaR"), ("FRSA BANK", "FRTB-SA"),
+                         ("PLAY SIMM EXAMPLE", "SIMM")):
+        r = bea.get("/go", params={"q": typed + " <GO>"}, follow_redirects=False)
+        assert f"{title} is not opened for your role" in unquote(r.headers.get("location", "")), typed
+    r = mira.get("/go", params={"q": "VAR BANK <GO>"}, follow_redirects=False)
+    assert "not opened for your role" not in unquote(r.headers.get("location", ""))
+    assert bea.get("/api/suggest", params={"q": "VAR B"}).json() == [] and bea.get("/api/suggest", params={"q": "PLAY"}).json() == []
+    assert mira.get("/api/suggest", params={"q": "PLAY"}).json()                        # her VaR Playground is offered
+    admin = _client(app)
+    r = admin.get("/go", params={"q": "EXP BANK <GO>"}, follow_redirects=False)
+    assert "not opened for your role" not in unquote(r.headers.get("location", ""))
+
+    class _Req:                                                                         # the suggestions filter: one rule, by word
+        state = type("S", (), {"identity": Identity("mira", "Mira", "", ("market-risk",)), "pack_switcher": []})()
+        app = None
+    _Req.app = app
+    kept = menus.suggestions_opened(_Req(), [{"mnemonic": "EXP", "complete": "EXP "}, {"mnemonic": "VAR", "complete": "VAR "},
+                                             {"mnemonic": "TRD", "complete": "TRD "}])
+    assert [s["mnemonic"] for s in kept] == ["VAR", "TRD"]
 
 
 def test_an_engine_running_nowhere_leaves_the_menu_and_an_administrator_sees_it_named_not_running(backend, monkeypatch):

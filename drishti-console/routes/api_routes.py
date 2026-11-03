@@ -104,7 +104,16 @@ async def rupaka_suggestions(request: Request, word: str, rest: str | None) -> l
 
 @router.get("/suggest")
 async def suggest(request: Request, q: str = "", limit: int | None = None):
-    """The command line's dropdown; without a limit the server's own (drishti.commands.suggest-limit, 25) applies."""
+    """The command line's dropdown; without a limit the server's own (drishti.commands.suggest-limit, 25) applies. The commands of an
+    engine the person's role does not open are left out (core/menus.py, the Engines menu's rule)."""
+    from core import menus
+
+    if menus.engine_refused(request, q):
+        return []
+    return menus.suggestions_opened(request, await _suggest(request, q, limit))
+
+
+async def _suggest(request: Request, q: str, limit: int | None):
     ed = getattr(request.state, "edition", None) or request.app.state.editions.instance     # the words an edition (or lens) keeps
     bi = re.match(r"(?is)^\s*(bi|rupaka)(?:\s+(.*))?$", q.replace("<GO>", ""))
     if bi and ed.word_on(bi.group(1)):                                                     # the reserved word RUPAKA: the BI pages and the reports you may open

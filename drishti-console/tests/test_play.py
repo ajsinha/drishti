@@ -128,7 +128,9 @@ def test_the_var_page_link_func_and_the_type_ahead(backend, monkeypatch):
                            "commands": [{"code": "VRES", "label": "VaR result", "kind": "var-result", "example": "VRES DESK:RATES"}]}]}
 
     monkeypatch.setattr(backend, "functions", functions, raising=False)
-    app, c = _app(backend, monkeypatch, RISK_ABOUT, roles=("viewer",))
+    _, viewer = _app(backend, monkeypatch, RISK_ABOUT, roles=("viewer",))                  # a role that does not open VaR (2.9.11.a)
+    assert not [x for x in viewer.get("/api/suggest", params={"q": "PLAY VAR DESK RATES"}).json() if x.get("mnemonic") == "PLAY"]
+    app, c = _app(backend, monkeypatch, RISK_ABOUT, roles=("market-risk",))               # a market-risk role opens VaR: offered
     assert "play-link.js" in c.get("/var?scope=DESK:RATES").text
     s = [x for x in c.get("/api/suggest", params={"q": "PLAY VAR DESK RATES"}).json() if x.get("mnemonic") == "PLAY"]
     assert s and s[0]["href"] == "/play?scope=DESK%3ARATES"

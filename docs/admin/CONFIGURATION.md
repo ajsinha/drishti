@@ -4493,7 +4493,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `menus[].columns[].title` | string | none |  | console | A column's heading | live |  |
 | `menus[].columns[].engine` | string | `none` |  | console | The Engines menu: the column's engine (its id in config/engines.yaml); drawn only while it runs on a server of the cluster | live |  |
 | `menus[].columns[].word` | string | empty |  | console | The Engines menu: the engine's command word, shown in the column's head | live |  |
-| `menus[].columns[].opens` | list | `[]` |  | console | The Engines menu: who opens the engine, any of role:&lt;name&gt; or pack:&lt;name&gt; (a pack assigned to the person); administrators always; none: everyone. Help follows it | live |  |
+| `menus[].columns[].opens` | list | `[]` |  | console | The Engines menu: who opens the engine, any of role:&lt;name&gt; or pack:&lt;name&gt; (a pack assigned to the person); administrators always; none: everyone. The engine's command words follow it (left out of the type-ahead, refused when typed); Help does not | live |  |
 | `menus[].columns[].items` | list | none |  | console | A column's items | live |  |
 | `menus[].columns[].items[].id` | string | none |  | console | The item's id (what an edition lists to keep it) | live |  |
 | `menus[].columns[].items[].href` | string | none |  | console | Where it goes (blank with cmd: the command run; with fill: the command line filled) | live |  |
@@ -4541,7 +4541,7 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `sections[].groups[].guides[].summary` | string | none |  | console | The row's summary, also searched | live |  |
 | `sections[].groups[].guides[].packs` | list | `[]` |  | console | The packs it is about: an edition that keeps none of them hides it | live |  |
 | `sections[].groups[].guides[].roles` | list | `[]` |  | console | Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it) | live |  |
-| `sections[].groups[].guides[].engine` | string | `none` |  | console | The compute engine it is about: left out while it runs on no server and for a role that does not open it (an administrator sees it greyed) | live |  |
+| `sections[].groups[].guides[].engine` | string | `none` |  | console | The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise | live |  |
 | `sections[].groups[].guides[].pair` | string | `none` |  | console | The tutorial drawn beside this guide on its row (a page of the same group) | live |  |
 | `moved` | map | `shipped` |  | console | Retired addresses: old slug -&gt; slug or slug#anchor, answered with a 301 | live |  |
 | `moved.<name>` | string | none |  | console | One retired slug and the page (and section) that took it over | live |  |

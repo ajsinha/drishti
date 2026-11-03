@@ -19,7 +19,9 @@ dark and light, over a console of its own whose menus.yaml shows the search box 
 - its search box filters as you type (an engine with no match folds away, the word marked), Escape clears it, Enter opens the first page;
 - an item to finish (Exposure -> A counterparty) fills the command line and closes the menu;
 - on a phone (390 px) the columns fold: the first engine open, a tap on another opens it and closes the first; every row at least 44 px,
-  the panel inside its 16 px gutters, no sideways scroll; F1 still opens the screen's help.
+  the panel inside its 16 px gutters, no sideways scroll; F1 still opens the screen's help;
+- a role that opens no engine (a BI analyst) has no Engines menu, is offered no VAR command in the type-ahead and, typing VAR BANK,
+  reads "VaR is not opened for your role; ask an administrator.", on a desktop and a phone; the VaR guide still opens for it.
 DRISHTI_ENGINES_SHOTS=<folder> saves screenshots. Skipped when Playwright or its Chromium is missing."""
 import os
 import threading
@@ -81,6 +83,34 @@ def console():
         assert server.started, "the console did not start"
         yield f"http://127.0.0.1:{port}"
         server.should_exit = True
+
+
+@pytest.fixture(scope="module")
+def analyst_console():
+    """A console whose acting person is a BI analyst: a role that opens no engine (the Engines menu's opens:)."""
+    import uvicorn
+
+    from core import engines
+    from core.app import create_app
+    from core.auth import Identity
+    from core.config import load_settings
+
+    engines.reset()
+    app = create_app(load_settings(CONSOLE / "config"))
+    app.state.backend = TickingBackend()
+
+    async def analyst(cookie, _backend):
+        return Identity(user="bea", display="Bea", desk="BI", roles=("bi-analyst",))
+    app.state.auth.current = analyst
+    port = _free_port()
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
+    threading.Thread(target=server.run, daemon=True).start()
+    deadline = time.monotonic() + 15
+    while not server.started and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert server.started, "the analyst's console did not start"
+    yield f"http://127.0.0.1:{port}"
+    server.should_exit = True
 
 
 def _context(browser, width, theme):
@@ -197,6 +227,30 @@ def test_the_engines_menu_folds_on_a_phone(browser, console, theme):
         page.locator("[data-engines-panel] a.mega-item[data-fill='EXP NSET']").tap()
         page.wait_for_timeout(200)
         assert page.input_value("#cmdInput") == "EXP NSET "
+    finally:
+        ctx.close()
+
+
+@pytest.mark.parametrize("width", (1280, 390))
+def test_a_role_that_opens_no_engine_has_no_menu_no_suggestion_and_a_refusal_in_words(browser, analyst_console, width):
+    ctx = _context(browser, width, "terminal")
+    page = ctx.new_page()
+    try:
+        page.goto(analyst_console + "/t", wait_until="load")
+        labels = [t.strip() for t in page.locator(".tbar-menus .tbar-menu-l").all_text_contents()]
+        assert "Engines" not in labels and page.locator("[data-engines-menu]").count() == 0
+        page.locator("#cmdInput").fill("VAR B")
+        page.wait_for_timeout(600)                                                # the type-ahead asks the console
+        offered = [t.upper() for t in page.locator("#cmdList li").all_text_contents()]
+        assert not any(t.startswith("VAR") for t in offered), offered
+        page.locator("#cmdInput").fill("VAR BANK")
+        page.locator("#cmdInput").press("Enter")
+        page.wait_for_load_state("load")
+        page.get_by_text("VaR is not opened for your role; ask an administrator.").first.wait_for(state="visible", timeout=10000)
+        assert page.evaluate("document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1")
+        _shot(page, f"04-engine-refused-{width}")
+        page.goto(analyst_console + "/help/docs-guides-var-guide", wait_until="load")   # Help is documentation: open to the role
+        assert page.locator(".help-article").is_visible()
     finally:
         ctx.close()
 

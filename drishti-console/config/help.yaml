@@ -17,8 +17,8 @@
 # section only. Every page belongs to exactly one section (tests/test_help.py). Order here is display order.
 # A page is a console guide (web/guides/<slug>.md) or, with `doc:`, a repository document rendered as-is (so the in-app reference is the
 # repository's docs). Its keys: slug, doc, title, icon, kind (guide, tutorial, knowledge), summary, packs, roles, engine and pair:
-#   engine: the compute engine the page is about (config/engines.yaml): left out while the engine runs on no server, and for a person whose
-#           role does not open it (the Engines menu's opens:, config/menus.yaml); an administrator sees it greyed instead;
+#   engine: the compute engine the page is about (config/engines.yaml): left out while the engine runs on no server (an administrator
+#           sees it greyed instead); Help is documentation, open to anyone who can open Help, whatever the Engines menu's opens: say;
 #   pair:   the tutorial drawn beside a guide on its row (the tutorial is a page of the same group);
 #   roles:  only people with one of these roles (or an administrator) see the page: hidden from the sections and search, 404 at its address.
 # A section with roles: shows only to those people (Internal: administrators). A group's words: the command words shown beside its title.
