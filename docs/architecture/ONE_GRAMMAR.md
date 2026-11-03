@@ -90,3 +90,66 @@ a second expression syntax, and Python is the open-ended escape, sandboxed. Size
 | 3 | `measure`, `cell`, `group` on the engine, the Sutra pivot panel in paths, the catalogue page | M | 2.9.11.b |
 | 5 | the guards | S | 2.9.11.b |
 | 4 | DEL folded into Rachana, its parity proof, DEL deleted | L | a release of its own after 2.9.11.d, designed first |
+
+## 7. The function catalogue: what to add, from Excel and SAS
+
+*Product owner, 2026-11-03: "evaluate what other functions we should build into Drishti like sum ... what Excel and SAS provide ...
+let us expand wherever you think ok".*
+
+**What exists (2026-11-03).** BI's DEL has 59 functions (`drishti-server/src/main/resources/bi/expr/functions.yaml`): scalar (18), aggregate
+(9: `sum`, `avg`, `min`, `max`, `count`, `distinct`, `ratio`, `percentile`, `avg_by`), time (10: `ytd`, `mtd`, `qtd`, `prior_period`,
+`same_period_last_year`, `fiscal_ytd` …), windows (10: `lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_*`, `running`,
+`cumulative`), balances (5: `opening`, `closing`, `last`, `first`, `avg_over`), filter (3: `calc`, `share_of`, `parent_of`), conversion (2:
+`fx`, `convert`), lookup and measure. Rachana has about 23 (`sum`, `min`, `max`, `size`, `flatten`, `group`, `coalesce`, `fmt`, text
+tests, `days`, `today` …). The pivot engine has about 14 aggregates (`sum`, `count`, `avg`, `min`, `max`, `wavg`, `median`,
+`percentile`, `variance`, `stddev`, `count_distinct`, and the `_once` forms). Each family below lands **once**: scalars in Rachana,
+aggregates and windows in the engine, as part 2 requires.
+
+**What every new function must have** (the catalogue entry checks it): typed arguments and result, the null rule, a mergeable form or
+the word *holistic* (so totals and the cluster stay right), currency and unit rules (a sum of two currencies is refused unless converted),
+masks respected, a worked example that runs in the docs test, and its **Excel equivalent** where one exists, so the pivot's Excel export
+writes a live formula and the docs map Excel and SAS names to Drishti's (one name in Drishti; the others are documentation, never aliases).
+
+### 7.1 Tier 1: the everyday analyst's set (Excel's and SAS PROC MEANS/TABULATE/RANK core)
+
+| Family | Add | Excel / SAS it answers | Where |
+|---|---|---|---|
+| Conditional aggregates | any aggregate with `where` (exists in DEL), and in paths `sum($.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL)` | `SUMIFS`, `COUNTIFS`, `AVERAGEIFS`, `MAXIFS`; SAS `WHERE=` | engine |
+| Descriptive statistics | `nmiss` (nulls), `range`, `mode`, `stderr`, `cv`, `skewness`, `kurtosis`, `iqr`, `geomean`, `harmean`, `trimmean(x, pct)` | `MODE`, `SKEW`, `KURT`, `GEOMEAN`, `TRIMMEAN`; PROC MEANS `NMISS CV SKEWNESS KURTOSIS STDERR QRANGE` | engine (moments are mergeable) |
+| Two-variable statistics | `corr`, `covar`, `slope`, `intercept`, `rsq` | `CORREL`, `COVARIANCE.S`, `SLOPE`, `INTERCEPT`, `RSQ`; PROC CORR | engine (mergeable sums of products) |
+| Shares of totals | `pct_of_total`, `pct_of_row`, `pct_of_column`, `pct_of_parent` (DEL's `share_of` and `parent_of` move here) | Excel PivotTable "Show values as %"; PROC TABULATE `PCTSUM ROWPCTSUM COLPCTSUM` | engine |
+| Ranks and tops | `rank`, `dense_rank`, `percent_rank` (from DEL), `ntile(n)` (deciles, quartiles), `kth_largest`, `kth_smallest`, `top_n`, `bottom_n` | `RANK`, `LARGE`, `SMALL`, `QUARTILE`; PROC RANK `GROUPS=` | engine |
+| Windows and time | DEL's `lag`, `lead`, `moving_*`, `running`, `cumulative`, `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `opening`, `closing` move to the engine; add `diff` and `pct_change` | SAS `LAG`, `DIF`, PROC EXPAND; Excel `OFFSET` patterns | engine |
+| Text aggregate | `string_agg(x, sep, distinct?)` | `TEXTJOIN`; SAS `CATX` over a group | engine |
+| Math | `round`, `round_up`, `round_down`, `mround`, `ceiling`, `floor`, `mod`, `power`, `sqrt`, `exp`, `ln`, `log10`, `sign`, `clamp(x, lo, hi)` | the Excel math set | Rachana |
+| Logic | `if`, `ifs`, `switch`, `iferror`, `let(name = expr, ...)` | `IF`, `IFS`, `SWITCH`, `IFERROR`, `LET` | Rachana |
+| Text | `concat`, `left`, `right`, `mid`, `replace`, `split`, `trim`, `pad`, `regex_extract` | `LEFT`, `MID`, `SUBSTITUTE`, `TEXTSPLIT`, `TRIM`, `REGEXEXTRACT` | Rachana |
+| Lists (Excel's dynamic arrays) | `sort`, `unique`, `take`, `drop`, `sequence`, `map(list, expr)`, `reduce(list, init, expr)` over `@` | `SORT`, `UNIQUE`, `TAKE`, `SEQUENCE`, `MAP`, `REDUCE` | Rachana (no aggregation: `reduce` with `+` is refused in favour of `sum`) |
+| Dates with the bank's calendars | `edate`, `eomonth`, `workday(d, n, calendar)`, `networkdays(a, b, calendar)`, `yearfrac(a, b, basis)` (ACT/360, ACT/365F, 30/360, ACT/ACT), `intck(interval, a, b)`, `intnx(interval, d, n)` | `EDATE`, `EOMONTH`, `WORKDAY.INTL`, `NETWORKDAYS.INTL`, `YEARFRAC`; SAS `INTCK`, `INTNX` | Rachana, on the calendars Drishti already has (`USNY` …) |
+
+### 7.2 Tier 2: finance on flows that are given
+
+| Add | Excel it answers | Note |
+|---|---|---|
+| `npv(rate, flows)`, `xnpv(rate, flows, dates)`, `irr`, `xirr`, `pv`, `fv`, `pmt`, `rate` | the Excel financial set | on cash flows a document or a table carries (`$.LEGS[*].CASH_FLOWS[*]`) |
+| `discount_factor(curve, date)`, `forward_rate(curve, a, b)` | none | reads an `ir-curve` kind; interpolation stated |
+| `accrued(coupon, last, next, basis)`, `macaulay_duration`, `modified_duration`, `convexity` on given flows and a yield | `ACCRINT`, `DURATION`, `MDURATION` | arithmetic on given flows only |
+| `norm_dist`, `norm_inv`, `t_dist`, `chisq_dist`, `binom_dist` | `NORM.S.DIST`, `NORM.S.INV`, `T.DIST`, `CHISQ.DIST`, `BINOM.DIST` | statistics for tests a person builds (the VaR engine's backtesting keeps its own) |
+
+**The boundary.** Pricing a trade from market data (a model, a curve build, a volatility surface) is QLRisk's job as the quant engine
+(design only until its API is stable), and VaR, ES, exposure, FRTB-SA and SIMM come only from their own engines through `measure(...)`:
+the catalogue never re-implements them, and a function that would (a `var(vector, p)` over a scenario vector) is not added.
+
+### 7.3 Tier 3: SAS-style analysis (candidates)
+
+Frequency tables with chi-square (PROC FREQ), regression with several variables (PROC REG), `forecast` and `trend` (Excel's linear forms),
+winsorising and z-score outlier flags (PROC STDIZE, PROC UNIVARIATE), histogram bins as a dimension. Each a candidate for the pivot's P4
+or later, decided one by one.
+
+### 7.4 When
+
+| Tier | Size | Release |
+|---|---|---|
+| 1 | M to L | **2.9.11.e**, with DEL folded into Rachana: DEL's 59 functions move once, and the new ones are added in the same move, never twice |
+| 2 | M | the release after, coordinated with the QLRisk boundary |
+| 3 | per function | candidates |

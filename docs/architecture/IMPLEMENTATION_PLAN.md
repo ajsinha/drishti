@@ -780,7 +780,7 @@ tool and the browser. Each example runs as a test on the demo lake. Size M.
 *Product owner, 2026-11-03: one grammar and no functionality coded twice.* BI's measures, derived columns, filters and row rules written in
 Rachana expressions, DEL's filter-context rules carried over as Rachana functions, every model, report and row rule migrated by a tool
 and proved equal (figures and the rows each person sees) to the current code, then DEL's parser, checker and lowering deleted
-([ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). Designed in detail first. Size L.
+([ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). With it, the function catalogue's tier 1 ([section 7.1](ONE_GRAMMAR.md#71-tier-1-the-everyday-analysts-set-excels-and-sas-proc-meanstabulaterank-core)): conditional aggregates, descriptive and two-variable statistics, shares of totals, ranks, windows and time on the engine; math, logic, text, lists and calendar dates in Rachana; each with its Excel equivalent. Designed in detail first. Size L.
 
 ## 2.9.12: counterparty engines (proposed)
 
