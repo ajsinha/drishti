@@ -33,7 +33,6 @@ kinds:
 - simulation-run
 - exposure-path
 - exposure-result
-- exposure-whatif
 - exposure-official-cpty
 - nset-mtm
 - cpty-mtm
@@ -50,7 +49,6 @@ commands:
   XRUN: simulation-run
   XPATH: exposure-path
   EXP: exposure-result
-  XWIF: exposure-whatif
   XOFC: exposure-official-cpty
   NSMTM: nset-mtm
   CPMTM: cpty-mtm
@@ -65,7 +63,6 @@ depends-on:
   - exposure-engine
   - exposure-results
   - exposure-store
-  - exposure-whatif
   - legal-store
   plugins:
   - delta
@@ -507,16 +504,6 @@ No samples ship: documents are read live from its connector `exposure-engine` (p
 
 Links: `RUN_ID` → `simulation-run`.
 
-### `exposure-whatif`
-
-**Exposure what-if before dealing (computed, Python)** · mnemonic `XWIF` · read through connector `exposure-whatif`.
-
-About: Exposure what-if before dealing.
-
-**Id:** set by its connector (no samples ship).
-
-No samples ship: documents are read live from its connector `exposure-whatif` (plugin `reactive`).
-
 ### `exposure-official-cpty`
 
 **Exposure official results by netting set and counterparty (published)** · mnemonic `XOFC` · read through connector `exposure-results`.
@@ -563,7 +550,6 @@ No samples ship: documents are read live from its connector `ccr-derived` (plugi
 | `XRUN` | `simulation-run` | Exposure simulation run |
 | `XPATH` | `exposure-path` | Exposure path (a trade's MtM on every path at a grid date) |
 | `EXP` | `exposure-result` | Exposure profile of a scope (computed) |
-| `XWIF` | `exposure-whatif` | Exposure what-if before dealing (computed, Python) |
 | `XOFC` | `exposure-official-cpty` | Exposure official results by netting set and counterparty (published) |
 | `NSMTM` | `nset-mtm` | Netting-set MtM totals (derived from the trade valuations) |
 | `CPMTM` | `cpty-mtm` | Counterparty MtM totals (derived from the trade valuations) |
@@ -619,7 +605,6 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `exposure-results` | `delta` | `exposure-official-cpty` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-store` | `delta` | `simulation-run`, `exposure-path` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
-| `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
 

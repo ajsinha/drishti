@@ -32,8 +32,8 @@ commands:                                # what people may type and see (command
      BOOK, DESK, TRDR, POS,
     # risk on my book: VaR limits, VaR results, trade valuations, P&L vectors, hierarchies, portfolios (VAR is the word: the explorer and its what-if)
      VLIM, VRES, TVAL, PNLV, HIER, PORT,
-    # counterparties: counterparties, groups, netting sets and their MtM, counterparty MtM, credit limits, the pre-deal check, exposure
-     CPTY, GRP, NSET, NSMTM, CPMTM, LIM, XWIF, EXP,
+    # counterparties: counterparties, groups, netting sets and their MtM, counterparty MtM, credit limits, exposure (EXP is the word: the explorer and its pre-deal check)
+     CPTY, GRP, NSET, NSMTM, CPMTM, LIM, EXP,
     # market data a trader reads: curves, FX spot and vols, equities and indexes, commodities and their curves, bonds, credit curves
      CRV, FX, FXV, EQ, EQX, CMD, CMDC, BND, CDS]
     # left out: regulatory (FRTB, SACCR, CVA, SIMM), stress (SCN, STR, SSPNL), collateral operations (COLL, MC), the exposure engine's
@@ -73,7 +73,7 @@ menus:                                   # by id, per menu; a menu not named sho
   views: [terminal, search, functions, data, reports, workspaces, monitors, alerts]
   help: [help-centre, knowledge, install, about]
   footer: [help, about, release-notes]
-  placeholder: "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, XWIF, CTRD CP-ALDERSHOT …  then <GO>"
+  placeholder: "TRD 1000001, BOOK BOOK-RATES-1, VAR BOOK BOOK-RATES-1, EXP CPTY:CP-ALDERSHOT, CTRD CP-ALDERSHOT …  then <GO>"
 
 home:
   landing: trader                        # the default landing: trader (A, Trader desk), desk (B, Desk head), explorer (C, Explorer)
@@ -81,7 +81,7 @@ home:
   template: home/trading_landing.html    # the page that draws them (it names its script and style: trading-landing.js, trading-landing.css)
   titles: { trader: Trader desk, desk: Desk head, explorer: Explorer }
   landing-by-role: {}                    # {access role: landing}: wins over the person's choice when set (the RBAC hook, as the others)
-  chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, XWIF, CRV CRV-USD-OIS]   # C's chips
+  chips: [TRD 1000001, BOOK BOOK-RATES-1, CTRD CP-ALDERSHOT, POS BOOK-RATES-1, VAR DESK DESK-RATES, EXP CPTY:CP-ALDERSHOT, CRV CRV-USD-OIS]   # C's chips
   sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }   # the product's Home (signed out, or landing=today)
   cards:                                 # quick cards on Home (replace ui.home_cards); the Trader desk adds the person's own (their trader, book)
     - { title: "A book: its trades, positions and MtM", cmd: BOOK BOOK-RATES-1, icon: journal-text }

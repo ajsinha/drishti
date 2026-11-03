@@ -16,7 +16,7 @@
 token's user sees it: a scope's figures and profile (show), its contributions (parts), the tree of legal entities, counterparties and
 netting sets (tree), the profile as CSV (profile), the exposure distribution at a date with the path fan (distribution), the engine's
 state (status), captures (capture, captures, compare), the official end-of-day record (official), the retention plan (retention), a
-reload (administrators) and a pre-deal what-if (whatif: exact through the Python engine, or the conservative proxy).
+reload (administrators) and a pre-deal what-if (whatif: exact on the run's paths, or the conservative proxy, both the server's exposure engine).
 Exit codes: 0, 1 (the server said no), 2 (usage)."""
 from __future__ import annotations
 
@@ -262,7 +262,7 @@ def register(groups, srv, ctx: dict) -> None:
     sub.add_parser("retention", help="what the retention keeps of each date held, and the dates whose trade paths are beyond it", parents=[srv])
     rl = sub.add_parser("reload", help="drop the loaded dates (administrators): the next request maps the hot file again or reads the lake", parents=[srv])
     rl.add_argument("--date", metavar="YYYY-MM-DD", help="drop only this business date (2.9.7); the others stay open")
-    w = scoped("whatif", "a scope's exposure before and after candidate trades: exact (paths, the Python engine) or the proxy (addon)")
+    w = scoped("whatif", "a scope's exposure before and after candidate trades: exact (paths) or the proxy (addon)")
     w.add_argument("--like", metavar="TRADE", help="a candidate copying a booked trade's paths on the run")
     w.add_argument("--factor", type=float, default=1.0, help="the copy's scale (-1: the trade's unwind; default 1)")
     w.add_argument("--set", metavar="NETTING_SET", help="the netting set the candidate joins (default none: a netting set of its own)")
