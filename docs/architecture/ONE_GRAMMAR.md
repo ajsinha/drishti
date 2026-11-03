@@ -146,6 +146,30 @@ Frequency tables with chi-square (PROC FREQ), regression with several variables 
 winsorising and z-score outlier flags (PROC STDIZE, PROC UNIVARIATE), histogram bins as a dimension. Each a candidate for the pivot's P4
 or later, decided one by one.
 
+### 7.3a Matrix functions at native speed (with Java 25)
+
+*Product owner, 2026-11-03: "after JDK 25 is activated ... very fast and native computation of some of these functions like large
+matrix multiplication using BLAS and NumPy via FFM".*
+
+| Add | Excel / SAS it answers | Drishti uses |
+|---|---|---|
+| `mmult`, `transpose`, `solve`, `inverse`, `det` | `MMULT`, `TRANSPOSE`, `MINVERSE`, `MDETERM`; SAS PROC IML | regression with several variables (tier 3), what-if batches |
+| `cov_matrix`, `corr_matrix` over columns or scenario vectors | `COVARIANCE.S` across a range; PROC CORR | risk-factor correlation views |
+| `eigen`, `pca(k)`, `cholesky` | PROC PRINCOMP, PROC IML | the parked statistical factor VaR; correlated simulation |
+
+**How they run.** One implementation in the engine (`drishti-bicompute`), calling BLAS and LAPACK through the Foreign Function & Memory
+API on Java 25 (in Java 21 that API is a preview), as [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md) section 6 designs:
+OpenBLAS only, CBLAS and LAPACKE downcalls, BLAS's own threads set to one with Drishti's pool over tiles, the parity rule of a relative
+1e-12 with the selected scenario identical, a start-up canary that falls back to the Java kernel, and not on the Windows QA machine unless
+the product owner allows a system library. Matrices small enough (an FRTB bucket's or SIMM's correlations) stay in plain Java, where a
+native call costs more than it saves. Python custom functions (P2's sandboxed pool) already have NumPy, whose wheels bundle their own
+OpenBLAS: that serves a person's own code and is not a second implementation of a catalogue function.
+
+**What is true today.** No BLAS is bound in Java yet; the Java side uses FFM only to map files (`FileMaps`). The benchmark found that
+today's VaR sums are bound by memory bandwidth, so BLAS pays only for many scopes in one pass (GEMM over K scopes); its go rule is 1.5
+times the Java multi-scope kernel at K of 100 or more (BENCHMARK.md, HIGH_PERFORMANCE_NATIVE.md section 6.4). The development machine
+has the reference BLAS and LAPACK, not OpenBLAS: the system package `libopenblas0` is needed for the Java binding.
+
 ### 7.4 When
 
 | Tier | Size | Release |
@@ -153,3 +177,4 @@ or later, decided one by one.
 | 1 | M to L | **2.9.11.e**, with DEL folded into Rachana: DEL's 59 functions move once, and the new ones are added in the same move, never twice |
 | 2 | M | the release after, coordinated with the QLRisk boundary |
 | 3 | per function | candidates |
+| matrix functions (7.3a) | M | with the Java 25 activation (2.9.13 or later), after the BLAS benchmark's go |
