@@ -15,6 +15,23 @@
 -->
 # Changelog
 
+## Unreleased (on develop, after 2.9.11)
+
+- **The release drill is faster and stops sooner (tools/drill.sh; PACK_DEVELOPER_GUIDE.md §2.6, TOOLS.md).** A gate of a few
+  minutes runs first, every job at once: the licence headers, the generated documents and data that must be current (settings
+  catalogue, data contracts and their pages, data samples, the packs' generated content, the Python API reference), the docs and
+  help console tests, and one Java 21 build of the working tree (Javadoc with doclint, Spotless, Maven threads) that runs only the
+  rule tests: every `drishti-it` test, `TokenScopeGuardTest` and `ArrowAnswersTest`; its jar is the one the console starts. Its first
+  failure stops the drill. Then everything else at once: the console suite in a browser lane (few workers, normal priority) and an
+  other lane (more workers, lower priority), each giving its files to the workers longest first from the durations the last runs
+  recorded (`data/drill/durations.json`); the Python tool tests; the Java 21 verify in a copy of the committed tree (its `config/`
+  and `data/` compared by content before and after); and the Java 25 verify, in its own copy, once the lighter jobs have finished.
+  A failed console test runs once more file by file and every failed file is re-run (two at a time in the other lane, one in the
+  browser lane), each under a time limit of twice the file's recorded time, at least ten minutes; tests listed in
+  `tools/drill-known.txt` are reported as accepted and do not fail the drill. The first failure no re-run can change stops the other
+  jobs (`--keep-going` runs them to the end). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
+  checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
+
 ## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)
 
 - **Compute engines on or off per server, each with its own configuration file (2.9.11 row 14; COMPUTE_ENGINES.md, OPERATIONS.md
