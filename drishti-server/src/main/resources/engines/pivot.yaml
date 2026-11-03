@@ -42,3 +42,23 @@ drishti:
     export:
       xlsx-max-rows: 1000000         # the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered
       rows-max: 1000000              # the most member rows an export of the underlying rows writes
+    sketches:                        # distinct counts, percentiles and top values with a stated error (PIVOT_GUIDE.md, scale)
+      hll-precision: 12              # HyperLogLog: 2^p registers (11 to 16); 12: 4,096 registers, ±1.6% (1.04/√m)
+      kll-k: 200                     # KLL's k: ±1.65% of rank at 200 (with SQL's quantile points ±1.8%)
+      top-capacity-factor: 10        # Space-Saving keeps this many counters per value shown by top(x, n)
+      approximate-above-rows: 10000000   # a view reading more rows answers count_distinct, median and percentile by their sketches (≈; exact on request); 0: never by size
+    progressive:                     # ≈ first, then exact (never for VaR or any holistic measure)
+      enabled: true                  # false: one exact answer only
+      after-ms: 2000                 # a view estimated over this answers ≈ from a sample first
+      sample-fraction: 0.02          # the share of rows the first answer reads
+    rollups:                         # rollups of partial states, refreshed on load, chosen automatically (aggregate awareness)
+      enabled: true                  # rollups answer views and are refreshed
+      refresh-seconds: 60            # how often each rollup's source version is checked: a load is merged in within this
+      advise-after-scans: 10         # a grain scanned this many times is proposed as a rollup (GET /api/v1/pivot/rollups, advice)
+      dir: ""                        # where rollups are kept (blank: <data dir>/pivot/rollups)
+      definitions: []                # rollups: {id, source, grain: [DESK, TRADE_DATE:month], functions: [sum(NOTIONAL_USD), count()], dates: latest|all}
+    cluster:                         # a view's partial states computed on every node running the engine and merged in node order
+      enabled: true                  # false: this node computes its views alone
+      hedge-after-seconds: 20        # a node's share not answered by then is asked of the next node too; the first answer wins
+      deadline-seconds: 300          # a share with no answer by then refuses the view in words (DRS-5720), never a partial figure
+      min-rows: 5000000              # views estimated under this many rows stay on this node

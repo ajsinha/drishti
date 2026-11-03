@@ -127,7 +127,10 @@ def register(groups, srv, ctx: dict) -> None:
                 if res.get("functions"):
                     print("  functions: " + ", ".join(f"{f['name']}({f['args']})" for f in res["functions"]))
         elif c == "run":
-            res = api.json("POST", "/api/v1/pivot/query", body(a))
+            q = body(a)
+            if a.exact or a.approximate:
+                q["exact"] = bool(a.exact)          # exact on request, or every distinct count and percentile by its sketch
+            res = api.json("POST", "/api/v1/pivot/query", q)
             if a.csv:
                 b = body(a)
                 b.update({"format": "csv", "shape": "grid"})
@@ -162,6 +165,30 @@ def register(groups, srv, ctx: dict) -> None:
             v = build_view(a)
             res = api.json("POST", "/api/v1/pivot/views", {"name": a.name, "view": v, "sharedWith": a.share or []})
             say_json(res) if a.json else print(f"saved {res['id']} (version {res['version']}): PIVOT @{res['id']} opens it, as the reader")
+        elif c == "rollups":
+            if a.action == "list":
+                res = api.json("GET", "/api/v1/pivot/rollups")
+                if a.json:
+                    say_json(res)
+                else:
+                    built = {r["id"]: r for r in res.get("built", [])}
+                    for d in res.get("definitions", []):
+                        b = built.get(d["id"])
+                        state = f"{b['rows']:,} rows at {b['version']} ({b['lastRefresh']})" if b else "not built yet"
+                        print(f"{d['id']:<28} {d['source']} by {' x '.join(d['grain']) or 'nothing'}: {state}")
+                    for x in res.get("advice", []):
+                        print("advice: " + x["words"])
+            elif a.action == "define":
+                spec = {"id": a.id, "source": a.source, "grain": (a.grain or "").split(",") if a.grain else [],
+                        "functions": a.functions or [], "dates": a.dates}
+                res = api.json("POST", "/api/v1/pivot/rollups", spec)
+                say_json(res) if a.json else print(f"defined {res['id']}: refresh {res.get('refresh')}")
+            elif a.action == "refresh":
+                res = api.json("POST", f"/api/v1/pivot/rollups/{urllib.parse.quote(a.id)}/refresh" + (f"?date={a.date}" if a.date else ""), {})
+                say_json(res) if a.json else print(res["words"])
+            elif a.action == "remove":
+                res = api.json("DELETE", f"/api/v1/pivot/rollups/{urllib.parse.quote(a.id)}")
+                say_json(res) if a.json else print(f"removed {res['removed']}")
         return 0
 
     def view_args(p) -> None:
@@ -189,6 +216,9 @@ def register(groups, srv, ctx: dict) -> None:
     r = ps.add_parser("run", help="a view's answer: rows as shown, every cell from its own members", parents=[srv])
     view_args(r)
     r.add_argument("--csv", metavar="FILE", help="write the grid as CSV instead of printing it")
+    ex = r.add_mutually_exclusive_group()
+    ex.add_argument("--exact", action="store_true", help="exact on request: every sketch (approx_count_distinct, approx_percentile, top) computed exactly")
+    ex.add_argument("--approximate", action="store_true", help="count_distinct, median and percentile by their sketches at any size (≈, stated error)")
     r.set_defaults(func=cmd, pivot_cmd="run")
     e = ps.add_parser("estimate", help="what the view reads before it runs", parents=[srv])
     view_args(e)
@@ -207,3 +237,13 @@ def register(groups, srv, ctx: dict) -> None:
     view_args(sv)
     sv.add_argument("--share", action="append", metavar="WHO", help="a person or role:<role>, repeatable")
     sv.set_defaults(func=cmd, pivot_cmd="save")
+    ru = ps.add_parser("rollups", help="rollups of partial states: list (with advice), define, refresh, remove (administrators change them)",
+                       parents=[srv])
+    ru.add_argument("action", choices=["list", "define", "refresh", "remove"])
+    ru.add_argument("id", nargs="?", help="the rollup's id (define, refresh, remove)")
+    ru.add_argument("--source", help="define: the source")
+    ru.add_argument("--grain", help="define: dimensions, DESK,CURRENCY,TRADE_DATE:month")
+    ru.add_argument("--functions", action="append", help="define: a function kept, sum(NOTIONAL_USD); repeatable")
+    ru.add_argument("--dates", choices=["latest", "all"], default="latest")
+    ru.add_argument("--date", metavar="YYYY-MM-DD", help="refresh: the date (default: the source's latest)")
+    ru.set_defaults(func=cmd, pivot_cmd="rollups")

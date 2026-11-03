@@ -40,6 +40,7 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md).
 - [16. Settings](#16-settings)
 - [17. Refusals and their codes](#17-refusals-and-their-codes)
 - [18. How it is built](#18-how-it-is-built)
+- [19. Scale: sketches, rollups, progressive answers and the cluster](#19-scale-sketches-rollups-progressive-answers-and-the-cluster)
 
 ## 1. Open it
 
@@ -102,12 +103,16 @@ executor has no spill folder unless `drishti.pivot.duckdb.temp-directory` names 
 | `var_samp(x)`, `var_pop(x)`, `stddev_samp(x)`, `stddev_pop(x)` | mergeable | Welford's state of its own rows | value |
 | `median(x)`, `percentile(x, q)` | holistic, exact | the quantile of its own values (linear interpolation, as DuckDB's `quantile_cont`) | value |
 | `count_distinct(x)` | holistic, exact | the distinct values of its own rows | value |
+| `approx_count_distinct(x)` | sketch (HyperLogLog), ±1.6% | the merge of its cells' registers | value |
+| `approx_median(x)`, `approx_percentile(x, q)` | sketch (KLL), ±1.65% of rank | the merge of its cells' KLL summaries | value |
+| `top(x, n)`, `top_exact(x, n)` | sketch (Space-Saving), exact form holistic | the rows of its n most frequent values, from merged counters | value |
 | `var()`, `es()` (source `var`) | holistic | the VaR engine's answer for the cell's own scope, from its trades' summed scenario vector | value |
 | `pv()`, `trades()` (source `var`) | holistic (adds up) | the engine's answer for the cell's scope | value |
 
 So the desks' VaRs add up to more than the bank's: the grand total is the bank's own VaR, and the gap (Σ children − total) is shown beside
-every open node's total as **Σ−total**, the diversification. The sketch functions (≈ distinct counts and percentiles, exact on request) come
-with phase P3; custom functions (DEL, SQL macros, Python, Java) with phase P2.
+every open node's total as **Σ−total**, the diversification. The sketch functions (≈ distinct counts, percentiles and top values, with a
+stated error, exact on request) are in [section 19](#19-scale-sketches-rollups-progressive-answers-and-the-cluster); custom functions (DEL,
+SQL macros, Python, Java) come with phase P2.
 
 Show values as: a value may carry `showAs` (`pct-grand`, `pct-row`, `pct-column`, `pct-parent-row`, `rank`); it is computed from the
 finished figures, so a total is never broken.
@@ -222,6 +227,9 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's or a cell's provenance |
 | `GET, POST /api/v1/pivot/views`, `GET /views/{owner}/{name}`, `DELETE /views/{name}` | saved views |
 | `POST /api/v1/pivot/export` | `{view, what: pivot|rows|definition, format: xlsx|csv|arrow, shape: cells|grid, delimiter, bom, coords}`, streamed |
+| `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 19.1](#191-sketches-with-a-stated-error-and-exact-on-request)) |
+| `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample, with intervals) then `exact` |
+| `GET, POST /api/v1/pivot/rollups`, `DELETE /rollups/{id}`, `POST /rollups/{id}/refresh` | rollups: list with advice; define, remove, refresh (administrators) |
 
 Details and the error codes: [API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot).
 
@@ -247,7 +255,7 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 `max-holistic-cells`, `busy-cells`, `cache-mb` (the partial-state cache `pivot.states`, in the one memory budget), `provenance-kept`,
 `local-shards`, `stage-max-rows`, `stage-keep`, `duckdb.connections`, `duckdb.threads`, `duckdb.memory-limit-mb`, `duckdb.temp-directory`,
 `estimate.confirm-above-seconds`, `estimate.confirm-above-rows`, `aggregate-only.min-members-per-cell`, `export.xlsx-max-rows`,
-`export.rows-max`; and `drishti.admission.retry-after.pivot-view`.
+`export.rows-max`; the scale keys of [section 19.6](#196-settings); and `drishti.admission.retry-after.pivot-view`.
 
 ## 17. Refusals and their codes
 
@@ -258,6 +266,7 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 | DRS-1020 | 404 | the engine is switched off here (DRS-5703 when an edition has no PIVOT) |
 | DRS-5704 | 404 | a saved view, provenance id or source that is not there (or not shared with you) |
 | DRS-5705 | 403 | a masked field asked as a dimension, input or filter |
+| DRS-5720 | 504 | a view computed across the cluster where a node's share had no answer by the deadline (no other node could answer it) |
 | DRS-9507 | 503 | busy protection: a large view did not start; `Retry-After` |
 
 ## 18. How it is built
@@ -268,3 +277,116 @@ SPI (`PivotProvider`: catalogue, estimate, evaluate a plan of declarative cell s
 the `GROUP BY GROUPING SETS` compiler and the DuckDB tabular provider, partial states merged in a fixed order (`OrderedMerge`), the
 partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
 REST, busy protection, saved views and audit. The console only draws.
+
+## 19. Scale: sketches, rollups, progressive answers and the cluster
+
+Large tables (a billion rows and more) are answered by four things that work together, each of them inside the engine and each saying in
+the answer what it did. The design and its reasons are [PIVOT_ENGINE.md section 9](../architecture/PIVOT_ENGINE.md#9-scale-extremely-large-data).
+
+### 19.1 Sketches, with a stated error and exact on request
+
+| Function | Sketch | State | Stated error | Exact form |
+|---|---|---|---|---|
+| `approx_count_distinct(x)` | HyperLogLog | 2^p registers (p = 12: 4,096 bytes) | ±1.04/√m: **±1.6%** at p = 12, ±0.8% at p = 14 (one standard error) | `count_distinct(x)` |
+| `approx_median(x)`, `approx_percentile(x, q)` | KLL | about 3k values (k = 200) | **±1.65% of rank** at k = 200; ±1.8% when made from DuckDB's quantile points | `median(x)`, `percentile(x, q)` |
+| `top(x, n)` | Space-Saving | 10·n counters | each count over by at most the smallest counter; never under | `top_exact(x, n)` |
+
+A sketch merges like a sum: the distinct count of a desk-month total is the merge of its cells' registers (exact for the sketch, the same
+registers in any order), never the sum of the cells' counts. Every ≈ measure carries its error in the answer (`measures[].error`) and in
+the provenance popover.
+
+**Exact or ≈ is chosen by size, and you may always ask.** A view that reads more than `sketches.approximate-above-rows` rows (10 million)
+answers `count_distinct`, `median` and `percentile` by their sketches, with a note saying so; under it they are exact (cheap there). Ask
+for exact with `"exact": true` beside the view, or for ≈ at any size with `"exact": false` (the screen's control for it comes with the
+screen's scale part; the API and the command line have it now):
+
+```json
+{ "view": { "source": "trade", "rows": ["DESK"], "values": [{"measure": "count_distinct(COUNTERPARTY)", "as": "Counterparties"}] },
+  "exact": true }
+```
+
+```
+drishti.py pivot run --source trade --rows DESK --values "approx_count_distinct(COUNTERPARTY)"      # ≈, ±1.6%
+drishti.py pivot run --source trade --rows DESK --values "count_distinct(COUNTERPARTY)" --exact     # exact on request
+```
+
+How a sketch is made on the tabular provider: HyperLogLog's (register, rank) pairs come from DuckDB's 64-bit `hash()` in the same
+`GROUP BY GROUPING SETS` statement as every other state; KLL is built in Java from the cell's quantile points (`quantile_disc` at 2k + 1
+fractions) and its count; Space-Saving from the cell's value counts, kept to its counters. KLL is written in the module (Apache
+DataSketches, allowed by decision 2, is not resolvable in the offline build); its error is measured by `SketchErrorTest`.
+
+### 19.2 Rollups of partial states, chosen automatically
+
+A rollup keeps the **partial states** (sums, counts, Welford parts, HyperLogLog registers, KLL summaries, Space-Saving counters) of a source
+at a grain. A view whose dimensions, filters and measures the rollup covers is answered from it, merged in key order, equal to reading the
+table; the answer says "answered from the rollup …". A date kept by day answers week, month, quarter and year too.
+
+```yaml
+# config/engines/pivot.yaml (or POST /api/v1/pivot/rollups, administrators)
+drishti:
+  pivot:
+    rollups:
+      definitions:
+        - id: trades-desk-month
+          source: trade
+          grain: [DESK, CURRENCY, TRADE_DATE:month]
+          functions: ["sum(NOTIONAL_USD)", "count()", "approx_count_distinct(COUNTERPARTY)"]
+          dates: latest            # the latest date, refreshed as it moves (all: keep every date built)
+```
+
+- **Refreshed on load, incrementally.** Every `rollups.refresh-seconds` (60) each rollup's source version is checked. On a direct lake
+  route the files of the version are the rollup's parts: files a load added are read alone and merged in; a partition that lost a file
+  (a restatement, a delete) is rebuilt from its own files; other partitions are untouched. A source read another way is rebuilt whole when
+  its version moves. A stale rollup never answers.
+- **Smallest first.** Of the rollups that cover a view, the one with the fewest rows answers.
+- **Not for everyone.** A rollup answers only a person who reads every row and field of the source (row rules and masks apply before
+  aggregation, and a rollup has aggregated already); never a view with `asOf`; never money that is guarded per cell or converted (the
+  table answers those). Holistic functions (exact median, VaR) are never rollup material.
+- **Advice.** Grains that scanned the table `rollups.advise-after-scans` times (10) are proposed, with how often and how long:
+  `GET /api/v1/pivot/rollups` lists the definitions, the rollups built (rows, bytes, version, last refresh) and the advice.
+- Kept on disk under `<data dir>/pivot/rollups/<id>/<date>.rollup`, read back at start.
+
+### 19.3 Progressive answers: ≈ first, then exact
+
+A view estimated over `progressive.after-ms` (2 s) answers twice when the caller asks for the pair
+(`POST /api/v1/pivot/query?progressive=true`, server-sent events `approximate` then `exact`): first from a
+sample of `progressive.sample-fraction` (2%) of the rows, then exact. The first answer is honest or silent:
+
+| Measure | First answer |
+|---|---|
+| `sum`, `count` | the sample's figure scaled up, with its 95% interval (`intervals`) |
+| `avg` | the sample's average, ±1.96·s/√n |
+| `approx_median`, `approx_percentile` | the sample's quantile, with its rank interval |
+| everything else (min, max, variance, distinct counts) | "computing" until exact: never a guessed figure |
+
+Every cell of the first answer is marked `approximate`; it is never cached. **Never for VaR** or any view with a holistic measure: those
+wait for exact (decision 7).
+
+### 19.4 The cluster: partial states from every node, merged in order
+
+On a Drishti\*net cluster, a mergeable view estimated over `cluster.min-rows` (5 million) is computed by every live node running the
+engine: on a direct lake route each node reads its share of the files (assigned by rendezvous hashing of the path, so each node's caches
+stay warm for the same files), otherwise one row shard each; each answers **partial states per cell key** (`POST
+/api/v1/net/pivot/partials`, for the cluster's nodes only, as the same person, so masks and row rules apply there before aggregation);
+the coordinator merges them in node order, then cell-key order. The figures equal one node's (counts and registers exactly, sums to the
+last digits) and repeat on every run. A node late past `cluster.hedge-after-seconds` (20) has its share asked of the next node too (the
+first answer wins); a share with no answer by `cluster.deadline-seconds` (300) refuses the view in words (DRS-5720), never a figure from
+the other nodes alone. VaR keeps its own sharding.
+
+### 19.5 The scan estimate, refined
+
+The estimate (`POST /api/v1/pivot/estimate`) counts rows and bytes from metadata before anything is read; once this node has measured
+scans, its seconds come from the **measured** rate (the median of its last 20 scans over 200 ms), divided by the nodes that will share
+the scan, always as a range (`range`: half to twice) with how it was made. It lists the options: run, narrow, **use the rollup** (when one
+covers the view, and whether it may answer you), run in the background, not now.
+
+### 19.6 Settings
+
+Under `drishti.pivot` in `config/engines/pivot.yaml`, in [CONFIGURATION.md](../admin/CONFIGURATION.md): `sketches.hll-precision` (12),
+`sketches.kll-k` (200), `sketches.top-capacity-factor` (10), `sketches.approximate-above-rows` (10,000,000), `progressive.enabled`,
+`progressive.after-ms` (2000), `progressive.sample-fraction` (0.02), `rollups.enabled`, `rollups.refresh-seconds` (60),
+`rollups.advise-after-scans` (10), `rollups.dir`, `rollups.definitions`, `cluster.enabled`, `cluster.hedge-after-seconds` (20),
+`cluster.deadline-seconds` (300), `cluster.min-rows` (5,000,000).
+
+The benchmark of these at 5, 25 and 75 GB, one node and three, cold and warm, with and without a rollup, is
+[BENCHMARK.md section 11](../admin/BENCHMARK.md#11-the-pivot-engine-at-scale).
