@@ -15,6 +15,34 @@
 -->
 # Changelog
 
+## 2.9.11.c
+
+- **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 34, a page per client; ARROW_FLIGHT.md).**
+  A new engine `flight` (`config/engines/flight.yaml`, off as shipped, a restart to turn on) answers Arrow Flight on its own port (18815),
+  TLS always (the server's certificate; mutual TLS with `tls.client-ca`). Requests are Rachana requests in five forms: `kind` (a kind's
+  rows on a day, its paths and filter lines, read by the Data view's reader with every check of a download), `model` (an MQ query),
+  `pivot` (a pivot view, as `POST /api/v1/pivot/query`), `measure` (`var.scenarios`, a scope's P&L vector in float64; `var.parts`, one
+  vector per part, float32 for positions and trades as the hot file keeps them) and `lake` (a table found through the lake configuration).
+  `GetFlightInfo` lists each part with the real addresses of the nodes that hold it; `DoGet` sends snapshots in batches, or with
+  `stream: true` a live stream (VaR after each intraday batch, appends to an in-memory table) whose batches carry a sequence to resume
+  after. API tokens only, with the new scope `data:read` (or `data:read:<domain>`), checked at the handshake by the token services; an
+  application's token may act on behalf of a person (`x-drishti-on-behalf-of`), an embed token for its signed-in person. Each read is
+  admitted by busy protection (`Work.FLIGHT`, `DRS-9506`), held to its role's rows, bytes and time limits and an Arrow memory cap per read
+  and per node (counted on Health's busy card), audited (`data.flight`), and shown on Admin → Data out (`GET /api/v1/admin/data-out`, Stop
+  a live read). New error codes `DRS-5601` to `DRS-5610`.
+- **One Arrow library.** Apache Arrow Java 19.0.0 (`arrow-vector`, `arrow-memory-netty`, `flight-core`; `flight-sql` managed for the next
+  step), one version for every Arrow artifact. The hand-written Arrow IPC code is gone: the compute workers' exchange (`ArrowIpc`), the
+  engine's result format and the Arrow answers (`ArrowIpcWriter`, `ArrowAnswers`) are written and read with the official library, the same
+  wire format (pyarrow, Arrow JS, DuckDB-Wasm and the Python workers read them unchanged). The JVM option
+  `--add-opens=java.base/java.nio=ALL-UNNAMED` Arrow's memory module needs is in the server jar's manifest and the test forks.
+- **The console writes no Arrow of its own.** It passes the server's Arrow bytes through and sends a JSON answer as JSON (an answer given
+  in time by a BI run now reaches the browser as JSON, which `drishtiFetchTable` reads as well); the scenario matrix's Arrow download is the
+  server's stream. Python reads Drishti's data through `clients/python/drishti_flight.py`, a one-file client over `pyarrow.flight`
+  (parallel parts, a node down served by the next, streams with resume, Drishti's codes on refusals, a command line).
+- New module `drishti-flight` (plain Java: `FlightService`, `DrishtiFlightProducer`, `TokenAuthenticator`, `FlightRequest`,
+  `FlightBackend`, `FlightActivity`, `FlightLimits`); the server's wiring is `server.flight` (`FlightConfiguration`, `ServerFlightBackend`,
+  the forms, `DataOutController`). Tests: `FlightServiceTest`, `FlightServerTest`, `ArrowIpcTest`, the console's `test_flight_client.py`.
+
 ## 2.9.11.f
 
 - **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;
