@@ -20,7 +20,7 @@ import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * FVA, funding cost and benefit (docs/guides/EXPOSURE_GUIDE.md section 31, docs/architecture/COUNTERPARTY_ENGINES.md section 5),
+ * FVA, funding cost and benefit (docs/guides/FVA_GUIDE.md section 9, docs/architecture/COUNTERPARTY_ENGINES.md section 5),
  * {@code drishti.ccr.fva}. Its switch is the engine's own, {@code drishti.engines.fva.enabled}; it needs the exposure engine.
  *
  * @param fundingSpread the borrowing spread: a curve id (read from {@code curve-kind}, else from {@code curves} here) or a flat spread in
