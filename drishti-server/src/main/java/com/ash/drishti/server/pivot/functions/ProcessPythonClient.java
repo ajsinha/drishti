@@ -27,6 +27,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashSet;
@@ -34,20 +35,17 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * The {@code pivot-fn} pool (PIVOT_ENGINE.md section 8.5): sandboxed Python worker processes on this node ({@code python -I}, an empty
- * environment, the compute SDK's {@code drishti_compute.pivot_fn}), each serving one call at a time. Batches go to a worker as Arrow IPC
+ * environment, the compute SDK's {@code drishti_compute.pivot_fn}), each serving one call at a time and one function version only. Batches go to a worker as Arrow IPC
  * stream bytes over its pipe, never through a file, so memory-only data is never written; a state comes back as bytes. A call over its time
  * limit stops its worker (a new one starts on demand) and is refused in words; a worker that dies is replaced.
  */
@@ -60,8 +58,8 @@ public final class ProcessPythonClient implements PythonFunctionClient, AutoClos
     private final Path sdk;
     private final int max;
     private final long timeoutMs;
-    private final BlockingQueue<Worker> idle;
-    private final AtomicInteger started = new AtomicInteger();
+    private final ArrayDeque<Worker> idle = new ArrayDeque<>();
+    private int running;
     private final ExecutorService readers = Executors.newCachedThreadPool(r -> {
         Thread t = new Thread(r, "pivot-fn-reader");
         t.setDaemon(true);
@@ -93,40 +91,65 @@ public final class ProcessPythonClient implements PythonFunctionClient, AutoClos
                 + "from drishti_compute import pivot_fn; sys.exit(pivot_fn.main(['--memory', '" + ((long) memoryMb << 20) + "']))");
         this.max = Math.max(1, workers);
         this.timeoutMs = Math.max(1, timeoutSeconds) * 1000L;
-        this.idle = new ArrayBlockingQueue<>(this.max);
     }
 
     private static String pyString(String s) {
         return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'";
     }
 
-    private Worker borrow() {
-        Worker w = idle.poll();
-        if (w != null && w.process.isAlive()) {
-            return w;
-        }
-        if (w != null) {
-            started.decrementAndGet();
-        }
-        if (started.incrementAndGet() <= max) {
-            try {
-                return start();
-            } catch (RuntimeException e) {
-                started.decrementAndGet();
-                throw e;
+    /**
+     * A worker for one function version: an idle one that has loaded it, else a new one (a worker serves one function version only, so a
+     * function's rows never meet another function's code), else the least recently used idle one replaced; waits up to the call's time limit.
+     */
+    private Worker borrow(String sha) {
+        long end = System.nanoTime() + timeoutMs * 1_000_000L;
+        Worker evict = null;
+        synchronized (this) {
+            while (true) {
+                idle.removeIf(w -> {
+                    if (!w.process.isAlive()) {
+                        running--;
+                        return true;
+                    }
+                    return false;
+                });
+                Worker same = idle.stream().filter(w -> w.loaded.contains(sha)).findFirst().orElse(null);
+                if (same != null) {
+                    idle.remove(same);
+                    return same;
+                }
+                if (running < max) {
+                    running++;
+                    break;
+                }
+                if (!idle.isEmpty()) {
+                    evict = idle.pollLast();                         // replaced: the count of workers stays
+                    break;
+                }
+                long left = (end - System.nanoTime()) / 1_000_000L;
+                if (left <= 0) {
+                    throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_LIMIT, "every Python function worker on this node is busy (pivot-fn: "
+                            + max + " workers); try again shortly");
+                }
+                try {
+                    wait(left);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_LIMIT, "interrupted while waiting for a Python function worker");
+                }
             }
         }
-        started.decrementAndGet();
+        if (evict != null) {
+            evict.process.destroyForcibly();
+        }
         try {
-            Worker x = idle.poll(timeoutMs, TimeUnit.MILLISECONDS);
-            if (x == null) {
-                throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_LIMIT, "every Python function worker on this node is busy (pivot-fn: " + max
-                        + " workers); try again shortly");
+            return start();
+        } catch (RuntimeException e) {
+            synchronized (this) {
+                running--;
+                notifyAll();
             }
-            return x.process.isAlive() ? x : borrow();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_LIMIT, "interrupted while waiting for a Python function worker");
+            throw e;
         }
     }
 
@@ -161,9 +184,13 @@ public final class ProcessPythonClient implements PythonFunctionClient, AutoClos
     }
 
     private void give(Worker w) {
-        if (!w.process.isAlive() || !idle.offer(w)) {
-            w.process.destroyForcibly();
-            started.decrementAndGet();
+        synchronized (this) {
+            if (w.process.isAlive()) {
+                idle.addFirst(w);
+            } else {
+                running--;
+            }
+            notifyAll();
         }
     }
 
@@ -204,7 +231,7 @@ public final class ProcessPythonClient implements PythonFunctionClient, AutoClos
     }
 
     private Frame call(Spec f, String op, byte[] body) {
-        Worker w = borrow();
+        Worker w = borrow(f.sha256());
         try {
             if (!w.loaded.contains(f.sha256())) {
                 Map<String, Object> load = new LinkedHashMap<>();
@@ -298,14 +325,18 @@ public final class ProcessPythonClient implements PythonFunctionClient, AutoClos
     }
 
     /** Workers running now. */
-    public int workers() {
-        return started.get();
+    public synchronized int workers() {
+        return running;
     }
 
     @Override
     public void close() {
-        Worker w;
-        while ((w = idle.poll()) != null) {
+        List<Worker> all;
+        synchronized (this) {
+            all = new ArrayList<>(idle);
+            idle.clear();
+        }
+        for (Worker w : all) {
             try {
                 send(w, Map.of("op", "shutdown"), new byte[0]);
             } catch (IOException ignored) {

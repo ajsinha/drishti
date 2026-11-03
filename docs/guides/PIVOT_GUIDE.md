@@ -370,7 +370,7 @@ figure. Saves, tests, submissions, approvals, withdrawals and every use in a vie
 run in an official run, report or sign-off, and never take an official measure's name (`var`, `es`, `frtb_sa`, `simm`, `saccr`, ...):
 the official measures stay the Java engines.
 
-**Python's sandbox.** Each worker is `python -I` in an empty environment: no network, no processes, no writes at all, no reads outside the
+**Python's sandbox.** Each worker is `python -I` in an empty environment and serves one function version only (a function's rows never meet another function's code): no network, no processes, no writes at all, no reads outside the
 Python installation and the SDK, imports from an allow-list (numpy, pyarrow, scipy, pandas, polars and safe standard modules), `open`,
 `exec`, `eval` and `compile` not given to your code, memory limited per worker and each call's time limited (the worker is stopped past
 it). `batch["r"]` is a pyarrow array (or numpy, or a list when those are not installed); `batch.numpy("r")` and `batch.list("r")` give the
