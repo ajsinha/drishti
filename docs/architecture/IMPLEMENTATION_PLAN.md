@@ -782,6 +782,14 @@ every 10 minutes by the existing Java loader, moved to the outbox with their mar
 signal; crash-safe, duplicate-safe, owner node only, a module `drishti-dataload` run as a server thread with the load in a child
 process. The design and its questions: [DATALOAD_INBOX.md](DATALOAD_INBOX.md). Size M.
 
+## The lake configuration (planned; release to be decided)
+
+*Product owner, 2026-11-03.* One configuration per lake (`config/lakes/<lake>.yaml`, planned): where it is, its format and storage, and
+every table's settings (partitioning after `business_date`, which is always first; promoted columns, vectors, id and date fields, file
+layout, retention, maintenance, table properties, in-memory caps). Every writer (lake build, the Java loader, the data inbox, the demo
+lakes) and every reader (the Delta and Iceberg connectors, BI, the pivot engine, Arrow Flight) refers to it; connectors keep only reading
+concerns. The design and its questions: [LAKE_CONFIG.md](LAKE_CONFIG.md). Size M.
+
 ## 2.9.11.e: DEL folded into Rachana (planned)
 
 *Product owner, 2026-11-03: one grammar and no functionality coded twice.* BI's measures, derived columns, filters and row rules written in
