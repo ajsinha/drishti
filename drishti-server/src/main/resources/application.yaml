@@ -157,10 +157,11 @@ drishti:
     # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
     squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
   admission:                         # busy protection (docs/admin/OPERATIONS.md "Busy protection"): new heavy work waits politely instead of an out-of-memory
-    enabled: true                    # false: nothing waits (Admin -> Health still shows the readings)
+    enabled: ${DRISHTI_ADMISSION_ENABLED:true}  # false: nothing waits (Admin -> Health still shows the readings)
     memory-warn: 0.80                # the heap after the last collection past this share of -Xmx: Health says "getting full"
     memory-refuse-heavy: 0.85        # past this, new date loads, downloads, BI runs and bulk loads wait (503 DRS-9502 to DRS-9505, Retry-After)
     memory-refuse-sign-in: 0.92      # past this, new sign-ins wait too (DRS-9501); people signed in keep working
+    memory-free-min-mb: 768          # the memory levels act only while the heap left after the last collection is also under this
     queued-loads: 2                  # date loads that may wait behind the running ones (each engine's load-threads) before a new one waits
     open-heap-refuse: 1.2            # new date loads wait when the open dates' heap passes this share of its safety net (the dates in use are well over it)
     request-handlers: 200            # requests answered at once before the server counts as full

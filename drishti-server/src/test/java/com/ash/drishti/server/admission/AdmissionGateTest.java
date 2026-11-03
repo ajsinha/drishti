@@ -48,8 +48,10 @@ class AdmissionGateTest {
             return heap.get();
         }
 
+        long max = 4 * GB;                                                // a 4 GB heap: at 85% about 600 MB is left, under memory-free-min-mb
+
         public long heapMaxBytes() {
-            return 100 * GB;
+            return max;
         }
 
         public int requestsInFlight() {
@@ -65,7 +67,7 @@ class AdmissionGateTest {
         }
 
         void memory(double share) {
-            heap.set((long) (share * 100 * GB));
+            heap.set((long) (share * max));
         }
     }
 
@@ -234,7 +236,7 @@ class AdmissionGateTest {
 
     @Test
     void offLetsEverythingInButStillReads() {
-        AdmissionProperties off = new AdmissionProperties(false, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        AdmissionProperties off = new AdmissionProperties(false, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         AdmissionGate g = new AdmissionGate(off, sig, now::get, null, () -> "rita");
         sig.memory(0.99);
         assertThatCode(() -> g.admit(Work.SIGN_IN, "Sign in")).doesNotThrowAnyException();
@@ -260,8 +262,8 @@ class AdmissionGateTest {
         long after = settle(heap, before + retained / 2);
         assertThat(after).as("the reading after a collection holds what is kept").isGreaterThan(before + retained / 2);
         double level = (before + retained / 4) / (double) max;
-        AdmissionProperties p = new AdmissionProperties(true, level / 2, level, Math.min(0.99, level * 2), null, null, null, null, null, null,
-                null, null, null, null, null);
+        AdmissionProperties p = new AdmissionProperties(true, level / 2, level, Math.min(0.99, level * 2), 1 << 20, null, null, null, null,
+                null, null, null, null, null, null, null);              // any free heap counts as short: the share alone decides here
         Signals live = new Signals() {
             public long heapAfterGcBytes() {
                 return heap.bytes();
@@ -301,5 +303,16 @@ class AdmissionGateTest {
             }
         }
         return heap.bytes();
+    }
+
+    @Test
+    void aLargeHeapPastTheShareButWithRoomLeftIsNotShortOfMemory() {
+        Fake big = new Fake();
+        big.max = 64 * GB;
+        AdmissionGate g = new AdmissionGate(AdmissionProperties.defaults(), big, now::get, null, () -> "rita");
+        big.heap.set((long) (0.90 * 64 * GB));                         // 90% of 64 GB: 6.4 GB left, over the 768 MB floor
+        assertThatCode(() -> g.admit(Work.LOAD, "a date")).doesNotThrowAnyException();
+        big.heap.set(64 * GB - 500L * 1024 * 1024);                     // 500 MB left: short of memory
+        assertThatThrownBy(() -> g.admit(Work.LOAD, "a date")).isInstanceOf(BusyRefusal.class);
     }
 }
