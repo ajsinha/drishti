@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import com.sun.management.HotSpotDiagnosticMXBean;
 import java.io.IOException;

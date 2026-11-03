@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.SourcePlugin;
@@ -42,7 +42,7 @@ import java.util.zip.GZIPInputStream;
  * lakes, Kafka's topic state, JDBC, files, the vendor feeds), a JSON Lines file, or a URL answering JSON Lines or a JSON array. Everything
  * is read into memory and nothing is written anywhere: the source's own bytes stay where they were.
  */
-final class ReplenishSource {
+public final class ReplenishSource {
 
     private static final ObjectMapper JSON = new ObjectMapper();
     private static final HttpClient HTTP = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(20)).followRedirects(HttpClient.Redirect.NORMAL).build();
@@ -50,7 +50,7 @@ final class ReplenishSource {
     private final SourceRegistry registry;
     private volatile java.util.function.Function<String, List<String>> idsOf = ref -> List.of();
 
-    ReplenishSource(SourceRegistry registry) {
+    public ReplenishSource(SourceRegistry registry) {
         this.registry = registry;
     }
 
@@ -60,7 +60,7 @@ final class ReplenishSource {
     }
 
     /** The documents of {@code source}, each a JSON object. */
-    List<ObjectNode> read(MemoryLakeProperties.Source source) throws Exception {
+    List<ObjectNode> read(MemoryLakeSettings.Source source) throws Exception {
         if (source == null) {
             throw new IllegalArgumentException("the table names no source");
         }
@@ -95,7 +95,7 @@ final class ReplenishSource {
     }
 
     /** A marker of the source's state, so a change can start a run (a file's time and size; a connector's last update), or null. */
-    String mark(MemoryLakeProperties.Source source) {
+    String mark(MemoryLakeSettings.Source source) {
         try {
             if (source.file() != null && !source.file().isBlank()) {
                 Path p = Path.of(source.file());

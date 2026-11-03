@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.common.DrishtiException;
@@ -121,7 +121,7 @@ public final class Retention {
                 continue;
             }
             String root = registry.applied(name).map(c -> c.settings().getOrDefault("root", "")).orElse("");
-            String contract = root.startsWith("mem://") ? contractOfStore.apply(com.ash.drishti.lakeio.mem.MemoryStores.storeName(root)) : "";
+            String contract = root.startsWith("mem://") ? contractOfStore.apply(com.ash.drishti.memlake.store.MemoryStores.storeName(root)) : "";
             for (String kind : registry.applied(name).map(c -> c.kinds()).orElse(List.of())) {
                 m.put(kind.toLowerCase(Locale.ROOT), contract == null ? "" : contract);
                 String code = codeFor == null ? null : codeFor.apply(kind);

@@ -13,19 +13,21 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.deltalake;
+package com.ash.drishti.memlake;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.ash.drishti.deltalake.NativeEngine;
+import com.ash.drishti.deltalake.TableReader;
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.deltalake.write.TableUpkeep;
-import com.ash.drishti.lakeio.mem.MemoryStorage;
-import com.ash.drishti.lakeio.mem.MemoryStoreFullException;
-import com.ash.drishti.lakeio.mem.MemoryStores;
+import com.ash.drishti.memlake.store.MemoryStorage;
+import com.ash.drishti.memlake.store.MemoryStoreFullException;
+import com.ash.drishti.memlake.store.MemoryStores;
 import io.delta.kernel.utils.FileStatus;
 import java.io.StringReader;
 import java.nio.file.Path;
@@ -40,7 +42,7 @@ import org.junit.jupiter.api.io.TempDir;
  * Delta tables in memory (docs/architecture/IN_MEMORY_LAKE.md): written by the lake writer from rows held in memory (no staged file),
  * read by the native engine unchanged, equal to the same table on disk, never a byte on the disk.
  */
-class MemoryLakeTest {
+class DeltaInMemoryTest {
 
     @TempDir
     Path tmp;
@@ -143,11 +145,11 @@ class MemoryLakeTest {
             LakeWriter.forTable(table, Map.of()).write(manifest(table, "replace", "2026-11-0" + (1 + i % 3), rows(i * 100, 100, "v" + i), 100), n -> { });
         }
         try (NativeEngine engine = NativeEngine.create(Map.of())) {
-            TableUpkeep.Shape before = TableUpkeep.shape(engine, store, table, 1 << 20);
+            TableUpkeep.Shape before = TableUpkeep.shape(engine, table, 1 << 20);
             assertEquals(11, before.version());
             assertTrue(before.rows() == 100 || before.rows() == -1, "rows " + before.rows());
             long used = store.pool().inUseBytes();
-            long freed = TableUpkeep.expire(engine, store, table, 2);
+            long freed = MemoryUpkeep.expire(engine, store, table, 2);
             assertTrue(freed > 0, "freed " + freed);
             assertTrue(store.pool().inUseBytes() < used);
             assertEquals(100, read(table).size());

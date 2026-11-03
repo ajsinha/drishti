@@ -13,7 +13,7 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -70,7 +70,7 @@ final class MemoryTable {
         }
     }
 
-    final MemoryLakeProperties.TableSpec spec;
+    final MemoryLakeSettings.TableSpec spec;
     final ReentrantLock lock = new ReentrantLock();
     private final int keep;
     private final Deque<Run> history = new ArrayDeque<>();
@@ -93,7 +93,7 @@ final class MemoryTable {
     /** The decoded size of the rows last written (their JSON), for the compression ratio on Admin, Lakes. */
     volatile long decodedBytes;
 
-    MemoryTable(MemoryLakeProperties.TableSpec spec, int keep) {
+    MemoryTable(MemoryLakeSettings.TableSpec spec, int keep) {
         this.spec = spec;
         this.keep = keep;
     }

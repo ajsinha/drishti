@@ -13,13 +13,13 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.deltalake.write.TableUpkeep;
-import com.ash.drishti.lakeio.mem.MemoryStorage;
-import com.ash.drishti.lakeio.mem.MemoryStores;
+import com.ash.drishti.memlake.store.MemoryStorage;
+import com.ash.drishti.memlake.store.MemoryStores;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.delta.kernel.engine.Engine;
@@ -53,7 +53,7 @@ final class MemoryCompactor {
     record Candidate(MemoryTable table, String why, long saving, long size) {}
 
     private final MemoryLake lake;
-    private final MemoryLakeProperties.Compaction cfg;
+    private final MemoryLakeSettings.Compaction cfg;
     private final BooleanSupplier quiet;
     private final AtomicBoolean running = new AtomicBoolean();
     private final AtomicLong rewrites = new AtomicLong();
@@ -61,7 +61,7 @@ final class MemoryCompactor {
     private final AtomicLong waitedForRoom = new AtomicLong();
     private volatile Instant lastRun;
 
-    MemoryCompactor(MemoryLake lake, MemoryLakeProperties.Compaction cfg, BooleanSupplier quiet) {
+    MemoryCompactor(MemoryLake lake, MemoryLakeSettings.Compaction cfg, BooleanSupplier quiet) {
         this.lake = lake;
         this.cfg = cfg;
         this.quiet = quiet == null ? () -> true : quiet;
@@ -104,7 +104,7 @@ final class MemoryCompactor {
             }
             TableUpkeep.Shape shape;
             try {
-                shape = TableUpkeep.shape(LakeWriter.engineFor(t.spec.path(), Map.of()), store, t.spec.path(), small);
+                shape = TableUpkeep.shape(LakeWriter.engineFor(t.spec.path(), Map.of()), t.spec.path(), small);
             } catch (Exception e) {
                 continue;
             }
@@ -188,7 +188,7 @@ final class MemoryCompactor {
             stats.addAll(promoted);
             LakeManifest m = new LakeManifest(path, partitionColumns, columns, promoted, "replace", 5_000, stats.stream().distinct().toList(), parts);
             LakeWriter.Result r = LakeWriter.forTable(path, Map.of("codec", t.spec.codec())).write(m, n -> { });
-            TableUpkeep.expire(engine, store, path, 1);       // the old files go now; a reader on them keeps its chunks until it ends
+            MemoryUpkeep.expire(engine, store, path, 1);       // the old files go now; a reader on them keeps its chunks until it ends
             long after = store.bytesUnder(path);
             long saved = before - after;
             t.version = r.version();

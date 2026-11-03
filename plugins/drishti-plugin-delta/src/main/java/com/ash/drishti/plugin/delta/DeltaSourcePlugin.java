@@ -281,7 +281,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta"));
         // a lake in memory (mem://, IN_MEMORY_LAKE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
-        this.memoryOnly = com.ash.drishti.lakeio.mem.MemoryStores.isMemory(root);
+        this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
         this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());
         this.engine = lake.engine();
         this.idColumn = ctx.setting("id-column", "id");

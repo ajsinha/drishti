@@ -13,10 +13,10 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-package com.ash.drishti.server.memlake;
+package com.ash.drishti.memlake;
 
 import com.ash.drishti.engine.source.SourceRegistry;
-import com.ash.drishti.lakeio.mem.MemoryStores;
+import com.ash.drishti.memlake.store.MemoryStores;
 import java.util.Locale;
 
 /**
@@ -31,7 +31,7 @@ public final class MemoryBinding {
 
     private MemoryBinding() {}
 
-    static void install(MemoryLake l, SourceRegistry r) {
+    public static void install(MemoryLake l, SourceRegistry r) {
         lake = l;
         registry = r;
     }
