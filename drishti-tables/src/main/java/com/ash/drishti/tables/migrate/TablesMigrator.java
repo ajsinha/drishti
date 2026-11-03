@@ -86,12 +86,14 @@ public final class TablesMigrator {
      * @param items every item
      * @param changes every expression changed or refused
      * @param problems the checks of the catalogue the run would leave (the existing tables plus the new ones)
+     * @param consumers a consumer file of the BI folder ({@code reports/x.report.yaml}) to its new text, only those that change
+     * @param consumersBefore those files' text now
      */
     public record Plan(Map<String, String> writes, Map<String, String> before, Map<String, String> sources, List<Item> items, List<Change> changes,
-            List<Problem> problems) {
+            List<Problem> problems, Map<String, String> consumers, Map<String, String> consumersBefore) {
 
         public boolean anyWrite() {
-            return !writes.isEmpty();
+            return !writes.isEmpty() || !consumers.isEmpty();
         }
 
         public long count(String state) {
@@ -102,6 +104,7 @@ public final class TablesMigrator {
         public String diff() {
             StringBuilder sb = new StringBuilder();
             writes.forEach((f, text) -> sb.append(UnifiedDiff.of(f, before.get(f), text)));
+            consumers.forEach((f, text) -> sb.append(UnifiedDiff.of("config/bi/" + f, consumersBefore.get(f), text)));
             return sb.toString();
         }
     }
@@ -114,7 +117,7 @@ public final class TablesMigrator {
 
     /**
      * Plans the migration of the BI folder {@code bi} ({@code config/bi}: {@code datasets/}, {@code models/}) into {@code tables}
-     * ({@code config/tables}).
+     * ({@code config/tables}), and of its consumers ({@code reports/}, {@code boards/}, {@code alerts/}, {@code notebooks/}) in place.
      */
     public Plan plan(Path bi, Path tables) throws IOException {
         Map<String, String> files = new LinkedHashMap<>();
@@ -129,11 +132,31 @@ public final class TablesMigrator {
                 }
             }
         }
-        return plan(files, tables);
+        Map<String, String> consumers = new LinkedHashMap<>();
+        for (String dir : CONSUMERS) {
+            Path d = bi.resolve(dir);
+            if (!Files.isDirectory(d)) {
+                continue;
+            }
+            try (Stream<Path> s = Files.list(d)) {
+                for (Path f : s.filter(p -> p.toString().endsWith(".yaml")).sorted().toList()) {
+                    consumers.put(dir + "/" + f.getFileName(), Files.readString(f));
+                }
+            }
+        }
+        return plan(files, tables, consumers);
     }
+
+    /** The BI folder's consumers of datasets and models. */
+    static final List<String> CONSUMERS = List.of("reports", "boards", "alerts", "notebooks");
 
     /** Plans the migration of the given BI files (relative name to text); the tests' and the server's way in. */
     public Plan plan(Map<String, String> files, Path tables) throws IOException {
+        return plan(files, tables, Map.of());
+    }
+
+    /** As above, with the consumer files (relative name to text) rewritten too. */
+    public Plan plan(Map<String, String> files, Path tables, Map<String, String> consumerFiles) throws IOException {
         Translate translate = new Translate(translator);
         List<Item> items = new ArrayList<>();
         List<Change> changes = new ArrayList<>();
@@ -286,7 +309,27 @@ public final class TablesMigrator {
                 .forEach(c -> problems.add(Problem.error(TableCodes.MIGRATION_REFUSED, c.key(), c.refusal() + " (" + c.before() + ")").in(c.item())));
         Map<String, String> fileSources = new LinkedHashMap<>();
         writes.keySet().forEach(k -> fileSources.put(k, sources.get(k)));
-        return new Plan(writes, before, fileSources, marked, changes, problems);
+        Map<String, Integer> becameModels = new LinkedHashMap<>();
+        for (Map.Entry<String, JsonNode> d : datasets.entrySet()) {
+            if (d.getValue().has("tables")) {
+                becameModels.put(d.getKey(), Integer.parseInt(DatasetMigration.version(d.getValue().path("version").asText("1.0.0")).split("\\.")[0]));
+            }
+        }
+        ConsumerMigration cm = new ConsumerMigration(translate);
+        Map<String, String> consumers = new LinkedHashMap<>();
+        Map<String, String> consumersBefore = new LinkedHashMap<>();
+        for (Map.Entry<String, String> c : consumerFiles.entrySet()) {
+            List<Change> mine = new ArrayList<>();
+            String now = cm.rewrite(c.getValue(), becameModels, c.getKey(), mine);
+            changes.addAll(mine);
+            mine.stream().filter(x -> x.refusal() != null)
+                    .forEach(x -> problems.add(Problem.error(TableCodes.MIGRATION_REFUSED, x.key(), x.refusal() + " (" + x.before() + ")").in(c.getKey())));
+            if (!now.equals(c.getValue())) {
+                consumers.put(c.getKey(), now);
+                consumersBefore.put(c.getKey(), c.getValue());
+            }
+        }
+        return new Plan(writes, before, fileSources, marked, changes, problems, consumers, consumersBefore);
     }
 
     /**
@@ -306,6 +349,14 @@ public final class TablesMigrator {
             audit.record(who, "file:" + w.getKey() + (plan.sources().get(w.getKey()) == null ? "" : " from " + plan.sources().get(w.getKey())),
                     plan.before().get(w.getKey()), w.getValue());
             written.add(w.getKey());
+        }
+        for (Map.Entry<String, String> c : plan.consumers().entrySet()) {
+            Path f = bi.resolve(c.getKey());
+            Path tmp = f.resolveSibling(f.getFileName() + ".migrating");
+            Files.writeString(tmp, c.getValue());
+            Files.move(tmp, f, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            audit.record(who, "file:config/bi/" + c.getKey() + " (a consumer)", plan.consumersBefore().get(c.getKey()), c.getValue());
+            written.add("config/bi/" + c.getKey());
         }
         if (movedTo != null && bi != null) {
             for (Item i : plan.items()) {

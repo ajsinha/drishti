@@ -238,7 +238,11 @@ public final class Catalogue {
         if (t.from() != null && t.from().form() == TableDef.Source.Form.TABLE && table(t.from().table()).isEmpty()) {
             out.add(Problem.error(TableCodes.REFERENCE, "from.table", "no table '" + t.from().table() + "' in the catalogue").in(source));
         }
-        if (t.from() != null && t.from().form() == TableDef.Source.Form.MODEL && model(TableName.Ref.parse(t.from().model())).isEmpty()) {
+        boolean implicit = t.from() != null && t.from().form() == TableDef.Source.Form.MODEL && t.from().model().startsWith("table:");
+        if (implicit && table(t.from().model().substring("table:".length())).isEmpty()) {
+            out.add(Problem.error(TableCodes.REFERENCE, "from.model", "no table '" + t.from().model().substring("table:".length()) + "' for its implicit model").in(source));
+        }
+        if (!implicit && t.from() != null && t.from().form() == TableDef.Source.Form.MODEL && model(TableName.Ref.parse(t.from().model())).isEmpty()) {
             out.add(Problem.error(TableCodes.REFERENCE, "from.model", "no model '" + t.from().model() + "' in the catalogue").in(source));
         }
         for (ColumnDef c : t.columns().values()) {

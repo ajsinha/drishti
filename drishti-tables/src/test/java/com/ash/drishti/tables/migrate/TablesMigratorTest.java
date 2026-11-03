@@ -205,4 +205,73 @@ class TablesMigratorTest {
         assertThat(p.writes()).doesNotContainKey("bi/conditional.model.yaml");
         assertThat(p.problems()).anyMatch(x -> x.code().equals(TableCodes.MIGRATION_REFUSED) && x.message().contains("not Rachana"));
     }
+
+    @Test
+    void aGroupedDatasetIsItsRowsAndASummaryTableOfTheirImplicitModel() throws Exception {
+        Path bi = bi();
+        Files.writeString(bi.resolve("datasets/desk-totals.dataset.yaml"), LICENCE + """
+                rachana: 2
+                dataset: desk-totals
+                extends: trades-basic-trade@^1
+                group:
+                  by: [DESK]
+                  columns: { MTM: sum, TRADES: count }
+                  grain: { says: One row per desk }
+                """);
+        TablesMigrator.Plan p = new TablesMigrator(AS_IS).plan(bi, dir.resolve("tables"));
+        assertThat(p.items()).filteredOn(i -> i.source().equals("datasets/desk-totals.dataset.yaml")).singleElement()
+                .satisfies(i -> assertThat(i.outputs()).containsExactly("bi/desk_totals_rows.table.yaml", "bi/desk_totals.table.yaml"));
+        TableDef summary = com.ash.drishti.tables.yaml.TableYaml.read(p.writes().get("bi/desk_totals.table.yaml")).table();
+        assertThat(summary.from().model()).isEqualTo("table:bi.desk_totals_rows");
+        assertThat(summary.from().modelQuery().toString()).contains("desk_totals_rows.DESK").contains("sum(desk_totals_rows.MTM)").contains("count(desk_totals_rows)");
+        assertThat(summary.keys()).containsExactly("DESK");
+        assertThat(summary.columns().get("TRADES").type()).isEqualTo("integer");
+        assertThat(p.problems()).filteredOn(Problem::isError).isEmpty();
+    }
+
+    @Test
+    void consumersChangeOnlyWhereTheyNameADatasetOrHoldAnExpression() throws Exception {
+        Path bi = bi();
+        Files.writeString(bi.resolve("datasets/live.dataset.yaml"), LICENCE + """
+                rachana: 1
+                dataset: live
+                version: 1
+                tables:
+                  trade:
+                    source: { kind: trade-valuation }
+                    columns:
+                      VALUATION_ID: { type: string, key: true }
+                      MTM: { type: decimal }
+                measures:
+                  MTM: { expr: "sum(trade.MTM)" }
+                """);
+        Files.createDirectories(bi.resolve("reports"));
+        Files.createDirectories(bi.resolve("notebooks"));
+        String report = LICENCE + """
+                report: desk
+                dataset: live          # the live sample
+                measures:
+                  Big: { expr: "sum(trade.MTM, where = trade.MTM != 0)", format: amount0 }
+                pages: []
+                """;
+        Files.writeString(bi.resolve("reports/desk.report.yaml"), report);
+        Files.writeString(bi.resolve("notebooks/n.notebook.yaml"), LICENCE + """
+                cells:
+                  - mq:
+                      model: trades-basic@1
+                      define:
+                        Neg: "sum(trade.MTM, where = trade.MTM < 0)"
+                      select: { measures: [Neg] }
+                """);
+        TablesMigrator m = new TablesMigrator(AS_IS);
+        TablesMigrator.Plan p = m.plan(bi, dir.resolve("tables"));
+        String now = p.consumers().get("reports/desk.report.yaml");
+        assertThat(now).contains("model: live@1   # the live sample").contains("expr: \"sum(trade.MTM, where = trade.MTM != 0 && trade.MTM != null)\"")
+                .contains("format: amount0").startsWith("# Project Drishti");
+        assertThat(p.consumers()).doesNotContainKey("notebooks/n.notebook.yaml");   // already the one spelling, nothing to change
+        assertThat(p.diff()).contains("+++ b/config/bi/reports/desk.report.yaml");
+        TablesMigrator.write(p, dir.resolve("tables"), bi, null, MigrationAudit.NONE, null);
+        assertThat(Files.readString(bi.resolve("reports/desk.report.yaml"))).isEqualTo(now);
+        assertThat(m.plan(bi, dir.resolve("tables")).consumers()).as("a second run changes nothing").isEmpty();
+    }
 }

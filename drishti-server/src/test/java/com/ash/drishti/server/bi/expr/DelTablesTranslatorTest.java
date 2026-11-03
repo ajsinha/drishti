@@ -24,13 +24,14 @@ import com.ash.drishti.tables.migrate.MigrationAudit;
 import com.ash.drishti.tables.migrate.TablesMigrator;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
  * The migration with DEL's real translator (BI_FOUNDATION_2911E.md sections 2.4 and 4): DEL read by its parser, mapped by part A's
- * {@link DelToRachana}, printed by Rachana; then the layer's rewrites. Every shipped dataset and model of {@code config/bi} (read only)
- * converts, the outputs pass the layer's checks, and a second run changes nothing.
+ * {@link DelToRachana}, printed by Rachana; then the layer's rewrites. Every shipped dataset and model of {@code config/bi} (a copy)
+ * converts, the reports bound to a version-1 dataset bind its model, the outputs pass the layer's checks, and a second run changes nothing.
  */
 class DelTablesTranslatorTest {
 
@@ -59,7 +60,15 @@ class DelTablesTranslatorTest {
 
     @Test
     void everyShippedItemConvertsAndASecondRunChangesNothing() throws Exception {
-        Path shipped = Path.of("..", "config", "bi");
+        Path shipped = dir.resolve("bi");                                    // a copy: the consumers are rewritten in place
+        for (String sub : List.of("datasets", "models", "reports", "notebooks")) {
+            Files.createDirectories(shipped.resolve(sub));
+            try (var files = Files.list(Path.of("..", "config", "bi", sub))) {
+                for (Path f : files.filter(x -> x.toString().endsWith(".yaml")).toList()) {
+                    Files.copy(f, shipped.resolve(sub).resolve(f.getFileName()));
+                }
+            }
+        }
         Path tables = dir.resolve("tables");
         TablesMigrator m = new TablesMigrator(t);
         TablesMigrator.Plan p = m.plan(shipped, tables);
@@ -69,6 +78,8 @@ class DelTablesTranslatorTest {
         assertThat(p.changes()).anyMatch(c -> "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)".equals(c.after()));
         assertThat(p.changes()).filteredOn(c -> c.key().equals("measures.Cashflow amount.expr")).singleElement()
                 .satisfies(c -> assertThat(c.after()).contains("payments.CURRENCY == 'JPY' ? 1 / 148.2 :"));
+        assertThat(p.consumers()).containsOnlyKeys("reports/live-trading-desk.report.yaml", "reports/live-exposure.report.yaml");
+        assertThat(p.consumers().get("reports/live-trading-desk.report.yaml")).contains("model: live-trading@1");
         TablesMigrator.write(p, tables, shipped, null, MigrationAudit.NONE, null);
         assertThat(m.plan(shipped, tables).anyWrite()).as("idempotent on the shipped set").isFalse();
         assertThat(Files.list(tables.resolve("bi")).count()).isEqualTo(p.writes().size());
