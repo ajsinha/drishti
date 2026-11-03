@@ -15,15 +15,15 @@
 """The exposure explorer in a real browser (docs/guides/EXPOSURE_GUIDE.md section 3), over the committed exposure run (the run
 XR-2026-09-30-01's eight netting sets, 627 trades, 200 paths, 24 grid dates: lake demo --exposure committed, the quick one) with the netting sets, CSAs, collateral balances,
 credit limits, counterparties, groups and legal entities beside it, built into a scratch lake (lake demo --only those kinds, as the
-guide's pictures do in tools/docs/shots/_exp.py, with the committed run) and served by the Delta connector, the demo connector OFF, compute ON (the exact pre-deal
-method runs in the Python exposure engine):
+guide's pictures do in tools/docs/shots/_exp.py, with the committed run) and served by the Delta connector, the demo connector OFF (both pre-deal
+methods run in the server's exposure engine):
 
 - EXP BANK <GO> opens the explorer on the bank: the scope tree, the counterparty board; a click on a counterparty moves every panel in
   place (the breadcrumb, the tiles, its Netting sets tab); a netting set's Collateral tab shows its CSA and the signed "Effect of
   collateral"; its Trades tab opens a trade "In its netting set" with its netting benefit; Back returns to the set;
 - By tenor; the q 95/99 and collateralised switches change the figures; the pre-deal what-if (on a netting set, and on a counterparty
   into the netting set picked, its largest first) by the proxy (addon) and by the exact
-  method (paths, the Python engine);
+  method (paths);
 - a netting set the run does not cover says so (no figures); on a phone the explorer does not scroll sideways; F1 opens the guide.
 
 Takes no pictures. Skipped when Playwright, Chromium, the built server jar or a JDK is missing, or the lake cannot be built."""
@@ -59,8 +59,7 @@ def stack(tmp_path_factory):
                         "--engine", "deltalake", "--exposure", "committed"], capture_output=True, text=True, cwd=ROOT, timeout=900)   # the Python writer, in this process: auto starts a JVM for every table and business day
     if r.returncode != 0 or not (lake / "risk" / "exposure-path").is_dir():
         pytest.skip("could not build the exposure lake: " + (r.stderr or r.stdout)[-400:])
-    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
-                                        "DRISHTI_COMPUTE_ENABLED": "true", "DRISHTI_PYTHON": sys.executable}):
+    for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true"}):
         _engine_ready(str(st))
         yield st
 
@@ -211,7 +210,7 @@ def test_the_pre_deal_what_if_by_the_proxy_and_by_the_paths(stack, browser):
     assert "Peak PFE after" in out and "proxy" in out
     assert pg.locator("[data-xx-whatif-out] tbody tr").count() == len(head(pg, "profile"))
 
-    # the exact method: the candidate's paths netted and collateralised with the set by the Python exposure engine (compute is on)
+    # the exact method: the candidate's paths netted and collateralised with the set by the server's exposure engine
     pg.evaluate("delete document.querySelector('[data-exposure]').dataset.whatif")
     pg.locator("[data-xx-method]").select_option("paths")
     pg.locator("[data-xx-factor]").fill("-1")                                # the unwind of a booked trade

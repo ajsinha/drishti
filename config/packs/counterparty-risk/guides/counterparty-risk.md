@@ -47,7 +47,7 @@ Each kind is read from the Delta Lake folder of its **data domain** (`data/delta
 
 ### Exposure: the exposure engine
 
-The pack's exposure profiles are computed, never stored: the server nets every trade's mark to market on every path of the upstream simulation run (`exposure-path`, one row per trade and grid date, the run's grid in `simulation-run`) per netting set, applies each CSA's collateral path by path (thresholds, minimum transfer amounts, independent amount, rounding, lagged by the margin period of risk) and reads EE, ENE, effective EE, PFE at 95% and 99%, EPE and EEPE for any scope: `EXP NSET:NS-ALDERSHOT-FRA <GO>`, `EXP CPTY:CP-ALDERSHOT <GO>` (its netting sets summed path by path), `EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>` (a trade alone). The netting-set and counterparty pages show the engine's figures computed as they open. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.ccr.exposure`); the official end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The explorer opens with `EXP <scope> <GO>` (the bank, a legal entity's counterparty board, a counterparty's netting sets, a set's collateral and trades, a trade alone and in its set, captures and compare, the pre-deal what-if); a what-if by the exact `paths` method is `XWIF` (`exposure-whatif`, the Python engine, compute on). The API is `/api/v1/exposure`; from the command line: `drishti.py exposure show CPTY:CP-ALDERSHOT`.
+The pack's exposure profiles are computed, never stored: the server nets every trade's mark to market on every path of the upstream simulation run (`exposure-path`, one row per trade and grid date, the run's grid in `simulation-run`) per netting set, applies each CSA's collateral path by path (thresholds, minimum transfer amounts, independent amount, rounding, lagged by the margin period of risk) and reads EE, ENE, effective EE, PFE at 95% and 99%, EPE and EEPE for any scope: `EXP NSET:NS-ALDERSHOT-FRA <GO>`, `EXP CPTY:CP-ALDERSHOT <GO>` (its netting sets summed path by path), `EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>` (a trade alone). The netting-set and counterparty pages show the engine's figures computed as they open. Each loaded date lives in a memory-mapped hot file under the data folder (`drishti.ccr.exposure`); the official end-of-day figures are published to `risk-results/exposure-official` and `exposure-official-cpty`. The explorer opens with `EXP <scope> <GO>` (the bank, a legal entity's counterparty board, a counterparty's netting sets, a set's collateral and trades, a trade alone and in its set, captures and compare, the pre-deal what-if, exact by the `paths` method or the `addon` proxy, both in the same engine). The API is `/api/v1/exposure`; from the command line: `drishti.py exposure show CPTY:CP-ALDERSHOT`.
 
 The exposure guide (`docs/guides/EXPOSURE_GUIDE.md`) explains every number with worked examples, the explorer, scopes, collateral, captures, the what-if, entitlements, the CLI, the API and the settings; tutorial 26 (`docs/tutorials/26-exposure-from-the-bank-to-a-trade.md`) walks through it on the test data; the data contract is its Part II.
 
@@ -165,7 +165,6 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `XRUN` | `simulation-run` | input | `RUN_ID` | One row per simulation run and business date, keyed by RUN_ID; the newest complete run of a date answers. | 24 |
 | `XPATH` | `exposure-path` | input | `PATH_ROW_ID` | One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. | 21 |
 | `EXP` | `exposure-result` | computed | — | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. | 27 |
-| `XWIF` | `exposure-whatif` | computed | — | One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked. | 27 |
 | `XOFC` | `exposure-official-cpty` | computed | `NODE_ID`, `RESULT_VERSION` | One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 32 |
 | `NSMTM` | `nset-mtm` | computed | `NETTING_SET_ID` | One record per NETTING_SET_ID of the trade-valuation records, computed when asked. | 32 |
 | `CPMTM` | `cpty-mtm` | computed | `COUNTERPARTY` | One record per COUNTERPARTY of the trade-valuation records, computed when asked. | 20 |
@@ -636,50 +635,6 @@ The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) a
 - No stored key: an answer's id is the scope asked (the id in the request); EXP <scope> <GO> opens it, and EXP EXP-<cp>-<le> (an id of the retired exposure-profile kind) opens EXP NSET:NS-<cp>-<le>.
 - Computed as the viewer with the exposure engine's entitlements (EXPOSURE_GUIDE.md section 9); cached per view signature, data version, scope and parameters.
 
-### XWIF: Exposure what-if before dealing (computed, Python) (`exposure-whatif`)
-
-A scope's exposure before and after candidate trades kept in the person's private sandbox, by the exact paths method (each candidate's values on every path of the day's run added to its netting set, collateral and exposure computed again), computed when asked by the Python exposure engine from the scope's exposure-result; never stored.
-
-**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `exposure-whatif` (plugin `reactive`).
-
-**Grain:** One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked. **Contract:** `contracts/exposure-whatif.contract.yaml` ([full contract page](../../../../docs/contracts/packs/counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif)).
-
-| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
-|---|---|---|---|---|---|---|---|
-| `SCOPE` | text |  | required |  |  |  | The base scope (the id), e.g. CPTY:CP-ALDERSHOT or NSET:NS-ALDERSHOT-NY. |
-| `CANONICAL` | text |  | required |  |  |  | — |
-| `BUSINESS_DATE` | date |  | required |  |  |  | — |
-| `RUN_ID` | text |  | required |  |  |  | The simulation run every candidate's paths must be of. |
-| `CONFIDENCE` | rate |  | required |  |  |  | — |
-| `COLLATERAL_MODEL` | text |  | required |  |  |  | lagged, current or none, as asked. |
-| `METHOD` | text |  | required |  |  |  | paths (the exact method; the conservative addon proxy is the Java engine's, POST /api/v1/exposure/what-if). |
-| `ITEMS` | integer |  | required |  |  |  | The candidate trades of the sandbox (0 without one). |
-| `BEFORE_PEAK_PFE` | amount |  | required | USD |  |  | — |
-| `AFTER_PEAK_PFE` | amount |  | required | USD |  |  | — |
-| `CHANGE_PEAK_PFE` | amount |  | required | USD |  |  | — |
-| `BEFORE_PEAK_PFE_TENOR` | text |  | optional |  |  |  | — |
-| `AFTER_PEAK_PFE_TENOR` | text |  | optional |  |  |  | — |
-| `BEFORE_EPE` | amount |  | required | USD |  |  | — |
-| `AFTER_EPE` | amount |  | required | USD |  |  | — |
-| `CHANGE_EPE` | amount |  | required | USD |  |  | — |
-| `BEFORE_EEPE` | amount |  | required | USD |  |  | — |
-| `AFTER_EEPE` | amount |  | required | USD |  |  | — |
-| `CHANGE_EEPE` | amount |  | required | USD |  |  | — |
-| `BEFORE_PEAK_EE` | amount |  | required | USD |  |  | — |
-| `AFTER_PEAK_EE` | amount |  | required | USD |  |  | — |
-| `CHANGE_PEAK_EE` | amount |  | required | USD |  |  | — |
-| `BEFORE_CE` | amount |  | required | USD |  |  | — |
-| `AFTER_CE` | amount |  | required | USD |  |  | — |
-| `CHANGE_CE` | amount |  | required | USD |  |  | — |
-| `FLAGS` | text |  | optional |  |  |  | exact. |
-| `ENGINE` | text |  | required |  |  |  | — |
-
-**Links:** `SCOPE` → `exposure-result`.
-
-- No stored key: an answer's id is the base scope (the id in the request); the parameters ride on it (sandbox, q, collateral, sets).
-- The candidates' paths are supplied in the sandbox (TRADE_ID, LABEL, NETTING_SET, MTM of G x P values of the run, MTM0, LIFE_YEARS, RUN_ID), priced elsewhere (an upstream what-if service, or a copy of a booked trade's paths, scaled); a candidate joins a netting set the scope covers whole, or none (a netting set of its own, uncollateralised).
-- The tables profile (TENOR, DATE, T, EE_BASE, EE, ENE_BASE, ENE, PFE_BASE, PFE, INCREMENTAL_EE, INCREMENTAL_PFE) and items (TRADE_ID, LABEL, NETTING_SET, PEAK_PFE_ALONE, INCREMENTAL_PEAK_PFE) come with the answer.
-
 ### XOFC: Exposure official results by netting set and counterparty (published) (`exposure-official-cpty`)
 
 The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input.
@@ -841,7 +796,6 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `XRUN` | `simulation-run` | synthetic: `python3 tools/packgen/ccr/make_ccr_data.py` | `data/testdata/counterparty-risk/simulation-run/` → `lake demo` → connector `exposure-store` |
 | `XPATH` | `exposure-path` | synthetic: `python3 tools/packgen/ccr/make_ccr_data.py` | `data/testdata/counterparty-risk/exposure-path/` → `lake demo` → connector `exposure-store` |
 | `EXP` | `exposure-result` | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine); see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
-| `XWIF` | `exposure-whatif` | computed by Drishti: the reactive connector exposure-whatif (python engine drishti_compute.exposure.whatif:ExposureWhatIfEngine, pool exposure); see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `XOFC` | `exposure-official-cpty` | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty; see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/exposure-official-cpty/` |
 | `NSMTM` | `nset-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
 | `CPMTM` | `cpty-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
