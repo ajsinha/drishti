@@ -72,7 +72,7 @@ def render(st: dict) -> list[str]:
         for f in files:
             counts[f.get("outcome", "")] = counts.get(f.get("outcome", ""), 0) + 1
         what = ", ".join(f"{n} {k}" for k, n in sorted(counts.items())) or (c.get("why") or "")
-        out.append(f"  {str(c.get('started', ''))[:19].replace('T', ' ')}  {c.get('run', ''):<22}{c.get('state', ''):<9}{what}")
+        out.append(f"  {str(c.get('started', ''))[:19].replace('T', ' ')}  {c.get('run', ''):<34} {c.get('state', ''):<9}{what}")
         for n in c.get("notices") or []:
             out.append(f"    notice: {n}")
     if st.get("error"):

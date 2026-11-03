@@ -20,7 +20,8 @@ will place jsonl, jsonl.gz, tar, tar.gz etc. files there and every file will als
 system should see how many ready files there are and ingest them using Java into Delta. If a file named `ready.all` is there it should
 ingest all files. Once a file is ingested it should be placed in the outbox along with its ready file so the system does not process the
 same file again. Design it in a robust way. Once a file has been loaded and committed to the lake the server also needs to know that
-data has moved. A separate Maven module; it can work as a thread in the server." Status: **designed, not built**; the questions of section 13 were
+data has moved. A separate Maven module; it can work as a thread in the server." Status: **built** (module `drishti-dataload`, the server's wiring in `server.dataload`, `drishti.py dataload`; section 14 says what was built
+and what is still (planned)); the questions of section 13 were
 decided as recommended by the product owner (2026-11-03).*
 
 ## 1. What is reused, never rewritten
@@ -37,7 +38,7 @@ The new module only **finds, claims, routes, records and moves** files; everythi
 
 ## 2. The folders
 
-All under the data folder (`drishti.dataload.dir`, default `<data>/dataload`), on one file system so a move is an atomic rename: (planned)
+All under the data folder (`drishti.dataload.dir`, default `<data>/dataload`), on one file system so a move is an atomic rename:
 
 | Folder | Holds | Who writes |
 |---|---|---|
@@ -74,9 +75,9 @@ checks again; **Load now** says the same. Files are moved into the run's folder 
 place: the inbox (waiting), one run's folder (loading), the outbox (loaded) or failed.
 
 
-Every `interval` (default 10 minutes, `drishti.dataload.interval`; also **Load now** in Admin and `drishti.py dataload run`): (planned)
+Every `interval` (default 10 minutes, `drishti.dataload.interval`; also **Load now**, `POST /api/v1/admin/dataload/run` and `drishti.py dataload run`):
 
-1. **One runner.** Only the node configured as the inbox's owner runs (`drishti.dataload.owner: true`); and the run takes (planned)
+1. **One runner.** Only the node configured as the inbox's owner runs (`drishti.dataload.owner: true`); and the run takes
    `dataload/inbox.lock` (created atomically, holding the node and a heartbeat; a lock whose heartbeat is older than three intervals is
    taken over and the takeover logged), so two servers on one shared folder never both run.
 2. **Busy check.** When busy protection says memory or CPU is short, the cycle is skipped and says so; the next cycle runs.
@@ -87,7 +88,7 @@ Every `interval` (default 10 minutes, `drishti.dataload.interval`; also **Load n
    and then the rest stays in the inbox for the next cycle.
 4. **Claim**: each file and its `.ready` are renamed into `inprocess/<run>/`; the ledger line `claimed` is written first.
 5. **Skip duplicates**: a file whose SHA-256 the ledger already shows as `loaded` goes straight to `outbox/` with *already loaded in run
-   … on …*, and is not loaded again (`drishti.dataload.reload-duplicates: false`). (planned)
+   … on …*, and is not loaded again (`drishti.dataload.reload-duplicates: false`).
 6. **Route** (section 5) and **load**: the files of one table go to one `LakeLoad` run (its own table lock; one Delta commit per business
    date, as today). Tables load one after another, so the server's memory is bounded by one load.
 7. **Record**: the ledger line `loaded` with the tables, dates, Delta versions, rows and rejects.
@@ -99,7 +100,8 @@ Every `interval` (default 10 minutes, `drishti.dataload.interval`; also **Load n
 ## 5. Routing a file to a table
 
 In this order: the `.ready` contents (section 3.5); a **row form** that names itself (*loader rows* `{domain, kind, id, date, doc,
-columns}` and *lake rows* with `table`, DATA_GUIDE section 2); the **rules** in `config/dataload.yaml`: a file-name pattern to a pack and (planned)
+columns}` and *lake rows* with `table`, DATA_GUIDE section 2) (planned: the parallel loader reads documents, so such files are routed by a
+rule or their `.ready` today); the **rules** in `config/dataload.yaml`: a file-name pattern to a pack and
 kind, with the date taken from the pack's date field or from the name:
 
 ```yaml
@@ -121,7 +123,7 @@ An archive follows the loader's own rule: one dataset named after the archive, o
 ## 6. Running in the server, safely
 
 The cycle is a thread of the server, as asked. The **load itself runs as a child Java process** of the server
-(`java -cp <the server's jar> com.ash.drishti.lakeload.LakeLoad --config <generated>`) with its own heap (`drishti.dataload.loader-heap`, (planned)
+(`java -cp <the server's jar> com.ash.drishti.lakeload.LakeLoad --config <generated>`) with its own heap (`drishti.dataload.loader-heap`,
 default 4g), `nice`, and the server's temp folder: a large or malformed file can never take the server's heap, and the loader's exit code
 says exactly what happened. The server waits for it with a time limit (`load-timeout`, default 2 hours), and a hung load is stopped and
 its files go back to the inbox with the reason. (One way of loading, the loader that exists, in its own process; no second loader code
@@ -153,19 +155,19 @@ A date's commit replaces that date's rows of that table (the default `mode: repl
 
 ## 9. Configuration and the switch
 
-`config/engines/dataload.yaml` (off by default, Admin → Engines): `enabled`, `owner`, `dir`, `interval`, `stable-seconds`, `max-files`, (planned)
+`config/engines/dataload.yaml` (off by default, Admin → Engines): `enabled`, `owner`, `dir`, `interval`, `stable-seconds`, `max-files`,
 `max-gb`, `loader-heap`, `load-timeout`, `reject-max-percent`, `reload-duplicates`, `keep-outbox-days` (default 30; older outbox and
 failed folders are deleted, the ledger kept), and `config/dataload.yaml` for the routing rules; every key in CONFIGURATION.md.
 
 ## 10. What a person sees
 
-**Admin → Data loads → Inbox** (mock-ups first): files waiting (ready, not yet stable, without a marker), the last cycles with their
+**Admin → Data loads → Inbox** (planned; mock-ups first): files waiting (ready, not yet stable, without a marker), the last cycles with their
 files, tables, dates, rows and time, failures with the reason and **Retry**, **Load now**, and the next cycle's time. The command line:
-`drishti.py dataload status | run | retry <file>`. Every load is on the Data loads page as today, with *from the inbox* and its files. (planned)
+`drishti.py dataload status | run | retry <file>`. Every load is on the Data loads page as today, with *inbox:* and its files as its source.
 
 ## 11. The module
 
-`drishti-dataload`, plain Java (no Spring): `Inbox` (find and the hand-shake), `Claims` (work folder, lock and heartbeat), `Ledger`,
+`drishti-dataload`, plain Java (no Spring): `Inbox` (find and the hand-shake), `Claims` (the `inprocess/` folder, lock and heartbeat), `Ledger`,
 `Routes` (section 5), `LoaderProcess` (the child `LakeLoad`), `Outbox` (moves and reports), `Recovery` (section 7), `Cycle` (one run of
 section 4). The server keeps only the wiring: the schedule, the settings, the bridge to `LoadService`, busy protection and the Admin API.
 Architecture rules: the module never writes a table itself (only `drishti-lakeload` does) and never names the server.
@@ -190,3 +192,20 @@ and the lock on NTFS (the Windows workflow).
 | D6 | The `.ready` file's optional contents (pack, kind, date, mode, checksum, rows) | **Optional**, empty works |
 | D7 | Which nodes run it | **The configured owner only**, plus the folder lock |
 | D8 | `tar.tz` in the request | read as **`.tar.gz`/`.tgz`**; `.zip` and `.zst` come with the loader |
+
+## 14. As built
+
+| Part | Where |
+|---|---|
+| The module, plain Java | `drishti-dataload`: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote` (the marker's keys), `LoaderProcess` (with the `LoadRunner` contract), `Outbox`, `Recovery`, `Cycle`, `DataInbox` (the schedule, Load now, Retry, the status), `DataLoadSettings`, `Signal` |
+| Reused, not rewritten | `LakeLoad` (run as a child process from the server's own class path or exec jar: `-Dloader.main`; its exit codes 0/1/2/3, its summary and the load file it reads), `LakeLoad.reads` (the loader's own file names, `Archives`), `PackLayout` (through `source.pack`: the table, layout, key and date of the pack), the archive guards; `LoadService.announce` for the signal (the method `POST /api/v1/packs/{pack}/loads` calls), `AdmissionGate` (`Work.BULK_LOAD`) for the busy check, `TempFiles` for the loader's temp folder, `BasicEngine` and the engine catalogue for the switch |
+| The server's wiring | `server.dataload.DataLoadConfiguration` (settings, packs, signal, busy check, the engine), `DataLoadController` (`GET /api/v1/admin/dataload`, `POST …/run`, `POST …/retry`; the two `POST`s in the `loads:write` scope) |
+| Files | `config/engines/dataload.yaml` (off as shipped), `config/dataload.yaml` (no rules; the demo packs' rules commented) |
+| Architecture rules | `ArchitectureRulesTest`: the module never depends on the server or Spring, and never on a table format, lake engine or storage (it writes no table: only the loader does) |
+| The run's files | `inprocess/<run>/load-<n>.yaml` (the load file), `.route.json` (pack, kind, batch: what a restart reads), `.summary.json`, `.log`, `.rejects.jsonl`; `load-<n>-check.*` for a dry run made when a `.ready` names `rows`; `signals.jsonl` (signals not yet sent). Moved to `outbox/<day>/<run>/loads/` at the end of the run |
+| Recovery | a claimed file whose load's summary says it committed is completed from the summary (never loaded again); otherwise it goes back. A crash inside the loader's own write, before its summary, sends the file back and it loads again: its dates are replaced, the same data |
+| Batch | one loader run per table (pack, kind, connector, table, date field or date, key, lake, format); when a run of several files fails without a commit, each file is loaded again alone, so one bad file fails alone |
+
+Still (planned): the Admin screen (mock-ups first); routing by a self-naming row form; the signal forwarded to the other members of a
+cluster (today only the owner node is told; announce on the others by hand, or with `drishti.py data landed`, until then); the
+three-node and Windows (NTFS) tests.

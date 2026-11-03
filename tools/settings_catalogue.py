@@ -87,7 +87,7 @@ AREAS = [
          "`drishti-server/src/main/resources/application.yaml`, inside the jar. Override a key in `application.local.yaml`, with an "
          "environment variable (the one named, or Spring's relaxed name) or a `--key=value` argument ([Precedence](#precedence))."),
     Area("engines", "Compute engines: `config/engines/*.yaml`",
-         "One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake), "
+         "One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), "
          "`config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: "
          "its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. "
          "`application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and "
@@ -139,6 +139,10 @@ AREAS = [
          "One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `./config/simm`), read and checked at start: the bank's "
          "licensed numbers, never shipped. The structure is `docs/architecture/capital-parameters/simm.yaml`, every number empty; a version "
          "with a number missing is refused with `DRS-5333` ([SIMM_GUIDE.md section 4](../guides/SIMM_GUIDE.md#4-the-licensed-parameter-file))."),
+    Area("dataload", "The data inbox's routing rules: `config/dataload.yaml`",
+         "Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again "
+         "at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), "
+         "[DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md)). The inbox's own settings are in `config/engines/dataload.yaml`."),
     Area("ui-kit", "The UI kit: `config/ui-kit/brand.yaml`",
          "The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`)."),
     Area("ai", "AI providers and MCP servers: `config/ai/`, `config/mcp/`",
@@ -419,6 +423,7 @@ def all_rows() -> tuple[list[Row], list[str]]:
                           named={"roles": "<role>"} if name == "access" else None)
     rows += yaml_rows("net", sorted((ROOT / "config/net.examples/peers").glob("*.yaml")), "each member", "live", "`peers/<name>.yaml`")
     rows += yaml_rows("alerts", [ROOT / "config/alerts/platform-alerts.yaml"], "server", "live", None, named={"rules": "<rule>"})
+    rows += yaml_rows("dataload", [ROOT / "config/dataload.yaml"], "server (the inbox's owner)", "live", None)
     rows += yaml_rows("ui-kit", [ROOT / "config/ui-kit/brand.yaml"], "server", "restart", None, named={"themes": "<theme>"})
     rows += yaml_rows("ai", sorted((ROOT / "config/ai").glob("*.yaml.example")), "server and console", "live", "A provider file: `config/ai/<name>.yaml`",
                       named={"deployments": "<model>"})
@@ -441,7 +446,7 @@ def code_env() -> dict[str, str]:
     """``DRISHTI_*`` variables the main code reads by name (Java, Python, shell), with the first file that reads each."""
     out: dict[str, str] = {}
     roots = ["drishti-server", "drishti-engine", "drishti-api", "drishti-common", "drishti-packs", "drishti-console", "drishti-net",
-             "drishti-compute", "drishti-identity", "drishti-ai", "drishti-lakeio", "drishti-deltalake", "drishti-iceberg", "drishti-memlake", "plugins", "tools"]
+             "drishti-compute", "drishti-identity", "drishti-ai", "drishti-lakeio", "drishti-deltalake", "drishti-iceberg", "drishti-memlake", "drishti-dataload", "plugins", "tools"]
     for r in roots:
         for p in sorted((ROOT / r).rglob("*")):
             if p.suffix not in (".java", ".py") or not p.is_file():

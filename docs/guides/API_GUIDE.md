@@ -1768,6 +1768,16 @@ that did not come. Everything about it (every field, the idempotency rules, the 
 Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and `data-load-config-reset`. `GET /admin/health` lists
 `dataLate` and is `DEGRADED` while it is not empty.
 
+**The data inbox** (files dropped in `<data>/dataload/inbox` with a `.ready` marker, loaded by the server: [DATA_GUIDE.md section 7](DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load);
+the CLI is `drishti.py dataload`). Administrators; a token needs `loads:write` for the two `POST`s. While the inbox's engine is off on every
+server the paths answer `DRS-1020`.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/dataload` | `{on, owner, node, dir, interval, nextCycleAt, running: {startedAt, trigger}, lock: {run, node, pid, since, heartbeat}, waiting: [{file, size, modified, state}], markersWithoutFile, readyAll, failed: [{file, day, run, reason}], ledger: [the newest 20 lines], cycles: [{run, trigger, started, finished, state: done\|skipped\|failed, why, files: [{file, outcome, reason, pack, kind, versions, rows, rejected}], notices, signals}], settings}` |
+| `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
+| `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
+
 ### Administration: node readiness and the drain before a stop
 
 This server as a node of a cluster ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#91-health-endpoints), `CD1` and `CD2`).

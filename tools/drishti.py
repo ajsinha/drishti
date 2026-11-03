@@ -1275,8 +1275,7 @@ def build_parser() -> argparse.ArgumentParser:
     ls.add_argument("--limit", type=int, default=30, help="most loads listed (default 30)")
     ls.add_argument("--expectations", action="store_true", help="also list what the pack expects and today's state (on-time, late, missing ...)")
 
-    # authoring tools: data profile, pack regenerate|diff|catalogue|i18n (tools/authoring.py)
-    load_module("authoring", "authoring.py").register(sys.modules[__name__], k, d, add, jvm, js, PFJ)
+    load_module("authoring", "authoring.py").register(sys.modules[__name__], k, d, add, jvm, js, PFJ)   # data profile, pack regenerate|diff|catalogue|i18n
 
     # server -----------------------------------------------------------------------------------------------
     sv = group("server", "A running server over REST: health and pack management (administrator)")
@@ -1424,6 +1423,7 @@ def build_parser() -> argparse.ArgumentParser:
         load_module(mod, mod + ".py").register(groups, srv, play_ctx)
     adm = load_module("capacitycli", "capacitycli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "say_json": say_json})   # admin capacity (2.9.11)
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
+    load_module("dataloadcli", "dataloadcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # dataload status|run|retry
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):

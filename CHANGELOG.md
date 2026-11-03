@@ -15,6 +15,27 @@
 -->
 # Changelog
 
+## 2.9.11.f
+
+- **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;
+  OPERATIONS.md 11.4; TOOLS.md 5.3a; API_GUIDE.md, Data loads).** Put JSON Lines files or archives (`.jsonl`, `.ndjson`, `.json`; plain,
+  `.gz`, `.zst`; `.zip`, `.tar`, `.tar.gz`, `.tgz`) in `<data>/dataload/inbox` with a `<file>.ready` beside each (or one `ready.all`);
+  every `interval` (10 minutes) the owner node takes the whole ready, stable batch at once into `inprocess/<run>/` (a run id is its start
+  time and node, `20261103T150000Z-drishti-main`), skips a file whose SHA-256 was loaded before, routes each file by its `.ready` or the
+  first rule of `config/dataload.yaml`, loads the files of each table with the parallel lake loader (`LakeLoad`) started as a child Java
+  process with its own heap (`loader-heap`), records every step in `ledger/`, moves each file with its marker and a report to
+  `outbox/<day>/<run>/` (or `failed/` with the reason), and announces each pack, kind and business date through `LoadService`, as
+  `POST /api/v1/packs/{pack}/loads` does. Runs never overlap: a cycle due while a run loads is recorded as *skipped: run … still loading
+  (n min)*, and Load now says the same. Crash-safe: a stopped server's run is finished at the next cycle, never loaded twice. One runner
+  per folder (`owner`, plus `inbox.lock` with a heartbeat). Busy protection skips a cycle when the server is short.
+- New module `drishti-dataload` (plain Java: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess`, `Outbox`, `Recovery`,
+  `Cycle`, `DataInbox`); the server's wiring is `server.dataload` (`DataLoadConfiguration`, `DataLoadController`). New engine `dataload`
+  in the catalogue, `config/engines/dataload.yaml` (off as shipped; every key in CONFIGURATION.md), `config/dataload.yaml` (the routing
+  rules; the demo packs' rules commented). New endpoints `GET /api/v1/admin/dataload`, `POST /api/v1/admin/dataload/run` and
+  `POST /api/v1/admin/dataload/retry` (administrators; the `POST`s in the `loads:write` scope). New command `drishti.py dataload
+  status|run|retry`. `LakeLoad.reads(name)` tells whether the loader reads a file name. Two new rules in `ArchitectureRulesTest`
+  (`dataInboxIsPlainJava`, `dataInboxWritesNoTable`). The Admin screen comes after its mock-ups.
+
 ## 2.9.11.a
 
 - **The in-memory lake is its own module, `drishti-memlake` (IN_MEMORY_LAKE.md section 16; ARCHITECTURE.md §13,
