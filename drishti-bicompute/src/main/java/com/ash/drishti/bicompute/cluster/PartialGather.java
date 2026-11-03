@@ -96,17 +96,15 @@ public final class PartialGather {
             P answer = null;
             Throwable failure = null;
             try {
-                long waited = (System.nanoTime() - start) / 1_000_000;
-                if (hedgeAfterMs > 0 && s.nodes().size() > 1 && waited < hedgeAfterMs) {
+                if (s.nodes().size() > 1) {
+                    long waited = (System.nanoTime() - start) / 1_000_000;
+                    long first = hedgeAfterMs > 0 ? Math.max(1, hedgeAfterMs - waited) : Math.max(1, deadlineMs - waited);
                     try {
-                        answer = f.get(hedgeAfterMs - waited, TimeUnit.MILLISECONDS);
+                        answer = f.get(first, TimeUnit.MILLISECONDS);
                     } catch (TimeoutException late) {
-                        CompletableFuture<P> second = ask(s, 1, ask, exec);
-                        f = CompletableFuture.anyOf(f, second).thenApply(x -> {
-                            @SuppressWarnings("unchecked")
-                            P p = (P) x;
-                            return p;
-                        });
+                        f = firstAnswer(f, ask(s, 1, ask, exec));     // late: the next node too, the first answer wins
+                    } catch (ExecutionException failed) {
+                        f = ask(s, 1, ask, exec);                    // failed: the next node instead
                     }
                 }
                 if (answer == null) {
@@ -136,6 +134,19 @@ public final class PartialGather {
             acc = combine.add(acc, p);
         }
         return acc;
+    }
+
+    /** The first of two answers that succeeds; failed only when both fail. */
+    static <P> CompletableFuture<P> firstAnswer(CompletableFuture<P> a, CompletableFuture<P> b) {
+        CompletableFuture<P> r = new CompletableFuture<>();
+        a.thenAccept(r::complete);
+        b.thenAccept(r::complete);
+        CompletableFuture.allOf(a, b).whenComplete((x, e) -> {
+            if (!r.isDone()) {
+                r.completeExceptionally(e == null ? new IllegalStateException("no answer") : e);
+            }
+        });
+        return r;
     }
 
     private static <P> CompletableFuture<P> ask(Share s, int which, Ask<P> ask, Executor exec) {
