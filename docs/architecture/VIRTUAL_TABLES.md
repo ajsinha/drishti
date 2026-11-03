@@ -18,9 +18,9 @@
 *Product owner, 2026-11-03: "virtual tables: logically defined tables which get data from a table in Delta. The actual table may be
 complex JSON, but a configuration applies Rachana grammar to change the data layout so it starts looking like a traditional table, and
 using Arrow we should be able to serve it." Then: "BI models and datasets are actually virtual tables. I want to generalise the concept and
-centralise it so BI and other consumers can use it." Status: **designed, not built**; the questions of section 10 decided as recommended by the
-product owner (2026-11-03: "virtual table is quite a generalised concept and sits on top of connectors, not just the lake"; "the main
-thing is that Arrow Flight can serve data from a virtual table too"). (planned)*
+centralise it so BI and other consumers can use it." Status: **design for discussion with the product owner** ("don't code: write the design first and let us discuss"); nothing is
+built and nothing is decided yet. The product owner's points so far: virtual tables sit on top of connectors, not just the lake, and
+Arrow Flight serves them. Section 10 lists the questions with a recommendation each. (planned)*
 
 ## 1. The idea
 
@@ -129,9 +129,9 @@ relationships, measures, materialisation and who uses them (lineage).
 L: the module and its catalogue, BI's datasets, models and layers moved under it with a migration tool and the parity test, the pivot and
 Flight reading it, the checks and preview, docs (a tables guide with real examples on the demo lake; the BI, pivot and Flight guides).
 
-## 10. Decisions (product owner, 2026-11-03: every recommendation accepted)
+## 10. Questions for the discussion, with recommendations
 
-| # | Question | Decided |
+| # | Question | Recommendation |
 |---|---|---|
 | V1 | A central layer of its own (a module, `config/tables/` (planned)), not inside BI and not in the lake file | **Yes**: its sources are any kind, not only the lake |
 | V2 | BI's datasets become flat virtual tables and BI's models become the layer's models; BI keeps reports, visuals and boards | **Yes**: one definition, migrated by a tool, proved by the BI parity test |
