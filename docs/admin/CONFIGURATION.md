@@ -1519,7 +1519,7 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
 | `columns.<kind>` | from packs | A kind's key fields in pick lists and searches (`columns:` in `pack.yaml`). |
-| `pivot.<kind>` | from packs | A Pivot tab on the kind's results: `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)). |
+| `pivot.<kind>` | from packs | Pivot on the kind's results (the pivot screen): `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-pivot-on-search-results)). |
 
 ### `drishti.calc` — Python in the browser
 
@@ -2116,7 +2116,7 @@ as any Studio save (`drishti.governance`).
 
 ### `drishti.pivot` — the Pivot tab
 
-The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) appears only where a
+The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#pivot-slice-a-table-your-way)) appears only where a
 Sutra (`pivot:` on a table or ladder) or a pack (`pivot:` beside a kind's `columns:`) opts in; these keys bound it.
 There is no role power: anyone who may open a kind may pivot and save; promoting a pivot to a Sutra needs `author`,
 `drishti.rachana.studio-save` and goes through review. Saved pivots live in the preference store (namespace `pivots`).

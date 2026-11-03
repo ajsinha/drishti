@@ -425,7 +425,7 @@ Every file under `docs/`, by folder. Documents marked *moved* are short pointers
 | [workspaces.md](guides/USER_GUIDE.md#workspaces) | you arrange several live views on one screen |
 | [sharing-and-discussion.md](../drishti-console/web/guides/sharing-and-discussion.md) | you send a view with a note, read your inbox or discuss a number |
 | [layout-mode.md](guides/USER_GUIDE.md#layout-mode-arrange-a-view-your-way) | you arrange a view's panels for yourself (`Alt+L`) |
-| [pivot-tab.md](guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way) | you slice a table in the Pivot tab |
+| [pivot-tab.md](guides/USER_GUIDE.md#pivot-slice-a-table-your-way) | you slice a table with Pivot (the pivot screen) |
 | [screen-builder.md](guides/RACHANA_REFERENCE.md#1-start-bring-data) | you turn sample JSON files into a shape, the first two steps of the builder |
 
 ### Examples (`guides/examples/`)
