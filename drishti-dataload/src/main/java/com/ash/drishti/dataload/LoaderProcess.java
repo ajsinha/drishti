@@ -102,7 +102,8 @@ public final class LoaderProcess implements LoadRunner {
         t.put("lake", r.lake());
         t.put("kind", r.kind());
         // the table: the route's, else the pack connector's (trade-endur: trade_endur), which picks among several tables of one kind
-        put(t, "table", r.table() != null ? r.table() : r.connector() == null ? null
+        boolean named = r.lake() != null && r.lake().matches("[a-z0-9][a-z0-9_-]*");      // a lake of config/lakes/ (else a folder: the old form)
+        put(t, "table", r.table() != null || !named || r.connector() == null ? r.table()
                 : com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).table());
         t.put("batch-id", batchId(files));
         ObjectNode rj = root.putObject("rejects");
