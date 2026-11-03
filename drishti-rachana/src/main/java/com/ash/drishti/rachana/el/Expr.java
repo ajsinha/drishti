@@ -335,11 +335,45 @@ public interface Expr {
                 values.add(v);
             }
             // a function of a masked value is masked (coalesce only passes it on when it is the first value it has)
-            return masked && !"coalesce".equals(name) && !"nonblank".equals(name) ? Values.mask() : fn.apply(values, c);
+            return masked && !Functions.passesMask(name) ? Values.mask() : fn.apply(values, c);
         }
 
         public void paths(Consumer<String> sink) {
             args.forEach(a -> a.paths(sink));
+        }
+    }
+
+    /** A call of a form ({@link ElForm}): its arguments handed over unevaluated ({@code map}, {@code iferror} …). */
+    record Form(String name, ElForm fn, List<Expr> args) implements Expr {
+        public Object eval(EvalContext c) {
+            return fn.apply(args, c);
+        }
+
+        public void paths(Consumer<String> sink) {
+            args.forEach(a -> a.paths(sink));
+        }
+    }
+
+    /** {@code let(n = expr, ..., result)}: each name bound in turn (a later value may read an earlier name), then the result. */
+    record Let(List<String> names, List<Expr> values, Expr body) implements Expr {
+        public Object eval(EvalContext c) {
+            EvalContext inner = c;
+            for (int i = 0; i < names.size(); i++) {
+                inner = inner.withLocal(names.get(i), values.get(i).eval(inner));
+            }
+            return body.eval(inner);
+        }
+
+        public void paths(Consumer<String> sink) {
+            values.forEach(v -> v.paths(sink));
+            body.paths(sink);
+        }
+    }
+
+    /** A name bound by {@code let}, or {@code @acc} inside {@code reduce}. */
+    record Local(String name) implements Expr {
+        public Object eval(EvalContext c) {
+            return c.local(name);
         }
     }
 }

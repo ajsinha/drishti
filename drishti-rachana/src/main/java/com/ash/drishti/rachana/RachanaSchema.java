@@ -30,7 +30,8 @@ import java.util.TreeSet;
  * The JSON Schema (draft 2020-12) of a Sutra, built from the grammar itself: the panel kinds and the options each
  * takes, which values are Rachana-EL, the formats and tones, the kinds this server serves. Editors use it for
  * completion and checking before a Sutra reaches the server; {@code x-rachana-functions} lists the expression
- * functions for completion inside expressions. Because it is generated, it never disagrees with the parser.
+ * functions for completion inside expressions (an old spelling marked {@code oldSpellingOf}: checked, never offered). Because it is
+ * generated, it never disagrees with the parser.
  */
 public final class RachanaSchema {
 
@@ -103,8 +104,11 @@ public final class RachanaSchema {
         panel.put("x-rachana-use", Map.of("$ref", "#/$defs/use"));    // an item with `use:` is a shared block's use, not a panel
         s.put("$defs", Map.of("panel", panel, "column", column(formats), "use", use()));
         Map<String, Object> fns = new LinkedHashMap<>();
-        Functions.arity().entrySet().stream().sorted(Map.Entry.comparingByKey())
-                .forEach(e -> fns.put(e.getKey(), Map.of("min", e.getValue()[0], "max", e.getValue()[1])));
+        Functions.arity().entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(e -> {
+            String now = Functions.oldSpellings().get(e.getKey());          // an old spelling is checked but never offered
+            fns.put(e.getKey(), now == null ? Map.of("min", e.getValue()[0], "max", e.getValue()[1])
+                    : Map.of("min", e.getValue()[0], "max", e.getValue()[1], "oldSpellingOf", now));
+        });
         s.put("x-rachana-functions", fns);
         return s;
     }

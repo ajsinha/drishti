@@ -15,287 +15,172 @@
  */
 package com.ash.drishti.rachana.el;
 
-import com.ash.drishti.api.DataNode;
-import java.util.Locale;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.function.Function;
 
 /**
- * The closed set of Rachana-EL functions. Adding one is an ADR-003 amendment: functions must stay pure,
- * total (never throw on odd input) and cheap.
+ * The one table of Rachana-EL functions, filled by the families: {@link LogicFunctions}, {@link MathFunctions},
+ * {@link TextFunctions}, {@link DateFunctions} and {@link ListFunctions} (FUNCTION_CATALOGUE.md sections 1, 2, 3 and 6).
+ * Every function is a scalar (one value from values): aggregates belong to the pivot engine (ONE_GRAMMAR.md), except the
+ * list forms Rachana had before ({@code sum}, {@code min}, {@code max} over a list, {@code group}), which keep their names
+ * and results until they move there. Functions are pure and cheap; an empty argument gives an empty result unless the
+ * function says otherwise, a masked one a masked result, and a value of the wrong type (text where a number is needed)
+ * raises {@code DRS-2102} naming the function and the value, which {@code iferror(...)} turns into a fallback.
+ *
+ * <p>Three kinds of entry: an <b>eager</b> function ({@link ElFunction}) gets its arguments evaluated; a <b>form</b>
+ * ({@link ElForm}) gets them unevaluated, to evaluate lazily or once per list element with {@code @} bound
+ * ({@code switch}, {@code iferror}, {@code map}, {@code reduce}, {@code sort}); a <b>syntax</b> entry is built by the
+ * parser itself ({@code if}, {@code ifs}, {@code let}). An old spelling ({@code startsWith}, {@code days} …) is read for
+ * existing Sutras and is the same entry as its one name.
  */
 public final class Functions {
 
-    /** Name to {min args, max args}. */
-    static final Map<String, int[]> ARITY = Map.ofEntries(
-            Map.entry("link", new int[] {1, 3}), Map.entry("size", new int[] {1, 1}), Map.entry("sum", new int[] {1, 2}),
-            Map.entry("fmt", new int[] {2, 2}), Map.entry("coalesce", new int[] {1, 8}), Map.entry("first", new int[] {1, 1}),
-            Map.entry("last", new int[] {1, 1}), Map.entry("abs", new int[] {1, 1}), Map.entry("min", new int[] {1, 8}),
-            Map.entry("max", new int[] {1, 8}), Map.entry("upper", new int[] {1, 1}), Map.entry("lower", new int[] {1, 1}),
-            Map.entry("contains", new int[] {2, 2}), Map.entry("startsWith", new int[] {2, 2}),
-            Map.entry("matches", new int[] {2, 2}), Map.entry("matchesCase", new int[] {2, 2}),
-            Map.entry("within", new int[] {2, 2}), Map.entry("oneOf", new int[] {2, 2}),
-            Map.entry("flatten", new int[] {1, 1}), Map.entry("nonblank", new int[] {1, 8}),
-            Map.entry("group", new int[] {2, 4}), Map.entry("days", new int[] {2, 2}), Map.entry("today", new int[] {0, 0}));
+    /** Name to {min args, max args}, every kind of entry, old spellings included. */
+    static final Map<String, int[]> ARITY;
+    private static final Map<String, ElFunction> FUNCTIONS;
+    private static final Map<String, ElForm> FORMS;
+    private static final Set<String> SYNTAX;
+    private static final Set<String> PASS_MASK;
+    private static final Map<String, Function<List<Expr>, String>> CHECKS;
+    private static final Map<String, String> OLD_SPELLINGS;
 
-    private static final Map<String, ElFunction> FUNCTIONS = Map.ofEntries(
-            Map.entry("link", Functions::link), Map.entry("size", (a, c) -> size(a.get(0))),
-            Map.entry("sum", Functions::sum), Map.entry("fmt", (a, c) -> c.formats().format(Values.text(a.get(1)), a.get(0))),
-            Map.entry("coalesce", (a, c) -> a.stream().filter(v -> !Values.isNull(v)).findFirst().orElse(null)),
-            Map.entry("first", (a, c) -> a.get(0) instanceof DataNode n ? n.get(0) : null),
-            Map.entry("last", (a, c) -> a.get(0) instanceof DataNode n ? n.get(-1) : null),
-            Map.entry("abs", (a, c) -> Values.normalise(Math.abs(Values.number(a.get(0))))),
-            Map.entry("min", (a, c) -> extreme(a, true)), Map.entry("max", (a, c) -> extreme(a, false)),
-            Map.entry("upper", (a, c) -> Values.text(a.get(0)).toUpperCase(Locale.ROOT)),
-            Map.entry("lower", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT)),
-            Map.entry("contains", (a, c) -> contains(a.get(0), Values.text(a.get(1)))),
-            Map.entry("startsWith", (a, c) -> Values.text(a.get(0)).toLowerCase(Locale.ROOT).startsWith(Values.text(a.get(1)).toLowerCase(Locale.ROOT))),
-            Map.entry("matches", (a, c) -> matches(a.get(0), Values.text(a.get(1)), true)),
-            Map.entry("matchesCase", (a, c) -> matches(a.get(0), Values.text(a.get(1)), false)),
-            Map.entry("within", (a, c) -> within(a.get(0), Values.text(a.get(1)))),
-            Map.entry("oneOf", (a, c) -> oneOf(a.get(0), a.get(1))),
-            Map.entry("flatten", (a, c) -> flatten(a.get(0))),
-            Map.entry("nonblank", (a, c) -> a.stream().filter(v -> !Values.isNull(v) && !Values.text(Values.simplify(v)).isBlank()).findFirst().orElse(null)),
-            Map.entry("group", Functions::group), Map.entry("days", (a, c) -> days(a.get(0), a.get(1))),
-            Map.entry("today", (a, c) -> c.today() == null ? null : c.today().toString()));
-
-    /** The most groups {@code group(...)} returns: a chart or table of groups stays readable and the work stays bounded. */
-    static final int MAX_GROUPS = 500;
-
-    /**
-     * {@code group(list, 'key', 'value'?, 'by'?)}: the list's elements grouped by the field {@code key} (a dotted path), one row
-     * {@code {label, value, count}} per distinct key in key order: {@code value} the sum of the field {@code value} over the group
-     * (non-numbers, blanks and number-like text read as numbers; the count when no value field is given), {@code count} its
-     * elements. {@code by} cuts an ISO date key to its {@code month} (2026-10) or {@code year} (2026) first. Elements without a key
-     * are left out; empty for anything but a list. A masked value makes the group's value masked.
-     */
-    private static Object group(java.util.List<Object> a, EvalContext c) {
-        if (!(Values.simplify(a.get(0)) instanceof DataNode.Arr arr)) {
-            return null;
-        }
-        String key = Values.text(a.get(1));
-        String value = a.size() > 2 && !Values.isNull(a.get(2)) && !Values.text(a.get(2)).isBlank() ? Values.text(a.get(2)) : null;
-        String by = a.size() > 3 ? Values.text(a.get(3)) : "";
-        java.util.TreeMap<String, double[]> groups = new java.util.TreeMap<>();
-        java.util.Set<String> masked = new java.util.HashSet<>();
-        for (DataNode e : arr.elements()) {
-            String k = path(e, key).asText();
-            if (k == null || k.isBlank()) {
-                continue;
-            }
-            k = "month".equals(by) && k.length() >= 7 ? k.substring(0, 7) : "year".equals(by) && k.length() >= 4 ? k.substring(0, 4) : k;
-            if (!groups.containsKey(k) && groups.size() >= MAX_GROUPS) {
-                continue;
-            }
-            double[] g = groups.computeIfAbsent(k, x -> new double[2]);
-            g[1]++;
-            if (value == null) {
-                g[0]++;
-                continue;
-            }
-            DataNode v = path(e, value);
-            if (v.isMasked()) {
-                masked.add(k);
-            }
-            double d = v.asDouble();
-            if (Double.isNaN(d) && v.type() == com.ash.drishti.api.NodeType.STRING) {
-                try {
-                    d = Double.parseDouble(v.asText().trim());
-                } catch (NumberFormatException ignored) {
-                    d = Double.NaN;
-                }
-            }
-            if (!Double.isNaN(d)) {
-                g[0] += d;
-            }
-        }
-        java.util.List<DataNode> out = new java.util.ArrayList<>(groups.size());
-        groups.forEach((k, g) -> {
-            java.util.Map<String, Object> row = new java.util.LinkedHashMap<>();
-            row.put("label", k);
-            row.put("value", masked.contains(k) ? null : Values.normalise(g[0]));
-            row.put("count", (long) g[1]);
-            out.add(DataNode.of(row));
-        });
-        return new DataNode.Arr(java.util.List.copyOf(out));
-    }
-
-    private static DataNode path(DataNode e, String dotted) {
-        return e.at(dotted);
-    }
-
-    /**
-     * {@code days(from, to)}: whole calendar days from one ISO date to another (a timestamp counts by its date), negative when
-     * {@code to} is earlier; empty when either is not a date. {@code days(today(), @.PAYMENT_DATE)} is how far off a payment is.
-     */
-    private static Object days(Object from, Object to) {
-        java.time.LocalDate a = date(from);
-        java.time.LocalDate b = date(to);
-        return a == null || b == null ? null : (Object) java.time.temporal.ChronoUnit.DAYS.between(a, b);
-    }
-
-    private static java.time.LocalDate date(Object v) {
-        String t = Values.text(Values.simplify(v)).trim();
-        if (t.length() < 10) {
-            return null;
-        }
-        try {
-            return java.time.LocalDate.parse(t.substring(0, 10));
-        } catch (java.time.format.DateTimeParseException e) {
-            return null;
-        }
-    }
-
-    /**
-     * {@code flatten(list)}: a list of lists made one list ({@code flatten($.legs[*].cashflows)} is every cashflow of every leg, in
-     * order); elements that are not lists are kept as they are; anything but a list is empty. One level only, so it stays cheap.
-     */
-    private static Object flatten(Object v) {
-        if (!(Values.simplify(v) instanceof DataNode.Arr arr)) {
-            return null;
-        }
-        java.util.List<DataNode> out = new java.util.ArrayList<>();
-        for (DataNode e : arr.elements()) {
-            if (e instanceof DataNode.Arr inner) {
-                out.addAll(inner.elements());
-            } else if (!e.isNull()) {
-                out.add(e);
-            }
-        }
-        return new DataNode.Arr(java.util.List.copyOf(out));
-    }
-
-    private static final java.util.concurrent.ConcurrentHashMap<String, com.ash.drishti.common.SafeRegex> PATTERNS = new java.util.concurrent.ConcurrentHashMap<>();
-
-    /**
-     * Regular-expression search over text, by the linear-time engine ({@link com.ash.drishti.common.SafeRegex}): a pattern it
-     * refuses raises DRS-4010, one that runs past its time budget DRS-4011. Matches anywhere in the value; null never matches.
-     */
-    private static boolean matches(Object value, String pattern, boolean ignoreCase) {
-        if (PATTERNS.size() > 512) {
-            PATTERNS.clear();
-        }
-        com.ash.drishti.common.SafeRegex re = PATTERNS.computeIfAbsent((ignoreCase ? "i:" : "c:") + pattern,
-                k -> com.ash.drishti.common.SafeRegex.compile(pattern, ignoreCase));
-        return !Values.isNull(value) && re.find(Values.text(value));
+    static {
+        Table t = new Table();
+        LogicFunctions.register(t);
+        MathFunctions.register(t);
+        TextFunctions.register(t);
+        DateFunctions.register(t);
+        ListFunctions.register(t);
+        ARITY = Collections.unmodifiableMap(t.arity);
+        FUNCTIONS = Map.copyOf(t.functions);
+        FORMS = Map.copyOf(t.forms);
+        SYNTAX = Set.copyOf(t.syntax);
+        PASS_MASK = Set.copyOf(t.passMask);
+        CHECKS = Map.copyOf(t.checks);
+        OLD_SPELLINGS = Collections.unmodifiableMap(new TreeMap<>(t.old));
     }
 
     private Functions() {}
 
-    /**
-     * {@code within(value, range)}: the value lies in a {@code from..to} range (a date-range or number-range control; either end
-     * may be empty, and an empty range holds everything). Numbers compare as numbers, anything else as text, so ISO dates order.
-     */
-    private static boolean within(Object value, String range) {
-        int cut = range.indexOf("..");
-        String from = cut < 0 ? range.trim() : range.substring(0, cut).trim();
-        String to = cut < 0 ? "" : range.substring(cut + 2).trim();
-        if (from.isEmpty() && to.isEmpty()) {
-            return true;
-        }
-        Object v = Values.simplify(value);
-        if (v == null) {
-            return false;
-        }
-        double x = Values.number(v);
-        boolean numeric = !Double.isNaN(x) && (from.isEmpty() || !Double.isNaN(Values.number(from)))
-                && (to.isEmpty() || !Double.isNaN(Values.number(to)));
-        if (numeric) {
-            return (from.isEmpty() || x >= Values.number(from)) && (to.isEmpty() || x <= Values.number(to));
-        }
-        String t = Values.text(v);
-        String day = t.length() > 10 && t.charAt(10) == 'T' ? t.substring(0, 10) : t;     // a timestamp is compared by its date
-        return (from.isEmpty() || day.compareTo(from) >= 0) && (to.isEmpty() || day.compareTo(to) <= 0);
-    }
-
-    /** {@code oneOf(value, list)}: the value is one of a multi-select control's choices; nothing chosen holds everything. */
-    private static boolean oneOf(Object value, Object choices) {
-        Object list = Values.simplify(choices);
-        if (list instanceof DataNode n && n.type() == com.ash.drishti.api.NodeType.ARRAY) {
-            if (n.size() == 0) {
-                return true;
-            }
-            for (int i = 0; i < n.size(); i++) {
-                if (Values.equal(value, n.get(i))) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return list == null || Values.text(list).isEmpty() || Values.equal(value, list);
-    }
-
-    /** Case-insensitive: text contains the part, or a list has an element that does. */
-    private static boolean contains(Object where, String part) {
-        String p = part.toLowerCase(Locale.ROOT);
-        if (where instanceof DataNode n && n.type() == com.ash.drishti.api.NodeType.ARRAY) {
-            for (int i = 0; i < n.size(); i++) {
-                if (contains(n.get(i), part)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-        return !Values.isNull(where) && Values.text(where).toLowerCase(Locale.ROOT).contains(p);
-    }
-
-    /** Every function of Rachana-EL with its argument count: {name: [min, max]}. */
-    public static java.util.Map<String, int[]> arity() {
+    /** Every function of Rachana-EL with its argument count: {name: [min, max]}, old spellings included. */
+    public static Map<String, int[]> arity() {
         return ARITY;
+    }
+
+    /**
+     * The spellings read for compatibility with existing Sutras, each with the one name to write instead
+     * ({@code startsWith} → {@code starts_with}); never offered for new work.
+     */
+    public static Map<String, String> oldSpellings() {
+        return OLD_SPELLINGS;
     }
 
     static ElFunction get(String name) {
         return FUNCTIONS.get(name);
     }
 
-    private static Object link(java.util.List<Object> a, EvalContext c) {
-        String id = Values.text(a.get(0));
-        if (id.isEmpty()) {
-            return null;
-        }
-        String kind = a.size() > 1 && !Values.isNull(a.get(1)) ? Values.text(a.get(1)) : null;
-        String label = a.size() > 2 && !Values.isNull(a.get(2)) ? Values.text(a.get(2)) : null;
-        return new Link(id, kind, label);
+    static ElForm form(String name) {
+        return FORMS.get(name);
     }
 
-    private static Object size(Object v) {
-        Object s = Values.simplify(v);
-        if (s instanceof DataNode n) {
-            return (long) n.size();
-        }
-        return s instanceof String str ? (long) str.length() : 0L;
+    /** True for a name the parser builds itself ({@code if}, {@code ifs}, {@code let}). */
+    static boolean syntax(String name) {
+        return SYNTAX.contains(name);
     }
 
-    private static Object sum(java.util.List<Object> a, EvalContext c) {
-        if (!(a.get(0) instanceof DataNode.Arr arr)) {
-            return 0L;
-        }
-        String field = a.size() > 1 ? Values.text(a.get(1)) : null;
-        double total = 0;
-        for (DataNode e : arr.elements()) {
-            DataNode x = field == null ? e : e.get(field);
-            if (x.isMasked()) {
-                return Values.mask();                 // a masked value is never added up: the sum is masked
-            }
-            double v = x.asDouble();
-            if (!Double.isNaN(v)) {
-                total += v;
-            }
-        }
-        return Values.normalise(total);
+    /** True for a function given a masked argument as it is ({@code coalesce}, {@code nonblank}), not masked for it. */
+    static boolean passesMask(String name) {
+        return PASS_MASK.contains(name);
     }
 
-    private static Object extreme(java.util.List<Object> a, boolean min) {
-        Iterable<?> items = a.size() == 1 && a.get(0) instanceof DataNode.Arr arr ? arr.elements() : a;
-        Double best = null;
-        for (Object o : items) {
-            if (Values.masked(o)) {
-                return Values.mask();
-            }
-            double v = Values.number(o);
-            if (!Double.isNaN(v) && (best == null || (min ? v < best : v > best))) {
-                best = v;
+    /** A problem with the written (literal) arguments of a call, found when it compiles; null when there is none. */
+    static String check(String name, List<Expr> args) {
+        Function<List<Expr>, String> c = CHECKS.get(name);
+        return c == null ? null : c.apply(args);
+    }
+
+    /** The value of a literal argument, or {@link #NOT_LITERAL} for anything computed. */
+    static Object literal(List<Expr> args, int i) {
+        return i < args.size() && args.get(i) instanceof Expr.Lit lit ? lit.value() : NOT_LITERAL;
+    }
+
+    /** What {@link #literal} gives for an argument that is not written as a literal. */
+    static final Object NOT_LITERAL = new Object();
+
+    /** What the families register into; each name once. */
+    static final class Table {
+        private final Map<String, int[]> arity = new TreeMap<>();
+        private final Map<String, ElFunction> functions = new HashMap<>();
+        private final Map<String, ElForm> forms = new HashMap<>();
+        private final Set<String> syntax = new HashSet<>();
+        private final Set<String> passMask = new HashSet<>();
+        private final Map<String, Function<List<Expr>, String>> checks = new HashMap<>();
+        private final Map<String, String> old = new HashMap<>();
+
+        private void name(String name, int min, int max) {
+            if (arity.putIfAbsent(name, new int[] {min, max}) != null) {
+                throw new IllegalStateException("Rachana-EL function " + name + " is registered twice");
             }
         }
-        return best == null ? null : Values.normalise(best);
+
+        /** An eager function: its arguments evaluated, a masked one making the result masked. */
+        Table fn(String name, int min, int max, ElFunction f) {
+            name(name, min, max);
+            functions.put(name, f);
+            return this;
+        }
+
+        /** A form: its arguments unevaluated. */
+        Table form(String name, int min, int max, ElForm f) {
+            name(name, min, max);
+            forms.put(name, f);
+            return this;
+        }
+
+        /** A name the parser builds itself. */
+        Table syntax(String name, int min, int max) {
+            name(name, min, max);
+            syntax.add(name);
+            return this;
+        }
+
+        /** {@code name} sees a masked argument as it is (it decides itself what a mask means). */
+        Table passesMask(String name) {
+            passMask.add(name);
+            return this;
+        }
+
+        /** A check of the literal arguments, run when an expression compiles. */
+        Table check(String name, Function<List<Expr>, String> c) {
+            checks.put(name, c);
+            return this;
+        }
+
+        /** {@code oldName} read for compatibility: the same entry as {@code name}, with its own argument count. */
+        Table old(String oldName, String name, int min, int max) {
+            name(oldName, min, max);
+            if (functions.containsKey(name)) {
+                functions.put(oldName, functions.get(name));
+            }
+            if (checks.containsKey(name)) {
+                checks.put(oldName, checks.get(name));
+            }
+            old.put(oldName, name);
+            return this;
+        }
+
+        /** {@code oldName} read for compatibility with the results it always gave ({@code f}, sharing the one name's core). */
+        Table old(String oldName, String name, int min, int max, ElFunction f) {
+            name(oldName, min, max);
+            functions.put(oldName, f);
+            old.put(oldName, name);
+            return this;
+        }
     }
 }
