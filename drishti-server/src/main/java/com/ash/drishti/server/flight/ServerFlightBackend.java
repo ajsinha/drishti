@@ -90,7 +90,7 @@ public final class ServerFlightBackend implements FlightBackend {
             }
         }
         if (!ApiTokenStore.looksLikeToken(token)) {
-            throw new FlightRefusal(ErrorCode.FLIGHT_UNAUTHENTICATED, "Flight takes a personal API token (Profile → API tokens) or an embed token, "
+            throw new FlightRefusal(ErrorCode.FLIGHT_UNAUTHENTICATED, "Flight takes a personal API token (My account → API tokens) or an embed token, "
                     + "never a browser session");
         }
         ApiTokenStore.Verified v = tokens.verify(token)
@@ -100,7 +100,7 @@ public final class ServerFlightBackend implements FlightBackend {
         Set<String> scopes = Set.copyOf(v.scopes());
         if (scopes.stream().noneMatch(s -> s.equals(SCOPE) || s.startsWith(SCOPE + ":"))) {
             throw new FlightRefusal(ErrorCode.FLIGHT_SCOPE, "this token lacks the scope data:read (or data:read:<domain>): make a token with it "
-                    + "on Profile → API tokens");
+                    + "on My account → API tokens");
         }
         if (onBehalfOf != null && !onBehalfOf.isBlank()) {
             if (!u.roles().contains(Entitlements.SERVICE)) {

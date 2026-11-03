@@ -384,7 +384,7 @@ engines:
     tiles: []
     lenses: []
     bi: []
-    cli: [flight]
+    cli: []
     playgrounds: []
     connectors: []
     kinds: []
