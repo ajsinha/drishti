@@ -80,8 +80,9 @@ Every `interval` (default 10 minutes, `drishti.dataload.interval`; also **Load n
    `dataload/inbox.lock` (created atomically, holding the node and a heartbeat; a lock whose heartbeat is older than three intervals is
    taken over and the takeover logged), so two servers on one shared folder never both run.
 2. **Busy check.** When busy protection says memory or CPU is short, the cycle is skipped and says so; the next cycle runs.
-3. **Take the whole batch, greedily** (product owner, 2026-11-03: "a greedy way to handle the batch"): every file that is ready and
-   stable at that moment is claimed at once, in one step, into the run's folder, oldest first; files that become ready while the run
+3. **Take the whole batch, greedily** (product owner, 2026-11-03: "a greedy way to handle the batch"): every file that is ready (it has
+   its own `.ready`, or `ready.all` is in the inbox) and stable at that moment is claimed at once; a file without its `.ready` when no
+   `ready.all` is there is never taken, in one step, into the run's folder, oldest first; files that become ready while the run
    loads wait for the next cycle. `max-files` and `max-gb` are off by default (no limit); an administrator may set them to bound one run,
    and then the rest stays in the inbox for the next cycle.
 4. **Claim**: each file and its `.ready` are renamed into `inprocess/<run>/`; the ledger line `claimed` is written first.
