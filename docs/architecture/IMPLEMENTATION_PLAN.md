@@ -783,15 +783,15 @@ every 10 minutes by the existing Java loader, moved to the outbox with their mar
 signal; crash-safe, duplicate-safe, owner node only, a module `drishti-dataload` run as a server thread with the load in a child
 process. The design and its questions: [DATALOAD_INBOX.md](DATALOAD_INBOX.md). Size M.
 
-## Virtual tables: one central table layer (under discussion; release to be decided)
+## Virtual tables: one central table layer (in 2.9.11.e; design under discussion)
 
 *Product owner, 2026-11-03.* Named, typed tables defined in Rachana over any kind any connector serves (not only the lake): a grain, a
 filter, columns as paths or scalar expressions; models relate them and hold measures. BI's datasets and models move under this layer (BI
 keeps reports, visuals and boards), BI's cached and rollup layers become its materialisation, and every consumer reads it: BI, the pivot,
 Sutras, **Arrow Flight (a ticket naming a virtual table or model)**, Flight SQL, the PostgreSQL protocol, the Data view, alerts, the AI.
-Design for discussion: [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md). Size L, two drills.
+BI is **moved onto** virtual tables, never left beside them (product owner, 2026-11-03). Built in **2.9.11.e together with the DEL fold**, so each BI dataset and model is migrated once (one tool, one parity proof, one drill pair). Design for discussion: [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md). Size L.
 
-## The PostgreSQL wire protocol (planned, after 2.9.11.d; designed first)
+## The PostgreSQL wire protocol (on hold: product owner, 2026-11-03)
 
 *Product owner, 2026-11-03.* Drishti answers on a port of its own as if it were PostgreSQL, so `psql`, psycopg, DBeaver, Tableau, Power
 BI, Grafana and anything with a Postgres driver can connect: read-only SQL over BI models and virtual tables, compiled to the same plans
@@ -806,12 +806,19 @@ layout, retention, maintenance, table properties, in-memory caps). Every writer 
 lakes) and every reader (the Delta and Iceberg connectors, BI, the pivot engine, Arrow Flight) refers to it; connectors keep only reading
 concerns. The design and its questions: [LAKE_CONFIG.md](LAKE_CONFIG.md). Size M.
 
-## 2.9.11.e: DEL folded into Rachana (planned)
+## 2.9.11.e: BI's foundation: DEL into Rachana, and virtual tables (planned)
 
 *Product owner, 2026-11-03: one grammar and no functionality coded twice.* BI's measures, derived columns, filters and row rules written in
 Rachana expressions, DEL's filter-context rules carried over as Rachana functions, every model, report and row rule migrated by a tool
 and proved equal (figures and the rows each person sees) to the current code, then DEL's parser, checker and lowering deleted
 ([ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). With it, the function catalogue's tier 1 ([section 7.1](ONE_GRAMMAR.md#71-tier-1-the-everyday-analysts-set-excels-and-sas-proc-meanstabulaterank-core)): conditional aggregates, descriptive and two-variable statistics, shares of totals, ranks, windows and time on the engine; math, logic, text, lists and calendar dates in Rachana; each with its Excel equivalent. Designed in detail first. Size L.
+
+*Product owner, 2026-11-03:* BI ends with only its own job (reports, visuals, the designer, boards, publishing, subscriptions): its
+computing moved to the pivot engine in 2.9.11.b, and here its expression language moves to Rachana and its datasets, models, cached and
+rollup layers move to **virtual tables** ([VIRTUAL_TABLES.md](VIRTUAL_TABLES.md)), in one release: one migration tool rewrites each
+dataset as a virtual table and each measure from DEL to Rachana in one pass, and one parity proof (every BI suite and shipped report the
+same figures, every person the same rows) covers both. Arrow Flight gains its `table` and `model` request forms; the client examples gain
+virtual-table notebooks. Two large items, two drills. Nothing is coded until the design discussion is finished.
 
 ## 2.9.12: counterparty engines (proposed)
 
