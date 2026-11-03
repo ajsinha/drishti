@@ -62,6 +62,8 @@ public final class KindSources implements TabularSource.Resolver {
     private volatile DuckDbExecutor exec;
     /** Per source and data version: the document fields a sample of its documents shows (PIVOT_ENGINE.md section 6.7). */
     private final Map<String, Map<String, DocPath>> shapes = new ConcurrentHashMap<>();
+    /** Per source: how the last document view read its fields (the provenance's route words). */
+    private final Map<String, String> lastRoute = new ConcurrentHashMap<>();
     /** Per source: the paths people typed (fields beyond the sampled list), and how often each was used, for the administrator. */
     private final Map<String, Map<String, Typed>> typed = new ConcurrentHashMap<>();
     private static final com.fasterxml.jackson.databind.ObjectMapper JSON = new com.fasterxml.jackson.databind.ObjectMapper();
@@ -75,6 +77,13 @@ public final class KindSources implements TabularSource.Resolver {
         Typed(DocPath path) {
             this.path = path;
         }
+    }
+
+    private volatile DatasetLayers layers;
+
+    /** The BI datasets whose cached layers hold a document list's fields (the dataset route). */
+    void layers(DatasetLayers l) {
+        this.layers = l;
     }
 
     /** How many documents the field list samples. */
@@ -350,6 +359,9 @@ public final class KindSources implements TabularSource.Resolver {
                     : "read through the " + d.format() + " connector (" + d.connector() + ") for you, staged in the pivot executor's DuckDB "
                     + "in memory" + (memoryOnly ? "; memory-only data, never written to a disk" : ""));
             m.put("pack", d.pack());
+            if (lastRoute.containsKey(d.kind())) {
+                m.put("documents", "document fields read through " + lastRoute.get(d.kind()));
+            }
             m.put("masks", masked == 0 ? "none" : masked + " column(s) masked for you: not read, not usable");
             m.put("rowRules", "the Data view's: you see the rows of " + d.kind() + " your role may open");
             Map<String, Object> dv = defaultView(d.kind(), date());
@@ -394,7 +406,13 @@ public final class KindSources implements TabularSource.Resolver {
             List<String> names = new ArrayList<>(fields.stream().map(PivotProvider.Field::name).toList());
             plan.dims().values().stream().map(com.ash.drishti.bicompute.core.Dim::field).filter(f -> f.endsWith(DocView.ALL) && !names.contains(f))
                     .forEach(names::add);
-            return new Relation(docView().relation(DuckDbExecutor.quote(docTable), plan, names, types), List.of(), null, List.of());
+            DatasetLayers dl = layers;
+            // the dataset route only for a reader without masks: the cached layer holds the values as stored
+            java.util.function.Function<String, DocView.Layer> fromLayers = dl == null || entitlements.masks(p) ? g -> null : g -> dl.layer(d.kind(), g, day);
+            DocView v = docView();
+            String sql = v.relation(DuckDbExecutor.quote(docTable), plan, names, types, fromLayers);
+            lastRoute.put(d.kind(), v.route);
+            return new Relation(sql, List.of(), null, List.of());
         }
 
         /** The promoted columns, the entity's id and its whole document (JSON, masks applied), staged once per version and mask signature. */

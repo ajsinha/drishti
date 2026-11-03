@@ -268,12 +268,57 @@ final class DocView {
     }
 
     /**
-     * The relation of one plan: {@code base} (a table with the promoted columns, {@code _id} and {@code _doc}) unnested down to the grain,
-     * every field as a column of its id, the parents' keys {@code _p0} (the entity) and {@code _p1}… (each list element).
+     * A BI dataset table over one list of the kind ({@code each: LEGS}), built into the BI {@code cached} layer (Parquet, one row per
+     * element): the dataset route of a list's fields (PIVOT_ENGINE.md section 6.7).
+     *
+     * @param from the layer's files as a FROM item ({@code read_parquet([...])})
+     * @param id the entity id column; @param index the element's position in its list
+     * @param columns field id ({@code LEGS.NOTIONAL}) to the layer's column
+     * @param name the dataset and table, for the route's words
      */
+    record Layer(String from, String id, String index, Map<String, String> columns, String name) {}
+
+    /** How the last relation read its fields (the provenance's route words; a test reads it). */
+    volatile String route = "";
+
+    /** The plan's fields of one grain (grouped, filtered on, or a function's input). */
+    private List<String> fieldsAt(AggregationPlan plan, String grain) {
+        Set<String> ids = new LinkedHashSet<>();
+        plan.dims().values().forEach(d -> ids.add(d.field()));
+        plan.functions().forEach(f -> ids.addAll(f.inputs()));
+        return ids.stream().filter(i -> paths.containsKey(i) && paths.get(i).grain().equals(grain)).toList();
+    }
+
     String relation(String base, AggregationPlan plan, List<String> fields, Map<String, String> types) {
+        return relation(base, plan, fields, types, g -> null);
+    }
+
+    /**
+     * The relation of one plan: {@code base} (a table with the promoted columns, {@code _id} and {@code _doc}) unnested down to the grain,
+     * every field as a column of its id, the parents' keys {@code _p0} (the entity) and {@code _p1}… (each list element). A one-list grain
+     * whose every used field a BI dataset table holds ({@code layers}) reads that table's cached layer instead of unnesting the documents.
+     */
+    String relation(String base, AggregationPlan plan, List<String> fields, Map<String, String> types, Function<String, Layer> layers) {
         String grain = grain(plan);
         List<DocPath.Level> levels = levelsOf(grain);
+        Map<String, String> fromLayer = new LinkedHashMap<>();
+        if (levels.size() == 1) {
+            Layer l = layers.apply(grain);
+            List<String> need = fieldsAt(plan, grain);
+            boolean deeper = plan.dims().values().stream().map(Dim::field).anyMatch(f -> grain(f).startsWith(grain + "."));
+            if (l != null && !deeper && !need.isEmpty() && need.stream().allMatch(f -> l.columns().containsKey(f)
+                    && paths.get(f).grainLevels().get(0).keep() == null)) {
+                List<String> picks = new ArrayList<>();
+                l.columns().forEach((f, c) -> {
+                    fromLayer.put(f, "_d_" + fromLayer.size());
+                    picks.add("l." + DuckDbExecutor.quote(c) + " AS \"" + fromLayer.get(f) + "\"");
+                });
+                String from = "(SELECT t.*, l." + DuckDbExecutor.quote(l.index()) + " AS \"_i1\", " + String.join(", ", picks) + " FROM " + base
+                        + " t JOIN " + l.from() + " l ON CAST(l." + DuckDbExecutor.quote(l.id()) + " AS VARCHAR) = CAST(t.\"_id\" AS VARCHAR))";
+                route = "dataset " + l.name() + " (the BI cached layer) for " + String.join(", ", need) + "; the documents for the rest";
+                return select(from, 1, plan, fields, types, grain, fromLayer);
+            }
+        }
         String from = base;
         for (int i = 0; i < levels.size(); i++) {
             String parent = i == 0 ? "CAST(\"_doc\" AS JSON)" : "\"_e" + i + "\"";
@@ -282,9 +327,16 @@ final class DocView {
             from = "(SELECT s.*, s.\"_l" + n + "\"[s.\"_i" + n + "\" + 1] AS \"_e" + n + "\" FROM (SELECT *, unnest(range(len(\"_l" + n + "\"))) AS \"_i" + n
                     + "\" FROM (SELECT *, " + list + " AS \"_l" + n + "\" FROM " + from + ")) s)";
         }
+        route = levels.isEmpty() ? "the documents' paths (DuckDB JSON over each document) and the promoted columns"
+                : "the documents unnested to one row per " + words(grain) + " (DuckDB JSON over each document)";
+        return select(from, levels.size(), plan, fields, types, grain, fromLayer);
+    }
+
+    private String select(String from, int depth, AggregationPlan plan, List<String> fields, Map<String, String> types, String grain,
+            Map<String, String> fromLayer) {
         List<String> cols = new ArrayList<>();
         cols.add("CAST(\"_id\" AS VARCHAR) AS \"_p0\"");
-        for (int i = 1; i <= levels.size(); i++) {
+        for (int i = 1; i <= depth; i++) {
             String prev = "CAST(\"_id\" AS VARCHAR)";
             for (int j = 1; j <= i; j++) {
                 prev = prev + " || '/' || CAST(\"_i" + j + "\" AS VARCHAR)";
@@ -296,7 +348,12 @@ final class DocView {
                 cols.add(DuckDbExecutor.quote(f));
                 continue;
             }
-            cols.add(column(f, grain, plan, "number".equals(types.get(f))) + " AS " + DuckDbExecutor.quote(f));
+            boolean number = "number".equals(types.get(f));
+            String layered = fromLayer.get(f);
+            boolean unread = !fromLayer.isEmpty() && layered == null && !grain(f).isEmpty() && (grain(f) + ".").startsWith(grain + ".");
+            String expr = unread ? "NULL" : layered == null ? column(f, grain, plan, number)
+                    : number ? "TRY_CAST(\"" + layered + "\" AS DOUBLE)" : "CAST(\"" + layered + "\" AS VARCHAR)";
+            cols.add(expr + " AS " + DuckDbExecutor.quote(f));
         }
         return "(SELECT " + String.join(", ", cols) + " FROM " + from + ")";
     }

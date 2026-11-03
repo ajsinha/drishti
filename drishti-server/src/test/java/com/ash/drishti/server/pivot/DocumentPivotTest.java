@@ -55,6 +55,10 @@ class DocumentPivotTest {
     static final String[] CCY = {"USD", "EUR", "JPY", "GBP"};
     static DuckDbExecutor exec;
     static List<Map<String, Object>> trades = new ArrayList<>();
+    @org.junit.jupiter.api.io.TempDir
+    static java.nio.file.Path tmp;
+    /** The legs as a BI dataset table's cached layer (one Parquet row per leg: id, index and the leg's columns). */
+    static String legsLayer;
 
     @BeforeAll
     static void documents() throws Exception {
@@ -99,6 +103,23 @@ class DocumentPivotTest {
                     }
                     return trades.size();
                 });
+        exec.stage("tlegs", List.of(new DuckDbExecutor.Column("id", "text"), new DuckDbExecutor.Column("index", "number"),
+                new DuckDbExecutor.Column("LEG_TYPE", "text"), new DuckDbExecutor.Column("CURRENCY", "text"), new DuckDbExecutor.Column("NOTIONAL", "number")),
+                sink -> {
+                    long n = 0;
+                    for (Map<String, Object> t : trades) {
+                        List<?> legs = (List<?>) t.get("LEGS");
+                        for (int i = 0; i < legs.size(); i++) {
+                            Map<?, ?> l = (Map<?, ?>) legs.get(i);
+                            sink.row(new Object[] {t.get("TRADE_ID"), i, l.get("LEG_TYPE"), l.get("CURRENCY"), l.get("NOTIONAL")});
+                            n++;
+                        }
+                    }
+                    return n;
+                });
+        java.nio.file.Path f = tmp.resolve("legs.parquet");
+        exec.execute("COPY \"tlegs\" TO '" + f + "' (FORMAT PARQUET)");
+        legsLayer = "read_parquet(['" + f + "'])";
     }
 
     @AfterAll
@@ -108,6 +129,11 @@ class DocumentPivotTest {
 
     /** A document source over the staged trades; {@code promoted}: the fields read as columns (the rest from the documents). */
     static PivotCore core(Set<String> promoted) {
+        return core(promoted, false, new String[1]);
+    }
+
+    /** As above; {@code dataset}: the legs' LEG_TYPE, CURRENCY and NOTIONAL also held by a BI dataset table; {@code route}: the last route. */
+    static PivotCore core(Set<String> promoted, boolean dataset, String[] route) {
         @SuppressWarnings("unchecked")
         List<Map<?, ?>> sample = (List<Map<?, ?>>) (List<?>) trades;
         Map<String, DocPath> docs = new LinkedHashMap<>();
@@ -187,7 +213,12 @@ class DocumentPivotTest {
                         fields.forEach(f -> t.put(f.name(), f.type()));
                         List<String> names = new ArrayList<>(fields.stream().map(PivotProvider.Field::name).toList());
                         plan.dims().values().stream().map(x -> x.field()).filter(f -> f.endsWith(DocView.ALL) && !names.contains(f)).forEach(names::add);
-                        return new Relation(view.relation("\"tdocs\"", plan, names, t), List.of(), null, List.of());
+                        java.util.function.Function<String, DocView.Layer> layers = g -> dataset && "LEGS".equals(g) ? new DocView.Layer(legsLayer, "id",
+                                "index", Map.of("LEGS.LEG_TYPE", "LEG_TYPE", "LEGS.CURRENCY", "CURRENCY", "LEGS.NOTIONAL", "NOTIONAL"), "trading-cashflows-legs/legs")
+                                : null;
+                        String sql = view.relation("\"tdocs\"", plan, names, t, layers);
+                        route[0] = view.route;
+                        return new Relation(sql, List.of(), null, List.of());
                     }
 
                     @Override
@@ -293,6 +324,24 @@ class DocumentPivotTest {
                 .mapToDouble(l -> (Double) l.get("NOTIONAL")).sum();
         assertThat(value(fixed, "*|*", "Fixed")).isCloseTo(f, offset(1e-6));
         assertThat(fixed.keySet()).anyMatch(k -> k.matches("path_[0-9a-f]+=3\\|\\*"));
+    }
+
+    @Test
+    void aListsFieldsReadFromADatasetsCachedLayerGiveTheFiguresOfTheDocuments() {
+        Map<String, Object> view = Map.of("source", "trade", "rows", List.of("$.DESK", "$.LEGS[*].LEG_TYPE"), "expandTo", Map.of("rows", 2),
+                "values", List.of(Map.of("measure", "sum($.LEGS[*].NOTIONAL)", "as", "N"), Map.of("measure", "count()", "as", "Legs"),
+                        Map.of("measure", "sum($.QUANTITY)", "as", "Q")));
+        String[] route = new String[1];
+        Map<String, Map<String, Object>> layered = cells(core(Set.of("TRADE_ID", "DESK", "PRODUCT_TYPE"), true, route), view);
+        assertThat(route[0]).startsWith("dataset trading-cashflows-legs/legs");
+        Map<String, Map<String, Object>> adHoc = cells(core(Set.of("TRADE_ID", "DESK", "PRODUCT_TYPE"), false, route), view);
+        assertThat(route[0]).startsWith("the documents unnested");
+        assertThat(layered.keySet()).isEqualTo(adHoc.keySet());
+        for (String k : adHoc.keySet()) {
+            for (String m : List.of("N", "Legs", "Q")) {
+                assertThat(value(layered, k, m)).as(k + " " + m).isCloseTo(value(adHoc, k, m), offset(1e-6));
+            }
+        }
     }
 
     @Test
