@@ -116,14 +116,62 @@ public final class BiAggregate {
         if (fns.isEmpty() || wanted.isEmpty()) {
             return new Totals(List.of(), skipped);
         }
-        Set<String> fields = new LinkedHashSet<>();
-        wanted.forEach(fields::addAll);
-        fns.forEach(t -> fields.addAll(t.fields()));
+        // one statement per fact: a measure aggregates its own fact's rows (a model's measures of two facts never share one row set)
+        Map<String, List<BiMeasures.Translated>> byFact = new LinkedHashMap<>();
+        for (BiMeasures.Translated t : fns) {
+            byFact.computeIfAbsent(t.tables().isEmpty() ? "" : t.tables().iterator().next(), k -> new ArrayList<>()).add(t);
+        }
+        if (byFact.size() > 1 && byFact.containsKey("")) {
+            List<BiMeasures.Translated> constants = byFact.remove("");
+            byFact.values().iterator().next().addAll(constants);
+        }
         List<QueryRequest.Filter> filters = base.filters().stream().filter(f -> !ds.measures().containsKey(f.field())).toList();
-        QueryRequest detail = new QueryRequest(new ArrayList<>(fields), List.of(), filters, base.from(), base.to(), List.of(), null, base.layer(), true);
-        Statement st = new Statement(wanted, fns, maxGroups);
-        QueryService.Result r = QueryService.aggregating(st, () -> run.apply(detail));
-        return new Totals(st.read(r), skipped);
+        List<List<Level>> parts = new ArrayList<>();
+        for (List<BiMeasures.Translated> group : byFact.values()) {
+            Set<String> fields = new LinkedHashSet<>();
+            wanted.forEach(fields::addAll);
+            group.forEach(t -> fields.addAll(t.fields()));
+            QueryRequest detail = new QueryRequest(new ArrayList<>(fields), List.of(), filters, base.from(), base.to(), List.of(), null, base.layer(),
+                    true);
+            Statement st = new Statement(wanted, group, maxGroups);
+            QueryService.Result r = QueryService.aggregating(st, () -> run.apply(detail));
+            parts.add(st.read(r));
+        }
+        return new Totals(join(parts, fns.stream().map(BiMeasures.Translated::measure).toList()), skipped);
+    }
+
+    /** The levels of each fact's statement side by side: per level, per group, the measures in the order asked (a group a fact lacks: empty). */
+    static List<Level> join(List<List<Level>> parts, List<String> order) {
+        if (parts.size() == 1) {
+            return parts.get(0);
+        }
+        Map<List<String>, Map<List<Object>, Map<String, Object>>> rows = new LinkedHashMap<>();
+        Map<List<String>, Set<String>> masked = new LinkedHashMap<>();
+        for (List<Level> part : parts) {
+            for (Level l : part) {
+                Map<List<Object>, Map<String, Object>> byKey = rows.computeIfAbsent(l.by(), k -> new LinkedHashMap<>());
+                masked.computeIfAbsent(l.by(), k -> new LinkedHashSet<>()).addAll(l.masked());
+                for (List<Object> r : l.rows()) {
+                    List<Object> key = r.subList(0, l.by().size());
+                    Map<String, Object> vals = byKey.computeIfAbsent(new ArrayList<>(key), k -> new LinkedHashMap<>());
+                    for (int i = 0; i < l.measures().size(); i++) {
+                        vals.put(l.measures().get(i), r.get(l.by().size() + i));
+                    }
+                }
+            }
+        }
+        List<Level> out = new ArrayList<>();
+        rows.forEach((by, byKey) -> {
+            List<List<Object>> rs = new ArrayList<>();
+            byKey.forEach((key, vals) -> {
+                List<Object> row = new ArrayList<>(key);
+                order.forEach(m -> row.add(vals.get(m)));
+                rs.add(row);
+            });
+            rs.sort(Comparator.comparing((List<Object> x) -> Statement.key(x, by.size())));
+            out.add(new Level(by, order, List.copyOf(masked.get(by)), rs));
+        });
+        return out;
     }
 
     /** The engine's statement over the detail query, and the reading of its answer. */
@@ -180,7 +228,9 @@ public final class BiAggregate {
             this.calls = fc;
             AggregationPlan plan = new AggregationPlan("bi", null, null, Map.of(), dimMap, fc, cs.isEmpty() ? List.of(CellSet.of(List.of(), Map.of()))
                     : cs, null, maxGroups, null);
-            TabularSource.Relation rel = new TabularSource.Relation("(" + detail.sql() + ")", detail.params(), null, List.of());
+            // the rows' order and the compiler's row cap mean nothing under a GROUP BY: dropped, so the engine never sorts the model's rows
+            String rows = detail.sql().replaceFirst("(?s) ORDER BY [^?']*? LIMIT \\d+$", "").replaceFirst(" LIMIT " + Integer.MAX_VALUE + "$", "");
+            TabularSource.Relation rel = new TabularSource.Relation("(" + rows + ")", detail.params(), null, List.of());
             List<GroupingSetsCompiler.Compiled> stmts = GroupingSetsCompiler.compile(plan, rel, types);
             GroupingSetsCompiler.Compiled c = stmts.get(0);     // the sets share one shape (no restriction): one statement
             this.dims = c.dims();
@@ -256,7 +306,7 @@ public final class BiAggregate {
             return out;
         }
 
-        private static String key(List<Object> row, int width) {
+        static String key(List<Object> row, int width) {
             StringBuilder b = new StringBuilder();
             for (int i = 0; i < width; i++) {
                 b.append(row.get(i) == null ? "￿" : String.valueOf(row.get(i))).append('\u0001');
