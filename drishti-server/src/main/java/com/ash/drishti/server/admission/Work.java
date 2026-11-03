@@ -30,7 +30,9 @@ public enum Work {
     /** A bulk load of a pack's data. */
     BULK_LOAD(ErrorCode.BUSY_BULK_LOAD, "Bulk load", true),
     /** A large pivot view: more cells than {@code drishti.pivot.busy-cells} (PIVOT_GUIDE.md). */
-    PIVOT_VIEW(ErrorCode.BUSY_PIVOT_VIEW, "Pivot view", true);
+    PIVOT_VIEW(ErrorCode.BUSY_PIVOT_VIEW, "Pivot view", true),
+    /** An Arrow Flight read (Admin → Data out): heavy, as a download is; it waits as long as a download. */
+    FLIGHT(ErrorCode.BUSY_FLIGHT, "Flight read", true);
 
     private final ErrorCode code;
     private final String label;

@@ -341,6 +341,7 @@ public final class AdmissionGate {
             case BI_RUN -> "The BI run did not start";
             case BULK_LOAD -> "The load did not start";
             case PIVOT_VIEW -> "The pivot did not start";
+            case FLIGHT -> "The Flight read did not start";
         };
     }
 
@@ -354,6 +355,7 @@ public final class AdmissionGate {
             case BI_RUN -> "The pages already open keep working; " + in + ".";
             case BULK_LOAD -> "Nothing was written; " + in + ".";
             case PIVOT_VIEW -> "Smaller pivots and the pages already open keep working; " + in + ".";
+            case FLIGHT -> "Nothing was sent; reads already running keep going; " + in + ".";
         };
     }
 

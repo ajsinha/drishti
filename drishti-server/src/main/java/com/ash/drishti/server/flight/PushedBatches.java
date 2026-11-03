@@ -151,6 +151,11 @@ final class PushedBatches implements FlightBackend.BatchSource {
 
     /** Rows as a table in the plan's types. */
     ArrowTable table(List<Map<String, Object>> rows) {
+        return table(names, types, rows);
+    }
+
+    /** Rows as a table in these columns' types (a value that does not fit is null). */
+    static ArrowTable table(List<String> names, List<ArrowTable.Type> types, List<Map<String, Object>> rows) {
         int n = rows.size();
         ArrowTable.Builder b = ArrowTable.builder();
         for (int c = 0; c < names.size(); c++) {

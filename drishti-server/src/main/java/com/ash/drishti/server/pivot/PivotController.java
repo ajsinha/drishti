@@ -445,8 +445,17 @@ public class PivotController {
     }
 
     /** The answer's cells as an Arrow stream: one record per cell and measure (row, column, coordinates, measure, value, members). */
-    @SuppressWarnings("unchecked")
     static byte[] arrow(Map<String, Object> a) {
+        Cells c = cells(a);
+        return ArrowIpcWriter.write(c.columns(), c.rows(), Map.of("provenance", String.valueOf(a.get("provenance")), "source", String.valueOf(a.get("source"))));
+    }
+
+    /** An answer's cells as columns: what the Arrow export writes and what Arrow Flight sends for {@code form: pivot}. */
+    public record Cells(List<ArrowIpcWriter.Column> columns, int rows) {}
+
+    /** The cells of an answer, one record per cell and measure: ROW, COLUMN, each dimension, MEASURE, VALUE, MEMBERS. */
+    @SuppressWarnings("unchecked")
+    public static Cells cells(Map<String, Object> a) {
         List<String> dims = new ArrayList<>((List<String>) a.get("rowDimensions"));
         dims.addAll((List<String>) a.get("columnDimensions"));
         Map<String, Map<String, Object>> cells = (Map<String, Map<String, Object>>) a.get("cells");
@@ -486,6 +495,6 @@ public class PivotController {
         cols.add(new ArrowIpcWriter.Column("MEASURE", ArrowIpcWriter.Kind.TEXT, meas));
         cols.add(new ArrowIpcWriter.Column("VALUE", ArrowIpcWriter.Kind.FLOAT64, val));
         cols.add(new ArrowIpcWriter.Column("MEMBERS", ArrowIpcWriter.Kind.INT64, mem));
-        return ArrowIpcWriter.write(cols, n, Map.of("provenance", String.valueOf(a.get("provenance")), "source", String.valueOf(a.get("source"))));
+        return new Cells(cols, n);
     }
 }
