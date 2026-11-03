@@ -40,6 +40,12 @@ public class FvaConfiguration {
         return svc;
     }
 
+    /** FVA as a pivot measure (source fva): the provider the CCR cube reads FVA through; the pivot engine adds it to its providers. */
+    @Bean
+    FvaPivotProvider fvaPivotProvider(FvaService svc) {
+        return new FvaPivotProvider(svc);
+    }
+
     /** FVA's figures on the netting-set and counterparty pages (the decided mock-up A), after the exposure engine's. */
     @Bean
     FvaFigures fvaFigures(FvaService svc, org.springframework.beans.factory.ObjectProvider<com.ash.drishti.engine.ViewPipeline> pipeline,

@@ -137,7 +137,7 @@ public class PivotConfiguration {
 
     @Bean
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, States states,
-            ObjectProvider<VarService> var,
+            ObjectProvider<VarService> var, ObjectProvider<com.ash.drishti.server.exposure.FvaPivotProvider> fva,
             ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         List<PivotProvider> providers = new ArrayList<>();
         VarService v = var.getIfAvailable();
@@ -146,6 +146,10 @@ public class PivotConfiguration {
                 com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
                 return r == null || !r.known("var") || r.running("var");
             }));
+        }
+        com.ash.drishti.server.exposure.FvaPivotProvider f = fva.getIfAvailable();
+        if (f != null) {                                                // FVA's measures (fva, fca, fba): the CCR cube's FVA source
+            providers.add(f);
         }
         providers.add(new TabularProvider(exec, both(kinds, panels)));
         PivotCore core = new PivotCore(providers, states, props.core());

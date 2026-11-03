@@ -73,6 +73,19 @@ class FvaServiceTest {
     }
 
     @Test
+    void theKindsNamesAndThePivotCellsScopes() {
+        assertThat(FvaResultEngine.name("eeStar")).isEqualTo("EE_STAR");
+        assertThat(FvaResultEngine.name("fca")).isEqualTo("FCA");
+        assertThat(FvaResultEngine.name("nettingSet")).isEqualTo("NETTING_SET");
+        assertThat(FvaPivotProvider.scope(Map.of())).isEqualTo("BANK");
+        assertThat(FvaPivotProvider.scope(Map.of("COUNTERPARTY", "CP-1"))).isEqualTo("CPTY:CP-1");
+        assertThat(FvaPivotProvider.scope(Map.of("NETTING_SET", "NS-X"))).isEqualTo("NSET:NS-X");
+        assertThat(FvaPivotProvider.scope(Map.of("GROUP", "GRP-1"))).isEqualTo("GROUP:GRP-1");
+        assertThat(FvaPivotProvider.scope(Map.of("COUNTERPARTY", "CP-1", "LEGAL_ENTITY", "LE-A"))).isNull();   // two words: no one scope
+        assertThat(FvaPivotProvider.NATIVES).extracting(n -> n.name()).containsExactly("fva", "fca", "fba", "nettingSets");
+    }
+
+    @Test
     void theDefaults() {
         FvaProperties p = FvaProperties.defaults();
         assertThat(p.requireRiskNeutral()).isTrue();                               // decision 10: production refuses

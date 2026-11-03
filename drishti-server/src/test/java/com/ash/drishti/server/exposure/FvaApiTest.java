@@ -58,7 +58,7 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
         "drishti.sources.routes.simulation-run=ccr-lake", "drishti.sources.routes.exposure-path=ccr-lake",
         "drishti.sources.routes.netting-set=ccr-lake", "drishti.sources.routes.csa=ccr-lake", "drishti.sources.routes.collateral-balance=ccr-lake",
         "drishti.sources.routes.counterparty=ccr-lake", "drishti.sources.routes.counterparty-group=ccr-lake",
-        "drishti.ccr.exposure.official.on-start=false", "drishti.ccr.exposure.official.enabled=false", "drishti.ccr.exposure.close-grace-seconds=0",
+        "drishti.ccr.exposure.official.on-start=false", "drishti.ccr.exposure.close-grace-seconds=0",
         "drishti.var.official.on-start=false",
         "drishti.engines.fva.enabled=true", "drishti.ccr.fva.funding-spread=0.005", "drishti.ccr.fva.discount-rate=0",
         "drishti.ccr.fva.require-risk-neutral=false",
@@ -82,6 +82,9 @@ class FvaApiTest {
 
     @Autowired MockMvc mvc;
     @Autowired TokenVerifier tokens;
+    @Autowired com.ash.drishti.packs.ConnectorFiles connectors;
+    @Autowired com.ash.drishti.server.connectors.ConnectorManager manager;
+    @Autowired FvaPivotProvider pivot;
     final ObjectMapper json = new ObjectMapper();
 
     private String as(String role) {
@@ -166,5 +169,73 @@ class FvaApiTest {
         assertThat(ex.length).isGreaterThan(1000);
         JsonNode st = get("/api/v1/fva/status", "risk");
         assertThat(st.get("requireRiskNeutral").asBoolean()).isFalse();
+    }
+
+    @Test
+    void fvaResultIsAnOrdinaryComputedKind() throws Exception {
+        connectors.write("fva-engine", """
+                plugin: reactive
+                mode: reactive
+                kinds:
+                  fva-result:
+                    compute: fva-result
+                    params:
+                      eePoint: { type: enum, options: [end, mid], default: end }
+                      fba: { type: enum, options: ["on", "off"], default: "on" }
+                      survival: { type: enum, options: ["on", "off"], default: "off" }
+                      spread: { type: text, default: "" }
+                    result: { required: [SCOPE, STATUS, FVA], types: { FVA: number, FCA: number, FBA: number } }
+                engine: { type: java, class: com.ash.drishti.server.exposure.FvaResultEngine, version: "1.0" }
+                triggers:
+                  - { on: data-version, kinds: [exposure-path], affects: all }
+                limits: { wait: 5s }
+                """);
+        manager.scan();
+        try {
+            String body = "{\"id\": \"CPTY:CP-1\", \"asOf\": \"" + ExposureLakeFixture.DAY + "\", \"params\": {}, \"wait\": 10000}";
+            JsonNode a = json.readTree(mvc.perform(MockMvcRequestBuilders.post("/api/v1/compute/fva-engine/fva-result").header("Authorization", as("risk"))
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body)).andExpect(status().isOk()).andReturn().getResponse()
+                    .getContentAsString());
+            assertThat(a.get("state").asText()).as(a.toString()).isEqualTo("ready");
+            JsonNode r = a.get("result");
+            assertThat(r.get("FVA").asDouble()).isCloseTo(-3_250.00, org.assertj.core.data.Offset.offset(0.005));
+            assertThat(r.get("FCA").asDouble()).isCloseTo(-6_250.00, org.assertj.core.data.Offset.offset(0.005));
+            assertThat(r.get("BY_NETTING_SET")).hasSize(2);
+            assertThat(r.get("TERMS")).hasSize(3);
+            assertThat(r.at("/TERMS/2/EE_STAR").isNumber()).isTrue();
+            assertThat(r.get("CVA_STATUS").asText()).isEqualTo("planned");
+            assertThat(r.get("FLAGS").toString()).contains("REAL_WORLD_RUN");
+            JsonNode off = json.readTree(mvc.perform(MockMvcRequestBuilders.post("/api/v1/compute/fva-engine/fva-result").header("Authorization", as("risk"))
+                    .contentType(org.springframework.http.MediaType.APPLICATION_JSON).content(body.replace("\"params\": {}", "\"params\": {\"fba\": \"off\"}")))
+                    .andReturn().getResponse().getContentAsString());
+            assertThat(off.at("/result/FBA").asDouble()).as(off.toString()).isZero();
+        } finally {
+            connectors.delete("fva-engine");
+            manager.scan();
+        }
+    }
+
+    @Test
+    void theOfficialRecordCapturesFvaWithTheExposure() throws Exception {
+        String ada = "Bearer " + tokens.mint("ada", List.of("admin"), 300);
+        JsonNode run = json.readTree(mvc.perform(MockMvcRequestBuilders.post("/api/v1/exposure/official").header("Authorization", ada).param("asOf",
+                ExposureLakeFixture.DAY.toString())).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(run.get("status").asText()).as(run.toString()).isIn("captured", "restated", "unchanged");
+        JsonNode rec = json.readTree(mvc.perform(MockMvcRequestBuilders.get("/api/v1/exposure/official").header("Authorization", ada).param("asOf",
+                ExposureLakeFixture.DAY.toString())).andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+        assertThat(rec.at("/scopes/NSET:NS-X/fva/fva").asDouble()).as(rec.at("/scopes/NSET:NS-X").toString())
+                .isCloseTo(-1_750.00, org.assertj.core.data.Offset.offset(0.005));
+        assertThat(rec.at("/scopes/CPTY:CP-1/fva/fva").asDouble()).isCloseTo(-3_250.00, org.assertj.core.data.Offset.offset(0.005));
+        assertThat(rec.at("/scopes/NSET:NS-X/fva/flags").toString()).contains("REAL_WORLD_RUN");
+    }
+
+    @Test
+    void theCcrCubesFvaSourceSumsTheNettingSets() {
+        com.ash.drishti.bicompute.spi.Viewer v = new com.ash.drishti.bicompute.spi.Viewer("rita",
+                new com.ash.drishti.server.security.Principal("rita", List.of("risk")));
+        assertThat(pivot.sources(v)).containsKey("fva");
+        var cat = pivot.catalogue(v, "fva", ExposureLakeFixture.DAY.toString());
+        assertThat(cat.fields()).extracting(f -> f.name()).containsExactly("NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY", "GROUP");
+        assertThat(cat.measures()).extracting(n -> n.name()).contains("fva", "fca", "fba");
     }
 }
