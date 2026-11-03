@@ -177,7 +177,7 @@ final class FvaPlaygroundBook {
     private String check(String... pairs) {
         List<String> c = new ArrayList<>();
         for (int i = 0; i < pairs.length; i += 2) {
-            c.add("ABS(" + pairs[i] + "-" + pairs[i + 1] + ")<0.005");
+            c.add("ABS(" + pairs[i] + "-(" + pairs[i + 1] + "))<0.005");
         }
         return "IF(AND(" + String.join(",", c) + "),\"" + PASS + "\",\"" + FAIL + "\")";
     }
