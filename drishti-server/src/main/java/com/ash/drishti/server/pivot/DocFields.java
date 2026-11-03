@@ -70,7 +70,8 @@ final class DocFields {
             Map<String, Seen> out) {
         for (Map.Entry<?, ?> e : m.entrySet()) {
             String k = String.valueOf(e.getKey());
-            if (!k.matches("[A-Za-z_][A-Za-z0-9_]*") || hidden.test(k) || top && promoted.contains(k) || out.size() >= MAX) {
+            boolean nested = e.getValue() instanceof Map || e.getValue() instanceof List;     // a promoted list is still walked: its elements
+            if (!k.matches("[A-Za-z_][A-Za-z0-9_]*") || hidden.test(k) || top && promoted.contains(k) && !nested || out.size() >= MAX) {
                 continue;
             }
             Object v = e.getValue();
@@ -87,7 +88,7 @@ final class DocFields {
                 Seen s = out.computeIfAbsent(p, Seen::new);
                 if (v instanceof Number) {
                     s.numbers++;
-                } else if (String.valueOf(v).matches("\\d{4}-\\d{2}-\\d{2}")) {
+                } else if (String.valueOf(v).matches("\\d{4}-\\d{2}-\\d{2}([T ].*)?")) {
                     s.dates++;
                 } else {
                     s.texts++;

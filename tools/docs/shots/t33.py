@@ -47,13 +47,13 @@ WORK: list = []                                       # the scratch folder the s
 
 # the guide's worked examples (PIVOT_ENGINE.md section 6.7), each a saved view
 EXAMPLES = {
-    "notional-by-desk-and-month": {"source": "trade", "rows": ["$.TT_GROUP"], "columns": ["$.TRADE_DATE:year"],
+    "notional-by-desk-and-year": {"source": "trade", "rows": ["$.TT_GROUP"], "columns": ["$.TRADE_DATE:year"],
                                    "values": [{"measure": "sum($.LEGS[*].NOTIONAL)", "as": "Notional"}]},
     "trades-with-a-jpy-leg": {"source": "trade", "rows": ["$.PRODUCT_TYPE"], "filters": {"$.LEGS[*].CURRENCY": {"in": ["JPY"]}},
                               "values": [{"measure": "count()", "as": "Trades"}]},
     "fixed-and-floating-legs": {"source": "trade", "rows": ["$.COUNTERPARTY"], "columns": ["$.LEGS[*].LEG_TYPE"], "top": {"$.COUNTERPARTY": {"n": 8}},
                                 "values": [{"measure": "count()", "as": "Legs"}, {"measure": "sum($.LEGS[*].NOTIONAL)", "as": "Notional"}]},
-    "quantity-once-per-trade": {"source": "trade", "rows": ["$.TT_GROUP"],
+    "quantity-once-per-trade": {"source": "trade", "rows": ["$.TT_GROUP"], "filters": {"$.CURRENCY": {"in": ["USD"]}},
                                 "values": [{"measure": "sum($.QUANTITY)", "as": "Quantity"}, {"measure": "count($.LEGS[*].LEG_ID)", "as": "Legs"}]},
     "booking-events-by-type": {"source": "trade", "rows": ["$.EVENTS[*].EVENT_TYPE"], "columns": ["$.EVENTS[*].EVENT_DATE:year"],
                                "values": [{"measure": "count()", "as": "Events"}]},
@@ -66,6 +66,8 @@ def _save(c: Ctx, name: str, view: dict) -> str:
     if "id" not in r:
         raise RuntimeError(f"{name}: {r}")
     ans = c.api("/api/pivot/query", {"view": r["id"]})
+    if "_catalogue" not in FIGURES:
+        FIGURES["_catalogue"] = c.page.request.get(c.base + "/api/pivot/catalogue?source=trade").json()
     FIGURES[name] = {"view": view, "id": r["id"], "rows": ans.get("rows"), "columns": ans.get("columns"), "cells": ans.get("cells"),
                      "measures": ans.get("measures"), "provenance": ans.get("provenance"), "notes": ans.get("notes"), "error": ans.get("detail")}
     import tempfile
@@ -93,7 +95,7 @@ def _example(c: Ctx, name: str, file: str) -> None:
 @shot("01-first-pivot.jpg")
 def first(c: Ctx):
     vid = _save(c, "trades-by-product", {"source": "trade", "rows": ["PRODUCT_TYPE"], "values": [{"measure": "count()", "as": "Trades"},
-                                                                                                    {"measure": "sum(QUANTITY)", "as": "Quantity"}]})
+                                                                                                    {"measure": "count_distinct(COUNTERPARTY)", "as": "Counterparties"}]})
     _open(c, "/pivot?view=" + vid)
     c.save("01-first-pivot.jpg")
 
@@ -109,12 +111,19 @@ def open_row(c: Ctx):
 @shot("03-documents-field-list.jpg")
 def field_list(c: Ctx):
     _open(c, "/pivot?source=trade")
-    c.save("03-documents-field-list.jpg", locator="[data-pv-fields]")
+    c.page.fill("[data-pv-field-search]", "legs")                       # the legs' fields, under their grain's heading
+    c.page.dispatch_event("[data-pv-field-search]", "input")
+    c.until("Array.from(document.querySelectorAll('[data-pv-fields] h3')).some(h => h.textContent.indexOf('Each leg') === 0)", 60)
+    c.page.wait_for_timeout(400)
+    c.save("03-documents-field-list.jpg", locator=".pv-card:has([data-pv-fields])")
 
 
-@shot("04-legs-per-desk.jpg", also=("notional-by-desk-and-month.jpg", "trades-with-a-jpy-leg.jpg", "fixed-and-floating-legs.jpg",
+@shot("04-legs-per-desk.jpg", also=("notional-by-desk-and-year.jpg", "trades-with-a-jpy-leg.jpg", "fixed-and-floating-legs.jpg",
                                      "quantity-once-per-trade.jpg", "booking-events-by-type.jpg", "var-by-desk.jpg"))
 def legs(c: Ctx):
+    # the check the guide quotes: the quantity once per trade at the leg grain equals the plain sum at the trade grain
+    _save(c, "quantity-at-the-trade-grain", {"source": "trade", "rows": ["$.TT_GROUP"], "filters": {"$.CURRENCY": {"in": ["USD"]}},
+                                             "values": [{"measure": "sum($.QUANTITY)", "as": "Quantity"}, {"measure": "count()", "as": "Trades"}]})
     for name in EXAMPLES:
         _example(c, name, name + ".jpg")
     c.guide = "t33"

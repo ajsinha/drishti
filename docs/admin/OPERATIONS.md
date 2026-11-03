@@ -1426,6 +1426,33 @@ WantedBy=multi-user.target
 Run it next to the writers. It is safe while Drishti reads the lake: a test proves Drishti's reader reads a lake the
 job has compacted, checkpointed and vacuumed.
 
+### 11.4 The data inbox: its folders, disk and retention
+
+The data inbox ([DATA_GUIDE.md section 7](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load)) is an engine, off as
+shipped (`config/engines/dataload.yaml`, Admin → Engines). Its folder, `drishti.dataload.dir` (`<data>/dataload`), holds:
+
+| Folder | Holds | Kept |
+|---|---|---|
+| `inbox/` | files waiting, their `.ready` markers, `ready.all` | until loaded |
+| `inprocess/<run>/` | the files one run claimed, while they load | emptied by the run; a stopped server's run is finished at the next cycle |
+| `outbox/<day>/<run>/` | loaded files, their markers and reports, the loader's logs and summaries (`loads/`) | `keep-outbox-days` (30), then the day folder is deleted |
+| `failed/<day>/<run>/` | files that could not load, with `<file>.failed.json` | the same |
+| `ledger/ledger-<yyyy-MM>.jsonl` | one line per step of every file; the SHA-256 that finds a file dropped again | for ever (small: one line a step) |
+| `inbox.lock` | the run that holds the inbox: run id, node, process, heartbeat | while a run loads |
+
+- **One file system** for the whole folder: claiming and moving are renames. On a shared folder (EFS, NFS) give one node `owner: true`;
+  the lock also keeps a second runner out, and a lock whose heartbeat is older than three intervals is taken over (logged).
+- **Disk**: a loaded file stays in the outbox for `keep-outbox-days`, so the folder needs room for that many days of input. Busy
+  protection's disk floor skips a cycle when the disk is nearly full.
+- **Memory**: each load is a separate Java process with `loader-heap` (4g) and `nice` 10; the server's heap is never used. Loads run one
+  table after another, so the machine needs `loader-heap` free beside the server while a run loads. A run stopped by `load-timeout`
+  (2h) sends its files back to the inbox.
+- **Runs never overlap**: a cycle due while a run loads is recorded as skipped (*run … still loading (12 min)*). A long run delays
+  the next one; it never doubles the work.
+- **Stopping the server** in the middle is safe: the next cycle puts claimed files back, completes a load that committed, moves what
+  was not moved and sends the signals not sent.
+- `drishti.py dataload status` (or `GET /api/v1/admin/dataload`) shows what waits, what failed and why, and the last cycles.
+
 ## 12. Memory and caches
 
 Nothing grows with the day's data without bound. Every cache has a size limit you can set:

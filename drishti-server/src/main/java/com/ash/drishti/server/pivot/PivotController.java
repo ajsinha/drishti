@@ -355,7 +355,7 @@ public class PivotController {
     }
 
     /**
-     * An export, streamed: {@code {view, what: pivot|rows|definition, format: xlsx|csv|arrow|yaml, shape: cells|grid, delimiter, bom, coords}}.
+     * An export, streamed: {@code {view, what: pivot|rows|definition, format: xlsx|csv|jsonl|arrow|yaml, shape: cells|grid, delimiter, bom, coords}}.
      * Audited with what, the format and the size, never the values.
      */
     @PostMapping("/export")
@@ -386,8 +386,13 @@ public class PivotController {
                     c.forEach((k, x) -> coords.put(String.valueOf(k), String.valueOf(x)));
                 }
                 PivotProvider.Rows r = core.drill(v, view, coords, 0, props.rowsMax());
-                start(res, "text/csv; charset=utf-8", base + "-rows.csv");
-                PivotExport.rowsCsv(r, counting(res.getOutputStream(), size), d, bom);
+                if ("jsonl".equals(format)) {
+                    start(res, "application/x-ndjson; charset=utf-8", base + "-rows.jsonl");
+                    PivotExport.rowsJsonl(r, counting(res.getOutputStream(), size));
+                } else {
+                    start(res, "text/csv; charset=utf-8", base + "-rows.csv");
+                    PivotExport.rowsCsv(r, counting(res.getOutputStream(), size), d, bom);
+                }
                 detail = "rows " + r.rows().size() + " of " + r.total() + "; cell=" + CellKey.of(coords).canonical();
             }
             default -> {
@@ -400,6 +405,9 @@ public class PivotController {
                     }
                     start(res, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base + ".xlsx");
                     PivotExport.xlsx(a, counting(res.getOutputStream(), size), p.user(), Instant.now().toString());
+                } else if ("jsonl".equals(format)) {
+                    start(res, "application/x-ndjson; charset=utf-8", base + ".jsonl");
+                    PivotExport.jsonl(a, counting(res.getOutputStream(), size));
                 } else if ("arrow".equals(format)) {
                     byte[] arrow = arrow(a);
                     start(res, "application/vnd.apache.arrow.stream", base + ".arrow");

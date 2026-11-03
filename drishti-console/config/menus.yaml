@@ -40,50 +40,69 @@ menus:
           - { id: functions, href: /func, icon: list-ul, label: Functions, desc: "Every command you can use, what it does · also FUNC <GO>", match: /func, requires: [word:FUNC] }
           - { id: datamap, href: /datamap, icon: diagram-3, label: Data map, desc: "Every kind of data, how it joins and how much there is · also DATAMAP <GO>", match: /datamap, requires: [feature:datamap, word:DATAMAP] }
           - { id: data, href: /data, icon: cloud-arrow-down, label: Data, desc: "Every dataset, its dates; choose columns and filters, download a day as .jsonl.gz · also DATA <GO>", match: /data/, requires: [feature:data, word:DATA] }
-          - { id: pivot, cmd: PIVOT, href: /pivot, icon: grid-3x3-gap, label: Pivot, desc: "Any table or VaR as a pivot: nested rows opened lazily, right totals, provenance, charts, Excel with formulas · also PIVOT <GO>", match: /pivot, requires: [word:PIVOT, route:/pivot] }
-          - { id: var, href: /var, icon: shield-check, label: VaR, desc: "Value at risk of the bank, a desk or any set of trades · also VAR <GO>", match: /var, requires: [edition, word:VAR] }
-          - { id: exposure, href: /exposure, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set · also EXP <GO>", match: /exposure, requires: [edition, word:EXP] }
+          - { id: pivot, cmd: PIVOT, href: /pivot, icon: grid-3x3-gap, label: Pivot, desc: "Any table, any entity document or VaR as a pivot: nested rows opened lazily, right totals, provenance, charts, Excel with formulas · also PIVOT <GO>", match: /pivot, requires: [word:PIVOT, route:/pivot] }
           - { id: reports, href: /reports, icon: file-earmark-bar-graph, label: Reports, desc: "Every report you have: scheduled reports, subscriptions, alerts, and BI reports", match: /reports, requires: [feature:reports] }
       - title: Watch
         items:
           - { id: workspaces, href: /w, icon: grid-1x2, label: Workspaces, desc: Several live views on one screen, match: /w, requires: [feature:workspaces] }
           - { id: monitors, href: /m, icon: list-columns, label: Monitors, desc: Live watchlists of entities, match: /m, requires: [feature:monitors] }
           - { id: alerts, href: /alerts, icon: bell, label: Alerts, desc: Rules checked on every change, match: /alerts, requires: [feature:alerts] }
-  # The subject menus of the lenses (docs/lenses/README.md, the lens menus): drawn only where an edition (or a lens) names them in its
-  # menus.top. An item's cmd: is the command it runs (its link: /go?q=<cmd> <GO>, unless it has an href) and fill: the words it puts in the
-  # command line for the person to finish; either is shown beside its label. cmd:<WORD> in requires: the edition shows that command.
-  - id: var
-    label: VaR
-    icon: shield-check
-    subject: true
+  # The Engines menu (2.9.11.a, mock-up engines-menu/A): one top menu for every compute engine, a column per engine (engine: its id in
+  # config/engines.yaml) with its command word, drawn only for a person whose role opens at least one engine and only with the engines
+  # running in the cluster (the server's about answer). A column's opens: who opens the engine, any of: role:<name> (the person holds the
+  # role) or pack:<name> (a pack assigned to the person); an administrator opens every engine; no opens: everyone. The same rule drops the
+  # engine's command words (config/engines.yaml words:) from the type-ahead and refuses them on the command line, in words (core/menus.py
+  # engine_refused); Help is not gated by it (documentation is open to anyone who can open Help). The search box shows
+  # when more than search-over engines run; an administrator also sees Admin -> Engines (admin-link) and the engines not running.
+  # An item's cmd: is the command it runs (its link: /go?q=<cmd> <GO>, unless it has an href) and fill: the words it puts in the command
+  # line for the person to finish; either is shown beside its label. cmd:<WORD> in requires: the edition shows that command.
+  - id: engines
+    label: Engines
+    icon: cpu
+    engines: true
+    search-over: 4
+    admin-link: { href: /admin/engines, label: "Admin → Engines", requires: [admin, admin-page:engines] }
     columns:
-      - title: Value at risk
+      - engine: var
+        title: VaR
+        word: VAR
+        opens: [role:market-risk, pack:market-risk]
         items:
-          - { id: var-explorer, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or ad-hoc set of trades", requires: [word:VAR] }
+          - { id: var-explorer, href: /var, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or set of trades", match: /var, requires: [word:VAR] }
+          - { id: var-explain, cmd: VAR BANK EXPLAIN, icon: arrow-left-right, label: Why it moved, desc: "Day on day: the trades, factors and scenarios that moved it", requires: [word:VAR] }
+          - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
+          - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, position or scope", match: /smat, requires: [word:SMAT] }
+          - { id: var-reports, href: /var/reports, icon: bank, label: Regulatory reports, desc: "Canada and the US, to the cell, signed runs", match: /var/reports, requires: [word:VAR, route:/var/reports] }
+          - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
+          - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
           - { id: var-results, cmd: VRES, icon: table, label: VaR results, desc: "The stored results of every hierarchy node", requires: [cmd:VRES] }
           - { id: var-official, cmd: VOFF, icon: patch-check, label: Official records, desc: "The signed-off VaR of each business date", requires: [cmd:VOFF] }
-          - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, a position or a scope", match: /smat, requires: [word:SMAT] }
           - { id: hier, cmd: HIER, icon: diagram-3, label: Hierarchies and limit letters, desc: "The VaR hierarchies, their nodes and limits", requires: [cmd:HIER] }
-      - title: Check and report
+      - engine: exposure
+        title: Exposure
+        word: EXP
+        opens: [role:credit-risk, pack:counterparty-risk]
         items:
-          - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every VaR figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
-          - { id: frsa, cmd: FRSA BANK, icon: bank2, label: FRTB-SA capital, desc: "Market-risk capital by the standardised approach for any scope", match: /frtb, requires: [word:VAR, route:/frtb] }
-          - { id: play-frtb, cmd: PLAY FRTB EXAMPLE, icon: calculator, label: FRTB-SA Playground, desc: "Every method choice a switch, compared and reproduced; a workbook of formulas", match: /play/frtb, requires: [word:VAR, word:PLAY, route:/play/frtb] }
-          - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the day's P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
-          - { id: stress-window, cmd: SWIN BANK, icon: calendar-range, label: Stress window, desc: "The most stressful year of history for stressed VaR", match: /var/stress-window, requires: [word:VAR] }
-  - id: exposure
-    label: Exposure
-    icon: graph-up
-    subject: true
-    columns:
-      - title: Counterparty exposure
-        items:
-          - { id: exp-explorer, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
+          - { id: exp-explorer, href: /exposure, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
           - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
           - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
-          - { id: simm, cmd: SIMM, icon: shield-lock, label: SIMM initial margin, desc: "ISDA SIMM per netting set, collect and post, against the counterparty's call", match: /simm, requires: [word:SIMM, engine:simm, route:/simm] }
-          - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, engine:simm, route:/play/simm] }
           - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
+      - engine: frtb-sa
+        title: FRTB-SA
+        word: FRSA
+        opens: [role:market-risk, pack:market-risk]
+        items:
+          - { id: frsa, cmd: FRSA BANK, icon: bank2, label: FRTB-SA capital, desc: "Standardised market-risk capital for any scope", match: /frtb, requires: [word:VAR, route:/frtb] }
+          - { id: play-frtb, cmd: PLAY FRTB EXAMPLE, icon: calculator, label: FRTB-SA Playground, desc: "Every method choice a switch, compared", match: /play/frtb, requires: [word:VAR, word:PLAY, route:/play/frtb] }
+      - engine: simm
+        title: SIMM
+        word: SIMM
+        opens: [role:credit-risk, role:market-risk, pack:counterparty-risk, pack:market-risk]
+        items:
+          - { id: simm, cmd: SIMM, icon: shield-lock, label: Netting sets, desc: "Initial margin per netting set, collect and post", match: /simm, requires: [word:SIMM, route:/simm] }
+          - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, route:/play/simm] }
+  # The subject menus of the lenses (docs/lenses/README.md, the lens menus): drawn only where an edition (or a lens) names them in its
+  # menus.top. An item's cmd: and fill: as in the Engines menu above.
   - id: blotter
     label: Blotter
     icon: journal-text

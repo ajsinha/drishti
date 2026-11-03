@@ -91,7 +91,7 @@ quality:                                 # the Quality landing's checks (EDITION
   stale-days: 2                          # stale: data older than the business date by more than this many business days
 
 help:
-  categories: [knowledge, start, use, bi, data, operate]   # the Build category hidden
+  categories: [get-started, risk, analytics, data, operate, reference, knowledge, internal]   # the help sections kept (config/help.yaml): Build hidden
   knowledge: [market-data]               # the Market data Knowledge page (the rest hidden)
   unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
 

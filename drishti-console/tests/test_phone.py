@@ -179,15 +179,24 @@ def test_the_phone_display_can_be_turned_off(client, monkeypatch):
 # ---- the lens menus' phone form ---------------------------------------------------------------------------------------------------
 
 def test_a_lens_folds_its_subject_menus_into_one_menu_named_after_it(backend, monkeypatch):
+    from test_edition import TRADING_ABOUT, _app, _client
+    app = _app(backend, monkeypatch)
+    app.state.editions.learn(TRADING_ABOUT)
+    html = _client(app).get("/t").text
+    fold = html[html.index("data-lens-fold"):html.index("</template>")]
+    assert 'class="tbar-lens-l">Trading<' in fold
+    for subject in ("Blotter", "Positions", "Risk", "Counterparties"):
+        assert f'mega-subject">{subject}<' in fold, subject
+    assert "Engines" not in fold                                              # the Engines menu is no subject menu: it stays in the bar
+    assert html.count("data-subject>") == 4                                   # the subject menus stay, for a wider screen
+
+
+def test_the_risk_edition_has_no_lens_menu_now_its_engines_menu_replaced_var_and_exposure(backend, monkeypatch):
     from test_edition import RISK_ABOUT, _app, _client
     app = _app(backend, monkeypatch)
     app.state.editions.learn(RISK_ABOUT)
     html = _client(app).get("/t").text
-    fold = html[html.index("data-lens-fold"):html.index('class="tbar-tools"')]
-    assert 'class="tbar-lens-l">Risk<' in fold
-    assert 'mega-subject">VaR<' in fold and 'mega-subject">Exposure<' in fold
-    assert "VAR BANK" in fold and "XWIF" in fold
-    assert html.count("data-subject>") == 2                                   # the subject menus stay, for a wider screen
+    assert "data-lens-fold" not in html and "data-subject" not in html and "data-engines-menu" in html
 
 
 def test_a_full_drishti_has_no_lens_menu(backend, monkeypatch):
