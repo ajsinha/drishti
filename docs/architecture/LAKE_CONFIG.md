@@ -17,7 +17,7 @@
 
 *Product owner, 2026-11-03: "it should not be in connector config: theoretically we can have a Delta lake anywhere. We should have one
 global and separate config for the lake. Everyone else, including the Delta connector, should refer to it." Status: **built**
-(2.9.11.c, section 9); the questions of section 8 decided as recommended by the product owner (2026-11-03).*
+(section 9); the questions of section 8 decided as recommended by the product owner (2026-11-03).*
 
 ## 1. Where the lake is described today, and why that is wrong
 
@@ -125,7 +125,7 @@ onto it, the migration tool, the checks, docs (a lake guide; CONNECTOR docs and 
 | L4 | Old connector keys: migrated by a tool, read with a warning for one release, then removed | **Yes** (the one allowed configuration alias, with its removal planned) |
 | L5 | Where it ships | **2.9.11.b**, or a release of its own after 2.9.11.b if .b is full (it touches every lake connector, so it gets its own drill attention) |
 
-## 9. As built (2.9.11.c)
+## 9. As built
 
 | Part | Where | Decided while building |
 |---|---|---|
