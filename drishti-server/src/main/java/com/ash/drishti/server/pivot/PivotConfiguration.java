@@ -174,4 +174,18 @@ public class PivotConfiguration {
     public PivotViews pivotViews(ContentStore store) {
         return new PivotViews(store);
     }
+
+    /**
+     * Rachana's {@code measure(...)} and {@code cell(...)} answered by this server's pivot engine (ONE_GRAMMAR.md part 3); while the
+     * pivot engine is switched off they are refused with the reason.
+     */
+    @Bean
+    public RachanaFigures rachanaFigures(PivotCore core, PivotViews views, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
+        RachanaFigures figures = new RachanaFigures(core, views, () -> {
+            com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
+            return r == null || !r.known("pivot") || r.running("pivot");
+        });
+        com.ash.drishti.bicompute.rachana.EngineFunctions.figures(figures);
+        return figures;
+    }
 }
