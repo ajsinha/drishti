@@ -29,7 +29,10 @@
   A failed console test runs once more file by file and every failed file is re-run (two at a time in the other lane, one in the
   browser lane), each under a time limit of twice the file's recorded time, at least ten minutes; tests listed in
   `tools/drill-known.txt` are reported as accepted and do not fail the drill. The first failure no re-run can change stops the other
-  jobs (`--keep-going` runs them to the end). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
+  jobs (`--keep-going` runs them to the end). **Fixed:** every command of the Python tool tests and of the Java runs now fails the
+  drill when it fails; before, a job ran as `job || ...`, where bash ignores errexit, so only each job's last command counted (the
+  trading pack's generated Sutra fragments and `data/testdata/testdata.yaml` had been reported stale in the tool log without
+  failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
 ## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)

@@ -113,10 +113,12 @@ echo "drill: $cpus CPUs, ${mem_gb} GB: console lanes browser $browser_workers wo
 # ---- jobs --------------------------------------------------------------------------------------------------------------------
 # Each job runs in the background with its own log; watch_jobs waits for a set of them and, at the first failure (unless
 # --keep-going), stops the others with everything they started (test servers, browsers, Maven forks) and fails the drill.
+# The job runs in a subshell of its own with errexit on and its status read afterwards, never as `job || ...`: bash ignores
+# errexit inside anything run on the left of || or &&, so there every command but the last could fail unseen.
 declare -A PID RC
 start_job() {
   local name=$1 began=$SECONDS; shift
-  ( rc=0; ( "$@" ) || rc=$?; echo $(( SECONDS - began )) > "$LOGS/$name.secs"; exit $rc ) > "$LOGS/$name.log" 2>&1 &
+  ( set +e; ( set -e; "$@" ); rc=$?; echo $(( SECONDS - began )) > "$LOGS/$name.secs"; exit $rc ) > "$LOGS/$name.log" 2>&1 &
   PID[$name]=$!
 }
 niced() { renice -n "$1" -p $BASHPID >/dev/null; shift; "$@"; }   # a job at lower priority, with all it starts
@@ -306,8 +308,8 @@ copy_verify() {   # name, JDK, Drishti*net test ports, whether the copy's data/ 
   # where git would call every copied file ignored and the repository-wide scans would see none)
   export GIT_CEILING_DIRECTORIES="$COPY_BASE"
   # what the tests may not leave in data/ and config/ (as in the working tree, below): every file there before, by its content
-  tree_files() { find config data \( -path data/tmp/maven -o -path data/drill -o -path data/testdata -o -path data/stack \) -prune \
-                   -o -type f -exec md5sum {} + 2>/dev/null | awk '{ h = $1; sub(/^[^ ]+  /, ""); print $0 "\t" h }' | sort; }
+  tree_files() { { find config data \( -path data/tmp/maven -o -path data/drill -o -path data/testdata -o -path data/stack \) -prune \
+                     -o -type f -exec md5sum {} + 2>/dev/null || true; } | awk '{ h = $1; sub(/^[^ ]+  /, ""); print $0 "\t" h }' | sort; }
   local before; before=$(tree_files)
   local rc=0
   DRISHTI_NET_IT_PORTS="$ports" JAVA_HOME="$jdk" ./mvnw -q -o clean verify -Dsurefire.rerunFailingTestsCount=1 "$@" ${DRILL_MVN_ARGS:-} || rc=$?
