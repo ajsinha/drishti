@@ -52,8 +52,8 @@ public record FlightSettings(boolean enabled, String bindHost, int port, String 
     public FlightSettings {
         Objects.requireNonNull(bindHost, "bindHost");
         advertiseHost = advertiseHost == null ? "" : advertiseHost.trim();
-        if (port < 1 || port > 65535) {
-            throw new IllegalArgumentException("drishti.engines.flight.port must be 1..65535, not " + port);
+        if (port < 0 || port > 65535) {
+            throw new IllegalArgumentException("drishti.engines.flight.port must be 1..65535 (0: any free port, tests), not " + port);
         }
         if (batchRows < 1) {
             throw new IllegalArgumentException("drishti.engines.flight.batch-rows must be at least 1");

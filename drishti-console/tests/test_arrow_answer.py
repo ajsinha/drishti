@@ -12,10 +12,11 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Arrow to the browser (2.9.7, docs/guides/DATA_GUIDE.md › Data formats: JSON Lines is the standard, section 6), the console's part (core/arrow_answer.py): an answer written as
-Arrow reads back as the very JSON answer (nulls, dates as text, decimals, integers past 2^53, unicode, a key left out of some records,
-repeated text as a dictionary); what Arrow is not written with goes as JSON; and the negotiation: Accept names the Arrow stream, the
-server's Arrow is passed through, a JSON answer is written as Arrow here, anything else (and every old client) gets JSON."""
+"""Arrow to the browser (DATA_GUIDE.md › Data formats, section 6; ARROW_FLIGHT.md decided 5), the console's part (core/arrow_answer.py):
+the server's stream (written here as the server writes it, tests/arrow_server_stream.py) reads back as the very JSON answer (nulls, dates
+as text, decimals, integers past 2^53, unicode, a key left out of some records, repeated text as a dictionary); and the negotiation: Accept
+names the Arrow stream, the server's Arrow is passed through as it came, a JSON answer goes as JSON (the console writes no Arrow), and
+every old client gets JSON."""
 import json
 from pathlib import Path
 
@@ -24,6 +25,7 @@ import pytest
 pa = pytest.importorskip("pyarrow")
 
 from core import arrow_answer  # noqa: E402
+from arrow_server_stream import server_stream  # noqa: E402
 
 MEDIA = arrow_answer.MEDIA
 
@@ -38,7 +40,7 @@ def bi_answer(n=40):
 
 def test_a_bi_answer_reads_back_cell_for_cell_with_dictionaries():
     a = bi_answer()
-    b = arrow_answer.encode(a, "rows", "rows")
+    b = server_stream(a, "rows", "rows")
     t = pa.ipc.open_stream(b).read_all()
     assert pa.types.is_dictionary(t.schema.field("desk").type) and pa.types.is_dictionary(t.schema.field("day").type)
     assert pa.types.is_string(t.schema.field("id").type)                   # unique text stays plain
@@ -48,10 +50,10 @@ def test_a_bi_answer_reads_back_cell_for_cell_with_dictionaries():
 def test_records_keep_a_key_left_out_apart_from_a_null_and_arrays_round_trip():
     a = {"var": 1.2e6, "rows": [{"rank": 1, "date": "2020-03-16", "pnl": -1250000.5, "from": "Rates", "marginalPer1m": None, "partial": True},
                                 {"rank": 2, "date": "2020-03-12", "pnl": -980000.0, "marginalPer1m": 12.5, "partial": False}]}
-    back = arrow_answer.decode(arrow_answer.encode(a, "records", "rows"))
+    back = arrow_answer.decode(server_stream(a, "records", "rows"))
     assert back == a and "from" not in back["rows"][1]
     p = {"var": 10.0, "series": [-5, 7, 0, 4_000_000_000], "scenarioDates": ["2024-01-02", "2024-01-03", "2024-01-04", "2024-01-05"], "rows": [{"rank": 1}]}
-    assert arrow_answer.decode(arrow_answer.encode(p, "arrays", "series,scenarioDates")) == p
+    assert arrow_answer.decode(server_stream(p, "arrays", "series,scenarioDates")) == p
 
 
 @pytest.mark.parametrize("answer,shape,at", [
@@ -63,7 +65,8 @@ def test_records_keep_a_key_left_out_apart_from_a_null_and_arrays_round_trip():
     ({"series": [1], "scenarioDates": ["a", "b"]}, "arrays", "series,scenarioDates"),     # arrays of different lengths
 ])
 def test_what_arrow_is_not_written_with_goes_as_json(answer, shape, at):
-    assert arrow_answer.encode(answer, shape, at) is None
+    assert server_stream(answer, shape, at) is None
+    assert not hasattr(arrow_answer, "encode"), "the console writes no Arrow from JSON"
 
 
 def test_the_servers_stream_reads_the_same_here():
@@ -90,20 +93,20 @@ def test_var_tables_are_negotiated(client, backend, monkeypatch):
     async def var(method, p, ident, body=None, raw=False, accept="", **params):
         seen.append((p, raw, accept))
         if raw:
-            return json.dumps(path).encode(), _Headers({"content-type": "application/json"})      # an older server: JSON, written as Arrow here
+            return json.dumps(path).encode(), _Headers({"content-type": "application/json"})      # the server answered JSON: it goes as JSON
         return path
     monkeypatch.setattr(backend, "var", var, raising=False)
     contrib = {"var": 12.0, "rows": [{"key": "T-1", "componentVar": 4.5, "partial": False}, {"key": "T-2", "componentVar": 7.5, "partial": True}]}
     path = contrib
     r = client.get("/api/var/scope/contributions?scope=BANK&by=trade", headers={"Accept": MEDIA + ", application/json;q=0.9"})
-    assert r.headers["content-type"] == MEDIA and seen[-1] == ("/scope/contributions", True, MEDIA)
-    assert arrow_answer.decode(r.content) == contrib
+    assert r.headers["content-type"].startswith("application/json") and seen[-1] == ("/scope/contributions", True, MEDIA)
+    assert r.json() == contrib
     r = client.get("/api/var/scope/contributions?scope=BANK&by=trade", headers={"Accept": "application/json"})
     assert r.headers["content-type"].startswith("application/json") and r.json() == contrib and seen[-1][1] is False
     r = client.get("/api/var/scope/path?scope=BANK", headers={"Accept": MEDIA})                       # the path stays JSON (measured)
     assert r.headers["content-type"].startswith("application/json") and seen[-1][1] is False
 
-    stream = arrow_answer.encode(contrib, "records", "rows")
+    stream = server_stream(contrib, "records", "rows")
 
     async def var_arrow(method, p, ident, body=None, raw=False, accept="", **params):
         return stream, _Headers({"content-type": MEDIA})
@@ -124,7 +127,7 @@ def test_a_visual_is_negotiated_on_both_bi_paths(client, backend, monkeypatch):
 
     async def bi_accepting(path, ident, body, accept, wait=None, **params):
         calls.append(("sync", path, accept))
-        return json.dumps(a).encode(), _Headers({"content-type": "application/json"})
+        return server_stream(a, "rows", "rows"), _Headers({"content-type": MEDIA})
 
     async def bi_async(method, path, ident, body, prefer, wait=None, **params):
         calls.append(("run", path))
@@ -140,7 +143,7 @@ def test_a_visual_is_negotiated_on_both_bi_paths(client, backend, monkeypatch):
     r = client.post("/bi/api/reports/file:report:x/query", json=body, headers={"Accept": MEDIA})
     assert r.headers["content-type"] == MEDIA and arrow_answer.decode(r.content) == a and calls[-1][0] == "sync"
     r = client.post("/bi/api/reports/file:report:x/query", json=body, headers={"Accept": MEDIA, "Prefer": "respond-async, wait=2"})
-    assert r.headers["content-type"] == MEDIA and arrow_answer.decode(r.content) == a and calls[-1][0] == "run"
-    assert json.loads(r.headers["x-drishti-ran-as"]) == {"id": "R-1", "title": "Zürich"}
+    assert r.headers["content-type"].startswith("application/json") and calls[-1][0] == "run"            # a run's answer: JSON as it came
+    assert r.json() == {"run": {"id": "R-1", "title": "Zürich"}, "answer": a}
     r = client.post("/bi/api/reports/file:report:x/query", json=body, headers={"Accept": "application/json"})
     assert r.json() == a and calls[-1][0] == "json"                                                    # an old client: JSON, as before

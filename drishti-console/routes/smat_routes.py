@@ -205,12 +205,12 @@ async def matrix_arrow(request: Request):
     """The matrix as an Arrow IPC stream file (the rows the record batch, the rest in its metadata, as the page reads it)."""
     p = _params(request)
     try:
-        answer = await request.app.state.backend.var("GET", "/matrix", ident(request), **p)
+        content, headers = await request.app.state.backend.var("GET", "/matrix", ident(request), raw=True, accept=arrow_answer.MEDIA, **p)
     except BackendError as e:
         return _problem(e)
-    content = arrow_answer.encode(answer, "records", "rows")
-    if content is None:
-        return JSONResponse({"code": "DRS-5001", "detail": "this matrix cannot be written as Arrow here (pyarrow is missing)"}, status_code=501)
+    if arrow_answer.MEDIA not in (headers.get("content-type") or "").lower():   # the server sends JSON for a matrix Arrow is not written with
+        return JSONResponse({"code": "DRS-5001", "detail": "this matrix cannot be sent as Arrow: download it as CSV or JSON Lines"}, status_code=422)
+    answer = arrow_answer.decode(content)                                        # only its name for the file
     return Response(content, media_type=arrow_answer.MEDIA,
                     headers={"Content-Disposition": f'attachment; filename="{_filename(answer, "arrow")}"', "Cache-Control": "no-store"})
 
