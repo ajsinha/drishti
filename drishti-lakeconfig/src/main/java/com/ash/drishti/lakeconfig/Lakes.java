@@ -76,9 +76,23 @@ public final class Lakes {
     public static Path dir() {
         String p = System.getProperty(PROPERTY);
         if (p == null || p.isBlank()) {
-            p = System.getenv(ENV);
+            p = properties.apply(PROPERTY);
+        }
+        if (p == null || p.isBlank()) {
+            p = properties.apply(ENV);
         }
         return Path.of(p == null || p.isBlank() ? DEFAULT_DIR : p.strip());
+    }
+
+    private static volatile Function<String, String> properties = System::getenv;
+
+    /**
+     * How a lake file's references are resolved by {@link #current()}: the server installs its own settings (its environment, system
+     * properties and configuration, as it resolves a connector file's references), so {@code ${DRISHTI_DELTA_ROOT}} given as a server
+     * setting is seen; null: the process's environment.
+     */
+    public static void useProperties(Function<String, String> lookup) {
+        properties = lookup == null ? System::getenv : lookup;
     }
 
     /** The lakes of {@link #dir()} with the process's environment. */
@@ -86,40 +100,12 @@ public final class Lakes {
         return read(dir(), System::getenv);
     }
 
-    private static final java.util.concurrent.atomic.AtomicReference<Object[]> CURRENT = new java.util.concurrent.atomic.AtomicReference<>();
-
     /**
-     * The lakes of {@link #dir()} as they are now: read again only when the folder, a file's time or the number of files changed since
-     * the last read (a connector's start, Admin -> Lakes and the checks all ask; an edited lake file is seen at the next ask).
+     * The lakes of {@link #dir()} as they are now, references resolved with the server's settings ({@link #useProperties}): read at
+     * every ask (a connector's start, Admin -> Lakes, the checks), so an edited lake file is seen at once; a few small files.
      */
     public static Lakes current() {
-        Path d = dir();
-        String stamp = stamp(d);
-        Object[] held = CURRENT.get();
-        if (held != null && held[0].equals(stamp)) {
-            return (Lakes) held[1];
-        }
-        Lakes fresh = read(d, System::getenv);
-        CURRENT.set(new Object[] {stamp, fresh});
-        return fresh;
-    }
-
-    private static String stamp(Path d) {
-        StringBuilder sb = new StringBuilder(d.toAbsolutePath().normalize().toString());
-        if (Files.isDirectory(d)) {
-            try (Stream<Path> files = Files.list(d)) {
-                files.filter(f -> f.getFileName().toString().endsWith(".yaml")).sorted().forEach(f -> {
-                    try {
-                        sb.append('|').append(f.getFileName()).append('@').append(Files.getLastModifiedTime(f).toMillis()).append('#').append(Files.size(f));
-                    } catch (IOException e) {
-                        sb.append('|').append(f.getFileName()).append("@?");
-                    }
-                });
-            } catch (IOException e) {
-                sb.append("|unlistable");
-            }
-        }
-        return sb.toString();
+        return read(dir(), properties);
     }
 
     /** Every {@code *.yaml} of {@code dir} (none when the folder does not exist: a server with no lake file). */
