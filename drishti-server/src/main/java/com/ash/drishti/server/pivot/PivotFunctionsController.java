@@ -1,0 +1,210 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.server.pivot;
+
+import com.ash.drishti.bicompute.core.PivotCore;
+import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.bicompute.custom.CustomFunctions;
+import com.ash.drishti.bicompute.custom.FunctionDef;
+import com.ash.drishti.bicompute.explain.Explain;
+import com.ash.drishti.bicompute.harness.FunctionCheck;
+import com.ash.drishti.bicompute.harness.Playground;
+import com.ash.drishti.bicompute.spi.Batch;
+import com.ash.drishti.bicompute.spi.Viewer;
+import com.ash.drishti.bicompute.whatif.Overlay;
+import com.ash.drishti.bicompute.whatif.WhatIf;
+import com.ash.drishti.common.DrishtiException;
+import com.ash.drishti.common.ErrorCode;
+import com.ash.drishti.identity.AuditLog;
+import com.ash.drishti.server.security.Principal;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestAttribute;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+/**
+ * The pivot engine's custom functions, explanations and what-ifs (PIVOT_GUIDE.md; API_GUIDE.md "Pivot: custom functions, explain and
+ * what-if"), under {@code /api/v1/pivot}: functions listed, read, tested in the playground (the harness, the states after each part and
+ * merge, the cost, a pivot of the sample), saved as versions after the harness passes, submitted, approved by someone other than the
+ * author, withdrawn; the difference between two cells or one cell on two dates in steps that add up; a view with a what-if overlay beside
+ * the original. Everything is audited; figures come from the {@code drishti-bicompute} engine.
+ */
+@RestController
+@RequestMapping("/api/v1/pivot")
+public class PivotFunctionsController {
+
+    private final PivotController pivot;
+    private final PivotCore core;
+    private final CustomFunctions functions;
+    private final AuditLog audit;
+
+    public PivotFunctionsController(PivotController pivot, PivotCore core, CustomFunctions functions, AuditLog audit) {
+        this.pivot = pivot;
+        this.core = core;
+        this.functions = functions;
+        this.audit = audit;
+    }
+
+    // ---- custom functions -----------------------------------------------------------------------------------------------------------
+
+    @GetMapping("/functions")
+    public Map<String, Object> list(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        Viewer v = pivot.on(p);
+        CustomFunctions.Settings s = functions.settings();
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("functions", functions.list(v));
+        out.put("languages", Map.of("formula", s.formula(), "sql", s.sql(), "python", s.python(), "java", s.java()));
+        out.put("requireApproval", s.requireApproval());
+        return out;
+    }
+
+    @GetMapping("/functions/{owner}/{name}")
+    public Map<String, Object> get(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String name,
+            @RequestParam(required = false) Integer version) {
+        return functions.get(pivot.on(p), owner, name, version).toMap();
+    }
+
+    /**
+     * The playground: {@code {name, language, code, entry, inputs, kind, ..., sample, parts, group, projectRows, nodes}}. Nothing is saved;
+     * the harness report, the states after each part and merge, the cost and the pivot of the sample are answered.
+     */
+    @PostMapping("/functions/test")
+    public Map<String, Object> test(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Viewer v = pivot.on(p);
+        FunctionDef d = functions.define(v, body, 0);
+        Batch sample = CustomFunctions.sample(d.inputs(), body.get("sample"));
+        FunctionCheck.Verdict verdict = functions.test(v, d, sample);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("definition", d.toMap());
+        out.put("harness", verdict.toMap());
+        String[] groups = groups(body.get("sample"), body.get("group") == null ? null : String.valueOf(body.get("group")), sample.rows());
+        long project = body.get("projectRows") instanceof Number n ? n.longValue() : 0;
+        int nodes = body.get("nodes") instanceof Number n ? n.intValue() : 1;
+        int parts = body.get("parts") instanceof Number n ? n.intValue() : 3;
+        try {
+            out.put("playground", Playground.run(functions.make(d, true), sample, parts, groups, project, nodes));
+        } catch (RuntimeException e) {
+            out.put("playground", Map.of("error", String.valueOf(e.getMessage())));
+        }
+        return out;
+    }
+
+    /** The sample's group column (the playground's little pivot), when the author picked one. */
+    @SuppressWarnings("unchecked")
+    static String[] groups(Object sample, String group, int rows) {
+        if (group == null || group.isBlank()) {
+            return null;
+        }
+        String[] out = new String[rows];
+        List<Object> list = sample instanceof Map<?, ?> m && m.get("rows") instanceof List<?> l ? (List<Object>) l
+                : sample instanceof List<?> l ? (List<Object>) l : List.of();
+        List<?> cols = sample instanceof Map<?, ?> m && m.get("columns") instanceof List<?> c ? c : List.of();
+        int ci = cols.indexOf(group);
+        for (int r = 0; r < Math.min(rows, list.size()); r++) {
+            Object row = list.get(r);
+            Object g = row instanceof Map<?, ?> rm ? rm.get(group) : row instanceof List<?> rl && ci >= 0 && ci < rl.size() ? rl.get(ci) : null;
+            out[r] = g == null ? null : String.valueOf(g);
+        }
+        return out;
+    }
+
+    /** Saves the caller's function as its next version, after its harness passes on {@code sample}. */
+    @PostMapping("/functions")
+    public Map<String, Object> save(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Viewer v = pivot.on(p);
+        FunctionDef draft = functions.define(v, body, 0);
+        return functions.save(v, body, CustomFunctions.sample(draft.inputs(), body.get("sample"))).toMap();
+    }
+
+    @PostMapping("/functions/{owner}/{ref}/submit")
+    public Map<String, Object> submit(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String ref,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String[] nv = ref(ref);
+        return functions.submit(pivot.on(p), owner, nv[0], Integer.parseInt(nv[1]), str(body, "note")).toMap();
+    }
+
+    @PostMapping("/functions/{owner}/{ref}/approve")
+    public Map<String, Object> approve(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String ref,
+            @RequestBody Map<String, Object> body) {
+        String[] nv = ref(ref);
+        return functions.approve(pivot.on(p), owner, nv[0], Integer.parseInt(nv[1]), str(body, "scope"), str(body, "reason")).toMap();
+    }
+
+    @PostMapping("/functions/{owner}/{ref}/revoke")
+    public Map<String, Object> revoke(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @PathVariable String owner, @PathVariable String ref,
+            @RequestBody(required = false) Map<String, Object> body) {
+        String[] nv = ref(ref);
+        return functions.revoke(pivot.on(p), owner, nv[0], Integer.parseInt(nv[1]), str(body, "reason")).toMap();
+    }
+
+    private static String[] ref(String ref) {
+        int at = ref.lastIndexOf('@');
+        if (at <= 0 || !ref.substring(at + 1).matches("\\d+")) {
+            throw new DrishtiException(ErrorCode.PIVOT_BAD_VIEW, "name a version: " + ref + "@3");
+        }
+        return new String[] {ref.substring(0, at), ref.substring(at + 1)};
+    }
+
+    private static String str(Map<String, Object> body, String key) {
+        return body == null || body.get(key) == null ? null : String.valueOf(body.get(key));
+    }
+
+    // ---- explain and what-if --------------------------------------------------------------------------------------------------------
+
+    /**
+     * {@code {view, measure, from: {DIM: value}, fromDate, to: {DIM: value}, toDate, by, order, price, quantity}}: the difference in steps
+     * that add up (two cells, or one cell on two dates).
+     */
+    @PostMapping("/explain")
+    public Map<String, Object> explain(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Viewer v = pivot.on(p);
+        PivotView view = pivot.view(p, body);
+        Explain.Request r = new Explain.Request(view, str(body, "measure"), coords(body.get("from")), str(body, "fromDate"),
+                body.get("to") == null ? null : coords(body.get("to")), str(body, "toDate"), str(body, "by"), str(body, "order"), str(body, "price"),
+                str(body, "quantity"));
+        Map<String, Object> out = Explain.explain(core, v, r);
+        audit.record(p.user(), "pivot.explain", view.source(), "from=" + r.from() + "@" + r.fromDate() + "; to=" + r.to() + "@" + r.toDate()
+                + "; by=" + r.by());
+        return out;
+    }
+
+    /** {@code {view, whatIf: {exclude, changes, add}}}: the view with the overlay beside the original, cell by cell. Never written anywhere. */
+    @PostMapping("/whatif")
+    public Map<String, Object> whatIf(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
+        Viewer v = pivot.on(p);
+        PivotView view = pivot.view(p, body);
+        Overlay o = Overlay.parse(body.get("whatIf"));
+        Map<String, Object> out = WhatIf.run(core, v, view, o);
+        audit.record(p.user(), "pivot.whatif", view.source(), "overlay=" + o.signature() + "; excluded=" + o.exclude().keySet() + "; changes="
+                + o.changes().size() + "; added=" + o.add().size());
+        return out;
+    }
+
+    private static Map<String, String> coords(Object o) {
+        Map<String, String> out = new LinkedHashMap<>();
+        if (o instanceof Map<?, ?> m) {
+            m.forEach((k, x) -> out.put(String.valueOf(k), String.valueOf(x)));
+        }
+        return out;
+    }
+}

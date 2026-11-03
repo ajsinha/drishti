@@ -86,7 +86,7 @@ public class PivotController {
         this.engines = engines;
     }
 
-    private Viewer on(Principal p) {
+    Viewer on(Principal p) {
         com.ash.drishti.server.engines.EngineRegistry reg = engines.getIfAvailable();
         if (reg != null ? reg.known("pivot") && !reg.running("pivot") : !enabled) {
             throw new DrishtiException(ErrorCode.PIVOT_OFF, "the pivot engine is switched off on this server (config/engines/pivot.yaml, drishti.engines.pivot.enabled)");
@@ -99,7 +99,7 @@ public class PivotController {
 
     /** The view of a body: {@code {"view": {...}}}, {@code {"view": "owner/name"}} (a saved view), or the view itself. */
     @SuppressWarnings("unchecked")
-    private PivotView view(Principal p, Map<String, Object> body) {
+    PivotView view(Principal p, Map<String, Object> body) {
         Object v = body == null ? null : body.get("view");
         if (v instanceof String id) {
             return views.open(p, id);
