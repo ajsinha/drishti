@@ -188,7 +188,7 @@ public final class KindSources implements TabularSource.Resolver {
         String fullVersion = version + "|" + (day == null ? "current" : day) + "|" + masks;
         String table = "pv_" + Integer.toHexString((source + "|" + fullVersion).hashCode()).replace('-', 'n');
         List<String> dates = d.dated() ? data.dates(source).stream().map(LocalDate::toString).toList() : List.of();
-        boolean memoryOnly = com.ash.drishti.server.memlake.Retention.current().memoryOnly(source);
+        boolean memoryOnly = com.ash.drishti.memlake.Retention.current().memoryOnly(source);
         com.ash.drishti.api.LakeFiles lake = memoryOnly ? null : lake(d, day, fields, p);
         long estimate = -1;
         if (lake == null) {
