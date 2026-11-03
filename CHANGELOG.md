@@ -58,6 +58,8 @@
   small legend swatch (14 by 3 pixels), so the page shrank to a narrow column; the box is now `sw-page`. New browser test
   `test_stress_window_browser.py`. VAR_GUIDE.md section 18.9 opens with a plain-words explanation: what the stress window is, what the
   screen shows, the data it uses and where it is useful.
+- **Forms, write-back:** a form opened before the page knew whether its person may submit (a quick open, a phone) now gets its Submit
+  button and its note when that answer arrives; before, it stayed without Submit until the page was reloaded.
 - **VaR, Ad-hoc scopes:** a saved basket's or portfolio's name stays visible; its Edit, Delete and + basket buttons sit after the name
   instead of over it, on one line: showing them never changes the row's height, so the rows below never move under the pointer.
 
