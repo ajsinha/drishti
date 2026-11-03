@@ -27,9 +27,10 @@ import java.util.function.Function;
 /**
  * The one table of Rachana-EL functions, filled by the families: {@link LogicFunctions}, {@link MathFunctions},
  * {@link TextFunctions}, {@link DateFunctions} and {@link ListFunctions} (FUNCTION_CATALOGUE.md sections 1, 2, 3 and 6).
- * Every function is a scalar (one value from values): aggregates belong to the pivot engine (ONE_GRAMMAR.md), except the
- * list forms Rachana had before ({@code sum}, {@code min}, {@code max} over a list, {@code group}), which keep their names
- * and results until they move there. Functions are pure and cheap; an empty argument gives an empty result unless the
+ * Rachana's own functions are scalars (one value from values). Every aggregate ({@code sum}, {@code count}, {@code avg},
+ * {@code min} and {@code max} over one list, {@code median}, {@code percentile} …), the grouping behind {@code group(...)}, and
+ * {@code measure(...)} and {@code cell(...)} come from the pivot engine, registered into this table by a {@link FunctionProvider}
+ * ({@link Aggregates}; ONE_GRAMMAR.md parts 1 to 3). Functions are pure and cheap; an empty argument gives an empty result unless the
  * function says otherwise, a masked one a masked result, and a value of the wrong type (text where a number is needed)
  * raises {@code DRS-2102} naming the function and the value, which {@code iferror(...)} turns into a fallback.
  *
@@ -49,14 +50,16 @@ public final class Functions {
     private static final Set<String> PASS_MASK;
     private static final Map<String, Function<List<Expr>, String>> CHECKS;
     private static final Map<String, String> OLD_SPELLINGS;
+    private static final Map<String, String> FAMILY;
 
     static {
         Table t = new Table();
-        LogicFunctions.register(t);
-        MathFunctions.register(t);
-        TextFunctions.register(t);
-        DateFunctions.register(t);
-        ListFunctions.register(t);
+        LogicFunctions.register(t.family("logic"));
+        MathFunctions.register(t.family("math"));
+        TextFunctions.register(t.family("text"));
+        DateFunctions.register(t.family("dates"));
+        ListFunctions.register(t.family("lists"));
+        Aggregates.install(t);
         ARITY = Collections.unmodifiableMap(t.arity);
         FUNCTIONS = Map.copyOf(t.functions);
         FORMS = Map.copyOf(t.forms);
@@ -64,6 +67,43 @@ public final class Functions {
         PASS_MASK = Set.copyOf(t.passMask);
         CHECKS = Map.copyOf(t.checks);
         OLD_SPELLINGS = Collections.unmodifiableMap(new TreeMap<>(t.old));
+        FAMILY = Map.copyOf(t.family);
+    }
+
+    /**
+     * One function of the table as the function catalogue (Help → Functions, {@code FUNC}) lists it.
+     *
+     * @param name its one name
+     * @param family {@code logic}, {@code math}, {@code text}, {@code dates}, {@code lists} (Rachana's own), or {@code aggregates}
+     * @param runs {@code R} (Rachana, a scalar) or {@code E} (the pivot engine, through a provider)
+     * @param source who implements it: {@code Rachana}, or the provider's own words; {@code none on the class path} when refused
+     * @param args its arguments as a provider writes them (empty for Rachana's own: the reference documents them)
+     * @param form a provided aggregate's {@code mergeable} or {@code holistic}, or {@code measure}; empty for a scalar
+     * @param description a provided function's one line; empty for Rachana's own
+     */
+    public record Entry(String name, String family, String runs, String source, String args, String form, String description) {}
+
+    /**
+     * Every function of the table under its one name (old spellings left out), in name order: what the generated function catalogue
+     * lists. {@code min} and {@code max} are listed once, as the engine's aggregates over one list; {@code group} as the engine's.
+     */
+    public static List<Entry> catalogue() {
+        List<Entry> out = new java.util.ArrayList<>();
+        for (String name : ARITY.keySet()) {
+            if (OLD_SPELLINGS.containsKey(name)) {
+                continue;
+            }
+            FunctionProvider.Provided p = Aggregates.all().get(name);
+            boolean engine = p != null || Aggregates.EXPECTED.contains(name) || "group".equals(name);
+            if (!engine) {
+                out.add(new Entry(name, FAMILY.getOrDefault(name, ""), "R", "Rachana", "", "", ""));
+                continue;
+            }
+            String source = Aggregates.source(name);
+            out.add(new Entry(name, "aggregates", "E", source == null ? "none on the class path" : source,
+                    p == null ? "" : p.args(), p == null ? "" : p.form(), p == null ? "" : p.description()));
+        }
+        return out;
     }
 
     private Functions() {}
@@ -122,11 +162,20 @@ public final class Functions {
         private final Set<String> passMask = new HashSet<>();
         private final Map<String, Function<List<Expr>, String>> checks = new HashMap<>();
         private final Map<String, String> old = new HashMap<>();
+        private final Map<String, String> family = new HashMap<>();
+        private String current = "";
+
+        /** The family the names registered next belong to (the catalogue's sections). */
+        Table family(String name) {
+            current = name;
+            return this;
+        }
 
         private void name(String name, int min, int max) {
             if (arity.putIfAbsent(name, new int[] {min, max}) != null) {
                 throw new IllegalStateException("Rachana-EL function " + name + " is registered twice");
             }
+            family.put(name, current);
         }
 
         /** An eager function: its arguments evaluated, a masked one making the result masked. */

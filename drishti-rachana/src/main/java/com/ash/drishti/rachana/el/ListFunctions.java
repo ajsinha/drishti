@@ -16,21 +16,17 @@
 package com.ash.drishti.rachana.el;
 
 import com.ash.drishti.api.DataNode;
-import com.ash.drishti.api.NodeType;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 
 /**
  * Lists, Excel's dynamic arrays over {@code [*]} (FUNCTION_CATALOGUE.md section 6): {@code size}, {@code first},
  * {@code last}, {@code flatten}, {@code sort}, {@code unique}, {@code take}, {@code drop}, {@code sequence}, {@code map},
- * {@code reduce}; and the list forms Rachana had before the pivot engine took aggregation ({@code sum}, {@code group}),
- * kept with their names and results until they move there (ONE_GRAMMAR.md part 2). {@code map}, {@code sort} and
+ * {@code reduce}; and {@code group} ({@link GroupForm}: Rachana binds the key and the inputs, the pivot engine groups and
+ * aggregates). Aggregates over a list ({@code sum} …) are the engine's (ONE_GRAMMAR.md part 2). {@code map}, {@code sort} and
  * {@code reduce} evaluate their expression once per element with {@code @} the element ({@code @acc} the running value
  * of {@code reduce}). A masked list, or a masked value a result depends on, makes the result masked.
  */
@@ -49,8 +45,7 @@ final class ListFunctions {
         t.fn("first", 1, 1, (a, c) -> a.get(0) instanceof DataNode n ? n.get(0) : null);
         t.fn("last", 1, 1, (a, c) -> a.get(0) instanceof DataNode n ? n.get(-1) : null);
         t.fn("flatten", 1, 1, (a, c) -> flatten(a.get(0)));
-        t.fn("sum", 1, 2, ListFunctions::sum);
-        t.fn("group", 2, 4, ListFunctions::group);
+        t.form("group", 2, 4, GroupForm::group);
         t.form("sort", 1, 3, ListFunctions::sort);
         t.fn("unique", 1, 1, (a, c) -> unique(a.get(0)));
         t.fn("take", 2, 2, (a, c) -> slice("take", a, true));
@@ -85,83 +80,6 @@ final class ListFunctions {
                 out.add(e);
             }
         }
-        return new DataNode.Arr(List.copyOf(out));
-    }
-
-    private static Object sum(List<Object> a, EvalContext c) {
-        if (!(a.get(0) instanceof DataNode.Arr arr)) {
-            return 0L;
-        }
-        String field = a.size() > 1 ? Values.text(a.get(1)) : null;
-        double total = 0;
-        for (DataNode e : arr.elements()) {
-            DataNode x = field == null ? e : e.get(field);
-            if (x.isMasked()) {
-                return Values.mask();                 // a masked value is never added up: the sum is masked
-            }
-            double v = x.asDouble();
-            if (!Double.isNaN(v)) {
-                total += v;
-            }
-        }
-        return Values.normalise(total);
-    }
-
-    /**
-     * {@code group(list, 'key', 'value'?, 'by'?)}: the list's elements grouped by the field {@code key} (a dotted path), one row
-     * {@code {label, value, count}} per distinct key in key order: {@code value} the sum of the field {@code value} over the group
-     * (non-numbers, blanks and number-like text read as numbers; the count when no value field is given), {@code count} its
-     * elements. {@code by} cuts an ISO date key to its {@code month} (2026-10) or {@code year} (2026) first. Elements without a key
-     * are left out; empty for anything but a list. A masked value makes the group's value masked.
-     */
-    private static Object group(List<Object> a, EvalContext c) {
-        if (!(Values.simplify(a.get(0)) instanceof DataNode.Arr arr)) {
-            return null;
-        }
-        String key = Values.text(a.get(1));
-        String value = a.size() > 2 && !Values.isNull(a.get(2)) && !Values.text(a.get(2)).isBlank() ? Values.text(a.get(2)) : null;
-        String by = a.size() > 3 ? Values.text(a.get(3)) : "";
-        TreeMap<String, double[]> groups = new TreeMap<>();
-        Set<String> masked = new HashSet<>();
-        for (DataNode e : arr.elements()) {
-            String k = e.at(key).asText();
-            if (k == null || k.isBlank()) {
-                continue;
-            }
-            k = "month".equals(by) && k.length() >= 7 ? k.substring(0, 7) : "year".equals(by) && k.length() >= 4 ? k.substring(0, 4) : k;
-            if (!groups.containsKey(k) && groups.size() >= MAX_GROUPS) {
-                continue;
-            }
-            double[] g = groups.computeIfAbsent(k, x -> new double[2]);
-            g[1]++;
-            if (value == null) {
-                g[0]++;
-                continue;
-            }
-            DataNode v = e.at(value);
-            if (v.isMasked()) {
-                masked.add(k);
-            }
-            double d = v.asDouble();
-            if (Double.isNaN(d) && v.type() == NodeType.STRING) {
-                try {
-                    d = Double.parseDouble(v.asText().trim());
-                } catch (NumberFormatException ignored) {
-                    d = Double.NaN;
-                }
-            }
-            if (!Double.isNaN(d)) {
-                g[0] += d;
-            }
-        }
-        List<DataNode> out = new ArrayList<>(groups.size());
-        groups.forEach((k, g) -> {
-            Map<String, Object> row = new LinkedHashMap<>();
-            row.put("label", k);
-            row.put("value", masked.contains(k) ? null : Values.normalise(g[0]));
-            row.put("count", (long) g[1]);
-            out.add(DataNode.of(row));
-        });
         return new DataNode.Arr(List.copyOf(out));
     }
 

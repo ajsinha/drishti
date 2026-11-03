@@ -65,8 +65,6 @@ class MaskTest {
         assertThat(eval("abs($.mtm)")).isEqualTo(DataNode.MASK);
         assertThat(eval("fmt($.mtm, 'signed0')")).isEqualTo(DataNode.MASK);
         assertThat(eval("link($.counterparty.id, 'counterparty', $.counterparty.name)")).isEqualTo(DataNode.MASK);
-        assertThat(eval("sum($.legs, 'pv')")).isEqualTo(DataNode.MASK);   // never added up
-        assertThat(eval("sum($.rows, 'pv')")).isEqualTo(3L);
         assertThat(((Number) eval("coalesce($.missing, $.notional, $.mtm)")).longValue()).isEqualTo(100L);
         assertThat(eval("$.mtm > 0 ? 'gain' : 'loss'")).isEqualTo(DataNode.MASK);
         assertThat(EL.template("MTM ${fmt($.mtm, 'signed0')}").render(EvalContext.of(DOC, F))).isEqualTo("MTM " + DataNode.MASK);

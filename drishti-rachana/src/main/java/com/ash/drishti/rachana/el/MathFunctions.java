@@ -59,10 +59,10 @@ final class MathFunctions {
         t.fn("clamp", 3, 3, (a, c) -> clamp(a));
         t.fn("least", 1, 64, (a, c) -> pick("least", a, true));
         t.fn("greatest", 1, 64, (a, c) -> pick("greatest", a, false));
-        // min/max over one list are aggregates (they move to the pivot engine, ONE_GRAMMAR.md part 2); with several
-        // arguments they are the old spelling of least/greatest, read for compatibility with the results they always gave
-        t.fn("min", 1, 8, (a, c) -> lenient(a, true));
-        t.fn("max", 1, 8, (a, c) -> lenient(a, false));
+        // min/max over one list are the pivot engine's aggregates (ONE_GRAMMAR.md part 2); with several arguments they are the
+        // old spelling of least/greatest, read for compatibility with the results they always gave
+        t.fn("min", 1, 8, (a, c) -> lenient(a, true, c));
+        t.fn("max", 1, 8, (a, c) -> lenient(a, false, c));
     }
 
     /** {@code round_up(x, [n])}, {@code round_down(x, [n])}: away from or towards zero, to n decimal places (negative: tens …). */
@@ -224,13 +224,16 @@ final class MathFunctions {
     }
 
     /**
-     * {@code min}/{@code max}: over one list's elements (a list aggregate) or over several arguments (the old spelling of
-     * {@code least}/{@code greatest}); numbers only, anything else skipped; empty if none; masked when an element is.
+     * {@code min}/{@code max}: over one list's elements, the pivot engine's aggregate (through its {@link FunctionProvider}; refused
+     * with the reason where the engine is not on the class path); over several arguments, the old spelling of
+     * {@code least}/{@code greatest}: numbers only, anything else skipped; empty if none; masked when an argument is.
      */
-    private static Object lenient(List<Object> a, boolean min) {
-        Iterable<?> items = a.size() == 1 && a.get(0) instanceof DataNode.Arr arr ? arr.elements() : a;
+    private static Object lenient(List<Object> a, boolean min, EvalContext c) {
+        if (a.size() == 1 && a.get(0) instanceof DataNode.Arr) {
+            return Aggregates.call(min ? "min" : "max", a, c);
+        }
         Double best = null;
-        for (Object o : items) {
+        for (Object o : a) {
             if (Values.masked(o)) {
                 return Values.mask();
             }

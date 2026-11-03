@@ -160,10 +160,8 @@ class MathFunctionsTest {
     void minAndMaxKeepTheirResults() {
         assertThat(eval("max(3, '7', 'x')")).isEqualTo(7L);                   // the old spelling skips what is not a number
         assertThat(eval("min($.PRICE, 0.05)")).isEqualTo(0.040829);
-        assertThat(eval("max($.NUMS)")).isEqualTo(10L);
-        assertThat(eval("min($.NUMS)")).isEqualTo(1.5);
+        evalError("max($.NUMS)", "max", "pivot engine (drishti-bicompute)", "not on the class path");
         assertThat(eval("min('a', 'b')")).isNull();
-        assertThat(masked("max($.PVS[*].PV)")).isTrue();
     }
 
     @Test

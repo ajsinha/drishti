@@ -125,9 +125,35 @@ class ListFunctionsTest {
     @Test
     void theOldListFormsKeepTheirResults() {
         assertThat(eval("size($.LEGS)")).isEqualTo(2L);
-        assertThat(eval("sum($.LEGS, 'NOTIONAL')")).isEqualTo(484000000L);
         assertThat(eval("first($.LEGS).LEG_TYPE")).isEqualTo("FIXED");
         assertThat(eval("last($.EVENTS).EVENT_TYPE")).isEqualTo("CASH_SETTLEMENT");
         assertThat(eval("size(flatten($.LEGS))")).isEqualTo(2L);
+    }
+
+    /**
+     * Rachana implements no aggregate (ONE_GRAMMAR.md part 2): without the pivot engine on the class path (this module's tests), an
+     * aggregate compiles, so a Sutra loads, and is refused with the reason when evaluated; drishti-bicompute's RachanaAggregatesTest
+     * tests the results.
+     */
+    @Test
+    void aggregatesCompileAndAreRefusedWithTheReasonWithoutTheEngine() {
+        EL.compile("sum($.LEGS, 'NOTIONAL') + count($.LEGS) + percentile($.LEGS[*].NOTIONAL, 0.9)");
+        evalError("sum($.LEGS, 'NOTIONAL')", "sum", "pivot engine (drishti-bicompute)", "not on the class path");
+        evalError("avg($.LEGS[*].NOTIONAL)", "avg", "pivot engine");
+        evalError("min($.LEGS[*].NOTIONAL)", "min", "pivot engine");
+        evalError("group($.LEGS, 'CURRENCY', 'NOTIONAL')", "group", "pivot engine");
+        evalError("measure('VAR', 'DESK:DESK-COMM')", "measure", "pivot engine");
+        assertThat(eval("min(3, 1, 2)")).isEqualTo(1L);                           // several arguments: least, Rachana's own
+        assertThat(eval("group($.NOPE, 'x')")).isNull();                          // not a list: empty, as before
+        assertThat(Functions.catalogue()).anySatisfy(e -> {
+            assertThat(e.name()).isEqualTo("sum");
+            assertThat(e.runs()).isEqualTo("E");
+            assertThat(e.source()).isEqualTo("none on the class path");
+        });
+        assertThat(Functions.catalogue()).anySatisfy(e -> {
+            assertThat(e.name()).isEqualTo("upper");
+            assertThat(e.runs()).isEqualTo("R");
+        });
+        assertThat(Functions.catalogue()).noneMatch(e -> e.name().equals("startsWith"));
     }
 }

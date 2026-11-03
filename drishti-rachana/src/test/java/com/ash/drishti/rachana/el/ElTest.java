@@ -49,7 +49,6 @@ class ElTest {
         assertThat(eval("$.direction == 'PAY_FIXED' ? 'Pay fixed' : 'Receive fixed'")).isEqualTo("Pay fixed");
         assertThat(eval("size($.legs) == 2 && !$.legs[1].payer")).isEqualTo(true);
         assertThat(eval("'Leg ' + $.legs[0].leg + ' · ' + $.legs[0].label")).isEqualTo("Leg 1 · Pay fixed");
-        assertThat(eval("sum($.legs[0].rows, 'a')")).isEqualTo(3.5);
         assertThat(eval("$.legs[?@.payer][0].leg")).isEqualTo(1L);
         assertThat(eval("fmt($.rate, 'pct4') + ' fixed'")).isEqualTo("3.8500% fixed");
         assertThat(eval("coalesce($.nope, $.cp.name)")).isEqualTo("Northbridge");
@@ -64,7 +63,6 @@ class ElTest {
     @Test
     void flattenJoinsTheListsOfEveryElementAndNonblankSkipsEmptyText() {
         assertThat(eval("size(flatten($.legs[*].rows))")).isEqualTo(2L);              // leg 2 has no rows: nothing added for it
-        assertThat(eval("sum(flatten($.legs[*].rows), 'a')")).isEqualTo(3.5);
         assertThat(eval("flatten($.tradeId)")).isNull();
         assertThat(eval("size(flatten($.legs))")).isEqualTo(2L);                       // elements that are not lists are kept
         assertThat(eval("nonblank('', '  ', $.nope, $.cp.name)")).isEqualTo("Northbridge");
@@ -79,12 +77,6 @@ class ElTest {
                            {"EVENT_DATE":"2026-11-03","AMOUNT":"","LEG":{"ID":1}},{"EVENT_DATE":"","AMOUNT":7},{"EVENT_DATE":"2027-01-15","AMOUNT":"x"}]}""");
         EvalContext at = EvalContext.of(doc, F).withToday(java.time.LocalDate.of(2026, 10, 16));
         java.util.function.Function<String, Object> ev = src -> Values.simplify(EL.compile(src).eval(at));
-        assertThat(ev.apply("size(group($.EVENTS, 'EVENT_DATE', 'AMOUNT'))")).isEqualTo(3L);              // a blank key is left out
-        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', 'AMOUNT')[0].value")).isEqualTo(499.5);       // number-like text counts
-        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', 'AMOUNT')[0].count")).isEqualTo(2L);
-        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', 'AMOUNT', 'month')[1].label")).isEqualTo("2026-11");
-        assertThat(ev.apply("group($.EVENTS, 'EVENT_DATE', '', 'year')[0].value")).isEqualTo(3L);        // no value field: the count
-        assertThat(ev.apply("group($.EVENTS, 'LEG.ID')[0].label")).isEqualTo("1");                        // a dotted key
         assertThat(ev.apply("group($.nope, 'x')")).isNull();
         assertThat(ev.apply("today()")).isEqualTo("2026-10-16");
         assertThat(ev.apply("days(today(), $.EVENTS[2].EVENT_DATE)")).isEqualTo(18L);
