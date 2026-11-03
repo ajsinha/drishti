@@ -34,6 +34,9 @@
 
 ## Unreleased (on develop, after 2.9.11)
 
+- **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
+  screen; it had been drawn flush left. The VaR card and the risk area name the basket sheet, which replaced the selection tray.
+
 - **The release drill is faster and stops sooner (tools/drill.sh; PACK_DEVELOPER_GUIDE.md §2.6, TOOLS.md).** A gate of a few
   minutes runs first, every job at once: the licence headers, the generated documents and data that must be current (settings
   catalogue, data contracts and their pages, data samples, the packs' generated content, the Python API reference), the docs and
