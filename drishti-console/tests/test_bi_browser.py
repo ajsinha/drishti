@@ -155,11 +155,11 @@ def test_the_catalogue_shows_only_what_the_audience_allows_and_searches_filters_
     assert "Desk P&L" in got and "Counterparty exposure" in got and "Liquidity daily" in got and "Trades (shipped)" in got
     assert "Trades dataset" not in got                                                 # a draft: its workspace only
     assert "Risk ladder" in got                                                        # cat is a member of the workspace, which sees every published item
-    cat.fill("[data-search]", "exposure")
+    cat.fill("input[data-search]", "exposure")
     expect(cat.locator(".bi-card")).to_have_count(1)
     expect(cat.locator("[data-count]")).to_have_text("1 item")
     assert "q=exposure" in cat.url
-    cat.fill("[data-search]", "")
+    cat.fill("input[data-search]", "")
     cat.click('[data-cat-tab="datasets"]')                                             # the kind is a tab since the catalogue split by kind
     expect(cat.locator('[data-cat-panel]')).to_have_attribute("data-cat-shown", "datasets")
     expect(cat.locator(".bi-card h3").filter(has_text="Trades (shipped)")).to_have_count(1)
@@ -172,7 +172,7 @@ def test_the_catalogue_shows_only_what_the_audience_allows_and_searches_filters_
     expect(cat.locator('[data-cat-panel]')).to_have_attribute("data-cat-shown", "reports")
     cat.select_option('[name="sort"]', "title")
     expect(cat.locator(".bi-card h3")).to_have_text(["Desk P&L", "Liquidity daily", "Risk ladder"])   # by title (the exposure board is under Boards)
-    cat.fill("[data-search]", "zzzz-nothing")
+    cat.fill("input[data-search]", "zzzz-nothing")
     expect(cat.locator("[data-empty]")).to_be_visible()
     # sue is a steward outside the workspace: she sees only what its audience names her in
     sue = sign_in(browser, "sue")
@@ -261,7 +261,7 @@ def test_the_keys_work_and_the_help_opens(stack, browser):
     page.keyboard.press("c")
     page.wait_for_url("**/bi/catalogue")
     page.keyboard.press("/")
-    expect(page.locator("[data-search]")).to_be_focused()
+    expect(page.locator("input[data-search]")).to_be_focused()
     page.keyboard.press("Escape")
     page.click("body", position={"x": 5, "y": 300})
     page.keyboard.press("g")
@@ -277,7 +277,7 @@ def test_the_keys_work_and_the_help_opens(stack, browser):
     expect(page.locator("#biKeys")).not_to_be_visible()
     page.keyboard.press("/")                                                              # off the catalogue: goes there, search focused
     page.wait_for_url("**/bi/catalogue?focus=1")
-    expect(page.locator("[data-search]")).to_be_focused()
+    expect(page.locator("input[data-search]")).to_be_focused()
     clean(page)
 
 
@@ -355,11 +355,11 @@ def test_the_bi_folder_is_live_a_file_added_changed_and_deleted_needs_no_restart
     page.goto(CONSOLE_URL + "/bi/catalogue")
     expect(page.locator(".bi-card").first).to_be_visible()
     f.write_text("title: Live demo\ndescription: dropped into the folder\n")
-    page.fill("[data-search]", "live demo")
+    page.fill("input[data-search]", "live demo")
     deadline = time.time() + 20
     while time.time() < deadline and page.locator(".bi-card h3", has_text="Live demo").count() == 0:
-        page.fill("[data-search]", "")
-        page.fill("[data-search]", "live demo")
+        page.fill("input[data-search]", "")
+        page.fill("input[data-search]", "live demo")
         page.wait_for_timeout(700)
     expect(page.locator(".bi-card h3").first).to_have_text("Live demo")
     page.locator(".bi-card h3 a").first.click()

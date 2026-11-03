@@ -54,7 +54,7 @@
         h('p', { class: 'bi-actions' }, use, ' ', h('a', { class: 'btn-pill btn-ghost bi-small', href: open, text: kind === 'model' && d.kind !== 'compat' ? 'Open the designer' : 'Open' })));
     }
     function draw() {
-      const t = (q('[data-search]').value || '').trim().toLowerCase();
+      const t = (q('input[data-search]').value || '').trim().toLowerCase();
       const match = (d) => !t || (d.name + ' ' + d.title + ' ' + (d.pack || '') + ' ' + (d.kind || '')).toLowerCase().indexOf(t) >= 0;
       // the shipped samples and the datasets Drishti generated (sample facts, a file: item, no owner) stay out of Your datasets unless asked for
       const sample = (d) => /^file:/.test(String(d.id || '')) || !d.owner || d.owner === 'system' || /^(sample|generated)[-_]/.test(String(d.name || ''));
@@ -76,7 +76,7 @@
       });
       q('[data-packs-empty]').hidden = Object.keys(by).length > 0;
     }
-    q('[data-search]').addEventListener('input', draw);
+    q('input[data-search]').addEventListener('input', draw);
     q('[data-show-samples]').addEventListener('change', draw);
     // New model: a title, a workspace, the datasets to start with
     const form = q('[data-new-model-form]');

@@ -106,7 +106,7 @@ def test_tabs_switch_in_place_with_the_address_and_history(ctx, stack):
 def test_search_works_inside_the_tab_and_all_groups_by_kind(ctx, stack):
     page = open_page(ctx, stack, "/bi/catalogue?kind=python")
     shown(page, "python")
-    page.fill("[data-search]", "desk")
+    page.fill("input[data-search]", "desk")                  # the catalogue's own box: the Engines menu's items carry data-search too
     page.wait_for_function("document.querySelectorAll('[data-cards] .bi-card').length === 1")
     assert titles(page) == ["Desk notebook"] and "q=desk" in page.url and "kind=python" in page.url
     assert page.text_content('[data-cat-tab="reports"] [data-cat-count]') == "3"
@@ -115,7 +115,7 @@ def test_search_works_inside_the_tab_and_all_groups_by_kind(ctx, stack):
     page.wait_for_selector('[data-cat-group="reports"]')
     heads = page.eval_on_selector_all(".bi-cat-group-h", "els => els.map(e => e.textContent.trim())")
     assert heads == ["Reports 3", "Python 1"]
-    assert titles(page, '[data-cat-group="python"]') == ["Desk notebook"] and page.input_value("[data-search]") == "desk"
+    assert titles(page, '[data-cat-group="python"]') == ["Desk notebook"] and page.input_value("input[data-search]") == "desk"
     assert not page.errors, page.errors
 
 

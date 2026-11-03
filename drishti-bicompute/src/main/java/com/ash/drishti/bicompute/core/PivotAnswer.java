@@ -242,6 +242,16 @@ final class PivotAnswer {
             Map<String, Map<String, Object>> cells) {
         String grandRow = c.rows.root.key();
         String grandCol = c.cols.root.key();
+        // a cell's key is "row key|column key", and a key of several coordinates has "|" in it too: split by the keys themselves
+        Map<String, String[]> parts = new LinkedHashMap<>();
+        for (Map<String, Object> r : rows) {
+            for (Map<String, Object> col : cols) {
+                String k = r.get("key") + "|" + col.get("key");
+                if (cells.containsKey(k)) {
+                    parts.put(k, new String[] {String.valueOf(r.get("key")), String.valueOf(col.get("key"))});
+                }
+            }
+        }
         for (PivotView.Value pv : c.view.values()) {
             String how = PivotView.low(pv.showAs());
             if (how == null) {
@@ -251,7 +261,7 @@ final class PivotAnswer {
             Map<String, Double> rawAll = new LinkedHashMap<>();
             cells.forEach((k, e) -> rawAll.put(k, v(cells, k, label)));
             for (Map.Entry<String, Map<String, Object>> x : cells.entrySet()) {
-                String[] rc = x.getKey().split("\\|", 2);
+                String[] rc = parts.getOrDefault(x.getKey(), x.getKey().split("\\|", 2));
                 Double raw = rawAll.get(x.getKey());
                 Double base = switch (how) {
                     case "pct-grand" -> rawAll.get(grandRow + "|" + grandCol);

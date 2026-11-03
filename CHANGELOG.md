@@ -15,7 +15,9 @@
 -->
 # Changelog
 
-## 2.9.11.f
+## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
+
+### The data inbox
 
 - **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;
   OPERATIONS.md 11.4; TOOLS.md 5.3a; API_GUIDE.md, Data loads).** Put JSON Lines files or archives (`.jsonl`, `.ndjson`, `.json`; plain,
@@ -44,7 +46,11 @@
   status|run|retry`. `LakeLoad.reads(name)` tells whether the loader reads a file name. Two new rules in `ArchitectureRulesTest`
   (`dataInboxIsPlainJava`, `dataInboxWritesNoTable`). The Admin screen comes after its mock-ups.
 
-## 2.9.11.a
+### Menus, Help and fixes
+
+- **Pivot: "show values as" on views of several dimensions.** % of row, % of column, % of parent and rank split a cell's key at its
+  first `|`, but a key of several coordinates holds `|` too, so on a view with two or more row or column dimensions they read the wrong
+  total (or none). The cell is now split by the row and column keys themselves; `ShowAsTest` checks every share against its own total.
 
 - **Pivot: a JSON Lines export** (PIVOT_GUIDE.md, Export). The pivot screen and `POST /api/v1/pivot/export` offer `jsonl` beside Excel, CSV and
   Arrow: one object a cell and measure, and the rows of a cell one object a row, so every export of the console offers the data standard.
@@ -87,7 +93,7 @@
   memory-lake tests moved with the code (`DeltaInMemoryTest`, `IcebergInMemoryTest`, `MemoryRatiosTest`, `MemoryLakeTest`,
   `RetentionTest`, `MemoryStorageTest`, `MemoryStorageContractTest`); `drishti-lakeio` and `drishti-deltalake` publish test jars for them.
 
-## Unreleased (on develop, after 2.9.11)
+### Fixes and smaller changes
 
 
 - **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
@@ -111,7 +117,7 @@
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
 
-## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
+### The pivot engine
 
 - **Pivots over entity documents (PIVOT_ENGINE.md 6.7; PIVOT_GUIDE.md, Documents).** A pivot field is a Rachana path, parsed by
   Rachana's own parser: `$.PRODUCT_TYPE`, `$.LEGS[0].CURRENCY`, `$.LEGS[*].NOTIONAL` (one row per leg), `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL`,
