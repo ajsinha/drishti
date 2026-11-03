@@ -35,15 +35,16 @@ const P = require(require('path').join(require('path').dirname(process.argv[1]),
 const input = JSON.parse(process.argv[2]);
 // The pivot engine's answer as the server gives it (POST /api/pivot/inline; RowsProviderTest and PivotApiTest prove the figures): one cell
 // per pair of key prefixes, blanks left out of every function, members in the engine's order. A stand-in so the drawing is tested alone.
-function engineCube(records, arr) {
+function engineCube(records, arr, kept) {
   const at = {}; records.fields.forEach((f, i) => { at[f.name] = i; });
   const has = (v) => v !== null && v !== undefined && v !== '';
   const num = (v) => typeof v === 'number' && isFinite(v);
   const natural = (a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' }) || (a < b ? -1 : a > b ? 1 : 0);
   const order = (a, b) => a === b ? 0 : a === P.BLANK ? 1 : b === P.BLANK ? -1 : natural(a, b);
+  const key = (f, row) => { const k = P.keyText(row[at[f]]); return kept && kept[f] && !kept[f][k] ? P.OTHERS_KEY : k; };
   const cells = {}, rk = {}, ck = {};
   records.rows.forEach((row) => {
-    const r = arr.rows.map((f) => P.keyText(row[at[f]])), c = arr.columns.map((f) => P.keyText(row[at[f]]));
+    const r = arr.rows.map((f) => key(f, row)), c = arr.columns.map((f) => key(f, row));
     rk[r.join(P.US)] = r; ck[c.join(P.US)] = c;
     [r, []].forEach((x) => (c.length ? [c, []] : [[]]).forEach((y) => {
       const k = P.cellKey(x, y), acc = cells[k] || (cells[k] = arr.values.map(() => ({ n: 0, k: 0, s: 0, lo: null, hi: null, set: {} })));
@@ -61,8 +62,24 @@ function engineCube(records, arr) {
       return g === 'count' ? a.n : g === 'distinct' ? Object.keys(a.set).length : !a.k ? null : g === 'avg' ? a.s / a.k : g === 'min' ? a.lo : g === 'max' ? a.hi : a.s;
     });
   });
-  const keys = (m) => Object.values(m).sort((a, b) => { for (let i = 0; i < a.length; i++) { const d = order(a[i], b[i]); if (d) { return d; } } return 0; });
-  return { rows: arr.rows, columns: arr.columns, values: arr.values, rowKeys: keys(rk), columnKeys: arr.columns.length ? keys(ck) : [], cells: cells };
+  const keys = (m) => Object.values(m).filter((k) => k[0] !== P.OTHERS_KEY).sort((a, b) => { for (let i = 0; i < a.length; i++) { const d = order(a[i], b[i]); if (d) { return d; } } return 0; });
+  const cube = { rows: arr.rows, columns: arr.columns, values: arr.values, rowKeys: keys(rk), columnKeys: arr.columns.length ? keys(ck) : [], cells: cells,
+    count: records.rows.length, rowOthers: 0, columnOthers: 0 };
+  if (kept) { return cube; }
+  // the engine's Top N: each level's members ranked by the measure (largest first, ties in member order), the rest one Others member
+  const top = arr.top || {}, keep = {}, more = {};
+  Object.keys(top).forEach((f) => {
+    const onRows = arr.rows.indexOf(f) >= 0, members = (onRows ? cube.rowKeys : cube.columnKeys).map((k) => k[0]);
+    if (members.length <= top[f].n) { return; }
+    const fig = (m) => { const v = cells[onRows ? P.cellKey([m], []) : P.cellKey([], [m])]; return v && num(v[top[f].by]) ? v[top[f].by] : -Infinity; };
+    const ranked = members.map((m, i) => ({ m, i, v: fig(m) })).sort((a, b) => (b.v - a.v) || (a.i - b.i)).slice(0, top[f].n);
+    keep[f] = {}; ranked.forEach((x) => { keep[f][x.m] = true; }); more[f] = members.length - top[f].n;
+  });
+  if (!Object.keys(keep).length) { return cube; }
+  const again = engineCube(records, arr, keep);
+  arr.rows.forEach((f) => { if (more[f]) { again.rowOthers = more[f]; } });
+  arr.columns.forEach((f) => { if (more[f]) { again.columnOthers = more[f]; } });
+  return again;
 }
 const out = (function (E, input) { %s })(E, input);
 process.stdout.write(JSON.stringify(out === undefined ? null : out));
@@ -195,13 +212,13 @@ def test_normalise_drops_unknown_keys_cuts_series_replaces_bad_enums_and_checks_
 
 # ---- the mapping and the aggregation ----------------------------------------------------------------------------------
 
-def test_x_maps_to_rows_split_to_columns_and_series_to_values_with_avg_asking_sum_and_count():
+def test_x_maps_to_rows_split_to_columns_and_series_to_values_and_the_split_asks_the_engines_top_n():
     s = {"v": 1, "type": "bar", "x": {"field": "CURRENCY"}, "split": "PAY_DATE",
          "series": [{"field": "AMOUNT", "agg": "sum"}, {"field": "PV", "agg": "avg"}, {"agg": "count"}]}
     a = js("const cols = E.classify(input.r.fields, input.r); return E.toArrangement(E.normalise(input.s, cols).settings).arrangement;", {"r": CASH, "s": s})
     assert a["rows"] == ["CURRENCY"] and a["columns"] == ["PAY_DATE"]
-    assert a["values"] == [{"field": "AMOUNT", "agg": "sum"}, {"field": "PV", "agg": "avg"}, {"field": "PV", "agg": "sum"},
-                           {"field": "PV", "agg": "count"}, {"field": "·rows", "agg": "count"}]
+    assert a["values"] == [{"field": "AMOUNT", "agg": "sum"}, {"field": "PV", "agg": "avg"}, {"field": "·rows", "agg": "count"}]
+    assert a["top"] == {"PAY_DATE": {"n": 11, "by": 0}}                        # an average's Others is the engine's, from its own rows
 
 
 @pytest.mark.parametrize("agg,expected", [("sum", [120, 200, 110]), ("avg", [40, 200, 55]), ("count", [3, 1, 2]),
@@ -448,5 +465,5 @@ return [m.x, m.series.map(d => d.data), m2.x, m2.series.map(d => d.data), ib.bod
 """
     out = js(body, {"r": CASH, "s": {"v": 1, "type": "bar", "x": "CURRENCY", "series": ["AMOUNT", {"field": "PV", "agg": "avg"}]}})
     assert out[4] == ["d0:string", "v0:number", "v1:number"] and out[5]["rows"] == ["d0"] and out[5]["columns"] == []
-    assert [v["measure"] for v in out[5]["values"]] == ["sum(v0)", "avg(v1)", "sum(v1)", "count(v1)"] and out[6] == ["USD", 100, 90]
+    assert [v["measure"] for v in out[5]["values"]] == ["sum(v0)", "avg(v1)"] and out[6] == ["USD", 100, 90] and out[5]["top"] == {}
     assert out[0] == out[2] and out[1] == out[3]

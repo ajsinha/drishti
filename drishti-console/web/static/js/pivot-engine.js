@@ -46,25 +46,36 @@
       return { measure: fn === 'count' && !f ? 'count()' : fn + '(' + f + ')', as: 'v' + i };
     });
   }
-  /** An engine answer as the cube: the members' keys in the engine's order, one figure per measure in each cell. */
+  var OTHERS_KEY = '\u0000Others';
+  /** The arrangement's top ({field: {n, by: value index}}) as the view's, by the engine's field and measure names. */
+  function topOf(arrangement, field, ms) {
+    var t = {};
+    Object.keys(arrangement.top || {}).forEach(function (f) { var x = arrangement.top[f], d = field(f); if (d) { t[d] = { n: x.n, by: ms[x.by].as }; } });
+    return t;
+  }
+  /**
+   * An engine answer as the cube: the members' keys in the engine's order, one figure per measure in each cell; a level's Others (the
+   * engine's own member, its figures from its own rows) under the key OTHERS_KEY, with how many members it holds (rowOthers, columnOthers).
+   */
   function fromAnswer(a, arrangement, ms) {
     if (!a || !a.cells) { throw new Error((a && (a.detail || a.message)) || 'The pivot engine did not answer'); }
     var cells = {}, rk = [], ck = [];
-    var rows = (a.rows || []).filter(function (r) { return r.kind === 'node' || r.kind === 'grand'; });
-    var cols = (a.columns || []).filter(function (c) { return c.kind === 'node' || c.kind === 'grand'; });
-    rows.forEach(function (r) { if (r.kind === 'node') { rk.push([r.value]); } });
-    cols.forEach(function (c) { if (c.kind === 'node') { ck.push([c.value]); } });
+    var keep = function (x) { return x.kind === 'node' || x.kind === 'grand' || x.kind === 'others'; };
+    var at = function (x) { return x.kind === 'others' ? [OTHERS_KEY] : x.kind === 'node' ? [x.value] : []; };
+    var rows = (a.rows || []).filter(keep), cols = (a.columns || []).filter(keep), ro = 0, co = 0;
+    rows.forEach(function (r) { if (r.kind === 'node') { rk.push([r.value]); } else if (r.kind === 'others') { ro = r.others || 1; } });
+    cols.forEach(function (c) { if (c.kind === 'node') { ck.push([c.value]); } else if (c.kind === 'others') { co = c.others || 1; } });
     rows.forEach(function (r) {
       cols.forEach(function (c) {
         var cell = a.cells[r.key + '|' + c.key];
         if (!cell) { return; }
-        cells[cellKey(r.kind === 'node' ? [r.value] : [], c.kind === 'node' ? [c.value] : [])] =
+        cells[cellKey(at(r), at(c))] =
           ms.map(function (m) { var x = cell.values ? cell.values[m.as] : null; return x == null ? null : x; });
       });
     });
     var grand = a.cells['*|*'], n = grand && typeof grand.members === 'number' ? grand.members : null;
     return { rows: arrangement.rows, columns: arrangement.columns, values: arrangement.values, rowKeys: rk, columnKeys: ck, cells: cells,
-      count: n, total: n, partial: !!a.partial };
+      count: n, total: n, rowOthers: ro, columnOthers: co, partial: !!a.partial };
   }
   function postJson(url, init) {
     return fetch(url, { method: 'POST', credentials: 'same-origin', headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' },
@@ -73,7 +84,8 @@
   /** Every row of a source aggregated by the engine (POST /api/pivot/query); field(name) is the source's field of a chart field. */
   function query(source, arrangement, field, fetchJson) {
     var ms = measures(arrangement, field);
-    var view = { source: source, rows: arrangement.rows.map(field), columns: arrangement.columns.map(field), values: ms, expandTo: { rows: 1, columns: 1 } };
+    var view = { source: source, rows: arrangement.rows.map(field), columns: arrangement.columns.map(field), values: ms, expandTo: { rows: 1, columns: 1 },
+      top: topOf(arrangement, field, ms) };
     return (fetchJson || postJson)('/api/pivot/query', { method: 'POST', body: { view: view } }).then(function (a) { return fromAnswer(a, arrangement, ms); });
   }
   /** The body of an inline pivot: the arrangement's fields only, renamed d0.. (rows and columns, as key texts) and v0.. (values). */
@@ -99,7 +111,7 @@
     });
     var ms = measures(arrangement, function (n) { return names['v:' + n] || null; });
     var view = { rows: arrangement.rows.map(function (d) { return names['d:' + d]; }), columns: arrangement.columns.map(function (d) { return names['d:' + d]; }),
-      values: ms, expandTo: { rows: 1, columns: 1 } };
+      values: ms, expandTo: { rows: 1, columns: 1 }, top: topOf(arrangement, function (d) { return names['d:' + d]; }, ms) };
     return { body: { fields: fields, rows: rows, view: view }, measures: ms };
   }
   /** Rows the page holds ({fields, rows}) aggregated by the engine (POST /api/pivot/inline): the cube of the arrangement. */
@@ -144,7 +156,7 @@
     return neg(v, dps) + fixed(v, dps);
   }
 
-  var api = { US: US, RS: RS, BLANK: BLANK, AGG_LABEL: AGG_LABEL, keyText: keyText, cellKey: cellKey, format: format,
+  var api = { US: US, RS: RS, BLANK: BLANK, OTHERS_KEY: OTHERS_KEY, AGG_LABEL: AGG_LABEL, keyText: keyText, cellKey: cellKey, format: format,
     measures: measures, fromAnswer: fromAnswer, query: query, inlineBody: inlineBody, inline: inline };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else {
     var cs = typeof document !== 'undefined' && document.currentScript;

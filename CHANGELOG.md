@@ -37,6 +37,9 @@
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 
+- **Chart any table: Top N, Others and the split cap by the pivot engine.** The chart asks the engine for a level's top N (`top: {field:
+  {n, by}}`) and draws its *Others* member, whose figures come from its own rows; the browser merges no cells any more (its `combine`
+  and the extra sum and count of an average are gone).
 - **Client renderer 1.2.0.** A table that offers Pivot is the table and a link to the pivot screen, as the console draws it (the Table |
   Pivot switch, `pivotTab` and the `pivot` behaviour module are gone); 1.1.0, 1.0.0 and 0.1.0 stay served, unchanged. The pivot grid sets
   its indents and conditional formats through the CSSOM, so a host's CSP that refuses inline styles is respected.

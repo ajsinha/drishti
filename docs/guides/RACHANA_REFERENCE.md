@@ -7585,11 +7585,10 @@ server answers `truncated: true` the line reads *All 50,000 of 61,204 rows (the 
 
 #### 11.2 Search
 
-Body: `{ "q": "<the search>", "rows": ["<x>"], "columns": ["<split>"] | [], "values": [{"field": "<y>", "agg": "<agg>"}…],
-"filters": [<the table's column filters, as the pivot's filters>] }`. Text X with Top N asks the full cube and cuts in the browser (the
-cube is bounded by the pivot's 2,000 row keys and 200 column keys; beyond, the pivot's own *partial* note is shown). A date X with a
-bucket other than `day` is bucketed in the browser from the day cube. `avg` with *Others* is computed from the cube's `sum` and `count`
-of the same field, which the chart asks for alongside (two values for one series), so *Others* stays exact.
+A pivot view on the kind (`POST /api/pivot/query`): `{source: <kind>, rows: [<x>], columns: [<split>] | [], values: [{measure, as}…],
+top: {<x>: {n, by}, <split>: {n: 11, by}}}`. Top N and *Others* are the engine's: it ranks a level's members by the measure, keeps N and
+makes the rest one *Others* member whose every figure is computed from its own rows (an average included), so nothing is merged in the
+browser. A date X charted over every match goes by day.
 
 #### 11.3 BI runs
 
@@ -7820,7 +7819,8 @@ One console builder and one server builder (two at most, as the release's other 
 * **Figures** (the engine's cube, stood in): sum, avg, count, min, max per X with repeated X; blanks; split into series; the
   numbers equal the server's `PivotCube` for the same rows (the existing `test_client_engine_writes_numeric_keys_as_the_server_does`
   pattern, extended to aggregates).
-* **Top N and Others:** additive (sum, count) and `avg` from sum and count; Others off; a pie capped at 12; ties broken by X order.
+* **Top N and Others** (the engine's, stood in): the largest N by the sorted series, ties in X order; *Others* one member with its own
+  figures (an average from its own rows); Others off leaves the rest out and says so; a pie capped at 12 (11 and Others); a split at 12.
 * **Buckets:** day to week, month, quarter, year; auto at 500 points; gaps `connect` and `break` against a Monday–Friday calendar.
 * **Pie refusal:** negative values refused with the message; `abs` accepted; zeros left out.
 * **Normalise:** unknown keys dropped, 7 series cut to 6, bad enums replaced, `v` checked.
