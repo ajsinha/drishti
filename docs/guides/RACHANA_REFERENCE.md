@@ -2838,11 +2838,13 @@ sign.
 
 ## Rachana-EL expressions
 
-Bindings, conditions and templates are written in **Rachana-EL**, a small expression language. It is closed (no loops, no assignment,
-no list literals, no access to anything but the document and the controls), side-effect free and **total**: evaluating an expression
-never throws on odd data. A missing field, a wrong type or a division by zero gives an empty value, never an error page. Expressions are
-bounded in size ([size limits](#size-limits)), so evaluation cannot run out of stack either; and should one panel's expression still
-fail, that panel shows the problem and the rest of the view renders.
+Bindings, conditions and templates are written in **Rachana-EL**, a small expression language. It is closed (no loops, no assignment
+outside `let(...)`, no list literals, no access to anything but the document and the controls) and side-effect free. The operators and
+paths are **total**: a missing field or a division by zero gives an empty value, never an error page. The functions of the
+[function catalogue](../architecture/FUNCTION_CATALOGUE.md) (`round_up`, `left`, `yearfrac` …) say plainly when they are given a value of
+the wrong type (`DRS-2102 round_up: 'abc' is not a number`); `iferror(x, fallback)` turns that into a value. Expressions are bounded in
+size ([size limits](#size-limits)), so evaluation cannot run out of stack either; and should one panel's expression fail, that panel
+shows the problem and the rest of the view renders.
 
 ### Where expressions appear
 
@@ -2871,6 +2873,8 @@ fail, that panel shows the problem and the rest of the view renders.
 | Projection | `[*]` | `$.LEGS[*].LEG_ID`: the field of every element, as a list |
 | Bare name | `AMOUNT` | a field of the current row inside a row, otherwise of the document |
 | Control | `ctl.<id>` | the value of a control ([Controls](#controls)); `ctl` is reserved and is never a field of the data |
+| Running value | `@acc` | inside `reduce(list, init, expr)`'s `expr` only: the value so far (elsewhere `@acc` is a panel's events) |
+| Named value | `name = expr` | inside `let(...)` only: binds `name`, read afterwards as a bare word (it hides a field of that name) |
 | Text | `'single'` or `"double"` quotes | `\` makes the next character literal (`'it\'s'`; so `'\d'` is the letter `d`); there are no `\n` escapes |
 | Number | `42`, `0.5`, `.5`, `1e6`, `2.5E-3` | a whole number is an integer (`1 + 1` prints `2`) |
 | Literals | `true`, `false`, `null` | there are no list or object literals |
@@ -2971,37 +2975,128 @@ Against `MX-20000001`:
 
 ### Functions
 
-The set is closed (`Functions.java`); a name outside it is a compile error (`unknown function 'round'; known: abs, coalesce, contains, …`,
-in alphabetical order), and so is a wrong number of arguments (`size takes 1 argument(s), got 2`, `link takes 1-3 argument(s), got 4`).
-The schema lists them with their argument counts (`x-rachana-functions`).
+The set is closed (`Functions.java` holds the one table; the families `LogicFunctions`, `MathFunctions`, `TextFunctions`,
+`DateFunctions` and `ListFunctions` fill it); a name outside it is a compile error (`unknown function 'round'; known: abs, ceiling,
+clamp, …`, in alphabetical order), and so is a wrong number of arguments (`size takes 1 argument(s), got 2`, `link takes 1-3
+argument(s), got 4`). The schema lists them with their argument counts (`x-rachana-functions`; an old spelling carries
+`oldSpellingOf`, and the editor checks it but never offers it). The whole catalogue, with each
+function's Excel and SAS equivalents and what is still to come, is [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md).
+Rachana has scalar functions only (one value from values); aggregates over many rows belong to the pivot engine
+([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)), and `sum`, `min`/`max` over a list and `group` are the list forms Rachana had before,
+kept with their names and results until they move there.
+
+**The rules every function keeps.**
+
+- **Empty in, empty out**, unless the function says otherwise: `round_up($.NOTHING, 2)` is empty. The text tests (`contains`,
+  `starts_with`, `ends_with`, `matches`, `matches_case`) are `false` for an empty value, `concat` skips empty parts, `coalesce`,
+  `nonblank`, `least` and `greatest` skip empty arguments.
+- **Masked in, masked out**: a function given a masked value gives `•••`; `if`, `ifs`, `switch` and `iferror` are masked only when the
+  masked value decides (a condition or the value tested); `map` masks only the element that is hidden.
+- **Decimals stay decimal.** Rounding, multiples, remainders, whole powers, roots, `clamp`, `least`/`greatest`, `sequence` and
+  `yearfrac` work in decimal arithmetic, so `round_up(2.671, 2)` is `2.68` and `power(1.1, 2)` is `1.21`, never `1.2100000000000002`. A
+  value that was already a binary floating-point number (the result of `*` or `/`) is read to 15 significant digits, as Excel reads it,
+  so `round_up(0.1 + 0.2, 1)` is `0.3`. `exp`, `ln`, `log10` and fractional powers are real-number functions.
+- **A value of the wrong type is a problem, not a silent empty**: `round_up('abc')` is `DRS-2102 round_up: 'abc' is not a number`,
+  `left($.LEGS, 2)` is `left: a list is not text`, `eomonth('soon')` is `eomonth: 'soon' is not a date (yyyy-mm-dd)`. Text that reads as
+  a number counts as one (`round_up('12.5')` is `13`); a number counts as the text it prints (`left(20261016, 4)` is `2026`). Wrap a
+  value that may be bad in `iferror(x, fallback)`. A wrong argument written in the expression itself (an unknown day-count basis,
+  interval or calendar, a refused pattern, a fill of two characters) is found when the Sutra loads (`DRS-2101`).
+- **Dates** are ISO text (`2026-10-16`; a timestamp counts by its date), and a date result is ISO text, like `today()`.
+
+**Old spellings.** One name per function. These spellings are still read, so existing Sutras keep working, but write the one name in new
+work: `startsWith` (write `starts_with`), `matchesCase` (`matches_case`), `oneOf` (`one_of`), `days` (`days_between`; `days` keeps
+giving empty, not a problem, for text that is not a date), and `min(a, b, …)`/`max(a, b, …)` with several arguments (`least`/`greatest`;
+`min`/`max` over one list stay the list aggregates).
+
+#### Logic and references
 
 | Function | Arguments | Returns |
 |---|---|---|
+| `if(c, a, b?)` | 2–3 | `a` when `c` is truthy, else `b` (empty without it); only the branch taken is evaluated, as `c ? a : b` |
+| `ifs(c1, a1, c2, a2, …, else?)` | 2–64 | the answer of the first truthy condition; the last argument is the `else` when their count is odd; empty if none holds |
+| `switch(x, v1, a1, v2, a2, …, else?)` | 3–64 | the answer of the first value equal to `x` (equality as `==`; an empty `x` equals a `null` case); the last argument is the `else` when their count is even; only the answer chosen is evaluated |
+| `iferror(x, y)` | 2 | `x`, or `y` when `x` fails: raises a problem (a wrong type, a bad pattern), divides by zero, is not a number or is empty. `y` is evaluated only when needed |
+| `let(name = expr, …, result)` | 2–64 | `result`, with each `name` bound in turn (a later value may read an earlier name); a name hides a field of the same name and is seen only inside its `let` |
 | `link(id, kind?, label?)` | 1–3 | a link to entity `id` of `kind` (or the kind the reference catalogue recognises), shown as `label` or the id; empty when `id` is empty |
-| `size(x)` | 1 | elements of a list, fields of an object, characters of a text; `0` for anything else (numbers, empty) |
-| `sum(list, 'field'?)` | 1–2 | the sum of `field` over the list's elements (or of the elements themselves); non-numbers are skipped; `0` when `list` is not a list |
-| `fmt(value, 'format')` | 2 | the value formatted as text with a named [format](#formats); an unknown format gives plain text |
 | `coalesce(a, b, …)` | 1–8 | the first argument that is not empty (an empty text `''` is not empty); empty if all are |
 | `nonblank(a, b, …)` | 1–8 | the first argument that has a value, skipping empty and all-space text as well as null (what most extracts write for a missing value): `nonblank(@.RATE, @.STRIKE_PRICE, '-')`; empty if none has |
-| `first(list)` | 1 | the first element; empty for a non-list or an empty list |
-| `last(list)` | 1 | the last element |
-| `flatten(list)` | 1 | a list of lists made one list, in order: `flatten($.LEGS[*].CASH_FLOWS)` is every cash flow of every leg; elements that are not lists are kept; empty for anything but a list. One level only |
-| `abs(x)` | 1 | the absolute value (NaN for a non-number) |
-| `min(a, b, …)` / `min(list)` | 1–8 | the smallest number among the arguments, or among a single list's elements; non-numbers are skipped; empty if none |
-| `max(a, b, …)` / `max(list)` | 1–8 | the largest, likewise: `max($.TRADES[*].NOTIONAL)` (a projection) is the largest notional |
-| `upper(text)` | 1 | upper case (empty → `''`) |
-| `lower(text)` | 1 | lower case |
-| `contains(where, part)` | 2 | **case-insensitive**: true when the text contains `part`, or when `where` is a list with an element that does (nested lists are searched) |
-| `startsWith(text, prefix)` | 2 | **case-insensitive** prefix test |
-| `matches(text, pattern)` | 2 | **case-insensitive** regular-expression test, matching anywhere in the text (anchor with `^` and `$`). The pattern is run by a linear-time engine, so no pattern can take exponential time: classes `[a-z]` `\d` `\w` `\s`, groups `( )` and `(?: )`, alternation `\|`, `* + ? {n,m}`, `^`, `$`, a leading `(?i)`. Back-references, look-around, atomic groups, possessive quantifiers and `\b` are refused (`DRS-4010`), as is a pattern over 200 characters; a value is cut to 8,192 characters and a match over 50 ms is `DRS-4011`. In a Sutra a backslash must survive both YAML and Rachana-EL text, so prefer `[0-9]` to `\d`. In a search: `TRD where COUNTERPARTY matches '^CP-MER'` |
-| `matchesCase(text, pattern)` | 2 | `matches`, but upper and lower case differ |
 | `within(value, range)` | 2 | true when `value` lies in a `from..to` range (what a `date-range` or `number-range` control holds; either end may be empty and an empty range holds everything): numbers compare as numbers, anything else as text, so ISO dates order, and a timestamp is compared by its date. A missing or masked value is never within |
-| `oneOf(value, list)` | 2 | true when `value` equals an element of `list` (what a `multi-select` control holds, or a projection); **nothing chosen (an empty list, or an empty text) holds everything**. A masked value is never one of them |
-| `group(list, 'key', 'value'?, 'by'?)` | 2–4 | the list's elements grouped by the field `key` (a dotted path), one row `{label, value, count}` per distinct key in key order: `value` the sum of the field `value` over the group (number-like text counts; without a value field, the count), `count` its elements; `by` cuts an ISO date key to its `month` (2026-10) or `year` (2026) first. Elements without a key are left out; at most 500 groups. Feeds a chart: `rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT')"` is a payment ladder |
-| `days(from, to)` | 2 | whole calendar days from one ISO date to another (a timestamp counts by its date), negative when `to` is earlier; empty when either is not a date |
-| `today()` | 0 | the business date the view is built for (the document's, else the picked or current date), as ISO text; empty outside a view. `$.EVENTS[?days(today(), @.EVENT_DATE) >= 0 && days(today(), @.EVENT_DATE) <= 30]` are the events of the next 30 days |
+| `one_of(value, list)` | 2 | true when `value` equals an element of `list` (what a `multi-select` control holds, or a projection); **nothing chosen (an empty list, or an empty text) holds everything**. A masked value is never one of them. Old spelling `oneOf` |
 
-Examples against `MX-20000001` (the business date 2026-10-16 where it matters):
+#### Math
+
+| Function | Arguments | Returns |
+|---|---|---|
+| `abs(x)` | 1 | the absolute value (NaN for a non-number) |
+| `round_up(x, n?)`, `round_down(x, n?)` | 1–2 | `x` rounded away from or towards zero to `n` decimal places (0 by default; negative `n` rounds to tens, hundreds …; a fraction of `n` is cut) |
+| `mround(x, m)` | 2 | the nearest multiple of `m`, a half away from zero; `0` when `m` is 0; a problem when `x` and `m` have different signs (Excel's `MROUND`) |
+| `ceiling(x, m?)`, `floor(x, m?)` | 1–2 | up (towards +∞) or down (towards −∞) to a multiple of \|m\| (1 by default; `0` when `m` is 0), as Excel's `CEILING.MATH` and `FLOOR.MATH` |
+| `mod(x, y)` | 2 | the remainder, with the sign of `y` (`mod(-3, 2)` is `1`, as Excel's `MOD`); empty when `y` is 0, as `x % 0` |
+| `power(x, y)` | 2 | `x` to the power `y`: a whole `y` up to ±64 in decimal (34 significant digits), any other in real numbers; empty for 0 to a negative power; a problem when there is no real result (`power(-8, 1 / 3)`) |
+| `sqrt(x)` | 1 | the square root, a decimal of 16 significant digits (exact for an exact square); a problem for a negative `x` |
+| `exp(x)`, `ln(x)`, `log10(x)` | 1 | e to the power `x`; the natural and the base-10 logarithm (a problem for `x` ≤ 0) |
+| `sign(x)` | 1 | `-1`, `0` or `1` |
+| `clamp(x, lo, hi)` | 3 | `x` held between `lo` and `hi`; a problem when `lo` is above `hi` |
+| `least(a, b, …)`, `greatest(a, b, …)` | 1–64 | the smallest or largest argument: numbers as numbers; when no argument is a number, as text, so ISO dates order; empty arguments skipped; a mix of numbers and other text is a problem. Old spelling: `min`/`max` with several arguments, which skip anything not a number |
+| `min(list)`, `max(list)` | 1 | the smallest or largest number among a list's elements (non-numbers skipped; empty if none; masked when an element is): `max($.TRADES[*].NOTIONAL)` (a projection) is the largest notional |
+
+#### Text
+
+| Function | Arguments | Returns |
+|---|---|---|
+| `fmt(value, 'format')` | 2 | the value formatted as text with a named [format](#formats); an unknown format gives plain text |
+| `upper(text)`, `lower(text)` | 1 | upper or lower case (empty → `''`) |
+| `contains(where, part)` | 2 | **case-insensitive**: true when the text contains `part`, or when `where` is a list with an element that does (nested lists are searched) |
+| `starts_with(text, prefix)`, `ends_with(text, suffix)` | 2 | **case-insensitive** prefix or suffix test. Old spelling `startsWith` |
+| `matches(text, pattern)` | 2 | **case-insensitive** regular-expression test, matching anywhere in the text (anchor with `^` and `$`). The pattern is run by a linear-time engine, so no pattern can take exponential time: classes `[a-z]` `\d` `\w` `\s`, groups `( )` and `(?: )`, alternation `\|`, `* + ? {n,m}` (and their lazy forms `*?` …), `^`, `$`, a leading `(?i)`. Back-references, look-around, atomic groups, possessive quantifiers and `\b` are refused (`DRS-4010`), as is a pattern over 200 characters; a value is cut to 8,192 characters and a match over 50 ms is `DRS-4011`. In a Sutra a backslash must survive both YAML and Rachana-EL text, so prefer `[0-9]` to `\d`. In a search: `TRD where COUNTERPARTY matches '^CP-MER'` |
+| `matches_case(text, pattern)` | 2 | `matches`, but upper and lower case differ. Old spelling `matchesCase` |
+| `regex_extract(text, pattern, group?)` | 2–3 | the first match's text, or that of capturing group `group` (1 the first `(`); empty when nothing matches. Case counts (start the pattern with `(?i)` to ignore it); the same linear-time engine and limits as `matches`, choosing the match Java's own engine would (leftmost; greedy repeats longest, lazy ones shortest) |
+| `concat(a, b, …)` | 1–64 | the texts joined; empty arguments add nothing; a list or object is a problem |
+| `left(text, n)`, `right(text, n)` | 2 | the first or last `n` characters (the whole text when it is shorter) |
+| `mid(text, start, n)` | 3 | `n` characters from position `start` (1 the first character, as in Excel); empty text past the end |
+| `replace(text, old, new)` | 3 | every `old` (as written, case counts) replaced by `new` |
+| `split(text, separator)` | 2 | the parts between each separator (as written, not a pattern), empty parts kept, as a list of text |
+| `trim(text)` | 1 | the text without the spaces at either end (spaces inside are kept) |
+| `pad(text, n, char?, side?)` | 2–4 | the text widened to `n` characters (at most 10,000) with `char` (one character, a space by default) on the `'left'` (the default) or the `'right'`; a text already that wide is kept whole |
+
+#### Dates, on the bank's calendars
+
+Business days come from the platform's own calendars, the ones the business date, the history windows and BI's
+`business_days_between` use: `USNY`, `GBLO`, `EUTA`, `JPTO`, `CATO`, `WEEKENDS` (weekends only), or a joint calendar `USNY+GBLO`
+(a holiday of either). A function given no calendar uses `USNY`.
+
+| Function | Arguments | Returns |
+|---|---|---|
+| `today()` | 0 | the business date the view is built for (the document's, else the picked or current date), as ISO text; empty outside a view. `$.EVENTS[?days_between(today(), @.EVENT_DATE) >= 0 && days_between(today(), @.EVENT_DATE) <= 30]` are the events of the next 30 days |
+| `days_between(from, to)` | 2 | whole calendar days from one date to another, negative when `to` is earlier. Old spelling `days`, which gives empty (not a problem) when either is not a date |
+| `eomonth(d, n?)` | 1–2 | the last day of the month `n` months after `d`'s (0 by default) |
+| `edate(d, n)` | 2 | the same day `n` months later (earlier for negative `n`); a day the month lacks becomes its last day (`edate('2024-01-31', 1)` is `2024-02-29`) |
+| `yearfrac(a, b, basis)` | 3 | the fraction of a year between two dates (either order, never negative), a decimal of 16 significant digits, on a day-count basis: `'ACT/360'` and `'ACT/365F'` (actual days over 360 or 365), `'30/360'` (US, as Excel's `YEARFRAC` basis 0, February's last day counting as the 30th), `'30E/360'` (European, basis 4), `'ACT/ACT'` (ISDA: each calendar year's days over that year's length). Excel's basis 1 is an average-year rule that differs from ISDA's across a year end; inside one year they agree |
+| `intck(interval, a, b, calendar?)` | 3–4 | how many interval boundaries lie between `a` and `b`, as SAS's `INTCK`: `'day'`, `'week'` (weeks start on Sunday), `'month'`, `'quarter'`, `'year'`, or `'business_day'` (the business days after `a` up to and including `b`, on the calendar; only this interval takes one); negative when `b` is earlier |
+| `is_business_day(d, calendar?)` | 1–2 | true when `d` is neither a weekend day nor a holiday of the calendar |
+
+#### Lists
+
+`map`, `sort` and `reduce` evaluate their expression once per element, with `@` the element and `#index` its position (`$` is still
+the document); `reduce` also binds `@acc`, the value so far.
+
+| Function | Arguments | Returns |
+|---|---|---|
+| `size(x)` | 1 | elements of a list, fields of an object, characters of a text; `0` for anything else (numbers, empty) |
+| `first(list)`, `last(list)` | 1 | the first or last element; empty for a non-list or an empty list |
+| `flatten(list)` | 1 | a list of lists made one list, in order: `flatten($.LEGS[*].CASH_FLOWS)` is every cash flow of every leg; elements that are not lists are kept; empty for anything but a list. One level only |
+| `sort(list, key?, desc?)` | 1–3 | the elements ordered by `key` (an expression over `@`; the element itself by default), ascending unless `desc` is true: numbers (and number-like text) as numbers and before text, text character by character (ISO dates order); elements with an empty key last either way; equal keys keep their order. Masked when a key is |
+| `unique(list)` | 1 | the distinct elements, the first of each, in order (`1` and `1.0` are one; `'1'` is text) |
+| `take(list, n)`, `drop(list, n)` | 2 | the first `n` elements, or all but the first `n`; negative `n` counts from the end (`take(list, -1)` is the last) |
+| `sequence(n, start?, step?)` | 1–3 | `n` numbers (at most 10,000) from `start` (1) by `step` (1), in decimal: `sequence(3, 0.1, 0.1)` is `0.1, 0.2, 0.3` |
+| `map(list, expr)` | 2 | `expr` for each element, as a list |
+| `reduce(list, init, expr)` | 3 | the list folded: starting from `init`, `expr` for each element in turn with `@acc` the value so far; the last value. An `expr` that adds or subtracts `@acc` with `+` or `-` (a sum written by hand, or text joined with `+`) does not compile: a total is `sum(...)` and text is joined with `concat(...)` |
+| `sum(list, 'field'?)` | 1–2 | the sum of `field` over the list's elements (or of the elements themselves); non-numbers are skipped; `0` when `list` is not a list |
+| `group(list, 'key', 'value'?, 'by'?)` | 2–4 | the list's elements grouped by the field `key` (a dotted path), one row `{label, value, count}` per distinct key in key order: `value` the sum of the field `value` over the group (number-like text counts; without a value field, the count), `count` its elements; `by` cuts an ISO date key to its `month` (2026-10) or `year` (2026) first. Elements without a key are left out; at most 500 groups. Feeds a chart: `rows: "group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT')"` is a payment ladder |
+
+#### Examples
+
+Against `MX-20000001` (the business date 2026-10-16 where it matters):
 
 | Expression | Result | Shown with a format |
 |---|---|---|
@@ -3019,23 +3114,60 @@ Examples against `MX-20000001` (the business date 2026-10-16 where it matters):
 | `nonblank($.PACKAGE_ID, 'n/a')` | `n/a` | |
 | `first($.LEGS).LEG_ECONOMIC_TYPE` | `Receive` | |
 | `last($.EVENTS).EVENT_TYPE` | `CASH_SETTLEMENT` | |
+| `if($.TRADE_STATUS == 'AMENDED', 'changed', 'as booked')` | `changed` | |
+| `ifs($.QUANTITY > 1e9, 'large', $.QUANTITY > 1e8, 'medium', 'small')` | `medium` | |
+| `switch(first($.LEGS).LEG_TYPE, 'FIXED', 'F', 'FLOAT', 'V', '?')` | `F` | |
+| `iferror($.QUANTITY / $.NOTHING, 0)` | `0` (`$.NOTHING` is missing, so the division is not a number) | |
+| `let(n = first($.LEGS).NOTIONAL, n / 1e6)` | `242` | |
 | `abs(-155245)` | `155245` | |
-| `min($.PRICE, 0.05)` | `0.040829` | `pct4`: `4.0829%` |
-| `max(3, '7', 'x')` | `7` | |
+| `round_up($.PRICE * 100, 2)` | `4.09` | |
+| `round_down($.QUANTITY / 1e6)` | `242` | |
+| `mround($.PRICE, 0.0025)` | `0.04` | `pct4`: `4.0000%` |
+| `ceiling(size($.LEGS), 4)` | `4` | |
+| `mod(intck('month', $.TRADE_DATE, $.MATURITY_DATE), 12)` | `11` | |
+| `power(1 + $.PRICE, 2)` | `1.083325007241` | |
+| `sqrt(10)` | `3.162277660168379` | |
+| `log10($.QUANTITY)` | `8.383815365980432` | |
+| `sign(-155245)` | `-1` | |
+| `clamp($.PRICE, 0, 0.04)` | `0.04` | |
+| `least($.MATURITY_DATE, '2030-12-31')` | `2030-12-31` | |
+| `greatest($.MATURITY_DATE, today())` | `2032-06-25` | |
+| `min($.PRICE, 0.05)` (old spelling of `least`) | `0.040829` | `pct4`: `4.0829%` |
+| `max(3, '7', 'x')` (old spelling: `x` is skipped) | `7` | |
 | `max($.LEGS[*].NOTIONAL)` | `242000000` | |
 | `upper($.PRODUCT_SUB_GROUP)` | `SWAP` | |
 | `lower($.TRADE_STATUS)` | `amended` | |
 | `contains($.PRODUCT_SUB_TYPE, 'SWAP')` | `true` | |
 | `contains($.LEGS[*].LEG_TYPE, 'float')` | `true` (a list with an element that contains it) | |
-| `startsWith($.PORTFOLIO, 'book-rates')` | `true` | |
+| `starts_with($.PORTFOLIO, 'book-rates')` | `true` | |
+| `ends_with($.PORTFOLIO, '-3')` | `true` | |
 | `matches($.TRADE_ID, '^MX-2[0-9]+$')` | `true` | |
-| `matchesCase($.TRADE_ID, '^mx-')` | `false` | |
+| `matches_case($.TRADE_ID, '^mx-')` | `false` | |
+| `regex_extract($.TRADE_ID, '^([A-Z]+)-', 1)` | `MX` | |
+| `concat($.PORTFOLIO, ' / ', $.CURRENCY)` | `BOOK-RATES-3 / AUD` | |
+| `left($.TRADE_ID, 3)`, `right($.TRADE_ID, 8)`, `mid($.TRADE_ID, 4, 4)` | `MX-`, `20000001`, `2000` | |
+| `replace($.TRADE_ID, '-', ' ')` | `MX 20000001` | |
+| `split($.MATURITY_DATE, '-')` | the list `2032`, `06`, `25` | |
+| `pad(first($.LEGS).LEG_ID, 3, '0')` | `001` | |
 | `within($.MATURITY_DATE, '2030-01-01..2035-12-31')` | `true` | |
-| `oneOf($.CURRENCY, $.LEGS[*].CURRENCY)` | `true` | |
+| `one_of($.CURRENCY, $.LEGS[*].CURRENCY)` | `true` | |
 | `size(group($.EVENTS[?nonblank(@.AMOUNT)], 'EVENT_DATE', 'AMOUNT', 'year'))` | `8` (2025 to 2032; `'month'` gives 28) | |
-| `days($.TRADE_DATE, $.MATURITY_DATE)` | `2527` | |
-| `days(today(), $.MATURITY_DATE)` | `2079` | |
+| `days_between($.TRADE_DATE, $.MATURITY_DATE)` | `2527` | |
+| `days_between(today(), $.MATURITY_DATE)` | `2079` | |
 | `today()` | `2026-10-16` | `dmy`: `16 Oct 2026` |
+| `eomonth($.TRADE_DATE)` | `2025-07-31` | |
+| `edate($.MATURITY_DATE, -6)` | `2031-12-25` | |
+| `yearfrac($.TRADE_DATE, $.MATURITY_DATE, 'ACT/365F')` | `6.923287671232877` | |
+| `yearfrac($.TRADE_DATE, $.MATURITY_DATE, '30/360')` | `6.916666666666667` | |
+| `yearfrac($.TRADE_DATE, $.MATURITY_DATE, 'ACT/ACT')` | `6.919230481323452` | |
+| `intck('month', $.TRADE_DATE, $.MATURITY_DATE)` | `83` | |
+| `is_business_day($.MATURITY_DATE, 'USNY')` | `true` | |
+| `is_business_day('2026-11-26')` | `false` (Thanksgiving) | |
+| `take(sort($.EVENTS, @.EVENT_DATE, true), 3)` | the three latest events, as a list (for `rows:`) | |
+| `unique($.LEGS[*].CURRENCY)` | the list `AUD` (both legs are in AUD) | |
+| `map($.LEGS, @.NOTIONAL / 1e6)` | the list `242`, `242` | |
+| `reduce($.LEGS, '', concat(@acc, left(@.LEG_TYPE, 2)))` | `FIFL` | |
+| `sequence(3)` | the list `1`, `2`, `3` | |
 
 `min`/`max` over a list look at the elements themselves, so `max($.LEGS)` (a list of objects) is empty: project the field first,
 `max($.LEGS[*].NOTIONAL)`.
@@ -3063,7 +3195,9 @@ unary    = ("!" | "-") unary | postfix ;
 postfix  = primary { "." ident | "[" expr "]" | "[?" expr "]" | "[*]" } ;     (* a "." ident after "[*]" takes that field of each element *)
 primary  = number | string | "true" | "false" | "null" | "$" | "@" | "#index"
          | "ctl" "." ident                                                  (* the value of a control *)
-         | ident "(" [ expr { "," expr } ] ")" | ident | "(" expr ")" ;
+         | "@acc"                                                           (* inside reduce's expression: the value so far *)
+         | "let" "(" ident "=" expr { "," ident "=" expr } "," expr ")"     (* names, then the result *)
+         | ident "(" [ expr { "," expr } ] ")" | ident | "(" expr ")" ;     (* an ident a let bound is that value *)
 ```
 
 ### Size limits
@@ -3087,7 +3221,7 @@ template's `${…}` parts are bounded one by one.
 | Code | When | Example message |
 |---|---|---|
 | `DRS-2101` | an expression or template does not compile (at load, in a workbench preview, or when saving an alert rule), including one beyond the [size limits](#size-limits) | `expression '$.LEGS[0': expected ']' but the expression ends at 8` |
-| `DRS-2102` | evaluation error | evaluation is total, so a well-formed expression within the size limits never raises it; if one does (the limits raised far beyond the default), the panel shows `DRS-2102 an expression of this panel is nested too deeply to evaluate …` and the rest of the view renders |
+| `DRS-2102` | evaluation error | a function given a value of the wrong type or outside its domain (`round_up: 'abc' is not a number`, `sqrt: -4 is negative`, `eomonth: 'soon' is not a date (yyyy-mm-dd)`); `iferror(x, fallback)` turns it into a value. The operators and paths never raise it; an expression nested too deeply to evaluate (the limits raised far beyond the default) shows `DRS-2102 an expression of this panel is nested too deeply to evaluate …`. The panel shows the problem and the rest of the view renders |
 
 The problem's message is `expression '<source>': <reason> at <offset>` (or `template '<source>': …`), where the offset is the 0-based
 character position inside the expression; `sutra lint` prints it after the file, line and code:
@@ -3097,12 +3231,15 @@ Common reasons:
 | Message | Cause | Fix |
 |---|---|---|
 | `unexpected character '&' at 9` | `&` or `\|` alone, `and`/`or` written as symbols of another language | use `&&`, `\|\|` |
-| `unexpected '[' at 18` | a list written in the expression (`oneOf($.CURRENCY, ['AUD', 'NZD'])`) | there are no list literals: compare (`$.CURRENCY == 'AUD' \|\| $.CURRENCY == 'NZD'`), or read a list from the document or a control |
+| `unexpected '[' at 18` | a list written in the expression (`one_of($.CURRENCY, ['AUD', 'NZD'])`) | there are no list literals: compare (`$.CURRENCY == 'AUD' \|\| $.CURRENCY == 'NZD'`), or read a list from the document or a control |
+| `unexpected '=' at 10` | `=` written for a comparison (`$.CURRENCY = 'AUD'`) | `==`; a lone `=` only names a value inside `let(...)` |
+| `reduce does not add up a list: use sum(...) …` | `reduce($.LEGS, 0, @acc + @.NOTIONAL)` | `sum($.LEGS, 'NOTIONAL')`; to join text, `reduce($.EVENTS, '', concat(@acc, @.EVENT_TYPE))` |
+| `yearfrac: unknown day-count basis 'ACT/365' (known: …)` | a basis, interval or calendar spelt otherwise | the names in [Functions](#functions): `'ACT/365F'` |
 | `unterminated string at 14` | a quote not closed | close it; inside YAML double quotes, use single quotes for EL text |
 | `expected ')' but the expression ends at 20` | a bracket or parenthesis not closed | close it |
 | `expected a field name but the expression ends at 7` | a path ending in a dot (`$.LEGS.`) | finish the path |
 | `the expression ends early: a value is missing at 7` | an operator with nothing after it (`$.QUANTITY >`) | finish the expression |
-| `unknown function 'round'; known: abs, coalesce, …` | a function that does not exist (the known ones are listed alphabetically) | use `fmt(x, 'amount0')` and the other functions above |
+| `unknown function 'round'; known: abs, ceiling, …` | a function that does not exist (the known ones are listed alphabetically) | `round_up`, `round_down` or `mround`, or `fmt(x, 'amount0')` to show a rounded figure |
 | `fmt takes 2 argument(s), got 1 at 0` | `fmt($.QUANTITY)` | `fmt($.QUANTITY, 'amount0')` |
 | `unexpected 'b' at 4` | two values with no operator between them (`'a' 'b'`) | join with `+` |
 | `unclosed '${' at 4` | a template part not closed | add `}` |

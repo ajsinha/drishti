@@ -29,9 +29,10 @@ import com.ash.drishti.rachana.format.Formats;
  * @param index position of the row, or -1
  * @param formats named formats
  * @param scope events and source of the panel being bound (never null)
+ * @param locals the names {@code let} bound and {@code reduce}'s {@code @acc}, innermost first (null when none)
  */
 public record EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl, java.time.LocalDate today,
-        Scope scope) {
+        Scope scope, Locals locals) {
 
     /**
      * What a panel of a Sutra Next screen reads besides the document.
@@ -58,8 +59,31 @@ public record EvalContext(DataNode root, Object row, int index, Formats formats,
         scope = scope == null ? Scope.NONE : scope;
     }
 
+    public EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl, java.time.LocalDate today,
+            Scope scope) {
+        this(root, row, index, formats, ctl, today, scope, null);
+    }
+
     public EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl, java.time.LocalDate today) {
         this(root, row, index, formats, ctl, today, Scope.NONE);
+    }
+
+    /** A name bound inside an expression ({@code let(n = ..., ...)}, {@code @acc}), and the ones bound outside it. */
+    public record Locals(String name, Object value, Locals outer) {}
+
+    /** The same context with {@code name} bound to {@code value} (hiding an outer binding of the same name). */
+    public EvalContext withLocal(String name, Object value) {
+        return new EvalContext(root, row, index, formats, ctl, today, scope, new Locals(name, value, locals));
+    }
+
+    /** The value bound to {@code name}, innermost first; missing when none is (the parser binds every name it reads). */
+    public Object local(String name) {
+        for (Locals l = locals; l != null; l = l.outer()) {
+            if (l.name().equals(name)) {
+                return l.value();
+            }
+        }
+        return DataNode.missing();
     }
 
     public EvalContext(DataNode root, Object row, int index, Formats formats, java.util.Map<String, Object> ctl) {
@@ -72,7 +96,7 @@ public record EvalContext(DataNode root, Object row, int index, Formats formats,
 
     /** The same context for a view of this business date: {@code today()} reads it (null outside a view). */
     public EvalContext withToday(java.time.LocalDate date) {
-        return new EvalContext(root, row, index, formats, ctl, date, scope);
+        return new EvalContext(root, row, index, formats, ctl, date, scope, locals);
     }
 
     public static EvalContext of(DataNode root, Formats formats) {
@@ -80,7 +104,7 @@ public record EvalContext(DataNode root, Object row, int index, Formats formats,
     }
 
     public EvalContext withRow(Object row, int index) {
-        return new EvalContext(root, row, index, formats, ctl, today, scope);
+        return new EvalContext(root, row, index, formats, ctl, today, scope, locals);
     }
 
     /**
@@ -88,17 +112,17 @@ public record EvalContext(DataNode root, Object row, int index, Formats formats,
      * list of text for a multi-select, a whole number for top-n, {@code from..to} text for a range.
      */
     public EvalContext withControls(java.util.Map<String, Object> values) {
-        return new EvalContext(root, row, index, formats, values, today, scope);
+        return new EvalContext(root, row, index, formats, values, today, scope, locals);
     }
 
     /** The same context reading {@code next} as its events and source. */
     public EvalContext withScope(Scope next) {
-        return new EvalContext(root, row, index, formats, ctl, today, next);
+        return new EvalContext(root, row, index, formats, ctl, today, next, locals);
     }
 
     /** The same context over another document, keeping the controls, the date and the events. */
     public EvalContext withRoot(DataNode next) {
-        return new EvalContext(next, null, -1, formats, ctl, today, scope);
+        return new EvalContext(next, null, -1, formats, ctl, today, scope, locals);
     }
 
     /** What a panel's {@code source:} named, read as {@code $src}; null when it names none. */

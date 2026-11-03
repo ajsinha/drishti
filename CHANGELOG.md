@@ -34,6 +34,23 @@
 
 ## Unreleased (on develop, after 2.9.11)
 
+- **Rachana's tier-1 functions (FUNCTION_CATALOGUE.md sections 1, 2, 3 and 6; RACHANA_REFERENCE.md "Functions").** Math:
+  `round_up`, `round_down`, `mround`, `ceiling`, `floor`, `mod`, `power`, `sqrt`, `exp`, `ln`, `log10`, `sign`, `clamp`, `least`,
+  `greatest`, worked in decimal (`round_up(2.671, 2)` is `2.68`, `power(1.1, 2)` is `1.21`). Logic: `if`, `ifs`, `switch`, `iferror`,
+  `let(name = expr, ..., result)`, evaluating only the branch taken. Text: `concat`, `left`, `right`, `mid`, `replace`, `split`, `trim`,
+  `pad`, `regex_extract`, `ends_with`. Dates: `days_between`, `eomonth`, `edate`, `yearfrac` (`ACT/360`, `ACT/365F`, `30/360`,
+  `30E/360`, `ACT/ACT` ISDA; tested against Excel's YEARFRAC and ISDA's examples), `intck`, `is_business_day`, on the platform's own
+  `BusinessCalendar` (`USNY` by default). Lists: `sort`, `unique`, `take`, `drop`, `sequence`, `map`, `reduce` (with `@acc`; a sum
+  written with `+` is refused in favour of `sum`). One name each: `starts_with`, `days_between`, `matches_case`, `one_of`, `least`,
+  `greatest`; the old spellings `startsWith`, `days`, `matchesCase`, `oneOf` and `min`/`max` with several arguments are read with the
+  results they always gave. The new functions raise `DRS-2102` naming the function and the value for a value of the wrong type
+  (`round_up: 'abc' is not a number`); a bad basis, interval, calendar, pattern or fill written in the expression is a `DRS-2101` at
+  load. `Functions` is now the one table the families (`LogicFunctions`, `MathFunctions`, `TextFunctions`, `DateFunctions`,
+  `ListFunctions`) register into; `EvalContext` carries the names `let` and `reduce` bind. `SafeRegex` (drishti-common) gains
+  `extract(text, group)` and `groups()`: capture groups and lazy repeats in the same linear-time engine, which `regex_extract` uses.
+  The editor schema (`x-rachana-functions`) marks an old spelling `oldSpellingOf`; the Sutra editor checks it but offers only the one
+  names, with help for the new functions.
+
 - **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
   screen; it had been drawn flush left. The VaR card and the risk area name the basket sheet, which replaced the selection tray.
 
