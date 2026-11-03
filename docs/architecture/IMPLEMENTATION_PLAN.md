@@ -775,6 +775,13 @@ access (no entitlements or masks, no in-memory tables, no computed figures). Jav
 tool and the browser. Each example runs as a test on the demo lake. Size M.
 
 
+## 2.9.11.f: the data inbox (planned)
+
+*Product owner, 2026-11-03.* Files dropped in `<data>/dataload/inbox` with a `.ready` marker (or a `ready.all`) are loaded into the lake
+every 10 minutes by the existing Java loader, moved to the outbox with their marker, and the server is told through the data-load
+signal; crash-safe, duplicate-safe, owner node only, a module `drishti-dataload` run as a server thread with the load in a child
+process. The design and its questions: [DATALOAD_INBOX.md](DATALOAD_INBOX.md). Size M.
+
 ## 2.9.11.e: DEL folded into Rachana (planned)
 
 *Product owner, 2026-11-03: one grammar and no functionality coded twice.* BI's measures, derived columns, filters and row rules written in
