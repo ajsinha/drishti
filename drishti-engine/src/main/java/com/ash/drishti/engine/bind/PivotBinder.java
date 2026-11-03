@@ -36,7 +36,7 @@ import java.util.Optional;
 
 /**
  * The interactive pivot of a table or ladder: what the view says about it (its fields and the arrangement it opens
- * with, carried by the table's data) and, when a user opens the Pivot tab, the panel's rows as raw values, every row up
+ * with, carried by the table's data) and, when a user opens Pivot (the pivot screen), the panel's rows as raw values, every row up
  * to {@link PivotProperties#maxRecords()} (a table's {@code limit} only shortens the table). Stateless and thread-safe.
  */
 public final class PivotBinder {
@@ -98,7 +98,7 @@ public final class PivotBinder {
     Records records(Panel p, BindContext c) {
         if (!props.enabled()) {
             throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN,
-                    "the Pivot tab is switched off on this server (drishti.pivot.enabled)");
+                    "Pivot (the pivot screen) is switched off on this server (drishti.pivot.enabled)");
         }
         PivotSpec spec = p.pivot().orElseThrow(() -> new IllegalArgumentException("panel '" + p.id() + "' does not offer a pivot"));
         DataNode rows = binder.eval(p.option("rows").orElseThrow(), c.eval()) instanceof DataNode n ? n : DataNode.missing();

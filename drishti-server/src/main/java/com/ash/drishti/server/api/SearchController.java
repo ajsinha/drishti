@@ -155,7 +155,7 @@ public class SearchController {
                 return m;
             }).orElse(null);
         } catch (IllegalArgumentException e) {
-            org.slf4j.LoggerFactory.getLogger(SearchController.class).warn("no Pivot tab for {}: {}", kind, e.getMessage());
+            org.slf4j.LoggerFactory.getLogger(SearchController.class).warn("no Pivot for {}: {}", kind, e.getMessage());
             return null;
         }
     }

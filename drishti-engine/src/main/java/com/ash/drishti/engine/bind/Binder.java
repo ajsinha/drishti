@@ -86,7 +86,7 @@ public final class Binder {
     }
 
     /**
-     * A table's or ladder's rows as raw values of its pivot's fields, for the Pivot tab (every row up to
+     * A table's or ladder's rows as raw values of its pivot's fields, for Pivot (the pivot screen) (every row up to
      * {@code drishti.pivot.max-records}, whatever the table's {@code limit}).
      *
      * @throws IllegalArgumentException when the panel offers no pivot

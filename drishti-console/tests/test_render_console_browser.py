@@ -251,14 +251,16 @@ def test_about_this_page_says_the_same_and_is_drawn_from_json_on_a_client_page(b
     assert any("format=json" in u for u in asked["client"]) and not any("format=json" in u for u in asked["server"]), asked
 
 
-def test_the_pivot_tab_builds_the_same_grid(browser, console):
-    seen = {}
+def test_a_table_that_offers_pivot_opens_the_pivot_screen_on_its_rows(browser, console):
+    # the server-drawn page has the Pivot link; a published client renderer draws its old switch, whose Pivot opens the same screen
     for mode, page in each_mode(browser, f"{console}/v/netting-set/NS-NORTH-01"):
-        page.locator("#p-trades [data-pv-tab='pivot']").click()
-        page.wait_for_selector("#p-trades .pv-host table", timeout=10000)
-        page.wait_for_timeout(200)
-        seen[mode] = page.locator("#p-trades .pv-host table").first.inner_text()
-    assert seen["server"] == seen["client"] and "Interest rate swap" in seen["client"], seen
+        link = page.locator("#p-trades .pv-open a")
+        if link.count():
+            assert link.first.get_attribute("href").startswith("/pivot?source=panel")
+            continue
+        with page.expect_popup() as popup:
+            page.locator("#p-trades [data-pv-tab='pivot']").click()
+        assert "/pivot?source=panel" in popup.value.url, mode
 
 
 def test_a_nested_pivot_is_drawn_as_the_same_grid(browser, console):
