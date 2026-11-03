@@ -182,3 +182,6 @@ apply` refuse a credential written in clear. There is no loader for these files:
   [Cassandra](../../../docs/connectors/CASSANDRA_CONNECTOR.md), [Delta Lake](../../../docs/connectors/DELTA_CONNECTOR.md),
   [Iceberg](../../../docs/connectors/ICEBERG_CONNECTOR.md), [external Iceberg](../../../docs/connectors/ICEBERG_EXTERNAL_CONNECTOR.md),
   [S3](../../../docs/connectors/S3_CONNECTOR.md), [news](../../../docs/connectors/NEWS.md), [yfinance](../../../docs/connectors/YFINANCE.md).
+
+The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
+file in [config/lakes.examples/other/](../../lakes.examples/other/): copy both (docs/guides/LAKE_GUIDE.md).

@@ -28,7 +28,7 @@ drishti:
         private-key: ${DRISHTI_FLIGHT_TLS_KEY:./config/tls/server.key}        # its private key, PKCS#8 PEM
         client-ca: ${DRISHTI_FLIGHT_TLS_CLIENT_CA:}                           # a CA bundle: set it and every client must present a certificate it signed (mutual TLS)
       memory:                                    # Arrow's off-heap memory (counted by busy protection with the rest)
-        total-mb: 4096                           # every Flight read of this node together
+        total-mb: ${DRISHTI_FLIGHT_MEMORY_MB:4096}   # every Flight read of this node together; the launchers add it to the direct-memory limit (tools/lake/memory_caps.py)
         request-mb: 1024                         # one read at most (a role's limit may be lower)
       batch-rows: 65536                          # rows in one record batch sent
       session-minutes: 60                        # how long the session given at the handshake lasts before the token is checked again

@@ -360,6 +360,10 @@ def connector_text(current: str | None, root: Path, domain: str, kind: str, colu
         kinds.append(kind)
     doc["kinds"] = kinds
     st = doc.get("settings") if isinstance(doc.get("settings"), dict) else {}
+    # binding names a folder: a connector that named a lake (LAKE_GUIDE.md) is bound in the older form (root, domain, layout; one warning
+    # at start) rather than refused for setting both; drishti.py lake migrate-config describes that folder as a lake of its own
+    st.pop("lake", None)
+    st.pop("lake-tables", None)
     st["root"] = str(root)
     st["domain"] = domain
     promoted = list((columns or {}).get("promoted") or {})

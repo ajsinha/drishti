@@ -13,6 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 # Example: copy to config/connectors/reference-store.yaml to read the reference-store data from iceberg. It replaces the
 # connector file of the same name (settings are not merged). Credentials are ${ENV_VAR} references.
+# The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/iceberg/iceberg.yaml: copy it to
+# config/lakes/iceberg.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - counterparty
@@ -29,8 +31,8 @@ kinds:
 - clearing-account
 description: reference-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
-  root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}
-  domain: reference
+  lake: iceberg
+  lake-tables: reference.counterparty,reference.counterparty-group,reference.issuer,reference.agreement,reference.ccp,reference.legal-entity,reference.book,reference.desk,reference.trader,reference.calendar,reference.csa,reference.clearing-account
   mode.counterparty: effective
   mode.counterparty-group: effective
   mode.issuer: effective
@@ -43,7 +45,3 @@ settings:
   mode.calendar: effective
   mode.csa: effective
   mode.clearing-account: effective
-  catalog: ${DRISHTI_ICEBERG_CATALOG:hadoop}
-  uri: ${DRISHTI_ICEBERG_URI:}
-  warehouse: ${DRISHTI_ICEBERG_WAREHOUSE:}
-  credential: ${DRISHTI_ICEBERG_CREDENTIAL:}

@@ -143,18 +143,21 @@ $javaArgs = @("-Djava.io.tmpdir=$tmpDir", "-Xmx$Heap", '-XX:MaxDirectMemorySize=
     '-Djdk.nio.maxCachedBufferSize=262144', '-XX:NativeMemoryTracking=summary', '-XX:+HeapDumpOnOutOfMemoryError', "-XX:HeapDumpPath=$dumps",
     '-Xlog:gc*:file=data/logs/gc-%p.log:time,uptime:filecount=5,filesize=20m', '-jar', $Jar)
 if ($major -ge 25) { $javaArgs = @('-XX:+UseCompactObjectHeaders') + $javaArgs }
-# the in-memory lake (IN_MEMORY_LAKE.md section 3a): its stores live in direct memory, so the limit is 256 MB plus the stores' max-mb,
-# from DRISHTI_LAKE_MEMORY_MB or the configuration (tools\lake\memory_caps.py); the later flag wins. Admin -> Health turns red when short.
+# direct memory (IN_MEMORY_LAKE.md section 3a; FLIGHT_GUIDE.md section 10): the in-memory lake's stores and Arrow's buffers (the compute
+# exchange, BI answers as Arrow, Arrow Flight when its engine is on) live there, so the limit is 256 MB plus both, from the one place that
+# sizes them (tools\lake\memory_caps.py; DRISHTI_LAKE_MEMORY_MB and DRISHTI_ARROW_MB, when set, are used as they are); the later flag
+# wins, and Arrow's own cap (-Ddrishti.arrow.max-bytes) is set to its share. Admin -> Health turns red when short.
+$py = Get-Command python -ErrorAction SilentlyContinue
 $memMb = 0
 if ($env:DRISHTI_LAKE_MEMORY_MB) { $memMb = [int]$env:DRISHTI_LAKE_MEMORY_MB }
-else {
-    $py = Get-Command python -ErrorAction SilentlyContinue
-    if ($py) { try { $memMb = [int](& $py.Source (Join-Path $root 'tools\lake\memory_caps.py') --stores-only 2>$null) } catch { $memMb = 0 } }
-}
-if ($memMb -gt 0) {
+elseif ($py) { try { $memMb = [int](& $py.Source (Join-Path $root 'tools\lake\memory_caps.py') --stores-only 2>$null) } catch { $memMb = 0 } }
+$arrowMb = 512
+if ($env:DRISHTI_ARROW_MB) { $arrowMb = [int]$env:DRISHTI_ARROW_MB }
+elseif ($py) { try { $arrowMb = [int](& $py.Source (Join-Path $root 'tools\lake\memory_caps.py') --arrow-only 2>$null) } catch { $arrowMb = 512 } }
+if ($memMb + $arrowMb -gt 0) {
     $at = [Array]::IndexOf($javaArgs, '-jar')
-    $javaArgs = $javaArgs[0..($at - 1)] + @("-XX:MaxDirectMemorySize=$(256 + $memMb)m") + $javaArgs[$at..($javaArgs.Length - 1)]
-    Write-Host "In-memory lake: direct memory 256 MB + $memMb MB of memory stores"
+    $javaArgs = $javaArgs[0..($at - 1)] + @("-XX:MaxDirectMemorySize=$(256 + $memMb + $arrowMb)m", "-Ddrishti.arrow.max-bytes=$([int64]$arrowMb * 1048576)") + $javaArgs[$at..($javaArgs.Length - 1)]
+    Write-Host "Direct memory: 256 MB + $memMb MB of memory stores + $arrowMb MB of Arrow buffers"
 }
 Write-Host "Drishti server: $Jar on port $Port, Delta engine $Engine, lake $LakeRoot, packs $(if ($Packs) { $Packs } else { '(default)' }), heap $Heap$(if ($DemoLakes) { ', offline demo on the lakes (sign in as drishti-dev-admin)' })"
 

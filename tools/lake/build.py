@@ -170,7 +170,9 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     ``connector`` that Delta connector of the pack (one of several serving a kind, one per source system: trade-endur ...), else the
     first; ``table`` is its ``table.<kind>`` folder when it names one (trade_endur), else the kind."""
     import yaml
-    m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+    import packlake                                   # a lake-form template read with the pack's lake: entries
+    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     out: dict = {"pack": m.get("pack") or pack.name}
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]
@@ -277,6 +279,14 @@ def lake_layout(a, p: dict) -> None:
     a.lake = str(getattr(a, "lake_root", None) or root)
     a.format = t["format"]
     if t.get("load-mode") == "append":
+        # an append records its batch in the commit so it is never appended twice; one implementation of that rule, the parallel
+        # loader's (LAKE_GUIDE.md section 4): the Python path refuses rather than append without it
+        if getattr(a, "engine", "auto") != "java":
+            raise BuildError(f"table {t['name']} of lake {name} appends (load-mode: append): each batch is recorded in the commit so it is "
+                             "never appended twice, which the parallel loader does: add --engine java --batch-id ID (the file's name, a run id)")
+        if not getattr(a, "batch_id", None):
+            raise BuildError(f"table {t['name']} of lake {name} appends (load-mode: append): give --batch-id ID (the file's name, a run id), "
+                             "so a repeated or retried load is never appended twice")
         a.mode = "append"
     p["lake_entry"], p["lake_name"] = t["name"], name
 
@@ -690,6 +700,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "
                         "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/TOOLS.md section 4.13); repeatable")
     g.add_argument("--mode", choices=MODES, default="overwrite-dates", help="overwrite-dates (default), overwrite-partitions or append")
+    g.add_argument("--batch-id", metavar="ID", help="--engine java, an append (a lake file's load-mode: append, or --mode append): the load's batch, "
+                   "recorded in each date's commit so the same batch is never appended twice (docs/guides/LAKE_GUIDE.md section 4)")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
     g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")

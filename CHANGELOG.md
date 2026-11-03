@@ -28,12 +28,12 @@
   example through Flight SQL ready for when it ships; Excel through Python (`openpyxl`, no add-in), with the ODBC route noted for when
   Flight SQL ships (its driver is an installer). Tokens only from `DRISHTI_TOKEN` or `DRISHTI_TOKEN_FILE`. `test_client_examples.py`
   checks every notebook's form on every run and runs every notebook, the Excel script and the Java example against a Flight server when
-  one is set. Linked from the Flight guide, the Python, Java, JDBC and ODBC pages and tutorial 34. C#/.NET, R and Go examples come later.
+  one is set. Linked from the Flight guide, the Python, Java, JDBC and ODBC pages and tutorial 35. C#/.NET, R and Go examples come later.
 - `tools/license_headers.py` checks notebooks: the notice is a notebook's first markdown cell.
 
 ## 2.9.11.c
 
-- **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 34, a page per client; ARROW_FLIGHT.md).**
+- **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 35, pages for Python, Java, JDBC and ODBC (C#/.NET, R and Go later); ARROW_FLIGHT.md).**
   A new engine `flight` (`config/engines/flight.yaml`, off as shipped, a restart to turn on) answers Arrow Flight on its own port (18815),
   TLS always (the server's certificate; mutual TLS with `tls.client-ca`). Requests are Rachana requests in five forms: `kind` (a kind's
   rows on a day, its paths and filter lines, read by the Data view's reader with every check of a download), `model` (an MQ query),
@@ -55,6 +55,13 @@
   in time by a BI run now reaches the browser as JSON, which `drishtiFetchTable` reads as well); the scenario matrix's Arrow download is the
   server's stream. Python reads Drishti's data through `clients/python/drishti_flight.py`, a one-file client over `pyarrow.flight`
   (parallel parts, a node down served by the next, streams with resume, Drishti's codes on refusals, a command line).
+- **Direct memory for Arrow's buffers.** The official Arrow library keeps its buffers in direct memory, so the launchers now size it
+  from the one place that already sized the in-memory lake's stores, `tools/lake/memory_caps.py`: Arrow's budget (`--arrow-only`) is
+  512 MB for the compute exchange and BI answers (`DRISHTI_ARROW_EXCHANGE_MB`) plus Flight's `memory.total-mb` (now
+  `${DRISHTI_FLIGHT_MEMORY_MB:4096}`) when its engine is on; the stack, `start-server.ps1`, the ECS entrypoint (`DRISHTI_ARROW_MB`, no
+  Python in the image) and the IDE run configurations add it to `-XX:MaxDirectMemorySize` (the later flag wins) and pass it as Arrow's own
+  cap, `-Ddrishti.arrow.max-bytes`; the run configurations also carry `--add-opens=java.base/java.nio=ALL-UNNAMED` (they start from
+  classes). Tested by `tools/lake/test_memory_caps.py` (OPERATIONS.md 12.1a, FLIGHT_GUIDE.md section 10, CONFIGURATION.md).
 - New module `drishti-flight` (plain Java: `FlightService`, `DrishtiFlightProducer`, `TokenAuthenticator`, `FlightRequest`,
   `FlightBackend`, `FlightActivity`, `FlightLimits`); the server's wiring is `server.flight` (`FlightConfiguration`, `ServerFlightBackend`,
   the forms, `DataOutController`). Tests: `FlightServiceTest`, `FlightServerTest`, `ArrowIpcTest`, the console's `test_flight_client.py`.
@@ -77,7 +84,14 @@
   show`. **Admin → Lakes** lists every lake and table from the files, read-only (`GET /api/v1/admin/lakes/files`). **Migration**:
   `drishti.py lake migrate-config [--write]` writes lake files from connector files that still carry `root`, `domain`, `table.<kind>` or
   `layout.<kind>.*` and rewrites them to `lake: <name>`; until then such a connector starts as before with one warning (the old keys are
-  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide.
+  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide, and tutorial 35
+  (one file per lake). **Every shipped pack** now ships its tables as a `lake:` block and its Delta templates name `lake: demo` and
+  `lake-tables:` (the generators write it through `tools/packlake.py`; the tools that read a template's layout read it through the same
+  module); `config/lakes/demo.yaml` holds their entries and ships inside the server too, so a container or a stack node knows the demo
+  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
+  The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
+  out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
+  `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only).
 
 ## 2.9.11.f
 

@@ -85,7 +85,8 @@ def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
     """(domain, {kind: Layout}, {kind: key}, {kind: date}) from a pack folder's pack.yaml."""
     import yaml
     L = _layout()  # delta only
-    m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    import packlake                                   # tools/packlake.py: a lake-form template read with the pack's lake: entries
+    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})   # a pack names its connectors and suggests them as templates
     conns = [c for c in defs.values() if c.get("plugin") in ("delta", "file")]
     if not conns:

@@ -41,8 +41,14 @@ export DRISHTI_TOKEN_FILE=~/.config/drishti/token                     # or DRISH
 export DRISHTI_FLIGHT_CA=/path/to/ca.pem                              # the CA of the server's certificate
 ```
 
-Optional: `DRISHTI_EXAMPLE_SCOPE` (a VaR scope, default `DESK:RATES`), `DRISHTI_EXAMPLE_DATE` (a business date; default the latest),
-`DRISHTI_EXAMPLE_STREAM_WAIT` (seconds a stream example waits, default 30), `DRISHTI_EXAMPLE_STREAM_BATCHES` (default 2).
+Optional:
+
+```bash
+export DRISHTI_EXAMPLE_SCOPE=DESK:RATES          # a VaR scope (the default)
+export DRISHTI_EXAMPLE_DATE=2026-09-30           # a business date (default: the latest)
+export DRISHTI_EXAMPLE_STREAM_WAIT=30            # seconds a stream example waits for a batch (the default)
+export DRISHTI_EXAMPLE_STREAM_BATCHES=2          # batches a stream example takes (the default)
+```
 
 ## Python notebooks (`python/`)
 
@@ -91,9 +97,10 @@ when `DRISHTI_FLIGHT_URL` and a token are set and the server answers; otherwise 
 
 ```bash
 DRISHTI_FLIGHT_URL=grpc+tls://<real address>:18815 DRISHTI_TOKEN_FILE=… DRISHTI_FLIGHT_CA=… \
-  python -m pytest drishti-console/tests/test_client_examples.py -v
+  DRISHTI_EXAMPLES_JAVA_CP="$PWD/examples/clients/java/lib/*" python -m pytest drishti-console/tests/test_client_examples.py -v
 ```
 
 ## Later
 
 - C#/.NET, R and Go examples.
+- Virtual-table and model notebooks (they come with 2.9.11.e).

@@ -16,16 +16,16 @@
 # Data out: Drishti's data to any client with Arrow Flight
 
 **Arrow Flight** is a protocol for moving columnar data (Apache Arrow record batches) between programs over gRPC. Drishti answers it on
-its own port so that a Python notebook, a Java service, a C#, R or Go program, or a JDBC tool reads Drishti's data, as the person it
+its own port so that any Arrow Flight client (a Python notebook, a Java service, a JDBC tool, or a program in any language with a
+Flight library) reads Drishti's data, as the person it
 belongs to, without a JSON step and without copying the lake: the kinds of every pack, BI model queries, pivot views, VaR's scenario P&L
 vectors and the in-memory lake, each with the same entitlements, masks, busy protection and audit as the screens.
 
 The exact form of every request, its schema and its errors are in the [reference](FLIGHT_REFERENCE.md); a hands-on walk from a token to a
-pandas DataFrame is [tutorial 34](../tutorials/34-data-out-with-arrow-flight.md); each language and tool has its own page
-([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [C#](flight/CSHARP.md), [R](flight/R.md), [Go](flight/GO.md), [JDBC](flight/JDBC.md),
-[ODBC](flight/ODBC.md)). Working examples to start from, every one read only (Python notebooks from a token to VaR scenario P&L, a
-live stream, DuckDB and the in-memory lake; Java; Excel through Python) are in
-[examples/clients](../../examples/clients/README.md). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
+pandas DataFrame is [tutorial 35](../tutorials/35-data-out-with-arrow-flight.md); the clients have their own pages
+([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [JDBC](flight/JDBC.md), [ODBC](flight/ODBC.md)).
+Working examples to start from, every one read only (Python notebooks from a token to VaR scenario P&L, a live stream, DuckDB and the
+in-memory lake; Java; Excel through Python) are in [examples/clients](../../examples/clients/README.md). Later: C#/.NET, R and Go client pages (the service already answers any Flight client). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
 
 ## Contents
 
@@ -135,7 +135,7 @@ pnl = f.measure("var.scenarios", "DESK:RATES").to_pandas()
 ## 5. The request path
 
 ```text
- client (pyarrow, Java, C#, R, Go, JDBC)
+ client (pyarrow, Java, JDBC, any Flight library)
     │  TLS, port 18815
     ▼
  ┌──────────────────────────── a Drishti node ─────────────────────────────┐
@@ -228,8 +228,14 @@ gets `DRS-5610`).
 ## 10. Operations
 
 **Sizing.** A read holds about two batches of Arrow memory at once (`batch-rows` × the row's width; 65,536 rows of 20 numeric columns
-≈ 10 MB a batch). `memory.request-mb` caps one read, `memory.total-mb` the node; the direct-memory limit of the JVM must leave room for
-them beside the in-memory lake's stores. (measured figures: to be filled in the heavy run)
+≈ 10 MB a batch). `memory.request-mb` caps one read, `memory.total-mb` (`DRISHTI_FLIGHT_MEMORY_MB`) the node. Arrow's buffers are direct
+memory, so the shipped launchers raise the JVM's `-XX:MaxDirectMemorySize` for them at start, from `tools/lake/memory_caps.py`: 256 MB,
+plus the in-memory lake's stores, plus Arrow's budget (512 MB for the compute exchange and BI answers, `DRISHTI_ARROW_EXCHANGE_MB`, plus
+`memory.total-mb` when Flight is on), and set Arrow's own cap (`-Ddrishti.arrow.max-bytes`) to that budget. With Flight on and the
+defaults: 256 + 512 + 4,096 = 4,864 MB. Check it with `python3 tools/lake/memory_caps.py --arrow-only`; on ECS set `DRISHTI_ARROW_MB` to
+what it prints ([OPERATIONS.md](../admin/OPERATIONS.md#121a-direct-memory-and-the-diagnostics-of-a-long-run), section 12.1a); the host must
+have that memory beside the heap. Changing `memory.total-mb` needs a restart (the limit is set at start). (measured figures: to be filled
+in the heavy run)
 
 **The port.** Open TCP 18815 between clients and every node (each node is read directly). A load balancer passes it through as TCP (TLS
 ends on the node, HTTP/2 inside); it must not terminate TLS, since the endpoints name the nodes themselves.

@@ -32,6 +32,12 @@ import booking as BK
 import sutras as TS  # noqa: E402  (tools/packgen/trades: the production-shaped trade's Sutras and derived kinds)
 import calc_snippets
 import layout
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+import packlake  # noqa: E402  (tools/packlake.py: the templates' tables as the pack's lake: entries, docs/guides/LAKE_GUIDE.md)
+
+#: the partitions after business_date the pack recommends (the demo lake, config/lakes/demo.yaml, says the same)
+PARTITIONS = {f"trading.trade_{s}": ["PRODUCT_TYPE"] for s in ("endur", "calypso", "murex")}
 import taxonomy as T
 import var_kinds as VK  # the VaR engine's kinds in the market-risk pack (positions, portfolios, P&L vectors, hierarchies)
 import corr_kinds as CK  # CORR computed from price history in the market-data pack (since 2.9.2)
@@ -336,7 +342,8 @@ def kept(name: str) -> str:
 def files() -> dict[Path, str]:
     out = {}
     for name in layout.PACKS:
-        body = yaml.dump(manifest(name), Dumper=_Plain, sort_keys=False, allow_unicode=True, width=140)
+        body = yaml.dump(packlake.lake_form(manifest(name), partitions=PARTITIONS), Dumper=_Plain, sort_keys=False, allow_unicode=True,
+                         width=140)
         out[PACKS / name / "pack.yaml"] = f"{HEADER}\n\n{GENERATED}\n# {layout.PACKS[name]['title']} pack for Drishti.\n{body}{kept(name)}"
         out[PACKS / name / "config" / "formats.yaml"] = (f"{HEADER}\n\n{GENERATED}\n# Number formats the banking packs share.\n"
                                                          + yaml.safe_dump({"formats": FORMATS}, sort_keys=False))
