@@ -33,10 +33,13 @@ drishti:
           label: "synthetic demo funding curve: the bank's unsecured spread over OIS (a bank names its own curve)"   # what the curve is, shown as its source
           points: [{ tenor: 6M, spread: 0.0040 }, { tenor: 1Y, spread: 0.0045 }, { tenor: 2Y, spread: 0.0055 }, { tenor: 5Y, spread: 0.0070 }, { tenor: 10Y, spread: 0.0085 }]   # tenor and spread in decimals, linear in t between points, flat beyond
       ee-point: end                  # end (the period's end) or mid (the average of both ends)
-      funding-survival: false        # true: each term x S_C(t) x S_B(t) from the flat hazards below (per-counterparty credit curves: planned)
-      counterparty-hazard: 0.0       # the counterparty's flat hazard rate with funding-survival
-      own-hazard: 0.0                # the bank's own flat hazard rate with funding-survival
+      funding-survival: false        # true: each term x S_C(t) x S_B(t): the counterparty's credit curve (its record's CREDIT_CURVE) and the bank's own-curve
+      credit-curve-kind: credit-curve   # the kind the credit curves are read from (CURVE_ID, POINTS TENOR and SURVIVAL, log-linear)
+      own-curve: ""                  # the bank's own credit curve id; empty: the flat own-hazard
+      counterparty-hazard: 0.0       # the counterparty's flat hazard rate when its record names no credit curve or the curve is not found (FLAT_HAZARD)
+      own-hazard: 0.0                # the bank's own flat hazard rate when own-curve is empty or not found
       fba: true                      # false: FCA only (asymmetric funding)
       require-risk-neutral: ${DRISHTI_FVA_REQUIRE_RISK_NEUTRAL:false}   # true in production: a run not RISK_NEUTRAL is refused (DRS-5447); false (the demo's REAL_WORLD run): computed and flagged REAL_WORLD_RUN
       playground-max-sets: 20        # the most netting sets one playground and workbook shows side by side
+      playground-max-paths: 5000     # the paths mode (mode=paths): the most paths a netting set's Paths tab holds
       playground-template: ""        # a bank's workbook template folder (empty: the built-in playground/fva/template/)

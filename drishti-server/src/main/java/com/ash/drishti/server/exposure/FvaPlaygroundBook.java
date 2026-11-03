@@ -41,8 +41,19 @@ final class FvaPlaygroundBook {
     static final String FAIL = "✗";
     static final String ALL_PASS = "ALL CHECKS PASS";
 
-    /** One netting set of the book: its id, counterparty, CSA, today's exposure and its negative, and the engine's result. */
-    record SetIn(String id, String counterparty, String csa, double ce, double nce, FvaMath.Result r) {}
+    /**
+     * One netting set of the book: its id, counterparty, CSA, today's exposure and its negative, and the engine's result.
+     *
+     * @param survival S_C(t) · S_B(t) at each primary date from the credit curves (null: 1 at every date)
+     * @param paths the paths mode: {@code {E, N}} each {@code K x P} (row-major), whose path means are EE and ENE; null: the profile mode
+     * @param p the paths per date in {@code paths}
+     */
+    record SetIn(String id, String counterparty, String csa, double ce, double nce, FvaMath.Result r, double[] survival, double[][] paths, int p) {
+
+        SetIn(String id, String counterparty, String csa, double ce, double nce, FvaMath.Result r) {
+            this(id, counterparty, csa, ce, nce, r, null, null, 0);
+        }
+    }
 
     /**
      * What the workbook shows.
@@ -50,10 +61,16 @@ final class FvaPlaygroundBook {
      * @param dates the primary dates (K), as text
      * @param lend null: symmetric (the lending table follows the borrowing one)
      * @param discount null: the paths are discounted (DF = 1)
+     * @param survivalSource where the survival of each side came from (Config says it)
      */
     record Input(String scope, String label, String date, String runId, String calibration, List<String> flags, List<String> dates, double[] t,
-            FvaMath.Curve borrow, FvaMath.Curve lend, FvaMath.Curve discount, double hazardCounterparty, double hazardBank, FvaMath.Point point,
-            boolean survival, boolean fba, List<SetIn> sets, FvaMath.Result total, Map<String, Object> provenance) {}
+            FvaMath.Curve borrow, FvaMath.Curve lend, FvaMath.Curve discount, String survivalSource, FvaMath.Point point, boolean survival, boolean fba,
+            List<SetIn> sets, FvaMath.Result total, Map<String, Object> provenance) {
+
+        boolean pathsMode() {
+            return !sets.isEmpty() && sets.stream().allMatch(s -> s.paths() != null);
+        }
+    }
 
     private final Input in;
     private final PlaygroundTemplate t;
@@ -63,7 +80,7 @@ final class FvaPlaygroundBook {
     private final boolean cached;
 
     // ---- the plan: where everything is ----
-    private static final int CH = 4;            // Config: EePoint B4, FundingSurvival B5, IncludeFba B6, hazards B7 and B8, flat flag B9
+    private static final int CH = 4;            // Config: EePoint B4, FundingSurvival B5, IncludeFba B6, survival's source B7, mode B8, flat flag B9
     private int borrowFirst;
     private int borrowLast;
     private int lendFirst;
@@ -71,7 +88,18 @@ final class FvaPlaygroundBook {
     private int dfFirst;
     private int dfLast;
     private static final int D0 = 4;           // Data and Terms: row 4 is today (k = 0), rows 5 .. 4 + K the primary dates
-    private static final int SET0 = 7;         // Terms: the first set's first column (EE*, ENE*, FCA, FBA per set)
+    private static final int SET0 = 6;         // Terms: the first set's first column (S, EE*, ENE*, FCA, FBA per set)
+    private static final int PER_SET = 5;      // Terms: columns per set
+    private static final int DATA_PER_SET = 3; // Data: EE, ENE, S per set
+
+    private static int dataEe(int j) {
+        return 3 + DATA_PER_SET * j;
+    }
+
+    /** Paths: the first row of set j's block (its E rows follow its title row, then the N title and rows). */
+    private int pathsBase(int j) {
+        return 3 + j * (2 * k + 2);
+    }
 
     FvaPlaygroundBook(Input in, PlaygroundTemplate t, String user, String now) {
         this(in, t, user, now, true);
@@ -159,6 +187,9 @@ final class FvaPlaygroundBook {
             main(w.sheet("Main", "1F3A5F"));
             config(w.sheet("Config", "B08A2E"));
             data(w.sheet("Data", "B08A2E"));
+            if (in.pathsMode()) {
+                paths(w.sheet("Paths", "B08A2E"));
+            }
             terms(w.sheet("Terms", "2E5A88"));
             explain(w.sheet("Explain", "6B7686"));
             provenance(w.sheet("Provenance", "6B7686"));
@@ -202,7 +233,7 @@ final class FvaPlaygroundBook {
         int row = first;
         for (int j = 0; j < n; j++) {
             SetIn si = in.sets().get(j);
-            int fc = SET0 + 4 * j + 2;
+            int fc = SET0 + PER_SET * j + 3;
             s.row(row).text(0, si.id(), "label").text(1, si.counterparty() == null ? "" : si.counterparty(), "text").text(2, si.csa(), "text");
             s.formula(3, "SUM(" + range("Terms", fc, D0, last()) + ")", c(si.r().fca()), "money");
             s.number(4, si.r().fca(), "money");
@@ -242,7 +273,7 @@ final class FvaPlaygroundBook {
     private String sumEeDt() {
         List<String> parts = new ArrayList<>();
         for (int j = 0; j < in.sets().size(); j++) {
-            parts.add("SUMPRODUCT(" + range("Data", 3 + 2 * j, D0 + 1, last()) + "," + range("Terms", 2, D0 + 1, last()) + ")");
+            parts.add("SUMPRODUCT(" + range("Data", dataEe(j), D0 + 1, last()) + "," + range("Terms", 2, D0 + 1, last()) + ")");
         }
         return parts.isEmpty() ? "0" : String.join("+", parts);
     }
@@ -257,13 +288,15 @@ final class FvaPlaygroundBook {
                 .text(4, "end: the exposure at the period's end; mid: the average of both ends (today's end: CE and its negative)", "wrap");
         s.list("B" + CH, List.of("end", "mid"));
         s.row(CH + 1).text(0, "FundingSurvival", "label").text(1, in.survival() ? "on" : "off", "input.text").text(2, "off", "text").text(3, "on, off", "text")
-                .text(4, "on: each term × S_C(t) × S_B(t) = e^(−(h_C + h_B) t): funding stops at either default", "wrap");
+                .text(4, "on: each term × S_C(t) × S_B(t), each set's survival in Data (from the credit curves): funding stops at either default", "wrap");
         s.list("B" + (CH + 1), List.of("on", "off"));
         s.row(CH + 2).text(0, "IncludeFba", "label").text(1, in.fba() ? "on" : "off", "input.text").text(2, "on", "text").text(3, "on, off", "text")
                 .text(4, "off: FCA only (asymmetric funding), FBA = 0", "wrap");
         s.list("B" + (CH + 2), List.of("on", "off"));
-        s.row(CH + 3).text(0, "Hazard rate, counterparty (h_C)", "label").number(1, in.hazardCounterparty(), "input.rate").text(4, "flat, per year (survival weighting)", "text");
-        s.row(CH + 4).text(0, "Hazard rate, the bank (h_B)", "label").number(1, in.hazardBank(), "input.rate").text(4, "flat, per year (survival weighting)", "text");
+        s.row(CH + 3).text(0, "Survival's source", "label").text(1, "Data, S", "text").text(4, in.survivalSource() == null || in.survivalSource().isBlank()
+                ? "no survival read (1 at every date)" : in.survivalSource(), "wrap");
+        s.row(CH + 4).text(0, "Mode", "label").text(1, in.pathsMode() ? "paths" : "profile", "text").text(4, in.pathsMode()
+                ? "paths: EE and ENE in Data are the means of each set's exposures on every path (Paths)" : "profile: EE and ENE in Data are the exposure engine's", "wrap");
         s.row(CH + 5).text(0, "Borrowing spread is flat", "label").text(1, in.borrow().isFlat() ? "yes" : "no", "input.text")
                 .text(4, "yes: Main shows the EPE reading (spread × life × EPE_life)", "text");
         s.row(borrowFirst - 2).text(0, "Borrowing (funding) spread: " + in.borrow().id() + " · " + in.borrow().source(), "head");
@@ -308,20 +341,57 @@ final class FvaPlaygroundBook {
     // ---- Data ------------------------------------------------------------------------------------------------------------------------
 
     private void data(SheetStream s) {
-        s.width(0, 6).width(1, 12).width(2, 10).widths(3, 2 + 2 * Math.max(1, in.sets().size()), 16).freeze(3, 3);
-        s.row(1).text(0, "Data: the exposure profile of each netting set as the exposure engine computed it (after collateral), USD", "title");
+        s.width(0, 6).width(1, 12).width(2, 10).widths(3, 2 + DATA_PER_SET * Math.max(1, in.sets().size()), 16).freeze(3, 3);
+        s.row(1).text(0, "Data: each netting set's exposure profile (after collateral, USD)" + (in.pathsMode() ? ", the means of its paths (Paths)"
+                : " as the exposure engine computed it") + ", and its survival S_C·S_B from the credit curves", "title");
         s.row(3).text(0, "k", "head").text(1, "Date", "head").text(2, "t", "head");
         for (int j = 0; j < in.sets().size(); j++) {
-            s.text(3 + 2 * j, "EE " + in.sets().get(j).id(), "head").text(4 + 2 * j, "ENE " + in.sets().get(j).id(), "head");
+            String id = in.sets().get(j).id();
+            s.text(dataEe(j), "EE " + id, "head").text(dataEe(j) + 1, "ENE " + id, "head").text(dataEe(j) + 2, "S " + id, "head");
         }
         s.row(D0).number(0, 0, "text").text(1, in.date(), "text").number(2, 0, "rate");
         for (int j = 0; j < in.sets().size(); j++) {
-            s.number(3 + 2 * j, in.sets().get(j).ce(), "money").number(4 + 2 * j, in.sets().get(j).nce(), "money");
+            s.number(dataEe(j), in.sets().get(j).ce(), "money").number(dataEe(j) + 1, in.sets().get(j).nce(), "money").number(dataEe(j) + 2, 1, "rate");
         }
         for (int i = 0; i < k; i++) {
             s.row(D0 + 1 + i).number(0, i + 1, "text").text(1, i < in.dates().size() ? in.dates().get(i) : "", "text").number(2, in.t()[i], "rate");
             for (int j = 0; j < in.sets().size(); j++) {
-                s.number(3 + 2 * j, in.sets().get(j).r().ee()[i], "money").number(4 + 2 * j, in.sets().get(j).r().ene()[i], "money");
+                SetIn si = in.sets().get(j);
+                if (in.pathsMode()) {
+                    int base = pathsBase(j);
+                    s.formula(dataEe(j), "AVERAGE(Paths!$B$" + (base + 1 + i) + ":$" + col(si.p()) + "$" + (base + 1 + i) + ")", c(si.r().ee()[i]), "money");
+                    s.formula(dataEe(j) + 1, "AVERAGE(Paths!$B$" + (base + k + 2 + i) + ":$" + col(si.p()) + "$" + (base + k + 2 + i) + ")", c(si.r().ene()[i]),
+                            "money");
+                } else {
+                    s.number(dataEe(j), si.r().ee()[i], "money").number(dataEe(j) + 1, si.r().ene()[i], "money");
+                }
+                s.number(dataEe(j) + 2, si.survival() == null ? 1.0 : si.survival()[i], "rate");
+            }
+        }
+    }
+
+    /** The paths mode: each set's exposure E and negative exposure N on every path at each primary date, after collateral (data). */
+    private void paths(SheetStream s) {
+        int p = in.sets().stream().mapToInt(SetIn::p).max().orElse(1);
+        s.width(0, 22).widths(1, p, 12).freeze(2, 1);
+        s.row(1).text(0, "Paths: each netting set's exposure E = max(V − C − IM, 0) and negative exposure N = min(V − C, 0) on every path, after the CSA "
+                + "(the exposure engine's); Data's EE and ENE are their means", "title");
+        for (int j = 0; j < in.sets().size(); j++) {
+            SetIn si = in.sets().get(j);
+            int base = pathsBase(j);
+            for (int part = 0; part < 2; part++) {
+                int top = base + part * (k + 1);
+                s.row(top).text(0, (part == 0 ? "E " : "N ") + si.id(), "head");
+                for (int q = 0; q < si.p(); q++) {
+                    s.text(1 + q, "path " + (q + 1), "head");
+                }
+                double[] m = si.paths()[part];
+                for (int i = 0; i < k; i++) {
+                    s.row(top + 1 + i).text(0, i < in.dates().size() ? in.dates().get(i) : "t" + (i + 1), "label");
+                    for (int q = 0; q < si.p(); q++) {
+                        s.number(1 + q, m[i * si.p() + q], "money");
+                    }
+                }
             }
         }
     }
@@ -329,15 +399,15 @@ final class FvaPlaygroundBook {
     // ---- Terms -----------------------------------------------------------------------------------------------------------------------
 
     private void terms(SheetStream s) {
-        s.width(0, 6).width(1, 10).widths(2, 6, 12).widths(SET0, SET0 + 4 * Math.max(1, in.sets().size()), 14).freeze(3, 2);
-        s.row(1).text(0, "Terms: per primary date, the discount factor, the spreads, the survival weight, the discounted exposures and the FCA and FBA terms",
-                "title");
-        s.row(3).text(0, "k", "head").text(1, "t", "head").text(2, "Δt", "head").text(3, "DF", "head").text(4, "s_B", "head").text(5, "s_L", "head")
-                .text(6, "S_C·S_B", "head");
+        s.width(0, 6).width(1, 10).widths(2, 5, 12).widths(SET0, SET0 + PER_SET * Math.max(1, in.sets().size()), 14).freeze(3, 2);
+        s.row(1).text(0, "Terms: per primary date, the discount factor, the spreads, each set's survival weight, its discounted exposures and its FCA and "
+                + "FBA terms", "title");
+        s.row(3).text(0, "k", "head").text(1, "t", "head").text(2, "Δt", "head").text(3, "DF", "head").text(4, "s_B", "head").text(5, "s_L", "head");
         for (int j = 0; j < in.sets().size(); j++) {
             String id = in.sets().get(j).id();
-            s.text(SET0 + 4 * j, "EE* " + id, "head").text(SET0 + 4 * j + 1, "ENE* " + id, "head").text(SET0 + 4 * j + 2, "FCA " + id, "head")
-                    .text(SET0 + 4 * j + 3, "FBA " + id, "head");
+            int c0 = SET0 + PER_SET * j;
+            s.text(c0, "S " + id, "head").text(c0 + 1, "EE* " + id, "head").text(c0 + 2, "ENE* " + id, "head").text(c0 + 3, "FCA " + id, "head")
+                    .text(c0 + 4, "FBA " + id, "head");
         }
         int nb = borrowLast - borrowFirst + 1;
         int nl = lendLast - lendFirst + 1;
@@ -354,28 +424,29 @@ final class FvaPlaygroundBook {
             String x = "$B" + r;
             double tt = i < 0 ? 0 : in.t()[i];
             double df = i < 0 ? 1 : in.total().df()[i];
-            double w = i < 0 || !in.survival() || in.total().survival() == null ? 1.0 : in.total().survival()[i];
             s.row(r).number(0, i + 1, "text").formula(1, "Data!$C$" + r, c(tt), "rate");
             s.formula(2, i < 0 ? "0" : "B" + r + "-B" + (r - 1), c(i < 0 ? 0 : in.total().dt()[i]), "rate");
             s.formula(3, logLinear(x), c(df), "rate");
             s.formula(4, linear(x, bt, bv, nb), c(i < 0 ? in.borrow().linear(0) : in.total().sb()[i]), "rate");
             s.formula(5, linear(x, lt, lv, nl), c(i < 0 ? lc.linear(0) : in.total().sl()[i]), "rate");
-            s.formula(6, "IF(" + surv + ",EXP(-(Config!$B$" + (CH + 3) + "+Config!$B$" + (CH + 4) + ")*" + x + "),1)", c(w), "rate");
             for (int j = 0; j < in.sets().size(); j++) {
                 SetIn si = in.sets().get(j);
-                int c = SET0 + 4 * j;
-                String ec = col(c);
-                String nc = col(c + 1);
-                s.formula(c, "Data!" + col(3 + 2 * j) + r + "*$D" + r, c(i < 0 ? si.ce() : si.r().eeStar()[i]), "money");
-                s.formula(c + 1, "Data!" + col(4 + 2 * j) + r + "*$D" + r, c(i < 0 ? si.nce() : si.r().eneStar()[i]), "money");
+                int c = SET0 + PER_SET * j;
+                String sc = col(c);
+                String ec = col(c + 1);
+                String nc = col(c + 2);
+                double w = i < 0 || !in.survival() || si.survival() == null ? 1.0 : si.survival()[i];
+                s.formula(c, "IF(" + surv + ",Data!" + col(dataEe(j) + 2) + r + ",1)", c(w), "rate");
+                s.formula(c + 1, "Data!" + col(dataEe(j)) + r + "*$D" + r, c(i < 0 ? si.ce() : si.r().eeStar()[i]), "money");
+                s.formula(c + 2, "Data!" + col(dataEe(j) + 1) + r + "*$D" + r, c(i < 0 ? si.nce() : si.r().eneStar()[i]), "money");
                 if (i < 0) {
-                    s.formula(c + 2, "0", c(0.0), "money").formula(c + 3, "0", c(0.0), "money");
+                    s.formula(c + 3, "0", c(0.0), "money").formula(c + 4, "0", c(0.0), "money");
                     continue;
                 }
                 String eePt = "IF(" + mid + ",(" + ec + (r - 1) + "+" + ec + r + ")/2," + ec + r + ")";
                 String enePt = "IF(" + mid + ",(ABS(" + nc + (r - 1) + ")+ABS(" + nc + r + "))/2,ABS(" + nc + r + "))";
-                s.formula(c + 2, "-" + eePt + "*$E" + r + "*$G" + r + "*$C" + r, c(si.r().fcaTerm()[i]), "money");
-                s.formula(c + 3, "IF(" + fba + "," + enePt + "*$F" + r + "*$G" + r + "*$C" + r + ",0)", c(si.r().fbaTerm()[i]), "money");
+                s.formula(c + 3, "-" + eePt + "*$E" + r + "*" + sc + r + "*$C" + r, c(si.r().fcaTerm()[i]), "money");
+                s.formula(c + 4, "IF(" + fba + "," + enePt + "*$F" + r + "*" + sc + r + "*$C" + r + ",0)", c(si.r().fbaTerm()[i]), "money");
             }
         }
     }

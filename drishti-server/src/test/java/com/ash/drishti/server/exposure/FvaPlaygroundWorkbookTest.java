@@ -58,26 +58,54 @@ class FvaPlaygroundWorkbookTest {
     }
 
     record Case(String name, List<FvaMath.Profile> sets, FvaMath.Curve borrow, FvaMath.Curve lend, FvaMath.Curve discount, boolean survival,
-            FvaMath.Point point, boolean fba, Double fva) {}
+            FvaMath.Point point, boolean fba, Double fva, boolean paths) {
+
+        Case(String name, List<FvaMath.Profile> sets, FvaMath.Curve borrow, FvaMath.Curve lend, FvaMath.Curve discount, boolean survival,
+                FvaMath.Point point, boolean fba, Double fva) {
+            this(name, sets, borrow, lend, discount, survival, point, fba, fva, false);
+        }
+    }
+
+    /** Four paths a date whose means are the profile: EE times 0.5, 1.5, 1.5, 0.5; ENE times 0.75, 1.25, 1, 1 (the paths mode's data). */
+    static double[][] paths(FvaMath.Profile p) {
+        int k = p.t().length;
+        double[] e = new double[k * 4];
+        double[] n = new double[k * 4];
+        double[] f = {0.5, 1.5, 1.5, 0.5};
+        double[] g = {0.75, 1.25, 1.0, 1.0};
+        for (int i = 0; i < k; i++) {
+            for (int q = 0; q < 4; q++) {
+                e[i * 4 + q] = p.ee()[i] * f[q];
+                n[i * 4 + q] = p.ene()[i] * g[q];
+            }
+        }
+        return new double[][] {e, n};
+    }
 
     static FvaPlaygroundBook.Input input(Case c) {
         double hc = 0.02;
         double hb = 0.01;
         FvaMath.Market m = FvaMath.market(T, c.discount(), c.borrow(), c.lend(), null);
+        double[] surv = FvaMath.flatSurvival(T, hc, hb);
         if (c.survival()) {
-            m = new FvaMath.Market(m.df(), m.sb(), m.sl(), FvaMath.flatSurvival(T, hc, hb));
+            m = new FvaMath.Market(m.df(), m.sb(), m.sl(), surv);
         }
         List<FvaPlaygroundBook.SetIn> sets = new ArrayList<>();
         List<FvaMath.Result> parts = new ArrayList<>();
         int i = 1;
         for (FvaMath.Profile p : c.sets()) {
-            FvaMath.Result r = FvaMath.compute(p, m, c.point(), c.fba());
+            double[] own = surv.clone();
+            for (int x = 0; x < own.length; x++) {
+                own[x] *= Math.exp(-0.001 * (i - 1) * T[x]);          // each set its own survival (its counterparty's curve)
+            }
+            FvaMath.Market mine = c.survival() ? new FvaMath.Market(m.df(), m.sb(), m.sl(), own) : m;
+            FvaMath.Result r = FvaMath.compute(p, mine, c.point(), c.fba());
             parts.add(r);
-            sets.add(new FvaPlaygroundBook.SetIn("NS-" + i, "CP-" + i, "none", p.ce(), p.nce(), r));
+            sets.add(new FvaPlaygroundBook.SetIn("NS-" + i, "CP-" + i, "none", p.ce(), p.nce(), r, own, c.paths() ? paths(p) : null, c.paths() ? 4 : 0));
             i++;
         }
         return new FvaPlaygroundBook.Input("TEST", c.name(), "2026-09-30", "XR-TEST", "RISK_NEUTRAL", List.of(), List.of("a", "b", "c", "d"), T, c.borrow(),
-                c.lend(), c.discount(), hc, hb, c.point(), c.survival(), c.fba(), sets, FvaMath.sum(parts), Map.of("Source", "test"));
+                c.lend(), c.discount(), "test: flat hazards", c.point(), c.survival(), c.fba(), sets, FvaMath.sum(parts), Map.of("Source", "test"));
     }
 
     void recalculatedEqualsEngine(Case c) throws Exception {
@@ -120,6 +148,12 @@ class FvaPlaygroundWorkbookTest {
         recalculatedEqualsEngine(new Case("fca-only", List.of(X1), FLAT50, lend, DF4, false, FvaMath.Point.END, false, -5_846.09));
         recalculatedEqualsEngine(new Case("asymmetric", List.of(X1), FLAT50, lend, oisLike, false, FvaMath.Point.END, true, null));
         recalculatedEqualsEngine(new Case("two-sets", List.of(X1, OTHER), FLAT50, null, oisLike, true, FvaMath.Point.MID, true, null));
+    }
+
+    @Test
+    void thePathsModeTakesEeAndEneAsTheMeansOfThePaths() throws Exception {
+        recalculatedEqualsEngine(new Case("paths", List.of(X1), FLAT50, null, DF4, false, FvaMath.Point.END, true, -5_000.57, true));
+        recalculatedEqualsEngine(new Case("paths-two", List.of(X1, OTHER), FLAT50, null, DF4, true, FvaMath.Point.MID, true, null, true));
     }
 
     @Test

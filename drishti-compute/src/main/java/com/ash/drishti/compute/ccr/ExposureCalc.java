@@ -211,14 +211,22 @@ public final class ExposureCalc {
     public static double[][] profile(Result r, Piece pc) {
         int gp = r.book.grid().primaryCount();
         int p = r.book.paths();
+        double[][] m = matrices(r, pc);
+        return new double[][] {ExposureMath.means(m[0], gp, p), ExposureMath.means(m[1], gp, p)};
+    }
+
+    /** One piece's exposure and negative exposure on every path, {@code {E, N}} each {@code G_primary x P}: its own, or the set's in the book. */
+    public static double[][] matrices(Result r, Piece pc) {
         if (pc.e != null) {
-            return new double[][] {ExposureMath.means(pc.e, gp, p), ExposureMath.means(pc.n, gp, p)};
+            return new double[][] {pc.e, pc.n};
         }
+        int gp = r.book.grid().primaryCount();
+        int p = r.book.paths();
         double[] e = new double[gp * p];
         double[] n = new double[gp * p];
         r.book.addExposure(pc.set, e);
         r.book.addNegative(pc.set, n);
-        return new double[][] {ExposureMath.means(e, gp, p), ExposureMath.means(n, gp, p)};
+        return new double[][] {e, n};
     }
 
     private static double[] sum(Map<String, double[]> tp, ExposureBook b, int[] trades, int len) {

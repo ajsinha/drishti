@@ -33,18 +33,24 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param curves funding curves named here (the demo's synthetic, labelled {@code CRV-USD-FUNDING}): used when the kind holds no such id
  * @param eePoint {@code end} (the period's end) or {@code mid} (the average of both ends)
  * @param fundingSurvival weight each term by S_C(t) · S_B(t) (off by default, decision 11)
- * @param counterpartyHazard the counterparty's flat hazard rate when survival weighting is on (per-counterparty credit curves: planned)
- * @param ownHazard the bank's own flat hazard rate when survival weighting is on
+ * @param counterpartyHazard the counterparty's flat hazard rate, used when its record names no credit curve or the curve is not found
+ *     ({@code FLAT_HAZARD})
+ * @param ownHazard the bank's own flat hazard rate, used when {@code own-curve} is blank or not found
  * @param fba report the funding benefit (symmetric funding); false: FCA only
  * @param requireRiskNeutral refuse FVA on a run whose calibration is not {@code RISK_NEUTRAL} (DRS-5447); false: compute and flag
  *     {@code REAL_WORLD_RUN} on every figure (the demo)
  * @param playgroundMaxSets the most netting sets one playground and workbook shows side by side
  * @param playgroundTemplate a bank's workbook template folder (blank: the built-in {@code playground/fva/template/})
+ * @param ownCurve the bank's own credit curve id for survival weighting (blank: the flat {@code own-hazard})
+ * @param creditCurveKind the kind the credit curves are read from ({@code credit-curve}: {@code CURVE_ID}, {@code POINTS[].TENOR},
+ *     {@code SURVIVAL}); a counterparty's curve is the one its record's {@code CREDIT_CURVE} names
+ * @param playgroundMaxPaths the most paths the playground's paths mode writes per netting set
  */
 @ConfigurationProperties("drishti.ccr.fva")
 public record FvaProperties(String fundingSpread, String lendingSpread, Double fallbackSpread, String discountCurve, Double discountRate,
         String curveKind, List<Curve> curves, String eePoint, Boolean fundingSurvival, Double counterpartyHazard, Double ownHazard, Boolean fba,
-        Boolean requireRiskNeutral, Integer playgroundMaxSets, String playgroundTemplate) {
+        Boolean requireRiskNeutral, Integer playgroundMaxSets, String playgroundTemplate, String ownCurve, String creditCurveKind,
+        Integer playgroundMaxPaths) {
 
     /** A funding curve named in the configuration: its id, what it is, its points. */
     public record Curve(String id, String label, List<Point> points) {
@@ -75,11 +81,14 @@ public record FvaProperties(String fundingSpread, String lendingSpread, Double f
         requireRiskNeutral = requireRiskNeutral == null || requireRiskNeutral;
         playgroundMaxSets = playgroundMaxSets == null || playgroundMaxSets < 1 ? 20 : playgroundMaxSets;
         playgroundTemplate = playgroundTemplate == null ? "" : playgroundTemplate.strip();
+        ownCurve = ownCurve == null ? "" : ownCurve.strip();
+        creditCurveKind = blank(creditCurveKind) ? "credit-curve" : creditCurveKind.strip();
+        playgroundMaxPaths = playgroundMaxPaths == null || playgroundMaxPaths < 1 ? 5000 : playgroundMaxPaths;
     }
 
     /** The defaults (tests, and a server without the block). */
     public static FvaProperties defaults() {
-        return new FvaProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new FvaProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     public FvaMath.Point point() {

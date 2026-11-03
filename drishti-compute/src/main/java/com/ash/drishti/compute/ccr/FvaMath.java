@@ -312,7 +312,13 @@ public final class FvaMath {
             sumEe += r.sumEeDt();
             sumEne += r.sumEneDt();
         }
-        return new Result(fca, fb, fca + fb, f.t(), f.dt(), f.df(), f.sb(), f.sl(), f.survival(), ee, ene, eeStar, eneStar, eePt, enePt, fcaT, fbaT,
+        double[] survival = f.survival();                                    // one survival for the sum only when every part shares it
+        for (Result r : parts) {
+            if (survival != null && !java.util.Arrays.equals(survival, r.survival())) {
+                survival = null;
+            }
+        }
+        return new Result(fca, fb, fca + fb, f.t(), f.dt(), f.df(), f.sb(), f.sl(), survival, ee, ene, eeStar, eneStar, eePt, enePt, fcaT, fbaT,
                 sumEe, sumEne, f.life());
     }
 }

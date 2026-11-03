@@ -126,8 +126,18 @@ public class FvaController {
         return m;
     }
 
-    private FvaService.Answer playable(Principal p, String scope, AsOf asOf, FvaService.Choices ch, String run) {
-        FvaService.Answer a = svc.answer(p, scope(scope), date(asOf), ch, run, null);
+    private static boolean paths(String mode) {
+        if (mode == null || mode.isBlank() || mode.strip().equalsIgnoreCase("profile")) {
+            return false;
+        }
+        if (mode.strip().equalsIgnoreCase("paths")) {
+            return true;
+        }
+        throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "mode is profile or paths, not " + mode);
+    }
+
+    private FvaService.Answer playable(Principal p, String scope, AsOf asOf, FvaService.Choices ch, String run, boolean paths) {
+        FvaService.Answer a = svc.answer(p, scope(scope), date(asOf), ch, run, null, new FvaService.Extras(true, paths));
         if (!a.setsShown()) {
             throw new DrishtiException(ErrorCode.FORBIDDEN, "the playground shows each netting set's profile; your role sees some of these sets only in aggregate");
         }
@@ -135,15 +145,21 @@ public class FvaController {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the playground shows up to " + svc.props().playgroundMaxSets() + " netting sets side by "
                     + "side (drishti.ccr.fva.playground-max-sets); the scope has " + a.sets().size() + ": name a netting set or a counterparty");
         }
+        if (paths && a.scoped().date().book().paths() > svc.props().playgroundMaxPaths()) {
+            throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, "the paths mode writes up to " + svc.props().playgroundMaxPaths() + " paths per netting set "
+                    + "(drishti.ccr.fva.playground-max-paths); the run has " + a.scoped().date().book().paths() + ": use the profile mode");
+        }
         return a;
     }
 
     @GetMapping("/playground")
     public Map<String, Object> playground(@RequestParam String scope, @RequestParam(required = false) String eePoint, @RequestParam(required = false) String fba,
             @RequestParam(required = false) String survival, @RequestParam(required = false) String spread, @RequestParam(required = false) String run,
-            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        FvaService.Answer a = playable(p, scope, asOf, choices(eePoint, fba, survival, spread), run);
+            @RequestParam(required = false) String mode, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        boolean paths = paths(mode);
+        FvaService.Answer a = playable(p, scope, asOf, choices(eePoint, fba, survival, spread), run, false);
         Map<String, Object> m = FvaViews.answer(a);
+        m.put("mode", paths ? "paths" : "profile");
         Map<String, Object> ch = new LinkedHashMap<>();
         ch.put("eePoint", Map.of("value", a.point().text(), "options", List.of("end", "mid"), "default", svc.props().eePoint()));
         ch.put("fba", Map.of("value", a.fba() ? "on" : "off", "options", List.of("on", "off"), "default", svc.props().fba() ? "on" : "off"));
@@ -158,8 +174,9 @@ public class FvaController {
     @GetMapping("/playground.xlsx")
     public ResponseEntity<StreamingResponseBody> export(@RequestParam String scope, @RequestParam(required = false) String eePoint,
             @RequestParam(required = false) String fba, @RequestParam(required = false) String survival, @RequestParam(required = false) String spread,
-            @RequestParam(required = false) String run, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        FvaService.Answer a = playable(p, scope, asOf, choices(eePoint, fba, survival, spread), run);
+            @RequestParam(required = false) String run, @RequestParam(required = false) String mode, AsOf asOf,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        FvaService.Answer a = playable(p, scope, asOf, choices(eePoint, fba, survival, spread), run, paths(mode));
         String safe = a.scoped().res().canonical().replaceAll("[^A-Za-z0-9_.~-]+", "-");
         return xlsx(input(a, svc.props()), p, "fva-playground_" + safe + "_" + a.scoped().date().date() + ".xlsx");
     }
@@ -186,17 +203,23 @@ public class FvaController {
         }
         List<FvaPlaygroundBook.SetIn> sets = new ArrayList<>();
         for (FvaService.SetFva s : a.sets()) {
-            sets.add(new FvaPlaygroundBook.SetIn(s.id(), s.counterparty(), s.csa(), s.ce(), s.nce(), s.result()));
+            sets.add(new FvaPlaygroundBook.SetIn(s.id(), s.counterparty(), s.csa(), s.ce(), s.nce(), s.result(), s.survival(), s.paths(),
+                    a.scoped().date().book().paths()));
         }
+        String survivalSource = a.sets().stream().map(FvaService.SetFva::survivalSource).filter(java.util.Objects::nonNull).distinct()
+                .reduce((x, y) -> x + "; " + y).orElse("");
         Map<String, Object> prov = new LinkedHashMap<>();
         prov.put("Engine", "fva (Java): FvaMath on the exposure engine's EE and ENE profile per netting set");
         prov.put("Exposure", "run " + a.scoped().date().book().runId() + ", " + a.scoped().date().book().paths() + " paths, collateral " + a.scoped().ask().collateral());
         return new FvaPlaygroundBook.Input(a.scoped().res().canonical(), a.scoped().label(), a.scoped().date().date().toString(), a.scoped().date().book().runId(),
-                a.calibration(), a.flags(), dates, a.total().t(), a.borrow(), a.lend() == a.borrow() ? null : a.lend(), a.discount(), props.counterpartyHazard(),
-                props.ownHazard(), a.point(), a.survivalOn(), a.fba(), sets, a.total(), prov);
+                a.calibration(), a.flags(), dates, a.total().t(), a.borrow(), a.lend() == a.borrow() ? null : a.lend(), a.discount(), survivalSource,
+                a.point(), a.survivalOn(), a.fba(), sets, a.total(), prov);
     }
 
-    /** Case F1 (b) of COUNTERPARTY_ENGINES.md section 9: case X1's profile, flat 50 bp, DF = e^(−0.04 t). */
+    /**
+     * Case F1 (b) of COUNTERPARTY_ENGINES.md section 9: case X1's profile, flat 50 bp, DF = e^(−0.04 t); Data holds case F1 (d)'s survival
+     * (flat hazards 2 % and 1 %), so FundingSurvival on in Config gives (d).
+     */
     static FvaPlaygroundBook.Input example() {
         double m = 1_000_000;
         double[] t = {0.25, 0.5, 0.75, 1.0};
@@ -205,8 +228,9 @@ public class FvaController {
         FvaMath.Curve df = new FvaMath.Curve("e^(-0.04 t)", List.of("1Y"), new double[] {1.0}, new double[] {Math.exp(-0.04)}, "case F1 (b)");
         FvaMath.Result r = FvaMath.compute(prof, FvaMath.market(t, df, borrow, null, null), FvaMath.Point.END, true);
         return new FvaPlaygroundBook.Input("EXAMPLE", "case F1 (b): case X1's profile, 50 bp, 4 % discounting", "the hand-built example", "X1", "RISK_NEUTRAL",
-                List.of(), List.of("t + 3M", "t + 6M", "t + 9M", "t + 1Y"), t, borrow, null, df, 0.02, 0.01, FvaMath.Point.END, false, true,
-                List.of(new FvaPlaygroundBook.SetIn("NS-X1", "CP-EXAMPLE", "none", 0.4 * m, 0, r)), r,
+                List.of(), List.of("t + 3M", "t + 6M", "t + 9M", "t + 1Y"), t, borrow, null, df, "case F1 (d): flat hazards, counterparty 2 %, the bank 1 %",
+                FvaMath.Point.END, false, true, List.of(new FvaPlaygroundBook.SetIn("NS-X1", "CP-EXAMPLE", "none", 0.4 * m, 0, r,
+                        FvaMath.flatSurvival(t, 0.02, 0.01), null, 0)), r,
                 Map.of("Source", "docs/architecture/COUNTERPARTY_ENGINES.md section 9, case F1 (b): FCA −5,846.09, FBA 845.52, FVA −5,000.57"));
     }
 }

@@ -34,9 +34,10 @@ import java.util.function.BooleanSupplier;
 /**
  * FVA of a scope (docs/guides/FVA_GUIDE.md): the exposure engine answers the scope as the caller ({@link ExposureService#scoped}), and each of
  * its netting sets' EE and ENE profile (after the CSA, decision 13) is read from what that answer already holds
- * ({@link ExposureCalc#profile}); {@link FvaMath} prices it with the funding spread, the discount curve and the choices. The scope's figures
- * are the sum of its sets' (FVA adds). The curves are read from the curve kind of the date (the market-data pack's {@code ir-curve}), a
- * funding curve named in the configuration when the kind has none of that id, else the flat fallback, said in the answer's flags.
+ * ({@link ExposureCalc#profile}); {@link FvaMath} prices it with the funding spread, the discount curve, the survival of both sides when
+ * asked and the choices. The scope's figures are the sum of its sets' (FVA adds). The curves are read from the curve kinds of the date (the
+ * market-data pack's {@code ir-curve} and {@code credit-curve}); a funding curve named in the configuration when the kind has none of that
+ * id; the flat settings otherwise, said in the answer's flags.
  */
 final class FvaService {
 
@@ -47,18 +48,32 @@ final class FvaService {
         }
     }
 
-    /** One netting set's FVA. */
-    record SetFva(String id, String counterparty, String name, String csa, boolean whole, double ce, double nce, FvaMath.Result result) {}
+    /**
+     * One netting set's FVA.
+     *
+     * @param survival S_C(t) · S_B(t) at each primary date (the counterparty's and the bank's), filled when survival weighting is on or the
+     *     playground asks; else null
+     * @param survivalSource where both survival curves came from
+     * @param paths the set's exposure and negative exposure per path, {@code {E, N}} each {@code G_primary x P}, for the playground's paths
+     *     mode; else null
+     */
+    record SetFva(String id, String counterparty, String name, String csa, boolean whole, double ce, double nce, FvaMath.Result result,
+            double[] survival, String survivalSource, double[][] paths) {}
 
     /** A scope's FVA: the exposure answer it reads, each set's and the sum, the curves and settings used, the flags. */
     record Answer(ExposureService.Scoped scoped, List<SetFva> sets, FvaMath.Result total, FvaMath.Curve borrow, FvaMath.Curve lend,
-            FvaMath.Curve discount, double[] survival, FvaMath.Point point, boolean fba, boolean survivalOn, String calibration, String valueBasis,
-            List<String> flags, boolean setsShown) {}
+            FvaMath.Curve discount, FvaMath.Point point, boolean fba, boolean survivalOn, String calibration, String valueBasis, List<String> flags,
+            boolean setsShown) {}
+
+    /** What the playground needs beyond the figures: every set's survival (to flip the switch in Config) and, in the paths mode, its paths. */
+    record Extras(boolean survival, boolean paths) {
+        static final Extras NONE = new Extras(false, false);
+    }
 
     private final ExposureService exposure;
     private final FvaProperties props;
-    private final com.github.benmanes.caffeine.cache.Cache<LocalDate, Map<String, DataNode>> curves =
-            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(20).expireAfterWrite(java.time.Duration.ofMinutes(5)).build();
+    private final com.github.benmanes.caffeine.cache.Cache<String, Map<String, DataNode>> docs =
+            com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(60).expireAfterWrite(java.time.Duration.ofMinutes(5)).build();
     private volatile BooleanSupplier running;
 
     FvaService(ExposureService exposure, FvaProperties props) {
@@ -95,26 +110,44 @@ final class FvaService {
 
     /** Releases what was read (the engine turned off). */
     void clear() {
-        curves.invalidateAll();
+        docs.invalidateAll();
+    }
+
+    /**
+     * The run's calibration against the setting (decision 10): a run that is not {@code RISK_NEUTRAL} is refused with DRS-5447 when
+     * {@code require-risk-neutral} is on, else priced and flagged {@code REAL_WORLD_RUN}.
+     */
+    static void checkRun(String calibration, boolean requireRiskNeutral, String runId, LocalDate date, List<String> flags) {
+        if ("RISK_NEUTRAL".equalsIgnoreCase(calibration)) {
+            return;
+        }
+        if (requireRiskNeutral) {
+            throw new DrishtiException(ErrorCode.FVA_REFUSED, "FVA is a price and needs a risk-neutral run: the run " + runId + " of " + date + " is "
+                    + (calibration == null || calibration.isEmpty() ? "of no stated calibration" : calibration)
+                    + " (drishti.ccr.fva.require-risk-neutral is true)");
+        }
+        flags.add("REAL_WORLD_RUN");
     }
 
     /** FVA of a scope as the caller, on the request's business date (the exposure engine's newest with paths when later). */
     Answer answer(Principal p, String scope, LocalDate asked, Choices ch, String run, Boolean strict) {
+        return answer(p, scope, asked, ch, run, strict, Extras.NONE);
+    }
+
+    Answer answer(Principal p, String scope, LocalDate asked, Choices ch, String run, Boolean strict, Extras extras) {
         enabled();
         ExposureService.Ask ask = ExposureService.Ask.of(exposure.props(), null, null, run, strict);
-        ExposureService.Scoped s = exposure.scoped(p, scope, asked, ask);
+        return price(p, exposure.scoped(p, scope, asked, ask), ch, extras);
+    }
+
+    /** Prices an exposure answer already made (the official capture prices the scopes it captures, as the server). */
+    Answer price(Principal p, ExposureService.Scoped s, Choices ch, Extras extras) {
         ExposureBook b = s.date().book();
         List<String> flags = new ArrayList<>();
         Map<String, Object> runRec = b.run();
         String calibration = text(runRec.get("CALIBRATION"));
         String valueBasis = text(runRec.get("VALUE_BASIS"));
-        if (!"RISK_NEUTRAL".equalsIgnoreCase(calibration)) {
-            if (props.requireRiskNeutral()) {
-                throw new DrishtiException(ErrorCode.FVA_REFUSED, "FVA is a price and needs a risk-neutral run: the run " + b.runId() + " of " + b.businessDate()
-                        + " is " + (calibration.isEmpty() ? "of no stated calibration" : calibration) + " (drishti.ccr.fva.require-risk-neutral is true)");
-            }
-            flags.add("REAL_WORLD_RUN");
-        }
+        checkRun(calibration, props.requireRiskNeutral(), b.runId(), b.businessDate(), flags);
         FvaMath.Point point = ch.eePoint() == null || ch.eePoint().isBlank() ? props.point() : point(ch.eePoint());
         boolean fba = ch.fba() == null ? props.fba() : ch.fba();
         boolean survivalOn = ch.fundingSurvival() == null ? props.fundingSurvival() : ch.fundingSurvival();
@@ -128,26 +161,36 @@ final class FvaService {
             flags.add("PATHS_DISCOUNTED");
         }
         double[] t = ExposureCalc.times(b.grid());
-        FvaMath.Market market = FvaMath.market(t, discount, borrow, lend, null);
-        double[] survival = survivalOn ? FvaMath.flatSurvival(t, props.counterpartyHazard(), props.ownHazard()) : null;
-        if (survivalOn) {
-            market = new FvaMath.Market(market.df(), market.sb(), market.sl(), survival);
-        }
+        FvaMath.Market base = FvaMath.market(t, discount, borrow, lend, null);
+        boolean wantSurvival = survivalOn || extras.survival();
+        List<String> survFlags = survivalOn ? flags : new ArrayList<>();        // the playground's extra curves flag nothing the answer did not use
+        FvaMath.Curve own = wantSurvival ? ownSurvival(day, survFlags) : null;
         ExposureCalc.Result r = s.result();
         List<SetFva> sets = new ArrayList<>();
         List<FvaMath.Result> parts = new ArrayList<>();
         boolean shown = true;
         for (ExposureCalc.Piece pc : r.pieces) {
+            ExposureBook.SetInfo si = b.set(pc.set);
+            double[] surv = null;
+            String survSource = null;
+            if (wantSurvival) {
+                FvaMath.Curve cp = counterpartySurvival(day, si.counterparty(), survFlags);
+                surv = new double[t.length];
+                for (int i = 0; i < t.length; i++) {
+                    surv[i] = cp.logLinear(t[i]) * own.logLinear(t[i]);
+                }
+                survSource = cp.id() + " (" + cp.source() + ") × " + own.id() + " (" + own.source() + ")";
+            }
+            FvaMath.Market market = survivalOn ? new FvaMath.Market(base.df(), base.sb(), base.sl(), surv) : base;
             double[][] prof = ExposureCalc.profile(r, pc);
             double nce = ExposureMath.currentNegative(pc.v0, pc.csa, r.params.model());
             FvaMath.Result fr = FvaMath.compute(new FvaMath.Profile(t, prof[0], prof[1], pc.ce, nce), market, point, fba);
             parts.add(fr);
-            ExposureBook.SetInfo si = b.set(pc.set);
             if (!s.view().detailsSet(pc.set)) {
                 shown = false;
             }
-            sets.add(new SetFva(si.id(), si.counterparty(), exposure.name(s.date(), si.counterparty(), p), ExposureExplorer.csaLabel(pc.csa), pc.whole, pc.ce, nce,
-                    fr));
+            sets.add(new SetFva(si.id(), si.counterparty(), exposure.name(s.date(), si.counterparty(), p), ExposureExplorer.csaLabel(pc.csa), pc.whole,
+                    pc.ce, nce, fr, surv, survSource, extras.paths() ? ExposureCalc.matrices(r, pc) : null));
         }
         if (!shown) {
             flags.add("SETS_AGGREGATE");
@@ -158,8 +201,8 @@ final class FvaService {
             }
         }
         sets.sort((x, y) -> Double.compare(x.result().fva(), y.result().fva()));
-        return new Answer(s, shown ? List.copyOf(sets) : List.of(), FvaMath.sum(parts), borrow, lend, discount, survival, point, fba, survivalOn,
-                calibration, valueBasis, List.copyOf(flags), shown);
+        return new Answer(s, shown ? List.copyOf(sets) : List.of(), FvaMath.sum(parts), borrow, lend, discount, point, fba, survivalOn, calibration,
+                valueBasis, List.copyOf(flags), shown);
     }
 
     private static FvaMath.Point point(String s) {
@@ -168,6 +211,46 @@ final class FvaService {
         } catch (IllegalArgumentException e) {
             throw new DrishtiException(ErrorCode.EXPOSURE_BAD_PARAMETER, e.getMessage());
         }
+    }
+
+    /**
+     * The counterparty's survival S_C(t): the credit curve its record names ({@code CREDIT_CURVE}; points {@code TENOR} and {@code SURVIVAL}
+     * of the credit-curve kind), log-linear; no curve: the flat {@code counterparty-hazard}, flagged {@code FLAT_HAZARD}.
+     */
+    FvaMath.Curve counterpartySurvival(LocalDate day, String counterparty, List<String> flags) {
+        DataNode cp = counterparty == null ? null : kind(day, exposure.props().kinds().counterparty(), "COUNTERPARTY_ID").get(counterparty);
+        String id = cp == null ? "" : cp.get("CREDIT_CURVE").asText();
+        if (!id.isBlank()) {
+            DataNode doc = kind(day, props.creditCurveKind(), "CURVE_ID").get(id);
+            FvaMath.Curve c = doc == null ? null : points(id, doc, "SURVIVAL", props.creditCurveKind() + " " + id + " of " + day);
+            if (c != null) {
+                return c;
+            }
+        }
+        if (!flags.contains("FLAT_HAZARD")) {
+            flags.add("FLAT_HAZARD");
+        }
+        return flatSurvival(props.counterpartyHazard(), "drishti.ccr.fva.counterparty-hazard (" + (id.isBlank() ? "no CREDIT_CURVE on " + counterparty
+                : "no curve " + id) + ")");
+    }
+
+    /** The bank's own survival S_B(t): the credit curve {@code own-curve}, else the flat {@code own-hazard} (flagged when a curve was named). */
+    FvaMath.Curve ownSurvival(LocalDate day, List<String> flags) {
+        if (!props.ownCurve().isBlank()) {
+            DataNode doc = kind(day, props.creditCurveKind(), "CURVE_ID").get(props.ownCurve());
+            FvaMath.Curve c = doc == null ? null : points(props.ownCurve(), doc, "SURVIVAL", props.creditCurveKind() + " " + props.ownCurve() + " of " + day);
+            if (c != null) {
+                return c;
+            }
+            if (!flags.contains("FLAT_HAZARD")) {
+                flags.add("FLAT_HAZARD");
+            }
+        }
+        return flatSurvival(props.ownHazard(), "drishti.ccr.fva.own-hazard");
+    }
+
+    private static FvaMath.Curve flatSurvival(double hazard, String source) {
+        return new FvaMath.Curve("flat " + hazard, List.of("1Y"), new double[] {1.0}, new double[] {Math.exp(-hazard)}, source);
     }
 
     /** A spread: a number (flat), a curve of the curve kind, a curve of the configuration, else the fallback (flagged). */
@@ -179,7 +262,7 @@ final class FvaService {
             }
             return FvaMath.Curve.flat("flat " + spec, flat, "the setting");
         }
-        DataNode doc = curveDocs(day).get(spec);
+        DataNode doc = kind(day, props.curveKind(), "CURVE_ID").get(spec);
         if (doc != null) {
             FvaMath.Curve c = points(spec, doc, "SPREAD", props.curveKind() + " " + spec + " of " + day);
             if (c != null) {
@@ -213,7 +296,7 @@ final class FvaService {
 
     /** The discount curve of the date, else the flat rate (flagged). */
     FvaMath.Curve discount(LocalDate day, List<String> flags) {
-        DataNode doc = curveDocs(day).get(props.discountCurve());
+        DataNode doc = kind(day, props.curveKind(), "CURVE_ID").get(props.discountCurve());
         if (doc != null) {
             FvaMath.Curve c = points(props.discountCurve(), doc, "DF", props.curveKind() + " " + props.discountCurve() + " of " + day);
             if (c != null) {
@@ -266,19 +349,20 @@ final class FvaService {
         return new FvaMath.Curve(id, ts, t, v, source);
     }
 
-    private Map<String, DataNode> curveDocs(LocalDate day) {
-        return curves.get(day, d -> {
+    /** A kind's documents of the date by their id field (cached a few minutes); a kind no connector serves reads as empty. */
+    private Map<String, DataNode> kind(LocalDate day, String kind, String idField) {
+        return docs.get(day + "|" + kind, key -> {
             Map<String, DataNode> m;
             try {
-                m = exposure.loader().documents(props.curveKind(), AsOf.of(d));
-            } catch (RuntimeException e) {                         // no curves: the configured curve or the flat setting answers, flagged
-                org.slf4j.LoggerFactory.getLogger(FvaService.class).warn("fva: the {} of {} not read: {}", props.curveKind(), d, e.getMessage());
+                m = exposure.loader().documents(kind, AsOf.of(day));
+            } catch (RuntimeException e) {                         // nothing read: the configured curve or the flat setting answers, flagged
+                org.slf4j.LoggerFactory.getLogger(FvaService.class).warn("fva: the {} of {} not read: {}", kind, day, e.getMessage());
                 m = Map.of();
             }
             Map<String, DataNode> out = new java.util.HashMap<>();
-            m.forEach((k, v) -> {
-                String id = v.get("CURVE_ID").asText();
-                out.put(id.isBlank() ? k : id, v);
+            m.forEach((id, v) -> {
+                String own = v.get(idField).asText();
+                out.put(own.isBlank() ? id : own, v);
             });
             return Map.copyOf(out);
         });
