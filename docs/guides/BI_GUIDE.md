@@ -3344,8 +3344,8 @@ The answer carries them as `totals`:
 ```
 POST /api/v1/bi/reports/file:report:nv-demo/query   {"page": "main", "visual": "matrix", "state": {"dates": {"from": "2026-10-07", "to": "2026-10-08"}}}      (the matrix: rows trade.desk, columns trade.currency)
 {"columns": ["trade.desk", "trade.currency", "Notional", "Avg MTM", "MTM per notional", "Largest notional"], "rows": [["DESK-EQD", "GBP", 154000000.0, 21250.0, 5519.48, 7000000.0], ...],
- "totals": [{"by": [],                 "columns": ["Notional", "Avg MTM", "MTM per notional", "Largest notional"], "masked": [], "rows": [[462000000.0, -3750.0, -961.5384615384615, 7000000.0]]},
-            {"by": ["trade.currency"], "columns": ["trade.currency", "Notional", "Avg MTM", ...], "rows": [["EUR", 154000000.0, -3750.0, -961.54, 7000000.0], ...]},
+ "totals": [{"by": [],                 "columns": ["Notional", "Avg MTM", "MTM per notional", "Largest notional"], "masked": [], "rows": [[..., -3750.0, -961.5384615384615, 7000000.0]]},
+            {"by": ["trade.currency"], "columns": ["trade.currency", "Notional", "Avg MTM", ...], "rows": [["EUR", ..., -3750.0, -961.54, 7000000.0], ...]},
             {"by": ["trade.desk"],     "columns": ["trade.desk", "Avg MTM", ...], "rows": [...]}]}
 ```
 

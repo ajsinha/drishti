@@ -2130,6 +2130,13 @@ and the fix for the codes that need more than the meaning.
 | DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
 | DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
 | DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
+| DRS-5710 | 400 | pivot: function invalid | a custom function refused as written: its definition, code, inputs, kind or name ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)) |
+| DRS-5711 | 422 | pivot: harness failed | a custom function whose harness did not pass (split-and-merge differs from one pass, not deterministic, too slow, too large): not saved, with the first failure |
+| DRS-5712 | 403 | pivot: approval | the author approving their own function, someone who is not an approver, a function not approved for the caller, a plug-in jar changed since its approval |
+| DRS-5713 | 404 | pivot: function language off | the function's language is switched off on this server (Python and Java plug-ins as shipped), or Python asked to read memory-only data |
+| DRS-5714 | 422 | pivot: function limit | a custom function past a limit: a state over its bound, a call over its time (its worker stopped), every worker busy |
+| DRS-5715 | 403 | pivot: official | a custom function in an official run, report or sign-off, or named as an official measure |
+| DRS-5716 | 400 | pivot: explain | an explanation or a what-if the engine cannot make as asked (no `by`, a cell that already fixes it, an empty overlay, a what-if on VaR) |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
 | DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
@@ -3381,6 +3388,32 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
 ```
 
 Refusals: `DRS-5701` to `DRS-5705` and `DRS-9507` ([the error code table](#error-code-table)).
+
+### Pivot: custom functions, explain and what-if
+
+Custom aggregation functions ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)), the difference between two cells in steps
+that add up (section 20) and what-if overlays (section 21). A view uses a function as a value `fn:owner/name@version(FIELD, ...)`.
+
+| Call | Does |
+|---|---|
+| `GET /api/v1/pivot/functions` | `{functions: [{id, ref, owner, name, version, language, kind, inputs, status, approvals, withdrawn, harness, versions, mine, label}], languages: {formula, sql, python, java}, requireApproval}`: yours and those approved for you |
+| `GET /api/v1/pivot/functions/{owner}/{name}?version=` | one version, its code included |
+| `POST /api/v1/pivot/functions/test` | `{name, language: formula\|sql\|python\|java, code, entry, inputs: [name \| {name, type: number\|text}], kind, params, tolerance, stateBytes, sketchError, description, sample: [{...}] \| {columns, rows}, group, parts, projectRows, nodes}` → `{definition, harness: {passed, firstFailure, checks, runs, worst, onePass, nsPerRow, stateBytes}, playground: {steps, onePass, final, same, cost, pivot}}`; nothing saved; audited |
+| `POST /api/v1/pivot/functions` | the same body: a new version after the harness passes (`DRS-5711` with the first failure otherwise); private |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit` | `{note}`: the author asks for sharing |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/approve` | `{scope: everyone\|group:<name>, reason}`: an approver who is not the author (a Java plug-in: an administrator, its jar's SHA-256 pinned) |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/revoke` | `{reason}`: withdrawn; its cells say so |
+| `POST /api/v1/pivot/explain` | `{view, measure, from: {DIM: V}, to: {DIM: V}, fromDate, toDate, by, order: member\|size, price, quantity}` → `{measure, kind, by, from, to, difference, method, order, steps: [{member, cause: new\|gone\|changed\|residual\|price\|quantity\|cross, from, to, step, cumulative}], residual: {value, name}, addsUp, words}` |
+| `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude: {FIELD: [values]}, changes: [{field, scale \| set, where: {FIELD: [values]}}], add: [{FIELD: value}]}}` → `{whatIf, original, diff, overlay, note}` (per cell of `diff`: `delta` per measure, what-if minus original, or `status`) |
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/functions/test \
+  -d '{"name":"wret","language":"formula","code":"sum(r * w) / sum(w)","inputs":["r","w"],"sample":[{"r":0.01,"w":2},{"r":-0.02,"w":1}]}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/explain \
+  -d '{"view":{"source":"trade","rows":["productType"],"values":["sum(notional)"]},"from":{"productType":"IRS"},"to":{"productType":"FXFWD"},"by":"counterparty"}'
+```
+
+Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
 
 ## Embedding views in another web application
 

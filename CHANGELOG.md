@@ -17,6 +17,24 @@
 
 ## Unreleased (on develop, after 2.9.11)
 
+- **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 36).** Custom aggregation functions in four
+  languages with the four steps start, add, merge and finish: a formula of the built-ins (DEL's syntax: `sum(PNL, where=PNL < 0) /
+  sum(abs(PNL))`, mergeable when its parts are, computed in the same `GROUPING SETS` statement), a DuckDB SQL macro (rewritten into the
+  built-ins' states when it is a formula, else holistic), Python (the node's sandboxed `pivot-fn` workers from the compute SDK: no
+  network, processes or writes, imports from an allow-list, Arrow batches over a pipe; off as shipped; never on memory-only data) and Java
+  plug-ins (a jar pinned by its SHA-256; off as shipped). The harness (one pass, batches, 2, 3 and 16 random parts merged two ways under
+  five seeds with every state read back, empty, nulls, one row, equal rows, infinities, determinism, cost, state size) gates every save;
+  the playground shows the states part by part, the cost and a pivot of the sample; versions; sharing needs an approver who is not the
+  author; a withdrawn function says so in its cells; everything audited; never in an official run. Explain the difference between two cells
+  or a cell on two dates in steps that add up (a waterfall; price and quantity effects); what-if overlays (members left out, fields scaled
+  or set, rows added) beside the original. `/api/v1/pivot/functions`, `/explain`, `/whatif`; `drishti.py pivot functions|explain|whatif`;
+  the pivot screen's Why (`W`), What-if (`I`) and Functions (`U`); settings under `drishti.pivot.functions`; codes DRS-5710 to DRS-5716.
+- **BI on the pivot engine (PB).** Every total and subtotal of a matrix, a table's total row and a model query's `totals` come from one
+  grouping-sets statement of the pivot engine over the model's rows as the reader sees them, run in BI's engine where the layers are
+  (one statement instead of one query per level); a model's measures are pivot functions and whether a measure adds up is the engine's
+  answer. The console no longer adds totals up: a sum's total is the engine's too, and a matrix without `subtotals` gets its totals from the
+  engine. A measure that reads beyond its group's rows (time intelligence, running, context, Python) has no total; the answer says why.
+
 - **The pivot engine, phase P1 (2.9.11.a; PIVOT_GUIDE.md, tutorial 33, PIVOT_ENGINE.md).** A new module `drishti-bicompute` (plain
   Java): views of declarative cell sets compiled to one `GROUP BY GROUPING SETS` statement per restriction, functions with start, add,
   merge and finish (mergeable: sum, count, avg, min, max, wavg, variance and standard deviation; holistic and exact: median, percentile,
