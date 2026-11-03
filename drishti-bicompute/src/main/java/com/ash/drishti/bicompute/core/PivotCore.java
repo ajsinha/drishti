@@ -660,6 +660,11 @@ public final class PivotCore {
     }
 
     /** The view on two dates, cell by cell (time travel and compare, section 10 item 2): each side's answer and the differences. */
+    /** Two answers of the same view, cell by cell ({@code {answer, other, diff}}): what-if against the original, two dates. */
+    public static Map<String, Object> compareAnswers(Map<String, Object> a, Map<String, Object> b) {
+        return PivotAnswer.compare(a, b);
+    }
+
     public Map<String, Object> compare(Viewer v, PivotView view, String otherDate) {
         Map<String, Object> a = query(v, view);
         Map<String, Object> b = query(v, view.on(otherDate));

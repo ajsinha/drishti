@@ -15,7 +15,6 @@
  */
 package com.ash.drishti.bicompute.whatif;
 
-import com.ash.drishti.bicompute.core.PivotAnswer;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.bicompute.spi.PivotProvider;
@@ -51,7 +50,7 @@ public final class WhatIf {
         wi.functions(core.functions());
         Map<String, Object> original = core.query(v, view);
         Map<String, Object> changed = wi.query(v, view);
-        Map<String, Object> out = new java.util.LinkedHashMap<>(PivotAnswer.compare(changed, original));
+        Map<String, Object> out = new java.util.LinkedHashMap<>(PivotCore.compareAnswers(changed, original));
         out.put("whatIf", out.remove("answer"));
         out.put("original", out.remove("other"));
         out.remove("date");

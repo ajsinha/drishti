@@ -115,8 +115,8 @@ public final class SqlMacroFunction {
         try {
             return FormulaFunction.of(ref, m.body(), m.params());
         } catch (FormulaParser.FormulaException notAFormula) {
-            boolean text = inputs != null && inputs.stream().anyMatch(FunctionDef.Input::text);
-            return new Holistic(ref, m, !text, runner);
+            boolean anyText = inputs != null && inputs.stream().anyMatch(FunctionDef.Input::text);
+            return new Holistic(ref, m, !anyText, runner);
         }
     }
 
