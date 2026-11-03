@@ -834,7 +834,7 @@ virtual-table notebooks. Two large items, two drills. Nothing is coded until the
 |---|---|---|
 | 1 | **SA-CCR engine and playground (L)** | CC7: CRE52 from `saccr-trade` (BCBS first, decided), replacing the stored `sa-ccr`; its playground (replacement cost, add-ons, the multiplier, EAD as formulas) |
 | 2 | **The CCR cube (L)** | the CCR cube on the shared cube core (MC2, MCP1, built in 2.9.11 with the MR cube pivot): CC1 to CC4 (board, allocated exposure at date load, the GLEIF group roll-up with a synthetic legal tree, limits by tenor with demo credit limits regenerated from the computed PFE), CCP1 to CCP6; landing A, tabs B and C (decided); RL6, RL9, TL2 |
-| 3 | The Exposure playground | EE, EPE and PFE for one netting set: the simulated paths as data, every step after them a formula |
+| 3 | The Exposure playground | EE, EPE and PFE for one netting set: the simulated paths as data, every step after them a formula. **Built (2026-11-03, `wip/exposure-playground`)**: `PLAY EXP <netting set>` and `PLAY EXP EXAMPLE` (case X1), the screen on the VaR Playground's frame, the workbook of live formulas (ten tabs, PFE by `SMALL` at the engine's rank), Rest of set, the size refusal, `drishti.py play exp`; [EXPOSURE_GUIDE.md section 29](../guides/EXPOSURE_GUIDE.md#29-the-exposure-playground-play-exp), tutorial 40 |
 | 4 | FVA and its playground | EPE and ENE × the funding spread |
 | 5 | **The exposure what-if in Java (S to M; product owner, 2026-11-02)** | the pre-deal exposure check (`POST /api/v1/exposure/what-if`) moves from the Python engine (`drishti_compute.exposure.whatif`) into the Java exposure engine, same request and answer, parity to the cent, then the Python engine retired (as the VaR what-if in 2.9.11 row 11) |
 

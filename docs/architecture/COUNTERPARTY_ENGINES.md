@@ -468,6 +468,11 @@ checksum.
 
 ### 8.2 Exposure playground (`PLAY EXP`)
 
+**Built** as designed here ([EXPOSURE_GUIDE.md section 29](../guides/EXPOSURE_GUIDE.md#29-the-exposure-playground-play-exp) is the
+reference), with three choices made at build: today's MTM per trade sits in Config's trade table beside each Data column (Data holds the
+paths only), Collateral shows the CSA's target, the rounded call and C as three blocks, and the browser's grid always shows figures of
+every path taken (the first N up to `max-paths`), listing the first 200.
+
 Scope: one netting set. Paths: all of the run's in the export up to `max-paths` (default 5,000); 200 in the browser grid (decision 6; the
 size estimate is shown before the download, as VaR's). Trades: up to 50
 columns in the browser and 500 in the export by default (choices 50, 500, 2,000, All within the column limit), the rest in Rest of set.

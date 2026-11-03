@@ -61,7 +61,7 @@ final class ExposurePlayground {
 
         static Choices of(ExposureService svc, ExposurePlaygroundProperties pp, String q, String rule, String collateral, String date, Integer paths,
                 String trades, int defaultTrades) {
-            double[] qs = svc.props().confidences();
+            double[] qs = null;                                             // none asked: the engine's confidences (case X1: 80% and 95%, as the design)
             if (q != null && !q.isBlank()) {
                 try {
                     qs = Arrays.stream(q.split(",")).map(String::trim).filter(x -> !x.isEmpty()).mapToDouble(Double::parseDouble).toArray();
@@ -143,6 +143,7 @@ final class ExposurePlayground {
             times[k] = grid.time(k);
         }
         ExposureMath.Model model = ExposureMath.Model.of(ch.collateral());
+        double[] qs = ch.qs() == null ? svc.props().confidences() : ch.qs();
         Object lb = b.run().get("LOOKBACK_DAYS");
         Map<String, Object> runFigures = new LinkedHashMap<>();
         if (n < p0) {
@@ -159,7 +160,7 @@ final class ExposurePlayground {
                 set.csa().present() ? set.csa().frequencyDays() : null, lb instanceof Number num ? num.intValue() : lb == null ? null : parseInt(lb),
                 provenance(s, set), runFigures);
         // the columns: every trade first (to rank them at the peak EE date), then the largest as their own and the rest summed
-        ExposurePlaygroundModel first = new ExposurePlaygroundModel(about, grid, times, all, n, set.csa(), model, ch.rule(), ch.qs(), svc.props().alpha(), -1);
+        ExposurePlaygroundModel first = new ExposurePlaygroundModel(about, grid, times, all, n, set.csa(), model, ch.rule(), qs, svc.props().alpha(), -1);
         Integer[] order = new Integer[all.size()];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
@@ -187,7 +188,7 @@ final class ExposurePlayground {
             int k = all.size() - shown;
             cols.add(new ExposurePlaygroundModel.Column(REST, "Rest of set (" + k + " trades)", true, k, mtm0, life, rest, p0));
         }
-        return new ExposurePlaygroundModel(about, grid, times, cols, n, set.csa(), model, ch.rule(), ch.qs(), svc.props().alpha(),
+        return new ExposurePlaygroundModel(about, grid, times, cols, n, set.csa(), model, ch.rule(), qs, svc.props().alpha(),
                 contributionAt(grid, ch.contributionDate()));
     }
 

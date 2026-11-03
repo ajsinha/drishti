@@ -15,6 +15,35 @@
 -->
 # Changelog
 
+## 2.9.12 — Counterparty engines: the Exposure playground (unreleased)
+
+### The Exposure Playground
+
+- **`PLAY EXP <netting set>`: one netting set's EE, ENE, PFE, EPE and EEPE worked from its simulated paths, the paths as data and every
+  step after them a formula (EXPOSURE_GUIDE.md section 29; COUNTERPARTY_ENGINES.md sections 4, 8.2 and 9; tutorial 40; TOOLS.md 5.15a;
+  API_GUIDE.md, Exposure engine).** On the VaR Playground's frame: the choices (confidences, rank rule, collateral model, contribution
+  date), the profile per primary date with the headline tiles, the first 200 paths at a date with V, L, the CSA's target, the rounded
+  call, C, E and N, the trades' shares of EE (Euler, adding up to EE), the formula bar, the explanation and Export to Excel. The server
+  computes every figure with the engine's own code (`ExposureMath`, `CsaTerms`) on the first N paths of the run (every path up to
+  `max-paths`, 5,000); the browser draws only. `PLAY EXP EXAMPLE` is the hand-built case X1 (EE 0.8, 1.6, 1.1, 1.3; EPE 1.2; EEPE 1.4;
+  peak PFE 95 % 2.5 at 9M).
+- **The workbook of live formulas**: Main (the check band, the choices as drop-down cells the formulas read, each figure beside the
+  engine's with a check, the add-up checks, the profile with one check per date), Config (the CSA, the run, the trades with today's MTM,
+  the grid), Data (the paths: one row per path, one column per grid date and trade), Netting (`SUM`), Collateral (target, rounded, C),
+  Exposure (E, N, max(V, 0)), Stats (`AVERAGE`; PFE by `SMALL` at the engine's own rank `ROUNDUP(P*q-1E-9,0)`, not Excel's
+  `PERCENTILE`; the interpolated rule as the weighted pair of ranks; EEE; the EPE weights), Contributions (`MATCH`/`INDEX` at the date
+  chosen), Explain and Provenance. The trade columns are chosen at export (50, 500, 2,000, All): the largest by |EE contribution| at the
+  peak EE date get their own, Rest of set carries the others' summed values so every figure is still the whole set's; each choice's
+  size is estimated before the download and a workbook over `export-max-cells` or 16,384 columns is refused in words.
+- **Settings** `drishti.ccr.exposure.playground.*` (`max-paths`, `browser-paths`, `browser-trades`, `export-choices`, `export-default`,
+  `export-max-cells`, `contribution-date`, `template`) in `config/engines/exposure.yaml`; the API `GET /api/v1/exposure/playground`,
+  `/playground/estimate`, `/playground.xlsx`, `/playground/template`; the console's `/play/exp` and `/api/exposure-play/...`; the
+  Engines menu's *Exposure Playground*; `drishti.py play exp`.
+- **Tests**: `ExposurePlaygroundWorkbookTest` (case X1 by hand; the workbook written without cached values and recalculated by headless
+  LibreOffice equal to the engine to the cent under each collateral model and both rank rules, and on a synthetic set with Rest of set,
+  rounding, an IA and IM), `ExposurePlaygroundApiTest` (the exposure test lake), `tests/test_exposure_play.py`,
+  `tools/test_expplaycli.py`.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox
