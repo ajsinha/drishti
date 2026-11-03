@@ -247,10 +247,9 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
                 long b = bytes(root);
                 check(live, limits, null, root.getRowCount(), b);    // a live stream has no end: no time limit on its whole life
                 await(pressure, listener, limits, clock.instant());
-                try (ArrowBuf meta = mine.buffer(8)) {
-                    meta.writeLong(seq);
-                    listener.putNext(meta);
-                }
+                ArrowBuf meta = mine.buffer(8);                       // putNext takes the buffer and releases it once sent
+                meta.writeLong(seq);
+                listener.putNext(meta);
                 live.sent(root.getRowCount(), b, seq, mine.getAllocatedMemory());
             }
         }
