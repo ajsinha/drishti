@@ -212,7 +212,7 @@ public interface Expr {
     record Neg(Expr e) implements Expr {
         public Object eval(EvalContext c) {
             Object v = e.eval(c);
-            return Values.masked(v) ? Values.mask() : Values.normalise(-Values.number(v));
+            return Values.masked(v) ? Values.mask() : Values.isNull(v) ? null : Values.normalise(-Values.number(v));
         }
 
         public void paths(Consumer<String> sink) {
@@ -287,10 +287,18 @@ public interface Expr {
                 case "!=":
                     return !Values.equal(a, b);
                 case "+":
+                    if (Values.isNull(a) && (Values.isNull(b) || Values.isNumber(b)) || Values.isNull(b) && Values.isNumber(a)) {
+                        return null;                                  // arithmetic on nothing is nothing; '+' still joins a text with nothing
+                    }
                     if (!(Values.isNumber(a) && Values.isNumber(b))) {
                         return Values.text(a) + Values.text(b);
                     }
                     return Values.normalise(Values.number(a) + Values.number(b));
+                case "-", "*", "/", "%":
+                    if (Values.isNull(a) || Values.isNull(b)) {
+                        return null;                                  // null in, null out (BI_FOUNDATION_2911E.md 2.6: as SQL computes it)
+                    }
+                    break;
                 default:
                     break;
             }
@@ -325,8 +333,34 @@ public interface Expr {
         }
     }
 
-    record Call(String name, ElFunction fn, List<Expr> args) implements Expr {
+    /**
+     * A call of an eager function. {@code named} holds the named arguments a function keeps by name ({@code where = ...},
+     * {@code by = [...]}, {@code ignore = ALL}: the keyword-only parameters of its signature, read by the engine's compiler); a named
+     * argument of a positional parameter is bound to its place by the parser. Empty for most calls.
+     */
+    record Call(String name, ElFunction fn, List<Expr> args, java.util.Map<String, Expr> named) implements Expr {
+        public Call {
+            named = named == null || named.isEmpty() ? java.util.Map.of()
+                    : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(named));
+        }
+
+        public Call(String name, ElFunction fn, List<Expr> args) {
+            this(name, fn, args, null);
+        }
+
+        /** The named argument {@code key}, or null when the call does not name it. */
+        public Expr arg(String key) {
+            return named.get(key);
+        }
+
         public Object eval(EvalContext c) {
+            if (!named.isEmpty()) {
+                throw new ElException(ErrorCode.EL_EVAL, name + ": " + String.join(", ", named.keySet().stream().map(k -> k + " =").toList())
+                        + " belongs to a measure of a model or a column of a table, computed by the pivot engine; a list has no such argument");
+            }
+            if (fn == null) {
+                throw new ElException(ErrorCode.EL_EVAL, name + " is not a function of Rachana");
+            }
             List<Object> values = new ArrayList<>(args.size());
             boolean masked = false;
             for (Expr a : args) {
@@ -340,6 +374,7 @@ public interface Expr {
 
         public void paths(Consumer<String> sink) {
             args.forEach(a -> a.paths(sink));
+            named.values().forEach(a -> a.paths(sink));
         }
     }
 
@@ -374,6 +409,86 @@ public interface Expr {
     record Local(String name) implements Expr {
         public Object eval(EvalContext c) {
             return c.local(name);
+        }
+    }
+
+    /**
+     * {@code [a, b, c]}: a list written in the expression (the right side of {@code in}, a {@code by = [...]} or {@code ignore = [...]},
+     * an argument of a list function); a masked item stays masked in its place.
+     */
+    record ListLit(List<Expr> items) implements Expr {
+        public ListLit {
+            items = List.copyOf(items);
+        }
+
+        public Object eval(EvalContext c) {
+            List<Object> values = new ArrayList<>(items.size());
+            for (Expr e : items) {
+                values.add(e.eval(c));
+            }
+            return Args.list(values);
+        }
+
+        public void paths(Consumer<String> sink) {
+            items.forEach(i -> i.paths(sink));
+        }
+    }
+
+    /**
+     * {@code x in list}, {@code x not in list}: strict membership (BI_FOUNDATION_2911E.md Q3). An empty list, an empty value or nothing
+     * at all holds nothing, so {@code x in []} is false and {@code x not in []} true (unlike {@code one_of}, whose empty choice holds
+     * everything, for controls). Equality is the null rule's: {@code null} equals only {@code null}. A value that is not a list is a list
+     * of one. A masked value or list gives the mask (a filter on it is never true).
+     */
+    record In(Expr value, Expr list, boolean negated) implements Expr {
+        public Object eval(EvalContext c) {
+            Object v = value.eval(c);
+            Object l = list.eval(c);
+            if (Values.masked(v) || Values.masked(l)) {
+                return Values.mask();
+            }
+            return holds(v, Values.simplify(l)) != negated;
+        }
+
+        /** True when {@code list} holds {@code v}. */
+        static boolean holds(Object v, Object list) {
+            if (list instanceof DataNode.Arr n) {
+                for (int i = 0; i < n.size(); i++) {
+                    if (!Values.masked(n.get(i)) && Values.equal(v, n.get(i))) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            if (list == null || list instanceof String s && s.isEmpty() || list instanceof DataNode) {
+                return false;
+            }
+            return Values.equal(v, list);
+        }
+
+        public void paths(Consumer<String> sink) {
+            value.paths(sink);
+            list.paths(sink);
+        }
+    }
+
+    /**
+     * {@code ^}: the parent of the current element ({@code ^^} its parent, and so on): in a filter over a leg's cash flows,
+     * {@code ^.LEG_TYPE} is the leg's; for a row of a table, the document. Missing when there is no such parent (BI_FOUNDATION_2911E.md
+     * Q8).
+     *
+     * @param up 1 for {@code ^}, 2 for {@code ^^}
+     */
+    record Parent(int up) implements Expr {
+        public Object eval(EvalContext c) {
+            return c == null ? DataNode.missing() : c.parent(up);
+        }
+    }
+
+    /** An optional positional argument left out before a named one: evaluates to nothing, read by a function as its default. */
+    record Absent() implements Expr {
+        public Object eval(EvalContext c) {
+            return null;
         }
     }
 }

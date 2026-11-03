@@ -103,8 +103,43 @@ public record EvalContext(DataNode root, Object row, int index, Formats formats,
         return new EvalContext(root, null, -1, formats);
     }
 
+    /**
+     * The same context with {@code row} as the current element ({@code @}): the element it was in (or the document) becomes its parent,
+     * read as {@code ^}.
+     */
     public EvalContext withRow(Object row, int index) {
-        return new EvalContext(root, row, index, formats, ctl, today, scope, locals);
+        return new EvalContext(root, row, index, formats, ctl, today, scope, new Locals(PARENT, this.row != null ? this.row : root, locals));
+    }
+
+    /**
+     * The same context with the elements of a grain as the current element and its parents: {@code chain} outermost first
+     * ({@code [leg, cashFlow]}), the last one {@code @}, the one before it {@code ^}, and so on; the document is above them all.
+     */
+    public EvalContext withRows(java.util.List<?> chain) {
+        EvalContext c = this;
+        for (int i = 0; i < chain.size(); i++) {
+            c = c.withRow(chain.get(i), i == chain.size() - 1 ? index : -1);
+        }
+        return c;
+    }
+
+    /** The name the parent of the current element is bound to (never a name {@code let} can bind). */
+    static final String PARENT = "^";
+
+    /** The {@code up}-th parent of the current element ({@code ^} is 1); missing when there is none. */
+    public Object parent(int up) {
+        int seen = 0;
+        for (Locals l = locals; l != null; l = l.outer()) {
+            if (PARENT.equals(l.name()) && ++seen == up) {
+                return l.value() == null ? DataNode.missing() : l.value();
+            }
+        }
+        return DataNode.missing();
+    }
+
+    /** The as-of date of the view or query ({@code asof()}, read also as {@code today()}); null outside one. */
+    public java.time.LocalDate asOf() {
+        return today;
     }
 
     /**
