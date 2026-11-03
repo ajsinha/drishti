@@ -34,7 +34,7 @@ import render_cases as cases  # noqa: E402
 from conftest import FIXTURES  # noqa: E402
 from table_chart_backend import ChartBackend, serve  # noqa: E402
 from test_render_parity_browser import INTENTIONAL, explain, normalised, pack_views  # noqa: E402,F401 - pack_views: the fixture
-from wb_live import live_console  # noqa: E402,F401 - the fixture pack_views needs
+from wb_live import BROWSER_WAIT_MS, live_console  # noqa: E402,F401 - live_console: the fixture pack_views needs
 import render_harness as H  # noqa: E402
 
 WIDTHS = (390, 1280)
@@ -104,7 +104,7 @@ def open_page(browser, url, width=1280):
     page.on("request", lambda r: reqs.append(r.url))
     page.add_init_script(CSP)
     page.goto(url, wait_until="load")
-    page.wait_for_selector(".view .pnl", state="attached", timeout=20000)
+    page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
     settle(page)
     page.__errors = errors
     page.__reqs = reqs
@@ -112,8 +112,11 @@ def open_page(browser, url, width=1280):
 
 
 def settle(page):
-    """The page's charts and map shapes drawn (a console page keeps its live channel open, so the network is never idle)."""
-    page.wait_for_function("() => !document.querySelector('.chart:not(.pnl-empty), .xchart:not(.pnl-empty)') || [...document.querySelectorAll('.chart, .xchart')].every((el) => el.classList.contains('pnl-empty') || (window.echarts && window.echarts.getInstanceByDom(el)))", timeout=15000)
+    """The page's charts and map shapes drawn, and no part of the page still busy (a control's query, a panel being fetched or swapped in: the
+    library and the page's scripts mark it aria-busy). A console page keeps its live channel open, so the network is never idle. Each wait is a
+    deadline (the suite's BROWSER_WAIT_MS: the drill runs this file beside the other workers), never a pause: it ends when the page is ready."""
+    page.wait_for_function("() => !document.querySelector('.chart:not(.pnl-empty), .xchart:not(.pnl-empty)') || [...document.querySelectorAll('.chart, .xchart')].every((el) => el.classList.contains('pnl-empty') || (window.echarts && window.echarts.getInstanceByDom(el)))", timeout=BROWSER_WAIT_MS)
+    page.wait_for_function("() => document.readyState === 'complete' && !document.querySelector('.view[aria-busy=\"true\"], .view [aria-busy=\"true\"], [data-render-host][aria-busy=\"true\"]')", timeout=BROWSER_WAIT_MS)
     page.wait_for_timeout(400)
     page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")
 
@@ -176,7 +179,7 @@ def test_every_pack_sutra_on_its_sample_is_the_same_page_either_way(browser, con
                 problems.append(f"sideways scroll: server {got['server']['overflow']} px, client {got['client']['overflow']} px")
             if diffs or problems:
                 failures.append(f"{name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}")
-                print(f"DIFF {name} at {width}px: {problems} {sorted(diffs)}")
+                print(f"DIFF {name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}")
     print(f"\nconsole pack parity: {len(names)} views x {len(WIDTHS)} widths x 2 modes = {pages} pages; differing: {len(failures)}")
     assert not failures, f"{len(failures)} of {len(names) * len(WIDTHS)} differ:\n" + "\n\n".join(failures[:6])
 

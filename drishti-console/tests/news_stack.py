@@ -24,10 +24,7 @@ import socket
 import subprocess
 import sys
 import threading
-import time
-import urllib.error
 import urllib.parse
-import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from java_launch import java_cmd
@@ -50,17 +47,10 @@ def listening(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
-def wait(url: str, seconds: float = 150) -> None:
-    end = time.time() + seconds
-    while time.time() < end:
-        try:
-            urllib.request.urlopen(url, timeout=2).read()
-            return
-        except urllib.error.HTTPError:
-            return
-        except Exception:  # noqa: BLE001 - not up yet
-            time.sleep(0.4)
-    raise RuntimeError(f"{url} did not come up")
+def wait(url: str, seconds: float | None = None, proc=None) -> None:
+    """bi_stack.wait: until the address answers, at most ``seconds`` (default its START_S), failing at once when ``proc`` has exited."""
+    import bi_stack
+    bi_stack.wait(url, bi_stack.START_S if seconds is None else seconds, proc)
 
 
 def _esc(s: str) -> str:
@@ -155,11 +145,11 @@ class Stack:
                 env["DRISHTI_OFFLINE"] = "true"
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env,
                                                 stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
-        wait(SERVER + "/actuator/health")
+        wait(SERVER + "/actuator/health", proc=self.procs["server"])
         cenv = dict(os.environ)
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"], env=cenv,
                                                  stdout=open(self.tmp / "console.log", "ab"), stderr=subprocess.STDOUT)
-        wait(CONSOLE_URL + "/healthz")
+        wait(CONSOLE_URL + "/healthz", proc=self.procs["console"])
         return self
 
     def close(self) -> None:

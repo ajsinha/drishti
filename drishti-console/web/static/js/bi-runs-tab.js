@@ -202,6 +202,10 @@
     if (returnTo && returnTo.isConnected) { returnTo.focus(); }
   }
   q('[data-run-drawer-close]').addEventListener('click', closeDrawer);
+  // the focus can leave the open drawer for nowhere (a button it was on became disabled while it works): Esc on the bare page still closes it
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !e.defaultPrevented && !drawer.hidden && (e.target === document.body || e.target === document.documentElement)) { e.preventDefault(); closeDrawer(); }
+  });
   drawer.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { e.preventDefault(); closeDrawer(); return; }
     if (e.key === 'Tab') {                                               // the focus stays in the drawer while it is open
@@ -297,7 +301,9 @@
     const can = r.can || {}, est = r.estimate || {}, act2 = r.actual || {}, s = r.source || {}, p = r.params || {};
     const enc = encodeURIComponent(r.id);
     q('[data-run-drawer-title]').textContent = R.titleOf(r);
+    const hadFocus = dBody.contains(document.activeElement);
     B.clear(dBody);
+    if (hadFocus) { const c = drawer.querySelector('[data-run-drawer-close]'); if (c) { c.focus(); } }   // a redraw keeps the focus in the drawer: Esc and Tab still work
     dBody.appendChild(h('p', { class: 'bi-run-dstate bi-run-' + r.state, 'data-run-drawer-state': r.state, role: 'status' }, h('span', { 'aria-hidden': 'true', text: R.stateOf(r.state).glyph + ' ' }), R.line(r)
       + (act2.bytesOut != null ? ' · ' + R.bytes(act2.bytesOut) : '')));
     if (R.active(r.state) && r.progress != null) {

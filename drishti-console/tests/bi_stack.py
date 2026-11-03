@@ -55,9 +55,17 @@ def listening(port: int) -> bool:
         return s.connect_ex(("127.0.0.1", port)) == 0
 
 
-def wait(url: str, seconds: float = 120) -> None:
+#: the longest a scratch server or console is waited for. A deadline, never a pause: the wait ends as soon as the address answers. A cold
+#: start beside the drill's other workers takes minutes (wb_live.py waits as long); a process that has exited is not waited for.
+START_S = 600.0
+
+
+def wait(url: str, seconds: float = START_S, proc: subprocess.Popen | None = None) -> None:
+    """Polls ``url`` until it answers (any HTTP status: the process is listening). Fails at once when ``proc`` has exited."""
     end = time.time() + seconds
     while time.time() < end:
+        if proc is not None and proc.poll() is not None:
+            raise RuntimeError(f"{url} did not come up: its process exited with {proc.returncode}")
         try:
             urllib.request.urlopen(url, timeout=2).read()
             return
@@ -157,13 +165,13 @@ class Stack:
                    DRISHTI_BI_DIR=str(work / "config" / "bi"))
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false"], tmp=self.tmp / "jvm-tmp"), cwd=work,
                                                 env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
-        wait(SERVER + "/actuator/health", 150)
+        wait(SERVER + "/actuator/health", proc=self.procs["server"])
         self.ids = seed()
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                     DRISHTI_SESSION_RECHECK_SECONDS="1")
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"], env=cenv,
                                                  stdout=open(self.tmp / "console.log", "ab"), stderr=subprocess.STDOUT)
-        wait(CONSOLE_URL + "/healthz")
+        wait(CONSOLE_URL + "/healthz", proc=self.procs["console"])
         return self
 
     def close(self) -> None:

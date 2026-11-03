@@ -164,7 +164,7 @@ class Stack:
             self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                      f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"),
                                                     stderr=subprocess.STDOUT)
-            wait(SERVER + "/actuator/health", 150)
+            wait(SERVER + "/actuator/health", proc=self.procs["server"])
             for role, bi, raw in [("bi-writer", ["bi", "bi-author"], True), ("desk-head", ["bi"], True)]:
                 s, r = admin("PUT", f"/admin/role-definitions/{role}", {"kinds": ["*"], "raw": raw, "bi": bi})
                 assert s == 200, r
@@ -176,7 +176,7 @@ class Stack:
                         DRISHTI_SESSION_RECHECK_SECONDS="1")
             self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"],
                                                      env=cenv, stdout=open(self.tmp / "console.log", "ab"), stderr=subprocess.STDOUT)
-            wait(CONSOLE_URL + "/healthz")
+            wait(CONSOLE_URL + "/healthz", proc=self.procs["console"])
             return self
         except BaseException:
             self.close()

@@ -22,6 +22,7 @@ gutters. Skipped when Playwright's Chromium is not installed."""
 import pytest
 
 sync_api = pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
+expect = sync_api.expect
 
 from bi_runs_backend import REPORT_ID, RunsBackend, serve  # noqa: E402
 
@@ -159,7 +160,10 @@ def test_the_runs_tab_lists_reuses_on_the_same_data_and_cancels(ctx, stack):
     page.select_option('[data-run-again-as]', "same")
     page.click('[data-run-act="rerun"]')
     page.wait_for_function("document.querySelector('[data-runs-table]').innerText.includes('Reused')", timeout=10000)
+    # the drawer moves to the new run once the list has reloaded: Esc closes that drawer, and nothing is clicked under it until it has gone
+    expect(page.locator("[data-run-drawer] [data-run-drawer-msg]")).to_contain_text("reused the answer", timeout=10000)
     page.keyboard.press("Escape")
+    expect(page.locator("[data-run-drawer]")).to_be_hidden()
     # a second run, cancelled from its row's drawer
     other = backend._new("Cash ladder 30 days")
     page.wait_for_selector(f'[data-run-row="{other["id"]}"]', timeout=10000)

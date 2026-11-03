@@ -93,7 +93,7 @@ def test_banner_appears_recovers_and_returns(tmp_path):
                                env=cenv, stdout=open(tmp_path / "console.log", "ab"), stderr=subprocess.STDOUT)
     server = None
     try:
-        wait(CONSOLE_URL + "/healthz")
+        wait(CONSOLE_URL + "/healthz", proc=console)
         with sync_playwright() as p:
             try:
                 b = p.chromium.launch()
@@ -109,7 +109,7 @@ def test_banner_appears_recovers_and_returns(tmp_path):
             assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth")
             page.evaluate("window.__marker = 1")
             server = start_server(tmp_path)                               # the server starts later
-            wait(SERVER + "/actuator/health", 150)
+            wait(SERVER + "/actuator/health", proc=server)
             end = time.time() + 90
             while marker(page) == 1:                                      # until the page has reloaded by itself
                 assert time.time() < end, "the page did not recover: " + page.locator("[data-server-watch]").inner_text() + " / " + (tmp_path / "console.log").read_text()[-600:]
