@@ -42,12 +42,12 @@ All under the data folder (`drishti.dataload.dir`, default `<data>/dataload`), o
 | Folder | Holds | Who writes |
 |---|---|---|
 | `inbox/` | the files and their `.ready` markers, and `ready.all` | the person or the upstream job |
-| `work/<run>/` | files claimed by a run, while they load | Drishti |
+| `inprocess/<run>/` | files claimed by a run, while they load | Drishti |
 | `outbox/<business day>/<run>/` | each loaded file with its `.ready` and a report `<file>.loaded.json` | Drishti |
 | `failed/<business day>/<run>/` | a file that could not be loaded, its `.ready` and `<file>.failed.json` (the reason in words, the loader's report) | Drishti |
 | `ledger/` | one line per file handled (JSON Lines): name, size, SHA-256, run, outcome, tables and versions committed | Drishti |
 
-`work`, `failed` and `ledger` are additions to the two folders asked for: without them a crash in the middle, a bad file, or the same
+`inprocess`, `failed` and `ledger` are additions to the two folders asked for: without them a crash in the middle, a bad file, or the same
 file dropped twice cannot be handled safely (sections 7 and 8).
 
 ## 3. The hand-shake
@@ -66,14 +66,25 @@ file dropped twice cannot be handled safely (sections 7 and 8).
 
 ## 4. One cycle
 
+**Runs never overlap** (product owner, 2026-11-03: "move all files into an inprocess folder, a timestamped subfolder inside it, so that
+if a load takes more than 10 minutes another schedule does not start a redundant load or a conflict"). A run's id is its start time and
+node, `20261103T120000Z-drishti-main`, and names its folder `inprocess/<run>/`. A cycle that is due while another run still holds the
+inbox lock does not start: it is recorded as *skipped: run 20261103T115000Z-drishti-main still loading (12 min)* and the next cycle
+checks again; **Load now** says the same. Files are moved into the run's folder before anything is read, so a file is in exactly one
+place: the inbox (waiting), one run's folder (loading), the outbox (loaded) or failed.
+
+
 Every `interval` (default 10 minutes, `drishti.dataload.interval`; also **Load now** in Admin and `drishti.py dataload run`): (planned)
 
 1. **One runner.** Only the node configured as the inbox's owner runs (`drishti.dataload.owner: true`); and the run takes (planned)
    `dataload/inbox.lock` (created atomically, holding the node and a heartbeat; a lock whose heartbeat is older than three intervals is
    taken over and the takeover logged), so two servers on one shared folder never both run.
 2. **Busy check.** When busy protection says memory or CPU is short, the cycle is skipped and says so; the next cycle runs.
-3. **Find** the ready, stable files (section 3), oldest first, at most `max-files` and `max-gb` a cycle.
-4. **Claim**: each file and its `.ready` are renamed into `work/<run>/`; the ledger line `claimed` is written first.
+3. **Take the whole batch, greedily** (product owner, 2026-11-03: "a greedy way to handle the batch"): every file that is ready and
+   stable at that moment is claimed at once, in one step, into the run's folder, oldest first; files that become ready while the run
+   loads wait for the next cycle. `max-files` and `max-gb` are off by default (no limit); an administrator may set them to bound one run,
+   and then the rest stays in the inbox for the next cycle.
+4. **Claim**: each file and its `.ready` are renamed into `inprocess/<run>/`; the ledger line `claimed` is written first.
 5. **Skip duplicates**: a file whose SHA-256 the ledger already shows as `loaded` goes straight to `outbox/` with *already loaded in run
    … on …*, and is not loaded again (`drishti.dataload.reload-duplicates: false`). (planned)
 6. **Route** (section 5) and **load**: the files of one table go to one `LakeLoad` run (its own table lock; one Delta commit per business
@@ -119,7 +130,7 @@ inside the server.)
 
 | The server stops after | On the next start |
 |---|---|
-| claiming, before loading | the files in `work/` with ledger `claimed` go back to `inbox/` |
+| claiming, before loading | the files in `inprocess/` with ledger `claimed` go back to `inbox/` |
 | a Delta commit, before the ledger says `loaded` | the loader's run log and the table's history show the commit (the loader's manifest names the run): the ledger is completed, the file moved, the signal sent; nothing is loaded twice |
 | `loaded`, before the move | the file is moved |
 | the move, before the signal | the signal is sent (signals are idempotent per pack, kind, date and batch: `LoadStore` records each once) |
@@ -171,7 +182,7 @@ and the lock on NTFS (the Windows workflow).
 | # | Question | Decided |
 |---|---|---|
 | D1 | `ready.all`: every data file in the inbox, even without its own `.ready`? | **Yes**, with the stability check, and `ready.all` itself moved to the outbox after the cycle |
-| D2 | The extra folders `work/`, `failed/`, `ledger/` | **Yes**: needed for crash safety, bad files and duplicates |
+| D2 | The extra folders `inprocess/`, `failed/`, `ledger/` | **Yes**: needed for crash safety, bad files and duplicates |
 | D3 | The load in a child process with its own heap, or inside the server's heap | **Child process**: a big or bad file can never take the server down |
 | D4 | A file with no routing rule | **`failed/` with the reason**, never guessed |
 | D5 | The same file dropped again (same SHA-256) | **Skipped, to the outbox with *already loaded***; a changed file with the same name is loaded (its dates replaced) |
