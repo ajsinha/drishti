@@ -39,6 +39,11 @@ In DBeaver: Database → New connection → *Arrow Flight SQL* (or a generic JDB
 
 (output from the demo lake: to be filled in the heavy run)
 
+## Example
+
+`JdbcFlightSql.java`, plain JDBC with the driver jar, ready for when Flight SQL ships:
+[examples/clients/java](../../../examples/clients/java/README.md#jdbc-through-flight-sql-when-it-ships).
+
 ## Errors
 
 The driver shows the service's message, starting with the code (`DRS-5602: …`).

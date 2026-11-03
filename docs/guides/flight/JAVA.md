@@ -60,6 +60,11 @@ A part on another node needs a client for that node's location (`e.getLocations(
 Add `"stream": true` to the request and read the ticket with `getStream`; each batch's sequence is
 `s.getLatestMetadata().getLong(0)`. Ask again with `"resume": <sequence>` after a break.
 
+## Example
+
+`ReadKindAndVarPnl.java`, one file run with the source launcher (a kind, then a desk's VaR scenario P&L with the engine's VaR and
+ES, each part from the first node that answers): [examples/clients/java](../../../examples/clients/java/README.md).
+
 ## Errors
 
 A refusal is a `FlightRuntimeException`; `e.getMessage()` starts with the code (`DRS-5604: …`) and `e.status().metadata().get("drishti-code")`

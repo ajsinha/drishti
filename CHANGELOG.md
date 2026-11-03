@@ -15,6 +15,22 @@
 -->
 # Changelog
 
+## 2.9.11.d
+
+- **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
+  outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
+  pivot view with Rachana paths over trade legs (`sum($.LEGS[*].NOTIONAL)` by desk, a desk-by-year grid, trades with a JPY leg); a desk's
+  VaR scenario P&L plotted over its 509 historical days with the VaR scenario and the ES tail marked from the engine's own figures, and
+  one vector per position; a live intraday stream with resume; Drishti's data joined with your own in DuckDB; an in-memory lake table
+  (the plan pointing at its owner node, nothing written to disk); and a direct read of a table found through `config/lakes/demo.yaml`
+  with `deltalake` or `pyiceberg`, labelled for users who already hold lake access (no entitlements or masks, no in-memory tables, no
+  computed figures). A Java example in one file (a kind and a desk's VaR P&L, each part from the first node that answers) and a JDBC
+  example through Flight SQL ready for when it ships; Excel through Python (`openpyxl`, no add-in), with the ODBC route noted for when
+  Flight SQL ships (its driver is an installer). Tokens only from `DRISHTI_TOKEN` or `DRISHTI_TOKEN_FILE`. `test_client_examples.py`
+  checks every notebook's form on every run and runs every notebook, the Excel script and the Java example against a Flight server when
+  one is set. Linked from the Flight guide, the Python, Java, JDBC and ODBC pages and tutorial 34. C#/.NET, R and Go examples come later.
+- `tools/license_headers.py` checks notebooks: the notice is a notebook's first markdown cell.
+
 ## 2.9.11.c
 
 - **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 34, a page per client; ARROW_FLIGHT.md).**

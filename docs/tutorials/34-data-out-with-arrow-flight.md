@@ -121,3 +121,6 @@ with `DRS-5610`. The last day's readers list your earlier reads.
 
 Flight reads Drishti's data as the person a token belongs to, in Arrow, from the node that holds it; VaR's vectors are the engine's own
 numbers, computed when asked; a stream resumes where it stopped; every read is limited, audited and visible to administrators.
+
+Next: the [client examples](../../examples/clients/README.md), notebooks and programs to start your own from (a pivot over trade
+legs, the VaR scenario and ES tail plotted, a join in DuckDB, the in-memory lake, Excel through Python).

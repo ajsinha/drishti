@@ -767,12 +767,18 @@ stored, per-position P&L in batches, live intraday), exactly the engine's figure
 hand-written Arrow writers, and the console's own JSON-to-Arrow conversion goes; browsers keep Arrow over HTTP and live views over
 Server-Sent Events. The design questions, each with a recommendation: [ARROW_FLIGHT.md](ARROW_FLIGHT.md). Size L.
 
-## 2.9.11.d: client examples (planned)
+## 2.9.11.d: client examples (built on wip/client-examples)
 
 *Product owner, 2026-11-03.* Examples in several languages and technologies, led by Python notebooks: read-only (they never write to
 Drishti), querying through Arrow Flight by default; examples that read the lake directly are marked for people who already hold lake
-access (no entitlements or masks, no in-memory tables, no computed figures). Java, JDBC through Flight SQL, C#/.NET, R, Excel, a JDBC
-tool and the browser. Each example runs as a test on the demo lake. Size M.
+access (no entitlements or masks, no in-memory tables, no computed figures). Each example runs as a test on the demo lake. Size M.
+
+**Built** ([examples/clients](../../examples/clients/README.md)): nine Python notebooks (connect and catalogue, a kind into pandas and
+polars, a BI model, a pivot over trade legs, VaR scenario P&L with the VaR scenario and ES tail, a live stream with resume, a DuckDB join,
+an in-memory lake table, a direct lake read through `config/lakes/demo.yaml`); Java (a kind and VaR P&L, one file; JDBC through Flight
+SQL, ready for when it ships); Excel through Python (openpyxl, no add-in; Power Query through ODBC when Flight SQL ships, an installer);
+`test_client_examples.py` (the form always, the runs against a Flight server in the heavy run). **Later** (product owner, 2026-11-03):
+C#/.NET, R and Go examples.
 
 
 ## 2.9.11.f: the data inbox (planned)

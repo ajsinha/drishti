@@ -23,7 +23,9 @@ vectors and the in-memory lake, each with the same entitlements, masks, busy pro
 The exact form of every request, its schema and its errors are in the [reference](FLIGHT_REFERENCE.md); a hands-on walk from a token to a
 pandas DataFrame is [tutorial 34](../tutorials/34-data-out-with-arrow-flight.md); each language and tool has its own page
 ([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [C#](flight/CSHARP.md), [R](flight/R.md), [Go](flight/GO.md), [JDBC](flight/JDBC.md),
-[ODBC](flight/ODBC.md)). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
+[ODBC](flight/ODBC.md)). Working examples to start from, every one read only (Python notebooks from a token to VaR scenario P&L, a
+live stream, DuckDB and the in-memory lake; Java; Excel through Python) are in
+[examples/clients](../../examples/clients/README.md). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
 
 ## Contents
 

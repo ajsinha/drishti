@@ -35,6 +35,11 @@ In Excel: Data → Get Data → From ODBC → the DSN → a model; in Power BI t
 
 (output from the demo lake: to be filled in the heavy run)
 
+## Without an installer
+
+Where the ODBC driver may not be installed, Excel gets a workbook from a Flight read through Python instead (no add-in):
+[examples/clients/excel](../../../examples/clients/excel/README.md).
+
 ## Errors
 
 The tool shows the service's message, starting with the code.
