@@ -298,6 +298,13 @@ public interface Expr {
                     if (Values.isNull(a) || Values.isNull(b)) {
                         return null;                                  // null in, null out (BI_FOUNDATION_2911E.md 2.6: as SQL computes it)
                     }
+                    if ("-".equals(op) && Values.simplify(a) instanceof String sa && Values.simplify(b) instanceof String sb) {
+                        java.time.LocalDate x = Args.parseDate(sa);
+                        java.time.LocalDate y = Args.parseDate(sb);
+                        if (x != null && y != null) {
+                            return java.time.temporal.ChronoUnit.DAYS.between(y, x);    // date - date: the days between (DEL's rule)
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -382,6 +389,11 @@ public interface Expr {
     record Form(String name, ElForm fn, List<Expr> args) implements Expr {
         public Object eval(EvalContext c) {
             return fn.apply(args, c);
+        }
+
+        /** The same form over other arguments (a compiler rewriting a tree). */
+        public Form withArgs(List<Expr> next) {
+            return new Form(name, fn, List.copyOf(next));
         }
 
         public void paths(Consumer<String> sink) {

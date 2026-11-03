@@ -234,7 +234,7 @@ public final class Checker {
     // ---- names -------------------------------------------------------------------------------------------------------
 
     /** The parts a field chain names ({@code [trades, MTM]}, {@code [$, LEGS, 0, NOTIONAL]}); null when it is not a plain name. */
-    static List<String> parts(Expr e) {
+    public static List<String> parts(Expr e) {
         List<String> out = new ArrayList<>();
         Expr at = e;
         while (true) {
