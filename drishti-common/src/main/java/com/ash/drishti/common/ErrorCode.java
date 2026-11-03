@@ -244,6 +244,11 @@ public enum ErrorCode {
      * {@code exposure-whatif} and its compute pool) is not running on this server, or did not answer in time.
      */
     EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 503),
+    /**
+     * FVA: refused for the run behind the profile: FVA is a price and needs a risk-neutral run, and the date's run is not
+     * ({@code drishti.ccr.fva.require-risk-neutral}; docs/guides/FVA_GUIDE.md).
+     */
+    FVA_REFUSED("DRS-5447", 409),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */

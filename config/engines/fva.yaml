@@ -12,11 +12,31 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/fva.yaml: funding cost and benefit (FVA) (not installed in this release). Read at start, imported by application.yaml after the jar's copy of this
+# config/engines/fva.yaml: funding cost and benefit (FVA, docs/guides/FVA_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
 # (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
   engines:
     fva:
-      enabled: ${DRISHTI_FVA_ENABLED:false}   # run funding cost and benefit (FVA) on this node once it is installed (its settings will live under drishti.ccr.fva.*)
+      enabled: ${DRISHTI_FVA_ENABLED:true}   # run FVA on this node: /api/v1/fva, FVA, PLAY FVA; needs the exposure engine (live)
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  ccr:
+    fva:                             # FVA = FCA + FBA per netting set from the exposure engine's EE and ENE profile (after the CSA), additive over sets
+      funding-spread: CRV-USD-FUNDING   # the borrowing spread: a curve id (read from curve-kind, else from curves below) or a flat spread such as 0.0050
+      lending-spread: ""             # the lending spread FBA uses, as funding-spread; empty: the same (symmetric funding)
+      fallback-spread: 0.0050        # used, flagged FUNDING_FALLBACK, when the named curve is found nowhere
+      discount-curve: CRV-USD-OIS    # the discount curve (POINTS TENOR and DF, log-linear in DF); DF = 1 when the paths are discounted
+      discount-rate: 0.0             # flat continuously compounded rate used, flagged FLAT_DISCOUNT, when the discount curve is not found
+      curve-kind: ir-curve           # the kind the curves are read from (the market-data pack's; a funding curve's points carry SPREAD)
+      curves:                        # funding curves named here, used when curve-kind holds no curve of that id
+        - id: CRV-USD-FUNDING
+          label: "synthetic demo funding curve: the bank's unsecured spread over OIS (a bank names its own curve)"
+          points: [{ tenor: 6M, spread: 0.0040 }, { tenor: 1Y, spread: 0.0045 }, { tenor: 2Y, spread: 0.0055 }, { tenor: 5Y, spread: 0.0070 }, { tenor: 10Y, spread: 0.0085 }]
+      ee-point: end                  # end (the period's end) or mid (the average of both ends)
+      funding-survival: false        # true: each term x S_C(t) x S_B(t) from the flat hazards below (per-counterparty credit curves: planned)
+      counterparty-hazard: 0.0       # the counterparty's flat hazard rate with funding-survival
+      own-hazard: 0.0                # the bank's own flat hazard rate with funding-survival
+      fba: true                      # false: FCA only (asymmetric funding)
+      require-risk-neutral: ${DRISHTI_FVA_REQUIRE_RISK_NEUTRAL:false}   # true in production: a run not RISK_NEUTRAL is refused (DRS-5447); false (the demo's REAL_WORLD run): computed and flagged REAL_WORLD_RUN
+      playground-max-sets: 20        # the most netting sets one playground and workbook shows side by side
+      playground-template: ""        # a bank's workbook template folder (empty: the built-in playground/fva/template/)
