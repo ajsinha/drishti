@@ -88,6 +88,22 @@ kinds:
       EXPOSURE_ENGINE.PROFILE.EE: { use: "ee" }
       EXPOSURE_ENGINE.PROFILE.PFE: { use: "pfe95" }
       EXPOSURE_ENGINE.PROFILE.PFE_99: { use: "pfe99" }
+      FVA_ENGINE.FVA:
+        term: "Funding valuation adjustment (FVA)"
+        means: "The funding cost and benefit of the set over its life: FCA + FBA, computed by the FVA engine from the same EE and ENE as the page opens."
+        unit: "USD"
+        sign: "Negative is a cost."
+      FVA_ENGINE.FCA:
+        term: "Funding cost adjustment (FCA)"
+        means: "The cost of funding the expected positive exposure at the bank's borrowing spread, period by period, discounted."
+        unit: "USD"
+        sign: "Never positive."
+      FVA_ENGINE.FBA:
+        term: "Funding benefit adjustment (FBA)"
+        means: "The benefit of the expected negative exposure, the money the bank holds, at its lending spread, discounted."
+        unit: "USD"
+        sign: "Never negative."
+      FVA_ENGINE.STATUS: { term: "FVA status", means: "Whether the FVA engine computed the figures: ok, or unavailable with the reason." }
       LIMIT: { term: "Credit limit", means: "The limit on the counterparty's peak potential future exposure approved for this netting set.", unit: "USD" }
       CVA:
         term: "Credit valuation adjustment"
