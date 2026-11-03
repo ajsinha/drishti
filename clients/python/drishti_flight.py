@@ -81,7 +81,7 @@ class Flight:
         if not self.url:
             raise ValueError("give the Flight address: grpc+tls://host:18815 (or DRISHTI_FLIGHT_URL)")
         if not self.url.startswith("grpc+tls://"):
-            raise ValueError("Drishti's Flight service is TLS only: the address starts with grpc+tls://")
+            raise ValueError("The Flight service is TLS only: the address starts with grpc+tls://")
         self.token = token or os.environ.get("DRISHTI_TOKEN") or ""
         if not self.token:
             raise ValueError("give an API token with the scope data:read (or DRISHTI_TOKEN)")

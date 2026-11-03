@@ -307,7 +307,7 @@ public final class DrishtiFlightProducer extends NoOpFlightProducer {
 
     private static FlightRequest request(FlightDescriptor d) {
         if (!d.isCommand()) {
-            throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "Drishti's descriptors are commands (a request as JSON), not paths").toFlight();
+            throw new FlightRefusal(ErrorCode.FLIGHT_BAD_TICKET, "a descriptor is a command (a request as JSON), not a path").toFlight();
         }
         try {
             return FlightRequest.parse(d.getCommand());
