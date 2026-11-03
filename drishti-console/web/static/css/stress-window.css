@@ -15,7 +15,7 @@
  */
 /* The stress window selection (terminal/stress_window.html, stress-window.js), after the approved mock-up stress-window/A: the long
    history's chart, the candidates, each node's worst window and the current window against the proposed one. Theme colours only. */
-.sw { padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 12px; color: var(--d-ink); }
+.sw-page { padding: 12px 16px 24px; display: flex; flex-direction: column; gap: 12px; color: var(--d-ink); }
 .sw-head { display: flex; align-items: baseline; gap: 12px; }
 .sw-title { font-size: 18px; margin: 0; }
 .sw-word { color: var(--d-link); font-size: 14px; margin-left: 8px; }

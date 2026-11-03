@@ -26,6 +26,12 @@
   swap (they had been added by hand, so `--check` failed); `testdata.yaml` regenerated. Tutorials 30 to 32 gain their pictures
   (`screenshots.py --guide t30`, `t31`, `t32`), what you should see at every step and their next steps; the tutorials card counts
   past thirty.
+- **The stress window page draws across the page again:** its outer box used the class `sw`, which the terminal style sheet also uses for a
+  small legend swatch (14 by 3 pixels), so the page shrank to a narrow column; the box is now `sw-page`. New browser test
+  `test_stress_window_browser.py`. VAR_GUIDE.md section 18.9 opens with a plain-words explanation: what the stress window is, what the
+  screen shows, the data it uses and where it is useful.
+- **VaR, Ad-hoc scopes:** a saved basket's or portfolio's name stays visible; its Edit, Delete and + basket buttons sit after the name
+  instead of over it.
 
 - **Busy protection judges memory by what is left, not only a share:** new heavy work waits for memory only when the heap after a collection is past its level **and** less than `memory-free-min-mb` (768 MB) is left; `DRISHTI_ADMISSION_ENABLED` switches it off (the console's own tests do, their servers running a 768 MB heap).
 

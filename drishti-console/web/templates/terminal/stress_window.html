@@ -24,7 +24,7 @@
 {% block head %}<link rel="stylesheet" href="/static/css/stress-window.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="sw" data-swin data-scope="{{ scope }}" data-hierarchy="{{ hierarchy }}" data-length="{{ length or '' }}" data-user="{{ user }}">
+<div class="sw-page" data-swin data-scope="{{ scope }}" data-hierarchy="{{ hierarchy }}" data-length="{{ length or '' }}" data-user="{{ user }}">
   <div class="sw-head">
     <h1 class="sw-title">Stress window selection <span class="sw-word mono" title="Type SWIN and a node, then &lt;GO&gt;">SWIN {{ scope }}</span></h1>
     <a class="sw-help" href="/help/context/stress-window" title="Help: the stress window selection (VAR_GUIDE.md section 18.9)" aria-label="Help: the stress window selection"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
