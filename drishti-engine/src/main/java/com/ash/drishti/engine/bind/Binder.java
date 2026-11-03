@@ -387,7 +387,7 @@ public final class Binder {
             more = p.option("moreLabel").map(m -> Values.text(eval(m, c.eval()))).orElse((rows.size() - limit) + " more");
         }
         boolean search = !p.option("search").map(String::trim).filter(v -> v.equalsIgnoreCase("false") || v.equalsIgnoreCase("no")).isPresent();
-        return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p).orElse(null),
+        return new PanelData.Table(headers, numeric, out, total, more, search, pivots.view(p, c.doc() == null ? null : c.doc().ref()).orElse(null),
                 childrenExpr == null ? null : ChartBinder.expandLevels(p), null, null, p.option("empty").orElse(null));
     }
 

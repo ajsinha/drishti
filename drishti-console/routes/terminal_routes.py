@@ -36,7 +36,7 @@ from routes.frtb_routes import redirect_for as frsa_redirect
 from routes.simm_routes import redirect_for as simm_redirect
 from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
-from routes.pivot_screen_routes import redirect_for as pivot_redirect
+from routes.pivot_routes import redirect_for as pivot_redirect
 from routes.exposure_routes import retired_link as exp_retired_link
 
 router = APIRouter(include_in_schema=False)
@@ -147,7 +147,7 @@ async def go(request: Request, q: str = ""):
         return to_frsa
     if ed.word_on("SIMM") and (to_simm := simm_redirect(typed)) is not None:          # SIMM [<netting set> | CPTY <id>]: ISDA SIMM (simm_routes.py)
         return to_simm
-    if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_screen_routes.py)
+    if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_routes.py)
         return to_pivot
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)
         return to_smat
@@ -295,12 +295,8 @@ async def search(request: Request, q: str = "", vs: str = "", words: str = ""):
             rows.append({"ref": r["ref"], "title": r.get("title") or r["ref"]["id"], "cells": cells, "status": r.get("status")})
     titled = any(r["title"] != r["ref"]["id"] for r in rows)       # a title that only repeats the id is left out
     chart_rows = search_chart_rows(data, q, titled) if data and rows and not vs else None
-    pivot_saved = None
-    if data and data.get("pivot") and not vs:                      # the kind's pack opts its results into a Pivot tab
-        state = await request.app.state.pivots.state(request.app.state.backend, ident(request))
-        pivot_saved = request.app.state.pivots.saved_search(state, data.get("kind", ""))
     return render(request, "terminal/search.html", q=q, vs=vs, words=words, phrase=phrase, data=data, rows=rows, error=error, titled=titled,
-                  screen="search", pivot_saved=pivot_saved, hq=hq, chart_rows=chart_rows)
+                  screen="search", hq=hq, chart_rows=chart_rows)
 
 
 def _chart_value(v):
@@ -464,7 +460,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
     layout = await request.app.state.layouts.context(request, vm, False)
     if vm.get("layout"):
         layout["panels"] = vm.get("panels") or []      # a grid screen: the Sutra's sizes (screen-grid.js keeps the reader's)
-    shown, _pivots = await request.app.state.pivots.view(request, vm, layout["panels"])
+    shown = layout["panels"]
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module
     # each panel as HTML (the macros) and as its JSON (the client-side renderer draws that on the pages it draws: ui.render, CLIENT_RENDERER.md 16)
@@ -575,7 +571,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
                       kind=kind, id=id_, error=e, embed=bool(embed))
     layout = await request.app.state.layouts.context(request, vm, bool(embed))      # the user's own arrangement, if any
     grid_mine = await _grid_layout(request, vm, layout)                             # a Sutra with layout: (RACHANA_REFERENCE.md 13)
-    panels, pivots = await request.app.state.pivots.view(request, vm, layout["panels"])   # each Pivot tab as the user saved it
+    panels = layout["panels"]
     rc = render_mode.client(request, "pane" if embed else "view")   # ui.render: the client-side renderer draws the page from this ViewModel
     phone = await phone_routes.plan_for(request, vm, panels, bool(embed), bool(rc))   # a phone or tablet (MOBILE_DISPLAY.md): its tiers
     if phone and phone["device"] == "tablet":                       # a tablet keeps the page's layout, less its desk panels (under More)
@@ -597,7 +593,7 @@ async def view(request: Request, kind: str, id_: str, embed: int = 0, gen: int =
     boot =render_mode.view_boot(request, vm, panels, grid, bool(embed), request.app.state.templates.env.globals["design_on"]()) if rc else None
     return render(request, "terminal/view.html", vm=vm, main=main, right=right, embed=bool(embed), share_url=share_url(request, kind, id_, (vm.get("provenance") or {}).get("generation"), ctl),
                   render_client=rc, render_boot=boot,
-                  pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, pivots=pivots, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")],
+                  pin=pin, pin_gen=gen or None, chosen_sutra=chosen, pin_via="history" if request.query_params.get("via") == "history" else None, ctl_query=controls.to_query(ctl), shared=shared, calc=calc, layout=layout, hidden_ids=[p["id"] for p in layout["panels"] if p.get("hidden")],
                   designer=designer_routes.view_context(request, mine), grid=grid, phone=phone,
                   phone_everything=phone_routes.everything(request, bool(embed)))
 

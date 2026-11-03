@@ -53,7 +53,6 @@ def test_two_columns_with_one_label_get_distinct_names():
 def test_the_search_page_hands_its_rows_to_the_chart_and_numbers_each_row(client, backend, monkeypatch):
     chart = ChartBackend()
     monkeypatch.setattr(backend, "search", chart.search, raising=False)
-    monkeypatch.setattr(backend, "pivots", chart.pivots, raising=False)
     page = client.get("/s", params={"q": "TRD where notional > 0"}).text
     m = re.search(r'data-chart-rows="([^"]+)"', page)
     assert m, "no chart rows on the search page"

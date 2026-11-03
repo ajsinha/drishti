@@ -24,7 +24,7 @@
 <div class="view" data-view{% if embed %} data-embed{% endif %}{% if asof != 'live' %} data-static{% endif %} data-kind="{{ vm.ref.kind }}" data-id="{{ vm.ref.id }}" data-generation="{{ vm.provenance.generation }}" data-page-asof="{{ asof }}" data-known="{{ known_at or '' }}" data-label="{{ vm.title.id }}"{% if chosen_sutra %} data-chosen-sutra="{{ chosen_sutra }}"{% endif %}{% if designer and designer.design %} data-design="{{ designer.design }}"{% endif %}{% if designer and designer.customizing %} data-customizing{% endif %}
      data-fetched="{{ vm.provenance.fetchedAt or '' }}" data-source="{{ vm.provenance.source or '' }}" data-updated="{{ vm.provenance.updatedAt or '' }}"{% if vm.provenance.stale %} data-stale{% endif %} data-stale-after="{{ vm.provenance.staleAfter or '' }}"{% if vm.provenance.live and asof == 'live' %} data-live{% endif %}
      data-refresh-min="{{ REFRESH_MIN }}" data-screen="{{ vm.ref.kind }}/{{ vm.provenance.sutra or 'page' }}" data-refresh-prefs="{{ (((request.state.settings or {}).get('refresh') or {}).get(vm.ref.kind ~ '/' ~ (vm.provenance.sutra or 'page')) or {}) | tojson | forceescape }}"
-     data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if vm.controls %} data-controls="{{ vm.controls | tojson | forceescape }}" data-selects="{{ (vm.selects or []) | tojson | forceescape }}"{% endif %}{% if pivots and pivots.promote %} data-pivot-promote{% endif %}{% if pivots and pivots.review %} data-pivot-review{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
+     data-me="{{ me.user if me else '' }}" data-view-sutra="{{ vm.provenance.sutra or '' }}"{% if vm.controls %} data-controls="{{ vm.controls | tojson | forceescape }}" data-selects="{{ (vm.selects or []) | tojson | forceescape }}"{% endif %}{% if me and me.is_admin %} data-admin{% endif %}{% if layout and layout.offered and layout.allowed %}
      data-sutra="{{ layout.sutra }}" data-min-span="{{ layout.min_span }}" data-layout-base="{{ layout.base | tojson | forceescape }}"{% if layout.mine %} data-layout-mine{% endif %}{% endif %}>
   {% if layout and layout.offered and layout.allowed %}{% include "terminal/_layout.html" %}{% endif %}
   {% if shared and shared.access and not embed %}
@@ -97,7 +97,7 @@
   {% endset %}
   {% if render_client %}
   {# Drawn in the browser by Drishti Render from the ViewModel in data-render-boot (the same JSON /api/view answers, arranged as this page
-     arranges it: the reader's layout, saved pivots and grid; read as text, never markup); static/js/view-render.js draws the banners, the
+     arranges it: the reader's layout and grid; read as text, never markup); static/js/view-render.js draws the banners, the
      head and the panels into this .view. #}
   <div class="view-r" data-render-host data-render-boot="{{ render_boot | tojson | forceescape }}"></div>
   <div hidden data-render-chrome><nav class="crumbs" aria-label="Breadcrumb" data-crumbs hidden></nav><div data-render-tools>{{ head_tools }}</div></div>
@@ -161,7 +161,6 @@
 <script src="/static/js/view.js?v={{ ASSET_V }}"{{ df }}></script>
 <script src="/static/js/pivot-engine.js?v={{ ASSET_V }}"{{ df }}></script>
 <script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"{{ df }}></script>
-<script src="/static/js/pivot.js?v={{ ASSET_V }}"{{ df }}></script>
 <script src="/static/js/tree-rows.js?v={{ ASSET_V }}"{{ df }}></script>
 <script src="/static/js/drill.js?v={{ ASSET_V }}"{{ df }}></script>
 <script src="/static/js/raw-viewer.js?v={{ ASSET_V }}"{{ df }}></script>

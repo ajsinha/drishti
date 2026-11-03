@@ -51,7 +51,7 @@ class EffectiveSettingsControllerTest {
         bundled.put("drishti.http.proxy.password", "${DRISHTI_HTTP_PROXY_PASSWORD:}");
         bundled.put("drishti.sources.plugins.jdbc.settings.url", "jdbc:postgresql://ash:hunter2@db:5432/drishti");
         bundled.put("drishti.security.token-read-posts[0]", "/api/v1/command");
-        bundled.put("drishti.security.token-read-posts[1]", "/api/v1/search/pivot/**");
+        bundled.put("drishti.security.token-read-posts[1]", "/api/v1/pivot/query");
         bundled.put("drishti.redact[0]", "TRADER_ID");
         bundled.put("drishti.redact[1]", "counterpartyId");
         bundled.put("unrelated.key", "x");

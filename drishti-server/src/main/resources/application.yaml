@@ -608,7 +608,6 @@ drishti:
       "[embed:view]":
         - GET /api/v1/views/*/*
         - GET /api/v1/views/*/*/stream
-        - GET /api/v1/views/*/*/panels/*/records
         - GET /api/v1/embed/check
         - POST /api/v1/command
       "[embed:about]":

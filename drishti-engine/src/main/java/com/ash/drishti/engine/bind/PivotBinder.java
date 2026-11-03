@@ -65,8 +65,11 @@ public final class PivotBinder {
         this.props = props;
     }
 
-    /** What the table's data carries: the fields offered and the arrangement the tab opens with; empty when not opted in. */
-    Optional<Map<String, Object>> view(Panel p) {
+    /**
+     * What the table's data carries: the fields offered, the arrangement the pivot opens with, and the pivot engine's source of the panel's
+     * rows ({@code panel/<kind>/<panel>/<id>}, PIVOT_GUIDE.md: Pivot opens the pivot screen on it); empty when not opted in.
+     */
+    Optional<Map<String, Object>> view(Panel p, com.ash.drishti.api.EntityRef ref) {
         if (!props.enabled()) {
             return Optional.empty();
         }
@@ -84,6 +87,9 @@ public final class PivotBinder {
             }
             out.put("fields", fields);
             out.put("maxRows", props.maxRecords());
+            if (ref != null) {
+                out.put("source", "panel/" + ref.kind() + "/" + p.id() + "/" + ref.id());
+            }
             return out;
         });
     }
