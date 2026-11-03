@@ -17,6 +17,13 @@
 
 ## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)
 
+- **The stress window page draws across the page again:** its outer box used the class `sw`, which the terminal style sheet also uses for a
+  small legend swatch (14 by 3 pixels), so the page shrank to a narrow column; the box is now `sw-page`. New browser test
+  `test_stress_window_browser.py`. VAR_GUIDE.md section 18.9 opens with a plain-words explanation: what the stress window is, what the
+  screen shows, the data it uses and where it is useful.
+- **VaR, Ad-hoc scopes:** a saved basket's or portfolio's name stays visible; its Edit, Delete and + basket buttons sit after the name
+  instead of over it.
+
 - **Busy protection judges memory by what is left, not only a share:** new heavy work waits for memory only when the heap after a collection is past its level **and** less than `memory-free-min-mb` (768 MB) is left; `DRISHTI_ADMISSION_ENABLED` switches it off (the console's own tests do, their servers running a 768 MB heap).
 
 - **Compute engines on or off per server, each with its own configuration file (2.9.11 row 14; COMPUTE_ENGINES.md, OPERATIONS.md
