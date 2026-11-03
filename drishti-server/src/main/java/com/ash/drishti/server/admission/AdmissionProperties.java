@@ -26,6 +26,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param memoryWarn the heap after the last collection past which Health says "getting full" (0.80)
  * @param memoryRefuseHeavy past this, new date loads, downloads, BI runs and bulk loads wait (0.85)
  * @param memoryRefuseSignIn past this, new sign-ins wait too (0.92); people signed in keep working
+ * @param memoryFreeMinMb the memory levels act only while the heap left after the last collection is also under this (768 MB): a
+ *     small heap that sits past 85% in its steady state is not short of memory, and a large one still has room at 85%
  * @param queuedLoads the date loads that may wait behind the running ones ({@code load-threads}) before a new one waits (2)
  * @param openHeapRefuse new date loads wait when the open dates' heap passes this share of their safety net (1.2: the dates in use alone
  *     are well over it, so a new date could not be made room for)
@@ -40,7 +42,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param overrideMaxMinutes the longest an operator's override may last (240)
  */
 @ConfigurationProperties("drishti.admission")
-public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double memoryRefuseHeavy, Double memoryRefuseSignIn, Integer queuedLoads,
+public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double memoryRefuseHeavy, Double memoryRefuseSignIn, Integer memoryFreeMinMb,
+        Integer queuedLoads,
         Double openHeapRefuse, Integer requestHandlers, Double requestsWarn, Double requestsRefuse, Integer queueRefuse, Double diskWarnGb,
         Double diskRefuseGb, RetryAfter retryAfter, Integer keep, Integer overrideMaxMinutes) {
 
@@ -73,6 +76,7 @@ public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double mem
         memoryWarn = share(memoryWarn, 0.80);
         memoryRefuseHeavy = share(memoryRefuseHeavy, 0.85);
         memoryRefuseSignIn = share(memoryRefuseSignIn, 0.92);
+        memoryFreeMinMb = memoryFreeMinMb == null || memoryFreeMinMb < 0 ? 768 : memoryFreeMinMb;
         queuedLoads = queuedLoads == null || queuedLoads < 0 ? 2 : queuedLoads;
         openHeapRefuse = openHeapRefuse == null || openHeapRefuse <= 0 ? 1.2 : openHeapRefuse;
         requestHandlers = pos(requestHandlers, 200);
@@ -88,7 +92,7 @@ public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double mem
 
     /** The defaults (tests, and a server without the section). */
     public static AdmissionProperties defaults() {
-        return new AdmissionProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new AdmissionProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     private static double share(Double v, double fallback) {

@@ -381,31 +381,6 @@ final class ChartBinder {
 
     // ---- pivot --------------------------------------------------------------------------------
 
-    /** Count, sum, minimum and maximum of the values that fall in one cell, row, column or the whole grid. */
-    private static final class Acc {
-        int n;
-        double sum;
-        double min = Double.POSITIVE_INFINITY;
-        double max = Double.NEGATIVE_INFINITY;
-
-        void add(double v) {
-            n++;
-            sum += v;
-            min = Math.min(min, v);
-            max = Math.max(max, v);
-        }
-
-        double get(String agg) {
-            return switch (agg) {
-                case "count" -> n;
-                case "avg" -> n == 0 ? Double.NaN : sum / n;
-                case "min" -> n == 0 ? Double.NaN : min;
-                case "max" -> n == 0 ? Double.NaN : max;
-                default -> sum;
-            };
-        }
-    }
-
     /** A group of a pivot's rows: its keys from the outermost level down, and the groups nested in it (none for a leaf). */
     private static final class Group {
         final String key;
@@ -436,6 +411,21 @@ final class ChartBinder {
         return "all".equals(v) ? PanelOptions.EXPAND_ALL : 1;
     }
 
+    /** The pivot engine's function of a pivot panel's {@code agg} over the value column {@code v}. */
+    private static String measure(String agg) {
+        return switch (agg) {
+            case "count" -> "count()";
+            case "avg", "min", "max" -> agg + "(v)";
+            default -> "sum(v)";
+        };
+    }
+
+    /**
+     * A pivot panel (Rachana {@code kind: pivot}): its rows grouped by {@code by} (nested when a list) and {@code across}, every cell,
+     * subtotal and total computed by the pivot engine (drishti-bicompute; PIVOT_ENGINE.md section 13: nothing else aggregates) over the
+     * rows held in memory, each from its own rows. The groups keep the order the rows first show them; at most {@code pivotColumns}
+     * columns are drawn (the rest still count in the row totals and the grand total) and {@code pivotRows} leaf rows.
+     */
     PanelData pivot(Panel p, BindContext c) {
         DataNode rows = list(p, "rows", c);
         List<String> bys = pivotBy(p);
@@ -447,11 +437,16 @@ final class ChartBinder {
         boolean heat = Boolean.TRUE.equals(p.options().get("heat"));
         boolean totals = !Boolean.FALSE.equals(p.options().get("totals"));
         boolean nested = bys.size() > 1;
-        Map<String, Map<String, Acc>> grid = new LinkedHashMap<>();    // by group (its keys joined), then column
-        Map<String, Acc> rowAcc = new LinkedHashMap<>();
-        Map<String, Acc> colAcc = new LinkedHashMap<>();
+        int k = bys.size();
+        List<com.ash.drishti.bicompute.spi.PivotProvider.Field> fields = new ArrayList<>();
+        for (int j = 0; j < k; j++) {
+            fields.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("b" + j, "string", bys.get(j), ""));
+        }
+        fields.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("x", "string", across, ""));
+        fields.add(new com.ash.drishti.bicompute.spi.PivotProvider.Field("v", "number", value == null ? "rows" : value, ""));
         Group root = new Group("", List.of());
-        Acc all = new Acc();
+        LinkedHashSet<String> columns = new LinkedHashSet<>();
+        List<Object[]> data = new ArrayList<>();
         int n = Math.min(rows.size(), limits.maxValues());
         boolean masked = false;
         for (int i = 0; i < n; i++) {
@@ -464,46 +459,90 @@ final class ChartBinder {
                 continue;
             }
             String col = key(field(across, row, i, c));
-            boolean shown = colAcc.containsKey(col) || colAcc.size() < limits.pivotColumns();
-            Group at = root;
-            List<String> path = new ArrayList<>(bys.size());
-            for (String by : bys) {
-                String k = key(field(by, row, i, c));
-                path.add(k);
-                List<String> here = List.copyOf(path);
-                at = at.kids.computeIfAbsent(k, kk -> new Group(String.join("\u001f", here), here));
-                rowAcc.computeIfAbsent(at.key, kk -> new Acc()).add(v);
-                if (shown) {
-                    grid.computeIfAbsent(at.key, kk -> new LinkedHashMap<>()).computeIfAbsent(col, kk -> new Acc()).add(v);
-                }
-            }
-            all.add(v);
+            boolean shown = columns.contains(col) || columns.size() < limits.pivotColumns();
             if (shown) {
-                colAcc.computeIfAbsent(col, k -> new Acc()).add(v);
+                columns.add(col);
             }
+            Object[] r = new Object[k + 2];
+            Group at = root;
+            List<String> path = new ArrayList<>(k);
+            for (int j = 0; j < k; j++) {
+                String key = key(field(bys.get(j), row, i, c));
+                r[j] = key;
+                path.add(key);
+                List<String> here = List.copyOf(path);
+                at = at.kids.computeIfAbsent(key, kk -> new Group(String.join("\u001f", here), here));
+            }
+            r[k] = shown ? col : MORE;                        // a column past the limit: in the totals, not drawn
+            r[k + 1] = v;
+            data.add(r);
         }
-        List<String> columns = List.copyOf(colAcc.keySet());
+        Map<String, Map<String, Object>> cells = engineCells(fields, data, k, agg);
+        List<String> cols = List.copyOf(columns);
         List<PanelData.PivotRow> out = new ArrayList<>();
         double[] range = {Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY};
         int[] leaves = {0, 0};                                         // leaf groups shown, leaf groups in all
-        emitGroups(root, nested, columns, grid, rowAcc, new String[] {agg, fmt, tone}, totals, out, range, leaves);
+        emitGroups(root, nested, cols, cells, new String[] {agg, fmt, tone}, totals, out, range, leaves);
         List<Cell> foot = null;
         if (totals) {
             foot = new ArrayList<>();
-            for (String col : columns) {
-                foot.add(cell(colAcc.get(col).get(agg), fmt, tone));
+            for (String col : cols) {
+                foot.add(cell(figure(cells, "*", "x=" + col), fmt, tone));
             }
-            foot.add(cell(all.get(agg), fmt, tone));
+            foot.add(cell(figure(cells, "*", "*"), fmt, tone));
         }
         int more = leaves[1] - leaves[0];
         List<String> levels = nested ? List.copyOf(bys) : null;
         Integer expand = nested ? expandLevels(p) : null;
         String by = String.join(" › ", bys);
         if (masked) {
-            return maskedPivot(by, columns, out, foot, agg, more, levels, expand, nested ? across : null);
+            return maskedPivot(by, cols, out, foot, agg, more, levels, expand, nested ? across : null);
         }
-        return new PanelData.Pivot(by, columns, out, foot, agg, heat, Double.isFinite(range[0]) ? range[0] : null,
+        return new PanelData.Pivot(by, cols, out, foot, agg, heat, Double.isFinite(range[0]) ? range[0] : null,
                 Double.isFinite(range[1]) ? range[1] : null, more, levels, expand, nested ? across : null);
+    }
+
+    /** The column of the rows past the drawn columns (never a value a row has: the key text never starts with a NUL). */
+    private static final String MORE = "\u0000more";
+
+    /** Every cell, subtotal and total of the rows, by the pivot engine: {@code rowKey|colKey} to the cell's entry. */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Map<String, Object>> engineCells(List<com.ash.drishti.bicompute.spi.PivotProvider.Field> fields, List<Object[]> data,
+            int k, String agg) {
+        List<Object> rowDims = new ArrayList<>();
+        for (int j = 0; j < k; j++) {
+            rowDims.add("b" + j);
+        }
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("source", "panel");
+        view.put("rows", rowDims);
+        view.put("columns", List.of("x"));
+        view.put("values", List.of(Map.of("measure", measure(agg), "as", "v")));
+        view.put("expandTo", Map.of("rows", Math.max(1, k), "columns", 1));
+        com.ash.drishti.bicompute.core.PivotCore core = new com.ash.drishti.bicompute.core.PivotCore(
+                List.of(new com.ash.drishti.bicompute.rows.RowsProvider("panel", "panel", fields, data)),
+                com.ash.drishti.bicompute.cache.StateCache.none(),
+                new com.ash.drishti.bicompute.core.PivotCore.Settings(5_000_000, 5_000_000, Integer.MAX_VALUE, 1, 10, 1, 60, Long.MAX_VALUE));
+        Map<String, Object> answer = core.query(com.ash.drishti.bicompute.spi.Viewer.of(""),
+                com.ash.drishti.bicompute.core.PivotView.parse(view));
+        return (Map<String, Map<String, Object>>) answer.get("cells");
+    }
+
+    /** The engine's figure of a row key and a column key ({@code *}: the total), NaN when the cell has none. */
+    @SuppressWarnings("unchecked")
+    private static double figure(Map<String, Map<String, Object>> cells, String rowKey, String colKey) {
+        Map<String, Object> e = cells.get(rowKey + "|" + colKey);
+        Object v = e == null ? null : ((Map<String, Object>) e.get("values")).get("v");
+        return v instanceof Number num ? num.doubleValue() : Double.NaN;
+    }
+
+    /** A group's row key as the engine writes it: its levels' coordinates ({@code b0=…|b1=…}). */
+    private static String rowKey(List<String> path) {
+        Map<String, String> m = new java.util.TreeMap<>();
+        for (int j = 0; j < path.size(); j++) {
+            m.put("b" + j, path.get(j));
+        }
+        return com.ash.drishti.bicompute.core.CellKey.of(m).canonical();
     }
 
     /**
@@ -511,7 +550,7 @@ final class ChartBinder {
      * {@code pivotRows} leaf rows in all (a group with none of them shown is left out too). {@code leaves} counts the
      * leaf rows shown and those that exist; {@code how} is the aggregation, format and tone.
      */
-    private void emitGroups(Group parent, boolean nested, List<String> columns, Map<String, Map<String, Acc>> grid, Map<String, Acc> rowAcc,
+    private void emitGroups(Group parent, boolean nested, List<String> columns, Map<String, Map<String, Object>> cells,
             String[] how, boolean totals, List<PanelData.PivotRow> out, double[] range, int[] leaves) {
         for (Group g : parent.kids.values()) {
             boolean leaf = g.kids.isEmpty();
@@ -522,12 +561,11 @@ final class ChartBinder {
                 }
                 leaves[0]++;
             }
-            Map<String, Acc> cells = grid.getOrDefault(g.key, Map.of());
+            String rk = rowKey(g.path);
             List<Cell> texts = new ArrayList<>(columns.size());
             List<Double> values = new ArrayList<>(columns.size());
             for (String col : columns) {
-                Acc a = cells.get(col);
-                double v = a == null ? Double.NaN : a.get(how[0]);
+                double v = figure(cells, rk, "x=" + col);
                 if (Double.isFinite(v)) {
                     if (leaf) {
                         range[0] = Math.min(range[0], v);
@@ -540,11 +578,11 @@ final class ChartBinder {
                     values.add(null);
                 }
             }
-            Cell total = totals ? cell(rowAcc.get(g.key).get(how[0]), how[1], how[2]) : null;
+            Cell total = totals ? cell(figure(cells, rk, "*"), how[1], how[2]) : null;
             int at = out.size();
             out.add(new PanelData.PivotRow(g.path.get(g.path.size() - 1), texts, values, total, nested ? g.path : null, nested ? !leaf : null));
             if (!leaf) {
-                emitGroups(g, nested, columns, grid, rowAcc, how, totals, out, range, leaves);
+                emitGroups(g, nested, columns, cells, how, totals, out, range, leaves);
                 if (out.size() == at + 1) {
                     out.remove(at);                                  // none of its rows fit under the limit
                 }

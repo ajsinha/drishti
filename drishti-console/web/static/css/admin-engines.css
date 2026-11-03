@@ -51,8 +51,8 @@
 .eng-sw { position: relative; width: 2.1rem; height: 1.15rem; border-radius: 1rem; border: 1px solid var(--d-border); background: var(--d-bg); cursor: pointer;
   vertical-align: middle; padding: 0; }
 .eng-sw span { position: absolute; top: .1rem; left: .12rem; width: .85rem; height: .85rem; border-radius: 50%; background: var(--d-muted); transition: left .12s; }
-.eng-sw[aria-checked="true"] { background: color-mix(in srgb, var(--d-accent) 30%, transparent); border-color: var(--d-accent); }
-.eng-sw[aria-checked="true"] span { left: 1.05rem; background: var(--d-accent); }
+.eng-sw[aria-checked="true"] { background: color-mix(in srgb, var(--d-fill) 30%, transparent); border-color: var(--d-fill); }
+.eng-sw[aria-checked="true"] span { left: 1.05rem; background: var(--d-fill); }
 .eng-sw:focus-visible { outline: 2px solid var(--d-link); outline-offset: 2px; }
 .eng-sw-l { font-size: .75rem; color: var(--d-muted); }
 .eng-bar { display: inline-block; width: 3.2rem; height: .35rem; border-radius: .2rem; background: color-mix(in srgb, var(--d-muted) 20%, transparent);

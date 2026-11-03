@@ -34,7 +34,7 @@ from core import element_sheet as es
 WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 ROOT = STATIC / "render"
-VERSION = "1.1.0"                   # 2.9.7: the sign-in window (auth: popup) and Elements 2.1; 1.0.0 (phase 2) and 0.1.0 (the preview) stay served, unchanged
+VERSION = "1.2.0"                   # 2.9.11: a table that offers Pivot links to the pivot screen (the Table | Pivot switch retired); 1.1.0, 1.0.0 and 0.1.0 stay served, unchanged
 FOLDER = ROOT / VERSION
 SHEET = "drishti-render.css"
 ENTRY = "drishti-render.js"

@@ -14,7 +14,7 @@
 
 """The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/PIVOT_ENGINE.md section 25): ``PIVOT <GO>``,
 ``PIVOT <table> <GO>`` (a table of the Data view, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
-table. The page is a shell that web/static/js/pivot-core.js and pivot.js fill: the field list and its four zones on the right, the grid with
+table. The page is a shell that web/static/js/pivot-grid.js and pivot.js fill: the field list and its four zones on the right, the grid with
 nested rows opened with + and −, the scan-estimate bar, the provenance popover, a chart of a selection and the Export menu. Every figure is
 the server's (``/api/v1/pivot``, asked as the person through the same-origin proxy ``/api/pivot/...``); the console only draws."""
 from __future__ import annotations
@@ -25,6 +25,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from core.backend import BackendError
+from core.csrf import json_body
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -76,10 +77,7 @@ async def _call(request: Request, method: str, path: str, body=None, **params):
 
 
 async def _body(request: Request) -> dict:
-    try:
-        b = await request.json()
-    except ValueError:
-        b = {}
+    b = await json_body(request)
     return b if isinstance(b, dict) else {}
 
 
@@ -108,7 +106,7 @@ async def export(request: Request):
 
 @router.post("/api/pivot/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "views", "promote"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote"):
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 
@@ -121,6 +119,12 @@ async def provenance(request: Request, pid: str, cell: str = ""):
 @router.get("/api/pivot/cells")
 async def cells(request: Request, ref: str = ""):
     return await _call(request, "GET", "/cells", ref=ref)
+
+
+@router.get("/api/pivot/paths")
+async def paths(request: Request, source: str = ""):
+    """An administrator's suggestions: the document paths people typed on a source, most used first."""
+    return await _call(request, "GET", "/paths", source=source)
 
 
 @router.get("/api/pivot/views")

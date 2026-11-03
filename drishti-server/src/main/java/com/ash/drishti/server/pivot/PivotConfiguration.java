@@ -99,8 +99,11 @@ public class PivotConfiguration {
 
     @Bean
     public KindSources pivotKindSources(DataViewService data, SourceRouter router, Entitlements entitlements, EditionCommands edition,
-            PivotProperties props, ObjectProvider<com.ash.drishti.engine.search.SearchProperties> search) {
-        return new KindSources(data, router, entitlements, edition, props, search.getIfAvailable());
+            PivotProperties props, ObjectProvider<com.ash.drishti.engine.search.SearchProperties> search,
+            ObjectProvider<com.ash.drishti.server.bi.DatasetService> datasets, ObjectProvider<com.ash.drishti.server.bi.engine.QueryService> queries) {
+        KindSources k = new KindSources(data, router, entitlements, edition, props, search.getIfAvailable());
+        k.layers(new DatasetLayers(datasets, queries));
+        return k;
     }
 
     /** A panel's rows (a table or ladder whose Sutra says pivot:) as a source: the old Pivot tab's place, on the engine. */

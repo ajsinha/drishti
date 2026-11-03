@@ -136,7 +136,7 @@ public class VarBasketController {
             m.put("id", pf.id());
             m.put("name", pf.name());
             m.put("type", pf.type());
-            m.put("note", "a portfolio is the bank's (its feed): never edited, amended or deleted in Drishti; this is a copy you save as your own basket");
+            m.put("note", "a portfolio is the bank's (its feed): never edited, amended or deleted in " + com.ash.drishti.common.Branding.name("the product") + "; this is a copy you save as your own basket");
             out.put("portfolio", m);
         } else {
             sheet = VarBasketSheet.fromTerms(views.selection().terms(p, scope), words, unplaced);

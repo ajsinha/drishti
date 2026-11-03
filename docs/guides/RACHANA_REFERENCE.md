@@ -7228,7 +7228,7 @@ endpoint (C2), saved charts (C4, C5), the `chart` panel kind and Promote (C8), O
 Feature decided by the product owner, beside BI runs
 ([BI_DESIGN.md](../architecture/BI_DESIGN.md#17-bi-runs-every-bi-query-as-a-bounded-visible-job)) and the two Drishti\*net transport items ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#appendix-a-drishtinet-many-servers-one-drishti)). Written
 2026-10-20 from the agreed feature, checked against the console and server code on `develop`. Builds on the pivot engine
-(`pivot-engine.js`, `pivot-grid.js`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)),
+(drishti-bicompute on the server; `pivot-engine.js`, its browser client, and `pivot-grid.js`, its grid; [PIVOT_GUIDE.md](PIVOT_GUIDE.md)),
 the chart panels (`charts.js`, [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one)), the BI visuals ([BI_GUIDE.md](BI_GUIDE.md#31-reports-the-yaml-the-visuals-and-how-they-behave) section 3) and
 history queries ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#2-history-queries-an-entity-over-time)).
 
@@ -7261,10 +7261,9 @@ The product owner, 2026-10-20: **every table can be charted.**
 | The table enhancer | `web/static/js/tables.js` | Every table that is not `data-plain` (table and ladder panels, search results, pick lists, admin lists) gets sort, column filters (`colfilter.js`), paging and keys. It builds the heading strip, so the Chart icon goes there **once** for all of them. Its keys are bound on the focused table and use only arrows, PgUp/PgDn, Home/End and Enter: **K is free**. |
 | Sutra table cells | `web/templates/_macros/panels.html` (`table`, `drill`, `pivot_table`) | Cells are **display text** (`cell_text(c)`, e.g. `1.5m`, `−30,205,543`); a column is only flagged `numeric`. Raw values are not in the page. A table cut at its `limit` says `d.more` in its footer. |
 | Panel records | `GET /api/pivot/records/{kind}/{id}/{panel}` → `ViewController.records` → `PivotBinder.records` | Every row of a panel up to `drishti.pivot.max-records` (50,000) as **raw values**, with the view's business date and masks (a masked field reads `•••`), `total` and `truncated`. **Today only for panels whose Sutra says `pivot:`**, and only the pivot's fields. |
-| The pivot engine | `web/static/js/pivot-engine.js` (`window.drishtiPivotEngine`, also `module.exports` for node tests) | `cube(records, {rows, columns, values, filters})` with `sum`, `count`, `avg`, `min`, `max`, `distinct`; keys sorted as the server's `PivotCube` sorts them (numbers by value, natural text order, `(blank)` last); limits 2,000 row keys and 200 column keys; `format` by the Sutra's format names. Exactly the "aggregate Y by X, split by S" this feature needs. |
-| The pivot grid and chart | `web/static/js/pivot-grid.js` `chart(cube, st, kind, tokens)` | ECharts options for bar, line and heatmap from a cube, coloured from theme tokens, SVG renderer. It has no time axis, no second axis, no combo, no stacking, no pie or scatter, and it cuts at 200 lines and 40 series. |
-| The search pivot | `POST /api/pivot/search/{kind}` → `SearchPivotController` (`/api/v1/search/pivot/{kind}`) | The **same cube shape** computed on the server over every entity the search matches on the business date, masked for the caller, for kinds whose pack says `pivot:`; columns only, unless `"documents": true`. |
-| Saved pivots | `/api/pivot/saved/panel/{sutra}/{panel}`, `/api/pivot/saved/search/{kind}` → `SavedPivotController` (`/api/v1/me/pivots`) | Per-user documents in the `PreferenceStore` namespace `pivots`, replicated to every node by `StateSync` (namespaces `settings`, `layouts`, `pivots`, `workspaces`), forgotten on every console worker through `core/user_stamps.py`; promotion to the Sutra's next version with a diff (`SutraPivotEditor`, `SutraGovernance`, `core/sutra_diff.py`). |
+| The pivot engine | drishti-bicompute (Java, [PIVOT_GUIDE.md](PIVOT_GUIDE.md)); in the browser `web/static/js/pivot-engine.js` (`window.drishtiPivotEngine`, also `module.exports` for node tests) | Every figure is computed on the server: `POST /api/pivot/query` over a source (a Data view kind, a panel's rows `panel/<kind>/<panel>/<id>`) and `POST /api/pivot/inline` over rows the page already holds (a chart of the shown rows). `pivot-engine.js` only asks and lays the answer out as a cube (`query`, `inline`, `fromAnswer`), and holds `keyText` and `format` by the Sutra's format names; it never adds up a figure. |
+| The pivot grid | `web/static/js/pivot-grid.js` (`window.PivotCore`) | The one renderer of pivot rows: the Pivot screen and a Sutra's nested `pivot` panel draw with it; + and − on groups, subtotals, the grand total, conditional formats. |
+| Saved pivot views | `/api/pivot/views` (`/api/v1/pivot/views`) | Per-user pivot views (PIVOT_GUIDE.md), shareable with roles; a cell is addressable as `pivot://owner/name@v/Measure[DIM=V]`. |
 | Chart panels | `web/static/js/charts.js` (`window.drishtiCharts`) | `tokens(root)` reads `--d-*` from `<html>` or a shadow host, `palette(t)` (8 tokens), `compact()` numbers, `axis()`, `tooltip()`; a "Data" table under every chart for keyboards, screen readers and print; redraws on a theme change. |
 | Sutra chart kinds | [Panels: the twenty-two kinds, and developing a new one](#panels-the-twenty-two-kinds-and-developing-a-new-one): `line`, `area`, `hbar` (`shape: donut`), `scatter`, `histogram`, `waterfall` | One series per kind (or `area`'s list of bands); **no grouped or stacked bars, no combo, no second axis, no split, no Top N**. |
 | BI visuals | `bi-report.js`, `bi-grids.js`, BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3 | Tables and matrices with raw answers (`columns` with `type` and `masked`, `rows`; BI_MODEL_SPEC 5.2), *first 1,000 of N* footers (`table-rows`), **Show as a table** / **Show as a chart** (`data-act="as-table"`) for chart visuals, **Show the rows behind this visual**. Visual types `bar` (horizontal), `column` (`stacked`, `percent`), `line`, `area`, `combo` (`values` as columns, `secondary` as lines on a second axis), `scatter`, `pie`, `donut`. |
@@ -7280,13 +7279,14 @@ The product owner, 2026-10-20: **every table can be charted.**
    *source adapter* (section 8). No table type has its own chart code.
 2. **Raw values, never display text,** wherever the server can give them. A table's cell `1.5m` is a rounded display; charting it would
    draw wrong numbers. Display text is a last resort for tables with no raw source (admin lists), and the chart says so.
-3. **The same engine on both sides.** Rows in the browser go through `pivot-engine.js`; rows on the server through `PivotCube` (the search
-   pivot) or the BI engine (BI runs). The chart consumes the cube; it never aggregates on its own.
+3. **One engine, on the server.** Every figure is the pivot engine's (drishti-bicompute): the shown rows through `POST /api/pivot/inline`,
+   every row through `POST /api/pivot/query`, or the BI engine (BI runs). The chart consumes the cube; it never aggregates on its own.
 4. **What the table shows, unless asked.** The chart opens on the rows the table holds, with its filters; **Chart all N** is an explicit
    choice with its cost said up front.
 5. **Masks hold twice.** The server masks before rows leave it; the component refuses a masked column. A chart never makes a hidden value
    readable (a total of masked values included).
-6. **No new aggregation endpoint.** Each table type's existing server path is reused (section 11).
+6. **No aggregation of its own.** Each table type's server path is reused (section 11); rows the page holds go to the pivot engine's
+   inline endpoint, which aggregates them with the same functions as every other pivot.
 7. **Tokens only.** Every colour is a `--d-*` token through `charts.js` `tokens()`; no literal colour, no inline style (CSP).
 
 ### 4. Where it appears
@@ -7416,7 +7416,7 @@ Computed by the pure function `defaults(columns, rows)` in `table-chart-engine.j
 
 | File | What | Size goal |
 |---|---|---|
-| `web/static/js/table-chart-engine.js` | pure, no DOM, node-testable (`module.exports`) like `pivot-engine.js`: classify, defaults, normalise settings, settings → pivot arrangement, cube → series (Top N, Others, buckets, sort, percent), the text summary, the export grid, the ECharts option builder (with tokens passed in) | ≤ 700 lines |
+| `web/static/js/table-chart-engine.js` | pure, no DOM, node-testable (`module.exports`) like `pivot-engine.js`: classify, defaults, normalise settings, settings → pivot arrangement (`plan`), the engine's cube → series (`finish`) (Top N, Others, buckets, sort, percent), the text summary, the export grid, the ECharts option builder (with tokens passed in) | ≤ 700 lines |
 | `web/static/js/table-chart.js` | the dialog, settings pane, ECharts instance, keys, actions, adapters' glue (`window.drishtiTableChart`) | ≤ 900 lines |
 | `web/static/js/table-chart-sources.js` | the adapters: `records`, `search`, `history`, `bi`, `dom` | ≤ 500 lines |
 | `web/static/css/table-chart.css` | the dialog, the phone sheet, the settings column, tokens only | ≤ 250 lines |
@@ -7467,7 +7467,7 @@ Every adapter implements the same small interface; `table-chart.js` never looks 
 ```
 
 `Answer` is one of `{ records: {fields, rows, total, truncated} }` (the browser aggregates), `{ cube }` (the server aggregated: the pivot
-cube shape of `pivot-engine.js`, as `/api/pivot/search` answers) or `{ run }` (a BI run still running; the component shows the run card
+cube shape of `pivot-engine.js`, laid out from a `/api/pivot/query` answer) or `{ run }` (a BI run still running; the component shows the run card
 and listens on `/api/v1/bi/runs/events`).
 
 #### 8.4 The adapters
@@ -7498,7 +7498,7 @@ agg}]`** (`count` with no field). Date bucketing is done before the cube by deri
 browser, or by the server pivot's existing date grain when the search pivot has it (else the search path buckets in the browser from the
 day cube). Scatter without aggregation skips the cube and reads the points directly.
 
-`pivot-grid.js`'s `chart()` draws the nested-pivot panels' grid; the new option builder is separate because it needs time axes, two value axes, combo,
+`pivot-grid.js` draws the nested-pivot panels' grid and the Pivot screen's; the chart's option builder needs time axes, two value axes, combo,
 stacking, pie and scatter. Both use `charts.js`'s `tokens`, `palette`, `compact`, `axis` and `tooltip`, which `charts.js` exports on
 `window.drishtiCharts` (C1 adds them to its public object).
 
@@ -7585,11 +7585,10 @@ server answers `truncated: true` the line reads *All 50,000 of 61,204 rows (the 
 
 #### 11.2 Search
 
-Body: `{ "q": "<the search>", "rows": ["<x>"], "columns": ["<split>"] | [], "values": [{"field": "<y>", "agg": "<agg>"}…],
-"filters": [<the table's column filters, as the pivot's filters>] }`. Text X with Top N asks the full cube and cuts in the browser (the
-cube is bounded by the pivot's 2,000 row keys and 200 column keys; beyond, the pivot's own *partial* note is shown). A date X with a
-bucket other than `day` is bucketed in the browser from the day cube. `avg` with *Others* is computed from the cube's `sum` and `count`
-of the same field, which the chart asks for alongside (two values for one series), so *Others* stays exact.
+A pivot view on the kind (`POST /api/pivot/query`): `{source: <kind>, rows: [<x>], columns: [<split>] | [], values: [{measure, as}…],
+top: {<x>: {n, by}, <split>: {n: 11, by}}}`. Top N and *Others* are the engine's: it ranks a level's members by the measure, keeps N and
+makes the rest one *Others* member whose every figure is computed from its own rows (an average included), so nothing is merged in the
+browser. A date X charted over every match goes by day.
 
 #### 11.3 BI runs
 
@@ -7742,7 +7741,7 @@ dropped with a note. A field Y with an aggregation becomes a local measure (`sum
 | **No column at all chartable** (every column masked, or only ids) | the icon is disabled with *Nothing to chart: every column is hidden for your role* (or *only identifiers*). |
 | **A single row** | drawn (one bar, one point, a full pie); the caption says *one row*. A line with one point is drawn as a point. |
 | **No rows** (the table is empty, or its filters leave none) | the popup opens with *No rows to chart (the table's filters leave none)* and the settings still usable; Chart all N if more exist. |
-| **Nulls and blanks** | a blank X is the pivot's `(blank)` key, last in order, labelled *(blank)*; a blank Y is left out of sum, avg, min and max, counted by count only when counting rows (as `pivot-engine.js` `Acc`). A time axis leaves blank-X rows out and says *3 rows without a PAY_DATE left out*. |
+| **Nulls and blanks** | a blank X is the pivot's `(blank)` key, last in order, labelled *(blank)*; a blank Y is left out of sum, avg, min and max, counted by count only when counting rows (the engine's functions). A time axis leaves blank-X rows out and says *3 rows without a PAY_DATE left out*. |
 | **Mixed types in a column** (numbers and text) | classified by the 90% rule (section 7); values that do not fit the type are left out of that role and counted in the status line (*2 non-numeric AMOUNT values left out*). A column below 90% either way is text. |
 | **Very many categories** | text X: more than `category-max` (30) starts at Top 20 with *Others*; the cube itself stops at 2,000 row keys (the pivot's limit), which the line says. Split: at most 12 series (11 and *Others*). Pie: at most 12 slices. |
 | **Negative values in a pie** | refused: *A pie shows shares of a whole, and AMOUNT has negative values (3 of 7 slices). Use a bar chart, or chart the absolute values.* with buttons **Bar chart** and **Absolute values** (a series option `abs: true`, saying *absolute* in the label). Zero slices are left out and said. |
@@ -7812,15 +7811,16 @@ One console builder and one server builder (two at most, as the release's other 
 
 ### 19. Tests
 
-#### 19.1 Unit (node, from `test_table_chart.py`, as `test_pivot.py` runs `pivot-engine.js`)
+#### 19.1 Unit (node, `test_table_chart_engine.py`, the engine's answer stood in; the figures themselves in `PivotApiTest` and `RowsProviderTest`)
 
 * **Classify:** ISO dates, date-times, numbers, numbers as text, mixed columns at 89% and 91%, all blank, masked.
 * **Defaults:** date + number → line by date; text + number → bar; two numbers → scatter; no number → count; ids never Y; masked never
   chosen; a saved document with a removed field → defaults with the note.
-* **Aggregation** (through `pivot-engine.js` `cube`): sum, avg, count, min, max per X with repeated X; blanks; split into series; the
+* **Figures** (the engine's cube, stood in): sum, avg, count, min, max per X with repeated X; blanks; split into series; the
   numbers equal the server's `PivotCube` for the same rows (the existing `test_client_engine_writes_numeric_keys_as_the_server_does`
   pattern, extended to aggregates).
-* **Top N and Others:** additive (sum, count) and `avg` from sum and count; Others off; a pie capped at 12; ties broken by X order.
+* **Top N and Others** (the engine's, stood in): the largest N by the sorted series, ties in X order; *Others* one member with its own
+  figures (an average from its own rows); Others off leaves the rest out and says so; a pie capped at 12 (11 and Others); a split at 12.
 * **Buckets:** day to week, month, quarter, year; auto at 500 points; gaps `connect` and `break` against a Monday–Friday calendar.
 * **Pie refusal:** negative values refused with the message; `abs` accepted; zeros left out.
 * **Normalise:** unknown keys dropped, 7 series cut to 6, bad enums replaced, `v` checked.
@@ -7907,8 +7907,8 @@ Reading the code on `develop` changed the agreed outline in these places:
 7. **The pivot's saved-arrangement namespace cannot be shared.** `SavedPivotController` lists and validates every key of `pivots` as a
    pivot arrangement and promotes from it; charts get the same mechanism under `charts`, and `StateSync.NAMESPACES` must list it or a
    saved chart would not follow the user across nodes.
-8. **`pivot-grid.js`'s chart is too narrow to extend in place** (no time axis, one value axis, cuts at 200 lines and 40 series); a separate
-   option builder leaves the pivot screen's charts to it.
+8. **The chart's option builder is its own** (time axes, two value axes, combo, stacking, pie and scatter); the Pivot screen draws its
+   charts from the engine's answer.
 9. **A BI measure must not be re-aggregated.** A BI table's measure column (a ratio, an average) summed again by X would be wrong; the BI
    path asks the engine for the measure at the chart's grain, and only fields get an aggregation menu.
 
@@ -7924,7 +7924,7 @@ Reading the code on `develop` changed the agreed outline in these places:
 
 Coding the engine settled these points:
 
-* **Count of rows needs a column.** `pivot-engine.js` `normalise` drops a value whose field is not a record field, so *Rows* cannot be
+* **Count of rows needs a column.** A value must name a field the engine is sent, so *Rows* cannot be
   `{field: null, agg: count}` beside other values. `prepare` adds a derived `·rows` column (1 per kept row) and counts it, so a count is
   of the rows that reached the chart (masked X or split cells drop their row first).
 * **A masked X or split cell drops its row; a masked Y cell is only left out of that series.** The section 10 rule ("left out of every
@@ -7946,7 +7946,7 @@ their buttons out (section 5.1: absent, not disabled) until they are.
 | `web/static/js/table-chart.js` | the dialog (`window.drishtiTableChart.open(source, {opener, root, exports})`): chart, caption, status line, Chart all N, settings, keys, View as table, PNG, SVG, CSV, Excel, Defaults | ~560 |
 | `web/static/js/table-chart-sources.js` | the adapters `dom`, `records`, `search`, `history`, `bi`, and `forTable(t, …)` that picks one for a table | ~215 |
 | `web/static/css/table-chart.css` | the dialog, the phone sheet (`max-width: 760px`), print; tokens only | ~100 |
-| `tables.js` | the chart button in every enhanced table's heading, `K` on the focused table, and `chartKit()`: ECharts, `pivot-engine.js`, the engine, the adapters, the dialog and the stylesheet loaded at the first use | +70 |
+| `tables.js` | the chart button in every enhanced table's heading, `K` on the focused table, and `chartKit()`: ECharts, `pivot-engine.js` (the pivot engine's client), the chart engine, the adapters, the dialog and the stylesheet loaded at the first use | +70 |
 | `history-page.js`, `terminal/history.html` | **K Chart** in the key bar, `Shift`+`K`, the key line and the `?` card; `core/history_rows.chart_data` writes the days' raw values in `data-hx-chart-rows` | |
 | `terminal/search.html`, `routes/terminal_routes.py` | `search_chart_rows`: the shown rows' raw values in `data-chart-rows`, each `<tr data-i>` so the table's filters and sort map back to them | |
 | `bi-report.js`, `bi-report-board.js` | a **Chart** button (`data-act="chart"`) on table and matrix visuals and on any visual shown as a table or as its rows; `K` on the focused visual with `preventDefault`, and the kiosk's `K` stands aside when `defaultPrevented` | |

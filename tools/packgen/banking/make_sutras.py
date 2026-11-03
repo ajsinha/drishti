@@ -31,6 +31,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "trades"))
 import kit_sutras as KS  # noqa: E402  (Sutra Next: panels as Drishti UI kit fragment uses, the generated doc: docstring)
 import layout
+import phone_display
 import sutras as TS  # noqa: E402  (tools/packgen/trades: the production-shaped deal screens and the derived trade pages)
 import booking as BK  # noqa: E402
 from data_deep import DEEP
@@ -528,6 +529,7 @@ def files() -> dict[Path, str]:
             k, pack in FRAGMENT_PACKS, KS.first_ids(PACKS / pack / "samples" / "catalog.jsonl").get(k.kind))
     for k in TS.DERIVED:          # a counterparty's, portfolio's, legal entity's and index's trades from every source system
         out[PACKS / "trading" / "sutras" / "pages" / f"{k}.v1.sutra.yaml"] = sutra_file(TS.derived_yaml(k))
+    out = {f: phone_display.apply(f.name, text) for f, text in out.items()}   # the phone layouts of the Sutras that say one
     names = [f.name for f in out if f.name.endswith(".sutra.yaml")]
     dupes = {n for n in names if names.count(n) > 1}
     if dupes:

@@ -14,7 +14,7 @@
  * See the LICENSE file in the root of this repository for the full terms.
  */
 /* The MR lens of the pivot screen (MCUBE; docs/guides/MR_CUBE_GUIDE.md; MR_CUBE_LENS.md section 6.7): the pivot is the pivot engine's own
-   grid (pivot.js, pivot-core.js) on source var; this file draws what the MR cube adds around it. Layout A: the headline strip, the lens
+   grid (pivot.js, pivot-grid.js) on source var; this file draws what the MR cube adds around it. Layout A: the headline strip, the lens
    controls (they change the view's options and the engine answers again), the time-travel slider, sparklines in the grid's cells and the
    rail of a clicked cell's tail and explain. Tab B: components (the engine's comp_var by the first row dimension), the waterfall, the
    view's histogram, the factor heat map. Tab C: the DV01 ladder, the what-if side by side, explain. Every number is the server's

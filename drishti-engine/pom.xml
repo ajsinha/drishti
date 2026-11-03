@@ -29,6 +29,7 @@
   <description>View pipeline, caches, live hub</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
     <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-core</artifactId></dependency>

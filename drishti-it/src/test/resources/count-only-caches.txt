@@ -33,3 +33,6 @@ plugins/drishti-plugin-iceberg-external/src/main/java/com/ash/drishti/plugin/ice
 plugins/drishti-plugin-iceberg/src/main/java/com/ash/drishti/plugin/iceberg/IcebergSourcePlugin.java#layouts  64 layouts
 plugins/drishti-plugin-redis/src/main/java/com/ash/drishti/plugin/redis/RedisSourcePlugin.java#dictionaries  256 zstd dictionaries of bounded size
 plugins/drishti-plugin-s3/src/main/java/com/ash/drishti/plugin/s3/S3SourcePlugin.java#cache  S3 objects, 10,000, TTL 30 s: to weigh (3.9 item 13)
+drishti-server/src/main/java/com/ash/drishti/server/frtb/FrtbService.java#cache  FRTB-SA answers per scope and lens, 64, TTL 10 min; to weigh with the 2.9.11.a benchmark
+drishti-server/src/main/java/com/ash/drishti/server/simm/SimmService.java#cache  SIMM answers per netting set and regime, TTL 10 min; to weigh with the 2.9.11.a benchmark
+drishti-server/src/main/java/com/ash/drishti/server/simm/SimmService.java#overridden  parsed parameter files with a validator's overrides, 32, small

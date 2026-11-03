@@ -55,6 +55,8 @@ import org.slf4j.LoggerFactory;
  */
 public final class AdmissionGate {
 
+    private static final long MB = 1024L * 1024;
+
     private static final Logger LOG = LoggerFactory.getLogger(AdmissionGate.class);
     private static final long GB = 1L << 30;
 
@@ -254,7 +256,7 @@ public final class AdmissionGate {
         }
         double mem = memoryShare();
         double memLevel = work == Work.SIGN_IN ? props.memoryRefuseSignIn() : props.memoryRefuseHeavy();
-        if (mem >= memLevel) {
+        if (mem >= memLevel && memoryFreeBytes() < props.memoryFreeMinMb() * MB) {
             return new Why(Cause.MEMORY, String.format(Locale.ROOT, "the server is short of memory: %.0f%% in use after clean-up (new %s waits over %.0f%%)",
                     mem * 100, work == Work.SIGN_IN ? "sign-ins" : "heavy work", memLevel * 100));
         }
@@ -418,6 +420,12 @@ public final class AdmissionGate {
     }
 
     // ------------------------------------------------------------------------------------------------------------ Health
+
+    /** The heap left after the last collection: the memory levels act only while it is under {@code memory-free-min-mb}. */
+    long memoryFreeBytes() {
+        long max = signals.heapMaxBytes();
+        return max <= 0 ? Long.MAX_VALUE : Math.max(0, max - signals.heapAfterGcBytes());
+    }
 
     double memoryShare() {
         long max = signals.heapMaxBytes();

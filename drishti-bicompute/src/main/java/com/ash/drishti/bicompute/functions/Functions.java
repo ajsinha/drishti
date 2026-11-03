@@ -55,7 +55,10 @@ public final class Functions {
             new Info("stddev_pop", "mergeable", "x", "population standard deviation", false),
             new Info("median", "holistic", "x", "the exact median, from the cell's own values", false),
             new Info("percentile", "holistic", "x, q", "the exact q-quantile (linear interpolation), from the cell's own values", false),
-            new Info("count_distinct", "holistic", "x", "the exact number of distinct values, from the cell's own values", false));
+            new Info("count_distinct", "holistic", "x", "the exact number of distinct values, from the cell's own values", false),
+            new Info("sum_once", "holistic", "x, p", "Σx counting each parent p once (a trade's quantity in a leg-grain view)", false),
+            new Info("count_once", "holistic", "x, p", "the parents p with a value of x, each once", false),
+            new Info("avg_once", "holistic", "x, p", "the average of x over the parents p, each once", false));
 
     private Functions() {}
 
@@ -76,6 +79,7 @@ public final class Functions {
             case "median" -> new Builtins.Quantile("median", 0.5);
             case "percentile", "quantile" -> new Builtins.Quantile("percentile", numbers.isEmpty() ? -1 : numbers.get(0));
             case "count_distinct", "distinct" -> new Builtins.Distinct();
+            case "sum_once", "count_once", "avg_once" -> new OncePerParent(n);
             default -> null;
         };
         return Optional.ofNullable(f);

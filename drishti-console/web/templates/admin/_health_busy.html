@@ -33,6 +33,7 @@
       {%- if g.id == 'memory' -%}{{ (g.value * 100) | round(0) | int }}% · {{ (g.usedBytes / 1073741824) | round(1) }} of {{ (g.maxBytes / 1073741824) | round(1) }} GB
       {%- elif g.id == 'loads' -%}{{ g.running }} of {{ g.slots }} slots{% if g.engines %} · {% for x in g.engines %}{{ x.engine }} {{ x.running }}/{{ x.threads }}{{ ', ' if not loop.last }}{% endfor %}{% endif %}
       {%- elif g.id == 'requests' -%}{{ g.busy }} of {{ g.handlers }} · queue {{ g.queue }}
+      {%- elif (g.id or '').startswith('memory-store:') -%}{{ (g.value * 100) | round(0) | int }}% · {{ ((g.usedBytes or 0) / 1048576) | round(1) }} of {{ ((g.maxBytes or 0) / 1048576) | round(1) }} MB
       {%- else -%}{% if g.totalBytes %}{{ ((g.totalBytes - g.freeBytes) / 1073741824) | round(0) | int }} of {{ (g.totalBytes / 1073741824) | round(0) | int }} GB · {% endif %}{{ (g.freeBytes / 1073741824) | round(0) | int }} GB free
       {%- endif -%}</span></div>
     <div class="busy-bar" role="img" aria-label="{{ g.label }}: {{ g.words }}"><i class="{{ g.state }}" data-busy-w="{{ ([g.value, 1] | min * 100) | round(1) }}"></i>
