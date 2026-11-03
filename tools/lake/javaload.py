@@ -140,6 +140,12 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
         target = {"format": "iceberg" if iceberg else "delta", "path": path, "domain": p["domain"], "kind": p["kind"]}
     if p.get("table"):
         target["table"] = p["table"]
+    if getattr(a, "mode", None) == "append":       # the loader's append: each date's commit records the batch, never appended twice
+        if not getattr(a, "batch_id", None):
+            raise LoaderError("--mode append with --engine java: give --batch-id ID (the file's name, a run id), so a repeated or retried "
+                              "load is never appended twice")
+        target["mode"] = "append"
+        target["batch-id"] = a.batch_id
     if not iceberg:
         props = writers.retention_properties(path)
         if props:

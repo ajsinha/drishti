@@ -36,7 +36,14 @@
   show`. **Admin → Lakes** lists every lake and table from the files, read-only (`GET /api/v1/admin/lakes/files`). **Migration**:
   `drishti.py lake migrate-config [--write]` writes lake files from connector files that still carry `root`, `domain`, `table.<kind>` or
   `layout.<kind>.*` and rewrites them to `lake: <name>`; until then such a connector starts as before with one warning (the old keys are
-  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide.
+  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide, and tutorial 34
+  (one file per lake). **Every shipped pack** now ships its tables as a `lake:` block and its Delta templates name `lake: demo` and
+  `lake-tables:` (the generators write it through `tools/packlake.py`; the tools that read a template's layout read it through the same
+  module); `config/lakes/demo.yaml` holds their entries and ships inside the server too, so a container or a stack node knows the demo
+  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
+  The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
+  out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
+  `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only).
 
 ## 2.9.11.f
 

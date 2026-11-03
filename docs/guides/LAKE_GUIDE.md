@@ -69,7 +69,13 @@ naming it. An unknown key, a format that is not delta or iceberg, a fifth partit
 secret written as a value (`secret-key: abc`), or a `lake:` that differs from the file's name: each refuses the file with the key named.
 
 The lake folder is `config/lakes/` (the system property `drishti.lakes.dir` or the variable `DRISHTI_LAKES_DIR` say otherwise). A server
-may know several lakes: a shared lake, a Murex lake, an in-memory store.
+may know several lakes: a shared lake, a Murex lake, an in-memory store. The demo lake's file also ships inside the server (a copy of
+`config/lakes/demo.yaml`), so a server started in another working folder, a container or a cluster node knows it; a `demo.yaml` in the lake
+folder wins. A reference may nest and may name a server setting: `${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}` is the
+variable, else the data folder's `delta` (`drishti.data.dir` as a system property or as `DRISHTI_DATA_DIR`).
+
+Example lake files for every example connector are in `config/lakes.examples/` (Delta in S3, Iceberg path tables, AWS S3 Tables, a REST
+catalog behind a private CA, an in-memory store), each beside its connectors in `config/connectors.examples/`.
 
 ## 2. Who refers to it
 
@@ -193,7 +199,10 @@ tables:
 ```
 
 The loader takes the batch id from `target.batch-id` (an append without one is refused); the data inbox sends one for every load (the
-files' names and sizes, so the same file dropped again is the same batch).
+files' names and sizes, so the same file dropped again is the same batch); `lake build --engine java --batch-id ID` passes one. The
+rule is implemented once, in the parallel loader: `lake build`'s Python path refuses a table whose lake file says `append` and names
+`--engine java --batch-id`. (`lake build --mode append` into a folder, the older form without a lake file, keeps its own append with no
+batch record.)
 
 ## 5. Checks
 
@@ -223,10 +232,17 @@ one more release; a store described in both places is refused, naming both. See 
 
 ## 7. A pack's recommended entries
 
-A pack may ship recommended entries for its kinds: a `lake:` block in `pack.yaml` with the same shape as a lake file's `tables:`. When a
-writer first meets a kind its lake file lacks (the data inbox does this), the pack's entry is copied into the lake file once and said so;
-from then on the lake file is the truth and an administrator edits it there. A pack without a `lake:` block gives the layout of its Delta
-or Iceberg connector template.
+A pack ships recommended entries for its kinds: a `lake:` block in `pack.yaml` with the same shape as a lake file's `tables:`, and its
+Delta and Iceberg templates name the lake and their entries (`lake: demo`, `lake-tables: trading.trade_endur`) with only reading
+concerns beside them (`union`, `source-name`, `mode.<kind>`, `layout.<kind>.type-ahead`). Every shipped pack is in this form, and
+`config/lakes/demo.yaml` holds their entries. When a writer first meets a kind its lake file lacks (the data inbox does this), the pack's
+entry is copied into the lake file once and said so; from then on the lake file is the truth and an administrator edits it there. A pack
+without a `lake:` block gives the layout of its Delta or Iceberg connector template. The two connectors that read official results
+(`var-results`, `exposure-results`) stay in the older form: the server points them at the publisher's own store
+(`drishti.var.official.*`, `drishti.ccr.exposure.official.*`).
+
+A connector file written from an older template keeps working (the older form, one warning); a template update never adds `lake:` to it
+(with `root` and `layout` beside it the connector would be refused): `drishti.py lake migrate-config` moves it.
 
 ## 8. Migrating an older installation
 
@@ -247,7 +263,13 @@ as before, with one warning naming the tool. To move:
 
 Nothing under the data folder changes: tables keep their files and partitions. The old keys are read for one more release, then removed.
 
-## 9. Admin → Lakes
+## 9. The local cluster (drishti-stack)
+
+The stack's synthetic lakes (`stack.yaml` `lakes:`) are laid out as the demo lake's file says: `tools/bench/trades.py` writes through it
+(`lake build --lake demo --lake-root data/stack/lakes/<name>`), and a node with `lake:` reads the same file with its root,
+`${DRISHTI_DELTA_ROOT}`, set to its synthetic lake. One description of the tables for every node; only the root differs.
+
+## 10. Admin → Lakes
 
 The page lists every lake (its format, root, whether it is held in memory) and each table: its kind, path, partition columns, promoted
 columns, vectors, id and load mode, read-only from the files. A lake file the reader refuses is shown as the refusal, so the page always
