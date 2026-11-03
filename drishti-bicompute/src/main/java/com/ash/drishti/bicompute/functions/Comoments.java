@@ -31,7 +31,7 @@ import java.util.List;
 public final class Comoments implements AggFunction<Object> {
 
     /** The names this class answers. */
-    public static final List<String> NAMES = List.of("corr", "covar", "slope", "intercept", "rsq");
+    public static final List<String> NAMES = List.of("corr", "covar", "slope", "intercept", "rsq", "covar_pop", "steyx");
 
     private final String name;
 
@@ -60,7 +60,7 @@ public final class Comoments implements AggFunction<Object> {
 
     @Override
     public String resultUnit() {
-        return "intercept".equals(name) ? null : "";
+        return "intercept".equals(name) || "steyx".equals(name) ? null : "";
     }
 
     /** The state: {n, mean a, mean b, Caa, Cbb, Cab}. */
@@ -129,6 +129,13 @@ public final class Comoments implements AggFunction<Object> {
         double n = st[0];
         double caa = Math.max(0, st[3]);
         double cbb = Math.max(0, st[4]);
+        if ("covar_pop".equals(name)) {
+            return n < 1 ? null : st[5] / n;                          // Excel's COVARIANCE.P
+        }
+        if ("steyx".equals(name)) {
+            // Excel's STEYX(y, x): the standard error of y predicted from x, √((Σ(y−ȳ)² − (Σ(x−x̄)(y−ȳ))² / Σ(x−x̄)²) / (n − 2))
+            return n < 3 || cbb == 0 ? null : Math.sqrt(Math.max(0, caa - st[5] * st[5] / cbb) / (n - 2));
+        }
         if (n < 2) {
             return null;
         }
@@ -148,6 +155,8 @@ public final class Comoments implements AggFunction<Object> {
     @Override
     public String emptyNote() {
         return switch (name) {
+            case "covar_pop" -> "no pairs of values in the cell";
+            case "steyx" -> "fewer than three pairs of values in the cell, or x does not vary (Excel's #DIV/0!)";
             case "covar" -> "fewer than two pairs of values in the cell";
             case "slope", "intercept" -> "fewer than two pairs of values in the cell, or x does not vary (Excel's #DIV/0!)";
             default -> "fewer than two pairs of values in the cell, or a variable does not vary (Excel's #DIV/0!)";

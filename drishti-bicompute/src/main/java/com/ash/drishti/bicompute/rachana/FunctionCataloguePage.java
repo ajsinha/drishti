@@ -44,7 +44,9 @@ public final class FunctionCataloguePage {
         FAMILIES.put("logic", "Logic (scalars)");
         FAMILIES.put("text", "Text (scalars)");
         FAMILIES.put("dates", "Dates, on the bank's calendars (scalars)");
-        FAMILIES.put("lists", "Lists (Excel's dynamic arrays, over [*])");
+        FAMILIES.put("lists", "Lists (Excel's dynamic arrays and MATLAB's list functions, over [*])");
+        FAMILIES.put("statistics", "Distributions and test statistics (scalars)");
+        FAMILIES.put("finance", "Finance on given flows (scalars)");
     }
 
     private FunctionCataloguePage() {}

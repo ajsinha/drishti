@@ -55,10 +55,17 @@ public final class Functions {
     static {
         Table t = new Table();
         LogicFunctions.register(t.family("logic"));
+        InfoFunctions.register(t.family("logic"));
         MathFunctions.register(t.family("math"));
+        NumberFunctions.register(t.family("math"));
         TextFunctions.register(t.family("text"));
+        TextParts.register(t.family("text"));
         DateFunctions.register(t.family("dates"));
+        DateParts.register(t.family("dates"));
         ListFunctions.register(t.family("lists"));
+        ListMore.register(t.family("lists"));
+        Distributions.register(t.family("statistics"));
+        FinanceFunctions.register(t.family("finance"));
         Aggregates.install(t);
         ARITY = Collections.unmodifiableMap(t.arity);
         FUNCTIONS = Map.copyOf(t.functions);
@@ -136,8 +143,8 @@ public final class Functions {
                         + "or any aggregate over @)"));
                 continue;
             }
-            out.add(new Entry(name, "aggregates", "E", source == null ? "none on the class path" : source,
-                    p == null ? "" : p.args(), p == null ? "" : p.form(), p == null ? "" : p.description()));
+            out.add(new Entry(name, p != null && "list".equals(p.form()) ? "lists" : "aggregates", "E",
+                    source == null ? "none on the class path" : source, p == null ? "" : p.args(), p == null ? "" : p.form(), p == null ? "" : p.description()));
         }
         return out;
     }

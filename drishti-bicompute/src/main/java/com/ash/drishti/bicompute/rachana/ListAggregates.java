@@ -53,7 +53,11 @@ final class ListAggregates {
             Map.entry("kurtosis", "kurtosis"), Map.entry("geomean", "geomean"), Map.entry("harmean", "harmean"),
             Map.entry("trimmean", "trimmean"), Map.entry("corr", "corr"), Map.entry("covar", "covar"), Map.entry("slope", "slope"),
             Map.entry("intercept", "intercept"), Map.entry("rsq", "rsq"), Map.entry("kth_largest", "kth_largest"),
-            Map.entry("kth_smallest", "kth_smallest"), Map.entry("string_agg", "string_agg"));
+            Map.entry("kth_smallest", "kth_smallest"), Map.entry("string_agg", "string_agg"), Map.entry("skewness_pop", "skewness_pop"),
+            Map.entry("devsq", "devsq"), Map.entry("covar_pop", "covar_pop"), Map.entry("steyx", "steyx"),
+            Map.entry("sumproduct", "sumproduct"), Map.entry("sumsq", "sumsq"), Map.entry("product", "product"),
+            Map.entry("avedev", "avedev"), Map.entry("percentile_exc", "percentile_exc"), Map.entry("rank_avg", "rank_avg"),
+            Map.entry("percent_rank_of", "percent_rank_of"), Map.entry("mode_multi", "mode_multi"));
 
     /** {@code name} over the evaluated arguments of a call. */
     static Object apply(String name, List<Object> args) {
@@ -113,6 +117,15 @@ final class ListAggregates {
             }
         }
         Object state = f.add(f.start(), new Batch(list.size(), batch));
+        if (f instanceof com.ash.drishti.bicompute.functions.MoreAggregates.ModeMulti mm) {
+            List<Object> values = mm.values(state);                // a Rachana list gets mode_multi's values as a list
+            if (values == null) {
+                return null;
+            }
+            List<DataNode> out = new ArrayList<>();
+            values.forEach(x -> out.add(DataNode.of(x instanceof Double d ? Values.normalise(d) : x)));
+            return new DataNode.Arr(List.copyOf(out));
+        }
         Object v = f.result(state);
         if (v instanceof Double d && (d.isNaN() || d.isInfinite())) {
             v = null;
@@ -191,7 +204,8 @@ final class ListAggregates {
 
     /** What an aggregate of nothing is: 0 for a sum, a count and nmiss (as Excel's), empty for the rest. */
     static Object empty(String name) {
-        return "sum".equals(name) || "count".equals(name) || "nmiss".equals(name) ? (Object) 0L : null;
+        return "sum".equals(name) || "count".equals(name) || "nmiss".equals(name) || "sumproduct".equals(name) || "sumsq".equals(name)
+                ? (Object) 0L : null;
     }
 
     static ElException error(String name, String why) {
