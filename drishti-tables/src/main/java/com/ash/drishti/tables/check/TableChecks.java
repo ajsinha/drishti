@@ -163,6 +163,10 @@ public final class TableChecks {
             out.add(Problem.error(TableCodes.PATH, p + ".path", "a path starts at $, @ or ^ ($.MTM, @.NOTIONAL, ^.LEG_ID); an expression goes under expr"));
             return;
         }
+        if (!Set.of("$", "@", "^", "^^").contains(path.root())) {
+            out.add(Problem.error(TableCodes.PATH, p + ".path", "a path starts at $, @ or ^ ($." + path.text() + ")"));
+            return;
+        }
         if (path.rest().contains("[*]")) {
             out.add(Problem.error(TableCodes.PATH, p + ".path", "a column holds one value: a list ([*]) is a grain, or an aggregate of the list in an expr "
                     + "(sum(" + path.text() + "))"));

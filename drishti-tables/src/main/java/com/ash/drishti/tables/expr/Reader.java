@@ -403,6 +403,9 @@ public final class Reader {
             expect(")");
             return new Node.Call(name.toString(), args);
         }
+        if (at("[")) {
+            return new Node.Path(name.toString(), pathRest());              // trades.LEGS[*].NOTIONAL: a document path under a name (refused in a measure, Q21)
+        }
         return new Node.Name(name.toString());
     }
 
