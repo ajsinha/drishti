@@ -174,7 +174,7 @@ the hand-shake and answer "stuck, next, loaded?" at a glance); [B](mockups/datal
 current run's steps, and a side panel of waiting files, failures and the engine; [C](mockups/dataload-inbox/C.html), table-first: one
 table of every file of the day wherever it is, then cycles, rules and settings (the cheapest to build, like the Loads tab).
 
-**Chosen** (product owner, 2026-11-03): **A and B, both built**, as two views of one screen over one API: A, the board (the default), and B, the timeline ("B has cool graphics"), switched by a toggle; C is not built.
+**Chosen** (product owner, 2026-11-03): **A**, the status board; B and C are not built.
 
 ## 11. The module
 
