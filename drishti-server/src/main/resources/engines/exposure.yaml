@@ -75,6 +75,15 @@ drishti:
         retention-years: 7           # the published tables keep their log and removed files (time travel) this long
         on-start: true               # at start, capture the newest date when it has no official record yet
         jsonl: true                  # also write each published date as JSON Lines: <root>/risk-results/jsonl/<table>/<date>/
+      playground:                    # the Exposure Playground, PLAY EXP (docs/guides/EXPOSURE_GUIDE.md section 29; COUNTERPARTY_ENGINES.md decision 6)
+        max-paths: 5000              # the most paths one playground (screen or workbook) takes from the run, the first ones; more asked is refused
+        browser-paths: 200           # the paths the screen lists (its figures are always of every path taken)
+        browser-trades: 50           # the trade contributions the screen lists
+        export-choices: ["50", "500", "2000", "All"]   # the trade columns the export offers; the other trades are summed into Rest of set
+        export-default: "500"        # the export's trade columns when none is asked
+        export-max-cells: 20000000   # the most cells one workbook may hold on this server; more is refused with the size
+        contribution-date: peak      # the primary date the contributions split EE at: peak (the peak EE date) or a tenor (1Y)
+        template: ""                 # a bank's workbook template folder (its look and words); blank: the built-in playground/exposure/template/
       retention:                     # what is kept how long (EXPOSURE_GUIDE.md section 27.3, decided 2026-10-26)
         trade-paths-days: 20         # full trade paths: the last 20 business dates ...
         trade-paths-month-end-years: 1   # ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond)
