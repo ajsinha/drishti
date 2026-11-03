@@ -118,6 +118,13 @@ class SaccrServiceTest {
     }
 
     @Test
+    void noDateAskedIsTheNewestDateOfTheClassificationRows() {
+        SaccrService.Run latest = svc.run(null, "NS-ALDERSHOT-NY", null, Saccr.Choices.REGULATORY, false);
+        assertThat(latest.date()).isEqualTo(COB);
+        assertThat(latest.ead()).isEqualTo(svc.run(null, "NS-ALDERSHOT-NY", COB, Saccr.Choices.REGULATORY, false).ead());
+    }
+
+    @Test
     void theHandBuiltCasesAreTheExampleScope() {
         SaccrService.Run ex = svc.run(null, "EXAMPLE", null, Saccr.Choices.REGULATORY, false);
         assertThat(ex.set("EX-S1").ead()).isCloseTo(4_776_789.04, within(0.01));

@@ -122,8 +122,33 @@ public final class SaccrData {
         return out;
     }
 
-    private Day read(AsOf asOf) {
-        LocalDate date = asOf.businessDate();
+    private Day read(AsOf asked) {
+        // the classification rows first: with no date asked, the newest business date they hold is the date of every other input
+        Map<String, List<Map<String, Object>>> all = new LinkedHashMap<>();
+        int[] orphan = new int[1];
+        String[] newest = {null};
+        boolean rowsRead = reader.documents(props.tradeKind(), asked, n -> {
+            String ns = text(n, "NETTING_SET");
+            if (ns == null) {
+                orphan[0]++;
+                return;
+            }
+            String d = text(n, "BUSINESS_DATE");
+            if (d != null && d.length() >= 10 && (newest[0] == null || d.substring(0, 10).compareTo(newest[0]) > 0)) {
+                newest[0] = d.substring(0, 10);
+            }
+            all.computeIfAbsent(ns, k -> new ArrayList<>()).add(plain(n));
+        });
+        LocalDate date = asked.businessDate() != null ? asked.businessDate() : newest[0] != null ? LocalDate.parse(newest[0]) : LocalDate.now();
+        Map<String, List<Map<String, Object>>> rows = new LinkedHashMap<>();
+        String day = date.toString();
+        all.forEach((ns, l) -> {
+            List<Map<String, Object>> keep = l.stream().filter(r -> r.get("BUSINESS_DATE") == null || String.valueOf(r.get("BUSINESS_DATE")).startsWith(day)).toList();
+            if (!keep.isEmpty()) {
+                rows.put(ns, new ArrayList<>(keep));
+            }
+        });
+        AsOf asOf = new AsOf(date, asked.knownAt());
         Map<String, DataNode> csas = new LinkedHashMap<>();
         reader.documents(props.csaKind(), asOf, n -> {
             String id = text(n, "CSA_ID");
@@ -152,21 +177,11 @@ public final class SaccrData {
             String status = text(n, "TRADE_STATUS");
             String mat = text(n, "MATURITY_DATE");
             if (ns == null || ns.isBlank() || tid == null || status != null && !LIVE.contains(status.toUpperCase(Locale.ROOT))
-                    || date != null && mat != null && mat.length() >= 10 && mat.substring(0, 10).compareTo(date.toString()) < 0) {
+                    || mat != null && mat.length() >= 10 && mat.substring(0, 10).compareTo(day) < 0) {
                 return;
             }
             members.computeIfAbsent(ns, k -> new ArrayList<>()).add(new Member(tid, num(n, "MTM", Double.NaN), text(n, "PRODUCT_TYPE"), text(n, "PRODUCT_GROUP"),
                     num(n, "NOTIONAL", Double.NaN)));
-        });
-        Map<String, List<Map<String, Object>>> rows = new LinkedHashMap<>();
-        int[] orphan = new int[1];
-        boolean rowsRead = reader.documents(props.tradeKind(), asOf, n -> {
-            String ns = text(n, "NETTING_SET");
-            if (ns == null) {
-                orphan[0]++;
-                return;
-            }
-            rows.computeIfAbsent(ns, k -> new ArrayList<>()).add(plain(n));
         });
         return new Day(date, sets, rows, members, rowsRead, setsRead, orphan[0]);
     }
