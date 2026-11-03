@@ -29,9 +29,9 @@ drishti:
       discount-rate: 0.0             # flat continuously compounded rate used, flagged FLAT_DISCOUNT, when the discount curve is not found
       curve-kind: ir-curve           # the kind the curves are read from (the market-data pack's; a funding curve's points carry SPREAD)
       curves:                        # funding curves named here, used when curve-kind holds no curve of that id
-        - id: CRV-USD-FUNDING
-          label: "synthetic demo funding curve: the bank's unsecured spread over OIS (a bank names its own curve)"
-          points: [{ tenor: 6M, spread: 0.0040 }, { tenor: 1Y, spread: 0.0045 }, { tenor: 2Y, spread: 0.0055 }, { tenor: 5Y, spread: 0.0070 }, { tenor: 10Y, spread: 0.0085 }]
+        - id: CRV-USD-FUNDING        # the curve id funding-spread or lending-spread names
+          label: "synthetic demo funding curve: the bank's unsecured spread over OIS (a bank names its own curve)"   # what the curve is, shown as its source
+          points: [{ tenor: 6M, spread: 0.0040 }, { tenor: 1Y, spread: 0.0045 }, { tenor: 2Y, spread: 0.0055 }, { tenor: 5Y, spread: 0.0070 }, { tenor: 10Y, spread: 0.0085 }]   # tenor and spread in decimals, linear in t between points, flat beyond
       ee-point: end                  # end (the period's end) or mid (the average of both ends)
       funding-survival: false        # true: each term x S_C(t) x S_B(t) from the flat hazards below (per-counterparty credit curves: planned)
       counterparty-hazard: 0.0       # the counterparty's flat hazard rate with funding-survival
