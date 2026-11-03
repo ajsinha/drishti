@@ -2182,6 +2182,10 @@ dataload:
   unmatched: fail
 ```
 
+A file of *lake rows* or *loader rows* ([section 2.2](#2-the-row-forms)) is refused with the reason: the parallel loader reads
+documents and has no reader for those forms. Load lake rows with `tools/samplegen/load_rows.py` and loader rows with the store's own loader,
+or drop the documents themselves.
+
 Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table`, `date-from` (`field` or `name`), `date-field`,
 `key` (the id field), `lake` (over `drishti.dataload.lake`), `format` (`delta` or `iceberg`). The shipped file lists them, with the
 examples above commented out.
@@ -2201,7 +2205,9 @@ Every `interval` (10 minutes), on the owner node:
    (`loader-heap`, 4g), so a large or broken file never takes the server's memory. Each business date is one commit.
 5. **Moved** with the marker and the report into `outbox/<day>/<run>/`.
 6. **Told**: one data-load signal per pack, kind and business date, as `POST /api/v1/packs/{pack}/loads` makes it; the load is on
-   Admin → Data loads with *inbox:* and its files, made by `dataload`.
+   Admin → Data loads with *inbox:* and its files, made by `dataload`. In a cluster the signal is passed on to every other live member,
+   as an announcement is ([section 1](#1-telling-drishti-new-data-has-landed)), made as the owner node (`node:<id>`), so every member
+   refreshes its own caches and engines.
 
 A server stopped in the middle finishes the run at its next cycle: files only claimed go back to the inbox, a load that had committed is
 completed (never loaded twice), files not yet moved are moved, signals not yet sent are sent.
@@ -2228,7 +2234,7 @@ drishti.py dataload run           # Load now (or: skipped, a run still loads)
 | The table locked by another load | back to the inbox; tried again next cycle; after three cycles a notice in the status |
 | The load runs past `load-timeout` (2h) | stopped; its files go back to the inbox |
 | `sha256` or `rows` in the `.ready` do not match | `failed/` before anything is written |
-| No rule, an unknown pack or kind, a link, a name the loader does not read | `failed/` with the reason |
+| No rule, an unknown pack or kind, a link, a name the loader does not read, a file of lake rows or loader rows | `failed/` with the reason |
 
 **Retry** puts a failed file and its marker back in the inbox (an empty marker when it had none): `drishti.py dataload retry <file>`;
 the next cycle, or Load now, loads it. Fix the file or the rules first.

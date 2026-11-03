@@ -1770,7 +1770,9 @@ Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and
 
 **The data inbox** (files dropped in `<data>/dataload/inbox` with a `.ready` marker, loaded by the server: [DATA_GUIDE.md section 7](DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load);
 the CLI is `drishti.py dataload`). Administrators; a token needs `loads:write` for the two `POST`s. While the inbox's engine is off on every
-server the paths answer `DRS-1020`.
+server the paths answer `DRS-1020`. In a cluster the inbox's signals reach the other members through the same
+`POST /packs/{pack}/loads`, signed with the cluster key and made as the owner node (`node:<id>`, the service role), which each member takes
+as an administrator's announcement.
 
 | Method | Path | Notes |
 |---|---|---|

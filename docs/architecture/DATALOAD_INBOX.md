@@ -100,8 +100,9 @@ Every `interval` (default 10 minutes, `drishti.dataload.interval`; also **Load n
 ## 5. Routing a file to a table
 
 In this order: the `.ready` contents (section 3.5); a **row form** that names itself (*loader rows* `{domain, kind, id, date, doc,
-columns}` and *lake rows* with `table`, DATA_GUIDE section 2) (planned: the parallel loader reads documents, so such files are routed by a
-rule or their `.ready` today); the **rules** in `config/dataload.yaml`: a file-name pattern to a pack and
+columns}` and *lake rows* with `table`, DATA_GUIDE section 2): the parallel loader reads documents and has no reader for these forms, and
+the inbox writes no second one, so such a file is **refused** into `failed/` with the reason and the tool that loads it (`load_rows.py`
+for lake rows, the store loaders for loader rows); the **rules** in `config/dataload.yaml`: a file-name pattern to a pack and
 kind, with the date taken from the pack's date field or from the name:
 
 ```yaml
@@ -204,8 +205,8 @@ and the lock on NTFS (the Windows workflow).
 | Architecture rules | `ArchitectureRulesTest`: the module never depends on the server or Spring, and never on a table format, lake engine or storage (it writes no table: only the loader does) |
 | The run's files | `inprocess/<run>/load-<n>.yaml` (the load file), `.route.json` (pack, kind, batch: what a restart reads), `.summary.json`, `.log`, `.rejects.jsonl`; `load-<n>-check.*` for a dry run made when a `.ready` names `rows`; `signals.jsonl` (signals not yet sent). Moved to `outbox/<day>/<run>/loads/` at the end of the run |
 | Recovery | a claimed file whose load's summary says it committed is completed from the summary (never loaded again); otherwise it goes back. A crash inside the loader's own write, before its summary, sends the file back and it loads again: its dates are replaced, the same data |
+| Cluster | each signal is passed on to every other live member by `loads.LoadForwarding`, the one path a data-load signal takes to the members (a person's announcement goes on as that person): the inbox's as this node, `node:<id>` with the service role, carried on behalf of the node and signed with the cluster key; the receiving member's `LoadController` takes a signed node signal as it takes an administrator's. One hop; a failed load is not passed on |
+| Row forms | `RowForms` looks at the first line of a plain, gzip or zstd file: loader rows and lake rows are refused with the reason. An archive's members are not looked at: rows of these forms there are rejected by the load (no pack id field) and the file fails with the loader's reason |
 | Batch | one loader run per table (pack, kind, connector, table, date field or date, key, lake, format); when a run of several files fails without a commit, each file is loaded again alone, so one bad file fails alone |
 
-Still (planned): the Admin screen (mock-ups first); routing by a self-naming row form; the signal forwarded to the other members of a
-cluster (today only the owner node is told; announce on the others by hand, or with `drishti.py data landed`, until then); the
-three-node and Windows (NTFS) tests.
+Still (planned): the Admin screen (mock-ups first); the three-node and Windows (NTFS) tests.

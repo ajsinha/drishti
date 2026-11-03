@@ -28,10 +28,13 @@ import com.ash.drishti.server.admission.AdmissionGate;
 import com.ash.drishti.server.admission.BusyRefusal;
 import com.ash.drishti.server.admission.Work;
 import com.ash.drishti.server.engines.BasicEngine;
+import com.ash.drishti.server.loads.LoadForwarding;
 import com.ash.drishti.server.loads.LoadRecord;
 import com.ash.drishti.server.loads.LoadService;
 import com.ash.drishti.server.net.NetService;
+import com.ash.drishti.server.net.PeerCalls;
 import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.security.Principal;
 import java.net.InetAddress;
 import java.time.Clock;
 import java.time.ZoneId;
@@ -46,7 +49,8 @@ import org.springframework.core.env.Environment;
  * The server's wiring of the data inbox (docs/architecture/DATALOAD_INBOX.md; the inbox itself is the plain-Java module
  * {@code drishti-dataload}): {@code drishti.dataload.*} bound onto {@link DataLoadSettings}, the loaded packs for routing, busy protection
  * for the busy check, the bridge to {@link LoadService} for the signal (the same service method the HTTP data-load signal calls), and the
- * inbox as a compute engine ({@code config/engines/dataload.yaml}, off as shipped): on starts its schedule, off stops it and a load that runs.
+ * inbox as a compute engine ({@code config/engines/dataload.yaml}, off as shipped); in a cluster each signal is passed on to the other
+ * members ({@link LoadForwarding}, as this node): on starts its schedule, off stops it and a load that runs.
  */
 @Configuration
 public class DataLoadConfiguration {
@@ -61,11 +65,12 @@ public class DataLoadConfiguration {
 
     @Bean(destroyMethod = "stop")
     public DataInbox dataInbox(DataLoadSettings settings, ObjectProvider<LoadService> loads, ObjectProvider<AdmissionGate> gate,
-            ObjectProvider<NetService> net, ObjectProvider<BusinessDates> dates) {
+            ObjectProvider<NetService> net, ObjectProvider<BusinessDates> dates, ObjectProvider<PeerCalls> peers) {
         BusinessDates bd = dates.getIfAvailable();
         ZoneId zone = bd == null ? ZoneId.systemDefault() : bd.zone();
-        return new DataInbox(settings, node(net.getIfAvailable()), Clock.systemUTC(), zone, packs(loads), new LoaderProcess(settings), signal(loads),
-                busy(gate));
+        String node = node(net.getIfAvailable());
+        return new DataInbox(settings, node, Clock.systemUTC(), zone, packs(loads), new LoaderProcess(settings),
+                signal(loads, new LoadForwarding(peers.getIfAvailable()), LoadForwarding.node(node)), busy(gate));
     }
 
     /** The inbox as a compute engine (COMPUTE_ENGINES.md): live on and off; its thread is {@code dataload-cycle}. */
@@ -109,10 +114,11 @@ public class DataLoadConfiguration {
     }
 
     /**
-     * The signal: {@link LoadService#announce} with a ready announcement, as {@code POST /api/v1/packs/{pack}/loads} makes it. A refusal of
-     * the service (no such pack or kind, a date in the future) is not sent again; anything else is sent again at the next cycle.
+     * The signal: {@link LoadService#announce} with a ready announcement, as {@code POST /api/v1/packs/{pack}/loads} makes it, then passed
+     * on to every other live member of the cluster by {@link LoadForwarding} as this node (the same path a person's announcement takes).
+     * A refusal of the service (no such pack or kind, a date in the future) is not sent again; anything else is sent again at the next cycle.
      */
-    static Signal signal(ObjectProvider<LoadService> loads) {
+    static Signal signal(ObjectProvider<LoadService> loads, LoadForwarding forwarding, Principal self) {
         return l -> {
             LoadService s = loads.getIfAvailable();
             if (s == null) {
@@ -120,10 +126,12 @@ public class DataLoadConfiguration {
             }
             String files = String.join(", ", l.files());
             String source = "inbox: " + files;
+            LoadService.Announcement a = new LoadService.Announcement(l.kind(), l.date().toString(), null, LoadRecord.READY, l.rows(), l.rejected(),
+                    source.length() > 200 ? source.substring(0, 197) + "..." : source, l.batch(), cut("loaded from the data inbox: " + files, 1000));
             try {
-                s.announce(l.pack(), new LoadService.Announcement(l.kind(), l.date().toString(), null, LoadRecord.READY, l.rows(), l.rejected(),
-                        source.length() > 200 ? source.substring(0, 197) + "..." : source, l.batch(),
-                        cut("loaded from the data inbox: " + files, 1000)), BY);
+                if (!s.announce(l.pack(), a, BY).duplicate()) {
+                    forwarding.forward(l.pack(), a, self);
+                }
             } catch (DrishtiException e) {
                 throw new IllegalArgumentException(e.getMessage(), e);
             }

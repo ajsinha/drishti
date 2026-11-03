@@ -27,7 +27,11 @@
   `outbox/<day>/<run>/` (or `failed/` with the reason), and announces each pack, kind and business date through `LoadService`, as
   `POST /api/v1/packs/{pack}/loads` does. Runs never overlap: a cycle due while a run loads is recorded as *skipped: run … still loading
   (n min)*, and Load now says the same. Crash-safe: a stopped server's run is finished at the next cycle, never loaded twice. One runner
-  per folder (`owner`, plus `inbox.lock` with a heartbeat). Busy protection skips a cycle when the server is short.
+  per folder (`owner`, plus `inbox.lock` with a heartbeat). Busy protection skips a cycle when the server is short. In a cluster
+  every signal is passed on to the other live members by `loads.LoadForwarding` (the path a person's announcement already took, now one
+  class for both), as the owner node: `node:<id>` with the service role, signed with the cluster key; the receiving `LoadController`
+  takes such a signed node signal as an administrator's. A file of lake rows or loader rows is refused with the reason (`RowForms`): the
+  parallel loader has no reader for those forms.
 - New module `drishti-dataload` (plain Java: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess`, `Outbox`, `Recovery`,
   `Cycle`, `DataInbox`); the server's wiring is `server.dataload` (`DataLoadConfiguration`, `DataLoadController`). New engine `dataload`
   in the catalogue, `config/engines/dataload.yaml` (off as shipped; every key in CONFIGURATION.md), `config/dataload.yaml` (the routing

@@ -234,6 +234,10 @@ public final class Cycle {
         Routes.Route route;
         try {
             note = ReadyNote.read(marker);
+            String rowForm = RowForms.refusal(file);                       // loader rows, lake rows: no reader in the loader, refused
+            if (rowForm != null) {
+                throw new Routes.Unrouted(rowForm);
+            }
             if (note.sha256() != null && !note.sha256().equals(sha)) {
                 throw new Routes.Unrouted("the SHA-256 in its .ready file is not the file's (" + sha + "): it may have been cut short or changed");
             }
