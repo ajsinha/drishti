@@ -28,7 +28,7 @@ About 20 minutes.
 
 - The server and console running with the demo data ([tutorial 1](01-first-15-minutes.md)); `DATA trade <GO>` lists the trades.
 - For step 5, the VaR engine on with the demo risk lake (`VAR BANK <GO>` answers).
-- A token for the command line (`drishti.py login`, [TOOLS.md](../guides/TOOLS.md)).
+- A token for the command line in `DRISHTI_TOKEN` or a `--token-file` ([TOOLS.md](../guides/TOOLS.md)).
 
 ## What you will learn
 

@@ -75,7 +75,9 @@ public final class FrtbData {
     public FrtbData(Reader reader, FrtbProperties props) {
         this.reader = reader;
         this.props = props;
-        this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(8)
+        this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(512L << 20)   // weighed in bytes (D3)
+                .<String, Day>weigher((k, d) -> (int) Math.min(Integer.MAX_VALUE, 4096L + 512L * size(d.records())
+                        + 256L * (size(d.defaultRisk()) + size(d.residualRisk()))))
                 .expireAfterWrite(Duration.ofMinutes(props.cacheMinutes())).<String, Day>build().asMap();
     }
 
@@ -253,5 +255,10 @@ public final class FrtbData {
         Map<String, FactorDictionary.Factor> m = new LinkedHashMap<>();
         fs.forEach(f -> m.put(f.name(), f));
         return new ArrayList<>(m.values());
+    }
+
+    /** A list's size for the cache's weigher; an input not read (no default-risk data) is null. */
+    public static long size(java.util.Collection<?> c) {
+        return c == null ? 0 : c.size();
     }
 }

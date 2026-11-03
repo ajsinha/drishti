@@ -185,6 +185,14 @@ public final class GroupingSetsCompiler {
         used.addAll(plan.filters().keySet());
         List<String> dims = new ArrayList<>(used);
         dims.removeIf(d -> !plan.dims().containsKey(d));
+        // the grouped dimensions first: only they are selected and named in GROUPING(); a dimension only filtered or excluded on (a
+        // filter, the Others of a level) stays in the base relation for the WHERE alone
+        Set<String> groupedSet = new LinkedHashSet<>();
+        group.forEach(s -> groupedSet.addAll(s.grouping()));
+        List<String> ordered = new ArrayList<>(dims.stream().filter(groupedSet::contains).toList());
+        dims.stream().filter(d -> !groupedSet.contains(d)).forEach(ordered::add);
+        dims = ordered;
+        int kg = (int) dims.stream().filter(groupedSet::contains).count();
         List<Object> params = new ArrayList<>();
         String base = base(plan, rel, types, dims, params, List.of());
         List<String> where = new ArrayList<>();
@@ -220,12 +228,11 @@ public final class GroupingSetsCompiler {
             params.addAll(ex.getValue());
         }
         List<String> select = new ArrayList<>();
-        boolean grouped = group.stream().anyMatch(s -> !s.grouping().isEmpty());
-        for (int i = 0; i < dims.size(); i++) {
-            select.add(grouped ? "\"d" + i + "\"" : "NULL AS \"d" + i + "\"");
+        boolean grouped = kg > 0;
+        for (int i = 0; i < kg; i++) {
+            select.add("\"d" + i + "\"");
         }
-        select.add(dims.isEmpty() ? "0 AS \"_g\"" : grouped ? "GROUPING(" + String.join(", ", select) + ") AS \"_g\""
-                : ((1L << dims.size()) - 1) + " AS \"_g\"");
+        select.add(grouped ? "GROUPING(" + String.join(", ", select) + ") AS \"_g\"" : "0 AS \"_g\"");
         select.add("count(*) AS \"_n\"");
         int k = 0;
         int states = 0;
@@ -268,7 +275,7 @@ public final class GroupingSetsCompiler {
         if (plan.maxGroups() > 0) {
             sql.append("\nLIMIT ").append(plan.maxGroups() + 1);
         }
-        return new Compiled(sql.toString(), params, dims, group, states);
+        return new Compiled(sql.toString(), params, List.copyOf(dims.subList(0, kg)), group, states);
     }
 
     /** The SELECT of a cell's member rows (drill-through): the visible fields, the row rules, the filters and the cell's coordinates. */

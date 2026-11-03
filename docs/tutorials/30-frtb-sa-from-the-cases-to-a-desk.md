@@ -87,6 +87,10 @@ GIRR:
 Check one figure by hand: the USD bucket holds WS −77,781.75 (5Y) and −38,890.87 (10Y) with ρ 0.970 from MAR21.46's table, so
 K = √(77,781.75² + 38,890.87² + 2 × 0.970 × 77,781.75 × 38,890.87) = 115,892.19 in the medium scenario.
 
+**You should see** the header *EXAMPLE · the hand-built cases · USD · binding low*, the six bars of the stack with a total of 566,732.73, and, with GIRR delta selected, the buckets EUR and USD in the drill on the right.
+
+![FRSA EXAMPLE: the capital stack of the hand-built cases, total 566,732.73, GIRR delta's buckets in the drill](img/t30/01-cases.jpg)
+
 ## Step 2 · The three scenarios and the binding one
 
 **In the UI.** Open the **Scenarios** tab. Each class and measure in the low, medium and high scenarios; the low column is outlined: the
@@ -110,12 +114,16 @@ scenarios:
   low: {multiplier: 2.0, minus: 1.0, floor-multiplier: 0.75}  # max(2 × ρ − 1, 0.75 × ρ)
 ```
 
+**You should see** three columns (low, medium, high) for every class and measure, the low column outlined as the binding one, and GIRR delta at 110,555.42 low against 91,079.64 high.
+
+![The Scenarios tab: the low scenario binds on the hedged cases](img/t30/02-scenarios.jpg)
+
 ## Step 3 · The playground: flip a switch and read why the figure moved
 
 **In the UI.** Type `PLAY FRTB EXAMPLE <GO>`. The **Choices** panel lists every method choice with its default, its rule and why the
 default was chosen. In **Compare with**, pick `girr-correlation: exact`. Both runs appear side by side:
 
-> Girr-correlation: table → exact raises the total by 24.37 (0.0%), from 566,732.73 to 566,757.11. GIRR delta rises by 24.37, most of it
+> Girr-correlation: table → exact raises the total by 24.38 (0.0%), from 566,732.73 to 566,757.11. GIRR delta rises by 24.38, most of it
 > in bucket USD, between USD CURVE SOFR 5Y and USD CURVE SOFR 10Y (ρ 0.970000 to 0.970446); the difference arises in the correlations
 > within the bucket (K_b).
 
@@ -135,6 +143,10 @@ python3 tools/drishti.py frtb sa EXAMPLE --override GIRR.delta.across-buckets=0.
 
 **The YAML.** A switch is a request parameter, never a configuration change; the defaults are the product owner's decisions. An override
 names a parameter path of the files and marks every figure *not the regulatory figure*.
+
+**You should see** both runs side by side, the comparison in words above the grid (*raises the total by 24.38*), and the formula bar filled when you select a row.
+
+![PLAY FRTB EXAMPLE compared with girr-correlation: exact, a row selected: the formula bar and the explanation](img/t30/03-compare.jpg)
 
 ## Step 4 · The workbook of live formulas
 
@@ -165,6 +177,8 @@ drishti:
     playground-template: ""          # a bank's workbook template folder; blank: the built-in one
 ```
 
+**You should see** Main's band read **ALL CHECKS PASS** when the workbook opens, and *SWITCHES CHANGED: SEE THE ALTERNATIVES* with a ✓ on the `girr-correlation = exact` row after you change Config.
+
 ## Step 5 · Save a recipe and replay it to the cent
 
 **In the UI.** In the playground with `girr-correlation: exact`, press **Save recipe**. The notice gives the id and the command, for
@@ -188,6 +202,10 @@ drishti:
   frtb:
     recipes-dir: ${drishti.data.dir:./data}/frtb/recipes
 ```
+
+**You should see** the notice *Saved as recipe FR-…* after **Save recipe**, and on the replay the notice *reproduced to the cent: the inputs and every figure equal the recipe's*.
+
+![PLAY FRTB RUN: a saved recipe replayed to the cent](img/t30/04-recipe.jpg)
 
 ## Step 6 · A desk of the demo data
 
@@ -236,6 +254,12 @@ drishti:
     rrao-from-positions: true
 ```
 
+**You should see** the rates desk's SBM of 437,325,508.39 in the low scenario, *DRC not computed: no default-risk inputs*, and on **Contributions** by `TT_BOOK` the three books adding up to the SBM.
+
+![FRSA DESK:DESK-RATES: the rates desk's capital on the demo data](img/t30/05-desk.jpg)
+
+![The Contributions tab by TT_BOOK: the books add up to the SBM](img/t30/06-contributions.jpg)
+
 ## What you did
 
 - read the capital of the hand-built cases and checked a bucket by hand;
@@ -245,5 +269,15 @@ drishti:
 - saved a recipe and replayed it to the cent;
 - did the same on the rates desk of the demo data, with its contributions.
 
-Next: the [FRTB-SA guide](../guides/FRTB_SA_GUIDE.md) for every formula, rule and setting, and the data contract in
-[FRTB.md](../contracts/FRTB.md).
+## Next steps
+
+- The [FRTB-SA guide](../guides/FRTB_SA_GUIDE.md): every formula, rule and setting.
+- The data contract: [FRTB.md](../contracts/FRTB.md).
+- [Tutorial 32](32-simm-from-the-examples-to-a-netting-set.md): SIMM from the same sensitivities.
+
+## When something goes wrong
+
+- *DRS-5329 the FRTB-SA parameter files are not in …*: `drishti.frtb.parameters-dir` names a folder without `frtb-sa-sbm.yaml`
+  and `frtb-sa-drc-rrao.yaml`; blank it to read the market-risk pack's `capital/`.
+- `FRSA` answers *engine off* (`DRS-1020`): turn FRTB-SA on in Admin → Engines (it needs VaR and sensitivities).
+- A desk shows no sensitivities: run `drishti.py lake demo` again so `market-risk/position-sensitivity` is in the lake.

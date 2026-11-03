@@ -75,7 +75,7 @@ def maturity_bucket(d: str, purpose: str = "display") -> str:
 
 
 def trade_row(t: dict) -> dict:
-    """A trade as a row of another entity's trade list: the columns shown, and what its Pivot tab groups by."""
+    """A trade as a row of another entity's trade list: the columns shown, and what its Pivot (the pivot screen) groups by."""
     return {"tradeId": t["tradeId"], "status": str(t.get("status") or "").upper() or None, "product": t["productName"], "assetClass": t["assetClass"],
             "currency": t["currency"], "book": t["book"],
             "notional": t["notional"], "maturity": t["maturityDate"], "maturityBucket": maturity_bucket(t["maturityDate"]), "mtm": t["mtm"]}

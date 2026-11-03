@@ -33,6 +33,8 @@ import java.util.List;
  */
 public final class EngineHistory {
 
+    private final java.util.concurrent.locks.ReentrantLock lock = new java.util.concurrent.locks.ReentrantLock();
+
     /** Most changes kept in memory and returned. */
     static final int KEEP = 1000;
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -70,22 +72,33 @@ public final class EngineHistory {
         trim();
     }
 
-    public synchronized void add(Change c) {
-        changes.add(c);
-        trim();
-        if (file != null) {
-            try {
-                Files.createDirectories(file.getParent());
-                Files.writeString(file, JSON.writeValueAsString(c) + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
-            } catch (IOException e) {
-                org.slf4j.LoggerFactory.getLogger(EngineHistory.class).warn("engines: history {} not written: {}", file, e.toString());
+    public void add(Change c) {
+        lock.lock();                    // a ReentrantLock, not synchronized: the file write blocks (Java 21 pins virtual threads)
+        try {
+            changes.add(c);
+            trim();
+            if (file != null) {
+                try {
+                    Files.createDirectories(file.getParent());
+                    Files.writeString(file, JSON.writeValueAsString(c) + "\n", StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND);
+                } catch (IOException e) {
+                    org.slf4j.LoggerFactory.getLogger(EngineHistory.class).warn("engines: history {} not written: {}", file, e.toString());
+                }
             }
+        } finally {
+            lock.unlock();
         }
     }
 
     /** Newest first, at most {@code limit}. */
-    public synchronized List<Change> newestFirst(int limit) {
-        List<Change> out = new ArrayList<>(changes);
+    public List<Change> newestFirst(int limit) {
+        List<Change> out;
+        lock.lock();
+        try {
+            out = new ArrayList<>(changes);
+        } finally {
+            lock.unlock();
+        }
         Collections.reverse(out);
         return out.subList(0, Math.min(Math.max(1, limit), out.size()));
     }

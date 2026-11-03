@@ -65,6 +65,19 @@ public interface TabularSource {
     Relation relation(DuckDbExecutor exec);
 
     /**
+     * The relation one plan reads: a document source unnests the lists the plan's grain steps into (one row per leg) and extracts its
+     * path fields; every other source reads the same relation for every plan.
+     */
+    default Relation relation(DuckDbExecutor exec, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+        return relation(exec);
+    }
+
+    /** The view as this source answers it ({@link PivotProvider#prepare}); the default: as it is. */
+    default com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+        return view;
+    }
+
+    /**
      * A relation: a FROM item and its bound parameters, and the person's row rules (a SQL condition over its columns and its parameters;
      * null: none) applied before grouping.
      */

@@ -397,10 +397,103 @@ When one table is far beyond what a few Drishti nodes scan in minutes (tens of t
 answers come back as mergeable states, and the core is unchanged. Not in this design's build; [section 9.10](#910-duckdbs-limits-stated-honestly)
 says when it is needed, and decision 8 asks whether to keep it parked.
 
+### 6.7 Documents: paths, arrays and grains
+
+*Product owner, 2026-11-03: "our data in lake is in json format so then how pivot will work on it?"; the design below, recommended and
+asked for.*
+
+**How the lake holds an entity.** A kind of reference or numeric data (a risk vector, a scenario PV, a limit) is stored as typed
+columns. An **entity document** (a trade, a counterparty, a netting set) is stored as the whole source document in a text column, `doc`
+(JSON), beside a few **promoted** columns that the pack names in the connector's `layout.<kind>.columns` (for trades `TRADE_ID`,
+`PRODUCT_TYPE`, `COUNTERPARTY`, `PORTFOLIO` …, holding exactly the document's values). A trade from Calypso carries nested parts inside
+`doc`: `LEGS` (a list; each leg has `LEG_ID`, `LEG_TYPE`, `CURRENCY`, `NOTIONAL`, an `INDEX` object …) and `EVENTS` (a list; each event
+has `EVENT_TYPE`, `EVENT_DATE`, `AMOUNT`, `CURRENCY` …).
+
+**One notation: Rachana's paths** (product owner, 2026-11-03: *"$.ABC.DEF kind of Sutra-like notation for nested columns ... keeps our
+pivot and BI in sync"*; *"Rachana grammar can be part of our pivot design"*). Every pivot field is a Rachana path or expression
+([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), the document `$`, the element `@`), exactly as a Sutra binds it and as a BI
+dataset column's `path:` names it. The field list writes the path for a person who picks from it; a person may also type one.
+
+| Path | Means | Grain |
+|---|---|---|
+| `$.PRODUCT_TYPE` | a top-level field | trade |
+| `$.LEGS[0].CURRENCY` | the first leg's currency: one value per trade | trade |
+| `$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME` | the floating leg's index, wherever the leg sits | trade |
+| `size($.LEGS)` | how many legs a trade has (a Rachana function) | trade |
+| `$.LEGS[*].NOTIONAL` | every leg's notional | **leg** (the `[*]` makes the grain) |
+| `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL` | the fixed legs' notionals | leg |
+| `$.LEGS[*].CASH_FLOWS[*].AMOUNT` | every cash flow of every leg | **cash flow** (two `[*]`: a list inside a list) |
+| `$.EVENTS[*].EVENT_TYPE` | every event's type | **event** |
+
+**The grain comes from the path:** no `[*]` is the entity's grain; each `[*]` steps into a list, and the deepest list a view uses is its
+grain. Two paths whose `[*]` lists are not one inside the other (`$.LEGS[*]` and `$.EVENTS[*]`) are separate lists and are never crossed.
+
+**One parser, no second dialect.** The pivot engine parses paths with Rachana's own expression parser (the `drishti-rachana` module) and
+compiles them: a path a promoted or dataset column holds reads that column; anything else becomes DuckDB JSON over `doc`
+(`json_extract`, `unnest` for `[*]`, `list_filter` for `[?...]`). A Rachana function with no SQL form is refused for a pivot with the
+reason, never evaluated a second way. BI datasets name document columns with the same paths: `path: $.LEGS[0].CURRENCY`, and
+`each: $.LEGS` is `$.LEGS[*]`; the BI guide's examples use the `$.` form, and BI's older dotted form (`LEGS.0.CURRENCY`) is read as the
+same path for existing datasets.
+
+**Three routes from a document field to a pivot, chosen per field, fastest first:**
+
+| Route | What it reads | Cost | When |
+|---|---|---|---|
+| **promoted column** | a typed column of the table | a column scan: fast at any size | the field is in the connector's `layout.<kind>.columns` |
+| **dataset column** | a BI dataset's column (a `path:` into the document, or an `each:` table), extracted once per business date into the BI `cached` layer (Parquet) | a column scan after the first build | the field is declared in a dataset ([BI_GUIDE.md](../guides/BI_GUIDE.md), "Tables and columns") |
+| **ad-hoc path** | DuckDB's JSON functions over `doc` at query time (`json_extract_string(doc, '$.LEGS[*].CURRENCY')`) | every document parsed for the scanned dates | anything else; the scan estimate ([section 9.7](#97-scan-estimates-before-anything-runs)) shows the cost first, and a large one is refused with the cheaper route named ("promote `LEGS.CURRENCY`, or add it to the trades dataset") |
+
+The person never chooses the route: the field list shows the field once, and the engine takes the fastest route that holds it. An
+administrator sees, per pack, the ad-hoc paths people use most with **Promote** and **Add to dataset** buttons.
+
+**The field list follows the document's shape.** It is built from the kind's data contract (every field, its type and meaning) and,
+where the contract is silent, from a sample of documents:
+
+```
+Trade                         (grain: one row per trade)
+  TRADE_ID, TRADE_DATE, PRODUCT_TYPE, COUNTERPARTY, PORTFOLIO, CURRENCY, QUANTITY, PRICE …
+  Legs                        (grain: one row per leg; a list in the document)
+    LEG_ID, LEG_TYPE, LEG_ECONOMIC_TYPE, CURRENCY, NOTIONAL, SETTLEMENT_TYPE
+    Index                     (an object inside the leg: one value per leg)
+      NAME, TENOR …
+  Events                      (grain: one row per event)
+    EVENT_TYPE, EVENT_DATE, AMOUNT, CURRENCY
+```
+
+A **nested object** (a value, not a list) is just more fields of its parent, named by their path (`LEGS.INDEX.NAME` shows as
+*Legs › Index › Name*). A **list** is a **grain** of its own.
+
+**One grain per view, and figures never counted twice.**
+
+1. **The view's grain is the finest one its rows, columns and values use.** Rows *Desk* and values *Sum of Legs › Notional* is a leg-grain
+   view: one row per leg is aggregated. The grid's header says so: *per leg*.
+2. **A coarser figure in a finer view is counted once per parent.** *Sum of Quantity* (a trade field) in a leg-grain view sums each trade's
+   quantity once, by its id, never once per leg; the header says *per trade, once*. A trade with three legs adds its quantity once. The
+   engine compiles it as an aggregate over the distinct parents in each cell (a grouping on the parent id first, then the cell), which
+   the split-and-merge harness tests.
+3. **Two different lists are never crossed.** Legs and Events of the same trade are independent lists: a view that would put a leg field
+   and an event field on the same row is refused with the reason ("Legs and Events are separate lists of a trade; pick one, or compare
+   them side by side as two values"), because crossing them multiplies rows (three legs and four events would give twelve).
+4. **Filters say which grain they mean.** *Legs › Currency = JPY* on a trade-grain view keeps the trades **with any** JPY leg (shown as
+   *trades with a leg in JPY*); on a leg-grain view it keeps the JPY legs. A filter with *all legs* is offered for the trade grain too.
+5. **Masks and row rules apply per path**: a masked field is not offered, at any depth; the trade's row rules decide its legs and events.
+
+**Worked examples on the demo lake** (the pivot guide carries each one with its real figures, its screen, its command line and its
+saved view in YAML, all produced by running it on `drishti.py lake demo`):
+
+| Question | Rows × columns | Values | Grain |
+|---|---|---|---|
+| Notional by desk and month | `$.DESK` × `$.TRADE_DATE` (month) | Sum of `$.LEGS[*].NOTIONAL` | leg |
+| How many trades have a JPY leg, by product | `$.PRODUCT_TYPE` | Count of trades, filter `$.LEGS[*].CURRENCY = 'JPY'` (any leg) | trade |
+| Fixed against floating legs per counterparty | `$.COUNTERPARTY` × `$.LEGS[*].LEG_TYPE` | Count of legs, Sum of `$.LEGS[*].NOTIONAL` | leg |
+| Quantity per desk without double counting | `$.DESK` | Sum of `$.QUANTITY` (*per trade, once*) beside Count of legs | leg, the quantity once per trade |
+| Booking events this week by type | `$.EVENTS[*].EVENT_TYPE` × `$.EVENTS[*].EVENT_DATE` (day) | Count of events | event |
+| VaR beside notional | Desk | VaR (the VaR provider), Sum of Legs › Notional | trade and leg: two providers side by side, each exact |
+
 ## 7. From the MR cube's core to the pivot engine: what is kept, what changes
 
 The paused branch `wip/mr-cube` (at `17a4af0ea`; compiles; its fifteen server tests pass) holds the shared cube core in
-`drishti-server/src/main/java/com/ash/drishti/server/cube/` (`CubeView` with the `MCUBE` text grammar, `CubeMeasure` with
+its `drishti-server` package `com.ash.drishti.server.cube` (on that branch only: `CubeView` with the `MCUBE` text grammar, `CubeMeasure` with
 `Kind {ADDITIVE, VECTOR, FORMULA}` and `needs`, `CubeDimension`, the `CubeSource<A>` and `Universe<A>` SPI on `OrdinalSet` members,
 `CubeEngine` evaluating one batch of R × C + R + C + 1 sets with totals, diversification, the cell budget, busy protection and a
 byte-weighed cache `cube.cells`, `CubeViews` for saved and shared views, `CubeExport`, `CubeController` at `/api/v1/cube`), the VaR
@@ -420,7 +513,7 @@ source (`VarCubeSource`, `VarCubeExtras`, `VarCubeController`) and the console's
 
 **Kept as they are:** saved and shared views (`CubeViews`, now `PivotViews`: a shared view opens with the reader's entitlements, never
 a copy of numbers), provenance ids per answer, the cell budget and the busy-protection check, the diversification view, the console's
-grid (`cube-core.js` becomes `pivot-core.js`, the MR cube's landings keep their look), the `MCUBE` command word and its text grammar (it
+grid (`cube-core.js` becomes `pivot-grid.js`, the MR cube's landings keep their look), the `MCUBE` command word and its text grammar (it
 becomes the MR cube's preset of the `PIVOT` grammar), the MR source's arithmetic and every test of the branch, which must pass
 unchanged against the engine (the MR cube's acceptance test of phase P1).
 
@@ -1017,11 +1110,13 @@ Errors are in words with a `DRS-` code assigned when built and listed in API_GUI
 ## 18. The command line
 
 ```
-drishti.py pivot query  --source trading.trades --rows DESK --cols month:TRADE_DATE --values "sum(NOTIONAL_USD)" --date 2026-10-30 [--csv|--arrow out.arrow]
+drishti.py pivot sources
+drishti.py pivot fields trade
+drishti.py pivot run --source trade --rows DESK --cols TRADE_DATE:month --values "sum(NOTIONAL_USD)" --date 2026-10-30 [--csv out.csv]
 drishti.py pivot estimate --view asha/desk-risk
-drishti.py pivot views list | show asha/desk-risk | export asha/desk-risk --xlsx out.xlsx [--native-pivot]
-drishti.py pivot explain --view asha/desk-risk --cell "DESK=EMEA" --from 2026-09-30 --to 2026-10-30
-drishti.py pivot functions list | test fn.py --sample rows.csv | submit asha/trimmed_mean | approve asha/trimmed_mean@3 --reason "..."
+drishti.py pivot export --view asha/desk-risk --format xlsx -o out.xlsx      (also csv, arrow; --what rows --cell DESK=EMEA; --what definition)
+drishti.py pivot views
+drishti.py pivot save desk-risk --source trade --rows DESK --values "sum(NOTIONAL_USD)" --share role:risk
 ```
 
 The same words as the API; `--wait` for background runs; a refused view prints the same sentence as the screen.
@@ -1134,6 +1229,9 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 - [x] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
 - [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)
+- [ ] Rachana paths as the field notation (one parser, compiled to columns or DuckDB JSON; the grain from `[*]`); BI's examples in the `$.` form
+- [ ] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators
+- [ ] the pivot guide's worked examples of section 6.7, each with its real figures from the demo lake, a screenshot, the command line and the saved view's YAML
 
 ## 25. Mock-ups: the screens to build
 

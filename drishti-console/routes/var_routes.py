@@ -379,9 +379,9 @@ async def basket_workbook(request: Request):
     server as the person (it checks every cell again)."""
     q = request.query_params
     extra = {k: q[k] for k in ("asOf", "ccy") if q.get(k)}
+    sheet = await json_body(request)                      # a body that is not a JSON object is a 400/415 before the server is asked
     try:
-        body, headers = await request.app.state.backend.var("POST", "/basket/sheet.xlsx", ident(request), body=await json_body(request),
-                                                            raw=True, **extra)
+        body, headers = await request.app.state.backend.var("POST", "/basket/sheet.xlsx", ident(request), body=sheet, raw=True, **extra)
     except BackendError as e:
         return _problem(e)
     return Response(body, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",

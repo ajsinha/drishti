@@ -17,6 +17,29 @@
 
 ## Unreleased (on develop, after 2.9.11)
 
+- **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
+  screen; it had been drawn flush left. The VaR card and the risk area name the basket sheet, which replaced the selection tray.
+
+- **The release drill is faster and stops sooner (tools/drill.sh; PACK_DEVELOPER_GUIDE.md §2.6, TOOLS.md).** A gate of a few
+  minutes runs first, every job at once: the licence headers, the generated documents and data that must be current (settings
+  catalogue, data contracts and their pages, data samples, the packs' generated content, the Python API reference), the docs and
+  help console tests, and one Java 21 build of the working tree (Javadoc with doclint, Spotless, Maven threads) that runs only the
+  rule tests: every `drishti-it` test, `TokenScopeGuardTest` and `ArrowAnswersTest`; its jar is the one the console starts. Its first
+  failure stops the drill. Then everything else at once: the console suite in a browser lane (few workers, normal priority) and an
+  other lane (more workers, lower priority), each giving its files to the workers longest first from the durations the last runs
+  recorded (`data/drill/durations.json`); the Python tool tests; the Java 21 verify in a copy of the committed tree (its `config/`
+  and `data/` compared by content before and after); and the Java 25 verify, in its own copy, once the lighter jobs have finished.
+  A failed console test runs once more file by file and every failed file is re-run (two at a time in the other lane, one in the
+  browser lane), each under a time limit of twice the file's recorded time, at least ten minutes; tests listed in
+  `tools/drill-known.txt` are reported as accepted and do not fail the drill. The first failure no re-run can change stops the other
+  jobs (`--keep-going` runs them to the end). **Fixed:** every command of the Python tool tests and of the Java runs now fails the
+  drill when it fails; before, a job ran as `job || ...`, where bash ignores errexit, so only each job's last command counted (the
+  trading pack's generated Sutra fragments and `data/testdata/testdata.yaml` had been reported stale in the tool log without
+  failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
+  checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
+
+## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine (unreleased, on wip/pivot-b)
+
 - **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 36).** Custom aggregation functions in four
   languages with the four steps start, add, merge and finish: a formula of the built-ins (DEL's syntax: `sum(PNL, where=PNL < 0) /
   sum(abs(PNL))`, mergeable when its parts are, computed in the same `GROUPING SETS` statement), a DuckDB SQL macro (rewritten into the
@@ -35,6 +58,20 @@
   answer. The console no longer adds totals up: a sum's total is the engine's too, and a matrix without `subtotals` gets its totals from the
   engine. A measure that reads beyond its group's rows (time intelligence, running, context, Python) has no total; the answer says why.
 
+## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
+
+- **Chart any table: Top N, Others and the split cap by the pivot engine.** The chart asks the engine for a level's top N (`top: {field:
+  {n, by}}`) and draws its *Others* member, whose figures come from its own rows; the browser merges no cells any more (its `combine`
+  and the extra sum and count of an average are gone).
+- **Client renderer 1.2.0.** A table that offers Pivot is the table and a link to the pivot screen, as the console draws it (the Table |
+  Pivot switch, `pivotTab` and the `pivot` behaviour module are gone); 1.1.0, 1.0.0 and 0.1.0 stay served, unchanged. The pivot grid sets
+  its indents and conditional formats through the CSSOM, so a host's CSP that refuses inline styles is respected.
+- **Nothing else aggregates: the Sutra `pivot` panel and Chart any table on the pivot engine.** A `pivot` panel's cells, subtotals and
+  totals are computed by the engine's in-memory provider (`RowsProvider`, the built-ins' own states; equal to the tabular provider on the same
+  rows) and its nested rows drawn by the one pivot grid (`pivot-grid.js`, the Pivot screen's, which now replaces `pivot-core.js`). *Chart any
+  table* sends the shown rows' chart fields to the new `POST /api/v1/pivot/inline` (at most 100,000 rows) and draws the engine's answer;
+  *Chart all N* on a panel offers *Chart every row*. `pivot-engine.js` is now only the engine's browser client (query, inline, layout,
+  formats): its in-browser `cube` and filters are deleted, as is the old nested grid.
 - **One pivot: the old Pivot tab retired onto the pivot engine (product owner, 2026-11-02: no dual machinery).** A table or ladder whose
   Sutra says `pivot:` and a search whose kind's pack says `pivot:` now carry **Pivot**, which opens the pivot screen on the panel's own rows
   (`panel/<kind>/<panel>/<id>`) or on the kind, with the Sutra's or the pack's arrangement as the opening view; an author promotes a page
@@ -58,7 +95,35 @@
   figure adds up and a Provenance sheet, CSV, Arrow, saved and shared views, cell references, compare two dates. `/api/v1/pivot`,
   `drishti.py pivot`, `drishti.pivot.*` settings, codes DRS-5701 to DRS-5705 and DRS-9507.
 
-## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)
+## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-03)
+
+- **Fixed (drill): the release drill's console findings.** The sign-in page, which sends its form in the background for busy protection,
+  marks the page while the form is on its way (`html[data-signing-in]`), and the browser tests wait on it as on a navigation (they had
+  run on before the sign-in was answered, then read the sign-in page). The basket workbook (`POST /api/var/basket/sheet.xlsx`) answers a
+  body that is not a JSON object with 400 or 415 in words, never 500. Admin → Engines' switches fill with the fill tokens and its data
+  travel in an attribute (no inline script); the SIMM screen names the product from `ui.product`. `POST /net/engines` is in the API
+  guide. `make_sutras.py` writes the phone layouts of the shared deal fragments, the counterparty, the netting set and the Endur commodity
+  swap (they had been added by hand, so `--check` failed); `testdata.yaml` regenerated. Tutorials 30 to 32 gain their pictures
+  (`screenshots.py --guide t30`, `t31`, `t32`), what you should see at every step and their next steps; the tutorials card counts
+  past thirty. FRSA's capital stack draws each bar to its length (the width was a style attribute, which the console's CSP blocks).
+  The SIMM screen's list of netting sets follows the page's date (`asOf`), as its breakdown did. Admin → Health no longer fails (500)
+  when the in-memory lake is on: a memory store's gauge reads its use against its cap. The example memory connector
+  (`config/connectors.examples/memory/news-store.yaml`) says `domain: ""`: without it the pack's template added `domain: news` and the
+  connector looked under `mem://news/news`, so every news page read *no source holds*.
+- **Fixed: the stress window page read the current window a month late on a demo lake.** `lake demo` moved a stress scenario set's
+  window and days with the business dates (HS-STRESS-2008 became 2008-08-01 to 2009-07-31 on a lake ending 2026-11-02) while the long
+  history's days stay as they are; a stress set's period of history now stays 2008-07-01 to 2009-06-30, as VAR_GUIDE.md section 18.9
+  says, and only its business date moves.
+- **The stress window page draws across the page again:** its outer box used the class `sw`, which the terminal style sheet also uses for a
+  small legend swatch (14 by 3 pixels), so the page shrank to a narrow column; the box is now `sw-page`. New browser test
+  `test_stress_window_browser.py`. VAR_GUIDE.md section 18.9 opens with a plain-words explanation: what the stress window is, what the
+  screen shows, the data it uses and where it is useful.
+- **Forms, write-back:** a form opened before the page knew whether its person may submit (a quick open, a phone) now gets its Submit
+  button and its note when that answer arrives; before, it stayed without Submit until the page was reloaded.
+- **VaR, Ad-hoc scopes:** a saved basket's or portfolio's name stays visible; its Edit, Delete and + basket buttons sit after the name
+  instead of over it, on one line: showing them never changes the row's height, so the rows below never move under the pointer.
+
+- **Busy protection judges memory by what is left, not only a share:** new heavy work waits for memory only when the heap after a collection is past its level **and** less than `memory-free-min-mb` (768 MB) is left; `DRISHTI_ADMISSION_ENABLED` switches it off (the console's own tests do, their servers running a 768 MB heap).
 
 - **Compute engines on or off per server, each with its own configuration file (2.9.11 row 14; COMPUTE_ENGINES.md, OPERATIONS.md
   section 21).** VaR (with regulatory VaR), exposure, the position sensitivities, FRTB-SA, SIMM and the in-memory lake each have a file,
@@ -5126,7 +5191,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
     `description`, `kinds` and `example` lines; `make_packs.py` refuses one over 60 lines and `--check` also fails on a
     generated snippet whose source is gone.
 - **The Pivot tab: an Excel-style pivot, only where a Sutra or pack asks for it**
-  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#pivot-slice-a-table-your-way)). A **Table | Pivot** switch on the
+  ([USER_GUIDE.md](docs/guides/PIVOT_GUIDE.md)). A **Table | Pivot** switch on the
   tables and ladders whose Sutra says `pivot:`, and on the search results and pick lists of kinds whose pack says
   `pivot:`; nowhere else. A field list and four zones, Rows, Columns (several levels each), Values (sum, count, avg,
   min, max, distinct count; shown as the value or % of row, column or total) and Filters (a pick list of values, or a
@@ -5138,7 +5203,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Rachana:** the `pivot` option of `table` and `ladder` panels, `true` or `{ fields, rows, columns, values, filters,
     heat, chart, totals }` (fields as row paths or `{ field, bind, label, fmt }`), with problem code `DRS-2031`
     (`DRS-2023` on other kinds); in the JSON Schema, so Studio completes and checks it
-    ([reference](docs/guides/RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder)).
+    ([reference](docs/guides/PIVOT_GUIDE.md)).
   - **Engines:** a panel's pivot runs in the browser over **all** its rows (`GET /api/v1/views/{kind}/{id}/panels/{panel}/records`,
     beyond the table's `limit`, up to `drishti.pivot.max-records`); a search's pivot runs on the server over every
     match of the business date from the day's promoted columns (`POST /api/v1/search/pivot/{kind}`, `/drill`,
@@ -5147,7 +5212,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Saved pivots** per (Sutra, panel) and per kind (`/api/v1/me/pivots`, preference namespace `pivots`); no new
     power: opening the kind is enough. **Promote to Sutra:** an author's pivot becomes the panel's `pivot:` in the
     Sutra's next version (only that key rewritten, shown as the changes and a diff), proposed through review.
-  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#pivot-pivot-on-search-results)).
+  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PIVOT_GUIDE.md)).
     The banking generators opt in a netting set's and a clearing account's trades (notional by product and maturity
     bucket), a book's largest trades (MTM by product and currency), a desk's new *Trades by book* table and the trading
     pack's new desk P&L Sutra (MTM by book and currency), collateral positions, a trade's cash flows (PV by type and

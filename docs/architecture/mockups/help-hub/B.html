@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!--
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+
+  A screen mock-up (help-hub/B.html), self-contained: system fonts, everything inline, nothing from a CDN.
+  Dark theme by default; open it with #light for the light theme. Its requirement is in docs/architecture/IMPLEMENTATION_PLAN.md (2.9.11.a, the Help centre reorganised).
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Help centre: option B, a rail of sections</title>
+<script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
+<style>
+:root{
+  --bg:#0e1628; --bg2:#121c33; --panel:#16213a; --panel2:#1b2744; --line:#26345a; --line2:#1f2b49;
+  --ink:#e7ecf5; --muted:#93a0b8; --faint:#8490a9; --amber:#e8a33a; --amber2:#f2b453; --amber-t:rgba(232,163,58,.14);
+  --link:#7fb2ff; --pos:#7fb2ff; --neg:#f2955a; --ok:#5fd39a; --warn:#f2c14e; --bad:#ff7a7a;
+  --hl:rgba(127,178,255,.10); --emph:rgba(232,163,58,.28); --onacc:#14100a;
+  --ok-t:rgba(95,211,154,.14); --warn-t:rgba(242,193,78,.16); --bad-t:rgba(255,122,122,.15);
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+  color-scheme:dark;
+}
+html.light{
+  --bg:#f7f5f0; --bg2:#efebe3; --panel:#ffffff; --panel2:#faf8f4; --line:#e2dcd0; --line2:#ece7dd;
+  --ink:#172440; --muted:#55607a; --faint:#60697e; --amber:#985b0a; --amber2:#7c4805; --amber-t:rgba(184,110,12,.10);
+  --link:#1f5fc4; --pos:#1f5fc4; --neg:#b4491a; --ok:#1b784c; --warn:#8a6100; --bad:#b42323;
+  --hl:rgba(31,95,196,.07); --emph:rgba(184,110,12,.16); --onacc:#ffffff;
+  --ok-t:rgba(27,120,76,.10); --warn-t:rgba(138,97,0,.10); --bad-t:rgba(180,35,35,.09);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:14px}
+a{color:var(--link);text-decoration:none}
+.page{max-width:1568px;margin:0 auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:12px}
+.intro h1{font-size:20px;margin:0 0 4px}
+.intro p{margin:0;color:var(--muted);max-width:120ch;line-height:1.5;font-size:13.5px}
+.rec{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:var(--ok-t);color:var(--ok);border:1px solid var(--ok);vertical-align:middle}
+.alt{display:inline-block;margin-left:10px;padding:2px 10px;border-radius:12px;font-size:12px;color:var(--muted);border:1px solid var(--line);vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:14px;align-items:center;padding:8px 14px;border:1px solid var(--line);border-radius:8px;background:var(--bg2)}
+.brand{font-weight:700;letter-spacing:.12em;color:var(--amber)} .brand i{font-style:normal;letter-spacing:.02em;margin-left:6px}
+.cmd{flex:1 1 300px;max-width:640px;white-space:nowrap;overflow:hidden;height:32px;display:flex;align-items:center;padding:0 14px;border:1px solid var(--amber);border-radius:16px;font-family:var(--mono);color:var(--amber);font-size:13px}
+.menus{display:flex;gap:4px;margin-left:auto;font-size:13px}
+.menus span{padding:5px 10px;border-radius:6px;color:var(--muted)} .menus span.on{background:var(--panel2);color:var(--ink)}
+.head{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline}
+.head h2{margin:0;font-size:17px} .head .meta{color:var(--muted);font-size:12.5px}
+.crumb{font-family:var(--mono);color:var(--link)}
+.ctrls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.pick{font-size:12.5px;padding:4px 10px;border:1px solid var(--line);border-radius:14px;color:var(--ink);background:var(--panel)}
+.pick b{color:var(--muted);font-weight:500;margin-right:4px}
+.btn{font-size:12.5px;padding:5px 12px;border:1px solid var(--line);border-radius:6px;color:var(--ink);background:var(--panel2);white-space:nowrap}
+.btn.p{background:var(--amber);border-color:var(--amber);color:var(--onacc);font-weight:600}
+.btn.dis{opacity:.45}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.seg span{padding:4px 11px;font-size:12.5px;color:var(--muted)} .seg span.on{background:var(--panel2);color:var(--ink);font-weight:600}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;min-width:0}
+.card h3{margin:0 0 8px;font-size:13.5px} .card h3 span{color:var(--muted);font-weight:400;font-size:12px;margin-left:6px}
+table{border-collapse:separate;border-spacing:0;font-size:12.5px;font-variant-numeric:tabular-nums;width:100%}
+th,td{padding:4px 8px;white-space:nowrap;text-align:right;border-bottom:1px solid var(--line2)}
+td{font-family:var(--mono)}
+th{background:var(--panel2);color:var(--muted);font-weight:500;font-size:12px}
+th.l,td.l{text-align:left;font-family:var(--sans)}
+.neg{color:var(--neg)} .posv{color:var(--pos)} .muted{color:var(--muted)} .ok{color:var(--ok)} .warn{color:var(--warn)} .bad{color:var(--bad)}
+.pill{display:inline-block;padding:1px 8px;border-radius:10px;font-size:11.5px;font-family:var(--sans);font-weight:600}
+.pill.g{background:var(--ok-t);color:var(--ok)} .pill.a{background:var(--warn-t);color:var(--warn)} .pill.r{background:var(--bad-t);color:var(--bad)} .pill.n{background:var(--panel2);color:var(--muted)}
+.kpis{display:flex;flex-wrap:wrap;gap:10px}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 14px;min-width:150px}
+.kpi .k{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.kpi .v{font-family:var(--mono);font-size:20px;margin-top:2px}
+.kpi .s{font-size:12px;color:var(--muted);margin-top:2px}
+.kpi.edge-a{border-left:3px solid var(--warn)} .kpi.edge-r{border-left:3px solid var(--bad)} .kpi.edge-g{border-left:3px solid var(--ok)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid var(--line);padding-top:8px}
+.mono{font-family:var(--mono)}
+svg text{font-family:var(--sans)}
+.tag{display:inline-block;font-size:10.5px;padding:0 6px;border-radius:8px;border:1px solid var(--line);color:var(--muted);margin-left:4px;font-family:var(--sans)}
+.tag.int{border-color:var(--warn);color:var(--warn)}
+.tag.ice{border-color:var(--link);color:var(--link)}
+.field{display:flex;align-items:center;gap:8px;margin:6px 0}
+.inp{background:var(--panel2);border:1px solid var(--line);border-radius:6px;padding:5px 10px;font-size:13px;color:var(--ink);min-width:120px}
+.inp.mono{font-family:var(--mono)}
+.chip{display:inline-block;font-size:12px;padding:3px 9px;border:1px solid var(--line);border-radius:12px;margin:2px;color:var(--muted)}
+.chip.on{border-color:var(--amber);color:var(--ink);background:var(--amber-t)}
+.cal{display:grid;grid-template-columns:repeat(7,30px);gap:3px;font-size:11.5px;text-align:center}
+.cal span{padding:4px 0;border-radius:4px;color:var(--faint)}
+.cal span.h{color:var(--ink);background:var(--panel2)} .cal span.s{background:var(--amber);color:var(--onacc);font-weight:700} .cal span.w{color:var(--muted);font-weight:600}
+.sql{font-family:var(--mono);font-size:12.5px;background:var(--bg2);border:1px dashed var(--line);border-radius:6px;padding:8px 10px;color:var(--muted);white-space:pre-wrap}
+.words{font-size:13px;line-height:1.55}
+.big{font-family:var(--mono);font-size:20px}
+.x{color:var(--faint);padding:0 4px}
+.scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;align-items:start}
+.scene{border:1px dashed var(--line);border-radius:10px;padding:10px;background:var(--bg2);min-width:0}
+.scene>.lbl{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin:0 0 8px}
+.scene>.lbl b{color:var(--amber);font-weight:700;margin-right:6px}
+.mini{display:flex;gap:10px;align-items:center;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);font-size:12.5px;margin-bottom:10px;flex-wrap:wrap}
+.mini .brand{font-size:12px}
+.mini .cmd{height:26px;font-size:12px;flex:1 1 160px;max-width:340px}
+.mini .menus{font-size:12px}
+.signin{max-width:380px;margin:6px auto 4px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px}
+.signin .logo{text-align:center;font-weight:700;letter-spacing:.14em;color:var(--amber);font-size:18px;margin-bottom:2px}
+.signin .tag2{text-align:center;color:var(--muted);font-size:12px;margin-bottom:14px}
+.signin label{display:block;font-size:12px;color:var(--muted);margin:8px 0 3px}
+.signin .inp{display:block;width:100%}
+.signin .btn{display:block;text-align:center;margin-top:12px;padding:8px}
+.msg{border:1px solid var(--line);border-left:4px solid var(--warn);background:var(--warn-t);border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.5}
+.msg.calm{border-left-color:var(--link);background:var(--hl)}
+.msg.okm{border-left-color:var(--ok);background:var(--ok-t)}
+.msg h4{margin:0 0 3px;font-size:13.5px}
+.msg .acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:8px}
+.ref{font-family:var(--mono);font-size:11px;color:var(--faint)}
+.ring{display:inline-flex;align-items:center;justify-content:center;width:46px;height:46px;border-radius:50%;flex:0 0 46px;
+  background:conic-gradient(var(--warn) 0 62%,var(--line) 62% 100%);font-family:var(--mono);font-size:12px;font-weight:700}
+.ring span{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:var(--panel)}
+.row{display:flex;gap:10px;align-items:flex-start}
+.chk{font-size:12.5px;color:var(--ink)} .chk b{color:var(--amber)}
+.dim{opacity:1}
+.ghost{border:1px dashed var(--line);border-radius:8px;padding:10px;color:var(--muted);font-size:12.5px}
+.gauge{margin:8px 0 12px}
+.gauge .t{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;flex-wrap:wrap}
+.gauge .t b{font-weight:600}
+.gauge .track{position:relative;height:12px;border-radius:6px;background:var(--panel2);border:1px solid var(--line);margin-top:4px;overflow:visible}
+.gauge .fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px}
+.gauge .mk{position:absolute;top:-4px;bottom:-4px;width:2px}
+.gauge .mk.w{background:var(--warn)} .gauge .mk.r{background:var(--bad)}
+.gauge .s{font-size:11.5px;color:var(--muted);margin-top:3px}
+.sw{display:inline-flex;align-items:center;gap:8px;font-size:12.5px}
+.sw i{display:inline-block;width:34px;height:18px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);position:relative}
+.sw i::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:var(--muted)}
+.sw.on i{background:var(--amber-t);border-color:var(--amber)} .sw.on i::after{left:18px;background:var(--amber)}
+.wrap{overflow-x:auto}
+.banner{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;padding:6px 12px;border-radius:8px;border:1px solid var(--warn);background:var(--warn-t);font-size:12.5px;margin-bottom:10px}
+.banner .dot{width:9px;height:9px;border-radius:50%;background:var(--warn);display:inline-block}
+.tray{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:8px 10px;margin-bottom:10px;font-size:12.5px}
+.tray .it{display:flex;gap:10px;align-items:center;padding:5px 0;border-bottom:1px solid var(--line2);flex-wrap:wrap}
+.tray .it:last-child{border-bottom:0}
+.tray .it .w{flex:1 1 200px}
+.prog{display:inline-block;width:80px;height:6px;border-radius:3px;background:var(--panel2);position:relative;overflow:hidden;vertical-align:middle}
+.prog::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--p,40%);background:var(--warn)}
+.light3{display:inline-flex;gap:4px;align-items:center;padding:3px 9px;border:1px solid var(--line);border-radius:12px;font-size:12px}
+.light3 .d{width:9px;height:9px;border-radius:50%;background:var(--line)}
+.light3 .d.g{background:var(--ok)} .light3 .d.a{background:var(--warn)} .light3 .d.r{background:var(--bad)}
+.hg{color:var(--warn);font-size:11.5px;margin-left:6px;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tile{border:1px solid var(--line);border-radius:8px;padding:8px 10px;background:var(--panel2)}
+.tile .k{font-size:11.5px;color:var(--muted)} .tile .v{font-family:var(--mono);font-size:18px;margin-top:2px}
+.tile.a{border-left:3px solid var(--warn)} .tile.r{border-left:3px solid var(--bad)} .tile.g{border-left:3px solid var(--ok)}
+.spark{display:block;width:100%;height:26px;margin-top:4px}
+.why{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.why .card h3{color:var(--amber)}
+.why ul{margin:0;padding-left:18px;font-size:12.5px;line-height:1.55}
+@media (max-width:900px){
+  .scenes,.why{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:480px){
+  .page{padding:12px 8px 20px}
+  .menus{display:none}
+  .tiles{grid-template-columns:minmax(0,1fr)}
+  .intro h1{font-size:17px}
+  .rec,.alt{margin-left:0;margin-top:4px}
+}
+
+
+.mono{font-family:var(--mono)}
+.note{font-size:12px;color:var(--muted);line-height:1.5}
+footer{font-size:12px;color:var(--faint);line-height:1.5}
+.menus span.on{box-shadow:inset 0 -2px 0 var(--amber)}
+.mm{position:relative;margin-top:-4px;border:1px solid var(--line);border-top:2px solid var(--amber);border-radius:0 0 12px 12px;background:var(--panel);padding:12px 14px 12px;box-shadow:0 10px 30px rgba(0,0,0,.30)}
+.mmtop{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-bottom:10px}
+.mmtop .ttl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted)}
+.srch{flex:1 1 220px;max-width:360px;height:30px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid var(--line);border-radius:15px;background:var(--bg2);color:var(--faint);font-size:12.5px}
+.srch b{color:var(--ink);font-weight:500}
+.srch .k{margin-left:auto;font-family:var(--mono);font-size:10.5px;border:1px solid var(--line);border-radius:4px;padding:0 4px;color:var(--faint)}
+.adm{margin-left:auto;font-size:12.5px}
+.cols{display:grid;gap:14px}
+.col{min-width:0}
+.colh{display:flex;align-items:baseline;gap:8px;padding:0 6px 6px;border-bottom:1px solid var(--line2);margin-bottom:4px}
+.colh b{font-size:13.5px} .colh .w{font-family:var(--mono);font-size:11px;color:var(--amber);border:1px solid var(--amber);border-radius:8px;padding:0 6px}
+.colh .s{margin-left:auto;font-size:11px;color:var(--ok)}
+.it{display:flex;gap:9px;align-items:flex-start;padding:6px;border-radius:8px}
+.it:hover,.it.hov{background:var(--hl)}
+.ic{flex:0 0 26px;height:26px;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:700;color:#fff}
+.c1{background:#3b6fd8}.c2{background:#2f9e74}.c3{background:#b0731e}.c4{background:#8a55c9}.c5{background:#c2465a}.c6{background:#5c6b85}
+.it .lb{display:block;font-weight:600;font-size:13px;line-height:1.25}
+.it .ds{display:block;font-size:11.5px;color:var(--muted);line-height:1.35}
+.it .cm{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--amber);white-space:nowrap;padding-left:6px}
+.it .tx{min-width:0;flex:1 1 auto}
+.offrow2{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin-top:10px;padding-top:9px;border-top:1px dashed var(--line);font-size:12px;color:var(--faint)}
+.offc{border:1px dashed var(--line);border-radius:12px;padding:2px 9px;color:var(--faint)} .offc i{font-style:normal;font-family:var(--mono);font-size:10.5px;margin-left:5px}
+.mark{background:var(--emph);color:var(--ink);border-radius:3px;padding:0 1px}
+.phone{width:390px;max-width:100%;margin:0 auto;border:1px solid var(--line);border-radius:22px;background:var(--bg);padding:10px 10px 14px;box-shadow:0 8px 30px rgba(0,0,0,.30)}
+.pbar{display:flex;align-items:center;gap:8px;padding:4px 4px 8px;border-bottom:1px solid var(--line2)}
+.pbar .ham{font-size:18px;color:var(--ink)} .pbar .brand{font-size:12px}
+.pbar .cmd{height:26px;font-size:11.5px;flex:1 1 auto;max-width:none;padding:0 10px}
+.dr{margin-top:8px;font-size:14px}
+.dr .row1{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 8px;border-bottom:1px solid var(--line2)}
+.dr .row1.open{color:var(--amber);font-weight:700}
+.dr .row2{display:flex;align-items:center;gap:10px;min-height:44px;padding:0 10px 0 22px;border-bottom:1px solid var(--line2);font-size:13.5px}
+.dr .row2 .cm{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--amber)}
+.dr .row2.sub{background:var(--panel)} .dr .row2.sub2{background:var(--panel);padding-left:36px}
+.chev{color:var(--muted);font-size:12px}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+.lst{border-right:1px solid var(--line2);padding-right:8px}
+.eng{display:flex;align-items:center;gap:8px;padding:7px 8px;border-radius:8px;font-size:13px}
+.eng.sel{background:var(--hl);box-shadow:inset 3px 0 0 var(--amber)}
+.eng .w{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--amber)}
+.eng.off{color:var(--faint)} .eng.off .w{color:var(--faint)}
+.eng .n{font-size:11px;color:var(--muted)}
+.fam2{font-size:10.5px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);padding:8px 8px 3px}
+.gh{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--amber);padding:0 6px 6px}
+.sub{font-size:11px;color:var(--muted);font-weight:600;padding:6px 6px 2px;display:flex;gap:6px;align-items:baseline}
+.sub .w{font-family:var(--mono);color:var(--amber);font-weight:500}
+.hs{display:flex;gap:10px;align-items:center;height:44px;padding:0 16px;border:1px solid var(--amber);border-radius:22px;background:var(--panel);font-size:14.5px;color:var(--faint);max-width:760px}
+.hs .k{margin-left:auto;font-family:var(--mono);font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px}
+.mu{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.mu .l{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:var(--muted);margin-right:4px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 12px;border-radius:16px;border:1px solid var(--line);background:var(--panel2);font-size:13px;color:var(--ink);white-space:nowrap}
+.chip .ic{flex:0 0 20px;height:20px;font-size:10px;border-radius:5px}
+.htiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.ht{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.ht.sel{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber)}
+.ht.int{border-style:dashed}
+.ht .t{display:flex;align-items:center;gap:8px} .ht .t b{font-size:14.5px}
+.ht .ic{flex:0 0 30px;height:30px;font-size:12px}
+.ht .d{font-size:12.5px;color:var(--muted);line-height:1.4}
+.ht .c{margin-top:auto;font-size:11.5px;color:var(--faint);display:flex;justify-content:space-between;gap:6px}
+.crumbs{font-size:12.5px;color:var(--muted)}
+.grp{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
+.grp h3{margin:0 0 6px;font-size:13px;color:var(--amber);text-transform:uppercase;letter-spacing:.07em}
+.grp h3 span{color:var(--muted);text-transform:none;letter-spacing:0;font-weight:400;font-size:12px;margin-left:6px}
+.pr{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline;padding:8px 0;border-top:1px solid var(--line2)}
+.grp h3+.pr{border-top:0}
+.pr .g{font-weight:600;font-size:13.5px}
+.pr .d{flex:1 1 100%;font-size:12px;color:var(--muted);line-height:1.4}
+.pr .tut{font-size:12.5px} .pr .dot{color:var(--faint)}
+.pr .pg{margin-left:auto;font-size:11px;color:var(--faint);font-family:var(--mono)}
+.pr.off .g,.pr.off .tut,.pr.off .d{color:var(--faint)}
+.offp{display:inline-block;font-size:11px;padding:1px 8px;border-radius:10px;border:1px dashed var(--line);color:var(--faint)}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;align-items:start}
+.rail{display:flex;flex-direction:column;gap:2px;min-width:0}
+.rl{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:8px;font-size:13.5px}
+.rl .n{margin-left:auto;font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+.rl.sel{background:var(--hl);box-shadow:inset 3px 0 0 var(--amber);font-weight:600}
+.rl .ic{flex:0 0 22px;height:22px;font-size:10px;border-radius:6px}
+.rl.int{color:var(--muted);border-top:1px dashed var(--line);margin-top:6px;padding-top:10px}
+.hb{display:grid;grid-template-columns:250px minmax(0,1fr);gap:14px;align-items:start}
+.hs.sh{font-size:12.5px;height:34px;padding:0 12px;border-radius:17px;max-width:520px;border-color:var(--line)}
+@media (max-width:1100px){.htiles{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.two,.grid2,.hb{grid-template-columns:minmax(0,1fr)!important}.lst{border-right:0;padding-right:0}}
+@media (max-width:480px){.htiles{grid-template-columns:minmax(0,1fr)!important}.cols{grid-template-columns:minmax(0,1fr)!important}.adm{margin-left:0}.it .cm{display:none}.mu{flex-wrap:nowrap;overflow-x:auto}}
+</style>
+</head>
+<body>
+<div class="page">
+<section class="intro"><h1>Help centre: option B, a rail of sections<span class="alt">alternative</span></h1><p>The same structure as a documentation site: a left rail with Help home, the eight sections and their page counts (Internal at its foot for administrators); the chosen section's pages on the right, grouped, every guide beside its tutorial, a search of that section only, an engine not running here greyed. Help home is the search box, the most-used row and the eight sections as small cards.</p></section>
+<div class="scenes"><div class="scene" style="grid-column:1/-1"><p class="lbl"><b>1</b>Help, the main page (an administrator)</p><div class="bar"><span class="brand">DRISHTI<i>Risk</i></span><div class="cmd">HELP &lt;GO&gt;</div><div class="menus"><span class="">Views</span><span class="">Engines ▾</span><span class="">BI</span><span class="">Build</span><span class="">Admin</span><span class="on">Help</span></div></div><div class="hb" style="padding-top:12px"><div class="rail"><div class="rl sel"><span class="ic c1">⌂</span>Help home</div><div class="rl"><span class="ic c1">GS</span>Get started<span class="n">4</span></div><div class="rl"><span class="ic c5">RM</span>Risk measures<span class="n">9</span></div><div class="rl"><span class="ic c3">BI</span>Analytics and BI<span class="n">6</span></div><div class="rl"><span class="ic c2">DA</span>Data<span class="n">8</span></div><div class="rl"><span class="ic c4">BU</span>Build<span class="n">6</span></div><div class="rl"><span class="ic c6">OP</span>Operate<span class="n">10</span></div><div class="rl"><span class="ic c6">RF</span>Reference<span class="n">7</span></div><div class="rl"><span class="ic c2">KN</span>Knowledge<span class="n">9</span></div><div class="rl int"><span class="ic c6">IN</span>Internal<span class="n">1</span></div></div><div style="display:flex;flex-direction:column;gap:12px;min-width:0"><div class="hs">⌕ Search all 60 pages of help…<span class="k">F1</span></div><div class="mu"><span class="l">Most used</span><span class="chip"><span class="ic c1">UG</span>User guide</span><span class="chip"><span class="ic c5">VA</span>VaR guide</span><span class="chip"><span class="ic c1">TU</span>Tutorials</span><span class="chip"><span class="ic c3">WN</span>What's new</span></div><div class="grid2"><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c1" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">GS</span><b>Get started</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">4</span></div><div class="note">Install, the first tour, sharing, and the tutorials</div></div><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c5" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">RM</span><b>Risk measures</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">9</span></div><div class="note">VaR, regulatory VaR, exposure, FRTB-SA and SIMM: a guide and a tutorial each</div></div><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c3" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">BI</span><b>Analytics and BI</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">6</span></div><div class="note">Rupaka BI and its languages, groupings and analytics, funds and ETFs</div></div><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c2" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">DA</span><b>Data</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">8</span></div><div class="note">Connectors, loads and lakes, external data, the in-memory lake</div></div><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c4" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">BU</span><b>Build</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">6</span></div><div class="note">Packs, Sutras, write-back, connectors, views in any web page</div></div><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c6" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">OP</span><b>Operate</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">10</span></div><div class="note">Configuration, editions, lenses, clusters, deploy, users, AI, troubleshooting</div></div><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c6" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">RF</span><b>Reference</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">7</span></div><div class="note">API, command line, tools, the Rachana and ViewModel references, release notes</div></div><div class="grp" style="padding:8px 12px"><div style="display:flex;gap:8px;align-items:center"><span class="ic c2" style="flex:0 0 22px;height:22px;font-size:10px;border-radius:6px">KN</span><b>Knowledge</b><span class="mono" style="margin-left:auto;font-size:11px;color:var(--faint)">9</span></div><div class="note">What the words of a bank's data mean: eight domains and the glossary</div></div></div></div></div></div><div class="scene" style="grid-column:1/-1"><p class="lbl"><b>2</b>Risk measures chosen in the rail</p><div class="bar"><span class="brand">DRISHTI<i>Risk</i></span><div class="cmd">HELP RISK &lt;GO&gt;</div><div class="menus"><span class="">Views</span><span class="">Engines ▾</span><span class="">BI</span><span class="">Build</span><span class="">Admin</span><span class="on">Help</span></div></div><div class="hb" style="padding-top:12px"><div class="rail"><div class="rl"><span class="ic c1">⌂</span>Help home</div><div class="rl"><span class="ic c1">GS</span>Get started<span class="n">4</span></div><div class="rl sel"><span class="ic c5">RM</span>Risk measures<span class="n">9</span></div><div class="rl"><span class="ic c3">BI</span>Analytics and BI<span class="n">6</span></div><div class="rl"><span class="ic c2">DA</span>Data<span class="n">8</span></div><div class="rl"><span class="ic c4">BU</span>Build<span class="n">6</span></div><div class="rl"><span class="ic c6">OP</span>Operate<span class="n">10</span></div><div class="rl"><span class="ic c6">RF</span>Reference<span class="n">7</span></div><div class="rl"><span class="ic c2">KN</span>Knowledge<span class="n">9</span></div><div class="rl int"><span class="ic c6">IN</span>Internal<span class="n">1</span></div></div><div style="display:flex;flex-direction:column;gap:10px;min-width:0"><div class="head"><h2>Risk measures</h2><span class="meta">9 pages · each guide beside its tutorial · this server runs VaR, Exposure and FRTB-SA; SIMM is off</span></div><div class="hs sh">⌕ Search Risk measures…<span class="k">only this section · <a>all of Help</a></span></div><div class="grid2"><div class="grp"><h3>Value at risk<span class="mono">VAR</span></h3><div class="pr"><a class="g">VaR guide</a><span class="dot">·</span><a class="tut">VaR tutorial: from the bank to a trade</a><span class="pg">guide · tutorial</span><span class="d">VaR of any scope from scenario P&amp;L: methods, hierarchies, stressed and 10-day VaR, why it moved, the Playground</span></div><div class="pr"><a class="g">Regulatory VaR reporting: Canada and the US</a><span class="dot">·</span><span class="tut muted">its tutorial: the VaR tutorial's regulatory steps</span><span class="pg">guide</span><span class="d">The reports to the cell, backtesting and the traffic light, period statistics, signed runs</span></div></div><div class="grp"><h3>Counterparty<span class="mono">EXP · SIMM</span></h3><div class="pr"><a class="g">Exposure guide</a><span class="dot">·</span><a class="tut">Exposure tutorial: from the bank to a trade</a><span class="pg">guide · tutorial</span><span class="d">EE, PFE and EPE of any counterparty or netting set, the pre-deal check</span></div><div class="pr off"><span class="g">SIMM guide</span><span class="dot">·</span><span class="tut">SIMM tutorial: from the hand-built examples to a netting set</span><span class="offp">not running on this server</span><span class="d">ISDA SIMM initial margin per netting set, against the counterparty's call. Greyed for administrators; left out for everyone else and from search.</span></div></div><div class="grp"><h3>Capital<span class="mono">FRSA</span></h3><div class="pr"><a class="g">FRTB-SA guide</a><span class="dot">·</span><a class="tut">FRTB-SA tutorial: from the hand-built cases to a desk</a><span class="pg">guide · tutorial</span><span class="d">Standardised market-risk capital: sensitivities, curvature, default risk, every method choice</span></div></div></div></div></div></div><div class="scene"><p class="lbl"><b>3</b>Data chosen: one click from any section to any other</p><div class="hb" style="grid-template-columns:200px minmax(0,1fr)"><div class="rail"><div class="rl"><span class="ic c1">⌂</span>Help home</div><div class="rl"><span class="ic c1">GS</span>Get started<span class="n">4</span></div><div class="rl"><span class="ic c5">RM</span>Risk measures<span class="n">9</span></div><div class="rl"><span class="ic c3">BI</span>Analytics and BI<span class="n">6</span></div><div class="rl sel"><span class="ic c2">DA</span>Data<span class="n">8</span></div><div class="rl"><span class="ic c4">BU</span>Build<span class="n">6</span></div><div class="rl"><span class="ic c6">OP</span>Operate<span class="n">10</span></div><div class="rl"><span class="ic c6">RF</span>Reference<span class="n">7</span></div><div class="rl"><span class="ic c2">KN</span>Knowledge<span class="n">9</span></div><div class="rl int"><span class="ic c6">IN</span>Internal<span class="n">1</span></div></div><div class="grp"><h3>Data<span>8 pages</span></h3><div class="pr"><a class="g">Connectors</a></div><div class="pr"><a class="g">Connector files and Admin → Connectors</a></div><div class="pr"><a class="g">Data guide: loads, formats, lakes, external data, schema to pack, the Data view</a></div><div class="pr"><a class="g">External data</a></div><div class="pr"><a class="g">In-memory lake: data that never touches a disk</a></div><div class="pr"><a class="g">In-memory lake tutorial: news held in memory only</a></div><div class="pr"><a class="g">TLS and proxy</a></div><div class="pr"><a class="g">Test data samples, field by field</a></div></div></div></div><div class="scene"><p class="lbl"><b>4</b>Phone, 390 px: the rail becomes a section picker</p><div class="phone"><div class="pbar"><span class="ham">☰</span><span class="brand">DRISHTI</span><div class="cmd">HELP RISK &lt;GO&gt;</div></div><div style="display:flex;flex-direction:column;gap:10px;margin-top:10px"><div class="pick" style="display:flex;justify-content:space-between;min-height:40px;align-items:center"><span><b>Section</b>Risk measures · 9</span><span class="chev">▾</span></div><div class="hs" style="height:40px;font-size:13.5px">⌕ Search Risk measures…</div><div class="grp"><h3>Value at risk<span class="mono">VAR</span></h3><div class="pr"><a class="g">VaR guide</a><span class="dot">·</span><a class="tut">VaR tutorial: from the bank to a trade</a><span class="pg">guide · tutorial</span><span class="d">VaR of any scope from scenario P&amp;L: methods, hierarchies, stressed and 10-day VaR, why it moved, the Playground</span></div><div class="pr"><a class="g">Regulatory VaR reporting: Canada and the US</a><span class="dot">·</span><span class="tut muted">its tutorial: the VaR tutorial's regulatory steps</span><span class="pg">guide</span><span class="d">The reports to the cell, backtesting and the traffic light, period statistics, signed runs</span></div></div><div class="grp"><h3>Counterparty<span class="mono">EXP · SIMM</span></h3><div class="pr"><a class="g">Exposure guide</a><span class="dot">·</span><a class="tut">Exposure tutorial: from the bank to a trade</a><span class="pg">guide · tutorial</span><span class="d">EE, PFE and EPE of any counterparty or netting set, the pre-deal check</span></div><div class="pr off"><span class="g">SIMM guide</span><span class="dot">·</span><span class="tut">SIMM tutorial: from the hand-built examples to a netting set</span><span class="offp">not running on this server</span><span class="d">ISDA SIMM initial margin per netting set, against the counterparty's call. Greyed for administrators; left out for everyone else and from search.</span></div></div><div class="grp"><h3>Capital<span class="mono">FRSA</span></h3><div class="pr"><a class="g">FRTB-SA guide</a><span class="dot">·</span><a class="tut">FRTB-SA tutorial: from the hand-built cases to a desk</a><span class="pg">guide · tutorial</span><span class="d">Standardised market-risk capital: sensitivities, curvature, default risk, every method choice</span></div></div></div></div></div></div>
+<div class="why"><div class="card"><h3>How it feels</h3><ul><li>A documentation site: the map always on the left.</li><li>One click from any section to any other.</li><li>Dense on a large screen.</li></ul></div><div class="card"><h3>Why choose it</h3><ul><li>Fastest for people who move around Help a lot (developers, administrators).</li><li>The rail stays put while reading a guide.</li></ul></div><div class="card"><h3>Against it</h3><ul><li>Less of a front door: the eight sections are listed twice on the home.</li><li>On the phone the rail folds into a picker (one more control).</li><li>A guide page already has its contents column; a rail beside it makes three columns.</li></ul></div></div>
+<footer>Mock-up. Design, not built (2.9.11.a). The page titles are those of drishti-console/config/help.yaml today, grouped as in option A. Open with #light for the light theme.</footer>
+</div>
+</body>
+</html>

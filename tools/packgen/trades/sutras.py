@@ -294,6 +294,16 @@ FRAGMENT_DOCS = {
     "payments": ("The netted payment ladder (cash events by date, paid below the line, received above) and the same payments by "
                  "month, both on the right. Use it on any deal screen whose trade carries EVENTS with amounts and dates.", ""),
 }
+# each shared fragment's tier on a phone (docs/architecture/MOBILE_DISPLAY.md), written into its doc:
+PHONE = {"deal-ticket": "must", "legs": "{ tier: glance, tab: 0 }", "flow-schedule": "{ tier: glance, rows: 5 }", "events": "more",
+         "payments": "more", "payments-metrics": "must", "trade-table": "{ tier: glance, rows: 5 }"}
+PHONE_NOTE = "  # on a phone (docs/architecture/MOBILE_DISPLAY.md): a use or a Sutra's phone: overrides it"
+
+
+def _phone(name: str) -> list[str]:
+    return [PHONE_NOTE, f"  phone: {PHONE[name]}"] if name in PHONE else []
+
+
 FOOTER = ["  - { use: data-provenance@1 }", "  - { use: risk-links@1 }", "  - { use: linked-entities@1 }"]   # the deal-footer: the kit's provenance, the Risk links (P&L vector, VaR, exposure), the linked entities
 
 
@@ -325,7 +335,7 @@ def blocks() -> dict[str, str]:
             lines.append("params: { " + ", ".join(f"{k}: {v}" for k, v in params.items()) + " }")
         with_ = (", with: { " + ", ".join(f"{k}: {v}" for k, v in example.items()) + " }") if example else ""
         lines += ["doc:", f"  summary: {q(desc)}", "  description: >-", *["    " + ln for ln in _wrap(about)],
-                  "  params:" if docs else "  params: {}", *docs, "  emits: []", "  expects: []", "  examples:",
+                  "  params:" if docs else "  params: {}", *docs, "  emits: []", "  expects: []", *_phone(name), "  examples:",
                   f"    - {{ use: {name}@1{with_} }}", "  since: \"2.7.0\""]
         lines += ["panels:"] + cut[name]
         out[name] = "\n".join(lines) + "\n"
@@ -467,6 +477,7 @@ def page_fragments() -> dict[str, str]:
         "  params: {}",
         "  emits: []",
         "  expects: []",
+        *_phone("payments-metrics"),
         "  examples:",
         "    - { use: payments-metrics@1 }",
         "  since: \"2.7.0\"",
@@ -484,7 +495,7 @@ def page_fragments() -> dict[str, str]:
         *["    " + ln for ln in _wrap(
             "A list of trades (a derived page's TRADES, one row a member trade) as a table whose columns are a parameter: a list "
             "of columns as a table panel writes them, each a label and a bind with an optional fmt, total and tone. Rows may be "
-            "filtered by a condition over each row (@), typically a control's value (ctl.status); the Pivot tab groups the "
+            "filtered by a condition over each row (@), typically a control's value (ctl.status); Pivot (the pivot screen) groups the "
             "notional by product type and source system, filtered by currency, so the rows carry PRODUCT_TYPE, SOURCE_SYSTEM, "
             "NOTIONAL and CURRENCY. Use it for any list of the trading pack's trades.")],
         "  params:",
@@ -497,6 +508,7 @@ def page_fragments() -> dict[str, str]:
         "    columns: { type: columns, default: [], meaning: \"The columns, in order, each { label, bind, fmt, total, tone } as a table panel writes them\" }",
         "  emits: []",
         "  expects: []",
+        *_phone("trade-table"),
         "  examples:",
         "    - { use: trade-table@1, with: { code: TRD, key: F2, columns: [ { label: Trade, bind: \"link(@.TRADE_ID, 'trade')\" }, "
         "{ label: Notional, bind: \"@.NOTIONAL\", fmt: amount0, total: true } ] } }",

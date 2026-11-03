@@ -78,18 +78,14 @@ public final class PivotCore {
     private volatile Admission admission;
     private volatile Functions.Resolver resolver;
     private final Map<String, Map<String, Object>> provenance;
+    /** The provenance ids in the order they were given: the oldest leave first beyond {@code provenanceKept}. */
+    private final java.util.concurrent.ConcurrentLinkedDeque<String> provenanceOrder = new java.util.concurrent.ConcurrentLinkedDeque<>();
 
     public PivotCore(List<PivotProvider> providers, StateCache cache, Settings settings) {
         this.providers = List.copyOf(providers);
         this.cache = cache == null ? StateCache.none() : cache;
         this.settings = settings == null ? Settings.defaults() : settings;
-        int keep = Math.max(10, this.settings.provenanceKept());
-        this.provenance = java.util.Collections.synchronizedMap(new LinkedHashMap<>(64, 0.75f, true) {
-            @Override
-            protected boolean removeEldestEntry(Map.Entry<String, Map<String, Object>> e) {
-                return size() > keep;
-            }
-        });
+        this.provenance = new java.util.concurrent.ConcurrentHashMap<>();
     }
 
     public void admission(Admission a) {
@@ -204,10 +200,10 @@ public final class PivotCore {
         final Map<String, String> units = new HashMap<>();
         final AggregationPlan.Money money;
 
-        Computation(Viewer viewer, PivotView view) {
+        Computation(Viewer viewer, PivotView asked) {
             this.viewer = viewer;
-            this.view = view;
-            this.provider = provider(view.source());
+            this.provider = provider(asked.source());
+            this.view = provider.prepare(viewer, asked);             // a document source's paths, grain and once-per-parent figures
             this.catalogue = provider.catalogue(viewer, view.source(), view.date());
             catalogue.fields().forEach(f -> {
                 types.put(f.name(), f.type());
@@ -782,7 +778,16 @@ public final class PivotCore {
         Map<String, Object> kept = new LinkedHashMap<>();
         kept.put("shared", answer.get("provenanceShared"));
         kept.put("cells", answer.get("cells"));
-        provenance.put(String.valueOf(answer.get("provenance")), kept);
+        String id = String.valueOf(answer.get("provenance"));
+        provenance.put(id, kept);
+        provenanceOrder.add(id);
+        int keep = Math.max(10, settings.provenanceKept());
+        while (provenanceOrder.size() > keep) {
+            String old = provenanceOrder.poll();
+            if (old != null) {
+                provenance.remove(old);
+            }
+        }
     }
 
     /** The set of measure kinds of a view's answer (for a column header's mix). */

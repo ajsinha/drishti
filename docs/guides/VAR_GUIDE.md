@@ -3250,6 +3250,41 @@ input table changed by any of it), `VarComputeFirstTest` (the demo figures above
 
 ### 18.9 Choosing the stress window
 
+**In plain words.**
+
+- **What it is.** Stressed VaR asks: *how much could today's portfolio lose on a bad day, if markets behaved as they did in the worst
+  year we know?* The answer depends entirely on **which year** is used: the *stress window*. Regulators (Basel 2.5 stressed VaR, and
+  the FRTB reduced-set stress period) require the bank to use the 12-month period that is **most painful for the portfolio it holds
+  today**, and to show, periodically and with evidence, that the chosen period is still the right one. As the portfolio changes (a
+  desk grows its commodity book, rates exposure flips sign), a different crisis can become the worst one: 2008 for credit, 2022 for
+  rates, 2020 for equities.
+- **What the screen shows.** Today's positions, replayed through every business day since 2007. For **every possible 250-day
+  window** (2007-01-02 to 2007-12-28, then one day later, and so on) it computes the stressed VaR that window would give. The chart
+  is that figure against the window's first day: peaks are the periods that hurt today's portfolio most. The **worst** window and the
+  **current** window (the one the stressed VaR uses now) are marked. The dashed line is today's normal VaR, for scale.
+- **The question it answers.** *Is our current stress window still the worst for what we hold?* If another window gives a stressed
+  VaR more than 5% higher (the threshold is configurable), the screen raises an **alert**. That is the trigger to review the window
+  and possibly change it.
+- **The data it uses.** One input: the **long-history P&L of each hierarchy node** (kind `pnl-history`, `PNLH`). Today's portfolio,
+  revalued by the pricing system under each historical day's market moves, summed to each node (bank, division, desk). It is
+  about 5,000 numbers per node, produced monthly, not per trade. In the demo this history is **synthetic** (see below), so the
+  periods and figures show how the tool works, not real market history.
+- **Where it is useful.**
+  1. **The periodic stress-period review** that market risk and model validation owe the regulator: an evidenced, repeatable
+     analysis instead of a spreadsheet.
+  2. **Early warning:** the alert says when the portfolio has drifted towards a different crisis.
+  3. **Per desk:** each desk can see which crisis hurts *it* most (the **By node** table), even though one window is approved
+     for the whole bank.
+  4. **Governance:** *Freeze and propose* keeps the exact analysis with its inputs, and a second person approves it
+     (maker-checker). The approved window instructs the pricing system's next stress scenario set, and every step is audited.
+- **How to read the example screen** (`SWIN BANK`, 250 days): the worst window starts 2007-11-30 (Bear Stearns into the autumn
+  of 2008) at 249m against the current window's 214m: **+16.8%**, above the 5% threshold, hence the alert. The next candidates
+  (late 2008 to 2010, the 2022 rates shock, the 2011 euro crisis) are all lower than the current window. **Window** switches to
+  125 or 500 days; the node chips (or `SWIN DESK DESK-STRUCT`, `SWIN LE LE-NY LEGAL`) repeat the analysis for one desk or legal
+  entity. A desk's own worst period often differs from the bank's.
+
+**In detail.**
+
 Stressed VaR (section 18.8) values today's portfolio over **one fixed 12-month stress period**. Which period? The rule is the one that is
 worst for **today's** portfolio, reviewed periodically. The **stress window selection** answers it: today's portfolio revalued over a
 long history (2007 to the day before the business date in the demo), every window of 250 consecutive days valued as a stressed VaR, the
@@ -3358,7 +3393,7 @@ ties), `VarStressWindowApiTest` (the analysis against hand-computed windows, the
 candidates apart, today's VaR from the last days, the node table, refusals in words, a role that does not see every node refused,
 freeze and propose with the data version, the proposer refused, another person approves, a second decision refused, the approval named
 beside the current window), `test_stress_data.py` (the committed history: every node above the books, every day since 2007, the stress
-and normal days giving 213,637,794 and 112,041,646, a node the sum of its children), the console's `test_stress_window_routes.py`.
+and normal days giving 213,637,794 and 112,041,646, a node the sum of its children), the console's `test_stress_window_routes.py` and `test_stress_window_browser.py` (the page drawn across its width, with no script error).
 
 ### 18.10 Period statistics
 

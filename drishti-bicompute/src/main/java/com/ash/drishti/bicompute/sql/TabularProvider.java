@@ -111,6 +111,11 @@ public final class TabularProvider implements PivotProvider {
     }
 
     @Override
+    public com.ash.drishti.bicompute.core.PivotView prepare(Viewer v, com.ash.drishti.bicompute.core.PivotView view) {
+        return resolver.open(v, view.source(), view.date()).prepare(view);
+    }
+
+    @Override
     public Partials evaluate(Viewer v, AggregationPlan plan) {
         List<Integer> fed = RowFed.fed(plan);
         if (!fed.isEmpty()) {
@@ -138,7 +143,7 @@ public final class TabularProvider implements PivotProvider {
         long t0 = System.nanoTime();
         TabularSource s = resolver.open(v, plan.source(), plan.date());
         Map<String, String> types = types(s);
-        TabularSource.Relation rel = s.relation(exec);
+        TabularSource.Relation rel = s.relation(exec, plan);
         List<GroupingSetsCompiler.Compiled> stmts = GroupingSetsCompiler.compile(plan, rel, types);
         Map<CellSet, TreeMap<CellKey, Partials.Entry>> out = new LinkedHashMap<>();
         plan.sets().forEach(set -> out.put(set, new TreeMap<>()));
@@ -254,7 +259,7 @@ public final class TabularProvider implements PivotProvider {
     public Rows drill(Viewer v, AggregationPlan plan, CellKey key, int offset, int limit) {
         TabularSource s = resolver.open(v, plan.source(), plan.date());
         Map<String, String> types = types(s);
-        TabularSource.Relation rel = s.relation(exec);
+        TabularSource.Relation rel = s.relation(exec, plan);
         Map<String, String> coords = new LinkedHashMap<>(key.coords());
         GroupingSetsCompiler.Compiled q = GroupingSetsCompiler.drill(plan, rel, types, s.fields(), coords, offset, limit, false);
         GroupingSetsCompiler.Compiled n = GroupingSetsCompiler.drill(plan, rel, types, s.fields(), coords, 0, 0, true);

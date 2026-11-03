@@ -17,7 +17,7 @@
    list and its four zones (Filters, Columns, Rows, Values) on the right; the grid with nested rows opened lazily with + and −, ≈ and exact
    markers, the provenance popover of a cell; the scan-estimate bar above; a chart of the selection below (a non-additive measure is never
    stacked); the Export menu (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). A shell:
-   pivot-core.js (the grid) and pivot.js (the screen) fill it from /api/pivot/...; every figure is the server's. #}
+   pivot-grid.js (the grid) and pivot.js (the screen) fill it from /api/pivot/...; every figure is the server's. #}
 {% extends "base.html" %}
 {% block title %}Pivot{% if source %} · {{ source }}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
@@ -139,4 +139,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-core.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% endblock %}

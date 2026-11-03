@@ -26,3 +26,5 @@ kinds:
 description: news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs
 settings:
   root: mem://news
+  domain: ""          # the tables sit at mem://news/<kind> (the pack's own connector reads <root>/news/<kind> on disk): kept empty, or the
+                      # pack's template would add domain: news and the connector would look under mem://news/news

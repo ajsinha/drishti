@@ -64,3 +64,18 @@ def test_about_on_a_phone(browser, about_console):
         assert page.evaluate("document.documentElement.scrollWidth <= window.innerWidth + 1")
     finally:
         ctx.close()
+
+
+def test_the_hero_lines_share_one_centre_on_a_wide_screen(browser, about_console):
+    """The headline, the product name and the tagline are centred on one line down the page (the headline's own margin once overrode
+    the hero's centring and drew it flush left)."""
+    page = browser.new_page(viewport={"width": 1900, "height": 1000})
+    try:
+        page.goto(about_console + "/about", wait_until="load")
+        centres = page.evaluate("""['.ab-hero h1', '.about-headline', '.about-tag'].filter(s => document.querySelector(s)).map(s => {
+          const r = document.querySelector(s).getBoundingClientRect(); return [s, r.left + r.width / 2]; })""")
+        assert len(centres) >= 2, centres
+        mid = centres[0][1]
+        assert all(abs(c - mid) < 4 for _, c in centres), centres
+    finally:
+        page.close()

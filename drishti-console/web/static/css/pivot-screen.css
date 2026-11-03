@@ -105,6 +105,7 @@
   .pv-main { grid-template-columns: minmax(0, 1fr); }
   .pv-pop { width: auto; left: 8px !important; right: 8px; }
 }
+.pv-sugg { font-size: 12px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 3px 0; overflow-wrap: anywhere; }
 
 /* custom functions, explain and what-if (pivot-functions.js; PIVOT_GUIDE.md) */
 .pf-card { margin-top: 10px; }
