@@ -93,7 +93,9 @@ class PivotApiTest {
     private String numberField(JsonNode catalogue) {
         String money = null;
         for (JsonNode f : catalogue.path("fields")) {
-            if ("number".equals(f.path("type").asText()) && !"dv01".equals(f.path("name").asText())) {
+            // a column of the Data view (a document path field, "path $…", is no column of its rows)
+            if ("number".equals(f.path("type").asText()) && !"dv01".equals(f.path("name").asText()) && !f.path("note").asText().startsWith("path ")
+                    && !f.path("name").asText().startsWith("_") && !f.path("name").asText().contains(".")) {
                 if (!"money".equals(f.path("unit").asText())) {
                     return f.path("name").asText();
                 }

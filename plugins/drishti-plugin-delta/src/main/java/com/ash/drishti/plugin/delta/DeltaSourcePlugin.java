@@ -402,20 +402,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         tables.putIfAbsent(kind, new DeltaTable(engine, lake.table(kind), idColumn, docColumn, dateColumn));
     }
 
-    /** New tables in the domain (a kind loaded after start) are served from the next reindex, without a restart. */
-    private void discoverTables() {
-        if (!discover) {
-            return;
-        }
-        try {
-            for (String kind : lake.tables()) {
-                if (!tables.containsKey(kind)) {
-                    add(kind);                                 // shows in /api/v1/sources and Admin → Health
-                }
-            }
-        } catch (IOException | RuntimeException e) {
-            // the lake is unreachable for now: health says so, and the next reindex tries again
-        }
+    /** New tables in the domain (a kind loaded after start), served without a restart ({@link NewTables}); true when one was found. */
+    private boolean discoverTables() {
+        return discover && NewTables.find(lake, tables.keySet(), this::add);
     }
 
     private List<String> kinds(String configured) throws IOException {
@@ -1396,6 +1385,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         idMaps.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         columnSets.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f"));
+        if (discoverTables()) {              // a table created by the load just signalled (the first into an empty lake): listed now
+            reindex();
+        }
     }
 
     /** One date's day parts, id maps, column sets and documents of this connector go, in memory and its id-map files on disk (2.9.7). */
@@ -1421,6 +1413,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void refreshVersions() {
         latest.synchronous().invalidateAll();
+        if (discoverTables()) {              // a new table in the domain is listed at once, not at the next reindex
+            loaders.execute(this::reindex);
+        }
         if (memoryOnly) {
             loaders.execute(this::reindex);   // a memory table just filled (or evicted): its kind is found and listed now, not at the next sweep
         }

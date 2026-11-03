@@ -15,8 +15,63 @@
 -->
 # Changelog
 
+## 2.9.11.f
+
+- **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;
+  OPERATIONS.md 11.4; TOOLS.md 5.3a; API_GUIDE.md, Data loads).** Put JSON Lines files or archives (`.jsonl`, `.ndjson`, `.json`; plain,
+  `.gz`, `.zst`; `.zip`, `.tar`, `.tar.gz`, `.tgz`) in `<data>/dataload/inbox` with a `<file>.ready` beside each (or one `ready.all`);
+  every `interval` (10 minutes) the owner node takes the whole ready, stable batch at once into `inprocess/<run>/` (a run id is its start
+  time and node, `20261103T150000Z-drishti-main`), skips a file whose SHA-256 was loaded before, routes each file by its `.ready` or the
+  first rule of `config/dataload.yaml`, loads the files of each table with the parallel lake loader (`LakeLoad`) started as a child Java
+  process with its own heap (`loader-heap`), records every step in `ledger/`, moves each file with its marker and a report to
+  `outbox/<day>/<run>/` (or `failed/` with the reason), and announces each pack, kind and business date through `LoadService`, as
+  `POST /api/v1/packs/{pack}/loads` does. Runs never overlap: a cycle due while a run loads is recorded as *skipped: run … still loading
+  (n min)*, and Load now says the same. Crash-safe: a stopped server's run is finished at the next cycle, never loaded twice. One runner
+  per folder (`owner`, plus `inbox.lock` with a heartbeat). Busy protection skips a cycle when the server is short. In a cluster
+  every signal is passed on to the other live members by `loads.LoadForwarding` (the path a person's announcement already took, now one
+  class for both), as the owner node: `node:<id>` with the service role, signed with the cluster key; the receiving `LoadController`
+  takes such a signed node signal as an administrator's. A file of lake rows or loader rows is refused with the reason (`RowForms`): the
+  parallel loader has no reader for those forms.
+- **A data-load signal makes a new table readable at once (the Delta connector).** A connector whose domain had no table when it started
+  (the first load into an empty lake) found the new table only at its next periodic reindex, so the signal's verify said *not found*;
+  the signal's refresh (`purgeCaches`, `refreshVersions`) now looks for new tables (`NewTables`, tested by `NewTablesTest`) and lists one it finds at once. Found by the data
+  inbox's end-to-end check.
+- New module `drishti-dataload` (plain Java: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess`, `Outbox`, `Recovery`,
+  `Cycle`, `DataInbox`); the server's wiring is `server.dataload` (`DataLoadConfiguration`, `DataLoadController`). New engine `dataload`
+  in the catalogue, `config/engines/dataload.yaml` (off as shipped; every key in CONFIGURATION.md), `config/dataload.yaml` (the routing
+  rules; the demo packs' rules commented). New endpoints `GET /api/v1/admin/dataload`, `POST /api/v1/admin/dataload/run` and
+  `POST /api/v1/admin/dataload/retry` (administrators; the `POST`s in the `loads:write` scope). New command `drishti.py dataload
+  status|run|retry`. `LakeLoad.reads(name)` tells whether the loader reads a file name. Two new rules in `ArchitectureRulesTest`
+  (`dataInboxIsPlainJava`, `dataInboxWritesNoTable`). The Admin screen comes after its mock-ups.
+
 ## 2.9.11.a
 
+- **Pivot: a JSON Lines export** (PIVOT_GUIDE.md, Export). The pivot screen and `POST /api/v1/pivot/export` offer `jsonl` beside Excel, CSV and
+  Arrow: one object a cell and measure, and the rows of a cell one object a row, so every export of the console offers the data standard.
+
+- **One Engines menu (mock-up engines-menu/A; USER_GUIDE.md, The top bar).** The Engines menu replaces the VaR and Exposure top-level
+  menus (and the VaR and Exposure entries of Views): a column per compute engine running in the cluster (VaR `VAR`, Exposure `EXP`,
+  FRTB-SA `FRSA`, SIMM `SIMM`), its command word in the column's head, every page one click away with its command on the right. It is
+  drawn only for a role that opens an engine (`opens:` per engine in `drishti-console/config/menus.yaml`: `role:<name>` or
+  `pack:<name>`; administrators open every engine). The same rule, in one place (`core/menus.py` `engine_refused`), drops an engine's
+  command words from the type-ahead for a role that does not open it and refuses them when typed, in words ("VaR is not opened for
+  your role; ask an administrator."), so the bar is Views, Engines, BI, Build, Admin, Help for a risk administrator and
+  Views, BI, Build, Help for a role that opens none. Past four running engines (`search-over`) a search box filters the pages by name,
+  description or command (Enter opens the first); administrators see *Admin → Engines* and, at the foot, the engines running on no
+  server, greyed. On a phone the columns fold into a drawer, one engine open at a time, 44 px rows. Drishti Risk's bar is Views,
+  Engines, BI, Admin, Help; Drishti Trading keeps its subject menus after Engines.
+- **The help centre reorganised (mock-up help-hub/A; USER_GUIDE.md, Help).** The front door of `/help` is a search box, a "most used"
+  row (User guide, VaR guide, Tutorials, What's new) and a tile per section: Get started, Risk measures, Analytics and BI, Data, Build,
+  Operate, Reference and Knowledge, with Internal for administrators. A tile opens its section's page (`/help/section/<id>`): its pages
+  grouped, every guide on one row with its tutorial beside it, a search of that section only (`/help/search?section=<id>`). Help is
+  documentation, not data: a running engine's pages are open to anyone who can open Help, signed out included; an engine that runs
+  nowhere has its pages left out (an administrator sees them greyed). Config-driven: `drishti-console/config/help.yaml` now has `sections:` with `groups:`, a page's `engine:` and `pair:`,
+  `most-used:`, `aliases:` (old section names: a pack guide's `category:`, an edition's `help.categories`, `/help#cat-<id>`) and
+  `documents:` (the section of an unlisted document by folder); every page belongs to exactly one section (a test checks it). Page
+  addresses, retired slugs and F1 are unchanged; the editions' `help.categories` name the new sections.
+- **Menu items for pages a build holds show again with FastAPI 0.142.** A menu item's `route:` requirement read the app's routes by
+  their `path`, which FastAPI 0.142's included routers no longer carry, so the VaR Playground, Backtesting, FRTB-SA and SIMM items were
+  left out; the routers are now walked into.
 - **The in-memory lake is its own module, `drishti-memlake` (IN_MEMORY_LAKE.md section 16; ARCHITECTURE.md §13,
   PACK_DEVELOPER_GUIDE.md §1.1 and §1.3).** Plain Java with no Spring: the `mem://` storage (`ChunkPool`, `MemoryStorage`,
   `MemoryStores`, from `drishti-lakeio` `com.ash.drishti.lakeio.mem`, now `com.ash.drishti.memlake.store`) and the service (`MemoryLake`,
@@ -145,6 +200,14 @@
 
 ## 2.9.11.a — The pivot engine (unreleased, on wip/pivot)
 
+- **Pivots over entity documents (PIVOT_ENGINE.md 6.7; PIVOT_GUIDE.md, Documents).** A pivot field is a Rachana path, parsed by
+  Rachana's own parser: `$.PRODUCT_TYPE`, `$.LEGS[0].CURRENCY`, `$.LEGS[*].NOTIONAL` (one row per leg), `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL`,
+  `size($.LEGS)`. The field list follows the documents' shape (each list a grain of its own) and takes a typed path; a view has one grain,
+  the finest list it uses; a coarser figure counts each parent once (new built-ins `sum_once`, `count_once`, `avg_once`); two separate lists
+  are refused; a filter on a list keeps the parents with any (or, with `~all`, all) elements matching. Three routes, fastest first: a
+  promoted column, a BI dataset table's cached layer, DuckDB JSON over the documents; the cell's provenance names it. An administrator sees
+  the most used typed paths with Promote and Add to dataset (`GET /api/v1/pivot/paths`). The guide's six worked examples and tutorial 33's
+  new step carry the demo lake's real figures and pictures (`tools/docs/shots/t33.py`).
 - **Chart any table: Top N, Others and the split cap by the pivot engine.** The chart asks the engine for a level's top N (`top: {field:
   {n, by}}`) and draws its *Others* member, whose figures come from its own rows; the browser merges no cells any more (its `combine`
   and the extra sum and count of an average are gone).

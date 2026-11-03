@@ -95,14 +95,18 @@ def test_the_glossary_matches_terms_names_and_synonyms_and_no_word_twice():
     assert anchor("SA-CCR") == "term-sa-ccr"
 
 
-def test_knowledge_is_the_first_section_of_the_help_centre(client):
+def test_knowledge_is_a_section_of_the_help_centre_with_every_knowledge_page(client):
+    """Knowledge is one of the eight tiles of the help centre (2.9.11.a, mock-up help-hub/A), its home first, every page of docs/knowledge."""
     catalogue = yaml.safe_load((CONSOLE / "config" / "help.yaml").read_text())
-    first = catalogue["categories"][0]
-    assert first["id"] == "knowledge" and first["guides"][0]["slug"] == "knowledge"
-    assert {g["doc"] for g in first["guides"]} == {"knowledge/README.md"} | {f"knowledge/{p.name}" for p in (DOCS / "knowledge").glob("*.md")
-                                                                              if p.name != "README.md"}
+    sec = next(s for s in catalogue["sections"] if s["id"] == "knowledge")
+    pages = [g for grp in sec["groups"] for g in grp["guides"]]
+    assert pages[0]["slug"] == "knowledge"
+    assert {g["doc"] for g in pages} == {"knowledge/README.md"} | {f"knowledge/{p.name}" for p in (DOCS / "knowledge").glob("*.md")
+                                                                   if p.name != "README.md"}
     index = client.get("/help").text
-    assert index.index('id="cat-knowledge"') < index.index('id="cat-start"')
+    assert 'href="/help/section/knowledge"' in index
+    page = client.get("/help/section/knowledge").text
+    assert page.index('href="/help/knowledge"') < page.index('href="/help/knowledge-market-risk"')
 
 
 def test_every_what_does_this_mean_target_opens_its_section(client):

@@ -89,7 +89,7 @@ home:
     - { title: "A fund: holdings, the index it tracks", cmd: FUND SPY, icon: briefcase }
 
 help:
-  categories: [knowledge, start, use, bi, data, operate]   # the Build category hidden
+  categories: [get-started, risk, analytics, data, operate, reference, knowledge, internal]   # the help sections kept (config/help.yaml): Build hidden
   knowledge: [world-economy, news-and-markets, us-equities, gleif, funds]   # Knowledge pages of these packs (the rest hidden)
   unlisted-slugs: refuse                 # a guide not in the help centre answers 404 (no reaching hidden guides by URL)
 

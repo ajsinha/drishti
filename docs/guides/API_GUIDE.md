@@ -1685,6 +1685,18 @@ that did not come. Everything about it (every field, the idempotency rules, the 
 Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and `data-load-config-reset`. `GET /admin/health` lists
 `dataLate` and is `DEGRADED` while it is not empty.
 
+**The data inbox** (files dropped in `<data>/dataload/inbox` with a `.ready` marker, loaded by the server: [DATA_GUIDE.md section 7](DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load);
+the CLI is `drishti.py dataload`). Administrators; a token needs `loads:write` for the two `POST`s. While the inbox's engine is off on every
+server the paths answer `DRS-1020`. In a cluster the inbox's signals reach the other members through the same
+`POST /packs/{pack}/loads`, signed with the cluster key and made as the owner node (`node:<id>`, the service role), which each member takes
+as an administrator's announcement.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/dataload` | `{on, owner, node, dir, interval, nextCycleAt, running: {startedAt, trigger}, lock: {run, node, pid, since, heartbeat}, waiting: [{file, size, modified, state}], markersWithoutFile, readyAll, failed: [{file, day, run, reason}], ledger: [the newest 20 lines], cycles: [{run, trigger, started, finished, state: done\|skipped\|failed, why, files: [{file, outcome, reason, pack, kind, versions, rows, rejected}], notices, signals}], settings}` |
+| `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
+| `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
+
 ### Administration: node readiness and the drain before a stop
 
 This server as a node of a cluster ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#91-health-endpoints), `CD1` and `CD2`).
@@ -3300,7 +3312,7 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `GET /api/v1/pivot/cells?ref=pivot://owner/name@v/Measure[DIM=V, ...]` | one cell of a saved view by reference: `value`, `found` (false with "not in the view"), `newerVersion` |
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
 | `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |
-| `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
+| `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|jsonl\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
 | `POST /api/v1/pivot/query` with `"exact": true` or `false` beside the view | `distinct`, `median` and `percentile` exact on request at any size, or by their sketches (≈) at any size (by default ≈ above `sketches.approximate-above-rows`; never VaR); a sketched measure carries `kind: sketch`, an id ending in `≈`, `error` (`±1.6% (HyperLogLog, 4,096 registers, one standard error)`) and `exact: false` |
 | `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample: each cell `approximate: true`, `intervals` per measure, "computing" notes for what a sample cannot state; never for VaR or a holistic measure; only when the estimate is over `progressive.after-ms`), then `exact`; `error` with `{error, code}` |
 | `GET /api/v1/pivot/rollups` | `{definitions, built: [{id, source, grain, functions, date, version, refreshedAt, lastRefresh, rows, bytes, partitions}], advice: [{source, grain, functions, asked, averageMs, words}]}` |

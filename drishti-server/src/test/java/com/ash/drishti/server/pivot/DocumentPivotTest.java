@@ -268,6 +268,10 @@ class DocumentPivotTest {
             }
         }
         assertThat(value(a, "*|*", "Legs")).isEqualTo(legs.size());
+        // a top N ranks with a plan of fewer fields: every plan of the view still reads one row per leg
+        Map<String, Map<String, Object>> top = cells(doc, Map.of("source", "trade", "rows", List.of("$.DESK"), "columns", List.of("$.LEGS[*].LEG_TYPE"),
+                "top", Map.of("$.DESK", Map.of("n", 1)), "values", List.of(Map.of("measure", "count()", "as", "Legs"))));
+        assertThat(value(top, "*|*", "Legs")).isEqualTo(legs.size());
     }
 
     @Test

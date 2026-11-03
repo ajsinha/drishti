@@ -78,7 +78,7 @@ as people know it, with what Excel lacks in the places Excel's equivalents would
 | Four zones | Filters, Columns, Rows, Values. Drag a field onto a zone, or select it and press `R`, `C`, `V` or `F`; double-click puts a number into Values and a text into Rows. A value's chip has a function picker (sum, count, avg, min, max, median, count_distinct, var_samp, stddev_samp) |
 | Provenance popover | click a cell: its figure, exact or ≈, the function and how its totals are made, the members counted, the condition (or VaR scope) that selects them, the data version, the filters, what was computed and what came from the cache, its reference; **Rows** lists the members, **Ask the VaR engine** opens the cell's scope in VAR |
 | Chart | a chart of the selected cells (or the top level), linked to the grid: a click on a bar opens that member |
-| Export | what (the pivot, the rows of the selected cell, the definition) and how (Excel, CSV, Arrow) |
+| Export | what (the pivot, the rows of the selected cell, the definition) and how (Excel, CSV, JSON Lines, Arrow) |
 
 Keyboard: arrows move between cells; `→` on a row's first cell opens it, `←` closes it; `Shift+→` opens every level below; `1` to `9`
 opens the whole row axis to that level; `E` expands the selected row by another field; `Enter` lists a cell's rows; `G` charts; `X`
@@ -123,6 +123,182 @@ shows its figure and its currency. To add them, convert in the view:
 
 Every money figure is then in USD (each row converted at its currency's rate before any aggregation; a row in a currency without a rate is
 left out), the measures' unit says USD, and the provenance names the rates and their source. Counts stay counts.
+
+### Documents: paths, lists and grains
+
+An entity of the lake is a **document**: a trade keeps its whole source record (JSON) beside a few promoted columns, and that record holds
+nested parts. A Calypso, Endur or Murex trade of the demo has `LEGS` (a list: each leg has `LEG_ID`, `LEG_TYPE`, `CURRENCY`, `NOTIONAL`, an
+`INDEX` object and a list of `CASH_FLOWS`) and `EVENTS` (a list: each event has `EVENT_TYPE`, `EVENT_DATE`, `AMOUNT`). Every part of it can
+be pivoted.
+
+**A field is a Rachana path**, written as a Sutra binds it and as a BI dataset column's `path:` names it:
+
+| Path | Means | One row per |
+|---|---|---|
+| `$.PRODUCT_TYPE` | a field of the trade | trade |
+| `$.LEGS[0].CURRENCY` | the first leg's currency | trade |
+| `$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME` | the floating leg's index, wherever the leg sits | trade |
+| `size($.LEGS)` | how many legs the trade has | trade |
+| `$.LEGS[*].NOTIONAL` | every leg's notional | **leg** (the `[*]` makes the grain) |
+| `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL` | the fixed legs' notionals | leg |
+| `$.LEGS[*].CASH_FLOWS[*].AMOUNT` | every cash flow of every leg | **cash flow** |
+| `$.EVENTS[*].EVENT_TYPE` | every event's type | **event** |
+
+The field list shows them grouped by what they count: the trade's own fields first, then *Each leg (one row per leg)*, *Each cash flow*,
+*Each event*, each field under its readable name (*Legs › Notional*, *Legs › Index › Name*). Type a path into the field search box and it is
+offered as *Your path*, to drag to a zone like any field. The same paths work in a saved view, on the command line and in the API; the
+answer names each field by its id (`LEGS.NOTIONAL`).
+
+**The rules, so a figure is never counted twice:**
+
+1. **One grain per view: the finest list its rows, columns and values use.** Rows *Desk* and values *Sum of Legs › Notional* aggregate one
+   row per leg.
+2. **A coarser figure in a finer view counts each parent once.** *Sum of Quantity* (a trade field) in a leg view adds each trade's quantity
+   once in each cell, never once per leg: a trade with three legs adds its quantity once.
+3. **Two separate lists are never crossed.** Legs and events of the same trade are independent lists; a view that would put a leg field and
+   an event field on the same rows is refused with the reason (three legs and four events would make twelve rows). Look at them side by side
+   as two views.
+4. **A filter on a list keeps the parents with any element matching.** *Legs › Currency = JPY* on a trade view keeps the trades with a JPY
+   leg; on a leg view it keeps the JPY legs. Add `~all` to the filter's field (`$.LEGS[*].CURRENCY~all`) to keep the trades whose legs
+   **all** match.
+5. **Masks apply per path:** a field hidden for you is not offered at any depth, and the record you read is the one your masks leave.
+
+**How a path is read**, chosen per view, fastest first (the cell's provenance names the route):
+
+| Route | When | What is read |
+|---|---|---|
+| **Promoted column** | the path names a field the connector promotes (`layout.<kind>.columns`) | that typed column |
+| **BI dataset** | every list field the view uses is a column of a published BI dataset table over that list (`source: {kind: trade, each: LEGS}`), and nothing is masked for you | that table's cached layer (Parquet, one row per element) |
+| **Ad hoc** | anything else | each document of the date, by DuckDB's JSON functions; the scan estimate says the cost first, and a kind past `drishti.pivot.stage-max-rows` documents is refused with the cheaper route named |
+
+An administrator sees, under the field list, the paths people typed most on that source, with **Promote** (the connector's page: add the
+field to its `layout.<kind>.columns`) and **Add to dataset** (the BI dataset editor: a `path:` column). Both make the path a column read.
+`GET /api/v1/pivot/paths?source=trade` lists them.
+
+#### Worked examples on the demo lake
+
+Each view below was run on the demo lake (`drishti.py lake demo`, the trades of the three source systems, business date 2026-09-30); the
+figures are the ones the run returned. Each is saved as a view, so it opens with `PIVOT @<you>/<name> <GO>`.
+
+**1. Notional by desk and year: one row per leg.** Rows `$.TT_GROUP` (the desk), columns `$.TRADE_DATE` by year, values the sum of
+`$.LEGS[*].NOTIONAL`. The view reads 20,422 legs of 15,000 trades; the grand total is **6019.12 bn**, DESK-RATES the largest desk at
+**2188.84 bn** (2024: 220.12 bn, 2025: 376.54 bn, 2026: 1592.18 bn). The first row has no desk: the trades whose source sets no `TT_GROUP`
+(1086.30 bn).
+
+![Notional by desk and year: the legs' notional](img/pivot/notional-by-desk-and-year.jpg)
+
+```
+drishti.py pivot run --source trade --rows '$.TT_GROUP' --cols '$.TRADE_DATE:year' --values 'sum($.LEGS[*].NOTIONAL)'
+```
+
+```yaml
+source: trade
+rows: [$.TT_GROUP]
+columns: [$.TRADE_DATE:year]
+values:
+  - {measure: sum($.LEGS[*].NOTIONAL), as: Notional}
+```
+
+**2. How many trades have a JPY leg, by product: one row per trade, a filter on a list.** Rows `$.PRODUCT_TYPE`, value `count()`, filter
+`$.LEGS[*].CURRENCY` in JPY. **1,383** of the 15,000 trades have at least one JPY leg, across 69 product types; the most are FX_ACCUMULATOR (68),
+FIRST_TO_DEFAULT (64), INFL_ASSET_SWAP (55) and FX_BARRIER (51).
+
+![Trades with a JPY leg, by product](img/pivot/trades-with-a-jpy-leg.jpg)
+
+```
+drishti.py pivot run --source trade --rows '$.PRODUCT_TYPE' --values 'count()' --filter '$.LEGS[*].CURRENCY=JPY'
+```
+
+```yaml
+source: trade
+rows: [$.PRODUCT_TYPE]
+filters: {$.LEGS[*].CURRENCY: {in: [JPY]}}
+values:
+  - {measure: count(), as: Trades}
+```
+
+**3. Fixed against floating legs per counterparty: a list field on the columns.** Rows `$.COUNTERPARTY` (the top 8, the other 16 in
+*Others*), columns `$.LEGS[*].LEG_TYPE`, values the count of legs and the sum of their notional. Of 20,422 legs, 9,604 are FIXED
+(2259.03 bn), 6,606 FLOAT (2762.22 bn), 3,358 OPTION (945.21 bn) and 854 PHYSICAL (52.66 bn); CP-NORTHPLAINS has the most legs (2,844).
+
+![Fixed and floating legs per counterparty](img/pivot/fixed-and-floating-legs.jpg)
+
+```
+drishti.py pivot run --source trade --rows '$.COUNTERPARTY' --cols '$.LEGS[*].LEG_TYPE' --top '$.COUNTERPARTY=8' \
+  --values 'count()' --values 'sum($.LEGS[*].NOTIONAL)'
+```
+
+```yaml
+source: trade
+rows: [$.COUNTERPARTY]
+columns: [$.LEGS[*].LEG_TYPE]
+top: {$.COUNTERPARTY: {n: 8}}
+values:
+  - {measure: count(), as: Legs}
+  - {measure: sum($.LEGS[*].NOTIONAL), as: Notional}
+```
+
+**4. Quantity per desk without double counting: a trade figure in a leg view.** Rows `$.TT_GROUP`, filter `$.CURRENCY` in USD (a quantity
+is an amount in its trade's currency; one currency adds up), values the sum of `$.QUANTITY` and the count of `$.LEGS[*].LEG_ID`. The legs
+make the grain (12,230 USD legs), and each trade's quantity is added once: the total, **1,120,878,590,423.65**, is exactly the sum over the
+8,562 USD trades at the trade grain. DESK-COMM: 197,072,225,509.30 over 1,320 legs of 990 trades; DESK-RATES: 172,787,316,965.74 over 882
+legs of 541 trades.
+
+![Quantity once per trade beside the count of legs](img/pivot/quantity-once-per-trade.jpg)
+
+```
+drishti.py pivot run --source trade --rows '$.TT_GROUP' --filter '$.CURRENCY=USD' --values 'sum($.QUANTITY)' --values 'count($.LEGS[*].LEG_ID)'
+```
+
+```yaml
+source: trade
+rows: [$.TT_GROUP]
+filters: {$.CURRENCY: {in: [USD]}}
+values:
+  - {measure: sum($.QUANTITY), as: Quantity}
+  - {measure: count($.LEGS[*].LEG_ID), as: Legs}
+```
+
+**5. Booking events by type and year: one row per event.** Rows `$.EVENTS[*].EVENT_TYPE`, columns `$.EVENTS[*].EVENT_DATE` by year, value
+`count()`: **157,087** events. BOOKED and CONFIRMED have 10,000 each (2024: 2,659, 2025: 3,322, 2026: 4,019); the cash settlements run to
+2059; 1,887 events have no type and no date (*(blank)*).
+
+![Booking events by type and year](img/pivot/booking-events-by-type.jpg)
+
+```
+drishti.py pivot run --source trade --rows '$.EVENTS[*].EVENT_TYPE' --cols '$.EVENTS[*].EVENT_DATE:year' --values 'count()'
+```
+
+```yaml
+source: trade
+rows: [$.EVENTS[*].EVENT_TYPE]
+columns: [$.EVENTS[*].EVENT_DATE:year]
+values:
+  - {measure: count(), as: Events}
+```
+
+**6. VaR beside the notional: two sources, each exact.** VaR is not a sum of trades, so it comes from the VaR source, not from the trade
+documents: rows `DESK`, values `var()` and `es()`. The bank's VaR is **112,041,645.93** (ES 160,143,809.24); DESK-CREDIT
+130,670,864.00 and DESK-RATES 74,633,680.00 add up, with the others, to more than the bank: the diversification. Put it beside example 1 to
+read a desk's VaR against its legs' notional.
+
+![VaR and ES by desk](img/pivot/var-by-desk.jpg)
+
+```
+drishti.py pivot run --source var --rows DESK --values 'var()' --values 'es()'
+```
+
+```yaml
+source: var
+rows: [DESK]
+values:
+  - {measure: var(), as: VaR}
+  - {measure: es(), as: ES}
+```
+
+Two views that would cross lists are refused rather than answered: rows `$.LEGS[*].CURRENCY` and columns `$.EVENTS[*].EVENT_TYPE` answers
+*Legs and Events are separate lists of each trade: a view that crossed them would count every pair … Pick one, or compare them side by side
+as two views.*
 
 ## 4. Measures and how each total is made
 
@@ -215,7 +391,7 @@ grid. ECharts is vendored; nothing comes from a CDN.
 | The underlying rows | the selected cell's member rows as CSV, as you may see them (up to `drishti.pivot.export.rows-max`) |
 | The definition | the view as YAML, no figures |
 
-An xlsx of more rows than `drishti.pivot.export.xlsx-max-rows` is refused with CSV or Arrow offered. Every export is audited (who, the view,
+**JSON Lines** (the data standard) writes one object a cell and measure (`row`, `column`, `coords` by dimension, `measure`, `value` as a number, `exact`, `members`, `kind`), and the rows of a cell one object a row. An xlsx of more rows than `drishti.pivot.export.xlsx-max-rows` is refused with CSV or Arrow offered. Every export is audited (who, the view,
 what, the format, the size), never its values.
 
 ## 11. Saved and shared views, compare
@@ -277,7 +453,7 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's or a cell's provenance |
 | `GET, POST /api/v1/pivot/views`, `GET /views/{owner}/{name}`, `DELETE /views/{name}` | saved views |
 | `POST /api/v1/pivot/promote` | a page table's view as its Sutra's `pivot:` arrangement (an author; `preview: true` shows the next version) |
-| `POST /api/v1/pivot/export` | `{view, what: pivot|rows|definition, format: xlsx|csv|arrow, shape: cells|grid, delimiter, bom, coords}`, streamed |
+| `POST /api/v1/pivot/export` | `{view, what: pivot|rows|definition, format: xlsx|csv|jsonl|arrow, shape: cells|grid, delimiter, bom, coords}`, streamed |
 | `GET /api/v1/pivot/functions`, `GET /functions/{owner}/{name}?version=` | custom functions you may use (section 19) |
 | `POST /api/v1/pivot/functions/test` | a definition and sample rows: the harness and the playground; nothing saved |
 | `POST /api/v1/pivot/functions` | save a new version after its harness passes |

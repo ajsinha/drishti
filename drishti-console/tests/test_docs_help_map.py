@@ -29,11 +29,16 @@ HELP = CONSOLE / "config" / "help.yaml"
 LINK = re.compile(r"\[([^\]]*)\]\(([^)\s]+)\)")
 
 
+def _pages(section: dict) -> list:
+    return [g for grp in section["groups"] for g in grp["guides"]]
+
+
 def _categories() -> list:
     """help.yaml's sections with the pages everyone may see: a page with `roles:` (administrators only, such as the internal competitive
-    analysis) is not in the customer-facing map."""
-    cats = yaml.safe_load(HELP.read_text(encoding="utf-8"))["categories"]
-    return [{**c, "guides": [g for g in c["guides"] if not g.get("roles")]} for c in cats]
+    analysis) is not in the customer-facing map, nor a section with `roles:` (Internal)."""
+    secs = yaml.safe_load(HELP.read_text(encoding="utf-8"))["sections"]
+    out = [{**s, "guides": [g for g in _pages(s) if not g.get("roles")]} for s in secs if not s.get("roles")]
+    return [s for s in out if s["guides"]]
 
 
 def _map_rows() -> list:
@@ -48,10 +53,10 @@ def _map_rows() -> list:
 
 
 def test_every_help_entry_has_a_title_that_parsed_whole():
-    for c in yaml.safe_load(HELP.read_text(encoding="utf-8"))["categories"]:
-        for g in c["guides"]:
+    for s in yaml.safe_load(HELP.read_text(encoding="utf-8"))["sections"]:
+        for g in _pages(s):
             assert isinstance(g.get("title"), str) and g["title"], g
-            assert set(g) <= {"slug", "doc", "title", "icon", "kind", "summary", "packs", "roles"}, f"{g.get('slug')}: unexpected keys {sorted(set(g))} (an unquoted comma in a title?)"
+            assert set(g) <= {"slug", "doc", "title", "icon", "kind", "summary", "packs", "roles", "engine", "pair"}, f"{g.get('slug')}: unexpected keys {sorted(set(g))} (an unquoted comma in a title?)"
 
 
 def test_the_docs_readme_names_the_help_sections_in_order():

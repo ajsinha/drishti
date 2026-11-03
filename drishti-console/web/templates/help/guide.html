@@ -20,7 +20,7 @@
 {% block content %}
 <div class="help-wrap help-guide">
   <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span>
-    <a href="/help#cat-{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
+    <a href="/help/section/{{ category.id }}">{{ category.name }}</a><span class="sep">/</span><span>{{ guide.title }}</span></nav>
   <div class="help-layout">
     <aside class="help-toc" aria-label="On this page">
       <form class="help-search small" action="/help/search" method="get" role="search"><i class="bi bi-search" aria-hidden="true"></i>

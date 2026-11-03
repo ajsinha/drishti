@@ -22,7 +22,7 @@ import re
 import pytest
 from fastapi.testclient import TestClient
 
-from conftest import CONSOLE
+from conftest import CONSOLE, help_pages
 from core.app import create_app
 from core.auth import Identity
 from core.config import load_settings
@@ -83,7 +83,10 @@ def test_without_an_edition_the_console_is_the_full_product(backend, monkeypatch
     links = _menu_links(t)
     for href in TODAY:
         assert href in links, href
-    assert "/var" not in links and "/exposure" not in links and "/lens/risk" not in links
+    assert "/lens/risk" not in links
+    assert "/var" in links and "/exposure" in links and "data-engines-menu" in t       # the Engines menu (2.9.11.a): VaR and Exposure, any product
+    views = t[t.index('<span class="tbar-menu-l">Views</span>'):t.index("data-engines-menu")]
+    assert 'href="/var"' not in views and 'href="/exposure"' not in views             # no longer in Views: one place each
     assert 'placeholder="TRD MX-20000001, CPTY north, TRD PRODUCT_TYPE=FX_QUANTO …  then &lt;GO&gt;"' in t
     assert c.get("/admin/ai").status_code == 200 and c.get("/admin/compute").status_code == 200
     home = c.get("/").text
@@ -121,7 +124,7 @@ def test_the_risk_edition_follows_its_file_on_every_surface(backend, monkeypatch
     tabs = users[users.index('class="adm-tabs"'):]
     assert 'href="/admin/users"' in tabs and 'href="/admin/ai"' not in tabs and 'href="/admin/compute"' not in tabs
     # help: the BI and Build categories hidden, and a guide that is not listed is not reached by its address
-    centre = c.get("/help").text
+    centre = help_pages(c)
     assert 'href="/help/install-and-run"' in centre and 'href="/help/knowledge-market-risk"' in centre
     assert 'href="/help/bi-guide"' not in centre and 'href="/help/pack-developer-guide"' not in centre
     assert 'href="/help/knowledge-economies"' not in centre                           # a Knowledge page of a pack the edition leaves out
@@ -244,7 +247,7 @@ def test_the_world_edition_follows_its_file_on_every_surface(backend, monkeypatc
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
     # help: the packs' Knowledge pages, the BI category kept, Build hidden; the risk Knowledge pages are not part of World
-    centre = c.get("/help").text
+    centre = help_pages(c)
     for slug in ("knowledge-economies", "knowledge-companies-funds-and-etfs", "knowledge-entities-and-ownership", "bi-guide", "external-data"):
         assert f'href="/help/{slug}"' in centre, slug
     for slug in ("knowledge-market-risk", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
@@ -384,7 +387,7 @@ def test_the_market_edition_follows_its_file_on_every_surface(market, monkeypatc
     for typed in ("VAR BANK <GO>", "RUPAKA <GO>", "SMAT T1 <GO>"):
         r = c.get("/go", params={"q": typed}, follow_redirects=False)
         assert r.status_code == 303 and "DRS-4023" in r.headers["location"], typed
-    centre = c.get("/help").text
+    centre = help_pages(c)
     for slug in ("knowledge-market-data", "knowledge-data-and-contracts", "user-guide", "data-samples"):
         assert f'href="/help/{slug}"' in centre, slug
     for slug in ("knowledge-market-risk", "knowledge-economies", "knowledge-counterparty-credit-risk", "pack-developer-guide"):
@@ -559,7 +562,7 @@ def test_the_trading_edition_follows_its_file_on_every_surface(trading, monkeypa
         assert not ed.command_shown(hidden), hidden
     assert ed.word_on("VAR") and ed.word_on("EXP") and ed.word_on("BI") and not ed.word_on("DATAMAP")
     assert ed.word_on("SMAT") and c.get("/smat").status_code == 200                      # the scenario matrix is Trading's too (2.9.7)
-    centre = c.get("/help").text
+    centre = help_pages(c)
     for slug in ("knowledge-trades-and-products", "knowledge-market-risk", "knowledge-counterparty-credit-risk", "user-guide"):
         assert f'href="/help/{slug}"' in centre, slug
     for slug in ("knowledge-economies", "pack-developer-guide"):

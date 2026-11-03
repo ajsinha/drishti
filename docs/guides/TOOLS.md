@@ -103,6 +103,7 @@ server take `--server` (default `DRISHTI_SERVER`, then `http://localhost:18480`)
 | `sutra` | `sutra shape`, `sutra design`, `sutra lint`, `sutra test`, `sutra preview`, `sutra gen` | [5.1](#51-sutra) |
 | `pack` | `pack make`, `pack new`, `pack regenerate`, `pack diff`, `pack catalogue`, `pack i18n`, `pack check`, `pack about-check`, `pack bundle`, `pack verify`, `pack deploy`, `pack rollback`, `pack publish`, `pack keygen`, `pack install` | [5.2](#52-pack) |
 | `data` | `data profile`, `data ingest`, `data load`, `data landed`, `data loads`, `data get` (a dataset as `.jsonl.gz`, the Data view) | [5.3](#53-data) |
+| `dataload` | `dataload status`, `dataload run`, `dataload retry` (the data inbox: files dropped in a folder, loaded by the server) | [5.3a](#53a-dataload) |
 | `lake` | `lake build`, `lake publish`, `lake scan`, `lake status`, `lake demo`, `lake maintain`, `lake memory` (the in-memory lake's stores, jobs and refills, [IN_MEMORY_LAKE_GUIDE](IN_MEMORY_LAKE_GUIDE.md)) | [4](#4-lake-build-a-large-json-export-into-a-delta-lake) |
 | `server` | `server health`, `server caches`, `server packs`, `server commands`, `server smoke`, `server engines` (`admin engines` is the same: the compute engines on or off, [OPERATIONS section 21](../admin/OPERATIONS.md)) | [5.4](#54-server-and-doctor) |
 | `connector` | `connector list`, `connector get`, `connector apply`, `connector delete`, `connector test`, `connector plugins`, `connector enable`, `connector disable`, `connector reset`, `connector history` | [5.5](#55-connector) |
@@ -126,7 +127,7 @@ The group modules live beside it and are not run on their own: `tools/authoring.
 `tools/ingest_jsonl.py` and `tools/ingest_watch.py` (`data ingest`), `tools/packbundle.py` (`pack bundle|verify|deploy|rollback`),
 `tools/serverpacks.py`, `tools/serverconnectors.py`, `tools/servernet.py` (`net`), `tools/hostaddr.py` (this machine's real address for Drishti*net members), `tools/build_demo_lakes.py` (every demo lake start to finish: `lake demo` over all sixty days, then your own ENDUR files one per date, `--store calypso=iceberg` for a source system in Iceberg, `--dry-run` to look first; the Windows QA guide's step 3.0), `tools/smoke.py`, `tools/doctor.py`, `tools/viewcmd.py`, `tools/completion.py`,
 `tools/bilang.py`, `tools/bimodel.py`, `tools/biitem.py`, `tools/bistatement.py` (`bi statement preview|file`), `tools/historycmd.py` (`history`), `tools/varcli.py` (`var`), `tools/datacli.py` (`data get`), `tools/expcli.py` (`exposure`), and `tools/lake/cli.py` with `tools/lake/build.py`, `tools/lake/scan.py`,
-`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
+`tools/lake/jsonstream.py`, `tools/lake/stage.py`, `tools/lake/writers.py`, `tools/lake/icebergwrite.py` (`lake build --format iceberg`, §4.4b), `tools/lake/demo.py` (`lake demo`), `tools/lake/memory_cli.py` (`lake memory status|jobs|refill`), `tools/enginescli.py` (`server engines list|show|on|off|history`), `tools/dataloadcli.py` (`dataload status|run|retry`), `tools/lake/memory_caps.py` (the launchers' direct-memory limit from the stores' caps), `tools/lake/stores.py` (a source system's trades copied into Iceberg, its connector file switched; `build_demo_lakes.py --store`) and `tools/lake/laketables.py` (the tables `lake status` lists). `tools/connector_upgrade_fixture.py` is not a `drishti.py` group: it writes the connector files an older release's server generated, the fixture of the connector upgrade drill (`ConnectorUpgradeTest`, [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md) "Upgrades").
 
 ## 4. lake build: a large JSON export into a Delta lake
 
@@ -1004,6 +1005,25 @@ total rows: 300
 `data landed` announces a batch to a server and `data loads` lists what landed and what is due ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)).
 **Scheduling** `data ingest --watch DIR --once` from cron is a drop folder polled every few minutes (exit `1` when a file failed);
 `data landed` is the last step of any ETL job that loads a store itself.
+
+### 5.3a dataload
+
+The data inbox from the command line ([DATA_GUIDE.md section 7](DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load); module
+`tools/dataloadcli.py`). Administrators; a token needs `loads:write` for `run` and `retry`.
+
+| Command | What it does |
+|---|---|
+| `dataload status [--json]` | the inbox on or off, the node, the next cycle, the folder lock's holder; every file waiting and why (ready, not stable yet, no `.ready` yet, refused at the next cycle), markers without a file; the failed files with their reasons; the last cycles (done, skipped and why, failed) with their files' outcomes and notices |
+| `dataload run` | Load now: a cycle starts at once; while a run still loads none starts and it says *skipped: run 20261103T150000Z-drishti-main still loading (12 min)* (runs never overlap) |
+| `dataload retry FILE` | a failed file and its `.ready` back into the inbox (an empty `.ready` when it had none); the next cycle, or `run`, loads it |
+
+```bash
+drishti-console/.venv/bin/python tools/drishti.py dataload status
+drishti-console/.venv/bin/python tools/drishti.py dataload run
+drishti-console/.venv/bin/python tools/drishti.py dataload retry trades-endur-2026-11-03.jsonl.gz
+```
+
+Exit codes: `0` done, `1` the server said no (a file that is not in `failed/`), `2` usage, `3` the inbox is off on every server (`DRS-1020`).
 
 ### 5.4 server and doctor
 

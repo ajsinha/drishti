@@ -49,9 +49,6 @@ _IMG = re.compile(r'(<a\b[^>]*>\s*)?(<img\b[^>]*?\bsrc="([^"]+)"[^>]*>)')
 _LINK = re.compile(r'<a href="([^"]*)"([^>]*)>(.*?)</a>', re.S)
 _EXTERNAL = re.compile(r"^(?:[a-z][a-z0-9+.-]*:|/|#)", re.I)
 _FRONT = re.compile(r"\A(?:\s*<!--.*?-->)*\s*(---\n.*?\n---\n)", re.S)
-# Where an unlisted repository document sits in the help centre, by its top folder.
-_DOC_CATEGORY = {"connectors": "data", "contracts": "data", "admin": "operate", "guides": "use", "architecture": "build", "tutorials": "start", "knowledge": "knowledge",
-                 "qa": "build", "": "operate"}
 
 
 _WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
@@ -112,6 +109,8 @@ class Guide:
     packs: tuple = ()                 # the packs the guide is about (a pack's own guide; help.yaml packs:), for an edition's help filter
     roles: tuple = ()                 # help.yaml roles: only people with one of these roles (or an administrator) see the guide; empty = everyone
     engine: str = ""                  # help.yaml engine: the compute engine the guide is about; hidden while it runs nowhere (COMPUTE_ENGINES.md)
+    pair: str = ""                    # help.yaml pair: the tutorial drawn beside this guide on its section's page
+    group: str = ""                   # the group of its section it sits in (help.yaml groups[].title)
 
     def permits(self, ident) -> bool:
         """Whether this person may see the guide: an unrestricted guide anyone; a guide with ``roles:`` (an internal page such as the
@@ -124,46 +123,69 @@ class Guide:
 
 
 class Library:
-    """Loads the catalogue once; renders and searches guides on demand. Thread-safe for reads."""
+    """Loads the catalogue once; renders and searches guides on demand. Thread-safe for reads.
+
+    ``categories`` are the help centre's sections (help.yaml ``sections:``), in order: ``{id, name, icon, blurb, roles, groups, guides}``,
+    each group ``{title, words, guides}`` and ``guides`` every page of the section in order; a page's ``category`` is its section's id."""
 
     def __init__(self, console_dir: Path, catalogue: Path, docs_dir: Path, packs: list | None = None):
         self.docs_dir = docs_dir
         data = yaml.safe_load(catalogue.read_text(encoding="utf-8"))
         self.categories = []
         self.guides: dict[str, Guide] = {}
-        for cat in data.get("categories", []):
-            items = []
-            for g in cat.get("guides", []):
-                src = g.get("doc")
-                path = (docs_dir / src) if src else (console_dir / "web" / "guides" / f"{g['slug']}.md")
-                guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
-                              g.get("kind", "reference" if src else "guide"), cat["id"], path, packs=tuple(g.get("packs") or ()),
-                              roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""))
-                if path.exists():
-                    self.guides[guide.slug] = guide
-                    items.append(guide)
-            self.categories.append({"id": cat["id"], "name": cat["name"], "icon": cat.get("icon", "book"),
-                                    "blurb": cat.get("blurb", ""), "guides": items})
+        self.aliases = {str(k): str(v) for k, v in (data.get("aliases") or {}).items()}
+        self.documents = {str(k): str(v) for k, v in (data.get("documents") or {}).items()}
+        for sec in data.get("sections", []):
+            groups = []
+            for grp in sec.get("groups", []):
+                items = []
+                for g in grp.get("guides", []):
+                    src = g.get("doc")
+                    path = (docs_dir / src) if src else (console_dir / "web" / "guides" / f"{g['slug']}.md")
+                    guide = Guide(g["slug"], g["title"], g.get("summary", "").replace("{tutorials}", tutorial_count_word(docs_dir)), g.get("icon", "journal-text"),
+                                  g.get("kind", "reference" if src else "guide"), sec["id"], path, packs=tuple(g.get("packs") or ()),
+                                  roles=tuple(str(r) for r in (g.get("roles") or ())), engine=str(g.get("engine") or ""),
+                                  pair=str(g.get("pair") or ""), group=str(grp.get("title") or ""))
+                    if path.exists():
+                        self.guides[guide.slug] = guide
+                        items.append(guide)
+                groups.append({"title": str(grp.get("title") or ""), "words": [str(w) for w in grp.get("words") or []], "guides": items})
+            self.categories.append({"id": sec["id"], "name": sec["name"], "icon": sec.get("icon", "book"), "blurb": sec.get("blurb", ""),
+                                    "roles": tuple(str(r) for r in sec.get("roles") or ()), "groups": groups,
+                                    "guides": [g for grp in groups for g in grp["guides"]]})
         cats = {c["id"]: c for c in self.categories}
         self.contextual = dict(data.get("contextual", {}))
         self.moved = dict(data.get("moved", {}))
+        self.most_used = [dict(m) for m in data.get("most-used") or [] if isinstance(m, dict) and m.get("slug")]
+        pack_group = str(data.get("pack-group") or "From the packs")
         for pack in packs or []:
             for g in pack.get("guides", []):
                 if not g["path"].exists() or g["slug"] in self.guides:
                     continue
-                cat = cats.get(g.get("category")) or cats.get("start")
+                cat = cats.get(self.section_id(str(g.get("category") or ""))) or cats.get(self.section_id("start")) or self.categories[0]
+                grp = next((x for x in cat["groups"] if x["title"] == pack_group), None)
+                if grp is None:
+                    grp = {"title": pack_group, "words": [], "guides": []}
+                    cat["groups"].append(grp)
                 guide = Guide(g["slug"], g["title"], g.get("summary", ""), g.get("icon", "journal-text"),
-                              g.get("kind", "guide"), cat["id"], g["path"], packs=(g.get("pack"),) if g.get("pack") else ())
+                              g.get("kind", "guide"), cat["id"], g["path"], packs=(g.get("pack"),) if g.get("pack") else (), group=pack_group)
                 self.guides[guide.slug] = guide
-                if g["slug"] == "getting-started":
-                    cat["guides"].insert(0, guide)
-                else:
-                    cat["guides"].append(guide)
+                grp["guides"].insert(0 if g["slug"] == "getting-started" else len(grp["guides"]), guide)
+                cat["guides"] = [x for gr in cat["groups"] for x in gr["guides"]]
             self.contextual.update({k: v for k, v in pack.get("contextual", {}).items() if v in self.guides})
         self.by_file = {g.path.resolve(): g.slug for g in self.guides.values()}
         self.listed = sum(1 for g in self.guides.values() if g.listed and not g.roles)
         self._documents(cats)
         self._cache: dict[str, tuple[float, dict]] = {}
+
+    def section_id(self, name: str) -> str:
+        """A section's id from its id or an old name (help.yaml ``aliases:``: a pack guide's category, an edition's help.categories, the
+        old ``/help#cat-<id>``)."""
+        return self.aliases.get(name, name)
+
+    def section(self, sid: str) -> dict | None:
+        """The section of that id or old name, or None."""
+        return next((c for c in self.categories if c["id"] == self.section_id(sid)), None)
 
     def _documents(self, cats: dict) -> None:
         """Every repository document not in the catalogue, unlisted, at a slug made from its path (DOC-18)."""
@@ -181,7 +203,7 @@ class Library:
             if slug in self.guides:
                 continue
             top = rel.parts[1] if len(rel.parts) > 2 and rel.parts[0] == self.docs_dir.name else ""
-            cat = cats.get(_DOC_CATEGORY.get(top, "build")) or self.categories[0]
+            cat = cats.get(self.documents.get(top, self.documents.get("default", "build"))) or self.categories[0]
             title = next((ln[2:].strip() for ln in path.read_text(encoding="utf-8").splitlines() if ln.startswith("# ")),
                          rel.stem)
             self.guides[slug] = Guide(slug, title, "", "file-earmark-text", "document", cat["id"], path, listed=False)
@@ -268,14 +290,19 @@ class Library:
             shown = Path(target)
         return f'<span class="help-repo" title="In the repository: {html.escape(str(shown))}">{m.group(3)}</span>'
 
-    def search(self, q: str, limit: int = 20) -> list[dict]:
+    def search(self, q: str, limit: int = 20, section: str = "") -> list[dict]:
+        """The guides whose text holds every word of ``q``, best first; with ``section`` only that section's listed pages (the
+        section-scoped search of its page)."""
         words = [w for w in re.split(r"\W+", q.lower()) if len(w) > 1]
         if not words:
             return []
         hits = []
+        sid = self.section_id(section) if section else ""
         for g in self.guides.values():
             if not g.listed and "qa" in g.path.parts:
                 continue                             # the QA records (history) are reachable by link, not search
+            if sid and (g.category != sid or not g.listed):
+                continue
             text = self.render(g.slug)["text"]
             low = text.lower()
             score = sum(low.count(w) for w in words) + sum(10 for w in words if w in g.title.lower())

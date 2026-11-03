@@ -38,6 +38,9 @@ import java.util.Map;
  */
 public final class PivotExport {
 
+    private static final ObjectMapper JSON = new ObjectMapper();
+
+
     /** Excel's rows per worksheet. */
     public static final int EXCEL_ROWS = 1_048_576;
 
@@ -272,6 +275,57 @@ public final class PivotExport {
                 line.add(v == null ? "" : v instanceof Number n ? Xlsx.num(n.doubleValue()) : q(String.valueOf(v), delimiter));
             }
             w.write(String.join(d, line) + "\r\n");
+        }
+        w.flush();
+    }
+
+    /**
+     * JSON Lines of the answer (the data standard, docs/guides/DATA_GUIDE.md): one object a cell and measure, its coordinates by
+     * dimension, the measure, the value as a number (null when empty), exact or approx, the members and the measure's kind.
+     */
+    @SuppressWarnings("unchecked")
+    public static void jsonl(Map<String, Object> answer, OutputStream out) throws IOException {
+        Writer w = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+        List<String> dims = new ArrayList<>((List<String>) answer.getOrDefault("rowDimensions", List.of()));
+        dims.addAll((List<String>) answer.getOrDefault("columnDimensions", List.of()));
+        List<Map<String, Object>> measures = list(answer, "measures");
+        for (Map.Entry<String, Map<String, Object>> e : cells(answer).entrySet()) {
+            String[] rc = e.getKey().split("\\|", 2);
+            Map<String, Object> cell = e.getValue();
+            Map<String, String> coords = cell.get("coords") instanceof Map<?, ?> cm ? (Map<String, String>) cm : Map.of();
+            for (Map<String, Object> m : measures) {
+                Map<String, Object> line = new LinkedHashMap<>();
+                line.put("row", rc[0]);
+                line.put("column", rc.length > 1 ? rc[1] : "*");
+                Map<String, Object> at = new LinkedHashMap<>();
+                for (String dim : dims) {
+                    String v = coords.get(dim);
+                    at.put(dim, v == null ? null : CellKey.OTHERS.equals(v) ? "Others" : v);
+                }
+                line.put("coords", at);
+                line.put("measure", String.valueOf(m.get("label")));
+                line.put("value", value(cell, String.valueOf(m.get("label"))));
+                line.put("exact", !Boolean.FALSE.equals(m.get("exact")));
+                line.put("members", cell.get("members"));
+                line.put("kind", m.get("kind"));
+                w.write(JSON.writeValueAsString(line));
+                w.write('\n');
+            }
+        }
+        w.flush();
+    }
+
+    /** A page of member rows as JSON Lines (drill-through export): one object a row, keyed by the rows' columns. */
+    public static void rowsJsonl(PivotProvider.Rows rows, OutputStream out) throws IOException {
+        Writer w = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+        List<String> cols = rows.columns();
+        for (List<Object> r : rows.rows()) {
+            Map<String, Object> line = new LinkedHashMap<>();
+            for (int i = 0; i < cols.size(); i++) {
+                line.put(cols.get(i), i < r.size() ? r.get(i) : null);
+            }
+            w.write(JSON.writeValueAsString(line));
+            w.write('\n');
         }
         w.flush();
     }
