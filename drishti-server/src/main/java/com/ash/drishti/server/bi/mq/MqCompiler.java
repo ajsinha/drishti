@@ -115,12 +115,11 @@ public final class MqCompiler {
         QueryRequest main = new QueryRequest(c.fields(), measures, filters, from, to, sort, limit, layer, q.rows() && measures.isEmpty());
         List<Level> levels = new ArrayList<>();
         if (q.totals() != null && !q.rows()) {
-            final Dataset finalDs = ds;
-            List<String> nonAdd = q.measures().stream().filter(m -> !v.info(finalDs, m).adds()).toList();
-            if (!nonAdd.isEmpty()) {
+            List<String> all = List.copyOf(q.measures());           // every measure: the pivot engine makes all levels in one statement
+            if (!all.isEmpty()) {
                 for (List<String> by : levels(q.totals(), c.fields())) {
                     List<QueryRequest.Filter> measureFree = List.copyOf(filters.subList(0, filters.size() - q.having().size()));     // a having filters groups, not totals
-                    levels.add(new Level(by, new QueryRequest(by, nonAdd, measureFree, from, to, List.of(), props.maxLimit(), layer)));
+                    levels.add(new Level(by, new QueryRequest(by, all, measureFree, from, to, List.of(), props.maxLimit(), layer)));
                 }
             }
         }

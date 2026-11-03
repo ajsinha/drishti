@@ -297,6 +297,61 @@ public final class QueryService implements AutoCloseable {
     }
 
     /**
+     * The aggregation the pivot engine asks over a model's rows (PIVOT_ENGINE.md section 12): {@code detail} is a query of shape rows (no
+     * measures) whose SQL, compiled as the reader (row rules, masks, joins, layers, dates) but not run, becomes the FROM item of the
+     * statement {@code outer} writes (one {@code GROUP BY GROUPING SETS} of the engine's function states). The statement runs here, in the
+     * engine that holds the model's layers, so no row leaves it; the answer is the statement's columns.
+     */
+    public interface Outer {
+        /** The statement over the detail query (its SQL and parameters, its columns named by their fields). */
+        SqlCompiler.Compiled wrap(SqlCompiler.Compiled detail);
+
+        /** What the statement computes, for the result cache's key. */
+        String signature();
+
+        /** The most rows (groups) the statement may answer. */
+        int maxRows();
+    }
+
+    private static final ThreadLocal<Outer> OUTER = new ThreadLocal<>();
+
+    /**
+     * Runs {@code work} (a model's detail query asked through the dataset service, the model query service or a runner: whatever reaches
+     * {@link #query} on this thread first) with {@code outer}'s statement over it (see {@link Outer}).
+     */
+    public static <T> T aggregating(Outer outer, java.util.function.Supplier<T> work) {
+        Outer before = OUTER.get();
+        OUTER.set(outer);
+        try {
+            return work.get();
+        } finally {
+            if (before == null) {
+                OUTER.remove();
+            } else {
+                OUTER.set(before);
+            }
+        }
+    }
+
+    /** The pivot engine's statement this thread is asking for (null: none): a cache that keys answers on the question keys on it too. */
+    public static Outer aggregation() {
+        return OUTER.get();
+    }
+
+    /** Runs {@code outer}'s statement over {@code detail} as the reader (see {@link Outer}). */
+    public Result aggregate(Loaded ds, QueryRequest detail, Caller who, Outer outer) {
+        if (!detail.measures().isEmpty() || !detail.detail()) {
+            throw new IllegalArgumentException("the pivot engine reads a model's rows: a detail query with no measures");
+        }
+        OUTER.set(outer);
+        try {
+            return query(ds, detail, who, false, null, null);
+        } finally {
+            OUTER.remove();
+        }
+    }
+
+    /**
      * As {@link #query(Loaded, QueryRequest, Caller, boolean)} for a composed or derived dataset: {@code frames} supplies the rows of its one table (the sources
      * asked as the reader, or the Transform's result) when the result cache does not already hold the answer.
      */
@@ -310,6 +365,18 @@ public final class QueryService implements AutoCloseable {
     }
 
     private Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, Frames frames, StagedTables staged) {
+        Outer outer = OUTER.get();
+        OUTER.remove();                                    // the sources and staged tables asked below are queries of their own, never wrapped
+        try {
+            return query(ds, q, who, explain, frames, staged, outer);
+        } finally {
+            if (outer != null) {
+                OUTER.set(outer);
+            }
+        }
+    }
+
+    private Result query(Loaded ds, QueryRequest q, Caller who, boolean explain, Frames frames, StagedTables staged, Outer outer) {
         queries.incrementAndGet();
         syncVersions(ds.key(), ds.dataset());
         Frames.Rows rows = null;
@@ -321,7 +388,8 @@ public final class QueryService implements AutoCloseable {
         if (staged != null && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + stagedKey) == null)) {
             inner = innerAnswers(ds.dataset(), q, who, staged);               // likewise asked before this query takes its place
         }
-        String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey;
+        String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey
+                + (outer == null ? "" : "|pivot:" + outer.signature());
         if (key != null && !explain) {
             Result hit = cache.getIfPresent(key);
             if (hit != null) {
@@ -342,7 +410,14 @@ public final class QueryService implements AutoCloseable {
         try (ticket) {
             events.admission(ticket.waitedNanos() / 1e9);
             long t0 = System.nanoTime();
-            Result r = ds.dataset().framed() ? runFramed(ds, q, who, rows != null || frames == null ? rows : frames.load(), explain) : run(ds, q, who, explain, inner);
+            Frames.Rows framedRows = ds.dataset().framed() ? (rows != null || frames == null ? rows : frames.load()) : null;
+            Result r;
+            OUTER.set(outer);
+            try {
+                r = ds.dataset().framed() ? runFramed(ds, q, who, framedRows, explain) : run(ds, q, who, explain, inner);
+            } finally {
+                OUTER.remove();
+            }
             events.query(ds.key(), r.meta() == null ? "" : r.meta().layer(), (System.nanoTime() - t0) / 1e9, r.rows());
             if (key != null && !explain) {
                 cache.put(key, r);
@@ -617,7 +692,12 @@ public final class QueryService implements AutoCloseable {
             layer.warnings().forEach(w -> warnings.add(t + (sameDates ? "" : " at " + lo) + ": " + w));
             return TableRelations.cached(d, table, layer.files(), Dialect.DUCKDB);
         };
-        SqlCompiler.Compiled c = probe.compile(plan, reader, from, cap, components, timeContext(d, q, dates), more);
+        Outer outer = OUTER.get();
+        SqlCompiler.Compiled c = probe.compile(plan, reader, from, outer == null ? cap : Integer.MAX_VALUE, components, timeContext(d, q, dates), more);
+        if (outer != null) {
+            c = outer.wrap(c);                                                    // the pivot engine's grouping sets over the reader's rows
+            cap = outer.maxRows() + 1;
+        }
         AnalyticEngine.Answer a = engine.query(c.sql(), c.params(), cap, timeout());
         Result done = finish(ds, q, c, a, layerName, rollup == null ? null : rollup.name(), dates, warnings, explain);
         Meta m = done.meta();
@@ -634,6 +714,19 @@ public final class QueryService implements AutoCloseable {
      * the reader may not see never reaches this table.
      */
     private Result runFramed(Loaded ds, QueryRequest q, Caller who, Frames.Rows rows, boolean explain) {
+        Dataset d = ds.dataset();
+        Outer outer = OUTER.get();
+        OUTER.remove();                                                       // the framed path wraps its own compile (below)
+        try {
+            return runFramed(ds, q, who, rows, explain, outer);
+        } finally {
+            if (outer != null) {
+                OUTER.set(outer);
+            }
+        }
+    }
+
+    private Result runFramed(Loaded ds, QueryRequest q, Caller who, Frames.Rows rows, boolean explain, Outer outer) {
         Dataset d = ds.dataset();
         if (rows == null) {
             throw new DrishtiException(ErrorCode.QUERY_INVALID, "dataset '" + d.name() + "' is " + (d.composed() ? "composed" : "derived") + ": it is queried through the dataset service, which asks its sources");
@@ -662,7 +755,12 @@ public final class QueryService implements AutoCloseable {
                     src = FrameSql.parquet(d, rows.parquet(), present);
                 }
                 String table = d.composed() ? Dataset.JOINED : Dataset.RESULT;
-                SqlCompiler.Compiled c = probe.compile(plan, reader, Map.of(table, src), cap, null, time);
+                SqlCompiler.Compiled c = probe.compile(plan, reader, Map.of(table, src), outer == null ? cap : Integer.MAX_VALUE, null, time);
+                int max = cap;
+                if (outer != null) {
+                    c = outer.wrap(c);                                        // the pivot engine's grouping sets over the frame's rows
+                    max = outer.maxRows() + 1;
+                }
                 long t0 = System.nanoTime();
                 try (PreparedStatement ps = conn.prepareStatement(c.sql())) {
                     ps.setQueryTimeout((int) Math.max(1, props.timeout().toSeconds()));
@@ -670,7 +768,7 @@ public final class QueryService implements AutoCloseable {
                         ps.setObject(i + 1, c.params().get(i));
                     }
                     try (ResultSet rs = ps.executeQuery()) {
-                        List<ArrowIpcWriter.Column> cols = DuckDbEngine.read(rs, cap);
+                        List<ArrowIpcWriter.Column> cols = DuckDbEngine.read(rs, max);
                         return new Framed(c, new AnalyticEngine.Answer(cols, cols.isEmpty() ? 0 : cols.get(0).values().length, (System.nanoTime() - t0) / 1e6));
                     }
                 }
@@ -813,6 +911,10 @@ public final class QueryService implements AutoCloseable {
 
     private Result direct(Loaded ds, QueryRequest q, SqlCompiler.Plan plan, SqlCompiler.Reader reader, Caller who, boolean explain) {
         Dataset d = ds.dataset();
+        if (OUTER.get() != null) {
+            throw new DrishtiException(ErrorCode.QUERY_INVALID, "dataset '" + d.name() + "' reads its source directly: its totals are not "
+                    + "computed by the pivot engine (they would read every row back); totals stay the visual's own figures");
+        }
         SqlTarget target = null;
         ConnectorCapabilities caps = null;
         for (String t : plan.tables()) {
