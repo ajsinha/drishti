@@ -15,7 +15,7 @@
 -->
 # BI's foundation (2.9.11.e): DEL into Rachana, and virtual tables
 
-*Status: **design, not built**. This is a **design draft for discussion, nothing decided** beyond what the documents it reads already
+*Status: **design, not built**. **Decided by the product owner on 2026-11-03**: every recommendation of section 8 accepted, except Q1, decided the other way (Rachana's null rule, below). Earlier wording: a design draft for discussion, nothing decided beyond what the documents it reads already
 record as decided (the release and its scope, product owner 2026-11-03; [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md) V6;
 [ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). Every command, path, setting, key and error code below that does not exist today is
 planned and says so on its line. Section 8 lists the questions, each with a recommendation. Nothing is coded until the discussion is
@@ -92,7 +92,7 @@ known. The differences that matter, each settled below:
 | Booleans | `and`, `or`, `not`; booleans only | `&&`, `\|\|`, `!`; truthiness of any value | Rachana's spelling; in **checked mode** booleans only (Q4) |
 | Conditional | `a if c else b` | `c ? a : b` | `c ? a : b` (and `if(c, a, b)`, tier 1) |
 | Null literal and test | `None`, `x is None` | `null`, `x == null` | `null`, `x == null` |
-| `!=` against null | false (SQL's rule: a comparison with null is false) | `null != 'X'` is **true** (empty equals only empty) | **SQL's rule everywhere**, Sutras proved unchanged by a scan (Q1) |
+| `!=` against null | false (SQL's rule: a comparison with null is false) | `null != 'X'` is **true** (empty equals only empty) | **Rachana's rule everywhere** (Q1, decided); the migrator rewrites DEL comparisons to keep BI's figures |
 | Membership | `x in [..]`, `not in`; empty list holds nothing | no `in`; `oneOf(x, list)` where an empty list holds **everything** | a strict `in` / `not in` operator; `one_of` stays a control function (Q3) |
 | Lists | literals `[a, b]` | none | list literals (needed by `in`, `by=`, `ignore=`) |
 | Keyword arguments | `where=`, `by=`, `ignore=`, `keep=`, `via=`, `over=`, `desc=`, `to=`, `at=`, `unit=`, `period=`, `hierarchy=` | none | named arguments `name = expr`, as FUNCTION_CATALOGUE already writes them |
@@ -677,13 +677,13 @@ Steps 2 and 3 run side by side (two heavy builders at most, one when the product
 
 A code freeze holds during each drill; nothing else heavy runs beside it; the drill tool is not changed during the release's drills.
 
-## 8. Questions for the product owner
+## 8. Decisions (product owner, 2026-11-03: every recommendation accepted; Q1 decided as Rachana's rule)
 
 Each with a recommendation. Q30 collects what this deeper look suggests changing in VIRTUAL_TABLES.md V1 to V5.
 
 | # | Question | Recommendation |
 |---|---|---|
-| Q1 | **One null rule.** DEL (and SQL) say a comparison with null is false, so `TRADE_STATUS != 'MATURED'` skips a null status; Rachana says `null != 'X'` is true. Which rule for the one grammar? | **SQL's, everywhere**; `== null` still tests emptiness. Sutras proved by a scan of every expression on their test cases; any Sutra whose display changes is listed for review before the switch |
+| Q1 | **One null rule.** DEL (and SQL) say a comparison with null is false; Rachana says `null != 'X'` is true. | **Decided: Rachana's rule** (`null != 'X'` is true, `null == 'X'` false) everywhere. The migrator rewrites each DEL comparison whose meaning would change (`a != b` becomes `a != b && a != null` where `a` may be null) so every BI figure stays identical under the parity proof (section 5); the editor and docs state the rule once. |
 | Q2 | **Checked mode.** Rachana refuses ill-typed expressions only where types are known (tables, models, typed pivots); Sutras over untyped documents stay total | **Yes**: one grammar and one checker; checked mode only refuses more, never means something else |
 | Q3 | **Strict `in`.** Add `in` and `not in` to Rachana (an empty list holds nothing), keeping `one_of` (an empty choice holds everything) for controls; row rules may use only `in` | **Yes**: otherwise a desk-head with no desks would see every trade |
 | Q4 | **One spelling.** Rachana's `&&`, `\|\|`, `!`, `?:`, `true`, `false`, `null`; DEL's Python words are not kept as aliases | **Yes**: one spelling; the migrator writes it and the editor completes it |
