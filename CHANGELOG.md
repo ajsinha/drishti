@@ -95,6 +95,26 @@
 
 ### Fixes and smaller changes
 
+- **Fixed: answers that arrive late no longer undo what you did meanwhile.** The dataset wizard's YAML and checks show the newest
+  form: an older check answering last (a slow server) had put back the title it was asked about, so the dataset saved under the old
+  name. The VaR regulatory report keeps a comment typed while the previous action's answer was on its way (it was emptied). In the
+  BI Runs tab, the run drawer keeps the focus when it is redrawn, and Esc closes it when the focus has fallen to the page (a button it
+  was on became disabled while it worked); before, Esc did nothing and the drawer stayed over the list. A BI report's visual that
+  is being asked again (a selection, a slicer, a drill) no longer takes a pushed answer to its old question, which drew the old
+  figures and ended its busy state early. The top bar's bell is marked `data-alerts-live` once the live feed has said hello (alerts,
+  notices and write-back edits reach the tab from then on); a zoomed panel is marked `data-table-fitting` while its tables wait to
+  fit its new height.
+
+- **Flaky browser tests fixed at the cause (the drill's `data/drill/flakes.log`).** The exposure and VaR browser tests build their
+  scratch lakes with the Python writer (`lake demo --engine deltalake`): `auto` started Drishti's Java writer in a new JVM for every
+  table and business day, hundreds per lake, and the exposure lake outran its 900 s limit beside the other workers. The scratch BI
+  stacks wait for their server and console until they answer (up to ten minutes, as `wb_live.py` does) and stop waiting at once when
+  the process has exited; they had 150 s and 120 s. The catalogue tests type into the catalogue's own search box (`input[data-search]`;
+  the Engines menu's items carry `data-search` too). The renderer parity test waits until no part of the page is busy, not a fixed
+  time, and prints what differs. The write-back test waits for the other browser's live feed, not 1.5 s; the zoom tests wait for the
+  fit, not 350 ms; the BI Runs test waits for the drawer to close before it clicks under it; the pack wizard's resumed draft is read
+  with an auto-waiting expectation.
+
 
 - **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
   screen; it had been drawn flush left. The VaR card and the risk area name the basket sheet, which replaced the selection tray.

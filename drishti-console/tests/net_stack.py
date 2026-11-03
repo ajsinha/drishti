@@ -121,7 +121,7 @@ class NetStack:
             args.append("--drishti.sources.plugins.demo.enabled=false")       # the demo's trades (and their ticks) are on b only
         cmd = java_cmd(java, args, tmp=work / "jtmp")                     # its native libraries unpack in its own folder, not /tmp
         self.procs[name] = subprocess.Popen(cmd, cwd=work, env=env, stdout=open(self.tmp / f"server-{name}.log", "ab"), stderr=subprocess.STDOUT)
-        wait(url(name) + "/actuator/health", 180)
+        wait(url(name) + "/actuator/health", proc=self.procs[name])
 
     def start_console(self, urls: str | None = None) -> None:
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="false", DRISHTI_BACKEND_URLS=urls or url("a"), DRISHTI_BACKEND_URL=url("a"),
@@ -129,7 +129,7 @@ class NetStack:
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}",
                                                   "--backend.discover_every=5s", "--backend.check_every=1s"], env=cenv,
                                                  stdout=open(self.tmp / "console.log", "ab"), stderr=subprocess.STDOUT)
-        wait(CONSOLE_URL + "/healthz")
+        wait(CONSOLE_URL + "/healthz", proc=self.procs["console"])
 
     def start(self) -> "NetStack":
         lock_path = ROOT / "drishti-server" / "target" / "net-it.lock"

@@ -62,7 +62,7 @@ def stack(tmp_path_factory):
     procs = [subprocess.Popen(java_cmd(java, ["-Xmx1500m", "-jar", jars[0], f"--server.port={SERVER_PORT}"], tmp=tmp / "jvm-tmp"), cwd=work, env=env,
                               stdout=open(tmp / "server.log", "ab"), stderr=subprocess.STDOUT)]
     try:
-        NS.wait(SERVER + "/actuator/health", 240)
+        NS.wait(SERVER + "/actuator/health", proc=procs[0])
         procs.append(subprocess.Popen([sys.executable, str(ROOT / "drishti-console" / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}",
                                        f"--backend.url={SERVER}"], env=dict(os.environ), stdout=open(tmp / "console.log", "ab"), stderr=subprocess.STDOUT))
         NS.wait(CONSOLE + "/healthz")

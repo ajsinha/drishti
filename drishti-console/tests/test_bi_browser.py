@@ -227,13 +227,18 @@ def test_a_workspace_is_created_and_shared_from_the_page(stack, browser):
 
 
 def test_review_before_publish_needs_a_second_person(stack, browser):
+    # its own shared workspace, made here: the test must not depend on the one test_a_workspace_is_created_and_shared_from_the_page makes (a
+    # pytest-xdist run that hands out tests, not files, puts the two on different workers with different servers; ann then had no Credit Desk)
+    status, ws = bi_stack.call("POST", "/bi/workspaces", "ann", ["bi-writer"], {"name": "Review Desk", "description": "review before publishing"})
+    assert status in (200, 201), ws
+    desk = ws["id"]
     ann = sign_in(browser, "ann")
-    ann.goto(CONSOLE_URL + "/bi/w/credit-desk?tab=members")                              # the settings sit on the Members tab (BIR-14)
+    ann.goto(CONSOLE_URL + f"/bi/w/{desk}?tab=members")                                  # the settings sit on the Members tab (BIR-14)
     ann.check("[data-review]")
     expect(ann.locator("[data-msg]")).to_contain_text("Review before publishing is on")
     ann.click('[data-ws-tab="items"]')
     ann.fill('[data-new-item] [name="title"]', "Limits report")
-    new_item(ann)
+    new_item(ann, desk)
     expect(ann.locator('[data-actions] button:has-text("Publish")')).to_have_count(0)
     ann.fill(".bi-note", "please check the limits")
     ann.click("text=Propose for review")
@@ -241,7 +246,7 @@ def test_review_before_publish_needs_a_second_person(stack, browser):
     url = ann.url
     expect(ann.locator('[data-actions] button:has-text("Approve")')).to_have_count(0)
     bob_ws = sign_in(browser, "ann")                                                      # bob must be a member to approve
-    bob_ws.goto(CONSOLE_URL + "/bi/w/credit-desk")
+    bob_ws.goto(CONSOLE_URL + f"/bi/w/{desk}")
     bob_ws.click('[data-ws-tab="members"]')
     bob_ws.fill('[data-add-member] [name="user"]', "bob")
     bob_ws.select_option('[data-add-member] [name="role"]', "member")

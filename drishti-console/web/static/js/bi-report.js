@@ -238,6 +238,8 @@
   /** A pushed answer redraws the visual in place when its rows are the whole picture; one with totals, highlights or bins is asked again (quietly). */
   function pushed(spec, entry, d) {
     if (!frames.get(spec.id) || frames.get(spec.id) !== entry) { return; }
+    // a new question is out (a selection, a slicer, a drill): a pushed answer to the old one must not paint over it, nor end its busy state
+    if (entry.frame.el.classList.contains('bi-vis-busy')) { return; }
     if (watch && watch.paused()) { entry.pending = true; return; }
     canvas.setAttribute('data-pushed', String((Number(canvas.getAttribute('data-pushed')) || 0) + 1));
     canvas.setAttribute('data-live-round', String((Number(canvas.getAttribute('data-live-round')) || 0) + 1));          // a pushed redraw is a round of the live page too
