@@ -34,7 +34,7 @@
   parallel loader has no reader for those forms.
 - **A data-load signal makes a new table readable at once (the Delta connector).** A connector whose domain had no table when it started
   (the first load into an empty lake) found the new table only at its next periodic reindex, so the signal's verify said *not found*;
-  the signal's refresh (`purgeCaches`, `refreshVersions`) now looks for new tables and lists one it finds at once. Found by the data
+  the signal's refresh (`purgeCaches`, `refreshVersions`) now looks for new tables (`NewTables`, tested by `NewTablesTest`) and lists one it finds at once. Found by the data
   inbox's end-to-end check.
 - New module `drishti-dataload` (plain Java: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess`, `Outbox`, `Recovery`,
   `Cycle`, `DataInbox`); the server's wiring is `server.dataload` (`DataLoadConfiguration`, `DataLoadController`). New engine `dataload`

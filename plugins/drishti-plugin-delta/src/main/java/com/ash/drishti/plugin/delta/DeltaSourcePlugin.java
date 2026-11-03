@@ -402,23 +402,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         tables.putIfAbsent(kind, new DeltaTable(engine, lake.table(kind), idColumn, docColumn, dateColumn));
     }
 
-    /** New tables in the domain (a kind loaded after start) are served without a restart; true when one was found (a load signal lists it). */
+    /** New tables in the domain (a kind loaded after start), served without a restart ({@link NewTables}); true when one was found. */
     private boolean discoverTables() {
-        if (!discover) {
-            return false;
-        }
-        boolean found = false;
-        try {
-            for (String kind : lake.tables()) {
-                if (!tables.containsKey(kind)) {
-                    add(kind);                                 // shows in /api/v1/sources and Admin → Health
-                    found = true;
-                }
-            }
-        } catch (IOException | RuntimeException e) {
-            // the lake is unreachable for now: health says so, and the next reindex tries again
-        }
-        return found;
+        return discover && NewTables.find(lake, tables.keySet(), this::add);
     }
 
     private List<String> kinds(String configured) throws IOException {
