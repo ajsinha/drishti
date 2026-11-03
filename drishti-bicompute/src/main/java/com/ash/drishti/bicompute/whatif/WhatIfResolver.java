@@ -156,7 +156,7 @@ public final class WhatIfResolver implements TabularSource.Resolver {
             params.addAll(vals);
         });
         if (parts.isEmpty()) {
-            return new Sql(negate ? "TRUE" : "TRUE", List.of());
+            return new Sql("TRUE", List.of());           // no condition: every row, whether kept or left out by negation
         }
         String all = String.join(" AND ", parts);
         return new Sql(negate ? "NOT (" + all + ")" : "(" + all + ")", params);
