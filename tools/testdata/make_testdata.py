@@ -137,6 +137,10 @@ def main(argv=None) -> int:
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "ccr"))
     import make_ccr_data as XD  # noqa: E402
     datasets += XD.write_testdata(out, days.dates, side_files=out.resolve() == (ROOT / "data" / "testdata").resolve())
+    # the SA-CCR engine's input (one classification row per live derivative of every netting set, derived by the rules of
+    # tools/packgen/ccr/make_saccr_data.py from the trade valuations just written), dated by its documents
+    import make_saccr_data as SA  # noqa: E402
+    datasets += SA.write_testdata(out, days.dates, side_files=out.resolve() == (ROOT / "data" / "testdata").resolve())
     # the kinds position-sensitivity (SENS) and risk-factor (RFAC) from the VaR data just written (tools/packgen/sensitivity/
     # make_sensitivity_data.py): read by the server's FRTB-SA engine from risk-store, loaded by `lake demo` as every risk kind
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "sensitivity"))
