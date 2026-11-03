@@ -15,8 +15,9 @@
 -->
 # Arrow Flight: Drishti's data to any client (design questions)
 
-*Release 2.9.11.c (product owner, 2026-11-03), picked up after 2.9.11.b is released. Status: **designed, not built**: every question of section 2 decided as
-recommended by the product owner (2026-11-03: "I am aligned with all of them, but good documentation is the key").*
+*Release 2.9.11.c (product owner, 2026-11-03), picked up after 2.9.11.b is released. Status: **built on branch wip/flight, not yet released** (section 5, As built): every question of section 2
+decided as recommended by the product owner (2026-11-03: "I am aligned with all of them, but good documentation is the key"); Flight SQL
+(Q10) not built yet.*
 
 **Read with:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2.9.11.c and 2.9.11.d), [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (requests are
 written in Rachana), [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (section 10, the console's Python), [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md).
@@ -80,3 +81,19 @@ order of urgency); [B](mockups/data-out/B.html), a map of clients and nodes with
 ## 4. Size
 One large item: the Arrow library replacing the hand-written writers, the Flight service with tickets, endpoints, streams, limits and
 audit, the Python client and its tests. Flight SQL is a second, medium item if it joins the same release.
+
+## 5. As built
+
+| Part | Where |
+|---|---|
+| One Arrow library (decided 5) | Apache Arrow Java 19.0.0 for every Arrow artifact; `ArrowIpc` (compute) and `ArrowIpcWriter` (server) written with `arrow-vector`, same wire format; the hand-written flatbuffers code deleted; the console passes the server's bytes through and writes no Arrow (`core/arrow_answer.py` keeps `wanted`, `decode`, `pass_on`) |
+| The service (decided 1, Q4) | module `drishti-flight`: `FlightService` (TLS always, its own port, the engine `flight` off as shipped), `DrishtiFlightProducer`, `FlightBackend` (all the server provides) |
+| Tickets (Q1) | `FlightRequest`: a form (`kind`, `model`, `pivot`, `measure`, `lake`) and a Rachana request; the measure call is read by the VaR form until Rachana's own `measure(...)` parser can be called in the server |
+| The forms (Q2, Q6) | `server.flight`: `KindFlightForm` (the Data view's reader, a download's checks), `AnswerFlightForms` (MQ, the pivot engine), `VarFlightForm` (`var.scenarios` float64, `var.parts` float32 for positions and trades), `LakeFlightForm` (the lake files, LAKE_CONFIG.md) |
+| Tokens (Q3) | `TokenAuthenticator` (the handshake, a session after it) over `ServerFlightBackend.authenticate` (API tokens with `data:read[:domain]`, an application's token on behalf of a person, embed tokens) |
+| The cluster (Q5) | `FlightNodes`: this node and the live Drishti\*net members by their real addresses; the Python client reads parts in parallel and tries the next address of a part |
+| Streams (Q7) | `DoGet` with `stream: true`; the sequence in each batch's app metadata; resume is stateless (VaR: the date's intraday stamp; lake: a cursor column) |
+| Limits (Q8) | `FlightLimits` per role, Arrow memory per read and per node (`ArrowMemory`, Health's `arrow-flight`), busy protection `Work.FLIGHT` |
+| Audit (Q9, Q11) | `data.flight` per read; `FlightActivity`; Admin → Data out, mock-ups A (the page) and B (the map) as two views of one screen over `GET /api/v1/admin/data-out` |
+| Q12 | `Add-Opens: java.base/java.nio` in the server jar's manifest; the test forks pass the option |
+
