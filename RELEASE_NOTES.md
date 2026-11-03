@@ -13,6 +13,44 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.a — release notes
+
+*Released 2026-11-03.* **The pivot engine, with pivots over trade documents in Rachana paths; one Engines menu and the Help hub; the data
+inbox; the in-memory lake in its own module.**
+
+## What changes for VaR users
+
+- **VaR now lives in the Engines menu.** The VaR and Exposure menus are replaced by one **Engines** menu with a column per running
+  engine (VaR `VAR`, Exposure `EXP`, FRTB-SA `FRSA`, SIMM `SIMM`), shown to the roles that open each engine; the command words work as
+  before, and a role that does not open an engine is told so in words.
+- **Pivot any table**, with VaR and ES beside notional or P&L: a VaR cell is always the VaR engine's figure for that cell's scope, never a
+  sum of its parts (the grid says so in each cell's provenance).
+- **VaR figures are unchanged**: VAR_CHECK_LINE
+- Help is reorganised into sections (Risk measures holds the VaR guide and its tutorials); old addresses and F1 still work.
+
+## New
+
+- **The pivot engine** (PIVOT_GUIDE.md): one engine for every pivot in Drishti (the pivot screen, Chart any table, the Sutra pivot panel),
+  true totals, expand and collapse, provenance, time travel, Top N with Others, exports to Excel (with its outline and formulas where a
+  figure adds up), CSV, **JSON Lines** and Arrow.
+- **Pivots over documents**: fields are Rachana paths (`$.LEGS[*].NOTIONAL`, `$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME`); a list is
+  its own grain (legs, cash flows, events), a trade's figure is counted once per trade in a per-leg view, two lists are never crossed.
+  Tutorial 33 and the guide's six worked examples use the demo lake's real figures.
+- **One Engines menu** and **the Help hub** (search, most used, sections; guides paired with their tutorials).
+- **The data inbox** (DATA_GUIDE.md section 7): files dropped in `<data>/dataload/inbox` with a `.ready` marker (or `ready.all`) are
+  loaded into the lake by the Java loader every 10 minutes, moved to the outbox with a report, and the cluster is told; off by default.
+- **The in-memory lake in its own module**, `drishti-memlake` (no change to settings or behaviour).
+
+## Upgrade
+
+- Rebuild and restart as usual; the server jar is `drishti-server-2.9.11.a-exec.jar`. No configuration change is required. The data
+  inbox and the pivot engine have their switches in Admin → Engines (`config/engines/dataload.yaml` is off by default).
+
+## Known open
+
+- Java 25 is not part of this release's checks (Java 21 is the production runtime).
+- The MR cube moved to 2.9.11.b, with the rest of the pivot engine's work.
+
 # Drishti 2.9.11 — release notes
 
 *Released 2026-11-03.* **Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines switched per

@@ -885,6 +885,13 @@ with the hedging-set table; the netting-set list with the selected set's breakdo
 figures on the netting-set and counterparty pages (the term bars per date beside CVA's future bars). Each option self-contained HTML, dark
 by default and light with `#light`, copied to `docs/lenses/mockups/<screen>/` with its build checklist.
 
+**Drawn and decided (product owner, 2026-11-03; the general rule: every option built, A the default, as views of one screen over one API):**
+SA-CCR ([A](../lenses/mockups/saccr/A.html) the EAD waterfall, the default; [B](../lenses/mockups/saccr/B.html) the netting-set list with
+the selected set's breakdown; [C](../lenses/mockups/saccr/C.html) a counterparty's sets side by side) and FVA
+([A](../lenses/mockups/fva/A.html) the FVA section of the netting-set page with term bars beside CVA's, the default;
+[B](../lenses/mockups/fva/B.html) the netting sets by FVA; [C](../lenses/mockups/fva/C.html) the counterparty page). The CCR cube's A, B
+and C are all built too, A the landing.
+
 ## 13. The playgrounds' explanations
 
 The words of each playground's Explain tab are written ahead of the engines, in the VaR Playground's format (a line `## <title>`, then
