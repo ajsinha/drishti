@@ -52,6 +52,7 @@ class LakeFileLoadTest {
         Files.writeString(tmp.resolve("lakes/risk.yaml"), "lake: risk\nformat: delta\nroot: '" + tmp.resolve("lake") + "'\ntables:\n"
                 + "  risk.scenario-pv:\n    id: POSITION_ID\n    date: BUSINESS_DATE\n    load-mode: " + mode + "\n"
                 + (partition == null ? "" : "    partition-by: [" + partition + "]\n")
+                + "    maintenance: {checkpoint-interval: 20}\n"
                 + "    promote: [LEGAL_ENTITY, DESK, TT_BOOK, TRADE_ID, QUANTITY, BASE_PV, CCY, POSITION_ID]\n    vectors: [SCENARIO_PV]\n");
     }
 
@@ -79,6 +80,7 @@ class LakeFileLoadTest {
         assertThat(table.resolve("_delta_log")).isDirectory();
         String log = Files.readString(table.resolve("_delta_log/00000000000000000000.json"));
         assertThat(log).contains("\"partitionColumns\":[\"business_date\",\"DESK\"]");
+        assertThat(log).contains("delta.checkpointInterval");                       // the lake file's maintenance, as a table property
     }
 
     @Test

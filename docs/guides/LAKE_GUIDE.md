@@ -237,9 +237,12 @@ Delta and Iceberg templates name the lake and their entries (`lake: demo`, `lake
 concerns beside them (`union`, `source-name`, `mode.<kind>`, `layout.<kind>.type-ahead`). Every shipped pack is in this form, and
 `config/lakes/demo.yaml` holds their entries. When a writer first meets a kind its lake file lacks (the data inbox does this), the pack's
 entry is copied into the lake file once and said so; from then on the lake file is the truth and an administrator edits it there. A pack
-without a `lake:` block gives the layout of its Delta or Iceberg connector template. The two connectors that read official results
-(`var-results`, `exposure-results`) stay in the older form: the server points them at the publisher's own store
-(`drishti.var.official.*`, `drishti.ccr.exposure.official.*`).
+without a `lake:` block gives the layout of its Delta or Iceberg connector template.
+
+The official results are lakes of their own: `config/lakes/var-official.yaml` and `ccr-official.yaml` take their format, root and storage
+from the publishers' settings (`drishti.var.official.format`, `.root`, `.storage`; `drishti.ccr.exposure.official.*`), so BI's readers
+(`var-results`, `exposure-results`, which name them) follow wherever and however the results are published; when the publisher writes
+Iceberg the server makes the reader an Iceberg connector, nothing else.
 
 A connector file written from an older template keeps working (the older form, one warning); a template update never adds `lake:` to it
 (with `root` and `layout` beside it the connector would be refused): `drishti.py lake migrate-config` moves it.
@@ -263,13 +266,43 @@ as before, with one warning naming the tool. To move:
 
 Nothing under the data folder changes: tables keep their files and partitions. The old keys are read for one more release, then removed.
 
-## 9. The local cluster (drishti-stack)
+## 9. Maintenance from the lake file
+
+`drishti.py lake maintain` (and Admin → Lakes' maintenance) acts on a table's own settings in its lake file, over the maintenance file's
+(`<data>/lakes/lake-maintenance.yaml`) and under the domain's retention floor (risk and risk-results keep seven years whatever is set):
+
+| Lake file | Maintenance does |
+|---|---|
+| `retention: 260` / `260d` / `7y` | keeps that many business dates (years: 261 a year); older dates removed |
+| `maintenance.compaction: false` | no compaction (default: compacted, a laid-out table re-sorted by its layout) |
+| `maintenance.target-file-mb` | the compaction's file size |
+| `maintenance.vacuum` / `expire-snapshots` (`168h`, `7d`), `vacuum-hours`, `orphan-hours` | Delta vacuum or Iceberg snapshot expiry age; Iceberg orphan files |
+| `maintenance.checkpoint` | a checkpoint each run (default true) |
+| `maintenance.checkpoint-interval` | the writers set it as the Delta table's `delta.checkpointInterval`; maintenance checkpoints each run |
+| `time-travel: 30d` | vacuum and expiry never go below it: old versions stay readable that long |
+
+A maintenance key it does not know is said in the run's log, never guessed.
+
+## 10. The data inbox's loader
+
+The inbox runs the parallel loader as a child process. It is handed the settings the lake files refer to, as the server resolves them
+(`DRISHTI_DELTA_ROOT` given only as a `--setting` included), and reads the same lake files through the same reader: it writes where the
+server's connectors read.
+
+## 11. An Iceberg demo store
+
+`tools/build_demo_lakes.py --store calypso=iceberg` (or `risk=iceberg`) copies the tables into Iceberg and writes their connectors in the
+lake form: `lake: demo-iceberg`, its lake file `demo-iceberg.yaml` beside the connector folder (`config/lakes/`), one entry per moved
+table from the pack's recommended entry (the partition field kept as a promoted column: Iceberg tables of the layout are partitioned by
+business date alone). Back to Delta, the pack's own connector (`lake: demo`) serves again.
+
+## 12. The local cluster (drishti-stack)
 
 The stack's synthetic lakes (`stack.yaml` `lakes:`) are laid out as the demo lake's file says: `tools/bench/trades.py` writes through it
 (`lake build --lake demo --lake-root data/stack/lakes/<name>`), and a node with `lake:` reads the same file with its root,
 `${DRISHTI_DELTA_ROOT}`, set to its synthetic lake. One description of the tables for every node; only the root differs.
 
-## 10. Admin → Lakes
+## 13. Admin → Lakes
 
 The page lists every lake (its format, root, whether it is held in memory) and each table: its kind, path, partition columns, promoted
 columns, vectors, id and load mode, read-only from the files. A lake file the reader refuses is shown as the refusal, so the page always

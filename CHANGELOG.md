@@ -43,7 +43,14 @@
   lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
   The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
   out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
-  `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only).
+  `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only). **The official results**
+  are lakes of their own (`config/lakes/var-official.yaml`, `ccr-official.yaml`: format, root and storage from the publishers' settings),
+  so `var-results` and `exposure-results` name them and the demo has no older-form connector left; the server only makes them Iceberg
+  when the publisher writes Iceberg. **The data inbox's loader** is handed the settings the lake files refer to as the server resolves
+  them (a `DRISHTI_DELTA_ROOT` given as a `--setting` reaches it). **`build_demo_lakes.py --store ...=iceberg`** writes its connectors in
+  the lake form (`lake: demo-iceberg`, its lake file beside the connector folder). **`lake maintain`** acts on a table's lake file:
+  `retention`, `maintenance` (compaction, vacuum or expire-snapshots age, checkpoint, target size; `checkpoint-interval` set by the
+  writers as `delta.checkpointInterval`) and `time-travel`, over the maintenance file and under the domain's retention floor.
 
 ## 2.9.11.f
 
