@@ -76,8 +76,12 @@ async def page(request: Request):
         memory = await request.app.state.backend.admin("GET", "/lakes/memory", me)
     except BackendError:
         memory = None
+    try:                                  # the lake files (LAKE_GUIDE.md): every lake and table as the server reads them, read-only
+        lake_files = await request.app.state.backend.admin("GET", "/lakes/files", me)
+    except BackendError:
+        lake_files = None
     return render(request, "admin/lakes.html", cfg=lakes.cfg.as_dict(), status=status, runs=lakes.runs(10), tables=figures, maint=maint,
-                  memory=memory if memory and memory.get("stores") else None)
+                  memory=memory if memory and memory.get("stores") else None, lake_files=lake_files)
 
 
 @router.get("/lakes/table")

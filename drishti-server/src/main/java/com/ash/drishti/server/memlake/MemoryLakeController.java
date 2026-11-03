@@ -63,6 +63,30 @@ public class MemoryLakeController {
         return out;
     }
 
+    /**
+     * Every lake of the lake files (config/lakes/, docs/guides/LAKE_GUIDE.md) and its tables, read-only: Admin -> Lakes lists them above the
+     * memory stores. A lake file the reader refuses is shown as the refusal, so the page always opens. {@code check=true} adds the
+     * comparison of each local table with its lake file (LAKE_CONFIG.md section 6).
+     */
+    @GetMapping("/api/v1/admin/lakes/files")
+    public Map<String, Object> lakeFiles(@RequestParam(name = "check", required = false, defaultValue = "false") boolean check,
+            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("dir", com.ash.drishti.lakeconfig.Lakes.dir().toAbsolutePath().normalize().toString());
+        try {
+            com.ash.drishti.lakeconfig.Lakes lakes = com.ash.drishti.lakeconfig.Lakes.current();
+            out.put("lakes", lakes.describe());
+            if (check) {
+                out.put("findings", com.ash.drishti.lakeconfig.LakeCheck.check(lakes, Map.of()));
+            }
+        } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
+            out.put("lakes", List.of());
+            out.put("error", e.getMessage());
+        }
+        return out;
+    }
+
     @GetMapping("/api/v1/admin/lakes/memory/jobs")
     public Map<String, Object> jobs(@RequestParam(name = "table", required = false) String table,
             @RequestParam(name = "limit", required = false, defaultValue = "100") int limit, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
