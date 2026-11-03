@@ -30,9 +30,13 @@ import org.springframework.core.env.Environment;
 public class FvaConfiguration {
 
     @Bean
-    FvaService fvaService(ExposureService exposure, FvaProperties props) {
+    FvaService fvaService(ExposureService exposure, FvaProperties props, org.springframework.beans.factory.ObjectProvider<ExposureOfficial> official) {
         FvaService svc = new FvaService(exposure, props);
         FvaResultEngine.install(svc);                                  // the computed kind fva-result (the reactive connector fva-engine)
+        ExposureOfficial o = official.getIfAvailable();
+        if (o != null) {                                               // the official record captures each scope's FVA with its exposure
+            o.fva(s -> svc.running() ? FvaFigures.official(svc.price(null, s, FvaService.Choices.none(), FvaService.Extras.NONE)) : null);
+        }
         return svc;
     }
 

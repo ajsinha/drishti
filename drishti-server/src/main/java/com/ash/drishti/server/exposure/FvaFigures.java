@@ -94,6 +94,27 @@ final class FvaFigures implements ViewAugmenter {
         return p.isPresent() ? p : Viewer.current().map(v -> new Principal(v.user(), v.roles()));
     }
 
+    /**
+     * A scope's FVA as the official end-of-day record keeps it beside its exposure (FVA_GUIDE.md section 6.2): the figures, the settings that
+     * priced them and the flags; the same engine and settings as every answer.
+     */
+    static Map<String, Object> official(FvaService.Answer a) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("status", "ok");
+        m.put("fca", a.total().fca());
+        m.put("fba", a.total().fba());
+        m.put("fva", a.total().fva());
+        m.put("epeLife", a.total().epeLife());
+        m.put("fundingSpread", a.borrow().id());
+        m.put("fundingSource", a.borrow().source());
+        m.put("discountCurve", a.discount() == null ? "none (discounted paths)" : a.discount().id());
+        m.put("eePoint", a.point().text());
+        m.put("fbaOn", a.fba());
+        m.put("fundingSurvival", a.survivalOn());
+        m.put("flags", a.flags());
+        return m;
+    }
+
     static Map<String, Object> figures(FvaService.Answer a, String scope) {
         FvaMath.Result r = a.total();
         var g = a.scoped().date().book().grid();
