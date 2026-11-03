@@ -64,7 +64,7 @@ def _rows(kind, items):
 
 class TradingBackend(FakeBackend):
     """The servers' answers; ``previous=False`` holds no valuations the day before; ``paths=False`` answers the exposure engine's exact
-    what-if 503 (its Python engine not running), so the check falls back to the add-on proxy; ``history='replay'`` gives no official
+    what-if 404 (the copied trade has no paths on the run), so the check falls back to the add-on proxy; ``history='replay'`` gives no official
     history."""
 
     def __init__(self, previous: bool = True, paths: bool = True, history: str = "official", carried: str | None = None):
@@ -194,7 +194,7 @@ class TradingBackend(FakeBackend):
             raise BackendError(404, "DRS-5401", f"no exposure of {scope}")
         if method == "POST" and path == "/what-if":
             if body.get("method") == "paths" and not self.paths:
-                raise BackendError(503, "DRS-5446", "the Python exposure engine is not running")
+                raise BackendError(404, "DRS-1001", "no exposure paths for the trade MX-20000010 on 2026-09-30")
             base = 401_500_000 if scope == "CPTY:CP-ALDERSHOT" else 50_000_000
             return {"base": {"peakPfe": base}, "with": {"peakPfe": base + 7_700_000}, "incremental": {"peakPfe": 7_700_000}, "method": body.get("method"),
                     "flags": ["proxy"] if body.get("method") == "addon" else []}
