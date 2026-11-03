@@ -107,7 +107,9 @@ public final class Signatures {
             Map<String, Object> m = new LinkedHashMap<>();
             m.put("name", name);
             m.put("family", family);
-            m.put("runs", runs);
+            if (runs != null && !runs.isEmpty()) {
+                m.put("runs", runs);
+            }
             m.put("signature", signature);
             m.put("params", params.stream().map(Param::toMap).toList());
             m.put("returns", returns);

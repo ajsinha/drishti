@@ -18,6 +18,11 @@ package com.ash.drishti.server.bi.expr;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.rachana.el.check.ElType;
+import com.ash.drishti.rachana.el.check.Fields;
+import com.ash.drishti.rachana.el.check.Problem;
+import com.ash.drishti.rachana.el.check.Scope;
+import com.ash.drishti.rachana.el.check.Signatures;
 import com.ash.drishti.server.bi.dataset.ExprParser;
 import com.ash.drishti.server.bi.dataset.Node;
 import java.util.List;
@@ -167,9 +172,9 @@ class DelLanguageTest {
 
     /** A model of two aliases for the checker: trades (mtm decimal, desk string masked, tradeDate date) and desks. */
     static final Fields MODEL = new Fields() {
-        final Map<String, Fields.Field> cols = Map.of("trades.mtm", new Fields.Field("trades.mtm", DelType.DECIMAL, false), "trades.desk",
-                new Fields.Field("trades.desk", DelType.STRING, true), "trades.tradeDate", new Fields.Field("trades.tradeDate", DelType.DATE, false), "trades.status",
-                new Fields.Field("trades.status", DelType.STRING, false), "trades.n", new Fields.Field("trades.n", DelType.INTEGER, false));
+        final Map<String, Fields.Field> cols = Map.of("trades.mtm", new Fields.Field("trades.mtm", ElType.DECIMAL, false), "trades.desk",
+                new Fields.Field("trades.desk", ElType.STRING, true), "trades.tradeDate", new Fields.Field("trades.tradeDate", ElType.DATE, false), "trades.status",
+                new Fields.Field("trades.status", ElType.STRING, false), "trades.n", new Fields.Field("trades.n", ElType.INTEGER, false));
 
         @Override
         public Optional<Fields.Field> field(List<String> parts) {
@@ -232,18 +237,18 @@ class DelLanguageTest {
 
     @Test
     void typesWhatIsRight() {
-        assertThat(check("sum(trades.mtm, where=trades.status == 'Live')", Scope.AGGREGATE).type()).isEqualTo(DelType.DECIMAL);
-        assertThat(check("count(trades)", Scope.AGGREGATE).type()).isEqualTo(DelType.INTEGER);
+        assertThat(check("sum(trades.mtm, where=trades.status == 'Live')", Scope.AGGREGATE).type()).isEqualTo(ElType.DECIMAL);
+        assertThat(check("count(trades)", Scope.AGGREGATE).type()).isEqualTo(ElType.INTEGER);
         assertThat(check("measure('m_mtm') / count(trades)", Scope.AGGREGATE).measures()).containsExactly("MTM");
-        assertThat(check("trades.tradeDate - trades.tradeDate", Scope.ROW).type()).isEqualTo(DelType.INTEGER);
-        assertThat(check("trades.n // 2", Scope.ROW).type()).isEqualTo(DelType.INTEGER);
+        assertThat(check("trades.tradeDate - trades.tradeDate", Scope.ROW).type()).isEqualTo(ElType.INTEGER);
+        assertThat(check("trades.n // 2", Scope.ROW).type()).isEqualTo(ElType.DECIMAL);           // checked mode reads x // y as floor(x / y)
         assertThat(check("trades.tradeDate >= '2026-10-01'", Scope.ROW).ok()).isTrue();
         assertThat(check("trades.status in user.desks", Scope.RULE).ok()).isTrue();
         assertThat(check("rank(sum(trades.mtm), by=[trades.status])", Scope.AGGREGATE).ok()).isTrue();
         assertThat(check("ytd(sum(trades.mtm), trades.tradeDate)", Scope.AGGREGATE).fields()).contains("trades.tradeDate", "trades.mtm");
         // wave B: the filter context, with its where= read per row and its field lists (or ALL)
         assertThat(check("calc(measure('MTM'), ignore=[trades.status], where=trades.mtm > 0)", Scope.AGGREGATE).ok()).isTrue();
-        assertThat(check("share_of(measure('MTM'), over=ALL)", Scope.AGGREGATE).type()).isEqualTo(DelType.DECIMAL);
+        assertThat(check("share_of(measure('MTM'), over=ALL)", Scope.AGGREGATE).type()).isEqualTo(ElType.DECIMAL);
         assertThat(check("avg_by(sum(trades.mtm), by=[trades.status])", Scope.AGGREGATE).ok()).isTrue();
         assertThat(DelPrinter.print(DelLowering.lower(DelParser.parse("calc(measure('MTM'), ignore=ALL, where=trades.mtm > 0)"))))
                 .isEqualTo("calc(measure('MTM'), where=trades.mtm > 0, ignore=ALL)");
@@ -255,14 +260,14 @@ class DelLanguageTest {
     void everyCatalogueExampleReads() {
         FunctionCatalog cat = FunctionCatalog.get();
         assertThat(cat.all()).hasSizeGreaterThan(50);
-        for (FunctionCatalog.Fn f : cat.all()) {
+        for (Signatures.Signature f : cat.all()) {
             assertThat(f.examples()).as(f.name()).hasSizeGreaterThanOrEqualTo(2);
             assertThat(f.description()).as(f.name()).isNotBlank();
-            for (FunctionCatalog.Example e : f.examples()) {
+            for (Signatures.Example e : f.examples()) {
                 DelAst tree = DelParser.parse(e.expr());
                 DelChecker.Checked c = DelChecker.check(tree, null, Fields.NONE);
                 if (f.built()) {
-                    assertThat(c.problems().stream().filter(DelException.Problem::error)).as(e.expr()).isEmpty();
+                    assertThat(c.problems().stream().filter(Problem::error)).as(e.expr()).isEmpty();
                     assertThat(DelLowering.lower(tree)).as(e.expr()).isNotNull();
                 } else {
                     assertThat(c.problems()).as(e.expr()).anyMatch(p -> "DRS-9129".equals(p.code()));

@@ -17,6 +17,7 @@ package com.ash.drishti.server.bi.expr;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.ash.drishti.rachana.el.check.Signatures;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -41,7 +42,7 @@ class FunctionDocsTest {
             guide = updated;
         }
         assertThat(FunctionDocs.section(guide)).as("BI_LANGUAGE_REFERENCE.md differs from functions.yaml: run this test with -Dexpressions.doc.update=true").isEqualTo(rendered);
-        for (FunctionCatalog.Fn f : FunctionCatalog.get().all()) {
+        for (Signatures.Signature f : FunctionCatalog.get().all()) {
             assertThat(guide).contains("#### `" + f.signature() + "`");
         }
     }
