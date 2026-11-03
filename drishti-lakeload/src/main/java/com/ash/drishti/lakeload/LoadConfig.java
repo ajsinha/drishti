@@ -436,6 +436,10 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
                 targetStorage = lakeStorage;
             }
             Map<String, String> merged = new LinkedHashMap<>(entry.properties());
+            String interval = entry.maintenance().get("checkpoint-interval");       // the lake file's maintenance: a Delta table's property
+            if (interval != null && !interval.isBlank() && entry.format().equals("delta")) {
+                merged.putIfAbsent("delta.checkpointInterval", interval.trim());
+            }
             merged.putAll(props);
             props = merged;
             if (tf.equals("iceberg") && !lake.catalog().isEmpty()) {
