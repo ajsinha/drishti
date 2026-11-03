@@ -65,7 +65,7 @@ may still change before it ships, and the document records each change.
 | [SACCR.md](SACCR.md) | SACCR (`sa-ccr`) | PARKED (design kept) |
 | [COLL.md](COLL.md) | COLL (`collateral-balance`): holdings kept, values computed | PARKED (design kept) |
 | [MC.md](MC.md) | MC (`margin-call`): calls kept, expected call computed | PARKED (design kept) |
-| [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`, `exposure-whatif`; the stored `exposure-profile` retired) | BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the Python what-if and its exact `paths` method, the CLI); Part II of the exposure guide since 2026-10-26 |
+| [EXPOSURE_GUIDE.md Part II](../guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance) | EXP (`exposure-result`; the stored `exposure-profile` retired) | BUILT (part 1: engine, API, computed kind, official results; part 2: the explorer, the what-if and its exact `paths` method in the Java engine, the CLI); Part II of the exposure guide since 2026-10-26 |
 | [LIM.md](LIM.md) | LIM (`credit-limit`): limits kept, usage computed | PARKED (design kept) |
 | [GRP.md](GRP.md) | GRP (`counterparty-group`): members kept, usage computed | PARKED (design kept) |
 | [CVA.md](CVA.md) | CVA (`cva`) | PARKED (design kept) |

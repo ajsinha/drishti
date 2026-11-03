@@ -15,6 +15,29 @@
 -->
 # Changelog
 
+## 2.9.12 — Counterparty engines (unreleased)
+
+### The exposure what-if in Java
+
+- **The exact pre-deal exposure what-if (`POST /api/v1/exposure/what-if`, method `paths`) is computed by the Java exposure engine
+  (EXPOSURE_GUIDE.md sections 7, 18.7 and 19.5; IMPLEMENTATION_PLAN 2.9.12 row 5; COUNTERPARTY_ENGINES.md 6.4).** `ExposureWhatIfMath`
+  (`drishti-compute`) adds each candidate's paths to its netting set's value path by path and computes the set's collateral and exposure
+  again with `ExposureMath`, the same code as every exposure figure; `ExposureWhatIfPaths` reads the scope and each joined netting set
+  as the asker. The same request and the same answer field by field (only the `engine` and `note` texts say Java); no sandbox, no
+  reactive connector, no compute workers: it answers on every server that runs exposure. Parity: the Python engine's answers on a book
+  of four netting sets (margined with thresholds, MTA, IA, rounding and IM; unmargined with IA; no CSA; collateral posted), six what-ifs
+  over the three collateral models, both rank rules, an unwind and a horizon change, recorded before it was retired
+  (`ccr/whatif-parity.json`), are given again to the cent (`ExposureWhatIfMathTest`); `ExposureApiTest` asks an unwind of a whole set,
+  a copy of its own and a set outside the scope (`400 DRS-5440`).
+- **The Python exposure engine is retired:** `drishti_compute.exposure` (`measures.py`, `whatif.py`) and its tests, the compute pool
+  `exposure` and `DRISHTI_COMPUTE_EXPOSURE_WORKERS`, the counterparty-risk pack's reactive connector `exposure-whatif` with its kind,
+  contract and command `XWIF`, the `exposure-result` parameters `detail` and `sets` (`ExposureWhatIfInputs`), and `DRS-5446`. A
+  never-edited `exposure-whatif.yaml` connector file is removed at start (kept beside it as `.retired-<time>.bak`); an edited one stays,
+  its kind listed as obsolete. The pre-deal check is the word `EXP`'s: the explorer's Pre-deal tab, and the Trading landing's new-trade
+  check (now gated on the words `VAR` and `EXP`); the *Pre-deal check* menu entries and the `XWIF` chips are gone (Trading's chips and
+  placeholder show `EXP CPTY:CP-ALDERSHOT`). The Trading check falls back to the `addon` proxy when the copied trade has no paths on the
+  run. The explorer's browser test runs without the compute workers.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox

@@ -1381,9 +1381,8 @@ paths), `--q Q` (the PFE confidence, default 0.95) and `--collateral lagged|curr
 - `exposure whatif SCOPE [--like TRADE] [--factor F] [--set NETTING_SET] [--candidates FILE.json] [--method paths|addon]`: the
   scope's exposure before and after candidate trades. `--like` copies a booked trade's paths on the run (`--factor -1` is its unwind),
   `--set` the netting set it joins (default a set of its own); `--candidates` is a JSON list of `{tradeId, nettingSet, paths:
-  {copyOf, factor} or {runId, mtm}, assetClass, notional, maturityDate, mtm}`. `paths` (the default) is exact, by the Python exposure
-  engine (`exposure-whatif`; the compute workers must be on, `DRISHTI_COMPUTE_ENABLED=true`, else `DRS-5446`); `addon` is the
-  conservative proxy computed by the server.
+  {copyOf, factor} or {runId, mtm}, assetClass, notional, maturityDate, mtm}`. `paths` (the default) is exact, the candidates' paths
+  added to their netting sets path by path; `addon` is the conservative proxy; both computed by the server's exposure engine.
 
 Exit codes are `0`, `1` (the server said no) and `2` (usage).
 
