@@ -28,9 +28,16 @@ import java.util.function.Function;
  * native}, and the {@code s3.*} settings of {@code <prefix>.storage} as placeholders). This is the template itself as the server sees
  * it: the file generated from it at start says {@code plugin: iceberg}, a file never edited follows when the format changes (its
  * template's fingerprint changed), and an edited file is kept and its difference listed (Admin &rarr; Connectors &rarr; Template
- * updates). Delta (the default): the template unchanged. Stateless.
+ * updates). Delta (the default): the template unchanged. A reader in the lake form ({@code lake: var-official} or {@code ccr-official},
+ * whose lake files take format, root and storage from the publisher's settings) only has its plugin made Iceberg. Stateless.
  */
 public final class OfficialReaders {
+
+    /**
+     * The lake of each publisher's results (config/lakes/var-official.yaml, ccr-official.yaml): its format, root and storage are the
+     * publisher's own settings, so a reader that names it needs only its plugin made Iceberg when the publisher writes Iceberg.
+     */
+    static final Map<String, String> LAKES = Map.of("var-official", "drishti.var.official", "ccr-official", "drishti.ccr.exposure.official");
 
     /** The settings prefix of each official kind's publisher. */
     static final Map<String, String> PREFIX = Map.of("var-official", "drishti.var.official", "exposure-official", "drishti.ccr.exposure.official",
@@ -41,8 +48,13 @@ public final class OfficialReaders {
 
     /** The prefix of the publisher whose results the template reads, or null when it is not a reader of official results. */
     static String prefixOf(Map<String, Object> t) {
-        if (t == null || !(t.get("settings") instanceof Map<?, ?> s) || !"risk-results".equals(String.valueOf(s.get("domain")))
-                || !"delta".equals(String.valueOf(t.get("plugin")))) {
+        if (t == null || !(t.get("settings") instanceof Map<?, ?> s) || !"delta".equals(String.valueOf(t.get("plugin")))) {
+            return null;
+        }
+        if (LAKES.containsKey(String.valueOf(s.get("lake")))) {
+            return LAKES.get(String.valueOf(s.get("lake")));
+        }
+        if (!"risk-results".equals(String.valueOf(s.get("domain")))) {
             return null;
         }
         for (String k : ConnectorFiles.kindNames(t.get("kinds"))) {
@@ -72,6 +84,12 @@ public final class OfficialReaders {
         }
         Map<String, Object> out = new LinkedHashMap<>(t);
         Map<String, Object> settings = new LinkedHashMap<>((Map<String, Object>) t.get("settings"));
+        if (LAKES.containsKey(String.valueOf(settings.get("lake")))) {   // the lake form: root and storage come from the lake file
+            out.put("plugin", "iceberg");
+            settings.put("engine", "native");
+            out.put("settings", settings);
+            return out;
+        }
         Object root = settings.get("root");
         out.put("plugin", "iceberg");
         settings.put("root", "${" + prefix + ".root" + (root == null ? "" : ":" + root) + "}");

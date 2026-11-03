@@ -248,28 +248,8 @@ connectors:
     kinds:
     - var-official
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: risk-results
-      layout:
-        var-official:
-          columns:
-          - HIERARCHY
-          - NODE_ID
-          - NODE_NAME
-          - PARENT_ID
-          - LEVEL
-          - CAPTURE_ID
-          - RESULT_VERSION
-          - VAR
-          - ES
-          - LIMIT
-          - LIMIT_USE
-          - DIVERSIFICATION
-          - HYPO_PNL
-          - EXCEPTIONS_250
-          - TRAFFIC_LIGHT
-          - CONFIDENCE
-          - ES_CONFIDENCE
+      lake: var-official
+      lake-tables: risk-results.var-official
   var-positions:
     plugin: var-positions
     enabled: ${DRISHTI_VAR_ENABLED:true}
@@ -873,6 +853,25 @@ lake:
       - FRTB_BUCKET
       - SIMM_RISK_CLASS
       - SIMM_BUCKET
+    risk-results.var-official:
+      promote:
+      - HIERARCHY
+      - NODE_ID
+      - NODE_NAME
+      - PARENT_ID
+      - LEVEL
+      - CAPTURE_ID
+      - RESULT_VERSION
+      - VAR
+      - ES
+      - LIMIT
+      - LIMIT_USE
+      - DIVERSIFICATION
+      - HYPO_PNL
+      - EXCEPTIONS_250
+      - TRAFFIC_LIGHT
+      - CONFIDENCE
+      - ES_CONFIDENCE
 
 # History queries (TRD 1000015 30, docs/architecture/DATA_ARCHITECTURE.md › History queries: an entity over time, section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.

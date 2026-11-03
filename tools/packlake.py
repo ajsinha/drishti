@@ -33,8 +33,11 @@ DEMO_ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 #: the layout keys that belong to the lake entry (the rest of a kind's layout, type-ahead, stays with the connector: a reading concern)
 ENTRY_KEYS = {"columns": "promote", "vectors": "vectors", "sort-by": "sort-by", "file-rows": "file-rows", "row-group-rows": "row-group-rows",
               "flatten": "flatten"}
-#: the domains whose readers the server points at a publisher's own store (OfficialReaders): left in the older form
-OFFICIAL_DOMAINS = {"risk-results"}
+#: the official results' readers (OfficialReaders): each kind's own lake, whose root and format are its publisher's settings
+#: (config/lakes/var-official.yaml, ccr-official.yaml); the server makes the connector Iceberg when the publisher writes Iceberg
+OFFICIAL_LAKES = {"var-official": "var-official", "exposure-official": "ccr-official", "exposure-official-cpty": "ccr-official"}
+#: the lakes whose root, unless a server setting says otherwise, is the demo lake's (a tool reads their tables there)
+DEMO_ROOTED = {DEMO_LAKE, "var-official", "ccr-official"}
 
 
 def _list(v) -> list[str]:
@@ -66,7 +69,8 @@ def lake_form(manifest: dict, lake: str = DEMO_LAKE, partitions: dict[str, list[
     """``manifest`` (a pack.yaml mapping) with every Delta or Iceberg template's tables moved into its ``lake:`` block: an entry
     ``<domain>.<folder>`` per kind (``kind:`` when the folder is not the kind), the promoted columns, vectors, sort, file layout and
     flattened fields; ``partitions`` adds a partition after business_date (``{"trading.trade_endur": ["PRODUCT_TYPE"]}``). Each template
-    then names ``lake`` and ``lake-tables``. A template already in that form, or reading official results, is left as it is."""
+    then names ``lake`` and ``lake-tables`` (an official results reader names its publisher's lake, :data:`OFFICIAL_LAKES`). A template
+    already in that form is left as it is."""
     m = copy.deepcopy(manifest)
     key = "connectors" if isinstance(m.get("connectors"), dict) else "connector-templates"
     if not isinstance(m.get("lake"), dict):
@@ -76,8 +80,9 @@ def lake_form(manifest: dict, lake: str = DEMO_LAKE, partitions: dict[str, list[
         if not isinstance(c, dict) or c.get("plugin") not in ("delta", "iceberg"):
             continue
         st = dict(c.get("settings") or {})
-        if "lake" in st or str(st.get("domain")) in OFFICIAL_DOMAINS:
+        if "lake" in st:
             continue
+        official = {OFFICIAL_LAKES[k] for k in (c.get("kinds") or []) if k in OFFICIAL_LAKES}
         domain = st.get("domain") or m.get("pack")
         names = []
         for kind in [str(k) for k in (c.get("kinds") or [])]:
@@ -98,7 +103,7 @@ def lake_form(manifest: dict, lake: str = DEMO_LAKE, partitions: dict[str, list[
         kept = {k: v for k, v in st.items()
                 if k not in ("root", "domain", "table") and not k.startswith("table.") and k != "layout" and not k.startswith("layout.")}
         reading = {kind: {"type-ahead": _layout(st, kind)["type-ahead"]} for kind in (c.get("kinds") or []) if "type-ahead" in _layout(st, kind)}
-        new = {"lake": lake, "lake-tables": ",".join(names)}
+        new = {"lake": next(iter(official)) if len(official) == 1 else lake, "lake-tables": ",".join(names)}
         new.update(kept)
         if reading:
             new["layout"] = reading
@@ -117,7 +122,7 @@ def settings_view(manifest: dict, connector: dict) -> dict:
     entries = ((manifest.get("lake") or {}).get("tables") or {})
     names = _list(st.get("lake-tables")) or [n for n, e in entries.items() if (e or {}).get("kind", n.split(".", 1)[1]) in (connector.get("kinds") or [])]
     out = {k: v for k, v in st.items() if k not in ("lake", "lake-tables", "layout")}
-    out["root"] = DEMO_ROOT if st["lake"] == DEMO_LAKE else st["lake"]
+    out["root"] = DEMO_ROOT if st["lake"] in DEMO_ROOTED else st["lake"]
     layout: dict = {k: dict(v) for k, v in ((st.get("layout") or {}) if isinstance(st.get("layout"), dict) else {}).items()}
     table: dict = {}
     for n in names:

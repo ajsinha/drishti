@@ -295,37 +295,8 @@ connectors:
     kinds:
     - exposure-official-cpty
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: risk-results
-      layout:
-        exposure-official-cpty:
-          columns:
-          - HIERARCHY
-          - NODE_ID
-          - NODE_NAME
-          - PARENT_ID
-          - LEVEL
-          - COUNTERPARTY
-          - LEGAL_ENTITY
-          - RESULT_VERSION
-          - RUN_ID
-          - PATHS
-          - CE
-          - EPE
-          - EEPE
-          - PEAK_EE
-          - PEAK_PFE_95
-          - PEAK_PFE_99
-          - EAD_IMM
-          - PEAK_PFE_DATE
-          - PFE_95_1Y
-          - PFE_95_5Y
-          - EE_1Y
-          - EE_5Y
-          - NETTING_SETS
-          - TRADES
-          - FAILED_TRADES
-          - PARTIAL_SETS
+      lake: ccr-official
+      lake-tables: risk-results.exposure-official-cpty
   exposure-store:
     plugin: delta
     enabled: ${DRISHTI_LAKE_ENABLED:true}
@@ -786,6 +757,34 @@ lake:
     collateral.collateral-balance: null
     collateral.margin-call: null
     collateral.simm: null
+    risk-results.exposure-official-cpty:
+      promote:
+      - HIERARCHY
+      - NODE_ID
+      - NODE_NAME
+      - PARENT_ID
+      - LEVEL
+      - COUNTERPARTY
+      - LEGAL_ENTITY
+      - RESULT_VERSION
+      - RUN_ID
+      - PATHS
+      - CE
+      - EPE
+      - EEPE
+      - PEAK_EE
+      - PEAK_PFE_95
+      - PEAK_PFE_99
+      - EAD_IMM
+      - PEAK_PFE_DATE
+      - PFE_95_1Y
+      - PFE_95_5Y
+      - EE_1Y
+      - EE_5Y
+      - NETTING_SETS
+      - TRADES
+      - FAILED_TRADES
+      - PARTIAL_SETS
     risk.simulation-run:
       promote:
       - RUN_ID

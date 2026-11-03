@@ -137,7 +137,7 @@ public final class Lakes {
     }
 
     /** The lakes shipped in this module's jar ({@code drishti/lakes/<name>.yaml}, a copy of {@code config/lakes/<name>.yaml}). */
-    static final List<String> SHIPPED = List.of("demo");
+    static final List<String> SHIPPED = List.of("demo", "var-official", "ccr-official");
 
     /** Lakes built in code (tests, a tool that was handed one lake). */
     public static Lakes of(Lake... lakes) {

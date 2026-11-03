@@ -132,7 +132,11 @@ public final class ConnectorLake {
         }
         // storage keys are the object store's: s3.<key> for an S3 root or a catalog's warehouse; another scheme's keys as written
         boolean s3 = lake.root().isEmpty() || lake.root().startsWith("s3://") || lake.root().startsWith("s3a://");
-        lake.storage().forEach((k, v) -> out.put(s3 && !k.startsWith("s3.") && !k.startsWith("tls.") && !k.startsWith("proxy.") ? "s3." + k : k, v));
+        lake.storage().forEach((k, v) -> {
+            if (v != null && !v.isBlank()) {                   // a reference that resolved to nothing (a publisher's unset s3.region) is no setting
+                out.put(s3 && !k.startsWith("s3.") && !k.startsWith("tls.") && !k.startsWith("proxy.") ? "s3." + k : k, v);
+            }
+        });
         lake.catalog().forEach((k, v) -> {
             if (!k.equals("type")) {
                 out.put(k, v);
