@@ -134,7 +134,11 @@ public final class Comoments implements AggFunction<Object> {
         }
         if ("steyx".equals(name)) {
             // Excel's STEYX(y, x): the standard error of y predicted from x, √((Σ(y−ȳ)² − (Σ(x−x̄)(y−ȳ))² / Σ(x−x̄)²) / (n − 2))
-            return n < 3 || cbb == 0 ? null : Math.sqrt(Math.max(0, caa - st[5] * st[5] / cbb) / (n - 2));
+            if (n < 3 || cbb == 0 || caa == 0) {
+                return caa == 0 && n >= 3 && cbb != 0 ? 0.0 : null;
+            }
+            double r2 = Math.min(1, st[5] / caa * (st[5] / cbb));           // r², each co-moment scaled first
+            return Math.sqrt(caa * (1 - r2) / (n - 2));
         }
         if (n < 2) {
             return null;
