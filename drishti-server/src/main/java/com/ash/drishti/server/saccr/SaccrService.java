@@ -198,6 +198,10 @@ public final class SaccrService {
     }
 
     private Run data(Principal p, String s, String up, LocalDate date, Saccr.Choices ch, boolean strict) {
+        if (up.contains(":") && !up.startsWith("CPTY:") && !up.startsWith("LE:") && !up.startsWith("NSET:")) {
+            throw new DrishtiException(ErrorCode.SACCR_BAD_REQUEST, "DRS-5410 SA-CCR adds over whole netting sets: the scopes are NSET:, CPTY:, LE:, BANK and "
+                    + "EXAMPLE, not " + s);
+        }
         SaccrData.Day day = data.day(new AsOf(date, null));
         if (!day.rowsRead()) {
             throw new DrishtiException(ErrorCode.NO_SOURCE_FOR_KIND, "no connector serves " + props.tradeKind() + ": load the SA-CCR classification rows first");
