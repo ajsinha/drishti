@@ -140,11 +140,23 @@ async def _readers(request: Request, me, domain: str, name: str) -> list[dict]:
     out = []
     try:
         listed = (await request.app.state.backend.admin("GET", "/connectors", me)).get("connectors", [])
+        lake_files = None
         for c in listed:
             if c.get("plugin") != "delta":
                 continue
             d = await request.app.state.backend.admin("GET", f"/connectors/{c['name']}", me)
             st = d.get("settings") or {}
+            if st.get("lake"):                    # a connector naming a lake (LAKE_GUIDE.md): its tables are the lake file's entries
+                if lake_files is None:
+                    lake_files = (await request.app.state.backend.admin("GET", "/lakes/files", me)).get("lakes") or []
+                named = [x.strip() for x in str(st.get("lake-tables") or "").split(",") if x.strip()]
+                for lake in lake_files:
+                    if lake.get("lake") != st["lake"]:
+                        continue
+                    for t in lake.get("tables") or []:
+                        if t.get("path") == f"{domain}/{name}" and (t.get("name") in named or not named and t.get("kind") in (d.get("kinds") or [])):
+                            out.append({"name": c["name"], "kind": t.get("kind"), "state": c.get("state"), "health": c.get("health")})
+                continue
             if st.get("domain") != domain:
                 continue
             for k in d.get("kinds") or []:
