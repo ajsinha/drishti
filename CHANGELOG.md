@@ -46,6 +46,10 @@
 
 ## 2.9.11.a
 
+- **Pivot: "show values as" on views of several dimensions.** % of row, % of column, % of parent and rank split a cell's key at its
+  first `|`, but a key of several coordinates holds `|` too, so on a view with two or more row or column dimensions they read the wrong
+  total (or none). The cell is now split by the row and column keys themselves; `ShowAsTest` checks every share against its own total.
+
 - **Pivot: a JSON Lines export** (PIVOT_GUIDE.md, Export). The pivot screen and `POST /api/v1/pivot/export` offer `jsonl` beside Excel, CSV and
   Arrow: one object a cell and measure, and the rows of a cell one object a row, so every export of the console offers the data standard.
 
