@@ -56,6 +56,7 @@
     <module>drishti-dataload</module>
     <module>drishti-net</module>
     <module>drishti-compute</module>
+    <module>drishti-flight</module>
     <module>plugins/drishti-plugin-demo</module>
     <module>plugins/drishti-plugin-file</module>
     <module>plugins/drishti-plugin-rest</module>
@@ -119,8 +120,10 @@
     <!-- LZ4 Parquet pages (delta-rs and Arrow write them): the maintained lz4-java fork, safe pure-Java and JNI decoders -->
     <lz4-java.version>1.10.2</lz4-java.version>
     <duckdb.version>1.5.6.0</duckdb.version>
-    <!-- Rupaka proof of concept: the Arrow IPC message definitions (Apache-2.0, with flatbuffers-java); the Arrow memory/vector libraries are not used -->
-    <arrow-format.version>19.0.0</arrow-format.version>
+    <!-- Apache Arrow Java, one version for every Arrow artifact (format, vector, memory, Flight, Flight SQL): the official IPC writers and
+         readers (no hand-written Arrow), and Arrow Flight (drishti-flight). Arrow Java 19 runs on Java 11+, so on Java 21; it needs
+         add-opens java.base/java.nio for its memory module (see drishti-flight and the server launch flags) -->
+    <arrow.version>19.0.0</arrow.version>
     <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
          runs them serially. Fixed scratch paths in a module's surefire configuration carry ${surefire.forkNumber} -->
     <drishti.test.forks>4</drishti.test.forks>
@@ -168,7 +171,13 @@
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-duckdb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>org.duckdb</groupId><artifactId>duckdb_jdbc</artifactId><version>${duckdb.version}</version></dependency>
-      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow-format.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-vector</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-memory-core</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-memory-netty</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-core</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>org.apache.arrow</groupId><artifactId>flight-sql</artifactId><version>${arrow.version}</version></dependency>
+      <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-flight</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-feeds</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-news</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-yfinance</artifactId><version>${project.version}</version></dependency>

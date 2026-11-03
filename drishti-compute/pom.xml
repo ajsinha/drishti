@@ -33,7 +33,8 @@
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.core</groupId><artifactId>jackson-databind</artifactId></dependency>
     <dependency><groupId>com.fasterxml.jackson.dataformat</groupId><artifactId>jackson-dataformat-yaml</artifactId></dependency>
-    <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-format</artifactId></dependency>
+    <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-vector</artifactId></dependency>
+    <dependency><groupId>org.apache.arrow</groupId><artifactId>arrow-memory-netty</artifactId></dependency>
     <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
     <dependency><groupId>org.junit.jupiter</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
     <dependency><groupId>org.assertj</groupId><artifactId>assertj-core</artifactId><scope>test</scope></dependency>
@@ -86,6 +87,8 @@
     </plugins>
   </build>
   <properties>
+    <!-- Arrow's memory module reads java.nio.Buffer.address -->
+    <argLine>--add-opens=java.base/java.nio=ALL-UNNAMED</argLine>
     <compute.excluded.groups>load</compute.excluded.groups>
     <!-- the API reference (the parent's profile api-docs): the measure-agnostic shard machinery and the peers' fan-out -->
     <drishti.apidocs.skip>false</drishti.apidocs.skip>
