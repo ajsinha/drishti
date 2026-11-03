@@ -288,6 +288,7 @@ public final class KindSources implements TabularSource.Resolver {
             m.put("pack", d.pack());
             m.put("masks", masked == 0 ? "none" : masked + " column(s) masked for you: not read, not usable");
             m.put("rowRules", "the Data view's: you see the rows of " + d.kind() + " your role may open");
+            m.put(com.ash.drishti.bicompute.sql.TabularSource.USER_CODE, !memoryOnly);   // decision 4: no Python functions on memory-only data
             return m;
         }
 

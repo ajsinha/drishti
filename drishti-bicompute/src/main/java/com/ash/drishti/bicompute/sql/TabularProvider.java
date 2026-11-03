@@ -115,6 +115,11 @@ public final class TabularProvider implements PivotProvider {
         List<Integer> fed = RowFed.fed(plan);
         if (!fed.isEmpty()) {
             TabularSource s = resolver.open(v, plan.source(), plan.date());
+            boolean python = fed.stream().anyMatch(i -> plan.functions().get(i).fn() instanceof com.ash.drishti.bicompute.python.PythonFunction);
+            if (python && Boolean.FALSE.equals(s.notes().get(TabularSource.USER_CODE))) {
+                throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_OFF, s.id() + " is memory-only data: Python custom functions do not read it "
+                        + "(user code is off for memory-only stores); use a formula, an SQL macro or an approved Java plug-in");
+            }
             return RowFed.evaluate(plan, fed, p -> evaluateSql(v, p), exec, s.relation(exec), types(s), feedBatchRows, feedHolisticMaxRows);
         }
         return evaluateSql(v, plan);

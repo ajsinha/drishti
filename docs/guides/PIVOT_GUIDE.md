@@ -18,7 +18,8 @@
 The pivot engine turns any table of any pack, or the VaR engine's trades, into a pivot: these measures, broken down by these fields on
 rows and columns, under these filters, on this business date. Every figure is computed by the server; every total is made from its own
 members, never from the figures on the screen. The design behind it is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md); the hands-on
-walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md).
+walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom functions, explain and what-if are walked through in
+[tutorial 36](../tutorials/36-custom-functions-and-explain.md).
 
 ## Contents
 
@@ -40,6 +41,10 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md).
 - [16. Settings](#16-settings)
 - [17. Refusals and their codes](#17-refusals-and-their-codes)
 - [18. How it is built](#18-how-it-is-built)
+- [19. Custom functions](#19-custom-functions)
+- [20. Why did it move: explain the difference](#20-why-did-it-move-explain-the-difference)
+- [21. What-if](#21-what-if)
+- [22. BI on the pivot engine](#22-bi-on-the-pivot-engine)
 
 ## 1. Open it
 
@@ -222,6 +227,12 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's or a cell's provenance |
 | `GET, POST /api/v1/pivot/views`, `GET /views/{owner}/{name}`, `DELETE /views/{name}` | saved views |
 | `POST /api/v1/pivot/export` | `{view, what: pivot|rows|definition, format: xlsx|csv|arrow, shape: cells|grid, delimiter, bom, coords}`, streamed |
+| `GET /api/v1/pivot/functions`, `GET /functions/{owner}/{name}?version=` | custom functions you may use (section 19) |
+| `POST /api/v1/pivot/functions/test` | a definition and sample rows: the harness and the playground; nothing saved |
+| `POST /api/v1/pivot/functions` | save a new version after its harness passes |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit`, `/approve`, `/revoke` | sharing: approval by someone who is not the author, withdrawal |
+| `POST /api/v1/pivot/explain` | `{view, from, to, fromDate, toDate, by, order, price, quantity}`: the difference in steps that add up (section 20) |
+| `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude, changes, add}}`: the view with the overlay beside the original (section 21) |
 
 Details and the error codes: [API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot).
 
@@ -237,6 +248,11 @@ drishti.py pivot estimate --view asha/desk-risk
 drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
 drishti.py pivot save desk-risk --source var --rows DESK --values "var()" --share role:risk
 drishti.py pivot views
+drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
+drishti.py pivot functions save wret.yaml --sample rows.csv
+drishti.py pivot functions approve asha/wret@1 --reason "reviewed" --scope group:rates
+drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-30 --to 2026-10-30 --by BOOK
+drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17
 ```
 
 More in [TOOLS.md](TOOLS.md#516-pivot).
@@ -247,7 +263,10 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 `max-holistic-cells`, `busy-cells`, `cache-mb` (the partial-state cache `pivot.states`, in the one memory budget), `provenance-kept`,
 `local-shards`, `stage-max-rows`, `stage-keep`, `duckdb.connections`, `duckdb.threads`, `duckdb.memory-limit-mb`, `duckdb.temp-directory`,
 `estimate.confirm-above-seconds`, `estimate.confirm-above-rows`, `aggregate-only.min-members-per-cell`, `export.xlsx-max-rows`,
-`export.rows-max`; and `drishti.admission.retry-after.pivot-view`.
+`export.rows-max`; custom functions under `functions` (`formula`, `sql-macros`, `require-approval`, `approver-role`,
+`holistic-max-rows`, `holistic-max-mb`, `harness.tolerance`, `harness.seeds`, `harness.max-ns-per-row`, `python.enabled`,
+`python.interpreter`, `python.workers`, `python.timeout-seconds`, `python.memory-mb`, `python.batch-rows`, `java.enabled`, `java.dir`);
+and `drishti.admission.retry-after.pivot-view`.
 
 ## 17. Refusals and their codes
 
@@ -259,6 +278,13 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 | DRS-5704 | 404 | a saved view, provenance id or source that is not there (or not shared with you) |
 | DRS-5705 | 403 | a masked field asked as a dimension, input or filter |
 | DRS-9507 | 503 | busy protection: a large view did not start; `Retry-After` |
+| DRS-5710 | 400 | a custom function refused as written (its code, inputs, kind or name) |
+| DRS-5711 | 422 | a custom function whose harness did not pass: not saved, with the first failure |
+| DRS-5712 | 403 | approval: the author approving, someone who is not an approver, a function not approved for you, a plug-in jar changed since approval |
+| DRS-5713 | 404 | a custom function's language is off here (Python and Java plug-ins as shipped) |
+| DRS-5714 | 422 | a custom function past a limit: a state over its bound, a call over its time, every worker busy |
+| DRS-5715 | 403 | a custom function in an official run, or an official measure's name |
+| DRS-5716 | 400 | an explanation or a what-if it cannot make as asked |
 
 ## 18. How it is built
 
@@ -268,3 +294,106 @@ SPI (`PivotProvider`: catalogue, estimate, evaluate a plan of declarative cell s
 the `GROUP BY GROUPING SETS` compiler and the DuckDB tabular provider, partial states merged in a fixed order (`OrderedMerge`), the
 partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
 REST, busy protection, saved views and audit. The console only draws.
+
+## 19. Custom functions
+
+When the built-ins are not enough, write your own aggregation function. Every function, built-in or yours, is the same four steps:
+`start` (an empty state), `add` (a columnar batch of a cell's rows: only the inputs you declare, already ruled and masked for the reader),
+`merge` (two partial states of the same cell as one) and `finish` (the figure). A function's **kind** says how its totals are made:
+**mergeable** (a small state, an exact merge: totals are merged states, never figures added up), **sketch** (a bounded state with a stated
+error) or **holistic** (no merge: every cell gets all of its rows in one call, up to `holistic-max-rows`).
+
+| Language | Write | Runs | Kind | On as shipped |
+|---|---|---|---|---|
+| **Formula** (DEL) | `sum(r * w) / sum(w)`, `sum(PNL, where=PNL < 0) / sum(abs(PNL))`, `percentile(x, 0.99) - percentile(x, 0.01)`, `count(where=PNL < 0) / count()` | in the same `GROUPING SETS` statement as the built-ins | the kind of its parts (a ratio of sums is mergeable; a formula with a median is holistic) | yes |
+| **SQL macro** (DuckDB) | `CREATE MACRO wret(r, w) AS sum(r * w) / sum(w)`; `CREATE MACRO slope(y, x) AS regr_slope(y, x)` | a macro that is a formula of the built-ins is rewritten into their states (mergeable, exact); any other runs in DuckDB per grouping set (holistic) | as found | yes |
+| **Python** | a class with `start`, `add`, `merge`, `finish`, decorated `@function(name=..., kind=Mergeable, inputs={...})` | the node's sandboxed `pivot-fn` worker pool, fed Arrow batches over a pipe (never a file) | as declared, proven by the harness | no (`functions.python.enabled`) |
+| **Java plug-in** | a class implementing `AggFunction` in a jar in `functions.java.dir` | in the server; the jar pinned by its SHA-256 when an administrator approves it | any | no (`functions.java.enabled`) |
+
+A view uses a function as `fn:owner/name@version(FIELD, FIELD)`: the fields are bound in order to the function's declared inputs. Without
+`@version` the latest version you may use is taken, and the column header says which (`fn:asha/wret@2 by asha`). A formula can also be
+written straight into a view's values, unnamed: `sum(PNL) / sum(abs(PNL))`.
+
+**The harness.** A function is saved, shared or used only after its harness passes on sample rows: one pass; batches of 1, 7, 1,000 and
+65,536 rows; the rows split into 2, 3 and 16 random parts merged left-deep and balanced under five seeds, every state serialised and read
+back as the cluster does; an empty cell, a part of nulls, a single row, 100 equal rows, infinities and NaN; a state read back finishes to
+the same figure; the same rows give the same bits twice; the cost a row (judged on 1,000 rows or more); the state within its declared
+bytes. A mergeable function whose split-and-merge answer differs from one pass by more than its tolerance (1e-12 relative) fails, with the
+run that differed and by how much.
+
+**The playground.** On the pivot screen, **Functions** (`U`): write the function, paste sample rows (CSV with a header), **Check**. You
+see the harness's checks, the state after each part and after each merge beside the one-pass figure, the cost (nanoseconds a row, the
+state's bytes, and the projection on a real table) and the function tried in a little pivot of the sample (by a column you pick), its
+total made from the groups' states. **Save version** keeps it private to you.
+
+**Versions, approval, audit, labels.** Every save is a new version; a saved view names the version it uses, so a new version never changes
+its figures. A function is private to its author until an approver (an administrator, or a member of `functions.approver-role`,
+`pivot-approver` as shipped) **who is not its author** approves it for everyone or a group (`group:rates`), with a reason; a Java plug-in
+is approved by an administrator. Withdrawing a version makes every cell of its column say "function withdrawn by … on …: reason", with no
+figure. Saves, tests, submissions, approvals, withdrawals and every use in a view are audited (who, which version). Custom functions never
+run in an official run, report or sign-off, and never take an official measure's name (`var`, `es`, `frtb_sa`, `simm`, `saccr`, ...):
+the official measures stay the Java engines.
+
+**Python's sandbox.** Each worker is `python -I` in an empty environment: no network, no processes, no writes at all, no reads outside the
+Python installation and the SDK, imports from an allow-list (numpy, pyarrow, scipy, pandas, polars and safe standard modules), `open`,
+`exec`, `eval` and `compile` not given to your code, memory limited per worker and each call's time limited (the worker is stopped past
+it). `batch["r"]` is a pyarrow array (or numpy, or a list when those are not installed); `batch.numpy("r")` and `batch.list("r")` give the
+others. Vectorise over the batch: a loop row by row shows in the playground's cost line.
+
+```python
+from drishti_pivot import function, Mergeable
+import pyarrow.compute as pc
+
+@function(name="wavg_return", kind=Mergeable, inputs={"r": "float64", "w": "float64"})
+class WeightedReturn:
+    def start(self, params):          return {"swr": 0.0, "sw": 0.0}
+    def add(self, s, batch):
+        swr = pc.sum(pc.multiply(batch["r"], batch["w"])).as_py() or 0.0
+        sw = pc.sum(batch["w"]).as_py() or 0.0
+        return {"swr": s["swr"] + swr, "sw": s["sw"] + sw}
+    def merge(self, a, b):            return {"swr": a["swr"] + b["swr"], "sw": a["sw"] + b["sw"]}
+    def finish(self, s):              return None if s["sw"] == 0 else s["swr"] / s["sw"]
+```
+
+Functions without an SQL form (Python, Java plug-ins) are fed by the tabular provider: the rows the view reads are scanned once, each row
+dealt to the cells of every level it belongs to, each cell's inputs fed in batches of `functions.python.batch-rows`.
+
+## 20. Why did it move: explain the difference
+
+Pick a cell (or two) and press **Why** (`W`): the difference between two cells, or one cell on two dates, split by the members of a
+dimension you choose, in steps that **add up** to the difference, drawn as a waterfall with its words ("Notional moved from 1.2bn to
+1.5bn (+300m); the largest steps: RATES +210m, FX +95m (new)").
+
+| The measure | Each step |
+|---|---|
+| a sum or a count | the member's own change (new, gone or changed), whatever the order |
+| a ratio, an average, a variance, a formula (mergeable) | the change in the total when that member's rows move from the first cell to the second, the others as the steps before left them; the steps telescope, so they add up exactly; a different order (by member, or largest first) splits the same difference differently, and the order is shown |
+| a median, a percentile, VaR (holistic: figures computed by DuckDB or the VaR engine, never merged) | each member's own change, then one step for what they do not explain (for VaR: diversification) |
+| price × quantity (`--price PRICE --quantity QUANTITY`) | the price effect Σ(p₁−p₀)·q₀, the quantity effect Σp₀·(q₁−q₀), the cross term, new members, members gone, in that order |
+
+What remains after the steps is shown as the residual and named (rounding, or rows whose member is blank); it is zero to the last digits
+for a mergeable measure.
+
+## 21. What-if
+
+**What-if** (`I`) shows the view with an overlay beside the view as it is, cell by cell, the differences being what-if minus original:
+leave members out (`BOOK=B-17`), scale or set a number field where a condition holds (`PRICE*1.1 where DESK=RATES`,
+`NOTIONAL=0 where TRADE_ID=T-1`), add hypothetical rows. The overlay is joined into the source's relation after your row rules, its values
+bound as parameters; the original's states come from the cache and only the overlay's cells are new. Nothing is written to the lake. On
+the VaR source, use the VaR engine's own what-if.
+
+## 22. BI on the pivot engine
+
+BI's totals and subtotals are the pivot engine's. Every total row and column of a **matrix**, the total row of a **table** with
+`format.totals`, and a model query's `totals` (grand, subtotals or explicit levels) are made in **one** `GROUP BY GROUPING SETS` statement
+of the engine's function states over the model's rows as the reader may see them: BI's compiler writes those rows (row rules, masks,
+joins, layers, dates) as the statement's FROM item and the statement runs in BI's engine, where the model's layers are, so no row leaves
+it. Each level is computed from its own rows: an average, a ratio, a distinct count and a percentile are right at every level, and a
+sum's total is the engine's too (the console adds nothing up).
+
+A model's measure is a pivot function when its DEL is an expression of aggregates of one fact's rows: `sum`, `avg`, `min`, `max`, `count`,
+`distinct`, `percentile`, `ratio`, `where=` conditions, arithmetic, row functions and other measures by `measure('Name')`. Whether a
+measure adds up is the engine's answer (its `plainSum`), not a guess from its text. Measures that read beyond the rows of their group
+(time intelligence, running and analytic functions, filter contexts, balances, Python measures) are the model's own query's: they get no
+total, and the answer says why ("no total for YTD: ytd(...) is not an aggregate of its group's rows"). A dataset read directly from its
+source (`mode: direct`) gets no engine totals either (they would read every row back).
