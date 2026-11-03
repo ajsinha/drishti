@@ -783,6 +783,14 @@ every 10 minutes by the existing Java loader, moved to the outbox with their mar
 signal; crash-safe, duplicate-safe, owner node only, a module `drishti-dataload` run as a server thread with the load in a child
 process. The design and its questions: [DATALOAD_INBOX.md](DATALOAD_INBOX.md). Size M.
 
+## Virtual tables: one central table layer (planned, right after 2.9.11.c)
+
+*Product owner, 2026-11-03.* Named, typed tables defined in Rachana over any kind any connector serves (not only the lake): a grain, a
+filter, columns as paths or scalar expressions; models relate them and hold measures. BI's datasets and models move under this layer (BI
+keeps reports, visuals and boards), BI's cached and rollup layers become its materialisation, and every consumer reads it: BI, the pivot,
+Sutras, **Arrow Flight (a ticket naming a virtual table or model)**, Flight SQL, the PostgreSQL protocol, the Data view, alerts, the AI.
+Design: [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md). Size L, two drills.
+
 ## The PostgreSQL wire protocol (planned, after 2.9.11.d; designed first)
 
 *Product owner, 2026-11-03.* Drishti answers on a port of its own as if it were PostgreSQL, so `psql`, psycopg, DBeaver, Tableau, Power
