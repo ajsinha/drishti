@@ -16,14 +16,15 @@
 # Data out: Drishti's data to any client with Arrow Flight
 
 **Arrow Flight** is a protocol for moving columnar data (Apache Arrow record batches) between programs over gRPC. Drishti answers it on
-its own port so that a Python notebook, a Java service, a C#, R or Go program, or a JDBC tool reads Drishti's data, as the person it
+its own port so that any Arrow Flight client (a Python notebook, a Java service, a JDBC tool, or a program in any language with a
+Flight library) reads Drishti's data, as the person it
 belongs to, without a JSON step and without copying the lake: the kinds of every pack, BI model queries, pivot views, VaR's scenario P&L
 vectors and the in-memory lake, each with the same entitlements, masks, busy protection and audit as the screens.
 
 The exact form of every request, its schema and its errors are in the [reference](FLIGHT_REFERENCE.md); a hands-on walk from a token to a
-pandas DataFrame is [tutorial 34](../tutorials/34-data-out-with-arrow-flight.md); each language and tool has its own page
-([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [C#](flight/CSHARP.md), [R](flight/R.md), [Go](flight/GO.md), [JDBC](flight/JDBC.md),
-[ODBC](flight/ODBC.md)). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
+pandas DataFrame is [tutorial 34](../tutorials/34-data-out-with-arrow-flight.md); the clients have their own pages
+([Python](flight/PYTHON.md), [Java](flight/JAVA.md), [JDBC](flight/JDBC.md), [ODBC](flight/ODBC.md)).
+Later: C#/.NET, R and Go client pages (the service already answers any Flight client). The design and its decisions are [ARROW_FLIGHT.md](../architecture/ARROW_FLIGHT.md).
 
 ## Contents
 
@@ -133,7 +134,7 @@ pnl = f.measure("var.scenarios", "DESK:RATES").to_pandas()
 ## 5. The request path
 
 ```text
- client (pyarrow, Java, C#, R, Go, JDBC)
+ client (pyarrow, Java, JDBC, any Flight library)
     │  TLS, port 18815
     ▼
  ┌──────────────────────────── a Drishti node ─────────────────────────────┐

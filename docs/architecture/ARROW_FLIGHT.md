@@ -64,7 +64,7 @@ run against the demo lake and its real output shown (never invented):
 | **A Flight guide** (`docs/guides/`, Help → Data out) | what Flight is and when to use it rather than the REST API or Arrow over HTTP; turning it on (the engine file, the port, TLS, the start-up option); tokens and scopes step by step; what can be read (kinds, models, pivot views, measures, the in-memory lake) and how each is named in Rachana; the cluster (endpoints, parallel reads, a node down); live streams and resuming; limits and what a refusal says; audit and Admin → Data out; troubleshooting (the ten most likely errors with their codes and fixes) |
 | **The reference** | every ticket form and descriptor, its JSON, its schema in Arrow, its errors (codes in API_GUIDE), the scopes it needs, its limits; Flight SQL's supported statements |
 | **A tutorial** | from a token to a pandas DataFrame of a desk's VaR scenario P&L in Python, then the same in Java and through JDBC (DBeaver), then a live intraday stream; UI, command line and code at every step, with pictures |
-| **Client pages** | one per language (Python, Java, C#, R, Go) and per tool (JDBC, ODBC): install, connect, read, stream, errors; the 2.9.11.d examples linked from each |
+| **Client pages** | one per language (Python, Java now; C#/.NET, R and Go later, product owner 2026-11-03) and per tool (JDBC, ODBC): install, connect, read, stream, errors; the 2.9.11.d examples linked from each |
 | **Operations** | sizing (memory for Arrow buffers per request and in total), the port in firewalls and load balancers, certificates and their renewal, monitoring (the metrics and the Admin page) |
 | **Diagrams** | the request path (client, token, entitlements, the query layer, the engines, the nodes) and the cluster read |
 

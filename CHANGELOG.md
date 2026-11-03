@@ -17,7 +17,7 @@
 
 ## 2.9.11.c
 
-- **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 34, a page per client; ARROW_FLIGHT.md).**
+- **Arrow Flight: Drishti's data to any client (FLIGHT_GUIDE.md, FLIGHT_REFERENCE.md, tutorial 34, pages for Python, Java, JDBC and ODBC (C#/.NET, R and Go later); ARROW_FLIGHT.md).**
   A new engine `flight` (`config/engines/flight.yaml`, off as shipped, a restart to turn on) answers Arrow Flight on its own port (18815),
   TLS always (the server's certificate; mutual TLS with `tls.client-ca`). Requests are Rachana requests in five forms: `kind` (a kind's
   rows on a day, its paths and filter lines, read by the Data view's reader with every check of a download), `model` (an MQ query),
