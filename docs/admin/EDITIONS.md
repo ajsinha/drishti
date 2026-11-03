@@ -114,7 +114,7 @@ Every node's task definition gets the same value.
 - the command line suggests VaR and exposure commands (`VAR BANK`, `VRES DESK:RATES`, `EXP CPTY:CP-ALDERSHOT`); `FUNC` lists only the
   edition's commands; `FORM` says it is not part of Drishti Risk;
 - Home is the **Risk desk** landing (section 4);
-- Help shows Knowledge, Start, Use, Data and Operate, without the BI and Build categories;
+- Help shows Get started, Risk measures, Data, Operate, Reference and Knowledge (and Internal for administrators), without the Analytics and BI, and Build, sections;
 - Admin shows users, roles, packs, commands, tokens, access, connectors, artifacts, data loads, lakes, audit, net, health, caches, capacity, BI and ad-hoc scopes (every person's VaR baskets)
   settings; `/admin/ai` answers 404;
 - BI's catalogue offers the VaR and exposure datasets, models and reports only.
@@ -246,7 +246,7 @@ home:
   phone: { table: more }                             # parts: hero, tiles, quick, card-1, table, chart, map, feed
 ```
 
-On a phone the edition's subject menus fold into one menu named after it (the edition's title without the product's name: **Risk**).
+On a phone the edition's subject menus fold into one menu named after it (the edition's title without the product's name: **Trading**); the Engines menu is no subject menu and stays in the bar, its columns folding into a drawer.
 
 ### White-labelling checklist
 
@@ -282,11 +282,11 @@ cp config/editions/risk.yaml config/editions/my-desk.yaml
 | `commands.words` | `BI`, `RUPAKA`, `FORM`, `FUNC`, `WHAT`, `DATAMAP`, `DATA`, `VAR`, `EXP`, `SMAT`, `PLAY`: `on` or `off`. `DATA` (the Data view) is on in all four: off, `DATA ...` answers `DRS-4023` and `/data`, `/api/data/...` and the server's `/api/v1/data` answer 404. Each edition also sets the feature `internal-only-data` off, so datasets marked internal only are listed but not downloaded. `PLAY` (the VaR Playground) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `PLAY VAR ...` answers `DRS-4023`, `/play` and `/api/play/...` answer 404, and the VaR page offers no **Playground** link. `SMAT` (the scenario matrix) is on in Drishti Risk and Drishti Trading, off in Drishti Market and Drishti World: off, `SMAT ...` answers `DRS-4023`, `/smat` and `/api/smat/...` answer 404, and no page offers its **Scenario matrix** link (lens-aware: a person looking through a Market or World lens sees none) |
 | `features` | presets of existing switches (`config/editions/features.yaml` says which settings each one sets); `off` presets false, anything else true |
 | `bi.datasets`, `bi.models` | the BI datasets and models offered (a dataset name may end in `*`); reports and boards follow |
-| `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, BI, Build, Admin, Help). The subject menus (`subject: true` in `drishti-console/config/menus.yaml`: `var`, `exposure`; `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where a `menus.top` names them. Drishti Risk: Views, VaR, Exposure, BI, Admin, Help; Drishti Trading: Views, Blotter, Positions, Risk, Counterparties, BI, Admin, Help; Drishti Market: Views, Curves, Volatility, FX, Credit, BI, Admin, Help; Drishti World: Views, Economies, Markets, Companies, BI, Admin, Help |
+| `menus.top` | the top menus by id, in order; a menu not named is not drawn (none: Views, Engines, BI, Build, Admin, Help). The Engines menu (`engines` in `drishti-console/config/menus.yaml`) has a column per compute engine running in the cluster that the person's role opens (`opens:`), and is not drawn for a role that opens none. The subject menus (`subject: true`: `blotter`, `positions`, `risk`, `counterparties`; `curves`, `volatility`, `fx`, `credit`; `economies`, `markets`, `companies`) are drawn only where a `menus.top` names them. Drishti Risk: Views, Engines, BI, Admin, Help; Drishti Trading: Views, Engines, Blotter, Positions, Risk, Counterparties, BI, Admin, Help; Drishti Market: Views, Curves, Volatility, FX, Credit, BI, Admin, Help; Drishti World: Views, Economies, Markets, Companies, BI, Admin, Help |
 | `menus.<menu>` | the items shown per menu (`views`, `bi`, `build`, `admin`, `help`, `footer`, or a subject menu), by the ids in `drishti-console/config/menus.yaml` |
 | `menus.placeholder` | the command line's placeholder |
 | `home.landing`, `home.landings`, `home.template`, `home.titles`, `home.landing-by-role`, `home.sections`, `home.cards`, `home.chips`, `home.hierarchies`, `home.topics` | Home (sections 4 and 10); `template` is a `home/<name>_landing.html` page (none: Drishti Risk's); `sections` switches off `stats`, `grammar`, `pipeline`, `capabilities`, `views`, `close` |
-| `help.categories`, `help.knowledge`, `help.unlisted-slugs` | the help centre's categories, the packs whose Knowledge pages show, `refuse` for unlisted documents |
+| `help.categories`, `help.knowledge`, `help.unlisted-slugs` | the help centre's sections by id (`config/help.yaml` `sections:`; an old name such as `start` or `use` is read through its `aliases:`), the packs whose Knowledge pages show, `refuse` for unlisted documents |
 | `admin.pages` | the Admin pages shown (the others answer 404) |
 | `branding.product`, `branding.tagline` | the product name and tagline |
 | `server:`, `console:` | raw settings of either side, as presets |
@@ -575,7 +575,7 @@ home:
   landing-by-role: {}
   sections: { stats: off, grammar: off, pipeline: off, capabilities: off, views: off }
   cards: [...]
-help: { categories: [knowledge, start, use, data, operate], knowledge: [market-risk, counterparty-risk, core, trading, market-data],
+help: { categories: [get-started, risk, data, operate, reference, knowledge, internal], knowledge: [market-risk, counterparty-risk, core, trading, market-data],
         unlisted-slugs: refuse }
 admin: { pages: [users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, capacity, bi, scopes] }
 branding: { product: Drishti Risk, tagline: VaR and exposure from your own pricing data }
@@ -608,7 +608,7 @@ Optional blocks: `server:` and `console:` hold raw settings of either side (a pr
 | **Menus** | Views: Terminal, Search, Functions, Data map, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; BI; Admin (its pages); Help: Help centre, Knowledge, Install and run, About | Build; Forms; the competitive analysis link in the footer |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Home** | the Drishti Risk landings (section 7); signed out, today's Home without its general sections | the grammar, the seven stages, the capabilities, the showcase, the stats |
-| **Help** | Knowledge (market risk, counterparty credit risk, trades, entities, market data, data and contracts), Start, Use, Data, Operate | the BI and Build categories, other packs' Knowledge pages, documents not in the catalogue |
+| **Help** | Get started, Risk measures, Data, Operate, Reference, Knowledge (market risk, counterparty credit risk, trades, entities, market data, data and contracts) | the Analytics and BI, and Build, sections, other packs' Knowledge pages, documents not in the catalogue |
 | **Admin** | users, roles, packs, commands, tokens, access, connectors, artifacts, data loads, lakes, audit, net, health, caches, capacity, BI settings, ad-hoc scopes | AI, collaboration, embedding, edits, compute (404) |
 | **BI** | datasets `market-risk-var-latest`, `market-risk-var-official`, `counterparty-exposure-*` (five), `live-exposure`, `live-exposure-netting`; models `market-risk-var`, `counterparty-exposure`, `live-exposure`; the reports and boards on them | every other dataset, model, report and board |
 | **Branding** | **Drishti Risk**, with Drishti's name and eye mark | nothing, by default |
@@ -636,10 +636,10 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
    label) or `fill:` (words put in the command line to finish, `/t?cmd=`, `web/static/js/command.js`); with more than six menus the
    labels fold to icons below 1750 px (`nav.css`, `.tbar-menus[data-many]`).
 5. **BI.** `server/edition/EditionBi.java`, applied in `BiService.catalogueItems` and `BiService.itemOf`: datasets, models, reports, boards,
-   Python visuals and notebooks follow `bi.datasets` and `bi.models`; the BI and Build help categories follow `help.categories`.
+   Python visuals and notebooks follow `bi.datasets` and `bi.models`; the Analytics and BI, and Build, help sections follow `help.categories`.
 6. **Feature flags.** `config/editions/features.yaml`; console `features.*`; `studio.enabled` wired (`/studio`).
 7. **Home.** `home.sections` in `landing.html`; `home.cards`; the landings (section 7); the hook `home.landing`.
-8. **Help and Knowledge.** `routes/help_routes.py` (`shown`, `categories_for`), `core/guides.py` (`Guide.packs`), `packs:` on the Knowledge
+8. **Help and Knowledge.** `routes/help_routes.py` (`shown`, `sections_for`), `core/guides.py` (`Guide.packs`), `packs:` on the Knowledge
    entries of `config/help.yaml`.
 9. **Admin.** `admin/_nav.html` and the Admin menu follow `admin.pages`; `core/edition_gate.py` answers 404 for a hidden page's routes.
 10. **Branding.** `ui.logo` (the `brand_mark` macro), `ui.favicon`, `ui.apple_touch_icon`, `/manifest.webmanifest` (`home_routes.py`); the

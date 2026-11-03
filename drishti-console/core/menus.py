@@ -15,7 +15,8 @@
 """The top bar's menus, the footer and the command line's placeholder, as data (config/menus.yaml; docs/admin/EDITIONS.md › The design as built,
 section 5.4): each item's ``requires:`` and the edition's (or the person's lens's) ``menus:`` lists decide what one request shows.
 Read again when the file changes. The lens items ("Open Drishti Risk", "Leave Drishti Risk") are added here, from the lenses the server
-offers."""
+offers. The Engines menu (``engines: true``) has a column per compute engine, drawn for the engines running in the cluster that the person's
+role opens (``opens:``); :func:`engine_opened` answers the same for Help."""
 from __future__ import annotations
 
 from pathlib import Path
@@ -79,9 +80,23 @@ def _has_route(request, path: str) -> bool:
     """Whether the server answers a page at ``path`` (a menu item for a page this build does not hold is not drawn)."""
     paths = getattr(request.app.state, "menu_route_paths", None)
     if paths is None:
-        paths = {str(getattr(r, "path", "") or "") for r in request.app.routes}
+        paths = _route_paths(request.app.routes)
         request.app.state.menu_route_paths = paths
     return path in paths
+
+
+def _route_paths(routes, prefix: str = "") -> set[str]:
+    """Every path the app answers. A FastAPI that keeps an included router whole (0.142: ``_IncludedRouter``, no ``path`` of its own)
+    is walked into, with its prefix; an older one lists each route with its path."""
+    out: set[str] = set()
+    for r in routes:
+        inner = getattr(r, "original_router", None)
+        if inner is not None:
+            ctx = getattr(r, "include_context", None)
+            out |= _route_paths(getattr(inner, "routes", []) or [], prefix + str(getattr(ctx, "prefix", "") or "") + str(getattr(inner, "prefix", "") or ""))
+        elif getattr(r, "path", None) is not None:
+            out.add(prefix + str(r.path))
+    return out
 
 
 def _href(it: dict) -> str:
@@ -139,25 +154,112 @@ def _lens_desc(lens) -> str:
     return f"{about}: your own view; nothing is secured by it" if about else "Focus your own view on this edition; nothing is secured by it"
 
 
+def _engines_menu(request) -> dict:
+    """The Engines menu's entry of config/menus.yaml (``engines: true``), or {}."""
+    return next((m for m in _spec(_console_dir(request)).get("menus") or [] if m.get("engines")), {})
+
+
+_SIGNED_IN = object()                  # the person of the request (request.state.identity)
+
+
+def _person_opens(request, rules: list, ident=_SIGNED_IN) -> bool:
+    """Whether the person opens an engine whose column says ``opens: rules``: an administrator always; no rules, everyone signed in;
+    else any rule holds: ``role:<name>`` (they hold the role) or ``pack:<name>`` (the pack is assigned to them, shown or not). Nobody
+    signed in opens none."""
+    me = getattr(request.state, "identity", None) if ident is _SIGNED_IN else ident
+    if me is None:
+        return False
+    if me.is_admin or not rules:
+        return True
+    roles = set(getattr(me, "roles", ()) or ())
+    assigned = {str(p.get("name")) for p in getattr(request.state, "pack_switcher", None) or []}
+    for rule in rules:
+        kind, _, value = str(rule).partition(":")
+        if (kind == "role" and value in roles) or (kind == "pack" and value in assigned):
+            return True
+    return False
+
+
+def engine_opened(request, engine_id: str, ident=_SIGNED_IN) -> bool:
+    """Whether this person's role opens the engine (the Engines menu's ``opens:`` of its column): Help leaves out the pages of an engine
+    the person does not open, as the Engines menu leaves out its column. An engine without a column there opens for everyone. ``ident``:
+    the person asked about (default: the request's)."""
+    col = next((c for c in _engines_menu(request).get("columns") or [] if str(c.get("engine") or "") == engine_id), None)
+    if col is None:
+        return True
+    return _person_opens(request, list(col.get("opens") or []), ident)
+
+
+def _engine_columns(request, edition: Edition, menu: dict, ctx: dict, fill: dict) -> list:
+    """The Engines menu's columns for this person: one per engine that runs in the cluster and that their role opens, with the items its
+    switches allow; ``[(title, items, word, engine id)]``."""
+    out = []
+    for col in menu.get("columns") or []:
+        eid = str(col.get("engine") or "")
+        if not eid or not engines.engine_available(eid) or not _person_opens(request, list(col.get("opens") or [])):
+            continue
+        items = _items(request, edition, "engines", col, ctx, fill)
+        if items:
+            out.append((_text(col.get("title"), fill) or engines.title(eid), items, str(col.get("word") or ""), eid))
+    return out
+
+
+def _items(request, edition: Edition, mid: str, col: dict, ctx: dict, fill: dict) -> list:
+    items = []
+    for it in col.get("items") or []:
+        if not all(_holds(request, edition, str(n), ctx) for n in it.get("requires") or []):
+            continue
+        if not edition.menu_shown(mid, str(it.get("id") or "")) or engines.menu_hidden(str(it.get("id") or "")):
+            continue
+        items.append((_href(it), it.get("icon"), _text(it.get("label"), fill), _text(it.get("desc"), fill), it.get("match"),
+                      str(it.get("cmd") or it.get("fill") or "")))
+    return items
+
+
+def engines_panel(request, ctx: dict) -> dict | None:
+    """What the Engines menu's panel draws beyond its columns (mock-up engines-menu/A): the columns with their command words and engine
+    ids, how many pages, the search box (more engines than ``search-over``), the Admin -> Engines link and, for an administrator, the
+    engines not running (greyed, never links). None when the person opens no running engine (the menu is not drawn)."""
+    menu = _engines_menu(request)
+    if not menu:
+        return None
+    edition = _edition(request)
+    g = request.app.state.templates.env.globals
+    fill = {"product": ctx.get("PRODUCT") or g.get("PRODUCT", ""), "tutorials": g.get("TUTORIALS_WORD", "")}
+    columns = _engine_columns(request, edition, menu, ctx, fill)
+    if not columns:
+        return None
+    link = menu.get("admin-link") or {}
+    admin = bool(link) and all(_holds(request, edition, str(n), ctx) for n in link.get("requires") or [])
+    me = getattr(request.state, "identity", None)
+    off = []
+    if me is not None and me.is_admin:
+        shown = {c[3] for c in columns}
+        off = [(engines.title(str(e.get("id"))), str((e.get("words") or [""])[0])) for e in engines.off()
+               if e.get("installed") and e.get("words") and str(e.get("id")) not in shown]
+    return {"label": _text(menu.get("label"), fill), "columns": [{"title": t, "links": i, "word": w, "engine": e} for t, i, w, e in columns],
+            "pages": sum(len(c[1]) for c in columns), "search": len(columns) > int(menu.get("search-over", 4) or 4),
+            "admin": {"href": str(link.get("href") or ""), "label": _text(link.get("label"), fill)} if admin else None, "off": off}
+
+
 def top_bar(request, ctx: dict) -> list:
     """The menus as the template draws them: ``[(label, icon, [(column title, [(href, icon, label, desc, match, cmd)])])]``; ``cmd`` is the
-    command shown beside an item's label (its ``cmd`` or ``fill``), blank for an item without one."""
+    command shown beside an item's label (its ``cmd`` or ``fill``), blank for an item without one. The Engines menu's columns are its
+    running engines that the person opens (:func:`engines_panel` adds the rest of its panel)."""
     edition = _edition(request)
     g = request.app.state.templates.env.globals
     fill = {"product": ctx.get("PRODUCT") or g.get("PRODUCT", ""), "tutorials": g.get("TUTORIALS_WORD", "")}
     out = []
     for menu in _menu_order(edition, _spec(_console_dir(request)).get("menus") or []):
         mid = str(menu.get("id") or "")
+        if menu.get("engines"):
+            columns = [(t, items) for t, items, _w, _e in _engine_columns(request, edition, menu, ctx, fill)]
+            if columns:
+                out.append((_text(menu.get("label"), fill), menu.get("icon"), columns))
+            continue
         columns = []
         for col in menu.get("columns") or []:
-            items = []
-            for it in col.get("items") or []:
-                if not all(_holds(request, edition, str(n), ctx) for n in it.get("requires") or []):
-                    continue
-                if not edition.menu_shown(mid, str(it.get("id") or "")) or engines.menu_hidden(str(it.get("id") or "")):
-                    continue
-                items.append((_href(it), it.get("icon"), _text(it.get("label"), fill), _text(it.get("desc"), fill), it.get("match"),
-                              str(it.get("cmd") or it.get("fill") or "")))
+            items = _items(request, edition, mid, col, ctx, fill)
             if mid == "views" and col is (menu.get("columns") or [None])[-1]:
                 for link in lens_links(request):                # the lenses: one link each, in Views (and on Home)
                     items.append((link["href"], "box-arrow-left" if link["leave"] else "eye", link["label"],

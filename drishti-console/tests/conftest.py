@@ -1085,6 +1085,14 @@ def with_packs(client, backend, monkeypatch):
     client.app.state.packs.forget_all()
 
 
+def help_pages(client) -> str:
+    """The help centre as a person sees it (2.9.11.a, mock-up help-hub/A): its front door and every section page it opens, one text, so a
+    test asks whether a guide is listed anywhere (``href="/help/<slug>"``) as it once asked of the single index."""
+    import re
+    front = client.get("/help").text
+    return front + "".join(client.get(f"/help/section/{s}").text for s in dict.fromkeys(re.findall(r'href="/help/section/([\w-]+)"', front)))
+
+
 def open_studio(client, url, **params):
     """What the confirmation page's button does: GET the address (it must only ask), then POST the same fields to /studio. A
     ``design=`` address opens a Design that exists and is a plain 302. Returns the redirect response."""

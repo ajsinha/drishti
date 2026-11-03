@@ -87,8 +87,8 @@ settings.
 
 | Id | Engine | File | Settings it owns (today's keys) | Brings to the screen | Needs | Uses when on |
 |---|---|---|---|---|---|---|
-| `var` | VaR, ES, stressed VaR, the what-if, why it moved, regulatory VaR (backtesting, report runs, sign-off) | `var.yaml` | `drishti.var.*`, `drishti.regulatory.*` | `VAR`, `VAR EXPLAIN`, `SMAT`, `PLAY VAR`; the VaR menu and page; the VaR landings and tiles; VAR_GUIDE's Help pages; `drishti.py var`; BI `market-risk-var-*` | none | |
-| `exposure` | EE, ENE, PFE, EPE, EEPE, the exposure what-if and its playground | `exposure.yaml` | `drishti.ccr.exposure.*` | `EXP`, `PLAY EXP`; the Exposure menu and page; tiles; EXPOSURE_GUIDE's Help pages; `drishti.py exposure`; BI `counterparty-exposure-*`, `live-exposure*` | none | |
+| `var` | VaR, ES, stressed VaR, the what-if, why it moved, regulatory VaR (backtesting, report runs, sign-off) | `var.yaml` | `drishti.var.*`, `drishti.regulatory.*` | `VAR`, `VAR EXPLAIN`, `SMAT`, `PLAY VAR`; its column of the Engines menu and its page; the VaR landings and tiles; VAR_GUIDE's Help pages; `drishti.py var`; BI `market-risk-var-*` | none | |
+| `exposure` | EE, ENE, PFE, EPE, EEPE, the exposure what-if and its playground | `exposure.yaml` | `drishti.ccr.exposure.*` | `EXP`, `PLAY EXP`; its column of the Engines menu and its page; tiles; EXPOSURE_GUIDE's Help pages; `drishti.py exposure`; BI `counterparty-exposure-*`, `live-exposure*` | none | |
 | `sensitivities` | position sensitivities and the factor dictionary: load, checks, sums by bucket | `sensitivities.yaml` | `drishti.sensitivities.*` (new; today in `drishti.frtb.sensitivity-kind`, `factor-kind`, `cache-minutes`) | `SENS`, `RFAC` pages, the factor dictionary screen | none | |
 | `frtb-sa` | FRTB-SA: SBM, DRC, RRAO, its playground | `frtb-sa.yaml` | `drishti.frtb.*` | `FRSA`, `PLAY FRTB`; the capital page; FRTB_SA_GUIDE's Help pages; `drishti.py frtb` | `sensitivities`, `var` (scope resolution and hierarchies) | |
 | `simm` | ISDA SIMM initial margin per netting set and regime, its playground | `simm.yaml` | `drishti.simm.*` (new) | `SIMM`, `PLAY SIMM`; the netting set page's IM panel | `sensitivities` | `exposure` (IM in the exposure page's collateral) |
@@ -272,7 +272,7 @@ is available when it runs on this node or on any node of the cluster.
 |---|---|
 | Command line | its words are unknown, as a word an edition hides: `FRSA DESK-RATES <GO>` answers "FRTB-SA is not running on this server" (`DRS-1020`) |
 | Type-ahead, search hints, FUNC, examples | its words, examples and command rows are not offered |
-| Menus | its items are not drawn (a menu item names the engine with `requires: engine:<id>` in `menus.yaml`, as it names `word:` and `feature:` today); a menu left empty is not drawn |
+| Menus | its column of the Engines menu is not drawn (a column names its engine with `engine: <id>` in `menus.yaml`, and its `opens:` the roles that see it), nor any item of another menu that names it (`requires: engine:<id>`); a menu left empty is not drawn |
 | Help | its pages are not listed in the Help centre, search or contextual help (a Help entry names `engine: <id>` in `help.yaml`); a direct link opens a short page saying the engine is not running here |
 | Home and landings | its tiles and quick cards are not drawn; a landing that is all one engine's (the VaR landing) is not offered on Home's switch |
 | Lenses | a lens whose engine is off is not offered (MR Cube, CCR Cube); in another lens the engine's chips are not drawn (the CCR cube's EAD chip without `sa-ccr`) |

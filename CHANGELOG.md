@@ -15,6 +15,30 @@
 -->
 # Changelog
 
+## 2.9.11.a
+
+- **One Engines menu (mock-up engines-menu/A; USER_GUIDE.md, The top bar).** The Engines menu replaces the VaR and Exposure top-level
+  menus (and the VaR and Exposure entries of Views): a column per compute engine running in the cluster (VaR `VAR`, Exposure `EXP`,
+  FRTB-SA `FRSA`, SIMM `SIMM`), its command word in the column's head, every page one click away with its command on the right. It is
+  drawn only for a role that opens an engine (`opens:` per engine in `drishti-console/config/menus.yaml`: `role:<name>` or
+  `pack:<name>`; administrators open every engine), so the bar is Views, Engines, BI, Build, Admin, Help for a risk administrator and
+  Views, BI, Build, Help for a role that opens none. Past four running engines (`search-over`) a search box filters the pages by name,
+  description or command (Enter opens the first); administrators see *Admin → Engines* and, at the foot, the engines running on no
+  server, greyed. On a phone the columns fold into a drawer, one engine open at a time, 44 px rows. Drishti Risk's bar is Views,
+  Engines, BI, Admin, Help; Drishti Trading keeps its subject menus after Engines.
+- **The help centre reorganised (mock-up help-hub/A; USER_GUIDE.md, Help).** The front door of `/help` is a search box, a "most used"
+  row (User guide, VaR guide, Tutorials, What's new) and a tile per section: Get started, Risk measures, Analytics and BI, Data, Build,
+  Operate, Reference and Knowledge, with Internal for administrators. A tile opens its section's page (`/help/section/<id>`): its pages
+  grouped, every guide on one row with its tutorial beside it, a search of that section only (`/help/search?section=<id>`). The pages of
+  an engine show only while it runs and only to a role that opens it (an administrator sees an engine's pages greyed while it runs
+  nowhere). Config-driven: `drishti-console/config/help.yaml` now has `sections:` with `groups:`, a page's `engine:` and `pair:`,
+  `most-used:`, `aliases:` (old section names: a pack guide's `category:`, an edition's `help.categories`, `/help#cat-<id>`) and
+  `documents:` (the section of an unlisted document by folder); every page belongs to exactly one section (a test checks it). Page
+  addresses, retired slugs and F1 are unchanged; the editions' `help.categories` name the new sections.
+- **Menu items for pages a build holds show again with FastAPI 0.142.** A menu item's `route:` requirement read the app's routes by
+  their `path`, which FastAPI 0.142's included routers no longer carry, so the VaR Playground, Backtesting, FRTB-SA and SIMM items were
+  left out; the routers are now walked into.
+
 ## Unreleased (on develop, after 2.9.11)
 
 - **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide

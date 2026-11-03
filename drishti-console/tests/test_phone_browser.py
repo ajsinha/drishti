@@ -18,7 +18,8 @@ dark (terminal) and light themes:
 * a phone gets the phone page (must, then glance in its compact form, More on this page, On desktop) without scrolling sideways, each
   control at least 44 px; a More row loads its panel in place, Show all brings the whole panel, Show everything the whole page;
 * the desktop is unchanged: every panel, no phone page;
-* in Drishti Risk the subject menus fold into one Risk menu on a phone, and stand in the bar on a desktop.
+* in Drishti Trading the subject menus fold into one Trading menu on a phone, and stand in the bar on a desktop (Drishti Risk has none
+  since its Engines menu took the place of VaR and Exposure: test_engines_menu_browser.py).
 
 DRISHTI_PHONE_SHOTS=<folder> also saves the screenshots the user guide shows. Skipped when Playwright or its Chromium is missing."""
 import os
@@ -91,6 +92,29 @@ def risk_console():
     server.should_exit = True
 
 
+@pytest.fixture(scope="module")
+def trading_console():
+    """A Drishti Trading console over the stand-in server: the edition whose subject menus (Blotter, Positions, Risk, Counterparties)
+    fold on a phone."""
+    import uvicorn
+
+    from core.app import create_app
+    from core.config import load_settings
+
+    app = create_app(load_settings(CONSOLE / "config"))
+    app.state.backend = TickingBackend()
+    app.state.editions.learn({"product": "Drishti Trading", "edition": {"name": "trading", "title": "Drishti Trading"}})
+    port = _free_port()
+    server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
+    threading.Thread(target=server.run, daemon=True).start()
+    deadline = time.monotonic() + 15
+    while not server.started and time.monotonic() < deadline:
+        time.sleep(0.05)
+    assert server.started, "the Trading console did not start"
+    yield f"http://127.0.0.1:{port}"
+    server.should_exit = True
+
+
 @pytest.mark.parametrize("theme", THEMES)
 def test_a_phone_gets_the_phone_page_and_loads_more_in_place(browser, console_url, theme):
     ctx = _context(browser, 390, theme)
@@ -144,40 +168,33 @@ def test_the_desktop_page_is_unchanged(browser, console_url, theme):
 
 
 @pytest.mark.parametrize("theme", THEMES)
-def test_the_lens_menus_fold_into_one_on_a_phone(browser, risk_console, theme):
+def test_the_lens_menus_fold_into_one_on_a_phone(browser, trading_console, theme):
     ctx = _context(browser, 390, theme)
     page = ctx.new_page()
     try:
-        _open(page, risk_console + "/t")
+        _open(page, trading_console + "/t")
         lens = page.locator(".tbar-lens-btn")
-        assert lens.is_visible() and lens.inner_text().strip().startswith("Risk")
-        assert not page.locator(".tbar-menu[data-subject]").first.is_visible()   # VaR and Exposure are inside it
+        assert lens.is_visible() and lens.inner_text().strip().startswith("Trading")
+        assert not page.locator(".tbar-menu[data-subject]").first.is_visible()   # Blotter ... Counterparties are inside it
         lens.click()
         panel = page.locator(".mega-lens")
         panel.wait_for(state="visible")
         titles = [t.strip() for t in panel.locator(".mega-subject").all_text_contents()]
-        assert titles == ["VaR", "Exposure"]
+        assert titles == ["Blotter", "Positions", "Risk", "Counterparties"]
         assert panel.locator("a.mega-item").first.is_visible()
         assert not page.evaluate(AUDIT)
-        page.wait_for_timeout(400)                                               # the panel fades in
-        _shot(page, f"04-lens-menu-{theme}")
-        item = panel.locator("a.mega-item[data-fill='EXP CPTY']")             # an item to finish fills the command line, as on a desktop
-        item.scroll_into_view_if_needed()
-        item.click()
-        page.wait_for_timeout(200)
-        assert page.input_value("#cmdInput") == "EXP CPTY "
     finally:
         ctx.close()
 
 
 @pytest.mark.parametrize("theme", THEMES)
-def test_the_subject_menus_stand_in_the_bar_on_a_desktop(browser, risk_console, theme):
+def test_the_subject_menus_stand_in_the_bar_on_a_desktop(browser, trading_console, theme):
     ctx = _context(browser, 1280, theme)
     page = ctx.new_page()
     try:
-        _open(page, risk_console + "/t")
+        _open(page, trading_console + "/t")
         assert page.locator(".tbar-lens-btn").count() == 0
-        assert page.locator(".tbar-menu[data-subject]").count() == 2
+        assert page.locator(".tbar-menu[data-subject]").count() == 4
         assert page.locator(".tbar-menu[data-subject]").first.is_visible()
         page.set_viewport_size({"width": 390, "height": 844})                   # narrowed: the lens menu comes in
         page.wait_for_timeout(500)

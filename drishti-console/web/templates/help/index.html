@@ -13,52 +13,46 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
+{# The help centre's front door (2.9.11.a, mock-up help-hub/A): one search box over all of Help, the most used pages, and a tile per
+   section (config/help.yaml sections:) with its one line and how many pages this person can open in it; a tile opens the section's own
+   page (help/section.html). Old addresses /help#cat-<id> lead to their section (static/js/help.js, data-help-sections). #}
 {% extends "base.html" %}
 {% block title %}Help · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal help-page{% endblock %}
 {% block nav %}{% include "help/_nav.html" %}{% endblock %}
 {% block content %}
-<section class="help-hero">
-  <i class="bi bi-book hero-ico" aria-hidden="true"></i>
-  <h1>Help &amp; documentation</h1>
-  <p>Everything about {{ PRODUCT }}, with worked examples: {{ count }} guides, tutorials, references and runbooks.
-     Press <kbd>F1</kbd> anywhere for help on the screen you are on.</p>
-  <div class="help-cta">
-    <a class="btn-pill btn-accent" href="/help/install-and-run"><i class="bi bi-flag" aria-hidden="true"></i> Getting started</a>
-    <a class="btn-pill btn-ghost" href="/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About {{ PRODUCT }}</a>
-    {% if competitive %}<a class="btn-pill btn-ghost" href="/help/competitive-analysis"><i class="bi bi-binoculars" aria-hidden="true"></i> Competitive analysis</a>{% endif %}
-    <a class="btn-pill btn-ghost" href="/help/api"><i class="bi bi-code-square" aria-hidden="true"></i> API guide</a>
-  </div>
-</section>
-<div class="help-wrap">
-  <div class="help-toolbar">
-    <form class="help-search" action="/help/search" method="get" role="search">
-      <i class="bi bi-search" aria-hidden="true"></i>
-      <label class="visually-hidden" for="help-q">Search help</label>
-      <input id="help-q" name="q" type="search" autocomplete="off" data-help-filter
-             placeholder="Search help, e.g. sutra, keyboard, lockout, inference, SSE…">
-    </form>
-    <div class="cat-chips">
-      {% for c in categories %}<a class="chip" href="#cat-{{ c.id }}"><i class="bi bi-{{ c.icon }}" aria-hidden="true"></i> {{ c.name }} <span>{{ c.guides | length }}</span></a>{% endfor %}
+<div class="help-wrap help-hub" data-help-hub data-help-sections="{{ section_names | tojson | forceescape }}">
+  <header class="hub-head">
+    <h1>Help</h1>
+    <p class="hub-sub">{{ count }} page{{ '' if count == 1 else 's' }}{% if engines_hidden %} · the pages of engines not running here are left out{% endif %}
+      · press <kbd>F1</kbd> anywhere for help on the screen you are on</p>
+  </header>
+  <form class="help-search hub-search" action="/help/search" method="get" role="search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <label class="visually-hidden" for="help-q">Search help</label>
+    <input id="help-q" name="q" type="search" autocomplete="off" data-help-q placeholder="Search all {{ count }} pages of help…">
+    <kbd class="hub-key" aria-hidden="true">F1</kbd>
+  </form>
+  {% if most %}
+  <section class="hub-most" aria-labelledby="hub-most-h">
+    <h2 id="hub-most-h" class="hub-h">Most used</h2>
+    <div class="hub-chips" data-help-most>
+      {% for m in most %}<a class="hub-chip" href="/help/{{ m.slug }}"><span class="hub-chip-ic"><i class="bi bi-{{ m.icon }}" aria-hidden="true"></i></span>{{ m.label | product }}</a>{% endfor %}
     </div>
+  </section>
+  {% endif %}
+  <div class="hub-tiles" data-help-tiles>
+    {% for s in sections %}
+    <a class="hub-tile" href="/help/section/{{ s.id }}" data-section="{{ s.id }}">
+      <span class="hub-tile-ic"><i class="bi bi-{{ s.icon }}" aria-hidden="true"></i></span>
+      <span class="hub-tile-t">{{ s.name }}</span>
+      <span class="hub-tile-d">{{ s.blurb | product }}</span>
+      <span class="hub-tile-f"><span class="hub-tile-n" data-count>{{ s.guides | length }} page{{ '' if s.guides | length == 1 else 's' }}</span><span class="hub-open">Open <i class="bi bi-chevron-right" aria-hidden="true"></i></span></span>
+    </a>
+    {% endfor %}
   </div>
-  {% for c in categories %}
-  <details class="help-cat" id="cat-{{ c.id }}" open>
-    <summary><span class="cat-name"><span class="cat-ico"><i class="bi bi-{{ c.icon }}" aria-hidden="true"></i></span> {{ c.name }}</span>
-      <span class="cat-count">{{ c.guides | length }}</span></summary>
-    <p class="cat-blurb">{{ c.blurb }}</p>
-    <div class="help-cards">
-      {% for g in c.guides %}
-      <a class="help-card" href="/help/{{ g.slug }}" data-search="{{ ((g.title ~ ' ' ~ g.summary ~ ' ' ~ c.name) | product) | lower }}">
-        <div class="hc-title"><span class="hc-ico"><i class="bi bi-{{ g.icon }}" aria-hidden="true"></i></span>
-          <span>{{ g.title }} <span class="badge-kind">{{ g.kind }}</span></span></div>
-        <p>{{ g.summary | product }}</p><span class="more">Read <i class="bi bi-arrow-right" aria-hidden="true"></i></span>
-      </a>
-      {% endfor %}
-    </div>
-  </details>
-  {% endfor %}
-  <p class="help-none" data-help-none hidden>No guide titles match. <a href="#" data-help-fulltext>Search inside every guide</a>.</p>
+  <p class="hub-links"><a href="/about"><i class="bi bi-info-circle" aria-hidden="true"></i> About {{ PRODUCT }}</a>
+    {% if competitive %}<a href="/help/competitive-analysis"><i class="bi bi-binoculars" aria-hidden="true"></i> Competitive analysis</a>{% endif %}</p>
 </div>
 {% endblock %}
 {% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script>{% endblock %}
