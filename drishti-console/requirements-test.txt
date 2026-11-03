@@ -14,7 +14,7 @@ scipy>=1.13
 # Test-only: tests/test_live_tabs_browser.py drives Chromium (many live tabs, UX-01). Skipped unless the browser is there
 # too: `python -m playwright install chromium`.
 playwright>=1.45
-pytest-xdist>=3.5      # the drill runs the suite in parallel (tools/drill.sh)
+pytest-xdist>=3.7      # the drill runs the suite in parallel, files in its own order (tools/drill.sh: --no-loadscope-reorder)
 # Test-only: the S3 simulator for the lake tools' S3 tests (tools/lake/test_s3_simulators.py). Pure Python, so it runs on the
 # Windows QA machine; pinned.
 moto[server]==5.2.3

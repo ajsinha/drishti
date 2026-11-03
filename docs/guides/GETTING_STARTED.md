@@ -499,7 +499,7 @@ Nothing Drishti writes is hidden (no dot-folders of its own), and everything it 
 | `data/derived/` | grouped pages kept on disk (`trade-pages`: counterparty, portfolio, legal entity and index trades), one folder per connector |
 | `data/tmp/` | temporary files: `tmp/server/drishti-<pid>` and `tmp/console/drishti-console-<pid>`, removed when the process stops; `tmp/server` is also the JVM's `-Djava.io.tmpdir` (native libraries unpack there, not in `/tmp`), `tmp/maven` is Maven's (`./mvnw`) and `tmp/drill` the release drill's (`tools/drill.sh`; emptied when it ends) |
 | `data/net/` | Drishti\*net, when it is on: `peers.json` (the members it knew, to rejoin after a restart), `history/` (earlier text of the files in `config/net/`); the console keeps the servers it learned in its own data folder's `net/servers.json` |
-| `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output (`lake demo` staging), the drill's logs |
+| `data/qa/`, `data/build/`, `data/drill/` | the QA profile's own data, tool output (`lake demo` staging), the drill's logs and the console test files' recorded durations (`durations.json`, which orders the next drill's files) |
 
 The repository itself holds code and configuration: `config/` (packs, connector files, BI files), `run-configs/` and `drishti-console/run-configs/` (the IntelliJ and PyCharm run
 configurations), `docs/`, `tools/`, `external_lib/`.
