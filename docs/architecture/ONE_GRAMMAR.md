@@ -23,13 +23,14 @@ built: section 8); part 4 designed, built in a release of its own after 2.9.11.d
 **Read with:** [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md) (the grammar), [PIVOT_ENGINE.md](PIVOT_ENGINE.md) (the engine,
 section 6.7 for paths into documents), [BI_DESIGN.md](BI_DESIGN.md) (section 3.3, DEL).
 
-## 1. What exists today, and why it must become one
+## 1. What existed before 2.9.11.b, and why it must become one
 
-Drishti computes with three overlapping languages and three implementations of the same aggregates:
+Drishti computed with three overlapping languages and three implementations of the same aggregates
+(parts 1 to 3 made the engine the only one; DEL remains, part 4):
 
 | Where | What it does | Its aggregates |
 |---|---|---|
-| Rachana's expressions (`drishti-rachana`, package `rachana.el`: `Parser`, `ElCompiler`, `Functions`) | Sutra bindings, titles, filters: paths (`$.LEGS[0].INDEX.NAME`, `[*]`, `[?...]`), templates, links | its own `sum`, `min`, `max`, `size`, `flatten`, `group` over lists |
+| Rachana's expressions (`drishti-rachana`, package `rachana.el`: `Parser`, `ElCompiler`, `Functions`) | Sutra bindings, titles, filters: paths (`$.LEGS[0].INDEX.NAME`, `[*]`, `[?...]`), templates, links | its own `sum`, `min`, `max`, `group` over lists (since 2.9.11.b: the engine's, section 8) |
 | DEL, BI's expression language (`drishti-server`, package `bi.expr`: `DelParser`, `DelChecker`, `DelLowering`, `FunctionCatalog`) | BI measures, derived columns, filters, row rules, in a Python-like syntax | BI's aggregates, lowered to DuckDB SQL |
 | The pivot engine (`drishti-bicompute`, package `functions`: `Builtins`, `OncePerParent`, `spi.AggFunction`) | every pivot, its totals, the once-per-parent forms, sketches, custom functions (DEL, SQL, Python, Java) | the full catalogue, each with start, add, merge and finish |
 
