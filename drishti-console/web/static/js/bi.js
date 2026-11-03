@@ -227,7 +227,7 @@
     q('[data-clear]').addEventListener('click', function () { qa('input, select', form).forEach(function (el) { el.value = el.name === 'sort' ? 'use' : ''; }); params = new URLSearchParams(); run(false); });
     remember(tab);
     run(false);
-    if (params.get('focus')) { q('[data-search]').focus(); }
+    if (params.get('focus')) { q('input[data-search]').focus(); }
   }
 
   // -- Workspaces -------------------------------------------------------------------------------------------------------
@@ -726,7 +726,7 @@
     var keys = document.getElementById('biKeys');
     if (e.key === '/') {
       e.preventDefault(); e.stopImmediatePropagation();
-      var s = q('[data-search]');
+      var s = q('input[data-search]');
       if (s) { s.focus(); } else { window.location.href = '/bi/catalogue?focus=1'; }
     } else if (e.key === '?' && keys) {
       e.preventDefault(); if (!keys.open) { keys.showModal(); }
