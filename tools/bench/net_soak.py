@@ -132,18 +132,22 @@ def connector_files(lake: Path, packs: str, packs_dir: Path = ROOT / "config" / 
     import yaml
     out = {}
     for p in pack_closure(packs, packs_dir):
-        spec = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        raw = yaml.safe_load((packs_dir / p / "pack.yaml").read_text(encoding="utf-8")) or {}
+        sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+        import packlake                               # where a lake-form template's tables are: the pack's lake: entries
+        spec = packlake.view(raw)
         for name, c in (spec.get("connectors") or {}).items():
             if c.get("plugin") != "delta":
                 continue
             st = c.get("settings") or {}
+            template_settings = ((raw.get("connectors") or {}).get(name) or {}).get("settings") or st
             tables = st.get("table") if isinstance(st.get("table"), dict) else {}
             held = [k for k in c.get("kinds") or [] if (lake / str(st.get("domain") or "") / str(tables.get(k) or st.get(f"table.{k}") or k)
                                                        / "_delta_log").is_dir()]
             if held:
                 continue
             body = {"plugin": "delta", "enabled": False, "kinds": list(c.get("kinds") or []),
-                    "description": f"switched off by the Drishti*net soak: the lake {lake.name} holds none of its tables", "settings": st}
+                    "description": f"switched off by the Drishti*net soak: the lake {lake.name} holds none of its tables", "settings": template_settings}
             out[name] = (f"# Written by tools/bench/net_soak.py: pack '{p}' connector, off for this node (SOAK-10).\n"
                          + yaml.safe_dump(body, sort_keys=False, width=140))
     return out

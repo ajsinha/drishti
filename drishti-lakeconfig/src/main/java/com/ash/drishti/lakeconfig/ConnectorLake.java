@@ -124,12 +124,15 @@ public final class ConnectorLake {
         // the plugins read <root>/<domain>/<folder>: the table's parent folder's last segment is the domain, the rest goes to the root
         String parent = parents.isEmpty() ? "" : parents.iterator().next();
         int cut = parent.lastIndexOf('/');
-        out.put("root", cut < 0 ? lake.root() : trim(lake.root()) + "/" + parent.substring(0, cut));
+        if (!lake.root().isEmpty()) {                          // a catalog lake (rest, glue, s3tables) has no root: the catalog says
+            out.put("root", cut < 0 ? lake.root() : trim(lake.root()) + "/" + parent.substring(0, cut));
+        }
         if (!parent.isEmpty()) {
             out.put("domain", parent.substring(cut + 1));
         }
-        boolean s3 = lake.root().startsWith("s3://") || lake.root().startsWith("s3a://");
-        lake.storage().forEach((k, v) -> out.put(s3 && !k.startsWith("s3.") ? "s3." + k : k, v));
+        // storage keys are the object store's: s3.<key> for an S3 root or a catalog's warehouse; another scheme's keys as written
+        boolean s3 = lake.root().isEmpty() || lake.root().startsWith("s3://") || lake.root().startsWith("s3a://");
+        lake.storage().forEach((k, v) -> out.put(s3 && !k.startsWith("s3.") && !k.startsWith("tls.") && !k.startsWith("proxy.") ? "s3." + k : k, v));
         lake.catalog().forEach((k, v) -> {
             if (!k.equals("type")) {
                 out.put(k, v);

@@ -73,7 +73,7 @@ public final class LakeCheck {
     public static List<Finding> table(Lake lake, LakeTable t) {
         List<Finding> out = new ArrayList<>();
         String loc = lake.location(t);
-        if (lake.inMemory() || loc.matches("^[a-z][a-z0-9+]*://.*") && !loc.startsWith("file://")) {
+        if (lake.inMemory() || lake.root().isEmpty() || loc.matches("^[a-z][a-z0-9+]*://.*") && !loc.startsWith("file://")) {
             out.add(new Finding("note", lake.name(), t.name(), "not checked from here: " + loc + " is not a local folder"));
             return out;
         }

@@ -202,177 +202,8 @@ connectors:
     - position-sensitivity
     - risk-factor
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: risk
-      layout:
-        trade-valuation:
-          columns:
-          - VALUATION_ID
-          - TRADE_ID
-          - SOURCE_SYSTEM
-          - PRODUCT_TYPE
-          - PRODUCT_GROUP
-          - PORTFOLIO
-          - DESK
-          - COUNTERPARTY
-          - NETTING_SET
-          - TRADER_ID
-          - BUY_SELL_CODE
-          - TRADE_STATUS
-          - CURRENCY
-          - NOTIONAL
-          - MTM
-          - MTM_CURRENCY
-          - PNL_1D
-          - DV01
-          - TRADE_DATE
-          - MATURITY_DATE
-          - VALUATION_DATE
-          sort-by: id
-          file-rows: 250000
-          row-group-rows: 1000
-        pnl-vector:
-          columns:
-          - VALUE_TYPE
-          - GRAIN
-          - TRADE_ID
-          - POSITION_ID
-          - CURRENCY
-          - SOURCE_SYSTEM
-          - SECURITY_ID
-          - INSTRUMENT
-          - LEGAL_ENTITY
-          - DIVISION
-          - DESK
-          - TT_BOOK
-          - LIMIT_LETTER
-          - PORTFOLIO
-          - STRATEGY
-          - PRODUCT_GROUP
-          - PRODUCT_TYPE
-          - COUNTERPARTY
-          - DIRECTION
-          - QUANTITY
-          - PV
-          - TAGS
-          - TRADE_STATUS
-          - MATURITY_DATE
-          - STATUS
-          - REPORTING_CCY
-          - SCENARIO_SET_ID
-          - BATCH_ID
-          - RUN_KIND
-          - COMPUTED_AT
-          - TRADE_IDS
-          - TRADE_CURRENCY
-          vectors:
-          - PNL
-        scenario-pv:
-          columns:
-          - VALUE_TYPE
-          - GRAIN
-          - TRADE_ID
-          - POSITION_ID
-          - CURRENCY
-          - SOURCE_SYSTEM
-          - SECURITY_ID
-          - INSTRUMENT
-          - LEGAL_ENTITY
-          - DIVISION
-          - DESK
-          - TT_BOOK
-          - LIMIT_LETTER
-          - PORTFOLIO
-          - STRATEGY
-          - PRODUCT_GROUP
-          - PRODUCT_TYPE
-          - COUNTERPARTY
-          - DIRECTION
-          - QUANTITY
-          - BASE_PV
-          - VALUATION_DATE
-          - BASE_VALUATION_DATE
-          - TAGS
-          - TRADE_STATUS
-          - MATURITY_DATE
-          - STATUS
-          - SCENARIO_SET_ID
-          - BATCH_ID
-          - RUN_KIND
-          - COMPUTED_AT
-          - TRADE_IDS
-          vectors:
-          - SCENARIO_PV
-        fx-scenario:
-          columns:
-          - CURRENCY
-          - RATE
-          - SCENARIO_SET_ID
-        risk-hierarchy:
-          columns:
-          - NODE_ID
-          - HIERARCHY
-          - LEVEL
-          - PARENT_ID
-          - NAME
-        var-limit:
-          columns:
-          - LIMIT_ID
-          - HIERARCHY
-          - NODE_ID
-          - LIMIT_VAR
-          - CURRENCY
-        desk-pnl:
-          columns:
-          - DESK_PNL_ID
-          - DESK_ID
-          - LEGAL_ENTITY
-          - ACTUAL_PNL
-          - HYPOTHETICAL_PNL
-          - FEES_AND_COMMISSIONS
-          - CURRENCY
-          - SOURCE
-          - AS_OF
-        pnl-history:
-          columns:
-          - HIERARCHY
-          - NODE_ID
-          - LEVEL
-          - CURRENCY
-          - FIRST_DAY
-          - LAST_DAY
-          - DAY_COUNT
-          vectors:
-          - PNL
-        portfolio:
-          columns:
-          - PORTFOLIO_ID
-          - NAME
-          - TYPE
-          - OWNER
-        position-sensitivity:
-          columns:
-          - SENSITIVITY_ID
-          - GRAIN
-          - POSITION_ID
-          - TRADE_ID
-          - SOURCE_SYSTEM
-          - BATCH_ID
-          - STATUS
-          - DESK
-          - TT_BOOK
-          - PRODUCT_TYPE
-          - CURRENCY
-        risk-factor:
-          columns:
-          - RISK_FACTOR
-          - FACTOR_TYPE
-          - RISK_CLASS
-          - QUALIFIER
-          - TENOR
-          - FRTB_BUCKET
-          - SIMM_RISK_CLASS
-          - SIMM_BUCKET
+      lake: demo
+      lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.risk-hierarchy,risk.var-limit,risk.desk-pnl,risk.pnl-history,risk.position-sensitivity,risk.risk-factor
   mr-derived:
     plugin: derived
     enabled: ${DRISHTI_MR_DERIVED_ENABLED:true}
@@ -866,6 +697,182 @@ roles:
     - '*'
     raw: true
     calc: true
+lake:
+  tables:
+    risk.stress-scenario: null
+    risk.stress-result: null
+    risk.frtb-sensitivity: null
+    risk.pnl-explain: null
+    risk.trade-valuation:
+      promote:
+      - VALUATION_ID
+      - TRADE_ID
+      - SOURCE_SYSTEM
+      - PRODUCT_TYPE
+      - PRODUCT_GROUP
+      - PORTFOLIO
+      - DESK
+      - COUNTERPARTY
+      - NETTING_SET
+      - TRADER_ID
+      - BUY_SELL_CODE
+      - TRADE_STATUS
+      - CURRENCY
+      - NOTIONAL
+      - MTM
+      - MTM_CURRENCY
+      - PNL_1D
+      - DV01
+      - TRADE_DATE
+      - MATURITY_DATE
+      - VALUATION_DATE
+      sort-by:
+      - id
+      file-rows: 250000
+      row-group-rows: 1000
+    risk.portfolio:
+      promote:
+      - PORTFOLIO_ID
+      - NAME
+      - TYPE
+      - OWNER
+    risk.pnl-vector:
+      promote:
+      - VALUE_TYPE
+      - GRAIN
+      - TRADE_ID
+      - POSITION_ID
+      - CURRENCY
+      - SOURCE_SYSTEM
+      - SECURITY_ID
+      - INSTRUMENT
+      - LEGAL_ENTITY
+      - DIVISION
+      - DESK
+      - TT_BOOK
+      - LIMIT_LETTER
+      - PORTFOLIO
+      - STRATEGY
+      - PRODUCT_GROUP
+      - PRODUCT_TYPE
+      - COUNTERPARTY
+      - DIRECTION
+      - QUANTITY
+      - PV
+      - TAGS
+      - TRADE_STATUS
+      - MATURITY_DATE
+      - STATUS
+      - REPORTING_CCY
+      - SCENARIO_SET_ID
+      - BATCH_ID
+      - RUN_KIND
+      - COMPUTED_AT
+      - TRADE_IDS
+      - TRADE_CURRENCY
+      vectors:
+      - PNL
+    risk.scenario-pv:
+      promote:
+      - VALUE_TYPE
+      - GRAIN
+      - TRADE_ID
+      - POSITION_ID
+      - CURRENCY
+      - SOURCE_SYSTEM
+      - SECURITY_ID
+      - INSTRUMENT
+      - LEGAL_ENTITY
+      - DIVISION
+      - DESK
+      - TT_BOOK
+      - LIMIT_LETTER
+      - PORTFOLIO
+      - STRATEGY
+      - PRODUCT_GROUP
+      - PRODUCT_TYPE
+      - COUNTERPARTY
+      - DIRECTION
+      - QUANTITY
+      - BASE_PV
+      - VALUATION_DATE
+      - BASE_VALUATION_DATE
+      - TAGS
+      - TRADE_STATUS
+      - MATURITY_DATE
+      - STATUS
+      - SCENARIO_SET_ID
+      - BATCH_ID
+      - RUN_KIND
+      - COMPUTED_AT
+      - TRADE_IDS
+      vectors:
+      - SCENARIO_PV
+    risk.fx-scenario:
+      promote:
+      - CURRENCY
+      - RATE
+      - SCENARIO_SET_ID
+    risk.scenario-set: null
+    risk.risk-hierarchy:
+      promote:
+      - NODE_ID
+      - HIERARCHY
+      - LEVEL
+      - PARENT_ID
+      - NAME
+    risk.var-limit:
+      promote:
+      - LIMIT_ID
+      - HIERARCHY
+      - NODE_ID
+      - LIMIT_VAR
+      - CURRENCY
+    risk.desk-pnl:
+      promote:
+      - DESK_PNL_ID
+      - DESK_ID
+      - LEGAL_ENTITY
+      - ACTUAL_PNL
+      - HYPOTHETICAL_PNL
+      - FEES_AND_COMMISSIONS
+      - CURRENCY
+      - SOURCE
+      - AS_OF
+    risk.pnl-history:
+      promote:
+      - HIERARCHY
+      - NODE_ID
+      - LEVEL
+      - CURRENCY
+      - FIRST_DAY
+      - LAST_DAY
+      - DAY_COUNT
+      vectors:
+      - PNL
+    risk.position-sensitivity:
+      promote:
+      - SENSITIVITY_ID
+      - GRAIN
+      - POSITION_ID
+      - TRADE_ID
+      - SOURCE_SYSTEM
+      - BATCH_ID
+      - STATUS
+      - DESK
+      - TT_BOOK
+      - PRODUCT_TYPE
+      - CURRENCY
+    risk.risk-factor:
+      promote:
+      - RISK_FACTOR
+      - FACTOR_TYPE
+      - RISK_CLASS
+      - QUALIFIER
+      - TENOR
+      - FRTB_BUCKET
+      - SIMM_RISK_CLASS
+      - SIMM_BUCKET
 
 # History queries (TRD 1000015 30, docs/architecture/DATA_ARCHITECTURE.md › History queries: an entity over time, section 6): how this pack's kinds look over time.
 # Only the shape: any dated kind has a history without an entry here.

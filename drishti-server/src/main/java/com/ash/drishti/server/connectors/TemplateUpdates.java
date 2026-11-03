@@ -210,9 +210,15 @@ public final class TemplateUpdates implements AutoCloseable {
             }
             Map<String, Object> flat = new LinkedHashMap<>();
             PackLoader.flatten("", def.get("settings") instanceof Map<?, ?> s ? (Map<String, Object>) s : Map.of(), flat);
+            // a template in the lake form (lake:, lake-tables:) and a file that still describes its lake itself: the lake keys are never
+            // merged into it (with root and layout beside lake: the connector would be refused); drishti.py lake migrate-config moves it
+            boolean olderFile = com.ash.drishti.lakeconfig.ConnectorLake.legacy(d.settings());
             flat.forEach((k, v) -> {
                 String tv = v == null ? "" : String.valueOf(v);
                 String fv = d.settings().get(k);
+                if (olderFile && (k.equals(com.ash.drishti.lakeconfig.ConnectorLake.LAKE) || k.equals(com.ash.drishti.lakeconfig.ConnectorLake.TABLES))) {
+                    return;
+                }
                 if (fv == null) {
                     fresh.put(k, tv);
                 } else if (!fv.equals(tv)) {

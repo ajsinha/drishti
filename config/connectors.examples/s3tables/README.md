@@ -93,3 +93,6 @@ deploy/aws/s3-tables/s3-tables.sh check --bucket drishti-risk --namespace risk -
 
 - [The Iceberg connector, section 20](../../../docs/connectors/ICEBERG_CONNECTOR.md#20-aws-s3-tables) and the [iceberg connector README](../../../plugins/drishti-plugin-iceberg/README.md).
 - [The tool scripts](../../../deploy/aws/s3-tables/README.md) and [Connector files](../../../docs/connectors/CONNECTOR_FILES.md).
+
+The Delta and Iceberg files here name a lake (`lake:`, `lake-tables:`); the lake itself, its root or catalog, storage and tables, is the matching
+file in [config/lakes.examples/s3tables/](../../lakes.examples/s3tables/): copy both (docs/guides/LAKE_GUIDE.md).

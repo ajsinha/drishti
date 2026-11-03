@@ -170,7 +170,9 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     ``connector`` that Delta connector of the pack (one of several serving a kind, one per source system: trade-endur ...), else the
     first; ``table`` is its ``table.<kind>`` folder when it names one (trade_endur), else the kind."""
     import yaml
-    m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+    import packlake                                   # a lake-form template read with the pack's lake: entries
+    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     out: dict = {"pack": m.get("pack") or pack.name}
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]

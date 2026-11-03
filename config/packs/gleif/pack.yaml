@@ -92,17 +92,16 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [lei-entity, lei-relationship, lei-mapping]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: gleif
+      lake: demo
+      lake-tables: gleif.lei-entity,gleif.lei-relationship,gleif.lei-mapping
       layout:
         lei-entity:
-          columns: [LEI, NAME, LEI_COUNTRY, LEGAL_CITY, LEGAL_FORM, REGISTRATION_STATUS, RENEWAL_LATE, SEGMENT, NEXT_RENEWAL, US_COMPANY]
-          type-ahead: [NAME, US_COMPANY]
-        lei-relationship:
-          columns: [RELATIONSHIP_ID, LEVEL, CHILD_ENTITY, PARENT_ENTITY, RELATIONSHIP_STATUS]
+          type-ahead:
+          - NAME
+          - US_COMPANY
         lei-mapping:
-          columns: [IDENTIFIER, TYPE, ENTITY_LEI, ENTITY_NAME]
-          type-ahead: [ENTITY_NAME]
+          type-ahead:
+          - ENTITY_NAME
   # LEIG and LEIC: computed from every entity when asked (a business date at a time, rebuilt when the lake loads), no member cap. An
   # entity is in its ownership group (LEI_GROUP: its ultimate parent, from GLEIF's level 2 relationships), in its legal-address country,
   # and in ALL (the pack-wide page, which keeps its aggregates only). The group's tree is built from each member's DIRECT_PARENT.
@@ -223,3 +222,33 @@ routes:
   lei-relationship: gleif-store
   lei-country: gleif-groupings
   lei-mapping: gleif-store
+
+# The tables this pack recommends (docs/guides/LAKE_GUIDE.md section 7): copied into a lake file the first time a writer meets
+# the kind; config/lakes/demo.yaml holds them for the demo lake. Its connectors above name the lake and these entries.
+lake:
+  tables:
+    gleif.lei-entity:
+      promote:
+      - LEI
+      - NAME
+      - LEI_COUNTRY
+      - LEGAL_CITY
+      - LEGAL_FORM
+      - REGISTRATION_STATUS
+      - RENEWAL_LATE
+      - SEGMENT
+      - NEXT_RENEWAL
+      - US_COMPANY
+    gleif.lei-relationship:
+      promote:
+      - RELATIONSHIP_ID
+      - LEVEL
+      - CHILD_ENTITY
+      - PARENT_ENTITY
+      - RELATIONSHIP_STATUS
+    gleif.lei-mapping:
+      promote:
+      - IDENTIFIER
+      - TYPE
+      - ENTITY_LEI
+      - ENTITY_NAME

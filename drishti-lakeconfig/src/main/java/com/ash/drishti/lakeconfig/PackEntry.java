@@ -120,6 +120,17 @@ public record PackEntry(String domain, String table, String key, String date, Li
     private static String tableOf(JsonNode pack, String connector, String kind) {
         JsonNode defs = pack.path("connectors").isObject() ? pack.path("connectors") : pack.path("connector-templates");
         JsonNode st = defs.path(connector).path("settings");
+        if (st.path(ConnectorLake.TABLES).isTextual()) {               // the lake form: lake-tables names the entries
+            for (String n : st.path(ConnectorLake.TABLES).asText().split(",")) {
+                String name = n.trim();
+                int dot = name.indexOf('.');
+                JsonNode e = pack.path("lake").path("tables").path(name);
+                if (dot > 0 && e.path("kind").asText(name.substring(dot + 1)).equals(kind)) {
+                    return name.substring(dot + 1);
+                }
+            }
+            return null;
+        }
         JsonNode t = st.path("table").isObject() ? st.path("table").path(kind) : st.path("table." + kind);
         return t.isTextual() && !t.asText().isBlank() ? t.asText() : null;
     }

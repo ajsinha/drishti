@@ -113,8 +113,8 @@ connectors:
     - expression-study
     - clinical-trial
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: genomics
+      lake: demo
+      lake-tables: genomics.gene,genomics.variant,genomics.protein,genomics.pathway,genomics.sample,genomics.sequencing-run,genomics.expression-study,genomics.clinical-trial
 routes:
   gene: genomics-store
   variant: genomics-store
@@ -299,3 +299,13 @@ roles:
     - expression-study
     - clinical-trial
     raw: true
+lake:
+  tables:
+    genomics.gene: null
+    genomics.variant: null
+    genomics.protein: null
+    genomics.pathway: null
+    genomics.sample: null
+    genomics.sequencing-run: null
+    genomics.expression-study: null
+    genomics.clinical-trial: null

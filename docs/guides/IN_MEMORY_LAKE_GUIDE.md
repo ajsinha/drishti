@@ -56,28 +56,33 @@ This guide sets one up end to end, explains what the server does with it, and li
 
 ## 2. Setting up a memory-only feed
 
-Two files. The connector:
+Three files. The connector:
 
 ```yaml
 # config/connectors/news-store.yaml (config/connectors.examples/memory/news-store.yaml)
 plugin: delta
 kinds: [news-topic, listed-company, news, quote]
 settings:
-  root: mem://news
-  domain: ""          # the tables sit at mem://news/<kind>: without it the pack's template adds domain: news
+  lake: news          # config/lakes/news.yaml (below): root mem://news, the tables at mem://news/<kind>
+  lake-tables: news.news-topic,news.listed-company,news.news,news.quote
 ```
 
 The store is a lake like any other ([LAKE_GUIDE.md section 6](LAKE_GUIDE.md#6-in-memory-stores)): its own lake file, its root
 `mem://<store>`, its cap and contract under `memory:`:
 
 ```yaml
-# config/lakes/news.yaml
+# config/lakes/news.yaml (config/lakes.examples/memory/news.yaml)
 lake: news
 root: mem://news
 memory:
   max-mb: 256                 # the hard cap
   chunk-kb: 64                # small tables: every file holds at least one chunk
   contract: VX-2026-07        # shown on every refusal and on Admin -> Lakes
+tables:                       # the tables sit at mem://news/<kind>
+  news.news-topic: {path: news-topic}
+  news.listed-company: {path: listed-company}
+  news.news: {path: news}
+  news.quote: {path: quote}
 ```
 
 Its tables' replenish jobs, below, stay in the in-memory lake's own file `config/engines/memory-lake.yaml` (the engine's work, with its switch,

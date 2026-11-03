@@ -52,7 +52,8 @@ public final class Lakes {
     /** At most this many partition columns after {@code business_date}. */
     public static final int MAX_PARTITIONS = 4;
 
-    private static final Pattern REF = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_]*)(?::-?([^}]*))?}");
+    /** A reference with no reference inside its default: resolved innermost first, so {@code ${A:${B:x}/delta}} nests. */
+    private static final Pattern REF = Pattern.compile("\\$\\{([A-Za-z_][A-Za-z0-9_.-]*)(?::-?([^}$]*))?}");
     private static final Pattern NAME = Pattern.compile("[a-z0-9][a-z0-9_-]*");
     private static final Set<String> SECRETS = Set.of("access-key", "secret-key", "session-token", "credential", "token", "password",
             "client-secret", "s3.access-key", "s3.secret-key", "s3.session-token");
@@ -180,10 +181,7 @@ public final class Lakes {
             throw new IllegalArgumentException(where + ": lake: " + name + " differs from the file's name " + expected + ".yaml");
         }
         String format = format(where, "format", v.text(root, "format", "delta"));
-        String rootPath = v.text(root, "root", null);
-        if (rootPath == null || rootPath.isBlank()) {
-            throw new IllegalArgumentException(where + ": root: where the lake is (a folder, s3://bucket/prefix, or mem://<store>)");
-        }
+        String rootPath = v.text(root, "root", "");
         Map<String, String> storage = v.map(root.path("storage"), "storage");
         secrets(where, "storage", root.path("storage"), storage);
         Map<String, String> catalog = new LinkedHashMap<>();
@@ -200,6 +198,9 @@ public final class Lakes {
         }
         if (format.equals("delta") && !ctype.equals("none")) {
             throw new IllegalArgumentException(where + ": catalog: is Iceberg's; a Delta lake's tables are paths under its root");
+        }
+        if (rootPath.isBlank() && !Set.of("rest", "glue", "s3tables").contains(ctype)) {      // a catalog says where its tables are
+            throw new IllegalArgumentException(where + ": root: where the lake is (a folder, s3://bucket/prefix, or mem://<store>)");
         }
         Map<String, String> memory = v.map(root.path("memory"), "memory");
         unknown(where, "memory.", root.path("memory"), MEMORY);
@@ -342,7 +343,7 @@ public final class Lakes {
 
     private static void secrets(String where, String block, JsonNode raw, Map<String, String> resolved) {
         for (String k : resolved.keySet()) {
-            if (SECRETS.contains(k) && !REF.matcher(raw.path(k).asText()).find()) {
+            if (SECRETS.contains(k) && !REF.matcher(raw.path(k).asText()).find() && !raw.path(k).asText().startsWith("file:")) {
                 throw new IllegalArgumentException(where + ": " + block + "." + k + ": a secret is never written in a lake file; give "
                         + "${AN_ENVIRONMENT_VARIABLE} or use the platform's role");
             }
@@ -363,21 +364,40 @@ public final class Lakes {
             if (raw == null) {
                 return null;
             }
-            Matcher m = REF.matcher(raw);
-            StringBuilder out = new StringBuilder();
-            while (m.find()) {
-                String val = env.apply(m.group(1));
-                if (val == null || val.isEmpty()) {
-                    val = m.group(2);
+            String now = raw;
+            for (int round = 0; round < 8 && REF.matcher(now).find(); round++) {
+                Matcher m = REF.matcher(now);
+                StringBuilder out = new StringBuilder();
+                while (m.find()) {
+                    String val = lookup(m.group(1));
+                    if (val == null || val.isEmpty()) {
+                        val = m.group(2);
+                    }
+                    if (val == null) {
+                        throw new IllegalArgumentException(where + ": " + key + ": the environment variable " + m.group(1) + " is not set and "
+                                + "the reference gives no default (${" + m.group(1) + ":default})");
+                    }
+                    m.appendReplacement(out, Matcher.quoteReplacement(val));
                 }
-                if (val == null) {
-                    throw new IllegalArgumentException(where + ": " + key + ": the environment variable " + m.group(1) + " is not set and "
-                            + "the reference gives no default (${" + m.group(1) + ":default})");
-                }
-                m.appendReplacement(out, Matcher.quoteReplacement(val));
+                m.appendTail(out);
+                now = out.toString();
             }
-            m.appendTail(out);
-            return out.toString();
+            return now;
+        }
+
+        /**
+         * A variable: the environment; a dotted name ({@code drishti.data.dir}) also as a system property and as its environment form
+         * ({@code DRISHTI_DATA_DIR}), as the server resolves it.
+         */
+        private String lookup(String name) {
+            String v = env.apply(name);
+            if ((v == null || v.isEmpty()) && (name.contains(".") || name.contains("-"))) {
+                v = System.getProperty(name);
+                if (v == null || v.isEmpty()) {
+                    v = env.apply(name.toUpperCase(java.util.Locale.ROOT).replace('.', '_').replace('-', '_'));
+                }
+            }
+            return v;
         }
 
         String text(JsonNode parent, String key, String dflt) {

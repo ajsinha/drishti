@@ -17,6 +17,8 @@
 # drishti.lake.memory.* keys) and restart. Nothing else changes for the pages, the search, BI or the Data view. Being memory-only, this
 # connector keeps no disk cache, no id-map files and no index segments; scheduled reports, mail and pictures of its data are refused and
 # only a user's download leaves. Guide: docs/guides/IN_MEMORY_LAKE_GUIDE.md.
+# The lake (delta, its root or catalog, storage and tables) is config/lakes.examples/memory/news.yaml: copy it to
+# config/lakes/news.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: delta
 kinds:
 - news-topic
@@ -25,6 +27,5 @@ kinds:
 - quote
 description: news-store held in memory only (mem://news), filled by the in-memory lake's replenish jobs
 settings:
-  root: mem://news
-  domain: ""          # the tables sit at mem://news/<kind> (the pack's own connector reads <root>/news/<kind> on disk): kept empty, or the
-                      # pack's template would add domain: news and the connector would look under mem://news/news
+  lake: news
+  lake-tables: news.news-topic,news.listed-company,news.news,news.quote

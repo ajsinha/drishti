@@ -120,6 +120,9 @@ public record Lake(String name, String format, String root, Map<String, String> 
 
     /** The table's location: the root and its path ({@code s3://b/delta/trading/trade_endur}). */
     public String location(LakeTable t) {
+        if (root.isEmpty()) {
+            return t.path();                                   // a catalog's table: its namespace and name, where the catalog says
+        }
         return (root.endsWith("/") ? root.substring(0, root.length() - 1) : root) + "/" + t.path();
     }
 
