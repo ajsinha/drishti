@@ -116,9 +116,18 @@ public class PivotFunctionsController {
             return null;
         }
         String[] out = new String[rows];
-        List<Object> list = sample instanceof Map<?, ?> m && m.get("rows") instanceof List<?> l ? (List<Object>) l
-                : sample instanceof List<?> l ? (List<Object>) l : List.of();
-        List<?> cols = sample instanceof Map<?, ?> m && m.get("columns") instanceof List<?> c ? c : List.of();
+        List<Object> list = List.of();
+        List<?> cols = List.of();
+        if (sample instanceof Map<?, ?> m) {
+            if (m.get("rows") instanceof List<?> rs) {
+                list = (List<Object>) rs;
+            }
+            if (m.get("columns") instanceof List<?> c) {
+                cols = c;
+            }
+        } else if (sample instanceof List<?> rs) {
+            list = (List<Object>) rs;
+        }
         int ci = cols.indexOf(group);
         for (int r = 0; r < Math.min(rows, list.size()); r++) {
             Object row = list.get(r);

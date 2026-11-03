@@ -130,7 +130,11 @@ class PivotFunctionsApiTest {
         Map<String, Object> view = Map.of("source", "trade", "rows", List.of("productType"), "values", List.of("sum(" + num + ")"));
         JsonNode q = call("asha", "analyst", post("/api/v1/pivot/query"), view, 200);
         List<String> types = new ArrayList<>();
-        q.path("rows").forEach(r -> types.add(r.path("label").asText()));
+        q.path("rows").forEach(r -> {
+            if (r.path("depth").asInt() == 1 && r.hasNonNull("value") && !"total".equals(r.path("kind").asText())) {
+                types.add(r.path("value").asText());
+            }
+        });
         assertThat(types.size()).isGreaterThanOrEqualTo(2);
         JsonNode e = call("asha", "analyst", post("/api/v1/pivot/explain"), Map.of("view", view, "from", Map.of("productType", types.get(0)),
                 "to", Map.of("productType", types.get(1)), "by", text), 200);

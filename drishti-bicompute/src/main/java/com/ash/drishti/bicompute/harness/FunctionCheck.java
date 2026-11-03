@@ -127,7 +127,7 @@ public final class FunctionCheck {
             checks.add(new Check("one pass", false, "failed: " + e.getClass().getSimpleName() + " " + e.getMessage()));
             return new Verdict(f.name(), f.kind(), false, null, checks, null, 0, 0, sample.rows());
         }
-        double ns = sample.rows() == 0 ? 0 : (System.nanoTime() - t0) / (double) sample.rows();
+        double ns = sample.rows() == 0 ? 0 : (System.nanoTime() - t0) / (double) sample.rows();     // replaced by a warm run below
         checks.add(new Check("one pass", true, "the figure is " + one));
 
         FunctionHarness.Report splits = null;
@@ -156,7 +156,9 @@ public final class FunctionCheck {
         }
 
         try {
+            long t1 = System.nanoTime();
             Double second = f.finish(f.add(f.start(), sample));
+            ns = sample.rows() == 0 ? 0 : (System.nanoTime() - t1) / (double) sample.rows();     // the cost of a warm run (after the splits)
             boolean same = second == null ? one == null : one != null && Double.doubleToLongBits(second) == Double.doubleToLongBits(one);
             checks.add(new Check("deterministic", same, same ? "the same rows in the same order gave the same bits" : "two runs gave " + one
                     + " and " + second));
@@ -193,8 +195,10 @@ public final class FunctionCheck {
             boolean ok = true;
             if (mergeable) {
                 Double withNulls = f.finish(f.merge(f.decode(f.encode(f.add(f.start(), sample))), f.decode(f.encode(s))));
-                ok = close(withNulls, one, o.tolerance());
-                d = ok ? "a part of nulls merged changes nothing" : "a part of nulls merged gives " + withNulls + ", not " + one;
+                Double together = f.finish(f.add(f.start(), concat(sample, nulls)));
+                ok = close(withNulls, together, o.tolerance());
+                d = ok ? "a part of nulls merged equals one pass over the rows and the nulls" : "a part of nulls merged gives " + withNulls
+                        + ", one pass over the same rows " + together;
             }
             out.add(new Check("nulls", ok, d));
         } catch (RuntimeException e) {
@@ -254,6 +258,26 @@ public final class FunctionCheck {
                 cols[i] = d;
             } else {
                 cols[i] = new String[n];
+            }
+        }
+        return new Batch(n, cols);
+    }
+
+    private static Batch concat(Batch a, Batch b) {
+        Object[] cols = new Object[a.columns().length];
+        int n = a.rows() + b.rows();
+        for (int i = 0; i < cols.length; i++) {
+            if (a.columns()[i] instanceof double[] x) {
+                double[] y = (double[]) b.columns()[i];
+                double[] z = Arrays.copyOf(x, n);
+                System.arraycopy(y, 0, z, a.rows(), b.rows());
+                cols[i] = z;
+            } else {
+                String[] x = (String[]) a.columns()[i];
+                String[] y = (String[]) b.columns()[i];
+                String[] z = Arrays.copyOf(x, n);
+                System.arraycopy(y, 0, z, a.rows(), b.rows());
+                cols[i] = z;
             }
         }
         return new Batch(n, cols);
