@@ -144,4 +144,24 @@ class PreviewTest {
                 """);
         assertThat(Preview.check(keyed, Preview.read(sample(false), 100), RowEvaluator.rachana())).noneMatch(Problem::isError);
     }
+
+    @Test
+    void fxAndRelatedAreReadFromTheFxSourceAndTheOtherTable() throws Exception {
+        TableDef t = table("""
+                rachana: 3
+                table: trading.trades
+                from: { kind: trade }
+                columns:
+                  TRADE_ID: $.TRADE_ID
+                  MTM_EUR:  { expr: "$.MTM * fx('USD', 'EUR')", type: decimal }
+                  STATE:    { expr: "related(core.states.WORDS, on = $.STATUS)", type: string }
+                """);
+        com.ash.drishti.tables.lang.LateBound.Lookup states = (table, key) -> "core.states".equals(table) && "LIVE".equals(key)
+                ? com.ash.drishti.api.DataNode.of(java.util.Map.of("WORDS", "trading")) : null;
+        Preview.Rows r = Preview.rows(t, Preview.read(sample(false), 100), 50,
+                RowEvaluator.rachana((from, to, at) -> "USD".equals(from) && "EUR".equals(to) ? 0.5 : null, states, java.time.LocalDate.of(2026, 10, 9)));
+        assertThat(r.problems()).isEmpty();
+        assertThat(((Number) r.rows().get(0).get(3)).doubleValue()).isEqualTo(1_250_000.0);
+        assertThat(r.rows()).extracting(x -> x.get(4)).containsExactly("trading", null, null);
+    }
 }
