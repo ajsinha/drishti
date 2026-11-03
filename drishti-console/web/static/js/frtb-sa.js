@@ -70,11 +70,14 @@
   // -------------------------------------------------------------------------------------------------------- the capital screen
   function stack(a) {
     var max = Math.max.apply(null, a.stack.map(function (s) { return Math.abs(s.value || 0); }).concat([1]));
+    var widths = [];
     $("[data-fr-stack]").innerHTML = a.stack.map(function (s) {
-      var w = s.value == null ? 0 : Math.max(1, Math.abs(s.value) / max * 100);
-      return '<div class="fr-bar' + (s.label === "Total" ? " total" : "") + '"><span class="fr-bl">' + esc(s.label) + '</span><span class="fr-bt"><i style="width:' + w
-        + '%"></i></span><span class="fr-bv mono">' + (s.value == null ? "not computed" : money(s.value)) + "</span></div>";
+      widths.push(s.value == null ? 0 : Math.max(1, Math.abs(s.value) / max * 100));
+      return '<div class="fr-bar' + (s.label === "Total" ? " total" : "") + '"><span class="fr-bl">' + esc(s.label) + '</span><span class="fr-bt"><i></i></span>'
+        + '<span class="fr-bv mono">' + (s.value == null ? "not computed" : money(s.value)) + "</span></div>";
     }).join("");
+    // each bar's length through the CSSOM: a style attribute in markup is blocked by the console's CSP (style-src 'self')
+    root.querySelectorAll("[data-fr-stack] .fr-bt i").forEach(function (i, n) { i.style.width = widths[n] + "%"; });
   }
   function classesGrid(a) {
     var rep = SC.indexOf(a.reported), rows = {};

@@ -85,6 +85,10 @@ InterestRate:
     delta: {1: 1000000, 2: 1000000, other: 20000}
 ```
 
+**You should see** `TOY-1` listed as installed and the default in `simm versions`, and, after the restart, the SIMM screen's meta line reading *default SIMM TOY-1* above every netting set.
+
+![SIMM with the toy version installed: every netting set, its IM to collect and post](img/t32/01-version.jpg)
+
 ## Step 2 · The hand-built examples
 
 `EXAMPLE` runs the contract's worked netting set (USD 5y +10,000 and 10y −6,000 per bp, EUR 2y +4,000, FX EUR +20,000 per 1 %), the
@@ -117,6 +121,10 @@ K = √(500,000² + 306,000² − 2 × 0.94 × 500,000 × 306,000) = 236,634.74;
 post differ by the swaption's curvature (7,952.79 collect; posted, θ = −1 and λ = 1 make it 0) and RatesFX's ψ combination.
 
 **The YAML.** Nothing to configure: `EXAMPLE` needs no data.
+
+**You should see** collect 1,231,385.86 and post 1,223,938.71, RatesFX and Credit as the product classes, and the risk classes InterestRate, FX and CreditQ beneath.
+
+![SIMM EXAMPLE: the hand-built examples, collect and post](img/t32/02-examples.jpg)
 
 ## Step 3 · A netting set, both ways
 
@@ -166,6 +174,10 @@ IM_FIXED_ADDON: 1000000
 IM_PRODUCT_MULTIPLIERS: {Equity: 1.1}
 ```
 
+**You should see** NS-ALDERSHOT-LDN's IM of 216,831,320.15 to collect and 216,429,809.08 to post, RatesFX and Equity, and the status *computed, incomplete*.
+
+![SIMM NS-ALDERSHOT-LDN: the breakdown by product and risk class](img/t32/03-netting-set.jpg)
+
 ## Step 4 · The playground: a switch flipped and explained
 
 **In the UI.** Type `PLAY SIMM NS-ALDERSHOT-LDN <GO>`. The Choices panel holds `simm-parameters` (TOY-1), `concentration` and `hvr`, each
@@ -194,6 +206,10 @@ python3 tools/drishti.py simm show EXAMPLE --override InterestRate.concentration
 USD's single concentration factor becomes √(4,000 / 3,000) = 1.154701, g(USD, EUR) = 0.866025, Delta_IR 382,700.58 and RatesFX
 450,195.27.
 
+**You should see** the Choices panel, the grid of weighted sensitivities, the formula bar filled for the selected row, and the comparison with `hvr: off` in words above the grid.
+
+![PLAY SIMM NS-ALDERSHOT-LDN compared with hvr: off](img/t32/04-compare.jpg)
+
 ## Step 5 · The workbook of live formulas
 
 **In the UI.** In the playground, **Export to Excel**. Open the workbook: Main's band reads **ALL CHECKS PASS**; each charge, each product
@@ -221,6 +237,8 @@ drishti:
 The playground's **Template workbook** link downloads the same workbook on the hand-built examples with every parameter cell empty: the
 shared template never holds a licensed number.
 
+**You should see** **ALL CHECKS PASS** on Main, still passing with the side set to `post`, and *SWITCHES CHANGED: SEE THE ALTERNATIVES* once concentration is off.
+
 ## Step 6 · A recipe, replayed to the cent
 
 **In the UI.** In the playground, **Save recipe**: *Saved as recipe SM-…: PLAY SIMM RUN SM-… computes it again to the cent*. Type
@@ -241,6 +259,10 @@ drishti:
   simm:
     recipes-dir: ${drishti.data.dir:./data}/simm/recipes
 ```
+
+**You should see** the notice *Saved as recipe SM-…* and, on the replay, *reproduced to the cent*.
+
+![PLAY SIMM RUN: a recipe replayed to the cent](img/t32/05-recipe.jpg)
 
 ## Step 7 · Against the counterparty's call
 
@@ -266,7 +288,11 @@ IM_TOTAL: 216500000
 IM_EQUITY: 172400000
 ```
 
-## What's next
+**You should see** Drishti's IM to collect and post beside the counterparty's figure per risk class, or, with no `crif-external` connector, *no call* and the note that the call is not loaded.
+
+![Against the counterparty: the margin beside the counterparty's call](img/t32/06-against.jpg)
+
+## Next steps
 
 - The [SIMM guide](../guides/SIMM_GUIDE.md): every formula, the parameter file's keys, the refusal codes and what is not built yet.
 - The [data contract](../contracts/SIMM.md): the CRIF mapping, the CSA's terms and the computed kind `simm-result`.

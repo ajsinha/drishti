@@ -17,6 +17,16 @@
 
 ## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-02)
 
+- **Fixed (drill): the release drill's console findings.** The sign-in page, which sends its form in the background for busy protection,
+  marks the page while the form is on its way (`html[data-signing-in]`), and the browser tests wait on it as on a navigation (they had
+  run on before the sign-in was answered, then read the sign-in page). The basket workbook (`POST /api/var/basket/sheet.xlsx`) answers a
+  body that is not a JSON object with 400 or 415 in words, never 500. Admin → Engines' switches fill with the fill tokens and its data
+  travel in an attribute (no inline script); the SIMM screen names the product from `ui.product`. `POST /net/engines` is in the API
+  guide. `make_sutras.py` writes the phone layouts of the shared deal fragments, the counterparty, the netting set and the Endur commodity
+  swap (they had been added by hand, so `--check` failed); `testdata.yaml` regenerated. Tutorials 30 to 32 gain their pictures
+  (`screenshots.py --guide t30`, `t31`, `t32`), what you should see at every step and their next steps; the tutorials card counts
+  past thirty.
+
 - **Busy protection judges memory by what is left, not only a share:** new heavy work waits for memory only when the heap after a collection is past its level **and** less than `memory-free-min-mb` (768 MB) is left; `DRISHTI_ADMISSION_ENABLED` switches it off (the console's own tests do, their servers running a 768 MB heap).
 
 - **Compute engines on or off per server, each with its own configuration file (2.9.11 row 14; COMPUTE_ENGINES.md, OPERATIONS.md
