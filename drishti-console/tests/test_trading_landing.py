@@ -259,7 +259,7 @@ def test_the_check_is_one_var_what_if_and_one_pre_deal_check():
 def test_the_check_falls_back_to_the_engines_proxy_and_says_so():
     b, me, s = _scope(backend=TradingBackend(paths=False))
     c = asyncio.run(tl.check(b, me, s, {}, {"product": "SWAPTION", "notional": "75m", "counterparty": "CP-ALDERSHOT"}))
-    assert c["exposure"]["proxy"] and c["exposure"]["method"] == "addon" and "DRS-5446" in c["exposure"]["fallback"]
+    assert c["exposure"]["proxy"] and c["exposure"]["method"] == "addon" and "DRS-1001" in c["exposure"]["fallback"]
     n = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "10m", "counterparty": "CP-NORTHPLAINS"}))
     assert n["exposure"]["state"] == "none" and n["exposure"]["proxy"]                     # no limit, no netting set: the add-on, said
     bad = asyncio.run(tl.check(b, me, s, {}, {"product": "IR_SWAP", "notional": "lots", "counterparty": "CP-ALDERSHOT"}))
