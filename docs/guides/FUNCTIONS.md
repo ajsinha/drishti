@@ -15,7 +15,7 @@
 -->
 # Functions
 
-*Generated from the registries (Rachana's function table and the pivot engine's functions registered into it) by `FunctionCataloguePage`; do not edit by hand. 99 functions, each under its one name. Each function's example, its Excel and SAS equivalents and its rules are in [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md); the grammar is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#functions).*
+*Generated from the registries (Rachana's function table and the pivot engine's functions registered into it) by `FunctionCataloguePage`; do not edit by hand. 140 functions, each under its one name. Each function's example, its Excel and SAS equivalents and its rules are in [FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md); the grammar is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#functions).*
 
 **Runs:** **R** Rachana (a scalar, one value from values); **E** the pivot engine (`drishti-bicompute`), the same implementation a pivot cell runs. Where the engine is not on the class path an **E** function is refused with the reason, never computed another way. **Form:** *mergeable* (a total combines partial results exactly), *holistic* (it needs the values), *measure* (a figure from its own engine, never summed).
 
@@ -124,12 +124,23 @@
 
 | Function | Runs | Source |
 |---|---|---|
+| `asof` | R | Rachana |
+| `business_days_between` | R | Rachana |
+| `date` | R | Rachana |
+| `day` | R | Rachana |
 | `days_between` | R | Rachana |
 | `edate` | R | Rachana |
 | `eomonth` | R | Rachana |
 | `intck` | R | Rachana |
 | `is_business_day` | R | Rachana |
-| `today` | R | Rachana |
+| `len` | R | Rachana |
+| `month` | R | Rachana |
+| `quarter` | R | Rachana |
+| `round` | R | Rachana |
+| `shift_date` | R | Rachana |
+| `timestamp` | R | Rachana |
+| `week` | R | Rachana |
+| `year` | R | Rachana |
 | `yearfrac` | R | Rachana |
 
 ## Lists (Excel's dynamic arrays, over [*])
@@ -170,3 +181,4 @@ A pivot value written around an aggregate: the aggregate is computed as any othe
 | `matchesCase` | `matches_case` |
 | `oneOf` | `one_of` |
 | `startsWith` | `starts_with` |
+| `today` | `asof` |
