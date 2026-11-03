@@ -2240,6 +2240,25 @@ and the fix for the codes that need more than the meaning.
 | DRS-9166 | 422 | Filter context | A filter-context or time function that cannot be planned: `via=` names no relationship, `parent_of` no hierarchy, `as_of` a date that is not fixed before the query (`date('…')`, `asof()`, `shift_date(asof(), n)`), contexts nested more than three deep through the measures they name, a context where none can be (a rollup, a live aggregate) |
 | DRS-9190 | 422 | Not converted | the expression converter (`drishti.py bi migrate --expressions`, `POST /api/v1/bi/expr/convert`) could not keep an old expression's meaning, so it left it as it was: rewrite it in DEL v2 by hand ([BI_LANGUAGE_REFERENCE.md › Expressions: the Drishti expression language (DEL), section 10](BI_LANGUAGE_REFERENCE.md#10-the-old-syntax-and-the-converter)) |
 | DRS-9191 | — | not converted (composed dataset) | the start-up model migration (`drishti.py bi migrate --models`) cannot fold a composed dataset: its sources are in different models and none of them reads the others' tables; listed in the migration problems. Put their datasets in one model, or write the join as a Python dataset |
+| DRS-9195 | — | Not migrated | `drishti.py tables migrate` could not migrate an item or an expression and wrote nothing for it: the report names the item, the key and why (a construct that waits for the DEL translator, a name two items give, a pack-generated dataset, which is regenerated) ([TABLES_GUIDE.md section 9](TABLES_GUIDE.md#9-the-migration-tables-migrate)) |
+| DRS-9196 | — | Migrate first | (planned with the switch) a server found a dataset or model file in BI's old form where the table layer reads and refused that file; run `drishti.py tables migrate --dry-run`, then without it |
+| DRS-9600 | — | Table definition unreadable | a `.table.yaml` or `.model.yaml` that is not YAML, has an unknown key, misses a required key, or a value of the wrong shape; also an expression that does not read ([TABLES_GUIDE.md section 10](TABLES_GUIDE.md#10-problem-codes)) |
+| DRS-9601 | — | Table name | a table's name is not `<domain>.<name>` (lower case, letters, digits, underscores), or its file is not in its domain's folder |
+| DRS-9602 | — | Built-in column | `id`, `business_date`, `index`, `update_seq` or `updated_at` declared: every table has them |
+| DRS-9603 | — | Table path | a grain or a column path that is not one: a grain not from `$` ending in a list, `@` or `^` with no element to name, a list (`[*]`) in a column |
+| DRS-9604 | — | Column form | a column with none, or more than one, of `path`, `expr`, `python` |
+| DRS-9605 | — | Column type | a type the layer does not know, or a numeric default aggregate on a column that is not a number |
+| DRS-9606 | — | Table keys | a key that is not a column, or `keep: { latest }` without keys |
+| DRS-9607 | — | Materialisation | an unknown `materialize`, or a live table without keys, over a list, or over a source that does not push |
+| DRS-9608 | — | Row rule | a table's or model's rule without a role or a condition |
+| DRS-9609 | — | Table reference | a table, model, column, measure or alias the catalogue does not hold |
+| DRS-9610 | — | Duplicate table | two definitions with one name, or one `was:` name given by two tables |
+| DRS-9611 | — | Table cycle | tables over tables that come back to themselves |
+| DRS-9612 | — | Waits for checked mode | (information) an expression using what Rachana's checked mode adds (`in`, lists, named arguments, `^`): decided once it lands |
+| DRS-9613 | — | Sample check | `tables check --sample`: keys that are not unique in the sample, a path empty in every sample row, a value not computed |
+| DRS-9614 | — | Old form | a BI dataset or model (`rachana: 2`, `dataset:`, `datasets:`) where the table layer reads: migrate it |
+| DRS-9615 | — | Display in data | `ctl.x`, `link(...)` or `fmt(...)` in a table or model: a column or measure has a `format` |
+| DRS-9616 | — | Path in a measure | a document path inside a measure: add it as a table's column, defined once |
 | DRS-9170 | 422 | SQL syntax | a Drishti SQL statement that is not one (HTTP 422): a syntax error at the position given, two statements, or a write (`INSERT`, `DELETE`, `CREATE`, `ATTACH`, `COPY`, `PRAGMA`, `SET` ...): the dialect is one read-only `SELECT` ([BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md#2-drishti-sql-read-only-sql-over-models)) |
 | DRS-9171 | 422 | SQL name | a table that is not one of the model's aliases, or a column it lacks for you (a hidden column is not found, on purpose); a bare column in two tables (say which); a column of a table the statement does not read (`JOIN` it) |
 | DRS-9172 | 422 | SQL join | A join whose `ON` is not a relationship of the model (or a comma, `RIGHT`, `FULL`, `CROSS` or `NATURAL` join): write `JOIN t` without `ON`, or ask the model owner for a relationship |

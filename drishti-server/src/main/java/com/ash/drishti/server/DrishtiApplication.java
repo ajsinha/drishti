@@ -71,6 +71,10 @@ public class DrishtiApplication {
             // no server temp folder under the data folder: the command's scratch folder is made in the JVM's temp folder (or DRISHTI_TMP_DIR)
             System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
         }
+        if (args.length > 0 && "tables".equals(args[0])) {                    // `tables list|check|preview|lineage|migrate` (drishti-tables): no Spring
+            System.exit(new com.ash.drishti.tables.cli.TablesCli(System.out, System.err, java.nio.file.Path.of("").toAbsolutePath())
+                    .run(java.util.List.of(args).subList(1, args.length)));
+        }
         startTempFolder(args);
         if (com.ash.drishti.deltalake.write.LakeCli.isCli(args)) {         // `lake write --manifest M` (tools/lake/build.py): no Spring, no web server
             System.exit(com.ash.drishti.deltalake.write.LakeCli.run(args, System.out, System.err));

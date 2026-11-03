@@ -56,7 +56,9 @@ class OneGrammarRulesTest {
             "com.ash.drishti.server.bi.dataset.ExprParser", "BI dataset expressions (DEL's operators): fold with DEL in 2.9.11.e",
             "com.ash.drishti.server.bi.layer.CalculationParser", "BI model calculations in DEL: fold with DEL in 2.9.11.e",
             "com.ash.drishti.bicompute.formula.", "pivot formulas of built-ins in DEL's syntax (PIVOT_ENGINE.md 8.2): fold with DEL in 2.9.11.e",
-            "com.ash.drishti.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): written in Rachana with DEL's fold, 2.9.11.e");
+            "com.ash.drishti.compute.var.ScopeExpr", "the VaR scope selector (VAR_GUIDE.md 5.2): written in Rachana with DEL's fold, 2.9.11.e",
+            "com.ash.drishti.tables.expr.", "the table layer's reader and printer of Rachana text (checks, migration rewrites): replaced by "
+                    + "Rachana's own tree and printer when part A of 2.9.11.e exposes them, in the switch");
 
     /** A class that reads an expression language: a parser or lexer of expressions or formulas, or an expression type with a static parse. */
     static final DescribedPredicate<JavaClass> PARSES_EXPRESSIONS = DescribedPredicate.describe("parse an expression language", c -> {

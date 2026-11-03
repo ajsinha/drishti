@@ -446,7 +446,7 @@ def code_env() -> dict[str, str]:
     """``DRISHTI_*`` variables the main code reads by name (Java, Python, shell), with the first file that reads each."""
     out: dict[str, str] = {}
     roots = ["drishti-server", "drishti-engine", "drishti-api", "drishti-common", "drishti-packs", "drishti-console", "drishti-net",
-             "drishti-compute", "drishti-bicompute", "drishti-identity", "drishti-ai", "drishti-lakeio", "drishti-deltalake", "drishti-iceberg", "drishti-memlake", "drishti-dataload", "plugins", "tools"]
+             "drishti-compute", "drishti-bicompute", "drishti-tables", "drishti-identity", "drishti-ai", "drishti-lakeio", "drishti-deltalake", "drishti-iceberg", "drishti-memlake", "drishti-dataload", "plugins", "tools"]
     for r in roots:
         for p in sorted((ROOT / r).rglob("*")):
             if p.suffix not in (".java", ".py") or not p.is_file():
