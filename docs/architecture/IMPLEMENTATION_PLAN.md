@@ -743,6 +743,7 @@ the VaR Playground's chosen frame ([VAR_PLAYGROUND.md section 16](VAR_PLAYGROUND
 | P2 | **Custom functions, explain, what-if** | DEL formulas, SQL macros, Python (per-node sandboxed pool, shipped off) and Java plug-ins; the split-and-merge harness; the playground; versions, approval by someone other than the author, audit, labels; explain the difference between any two cells or dates in steps that add up; what-if overlays; view versions and cell comments; expand by and a correct Others for holistic measures | L | 2.9.11.b |
 | PB | **BI on the pivot engine** | BI's matrix, totals, rollups and the semantic model's measures on the engine; models as sources (MQ stays the contract); parity proved by tests against figures recorded from the current code (every BI test suite and shipped report), then one switch with BI's old aggregation deleted in the same release (no dual machinery) | L | 2.9.11.b |
 | P3 | **Scale** | sketches (HLL, KLL, Space-Saving) with exact on request; rollups of partial states refreshed incrementally on load; aggregate awareness; progressive answers; scan estimates with options; scatter and gather across nodes with hedging; live pivots; the benchmark (100 GB, 1 TB, 3 TB; 1 node and 3; cold and warm; with and without rollups) into BENCHMARK.md | L | 2.9.11.b |
+| OG | **One grammar, one engine** | [ONE_GRAMMAR.md](ONE_GRAMMAR.md) parts 1, 2, 3 and 5: Rachana's function table open to providers and every aggregate implemented once, in the engine (Rachana's own list aggregates removed, every shipped Sutra proved unchanged); `measure`, `cell`, `group` on the engine; the Sutra pivot panel in paths; one generated function catalogue; guards against a second parser or aggregate | M | 2.9.11.b |
 | P4 | Excel and advice (candidate) | the native PivotTable with its pivot cache and charts bound to it; references in formulas and Excel; layout advice; ask in words; automatic insights | M to L | unscheduled |
 
 **Also in 2.9.11.a — the Help centre reorganised (product owner, 2026-11-02):** the main Help page becomes a search box, a "most used" row and eight tiles (Get started, Risk measures, Analytics and BI, Data, Build, Operate, Reference, Knowledge; Internal for administrators), each opening its own subpage with its pages grouped, every guide paired with its tutorial, a section-scoped search, only running engines' pages shown, old addresses and F1 kept working; two mock-ups first: [A](mockups/help-hub/A.html) (tiles, recommended) and [B](mockups/help-hub/B.html) (a rail of sections), **A picked for both** by the product owner (2026-11-02). Size S to M.
@@ -773,6 +774,13 @@ Drishti), querying through Arrow Flight by default; examples that read the lake 
 access (no entitlements or masks, no in-memory tables, no computed figures). Java, JDBC through Flight SQL, C#/.NET, R, Excel, a JDBC
 tool and the browser. Each example runs as a test on the demo lake. Size M.
 
+
+## 2.9.11.e: DEL folded into Rachana (planned)
+
+*Product owner, 2026-11-03: one grammar and no functionality coded twice.* BI's measures, derived columns, filters and row rules written in
+Rachana expressions, DEL's filter-context rules carried over as Rachana functions, every model, report and row rule migrated by a tool
+and proved equal (figures and the rows each person sees) to the current code, then DEL's parser, checker and lowering deleted
+([ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). Designed in detail first. Size L.
 
 ## 2.9.12: counterparty engines (proposed)
 
