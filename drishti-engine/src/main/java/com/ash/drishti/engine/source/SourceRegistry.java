@@ -438,7 +438,8 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
     static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
         Map<String, String> own = new LinkedHashMap<>(com.ash.drishti.common.ConnectorSecrets.resolve(c.settings()));
         try {
-            own = new LinkedHashMap<>(com.ash.drishti.lakeconfig.ConnectorLake.expand(name, c.plugin(), c.kinds(), own, com.ash.drishti.lakeconfig.Lakes::current,
+            own = new LinkedHashMap<>(com.ash.drishti.lakeconfig.ConnectorLake.expand(name, c.plugin(), c.kinds(), own,
+                    com.ash.drishti.lakeconfig.Lakes::current,
                     LOG::warn));
         } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
             throw new IllegalStateException(e.getMessage(), e);
