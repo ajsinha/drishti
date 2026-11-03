@@ -506,25 +506,25 @@ suggests a sketch or a mergeable form. Holistic functions never run on cluster p
 
 ### 8.5 Python: the sandbox and the worker pool
 
-Python custom functions **reuse the sandbox BI's Python measures run in today** (the same guards, the same tests,
-[BI_GUIDE.md, the sandbox](../guides/BI_GUIDE.md#7-the-sandbox-exactly)), hosted in the **compute worker pools** of the server's own node
-([PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool)) so the rows never leave the node that scanned them:
+Python custom functions run in the node's **`pivot-fn` pool** (`drishti_compute.pivot_fn`, part of the compute SDK: its audit-hook
+guard and its Arrow codec, [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool)), so the rows never leave the node that
+scanned them:
 
 | Guard | How (unchanged from BI and compute unless said) |
 |---|---|
-| process | a worker per request (fork-server on Linux, warm and reset on Windows), `python -I`, an empty environment |
-| no network | a network namespace with no interfaces where the machine allows it, and the audit hook refusing every socket |
+| process | warm workers (`functions.python.workers`), `python -I`, an empty environment; one call at a time; a worker serves **one function version only** (a function's rows never meet another function's code); a call past its time stops its worker |
+| no network | the audit hook refusing every socket |
 | no files | no reads outside the Python installation; no writes at all for pivot functions (they receive batches and return states; no scratch writes) |
 | no processes | the audit hook refuses `subprocess`, `os.system`, `exec*`, `fork`, `ctypes` |
 | packages | the pool's allow-list (numpy, pyarrow, scipy, pandas, polars by default) and safe standard-library modules; `exec`, `eval`, `compile` not given |
-| CPU, wall time, memory | per call and per view: `functions.python.timeout-seconds` (default 30 per batch, 300 per view), `memory-mb` (default 1,024) |
+| wall time, memory | per call: `functions.python.timeout-seconds` (default 30); per worker: `memory-mb` (default 1,024, the process's address space) |
 | inputs | only the declared input columns of the cell's rows, already filtered, ruled and masked for the reader |
 | output | a state within its declared size; validated by the server before it is merged or cached |
 
-**Transport.** Batches go to the worker as Arrow IPC over the worker's pipe or a shared-memory segment (`memfd` on Linux), not the
-scratch-folder files compute uses for its engines, so nothing is written for a function call. **Memory-only stores**: user code is
-**off by default per store** (`mem://` stores set `user-code: allow` to permit it), and when on, the data reaches the worker in memory only
-(pipe or shared memory, never a file, never spilled); the never-on-disk guard checks it ([IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)).
+**Transport.** Batches go to the worker as Arrow IPC stream bytes over its pipe (length-prefixed frames: a JSON header, a body), never
+the scratch-folder files compute uses for its engines, so nothing is written for a function call; a state comes back as bytes (exact JSON,
+floats to the bit). **Memory-only stores**: Python functions never read them (the source says so and the view is refused in words;
+[IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md)).
 
 **Throughput.** Per node, the pool's worker count (configuration only) times the per-worker rate; a vectorised `add` over 64K-row batches
 runs at numpy speed (tens to hundreds of millions of values a second per worker for simple arithmetic), so Python functions scale with
