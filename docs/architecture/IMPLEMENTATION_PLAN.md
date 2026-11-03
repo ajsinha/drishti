@@ -772,8 +772,8 @@ Server-Sent Events. The design questions, each with a recommendation: [ARROW_FLI
 
 *Product owner, 2026-11-03.* Examples in several languages and technologies, led by Python notebooks: read-only (they never write to
 Drishti), querying through Arrow Flight by default; examples that read the lake directly are marked for people who already hold lake
-access (no entitlements or masks, no in-memory tables, no computed figures). Java, JDBC through Flight SQL, C#/.NET, R, Excel, a JDBC
-tool and the browser. Each example runs as a test on the demo lake. Size M.
+access (no entitlements or masks, no in-memory tables, no computed figures). Java, JDBC through Flight SQL, Excel, a JDBC tool and the browser (C#, R and Go later: product owner,
+2026-11-03). Each example runs as a test on the demo lake. Size M.
 
 
 ## 2.9.11.f: the data inbox (planned)
