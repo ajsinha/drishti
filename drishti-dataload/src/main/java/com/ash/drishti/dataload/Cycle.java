@@ -187,7 +187,7 @@ public final class Cycle {
                     groups.computeIfAbsent(cl.route().group(), k -> new ArrayList<>()).add(cl);
                 }
             }
-            Plan plan = found.ready().isEmpty() ? null : new Plan(claims.run(run), run, t0, found.ready(), groups.values());
+            Plan plan = groups.isEmpty() ? null : new Plan(claims.run(run), run, t0, groups.values());
             faults.at("claimed");
             int t = 0;
             for (List<Claimed> g : groups.values()) {
@@ -437,12 +437,15 @@ public final class Cycle {
         private final Path file;
         private final ObjectNode doc;
 
-        Plan(Path dir, String run, Instant started, List<Inbox.Ready> claimed, java.util.Collection<List<Claimed>> groups) {
+        /** The files that load (a duplicate or a refused file of the run is already in the outbox or failed/), by table. */
+        Plan(Path dir, String run, Instant started, java.util.Collection<List<Claimed>> groups) {
             this.file = dir.resolve(FILE);
             doc = JSON.createObjectNode().put("run", run).put("node", node).put("startedAt", started.toString());
             var fs = doc.putArray("files");
-            for (Inbox.Ready r : claimed) {
-                fs.addObject().put("file", r.name()).put("size", r.size());
+            for (List<Claimed> g : groups) {
+                for (Claimed c : g) {
+                    fs.addObject().put("file", c.name()).put("size", c.size());
+                }
             }
             var ts = doc.putArray("tables");
             int n = 0;
