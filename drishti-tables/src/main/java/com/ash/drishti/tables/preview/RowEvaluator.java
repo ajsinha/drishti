@@ -21,50 +21,27 @@ import com.ash.drishti.rachana.el.Values;
 import com.ash.drishti.rachana.format.Formats;
 
 /**
- * Evaluates a row-scope expression in a {@link Preview.Frame}: Rachana's evaluator, with {@code $} the entity and {@code @} the grain's
- * element. What Rachana cannot evaluate yet ({@code ^}, {@code in}, list literals, named arguments: part A of 2.9.11.e) throws
- * {@link Pending}, so a preview shows the rest and says what waits. Part A's evaluator replaces {@link #rachana()} where it is created;
- * nothing else changes.
+ * Evaluates a row-scope expression or a path in a {@link Preview.Frame} with Rachana's own evaluator: {@code $} the entity, the grain's
+ * elements as {@code @} and its parents ({@code ^}, {@code ^^}), outermost first ({@link EvalContext#withRows}); {@code in}, lists and
+ * named arguments as Rachana evaluates them. The same evaluator the layer's in-memory answers use (part A's {@code RowsEvaluator}).
  */
 @FunctionalInterface
 public interface RowEvaluator {
 
-    /** The value of {@code expr} in the frame. */
+    /** The value of {@code expr} in the frame: a Java value, null, or the mask. */
     Object eval(String expr, Preview.Frame frame);
 
-    /** An expression that needs what Rachana's checked mode adds. */
-    final class Pending extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-
-        public Pending(String message) {
-            super(message);
-        }
-    }
-
-    /** Rachana's evaluator as it is today. */
+    /** Rachana's evaluator. */
     static RowEvaluator rachana() {
         ElCompiler el = new ElCompiler(2_000);
         Formats formats = Formats.defaults();
         return (expr, f) -> {
-            if (expr.contains("^") || expr.matches("(?s).*\\bin\\b.*") || expr.contains("[")) {
-                com.ash.drishti.tables.expr.Node n = com.ash.drishti.tables.expr.Reader.read(expr);
-                boolean[] pending = {false};
-                n.walk(x -> {
-                    if (x instanceof com.ash.drishti.tables.expr.Node.Path p && p.root().startsWith("^")
-                            || x instanceof com.ash.drishti.tables.expr.Node.ListOf
-                            || x instanceof com.ash.drishti.tables.expr.Node.Binary b && (b.op().equals("in") || b.op().equals("not-in"))) {
-                        pending[0] = true;
-                    }
-                });
-                if (pending[0]) {
-                    throw new Pending("uses what Rachana's checked mode adds (in, lists, ^): computed once part A lands");
-                }
-            }
             EvalContext c = EvalContext.of(f.entity(), formats);
             if (!f.elements().isEmpty()) {
-                c = c.withRow(f.root("@"), f.index());
+                c = c.withRows(f.elements());
             }
-            return Values.simplify(el.compile(expr).eval(c));
+            Object v = el.compile(expr).eval(c);
+            return Values.masked(v) ? v : Values.simplify(v);
         };
     }
 }

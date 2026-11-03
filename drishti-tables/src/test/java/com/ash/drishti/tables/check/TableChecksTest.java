@@ -95,9 +95,12 @@ class TableChecksTest {
     }
 
     @Test
-    void theRuleCheckedModeDecidesIsPendingNotWrong() {
-        assertThat(problems(TRADES)).filteredOn(p -> p.path().equals("rules[0].where")).singleElement()
-                .satisfies(p -> assertThat(p.code()).isEqualTo(TableCodes.PENDING)).satisfies(p -> assertThat(p.level()).isEqualTo(Problem.INFO));
+    void theRuleIsCheckedByRachanasCheckedMode() {
+        assertThat(problems(TRADES)).filteredOn(p -> p.path().equals("rules[0].where")).isEmpty();          // strict in, user.desks: a rule
+        TableDef t = TableYaml.read(TRADES.replace("$.DESK in user.desks", "$.DESK in user.desks and")).table();
+        assertThat(new TableChecks().check(t, "bi")).anyMatch(p -> p.path().equals("rules[0].where") && p.isError());
+        TableDef measureInRule = TableYaml.read(TRADES.replace("$.DESK in user.desks", "sum($.MTM) > 0")).table();
+        assertThat(new TableChecks().check(measureInRule, "bi")).anyMatch(p -> p.path().equals("rules[0].where") && p.code().equals(TableCodes.SCOPE));
     }
 
     @Test
@@ -126,22 +129,20 @@ class TableChecksTest {
         List<String> codes = codes(problems(bad));
         assertThat(codes).contains(TableCodes.NAME + " table", TableCodes.SCOPE + " filter", TableCodes.BUILT_IN + " columns.id", TableCodes.PATH + " columns.LEG.path",
                 TableCodes.PATH + " columns.ALL_LEGS.path", TableCodes.COLUMN + " columns.BOTH", TableCodes.COLUMN + " columns.NONE",
-                TableCodes.SCOPE + " columns.BARE.expr", TableCodes.TYPE + " columns.MTM_X.type", TableCodes.DISPLAY + " columns.SHOWN.expr",
-                TableCodes.DISPLAY + " columns.CTL.expr", TableCodes.SCOPE + " columns.WHO.expr", TableCodes.KEYS + " keys",
+                TableCodes.SCOPE + " columns.BARE.expr", TableCodes.TYPE + " columns.MTM_X.type", TableCodes.SCOPE + " columns.CTL.expr", TableCodes.SCOPE + " columns.WHO.expr", TableCodes.KEYS + " keys",
                 TableCodes.MATERIALIZE + " materialize.live.rows", TableCodes.MATERIALIZE + " materialize.live.age", TableCodes.RULE + " rules[0].role");
     }
 
     @Test
-    void aListAggregateInAColumnIsRachanasListFormNotAMeasure() {
+    void anAggregateInAColumnIsRefusedAndGreatestIsARowFunction() {
         String t = """
                 rachana: 3
                 table: bi.trades
                 from: { kind: trade }
                 columns:
-                  LEGS_NOTIONAL: { expr: "sum($.LEGS[*].NOTIONAL)", type: decimal }
-                  BIGGER:        { expr: "max($.A, $.B)", type: decimal }
+                  BIGGER:        { expr: "greatest($.A, $.B)", type: decimal }
                 """;
-        assertThat(codes(problems(t))).isEmpty();
+        assertThat(problems(t).stream().filter(p -> !Problem.INFO.equals(p.level())).map(Problem::line).toList()).isEmpty();
     }
 
     @Test

@@ -72,7 +72,8 @@ public class DrishtiApplication {
             System.exit(com.ash.drishti.server.cli.CliLauncher.launch(args, System.out, System.err));
         }
         if (args.length > 0 && "tables".equals(args[0])) {                    // `tables list|check|preview|lineage|migrate` (drishti-tables): no Spring
-            System.exit(new com.ash.drishti.tables.cli.TablesCli(System.out, System.err, java.nio.file.Path.of("").toAbsolutePath())
+            System.exit(new com.ash.drishti.tables.cli.TablesCli(System.out, System.err, java.nio.file.Path.of("").toAbsolutePath(),
+                    new com.ash.drishti.server.bi.expr.DelTablesTranslator())
                     .run(java.util.List.of(args).subList(1, args.length)));
         }
         startTempFolder(args);

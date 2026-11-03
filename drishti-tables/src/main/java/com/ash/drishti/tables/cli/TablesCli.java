@@ -40,7 +40,7 @@ import java.util.Optional;
 
 /**
  * The table layer's command line, run as {@code java -jar drishti-server-*-exec.jar tables <command>} (no engine, no Spring: definitions
- * and sample files only) and through {@code drishti.py tables} (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_GUIDE.md):
+ * and sample files only; the server hands it its DEL translator) and through {@code drishti.py tables} (docs/guides/TABLES_GUIDE.md, docs/guides/CLI_GUIDE.md):
  *
  * <pre>
  * tables list     [--root DIR] [--json]
@@ -71,15 +71,17 @@ public final class TablesCli {
     private final PrintStream out;
     private final PrintStream err;
     private final Path cwd;
+    private final com.ash.drishti.tables.migrate.DelTranslator translator;
 
-    public TablesCli(PrintStream out, PrintStream err, Path cwd) {
+    /**
+     * @param translator DEL into Rachana for {@code migrate} (the server's, over part A's mapping); null where DEL cannot be read, and
+     *     {@code migrate} then says so
+     */
+    public TablesCli(PrintStream out, PrintStream err, Path cwd, com.ash.drishti.tables.migrate.DelTranslator translator) {
         this.out = out;
         this.err = err;
         this.cwd = cwd;
-    }
-
-    public static void main(String[] args) {
-        System.exit(new TablesCli(System.out, System.err, Path.of("").toAbsolutePath()).run(List.of(args)));
+        this.translator = translator;
     }
 
     /** Runs one command ({@code args} without the leading {@code tables}). */
@@ -241,7 +243,11 @@ public final class TablesCli {
             err.println("tables migrate: no BI folder " + bi);
             return USAGE;
         }
-        TablesMigrator.Plan plan = new TablesMigrator().plan(bi, root);
+        if (translator == null) {
+            err.println("tables migrate: run it from the server's exec jar (java -jar drishti-server-*-exec.jar tables migrate), which reads DEL");
+            return USAGE;
+        }
+        TablesMigrator.Plan plan = new TablesMigrator(translator).plan(bi, root);
         String report = TablesMigrator.report(plan);
         if (a.value("--report", null) != null) {
             Files.writeString(cwd.resolve(a.value("--report", null)), report);

@@ -21,8 +21,6 @@ import com.ash.drishti.tables.Problem;
 import com.ash.drishti.tables.TableCodes;
 import com.ash.drishti.tables.def.ColumnDef;
 import com.ash.drishti.tables.def.TableDef;
-import com.ash.drishti.tables.expr.Node;
-import com.ash.drishti.tables.expr.Reader;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -42,8 +40,7 @@ import java.util.zip.GZIPInputStream;
  * A table's first rows over sample documents ({@code drishti.py tables preview}, VIRTUAL_TABLES.md section 8), and the checks a sample
  * allows ({@code tables check --sample}): keys unique, every path present in some document. Documents are JSONL (plain or {@code .gz}),
  * one entity per line, either the document itself or {@code {id, business_date, doc}} as the lake keeps it. The grain is expanded here;
- * paths are walked here ({@code $}, {@code @}, {@code ^}, {@code ^^}); filters and calculated columns are evaluated by Rachana through
- * {@link RowEvaluator}. Bounded: at most {@link #MAX_DOCUMENTS} documents and {@link #MAX_ROWS} rows. A preview never reads a lake or a
+ * paths ({@code $}, {@code @}, {@code ^}, {@code ^^}), filters and calculated columns are evaluated by Rachana through {@link RowEvaluator}. Bounded: at most {@link #MAX_DOCUMENTS} documents and {@link #MAX_ROWS} rows. A preview never reads a lake or a
  * connector: the server's preview (the switch) reads the source through the layer's compiler.
  */
 public final class Preview {
@@ -115,7 +112,7 @@ public final class Preview {
                 }
                 for (ColumnDef c : t.columns().values()) {
                     if (c.path() != null) {
-                        row.add(plain(walk(c.path(), f)));
+                        row.add(evaluate(eval, c.path(), f, "columns." + c.name() + ".path", problems));
                     } else if (c.expr() != null) {
                         row.add(evaluate(eval, c.expr(), f, "columns." + c.name() + ".expr", problems));
                     } else {
@@ -210,26 +207,10 @@ public final class Preview {
         }
     }
 
-    /** The value at a column's path in a frame. */
-    static DataNode walk(String path, Frame f) {
-        Node n = Reader.read(path);
-        if (!(n instanceof Node.Path p)) {
-            return DataNode.missing();
-        }
-        String rest = p.rest().startsWith(".") ? p.rest().substring(1) : p.rest();
-        DataNode base = f.root(p.root());
-        return rest.isEmpty() ? base : base.at(rest);
-    }
-
-    private static Object plain(DataNode n) {
-        return n == null || n.isNull() ? null : n.unwrap();
-    }
 
     private static Object evaluate(RowEvaluator eval, String expr, Frame f, String where, Map<String, Problem> problems) {
         try {
             return eval.eval(expr, f);
-        } catch (RowEvaluator.Pending e) {
-            problems.putIfAbsent(where, Problem.info(TableCodes.PENDING, where, e.getMessage()));
         } catch (RuntimeException e) {
             problems.putIfAbsent(where, Problem.warning(TableCodes.SAMPLE, where, "not computed: " + e.getMessage()));
         }

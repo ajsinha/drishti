@@ -17,7 +17,8 @@ package com.ash.drishti.tables.migrate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.ash.drishti.tables.expr.Reader;
+import com.ash.drishti.rachana.el.Printer;
+import com.ash.drishti.tables.lang.Trees;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -33,7 +34,7 @@ class NullRuleTest {
     /** {@code trades.VALUATION_ID} is a key (never missing); everything else may be. */
     static String rule(String rachana) {
         List<String> notes = new ArrayList<>();
-        return Rewrites.nullRule(Reader.read(rachana), Rewrites.missingUnless(Set.of("trades.VALUATION_ID", "$.VALUATION_ID")), notes).print();
+        return Printer.print(Rewrites.nullRule(Trees.parse(rachana), Rewrites.missingUnless(Set.of("trades.VALUATION_ID", "$.VALUATION_ID")), notes));
     }
 
     @Test
@@ -86,7 +87,7 @@ class NullRuleTest {
 
     @Test
     void worksInsideOrConditionalsAndCalls() {
-        assertThat(rule("a != 'X' || b == 'Y'")).isEqualTo("(a != 'X' && a != null) || b == 'Y'");
+        assertThat(rule("a != 'X' || b == 'Y'")).isEqualTo("a != 'X' && a != null || b == 'Y'");
         assertThat(rule("sum(p.AMOUNT * (p.CCY != 'USD' ? 2 : 1))")).isEqualTo("sum(p.AMOUNT * (p.CCY != 'USD' && p.CCY != null ? 2 : 1))");
         assertThat(rule("calc(measure('MTM'), where = desks.NAME != 'FX')")).isEqualTo("calc(measure('MTM'), where = desks.NAME != 'FX' && desks.NAME != null)");
     }
@@ -103,7 +104,7 @@ class NullRuleTest {
     @Test
     void theNotesSayWhatWasKept() {
         List<String> notes = new ArrayList<>();
-        Rewrites.nullRule(Reader.read("a != 'X'"), Rewrites.missingUnless(Set.of()), notes);
+        Rewrites.nullRule(Trees.parse("a != 'X'"), Rewrites.missingUnless(Set.of()), notes);
         assertThat(notes).singleElement().asString().contains("a != 'X' && a != null").contains("Q1");
     }
 }

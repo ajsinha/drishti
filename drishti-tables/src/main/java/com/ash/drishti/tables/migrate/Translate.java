@@ -15,18 +15,20 @@
  */
 package com.ash.drishti.tables.migrate;
 
+import com.ash.drishti.rachana.el.ElException;
+import com.ash.drishti.rachana.el.Expr;
+import com.ash.drishti.rachana.el.Printer;
 import com.ash.drishti.tables.check.ExpressionChecker;
-import com.ash.drishti.tables.expr.Node;
-import com.ash.drishti.tables.expr.Reader;
+import com.ash.drishti.tables.lang.Trees;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * One expression through the whole migration: the DEL translator (pluggable), then the layer's rewrites on Rachana's tree (columns to paths
- * in a table, date parts in a model, the null rule everywhere), printed once. Each expression's before and after, and every note, go into
- * the migration's report ({@link TablesMigrator.Change}).
+ * One expression through the whole migration: the DEL translator (part A's {@code DelToRachana}, plugged in by the server), then the
+ * layer's rewrites on Rachana's tree (columns to paths in a table, date parts in a model, the null rule everywhere), printed once by
+ * Rachana's printer. Each expression's before and after, and every note, go into the migration's report ({@link TablesMigrator.Change}).
  */
 final class Translate {
 
@@ -52,11 +54,11 @@ final class Translate {
         }
         List<String> notes = new ArrayList<>(r.notes());
         try {
-            Node tree = Reader.read(r.rachana());
+            Expr tree = Trees.parse(r.rachana());
             tree = Rewrites.columnsToPaths(tree, columnPaths, notes);
             tree = Rewrites.nullRule(tree, Rewrites.missingUnless(neverMissing), notes);
-            return new Out(tree.print(), notes, null);
-        } catch (Reader.ReadException e) {
+            return new Out(Printer.print(tree), notes, null);
+        } catch (ElException e) {
             return new Out(null, notes, "the translation does not read as Rachana: " + e.getMessage());
         }
     }
@@ -74,11 +76,11 @@ final class Translate {
         }
         List<String> notes = new ArrayList<>(r.notes());
         try {
-            Node tree = Reader.read(r.rachana());
+            Expr tree = Trees.parse(r.rachana());
             tree = Rewrites.dateParts(tree, columns, notes);
             tree = Rewrites.nullRule(tree, Rewrites.missingUnless(neverMissing), notes);
-            return new Out(tree.print(), notes, null);
-        } catch (Reader.ReadException e) {
+            return new Out(Printer.print(tree), notes, null);
+        } catch (ElException e) {
             return new Out(null, notes, "the translation does not read as Rachana: " + e.getMessage());
         }
     }

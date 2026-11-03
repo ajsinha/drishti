@@ -106,7 +106,9 @@ public final class ModelChecks {
             }
         }
         relationships(m, byAlias, columns, types, out);
-        ExpressionChecker.Env env = new ExpressionChecker.Env(columns, aliases, m.measures().keySet(), types, masked, 0);
+        Set<String> params = m.extras().get("parameters") instanceof Map<?, ?> ps ? ps.keySet().stream().map(String::valueOf).collect(java.util.stream.Collectors.toSet())
+                : Set.of();
+        ExpressionChecker.Env env = new ExpressionChecker.Env(columns, aliases, m.measures().keySet(), types, masked, 0, params, Map.of());
         for (ModelDef.Measure x : m.measures().values()) {
             if (x.expr() != null) {
                 out.addAll(expressions.check(x.expr(), ExpressionChecker.Scope.AGGREGATE, env, "measures." + x.name() + ".expr"));

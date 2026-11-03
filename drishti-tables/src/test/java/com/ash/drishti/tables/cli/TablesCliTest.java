@@ -36,7 +36,8 @@ class TablesCliTest {
     int run(String... args) {
         out.reset();
         err.reset();
-        return new TablesCli(new PrintStream(out, true, StandardCharsets.UTF_8), new PrintStream(err, true, StandardCharsets.UTF_8), cwd).run(List.of(args));
+        return new TablesCli(new PrintStream(out, true, StandardCharsets.UTF_8), new PrintStream(err, true, StandardCharsets.UTF_8), cwd,
+                (del, scope) -> com.ash.drishti.tables.migrate.DelTranslator.Result.ok(del, List.of())).run(List.of(args));
     }
 
     String out() {

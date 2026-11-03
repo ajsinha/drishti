@@ -103,7 +103,7 @@ class PreviewTest {
     }
 
     @Test
-    void whatChecksModeAddsWaitsAndTheRestIsShown() throws Exception {
+    void rachanasStrictInAndTheNullRule() throws Exception {
         TableDef t = table("""
                 rachana: 3
                 table: trading.trades
@@ -113,8 +113,8 @@ class PreviewTest {
                   OPEN:     { expr: "$.STATUS not in ['MATURED']", type: boolean }
                 """);
         Preview.Rows r = Preview.rows(t, Preview.read(sample(false), 100), 50, RowEvaluator.rachana());
-        assertThat(r.rows()).hasSize(3);
-        assertThat(r.problems()).singleElement().satisfies(p -> assertThat(p.code()).isEqualTo(TableCodes.PENDING));
+        assertThat(r.rows()).extracting(x -> x.get(3)).containsExactly(true, false, true);   // a missing status is not in the list
+        assertThat(r.problems()).isEmpty();
     }
 
     @Test

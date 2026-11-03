@@ -34,12 +34,24 @@ import org.junit.jupiter.api.io.TempDir;
 
 /**
  * The one migration tool's skeleton (BI_FOUNDATION_2911E.md section 4): datasets into tables, models into layer models, every expression
- * through the translator and the layer's rewrites, the dry run's diff, {@code --check}, the audit, idempotence; and the shipped samples of
- * {@code config/bi}, read only, migrated into a temporary folder with nothing refused but what waits for part A's translator.
+ * through the translator and the layer's rewrites, the dry run's diff, {@code --check}, the audit, idempotence. The shipped samples with
+ * DEL's real translator: drishti-server's {@code DelTablesTranslatorTest}.
  */
 class TablesMigratorTest {
 
     @TempDir Path dir;
+
+    /**
+     * The tests' translator: text that is already Rachana, printed in the one spelling (DEL itself is read by the server's translator over
+     * part A's mapping, tested with the shipped samples in drishti-server's {@code DelTablesTranslatorTest}).
+     */
+    static final DelTranslator AS_IS = (del, scope) -> {
+        try {
+            return DelTranslator.Result.ok(com.ash.drishti.rachana.el.Printer.print(com.ash.drishti.tables.lang.Trees.parse(del)), List.of());
+        } catch (RuntimeException e) {
+            return DelTranslator.Result.refused("not Rachana (the tests' translator reads Rachana only)");
+        }
+    };
 
     static final String LICENCE = "# Project Drishti · Any data. Any domain. One grammar.\n#\n# PROPRIETARY AND CONFIDENTIAL.\n";
 
@@ -63,7 +75,7 @@ class TablesMigratorTest {
             security:
               rows:
                 - { role: desk-head, where: "DESK in user.desks" }
-                - { role: [risk, analyst], where: "True" }
+                - { role: [risk, analyst], where: "true" }
               masked: [DESK]
             """;
     static final String LEGS = LICENCE + """
@@ -106,7 +118,7 @@ class TablesMigratorTest {
 
     @Test
     void migratesADatasetKeyByKey() throws Exception {
-        TablesMigrator.Plan p = new TablesMigrator().plan(bi(), dir.resolve("tables"));
+        TablesMigrator.Plan p = new TablesMigrator(AS_IS).plan(bi(), dir.resolve("tables"));
         assertThat(p.count("converted")).isEqualTo(3);
         assertThat(p.writes()).containsOnlyKeys("bi/trades_basic_trade.table.yaml", "bi/trades_basic_legs.table.yaml", "bi/trades-basic.model.yaml");
         String table = p.writes().get("bi/trades_basic_trade.table.yaml");
@@ -133,7 +145,7 @@ class TablesMigratorTest {
 
     @Test
     void migratesAModelWithItsAliasesAndTheNullRule() throws Exception {
-        TablesMigrator.Plan p = new TablesMigrator().plan(bi(), dir.resolve("tables"));
+        TablesMigrator.Plan p = new TablesMigrator(AS_IS).plan(bi(), dir.resolve("tables"));
         ModelDef m = com.ash.drishti.tables.yaml.ModelYaml.read(p.writes().get("bi/trades-basic.model.yaml")).model();
         assertThat(m.tables().get("trade").table().name()).isEqualTo("bi.trades_basic_trade");
         assertThat(m.measures().get("Open MTM").expr()).isEqualTo("sum(trade.MTM, where = trade.STATUS != 'MATURED' && trade.STATUS != null)");
@@ -147,7 +159,7 @@ class TablesMigratorTest {
     void writesAuditsAndASecondRunChangesNothing() throws Exception {
         Path bi = bi();
         Path tables = dir.resolve("tables");
-        TablesMigrator m = new TablesMigrator();
+        TablesMigrator m = new TablesMigrator(AS_IS);
         TablesMigrator.Plan first = m.plan(bi, tables);
         Path audit = dir.resolve("audit/tables-migrate.jsonl");
         List<String> written = TablesMigrator.write(first, tables, bi, null, MigrationAudit.jsonl(audit, Clock.fixed(Instant.parse("2026-11-03T21:00:00Z"),
@@ -170,7 +182,7 @@ class TablesMigratorTest {
     void movesTheOldFilesWhenAsked() throws Exception {
         Path bi = bi();
         Path tables = dir.resolve("tables");
-        TablesMigrator.Plan p = new TablesMigrator().plan(bi, tables);
+        TablesMigrator.Plan p = new TablesMigrator(AS_IS).plan(bi, tables);
         TablesMigrator.write(p, tables, bi, dir.resolve("migrated/2.9.11.e"), MigrationAudit.NONE, null);
         assertThat(Files.exists(bi.resolve("models/trades-basic.model.yaml"))).isFalse();
         assertThat(Files.exists(dir.resolve("migrated/2.9.11.e/models/trades-basic.model.yaml"))).isTrue();
@@ -187,30 +199,10 @@ class TablesMigratorTest {
                   Signed: { expr: "sum(trade.MTM if trade.MTM > 0 else 0)" }
                 """);
         Files.writeString(bi.resolve("datasets/pack.trading.trade.dataset.yaml"), "dataset: pack.trading.trade\ngenerated: true\n");
-        TablesMigrator.Plan p = new TablesMigrator().plan(bi, dir.resolve("tables"));
+        TablesMigrator.Plan p = new TablesMigrator(AS_IS).plan(bi, dir.resolve("tables"));
         assertThat(p.items()).filteredOn(i -> i.state().equals("refused")).extracting(TablesMigrator.Item::source)
                 .containsExactlyInAnyOrder("models/conditional.model.yaml", "datasets/pack.trading.trade.dataset.yaml");
         assertThat(p.writes()).doesNotContainKey("bi/conditional.model.yaml");
-        assertThat(p.problems()).anyMatch(x -> x.code().equals(TableCodes.MIGRATION_REFUSED) && x.message().contains("part A"));
-    }
-
-    /** The shipped samples: every dataset and model of config/bi, read only, into a temporary folder. */
-    @Test
-    void theShippedSamplesMigrateWithOnlyPartAsWorkLeft() throws Exception {
-        Path shipped = Path.of("..", "config", "bi");
-        Path tables = dir.resolve("tables");
-        TablesMigrator m = new TablesMigrator();
-        TablesMigrator.Plan p = m.plan(shipped, tables);
-        assertThat(p.count("converted")).isGreaterThanOrEqualTo(30);
-        // refused: the conditional chains of trading-cashflows (DEL's a if c else b: part A's translator), and the two version-1 live originals
-        // the shipped converted forms already stand for (the same table names)
-        assertThat(p.items()).filteredOn(i -> i.state().equals("refused")).extracting(TablesMigrator.Item::source)
-                .containsExactlyInAnyOrder("models/trading-cashflows.model.yaml", "datasets/live-trading.dataset.yaml", "datasets/live-exposure.dataset.yaml");
-        assertThat(p.problems()).filteredOn(Problem::isError).allMatch(x -> x.code().equals(TableCodes.MIGRATION_REFUSED) || x.source().contains("trading-cashflows"),
-                "only part A's work is left");
-        assertThat(p.changes()).anyMatch(c -> "sum(trades.MTM, where = trades.TRADE_STATUS != 'MATURED' && trades.TRADE_STATUS != null)".equals(c.after()));
-        TablesMigrator.write(p, tables, shipped, null, MigrationAudit.NONE, null);
-        assertThat(m.plan(shipped, tables).anyWrite()).as("idempotent on the shipped set").isFalse();
-        assertThat(Files.list(tables.resolve("bi")).count()).isEqualTo(p.writes().size());
+        assertThat(p.problems()).anyMatch(x -> x.code().equals(TableCodes.MIGRATION_REFUSED) && x.message().contains("not Rachana"));
     }
 }

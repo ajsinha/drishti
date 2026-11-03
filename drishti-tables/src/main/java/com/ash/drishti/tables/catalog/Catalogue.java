@@ -25,8 +25,8 @@ import com.ash.drishti.tables.def.ColumnDef;
 import com.ash.drishti.tables.def.ModelDef;
 import com.ash.drishti.tables.def.TableDef;
 import com.ash.drishti.tables.def.TableName;
-import com.ash.drishti.tables.expr.Node;
-import com.ash.drishti.tables.expr.Reader;
+import com.ash.drishti.rachana.el.Expr;
+import com.ash.drishti.tables.lang.Trees;
 import com.ash.drishti.tables.yaml.ModelYaml;
 import com.ash.drishti.tables.yaml.TableYaml;
 import java.io.IOException;
@@ -260,15 +260,16 @@ public final class Catalogue {
             return out;
         }
         try {
-            Reader.read(expr).walk(n -> {
-                if (n instanceof Node.Call c && c.function().equals("related") && !c.positional().isEmpty() && c.positional().get(0) instanceof Node.Name x) {
-                    int last = x.name().lastIndexOf('.');
+            Trees.walk(Trees.parse(expr), n -> {
+                if (n instanceof Expr.Call c && c.name().equals("related") && !c.args().isEmpty()) {
+                    String x = Trees.name(c.args().get(0));
+                    int last = x == null ? -1 : x.lastIndexOf('.');
                     if (last > 0) {
-                        out.add(new String[] {x.name().substring(0, last), x.name().substring(last + 1)});
+                        out.add(new String[] {x.substring(0, last), x.substring(last + 1)});
                     }
                 }
             });
-        } catch (Reader.ReadException e) {
+        } catch (RuntimeException e) {
             // reported by the table's own checks
         }
         return out;

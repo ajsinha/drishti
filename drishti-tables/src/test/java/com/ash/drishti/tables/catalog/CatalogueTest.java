@@ -133,7 +133,7 @@ class CatalogueTest {
         write("trading/a.table.yaml", "rachana: 3\ntable: trading.a\nfrom: { table: trading.b }\ncolumns: { X: $.X }\n");
         write("trading/b.table.yaml", "rachana: 3\ntable: trading.b\nfrom: { table: trading.a }\ncolumns: { X: $.X }\n");
         write("trading/bad.model.yaml", MODEL.replace("model: trading-risk", "model: bad").replace("sum(open.MTM_M)", "sum(open.NOPE)")
-                .replace("trades.DESK, to: desks.id", "trades.DESK, to: desks.NOPE").replace("sum(trades.MTM)", "sum(trades.LEGS[*].MTM)"));
+                .replace("trades.DESK, to: desks.id", "trades.DESK, to: desks.NOPE").replace("sum(trades.MTM)", "sum($.LEGS[*].MTM)"));
         write("trading/lookup.table.yaml", "rachana: 3\ntable: trading.lookup\nfrom: { kind: k }\ncolumns:\n  N: { expr: \"related(core.nope.NAME, on = $.K)\" }\n");
         write("misplaced.table.yaml", DESKS.replace("core.desks", "core.other"));
         Catalogue c = Catalogue.load(root, ItemStore.NONE);
@@ -142,7 +142,7 @@ class CatalogueTest {
         assertThat(ps).anyMatch(p -> p.code().equals(TableCodes.CYCLE));
         assertThat(ps).anyMatch(p -> p.code().equals(TableCodes.UNKNOWN_NAME) && p.message().contains("open.NOPE"));
         assertThat(ps).anyMatch(p -> p.code().equals(TableCodes.RELATIONSHIP) && p.message().contains("desks.NOPE"));
-        assertThat(ps).anyMatch(p -> p.code().equals(TableCodes.PATH_IN_MEASURE));
+        assertThat(ps).anyMatch(p -> p.code().equals(TableCodes.SCOPE) && p.message().contains("of the source"));
         assertThat(ps).anyMatch(p -> p.code().equals(TableCodes.REFERENCE) && p.message().contains("core.nope"));
         assertThat(ps).anyMatch(p -> p.code().equals(TableCodes.NAME) && "misplaced.table.yaml".equals(p.source()));
     }

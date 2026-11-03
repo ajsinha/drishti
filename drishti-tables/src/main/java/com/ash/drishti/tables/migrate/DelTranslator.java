@@ -19,11 +19,10 @@ import com.ash.drishti.tables.check.ExpressionChecker;
 import java.util.List;
 
 /**
- * The migration's pluggable step: one DEL expression into Rachana text (BI_FOUNDATION_2911E.md sections 2.4, 2.5 and 4.1). <b>Part A of
- * 2.9.11.e provides the real one</b>: DEL parsed by the old parser kept inside the tool (read, never evaluated), Rachana printed from the
- * tree, re-checked by checked mode, and the two lowerings compared on the generated set. Until it lands, {@link TokenTranslator} does the
- * mechanical part (words, quotes, numbers, {@code is None}, chains, the renamed functions) and refuses the rest by name, so a dry run
- * shows what is left for part A.
+ * The migration's pluggable step: one DEL expression into Rachana text (BI_FOUNDATION_2911E.md sections 2.4, 2.5 and 4.1). DEL is parsed by
+ * the old parser kept inside the tool (read, never evaluated), mapped to Rachana's tree by part A's mapping and printed by Rachana's
+ * printer. The server implements it ({@code server.bi.expr.DelTablesTranslator}: DEL's parser, part A's {@code DelToRachana}); this module
+ * never reads DEL.
  *
  * <p>The translator never does the layer's own rewrites: a bare column to its path (section 3.2) and the null rule (Q1) run after it, on
  * Rachana's tree ({@link Rewrites}), whichever translator is plugged in.

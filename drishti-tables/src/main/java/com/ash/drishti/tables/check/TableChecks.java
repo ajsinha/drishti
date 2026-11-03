@@ -20,8 +20,8 @@ import com.ash.drishti.tables.TableCodes;
 import com.ash.drishti.tables.def.ColumnDef;
 import com.ash.drishti.tables.def.TableDef;
 import com.ash.drishti.tables.def.TableName;
-import com.ash.drishti.tables.expr.Node;
-import com.ash.drishti.tables.expr.Reader;
+import com.ash.drishti.rachana.el.Expr;
+import com.ash.drishti.tables.lang.Trees;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -72,7 +72,9 @@ public final class TableChecks {
             out.add(Problem.error(TableCodes.UNREADABLE, "from.query", "a summary table asks its model a question: from: { model, query: { fields, measures } }"));
         }
         grain(t, documents, out);
-        ExpressionChecker.Env env = new ExpressionChecker.Env(t.columns().keySet(), Set.of(), Set.of(), types(t), masked(t), t.depth());
+        Map<String, String> paths = new java.util.LinkedHashMap<>();
+        t.columns().values().stream().filter(c -> c.path() != null).forEach(c -> paths.putIfAbsent(c.path(), c.name()));
+        ExpressionChecker.Env env = new ExpressionChecker.Env(t.columns().keySet(), Set.of(), Set.of(), types(t), masked(t), t.depth(), Set.of(), paths);
         if (t.filter() != null) {
             out.addAll(expressions.check(t.filter(), ExpressionChecker.Scope.ROW, env, "filter"));
         }
@@ -99,14 +101,14 @@ public final class TableChecks {
             out.add(Problem.error(TableCodes.PATH, "grain", "a grain reads lists inside documents: this table's source is not documents"));
             return;
         }
-        Node n;
+        String name;
         try {
-            n = Reader.read(t.grain());
-        } catch (Reader.ReadException e) {
+            name = Trees.name(Trees.parse(t.grain()));
+        } catch (RuntimeException e) {
             out.add(Problem.error(TableCodes.PATH, "grain", "the grain does not read: " + e.getMessage()));
             return;
         }
-        if (!(n instanceof Node.Path p) || !p.root().equals("$") || !p.rest().endsWith("[*]") || p.rest().matches(".*\\[\\d+].*")) {
+        if (name == null || !name.startsWith("$.") || !name.endsWith("[*]") || name.matches(".*\\[\\d+].*")) {
             out.add(Problem.error(TableCodes.PATH, "grain", "a grain is a path from $ that ends in a list: $.LEGS[*] or $.LEGS[*].CASH_FLOWS[*]"));
         }
     }
@@ -152,32 +154,34 @@ public final class TableChecks {
     }
 
     private static void path(ColumnDef c, int depth, String p, List<Problem> out) {
-        Node n;
+        Expr n;
         try {
-            n = Reader.read(c.path());
-        } catch (Reader.ReadException e) {
+            n = Trees.parse(c.path());
+        } catch (RuntimeException e) {
             out.add(Problem.error(TableCodes.PATH, p + ".path", "the path does not read: " + e.getMessage()));
             return;
         }
-        if (!(n instanceof Node.Path path)) {
+        String text = Trees.name(n);
+        String root = Trees.root(n);
+        if (text == null || root == null) {
             out.add(Problem.error(TableCodes.PATH, p + ".path", "a path starts at $, @ or ^ ($.MTM, @.NOTIONAL, ^.LEG_ID); an expression goes under expr"));
             return;
         }
-        if (!Set.of("$", "@", "^", "^^").contains(path.root())) {
-            out.add(Problem.error(TableCodes.PATH, p + ".path", "a path starts at $, @ or ^ ($." + path.text() + ")"));
+        if (root.isEmpty()) {
+            out.add(Problem.error(TableCodes.PATH, p + ".path", "a path starts at $, @ or ^ ($." + text + ")"));
             return;
         }
-        if (path.rest().contains("[*]")) {
+        if (text.contains("[*]")) {
             out.add(Problem.error(TableCodes.PATH, p + ".path", "a column holds one value: a list ([*]) is a grain, or an aggregate of the list in an expr "
-                    + "(sum(" + path.text() + "))"));
+                    + "(sum(" + text + "))"));
         }
-        String root = path.root();
+        String rest = text.substring(root.length());
         int need = root.equals("@") || root.equals("^") ? 1 : root.equals("^^") ? 2 : 0;
         if (depth < need) {
             out.add(Problem.error(TableCodes.PATH, p + ".path", root + " names " + (root.equals("@") ? "the grain's element" : "a parent of the grain's element")
                     + ": this table's grain is " + (depth == 0 ? "the entity (use $)" : "one list deep")));
         } else if ((root.equals("^") && depth == 1) || (root.equals("^^") && depth == 2)) {
-            out.add(Problem.warning(TableCodes.PATH, p + ".path", root + " is the entity itself at this grain: write $" + path.rest()));
+            out.add(Problem.warning(TableCodes.PATH, p + ".path", root + " is the entity itself at this grain: write $" + rest));
         }
     }
 
@@ -266,12 +270,13 @@ public final class TableChecks {
     private static boolean readsMasked(String expr, TableDef t, Set<String> masked) {
         Set<String> paths = new LinkedHashSet<>();
         try {
-            Reader.read(expr).walk(n -> {
-                if (n instanceof Node.Path p) {
-                    paths.add(p.text());
+            Trees.walk(Trees.parse(expr), n -> {
+                String name = Trees.name(n);
+                if (name != null) {
+                    paths.add(name);
                 }
             });
-        } catch (Reader.ReadException e) {
+        } catch (RuntimeException e) {
             return false;
         }
         return masked.stream().map(t.columns()::get).filter(c -> c != null && c.path() != null).anyMatch(c -> paths.contains(c.path()));

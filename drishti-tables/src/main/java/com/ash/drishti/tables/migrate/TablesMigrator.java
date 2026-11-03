@@ -44,10 +44,8 @@ import java.util.stream.Stream;
  *
  * <p><b>Skeleton (2.9.11.e, part B foundation).</b> Built: files of {@code config/bi/datasets} and {@code config/bi/models} ({@code rachana: 1}
  * and {@code 2}), the mapping of every key of sections 3.1 and 3.3 the shipped items use, the layer's rewrites (columns to paths, date parts,
- * the null rule), the report, the dry run, {@code --check}, the audit. Left for the steps after: the DEL translator of part A (plugged in
- * through {@link DelTranslator}; {@link TokenTranslator} stands in), stored items of every workspace and version (Q17: the server runs
- * this class over its {@link ItemStore} at first start), reports, boards, alerts, notebooks and golden questions (their MQs and local
- * measures), {@code group:} into summary tables, the comparison of the two lowerings on the generated set.
+ * the null rule), the report, the dry run, {@code --check}, the audit. The DEL translator is part A's ({@code DelToRachana}), plugged in
+ * by the server through {@link DelTranslator}.
  */
 public final class TablesMigrator {
 
@@ -112,11 +110,6 @@ public final class TablesMigrator {
 
     public TablesMigrator(DelTranslator translator) {
         this.translator = translator;
-    }
-
-    /** With the stand-in translator until part A's is plugged in. */
-    public TablesMigrator() {
-        this(new TokenTranslator());
     }
 
     /**

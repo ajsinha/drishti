@@ -46,16 +46,10 @@ public final class TableCodes {
     public static final String DUPLICATE = "DRS-9610";
     /** Tables over tables that come back to themselves. */
     public static final String CYCLE = "DRS-9611";
-    /** An expression the checks cannot decide yet: it uses the grammar of Rachana's checked mode (in, ^, lists, named arguments). */
-    public static final String PENDING = "DRS-9612";
     /** A check on the sample documents: keys not unique, a path no sample document holds. */
     public static final String SAMPLE = "DRS-9613";
     /** A file in BI's old form found where the layer reads ({@code rachana: 2} under {@code config/tables}). */
     public static final String OLD_FORM = "DRS-9614";
-    /** Display concerns in data: {@code ctl.x}, {@code link(...)}, {@code fmt(...)} in a table or model. */
-    public static final String DISPLAY = "DRS-9615";
-    /** A document path inside a measure: a path is a table's column, defined once (Q21). */
-    public static final String PATH_IN_MEASURE = "DRS-9616";
 
     /** The language's: an aggregate in row or rule scope, or a scope rule broken. */
     public static final String SCOPE = "DRS-9127";

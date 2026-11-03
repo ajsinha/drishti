@@ -70,8 +70,11 @@ public interface ExpressionChecker {
      * @param types column to type where known ({@code trades.MTM} to {@code decimal}); checked mode reads them
      * @param masked the masked columns ({@code alias.COLUMN} or a table's column names)
      * @param grainDepth how many lists deep the table's grain goes (0: no {@code @} or {@code ^})
+     * @param params a model's parameters ({@code param.x})
+     * @param paths a table's column paths to their column names ({@code $.MTM} to {@code MTM}), for the types and masks of the source
      */
-    record Env(Set<String> columns, Set<String> aliases, Set<String> measures, Map<String, String> types, Set<String> masked, int grainDepth) {
+    record Env(Set<String> columns, Set<String> aliases, Set<String> measures, Map<String, String> types, Set<String> masked, int grainDepth,
+            Set<String> params, Map<String, String> paths) {
 
         public static final Env EMPTY = new Env(Set.of(), Set.of(), Set.of(), Map.of(), Set.of(), 0);
 
@@ -81,6 +84,13 @@ public interface ExpressionChecker {
             measures = measures == null ? Set.of() : Set.copyOf(measures);
             types = types == null ? Map.of() : Map.copyOf(types);
             masked = masked == null ? Set.of() : Set.copyOf(masked);
+            params = params == null ? Set.of() : Set.copyOf(params);
+            paths = paths == null ? Map.of() : Map.copyOf(paths);
+        }
+
+        /** Without parameters or source paths. */
+        public Env(Set<String> columns, Set<String> aliases, Set<String> measures, Map<String, String> types, Set<String> masked, int grainDepth) {
+            this(columns, aliases, measures, types, masked, grainDepth, Set.of(), Map.of());
         }
     }
 }
