@@ -32,8 +32,7 @@ drishti:
         request-mb: 1024                         # one read at most (a role's limit may be lower)
       batch-rows: 65536                          # rows in one record batch sent
       session-minutes: 60                        # how long the session given at the handshake lasts before the token is checked again
-      stream-keep: 1024                          # batches of a live stream kept for resuming
       readers-hours: 24                          # how long finished reads are listed on Admin -> Data out (the audit keeps them for good)
       limits:                                    # per read, by role: rows, gb, minutes, memory-mb (0: no limit); the most generous of a person's roles applies
-        default: { rows: 50000000, gb: 8, minutes: 10, memory-mb: 512 }
+        default: { rows: 50000000, gb: 8, minutes: 10, memory-mb: 512 }   # a person whose roles name no limits: 50 million rows, 8 GB, 10 minutes, 512 MB of Arrow memory per read
         roles: {}                                # e.g. risk-manager: { rows: 200000000, gb: 32, minutes: 30, memory-mb: 1024 }
