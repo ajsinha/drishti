@@ -236,7 +236,7 @@ work, not for correctness.
 | **Console** | `drishti-console`, 4 workers | `DRISHTI_CONSOLE_WORKERS=4`, `backend.urls`, `discover: true`, same `DRISHTI_SESSION_SECRET` and token secret | 2 / 3 / 4–6 (2–3 after `D6`) | a coordinator (pilot only) | shard owners, loaders |
 | **VaR coordinator** | full packs or the `risk` edition; VaR sharding on, `coordinator-only: true` | `drishti.var.sharding.coordinator-only`, `drishti.var.threads` half the cores when BI also runs | 0 (all-in-one) / 2 / 3 | exposure coordinator | loaders |
 | **VaR shard owner** | `market-risk` (and what it needs); `peer-only-packs: [market-risk]` optional | sharding block, `zone-tag: az`, `drishti.var.threads: 0` (every core), BI off | 3 / 6 / 16 | nothing heavy | BI, loaders, consoles |
-| **Exposure server** (today) / **owner** (PLANNED `CD10`) | `counterparty-risk` | `drishti.ccr.exposure.*`, compute pool `exposure` | 1 / 1 → 4 / 8 | its compute pool | VaR owners (page cache) |
+| **Exposure server** (today) / **owner** (PLANNED `CD10`) | `counterparty-risk` | `drishti.ccr.exposure.*` | 1 / 1 → 4 / 8 | none | VaR owners (page cache) |
 | **BI and reporting** | Rūpaka, BI runs, scheduled reports | `config/runs/runs.yaml` workers, `drishti.bi.query.*` | 0 / 2 / 3 | data-serving | VaR owners |
 | **Data-serving** | entity pages, search, type-ahead, data map, World, Market packs | connector caches, `index.max-disk` | 0 / 2 / 3 | BI | VaR owners |
 | **Loader** | `drishti-lakeload` jobs (batch), `lake maintain` | `memory.budget-mb`, `parallel.writers`, spill on NVMe | 1 / 1 + standby / 2 + standby | nothing during the load window | any server |
@@ -771,7 +771,7 @@ scope that cuts a set (a desk inside a counterparty) is recomputed by the set's 
 
 Replicas, zones, handover, drain and failure behave exactly as VaR's (sections 4.5 to 4.8): the same `ShardOwners`, `ShardHandover`,
 `ShardMembership`, `ShardPeers` under the digest service of its own (proposed `exp-shards`). **Pre-deal what-ifs** (`method: paths`) go to
-the candidate's counterparty's owner, whose Python `exposure` pool reads the touched sets' matrices locally; a candidate without a netting
+the candidate's counterparty's owner, whose exposure engine reads the touched sets' matrices locally; a candidate without a netting
 set is its own set and may go to any owner.
 
 ### 6.5 Tests and the plug-in
@@ -807,7 +807,7 @@ set is its own set and may go to any owner.
 | Node answers | from aggregates, under 1 ms | from per-counterparty statistics or a sum of its sets |
 | Load | per owner, its key ranges | per owner, its sets, one at a time |
 | Intraday | file batches and Kafka windows | none (a new run reloads) |
-| What-if | the basket's vector through the same path | to the counterparty's owner (Python pool) |
+| What-if | the basket's vector through the same path | to the counterparty's owner (its exposure engine) |
 
 ---
 
@@ -1139,7 +1139,7 @@ A runbook and a twice-yearly exercise are PLANNED (`CD11`).
 | `con-1..3` | 3 | 4 / 8 GB / 20 GB | `DRISHTI_CONSOLE_WORKERS=4`, `DRISHTI_BACKEND_URLS=https://coord-1:18480,https://coord-2:18480`, `DRISHTI_CONSOLE_RELAY_ACROSS_HOSTS=true`, one `DRISHTI_CONSOLE_RELAY_KEY`, ports 17490–17493 open between the consoles |
 | `coord-1..2` | 2 | 16 / 64 GB / 100 GB | `-Xmx36g`, `drishti.var.sharding.coordinator-only=true`, tags `az:dc1-a` / `az:dc1-b` |
 | `var-1..6` | 6 | 16 / 128 GB / 800 GB NVMe | `-Xmx36g`, `drishti.var.threads=0`, tags split over two racks or halls |
-| `exp-1` (then `exp-1..4` with `CD10`) | 1 → 4 | 16 / 128 GB / 2 TB NVMe | counterparty-risk; compute pool `exposure` |
+| `exp-1` (then `exp-1..4` with `CD10`) | 1 → 4 | 16 / 128 GB / 2 TB NVMe | counterparty-risk |
 | `bi-1..2` | 2 | 16 / 64 GB / 500 GB | Rūpaka, `config/runs/runs.yaml` workers 2–4 |
 | `data-1..2` | 2 | 16 / 64 GB / 1 TB NVMe | entity pages, search, World, Market |
 | `load-1` (+ standby) | 1 + 1 | 32 / 64 GB / 100 GB NVMe | `drishti-lakeload`, cron or the bank's scheduler |

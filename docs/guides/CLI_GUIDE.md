@@ -2259,8 +2259,8 @@ drishti.py exposure whatif CPTY:CP-ALDERSHOT --like CLY-4003028 --factor -1 --se
 drishti.py exposure whatif CPTY:CP-ALDERSHOT --candidates new-swap.json --method addon               the conservative proxy
 ```
 
-Exit codes: 0; 1 when the server said no (the code and its message on standard error); 2 for usage. The exact what-if (`--method
-paths`, the default) needs the compute workers (`DRISHTI_COMPUTE_ENABLED=true`); without them it is `DRS-5446`.
+Exit codes: 0; 1 when the server said no (the code and its message on standard error); 2 for usage. Both what-if methods (`--method
+paths`, the default and exact, and `addon`) are the server's exposure engine's.
 [Tutorial 26](../tutorials/26-exposure-from-the-bank-to-a-trade.md) walks through them with the test data.
 
 ### `server packs deploy`, `history`, `rollback` and `datasource`

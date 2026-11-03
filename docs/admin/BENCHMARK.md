@@ -716,7 +716,8 @@ memory as float32, then one business date is loaded as the server loads it (ever
 each set's collateral, E and N, the hot file written and mapped). Scopes, contributions and what-ifs are the engine's own code; the trade
 paths a drill needs are read both as the wanted rows only and as the server reads the lake (the date streamed once). Best of five warm
 runs, hot file in the page cache, JDK 25. The Python engine's exact `paths` method was timed on its own (one netting set and its
-candidates, best of three).
+candidates, best of three). The exact method is now the Java engine's (`ExposureWhatIfMath`, the same `ExposureMath` arithmetic as
+every row below); its row is measured again at the next benchmark run.
 
 **Measured.** 10,000 trades (901 sets) at P = 100, 200 and 500 with G = 24, at P = 200 with G = 48; 100,000 trades (9,901 sets) at P = 200, G = 24:
 
