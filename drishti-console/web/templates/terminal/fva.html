@@ -1,0 +1,81 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# FVA (docs/guides/FVA_GUIDE.md sections 5 and 6). mode "screen": one FVA screen over one answer (/api/fva/scope), three views, the decided
+   mock-ups (docs/lenses/mockups/fva/): A the netting set's FVA (tiles, term bars by future date, the formula; the default), B the netting
+   sets by FVA with the selected set's bars, C the counterparty with each set's bars side by side. mode "play", PLAY FVA <scope>: the
+   playground on the VaR Playground's frame: the Choices, the terms by date with the formula bar, the explanation, Export to Excel. A shell:
+   fva.js fills it. #}
+{% extends "base.html" %}
+{% block title %}{{ 'FVA Playground' if mode == 'play' else 'FVA' }} · {{ scope or 'netting sets' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}{{ screen }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/frtb-sa.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/fva.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="pg fr fv" data-fva data-mode="{{ mode }}" data-scope="{{ scope }}" data-view="{{ view }}">
+  <div class="pg-head">
+    <h1 class="pg-title"><span class="pg-word mono">{{ 'PLAY FVA' if mode == 'play' else 'FVA' }}</span>
+      {{ 'FVA Playground' if mode == 'play' else 'Funding cost and benefit' }}</h1>
+    <nav class="pg-path mono" aria-label="The scope">{{ scope }}</nav>
+    <span class="pg-meta" data-fv-meta aria-live="polite">loading…</span>
+    <a class="pg-help" href="/help/context/{{ 'play-fva' if mode == 'play' else 'fva' }}" title="Help: FVA (the guide)" aria-label="Help: FVA"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if mode == 'play' and scope %}<a class="pg-link" href="/fva?scope={{ scope|urlencode }}">FVA screen</a>{% elif scope and scope != 'BANK' %}<a class="pg-link" data-fv-playlink href="/play/fva?scope={{ scope|urlencode }}">Open in the playground</a>{% endif %}
+  </div>
+  <form class="pg-ask" method="get" action="{{ '/play/fva' if mode == 'play' else '/fva' }}">
+    <label>Scope <input class="pg-input mono" name="scope" value="{{ scope }}" placeholder="NSET:NS-ALDERSHOT-FRA, CPTY:CP-ALDERSHOT, BANK" autocomplete="off"></label>
+    <button type="submit" class="pg-btn primary">Open</button>
+    <a class="pg-link" href="/api/fva/example.xlsx" download title="The workbook of the hand-built case F1 (b): every step a formula, checked to the cent">Example workbook</a>
+  </form>
+  <p class="pg-notice" data-fv-notice role="status" hidden></p>
+  {% if mode == 'screen' %}
+  <div class="fr-tabs" role="tablist">
+    <button type="button" role="tab" class="fr-tab" data-fv-tab="a" aria-selected="{{ 'true' if view == 'a' else 'false' }}">Netting set</button>
+    <button type="button" role="tab" class="fr-tab" data-fv-tab="b" aria-selected="{{ 'true' if view == 'b' else 'false' }}">Netting sets by FVA</button>
+    <button type="button" role="tab" class="fr-tab" data-fv-tab="c" aria-selected="{{ 'true' if view == 'c' else 'false' }}">Counterparty</button>
+  </div>
+  <div class="fv-tiles" data-fv-tiles aria-live="polite"></div>
+  <div data-fv-pane="a" {{ '' if view == 'a' else 'hidden' }}>
+    <section class="fv-panel"><h3 data-fv-a-title>FVA by future date</h3><div data-fv-a-chart></div></section>
+    <div class="fv-grid2">
+      <section class="fv-panel"><h3>The formula, this set</h3><div class="fv-formula mono" data-fv-formula></div></section>
+      <section class="fv-panel"><h3>How it was computed</h3><div data-fv-prov></div></section>
+    </div>
+  </div>
+  <div data-fv-pane="b" {{ '' if view == 'b' else 'hidden' }}>
+    <section class="fv-panel"><h3>Netting sets, sorted by FVA</h3><div class="pg-scroll"><table class="fr-grid" data-fv-sets aria-label="Every netting set: FCA, FBA, FVA"></table></div>
+      <p class="muted">FVA, FCA and FBA add up across netting sets and counterparties; EPE over the life does not, so no EPE total is shown.</p></section>
+    <section class="fv-panel"><h3 data-fv-b-title>The selected set by future date</h3><div data-fv-b-chart></div></section>
+  </div>
+  <div data-fv-pane="c" {{ '' if view == 'c' else 'hidden' }}>
+    <div class="fv-grid2" data-fv-c-sets></div>
+  </div>
+  {% else %}
+  <div class="fr-choices fv-choices" data-fv-choices aria-label="Choices: the period's exposure point, the funding benefit, survival weighting, the funding spread"></div>
+  <div class="pg-ctrls" role="toolbar">
+    <span class="pg-actions">
+      <button type="button" class="pg-btn primary" data-fv-export title="The workbook of live formulas: the choices are cells of Config, each figure checked against the engine's">Export to Excel</button>
+    </span>
+  </div>
+  <div class="fv-tiles" data-fv-tiles aria-live="polite"></div>
+  <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-fv-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-fv-fx>Select a cell</code></div>
+  <div class="pg-body">
+    <section class="pg-gridcard"><div class="pg-scroll" tabindex="0"><table class="fr-grid fv-terms" data-fv-terms aria-label="The terms by primary date"></table></div></section>
+    <aside class="pg-explain" data-fv-explain aria-live="polite"></aside>
+  </div>
+  {% endif %}
+</div>
+<script src="/static/js/fva.js?v={{ ASSET_V }}"></script>
+{% endblock %}

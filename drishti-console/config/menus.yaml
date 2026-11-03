@@ -101,6 +101,13 @@ menus:
         items:
           - { id: simm, cmd: SIMM, icon: shield-lock, label: Netting sets, desc: "Initial margin per netting set, collect and post", match: /simm, requires: [word:SIMM, route:/simm] }
           - { id: play-simm, cmd: PLAY SIMM EXAMPLE, icon: calculator, label: SIMM Playground, desc: "Every SIMM figure worked in a grid and a workbook of formulas", match: /play/simm, requires: [word:PLAY, route:/play/simm] }
+      - engine: fva
+        title: FVA
+        word: FVA
+        opens: [role:credit-risk, pack:counterparty-risk]
+        items:
+          - { id: fva, cmd: FVA BANK, icon: cash-coin, label: FVA by netting set, desc: "Funding cost and benefit of every netting set, the costliest first", match: /fva, requires: [word:FVA, route:/fva] }
+          - { id: play-fva, fill: PLAY FVA NSET, icon: calculator, label: FVA Playground, desc: "A netting set's FVA worked date by date, and its workbook of formulas", match: /play/fva, requires: [word:PLAY, route:/play/fva] }
   # The subject menus of the lenses (docs/lenses/README.md, the lens menus): drawn only where an edition (or a lens) names them in its
   # menus.top. An item's cmd: and fill: as in the Engines menu above.
   - id: blotter
