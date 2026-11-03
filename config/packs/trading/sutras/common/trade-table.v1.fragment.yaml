@@ -23,9 +23,9 @@ doc:
   description: >-
     A list of trades (a derived page's TRADES, one row a member trade) as a table whose columns are a parameter: a list of
     columns as a table panel writes them, each a label and a bind with an optional fmt, total and tone. Rows may be filtered by
-    a condition over each row (@), typically a control's value (ctl.status); Pivot (the pivot screen) groups the notional by product type
-    and source system, filtered by currency, so the rows carry PRODUCT_TYPE, SOURCE_SYSTEM, NOTIONAL and CURRENCY. Use it for
-    any list of the trading pack's trades.
+    a condition over each row (@), typically a control's value (ctl.status); Pivot (the pivot screen) groups the notional by
+    product type and source system, filtered by currency, so the rows carry PRODUCT_TYPE, SOURCE_SYSTEM, NOTIONAL and CURRENCY.
+    Use it for any list of the trading pack's trades.
   params:
     id: { type: id, default: trades, meaning: "The panel id, unique on the screen (a control's panel: names it)" }
     title: { type: text, default: Trades, meaning: "The title over the table; it may count the rows, e.g. Trades (${size($.TRADES)})" }
