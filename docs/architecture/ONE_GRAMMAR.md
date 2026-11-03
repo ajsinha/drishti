@@ -96,6 +96,9 @@ a second expression syntax, and Python is the open-ended escape, sandboxed. Size
 *Product owner, 2026-11-03: "evaluate what other functions we should build into Drishti like sum ... what Excel and SAS provide ...
 let us expand wherever you think ok".*
 
+**The full list, function by function** (one name each, an example, the Excel and SAS equivalents, where it runs, its status):
+[FUNCTION_CATALOGUE.md](FUNCTION_CATALOGUE.md).
+
 **What exists (2026-11-03).** BI's DEL has 59 functions (`drishti-server/src/main/resources/bi/expr/functions.yaml`): scalar (18), aggregate
 (9: `sum`, `avg`, `min`, `max`, `count`, `distinct`, `ratio`, `percentile`, `avg_by`), time (10: `ytd`, `mtd`, `qtd`, `prior_period`,
 `same_period_last_year`, `fiscal_ytd` …), windows (10: `lag`, `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_*`, `running`,
