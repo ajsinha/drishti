@@ -74,7 +74,7 @@ In plain words: exposures of different netting sets never net (each is floored a
 ## 22. Rest of set
 In plain words: a netting set can hold more trades than a workbook should show as columns. The largest trades by their contribution at the peak date get their own columns; Rest of set carries the summed values of all the others per path and date, entered as data, so V and every figure after it are still the whole set's to the cent (Data, Rest of set).
 ## 23. The checks
-In plain words: each result stands beside the engine's own figure with a check, and the parts are checked to add up. The band at the top of Main says ALL CHECKS PASS when the sheet equals the engine to the cent, the contributions add up to EE, every Data cell is a number, the path count equals the run's and the shown trades with Rest of set make the whole set. Change a simulated value and the engine checks turn red by design while the add-up checks stay green.
+In plain words: each result stands beside the engine's own figure with a check, and the parts are checked to add up. The band at the top of Main says ALL CHECKS PASS when the sheet equals the engine to the cent, the contributions add up to EE, every Data cell is a number, the path count equals the paths taken from the run (the first N; Main lists the run's own figures over all of them when N is smaller) and the shown trades with Rest of set make the whole set. Change a simulated value and the engine checks turn red by design while the add-up checks stay green.
 ## Term (Main): Netting set, counterparty
 The set of trades the playground works on, with its counterparty. A trade in no enforceable netting set is its own set.
 ## Term (Main): Business date
@@ -133,15 +133,19 @@ The collateral held minus posted today, after haircut (the current model's value
 Every date of the run with its role (PRIMARY or LOOKBACK), for a look-back date the primary date it serves, and its time in years.
 ## Term (Config): Alpha, horizon cap, longest remaining maturity
 1.4 for EAD_IMM (CRE53); the one-year cap of the averaging horizon; the latest maturity among the set's trades, which can make T shorter.
-## Term (Data): MTM per trade and grid date, Rest of set, today's MTM
-The simulated values as delivered (step 1); the summed values of the trades not shown (step 22); each trade's value today, for CE.
+## Term (Config): The trades, today's MTM, V0
+One row per Data column: the trade (or Rest of set), its value today and its maturity in years, and the trades it counts; V0, their sum, is the set's value today, for CE (step 17).
+## Term (Config): CSA present, Margined
+yes or no: a set with no CSA has no collateral at all; a CSA that calls no variation margin holds its independent amount on every path (step 8).
+## Term (Data): MTM per trade and grid date, Rest of set
+The simulated values as delivered (step 1), one row per path and one column per grid date and trade, the dates side by side; Rest of set the summed values of the trades not shown (step 22).
 ## Term (Netting): V, L
 The set's value per path at each primary date (step 3) and at each look-back date (step 4).
-## Term (Collateral): target, after MTA, C
-The collateral the CSA calls at the look-back value, after the minimum transfer amount and rounding, and the collateral of the model chosen (steps 5 to 8).
+## Term (Collateral): target, rounded, C
+The collateral the CSA calls at the look-back value (target), that call rounded as a change from today's collateral (rounded), and C: the collateral of the model chosen, the counterparty's minimum transfer amount taken off what is held (steps 5 to 8). A primary date with no look-back point has no target: its C is today's.
 ## Term (Exposure): E, N, max(V, 0)
 Exposure, negative exposure and the uncollateralised exposure per path and date (steps 9 and 19).
-## Term (Contributions): w, a, EE share
-A trade's share of the set's value on a path, its share of the exposure, and its average (step 20).
+## Term (Contributions): 1 − (C + IM) / V, a, EE share
+On each path with exposure, the part of each trade's value that is not covered by its share of the collateral (0 where there is no exposure); a, a trade's value times it; the EE share, the average of a over the paths (step 20). The date is Main's Contribution date.
 ## Term (Provenance): Sources, run and refusals
 The business date, the run (id, model and version, seed, calibration, value basis), the data versions of the paths, the CSA and the collateral, trades whose paths failed or were proxied, the flags, the template's version, who exported the workbook and when.
