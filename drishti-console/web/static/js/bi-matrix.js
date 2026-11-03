@@ -63,20 +63,12 @@
     const sortTree = (n) => { n.children = new Map([...n.children.entries()].sort((a, b) => a[0].localeCompare(b[0]))); n.children.forEach(sortTree); };
     sortTree(root);
 
-    /** The total of measure m over a node (null: everything) and a column (null: every column): summed when it adds up, else the engine's. */
+    /** The total of measure m over a node (null: everything) and a column (null: every column): the pivot engine's, never added up here. */
     const total = (m, node, c) => {
       const path = node ? node.path : [];
-      if (!V.additive(ctx, m)) {
-        const by = rowFields.slice(0, path.length).concat(c !== null && colField ? [colField] : []);
-        return tt.find(by, path.concat(c !== null && colField ? [c] : []), m);
-      }
-      let t = 0, any = false;
-      const walk = (n) => {
-        if (!n.children.size) { n.cells.forEach((v, k) => { const [cc, mm] = k.split(SEP); if (mm === m && (c === null || cc === c) && typeof v === 'number') { t += v; any = true; } }); }
-        n.children.forEach(walk);
-      };
-      walk(node || root);
-      return any ? t : null;
+      const by = rowFields.slice(0, path.length).concat(c !== null && colField ? [colField] : []);
+      const v = tt.find(by, path.concat(c !== null && colField ? [c] : []), m);
+      return v === undefined ? null : v;
     };
     const maxBar = {};
     bars.forEach((m) => { let mx = 1e-9; const walk = (n) => { n.cells.forEach((v, k) => { if (k.split(SEP)[1] === m && typeof v === 'number') { mx = Math.max(mx, Math.abs(v)); } }); n.children.forEach(walk); }; walk(root); maxBar[m] = mx; });
@@ -99,7 +91,7 @@
         w.style.width = Math.round(100 * Math.abs(v) / maxBar[m]) + '%';
         td.appendChild(h('span', { class: 'bi-barcell' }, w, h('span', { class: 'bi-bartext', text })));
       } else { td.textContent = text; }
-      if (o.bold && !V.additive(ctx, m)) { td.setAttribute('data-true-total', ''); td.title = 'Worked out over all the rows of the group, not added up from the figures shown'; }
+      if (o.bold) { td.setAttribute('data-true-total', ''); td.title = 'Worked out by the pivot engine over all the rows of the group, never added up from the figures shown'; }
       if (styler && typeof v === 'number') { V.paintCell(td, styler.cell(m, v, o.row || null)); }
       return td;
     };

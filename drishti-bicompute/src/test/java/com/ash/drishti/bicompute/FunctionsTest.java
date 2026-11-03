@@ -51,6 +51,18 @@ class FunctionsTest {
         return new Batch(n, new Object[] {x, w, t});
     }
 
+    /** A once-per-parent input: each parent (one of 2,000) repeats its own value on every row it has, as a trade's on its legs. */
+    private static Batch once(Batch b) {
+        String[] x = new String[b.rows()];
+        String[] p = new String[b.rows()];
+        for (int i = 0; i < x.length; i++) {
+            int parent = (i * 7919) % 2_000;
+            p[i] = "T-" + parent;
+            x[i] = parent % 13 == 0 ? null : Double.toString(parent * 1.5 - 700);
+        }
+        return new Batch(b.rows(), new Object[] {x, p});
+    }
+
     @Test
     void everyBuiltInPassesTheHarnessOn10kRows() {
         Batch b = rows(10_000, 7);
@@ -62,10 +74,12 @@ class FunctionsTest {
             List<String> fields = switch (n) {
                 case "count" -> List.of("x");
                 case "wavg" -> List.of("x", "w");
+                case "sum_once", "count_once", "avg_once" -> List.of("x", "p");
                 default -> List.of("x");
             };
             AggFunction<Object> f = Functions.builtIn(n, fields, "percentile".equals(n) ? List.of(0.99) : List.of()).orElseThrow();
-            Batch in = n.equals("count_distinct") ? new Batch(b.rows(), new Object[] {b.columns()[2]})
+            Batch in = n.endsWith("_once") ? once(b)
+                    : n.equals("count_distinct") ? new Batch(b.rows(), new Object[] {b.columns()[2]})
                     : n.equals("wavg") ? new Batch(b.rows(), new Object[] {b.columns()[0], b.columns()[1]}) : new Batch(b.rows(), new Object[] {b.columns()[0]});
             FunctionHarness.Report rep = FunctionHarness.run(f, in, 5, 1e-12);
             assertThat(rep.passed()).as(n + ": worst " + rep.worst()).isTrue();

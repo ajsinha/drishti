@@ -69,6 +69,7 @@ def open_view(ctx, stack, path=VIEW, wait="#p-flows [data-table-chart]"):
 
 def drawn(page):
     page.wait_for_selector(DLG + " .tc-canvas svg path", state="attached", timeout=15000)
+    page.wait_for_selector("dialog.tc-dlg:not([aria-busy])", state="attached", timeout=15000)   # the engine has answered the last change
     return page.evaluate("""(() => { const c = window.drishtiTableChart.current();
         return { type: c.settings.type, x: c.settings.x.field, series: c.option.series.map(s => s.name), kinds: c.option.series.map(s => s.type),
                  sum: document.querySelector('.tc-sum').textContent, status: document.querySelector('[data-tc-status]').textContent,
@@ -179,6 +180,7 @@ def test_search_results_chart_the_raw_values_and_chart_all_asks_the_pivot_engine
     assert len(backend.pivot_calls) == before + 2 and backend.pivot_calls[-1]["columns"] == ["currency"]
     page.click(".tc-all")                                                      # back to the shown rows
     page.select_option('[data-tc-k="x"]', "Trade date")                       # not a pivot field: Chart all stands down, with the reason
+    page.wait_for_selector("dialog.tc-dlg:not([aria-busy])", state="attached")
     assert allb.is_disabled() and "pivot" in allb.get_attribute("title")
 
 

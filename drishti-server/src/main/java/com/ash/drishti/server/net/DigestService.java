@@ -354,7 +354,7 @@ public final class DigestService implements AutoCloseable {
         for (Pack p : on) {
             packEntries.add(new Digest.PackEntry(p.name(), p.code(), p.version(), packHash(p), peerOnly.contains(p.name())));
             for (String kind : p.kinds().stream().sorted().toList()) {
-                if (com.ash.drishti.server.memlake.MemoryBinding.remoteHere(kind)) {
+                if (com.ash.drishti.memlake.MemoryBinding.remoteHere(kind)) {
                     continue;                                    // held in memory by its owner node: not offered from here (IN_MEMORY_LAKE.md s9)
                 }
                 String code = mnemonics.codeFor(kind);

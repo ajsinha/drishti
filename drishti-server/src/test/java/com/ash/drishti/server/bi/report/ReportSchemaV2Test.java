@@ -204,7 +204,10 @@ class ReportSchemaV2Test {
         Report r = ReportParser.parse(yaml).report();
         Dataset ds = ReportParserTest.dataset("trades-basic");
         QueryRequest base = query(yaml, "p", "m", "{}");
-        List<List<String>> by = Totals.matrix(ds, r.page("p").visual("m"), base, 100).stream().map(Totals.Level::by).toList();
+        assertThat(ds.measures()).isNotEmpty();
+        assertThat(base.fields()).isNotEmpty();
+        Report.Visual m = r.page("p").visual("m");
+        List<List<String>> by = com.ash.drishti.server.bi.pivot.BiAggregate.matrixLevels(m.well("rows"), m.well("columns"));
         assertThat(by).contains(List.of(), List.of("trade.DESK"), List.of("trade.DESK", "trade.PORTFOLIO"), List.of("trade.DESK", "trade.CURRENCY"),
                 List.of("trade.DESK", "trade.PORTFOLIO", "trade.CURRENCY"), List.of("trade.DESK", "trade.PORTFOLIO", "trade.PRODUCT_TYPE"));
         assertThat(all(yaml.replace("valuesOn: rows", "valuesOn: diagonal"))).anyMatch(x -> x.error() && x.path().endsWith("format.valuesOn"));

@@ -147,7 +147,7 @@ public final class LakeWriter {
         if (com.ash.drishti.lakeio.LocalPaths.isLocal(table)) {
             return DefaultEngine.create(new LocalWriteFileIO(parquetConf()));
         }
-        if (com.ash.drishti.lakeio.mem.MemoryStores.isMemory(table)) {
+        if (com.ash.drishti.lakeio.StorageProviders.memoryOnly(table)) {
             return DefaultEngine.create(new StorageWriteFileIO(com.ash.drishti.lakeio.S3Settings.from(Map.of()), memoryConf(settings)));
         }
         return DefaultEngine.create(new StorageWriteFileIO(com.ash.drishti.lakeio.S3Settings.from(settings), parquetConf()));

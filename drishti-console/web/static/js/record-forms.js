@@ -309,22 +309,37 @@
   }
 
   // ---- Submit (2.8.0 write-back, write-back.js) -----------------------------------------------------------------------------------
-  var WB = window.drishtiWriteBack, wb = { mayEdit: false };
-  if (WB) { WB.settings().then(function (s) { wb = s || wb; }); }
+  var WB = window.drishtiWriteBack, wb = { mayEdit: false }, wbKnown = !WB;
+  /* Whether this person may submit arrives after the page draws: a form opened before it is known gets its Submit and its note when it
+     arrives (a quick open, a phone, used to draw the form without its Submit for good). */
+  var wbReady = WB ? WB.settings().then(function (s) { wb = s || wb; wbKnown = true; }, function () { wbKnown = true; }) : Promise.resolve();
   /* A new record cannot be a correction laid over a source record: a form whose save: is an overlay submits edits only. */
   function canSubmit(st, isNew) { return !!(WB && wb.mayEdit && st.form.save && !(isNew && st.form.save.target === 'overlay')); }
   function sendNote(st, isNew) {
+    var n = el('span', 'fm-note', noteText(st, isNew)); n.setAttribute('data-fm-send-note', '');
+    if (!wbKnown) { wbReady.then(function () { n.textContent = noteText(st, isNew); }); }
+    return n;
+  }
+  function noteText(st, isNew) {
     var sv = st.form.save;
     var t = !sv ? 'Drafts only: this form sends nothing'
       : canSubmit(st, isNew) ? (sv.target === 'source' ? 'Submit amends the source' : sv.target === 'owned' ? 'Submit saves the record' : 'Submit keeps a correction over the source')
         + (sv.approval > 0 ? ' after ' + (sv.approval === 1 ? 'one approver' : sv.approval + ' approvers') : '')
       : isNew && sv.target === 'overlay' ? 'A new record is kept as a draft: this form submits corrections only'
       : wb.enabled === false ? 'Editing is off on this server: drafts only' : 'Drafts only for you: submitting needs the edit power';
-    var n = el('span', 'fm-note', t); n.setAttribute('data-fm-send-note', '');
-    return n;
+    return t;
   }
   /* Submit: the draft saved first (saveFirst returns a promise of it, or null when the form shows what to fix), then the sheet. */
   function submitButton(st, isNew, saveFirst, foot, after) {
+    if (!wbKnown) {
+      var spot = document.createComment('submit'); foot.appendChild(spot);
+      wbReady.then(function () {
+        if (!spot.parentNode) { return; }
+        var tmp = document.createElement('span'); submitButton(st, isNew, saveFirst, tmp, after);
+        if (tmp.firstChild) { spot.parentNode.replaceChild(tmp.firstChild, spot); } else { spot.remove(); }
+      });
+      return;
+    }
     if (!canSubmit(st, isNew)) { return; }
     var b = btn('fm-btn fm-primary fm-submit', 'Submit…', function () {
       var p = saveFirst();

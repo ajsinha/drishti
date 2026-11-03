@@ -31,6 +31,7 @@ import com.ash.drishti.bicompute.rollup.RollupDef;
 import com.ash.drishti.bicompute.rollup.RollupSource;
 import com.ash.drishti.bicompute.rollup.Rollups;
 import com.ash.drishti.bicompute.rollup.TabularRollupSource;
+import com.ash.drishti.bicompute.scale.ScalePolicy;
 import com.ash.drishti.bicompute.spi.PivotProvider;
 import com.ash.drishti.bicompute.spi.Viewer;
 import com.ash.drishti.common.DrishtiException;
@@ -67,13 +68,19 @@ class RollupTest {
     static final List<Object> MERGEABLE = List.of(Map.of("measure", "sum(NOTIONAL)", "as", "Notional"), Map.of("measure", "count()", "as", "Trades"),
             Map.of("measure", "avg(PNL)", "as", "Avg"), Map.of("measure", "min(PNL)", "as", "Min"), Map.of("measure", "max(PNL)", "as", "Max"),
             Map.of("measure", "var_samp(PNL)", "as", "Var"), Map.of("measure", "wavg(PNL, NOTIONAL)", "as", "WAvg"),
-            Map.of("measure", "approx_count_distinct(CPTY)", "as", "Cptys"));
+            Map.of("measure", "distinct(CPTY)", "as", "Cptys"));
 
+    /** The rollup keeps the distinct count's sketch ("≈"): the views answer it by its sketch (the scale policy, any size here). */
     static final List<String> FNS = List.of("sum(NOTIONAL)", "count()", "avg(PNL)", "min(PNL)", "max(PNL)", "var_samp(PNL)", "wavg(PNL, NOTIONAL)",
-            "approx_count_distinct(CPTY)");
+            "distinct(CPTY) ≈");
+
+    {
+        plain.core.hooks(new ScalePolicy(1));
+    }
 
     Rollups rollups(PivotFixture f, Path d) {
         Rollups r = new Rollups(Map.of("tabular", new TabularRollupSource(f.provider, Viewer.of("system"))), d);
+        f.core.hooks(new ScalePolicy(1));
         f.core.hooks(new AggregateAwareness(r, 10));
         return r;
     }
@@ -219,6 +226,7 @@ class RollupTest {
     void anIncrementalRefreshMergesNewPartsRebuildsARestatedPartitionAndEqualsARebuild() {
         ShardParts src = new ShardParts(new TabularRollupSource(fx.provider, Viewer.of("system")));
         Rollups r = new Rollups(Map.of("tabular", src), null);
+        fx.core.hooks(new ScalePolicy(1));
         fx.core.hooks(new AggregateAwareness(r, 10));
         r.define(new RollupDef("by-day", "trades", List.of("REGION", "DESK", "CCY", "TRADE_DATE"), FNS, "latest", null));
         src.parts = new ArrayList<>(List.of(new RollupSource.Part("s0", "A", -1, -1), new RollupSource.Part("s1", "A", -1, -1)));

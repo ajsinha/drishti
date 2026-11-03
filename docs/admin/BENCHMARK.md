@@ -1483,7 +1483,7 @@ run's) are counted and skipped. `python3 tools/bench/charts.py <results.jsonl â€
 **Status: the plan and the harness; to be measured.** Nothing in this section is measured yet; every cell below is filled by the run
 of 16.3, and the larger sizes of 16.4 are EXTRAPOLATED from those measured points, labelled so wherever they appear. The design is
 [PIVOT_ENGINE.md section 21](../architecture/PIVOT_ENGINE.md#21-the-benchmark-plan); what it measures is
-[PIVOT_GUIDE.md section 19](../guides/PIVOT_GUIDE.md#19-scale-sketches-rollups-progressive-answers-and-the-cluster).
+[PIVOT_GUIDE.md section 23](../guides/PIVOT_GUIDE.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster).
 
 ### 16.1 What is measured
 

@@ -17,6 +17,8 @@ package com.ash.drishti.bicompute.rollup;
 
 import com.ash.drishti.bicompute.core.AggregationPlan;
 import com.ash.drishti.bicompute.core.Partials;
+import com.ash.drishti.bicompute.core.PivotView;
+import com.ash.drishti.bicompute.functions.Sketches;
 import com.ash.drishti.bicompute.spi.PivotProvider;
 import com.ash.drishti.bicompute.spi.Viewer;
 import com.ash.drishti.bicompute.sql.DuckDbExecutor;
@@ -40,6 +42,11 @@ public final class TabularRollupSource implements RollupSource {
 
         /** The relation over {@code parts} only, the same columns as the whole. */
         TabularSource.Relation relation(DuckDbExecutor exec, List<String> parts);
+
+        /** True when the plan reads the parts' columns (false: a document plan reads the documents, never part by part). */
+        default boolean parted(AggregationPlan plan) {
+            return true;
+        }
     }
 
     private final TabularProvider provider;
@@ -80,6 +87,31 @@ public final class TabularRollupSource implements RollupSource {
     public List<Part> parts(String source, String date) {
         TabularSource s = provider.resolver().open(system, source, date);
         return s instanceof Parted p ? p.parts() : List.of();
+    }
+
+    @Override
+    public List<Part> parts(String source, String date, AggregationPlan plan) {
+        TabularSource s = provider.resolver().open(system, source, date);
+        return s instanceof Parted p && p.parted(plan) ? p.parts() : List.of();
+    }
+
+    @Override
+    public RollupDef prepared(RollupDef d) {
+        Map<String, Object> m = new java.util.LinkedHashMap<>();
+        m.put("source", d.source());
+        m.put("rows", d.grain());
+        List<Map<String, Object>> values = new java.util.ArrayList<>();
+        for (String f : d.functions()) {
+            String t = f.strip();
+            values.add(Map.of("measure", t.endsWith(Sketches.MARK.strip()) ? t.substring(0, t.length() - 1).strip() : t));
+        }
+        m.put("values", values);
+        PivotView v = provider.prepare(system, PivotView.parse(m));
+        List<String> fns = new java.util.ArrayList<>();
+        for (int i = 0; i < d.functions().size(); i++) {
+            fns.add(v.values().get(i).measure() + (d.functions().get(i).strip().endsWith(Sketches.MARK.strip()) ? Sketches.MARK : ""));
+        }
+        return new RollupDef(d.id(), d.source(), v.rows().stream().map(com.ash.drishti.bicompute.core.Dim::id).toList(), fns, d.dates(), d.title());
     }
 
     @Override
@@ -164,6 +196,16 @@ public final class TabularRollupSource implements RollupSource {
                     @Override
                     public Relation relation(DuckDbExecutor exec) {
                         return p.relation(exec, parts);
+                    }
+
+                    @Override
+                    public Relation relation(DuckDbExecutor exec, AggregationPlan plan) {
+                        return p.relation(exec, parts);
+                    }
+
+                    @Override
+                    public PivotView prepare(PivotView view) {
+                        return s.prepare(view);
                     }
                 };
             }

@@ -584,6 +584,11 @@ public final class Builtins {
             this.q = q;
         }
 
+        /** The quantile asked (0.5 for the median): its sketch form answers the same q. */
+        public double q() {
+            return q;
+        }
+
         @Override
         public String name() {
             return name;

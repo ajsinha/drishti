@@ -104,37 +104,10 @@
     return (fields || []).map(function (f, i) { return Object.assign({}, f, { name: names[i], path: f.name }); });
   }
 
-  // ---- the pivot engine: every row aggregated by the server, as the cube the chart engine draws ---------------------------------
-  var AGG = { sum: 'sum', count: 'count', avg: 'avg', min: 'min', max: 'max', distinct: 'count_distinct' };
-  var US = '\u001f', RS = '\u001e';
-  /**
-   * The chart's arrangement (rows: [x], columns: [split] or [], values: [{field, agg}]) asked of /api/pivot/query on `source`, the answer as
-   * a cube ({rows, columns, values, rowKeys, columnKeys, cells}); `field(name)` maps a chart field to the source's field (null: not one).
-   */
-  function engineCube(source, arrangement, xField, field, fetchJson) {
-    var measures = arrangement.values.map(function (v, i) {
-      var f = v.field === '·rows' ? null : field(v.field), fn = v.field === '·rows' ? 'count' : AGG[v.agg] || 'sum';
-      return { measure: fn === 'count' && !f ? 'count()' : fn + '(' + f + ')', as: 'v' + i };
-    });
-    var view = { source: source, rows: arrangement.rows.map(field), columns: arrangement.columns.map(field), values: measures,
-      expandTo: { rows: 1, columns: 1 } };
-    return fetchJson('/api/pivot/query', { method: 'POST', body: { view: view } }).then(function (a) {
-      if (!a || !a.cells) { throw new Error((a && (a.detail || a.message)) || 'The pivot engine did not answer'); }
-      var cells = {}, rk = [], ck = [];
-      var rows = (a.rows || []).filter(function (r) { return r.kind === 'node' || r.kind === 'grand'; });
-      var cols = (a.columns || []).filter(function (c) { return c.kind === 'node' || c.kind === 'grand'; });
-      rows.forEach(function (r) { if (r.kind === 'node') { rk.push([r.value]); } });
-      cols.forEach(function (c) { if (c.kind === 'node') { ck.push([c.value]); } });
-      rows.forEach(function (r) {
-        cols.forEach(function (c) {
-          var cell = a.cells[r.key + '|' + c.key];
-          if (!cell) { return; }
-          var key = (r.kind === 'node' ? [r.value] : []).join(US) + RS + (c.kind === 'node' ? [c.value] : []).join(US);
-          cells[key] = measures.map(function (m) { var x = cell.values ? cell.values[m.as] : null; return x == null ? null : x; });
-        });
-      });
-      return { cube: { rows: arrangement.rows, columns: arrangement.columns, values: arrangement.values, rowKeys: rk, columnKeys: ck, cells: cells } };
-    });
+  // ---- the pivot engine: every row aggregated by the server, as the cube the chart engine draws (pivot-engine.js) -----------------
+  function engineCube(source, arrangement, field, fetchJson) {
+    var PE = window.drishtiPivotEngine || (window.drishtiModules || {}).pivotEngine;
+    return PE.query(source, arrangement, field, fetchJson).then(function (cube) { return { cube: cube }; });
   }
 
   // ---- records: a Sutra table that offers Pivot ------------------------------------------------------------------------------------
@@ -152,11 +125,11 @@
       return fields;
     }
     var src = Object.assign({}, base, {
-      kind: 'records', identity: source, approximate: !!o.filtered,
+      kind: 'records', identity: source, approximate: !!o.filtered, everyRow: !o.filtered,     // the panel may hold more rows than the table shows
       context: { kind: view.getAttribute('data-kind'), id: view.getAttribute('data-id'), asOf: view.getAttribute('data-page-asof') || null },
       all: o.filtered ? null : function (settings, arrangement) {
         return catalogue().then(function (names) {
-          return engineCube(source, arrangement, settings.x.field, function (n) { return names[norm(n)] || null; }, fetchJson);
+          return engineCube(source, arrangement, function (n) { return names[norm(n)] || null; }, fetchJson);
         });
       }
     });
@@ -197,7 +170,7 @@
         return null;
       },
       all: !data.pivot || !data.kind ? null : function (settings, arrangement) {
-        return engineCube(data.kind, arrangement, settings.x.field, asPivot, fetchJson);
+        return engineCube(data.kind, arrangement, asPivot, fetchJson);
       }
     };
     return src;

@@ -165,6 +165,12 @@ public final class DatasetService {
     public interface ModelGateway {
         Asked ask(Principal p, BiStore.Item item, QueryRequest q, boolean explain);
 
+        /** The item's model's rows as the reader, for the pivot engine (see {@link DatasetService#detail}). */
+        QueryService.Result detail(Principal p, BiStore.Item item, QueryRequest q);
+
+        /** As {@link #detail} for a model named by reference, through a consumer when one is given. */
+        QueryService.Result detailModel(Principal p, String model, String consumer, QueryRequest q);
+
         /** As {@link #ask} on a model named by reference ({@code trades@1}, {@code dataset:<name>}): a report bound with {@code model:}. */
         Asked askModel(Principal p, String model, QueryRequest q, boolean explain);
 
@@ -485,6 +491,18 @@ public final class DatasetService {
         }
         ModelGateway g = gateway;
         return g == null ? new Asked(queryItem(p, item, q, explain), null) : g.ask(p, item, q, explain);
+    }
+
+    /**
+     * The model's rows for the pivot engine (a detail query run under {@link QueryService#aggregating}, so it runs as the engine's statement
+     * over those rows): straight to the model's runner as the reader, never through the model query's answer shaping or its result cache.
+     */
+    public QueryService.Result detail(Principal p, BiStore.Item item, QueryRequest q) {
+        ModelGateway g = gateway;
+        if (isModelRef(item)) {
+            return requireGateway().detailModel(p, item.id(), consumerOf(item), q);
+        }
+        return g == null ? queryItem(p, item, q, false) : g.detail(p, item, q);
     }
 
     /** What {@link #asked} would read, from metadata only; empty when the model layer is not running or the question cannot be sized without reading. */

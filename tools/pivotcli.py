@@ -14,7 +14,7 @@
 
 """`drishti.py pivot ...`: the pivot engine from the command line (docs/guides/PIVOT_GUIDE.md; the API: /api/v1/pivot), as the token's user
 sees it: a view's answer (pivot run), its scan estimate (pivot estimate), an export (pivot export), the sources and a source's fields (pivot
-sources, pivot fields) and saved views (pivot views, pivot save). Every figure is the server's. Exit codes: 0, 1 (the server said no),
+sources, pivot fields) and saved views (pivot views, pivot save); custom functions, explain and what-if are tools/pivotfncli.py's. Every figure is the server's. Exit codes: 0, 1 (the server said no),
 2 (usage)."""
 from __future__ import annotations
 
@@ -28,7 +28,11 @@ EPILOG = ("examples:\n  drishti.py pivot sources\n  drishti.py pivot fields trad
           "  drishti.py pivot run --view asha/desk-risk --csv out.csv\n"
           "  drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx\n"
           "  drishti.py pivot export --source trade --rows productType --values \"count()\" --what definition -o view.yaml\n"
-          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views")
+          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views\n"
+          "  drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK\n"
+          "  drishti.py pivot functions approve asha/wret@1 --reason \"reviewed\" --scope group:rates\n"
+          "  drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-30 --to 2026-10-30 --by BOOK\n"
+          "  drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17")
 
 
 def fmt(v) -> str:
@@ -217,8 +221,8 @@ def register(groups, srv, ctx: dict) -> None:
     view_args(r)
     r.add_argument("--csv", metavar="FILE", help="write the grid as CSV instead of printing it")
     ex = r.add_mutually_exclusive_group()
-    ex.add_argument("--exact", action="store_true", help="exact on request: every sketch (approx_count_distinct, approx_percentile, top) computed exactly")
-    ex.add_argument("--approximate", action="store_true", help="count_distinct, median and percentile by their sketches at any size (≈, stated error)")
+    ex.add_argument("--exact", action="store_true", help="exact on request: distinct counts and percentiles from their values at any size")
+    ex.add_argument("--approximate", action="store_true", help="distinct counts and percentiles by their sketches (≈, with a stated error) at any size; never VaR")
     r.set_defaults(func=cmd, pivot_cmd="run")
     e = ps.add_parser("estimate", help="what the view reads before it runs", parents=[srv])
     view_args(e)
@@ -247,3 +251,9 @@ def register(groups, srv, ctx: dict) -> None:
     ru.add_argument("--dates", choices=["latest", "all"], default="latest")
     ru.add_argument("--date", metavar="YYYY-MM-DD", help="refresh: the date (default: the source's latest)")
     ru.set_defaults(func=cmd, pivot_cmd="rollups")
+    import importlib.util  # noqa: WPS433 (custom functions, explain and what-if: tools/pivotfncli.py)
+    import os  # noqa: WPS433
+    spec = importlib.util.spec_from_file_location("pivotfncli", os.path.join(os.path.dirname(os.path.abspath(__file__)), "pivotfncli.py"))
+    fncli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fncli)
+    fncli.register(ps, srv, ctx, view_args, body)

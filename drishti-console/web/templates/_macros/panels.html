@@ -304,8 +304,8 @@
 {% if d.more %}<p class="pnl-note">{{ d.more }} earlier events not shown</p>{% endif %}
 {%- endmacro %}
 
-{# A pivot by several fields (Sutra by: [a, b]): the rows nest; static/js/tree-rows.js draws them with the Pivot tab's grid
-   (pivot-grid.js: ▸/▾ groups, subtotals) from data-pv-tree, and this plain table stays for pages without it. #}
+{# A pivot by several fields (Sutra by: [a, b]): the rows nest; every figure is the pivot engine's (ChartBinder). static/js/tree-rows.js
+   draws them with the pivot grid (pivot-grid.js: + and − on the groups, subtotals) from data-pv-tree, and this plain table stays for pages without it. #}
 {% macro pivot(d) -%}
 {% if d.levels %}<div class="pv-tree-host" data-pv-tree="{{ d | tojson | forceescape }}">{{ pivot_table(d) }}</div>{% else %}{{ pivot_table(d) }}{% endif %}
 {%- endmacro %}

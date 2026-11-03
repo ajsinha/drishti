@@ -64,6 +64,7 @@ plugin: delta
 kinds: [news-topic, listed-company, news, quote]
 settings:
   root: mem://news
+  domain: ""          # the tables sit at mem://news/<kind>: without it the pack's template adds domain: news
 ```
 
 The store and its tables, in the in-memory lake's own file `config/engines/memory-lake.yaml` (with its switch,

@@ -228,7 +228,7 @@ Schema is generated from the Java records and checked against real views ([VIEWM
 
 **The module layout.** One Spring Boot application on virtual threads, built from Maven modules that depend in one direction: the
 plugin SPI (`drishti-api`, no Spring), the Rachana grammar and inference, the entity graph, the engine, identity, packs, the lake
-engines (`drishti-deltalake`, `drishti-iceberg`, `drishti-lakeio`, `drishti-lakeload`), compute, Drishti\*net, the AI layer, and one
+engines (`drishti-deltalake`, `drishti-iceberg`, `drishti-lakeio`, `drishti-lakeload`), the in-memory lake (`drishti-memlake`), compute, Drishti\*net, the AI layer, and one
 module per connector. The console is a separate Python web application
 ([ARCHITECTURE.md › Module layout](docs/architecture/ARCHITECTURE.md#13-module-layout-java)).
 

@@ -55,13 +55,23 @@ _DOC_CATEGORY = {"connectors": "data", "contracts": "data", "admin": "operate", 
 
 
 _WORDS = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen",
-          "seventeen", "eighteen", "nineteen", "twenty", "twenty-one", "twenty-two", "twenty-three", "twenty-four", "twenty-five", "twenty-six", "twenty-seven", "twenty-eight", "twenty-nine", "thirty"]
+          "seventeen", "eighteen", "nineteen"]
+_TENS = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+
+
+def _word(n: int) -> str:
+    """A number below a hundred in words ("thirty-two"); the figure itself from a hundred."""
+    if n < 20:
+        return _WORDS[n]
+    if n < 100:
+        return _TENS[n // 10] + ("-" + _WORDS[n % 10] if n % 10 else "")
+    return str(n)
 
 
 def tutorial_count_word(docs_dir: Path) -> str:
     """How many written tutorials the docs hold (``docs/tutorials/NN-*.md``), in a capitalised word ("Eighteen"): the cards that name the number read it from here."""
     n = len(list((Path(docs_dir) / "tutorials").glob("[0-9][0-9]-*.md"))) if docs_dir else 0
-    return (_WORDS[n] if n < len(_WORDS) else str(n)).capitalize()
+    return _word(n).capitalize()
 
 
 def github_slug(text: str) -> str:

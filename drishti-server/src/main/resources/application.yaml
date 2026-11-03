@@ -159,10 +159,11 @@ drishti:
     # weights: {connector.idmaps: 20, connector.columns: 20, connector.documents: 6, connector.parts: 4, engine.answers: 20, engine.layouts: 10, small: 20}
     squeeze-at: 0.85                 # the heap after a collection past this share of -Xmx halves the connectors' and small pools for a minute
   admission:                         # busy protection (docs/admin/OPERATIONS.md "Busy protection"): new heavy work waits politely instead of an out-of-memory
-    enabled: true                    # false: nothing waits (Admin -> Health still shows the readings)
+    enabled: ${DRISHTI_ADMISSION_ENABLED:true}  # false: nothing waits (Admin -> Health still shows the readings)
     memory-warn: 0.80                # the heap after the last collection past this share of -Xmx: Health says "getting full"
     memory-refuse-heavy: 0.85        # past this, new date loads, downloads, BI runs and bulk loads wait (503 DRS-9502 to DRS-9505, Retry-After)
     memory-refuse-sign-in: 0.92      # past this, new sign-ins wait too (DRS-9501); people signed in keep working
+    memory-free-min-mb: 768          # the memory levels act only while the heap left after the last collection is also under this
     queued-loads: 2                  # date loads that may wait behind the running ones (each engine's load-threads) before a new one waits
     open-heap-refuse: 1.2            # new date loads wait when the open dates' heap passes this share of its safety net (the dates in use are well over it)
     request-handlers: 200            # requests answered at once before the server counts as full
@@ -339,6 +340,9 @@ drishti:
       - /api/v1/pivot/compare
       - /api/v1/pivot/rows
       - /api/v1/pivot/export
+      - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
+      - /api/v1/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
+      - /api/v1/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
       - /api/v1/command
       - /api/v1/forms/*/*/compile        # query by form: writes the criteria out as a search command, nothing else
       - /api/v1/changes/preview          # write-back's review sheet: what a change would do, written nowhere
@@ -386,6 +390,8 @@ drishti:
         description: "Save, share and delete your VaR baskets, capture VaR and exposure results, keep your what-if sandboxes and cancel your own computations (VAR_GUIDE.md, EXPOSURE_GUIDE.md, DATA_ARCHITECTURE.md). Your own items only (an administrator's token may also delete anyone's basket, as its user may); the bank's data is never changed."
         allow:
           - POST /api/v1/var/baskets
+          - POST /api/v1/frtb/playground/recipes   # save a FRTB-SA playground recipe (yours, replayable)
+          - POST /api/v1/simm/playground/recipes   # save a SIMM playground recipe
           - DELETE /api/v1/var/baskets/*/*
           - DELETE /api/v1/var/baskets/*
           - POST /api/v1/var/captures
@@ -489,6 +495,7 @@ drishti:
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
         allow:
           - POST /api/v1/packs/*/loads
+          - POST /api/v1/admin/lakes/memory/refill/*   # run an in-memory table's refill job now (drishti.py lake memory refill; the server still requires an administrator)
       "[node:drain]":
         description: "Drain this server before it stops and take it back (the stop hooks and the rolling upgrade runner, CLUSTER_DEPLOYMENT.md section 10.1): forwarded work and VaR shards handed to other members, readiness out of service. Needs the admin role at call time."
         allow:

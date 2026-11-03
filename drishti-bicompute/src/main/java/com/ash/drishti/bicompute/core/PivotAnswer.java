@@ -425,7 +425,7 @@ final class PivotAnswer {
 
     /** Two answers of one view on two dates: the differences per cell and measure, new and gone cells marked. */
     @SuppressWarnings("unchecked")
-    static Map<String, Object> compare(Map<String, Object> a, Map<String, Object> b) {
+    public static Map<String, Object> compare(Map<String, Object> a, Map<String, Object> b) {
         Map<String, Map<String, Object>> ca = (Map<String, Map<String, Object>>) a.get("cells");
         Map<String, Map<String, Object>> cb = (Map<String, Map<String, Object>>) b.get("cells");
         Map<String, Object> diff = new LinkedHashMap<>();

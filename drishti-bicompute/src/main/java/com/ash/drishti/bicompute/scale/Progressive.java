@@ -21,6 +21,7 @@ import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.bicompute.core.ScaleOptions;
 import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.functions.Kll;
+import com.ash.drishti.bicompute.functions.Sketches;
 import com.ash.drishti.bicompute.spi.Kind;
 import com.ash.drishti.bicompute.spi.PivotProvider;
 import com.ash.drishti.bicompute.spi.Viewer;
@@ -30,6 +31,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
 
 /**
  * Progressive answers (PIVOT_ENGINE.md section 9.8, decision 7): a view estimated over {@code after-ms} (2 s) answers twice, first ≈ from a
@@ -98,9 +100,11 @@ public final class Progressive {
         if ("var".equals(p.id())) {
             return "VaR is never sampled: it shows when exact";
         }
-        for (PivotView.Value val : view.values()) {
-            FunctionCall f = Functions.parse(val.measure(), val.label(), p);
-            if (f.fn().kind() == Kind.HOLISTIC) {
+        boolean exact = o != null && o.exactness() == ScaleOptions.Exactness.EXACT;
+        PivotView prepared = p.prepare(v, view);
+        for (PivotView.Value val : prepared.values()) {
+            FunctionCall f = parsed(val, p);
+            if (f != null && f.fn().kind() == Kind.HOLISTIC && (exact || !Sketches.hasSketch(f.fn()))) {
                 return f.label() + " is holistic: it is never sampled, the answer shows when exact";
             }
         }
@@ -134,12 +138,14 @@ public final class Progressive {
         PivotProvider p = core.provider(view.source());
         List<PivotView.Value> vals = new ArrayList<>(view.values());
         Map<String, String[]> companions = new LinkedHashMap<>();       // label -> {function, field, count label, var label}
+        List<PivotView.Value> prepared = p.prepare(v, view).values();   // a document source's paths and once-per-parent forms, one per value
         int i = 0;
         for (PivotView.Value val : view.values()) {
-            FunctionCall f = Functions.parse(val.measure(), val.label(), p);
-            String fn = f.fn().name();
-            if (("sum".equals(fn) || "avg".equals(fn)) && f.inputs().size() == 1) {
-                String x = f.inputs().get(0);
+            FunctionCall f = i < prepared.size() ? parsed(prepared.get(i), p) : null;
+            String fn = f == null ? "" : f.fn().name();
+            Matcher one = ONE_ARG.matcher(val.measure());
+            if (("sum".equals(fn) || "avg".equals(fn)) && f.inputs().size() == 1 && one.matches()) {
+                String x = one.group(2).strip();                       // the argument as the view wrote it (a field or a path)
                 String nl = COMPANION + "n" + i;
                 String vl = COMPANION + "v" + i;
                 vals.add(new PivotView.Value("count(" + x + ")", nl, null));
@@ -165,7 +171,7 @@ public final class Progressive {
         }
         am.put("values", vm);
         PivotView augmented = PivotView.parse(am);
-        ScaleOptions so = (o == null ? ScaleOptions.AUTO : o).sample(settings.sampleFraction());
+        ScaleOptions so = new ScaleOptions(ScaleOptions.Exactness.APPROXIMATE, settings.sampleFraction(), true);   // a sample's quantiles by sketch
         Map<String, Object> a = core.query(v, augmented, so);
         double f = fraction(a, v, view);
         Map<String, Map<String, Object>> cells = (Map<String, Map<String, Object>>) a.get("cells");
@@ -209,7 +215,7 @@ public final class Progressive {
                                 iv = new double[] {est - hw, est + hw};
                             }
                         }
-                        case "approx_median", "approx_percentile" -> {
+                        case "median", "percentile" -> {
                             est = x;
                             long members = cell.get("members") instanceof Number m ? m.longValue() : 0;
                             double dkw = members > 0 ? Math.sqrt(Math.log(2 / 0.05) / (2.0 * members)) : 1;
@@ -218,7 +224,7 @@ public final class Progressive {
                         default -> est = null;
                     }
                 }
-                if (est == null && !"approx_median".equals(fn) && !"approx_percentile".equals(fn)) {
+                if (est == null && !"median".equals(fn) && !"percentile".equals(fn)) {
                     put(values, raw, label, shownAs, null);
                     notes.put(label, "computing: no honest figure from a sample; the exact answer follows");
                     continue;
@@ -288,6 +294,19 @@ public final class Progressive {
             raw.put(label, x);
         } else {
             values.put(label, x);
+        }
+    }
+
+    /** {@code sum(x)} or {@code avg(x)} of one argument, as written. */
+    private static final java.util.regex.Pattern ONE_ARG = java.util.regex.Pattern.compile("\\s*(sum|avg)\\s*\\(([^,()]+)\\)\\s*",
+            java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    /** A prepared value as a function call, or null when it is not one of the built-ins (a custom function: "computing" until exact). */
+    private static FunctionCall parsed(PivotView.Value val, PivotProvider p) {
+        try {
+            return Functions.parse(val.measure(), val.label(), p);
+        } catch (RuntimeException e) {
+            return null;
         }
     }
 

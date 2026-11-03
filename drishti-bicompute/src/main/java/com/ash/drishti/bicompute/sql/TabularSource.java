@@ -55,8 +55,27 @@ public interface TabularSource {
     /** What every cell shares in its provenance (the route, the connector, the row rules in words). */
     Map<String, Object> notes();
 
+    /**
+     * The note that says whether user code (Python custom functions) may read the source's rows ({@code false} for memory-only data,
+     * PIVOT_ENGINE.md decision 4); absent: allowed.
+     */
+    String USER_CODE = "userCode";
+
     /** The relation the plan reads, made ready in the executor if it must be (a staged table is read once and kept). */
     Relation relation(DuckDbExecutor exec);
+
+    /**
+     * The relation one plan reads: a document source unnests the lists the plan's grain steps into (one row per leg) and extracts its
+     * path fields; every other source reads the same relation for every plan.
+     */
+    default Relation relation(DuckDbExecutor exec, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+        return relation(exec);
+    }
+
+    /** The view as this source answers it ({@link PivotProvider#prepare}); the default: as it is. */
+    default com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+        return view;
+    }
 
     /**
      * A relation: a FROM item and its bound parameters, and the person's row rules (a SQL condition over its columns and its parameters;

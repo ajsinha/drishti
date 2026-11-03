@@ -101,7 +101,8 @@ public final class ClusterRoute implements PivotCore.Hooks {
 
     @Override
     public Optional<PivotCore.Routed> route(Viewer v, PivotProvider p, AggregationPlan plan, ScaleOptions o) {
-        if (!settings.enabled() || o.sampled() || plan.shard() != null || !p.capabilities().shards() || !OrderedMerge.mergeable(plan)) {
+        if (!settings.enabled() || o.sampled() || plan.shard() != null || !p.capabilities().shards() || !OrderedMerge.mergeable(plan)
+                || plan.functions().stream().anyMatch(f -> f.id().startsWith("fn:"))) {          // custom functions are resolved per reader here
             return Optional.empty();
         }
         List<String> nodes = peers.nodes();
@@ -115,7 +116,7 @@ public final class ClusterRoute implements PivotCore.Hooks {
             }
         }
         RollupSource src = parted.get(p.id());
-        List<RollupSource.Part> parts = src == null ? List.of() : src.parts(plan.source(), plan.date());
+        List<RollupSource.Part> parts = src == null ? List.of() : src.parts(plan.source(), plan.date(), plan);
         List<PartialGather.Share> shares = new ArrayList<>();
         Map<String, Map<String, Object>> requests = new LinkedHashMap<>();
         String how;

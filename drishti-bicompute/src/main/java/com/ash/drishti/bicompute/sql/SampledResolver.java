@@ -124,7 +124,21 @@ public final class SampledResolver implements TabularSource.Resolver {
 
             @Override
             public Relation relation(DuckDbExecutor exec) {
-                Relation r = s.relation(exec);
+                return sampled(s.relation(exec));
+            }
+
+            /** A document plan's relation (its lists unnested) sampled the same way: its rows, not its documents. */
+            @Override
+            public Relation relation(DuckDbExecutor exec, com.ash.drishti.bicompute.core.AggregationPlan plan) {
+                return sampled(s.relation(exec, plan));
+            }
+
+            @Override
+            public com.ash.drishti.bicompute.core.PivotView prepare(com.ash.drishti.bicompute.core.PivotView view) {
+                return s.prepare(view);
+            }
+
+            private Relation sampled(Relation r) {
                 String from = "(SELECT * FROM " + r.from() + " AS \"s\" USING SAMPLE " + pct + " PERCENT (" + method + ", " + SEED + "))";
                 return new Relation(from, r.params(), r.rowRules(), r.ruleParams());
             }

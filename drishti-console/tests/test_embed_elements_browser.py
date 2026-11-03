@@ -130,7 +130,8 @@ class Stack:
         self.tmp, self.procs, self.results = tmp, {}, Path(os.environ.get("DRISHTI_ELEMENTS_RESULTS") or tmp / "results.jsonl")
 
     def start_console(self):
-        env = dict(os.environ, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true")
+        # its temp folders in the test's own folder: the crash below kills its workers before they can remove theirs
+        env = dict(os.environ, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_EMBED_ENABLED="true", DRISHTI_CONSOLE_TMP_DIR=str(self.tmp / "console-tmp"))
         args = [sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"]
         # its own process group: the console runs several uvicorn workers, and a crash must take them all (a killed parent alone leaves its
         # workers serving the port, so the "restarted" console would be the old one)
@@ -595,7 +596,7 @@ def inject(h, html):
 def test_enhancers_are_registered_and_the_host_page_is_untouched(host):
     h = host()
     h.open()
-    h.until(lambda: h.js("!!(window.drishtiModules && window.drishtiModules.tables && window.drishtiModules.pivot)"), 20, "modules registered")
+    h.until(lambda: h.js("!!(window.drishtiModules && window.drishtiModules.tables && window.drishtiModules.treeRows && window.drishtiModules.pivotGrid)"), 20, "modules registered")
     show(h, "netting-set", NETTING_SET)                                    # a live view with a table (a valuation has none)
     # one namespace and none of the globals the console's scripts publish on its own pages
     assert h.js("[window.drishtiAbout, window.drishtiPivot, window.drishtiCharts, window.drishti, window.drishtiPivotEngine, window.drishtiPivotGrid]") == [None] * 6

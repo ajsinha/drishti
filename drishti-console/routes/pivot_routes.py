@@ -14,7 +14,7 @@
 
 """The pivot screen (docs/guides/PIVOT_GUIDE.md; mock-up A of docs/architecture/PIVOT_ENGINE.md section 25): ``PIVOT <GO>``,
 ``PIVOT <table> <GO>`` (a table of the Data view, or ``var``), ``PIVOT @owner/name <GO>`` (a saved view), Views → Pivot and "Pivot" on a
-table. The page is a shell that web/static/js/pivot-core.js and pivot.js fill: the field list and its four zones on the right, the grid with
+table. The page is a shell that web/static/js/pivot-grid.js and pivot.js fill: the field list and its four zones on the right, the grid with
 nested rows opened with + and −, the scan-estimate bar, the provenance popover, a chart of a selection and the Export menu. Every figure is
 the server's (``/api/v1/pivot``, asked as the person through the same-origin proxy ``/api/pivot/...``); the console only draws."""
 from __future__ import annotations
@@ -25,6 +25,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse, Response
 
 from core.backend import BackendError
+from core.csrf import json_body
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -76,10 +77,7 @@ async def _call(request: Request, method: str, path: str, body=None, **params):
 
 
 async def _body(request: Request) -> dict:
-    try:
-        b = await request.json()
-    except ValueError:
-        b = {}
+    b = await json_body(request)
     return b if isinstance(b, dict) else {}
 
 
@@ -108,7 +106,7 @@ async def export(request: Request):
 
 @router.post("/api/pivot/{action}")
 async def post(request: Request, action: str):
-    if action not in ("query", "estimate", "expand", "compare", "rows", "views", "promote"):
+    if action not in ("query", "estimate", "expand", "compare", "rows", "inline", "views", "promote", "explain", "whatif", "functions"):
         return JSONResponse({"detail": "no such pivot action"}, status_code=404)
     return await _call(request, "POST", "/" + action, await _body(request))
 
@@ -121,6 +119,12 @@ async def provenance(request: Request, pid: str, cell: str = ""):
 @router.get("/api/pivot/cells")
 async def cells(request: Request, ref: str = ""):
     return await _call(request, "GET", "/cells", ref=ref)
+
+
+@router.get("/api/pivot/paths")
+async def paths(request: Request, source: str = ""):
+    """An administrator's suggestions: the document paths people typed on a source, most used first."""
+    return await _call(request, "GET", "/paths", source=source)
 
 
 @router.get("/api/pivot/views")
@@ -140,3 +144,27 @@ async def delete_view(request: Request, name: str):
         return Response(status_code=204)
     except BackendError as e:
         return _problem(e)
+
+
+# ---- custom functions (PIVOT_GUIDE.md, custom functions): the playground's check, the list, a version, approval -----------------------------
+
+@router.get("/api/pivot/functions")
+async def functions(request: Request):
+    return await _call(request, "GET", "/functions")
+
+
+@router.post("/api/pivot/functions/test")
+async def function_test(request: Request):
+    return await _call(request, "POST", "/functions/test", await _body(request))
+
+
+@router.get("/api/pivot/functions/{owner}/{name}")
+async def function_get(request: Request, owner: str, name: str, version: str = ""):
+    return await _call(request, "GET", f"/functions/{owner}/{name}", version=version)
+
+
+@router.post("/api/pivot/functions/{owner}/{ref}/{op}")
+async def function_op(request: Request, owner: str, ref: str, op: str):
+    if op not in ("submit", "approve", "revoke"):
+        return JSONResponse({"detail": "no such function action"}, status_code=404)
+    return await _call(request, "POST", f"/functions/{owner}/{ref}/{op}", await _body(request))

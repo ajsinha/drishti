@@ -226,6 +226,23 @@ public enum ErrorCode {
      * other node could answer its share): its rows are missing, so no figure is shown, never a figure from the other nodes alone.
      */
     PIVOT_NODE_MISSING("DRS-5720", 504),
+    /** A custom pivot function refused as written: its definition, code, inputs, kind or name (an official measure's name is never taken). */
+    PIVOT_FUNCTION_INVALID("DRS-5710", 400),
+    /** A custom pivot function whose harness did not pass (split-and-merge differs from one pass, non-deterministic, too slow, too large). */
+    PIVOT_FUNCTION_HARNESS("DRS-5711", 422),
+    /**
+     * Approval of a custom pivot function: its author approving it, someone who is not an approver, or a function not approved for the
+     * caller (private to its author) or withdrawn.
+     */
+    PIVOT_FUNCTION_APPROVAL("DRS-5712", 403),
+    /** A custom function's language switched off on this server ({@code drishti.pivot.functions.python.enabled}, {@code java.enabled}, ...). */
+    PIVOT_FUNCTION_OFF("DRS-5713", 404),
+    /** A custom function past a limit: a holistic cell over its rows or megabytes, a state over its bound, a call over its time. */
+    PIVOT_FUNCTION_LIMIT("DRS-5714", 422),
+    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (PIVOT_ENGINE.md decision 14). */
+    PIVOT_FUNCTION_OFFICIAL("DRS-5715", 403),
+    /** An explanation or a what-if the engine cannot make as asked (two cells of different measures, a holistic measure without its provider's steps). */
+    PIVOT_EXPLAIN("DRS-5716", 400),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

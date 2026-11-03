@@ -64,6 +64,19 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..", "org.springframework..",
                     "com.ash.drishti.identity..", "com.ash.drishti.rachana..", "com.ash.drishti.packs..");
 
+    /** The in-memory lake is plain Java: no Spring, nothing of the server (the server wires it in, server.memlake). */
+    @ArchTest
+    static final ArchRule memoryLakeIsPlainJava = noClasses()
+            .that().resideInAPackage("com.ash.drishti.memlake..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..");
+
+    /** The lake engines and connectors reach mem:// through lakeio's StorageProviders, never through the in-memory lake's module. */
+    @ArchTest
+    static final ArchRule lakeReadersDoNotSeeTheMemoryLake = noClasses()
+            .that().resideInAnyPackage("com.ash.drishti.lakeio..", "com.ash.drishti.deltalake..", "com.ash.drishti.iceberg..",
+                    "com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.api..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.memlake..");
+
     @ArchTest
     static final ArchRule controllersOnlyInServer = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.server..")

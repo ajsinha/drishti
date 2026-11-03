@@ -19,33 +19,29 @@ import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.bicompute.core.ScaleOptions;
-import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.functions.Sketches;
 import com.ash.drishti.bicompute.spi.PivotProvider;
 import com.ash.drishti.bicompute.spi.Viewer;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 /**
- * Exact or ≈ for distinct counts, percentiles and top values (PIVOT_ENGINE.md sections 5.2 and 5.3). A view names a measure as it wants it
- * shown; how it is computed follows the request:
+ * Exact or ≈ for distinct counts and percentiles (PIVOT_ENGINE.md sections 5.2 and 5.3; FUNCTION_CATALOGUE.md section 4). A function has
+ * one name ({@code distinct}, {@code median}, {@code percentile}); its sketch is how it is computed, never a second name:
  *
  * <ul>
- *   <li><b>exact on request</b> ({@code "exact": true}): every sketch is replaced by its exact form ({@code approx_count_distinct} by
- *       {@code count_distinct}, {@code approx_percentile} by {@code percentile}, {@code top} by {@code top_exact});</li>
- *   <li><b>approximate</b> ({@code "exact": false}): every exact distinct count and percentile is answered by its sketch;</li>
- *   <li><b>auto</b> (the default): exact while the view reads at most {@code approximate-above-rows} rows (exact is cheap there), its
- *       sketch above, with a note saying which and how to ask for exact.</li>
+ *   <li><b>exact on request</b> ({@code "exact": true}): computed from the values at any size;</li>
+ *   <li><b>approximate</b> ({@code "exact": false}): answered by the sketch, with its stated error;</li>
+ *   <li><b>auto</b> (the default): exact while the view reads at most {@code approximate-above-rows} rows (exact is cheap there), the
+ *       sketch above, with a note saying so and how to ask for exact.</li>
  * </ul>
  *
- * The label stays the view's, so sorting, top N and references are unchanged; the answer's measure says ≈ and its stated error.
+ * Only the built-ins of a provider that evaluates them are ever sketched: a provider's own measures (VaR, ES) and custom functions are
+ * not, so VaR is never approximate. The label stays the view's; the id gains {@code ≈}, so the cache and rollups keep the two apart.
  */
 public final class ScalePolicy implements PivotCore.Hooks {
-
-    /** The exact functions that have a sketch: the sketch's name is {@code approx_} and the same arguments. */
-    static final Set<String> TWINNED = Set.of("count_distinct", "median", "percentile");
 
     private volatile long approximateAboveRows;
 
@@ -61,33 +57,31 @@ public final class ScalePolicy implements PivotCore.Hooks {
     @Override
     public void functions(Viewer v, PivotView view, PivotProvider p, ScaleOptions o, List<FunctionCall> fns,
             Supplier<PivotProvider.Estimate> estimate, List<String> notes) {
+        if (o.exactness() == ScaleOptions.Exactness.EXACT || !p.capabilities().builtIns() || "var".equals(p.id())) {
+            return;
+        }
+        long rows = -1;
         for (int i = 0; i < fns.size(); i++) {
             FunctionCall f = fns.get(i);
-            if (o.exactness() == ScaleOptions.Exactness.EXACT && f.fn() instanceof Sketches.Sketch sk) {
-                FunctionCall e = Functions.parse(sk.exactText(f.inputs()), f.label(), p);
-                fns.set(i, e);
-                notes.add(f.label() + ": computed exactly as asked (" + e.id() + "), not by its sketch");
-                continue;
-            }
-            String name = f.fn().name().toLowerCase(Locale.ROOT);
-            if (!TWINNED.contains(name) || !p.capabilities().builtIns() || o.exactness() == ScaleOptions.Exactness.EXACT) {
+            if (!Sketches.hasSketch(f.fn())) {
                 continue;
             }
             boolean approx = o.exactness() == ScaleOptions.Exactness.APPROXIMATE;
-            long rows = -1;
             if (!approx && approximateAboveRows > 0) {
-                rows = estimate.get().rows();
+                if (rows < 0) {
+                    rows = estimate.get().rows();
+                }
                 approx = rows > approximateAboveRows;
             }
-            if (!approx) {
+            Optional<FunctionCall> s = approx ? Sketches.approximate(f) : Optional.empty();
+            if (s.isEmpty()) {
                 continue;
             }
-            FunctionCall s = Functions.parse("approx_" + f.id(), f.label(), p);
-            fns.set(i, s);
-            String err = s.fn() instanceof Sketches.Sketch sk ? sk.error() : "a stated error";
-            notes.add(f.label() + ": ≈ by its sketch, " + err + (rows > 0 ? String.format(Locale.ROOT, "; the view reads ≈%,d rows, more than "
-                    + "%,d (drishti.pivot.sketches.approximate-above-rows)", rows, approximateAboveRows) : " (asked approximate)")
-                    + "; ask for exact to compute it from the values");
+            fns.set(i, s.get());
+            String err = s.get().fn() instanceof Sketches.Sketch sk ? sk.error() : "a stated error";
+            notes.add(f.label() + ": ≈ by its sketch, " + err + (rows > 0 && o.exactness() != ScaleOptions.Exactness.APPROXIMATE
+                    ? String.format(Locale.ROOT, "; the view reads ≈%,d rows, more than %,d (drishti.pivot.sketches.approximate-above-rows)", rows,
+                            approximateAboveRows) : " (asked approximate)") + "; ask for exact to compute it from the values");
         }
     }
 }

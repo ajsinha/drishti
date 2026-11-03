@@ -31,6 +31,9 @@ os.environ.setdefault("DRISHTI_PACKS_EXTRA_DIRS", str(CONSOLE.parent / "examples
 # (drishti.disk.min-free-gb, min-free-percent), so a busy run's scratch never refuses a date; a test of the guard sets its own
 os.environ.setdefault("DRISHTI_DISK_MINFREEGB", "1")
 os.environ.setdefault("DRISHTI_DISK_MINFREEPERCENT", "1")
+# their servers run with -Xmx768m, where the heap after a collection sits past busy protection's 85% in its steady state: busy
+# protection is off for them (drishti.admission.enabled); its own tests use a stand-in server or set it themselves
+os.environ.setdefault("DRISHTI_ADMISSION_ENABLED", "false")
 if not os.environ.get("DRISHTI_CONSOLE_DATA_DIR"):
     # what the console keeps between runs (user stamps, net/servers.json): a folder of the test run's own, never the repository's data/
     import atexit
@@ -1139,6 +1142,36 @@ def _show_everything_in_browsers():
 
     Browser.new_context, Browser.new_page = wrapped_context, wrapped_page
     Browser._drishti_show_everything = True
+    _sign_in_waits_like_a_navigation()
+
+
+def _sign_in_waits_like_a_navigation():
+    """The sign-in page sends its form in the background (static/js/login-busy.js, busy protection), so a click on Sign in starts no
+    navigation for Playwright to wait on, and a helper's wait_for_url("**/bi") matches the sign-in page's own ?next=/bi at once. A click
+    on a submit button of the sign-in page waits, as for a navigation, until the form has been answered: the page's data-signing-in mark
+    gone (the next page, the page with its error, or the busy countdown)."""
+    from playwright.sync_api import Error, Page
+
+    click = Page.click
+
+    def wrapped_click(self, selector, *a, **k):
+        on_sign_in = "/login" in (self.url or "") and "submit" in str(selector)
+        out = click(self, selector, *a, **k)
+        if on_sign_in:
+            for _ in range(600):
+                try:
+                    if not self.evaluate("document.documentElement.hasAttribute('data-signing-in')"):
+                        break
+                except Error:                                  # the page is navigating: its context went away mid-question
+                    pass
+                self.wait_for_timeout(50)
+            try:
+                self.wait_for_load_state("load")
+            except Error:
+                pass
+        return out
+
+    Page.click = wrapped_click
 
 
 _show_everything_in_browsers()

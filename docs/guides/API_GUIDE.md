@@ -1565,6 +1565,7 @@ Every change is audited (`pack-upload-checked`, `pack-deployed`, `pack-rolled-ba
 | `GET` | `/admin/commands/history?scope=&name=&limit=200` | The changes, newest first: `{items[{scope, name, grantee, on, reason, actor, at, node}]}` (`scope` and `name` together narrow it to one switch). Admin; never a token. |
 | `GET` | `/admin/engines` | Admin → Engines ([OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)): every compute engine of this server, `{node, dir, running, installed, memoryBytes, heapMaxBytes, engines[{id, title, about, installed, state, reason, on, liveOn, restartNeeded, memoryBytes, threads, datesOpen, inFlight, needs[], uses[], neededBy[], usedBy[], source, alias, overridden, file, fileExists, checksum, hides{words, menus, help, bi, cli, playgrounds, ...}}], cluster{on, self, peers{node: {engine: state}}, available{engine: bool}}}`. `state` is running, off, starting, stopping, blocked (with `reason`) or not installed; `source` is where the switch's value comes from. Admin; never a token. |
 | `POST` | `/admin/engines` | `{"reason": "...", "node": "", "changes": [{"engine": "frtb-sa", "on": false}], "withNeeds": false, "withDependents": false, "expected": {"frtb-sa": "<checksum read>"}}`: the batch, checked as a whole for the dependencies (`409 DRS-1021` in words, nothing changed); each change written to the engine's file (`409 DRS-1023` when the file changed since `expected` or the folder cannot be written) and taking effect live (off drains the requests in flight up to `drishti.engines.drain`), or `restart needed` (the in-memory lake on), or `written` (a setting above the file still decides). The answer is the list as `GET` gives it plus `outcomes[{engine, on, outcome, detail}]`. `node`: another node of the cluster, sent there signed (`forwardedTo` in the answer). Audited as `engine-enabled`, `engine-disabled`, `engine-refused`. A reason is required. Admin; never a token. |
+| `POST` | `/net/engines` | The same batch as `POST /admin/engines` (its `node` empty), sent by another node's Admin → Engines for an administrator there and signed with the cluster key: applied on this node, answered as `POST /admin/engines` answers. A call not signed by a node of this cluster is `403`. Node-only; never a token. |
 | `GET` | `/admin/engines/history?limit=100` | The changes, newest first: `{node, changes[{at, engine, change, who, why, node, outcome, detail}]}`; an edit of the file by hand is `edited in the file` with no `who` or `why`. Admin; never a token. |
 | `GET` | `/admin/engines/{id}/impact` | What turning the engine off hides: `{engine, title, hides{...}, neededBy[], usedBy[], elsewhere[nodes running it], live}`. Admin; never a token. |
 | `GET` | `/about`, `/public/about` | Gain `engines`: `[{id, title, here, cluster}]`, each engine running on this node (`here`) and on any reachable node (`cluster`); the console shows an engine's words, menus and Help only when `cluster` is true. |
@@ -2047,6 +2048,13 @@ and the fix for the codes that need more than the meaning.
 | DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
 | DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
 | DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
+| DRS-5710 | 400 | pivot: function invalid | a custom function refused as written: its definition, code, inputs, kind or name ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)) |
+| DRS-5711 | 422 | pivot: harness failed | a custom function whose harness did not pass (split-and-merge differs from one pass, not deterministic, too slow, too large): not saved, with the first failure |
+| DRS-5712 | 403 | pivot: approval | the author approving their own function, someone who is not an approver, a function not approved for the caller, a plug-in jar changed since its approval |
+| DRS-5713 | 404 | pivot: function language off | the function's language is switched off on this server (Python and Java plug-ins as shipped), or Python asked to read memory-only data |
+| DRS-5714 | 422 | pivot: function limit | a custom function past a limit: a state over its bound, a call over its time (its worker stopped), every worker busy |
+| DRS-5715 | 403 | pivot: official | a custom function in an official run, report or sign-off, or named as an official measure |
+| DRS-5716 | 400 | pivot: explain | an explanation or a what-if the engine cannot make as asked (no `by`, a cell that already fixes it, an empty overlay, a what-if on VaR) |
 | DRS-5720 | 504 | pivot: a node's share missing | a view computed across the cluster where a node's share had no answer by `drishti.pivot.cluster.deadline-seconds` and no other node could answer it: no figure is shown, never one from the other nodes alone |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
@@ -3286,11 +3294,14 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `POST /api/v1/pivot/expand` | `{view, axis: rows, path: [[dim, value], ...], by}`: the view with that node open (only its children computed; the rest from the cache) |
 | `POST /api/v1/pivot/compare` | `{view, otherDate}`: `{answer, other, diff}` (per cell: `delta` per measure, or `status` new or gone) |
 | `POST /api/v1/pivot/rows` | `{view, coords, offset, limit}`: a cell's member rows, as the caller may see them |
+| `GET /api/v1/pivot/cells/{owner}/{name}/{rest}` | the same cell as a path (`/cells/asha/desk-risk/@3/S[DESK=EMEA]`): what a spreadsheet link or a Sutra reference uses |
+| `GET /api/v1/pivot/paths?source=` | an administrator's: the document paths people typed on a source, most used first, each with how it becomes a column read (promote it in the connector's `layout.<kind>.columns`, or add it to a BI dataset as `path:`) |
+| `POST /api/v1/pivot/inline` | `{fields: [{name, type}], rows: [[…]], view}`: rows the caller already holds (a chart of a table's shown rows; at most 100,000) aggregated by the engine's built-ins; a bad field or too many rows is DRS-5701 |
 | `GET /api/v1/pivot/cells?ref=pivot://owner/name@v/Measure[DIM=V, ...]` | one cell of a saved view by reference: `value`, `found` (false with "not in the view"), `newerVersion` |
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
 | `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |
 | `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
-| `POST /api/v1/pivot/query` with `"exact": true` or `false` beside the view | exact on request (every sketch computed exactly), or distinct counts and percentiles by their sketches at any size; a sketch measure carries `error` (`±1.6% (HyperLogLog, 4,096 registers, one standard error)`) and `exact: false` |
+| `POST /api/v1/pivot/query` with `"exact": true` or `false` beside the view | `distinct`, `median` and `percentile` exact on request at any size, or by their sketches (≈) at any size (by default ≈ above `sketches.approximate-above-rows`; never VaR); a sketched measure carries `kind: sketch`, an id ending in `≈`, `error` (`±1.6% (HyperLogLog, 4,096 registers, one standard error)`) and `exact: false` |
 | `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample: each cell `approximate: true`, `intervals` per measure, "computing" notes for what a sample cannot state; never for VaR or a holistic measure; only when the estimate is over `progressive.after-ms`), then `exact`; `error` with `{error, code}` |
 | `GET /api/v1/pivot/rollups` | `{definitions, built: [{id, source, grain, functions, date, version, refreshedAt, lastRefresh, rows, bytes, partitions}], advice: [{source, grain, functions, asked, averageMs, words}]}` |
 | `POST /api/v1/pivot/rollups`, `DELETE /api/v1/pivot/rollups/{id}`, `POST /api/v1/pivot/rollups/{id}/refresh?date=` | administrators: define `{id, source, grain, functions, dates: latest\|all, title}` (refreshed at once in the background), remove, refresh now (`{words}`: what the incremental refresh did); audited |
@@ -3308,6 +3319,34 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
 ```
 
 Refusals: `DRS-5701` to `DRS-5705`, `DRS-5720` and `DRS-9507` ([the error code table](#error-code-table)).
+
+### Pivot: custom functions, explain and what-if
+
+Custom aggregation functions ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)), the difference between two cells in steps
+that add up (section 20) and what-if overlays (section 21). A view uses a function as a value `fn:owner/name@version(FIELD, ...)`.
+
+| Call | Does |
+|---|---|
+| `GET /api/v1/pivot/functions` | `{functions: [{id, ref, owner, name, version, language, kind, inputs, status, approvals, withdrawn, harness, versions, mine, label}], languages: {formula, sql, python, java}, requireApproval}`: yours and those approved for you |
+| `GET /api/v1/pivot/functions/{owner}/{name}?version=` | one version, its code included |
+| `POST /api/v1/pivot/functions/test` | `{name, language: formula\|sql\|python\|java, code, entry, inputs: [name \| {name, type: number\|text}], kind, params, tolerance, stateBytes, sketchError, description, sample: [{...}] \| {columns, rows}, group, parts, projectRows, nodes}` → `{definition, harness: {passed, firstFailure, checks, runs, worst, onePass, nsPerRow, stateBytes}, playground: {steps, onePass, final, same, cost, pivot}}`; nothing saved; audited |
+| `POST /api/v1/pivot/functions` | the same body: a new version after the harness passes (`DRS-5711` with the first failure otherwise); private |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit` | `{note}`: the author asks for sharing |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/approve` | `{scope: everyone\|group:<name>, reason}`: an approver who is not the author (a Java plug-in: an administrator, its jar's SHA-256 pinned) |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/revoke` | `{reason}`: withdrawn; its cells say so |
+| `POST /api/v1/pivot/explain` | `{view, measure, from: {DIM: V}, to: {DIM: V}, fromDate, toDate, by, order: member\|size, price, quantity}` → `{measure, kind, by, from, to, difference, method, order, steps: [{member, cause: new\|gone\|changed\|residual\|price\|quantity\|cross, from, to, step, cumulative}], residual: {value, name}, addsUp, words}` |
+| `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude: {FIELD: [values]}, changes: [{field, scale \| set, where: {FIELD: [values]}}], add: [{FIELD: value}]}}` → `{whatIf, original, diff, overlay, note}` (per cell of `diff`: `delta` per measure, what-if minus original, or `status`) |
+| `GET /api/v1/pivot/views/{owner}/{name}/versions`, `GET .../versions/{n}`, `GET .../diff?from=&to=` | a saved view's versions (newest first), one version, the definition's changes between two (`{changes: [{key, from, to}], words}`) |
+| `POST /api/v1/pivot/views/{name}/restore` | `{version}`: the caller's old version saved again as the next version; audited `pivot.view.restore` |
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/functions/test \
+  -d '{"name":"wret","language":"formula","code":"sum(r * w) / sum(w)","inputs":["r","w"],"sample":[{"r":0.01,"w":2},{"r":-0.02,"w":1}]}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/explain \
+  -d '{"view":{"source":"trade","rows":["productType"],"values":["sum(notional)"]},"from":{"productType":"IRS"},"to":{"productType":"FXFWD"},"by":"counterparty"}'
+```
+
+Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
 
 ## Embedding views in another web application
 

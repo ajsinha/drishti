@@ -1424,11 +1424,18 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.
   groups as `TRADE_DATE:month`), `--cols`, `--values "sum(X)"` (repeatable), `--filter FIELD=V1,V2`, `--open DIM=V[/DIM=V]` (a node
   opened, lazily computed), `--level N`, `--top FIELD=N`. `--csv FILE` writes the grid; `--json` the whole answer. `--exact` asks
   every sketch exactly (exact on request); `--approximate` answers distinct counts and percentiles by their sketches at any size
-  ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-scale-sketches-rollups-progressive-answers-and-the-cluster)).
+  ([PIVOT_GUIDE.md section 23](PIVOT_GUIDE.md#23-scale-sketches-rollups-progressive-answers-and-the-cluster)).
 - `pivot estimate`: what the view reads before it runs.
 - `pivot export --format xlsx|csv|arrow [--what pivot|rows|definition] [--cell DIM=V,...] -o FILE`: the Excel workbook with its outline
   and `SUM` formulas only where a figure adds up and a Provenance sheet; CSV; Arrow; a cell's rows; the view as YAML. Audited.
 - `pivot views`; `pivot save NAME [view flags] [--share role:risk]`.
+- `pivot functions list`; `pivot functions test FILE --sample ROWS.csv [--group COL]` (the harness's checks and the states part by part;
+  exit 1 when it fails); `pivot functions save FILE --sample ROWS.csv`; `pivot functions submit|approve|revoke owner/name@v [--reason]
+  [--scope everyone|group:NAME]` (`tools/pivotfncli.py`; a function file is YAML or JSON: `name, language, code, entry, inputs, kind`).
+- `pivot explain [view flags] --cell DIM=V [--other-cell DIM=V | --from DATE --to DATE] --by FIELD [--order member|size]
+  [--price P --quantity Q]`: the steps, the residual and the difference.
+- `pivot whatif [view flags] [--exclude FIELD=V1,V2] [--scale FIELD=X@DIM=V] [--set FIELD=X@DIM=V] [--add-json ROWS.json]`: the cells
+  that change, what-if minus original.
 - `pivot rollups list` (the rollups, their rows, version and last refresh, and the advice); `pivot rollups define ID --source S --grain
   DESK,TRADE_DATE:month --functions "sum(NOTIONAL_USD)" [--functions ...] [--dates latest|all]`, `pivot rollups refresh ID [--date]`,
   `pivot rollups remove ID` (administrators; audited).
@@ -1438,6 +1445,8 @@ drishti-console/.venv/bin/python tools/drishti.py pivot fields trade
 drishti-console/.venv/bin/python tools/drishti.py pivot run --source trade --rows productType,counterparty --values "count()" --open productType=IRS
 drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows DESK --cols CURRENCY --values "var()" --values "es()"
 drishti-console/.venv/bin/python tools/drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
+drishti-console/.venv/bin/python tools/drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
+drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade --rows productType --values "sum(notional)" --cell productType=IRS --other-cell productType=FXFWD --by counterparty
 ```
 
 ## 6. Store loaders: `tools/load-*.sh`
@@ -1578,7 +1587,10 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it": licence check, the Java verify (21 with the API references' Javadoc and doclint, and 25), the console and tool tests in parallel, a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning), then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only. Once per release wave. |
+| `tools/drill.sh` | "Drill it" ([PACK_DEVELOPER_GUIDE.md §2.6](PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane and an other lane (files longest first), the Python tool tests, and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure. Once per release wave. |
+| `tools/drillkit/drill_plan.py` | the drill's console planner: `lanes` (the browser lane holds every file that drives a browser or uses the scratch ports, the other lane the rest; each longest first from `data/drill/durations.json`), `merge` (a run's per-file seconds into the durations), `rerun` (each failed test once more, file by file, under a time limit of twice the file's recorded time and at least ten minutes; every outcome reported; known failures from `tools/drill-known.txt` accepted) |
+| `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
+| `tools/drill-known.txt` | the console tests the drill accepts when they fail: one line each, its pytest id, a `|` and the reason; reported at the end of the lane, never hidden |
 | `tools/sizing_planner.py` | reads the planner's one file, `drishti-server/src/main/resources/capacity/planner.yaml`, and writes the single-node sizing planner workbook `docs/architecture/Drishti-Sizing-Planner.xlsx` (inputs, results with the settings and JVM arguments, coefficients, explanation: [RESOURCES_AND_SCALE.md section 9.7](../architecture/RESOURCES_AND_SCALE.md#97-sizing-a-single-node-the-planner-workbook)), the server's workbook template (`drishti-server/src/main/resources/capacity/template/`, for Admin → Capacity's download) and the shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`); `--check` exits 1 when any of them is not a fresh build; PyYAML |
 | `tools/capacitycli.py` | `drishti.py admin capacity`: Admin → Capacity from a terminal, the server's planner evaluated with `sizing_planner.py`'s evaluator (`--live`, `--set Name=value`, `--all`, `--xlsx FILE --inputs plan\|live\|both`): [CLI_GUIDE.md](CLI_GUIDE.md) |
 | `tools/license_headers.py` | checks (exit `1` naming the files) or, with `--fix`, inserts the copyright header in every source file |

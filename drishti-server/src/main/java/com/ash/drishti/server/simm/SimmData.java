@@ -78,7 +78,10 @@ public final class SimmData {
         this.reader = reader;
         this.sensitivities = sensitivities;
         this.props = props;
-        this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumSize(8)
+        this.cache = com.github.benmanes.caffeine.cache.Caffeine.newBuilder().maximumWeight(256L << 20)   // weighed in bytes (D3); the
+                .<String, Day>weigher((k, d) -> (int) Math.min(Integer.MAX_VALUE, 4096L      // sensitivities themselves are FrtbData's
+                        + 64L * (d.recordsBySet() == null ? 0 : d.recordsBySet().values().stream().mapToLong(FrtbData::size).sum())
+                        + 256L * ((d.factors() == null ? 0 : d.factors().size()) + (d.nettingSets() == null ? 0 : d.nettingSets().size()))))
                 .expireAfterWrite(Duration.ofMinutes(props.cacheMinutes())).<String, Day>build().asMap();
     }
 

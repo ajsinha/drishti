@@ -46,6 +46,19 @@ public interface RollupSource {
         return List.of();
     }
 
+    /** The parts a plan may be read by (none when the plan cannot be read part by part: a document source's lists, say). */
+    default List<Part> parts(String source, String date, AggregationPlan plan) {
+        return parts(source, date);
+    }
+
+    /**
+     * A definition as the provider answers it (PIVOT_ENGINE.md section 6.7): a document source's paths ({@code $.LEGS[*].CURRENCY}) as its
+     * field ids, at one grain; refused in words when the grain cannot be answered honestly. The default: as written.
+     */
+    default RollupDef prepared(RollupDef d) {
+        return d;
+    }
+
     /** The plan's partial states as the system reads them, over {@code parts} only (null: every row). */
     Partials evaluate(AggregationPlan plan, List<String> parts);
 

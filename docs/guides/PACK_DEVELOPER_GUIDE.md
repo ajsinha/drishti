@@ -4213,9 +4213,10 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI.md](../admin/AI.md#1-model-providers) and [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
 | `drishti-diskcache` | `diskcache` | A disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state. | `DiskCache` |
 | `drishti-messaging` | `messaging` | The latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `MessageStateSource` |
-| `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters` |
+| `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. Other schemes come from a `StorageProvider` another module registers (`mem://`, the in-memory lake): the engines ask `StorageProviders` and never name that module. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters`, `StorageProvider`, `StorageProviders` |
 | `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
+| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
 | `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is Rūpaka, the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
@@ -4273,15 +4274,17 @@ drishti-messaging                 (api, diskcache)
 drishti-lakeio                    (api)
 drishti-deltalake                 (lakeio)
 drishti-iceberg                   (api, lakeio)
+drishti-memlake                   (api, common, engine, lakeio, deltalake; no Spring code: ArchitectureRulesTest)
 drishti-lakeload                  (api, lakeio, deltalake, iceberg)
 plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake; iceberg and iceberg-external add iceberg)
-drishti-server                    (engine, identity, packs, ai, lakeload, and all nineteen plugins)
+drishti-server                    (engine, identity, packs, ai, lakeload, memlake, and all nineteen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```
 
 `ArchitectureRulesTest` keeps these one-way (see [§3.3](#33-architecture-rules)): nothing below the engine may see `engine` or
-`server`, the engine may not see `server`, `api` sees nothing internal, and `ai` sees only `api` and `common`. The reactor also builds
+`server`, the engine may not see `server`, `api` sees nothing internal, `ai` sees only `api` and `common`, `memlake` sees neither the
+server nor Spring, and the lake engines and connectors never see `memlake` (they reach `mem://` through `lakeio`'s `StorageProviders`). The reactor also builds
 `docs/guides/examples/connector`, the worked example plugin of [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
 
 #### 1.4 Everything else
@@ -4480,71 +4483,126 @@ tools/drill.sh
 ```
 
 Options: `--docs` (the light drill, below), `--full` (the full drill even when only docs changed), `--no-push` (verify only: no push,
-no merge, and it may run on any branch). `DRILL_MVN_ARGS="..."` adds Maven arguments to both Java runs (for example
-`-Ddrishti.test.forks=1` to run the test classes serially). The script prints `drill: mode = full` or `drill: mode = docs`, then each
-stage's time, then a summary. It is costly (it runs everything): run it once per release, and targeted tests in between.
+no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
+once; by default the first failure stops the rest). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
+`-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
+lanes' workers, `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
+time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
+script prints
+`drill: mode = full` or `drill: mode = docs`, the machine's CPUs and memory with the workers it chose, each job's time, then a
+summary. It is costly (it runs everything): run it once per release, and targeted tests in between.
 
 **Which mode.** The commits since `origin/develop` decide: when every changed file is under `docs/` or `tools/docs/`, is a `*.md` file
 or is a `help.yaml`, the drill runs in docs mode by itself; otherwise it runs in full mode. `tools/drill.sh --docs` on anything else is
 refused, with the files that are not documentation listed.
 
-**Full mode**, in order (it stops at the first failure, `set -euo pipefail`):
+**Before anything runs**, the drill refuses to start unless the current branch is `develop` (`drill: must be on develop`; not checked
+with `--no-push`), the working tree is clean (`drill: commit your changes first`) and the console's Python environment exists.
 
-1. Refuses to run unless the current branch is `develop` (`drill: must be on develop`; not checked with `--no-push`) and the working
-   tree is clean (`drill: commit your changes first`).
-2. `python3 tools/license_headers.py`: every file carries the copyright header.
-3. The whole Java build, every test and every rule, offline, on **Java 21** (`JAVA21_HOME`, default
-   `/usr/lib/jvm/java-21-openjdk-amd64`), the production runtime, containers included, after `mvn clean` (`./mvnw -q -o clean verify`:
-   nothing an earlier build or an interrupted run left in `target/` is built on). It builds the jar the console tests start. Test
-   classes run in parallel JVM forks inside each module (`drishti.test.forks`, 4 by default, set in the root `pom.xml`; each fork is
-   reused for many classes). Anything a test writes at a fixed path carries `${surefire.forkNumber}` (see `drishti-server/pom.xml`);
-   Testcontainers and the in-test servers use free ports. A test must not clear or change a JVM-wide setting for the classes that follow
-   it in the same fork.
-4. Then three jobs at the same time, each with its own log in `<data dir>/drill/` (`java25.log`, `console.log`, `tools.log`) and its
-   own timing; all must pass, and the tail of each failed log is printed:
-   - **Java 25**, the forward-compatibility run (`JAVA25_HOME`; skipped with a message when that JDK is absent): the same tests again,
-     with Docker hidden so the container tests (already run on 21) are skipped. It runs in a **copy of the committed tree** (a
-     `git archive` of `HEAD` into a temporary directory, removed afterwards) with its own `target/` directories, and two test forks.
-   - **The console suite**, `pytest -n <min(4, cpus/2)> --dist loadfile drishti-console/tests`: pytest-xdist workers each take whole
-     test files, so a browser file keeps its module and session fixtures. Every live server and console in the tests starts on ports
-     offset by the worker, in the worker's own scratch directory; the stand-in server object's state is put back after each test
-     (`conftest.py`). If it fails, the failed tests (and only those, read from the run's own `FAILED`/`ERROR` summary, since
-     `pytest.ini` turns the pytest cache off) run once more, serially, one file at a time and each file under a 20-minute limit (a
-     browser that dies mid-test cannot block the drill): a test that passes the second time is printed as `FLAKY` and appended to
-     `<data dir>/drill/flakes.log` with the commit; a test that fails twice, a file that hits the limit, or a run that failed without a
-     failed test to re-run (a collection error), stops the drill. The Java 25 run re-runs a failed test once too
-     (`-Dsurefire.rerunFailingTestsCount=1`): it shares the machine with the console suite, and surefire reports such a test as a flake.
-   - **The Python tool tests**: every generator that supports `--check` (generated pack content must match what the generator writes
-     now), the `unittest` suites of `tools/` (`samplegen`, `packreg`, `test_sutragen`, `test_ingest_jsonl`, `test_drishti_cli`,
-     `test_pack_bundle`, `test_no_hidden_names`, `test_packmake`, `test_pack_authoring`, `test_cli_extras`, `test_pack_deploy`,
-     `test_cli_bi`, `test_cli_connectors`, `test_cli_loads`, `test_pack_form`, `test_schemapack`, `tools/testdata/test_testdata.py`),
-     and, if `uv` is installed, the lake tests with `deltalake`, `pyarrow` and `pyyaml` supplied by `uv run --with`
-     (`samplegen/test_layout.py`, `lake/test_maintain.py`, `lake/test_demo.py`), each under a 10-minute `timeout`. (Tools that start
-     worker processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a `spawn`
-     pool.) `tools/lake/test_build.py` is not in the list: run it by hand
-     (`cd tools/lake && ../../drishti-console/.venv/bin/python -m unittest test_build`).
-5. Checks that the tests left the repository's `config/` folder as they found it: a file under `config/` (untracked or git-ignored,
-   connector files included) that was not there before the tests fails the drill, with its name. Every test writes connector files,
-   packs and settings to its own scratch folder (`@TempDir`, pytest's `tmp_path`, `--connectors-dir`, `DRISHTI_CONNECTORS_DIR`).
-   The same for the data folder (`DRISHTI_DATA_DIR`, else `data/`): every file under it (name, time and size) is listed before the
-   tests, and one added or changed during them fails the drill with its name. Not compared: the drill's own logs (`drill/`),
-   Maven's temp folder (`tmp/maven`), the drill's temporary folder (`tmp/drill`), the committed test data (`testdata/`) and the
-   local cluster's other nodes (`stack/`). Every temporary file of the drill (pytest's folders, the tests' own temporary files) goes to
-   `data/tmp/drill` on disk, never the system `/tmp` (`DRISHTI_DRILL_TMP` names another folder); it is emptied when the drill ends.
-   The Java 25 run's copy of the repository is made beside it, outside the repository (`<repository>-drill-java25`,
-   `DRISHTI_DRILL_COPY_DIR`), and removed when that run ends. The
-   `sutra` command line writes nothing there either: it runs with a scratch data folder of its own. When a server is running with
-   the repository as its working folder (your own stack), it writes to `data/` while the tests run, so the drill then lists the
-   changed files as a warning instead of failing: it cannot tell the server's files from a test's.
-6. Pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to `develop`. It prints
-   `drilled (full): <the last commit>`.
+**Stage 1, the gate** (a few minutes). The cheap checks, all at once, so a mistake that any of them finds stops the drill before the
+long runs start; the first failure stops the other gate jobs and the drill prints the failed job's log:
 
-**Docs mode** runs the licence check, the documentation console tests (`test_docs_*.py`, `test_help*.py`, `test_guide_images.py`,
-`test_examples.py`) and the Python tool tests, concurrently, then the same `config/` and data folder checks, push and merge. No Java build, no browser tests.
+- **Static checks** (`gate-static.log`), each a separate process: `tools/license_headers.py` (every file carries the copyright
+  header); `tools/settings_catalogue.py --check` (CONFIGURATION.md is current and every key has a meaning); `tools/contracts.py check`
+  and `tools/contracts.py docs --check` (every command has a data contract that matches its pack and data, and the contracts' pages
+  are current); `tools/testdata/sample_docs.py --check` (the data samples' pages are current); `tools/api_docs.py check-python`
+  (every public Python function, class and method of the API references has a docstring and type hints);
+  `tools/test_no_hidden_names.py`; and every pack generator that supports `--check` (the generated pack content is what the
+  generator writes now).
+- **The docs and help console tests** (`gate-docs.log`, output in `console-gate.txt`): `test_docs_*.py`, `test_help.py`,
+  `test_help_links.py`, `test_help_configuration.py`, `test_help_developer.py` and `test_tools_guide.py`, on four pytest-xdist
+  workers. The console lanes leave these files out.
+- **One Java 21 build of the working tree** (`gate-java.log`; `JAVA21_HOME`, default `/usr/lib/jvm/java-21-openjdk-amd64`):
+  `./mvnw -q -o clean package spotless:check -P api-docs -T 1C`, offline, every module compiled once with Error Prone, Javadoc with
+  doclint on the documented modules, Spotless and the enforcer's Java 21 bytecode rule, Maven building independent modules side by
+  side. It runs only the rule tests: every test class of `drishti-it` (the architecture rules, file size, caches weighed in bytes,
+  no blocking under `synchronized`, branding literals, licence headers, connection discipline, schema parity),
+  `TokenScopeGuardTest` (every endpoint that changes anything declares its token scope) and `ArrowAnswersTest` (it writes the Arrow
+  sample the console's `test_arrow_answer.py` reads). The build fails when one of these classes has no report (a filter that matched
+  nothing would otherwise pass in silence) or when it made no server jar. Nothing is installed into `~/.m2`. The jar it makes is the
+  one the console and the tool tests start in stage 2.
 
-The drill removes its own temporary files on exit. The console suite needs `pytest-xdist` (in `requirements-test.txt`). The inotify
-watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode: that is the
-machine, not the drill.
+**Stage 2** (the long runs, all at the same time, each with its own log in `<data dir>/drill/`; all must pass, and at the first
+failure that no re-run can change the drill stops the rest, unless `--keep-going`):
+
+- **The console suite in two lanes** (`console-browser.log` and `console-other.log`, pytest output in `console-browser.txt` and
+  `console-other.txt`). `tools/drillkit/drill_plan.py lanes` sorts the files: the **browser lane** holds every file that drives a
+  browser (Playwright, Chromium) or starts a live stack on the scratch ports (`scratch_ports.worker_port`, or a helper module that
+  reads `PYTEST_XDIST_WORKER`, at any import depth); the **other lane** holds the rest, which run in-process against the fake
+  backend. Two pytest sessions number their workers alike (`gw0`, `gw1`, ...), so every file that adds the worker's port offset runs
+  in the one browser session and the two lanes never share a port. The browser lane gets few workers (one per six CPUs, at most
+  four) at normal priority, because a page under a busy CPU misses its ticks; the other lane gets more (one per three CPUs, at most
+  eight) at lower priority (`nice 5`); each worker is budgeted memory (about 3 GB for a browser worker, 1 GB for another) and the
+  counts come down on a smaller machine. Each lane gives its files to pytest-xdist longest first (`--dist loadfile
+  --no-loadscope-reorder`: a worker takes a whole file, so a browser file keeps its server and browser fixtures), the order taken
+  from the seconds each file took in the last runs (`<data dir>/drill/durations.json`, written by the pytest plugin
+  `tools/drillkit/drill_timings.py` at the end of every run, passed or failed); a file never measured counts as two minutes in the
+  browser lane and fifteen seconds in the other, and the two slowest browser files start first from the first run on. Every live
+  server and console in the tests starts on ports offset by the worker, in the worker's own scratch directory. A lane that runs three
+  hours is stopped and fails the drill (`DRILL_LANE_LIMIT`, seconds).
+- **Re-runs.** When a lane fails, `drill_plan.py rerun` reads the failed tests from the lane's own `FAILED`/`ERROR` summary
+  (`pytest.ini` turns the pytest cache off) and runs each once more, file by file, without xdist: one file at a time in the browser
+  lane, two at a time in the other, the longest first. Each file has a time limit of twice its recorded time and never under ten
+  minutes (twenty for a file never measured), so a browser that dies mid-test cannot block the drill. Every failed file is re-run,
+  whatever happened to the one before; at the end the lane lists each outcome: a test that passes the second time is printed as
+  `FLAKY` and appended to `<data dir>/drill/flakes.log` with the commit; a test listed in `tools/drill-known.txt` (its pytest id, a
+  `*` matching any text, then a `|` and the reason) is printed with its reason as known and accepted and is not run again; a test
+  that fails twice, a file that hits its limit, a file that could not be collected, or a run that failed without a failed test to
+  re-run fails the lane. Each re-run's output is in `rerun-<file>.log`.
+- **The Python tool tests** (`tools.log`, at lower priority): the `unittest` suites of `tools/` (`samplegen`, `packreg`,
+  `test_sutragen`, `test_ingest_jsonl`, `test_convert`, `test_drishti_cli`, `test_pack_bundle`, `test_no_hidden_names`,
+  `test_packmake`, `test_pack_authoring`, `test_cli_extras`, `test_pack_deploy`, `test_deploy_aws`, the `test_cli_*` suites,
+  `test_pack_form`, `test_schemapack`, `test_contracts`, `test_api_docs`, `tools/testdata/test_testdata.py`, `test_sizing_planner`,
+  `test_capacitycli`), `tools/testdata/make_testdata.py --check` (the committed test data is what its generator writes),
+  `tools/api_docs.py check-java` (every public Java type and member of the Javadoc the gate built has a comment) and, if `uv` is
+  installed, the lake, real-data, compute-SDK and AWS tool tests with their libraries supplied by `uv run --with`, each under a
+  10-minute `timeout`. (Tools that start worker processes after pyarrow or deltalake have started threads must spawn them, never
+  fork: `bulk_trades.py` uses a `spawn` pool.) `tools/lake/test_build.py` is not in the list: run it by hand
+  (`cd tools/lake && ../../drishti-console/.venv/bin/python -m unittest test_build`).
+- **Java 21** (`java21.log`, at lower priority, `nice 5`), the production runtime: `./mvnw -q -o clean verify -P api-docs`, every test and every rule, containers
+  included, in a **copy of the committed tree** (a `git archive` of `HEAD` beside the repository, in `<repository>-drill-copies`,
+  `DRISHTI_DRILL_COPY_DIR`, removed afterwards), so it can neither clean nor replace the jar the console runs from the working tree.
+  Test classes run in parallel JVM forks inside each module (`drishti.test.forks`, 4 by default, set in the root `pom.xml`; each fork
+  is reused for many classes). Anything a test writes at a fixed path carries `${surefire.forkNumber}` (see `drishti-server/pom.xml`);
+  Testcontainers and the in-test servers use free ports, and the Drishti\*net cluster tests take their own ports
+  (`DRISHTI_NET_IT_PORTS` 20783 to 20785). A test must not clear or change a JVM-wide setting for the classes that follow it in the
+  same fork. The run shares the machine with the console, so a failed test runs once more (`-Dsurefire.rerunFailingTestsCount=1`);
+  one that passes the second time is listed as `FLAKY` in the log and in `flakes.log`. The copy's `config/` and `data/` folders are
+  compared before and after by content: a file the tests added or changed there fails the drill with its name.
+- **Java 25**, the forward-compatibility run (`java25.log`; `JAVA25_HOME`; skipped with a message when that JDK is absent): the same
+  tests on Java 25 in a copy of its own, with Docker hidden so the container tests (already run on 21) are skipped, two test forks,
+  its cluster tests on ports 19783 to 19785, at the lowest priority (`nice 10`), and the same single re-run. It starts once the other
+  console lane and the tool tests have finished, or once Java 21 has, so it shares the machine with the browser lane when the load
+  is lighter.
+
+**After the tests**, the drill checks that they left the repository's `config/` folder as they found it: a file under `config/`
+(untracked or git-ignored, connector files included) that was not there before the tests fails the drill, with its name. Every
+test writes connector files, packs and settings to its own scratch folder (`@TempDir`, pytest's `tmp_path`, `--connectors-dir`,
+`DRISHTI_CONNECTORS_DIR`). The same for the data folder (`DRISHTI_DATA_DIR`, else `data/`): every file under it (name, time and
+size) is listed before the tests, and one added or changed during them fails the drill with its name. Not compared: the drill's own
+logs (`drill/`), Maven's temp folder (`tmp/maven`), the drill's temporary folder (`tmp/drill`), the committed test data (`testdata/`)
+and the local cluster's other nodes (`stack/`). Every temporary file of the drill (pytest's folders, the tests' own temporary files)
+goes to `data/tmp/drill` on disk, never the system `/tmp` (`DRISHTI_DRILL_TMP` names another folder); it is emptied when the drill
+ends, as are the copies of a stopped run. The `sutra` command line writes nothing there either: it runs with a scratch data folder
+of its own. When a server is running with the repository as its working folder (your own stack), it writes to `data/` while the
+tests run, so the drill then lists the changed files as a warning instead of failing: it cannot tell the server's files from a
+test's.
+
+**Then** it pushes `develop`, fast-forwards `main` to `develop` (a fast-forward-only merge), pushes `main`, and returns to `develop`.
+It prints `drilled (full): <the last commit>`.
+
+**Docs mode** runs the gate without its Java build (the static checks and the docs and help console tests), then the other
+documentation console tests (`test_help_configuration_browser.py`, `test_guide_images.py`, `test_examples.py`) and the Python tool
+tests at the same time, then the same `config/` and data folder checks, push and merge. No Java build.
+
+**Where the time goes.** On the release machine (24 CPUs, 64 GB) the gate takes about four minutes, most of it the Java build. In
+stage 2 the browser lane is the longest job: its slowest file alone (`test_render_console_browser.py`, every pack's Sutra drawn
+both ways) takes about twenty minutes, so the lane takes at least that. Java 21 takes about 25 minutes in its copy and Java 25
+about 28 from its start. A full drill that passes takes about an hour; one that fails at the gate stops within a few minutes.
+
+The drill removes its own temporary files on exit. The console suite needs `pytest-xdist` 3.7 or newer (in `requirements-test.txt`).
+The inotify watch limit of a loaded desktop (`fs.inotify.max_user_watches`) can make the Sutra hot-reload tests fail in any mode:
+that is the machine, not the drill.
 
 #### 2.7 One config, several instances of the same connector
 

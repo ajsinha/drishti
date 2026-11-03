@@ -86,16 +86,16 @@ STATUSES = ["NEW", "LIVE", "LIVE", "LIVE", "AMENDED", "MATURED"]
 VIEWS = {
     "V1": {"rows": ["DESK"], "columns": ["BUSINESS_DATE:month"], "values": [{"measure": "sum(NOTIONAL_USD)", "as": "Notional"}]},
     "V2": {"rows": ["DESK"], "columns": ["BUSINESS_DATE:month"], "values": [{"measure": "sum(NOTIONAL_USD)", "as": "Notional"},
-                                                                         {"measure": "approx_count_distinct(COUNTERPARTY)", "as": "Cptys"}]},
+                                                                         {"measure": "distinct(COUNTERPARTY)", "as": "Cptys"}]},
     "V3": {"rows": ["DESK"], "columns": ["BUSINESS_DATE:month"], "values": [{"measure": "sum(NOTIONAL_USD)", "as": "Notional"},
-                                                                         {"measure": "approx_percentile(PNL_1D, 0.99)", "as": "P99"}]},
+                                                                         {"measure": "percentile(PNL_1D, 0.99)", "as": "P99"}]},
     "V4": {"rows": ["REGION", "LEGAL_ENTITY", "DESK", "PRODUCT_GROUP", "PRODUCT_TYPE", "CURRENCY"], "columns": [],
            "values": [{"measure": "sum(NOTIONAL_USD)", "as": "Notional"}, {"measure": "count()", "as": "Trades"}], "expandTo": {"rows": 6}},
     "V5": {"rows": ["DESK"], "columns": ["BUSINESS_DATE:month"], "values": [{"measure": "py.weighted_mean_return(PNL_1D, NOTIONAL_USD)",
                                                                          "as": "WMR"}], "optional": True},
 }
 ROLLUP = {"id": "bench-desk-month-ccy", "source": SOURCE, "grain": ["DESK", "BUSINESS_DATE:month", "CURRENCY"],
-          "functions": ["sum(NOTIONAL_USD)", "count()", "approx_count_distinct(COUNTERPARTY)", "approx_percentile(PNL_1D, 0.99)"]}
+          "functions": ["sum(NOTIONAL_USD)", "count()", "distinct(COUNTERPARTY) ≈", "percentile(PNL_1D, 0.99) ≈"]}
 
 
 # ---- safety: where data may go, and how much room there is ------------------------------------------------------------------------

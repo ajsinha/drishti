@@ -111,7 +111,7 @@ def _chrome():
 
 def _run(chrome, tmp_path, body, script):
     page = tmp_path / "page.html"
-    scripts = "".join(f'<script src="{(STATIC / js).as_uri()}"></script>' for js in ("pivot-engine.js", "pivot-grid.js", "tree-rows.js"))
+    scripts = "".join(f'<script src="{(STATIC / js).as_uri()}"></script>' for js in ("pivot-grid.js", "tree-rows.js"))
     page.write_text(f'<!doctype html><html><body>{body}{scripts}<script>var out = {{}};{script}'
                     'document.body.insertAdjacentHTML("beforeend", "<pre id=result>" + JSON.stringify(out) + "</pre>");</script></body></html>')
     # Chromium puts its process-singleton socket in a throwaway profile under TMPDIR; a socket path longer than the system's limit (108
@@ -155,17 +155,18 @@ def test_in_a_browser_a_table_row_expands_collapses_and_the_filter_keeps_its_anc
 
 
 def test_in_a_browser_a_pivot_group_toggles_with_the_pivot_grid(client, tmp_path):
+    """The nested pivot panel is drawn by the one pivot grid (pivot-grid.js, the Pivot screen's) from the engine's figures."""
     chrome = _chrome()
     if not chrome:
         pytest.skip("needs Chromium (playwright install chromium, or CHROME_BIN)")
     got = _run(chrome, tmp_path, _render(client, "pivot", NEST), """
       var host = document.querySelector('.pv-tree-host');
-      function heads() { return Array.from(host.querySelectorAll('tbody th.pv-rh')).map(function (t) { return t.textContent.replace(/[▸▾]/g, '').trim(); }).filter(Boolean); }
-      function togs() { return Array.from(host.querySelectorAll('.pv-tog')).map(function (b) { return b.getAttribute('aria-expanded') + ':' + b.getAttribute('aria-label'); }); }
-      out.grid = !!host.querySelector('table.pv-grid'); out.start = heads(); out.startTogs = togs();
-      host.querySelector('.pv-tog').click();
+      function heads() { return Array.from(host.querySelectorAll('tbody th.pv-rowhead .pv-lab')).map(function (t) { return t.textContent.trim(); }); }
+      function togs() { return Array.from(host.querySelectorAll('[data-pv-toggle]')).map(function (b) { return b.getAttribute('aria-expanded') + ':' + b.getAttribute('aria-label'); }); }
+      out.grid = !!host.querySelector('table.pv-table'); out.start = heads(); out.startTogs = togs();
+      host.querySelector('[data-pv-toggle]').click();
       out.opened = heads(); out.openedTogs = togs();
-      host.querySelector('.pv-tog').click();
+      host.querySelector('[data-pv-toggle]').click();
       out.closed = heads();
       out.cells = Array.from(host.querySelectorAll('tbody tr:first-child td.pv-c')).map(function (t) { return t.textContent; });
     """)

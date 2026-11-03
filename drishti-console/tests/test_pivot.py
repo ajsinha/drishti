@@ -58,7 +58,7 @@ def test_the_page_and_the_api_are_read_as_the_person(backend, monkeypatch):
     r = c.get("/go", params={"q": "PIVOT trade <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/pivot?source=trade"
     page = c.get("/pivot?source=trade").text
-    assert "data-pivot-screen" in page and "pivot-core.js" in page and "/static/js/pivot.js" in page and "echarts.min.js" in page
+    assert "data-pivot-screen" in page and "pivot-grid.js" in page and "/static/js/pivot.js" in page and "echarts.min.js" in page
     for marker in ("data-pv-fields", 'data-pv-zone="rows"', 'data-pv-zone="columns"', 'data-pv-zone="values"', 'data-pv-zone="filters"',
                    "data-pv-grid", "data-pv-estimate", "data-pv-pop", "data-pv-chartcard", 'data-pv-export="xlsx"', "data-pv-compare"):
         assert marker in page, marker

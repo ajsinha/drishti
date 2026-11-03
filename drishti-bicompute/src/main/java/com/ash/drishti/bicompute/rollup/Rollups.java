@@ -22,7 +22,6 @@ import com.ash.drishti.bicompute.core.CellSet;
 import com.ash.drishti.bicompute.core.Dim;
 import com.ash.drishti.bicompute.core.Partials;
 import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.spi.Kind;
 import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.common.ErrorCode;
@@ -103,7 +102,7 @@ public final class Rollups {
         if (src == null) {
             throw PivotView.bad("no rollups of '" + d.source() + "': its provider does not offer them (VaR's own per-node sums are its rollup)");
         }
-        functions(d, src);
+        functions(src.prepared(d), src);
         RollupDef old = defs.put(d.id(), d);
         if (old != null && !old.equals(d)) {
             built.keySet().removeIf(k -> k.startsWith(d.id() + "|"));
@@ -129,10 +128,10 @@ public final class Rollups {
     static List<FunctionCall> functions(RollupDef d, RollupSource src) {
         List<FunctionCall> out = new ArrayList<>();
         for (String text : d.functions()) {
-            FunctionCall f = Functions.parse(text, null, src.provider());
+            FunctionCall f = com.ash.drishti.bicompute.functions.Sketches.parse(text, src.provider());   // "distinct(CPTY) ≈": its sketch
             if (f.fn().kind() == Kind.HOLISTIC || !f.fn().sqlStateMergeable()) {
                 throw PivotView.bad("rollup " + d.id() + ": " + f.id() + " is holistic; a rollup keeps only states that merge (sum, count, avg, "
-                        + "var, approx_count_distinct, approx_percentile, top)");
+                        + "var; distinct, median and percentile as their sketches, written with ≈: distinct(COUNTERPARTY) ≈)");
             }
             out.add(f);
         }
@@ -213,6 +212,7 @@ public final class Rollups {
         if (have != null && version.equals(have.version)) {
             return "rollup " + id + " is current (" + version + ")";
         }
+        d = src.prepared(d);                                   // a document source's paths as its field ids, at one grain
         List<FunctionCall> fns = functions(d, src);
         Rollup r = new Rollup(d, date, fns);
         if (have != null) {
@@ -223,7 +223,7 @@ public final class Rollups {
                 r.partitions.put(k, c);
             });
         }
-        List<RollupSource.Part> parts = src.parts(d.source(), date);
+        List<RollupSource.Part> parts = src.parts(d.source(), date, plan(d, date, fns));
         String words;
         if (parts.isEmpty()) {
             r.partitions.clear();
@@ -278,12 +278,16 @@ public final class Rollups {
 
     /** The grain's states over some parts (null: every row), as the system reads them. */
     static Map<CellKey, Partials.Entry> grain(RollupSource src, RollupDef d, String date, List<FunctionCall> fns, List<String> parts) {
+        Partials p = src.evaluate(plan(d, date, fns), parts);
+        return p.sets().isEmpty() ? Map.of() : p.sets().get(0).cells();
+    }
+
+    /** The plan of a rollup's grain: one cell set grouped by every grain dimension, no filter, every row (the system's). */
+    static AggregationPlan plan(RollupDef d, String date, List<FunctionCall> fns) {
         Map<String, Dim> dims = new LinkedHashMap<>();
         d.grain().forEach(g -> dims.put(g, Dim.parse(g)));
-        AggregationPlan plan = new AggregationPlan(d.source(), date, null, Map.of(), dims, fns, List.of(CellSet.of(d.grain(), Map.of())), null, 0,
+        return new AggregationPlan(d.source(), date, null, Map.of(), dims, fns, List.of(CellSet.of(d.grain(), Map.of())), null, 0,
                 AggregationPlan.Money.none());
-        Partials p = src.evaluate(plan, parts);
-        return p.sets().isEmpty() ? Map.of() : p.sets().get(0).cells();
     }
 
     // ---- disk --------------------------------------------------------------------------------------------------------------------------
@@ -312,12 +316,13 @@ public final class Rollups {
             return;
         }
         RollupSource src = sourceOf(d.source());
+        RollupDef prepared = src.prepared(d);
         Map<String, FunctionCall> byId = new LinkedHashMap<>();
-        functions(d, src).forEach(f -> byId.put(f.id(), f));
+        functions(prepared, src).forEach(f -> byId.put(f.id(), f));
         try (var files = Files.list(dir.resolve(d.id()))) {
             for (Path f : files.filter(p -> p.toString().endsWith(".rollup")).toList()) {
                 try {
-                    Rollup r = Rollup.decode(d, Files.readAllBytes(f), id -> {
+                    Rollup r = Rollup.decode(prepared, Files.readAllBytes(f), id -> {
                         FunctionCall c = byId.get(id);
                         if (c == null) {
                             throw new IllegalStateException("the file keeps " + id + ", not in the definition");

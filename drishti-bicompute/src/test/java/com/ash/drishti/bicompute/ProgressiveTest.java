@@ -42,7 +42,7 @@ class ProgressiveTest {
 
     static final Map<String, Object> VIEW = Map.of("source", "trades", "rows", List.of("REGION"), "values", List.of(
             Map.of("measure", "sum(NOTIONAL)", "as", "N"), Map.of("measure", "count()", "as", "C"), Map.of("measure", "avg(NOTIONAL)", "as", "A"),
-            Map.of("measure", "min(PNL)", "as", "Mn"), Map.of("measure", "approx_count_distinct(CPTY)", "as", "D")));
+            Map.of("measure", "min(PNL)", "as", "Mn"), Map.of("measure", "distinct(CPTY)", "as", "D")));
 
     @Test
     @SuppressWarnings("unchecked")
@@ -89,7 +89,9 @@ class ProgressiveTest {
             Progressive pr = new Progressive(fx.core, new Progressive.Settings(true, 1, 0.5));
             Map<String, Object> holistic = Map.of("source", "trades", "rows", List.of("REGION"), "values",
                     List.of(Map.of("measure", "median(PNL)", "as", "Med")));
-            assertThat(pr.refusal(rita, PivotView.parse(holistic), ScaleOptions.AUTO)).contains("holistic");
+            assertThat(pr.refusal(rita, PivotView.parse(holistic), new ScaleOptions(ScaleOptions.Exactness.EXACT, 0, true))).contains("holistic");
+            assertThat(pr.refusal(rita, PivotView.parse(holistic), ScaleOptions.AUTO)).as("a median has a sketch: the first answer may use it")
+                    .doesNotContain("holistic");
             List<Map<String, Object>> seen = new ArrayList<>();
             Map<String, Object> slowEnough = Map.of("source", "trades", "rows", List.of("REGION"), "values",
                     List.of(Map.of("measure", "sum(NOTIONAL)", "as", "N")));

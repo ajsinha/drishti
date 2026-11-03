@@ -25,6 +25,7 @@ import time
 
 from conftest import CONSOLE, FIXTURES
 from core.backend import BackendError
+from engine_standin import inline_answer  # noqa: F401  (pivot_screen_backend imports it from here)
 from test_live_tabs_browser import TickingBackend, _free_port
 
 MASK = "•••"
@@ -83,6 +84,7 @@ class ChartBackend(TickingBackend):
     def __init__(self):
         super().__init__()
         self.pivot_calls = []
+        self.inline_calls = []                             # the shown rows the chart asked the engine to aggregate
         self.record_calls = []
 
     async def stream(self, kind, id_, ident=None, opened=None):
@@ -123,6 +125,9 @@ class ChartBackend(TickingBackend):
             for i, k in enumerate(keys):
                 cells[f"{x}={k}|*"] = {"values": {v["as"]: float((i + 1) * 100_000_000) for v in view.get("values") or []}}
             return {"source": view.get("source"), "rows": rows, "columns": [{"key": "*", "kind": "grand"}], "cells": cells}
+        if path == "/inline":
+            self.inline_calls.append(len((body or {}).get("rows") or []))
+            return inline_answer(body or {})
         raise BackendError(404, "DRS-1001", "no such pivot call in the stand-in")
 
     async def search(self, q, ident=None):

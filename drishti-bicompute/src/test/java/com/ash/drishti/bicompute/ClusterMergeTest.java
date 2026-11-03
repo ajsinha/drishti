@@ -22,6 +22,7 @@ import static org.assertj.core.data.Offset.offset;
 import com.ash.drishti.bicompute.cache.StateCache;
 import com.ash.drishti.bicompute.cluster.ClusterRoute;
 import com.ash.drishti.bicompute.cluster.PartialGather;
+import com.ash.drishti.bicompute.scale.ScalePolicy;
 import com.ash.drishti.bicompute.core.PivotCore;
 import com.ash.drishti.bicompute.core.PivotView;
 import com.ash.drishti.common.DrishtiException;
@@ -49,7 +50,7 @@ class ClusterMergeTest {
     static final Map<String, Object> VIEW = Map.of("source", "trades", "rows", List.of("REGION", "DESK"), "columns", List.of("CCY"), "expandTo",
             Map.of("rows", 2), "values", List.of(Map.of("measure", "sum(NOTIONAL)", "as", "S"), Map.of("measure", "count()", "as", "C"),
                     Map.of("measure", "avg(PNL)", "as", "A"), Map.of("measure", "var_samp(PNL)", "as", "V"), Map.of("measure", "min(PNL)", "as", "Mn"),
-                    Map.of("measure", "approx_count_distinct(CPTY)", "as", "D")));
+                    Map.of("measure", "distinct(CPTY)", "as", "D")));
 
     /** Nodes in one test: each a fixture with the same seeded table; peers call each other's {@link ClusterRoute#answer} through JSON. */
     static final class Cluster implements AutoCloseable {
@@ -93,6 +94,7 @@ class ClusterMergeTest {
                         return JSON.readValue(JSON.writeValueAsString(answer), Map.class);
                     }
                 };
+                nodes.get(i).core.hooks(new ScalePolicy(1));                 // distinct(CPTY) by its sketch, so registers cross nodes
                 nodes.get(i).core.hooks(new ClusterRoute(peers, new ClusterRoute.Settings(true, 300, 10_000, 0), Map.of(),
                         Executors.newVirtualThreadPerTaskExecutor()));
             }
@@ -133,6 +135,7 @@ class ClusterMergeTest {
     void aTwoNodePartialMergeEqualsOneNodeAndRepeatsToTheDigit() {
         Map<String, Object> one;
         try (PivotFixture alone = new PivotFixture(4_000, StateCache.none(), PivotCore.Settings.defaults())) {
+            alone.core.hooks(new ScalePolicy(1));
             one = alone.core.query(Viewer.of("rita"), PivotView.parse(VIEW));
         }
         for (int n : new int[] {2, 3}) {

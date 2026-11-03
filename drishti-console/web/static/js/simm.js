@@ -92,6 +92,8 @@
   function sets() {
     var q = new URLSearchParams();
     if (cpty) { q.set("counterparty", cpty); }
+    var asOf = new URLSearchParams(window.location.search).get("asOf");   // the list follows the page's date, as the breakdown does
+    if (asOf) { q.set("asOf", asOf); }
     getJson("/api/simm/netting-sets?" + q.toString()).then(function (l) {
       var h = '<thead><tr><th class="l">Netting set</th><th class="l">Counterparty</th><th>IM collect</th><th>IM post</th><th class="l">Version</th><th class="l">Status</th><th>Their call</th></tr></thead><tbody>';
       l.rows.forEach(function (r) {
@@ -109,7 +111,7 @@
   function against() {
     if (!ns) { $("[data-sm-against]").innerHTML = "<tbody><tr><td>Select a netting set.</td></tr></tbody>"; return; }
     getJson("/api/simm/against?" + query().toString()).then(function (c) {
-      var h = '<thead><tr><th class="l">Side</th><th class="l">Risk class</th><th>Drishti</th><th>Their call</th><th>Difference</th><th class="l">Status</th></tr></thead><tbody>';
+      var h = '<thead><tr><th class="l">Side</th><th class="l">Risk class</th><th>' + esc((document.body && document.body.dataset.product) || "Ours") + '</th><th>Their call</th><th>Difference</th><th class="l">Status</th></tr></thead><tbody>';
       c.rows.forEach(function (r) {
         h += '<tr class="tot"><td class="l">' + esc(r.direction) + '</td><td class="l">total</td><td class="mono">' + money(r.drishti) + '</td><td class="mono">' + money(r.theirs)
           + '</td><td class="mono">' + money(r.difference) + '</td><td class="l">' + esc(r.status) + "</td></tr>";

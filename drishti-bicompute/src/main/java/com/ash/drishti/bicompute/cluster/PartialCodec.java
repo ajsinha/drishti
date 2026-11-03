@@ -22,7 +22,6 @@ import com.ash.drishti.bicompute.core.CellSet;
 import com.ash.drishti.bicompute.core.Dim;
 import com.ash.drishti.bicompute.core.Partials;
 import com.ash.drishti.bicompute.core.PivotView;
-import com.ash.drishti.bicompute.functions.Functions;
 import com.ash.drishti.bicompute.spi.PivotProvider;
 import java.util.ArrayList;
 import java.util.Base64;
@@ -97,7 +96,7 @@ public final class PartialCodec {
         }
         List<FunctionCall> fns = new ArrayList<>();
         for (String f : strings(m.get("functions"))) {
-            fns.add(Functions.parse(f, null, provider));
+            fns.add(com.ash.drishti.bicompute.functions.Sketches.parse(f, provider));     // a sketched call keeps its ≈
         }
         List<CellSet> sets = new ArrayList<>();
         for (Object o : (List<Object>) m.getOrDefault("sets", List.of())) {

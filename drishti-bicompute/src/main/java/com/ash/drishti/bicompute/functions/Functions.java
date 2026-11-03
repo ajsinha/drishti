@@ -56,12 +56,9 @@ public final class Functions {
             new Info("median", "holistic", "x", "the exact median, from the cell's own values", false),
             new Info("percentile", "holistic", "x, q", "the exact q-quantile (linear interpolation), from the cell's own values", false),
             new Info("count_distinct", "holistic", "x", "the exact number of distinct values, from the cell's own values", false),
-            new Info("approx_count_distinct", "sketch", "x", "≈ distinct values (HyperLogLog, ±1.6% at 4,096 registers); exact on request", false),
-            new Info("approx_median", "sketch", "x", "≈ median (KLL, ±1.8% of rank at k = 200); exact on request", false),
-            new Info("approx_percentile", "sketch", "x, q", "≈ q-quantile (KLL, ±1.8% of rank at k = 200); exact on request", false),
-            new Info("top", "sketch", "x, n", "rows of the n most frequent values (Space-Saving, 10·n counters; each count over by at most "
-                    + "the smallest counter); exact on request", false),
-            new Info("top_exact", "holistic", "x, n", "rows of the n most frequent values, every value counted", false));
+            new Info("sum_once", "holistic", "x, p", "Σx counting each parent p once (a trade's quantity in a leg-grain view)", false),
+            new Info("count_once", "holistic", "x, p", "the parents p with a value of x, each once", false),
+            new Info("avg_once", "holistic", "x, p", "the average of x over the parents p, each once", false));
 
     private Functions() {}
 
@@ -82,11 +79,7 @@ public final class Functions {
             case "median" -> new Builtins.Quantile("median", 0.5);
             case "percentile", "quantile" -> new Builtins.Quantile("percentile", numbers.isEmpty() ? -1 : numbers.get(0));
             case "count_distinct", "distinct" -> new Builtins.Distinct();
-            case "approx_count_distinct", "approx_distinct" -> new Sketches.ApproxDistinct();
-            case "approx_median" -> new Sketches.ApproxQuantile("approx_median", 0.5);
-            case "approx_percentile", "approx_quantile" -> new Sketches.ApproxQuantile("approx_percentile", numbers.isEmpty() ? -1 : numbers.get(0));
-            case "top" -> new Sketches.Top(numbers.isEmpty() ? 10 : (int) Math.round(numbers.get(0)), false);
-            case "top_exact" -> new Sketches.Top(numbers.isEmpty() ? 10 : (int) Math.round(numbers.get(0)), true);
+            case "sum_once", "count_once", "avg_once" -> new OncePerParent(n);
             default -> null;
         };
         return Optional.ofNullable(f);
@@ -97,6 +90,42 @@ public final class Functions {
      * built-ins; refused in words otherwise ({@code DRS-5701}). {@code label}: the column header (null: the text).
      */
     public static FunctionCall parse(String text, String label, PivotProvider provider) {
+        return parse(text, label, provider, null, null);
+    }
+
+    /**
+     * Finds the functions a view names beyond the built-ins and the provider's natives (PIVOT_ENGINE.md section 8): custom functions
+     * ({@code fn:owner/name@v(FIELD, ...)}), resolved for the reader. The host sets one on the core.
+     */
+    @FunctionalInterface
+    public interface Resolver {
+        /** The call as a function call for this reader, or empty when the text is not one of its functions. */
+        Optional<FunctionCall> resolve(com.ash.drishti.bicompute.spi.Viewer v, String text, String label);
+    }
+
+    /**
+     * As {@link #parse(String, String, PivotProvider)}, with custom functions ({@code resolver}) and formulas of the built-ins
+     * ({@code sum(PNL) / sum(abs(PNL))}, DEL's syntax; section 8.2) on a provider that evaluates built-ins.
+     */
+    public static FunctionCall parse(String text, String label, PivotProvider provider, Resolver resolver, com.ash.drishti.bicompute.spi.Viewer v) {
+        if (resolver != null && text != null && text.strip().startsWith("fn:")) {
+            if (!provider.capabilities().builtIns()) {
+                throw PivotView.bad(text + ": custom functions run over a source's rows; " + provider.id() + "'s measures are its own");
+            }
+            return resolver.resolve(v, text, label).orElseThrow(() -> PivotView.bad("no custom function " + text.strip()));
+        }
+        try {
+            return simple(text, label, provider);
+        } catch (com.ash.drishti.common.DrishtiException e) {
+            if (!provider.capabilities().builtIns() || text == null || !com.ash.drishti.bicompute.formula.FormulaParser.isFormula(text)) {
+                throw e;
+            }
+            com.ash.drishti.bicompute.formula.FormulaFunction f = com.ash.drishti.bicompute.formula.FormulaFunction.of(text);
+            return new FunctionCall(f.text(), label == null || label.isBlank() ? f.text() : label.strip(), f, f.fields());
+        }
+    }
+
+    private static FunctionCall simple(String text, String label, PivotProvider provider) {
         Matcher m = CALL.matcher(text == null ? "" : text);
         if (!m.matches()) {
             throw PivotView.bad("'" + text + "' is not a measure: write a function and its fields, sum(NOTIONAL_USD), count(), var()");

@@ -274,12 +274,14 @@ def test_paste_check_save_reopen_edit_and_delete(served, browser):
         assert be.saves[-1]["version"] == 1 and be.saves[-1]["name"] == "mix"
         assert be.kept["ash/mix"]["version"] == 2 and be.kept["ash/mix"]["sheet"]["TRD"][1] == ""
         # a portfolio is the bank's: Edit a copy opens its parts as your own unsaved basket
+        pg.locator('[data-vx-adhoc] .vx-row', has=pg.locator('[data-vx-edit="PORT:PF-USD-RATES"]')).hover()   # a row's buttons show on hover
         pg.click('[data-vx-edit="PORT:PF-USD-RATES"]')
         wait(pg, "window.VarBasket.state.copyOf === 'PF-USD-RATES'", 15)
         assert cell(pg, "POS", 1).inner_text() == "POS-B"
         assert "your own basket" in pg.inner_text("[data-vb-save]")
         assert "copy" in pg.inner_text("[data-vb-msg]")
         # Delete, through the confirm dialog
+        pg.locator('[data-vx-adhoc] .vx-row', has=pg.locator('[data-vx-delete="ash/mix"]')).hover()
         pg.click('[data-vx-delete="ash/mix"]')
         pg.wait_for_selector("[data-sd-dialog]", state="visible")
         pg.click("[data-sd-yes]")

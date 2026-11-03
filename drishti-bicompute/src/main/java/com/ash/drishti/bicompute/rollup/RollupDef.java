@@ -28,7 +28,7 @@ import java.util.Map;
  *
  * <pre>{@code
  * { "id": "trades-desk-month", "source": "trade", "grain": ["DESK", "CURRENCY", "TRADE_DATE:month"],
- *   "functions": ["sum(NOTIONAL_USD)", "count()", "approx_count_distinct(COUNTERPARTY)"], "dates": "latest" }
+ *   "functions": ["sum(NOTIONAL_USD)", "count()", "distinct(COUNTERPARTY) ≈"], "dates": "latest" }
  * }</pre>
  *
  * @param id its id (a file name: letters, digits, dashes)

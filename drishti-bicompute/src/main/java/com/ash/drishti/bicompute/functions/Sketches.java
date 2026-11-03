@@ -24,14 +24,16 @@ import java.util.List;
 import java.util.Locale;
 
 /**
- * The sketch functions (PIVOT_ENGINE.md sections 5.2, 5.3 and 9.5), each a bounded state with a stated error, its exact form on request:
+ * The sketches (PIVOT_ENGINE.md sections 5.2, 5.3 and 9.5; FUNCTION_CATALOGUE.md section 4): the ≈ forms of functions that have one name
+ * each, never functions of their own. A view writes {@code distinct(x)}, {@code median(x)}, {@code percentile(x, q)}; the scale policy
+ * answers it by its sketch when the person accepts ≈ (or the view is large, in auto), and its id then ends in {@code ≈} (a different cache
+ * key, a different rollup state). VaR and every provider's own measures are never approximated.
  *
  * <ul>
- *   <li>{@code approx_count_distinct(x)}: HyperLogLog ({@link Hll}), ±1.04/√m; exact form {@code count_distinct(x)}.</li>
- *   <li>{@code approx_median(x)}, {@code approx_percentile(x, q)}: KLL ({@link Kll}), ±1.65% of rank at k = 200; exact forms
- *       {@code median(x)}, {@code percentile(x, q)}.</li>
- *   <li>{@code top(x, n)}: Space-Saving ({@link SpaceSaving}) with 10·n counters: the rows of the n most frequent values, each count
- *       over by at most the smallest counter; exact form {@code top_exact(x, n)} (every value counted).</li>
+ *   <li>{@code distinct(x)} ≈: HyperLogLog ({@link Hll}), ±1.04/√m.</li>
+ *   <li>{@code median(x)}, {@code percentile(x, q)} ≈: KLL ({@link Kll}), ±1.65% of rank at k = 200.</li>
+ *   <li>{@code top_n} ≈: the Space-Saving state ({@link SpaceSaving}, {@link Top}, 10·n counters, each count over by at most the
+ *       smallest counter), built and tested; its use by a level's Top N past the group guard is not yet wired.</li>
  * </ul>
  *
  * In SQL (the tabular provider): HyperLogLog's (register, rank) pairs from DuckDB's {@code hash()}; KLL from the cell's quantile points
@@ -83,6 +85,41 @@ public final class Sketches {
         String exactText(List<String> inputs);
     }
 
+    /** The suffix of a sketched call's id ({@code distinct(CPTY) ≈}): the cache, rollups and the cluster tell it from the exact form. */
+    public static final String MARK = " ≈";
+
+    /** True when a function has an ≈ form (an exact distinct count or quantile of the built-ins). */
+    public static boolean hasSketch(AggFunction<?> f) {
+        return f instanceof Builtins.Distinct || f instanceof Builtins.Quantile;
+    }
+
+    /** The ≈ form of a call (same inputs and label, its id marked), or empty when it has none. */
+    public static java.util.Optional<com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall> approximate(
+            com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall f) {
+        AggFunction<Object> s;
+        if (f.fn() instanceof Builtins.Distinct) {
+            s = new ApproxDistinct();
+        } else if (f.fn() instanceof Builtins.Quantile q) {
+            s = new ApproxQuantile(q.name(), q.q());
+        } else {
+            return java.util.Optional.empty();
+        }
+        return java.util.Optional.of(new com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall(f.id() + MARK, f.label(), s, f.inputs()));
+    }
+
+    /**
+     * A call's text as written in a rollup or sent between nodes: the function's own text, or that text with {@link #MARK} for its ≈ form.
+     */
+    public static com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall parse(String text, com.ash.drishti.bicompute.spi.PivotProvider p) {
+        String t = text.strip();
+        if (t.endsWith(MARK.strip())) {
+            com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall exact = Functions.parse(t.substring(0, t.length() - 1).strip(), null, p);
+            return approximate(exact).orElseThrow(() -> com.ash.drishti.bicompute.core.PivotView.bad(exact.id() + " has no ≈ form; "
+                    + "distinct, median and percentile have"));
+        }
+        return Functions.parse(t, null, p);
+    }
+
     /** The values of a SQL list (a JDBC array, an array, a list); empty for null. */
     static List<Object> list(Object o) {
         if (o == null) {
@@ -124,7 +161,7 @@ public final class Sketches {
 
     // ---- HyperLogLog -------------------------------------------------------------------------------------------------------------------
 
-    /** {@code approx_count_distinct(x)}: the HyperLogLog estimate of the distinct values. */
+    /** {@code distinct(x)} ≈: the HyperLogLog estimate of the distinct values. */
     public static final class ApproxDistinct implements AggFunction<Object>, Sketch {
         private final int p;
 
@@ -138,7 +175,7 @@ public final class Sketches {
 
         @Override
         public String name() {
-            return "approx_count_distinct";
+            return "distinct";
         }
 
         @Override
@@ -228,13 +265,13 @@ public final class Sketches {
 
         @Override
         public String exactText(List<String> inputs) {
-            return "count_distinct(" + inputs.get(0) + ")";
+            return "distinct(" + inputs.get(0) + ")";
         }
     }
 
     // ---- KLL -----------------------------------------------------------------------------------------------------------------------------
 
-    /** {@code approx_median(x)}, {@code approx_percentile(x, q)}: the q-quantile of a KLL sketch. */
+    /** {@code median(x)}, {@code percentile(x, q)} ≈: the q-quantile of a KLL sketch. */
     public static final class ApproxQuantile implements AggFunction<Object>, Sketch {
         private final String name;
         private final double q;
@@ -335,16 +372,16 @@ public final class Sketches {
 
         @Override
         public String exactText(List<String> inputs) {
-            return "median".equals(name.replace("approx_", "")) ? "median(" + inputs.get(0) + ")"
-                    : "percentile(" + inputs.get(0) + ", " + q + ")";
+            return "median".equals(name) ? "median(" + inputs.get(0) + ")" : "percentile(" + inputs.get(0) + ", " + q + ")";
         }
     }
 
     // ---- Space-Saving -------------------------------------------------------------------------------------------------------------------
 
     /**
-     * {@code top(x, n)}: the rows of the n most frequent values of x (a Space-Saving summary of 10·n counters); {@code top_exact(x, n)}: the
-     * same from every value counted (holistic). The values themselves, with their counts and bounds, are {@link #values}.
+     * The ≈ state of {@code top_n} by rows: the n most frequent values of x (a Space-Saving summary of 10·n counters; exact: every value
+     * counted, holistic); {@link #values} gives them with their counts and bounds, {@link #finish} the rows they hold. Built and tested;
+     * a level's Top N does not use it yet.
      */
     public static final class Top implements AggFunction<Object>, Sketch {
         private final int n;
@@ -362,7 +399,7 @@ public final class Sketches {
 
         @Override
         public String name() {
-            return exact ? "top_exact" : "top";
+            return "top_n";
         }
 
         @Override
@@ -471,7 +508,7 @@ public final class Sketches {
 
         @Override
         public String exactText(List<String> inputs) {
-            return "top_exact(" + inputs.get(0) + ", " + n + ")";
+            return "top_n(" + n + ", count(" + inputs.get(0) + "))";
         }
     }
 }

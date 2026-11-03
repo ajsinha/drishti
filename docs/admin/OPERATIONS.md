@@ -1794,6 +1794,10 @@ are written again, and `--check` fails while any of them is stale.
 When the server is short of memory or threads, new heavy work waits a moment instead of risking an out-of-memory. One gate stands in
 front of every kind of new work that can take a lot of memory at once:
 
+Memory counts as short only when **both** hold: the heap after the last collection is past its level, **and** less than
+`memory-free-min-mb` (768 MB) is left. A small heap that sits past 85% in its steady state is not refused for it, and a large heap still
+with gigabytes free at 85% keeps working; the same share on a 4 GB heap (about 600 MB left) waits.
+
 | New work | Code when it waits | Waits when | Tried again after (`Retry-After`) |
 |---|---|---|---|
 | a sign-in | `503 DRS-9501` | memory after clean-up over `memory-refuse-sign-in` (92%) | 45 s |
@@ -1873,6 +1877,7 @@ drishti:
     memory-warn: 0.80
     memory-refuse-heavy: 0.85     # new loads, downloads, BI runs, bulk loads
     memory-refuse-sign-in: 0.92   # new sign-ins
+    memory-free-min-mb: 768       # the memory levels act only while less than this is left after a collection
     queued-loads: 2               # loads that may wait behind each engine's load-threads
     open-heap-refuse: 1.2         # times the open dates' safety net
     request-handlers: 200

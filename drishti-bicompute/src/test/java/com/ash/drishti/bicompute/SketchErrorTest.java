@@ -267,20 +267,28 @@ class SketchErrorTest {
 
     @Test
     void exactOnRequestEqualsExactAndAutoAnswersBySketchAboveTheThreshold() {
-        try (PivotFixture fx = new PivotFixture(2_000, StateCache.none(), PivotCore.Settings.defaults())) {
+        try (PivotFixture fx = new PivotFixture(2_000, StateCache.lru(16L << 20), PivotCore.Settings.defaults())) {
             Map<String, Object> view = Map.of("source", "trades", "rows", List.of("REGION"), "values",
-                    List.of(Map.of("measure", "approx_count_distinct(CPTY)", "as", "Cptys"), Map.of("measure", "count_distinct(CPTY)", "as", "Exact"),
-                            Map.of("measure", "approx_median(PNL)", "as", "Med")));
+                    List.of(Map.of("measure", "distinct(CPTY)", "as", "Exact"), Map.of("measure", "median(PNL)", "as", "Med")));
             Viewer rita = Viewer.of("rita");
             fx.core.hooks(new ScalePolicy(1_000));             // the fixture's 2,000 rows are "large" here
-            Map<String, Object> exact = fx.core.query(rita, PivotView.parse(view), new ScaleOptions(ScaleOptions.Exactness.EXACT, 0, false));
             Map<String, Object> auto = fx.core.query(rita, PivotView.parse(view), ScaleOptions.AUTO);
+            Map<String, Object> exact = fx.core.query(rita, PivotView.parse(view), new ScaleOptions(ScaleOptions.Exactness.EXACT, 0, false));
             for (Map<String, Object> cell : PivotCoreTest.cells(exact).values()) {
-                assertThat(PivotCoreTest.val(cell, "Cptys")).isEqualTo(PivotCoreTest.val(cell, "Exact"));
+                @SuppressWarnings("unchecked")
+                Map<String, String> coords = (Map<String, String>) cell.get("coords");
+                String w = coords.isEmpty() ? "" : " WHERE REGION = ?";
+                Object[] p = coords.isEmpty() ? new Object[0] : new Object[] {coords.get("REGION")};
+                assertThat(PivotCoreTest.val(cell, "Exact")).as("exact on request, not the cached sketch").isEqualTo(
+                        fx.scalar("SELECT count(DISTINCT CPTY) FROM trades" + w, p));
             }
+            @SuppressWarnings("unchecked")
+            List<Map<String, Object>> exactMeasures = (List<Map<String, Object>>) exact.get("measures");
+            assertThat(exactMeasures).allSatisfy(m -> assertThat(m.get("kind")).isEqualTo("holistic"));
             @SuppressWarnings("unchecked")
             List<Map<String, Object>> measures = (List<Map<String, Object>>) auto.get("measures");
             assertThat(measures).allSatisfy(m -> assertThat(m.get("kind")).isEqualTo("sketch"));
+            assertThat(measures).extracting(m -> m.get("label")).containsExactly("Exact", "Med");
             assertThat(measures.get(0).get("error").toString()).contains("HyperLogLog").contains("4,096");
             Double approxGrand = null;
             Double exactGrand = null;

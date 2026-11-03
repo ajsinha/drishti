@@ -252,15 +252,11 @@ def test_about_this_page_says_the_same_and_is_drawn_from_json_on_a_client_page(b
 
 
 def test_a_table_that_offers_pivot_opens_the_pivot_screen_on_its_rows(browser, console):
-    # the server-drawn page has the Pivot link; a published client renderer draws its old switch, whose Pivot opens the same screen
+    # the server-drawn page and the client renderer (1.2.0) both carry the Pivot link to the pivot screen on the panel's rows
     for mode, page in each_mode(browser, f"{console}/v/netting-set/NS-NORTH-01"):
         link = page.locator("#p-trades .pv-open a")
-        if link.count():
-            assert link.first.get_attribute("href").startswith("/pivot?source=panel")
-            continue
-        with page.expect_popup() as popup:
-            page.locator("#p-trades [data-pv-tab='pivot']").click()
-        assert "/pivot?source=panel" in popup.value.url, mode
+        assert link.count() == 1, mode
+        assert link.first.get_attribute("href") == "/pivot?source=panel/netting-set/trades/NS-NORTH-01", mode
 
 
 def test_a_nested_pivot_is_drawn_as_the_same_grid(browser, console):

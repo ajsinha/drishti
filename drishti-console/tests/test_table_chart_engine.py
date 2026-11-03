@@ -13,7 +13,8 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.1): table-chart-engine.js under Node, as
-test_pivot.py runs pivot-engine.js. Classify, defaults, normalise, the mapping onto the pivot engine, aggregation, Top N
+with the pivot engine's answer stood in (the server's engine aggregates: PivotApiTest, RowsProviderTest). Classify, defaults, normalise,
+the mapping onto the pivot engine, the figures per X, Top N
 and Others, buckets and gaps, the pie refusal, masks, the summary, the export grid and the ECharts option (two axes,
 stacking, 100%, combo, and no literal colour)."""
 from __future__ import annotations
@@ -30,7 +31,56 @@ pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node
 
 HARNESS = """
 const E = require(process.argv[1]);
+const P = require(require('path').join(require('path').dirname(process.argv[1]), 'pivot-engine.js'));
 const input = JSON.parse(process.argv[2]);
+// The pivot engine's answer as the server gives it (POST /api/pivot/inline; RowsProviderTest and PivotApiTest prove the figures): one cell
+// per pair of key prefixes, blanks left out of every function, members in the engine's order. A stand-in so the drawing is tested alone.
+function engineCube(records, arr, kept) {
+  const at = {}; records.fields.forEach((f, i) => { at[f.name] = i; });
+  const has = (v) => v !== null && v !== undefined && v !== '';
+  const num = (v) => typeof v === 'number' && isFinite(v);
+  const natural = (a, b) => a.localeCompare(b, 'en', { numeric: true, sensitivity: 'base' }) || (a < b ? -1 : a > b ? 1 : 0);
+  const order = (a, b) => a === b ? 0 : a === P.BLANK ? 1 : b === P.BLANK ? -1 : natural(a, b);
+  const key = (f, row) => { const k = P.keyText(row[at[f]]); return kept && kept[f] && !kept[f][k] ? P.OTHERS_KEY : k; };
+  const cells = {}, rk = {}, ck = {};
+  records.rows.forEach((row) => {
+    const r = arr.rows.map((f) => key(f, row)), c = arr.columns.map((f) => key(f, row));
+    rk[r.join(P.US)] = r; ck[c.join(P.US)] = c;
+    [r, []].forEach((x) => (c.length ? [c, []] : [[]]).forEach((y) => {
+      const k = P.cellKey(x, y), acc = cells[k] || (cells[k] = arr.values.map(() => ({ n: 0, k: 0, s: 0, lo: null, hi: null, set: {} })));
+      arr.values.forEach((v, i) => {
+        const val = row[at[v.field]], a = acc[i];
+        if (!has(val)) { return; }
+        a.n++; a.set[P.keyText(val)] = true;
+        if (num(val)) { a.k++; a.s += val; a.lo = a.lo === null || val < a.lo ? val : a.lo; a.hi = a.hi === null || val > a.hi ? val : a.hi; }
+      });
+    }));
+  });
+  Object.keys(cells).forEach((k) => {
+    cells[k] = cells[k].map((a, i) => {
+      const g = arr.values[i].agg;
+      return g === 'count' ? a.n : g === 'distinct' ? Object.keys(a.set).length : !a.k ? null : g === 'avg' ? a.s / a.k : g === 'min' ? a.lo : g === 'max' ? a.hi : a.s;
+    });
+  });
+  const keys = (m) => Object.values(m).filter((k) => k[0] !== P.OTHERS_KEY).sort((a, b) => { for (let i = 0; i < a.length; i++) { const d = order(a[i], b[i]); if (d) { return d; } } return 0; });
+  const cube = { rows: arr.rows, columns: arr.columns, values: arr.values, rowKeys: keys(rk), columnKeys: arr.columns.length ? keys(ck) : [], cells: cells,
+    count: records.rows.length, rowOthers: 0, columnOthers: 0 };
+  if (kept) { return cube; }
+  // the engine's Top N: each level's members ranked by the measure (largest first, ties in member order), the rest one Others member
+  const top = arr.top || {}, keep = {}, more = {};
+  Object.keys(top).forEach((f) => {
+    const onRows = arr.rows.indexOf(f) >= 0, members = (onRows ? cube.rowKeys : cube.columnKeys).map((k) => k[0]);
+    if (members.length <= top[f].n) { return; }
+    const fig = (m) => { const v = cells[onRows ? P.cellKey([m], []) : P.cellKey([], [m])]; return v && num(v[top[f].by]) ? v[top[f].by] : -Infinity; };
+    const ranked = members.map((m, i) => ({ m, i, v: fig(m) })).sort((a, b) => (b.v - a.v) || (a.i - b.i)).slice(0, top[f].n);
+    keep[f] = {}; ranked.forEach((x) => { keep[f][x.m] = true; }); more[f] = members.length - top[f].n;
+  });
+  if (!Object.keys(keep).length) { return cube; }
+  const again = engineCube(records, arr, keep);
+  arr.rows.forEach((f) => { if (more[f]) { again.rowOthers = more[f]; } });
+  arr.columns.forEach((f) => { if (more[f]) { again.columnOthers = more[f]; } });
+  return again;
+}
 const out = (function (E, input) { %s })(E, input);
 process.stdout.write(JSON.stringify(out === undefined ? null : out));
 """
@@ -58,7 +108,7 @@ CASH = records(
 BUILD = """
 const cols = E.classify(input.r.fields, input.r);
 const n = E.normalise(input.s, cols);
-const m = E.build(input.r, cols, n.settings, input.o || {});
+const m = E.build(input.r, cols, n.settings, Object.assign({ cube: engineCube }, input.o || {}));
 """
 
 
@@ -162,19 +212,19 @@ def test_normalise_drops_unknown_keys_cuts_series_replaces_bad_enums_and_checks_
 
 # ---- the mapping and the aggregation ----------------------------------------------------------------------------------
 
-def test_x_maps_to_rows_split_to_columns_and_series_to_values_with_avg_asking_sum_and_count():
+def test_x_maps_to_rows_split_to_columns_and_series_to_values_and_the_split_asks_the_engines_top_n():
     s = {"v": 1, "type": "bar", "x": {"field": "CURRENCY"}, "split": "PAY_DATE",
          "series": [{"field": "AMOUNT", "agg": "sum"}, {"field": "PV", "agg": "avg"}, {"agg": "count"}]}
     a = js("const cols = E.classify(input.r.fields, input.r); return E.toArrangement(E.normalise(input.s, cols).settings).arrangement;", {"r": CASH, "s": s})
     assert a["rows"] == ["CURRENCY"] and a["columns"] == ["PAY_DATE"]
-    assert a["values"] == [{"field": "AMOUNT", "agg": "sum"}, {"field": "PV", "agg": "avg"}, {"field": "PV", "agg": "sum"},
-                           {"field": "PV", "agg": "count"}, {"field": "·rows", "agg": "count"}]
+    assert a["values"] == [{"field": "AMOUNT", "agg": "sum"}, {"field": "PV", "agg": "avg"}, {"field": "·rows", "agg": "count"}]
+    assert a["top"] == {"PAY_DATE": {"n": 11, "by": 0}}                        # an average's Others is the engine's, from its own rows
 
 
 @pytest.mark.parametrize("agg,expected", [("sum", [120, 200, 110]), ("avg", [40, 200, 55]), ("count", [3, 1, 2]),
                                           ("min", [-30, 200, 10]), ("max", [100, 200, 100])])
 def test_aggregation_per_x_with_repeated_x_and_blanks(agg, expected):
-    """A blank Y is left out of sum, avg, min and max; count of a field counts its non-blank values (pivot-engine.js Acc)."""
+    """A blank Y is left out of sum, avg, min and max; count of a field counts its non-blank values (the engine's functions)."""
     r = records([{"name": "M", "type": "text"}, "AMOUNT"], [["a", 100], ["a", 50], ["a", -30], ["b", 200], ["c", 10], ["c", None], ["c", 100]])
     m = build(r, {"v": 1, "type": "bar", "x": "M", "series": [{"field": "AMOUNT", "agg": agg}], "sort": {"by": "x"}})
     assert m["x"] == ["a", "b", "c"] and m["series"][0]["data"] == expected
@@ -396,14 +446,24 @@ def test_long_text_labels_make_horizontal_bars_and_a_negative_single_bar_uses_ne
     assert o["series"][0]["data"][0]["itemStyle"]["color"] == TOKENS["neg"] and o["series"][0]["data"][1] == 2
 
 
-def test_a_server_cube_draws_like_the_browser_cube():
-    """The search pivot answers the pivot engine's cube shape: drawn through fromCube it equals the browser's drawing."""
+def test_the_engine_answer_of_the_shown_rows_draws_the_chart():
+    """The shown rows go to the engine renamed d0.. and v0.. (POST /api/pivot/inline); its answer, laid out by pivot-engine.js, draws the chart."""
     body = BUILD + """
 const prep = E.prepare(input.r, n.settings, cols, {});
-const c = E.cube(prep, n.settings, {});
-const server = JSON.parse(JSON.stringify(c)); delete server.slots;
-const m2 = E.fromCube(server, n.settings, cols, {});
-return [m.x, m.series.map(d => d.data), m2.x, m2.series.map(d => d.data)];
+const arr = E.toArrangement(n.settings, prep).arrangement;
+const ib = P.inlineBody(prep.records, arr);
+const c = engineCube(prep.records, arr);
+const answer = { rows: c.rowKeys.map(k => ({ kind: 'node', key: 'd0=' + k[0], value: k[0] })).concat([{ kind: 'grand', key: '*' }]),
+  columns: [{ kind: 'grand', key: '*' }], cells: {} };
+answer.rows.forEach(r => {
+  const v = c.cells[P.cellKey(r.kind === 'node' ? [r.value] : [], [])], values = {};
+  ib.measures.forEach((m, i) => { values[m.as] = v[i]; });
+  answer.cells[r.key + '|*'] = { values: values };
+});
+const m2 = E.fromCube(P.fromAnswer(answer, arr, ib.measures), n.settings, cols, {});
+return [m.x, m.series.map(d => d.data), m2.x, m2.series.map(d => d.data), ib.body.fields.map(f => f.name + ':' + f.type), ib.body.view, ib.body.rows[0]];
 """
     out = js(body, {"r": CASH, "s": {"v": 1, "type": "bar", "x": "CURRENCY", "series": ["AMOUNT", {"field": "PV", "agg": "avg"}]}})
+    assert out[4] == ["d0:string", "v0:number", "v1:number"] and out[5]["rows"] == ["d0"] and out[5]["columns"] == []
+    assert [v["measure"] for v in out[5]["values"]] == ["sum(v0)", "avg(v1)"] and out[6] == ["USD", 100, 90] and out[5]["top"] == {}
     assert out[0] == out[2] and out[1] == out[3]
