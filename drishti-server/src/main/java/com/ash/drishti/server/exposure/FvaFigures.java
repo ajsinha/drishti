@@ -19,7 +19,6 @@ import com.ash.drishti.api.AsOf;
 import com.ash.drishti.api.DataNode;
 import com.ash.drishti.api.EntityDocument;
 import com.ash.drishti.api.compute.Viewer;
-import com.ash.drishti.common.DrishtiException;
 import com.ash.drishti.compute.ccr.FvaMath;
 import com.ash.drishti.engine.ViewAugmenter;
 import com.ash.drishti.server.net.NetCaller;
@@ -71,7 +70,7 @@ final class FvaFigures implements ViewAugmenter {
         } else {
             try {
                 figures = figures(svc.answer(who.get(), scope, date, FvaService.Choices.none(), null, null), scope);
-            } catch (DrishtiException | IllegalArgumentException e) {
+            } catch (RuntimeException e) {                         // the page opens whatever FVA says: the reason is shown, never an error
                 figures = note("unavailable", scope, String.valueOf(e.getMessage()).replaceFirst("^DRS-\\d{4} ", ""));
             }
         }
