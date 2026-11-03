@@ -347,13 +347,16 @@ Built for 2.9.12 on branch `wip/fva`; the reference is [FVA_GUIDE.md](../guides/
 | Engine | `FvaMath` (drishti-compute, package `ccr`) prices a profile; `ExposureCalc.profile` reads each netting set's EE and ENE from the matrices the exposure answer already holds (no second exposure computation); `FvaService` answers any exposure scope as the caller, per set and summed |
 | Spreads | borrowing `funding-spread` (FCA) and lending `lending-spread` (FBA; empty: symmetric, the design's single s_F): a curve id read from the curve kind (`ir-curve`, points `TENOR` and `SPREAD`), else a curve of that id in `drishti.ccr.fva.curves` (the demo's synthetic `CRV-USD-FUNDING`, decision 12), else the flat `fallback-spread`, flagged `FUNDING_FALLBACK` |
 | Discounting | `CRV-USD-OIS` of the date (points `TENOR`, `DF`), log-linear in DF from (0, 1), the last segment's rate beyond; no curve: the flat `discount-rate`, flagged `FLAT_DISCOUNT`; DF = 1 for discounted paths |
-| Survival | flat hazards `counterparty-hazard` and `own-hazard` (off by default); per-counterparty credit curves and `own-curve` not yet |
+| Survival | off by default; on, each netting set's counterparty survival from the `credit-curve` its record's `CREDIT_CURVE` names and the bank's from `own-curve`, log-linear; flat hazards flagged `FLAT_HAZARD` otherwise |
 | Run | `require-risk-neutral` true refuses a run not `RISK_NEUTRAL` with DRS-5447 (409); the shipped file sets it false through `DRISHTI_FVA_REQUIRE_RISK_NEUTRAL` for the demo's `REAL_WORLD` run, every figure flagged `REAL_WORLD_RUN` |
 | Switch | its own engine `fva` (`config/engines/fva.yaml`, on by default), needing the exposure engine (the catalogue's `needs`) |
 | API | `GET /api/v1/fva/scope`, `/status`, `/playground`, `/playground.xlsx`, `/playground/template`; all reads (the `read` token scope) |
 | Screens | one FVA screen over the one answer, views A (a netting set, default), B (the netting sets by FVA), C (a counterparty), the decided mock-ups; the netting-set page's strip, term bars and Funding panel (`FVA_ENGINE` on the netting-set and counterparty documents); CVA shown as planned |
-| Playground | `PLAY FVA`: Choices, terms by date with the formula bar, explanation; the workbook (Main, Config, Data, Terms, Explain, Provenance) of live formulas (`LN` joined the common set), equal to the engine to the cent under LibreOffice; the profile mode only |
-| Not yet | the computed kind `fva-result` and its connector, official FVA captures, the CCR cube's FVA measure, the `paths` mode, survival from credit curves, a funding curve in the generated market data |
+| Playground | `PLAY FVA`: Choices, terms by date with the formula bar, explanation; the workbook (Main, Config, Data, Paths, Terms, Explain, Provenance) of live formulas (`LN` joined the common set), equal to the engine to the cent under LibreOffice; the `profile` mode and the `paths` mode (EE and ENE the means of each set's exposures on the paths after the CSA) |
+| Kind | `fva-result` (`FVAR`) through the reactive connector `fva-engine` (`FvaResultEngine`), the one answer in the kinds' names (decision 9) |
+| Official | the exposure engine's official record captures each set's, counterparty's and group's FVA with its exposure; the published tables keep their columns (`fva-official` columns there: not yet) |
+| CCR cube | the pivot source `fva` (`FvaPivotProvider`: netting set, counterparty, legal entity, group; `fva()`, `fca()`, `fba()`), the provider the cube's FVA measure reads (decision 15); the cube itself is not built here |
+| Not yet | FVA columns in the published official tables, the paths mode's collateral as formulas (the Exposure Playground's tabs), a funding curve in the generated market data, CVA and DVA |
 
 ## 6. The CCR cube core: data flow
 

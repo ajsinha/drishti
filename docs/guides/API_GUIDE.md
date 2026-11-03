@@ -3243,12 +3243,14 @@ of its sets'. Every endpoint is `GET` and reads only (the `read` token scope); e
 | `GET /api/v1/fva/scope?scope=…` | the one answer every screen draws: `figures` (`fca`, `fba`, `fva`, `sumEeDt`, `life`, `epeLife`, `eneLife`), `epeReading`, `terms[]` per primary date (`date`, `tenor`, `t`, `dt`, `df`, `sb`, `sl`, `survival`, `ee`, `ene`, `eeStar`, `eneStar`, `eePoint`, `enePoint`, `fca`, `fba`), `nettingSets[]` (each set's figures, `csa`, `fcaTerms`, `fbaTerms`; sorted by FVA), `counterparties[]`, `largest`, `settings` (the choices and the curves' points and sources), `cva` (`planned`), `flags`, `provenance`, `playground` |
 | `GET /api/v1/fva/status` | the settings and the funding and discount curves of the newest date, with their sources and flags |
 | `GET /api/v1/fva/playground?scope=…` | the answer with `choices`, `explainSteps` and `maxSets` (a netting set or up to `playground-max-sets` sets) |
-| `GET /api/v1/fva/playground.xlsx?scope=…` | the workbook of live formulas (Main, Config with the choice cells, Data, Terms, Explain, Provenance), equal to the engine to the cent |
+| `GET /api/v1/fva/playground.xlsx?scope=…&mode=profile\|paths` | the workbook of live formulas (Main, Config with the choice cells, Data, Terms, Explain, Provenance; with `mode=paths` a Paths tab whose means are EE and ENE), equal to the engine to the cent |
 | `GET /api/v1/fva/playground/template` | the same workbook on the hand-built case F1 (b) |
 
 Refusals: `400 DRS-5440` for a bad scope or choice or a playground over `playground-max-sets` netting sets; `403` for the playground when
 the caller sees some of the sets only in aggregate (the scope answer then carries the total alone, flagged `SETS_AGGREGATE`); `409 DRS-5447`
 for a run that is not risk-neutral with `require-risk-neutral: true`; `404 DRS-1020` when FVA or the exposure engine is off on this server.
+The same answer is the computed kind `fva-result` (`POST /api/v1/compute/fva-engine/fva-result`, `/api/v1/entities/fva-result/{scope}/raw`; the
+FVA guide, section 6.1), and each scope's FVA is in the exposure engine's official record (`GET /api/v1/exposure/official`, `fva`).
 
 ## Exposure engine: `/api/v1/exposure`
 

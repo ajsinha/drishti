@@ -98,7 +98,8 @@ kind's FVA field is not read.
 | Discount factor DF(t) | the `ir-curve` document `CRV-USD-OIS` of the date (`POINTS[].TENOR`, `DF`) | log-linear in DF between (0, 1) and the points, the last segment's rate beyond; DF = 1 when the run's `VALUE_BASIS` is `DISCOUNTED`; no curve: the flat `discount-rate`, flagged `FLAT_DISCOUNT` |
 | Borrowing spread s_B(t) | `funding-spread`: a curve id read from the `ir-curve` kind (points `TENOR`, `SPREAD` in decimals), else a curve of the same id in `drishti.ccr.fva.curves`, else a flat number | linear in t between points, flat beyond; no curve anywhere: `fallback-spread`, flagged `FUNDING_FALLBACK` |
 | Lending spread s_L(t) | `lending-spread`, as the borrowing one; empty: the same (symmetric) | as s_B |
-| Survival S_C(t) · S_B(t) | the flat hazards `counterparty-hazard` and `own-hazard` | e^(−(h_C + h_B) t); only with `funding-survival` |
+| Survival S_C(t) | the counterparty's credit curve: the `credit-curve` document its record's `CREDIT_CURVE` names (points `TENOR`, `SURVIVAL`) | log-linear in S from (0, 1); no curve: the flat `counterparty-hazard`, e^(−h_C t), flagged `FLAT_HAZARD`; only with `funding-survival` |
+| Survival S_B(t) | the bank's own credit curve `own-curve` in the same kind | as S_C; empty or not found: the flat `own-hazard` |
 | The run's calibration | the exposure run's `CALIBRATION` | not `RISK_NEUTRAL`: refused, or computed and flagged (section 10) |
 
 **The demo's funding curve.** The demo names `CRV-USD-FUNDING`, a synthetic, labelled curve of the bank's unsecured spread over OIS
@@ -112,7 +113,7 @@ says which source it used.
 |---|---|---|---|
 | `ee-point` (`eePoint`) | `end`, `mid` | `end` | `end`: EE*(t_k) stands for the period (t_(k−1), t_k]; `mid`: the average of both ends, EE*(t_0) = CE |
 | `fba` | on, off | on | off: FCA only (asymmetric funding), FBA = 0 |
-| `funding-survival` (`survival`) | on, off | off | on: each term × S_C(t_k) · S_B(t_k): funding stops at either default (decision 11) |
+| `funding-survival` (`survival`) | on, off | off | on: each term × S_C(t_k) · S_B(t_k), each netting set with its own counterparty's curve: funding stops at either default (decision 11) |
 | `funding-spread` (`spread`) | a curve id or a fraction | `CRV-USD-FUNDING` | `0.006` is a flat 60 bp: what-if on the spread |
 
 The defaults are settings (section 9); a request may change any of them (`?eePoint=mid&fba=off&survival=on&spread=0.006`), and the
@@ -154,7 +155,37 @@ All `GET`, read-only: a token with the default `read` scope may call them; nothi
 | `GET /api/v1/fva/playground.xlsx?scope=…` | the workbook of live formulas (section 8) |
 | `GET /api/v1/fva/playground/template` | the workbook of the hand-built case F1 (b) |
 
-The scope is the exposure engine's grammar: `NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `BOOK:`, a hierarchy's word, `BANK`.
+The scope is the exposure engine's grammar: `NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `BOOK:`, a hierarchy's word, `BANK`. The
+workbook's `mode` is `profile` (the default) or `paths` (section 8).
+
+### 6.1 FVA as a kind: `fva-result`
+
+The computed kind `fva-result` (command `FVAR`; the word `FVA` opens the screen) is the same answer as a kind, so a Calc snippet, BI, the
+entities API, search and the CCR cube read FVA like any other data: `FVAR NSET:NS-ALDERSHOT-FRA <GO>`, `/v/fva-result/CPTY:CP-ALDERSHOT`,
+`drishti.get_async("fva-result", "BANK")`. The counterparty-risk pack's reactive connector `fva-engine` (`engine.type: java`,
+`FvaResultEngine`) answers it as the viewer; the id is the scope and the choices are parameters after `~` (`CPTY:CP-ALDERSHOT~fba=off`).
+The record is the answer in the kinds' names: `SCOPE`, `SCOPE_KIND`, `LABEL`, `BUSINESS_DATE`, `RUN_ID`, `CALIBRATION`, `FCA`, `FBA`,
+`FVA`, `EPE_LIFE`, `LIFE`, `FUNDING_SPREAD`, `EE_POINT`, `FUNDING_SURVIVAL`, `FBA_ON`, `NETTING_SETS`, `BY_NETTING_SET`, `TERMS`,
+`CVA_STATUS`, `FLAGS`, `PROVENANCE`, `STATUS`; never stored. Its data contract is
+[fva-result.contract.yaml](../../config/packs/counterparty-risk/contracts/fva-result.contract.yaml); it is computed again when the
+exposure paths, the netting sets, the CSAs, the collateral, the valuations, the curves or the credit curves load (the data-version
+trigger).
+
+### 6.2 Official FVA
+
+The exposure engine's official end-of-day record ([EXPOSURE_GUIDE.md section 20](EXPOSURE_GUIDE.md#20-official-end-of-day-results))
+captures each netting set's, counterparty's and group's FVA with its exposure, from the same answer, as the server: `fva` beside each
+scope's figures in `GET /api/v1/exposure/official` (`fca`, `fba`, `fva`, `epeLife`, the funding spread and its source, the discount curve,
+the choices and the flags). With `require-risk-neutral` on and a run that is not risk-neutral the scope's `fva` is `{status: refused,
+reason}`. The published tables (`risk-results/exposure-official-cpty`) keep their columns; FVA columns there are not published yet.
+
+### 6.3 FVA as a pivot measure
+
+The pivot engine's source `fva` (`FvaPivotProvider`) is the provider the CCR cube reads FVA through (decision 15): the netting sets of the
+date as the person sees them, the dimensions `NETTING_SET`, `COUNTERPARTY`, `LEGAL_ENTITY` and `GROUP`, the measures `fva()`, `fca()`,
+`fba()` and `nettingSets()`. FVA adds over sets, so a cell is the sum of its netting sets' FVA from one answer of the bank and equals the
+engine's answer for the cell's scope, which its provenance names (`CPTY:CP-ALDERSHOT`). A role that sees some sets only in aggregate gets
+no dimension.
 
 ## 7. The command line
 
@@ -165,6 +196,7 @@ drishti.py fva sets BANK                             # the netting sets by FVA, 
 drishti.py fva status                                # the settings and the funding curve of the newest date
 drishti.py play fva NSET:NS-ALDERSHOT-FRA            # the terms by date
 drishti.py play fva CPTY:CP-ALDERSHOT --xlsx aldershot-fva.xlsx
+drishti.py play fva NSET:NS-ALDERSHOT-FRA --mode paths --xlsx fva-paths.xlsx   # EE and ENE the means of the paths
 drishti.py play fva --example --xlsx fva-example.xlsx
 ```
 
@@ -182,10 +214,15 @@ alike; `LN` and `EXP` for the discount factors, `INDEX` and `MATCH` for the inte
 | Tab | What it holds |
 |---|---|
 | **Main** | the band (ALL CHECKS PASS), each netting set's FCA, FBA and FVA beside the engine's with a check, the scope's sum, the check FVA = FCA + FBA, the EPE reading, CVA (planned) |
-| **Config** | the choices as drop-downs (`EePoint`, `FundingSurvival`, `IncludeFba`), the hazards, the borrowing spread's points, the lending spread's (formulas that follow the borrowing ones when funding is symmetric), the discount curve's points from the anchor (0, 1) |
-| **Data** | per netting set: today's CE and its negative, then EE and ENE at each primary date |
-| **Terms** | per date: t, Δt, DF (log-linear), s_B and s_L (linear), S; per set: EE*, ENE*, the FCA and FBA terms |
+| **Config** | the choices as drop-downs (`EePoint`, `FundingSurvival`, `IncludeFba`), where the survival came from, the mode, the borrowing spread's points, the lending spread's (formulas that follow the borrowing ones when funding is symmetric), the discount curve's points from the anchor (0, 1) |
+| **Data** | per netting set: today's CE and its negative, then EE, ENE and S = S_C · S_B (from the credit curves) at each primary date; in the paths mode EE and ENE are formulas, `AVERAGE` of the set's paths |
+| **Paths** (the paths mode) | per netting set: its exposure E and negative exposure N on every path at each primary date, after the CSA (the exposure engine's), up to `playground-max-paths` paths |
+| **Terms** | per date: t, Δt, DF (log-linear), s_B and s_L (linear); per set: S (its survival when FundingSurvival is on, else 1), EE*, ENE*, the FCA and FBA terms |
 | **Explain**, **Provenance** | the words of every step and term ([explain.txt](../../drishti-server/src/main/resources/playground/fva/template/explain.txt)); the run, the curves and their sources, the flags |
+
+**Two modes.** `profile` (the default) writes EE and ENE as the exposure engine computed them; `paths` (the Workbook choice, `mode=paths`,
+`--mode paths`) writes each set's paths and makes EE and ENE their means, so the whole chain from the exposures on the paths to FVA is in
+one workbook. The survival is written for every set whichever the switch, so FundingSurvival can be flipped in Config.
 
 A figure equals the engine's when `ABS(workbook − engine) < 0.005`. Flip a choice in Config and FVA recomputes; the engine checks then turn
 red by design (the engine answered the original question) while FVA = FCA + FBA stays green. The defined names `FCA`, `FBA`, `FVA`,
@@ -209,11 +246,14 @@ drishti.ccr.fva:
   curves: [{ id: CRV-USD-FUNDING, label: "...", points: [{ tenor: 6M, spread: 0.0040 }, ...] }]
   ee-point: end
   funding-survival: false
-  counterparty-hazard: 0.0
+  credit-curve-kind: credit-curve    # the counterparty's curve: its record's CREDIT_CURVE
+  own-curve: ""                      # the bank's own credit curve; empty: own-hazard
+  counterparty-hazard: 0.0           # FLAT_HAZARD
   own-hazard: 0.0
   fba: true
   require-risk-neutral: ${DRISHTI_FVA_REQUIRE_RISK_NEUTRAL:false}   # true in production
   playground-max-sets: 20
+  playground-max-paths: 5000
   playground-template: ""
 ```
 
@@ -227,10 +267,11 @@ Every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md) and in Help → Co
 | **DRS-5447** (409) | the same with `require-risk-neutral: true` (production, decision 10): FVA is a price and needs a risk-neutral run |
 | `FUNDING_FALLBACK` | the funding curve was found neither in the curve kind nor in the configuration: the flat `fallback-spread` priced it |
 | `FLAT_DISCOUNT` | the discount curve was not found: the flat `discount-rate` discounted |
+| `FLAT_HAZARD` | with survival weighting, a counterparty's record names no credit curve (or it is not found), or `own-curve` is not found: the flat hazard priced it |
 | `PATHS_DISCOUNTED` | the run's values are already discounted: DF = 1 |
 | `SETS_AGGREGATE` | the caller sees some netting sets only in aggregate: the total without the sets |
 | `partial`, `stale-run` and the exposure engine's flags | carried from the exposure answer |
-| DRS-5440 (400) | a bad scope or choice (`eePoint` not end or mid, `fba` not on or off, a spread outside −5 % to 50 %), or a playground over 20 sets |
+| DRS-5440 (400) | a bad scope or choice (`eePoint` not end or mid, `fba` not on or off, a spread outside −5 % to 50 %, `mode` not profile or paths), a playground over 20 sets, or the paths mode over `playground-max-paths` paths |
 | DRS-1020 (404) | FVA or the exposure engine is off on this server |
 
 ## 11. The tests that prove it
@@ -240,20 +281,23 @@ Every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md) and in Help → Co
   sets, the curves' interpolation and the tenors.
 - **FvaApiTest** (drishti-server, the exposure lake fixture): NS-X by hand (FCA −4,750, FBA 3,000, FVA −1,750 at 50 bp, Δt 0.2, 0.2, 0.6),
   CP-1 as the sum of its sets (−3,250), the choices moving the figures as the formulas say, an aggregate viewer, the playground and its
-  workbooks.
+  workbooks, `fva-result` through its reactive connector, FVA in the official record, the pivot source's catalogue.
+- **FvaServiceTest**: DRS-5447 (409) for a run that is not risk-neutral with `require-risk-neutral` on, `REAL_WORLD_RUN` with it off, a
+  risk-neutral run never flagged; a credit curve's survival read log-linear; the kind's names and the pivot cells' scopes; the defaults.
 - **FvaPlaygroundWorkbookTest**: the workbook written without cached values and recalculated by headless LibreOffice equals the engine to
-  the cent for case F1 (a) to (d), the mid point, FCA only, an asymmetric lending spread on an OIS-like curve and two netting sets side by
-  side; the formula scanner finds no function outside the common set.
+  the cent for case F1 (a) to (d), the mid point, FCA only, an asymmetric lending spread on an OIS-like curve, two netting sets side by
+  side each with its own survival, and the paths mode (EE and ENE the means of the paths); the formula scanner finds no function outside
+  the common set.
 - **test_fvacli.py**, **test_fva.py**: the command line and the console pass the choices through and compute nothing.
 
 ## 12. What is not built yet
 
-- The computed kind `fva-result` and its reactive connector (BI and the CCR cube's FVA measure read it), and official FVA captures per set
-  and counterparty.
-- Survival weighting from each counterparty's credit curve and the bank's own (`own-curve`); today flat hazards from the settings.
-- The `paths` mode of the playground (EE and ENE as formulas over the Exposure Playground's paths).
+- FVA columns in the published official tables (the official record keeps FVA; section 6.2).
+- In the paths mode, the collateral on each path as formulas (the Exposure Playground's tabs): today E and N are the exposure engine's
+  values after the CSA.
 - A funding curve in the market-data pack's generated test data; today the demo's curve is configured in `config/engines/fva.yaml`.
-- CVA and DVA in the same engine; the CCR cube's FVA measure and the counterparty tiles of its tab C.
+- CVA and DVA in the same engine; the CCR cube itself (its FVA chip and the counterparty tiles of its tab C read the pivot source of
+  section 6.3).
 
 ---
 
