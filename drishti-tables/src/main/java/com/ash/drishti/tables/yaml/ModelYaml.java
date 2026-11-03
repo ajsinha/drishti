@@ -214,7 +214,7 @@ public final class ModelYaml {
     /** The canonical YAML of {@code m}, with {@code header} comment lines first. */
     public static String write(ModelDef m, List<String> header) {
         Writer w = new Writer();
-        header.forEach(h -> w.line("# " + h));
+        header.forEach(h -> w.line(h.startsWith("#") || h.isEmpty() ? h : "# " + h));
         w.line("rachana: " + TableYaml.RACHANA);
         w.kv("model", m.name());
         w.kv("version", m.version());

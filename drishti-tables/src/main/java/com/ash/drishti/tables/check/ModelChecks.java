@@ -95,8 +95,18 @@ public final class ModelChecks {
             TableChecks.masked(t.get()).forEach(c -> masked.add(u.alias() + "." + c));
         }
         types.put("business_date", "date");
+        Set<String> aliases = new LinkedHashSet<>(m.tables().keySet());
+        if (m.extras().get("history") instanceof Map<?, ?> h) {
+            aliases.add("history");                                         // the sampled measures (Q14): history.ts and one column per measure
+            columns.add("history.ts");
+            for (String k : List.of("measures", "by")) {
+                if (h.get(k) instanceof List<?> l) {
+                    l.forEach(x -> columns.add("history." + x));
+                }
+            }
+        }
         relationships(m, byAlias, columns, types, out);
-        ExpressionChecker.Env env = new ExpressionChecker.Env(columns, m.tables().keySet(), m.measures().keySet(), types, masked, 0);
+        ExpressionChecker.Env env = new ExpressionChecker.Env(columns, aliases, m.measures().keySet(), types, masked, 0);
         for (ModelDef.Measure x : m.measures().values()) {
             if (x.expr() != null) {
                 out.addAll(expressions.check(x.expr(), ExpressionChecker.Scope.AGGREGATE, env, "measures." + x.name() + ".expr"));

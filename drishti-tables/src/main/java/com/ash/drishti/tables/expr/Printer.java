@@ -72,9 +72,10 @@ public final class Printer {
             case Node.Binary b -> {
                 int me = level(b);
                 boolean cmp = me == 4;
-                sub(b.left(), cmp ? level(b.left()) <= me : level(b.left()) < me, sb);
+                boolean or = b.op().equals("||");                         // (a && b) || c: the parentheses a reader expects, read as the same tree
+                sub(b.left(), cmp ? level(b.left()) <= me : level(b.left()) < me || or && level(b.left()) == 3, sb);
                 sb.append(' ').append(b.op().equals("not-in") ? "not in" : b.op()).append(' ');
-                sub(b.right(), level(b.right()) <= me, sb);
+                sub(b.right(), level(b.right()) <= me || or && level(b.right()) == 3, sb);
             }
             case Node.Cond c -> {
                 sub(c.test(), level(c.test()) <= 1, sb);

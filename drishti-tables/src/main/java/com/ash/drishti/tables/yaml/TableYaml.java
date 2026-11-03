@@ -167,7 +167,17 @@ public final class TableYaml {
                     y.text(v, "type", path, null), y.text(v, "role", path, null), y.text(v, "meaning", path, null), y.text(v, "references", path, null),
                     y.text(v, "unit", path, null), add == null || add.isNull() ? null : add.asBoolean(), y.text(v, "aggregate", path, null),
                     y.text(v, "format", path, null), v.path("key").asBoolean(false) || "key".equals(v.path("role").asText()), y.text(v, "description", path, null),
-                    v.path("masked").asBoolean(false), y.strings(v, "hidden-for", path)));
+                    v.path("masked").asBoolean(false), y.strings(v, "hidden-for", path), extras(v)));
+        }
+        return out;
+    }
+
+    private static Map<String, Object> extras(JsonNode v) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        for (String k : List.of("title", "id", "term", "means", "sign", "of")) {
+            if (v.has(k)) {
+                out.put(k, Yaml.plain(v.get(k)));
+            }
         }
         return out;
     }
@@ -223,7 +233,7 @@ public final class TableYaml {
     /** The canonical YAML of {@code t}, with {@code header} comment lines first (each written as {@code # line}). */
     public static String write(TableDef t, List<String> header) {
         Writer w = new Writer();
-        header.forEach(h -> w.line("# " + h));
+        header.forEach(h -> w.line(h.startsWith("#") || h.isEmpty() ? h : "# " + h));
         w.line("rachana: " + RACHANA);
         w.kv("table", t.name());
         if (t.was() != null) {

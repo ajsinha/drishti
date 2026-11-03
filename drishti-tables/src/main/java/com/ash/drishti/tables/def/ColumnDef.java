@@ -39,9 +39,11 @@ import java.util.Set;
  * @param description the words, or null
  * @param masked true when readers without the raw power see {@code •••} (Q9; a column built from a masked path is masked too)
  * @param hiddenFor roles that never see the column, never null
+ * @param extras the other descriptive keys as written ({@code title}, {@code id}, {@code term}, {@code means}, {@code sign}, {@code of})
  */
 public record ColumnDef(String name, String path, String expr, Object python, String type, String role, String meaning, String references,
-        String unit, Boolean additive, String aggregate, String format, boolean key, String description, boolean masked, List<String> hiddenFor) {
+        String unit, Boolean additive, String aggregate, String format, boolean key, String description, boolean masked, List<String> hiddenFor,
+        Map<String, Object> extras) {
 
     /** The types a column may have (DEL's, kept by checked mode). */
     public static final Set<String> TYPES = Set.of("string", "integer", "decimal", "boolean", "date", "timestamp");
@@ -49,33 +51,37 @@ public record ColumnDef(String name, String path, String expr, Object python, St
     /** The roles a column may have. */
     public static final Set<String> ROLES = Set.of("key", "dimension", "measure", "attribute", "time");
 
+    /** The descriptive keys kept as written in {@link #extras}. */
+    public static final Set<String> EXTRA_KEYS = Set.of("title", "id", "term", "means", "sign", "of");
+
     public ColumnDef {
         hiddenFor = hiddenFor == null ? List.of() : List.copyOf(hiddenFor);
+        extras = extras == null ? Map.of() : java.util.Collections.unmodifiableMap(new java.util.LinkedHashMap<>(extras));
     }
 
     /** A column that reads a path. */
     public static ColumnDef ofPath(String name, String path, String type) {
-        return new ColumnDef(name, path, null, null, type, null, null, null, null, null, null, null, false, null, false, null);
+        return new ColumnDef(name, path, null, null, type, null, null, null, null, null, null, null, false, null, false, null, null);
     }
 
     /** A calculated column. */
     public static ColumnDef ofExpr(String name, String expr, String type) {
-        return new ColumnDef(name, null, expr, null, type, null, null, null, null, null, null, null, false, null, false, null);
+        return new ColumnDef(name, null, expr, null, type, null, null, null, null, null, null, null, false, null, false, null, null);
     }
 
     /** The same column with {@code masked} set. */
     public ColumnDef withMasked(boolean m) {
-        return new ColumnDef(name, path, expr, python, type, role, meaning, references, unit, additive, aggregate, format, key, description, m, hiddenFor);
+        return new ColumnDef(name, path, expr, python, type, role, meaning, references, unit, additive, aggregate, format, key, description, m, hiddenFor, extras);
     }
 
     /** The same column reading another path. */
     public ColumnDef withPath(String p) {
-        return new ColumnDef(name, p, expr, python, type, role, meaning, references, unit, additive, aggregate, format, key, description, masked, hiddenFor);
+        return new ColumnDef(name, p, expr, python, type, role, meaning, references, unit, additive, aggregate, format, key, description, masked, hiddenFor, extras);
     }
 
     /** The same column with another expression. */
     public ColumnDef withExpr(String e) {
-        return new ColumnDef(name, path, e, python, type, role, meaning, references, unit, additive, aggregate, format, key, description, masked, hiddenFor);
+        return new ColumnDef(name, path, e, python, type, role, meaning, references, unit, additive, aggregate, format, key, description, masked, hiddenFor, extras);
     }
 
     /** How many of path, expr and python are set (exactly one is right). */
@@ -103,6 +109,7 @@ public record ColumnDef(String name, String path, String expr, Object python, St
             m.put("hidden-for", hiddenFor);
         }
         put(m, "description", description);
+        m.putAll(extras);
         return m;
     }
 

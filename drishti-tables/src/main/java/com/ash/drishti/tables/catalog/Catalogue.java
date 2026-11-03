@@ -66,10 +66,40 @@ public final class Catalogue {
 
     /** A catalogue of the given definitions, in order (the tests' and the migration's way in). */
     public static Catalogue of(Collection<TableDef> tableDefs, Collection<ModelDef> modelDefs) {
+        return of(tableDefs, modelDefs, d -> "memory");
+    }
+
+    /** As {@link #of(Collection, Collection)}, each definition labelled ({@code bi/trading_risk_trades.table.yaml}) for its problems. */
+    public static Catalogue of(Collection<TableDef> tableDefs, Collection<ModelDef> modelDefs, java.util.function.Function<Object, String> label) {
         Catalogue c = new Catalogue();
-        tableDefs.forEach(t -> c.add(new Entry(Entry.TABLE, t.name(), "memory", t, null, List.of())));
-        modelDefs.forEach(m -> c.add(new Entry(Entry.MODEL, m.name(), "memory", null, m, List.of())));
+        tableDefs.forEach(t -> c.add(new Entry(Entry.TABLE, t.name(), label.apply(t), t, null, List.of())));
+        modelDefs.forEach(m -> c.add(new Entry(Entry.MODEL, m.name(), label.apply(m), null, m, List.of())));
         return c;
+    }
+
+    /**
+     * The table as its readers see it: a table over a table ({@code from: { table }}) has its base's columns, rules and keys, its own added
+     * (an own column of the same name replaces the base's). A table over anything else is itself.
+     */
+    public Optional<TableDef> effective(TableName.Ref ref) {
+        return table(ref).map(t -> effective(t, 0));
+    }
+
+    private TableDef effective(TableDef t, int depth) {
+        if (t.from() == null || t.from().form() != TableDef.Source.Form.TABLE || depth > 10) {
+            return t;
+        }
+        Optional<TableDef> base = table(t.from().table()).map(b -> effective(b, depth + 1));
+        if (base.isEmpty()) {
+            return t;
+        }
+        Map<String, ColumnDef> columns = new LinkedHashMap<>(base.get().columns());
+        columns.putAll(t.columns());
+        List<TableDef.Rule> rules = new ArrayList<>(base.get().rules());
+        rules.addAll(t.rules());
+        List<String> keys = t.keys().isEmpty() ? base.get().keys() : t.keys();
+        return new TableDef(t.name(), t.was(), t.version(), t.about(), t.from(), t.grain(), t.filter(), columns, keys, t.keepLatest(), t.says(),
+                t.materialize(), t.asOf(), t.retention(), t.refresh(), rules, t.hiddenFor(), t.tests());
     }
 
     /**
@@ -191,10 +221,10 @@ public final class Catalogue {
             out.addAll(e.readProblems());
             if (e.table() != null) {
                 String folder = e.source().contains("/") && !e.source().startsWith("item:") ? e.source().substring(0, e.source().indexOf('/')) : null;
-                tc.check(e.table(), folder).forEach(p -> out.add(p.in(e.source())));
+                tc.check(effective(e.table(), 0), folder).forEach(p -> out.add(p.in(e.source())));
                 references(e.table(), e.source(), out);
             } else if (e.model() != null) {
-                mc.check(e.model(), this::table).forEach(p -> out.add(p.in(e.source())));
+                mc.check(e.model(), this::effective).forEach(p -> out.add(p.in(e.source())));
                 e.model().tables().values().stream().filter(u -> renamed(u.table().name()) != null)
                         .forEach(u -> out.add(Problem.warning(TableCodes.REFERENCE, "tables." + u.alias(), "'" + u.table().name() + "' is now "
                                 + renamed(u.table().name()) + " (the old name resolves for one release)").in(e.source())));
