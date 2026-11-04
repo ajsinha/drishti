@@ -19,12 +19,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.ash.drishti.api.SourcePlugin;
+import com.ash.drishti.lakeconfig.ConnectorLake;
+import com.ash.drishti.lakeconfig.Lake;
+import com.ash.drishti.lakeconfig.Lakes;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.ash.drishti.testkit.s3.S3Endpoint;
 import com.ash.drishti.testkit.s3.S3MockServer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -50,8 +54,19 @@ class DeltaOnAwsS3Test extends DatedSourceContract {
     static String oldKey;
     static String oldSecret;
 
-    /** The settings of the shipped template, {@code ${VAR:default}} resolved from {@code vars} (else the default). */
+    /**
+     * The settings the plugin is given for the shipped template, {@code ${VAR:default}} resolved from {@code vars} (else the default): the
+     * connector file names lake {@code s3}, and its root, storage and tables come from the shipped lake file
+     * ({@code config/lakes.examples/delta-s3/s3.yaml}), expanded as the server's source registry expands them.
+     */
     static Map<String, String> template(Map<String, String> vars) throws Exception {
+        Map<String, String> own = connectorSettings(vars);
+        Lake lake = Lakes.parse(Files.readString(Path.of("../../config/lakes.examples/delta-s3/s3.yaml")), "s3", vars::get);
+        return new HashMap<>(ConnectorLake.expand("risk-store", "delta", List.of(), own, () -> Lakes.of(lake), w -> { }));
+    }
+
+    /** The connector file's own settings, {@code ${VAR:default}} resolved from {@code vars} (else the default). */
+    static Map<String, String> connectorSettings(Map<String, String> vars) throws Exception {
         Path file = Path.of("../../config/connectors.examples/delta-s3/risk-store.yaml");
         Map<String, String> out = new HashMap<>();
         boolean in = false;
@@ -83,6 +98,7 @@ class DeltaOnAwsS3Test extends DatedSourceContract {
         assertThat(s.get("root")).isEqualTo("s3://drishti-lake/delta");
         assertThat(s).containsEntry("engine", "native").containsEntry("domain", "risk").containsKey("s3.region");
         assertThat(s.keySet()).noneMatch(k -> k.contains("access-key") || k.contains("secret"));
+        assertThat(connectorSettings(Map.of())).containsEntry("lake", "s3").doesNotContainKey("root");   // the lake file holds the root
         assertThat(template(Map.of("DRISHTI_DELTA_S3_BUCKET", "acme-lake", "DRISHTI_DELTA_S3_PREFIX", "lake/delta")).get("root"))
                 .isEqualTo("s3://acme-lake/lake/delta");
     }
