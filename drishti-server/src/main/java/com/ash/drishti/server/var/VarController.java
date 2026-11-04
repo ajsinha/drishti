@@ -152,7 +152,12 @@ public class VarController {
             @RequestParam(required = false) String window, @RequestParam(required = false) Double confidence,
             @RequestParam(name = "es-confidence", required = false) Double esConfidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return parametric(headline(scope, ccy, window, confidence, esConfidence, horizon, method, esq, set, asOf, p), parametric);
+    }
+
+    private Map<String, Object> headline(String scope, String ccy, String window, Double confidence, Double esConfidence, String horizon,
+            String method, Double esq, String set, AsOf asOf, Principal p) {
         if (set != null && VarProperties.stressed(set(set)) && (window != null || esConfidence != null)) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "window and es-confidence recompute the normal set's VaR; stressed VaR takes "
                     + "confidence and esConfidence from the offered lists");
@@ -175,16 +180,47 @@ public class VarController {
     public Map<String, Object> headlinePath(@PathVariable String scope, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set));
+            @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return parametric(views.headline(p, scope(scope), date(asOf), ccy, lens(horizon, method, confidence, esq, set)), parametric);
+    }
+
+    /**
+     * The {@code parametric} flag of an answer (PARAMETRIC_VAR.md section 6): absent or true keeps the block (asked while the measure is
+     * off: 403 in words); false leaves it out (a lean client), on the answer, its tree nodes and its rows. Historical fields never change.
+     */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> parametric(Map<String, Object> answer, Boolean asked) {
+        if (Boolean.TRUE.equals(asked) && (views.parametric() == null || !views.parametric().enabled())) {
+            throw new DrishtiException(ErrorCode.FORBIDDEN, "parametric VaR is switched off on this server (drishti.var.parametric.enabled)");
+        }
+        if (!Boolean.FALSE.equals(asked)) {
+            return answer;
+        }
+        Map<String, Object> out = new LinkedHashMap<>(answer);
+        out.remove("parametric");
+        for (String list : List.of("nodes", "rows")) {
+            if (out.get(list) instanceof List<?> l) {
+                out.put(list, l.stream().map(x -> {
+                    if (x instanceof Map<?, ?> m && m.containsKey("parametric") || x instanceof Map<?, ?> m2 && m2.containsKey("pComponentVar")) {
+                        Map<String, Object> r = new LinkedHashMap<>((Map<String, Object>) x);
+                        r.remove("parametric");
+                        r.keySet().removeIf(k -> k.startsWith("p") && k.length() > 1 && Character.isUpperCase(k.charAt(1))
+                                || List.of("rho", "sigma", "mu", "cov", "zCovOverSigma", "describe").contains(k));
+                        return r;
+                    }
+                    return x;
+                }).toList());
+            }
+        }
+        return out;
     }
 
     @GetMapping("/scope/path")
     public Map<String, Object> path(@RequestParam String scope, @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "0") int size,
             @RequestParam(required = false) String ccy, @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set));
+            @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return parametric(views.path(p, scope(scope), date(asOf), page, size, ccy, lens(horizon, method, confidence, esq, set)), parametric);
     }
 
     @GetMapping("/scope/history")
@@ -204,10 +240,25 @@ public class VarController {
             @RequestParam(required = false) String scenario, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p,
+            @RequestParam(required = false) Boolean parametric, @RequestParam(defaultValue = "false") boolean matrix, @RequestAttribute(Principal.ATTRIBUTE) Principal p,
             @org.springframework.web.bind.annotation.RequestHeader(value = org.springframework.http.HttpHeaders.ACCEPT, required = false) String accept) {
-        return ArrowAnswers.negotiate(accept, views.contributions(p, scope(scope), date(asOf), by, scenario, ccy,
-                lens(horizon, method, confidence, esq, set)), "records", "rows");
+        if (matrix && Boolean.FALSE.equals(parametric)) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true is parametric: it cannot be asked with parametric=false");
+        }
+        Map<String, Object> answer = parametric(views.contributions(p, scope(scope), date(asOf), by, scenario, ccy,
+                lens(horizon, method, confidence, esq, set), matrix && !Boolean.FALSE.equals(parametric)), matrix ? Boolean.TRUE : parametric);
+        if (accept != null && accept.contains("arrow") && answer.get("rows") instanceof List<?> rows) {
+            answer = new LinkedHashMap<>(answer);                      // Arrow: the parametric columns as columns, the tooltips' lines left to JSON
+            answer.put("rows", rows.stream().map(x -> {
+                if (x instanceof Map<?, ?> m && m.containsKey("describe")) {
+                    Map<Object, Object> r = new LinkedHashMap<>(m);
+                    r.remove("describe");
+                    return r;
+                }
+                return x;
+            }).toList());
+        }
+        return ArrowAnswers.negotiate(accept, answer, "records", "rows");
     }
 
     /**
@@ -261,8 +312,8 @@ public class VarController {
     public Map<String, Object> tree(@RequestParam(required = false) String hierarchy, @RequestParam(required = false) String ccy,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(name = "esConfidence", required = false) Double esq, @RequestParam(required = false) String set, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
-        return views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq, set));
+            @RequestParam(required = false) Boolean parametric, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return parametric(views.tree(p, hierarchy, date(asOf), ccy, lens(horizon, method, confidence, esq, set)), parametric);
     }
 
     @GetMapping("/status")
@@ -277,6 +328,9 @@ public class VarController {
         m.put("tenDayMethod", pr.tenDayMethod());
         m.put("horizons", List.of("1d", "10d"));
         m.put("rankRule", pr.rankRule());
+        if (views.parametric() != null) {
+            m.put("parametric", views.parametric().props().describe());   // the cross-check's settings (PARAMETRIC_VAR.md section 5)
+        }
         m.put("componentWindow", pr.componentWindow());
         m.put("threads", svc.sums().threads());
         m.put("memoryBudgetMb", pr.memoryBudgetMb());

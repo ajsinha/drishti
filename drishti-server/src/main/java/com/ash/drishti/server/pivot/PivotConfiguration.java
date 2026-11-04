@@ -141,14 +141,16 @@ public class PivotConfiguration {
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, States states,
             ObjectProvider<VarService> var, ObjectProvider<MrCubeProperties> mr, ObjectProvider<FrtbService> frtb,
             org.springframework.core.env.Environment env,
-            ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
+            ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines,
+            ObjectProvider<com.ash.drishti.server.var.VarParametricProperties> parametric) {
         List<PivotProvider> providers = new ArrayList<>();
         VarService v = var.getIfAvailable();
         if (v != null) {
             boolean mrSwitch = env.getProperty("drishti.engines.mr-cube.enabled", Boolean.class, false);
             providers.add(new VarPivotProvider(v, () -> running(engines, "var", true), () -> running(engines, "mr-cube", mrSwitch),
                     mr.getIfAvailable(MrCubeProperties::defaults), () -> running(engines, "frtb-sa", true)
-                            ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null));
+                            ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null)
+                    .parametric(parametric.getIfAvailable()));
         }
         providers.add(new TabularProvider(exec, both(kinds, panels)));
         PivotCore core = new PivotCore(providers, states, props.core());

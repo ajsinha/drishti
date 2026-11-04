@@ -132,6 +132,24 @@ public final class VarResultEngine implements ComputeEngine {
             pnl.add(v);
         }
         row.put("PNL", pnl);
+        if (head.get("parametric") instanceof Map<?, ?> pm && !Boolean.FALSE.equals(req.params().get("parametric"))) {
+            // VRES 1.3: the parametric cross-check's optional fields (PARAMETRIC_VAR.md section 7)
+            row.put("PARAMETRIC_VAR", pm.get("var"));
+            row.put("PARAMETRIC_ES", pm.get("es"));
+            row.put("PARAMETRIC_MU", pm.get("mu"));
+            row.put("PARAMETRIC_SIGMA", pm.get("sigma"));
+            row.put("PARAMETRIC_Z", pm.get("z"));
+            row.put("PARAMETRIC_N", pm.get("n"));
+            row.put("PARAMETRIC_WEIGHTING", pm.get("weighting"));
+            row.put("PARAMETRIC_LAMBDA", pm.get("lambda"));
+            row.put("PARAMETRIC_HORIZON_RULE", pm.get("horizonRule"));
+            row.put("PARAMETRIC_SKEW", pm.get("skew"));
+            row.put("PARAMETRIC_EXCESS_KURTOSIS", pm.get("excessKurtosis"));
+            row.put("FAT_TAIL_GAP", pm.get("gap"));
+            row.put("FAT_TAIL_GAP_PCT", pm.get("gapPct"));
+            row.put("FAT_TAIL_ES_GAP", pm.get("esGap"));
+            row.put("PARAMETRIC_OFFICIAL", false);
+        }
         row.put("PROVENANCE", upper(head.get("provenance")));
         Map<String, Object> meta = new LinkedHashMap<>();
         meta.put("engine", "var-engine");

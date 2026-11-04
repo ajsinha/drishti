@@ -30,14 +30,14 @@
 {% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/drishti_var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-basket.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-layout.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-parametric.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-basket.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_var-layout.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
 {{ back(request) }}
 <div class="vx" data-var data-tab="{{ tab or 'path' }}" data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-admin="{{ 'true' if admin else '' }}" data-ccy="{{ ccy }}"
      data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}"
-     data-set="{{ lens.set if lens and lens.set else '' }}">
+     data-set="{{ lens.set if lens and lens.set else '' }}" data-pm="{{ '1' if parametric_mode else '' }}">
   <div class="vx-status" aria-live="polite">
     <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
     <span>Business date <b class="mono" data-vx-date>…</b></span>
@@ -116,6 +116,21 @@
     <section class="vx-main">
       <nav class="vx-crumb" aria-label="Scope path" data-vx-crumb></nav>
       <div class="vx-tiles" data-vx-tiles aria-live="polite"{{ part(PP, 'tiles') }}></div>
+      {# parametric VaR (docs/architecture/PARAMETRIC_VAR.md, VAR_GUIDE.md section 3.12): a toggle on the explorer (PVAR opens it with the
+         toggle on); on, the three tiles, the tree's Parametric and Gap columns and the normal curve over the P&L histogram (N), each
+         figure's ? from the server's describe lines #}
+      <div class="vp-bar" data-vp-bar>
+        <label class="vp-toggle" title="Parametric VaR beside historical: a cross-check from the same scenario P&amp;L vector, never the official VaR (the PVAR command opens the explorer with it on)"><input type="checkbox" data-vp-on{{ ' checked' if parametric_mode }}> Parametric</label>
+        {% if parametric_mode %}
+        <span class="vp-badge" title="Parametric VaR is a cross-check computed from the same scenario P&amp;L vector: never the official VaR">cross-check, not official</span>
+        <label class="vp-toggle" title="Normal curve on the histogram (key N)"><input type="checkbox" data-vp-curve checked> Normal curve <kbd>N</kbd></label>
+        <a class="vp-link" data-vp-play href="#" title="Every parametric figure worked in a grid and a workbook of formulas: the VaR Playground's Parametric tab">Worked in the playground</a>
+        {% endif %}
+      </div>
+      {% if parametric_mode %}
+      <p class="vx-notice" data-vp-off role="status" hidden></p>
+      <div class="vx-tiles vp-tiles" data-vp-tiles aria-live="polite"></div>
+      {% endif %}
       <p class="vx-method" data-vx-method aria-live="polite"{{ part(PP, 'method') }}></p>
       <div class="vx-panel">
         <div class="vx-tabs" role="tablist" data-vx-tabs>
@@ -205,4 +220,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-layout.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-explorer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-explain.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_table.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-layout.js?v={{ ASSET_V }}"></script><script src="/static/js/var-parametric.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-explorer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-explain.js?v={{ ASSET_V }}"></script>{% endblock %}

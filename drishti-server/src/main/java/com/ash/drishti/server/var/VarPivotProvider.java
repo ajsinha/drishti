@@ -71,7 +71,9 @@ public final class VarPivotProvider implements PivotProvider {
             new Native("var", "VaR", Kind.HOLISTIC, "money", "the cell's own VaR from the summed scenario P&L vector of its trades (the VaR engine's)"),
             new Native("es", "ES", Kind.HOLISTIC, "money", "the cell's own expected shortfall from its summed vector"),
             new Native("pv", "PV", Kind.HOLISTIC, "money", "the sum of the cell's trades' present values"),
-            new Native("trades", "Trades", Kind.HOLISTIC, "count", "the trades in the cell"));
+            new Native("trades", "Trades", Kind.HOLISTIC, "count", "the trades in the cell"),
+            new Native("pvar", "Parametric VaR", Kind.HOLISTIC, "money", "the cell's parametric VaR, z·σ − μ of its summed scenario P&L vector "
+                    + "(a cross-check, never official; PARAMETRIC_VAR.md)"));
     static final List<Native> MR = List.of(
             new Native("comp_var", "Comp VaR", Kind.HOLISTIC, "money", "the cell's share of the view's total VaR (Euler: the parts add up to the total)"),
             new Native("comp_es", "Comp ES", Kind.HOLISTIC, "money", "the cell's share of the view's total ES (Euler)"),
@@ -85,7 +87,16 @@ public final class VarPivotProvider implements PivotProvider {
     /** The measures whose total is the plain sum of its parts (an export may write SUM formulas for them). */
     static final Set<String> PLAIN = Set.of("pv", "trades", "comp_var", "comp_es", "dv01", "cs01");
     /** The measures read from the cells' summed vectors. */
-    static final Set<String> VECTOR = Set.of("var", "es", "comp_var", "comp_es", "incr_var", "limit_use");
+    static final Set<String> VECTOR = Set.of("var", "es", "comp_var", "comp_es", "incr_var", "limit_use", "pvar");
+
+    /** Parametric VaR's settings (pvar()); the defaults until the server hands its own. */
+    private VarParametricProperties parametric = VarParametricProperties.defaults();
+
+    /** The server's parametric settings: pvar() follows them, and answers in words while the measure is off. */
+    public VarPivotProvider parametric(VarParametricProperties p) {
+        this.parametric = p == null ? VarParametricProperties.defaults() : p;
+        return this;
+    }
 
     private final VarService svc;
     private final BooleanSupplier on;
@@ -588,6 +599,8 @@ public final class VarPivotProvider implements PivotProvider {
         return switch (fn) {
             case "var" -> m.var();
             case "es" -> m.es();
+            case "pvar" -> parametric.enabled() ? (Object) com.ash.drishti.compute.var.ParametricVar.of(v, o.calc.confidence(), o.calc.esConfidence(),
+                    parametric.settings()).var() : "parametric VaR is switched off on this server (drishti.var.parametric.enabled)";
             case "trades" -> (double) c.members().size();
             case "pv" -> {
                 double x = o.pv(c.members());

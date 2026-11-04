@@ -106,13 +106,39 @@
       hover(r, money(a) + " to " + money(b) + "\n" + n + " scenario day" + (n === 1 ? "" : "s"));
       if (d.onPick) r.addEventListener("click", function () { d.onPick(a, b); });
     });
-    [{ v: d.var, cls: "mk-var", label: "VaR " + money(d.var), dy: 0 }, { v: d.es, cls: "mk-es", label: "ES " + money(d.es), dy: 12 }].forEach(function (k) {
+    [{ v: d.var, cls: "mk-var", label: (d.parametric ? "historical " : "VaR ") + money(d.var), dy: 0 }, { v: d.es, cls: "mk-es", label: "ES " + money(d.es), dy: 12 }].forEach(function (k) {
       if (k.v === null || k.v === undefined) return;
       var x = X(-k.v);
       el("line", { x1: x, x2: x, y1: m.t - 4, y2: h - m.b, "class": "vx-mark " + k.cls }, s);
       var t = el("text", { x: x + 4, y: m.t + 6 + k.dy, "class": "vx-mark-label " + k.cls }, s);
       t.textContent = k.label;
     });
+    if (d.parametric && d.parametric.curve) normal(s, d.parametric, X, h, m, cmax, d.var);
+  }
+
+  /**
+   * The fitted normal over the bars (PARAMETRIC_VAR.md section 8): every point from the server (curve.x, curve.y on the bars' scale), the
+   * parametric marker (dashed), the two tails lightly shaded, the fat-tail gap bracket between the markers, and the curve's hover card
+   * from the server's lines. Nothing is computed here but the drawing's coordinates.
+   */
+  function normal(s, p, X, h, m, cmax, hvar) {
+    var top = Math.max(cmax, Math.max.apply(null, p.curve.y.concat([0])));
+    var Y = function (n) { return h - m.b - n / top * (h - m.t - m.b); };
+    var hx = X(-hvar), px = X(p.markers.parametric);
+    el("rect", { x: X(p.curve.x[0]), y: m.t, width: Math.max(0, hx - X(p.curve.x[0])), height: h - m.t - m.b, "class": "vp-tail hist" }, s);
+    el("rect", { x: X(p.curve.x[0]), y: m.t, width: Math.max(0, px - X(p.curve.x[0])), height: h - m.t - m.b, "class": "vp-tail param" }, s);
+    var pts = p.curve.x.map(function (x, i) { return X(x).toFixed(1) + "," + Y(p.curve.y[i]).toFixed(1); }).join(" ");
+    var line = el("polyline", { points: pts, "class": "vp-curve", fill: "none" }, s);
+    hover(line, (p.curveDescribe || []).join("\n"));
+    el("line", { x1: px, x2: px, y1: m.t - 4, y2: h - m.b, "class": "vx-mark vp-mark" }, s);
+    var t = el("text", { x: px + 4, y: m.t + 30, "class": "vx-mark-label vp-mark" }, s);
+    t.textContent = "parametric " + money(p["var"]);
+    if (p.gap !== null && p.gap !== undefined) {
+      var y = m.t - 2, a = Math.min(hx, px), b = Math.max(hx, px);
+      el("line", { x1: a, x2: b, y1: y, y2: y, "class": "vp-gap" }, s);
+      var g = el("text", { x: (a + b) / 2, y: y - 3, "text-anchor": "middle", "class": "vp-gap-label" }, s);
+      g.textContent = "fat-tail gap " + signed(p.gap) + (p.gapPct === null || p.gapPct === undefined ? "" : " (" + (p.gapPct >= 0 ? "+" : "") + Math.round(p.gapPct * 100) + "%)");
+    }
   }
 
   /** Bars over ordered keys: rows [{k, v, cls, tip}]; a dashed line (the -VaR) when given. */
