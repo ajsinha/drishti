@@ -15,7 +15,7 @@ def test_the_notes_are_visible_editable_and_the_licence_comment_is_not_shown(liv
     page.request.patch(f"{live_console}/build/designs/{id_}", data=json.dumps({"notes": LICENCE + "# Shipments\n\nWhat to **look for**:\n- the carrier\n"}),
                        headers={"Content-Type": "application/json"})
     page.goto(f"{live_console}/build/d/{id_}?tab=notes")
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     area = page.get_by_label("Notes (markdown)")
     assert "Copyright" not in area.input_value() and area.input_value().startswith("# Shipments")
     view = page.locator("[data-notes-view]")
@@ -43,7 +43,7 @@ def test_the_workbench_and_my_designs_do_not_scroll_sideways_on_a_phone(live_con
     audit = "() => { const d = document.documentElement; return [d.scrollWidth, d.clientWidth]; }"
     for tab in ("design", "yaml", "summary", "notes"):
         page.goto(f"{live_console}/build/d/{id_}?tab={tab}")
-        wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+        wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
         page.wait_for_timeout(500)
         width, client = page.evaluate(audit)
         assert width <= client + 1, f"{tab}: {width} px in {client}"

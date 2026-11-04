@@ -65,7 +65,7 @@ def test_the_page_shows_pools_workers_queues_approvals_and_environments(client, 
     page = client.get("/admin/compute").text
     for text in ("Compute", "drishti-main", "risk", "32 workers", "drishti-b", "interactive", "12,345", "1 crashed", "7 recycled", "timeout 2",
                  "p95 <span class=\"mono\">41</span>", "req-abc", "asha", "sum-vectors", "connector:var-engine", "1 python, 1 java", "org.quantlib:quantlib-java",
-                 "numpy==2.1.3", "50.0 MB", "req-old", "2 approval requests waiting", "admin-compute.js", "admin-compute.css", 'data-decide-dialog',
+                 "numpy==2.1.3", "50.0 MB", "req-old", "2 approval requests waiting", "drishti_admin-compute.js", "drishti_admin-compute.css", 'data-decide-dialog',
                  'aria-current="page"', "/admin/compute"):
         assert text in page, text
     assert '<caption class="visually-hidden">' in page and 'scope="col"' in page

@@ -164,7 +164,7 @@ def ran(page, before: int, timeout=60000) -> int:
 
 
 def state(page):
-    return page.evaluate("() => JSON.parse(JSON.stringify({ spec: window.drishtiTransform.spec, run: window.drishtiTransform.run }))")
+    return page.evaluate("() => JSON.parse(JSON.stringify({ spec: window.Drishti.transform.spec, run: window.Drishti.transform.run }))")
 
 
 def add_snippet(page, sid, fill):
@@ -293,7 +293,7 @@ def open_extract(page, date=None):
     if date:
         page.fill("[data-date]", date)
     page.click("[data-open-go]")
-    page.wait_for_function("() => window.drishtiPyConsole && window.drishtiPyConsole.ex")
+    page.wait_for_function("() => window.Drishti.pyConsole && window.Drishti.pyConsole.ex")
 
 
 @pytest.mark.skipif(not PYODIDE.exists(), reason="needs Pyodide (tools/fetch-pyodide.sh)")
@@ -301,7 +301,7 @@ def test_the_browser_console_analyses_a_masked_extract_and_a_result_is_promoted(
     ann = sign_in(browser, "ann", "/pyconsole")                                               # an analyst: no raw power, so PRICE is masked for her
     open_extract(ann, DAY)
     expect(ann.locator("[data-info]")).to_contain_text("Masked for you: PRICE")
-    ex = ann.evaluate("() => window.drishtiPyConsole.ex")
+    ex = ann.evaluate("() => window.Drishti.pyConsole.ex")
     price = [c["name"] for c in ex["columns"]].index("PRICE")
     assert ex["masked"] == ["PRICE"] and {r[price] for r in ex["rows"]} <= {None, "•••"}, {r[price] for r in ex["rows"]}   # the browser never received a price
     assert ann.locator("[data-promote]").is_disabled()                                        # promoting runs Python on the console: bi-author only
@@ -312,19 +312,19 @@ def test_the_browser_console_analyses_a_masked_extract_and_a_result_is_promoted(
     workers = []
     page.on("worker", lambda w: workers.append(w.url))
     open_extract(page, DAY)
-    assert page.evaluate("() => window.drishtiPyConsole.ex.rowCount") == 60
+    assert page.evaluate("() => window.Drishti.pyConsole.ex.rowCount") == 60
     page.wait_for_function("() => document.getElementById('pc').getAttribute('data-ready') === 'true'", timeout=120000)
     code = ('by_book = df.groupby("PORTFOLIO", as_index=False)["QUANTITY"].sum()\n'
             'print(len(df), "rows in the browser")\nshow(by_book, "Quantity by book")\nchart(by_book, kind="bar", x="PORTFOLIO", y="QUANTITY")\n')
-    page.evaluate("(c) => window.drishtiPyConsole.setCode(c)", code)
+    page.evaluate("(c) => window.Drishti.pyConsole.setCode(c)", code)
     page.click("[data-run]")
     page.wait_for_function("() => document.getElementById('pc').getAttribute('data-ran') && document.getElementById('pc').getAttribute('data-running') === 'false'", timeout=120000)
     expect(page.locator("[data-out]")).to_contain_text("60 rows in the browser")
     expect(page.locator("[data-out] [data-pc-table] tbody tr")).to_have_count(3)
     expect(page.locator("[data-out] [data-pc-chart] canvas")).to_be_visible()
-    browser_rows = page.evaluate("() => window.drishtiPyConsole.browser.table.rows")
+    browser_rows = page.evaluate("() => window.Drishti.pyConsole.browser.table.rows")
     assert {r[0]: r[1] for r in browser_rows} == pytest.approx(fx_quantity())
-    assert any("calc-worker.js" in w for w in workers)                                       # Calc's worker ran it, in this tab
+    assert any("drishti_calc-worker.js" in w for w in workers)                                       # Calc's worker ran it, in this tab
     shot(page, "05-browser-console.png", page.locator("section[aria-labelledby=pcCodeH]"))
 
     page.fill("[data-ptitle]", "Quantity by book, from the browser")

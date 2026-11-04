@@ -23,7 +23,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 MODULE = ROOT / "drishti-console" / "web" / "static" / "calc" / "drishti.py"
-CALC_JS = (ROOT / "drishti-console" / "web" / "static" / "js" / "calc.js").read_text()
+CALC_JS = (ROOT / "drishti-console" / "web" / "static" / "js" / "drishti_calc.js").read_text()
 RUNTIME_FILE = "/lib/python314.zip/_pyodide/_base.py"
 
 

@@ -15,7 +15,7 @@
 #}
 {# History (DATA_ARCHITECTURE.md › History queries: an entity over time, section 5): TRD 1000015 30 <GO>. One row per business day the entity has data, newest first; what
    changed from the day before is tinted and says what it was; a market kind has a chart and its headline numbers on top. Keyboard
-   first: history-page.js (? lists the keys). #}
+   first: drishti_history-page.js (? lists the keys). #}
 {% extends "base.html" %}
 {% set d = page.data if page else {} %}
 {% set mn = (d.mnemonic if page else '') or '' %}
@@ -23,7 +23,7 @@
 {% block title %}{{ id }} · History · {{ PRODUCT }}{% endblock %}
 {% block screen %}history{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/history.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_history.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=((mn ~ ' ') if mn else '') ~ id ~ ' ' ~ typed_range ~ (' DIFF' if params.get('diff') else '') ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% if error %}
@@ -184,4 +184,4 @@
 </div>
 {% endif %}
 {% endblock %}
-{% block scripts %}{% if page and page.market %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>{% endif %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/history-page.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}{% if page and page.market %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script>{% endif %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_history-page.js?v={{ ASSET_V }}"></script>{% endblock %}

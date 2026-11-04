@@ -86,8 +86,8 @@ def card(c: Ctx, name: str, panel: dict, theme: str = "light", width: int = 620,
     html = f"""<!doctype html><html lang="en" data-theme="{theme}"><head><meta charset="utf-8"><base href="{c.base}/">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="/static/vendor/bootstrap/css/bootstrap.min.css"><link rel="stylesheet" href="/static/vendor/bootstrap-icons/bootstrap-icons.css">
-<link rel="stylesheet" href="/static/css/tokens.css"><link rel="stylesheet" href="/static/css/theme.css"><link rel="stylesheet" href="/static/css/terminal.css">
-<link rel="stylesheet" href="/static/css/layout.css"></head>
+<link rel="stylesheet" href="/static/css/drishti_tokens.css"><link rel="stylesheet" href="/static/css/drishti_theme.css"><link rel="stylesheet" href="/static/css/drishti_terminal.css">
+<link rel="stylesheet" href="/static/css/drishti_layout.css"></head>
 <body class="terminal" style="padding:16px"><main class="view-main">{render_panel(panel)}</main></body></html>"""
     c.page.set_viewport_size({"width": width, "height": height})
     c.page.set_content(html, wait_until="networkidle")

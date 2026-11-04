@@ -33,6 +33,7 @@ files:
   css/admin-capacity.css: css/drishti_admin-capacity.css
   css/admin-compute.css: css/drishti_admin-compute.css
   css/admin-connectors.css: css/drishti_admin-connectors.css
+  css/admin-data-out.css: css/drishti_admin-data-out.css
   css/admin-detail.css: css/drishti_admin-detail.css
   css/admin-embedding.css: css/drishti_admin-embedding.css
   css/admin-engines.css: css/drishti_admin-engines.css
@@ -102,6 +103,7 @@ files:
   css/touch.css: css/drishti_touch.css
   css/trading-landing.css: css/drishti_trading-landing.css
   css/var-basket.css: css/drishti_var-basket.css
+  css/var-layout.css: css/drishti_var-layout.css
   css/var-playground.css: css/drishti_var-playground.css
   css/var-regulatory.css: css/drishti_var-regulatory.css
   css/var.css: css/drishti_var.css
@@ -144,6 +146,7 @@ files:
   js/admin-compute.js: js/drishti_admin-compute.js
   js/admin-connector-templates.js: js/drishti_admin-connector-templates.js
   js/admin-connectors.js: js/drishti_admin-connectors.js
+  js/admin-data-out.js: js/drishti_admin-data-out.js
   js/admin-embedding.js: js/drishti_admin-embedding.js
   js/admin-engines.js: js/drishti_admin-engines.js
   js/admin-inbox.js: js/drishti_admin-inbox.js
@@ -355,6 +358,7 @@ files:
   js/var-charts.js: js/drishti_var-charts.js
   js/var-explain.js: js/drishti_var-explain.js
   js/var-explorer.js: js/drishti_var-explorer.js
+  js/var-layout.js: js/drishti_var-layout.js
   js/var-playground.js: js/drishti_var-playground.js
   js/var-reports.js: js/drishti_var-reports.js
   js/view-render.js: js/drishti_view-render.js
@@ -455,6 +459,9 @@ globals:
   VarExplorer:
     to: VarExplorer
     status: move
+  VarLayout:
+    to: VarLayout
+    status: move
   __drishtiControls:
     to: __controls
     status: move
@@ -529,6 +536,9 @@ globals:
     to: drishtiGeo
     status: keep
     why: 'a frozen library (static/render/<version>, web/embed) reads it: a published contract'
+  drishtiKey:
+    to: key
+    status: move
   drishtiLayout:
     to: layout
     status: move

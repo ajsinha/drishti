@@ -15,7 +15,7 @@
 """Write-back, the console's half (docs/guides/WRITE_BACK.md): /api/changes passes each call to the server as the signed-in person
 (the review sheet, submit, approve, a record's history) and hands back the server's refusal with its code; Review -> Changes lists the
 changes waiting for an approver with Approve and Reject for one the server says the reader may decide; Admin -> Edits shows the store,
-the lanes, the warnings and each connector's writes with its switch; a page with a form loads write-back.js; the live connection
+the lanes, the warnings and each connector's writes with its switch; a page with a form loads drishti_write-back.js; the live connection
 carries the edit events."""
 from pathlib import Path
 
@@ -104,10 +104,10 @@ def test_a_page_with_a_form_loads_write_back_and_the_live_connection_carries_edi
         return vm
     monkeypatch.setattr(backend, "view", view)
     page = client.get("/v/trade/IRS-47102").text
-    assert "write-back.js" in page and page.index("write-back.js") < page.index("record-forms.js")
-    hub = (WEB / "static" / "js" / "live-hub.js").read_text(encoding="utf-8")
+    assert "drishti_write-back.js" in page and page.index("drishti_write-back.js") < page.index("drishti_record-forms.js")
+    hub = (WEB / "static" / "js" / "drishti_live-hub.js").read_text(encoding="utf-8")
     assert "'edit'" in hub and "'switches'" in hub
-    forms = (WEB / "static" / "js" / "record-forms.js").read_text(encoding="utf-8")
+    forms = (WEB / "static" / "js" / "drishti_record-forms.js").read_text(encoding="utf-8")
     assert "Sending to the source arrives in 2.8.0" not in forms and "data-fm-submit" in forms
-    alerts = (WEB / "static" / "js" / "alerts.js").read_text(encoding="utf-8")
+    alerts = (WEB / "static" / "js" / "drishti_alerts.js").read_text(encoding="utf-8")
     assert "edit: onEdit" in alerts and "drishti:edit" in alerts

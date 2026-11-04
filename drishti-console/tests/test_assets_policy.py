@@ -66,15 +66,15 @@ CDN = re.compile(r"https?://|cdn\.jsdelivr|unpkg\.com|cdnjs\.|//cdn\.", re.I)
 
 def test_calc_code_names_no_other_origin():
     """The page, the worker and the drishti module contain no URL at all: every load and every read is same-origin."""
-    for f in [WEB / "static/js/calc.js", WEB / "static/js/calc-worker.js", WEB / "static/calc/drishti.py",
-              WEB / "static/calc/quant.py", WEB / "templates/terminal/_calc.html"]:
+    for f in [WEB / "static/js/drishti_calc.js", WEB / "static/js/drishti_calc-worker.js", WEB / "static/calc/drishti.py",
+              WEB / "static/calc/drishti_quant.py", WEB / "templates/terminal/_calc.html"]:
         text = "\n".join(line for line in f.read_text(encoding="utf-8").splitlines() if "Copyright" not in line)
         assert not CDN.search(text), f
 
 
 def test_the_worker_points_pyodide_at_this_origin_for_everything():
     """Pyodide defaults its package URL to a CDN when it is not told otherwise; the worker tells it every location."""
-    worker = (WEB / "static/js/calc-worker.js").read_text(encoding="utf-8")
+    worker = (WEB / "static/js/drishti_calc-worker.js").read_text(encoding="utf-8")
     for option in ("indexURL: base", "packageBaseUrl: base", "lockFileURL: base + 'pyodide-lock.json'",
                    "stdLibURL: base + 'python_stdlib.zip'", "cdnUrl: base"):
         assert option in worker, option

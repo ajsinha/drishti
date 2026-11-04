@@ -15,7 +15,7 @@
 #}
 {% extends "base.html" %}
 {% block title %}Template updates · Connectors · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-connectors.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-connectors.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
@@ -65,5 +65,5 @@
   </section>
   {% else %}<p class="text-muted-d" data-none>Every connector matches its pack's template.</p>{% endfor %}
 </div>
-<script src="/static/js/admin-connector-templates.js?v={{ ASSET_V }}" defer></script>
+<script src="/static/js/drishti_admin-connector-templates.js?v={{ ASSET_V }}" defer></script>
 {% endblock %}

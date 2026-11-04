@@ -16,7 +16,7 @@
 things only: the baskets left the left-hand column for two searchable drop-downs in a toolbar (System baskets: the bank's portfolios;
 My baskets: the saved baskets, mine and shared with me), and the right-hand "How this number was built" column became a drawer opened
 by How calculated (H). This file is the guard that nothing else went: the inventory below was taken from the page BEFORE the change
-(terminal/var.html, var-explorer.js, var-explain.js): every tile, panel, chart, table, tab, control, key, every expected-shortfall
+(terminal/var.html, drishti_var-explorer.js, drishti_var-explain.js): every tile, panel, chart, table, tab, control, key, every expected-shortfall
 figure and every line of the explanation. The server-rendered page and the scripts are checked here; the drawn page in Chromium
 (a stand-in engine, the console in-process) at the end of the file. Skipped without Playwright or Chromium (the browser part only)."""
 import os
@@ -84,10 +84,10 @@ PAGE_INVENTORY = [
 ]
 
 #: the scripts the page loads, in order
-SCRIPTS = ["Arrow.es2015.min.js", "drishti-table.js", "var-basket-sheet.js", "var-basket.js", "scope-delete.js", "var-charts.js",
-           "var-explorer.js", "var-explain.js"]
+SCRIPTS = ["Arrow.es2015.min.js", "drishti_table.js", "drishti_var-basket-sheet.js", "drishti_var-basket.js", "drishti_scope-delete.js", "drishti_var-charts.js",
+           "drishti_var-explorer.js", "drishti_var-explain.js"]
 
-#: what the scripts draw (var-explorer.js): the six tiles, the tree's columns, every line of How this number was built, the actions
+#: what the scripts draw (drishti_var-explorer.js): the six tiles, the tree's columns, every line of How this number was built, the actions
 EXPLORER_INVENTORY = [
     '(stressed ? "Stressed VaR " : "VaR ")', '(stressed ? "Stressed ES " : "ES ")', "C.money(d.es)", '"mean of worst " + d.esCount',
     '"1-day ES × √10"', '"Sum of standalone VaR"', '"Diversification"', '"Limit utilisation"', '"Backtest exceptions ("',
@@ -95,7 +95,7 @@ EXPLORER_INVENTORY = [
     '"ES " + esc + "% (mean of worst "', '"Reporting currency"', '"Input"', '"By source system"', '"Intraday"', '"Scenario FX"',
     '"Cross rates"', '"Resolved"', '"Positions"', '"Trades"', '"Outside your view"', '"Unknown ids"', '"Warnings"', '"Rows left out"',
     '"Vectors"', '"Scenario set"', '"Method"', '["ES", p.es]', '"Components"', '"Positions by"', '"Engine"', '"View"', '"Members"',
-    '"Computed"', "doCapture", "csvOfPath", "jsonlOfPath", "B.openWhatIf()", "DrishtiScopeDelete.ask", "B.edit(scope)",
+    '"Computed"', "doCapture", "csvOfPath", "jsonlOfPath", "B.openWhatIf()", "Drishti.ScopeDelete.ask", "B.edit(scope)",
     '"Edit a copy"', "addButton(", "b.owner === S.user || S.admin", "switchTab", "setCcy", "setLens", "/help/context/var-explain",
 ]
 
@@ -122,14 +122,14 @@ def test_the_scripts_and_styles_stay(client):
     html = _page(client)
     at = [html.index(s) for s in SCRIPTS]
     assert at == sorted(at), "the scripts' order changed"
-    assert "/static/css/var.css" in html and "/static/css/var-basket.css" in html
+    assert "/static/css/drishti_var.css" in html and "/static/css/drishti_var-basket.css" in html
 
 
 def test_the_explorer_still_draws_every_tile_es_figure_and_explanation_line(client):
-    js = client.get("/static/js/var-explorer.js").text
+    js = client.get("/static/js/drishti_var-explorer.js").text
     missing = [needle for needle in EXPLORER_INVENTORY if needle not in js]
-    assert not missing, "gone from var-explorer.js: " + ", ".join(missing)
-    explain = client.get("/static/js/var-explain.js").text
+    assert not missing, "gone from drishti_var-explorer.js: " + ", ".join(missing)
+    explain = client.get("/static/js/drishti_var-explain.js").text
     assert "drishtiVarExplain" in explain
 
 
@@ -154,7 +154,7 @@ def test_the_new_layout_baskets_in_two_drop_downs_and_the_drawer(client):
     drawer = re.search(r'<aside class="vx-panel vx-prov vx-drawer[^"]*"[^>]*>', opened).group(0)
     assert " hidden" not in drawer and "vx-open" in drawer
     assert re.search(r'data-vx-how [^>]*aria-expanded="true"', opened)
-    js = client.get("/static/js/var-layout.js").text
+    js = client.get("/static/js/drishti_var-layout.js").text
     assert "VarLayout" in js and "aria-activedescendant" in js and '"how"' in js
 
 
@@ -283,7 +283,7 @@ def test_the_drawn_screen_keeps_every_figure_and_the_explanation_moves_into_the_
         assert pg.locator(".vx-tile").count() == 6
         es_tile = pg.locator('.vx-tile[data-tile="1"]')
         assert es_tile.locator(".l").inner_text().startswith("ES 97.5%")
-        assert es_tile.locator(".v").inner_text() == pg.evaluate(f"window.VarCharts.money({ES})")
+        assert es_tile.locator(".v").inner_text() == pg.evaluate(f"window.Drishti.VarCharts.money({ES})")
         assert "mean of worst 13" in es_tile.inner_text()
         assert pg.locator('.vx-tile[data-tile="0"] .l').inner_text().startswith("VaR 99%")
         # the tree stays on the left, with its VaR and ES columns; a click on a node moves the page
@@ -405,7 +405,7 @@ def test_the_basket_drop_downs_search_keys_actions_and_new_basket(served, browse
         pg.keyboard.press("m")
         pg.locator("[data-vx-basket-new]").click()
         _wait(pg, "!document.querySelector('[data-vx-basket]').hidden")
-        pg.evaluate("window.VarBasket.add('TRD:C', {name: 'C'})")
+        pg.evaluate("window.Drishti.VarBasket.add('TRD:C', {name: 'C'})")
         pg.locator("[data-vb-name]").fill("fresh")
         pg.locator("[data-vb-save]").click()
         _wait(pg, "document.querySelector('[data-vx-basket]').hidden")

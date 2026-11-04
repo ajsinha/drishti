@@ -29,7 +29,7 @@ def test_swin_opens_the_tool_on_the_node():
 def test_the_page_is_a_shell(client):
     r = client.get("/var/stress-window?scope=DESK:DESK-RATES&hierarchy=MGMT&length=250")
     assert r.status_code == 200
-    assert 'data-swin' in r.text and 'data-scope="DESK:DESK-RATES"' in r.text and "stress-window.js" in r.text
+    assert 'data-swin' in r.text and 'data-scope="DESK:DESK-RATES"' in r.text and "drishti_stress-window.js" in r.text
     assert "Freeze and propose for sign-off" in r.text
 
 

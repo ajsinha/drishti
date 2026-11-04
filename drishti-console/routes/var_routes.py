@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The VaR explorer (docs/guides/VAR_GUIDE.md section 3): ``VAR DESK RATES <GO>`` opens
-``/var?scope=DESK:RATES``. The page is a shell; web/static/js/var-explorer.js fills its panels from the same-origin JSON below, which
+``/var?scope=DESK:RATES``. The page is a shell; web/static/js/drishti_var-explorer.js fills its panels from the same-origin JSON below, which
 asks the server's VaR engine (/api/v1/var) with the user's own identity, so entitlements by node and masks apply as on every screen.
 
 Command words after VAR (``VAR BANK``, ``VAR LE LE-NY``, ``VAR DIV MARKETS``, ``VAR DESK RATES``, ``VAR BOOK BOOK-RATES-1``,
@@ -457,7 +457,7 @@ def swin_command(words: list[str]) -> str | None:
 
 @router.get("/var/stress-window")
 async def stress_window_page(request: Request, scope: str = "BANK", hierarchy: str = "MGMT", length: str = ""):
-    """The stress window selection (VAR_GUIDE.md section 18.9): a shell that stress-window.js fills from /api/var/stress-window."""
+    """The stress window selection (VAR_GUIDE.md section 18.9): a shell that drishti_stress-window.js fills from /api/var/stress-window."""
     me = getattr(request.state, "identity", None)
     n = int(length) if length.isdigit() else 0
     return render(request, "terminal/stress_window.html", scope=(scope or "BANK").strip()[:120], hierarchy=hierarchy_of(hierarchy),

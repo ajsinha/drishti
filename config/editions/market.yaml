@@ -76,7 +76,7 @@ menus:                                   # by id, per menu; a menu not named sho
 home:
   landing: desk                          # the default landing: desk (A, Market desk), explorer (B, Explorer), quality (C, Quality); today: the product's Home
   landings: [desk, explorer, quality]    # the landings a person may pick on Home (their choice is kept in their settings)
-  template: home/market_landing.html     # the page that draws them (it names its script and style: market-landing.js, market-landing.css)
+  template: home/market_landing.html     # the page that draws them (it names its script and style: drishti_market-landing.js, drishti_market-landing.css)
   titles: { desk: Market desk, explorer: Explorer, quality: Quality }
   landing-by-role: {}                    # {role: landing}: read, wins over the person's choice when set; wired to role-based access later
   chips: [CRV CRV-USD-OIS, CRV CRV-CAD-GOVT, FXF FXF-EURUSD, FXV FXV-USDJPY, IRV IRV-USD, CDS CDS-SOLARIS, INFC INFC-USCPI, CMDC CMDC-WTI, CORR CORR-G10FX, DATAMAP]   # B's chips

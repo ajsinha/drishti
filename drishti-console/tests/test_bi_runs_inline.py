@@ -129,7 +129,7 @@ def test_the_prefer_header_is_read_in_any_case_and_a_get_is_never_async():
 # ---- the page scripts' side ---------------------------------------------------------------------------------------------------------------
 
 def test_b_ask_sends_prefer_and_sorts_the_four_outcomes():
-    lib = (JS / "bi-lib.js").read_text(encoding="utf-8")
+    lib = (JS / "drishti_bi-lib.js").read_text(encoding="utf-8")
     body = lib[lib.index("B.ask = function"):lib.index("B.publishedBanner")]
     assert "Prefer: 'respond-async, wait=' + wait" in body
     for outcome in ("r.status === 202", "'DRS-9082'", "'DRS-9089'", "{ answer:"):
@@ -137,17 +137,17 @@ def test_b_ask_sends_prefer_and_sorts_the_four_outcomes():
 
 
 def test_a_report_visual_asks_with_the_inline_wait_interaction_and_supersedes():
-    rep = (JS / "bi-report.js").read_text(encoding="utf-8")
+    rep = (JS / "drishti_bi-report.js").read_text(encoding="utf-8")
     fn = rep[rep.index("function ask(spec, entry, token, quiet)"):]
     fn = fn[:fn.index("\n  }\n")]
     assert "B.ask(path" in fn and "interaction" in fn and "supersedes: reportId + '/' + pageId + '/' + spec.id" in fn
     assert "R.seconds(st.inlineWait)" in fn and "R.fromUrl(spec.id" in fn and "quiet" in fn          # a live redraw stays synchronous
-    board = (JS / "bi-report-board.js").read_text(encoding="utf-8")
+    board = (JS / "drishti_bi-report-board.js").read_text(encoding="utf-8")
     assert "B.ask(path" in board and "R.settle(" in board
 
 
 def test_the_run_card_says_every_state_in_words_never_a_code_alone():
-    runs = (JS / "bi-runs.js").read_text(encoding="utf-8")
+    runs = (JS / "drishti_bi-runs.js").read_text(encoding="utf-8")
     for code in [f"DRS-90{n}" for n in range(80, 90)]:
         assert f"'{code}'" in runs, code                          # every code of section 16 has its words
     for words in ("We'll put it on the bell when it is ready", "Open in Runs", "Run in background", "Narrow the dates", "Not now",

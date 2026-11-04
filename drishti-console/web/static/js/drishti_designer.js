@@ -1,0 +1,356 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* The Sutra designer's Customize mode (docs/guides/RACHANA_REFERENCE.md › Screen designer and the Build workbench, section 31): the real page, with real data as the viewer, edited in place.
+   Customize makes a draft of this page's Sutra; each change is one step the console applies to the draft, and only the panels it
+   changed are drawn again (the page is fetched, panels the step did not touch stay as they are: no reload, no flicker, the scroll kept). Panels get a handle (drag, or the arrows), Hide and, for tables, Columns; the side panel holds "When I click", "Add to this
+   page" and what is hidden. A part added from the kit opens its settings at once and can be removed again, with Undo
+   (drishti_designer-settings.js); one click adds one panel (a step carries a nonce, and an add in flight ignores more clicks). Done keeps the draft as the user's own page; Cancel forgets it. Plain words only: no pins, wires or YAML
+   unless "Show the Sutra" is asked for. */
+(function () {
+  'use strict';
+  var view = document.querySelector('[data-view]');
+  if (!view) { return; }
+  var kind = view.dataset.kind, id = view.dataset.id, page = '/v/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id);
+
+  function api(method, url, body) {
+    return fetch(url, { method: method, credentials: 'same-origin', headers: body ? { 'Content-Type': 'application/json' } : {},
+                        body: body ? JSON.stringify(body) : undefined })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) { throw new Error(j.detail || 'Something went wrong'); } return j; }); });
+  }
+  function el(tag, attrs, kids) {
+    var e = document.createElement(tag);
+    Object.keys(attrs || {}).forEach(function (k) {
+      if (k === 'text') { e.textContent = attrs[k]; } else if (k === 'on') { Object.keys(attrs.on).forEach(function (ev) { e.addEventListener(ev, attrs.on[ev]); }); }
+      else if (attrs[k] != null) { e.setAttribute(k, attrs[k]); }
+    });
+    (kids || []).forEach(function (c) { if (c) { e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c); } });
+    return e;
+  }
+
+  var open = document.querySelector('[data-customize-open]');
+  if (open) {
+    open.addEventListener('click', function () {
+      open.disabled = true;
+      api('POST', '/designer/customize', { kind: kind, id: id }).then(function (r) { location.href = r.url; })
+        .catch(function (e) { open.disabled = false; alert(e.message); });
+    });
+  }
+  if (!view.hasAttribute('data-customizing')) { return; }
+
+  /* a panel's signature is a hash of the HTML the server drew for it, taken before anything decorates it: a step's answer keeps the
+     panels whose HTML did not change (the same nodes, charts and all) and swaps in only the others */
+  function sig(text) { var h = 5381; for (var i = 0; i < text.length; i++) { h = ((h << 5) + h + text.charCodeAt(i)) | 0; } return String(h); }
+  view.querySelectorAll('section.pnl[id]').forEach(function (s) { s.setAttribute('data-dz-sig', sig(s.outerHTML)); });
+
+  var draft = view.dataset.design, state = null, msg, side, rev = 0, opened = null, adding = false;
+  function say(text, ok) { msg.textContent = text || ''; msg.className = 'dz-msg' + (ok ? ' dz-ok' : ''); }
+  function nonce() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
+  function step(body) {
+    body.kind = kind; body.id = id; body.nonce = body.nonce || nonce();   // the same step sent twice (a retry) is done once
+    say('Saving…', true);
+    return api('POST', '/designer/op/' + encodeURIComponent(draft), body).then(function (r) { return redraw().then(function () { return r; }); })
+      .catch(function (e) { say(e.message); throw e; });
+  }
+  /* one action adds one panel: a click, a drop or a double click while the first add is on its way are the same add */
+  function addPart(k, at) {
+    if (adding) { return; }
+    adding = true;
+    side.querySelectorAll('[data-dz-add]').forEach(function (c) { c.setAttribute('aria-disabled', 'true'); });
+    var body = { op: 'add', ref: k.ref, 'with': k['with'] };
+    if (at != null) { body.at = at; }
+    step(body).then(function (r) { if (r && r.index != null) { openSettings(r.index, true); } })
+      .catch(function () {}).then(function () { adding = false; side.querySelectorAll('[data-dz-add]').forEach(function (c) { c.removeAttribute('aria-disabled'); }); });
+  }
+  function openSettings(index, focus) {
+    opened = index;
+    if (state) { sidePanel(focus); }
+  }
+  var settings = window.Drishti.designerSettings ? window.Drishti.designerSettings({
+    el: el, api: api, step: function (b) { return step(b); }, draft: draft, kind: kind, id: id, open: function (i, f) { openSettings(i, f); }
+  }) : null;
+  function redraw() {
+    var y = window.scrollY;
+    return fetch(location.href, { credentials: 'same-origin', headers: { Accept: 'text/html' } }).then(function (r) {
+      if (!r.ok) { throw new Error('The page could not be drawn again (HTTP ' + r.status + ')'); }
+      return r.text();
+    }).then(function (html) {
+      // a page the client-side renderer draws (ui.render: client) embeds its ViewModel: its body is drawn by the library in this document
+      var fresh = (window.Drishti.freshGrid && window.Drishti.freshGrid(html)) || new DOMParser().parseFromString(html, 'text/html').querySelector('[data-view] .vgrid');
+      if (!fresh) { location.reload(); return null; }                     // not a page any more (signed out...): the only full reload
+      var old = {}, added = [];
+      grid.querySelectorAll('section.pnl[id]').forEach(function (s) { old[s.id] = s; });
+      var next = fresh.ownerDocument === document ? fresh : document.importNode(fresh, true);
+      next.querySelectorAll('section.pnl[id]').forEach(function (s) {
+        var h = sig(s.outerHTML), o = old[s.id];
+        if (o && o.getAttribute('data-dz-sig') === h) { s.replaceWith(o); }
+        else { s.setAttribute('data-dz-sig', h); added.push(s); }
+      });
+      next.querySelectorAll('.dz-tools, .dz-cols').forEach(function (t) { t.remove(); });
+      next.style.minHeight = grid.offsetHeight + 'px';                     // no jump while the new panels draw
+      grid.replaceWith(next); grid = next;
+      (view.querySelector('.vmain') || grid).appendChild(drop);
+      if (window.Drishti.screenGrid && next.hasAttribute('data-sgrid')) { window.Drishti.screenGrid.init(next); }   // a grid screen: its picture again
+      added.forEach(function (s) {
+        if (window.Drishti.layout) { window.Drishti.layout.decorate(s); }
+        if (window.Drishti.view && window.Drishti.view.enhance) { window.Drishti.view.enhance(s); }
+      });
+      function keep() { window.scrollTo({ top: y, left: 0, behavior: 'instant' }); }
+      keep();
+      return load().then(function () { next.style.minHeight = ''; keep(); });
+    }).then(function () { say('Saved', true); });
+  }
+
+  /* the yellow bar */
+  msg = el('span', { 'class': 'dz-msg', role: 'status', 'aria-live': 'polite' });
+  var bar = el('div', { 'class': 'dz-bar', role: 'region', 'aria-label': 'Customizing this page' }, [
+    el('span', { 'class': 'dz-bar-words' }, [el('i', { 'class': 'bi bi-sliders', 'aria-hidden': 'true' }), ' Customizing · only you see changes until you share']),
+    msg,
+    el('span', { 'class': 'dz-grow' }),
+    el('a', { 'class': 'dz-btn dz-quiet', href: '/designer/new', text: 'Describe a change' }),
+    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-outline': '', href: '/designer/outline?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft), text: 'Outline' }),
+    el('a', { 'class': 'dz-btn dz-quiet', 'data-dz-grid': '', href: '/designer/grid?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id) + '&design=' + encodeURIComponent(draft), text: 'Grid' }),
+    el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-cancel': '', text: 'Cancel', on: { click: function () {
+      api('POST', '/designer/cancel/' + encodeURIComponent(draft)).finally(function () { location.href = page; }); } } }),
+    el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-done': '', text: 'Done', on: { click: function () {
+      say('Keeping your page…', true);
+      api('POST', '/designer/done/' + encodeURIComponent(draft), { kind: kind }).then(function () { location.href = page; })
+        .catch(function (e) { say(e.message); }); } } })
+  ]);
+  view.insertBefore(bar, view.firstChild);
+  document.body.classList.add('dz-on');
+
+  /* the side panel */
+  side = el('aside', { 'class': 'dz-side', 'aria-label': 'Customize' });
+  var grid = view.querySelector('.vgrid');
+  var wrap = el('div', { 'class': 'dz-wrap' });
+  grid.parentNode.insertBefore(wrap, grid);
+  wrap.appendChild(grid); wrap.appendChild(side);
+  var drop = el('div', { 'class': 'dz-drop', 'data-dz-drop': '', tabindex: '-1', text: 'Drop here, or pick from the list on the right' });
+  (view.querySelector('.vmain') || grid).appendChild(drop);
+
+  function sectionsOf(part) {
+    return part.ids.map(function (pid) { return document.getElementById('p-' + pid); }).filter(Boolean);
+  }
+
+  function columnsBox(part, sec) {
+    var t = part.table, box = el('div', { 'class': 'dz-cols', role: 'group', 'aria-label': 'Columns' });
+    var chosen = t.chosen.slice();
+    t.fields.forEach(function (f) {
+      var cb = el('input', { type: 'checkbox', value: f });
+      cb.checked = chosen.indexOf(f) >= 0;
+      box.appendChild(el('label', {}, [cb, ' ' + f.replace(/_/g, ' ').toLowerCase()]));
+    });
+    box.appendChild(el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-cols-apply': '', text: 'Show these columns', on: { click: function () {
+      var picked = [].slice.call(box.querySelectorAll('input:checked')).map(function (i) { return i.value; });
+      var order = chosen.filter(function (f) { return picked.indexOf(f) >= 0; }).concat(picked.filter(function (f) { return chosen.indexOf(f) < 0; }));
+      step({ op: 'columns', panel: t.id, fields: order }).catch(function () {});
+    } } }));
+    sec.appendChild(box);
+  }
+
+  function tools(part, sec, first) {
+    var n = state.parts.length;
+    var handle = el('span', { 'class': 'dz-handle', draggable: 'true', title: 'Drag to move', 'aria-hidden': 'true', text: '⋮⋮' });
+    handle.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/x-dz-part', String(part.index)); e.dataTransfer.effectAllowed = 'move'; });
+    var row = el('div', { 'class': 'dz-tools', 'data-dz-part': String(part.index) }, [
+      handle,
+      el('strong', { text: part.title }),
+      el('span', { 'class': 'dz-grow' }),
+      el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-up': '', 'aria-label': 'Move ' + part.title + ' up', disabled: part.index === 0 ? '' : null, text: '↑',
+                     on: { click: function () { step({ op: 'move', index: part.index, to: part.index - 1 }).catch(function () {}); } } }),
+      el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-down': '', 'aria-label': 'Move ' + part.title + ' down', text: '↓',
+                     on: { click: function () { step({ op: 'move', index: part.index, to: part.index + 1 }).catch(function () {}); } } }),
+      (part.table || part.tables.length) && first ? el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-columns': '', text: 'Columns', on: { click: function () {
+        if (part.table) { var old = sec.querySelector('.dz-cols'); if (old) { old.remove(); } else { columnsBox(part, sec); } return; }
+        step({ op: 'unpack', index: part.index }).catch(function () {});              // a used table is written out first, then it takes columns
+      } } }) : null,
+      first && state.grid ? layoutHandles(part) : null,
+      first ? el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-hide': '', text: 'Hide', on: { click: function () { step({ op: 'hide', index: part.index, title: part.title }).catch(function () {}); } } }) : null
+    ]);
+    if (part.index === 0) { row.querySelector('[data-dz-up]').disabled = true; }
+    if (part.index === n - 1) { row.querySelector('[data-dz-down]').disabled = true; }
+    sec.classList.add('dz-panel');
+    sec.insertBefore(row, sec.firstChild);
+    if (settings) { settings.tools(part, row, sec, first); }
+    if (sec.hasAttribute('data-dz-dnd')) { return; }                      // a panel kept across a step: its drop target is set already
+    sec.setAttribute('data-dz-dnd', '');
+    function here() { var t = sec.querySelector('.dz-tools'); return t ? +t.getAttribute('data-dz-part') : -1; }
+    sec.addEventListener('dragover', function (e) { if (e.dataTransfer.types.indexOf('text/x-dz-part') >= 0 || e.dataTransfer.types.indexOf('text/x-dz-kit') >= 0) { e.preventDefault(); sec.classList.add('dz-over'); } });
+    sec.addEventListener('dragleave', function () { sec.classList.remove('dz-over'); });
+    sec.addEventListener('drop', function (e) {
+      sec.classList.remove('dz-over');
+      e.stopPropagation();                                                // a panel inside a panel: the drop is the inner one's, once
+      var from = e.dataTransfer.getData('text/x-dz-part'), kit = e.dataTransfer.getData('text/x-dz-kit');
+      if (from !== '') { e.preventDefault(); if (+from !== here()) { step({ op: 'move', index: +from, to: here() }).catch(function () {}); } }
+      else if (kit) { e.preventDefault(); addPart(JSON.parse(kit), here()); }
+    });
+  }
+
+  /* layout handles on a grid screen (layout: in the Sutra): narrower / wider, and the area it sits in */
+  function layoutHandles(part) {
+    var span = part.span || 12, box = el('span', { 'class': 'dz-lay', role: 'group', 'aria-label': 'Size and place of ' + part.title }, [
+      el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-narrower': '', 'aria-label': 'Narrower', title: 'Narrower (' + span + ' of 12 columns now)', text: '−', disabled: span <= 2 ? '' : null,
+                     on: { click: function () { step({ op: 'span', index: part.index, value: span - 1 }).catch(function () {}); } } }),
+      el('span', { 'class': 'dz-span', text: span + '/12' }),
+      el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-wider': '', 'aria-label': 'Wider', title: 'Wider', text: '+', disabled: span >= 12 ? '' : null,
+                     on: { click: function () { step({ op: 'span', index: part.index, value: span + 1 }).catch(function () {}); } } })]);
+    if (state.areas && state.areas.length) {
+      var s = select('Area of ' + part.title, state.areas.map(function (a) { return [a, a.replace(/-/g, ' ')]; }), 'data-dz-area');
+      s.value = part.area && state.areas.indexOf(part.area) >= 0 ? part.area : state.areas[0];
+      s.addEventListener('change', function () { step({ op: 'area', index: part.index, value: s.value }).catch(function () {}); });
+      box.appendChild(s);
+    }
+    return box;
+  }
+
+  function select(label, options, attr) {
+    var s = el('select', { 'class': 'dz-pill', 'aria-label': label });
+    s.setAttribute(attr, '');
+    options.forEach(function (o) { s.appendChild(el('option', { value: o[0], text: o[1] })); });
+    return s;
+  }
+
+  function sidePanel(focus) {
+    side.innerHTML = '';
+    var op = opened == null ? null : state.parts.filter(function (p) { return p.index === opened && p.used; })[0];
+    if (op && settings) { settings.box(side, op.index, focus); } else { opened = null; }
+    /* When I click */
+    var tables = state.tables.map(function (t) { return ['t:' + t.id, t.title]; });
+    state.parts.forEach(function (p) { if (!p.table && p.tables.length) { tables.push(['u:' + p.index + ':' + p.tables[0], p.title]); } });
+    side.appendChild(el('h3', { 'class': 'dz-h', text: 'When I click' }));
+    if (!tables.length) {
+      side.appendChild(el('p', { 'class': 'dz-note', text: 'This page has no table to click.' }));
+    } else {
+      var from = select('the table to click', tables, 'data-dz-click-from');
+      var what = select('what to show', [], 'data-dz-click-show');
+      var where = select('where to show it', Object.keys(state.places).map(function (k) { return [k, state.places[k]]; }), 'data-dz-click-place');
+      var set = state.tables.filter(function (t) { return t.click; })[0];
+      var shows = [];
+      function fillShows() {                                              // the row's details, the records linked from it, a panel of the page
+        var t = state.tables.filter(function (x) { return 't:' + x.id === from.value; })[0];
+        shows = t && t.shows && t.shows.length ? t.shows : [{ label: 'the row’s details', spec: { how: 'row' } }];
+        what.innerHTML = '';
+        shows.forEach(function (c, i) { what.appendChild(el('option', { value: String(i), text: c.label, 'data-how': c.spec.how })); });
+      }
+      from.addEventListener('change', fillShows);
+      if (set) { from.value = 't:' + set.id; where.value = set.place || 'expand-row'; }
+      fillShows();
+      side.appendChild(el('div', { 'class': 'dz-sentence' }, ['a row in ', from, ' show ', what, ' in ', where]));
+      side.appendChild(el('div', { 'class': 'dz-row' }, [
+        el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-click-apply': '', text: 'Make it so', on: { click: function () {
+          var v = from.value;
+          if (v.indexOf('u:') === 0) {                    // a used table: written out first, then it is clickable
+            var bits = v.split(':');
+            say('Opening up the table…', true);
+            api('POST', '/designer/op/' + encodeURIComponent(draft), { op: 'unpack', index: +bits[1], kind: kind, id: id })
+              .then(function () { return step({ op: 'click', panel: bits[2], place: where.value, show: (shows[+what.value] || {}).spec }); }).catch(function (e) { say(e.message); });
+          } else { step({ op: 'click', panel: v.slice(2), place: where.value, show: (shows[+what.value] || {}).spec }).catch(function () {}); }
+        } } }),
+        set ? el('button', { type: 'button', 'class': 'dz-btn', text: 'Stop', on: { click: function () { step({ op: 'unclick', panel: set.id }).catch(function () {}); } } }) : null
+      ]));
+    }
+    if (window.Drishti.designerForms) { window.Drishti.designerForms(side, state, { el: el, select: select, step: step }); }   // Let people edit (forms)
+    /* Refresh this panel every … (RACHANA_REFERENCE.md 9) */
+    side.appendChild(el('h3', { 'class': 'dz-h', text: 'Refresh' }));
+    var rpart = select('the panel to refresh', state.parts.map(function (p) { return [String(p.index), p.title]; }), 'data-dz-refresh-part');
+    var rsecs = select('how often', [['0', 'never (off)'], ['10', '10 seconds'], ['15', '15 seconds'], ['30', '30 seconds'], ['60', 'minute'],
+                                     ['300', '5 minutes'], ['900', '15 minutes']], 'data-dz-refresh-every');
+    function rfill() {
+      var p = state.parts.filter(function (x) { return String(x.index) === rpart.value; })[0] || {};
+      var v = String(p.refresh || 0);
+      if (!rsecs.querySelector('option[value="' + v + '"]')) { rsecs.appendChild(el('option', { value: v, text: v + ' seconds' })); }
+      rsecs.value = v;
+    }
+    rpart.addEventListener('change', rfill); rfill();
+    side.appendChild(el('div', { 'class': 'dz-sentence' }, ['Refresh ', rpart, ' every ', rsecs]));
+    side.appendChild(el('div', { 'class': 'dz-row' }, [
+      el('button', { type: 'button', 'class': 'dz-btn dz-primary', 'data-dz-refresh-apply': '', text: 'Set', on: { click: function () {
+        step({ op: 'refresh', index: +rpart.value, seconds: +rsecs.value }).catch(function () {});
+      } } })]));
+    /* Add to this page */
+    side.appendChild(el('h3', { 'class': 'dz-h', text: 'Add to this page' }));
+    var q = el('input', { type: 'search', 'class': 'dz-search', placeholder: 'Search: limits, chart, map…', 'aria-label': 'Search what to add', 'data-dz-search': '' });
+    var list = el('div', { 'class': 'dz-kit', 'data-dz-kit': '' });
+    side.appendChild(q); side.appendChild(list);
+    function show(items) {
+      list.innerHTML = '';
+      if (!items.length) { list.appendChild(el('p', { 'class': 'dz-note', text: 'Nothing matches: try other words.' })); }
+      items.forEach(function (k) {
+        var card = el('button', { type: 'button', 'class': 'dz-card' + (k.fit ? ' dz-fits' : ''), draggable: 'true', 'data-dz-add': k.ref, title: k.summary }, [
+          el('strong', { text: k.title }), el('span', { text: ' · ' + k.summary })]);
+        card.addEventListener('dragstart', function (e) { e.dataTransfer.setData('text/x-dz-kit', JSON.stringify(k)); });
+        card.addEventListener('click', function () { addPart(k); });
+        list.appendChild(card);
+      });
+    }
+    show(state.kit);
+    var timer;
+    q.addEventListener('input', function () {
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        api('GET', '/designer/kit/' + encodeURIComponent(draft) + '?q=' + encodeURIComponent(q.value) + '&kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id))
+          .then(function (r) { show(r.results); }).catch(function (e) { say(e.message); });
+      }, 200);
+    });
+    /* hidden */
+    if (state.hidden.length) {
+      side.appendChild(el('h3', { 'class': 'dz-h', text: 'Hidden' }));
+      state.hidden.forEach(function (h) {
+        side.appendChild(el('div', { 'class': 'dz-row' }, [el('span', { 'class': 'dz-grow', text: h.title }),
+          el('button', { type: 'button', 'class': 'dz-mini', 'data-dz-show': h.title, text: 'Show', on: { click: function () { step({ op: 'show', hidden: h.index }).catch(function () {}); } } })]));
+      });
+    }
+    /* your page */
+    var foot = el('div', { 'class': 'dz-foot' });
+    if (state.mine) {
+      foot.appendChild(el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-reset': '', text: 'Reset to the pack’s page', on: { click: function () {
+        if (!confirm('Forget your version of this page and use the pack’s page again?')) { return; }
+        api('POST', '/designer/reset', { kind: kind }).then(function () { return api('POST', '/designer/cancel/' + encodeURIComponent(draft)); })
+          .then(function () { location.href = page; }).catch(function (e) { say(e.message); });
+      } } }));
+      foot.appendChild(el('button', { type: 'button', 'class': 'dz-btn', 'data-dz-share': '', text: 'Share', on: { click: function () {
+        api('POST', '/build/designs/' + encodeURIComponent(state.mine.id) + '/share').then(function (r) {
+          say('Anyone you send this read-only link to can see your page’s design: ' + r.url, true);
+        }).catch(function (e) { say(e.message); });
+      } } }));
+    }
+    var yaml = el('details', { 'class': 'dz-yaml' }, [el('summary', { text: 'Show the Sutra' }), el('pre', { 'class': 'mono', text: state.yaml || '' })]);
+    foot.appendChild(yaml);
+    side.appendChild(foot);
+  }
+
+  drop.addEventListener('dragover', function (e) { e.preventDefault(); drop.classList.add('dz-over'); });
+  drop.addEventListener('dragleave', function () { drop.classList.remove('dz-over'); });
+  drop.addEventListener('drop', function (e) {
+    e.preventDefault(); drop.classList.remove('dz-over');
+    var kit = e.dataTransfer.getData('text/x-dz-kit'), from = e.dataTransfer.getData('text/x-dz-part');
+    if (kit) { e.stopPropagation(); addPart(JSON.parse(kit)); }
+    else if (from !== '') { step({ op: 'move', index: +from, to: state.parts.length - 1 }).catch(function () {}); }
+  });
+
+  function load() {
+    return api('GET', '/designer/state/' + encodeURIComponent(draft) + '?kind=' + encodeURIComponent(kind) + '&id=' + encodeURIComponent(id)).then(function (s) {
+      state = s;
+      view.querySelectorAll('.dz-tools, .dz-need').forEach(function (t) { t.remove(); });
+      s.parts.forEach(function (part) { sectionsOf(part).forEach(function (sec, i) { tools(part, sec, i === 0); }); });
+      sidePanel();
+      view.setAttribute('data-dz-ready', '');
+      view.setAttribute('data-dz-rev', String(++rev));                    // a step is drawn (tests wait on it)
+    });
+  }
+  load().catch(function (e) { say(e.message); });
+})();

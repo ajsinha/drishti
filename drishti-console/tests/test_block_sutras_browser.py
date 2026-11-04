@@ -31,7 +31,7 @@ TRADES = [("MX-20000001", "MUREX"), ("1000001", "ENDUR")]      # an IRS fixed/fl
 
 def drawn_with_blocks(page):
     """The designer drew the Sutra: the legs block's and the flow-schedule block's panels are on the canvas."""
-    page.wait_for_function("() => window.drishtiWorkbench && window.drishtiWorkbench.store.state.id", timeout=BROWSER_WAIT_MS)
+    page.wait_for_function("() => window.Drishti.workbench && window.Drishti.workbench.store.state.id", timeout=BROWSER_WAIT_MS)
     page.locator("[data-preview] .pnl[data-panel='legs']").first.wait_for(timeout=BROWSER_WAIT_MS)
     page.locator("[data-preview] .pnl[data-panel='flows']").first.wait_for(timeout=BROWSER_WAIT_MS)
     assert page.locator("[data-preview] [data-first-panel]").count() == 0 or page.locator("[data-preview] .wb-first").first.is_hidden()
@@ -54,7 +54,7 @@ def test_block_sutras_draw_in_the_designer_from_the_deal_page_and_from_the_pack(
         link.click()
         page.wait_for_url(lambda u: "/build/d/" in u, timeout=BROWSER_WAIT_MS)
         drawn_with_blocks(page)
-        refs = [s.get("ref") for s in page.request.get(f"{base}/build/designs/" + page.evaluate("() => window.drishtiWorkbench.store.state.id")).json()["samples"]]
+        refs = [s.get("ref") for s in page.request.get(f"{base}/build/designs/" + page.evaluate("() => window.Drishti.workbench.store.state.id")).json()["samples"]]
         assert {"kind": "trade", "id": trade} in refs, (system, refs)
 
     # a pack Sutra opened with no record: the first pack sample its match holds for is added, and Samples says so

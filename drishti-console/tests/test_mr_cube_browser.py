@@ -80,7 +80,7 @@ def opened(pg):
 
 
 def view(pg):
-    return pg.evaluate("window.PivotScreen.view()")
+    return pg.evaluate("window.Drishti.PivotScreen.view()")
 
 
 def grand(answer):
@@ -170,7 +170,7 @@ def test_tab_b_components_add_up_and_the_10_day_lens_asks_again(stack, browser):
     pg.click('[data-mr-tab="pivot"]')
     one_day = fetch(pg, "POST", "/api/pivot/mr/headline", {"view": view(pg)})["body"]["var"]      # the lens's own 1-day figure, to the cent
     pg.click('[data-mr-seg="horizon"] button[data-v="10d"]')
-    wait(pg, "(window.PivotScreen.view().options || {}).horizon === '10d'", 60)
+    wait(pg, "(window.Drishti.PivotScreen.view().options || {}).horizon === '10d'", 60)
     wait(pg, "!!document.querySelector('[data-mr-tiles] .mr-tile .mr-tv')", 60)
     ten = fetch(pg, "POST", "/api/pivot/mr/headline", {"view": view(pg)})["body"]
     assert abs(ten["var"] - one_day * 10 ** 0.5) <= 1e-9 * abs(ten["var"]), (ten["var"], one_day)          # √10 of the same 1-day figure

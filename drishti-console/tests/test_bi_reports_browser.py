@@ -509,7 +509,7 @@ pages:
       - { id: s-drop, type: slicer, title: Dropdown slicer, at: { x: 10, y: 15, w: 2, h: 2 }, wells: { field: [trade.DESK] }, format: { mode: dropdown } }
       - { id: s-range, type: slicer, title: Range slicer, at: { x: 10, y: 17, w: 2, h: 2 }, wells: { field: [trade.NOTIONAL] }, format: { mode: range } }
       - { id: text, type: text, at: { x: 0, y: 20, w: 4, h: 1 }, text: A text visual, format: { size: heading } }
-      - { id: image, type: image, at: { x: 4, y: 21, w: 2, h: 2 }, src: /static/img/drishti-icon.png, alt: The Drishti eye }
+      - { id: image, type: image, at: { x: 4, y: 21, w: 2, h: 2 }, src: /static/img/drishti_icon.png, alt: The Drishti eye }
       - { id: button, type: button, at: { x: 6, y: 21, w: 3, h: 1 }, text: Go to the first page, action: { navigate: all } }
 """
 

@@ -15,13 +15,13 @@
 #}
 {# The exposure explorer (EXPOSURE_GUIDE.md section 3; the approved combined mock-up): the command line with the switches and the run;
    the breadcrumb with Back; the scope tree (bank, legal entities, counterparties, netting sets, the open set's trades) with each node's
-   peak PFE; the headline tiles; the profile chart; tabs that change with the scope's level. A shell: exposure-explorer.js fills every
+   peak PFE; the headline tiles; the profile chart; tabs that change with the scope's level. A shell: drishti_exposure-explorer.js fills every
    panel from /api/exposure/... and moves the whole screen to a scope in place. #}
 {% extends "base.html" %}
 {% block title %}Exposure · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}exposure{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/exposure.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_exposure.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='EXP ' ~ scope ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'exposure') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
@@ -75,4 +75,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/exposure-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_exposure-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_exposure-explorer.js?v={{ ASSET_V }}"></script>{% endblock %}

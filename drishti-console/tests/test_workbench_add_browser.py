@@ -32,7 +32,7 @@ def settled_selection(page, kind):
 def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_adds_a_draggable_panel(live_console, page):
     page.goto(live_console + "/studio?example=pnl-explain")
     page.locator("[data-start-go]").click()                                  # a GET only asks; the button starts the design
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     page.locator("[data-preview] [data-panel]").first.wait_for()
     assert "tab=split" in page.url
     assert page.locator("[data-preview]").is_visible() and page.locator("#wbPaneYaml .CodeMirror").is_visible()          # the canvas is in sight
@@ -47,7 +47,7 @@ def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_a
     new = page.evaluate("document.querySelector('[data-preview] .wb-sel[data-panel]').dataset.panel")
     grip = page.locator(f'[data-preview] [data-panel="{new}"] .wb-grip')
     assert grip.count() == 1 and "Drag to move" in page.locator(f'[data-preview] [data-panel="{new}"] .pnl-h').get_attribute("title")
-    ids0 = page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    ids0 = page.evaluate("window.Drishti.workbench.canvas.ids()")
     first_id = ids0[ids0.index(new) - 1]                                   # the panel just above it (both are in view)
     first = page.locator(f'[data-preview] [data-panel="{first_id}"]')
     first.scroll_into_view_if_needed()
@@ -62,7 +62,7 @@ def test_a_studio_address_opens_with_the_canvas_and_yaml_and_the_header_button_a
     page.mouse.move(fb["x"] + 20, fb["y"] + 30, steps=8)
     page.mouse.up()
     settle(page, rev)
-    ids = page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    ids = page.evaluate("window.Drishti.workbench.canvas.ids()")
     assert ids.index(new) < ids.index(first_id)
     assert [ln for ln in state(page, "yaml").splitlines() if ln.lstrip().startswith("#")] == comments        # the comments stay
 
@@ -99,7 +99,7 @@ def test_an_empty_design_offers_to_add_the_first_panel(live_console, page):
     made = post(page, live_console + "/build/designs", {"name": "blank", "kind": "trade"})
     post(page, f"{live_console}/build/designs/{made['id']}/files", {"files": [{"name": "t.json", "text": SAMPLE}]})
     page.goto(f"{live_console}/build/d/{made['id']}")
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     button = page.locator("[data-first-panel]")
     button.wait_for()
     rev = state(page, "rev")
@@ -109,4 +109,4 @@ def test_an_empty_design_offers_to_add_the_first_panel(live_console, page):
     settle(page, rev)
     assert settled_selection(page, "kv")
     assert page.locator("[data-first-panel]").count() == 0
-    assert "refs" not in page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    assert "refs" not in page.evaluate("window.Drishti.workbench.canvas.ids()")

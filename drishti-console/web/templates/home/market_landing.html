@@ -18,13 +18,13 @@
    command line across curves, surfaces and fixings, chips, counts by asset class, the commands by asset class, recents, Knowledge, Data
    map, Learn) and C "quality" (the checks the data supports today, by severity, with the clean share; no impact figures). A shell: every
    figure is the pack's own answer, worked out by core/market_landing.py (/api/home/market/desk, moves, quality) or read through
-   /api/home/search, and drawn by market-landing.js; a panel whose answer is refused or empty says so and nothing is invented. The terminal
+   /api/home/search, and drawn by drishti_market-landing.js; a panel whose answer is refused or empty says so and nothing is invented. The terminal
    look with a violet accent. The choice of landing is the person's, kept in their settings (routes/edition_routes.py). #}
 {% extends "base.html" %}
 {% block title %}{{ PRODUCT }}{% endblock %}
 {% block screen %}home{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/market-landing.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_market-landing.css?v={{ ASSET_V }}">{% endblock %}
 {% macro go(cmd) %}/go?q={{ (cmd ~ ' <GO>') | urlencode }}{% endmacro %}
 {% set groups = [
   ("Rates", "rates", [("CRV", "Interest rate curves"), ("REPO", "Repo curves"), ("IRV", "Swaption vol cubes"), ("CPV", "Cap and floor vols"), ("FIX", "Rate fixings"), ("INF", "Inflation indexes"), ("INFC", "Inflation curves")]),
@@ -127,4 +127,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/market-landing.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_market-landing.js?v={{ ASSET_V }}"></script>{% endblock %}

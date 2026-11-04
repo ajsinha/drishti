@@ -56,7 +56,7 @@ an argument about which numbers were meant.
 Drishti already has the pieces to do this properly: every read is built for one caller with their masks
 (`Entitlements.redactor`), every page knows its business date, "known at" instant and generation
 (`ViewModel.Provenance`), the access log records reads (`AccessRecorder`), the bell receives live events
-(`alerts.js` on the browser's one channel), and notes already hang off entities (`NoteStore`). This design joins them
+(`drishti_alerts.js` on the browser's one channel), and notes already hang off entities (`NoteStore`). This design joins them
 so that the conversation happens **inside** the controls: what travels is a link and the people's own words, never
 the data; the recipient sees the data with their own rights; and every message is pinned to the data it was about.
 
@@ -99,9 +99,9 @@ The design reuses these; each claim is grounded in the code named.
 
 | Piece | Where | What it gives us | What it lacks for this feature |
 |---|---|---|---|
-| Share button | `drishti-console/web/templates/terminal/view.html` (`data-share`), `view.js` (copy), `share_url()` in `drishti-console/routes/terminal_routes.py` | A link that reopens the view live, or through `/asof?d=…&ki=…&next=…` on a picked date and "known at" instant | No note, no recipients, no record; **the link loses its date when the recipient is signed out**: `AuthGate` (`drishti-console/core/app.py`) redirects to `/login?next=` with `request.url.path` only, so `/asof`'s query (and `srv=`) is dropped. Opening it also changes the recipient's sticky as-of cookie (12 h) for every later page |
-| Notes | `NoteStore`, `NoteEntity` (`drishti_note`), `NoteController` (`/api/v1/notes`), `notes.js`, the Notes drawer in `view.html` | Text on an entity or a field `path`, readable by everyone who may open the kind, author edits, author or admin deletes, every change in the audit log | Not masked (a note may quote a masked value, and `notes.js` writes the note into `data-note` on a masked field's element); no pin to data; hard delete (nothing kept for compliance); no replies, mentions or notifications; JPA only; 200 per entity |
-| Bell and alerts | `AlertEngine`, `AlertHistory` (`drishti_alert`, newest `keep` per user), `AlertController` (`/me/alerts`, SSE `/me/alerts/stream`), `alerts.js`, `channel` subscription `alerts` in `drishti-console/routes/api_routes.py` | A per-user live event stream on the browser's single channel, a counter badge, toasts, system notifications; per-user masks in `JsonConfiguration.alertEngine` (`Caffeine` cache of `entitlements.redactor(new Principal(user, roles))`) | Only alerts; listeners are in-process (a second server never hears them); no read state |
+| Share button | `drishti-console/web/templates/terminal/view.html` (`data-share`), `drishti_view.js` (copy), `share_url()` in `drishti-console/routes/terminal_routes.py` | A link that reopens the view live, or through `/asof?d=…&ki=…&next=…` on a picked date and "known at" instant | No note, no recipients, no record; **the link loses its date when the recipient is signed out**: `AuthGate` (`drishti-console/core/app.py`) redirects to `/login?next=` with `request.url.path` only, so `/asof`'s query (and `srv=`) is dropped. Opening it also changes the recipient's sticky as-of cookie (12 h) for every later page |
+| Notes | `NoteStore`, `NoteEntity` (`drishti_note`), `NoteController` (`/api/v1/notes`), `drishti_notes.js`, the Notes drawer in `view.html` | Text on an entity or a field `path`, readable by everyone who may open the kind, author edits, author or admin deletes, every change in the audit log | Not masked (a note may quote a masked value, and `drishti_notes.js` writes the note into `data-note` on a masked field's element); no pin to data; hard delete (nothing kept for compliance); no replies, mentions or notifications; JPA only; 200 per entity |
+| Bell and alerts | `AlertEngine`, `AlertHistory` (`drishti_alert`, newest `keep` per user), `AlertController` (`/me/alerts`, SSE `/me/alerts/stream`), `drishti_alerts.js`, `channel` subscription `alerts` in `drishti-console/routes/api_routes.py` | A per-user live event stream on the browser's single channel, a counter badge, toasts, system notifications; per-user masks in `JsonConfiguration.alertEngine` (`Caffeine` cache of `entitlements.redactor(new Principal(user, roles))`) | Only alerts; listeners are in-process (a second server never hears them); no read state |
 | Access log | `AccessLog` (`drishti_access`, queued, batched, *drops when full*), `AccessRecorder` (route → action map) | Who read what, when, for which business date | No `share` action; a queued, droppable path is not enough for a record of sending |
 | Audit log | `AuditLog`, `JpaAuditLog` (`drishti_audit`) | Who changed what (`note.add`, `note.edit`, `note.delete`, …) | Not tamper-evident; free-text detail |
 | Rights | `Entitlements.mayOpen` (role kinds **and** `PackAccess.kindAllowed`: the kind's pack active for the user), `redactor`, `restrict`, `PanelView.denied` | The one place masks and kind rights are decided, and copies of masked values scrubbed (`mask-copies`) | Works on a `Principal` of the caller; deciding for a *recipient* is done ad hoc today (`JsonConfiguration`) |
@@ -509,7 +509,7 @@ bean then uses it). Two checks:
 | A masked value typed into a note or comment ("J. Smith"), in any language case | at write, the server takes the author's document at the pin (the stored, unmasked document through `SourceRouter`), collects the masked fields' values with `Entitlements`' `mask-copies` routine (extracted from `copies(...)` as `maskedValues(doc)`), and records the **spans** of exact occurrences in the text; readers without `raw` see those spans as `•••`. Same bounds as `mask-copies` (min length, numbers of four digits or more, exact match). The author is warned; `on-masked-copy: reject` refuses instead. Spans are recomputed on edit. ([Decision 7](#decisions-for-the-product-owner)) | `CommentMaskTest`: masked value in text → `•••` for viewer, intact for raw; a JSON scan of every collab answer for a non-raw caller never contains the value |
 | Values the author knows from elsewhere (not in this document) | not detectable by the document; `deny-patterns` (regexes, e.g. an MRN format) refuse them; documented as a limit, with the advice to use value quotes | deny-pattern test |
 | Quoting a value | `{$.mtm}` tokens are stored as paths and rendered for each reader from **their** view at the comment's pin (the pinned view built once per (reader mask class, pin), cached), `•••` when masked, `—` when the path is gone | quote test, masked and unmasked |
-| A field anchor on a masked field | the thread is visible (the label is on the page); the marker never carries text (`notes.js`' `data-note` with the body is removed) | console test |
+| A field anchor on a masked field | the thread is visible (the label is on the page); the marker never carries text (`drishti_notes.js`' `data-note` with the body is removed) | console test |
 | A panel anchor on a panel the reader sees as denied | the thread records the panel's `gate_kind`; readers must `mayOpen` it too, else the thread is not listed and counts omit it | `ThreadVisibilityTest` |
 | Cross-pack leakage through `@mention` | a mention of a user or role notifies only people who `mayReach` the kind; others get nothing (not even "someone mentioned you"); the author is told who was not notified only under `undeliverable: tell` ([Decision 6](#decisions-for-the-product-owner)) | mention of a genomics-only user on a trade → no inbox row, no email |
 | Learning other people's rights through the directory | the directory is scoped to users who share a pack with the caller ([Decision 3](#decisions-for-the-product-owner)); `reach` is shown only under `tell`; rate limited | directory scope test |
@@ -708,19 +708,19 @@ adds no library.
   comment, mention and quote parts), `terminal/share_denied.html`, `inbox.html`, `admin/collab.html`; the drawer host in
   `terminal/view.html` becomes `<aside class="side" id="sideDrawer">` with two tab panels, *About* (the existing
   `#aboutDrawer` body, unchanged inside) and *Discussion*.
-- **JS** (each under 300 lines, no library): `share.js` (dialog, `Alt+S`, value quote picker), `people.js` (the
+- **JS** (each under 300 lines, no library): `drishti_share.js` (dialog, `Alt+S`, value quote picker), `drishti_people.js` (the
   directory type-ahead used by the dialog and by `@` in comments: `role="combobox"`, `aria-activedescendant`, arrow
-  keys, `Enter`, `Esc`), `discussion.js` (drawer tab, `Alt+N`, threads, reply, edit, retract, follow, badges from
-  `/counts` fetched after paint, field markers replacing `notes.js`), `alerts.js` (bell: notices beside alerts, unread
-  count from `/me/inbox/count` at load then `notice` events), `inbox.js` (`/inbox` page, `Alt+I`). `about.js` changes
+  keys, `Enter`, `Esc`), `drishti_discussion.js` (drawer tab, `Alt+N`, threads, reply, edit, retract, follow, badges from
+  `/counts` fetched after paint, field markers replacing `drishti_notes.js`), `drishti_alerts.js` (bell: notices beside alerts, unread
+  count from `/me/inbox/count` at load then `notice` events), `drishti_inbox.js` (`/inbox` page, `Alt+I`). `drishti_about.js` changes
   only to open inside the shared host.
-- **CSS**: `collab.css`, colours only from `tokens.css` (`--d-*`), so all seven themes work; `test_contrast.py` gains
+- **CSS**: `drishti_collab.css`, colours only from `drishti_tokens.css` (`--d-*`), so all seven themes work; `test_contrast.py` gains
   the new tokens.
 - **Keys.** `Alt+S` share, `Alt+N` discussion, `Alt+I` inbox (none is bound today: `Alt+C` Calc, `Alt+L` layout,
   `Alt+←`, `Alt+0…4` in workspaces); `Ctrl+Enter` sends in the dialog and in a reply box; `Esc` closes and returns
-  focus to the opener. Keys are ignored while typing in a field, as `about.js` does for `?`.
+  focus to the opener. Keys are ignored while typing in a field, as `drishti_about.js` does for `?`.
 - **Phone** (`max-width: 640px`): the share dialog is a full-screen sheet; the side drawer is the bottom sheet the
-  About drawer already uses (one tab at a time, swipe down closes, focus trapped as `pivot.js:dialog()` does); the
+  About drawer already uses (one tab at a time, swipe down closes, focus trapped as `drishti_pivot.js:dialog()` does); the
   inbox is a single column.
 - **Accessibility.** The dialog is `role="dialog" aria-modal="true"` with a focus trap; the drawer stays
   `aria-modal="false"`. New comments arriving live are announced in a polite live region ("1 new comment on VaR
@@ -740,7 +740,7 @@ adds no library.
 | `POST /shares` (25 recipients, 200 expanded) | p95 ≤ 80 ms, one transaction; the masked-copy scan reads the document the router has cached |
 | Notice to bell | ≤ 1 s same server; ≤ `inbox.poll` + 1 s across servers |
 | Email | first attempt within `outbox.tick` after commit |
-| Console JS + CSS | `share.js` + `people.js` + `discussion.js` + `inbox.js` ≤ 40 KB, `collab.css` ≤ 8 KB unminified; loaded only on pages that use them |
+| Console JS + CSS | `drishti_share.js` + `drishti_people.js` + `drishti_discussion.js` + `drishti_inbox.js` ≤ 40 KB, `drishti_collab.css` ≤ 8 KB unminified; loaded only on pages that use them |
 | Outbox dispatch | 50 mails per tick per server; the SMTP connection reused within a batch |
 
 Two mask classes exist per entity (`raw` or not: `Entitlements.masks` is binary), so rendered comments cache well.
@@ -784,7 +784,7 @@ Made after the data safety QA pass ([QA history, data safety](../qa/QA_HISTORY.m
 *Two people, one trade.* `asha` (role `author`, sees every field) is looking at `TRD MX-20000001` on the business date 2026-09-30 and wants `vera`
 (role `viewer`, no `raw`: the trader and counterparty fields read `•••` for her) to check something. Then they talk about it in the open. The code
 lives in `drishti-server/.../collab` (services and controllers), `drishti-identity/.../collab` (records and stores) and the console
-(`routes/collab_routes.py`, `routes/thread_routes.py`, `core/collab.py`, `core/threads.py`, `share.js`, `discussion*.js`, `inbox.js`, `alerts.js`).
+(`routes/collab_routes.py`, `routes/thread_routes.py`, `core/collab.py`, `core/threads.py`, `drishti_share.js`, `discussion*.js`, `drishti_inbox.js`, `drishti_alerts.js`).
 The design and its reasons are in [COLLABORATION.md](COLLABORATION.md) and [ADR-020](adr/020-collaboration-records-live-in-the-identity-database.md); the
 pictures below are made by `tools/docs/shots/collab.py` on a server started with the QUICKSTART packs and sign-in on.
 
@@ -796,12 +796,12 @@ later, and nothing to update when someone's role changes.
 
 ![The Share dialog on MX-20000001](../guides/img/collab/01-share-dialog.jpg)
 
-Asha presses `Alt+S` (`share.js`), picks `Vera Lim` from the people picker and writes the note: *"Please check the fixed leg before the 16:00 sign-off.
+Asha presses `Alt+S` (`drishti_share.js`), picks `Vera Lim` from the people picker and writes the note: *"Please check the fixed leg before the 16:00 sign-off.
 The trader on this one is TRDR-ASHAH."* The yellow warning is the server's answer to the second sentence, explained in step 6.
 
 | # | What happens | Where | Code |
 |---|---|---|---|
-| 1 | The picker asks for people and roles: only users who share a pack with Asha, from two letters, rate limited; a role shows its size, never its members | console to server | `people.js`, `GET /api/directory` then `GET /api/v1/directory`, `DirectoryController`, `DirectoryService` (`drishti.collab.directory.*`) |
+| 1 | The picker asks for people and roles: only users who share a pack with Asha, from two letters, rate limited; a role shows its size, never its members | console to server | `drishti_people.js`, `GET /api/directory` then `GET /api/v1/directory`, `DirectoryController`, `DirectoryService` (`drishti.collab.directory.*`) |
 | 2 | The dialog posts the page's own `asOf` and `knownAt` in the body (a pinned link sets no cookie); the console turns them into the as-of headers of that one call | console | `collab_routes.py` `share`, `BackendClient` (`X-Drishti-As-Of`, `X-Drishti-Known-At`) |
 | 3 | Asha must hold the `collaborate` power, the kind's pack must allow sharing (`drishti.collab.packs.<pack>.share-enabled`, else `403 DRS-7004`), and she must herself be able to open `trade` | server | `ShareService.share`, `requireCollaborate`, `requirePackSharing`, `Entitlements.requireOpen` |
 | 4 | **Recipients are resolved.** Names and roles become people: a role expands to its members (at most `max-group-size`; `admin` and `service` are never addressable); each person must be in Asha's directory scope. Each is then checked **at delivery**: their role opens `trade` *and* the pack that owns `trade` is assigned to them (`Entitlements.mayReach`; a pack they switched off still delivers, and the page offers *Switch on*). The result per person is a state: `notified`, `no-access`, `no-pack`, `disabled` or `over-limit` | server | `ShareService.resolve`, `DirectoryService`, `Principals` (a principal for any user, cached a minute), `Entitlements.mayReach`, `reachState`, `Recipient` |
@@ -816,7 +816,7 @@ The trader on this one is TRDR-ASHAH."* The yellow warning is the server's answe
 
 ### Part 2: the notice and the email
 
-Vera is on another page. Within a second `alerts.js` receives the `notice` event, raises the bell's count and shows a toast (the count at page load
+Vera is on another page. Within a second `drishti_alerts.js` receives the `notice` event, raises the bell's count and shows a toast (the count at page load
 comes from `GET /api/v1/me/inbox/count`). The bell is the inbox's door:
 
 ![Vera's top bar: the bell shows 1](../guides/img/collab/03-recipient-bell.jpg)
@@ -867,20 +867,20 @@ conversation continues in the Discussion tab, below.
 
 ### Part 4: a comment in the discussion, an @mention
 
-Asha writes in the open. She presses `Alt+N`: the side drawer of *About this page* has a second tab, **Discussion** (`about.js` hosts it,
-`discussion.js` is the controller). Her comment mentions `@vera`, repeats the trader's id by hand (`TRDR-ASHAH`) and quotes two fields, `{$.TRADER_ID}`
+Asha writes in the open. She presses `Alt+N`: the side drawer of *About this page* has a second tab, **Discussion** (`drishti_about.js` hosts it,
+`drishti_discussion.js` is the controller). Her comment mentions `@vera`, repeats the trader's id by hand (`TRDR-ASHAH`) and quotes two fields, `{$.TRADER_ID}`
 (shown as the trader's name) and `{$.QUANTITY}`:
 
 ![Asha's Discussion tab: @vera, TRDR-ASHAH, the quoted trader and quantity](../guides/img/collab/07-discussion-author.jpg)
 
 | # | What happens | Code |
 |---|---|---|
-| 1 | The `@` and `{` pickers (`discussion-compose.js`, one ARIA combobox) fill the box. The browser posts the text, the anchor (whole view, a panel or a field), the generation and the page's `asOf` and `knownAt` to the console, which sends them as the as-of headers. The comment is pinned to the date Asha was looking at | `thread_routes.py`, `core/threads.py`, `ThreadController` `POST /threads/{kind}/{id}` |
+| 1 | The `@` and `{` pickers (`drishti_discussion-compose.js`, one ARIA combobox) fill the box. The browser posts the text, the anchor (whole view, a panel or a field), the generation and the page's `asOf` and `knownAt` to the console, which sends them as the as-of headers. The comment is pinned to the date Asha was looking at | `thread_routes.py`, `core/threads.py`, `ThreadController` `POST /threads/{kind}/{id}` |
 | 2 | Asha must hold `collaborate` and be able to open the kind (and a panel's gate kind). The text is cleaned (plain text, length, `text.deny-patterns`) | `ThreadService.start`, `Entitlements.requireOpen` |
 | 3 | **The typed `TRDR-ASHAH` is found in the stored document at the pin**, as in Part 1 step 6, and its span stored. A quote `{$.TRADER_ID}` is stored as a *path*, not a value | `ThreadService.draft`, `PinnedDocs`, `NoteText.spans` |
 | 4 | **The @mention is resolved.** `@vera` and `@risk` become users and roles; roles expand (`mentionable-roles`, `max-group-size`); each person is checked with `mayReach` like a share recipient, so a mention never reaches someone who may not open this kind of view: they get **nothing**, not even "someone mentioned you". The author learns who was left out (`undeliverable: tell`) | `Audience.resolve`, `Audience.Mentioned` (`reached`, `skipped`) |
 | 5 | One transaction: the thread, the comment, **revision 1**, the mention rows, the author's follow and the notices (`InAppNotifier`: a `mention` row for Vera, `reply` rows for the followers of later replies; `EmailNotifier`: several notices to one person within `inbox.coalesce` become one mail); then the push after the commit | `ThreadService.write`, `CollabTx`, `Notifier.onComment`, `ThreadStore` |
-| 6 | The drawer says *"1 person notified"* and, by name, anyone skipped, plus the warning about the typed value | `ThreadService.Posted`, `discussion-view.js` |
+| 6 | The drawer says *"1 person notified"* and, by name, anyone skipped, plus the warning about the typed value | `ThreadService.Posted`, `drishti_discussion-view.js` |
 
 ### Part 5: per-reader scrubbing
 
@@ -970,24 +970,24 @@ M 2–3 days, L 4–5 days. Browser tests are Playwright against a scratch serve
 
 | Step | Scope | Files touched | Tests | Accepted when | Size |
 |---|---|---|---|---|---|
-| **1. Pinned links that survive sign-in** (console) **(built)** | `AuthGate` keeps the query in `next=`; `?knownAt=` per request like `?asOf=`; `share_url()` emits `/v/{k}/{id}?asOf=&knownAt=&gen=` instead of `/asof?…` (the old form still works); the *as shared* banner with the three outcomes (as it was, `DRS-1007` retry, generation changed → *What changed*); *Go live* | `drishti-console/core/app.py`, `core/asof.py`, `routes/terminal_routes.py` (`share_url`, `view`), `templates/terminal/view.html` (banner only), `static/css/terminal.css` | `test_share_link.py` (signed-out → login → lands on the pinned date; cookie untouched; `DRS-1007` fallback; banner text), `test_share_link_browser.py` | a copied link to 29 Sep known at 18:00 opened signed out by another user shows 29 Sep at 18:00 after sign-in, and their other tabs stay live | S |
+| **1. Pinned links that survive sign-in** (console) **(built)** | `AuthGate` keeps the query in `next=`; `?knownAt=` per request like `?asOf=`; `share_url()` emits `/v/{k}/{id}?asOf=&knownAt=&gen=` instead of `/asof?…` (the old form still works); the *as shared* banner with the three outcomes (as it was, `DRS-1007` retry, generation changed → *What changed*); *Go live* | `drishti-console/core/app.py`, `core/asof.py`, `routes/terminal_routes.py` (`share_url`, `view`), `templates/terminal/view.html` (banner only), `static/css/drishti_terminal.css` | `test_share_link.py` (signed-out → login → lands on the pinned date; cookie untouched; `DRS-1007` fallback; banner text), `test_share_link_browser.py` | a copied link to 29 Sep known at 18:00 opened signed out by another user shows 29 Sep at 18:00 after sign-in, and their other tabs stay live | S |
 | **2. Share with a note: server** (done) | `drishti.collab` properties (all keys), full collab schema (both SQL files, every table above so later steps add none), `ErrorCode` `DRS-7001`–`7012`; `Principals`, `Entitlements.mayReach` and `maskedValues` (extracted from `copies`); `ShareStore` (JPA + file), `InboxStore` (JPA + file), `ShareService`, `InboxService`, `InboxHub`, `Notifier` + `InAppNotifier`, `RateLimits`; `DirectoryController`, `ShareController`, `InboxController`; `notice` events on `/me/alerts/stream`; `AccessLog.recordNow`, `share` action and `X-Drishti-Share` detail; `collaborate`/`compliance` powers | `drishti-common/.../ErrorCode.java`; `drishti-identity/.../collab/*` (new), `db/schema-*.sql`, `IdentityConfiguration.java`, `AccessLog.java`, `RoleDefinition.java`/`RoleEntity.java` (powers); `drishti-server/.../collab/*` (new), `security/{Entitlements,Principals}.java`, `api/{AlertController,AccessRecorder}.java`, `JsonConfiguration.java` (uses `Principals`), `application.yaml` | `ShareServiceTest` (rights matrix, expansion, limits, spans), `ShareStoreContractTest` run against both stores, `ShareControllerTest` (codes, 404 for strangers), `CommentMaskTest`-style JSON scan, `InboxHubTest` (two servers on one SQLite file), `AccessRecorderTest` | `curl POST /shares` to a user and a role: inbox rows for those who may reach, skipped list for the rest, an access-log `share` row even with the queue full, the bell stream emits `notice` | L |
-| **3. Share with a note: console** (done) | dialog, people picker, value quotes, *Copy link* kept; `/share/{id}` resolver and no-access page; bell notices and unread count; `/inbox` page | `routes/collab_routes.py` (new), `core/collab.py` (new), `templates/terminal/{_share,share_denied}.html`, `templates/inbox.html`, `templates/terminal/view.html` (Share button), `static/js/{share,people,inbox}.js` (new), `static/js/alerts.js`, `static/css/collab.css`, `templates/terminal/_topbar.html` (bell link → inbox), `config/application.yaml` (`ui.error_advice`) | `test_share.py`, `test_inbox.py`, `test_share_browser.py` (keyboard-only share, phone sheet, focus return, recipient opens and sees `•••`, no-access page), `test_assets_policy.py`, `test_contrast.py` | from MX-20000001 a user shares with `ravi` and `risk`; Ravi's bell counts 1 within a second; the link opens the pinned view; a user without `trade` sees the no-access page | M |
+| **3. Share with a note: console** (done) | dialog, people picker, value quotes, *Copy link* kept; `/share/{id}` resolver and no-access page; bell notices and unread count; `/inbox` page | `routes/collab_routes.py` (new), `core/collab.py` (new), `templates/terminal/{_share,share_denied}.html`, `templates/inbox.html`, `templates/terminal/view.html` (Share button), `static/js/{share,people,inbox}.js` (new), `static/js/drishti_alerts.js`, `static/css/drishti_collab.css`, `templates/terminal/_topbar.html` (bell link → inbox), `config/application.yaml` (`ui.error_advice`) | `test_share.py`, `test_inbox.py`, `test_share_browser.py` (keyboard-only share, phone sheet, focus return, recipient opens and sees `•••`, no-access page), `test_assets_policy.py`, `test_contrast.py` | from MX-20000001 a user shares with `ravi` and `risk`; Ravi's bell counts 1 within a second; the link opens the pinned view; a user without `trade` sees the no-access page | M |
 | **4. Email** (done; see *Step 4*) | `EmailNotifier`, `OutboxStore` (JPA + file), `OutboxDispatcher` (lease, backoff, dead letters, coalescing), templates (`share`, `mention`, `reply`, `test`) with Rachana-EL over a closed map, `notify` settings, per-pack `content`; admin outbox endpoints and mail test; `spring-boot-starter-mail` | `drishti-server/.../collab/mail/*` (new), `drishti-identity/.../collab/Outbox*.java` (new), `api/SettingsController.java` (`notify`), `drishti-server/pom.xml`, `resources/collab/templates/*`, `THIRD-PARTY-NOTICES.md`; console `templates/account.html` (notify toggles) | `OutboxDispatcherTest` against an in-process SMTP stub on a free port (retry, 5xx → dead, lease takeover, coalescing), `MailRenderTest` (no values, masks, `link-only`, header injection), startup refusal with security off | with `spring.mail.host` at a stub, a share to Ravi sends one mail with the note and the link and no figures; stopping the stub leaves it pending and it is sent when the stub returns | M |
 | **5. Threads: server** (done) | `ThreadStore` (JPA + file), `ThreadService` (anchors, gate kinds, pins, mentions, followers, edit window, retract, resolve, revisions with the hash chain, spans, quotes), `ThreadController`, `/me/mentions`, `NoteImport`, `/notes` facade | `drishti-identity/.../collab/Thread*.java`, `Comment*.java`, `NoteImport.java` (new); `drishti-server/.../collab/thread/*` (new), `api/NoteController.java` (facade) | `ThreadServiceTest`, `ThreadStoreContractTest` (both stores), `ThreadVisibilityTest` (kind, pack, gate kind), `HashChainTest`, `NoteImportTest` (idempotent), `NoteControllerTest` (facade, unchanged shape) | a comment on the VaR contribution panel with `@risk` reaches `risk` members who may open `var`, not a genomics-only member; editing after 15 min is `403 DRS-7008`; the chain verifies | L |
-| **6. Threads: console** (done; see *Step 6*) | shared side drawer (About and Discussion tabs), threads, reply, edit, retract, resolve, follow, `@` and `{` pickers, panel badges, field markers, *Open as it was*, live new-comment notices; Notes drawer and `notes.js` removed | `templates/terminal/{view,_discussion}.html`, `_macros/collab.html`, `static/js/discussion.js` (new), `static/js/about.js` (host only), `static/css/{about,collab}.css`, `routes/collab_routes.py` (discussion routes), `core/threads.py` (new); `static/js/notes.js` deleted | `test_discussion.py`, `test_discussion_browser.py` (keyboard-only thread, `Alt+N` / `?` switching tabs, phone sheet, `•••` in a quote for a viewer, *Open as it was*), `test_about_browser.py` still green, `test_fkeys.py` | on VAR-COMM a user opens a panel thread from its badge, mentions a colleague, and the colleague's *Open as it was* shows the comment's date | L |
-| **7. Moderation, retention, legal hold, export** (server done; see *Step 7*) | hide/unhide, lock, holds, `CollabPurge`, export job and zip, verify; admin console page | `drishti-server/.../collab/compliance/*` (new), `drishti-identity/.../collab/Hold*.java` (new); console `routes/compliance_routes.py`, `core/compliance.py`, `templates/admin/collab.html`, `static/js/admin-collab.js` (new) | `CollabPurgeTest` (holds win, whole threads only), `ExportTest` (manifest, NDJSON, hashes, unscrubbed only for `compliance`), `ModerationTest`, `test_admin_collab.py` | a hold on MX-20000001 keeps its threads past retention; an export of a day verifies against the chain | M |
+| **6. Threads: console** (done; see *Step 6*) | shared side drawer (About and Discussion tabs), threads, reply, edit, retract, resolve, follow, `@` and `{` pickers, panel badges, field markers, *Open as it was*, live new-comment notices; Notes drawer and `drishti_notes.js` removed | `templates/terminal/{view,_discussion}.html`, `_macros/collab.html`, `static/js/drishti_discussion.js` (new), `static/js/drishti_about.js` (host only), `static/css/{about,collab}.css`, `routes/collab_routes.py` (discussion routes), `core/threads.py` (new); `static/js/notes.js` deleted | `test_discussion.py`, `test_discussion_browser.py` (keyboard-only thread, `Alt+N` / `?` switching tabs, phone sheet, `•••` in a quote for a viewer, *Open as it was*), `test_about_browser.py` still green, `test_fkeys.py` | on VAR-COMM a user opens a panel thread from its badge, mentions a colleague, and the colleague's *Open as it was* shows the comment's date | L |
+| **7. Moderation, retention, legal hold, export** (server done; see *Step 7*) | hide/unhide, lock, holds, `CollabPurge`, export job and zip, verify; admin console page | `drishti-server/.../collab/compliance/*` (new), `drishti-identity/.../collab/Hold*.java` (new); console `routes/compliance_routes.py`, `core/compliance.py`, `templates/admin/collab.html`, `static/js/drishti_admin-collab.js` (new) | `CollabPurgeTest` (holds win, whole threads only), `ExportTest` (manifest, NDJSON, hashes, unscrubbed only for `compliance`), `ModerationTest`, `test_admin_collab.py` | a hold on MX-20000001 keeps its threads past retention; an export of a day verifies against the chain | M |
 | **8. End-to-end docs** (done; see *Step 8*) | HOW_IT_FITS section, ARCHITECTURE paragraph, ADR-020, USER_GUIDE consolidation, the console's monitors-and-alerts guide | docs only | `test_help_links.py`, `test_docs_error_codes.py`, `test_docs_settings.py`, licence headers | every link resolves; every new code and key documented | S |
 | **9. Bridges** (phase 2) | `WebhookNotifier`, bridge bindings, render-as role | `drishti-server/.../collab/bridge/*` (new), admin page section | stub HTTP server test (allow-list, no redirects, masks) | a comment on a bound kind posts text and link only | M |
 | **10. Watermarked snapshots** (phase 2, built: see *As-built notes: step 10*) | `SnapshotRenderer` (Java2D), most-restrictive principal, policy, attachment | `drishti-server/.../collab/snapshot/*` (new) | golden-image test, a recipient without `raw` → masked image, a gate-kind panel left out | off by default; on, an image never shows more than its least-entitled recipient may see | L |
 
 **Step 3.** `core/collab.py` (client, `link_for`, the `X-Drishti-Share` contextvar `BackendClient` adds to every call while a view
 opened through a share is built), `routes/collab_routes.py` (`/api/collab`, `/api/directory`, `/api/share`, `/share/{id}`, `/inbox`,
-`/api/inbox/{count,read}`), `terminal/_share.html`, `terminal/share_denied.html`, `inbox.html`, `share.js`, `people.js`, `inbox.js`, `alerts.js`,
-`collab.css`. Deviations: (1) the dialog posts the page's own `asOf` and `knownAt` in the body (a pinned link sets no cookie), which the route turns into the
+`/api/inbox/{count,read}`), `terminal/_share.html`, `terminal/share_denied.html`, `inbox.html`, `drishti_share.js`, `drishti_people.js`, `drishti_inbox.js`, `drishti_alerts.js`,
+`drishti_collab.css`. Deviations: (1) the dialog posts the page's own `asOf` and `knownAt` in the body (a pinned link sets no cookie), which the route turns into the
 as-of headers of the one call; (2) the bell is the inbox's door: it links to `/inbox` (Alerts stay at `/alerts`, reached from the inbox page), its count starts from
 `GET /me/inbox/count` and rises with `notice` and `alert` events, and there is no dropdown tray yet; (3) the panel's own *Share this panel* is a
-**send** icon `share.js` adds to each panel header (no panel menu exists), and `gateKind` is sent only when the panel element carries `data-gate-kind`,
+**send** icon `drishti_share.js` adds to each panel header (no panel menu exists), and `gateKind` is sent only when the panel element carries `data-gate-kind`,
 which no panel does yet (the server's view marks a denied panel itself); (4) value quotes (`{`) and the email channel are steps 5 and 4; (5) a recipient
 who may not open the share gets `403` with the clean page, a stranger `404` with a page that does not say a share exists, and *Switch on <pack>*
 shows when the server says `pack-off`; (6) a link's `knownAt` is cut to whole seconds, the console's form.
@@ -1085,26 +1085,26 @@ not yet purged by `inbox.keep-days` at this step (they are capped by `inbox.keep
 Tests: `ComplianceApiContract` on both stores (authorization, hold scopes and date ranges, purge skips held items, export contents and checksums, tamper
 detection), `CollabPurgeDaysTest`, `HoldTest`, the store contract's `removal` and `holds`.
 **Step 6, and where it differs from the design above.** One side drawer (`#aboutDrawer`, kept so About's code and tests are unchanged) with
-a tablist, an About panel and a Discussion panel (`terminal/_discussion.html`); `about.js` owns the host (open, close, focus, phone sheet, tabs, the
-`drishti:drawer` event, `window.drishtiAbout.{open,close,setTab,tab}`), `?` and F1 always land on About, Alt+N on Discussion. `discussion.js` (controller),
-`discussion-view.js` (drawing, `textContent` only) and `discussion-compose.js` (the `@` and `{` pickers, one ARIA combobox over the textarea) replace
-`notes.js`, which is deleted along with the Notes drawer. Deviations: (1) the tab is drawn from JSON (`/api/threads/...`, `routes/thread_routes.py`,
+a tablist, an About panel and a Discussion panel (`terminal/_discussion.html`); `drishti_about.js` owns the host (open, close, focus, phone sheet, tabs, the
+`drishti:drawer` event, `window.Drishti.about.{open,close,setTab,tab}`), `?` and F1 always land on About, Alt+N on Discussion. `drishti_discussion.js` (controller),
+`drishti_discussion-view.js` (drawing, `textContent` only) and `drishti_discussion-compose.js` (the `@` and `{` pickers, one ARIA combobox over the textarea) replace
+`drishti_notes.js`, which is deleted along with the Notes drawer. Deviations: (1) the tab is drawn from JSON (`/api/threads/...`, `routes/thread_routes.py`,
 `core/threads.py`), not from a server-rendered `/v/{kind}/{id}/discussion` partial: every comment arrives scrubbed for the reader and is set with
 `textContent`, so there is no HTML to trust; (2) the console adds `href` (the pinned link) to every comment from its pin, and *Open as it was* shows only
 when the page's date or generation differs from the comment's; (3) a post carries the page's `asOf` and `knownAt` in its body, which the route turns into the
 as-of headers (as for a share), so a comment written on a past date is pinned to it; (4) the new-thread box is always at the bottom of the tab, and
 anything else (a reply, an edit, a hide reason) is an inline form; (5) live updates ride the bell's channel: a `notice` of type `mention` or `reply` about
 this entity refreshes the list and is announced in a polite live region (readers who follow no thread are not pushed anything; they see new comments when
-they open the tab); (6) the panel's comment icon is added by `discussion.js` beside the `?` once `/api/collab` says collaboration is on, and the field
+they open the tab); (6) the panel's comment icon is added by `drishti_discussion.js` beside the `?` once `/api/collab` says collaboration is on, and the field
 dot reuses `.has-note`; (7) the account page's `notify.email.{share,mention,reply}` toggles (left from step 4) are built, saved through `/me/settings`.
 Tests: `test_discussion.py`, `test_discussion_browser.py` (two users, mention and bell, masked value and quote, edit, retract, hide, open as it was,
 keyboard-only, phone).
 
 **Console polish.** (1) The share dialog's tick *Also start a discussion on the view* (`name="postToThread"`) is set on opening from `/collab`'s
 `postToThread` (the server already reported it) and sent in the share body; no server change. (2) The share banner on `/v/{kind}/{id}?share=` lists the
-share's `replies` and, when `role` is `sender` or `recipient`, a reply form (`share-reply.js`, `Ctrl+Enter`) posting to `POST /api/share/{id}/replies`
+share's `replies` and, when `role` is `sender` or `recipient`, a reply form (`drishti_share-reply.js`, `Ctrl+Enter`) posting to `POST /api/share/{id}/replies`
 (a console proxy of `POST /shares/{id}/replies`); `compliance` reads only. (3) **Admin > Collaboration**: `routes/collab_admin_routes.py`
-(`/admin/collab`, JSON under `/admin/collab/api/...` proxying the server's `/admin/collab/*`), `templates/admin/collab.html`, `static/js/admin-collab.js`.
+(`/admin/collab`, JSON under `/admin/collab/api/...` proxying the server's `/admin/collab/*`), `templates/admin/collab.html`, `static/js/drishti_admin-collab.js`.
 The page opens for an administrator or a caller whose `/collab` says `compliance`; sections by role as the API (moderation, retention and bridges:
 `admin`; holds, export, verify: `compliance`; the thread search: either). Deviations from the plan: the file names (no `compliance_routes.py` or
 `core/compliance.py`); hide, unhide and lock reuse the Discussion calls (`/api/comment/{id}/hide`, `/api/thread/{id}/state`); hidden comments are
@@ -1112,7 +1112,7 @@ found by opening a thread (a *Only hidden comments* filter), because the server 
 zip passes through the console in memory (`raw=True`) once. (4) Times: `core/asof.py:local_when` (`to_local` in the zone, then the label) is the one
 formatter; the zone is the business zone of the top bar's *known at* picker (else the clock's), the label is the zone's last name part ("New York").
 Templates use `when_local`; the JSON the pages draw gets `<name>Local` beside every `...At` (`routes/common.py:localise`), so the JavaScript never
-works a zone out. (5) A quoted value is drawn by `discussion-view.js` from the field's cell on the page (`[data-path]`): its text as is when the page
+works a zone out. (5) A quoted value is drawn by `drishti_discussion-view.js` from the field's cell on the page (`[data-path]`): its text as is when the page
 is at the comment's generation, else the cell's grouping, decimals, prefix and suffix applied to the stored number; `•••` and `—` are never replaced.
 No server change (the server sends the stored value). Tests: `test_collab_polish.py`, `test_collab_polish_browser.py`.
 
@@ -1186,7 +1186,7 @@ cross-cutting sections only.
 | 7 | Masked values typed into text | always scrub for readers without `raw` (write-time spans with the `mask-copies` rules, whatever `drishti.security.mask-copies` says), warn the author, `reject` available; offer value quotes as the safe way to cite a figure; document that values from outside the document are not caught (use `deny-patterns`) |
 | 8 | Edit, delete, retention | 15-minute edit window with every revision kept; after it, retract only; administrators hide with a reason; nothing erased before retention; retention default keep-forever (`keep-days: 0`) so no record is destroyed by default |
 | 9 | About and Discussion drawers | one side drawer with two tabs (`?` → About, `Alt+N` → Discussion), rather than two drawers that stack or overlap |
-| 10 | Inbox and the bell | one bell for notices and alerts with tabs; alerts stay in `drishti_alert` and `/alerts`; notices ride the existing `/me/alerts/stream` (no new connection, the six-connection lesson of `live-hub.js`) |
+| 10 | Inbox and the bell | one bell for notices and alerts with tabs; alerts stay in `drishti_alert` and `/alerts`; notices ride the existing `/me/alerts/stream` (no new connection, the six-connection lesson of `drishti_live-hub.js`) |
 | 11 | Snapshot renderer (phase 2) | server-side Java2D of strip and tables, no headless browser; off by default; only if the product owner keeps phase 2 |
 | 12 | Groups | roles are the groups (single sign-on already maps directory groups to roles); no separate group store in this design; revisit if firms need mailing-list-style groups that grant no rights |
 | 13 | Error code range | a new first digit, 7 for collaboration (`DRS-7001`–`7012`), documented in `ErrorCode`'s header |

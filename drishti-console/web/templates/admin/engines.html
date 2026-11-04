@@ -15,14 +15,14 @@
 #}
 {% extends "base.html" %}
 {% block title %}Engines · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-engines.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-engines.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {# Admin -> Engines (docs/architecture/COMPUTE_ENGINES.md section 8; mock-up A, docs/architecture/mockups/engines/A.html, with C as the
    Cluster tab): one table of the engines on this server, a change staged and reviewed in the side panel (dependencies, what disappears for
-   people, live or restart, the reason), History below. admin-engines.js draws everything from the JSON below and the page's API. #}
+   people, live or restart, the reason), History below. drishti_admin-engines.js draws everything from the JSON below and the page's API. #}
 <div class="adm eng" data-engines>
   <h1>Engines</h1>
   {% with tab='engines' %}{% include "admin/_nav.html" %}{% endwith %}
@@ -86,4 +86,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-engines.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_admin-engines.js?v={{ ASSET_V }}"></script>{% endblock %}

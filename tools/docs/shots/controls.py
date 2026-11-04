@@ -36,9 +36,9 @@ def open_view(c: Ctx, path: str, width: int, height: int):
 
 
 def done(c: Ctx, action):
-    n = c.page.evaluate("(window.__drishtiControls || []).length")
+    n = c.page.evaluate("(window.Drishti.__controls || []).length")
     action()
-    c.until(f"(window.__drishtiControls || []).length > {n}", 30)
+    c.until(f"(window.Drishti.__controls || []).length > {n}", 30)
     c.page.wait_for_timeout(400)
 
 
@@ -105,10 +105,10 @@ def workbench(c: Ctx):
     sutra = (c.page.request.get(c.base + "/api/sutras/irs-fixfloat").text() if False else None)
     d = c.design("controls-demo", files={"irs.json": json.dumps(doc)}, kind="trade")
     c.open(d)
-    c.page.evaluate("""() => window.drishtiWorkbench.store.send([{ op: 'text', yaml:
+    c.page.evaluate("""() => window.Drishti.workbench.store.send([{ op: 'text', yaml:
       'rachana: 1\\nsutra: controls-demo\\nversion: 1\\nmatch: { kind: trade }\\ntitle: { id: $.tradeId }\\npanels:\\n  - id: schedule\\n    kind: table\\n    title: Cashflows\\n    rows: $.schedule\\n    where: "oneOf(@.leg, ctl.legs) && within(@.payDate, ctl.when)"\\n    columns:\\n      - { label: Pay date, bind: "@.payDate" }\\n      - { label: Leg, bind: "@.leg" }\\n      - { label: Amount, bind: "@.amount", fmt: signed0 }\\n' }], 'Sutra')""")
     c.page.wait_for_timeout(1500)
-    c.page.evaluate("""() => window.drishtiWorkbench.store.send([{ op: 'setControls', items: [
+    c.page.evaluate("""() => window.Drishti.workbench.store.send([{ op: 'setControls', items: [
       { id: 'legs', kind: 'multi-select', label: 'Legs', options: '$.schedule[*].leg', default: 'all', placement: 'header', panel: 'schedule', remember: 'user' },
       { id: 'when', kind: 'date-range', label: 'Paid between', placement: 'header', panel: 'schedule' }] }], 'Controls')""")
     c.page.wait_for_timeout(1500)

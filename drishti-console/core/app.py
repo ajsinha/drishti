@@ -40,7 +40,7 @@ _PAGE_KINDS = ("", "share", "datamap", "data", "form", "functions", "pack")     
 
 
 def _render_modules() -> list[str]:
-    """The current renderer's modules a console page imports (view-render.js -> drishti-render.js -> m/*.js), Elements' own left out."""
+    """The current renderer's modules a console page imports (drishti_view-render.js -> drishti-render.js -> m/*.js), Elements' own left out."""
     from core import render_dist as rd
 
     skip = {"drishti-elements.js", "m/elements.js"}
@@ -95,12 +95,12 @@ CSP = ("default-src 'self'; img-src 'self' data:; style-src 'self'; script-src '
 # would reach as the user (QA 2026-10-01 SEC-17). Its reads go by message to the page, which fetches an allow-listed few.
 WORKER_CSP = "default-src 'none'; script-src 'self' 'wasm-unsafe-eval'; connect-src {connect}"
 _HOST = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$|^\[[0-9A-Fa-f:.]+\](:\d{1,5})?$")
-WORKER = "/static/js/calc-worker.js"
+WORKER = "/static/js/drishti_calc-worker.js"
 PYODIDE = "/pyodide/"
 # Calc's Graphic Walker frame (drishti_bi.walk, docs/guides/USER_GUIDE.md): a third-party UI that needs eval (Vega compiles chart expressions) and writes its own styles
 # (styled-components, a shadow root). So the one page that holds it, and only it, has this narrow policy, and it is a sandboxed frame: `sandbox allow-scripts` (no same-origin, so
 # no cookie and no console API), `connect-src 'none'` and no navigation or forms, so the rows it is given by message cannot leave it. Calc's own page keeps the strict policy.
-WALKER_PAGE = "/static/calc/walker.html"
+WALKER_PAGE = "/static/calc/drishti_walker.html"
 WALKER_CSP = ("default-src 'none'; script-src 'self' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src data: blob:; font-src data:; worker-src blob:; connect-src 'none'; "
               "base-uri 'none'; form-action 'none'; frame-ancestors 'self'; sandbox allow-scripts")
 # Wave B (BI_DESIGN.md P3): no BI page loads WebAssembly any more (Perspective and DuckDB-Wasm are gone); only Calc's worker above may compile it.

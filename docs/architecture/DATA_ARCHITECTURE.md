@@ -333,7 +333,7 @@ The alerts stream does not count against `drishti.live.max-streams`.
 | `view:<kind>/<id>` | The view stream above. `frame` patches for panels other than line and area charts gain an `html` field with the rendered panel. |
 | `alerts` | The alerts stream. |
 | `monitor:<name>` | A monitor's stream. |
-| `compute:<request id>` | A computed panel's request ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): `hello`, `progress` (`{done, of, estimate}`), `state` (stale, with words), `done`, `failed`, and `updated` while the panel stays open and a trigger recomputes what it shows. Its owner's only. The page's `compute.js` subscribes for every panel with `data-compute-req` and fetches the panel again on `done`, `failed` or `updated`. |
+| `compute:<request id>` | A computed panel's request ([REACTIVE_CONNECTOR.md](../connectors/REACTIVE_CONNECTOR.md)): `hello`, `progress` (`{done, of, estimate}`), `state` (stale, with words), `done`, `failed`, and `updated` while the panel stays open and a trigger recomputes what it shows. Its owner's only. The page's `drishti_compute.js` subscribes for every panel with `data-compute-req` and fetches the panel again on `done`, `failed` or `updated`. |
 | `bilive:<report id>` | A BI report's live tables ([below](#live-bi-a-reports-live-tables)): `hello`, `tick` and `status` events with no data. |
 
 Up to `live.max_subscriptions` (32) subscriptions per channel, that is per browser: a view open in several tabs
@@ -391,9 +391,9 @@ SourcePlugin.subscribe ─► TopicHub topic (one per entity, one source subscri
                               │ pane), the alerts bell and monitors; panels re-rendered to HTML with the same
                               │ Jinja macros; charts sent as data
                               ▼
-            live-hub.js (a SharedWorker, or the leader tab): routes each event to the tabs that subscribed
+            drishti_live-hub.js (a SharedWorker, or the leader tab): routes each event to the tabs that subscribed
                               ▼
-            channel.js → live.js: strip cells updated in place, panels swapped, charts moved; changes flash
+            drishti_channel.js → drishti_live.js: strip cells updated in place, panels swapped, charts moved; changes flash
 ```
 
 Step by step, for one tick of END-1000008:
@@ -410,8 +410,8 @@ Step by step, for one tick of END-1000008:
 4. The frame goes into that client's **FrameMailbox**. The client's writer (a virtual thread) takes it and
    writes `event:frame`.
 5. The console's channel relays it to the browser, rendering the `built` panel to HTML.
-6. In the browser, the hub (`live-hub.js`) passes it to every tab that subscribed to `ch`, and each tab's
-   `channel.js` hands it to `live.js`, which swaps the strip cell and the panel and flashes the change.
+6. In the browser, the hub (`drishti_live-hub.js`) passes it to every tab that subscribed to `ch`, and each tab's
+   `drishti_channel.js` hands it to `drishti_live.js`, which swaps the strip cell and the panel and flashes the change.
 
 #### One connection per browser
 
@@ -424,7 +424,7 @@ share their page's subscriptions. Subscriptions that arrive later are added to t
 (`POST /api/channel/{id}`) instead of reconnecting. Five of the six connections are always left for pages,
 searches and suggestions, however many tabs are open.
 
-The channel is held by a **hub**, `drishti-console/web/static/js/live-hub.js`:
+The channel is held by a **hub**, `drishti-console/web/static/js/drishti_live-hub.js`:
 
 1. In a **SharedWorker** that can hold an `EventSource` (Chrome, Edge and Firefox on the desktop): one worker per
    console origin and browser profile, started by the first tab and ended by the browser when the last tab closes.
@@ -457,7 +457,7 @@ refusal, again after 2 s, doubling up to 30 s).
 Upstream, the console reads the server's streams through its pooled HTTP client and closes each one within
 seconds of the browser going away, busy or quiet: it closes the HTTP response itself from a task outside the
 request's cancel scope, because Starlette's scope cancels every clean-up await of a finished request. A test
-guards that no page opens its own `EventSource` (only `live-hub.js` does), and
+guards that no page opens its own `EventSource` (only `drishti_live-hub.js` does), and
 `drishti-console/tests/test_live_tabs_browser.py` opens eight live tabs and a four-pane workspace in Chromium and checks
 that the next page loads at once and every tab and pane keeps ticking.
 
@@ -480,13 +480,13 @@ Tabs talk to the hub with small messages (over the worker's port, or the `Broadc
 | `{t: "stale"}` | the page belongs to another session than the browser's current one |
 | `{t: "who"}` | the hub does not know this tab (a new leader, or it was dropped): say hello again |
 
-##### In the browser: `channel.js`
+##### In the browser: `drishti_channel.js`
 
-`drishti-console/web/static/js/channel.js` gives every script on the page one object, `window.DrishtiChannel`, with a
+`drishti-console/web/static/js/drishti_channel.js` gives every script on the page one object, `window.Drishti.Channel`, with a
 single call, `subscribe(key, handlers)`, which returns a function that unsubscribes:
 
 ```js
-var off = window.DrishtiChannel.subscribe('view:trade/END-1000008', {
+var off = window.Drishti.Channel.subscribe('view:trade/END-1000008', {
   view:   function (d) { /* first event: d.generation */ },
   frame:  function (f) { /* f.patches, f.p99Ms */ },
   gone:   function (d) { /* d.code, d.detail: this subscription ended */ },
@@ -495,8 +495,8 @@ var off = window.DrishtiChannel.subscribe('view:trade/END-1000008', {
 });
 ```
 
-Handlers for `alert`, `row` and `hello` work the same way. `live.js` (entity views), `alerts.js` (the bell) and
-`monitor.js` (monitor pages) are its only users. `DrishtiChannel.transport()` says how the tab reaches the hub:
+Handlers for `alert`, `row` and `hello` work the same way. `drishti_live.js` (entity views), `drishti_alerts.js` (the bell) and
+`drishti_monitor.js` (monitor pages) are its only users. `Drishti.Channel.transport()` says how the tab reaches the hub:
 `shared-worker`, `leader`, `follower`, `tab` (a hub of its own) or `none`. How it behaves:
 
 | Situation | What happens |
@@ -512,7 +512,7 @@ Handlers for `alert`, `row` and `hello` work the same way. `live.js` (entity vie
 | a refused connection (the browser gave up) | `error`, then the hub opens it again after 2 s, doubling up to 30 s |
 | no `channel` event within 10 s | `error` (the Live pill says `Reconnecting…`); still trying |
 | tab hidden for 10 s | the tab gives its keys back and calls `paused`; when shown again it takes them back, and each view reloads from fresh data |
-| inside a workspace pane (an iframe of the same site) | uses the parent window's `DrishtiChannel`, so a workspace of four panes is one tab to the hub |
+| inside a workspace pane (an iframe of the same site) | uses the parent window's `Drishti.Channel`, so a workspace of four panes is one tab to the hub |
 | a page of another session | `GET /api/channel/who`; the channel follows the browser's current session, and other pages get `stale` |
 
 ##### In the console: lifetime of a channel
@@ -573,7 +573,7 @@ views that show it, through the same subscription that carries its updates:
    "2026-10-01T09:30:05Z"}`, and rebuilds nothing while the entity stays deleted (ticks of its charts' sources
    included). The server also forgets the entity in every user's "recent" list, so the command line stops offering
    it. Alerts on the entity do not evaluate a deletion.
-3. The console relays the patch unchanged. `live.js` keeps the view's last state, greys its panels and strip, puts a
+3. The console relays the patch unchanged. `drishti_live.js` keeps the view's last state, greys its panels and strip, puts a
    banner over it, *"MX-29000001 was deleted at 1 Oct 2026, 09:30:05 by its source. What you see is its last state;
    it no longer updates."*, and sets the top bar to `Deleted`. It is not an error page: links still work, and the
    last values can still be read and copied.
@@ -702,7 +702,7 @@ What reaches a browser is small. A report over such a table has one stream, `GET
 | `status` | how the tables are doing when nothing changed, every `drishti.bi.live.status` (5 s): the heartbeat of this stream |
 
 A tick carries **no data and no mask**. The page asks its visuals again, as the person looking, through the BI query path: **row rules and masks are applied to every answer, never to the stream**, so a stream shared by a hundred readers is the same bytes and each reader's picture is their own.
-The hub (`live-hub.js`) forwards the two event names `tick` and `status`; a tab hidden for ten seconds gives the subscription back like any other and the report redraws everything when it takes it again.
+The hub (`drishti_live-hub.js`) forwards the two event names `tick` and `status`; a tab hidden for ten seconds gives the subscription back like any other and the report redraws everything when it takes it again.
 
 | Limit | Setting | |
 |---|---|---|
@@ -710,7 +710,7 @@ The hub (`live-hub.js`) forwards the two event names `tick` and `status`; a tab 
 | one stream per distinct report | | a board of ten tiles over two reports holds two |
 | the browser's subscriptions | `live.max_subscriptions` (32) | a `bilive:` subscription counts like a view |
 
-Pause, the "last update" time and the stale and disconnected states of the indicator are the page's (`bi-live.js`): *stale* is "nothing heard for `bi.live.stale_seconds`" (the 5-second status is what keeps a quiet healthy stream from looking stale) or the table's own `stale` state
+Pause, the "last update" time and the stale and disconnected states of the indicator are the page's (`drishti_bi-live.js`): *stale* is "nothing heard for `bi.live.stale_seconds`" (the 5-second status is what keeps a quiet healthy stream from looking stale) or the table's own `stale` state
 (a feed that pushes and then goes silent for `drishti.bi.live.stale-after`).
 
 #### Results computed by a streaming producer
@@ -942,7 +942,7 @@ History queries are built from parts that are in the code now. Nothing below is 
 
 | Part | Where | What it gives the design |
 |---|---|---|
-| One field over time | `HistoryController.series`, `GET /api/v1/history/{kind}/{id}/series?path=&days=` (drishti-server `server/api/HistoryController.java`) | One Rachana-EL path over up to `MAX_DAYS` = 260 business days, one `router.fetch(ref, AsOf.of(d))` per day, all at once, redacted per day with `Entitlements.redact`. Used by the field dialog `web/static/js/history.js` (click a number). |
+| One field over time | `HistoryController.series`, `GET /api/v1/history/{kind}/{id}/series?path=&days=` (drishti-server `server/api/HistoryController.java`) | One Rachana-EL path over up to `MAX_DAYS` = 260 business days, one `router.fetch(ref, AsOf.of(d))` per day, all at once, redacted per day with `Entitlements.redact`. Used by the field dialog `web/static/js/drishti_history.js` (click a number). |
 | What changed | `HistoryController.diff`, `GET /api/v1/history/{kind}/{id}/diff?from=&to=&fromKnownAt=&toKnownAt=`; `engine/history/DocumentDiff` (limit 2000 changes) | The diff between two days, or two "known at" instants. Console page `/compare/{kind}/{id}`, export `/export/compare/{kind}/{id}.csv`. |
 | Dated reads | `SourcePlugin.fetch(EntityRef, AsOf)`, `AsOf(businessDate, knownAt, live)`, `Provenance(source, generation, fetchedAt, live, businessDate)` (drishti-api) | Every dated connector answers one entity on one date; the provenance says which date the data is for and its generation. |
 | Time travel | `SourcePlugin.timeTravel()`; `DRS-1007` `NO_TIME_TRAVEL` | Delta and Iceberg answer `knownAt`; others refuse it rather than show today's data. |
@@ -950,7 +950,7 @@ History queries are built from parts that are in the code now. Nothing below is 
 | Business days | `engine/time/BusinessDates` (`calendar().previous(d)`, `earliest()`, `current()`, `parse(date, knownAt)`) | The calendar the series already walks. |
 | Routing | `engine/source/SourceRouter` (`fetch`, `fetchAll`, `readOrder`, `Fallback` for Drishti\*net peers), `SourceRegistry` | Several connectors per kind in read order (Redis for recent days, Delta behind it); peers when no local source holds the entity. |
 | Forwarding | `server/net/ViewForwardFilter` (already forwards `/api/v1/history/{kind}/{id}...`), `PeerSource`, `NetDataController` (`/api/v1/net/fetch/{kind}/{id}`) | A history request reaches the node that serves the kind with no new routing code. |
-| The command line | `engine/command/CommandParser`, `server/api/CommandController` (`POST /api/v1/command`, `/suggest`, `/history`, `/aliases`), `CommandMemory.expand` (aliases), `engine/search/SearchQuery.pick/looksLikePick`, `engine/search/PhraseParser`; console `routes/terminal_routes.py` `/go`, `web/static/js/command.js` | Where the range is parsed and the page chosen (section 4). |
+| The command line | `engine/command/CommandParser`, `server/api/CommandController` (`POST /api/v1/command`, `/suggest`, `/history`, `/aliases`), `CommandMemory.expand` (aliases), `engine/search/SearchQuery.pick/looksLikePick`, `engine/search/PhraseParser`; console `routes/terminal_routes.py` `/go`, `web/static/js/drishti_command.js` | Where the range is parsed and the page chosen (section 4). |
 | Pinned links | console `core/asof.py` (`?asOf=&knownAt=`), `share_url()` and `view()` in `routes/terminal_routes.py` (`?gen=`, `pin = asit / changed / retry`) | A history row opens "the normal view as of that day" with the machinery that exists. |
 | Export | console `routes/export_routes.py`, `core/export.py` (`to_csv` with BOM and CRLF, `filename()`, `to_xlsx`, the formula guard) | The conventions history export follows. |
 
@@ -1126,7 +1126,7 @@ declared before `/v/{kind}/{id_:path}`, as `/about` and `/panels` are. A pick li
 
 - The **headline numbers** are computed by the server on the headline field (`history.<kind>.headline`, default the first chart field):
   last, change and change % over the range (first to last row), high and low with their dates, range (high − low) and average.
-- The **chart** is ECharts, as the field dialog in `history.js` already uses, coloured from the theme's tokens (`--d-ink`, `--d-muted`,
+- The **chart** is ECharts, as the field dialog in `drishti_history.js` already uses, coloured from the theme's tokens (`--d-ink`, `--d-muted`,
   `--d-link`, `--d-border`) read at draw time, so every theme works. Several chart fields (a curve's `TEN_Y` and `SLOPE_2S_10S`) are one
   axis each, `P` steps between them. The table's selected row and the chart's crosshair move together.
 - Range buttons re-ask the server; the page URL follows (`?range=3M`), so `Back` works and a link reproduces it.
@@ -1151,7 +1151,7 @@ never the only signal. The chart has an `aria-label` with the headline numbers a
 ignored while focus is in an input, as the command line's `/` is. Reduced motion turns off the chart's animation.
 
 **Themes:** all ten (`terminal`, `light`, `wallstreet`, `blue`, `green`, `crimson`, `crimson-dark`, `terminal-green`, `terminal-crimson`,
-`terminal-blue`). The new `web/static/css/history.css` uses only tokens: text in `TEXT_TOKENS` (`--d-ink`, `--d-muted`, `--d-link`,
+`terminal-blue`). The new `web/static/css/drishti_history.css` uses only tokens: text in `TEXT_TOKENS` (`--d-ink`, `--d-muted`, `--d-link`,
 `--d-warn`, `--d-pos`, `--d-neg`…), fills with `--d-on-fill` text, so `drishti-console/tests/test_contrast.py` (every `color: var(--d-X)`
 in `web/static/css/*.css` must be a text token or `on-accent` / `on-fill`; 4.5:1 on every ground) covers it with no new rule.
 
@@ -1745,7 +1745,7 @@ as a fixture file; neither touches the other's files. Each step is one push with
 | **H5** | A | Fast paths: delta (with promoted-column row read and versions), jdbc table and query mode, duckdb, mongodb, aerospike, redis, file | the contract test per plugin with the fast path, plus "reads no document when the fields are promoted" for delta | each connector's document in `docs/connectors/` |
 | **H6** | A | Fast paths on the merged branches: drishti-iceberg / iceberg-external (planned scan), cassandra (`entity_days`) | their contract tests; starts only after those branches are on develop | ICEBERG_CONNECTOR, CASSANDRA_CONNECTOR |
 | **H7** | B | The command: `HistoryRange`, `CommandController.resolve` (range after alias expansion, before pick), `CommandResponse.history`, `SuggestionService` range suggestions | `HistoryRangeTest` (every row of section 4.2's table), `CommandControllerTest` cases | USER_GUIDE command line |
-| **H8** | B | Console: `/v/{kind}/{id}/history` route, `/v/…?days=` redirect, `/go` redirect, `backend.history()`, `terminal/history.html`, `web/static/js/history-page.js`, `web/static/css/history.css`; document shape, keys, changes only, drawer, open the day | `FakeBackend.history` from the fixture; route and template tests; `test_contrast.py` passes | USER_GUIDE history section |
+| **H8** | B | Console: `/v/{kind}/{id}/history` route, `/v/…?days=` redirect, `/go` redirect, `backend.history()`, `terminal/history.html`, `web/static/js/drishti_history-page.js`, `web/static/css/drishti_history.css`; document shape, keys, changes only, drawer, open the day | `FakeBackend.history` from the fixture; route and template tests; `test_contrast.py` passes | USER_GUIDE history section |
 | **H9** | B | Market shape: chart, headline numbers, range buttons, crosshair, embedded series | template tests with the equity fixture | USER_GUIDE |
 | **H10** | B | DIFF mode, export routes (csv, json, xlsx), share links and pick lists carrying the range | export tests (names, BOM, formula guard, masked values as served) | USER_GUIDE, API_GUIDE "console's own JSON routes" |
 | **H11** | B | `drishti.py history`, the Python client's `history()`, `PhraseParser` time phrases | `test_drishti_cli.py` cases, `PhraseParserTest` cases | CLI_GUIDE, USER_GUIDE plain words |
@@ -2784,7 +2784,7 @@ Built on the compute workers C1 to C3 ([PYTHON_COMPUTE.md](PYTHON_COMPUTE.md)). 
 | Templates | single braces: `{id}`, `{params.x}`, `{inputs.book.MEMBERS}`, `{payload.BOOK_ID}`, `{entity}`; `${NAME}` stays an environment variable | `Templates` |
 | Result rules | `result: { required, types, max-rows }` instead of a JSON schema file (`result.schema`: planned) | `Results` |
 | Parameters on a panel | `source: { kind, id, params: { name: expression } }`, only with `id`; lint `DRS-2012` (shape) and `DRS-2057` (not with `where`/`search`); evaluated as the viewer (a masked value: *not available to your role*) into the id `ID~name=value` | `WiringReader`, `ScreenWire` |
-| Panel states | `ready`, `computing` (progress), `stale`, `failed`, `refused` in the view model (`PanelView.compute`) and drawn in place; the console follows `compute:<request>` on the live channel and fetches the panel again when it is done or updated | `ViewModel`, `panels.html`, `compute.js` |
+| Panel states | `ready`, `computing` (progress), `stale`, `failed`, `refused` in the view model (`PanelView.compute`) and drawn in place; the console follows `compute:<request>` on the live channel and fetches the panel again when it is done or updated | `ViewModel`, `panels.html`, `drishti_compute.js` |
 | Lifecycle | authorise (the viewer's kinds), parameters, pin (the read kinds' data versions and the sandbox version), key (with the view signature: a hash of the roles and the embedding app, `Principal.securitySignature`), cache, single flight, admission (per-user in-flight; the pool's fair queue), inputs read and masked as the viewer, engine, progress, validate, stamp (`STAMP`: pin, inputs, watermark, trigger, engine, where it ran, signature, result hash), cache, audit (`compute.answer`, `compute.failed`) | `ReactiveConnector` |
 | Engines | Python in a compute pool (Arrow in and out; fan-out over every worker of the pool and its peers with `split` and `reduce`); Java in the server (Drishti's own always; others with `compute.in-process-java: true`) | `PythonRunner`, `JavaRunner` |
 | Triggers | `write-back` and any event through `POST /api/v1/compute/events` (administrators) and `ReactiveHub.publish` (the write-back module's hook: built 2026-10-25, every applied change after its commit, with the watermark `L<lane> -> seq`, replayed per lane from the edit log's cursor; [WRITE_BACK.md › The design and its reasons, section 19](../guides/WRITE_BACK.md#19-implementation)); `live`: the entities of its kinds a watched computation read are followed, a new generation recomputes the results that read them; `data-version`: the load signal and a check every 30 s; `schedule`: `cron` (Spring's six fields) or `every`. `affects`: `all`, `subscribed`, id templates, or an expression a Java engine answers. Coalescing, watermark ordering, dedupe as designed | `Triggers`, `Coalescer` |

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Studio's light check as it runs in the browser (studio-yaml.js and studio-assist.js under Node): QA 2026-10-01 GRAM-07,
+"""Studio's light check as it runs in the browser (drishti_studio-yaml.js and drishti_studio-assist.js under Node): QA 2026-10-01 GRAM-07,
 a tab-indented line is said to be indented with a tab, not to need a colon."""
 import json
 import shutil
@@ -36,14 +36,14 @@ global.window = global;
 const fs = require('fs');
 eval(fs.readFileSync(process.argv[1], 'utf8'));
 eval(fs.readFileSync(process.argv[2], 'utf8'));
-const schema = new window.drishtiAssist.Schema(JSON.parse(process.argv[3]));
-const ps = window.drishtiAssist.check(schema, window.drishtiYaml.parse(process.argv[4]));
+const schema = new window.Drishti.assist.Schema(JSON.parse(process.argv[3]));
+const ps = window.Drishti.assist.check(schema, window.Drishti.yaml.parse(process.argv[4]));
 process.stdout.write(JSON.stringify(ps.map(p => [p.location.line, p.message])));
 """
 
 
 def check(text: str) -> list:
-    run = subprocess.run(["node", "-e", HARNESS, str(JS / "studio-yaml.js"), str(JS / "studio-assist.js"), json.dumps(SCHEMA), text],
+    run = subprocess.run(["node", "-e", HARNESS, str(JS / "drishti_studio-yaml.js"), str(JS / "drishti_studio-assist.js"), json.dumps(SCHEMA), text],
                          capture_output=True, text=True, timeout=60)
     assert run.returncode == 0, run.stderr
     return json.loads(run.stdout)
@@ -67,13 +67,13 @@ def test_a_key_without_a_colon_still_says_so():
 PARSE = """
 global.window = global;
 eval(require('fs').readFileSync(process.argv[1], 'utf8'));
-const Y = window.drishtiYaml, root = Y.parse(process.argv[2]);
+const Y = window.Drishti.yaml, root = Y.parse(process.argv[2]);
 process.stdout.write(JSON.stringify(Y.plain(Y.get(root, 'panels'))));
 """
 
 
 def parse_panels(text: str):
-    run = subprocess.run(["node", "-e", PARSE, str(JS / "studio-yaml.js"), text], capture_output=True, text=True, timeout=60)
+    run = subprocess.run(["node", "-e", PARSE, str(JS / "drishti_studio-yaml.js"), text], capture_output=True, text=True, timeout=60)
     assert run.returncode == 0, run.stderr
     return json.loads(run.stdout)
 

@@ -41,7 +41,7 @@ ENTRY = "drishti-render.js"
 RECORD = "integrity.json"
 DEMO = ("demo.html", "demo.js", "demo.css")      # the playground: served with the library, not part of a host's integrity list
 # the console's sheets the view page loads, in its order, plus the panel sheets of terminal/view.html and the grid's
-SHEETS = es.SHEETS + ("css/drill.css", "css/wire.css", "css/refresh.css", "css/compute.css", "css/screen-grid.css")
+SHEETS = es.SHEETS + ("css/drishti_drill.css", "css/drishti_wire.css", "css/drishti_refresh.css", "css/drishti_compute.css", "css/drishti_screen-grid.css")
 ICON_SOURCES = ("static/render/{v}/m/kinds.js", "static/render/{v}/m/grid.js", "static/render/{v}/m/screen.js", "static/render/{v}/m/view.js", "static/render/{v}/m/about.js", "static/render/{v}/m/signin.js")
 
 ADDENDUM = """\

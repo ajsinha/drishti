@@ -617,7 +617,7 @@ The console keeps a few answers for a moment so pages draw quickly. Nothing it k
 - **Responses**: every page and answer is sent `Cache-Control: private, no-store` (the static files excepted), so neither a shared proxy nor
   the browser's back button shows a person's page after they sign out.
 - **The browser**: what pages keep in this browser (the VaR basket, Calc's drafts and history, column filters, table sizes, the capacity
-  plan, BI Studio's tabs and drafts, the controls' choices) is named per person (`window.drishtiKey`), and **Sign out** clears it
+  plan, BI Studio's tabs and drafts, the controls' choices) is named per person (`window.Drishti.key`), and **Sign out** clears it
   (`Clear-Site-Data: "storage"`).
 - **Links that change something** (open or leave a lens, choose Home's landing) are posted; opening their address shows a form, so a
   crawler, a prefetch or another site's link changes nothing.

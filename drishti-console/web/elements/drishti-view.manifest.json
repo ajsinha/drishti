@@ -7,10 +7,10 @@
   },
   "icons": {
     "arrows-fullscreen": [
-      "static/js/zoom.js"
+      "static/js/drishti_zoom.js"
     ],
     "bar-chart-line": [
-      "static/js/tables.js"
+      "static/js/drishti_tables.js"
     ],
     "box": [
       "templates/_macros/panels.html"
@@ -28,10 +28,10 @@
       "templates/_macros/view.html"
     ],
     "fullscreen-exit": [
-      "static/js/zoom.js"
+      "static/js/drishti_zoom.js"
     ],
     "funnel": [
-      "static/js/colfilter.js"
+      "static/js/drishti_colfilter.js"
     ],
     "grid-3x3": [
       "templates/_macros/panels.html"
@@ -58,16 +58,16 @@
   },
   "sha256": "408f10ba8bf38627be2d0c4a5d1c1e8df277dbb1a5fbe2b1d05abff3e0f6fb99",
   "sources": [
-    "css/tokens.css",
-    "css/theme.css",
-    "css/terminal.css",
-    "css/layout.css",
-    "css/gradients.css",
-    "css/pivot.css",
-    "css/colfilter.css",
-    "css/controls.css",
-    "css/about.css",
-    "css/touch.css",
+    "css/drishti_tokens.css",
+    "css/drishti_theme.css",
+    "css/drishti_terminal.css",
+    "css/drishti_layout.css",
+    "css/drishti_gradients.css",
+    "css/drishti_pivot.css",
+    "css/drishti_colfilter.css",
+    "css/drishti_controls.css",
+    "css/drishti_about.css",
+    "css/drishti_touch.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
   "version": "951fed1ed7a8"

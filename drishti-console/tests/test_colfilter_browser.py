@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Excel-style column filters (static/js/colfilter.js, BI_DESIGN.md 8.1) in a real browser (Chromium): the logic (value types and
+"""Excel-style column filters (static/js/drishti_colfilter.js, BI_DESIGN.md 8.1) in a real browser (Chromium): the logic (value types and
 conditions, run in the page), the menu for every filter type, filters that combine, the footer and the live region, filters that survive
 a live patch, the address round trip, keyboard only, a phone (390 px, touch), masked values, tree rows and pivots. The console runs
 in-process against a stand-in server whose view carries tables built for the purpose; skipped when Playwright's Chromium is missing."""
@@ -521,13 +521,13 @@ def test_the_remember_switch_is_off_unless_the_page_asks_for_it(browser, url):
     pg.goto(url + VIEW, wait_until="load")
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     tick(pg, ["Rates"], "Desk")
-    mem = pg.evaluate("window.drishtiKey('drishti.columnFilters')")                     # named per person (theme-init.js)
+    mem = pg.evaluate("window.Drishti.key('drishti.columnFilters')")                     # named per person (drishti_theme-init.js)
     assert mem.startswith("drishti.columnFilters@")
     assert pg.evaluate("k => localStorage.getItem(k)", mem) is None                          # off by default: nothing is kept
     pg.goto(url + VIEW, wait_until="load")
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     assert len(ids(pg)) == 12                                                               # and a fresh visit starts unfiltered
-    pg.evaluate("localStorage.setItem(window.drishtiKey('drishti.rememberFilters'), 'on')")   # the per-user switch, on
+    pg.evaluate("localStorage.setItem(window.Drishti.key('drishti.rememberFilters'), 'on')")   # the per-user switch, on
     tick(pg, ["FX"], "Desk")
     assert "FX" in pg.evaluate("k => localStorage.getItem(k)", mem)
     pg.goto(url + VIEW, wait_until="load")                                                  # no filter in the address: the remembered one returns

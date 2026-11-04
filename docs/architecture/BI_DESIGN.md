@@ -1129,8 +1129,8 @@ Paths are under `drishti-server/src/main/java/com/ash/drishti/server/bi/` (serve
 | `engine/QueryService.stats()` AtomicLong counters | **replace** | Micrometer metrics of 6.8 (B) |
 | `poc/` (phase 0, still compiled) | **delete** | (A) |
 | console `core/pyrunner.py`, `pyrunner_worker.py` (one process per call, audit hook, rlimits, netns) | **keep** | fork-server, `column` interface, `compute_groups` (B) |
-| console Analyse SQL (SQLite on the console, DuckDB-Wasm in the browser), `web/static/js/bi-explore-duck.js`, Pyodide (`calc-worker.js`, `static/calc/bi_driver.py`) for BI | **replace** | DSQL on the server (A); browser paths deleted (B) |
-| console `routes/model_routes.py`, `core/model_layer.py`, `bi-model-designer.js`, `bi-wizard*.js` | **keep** | grow into the designers of section 8 (A, C) |
+| console Analyse SQL (SQLite on the console, DuckDB-Wasm in the browser), `web/static/js/bi-explore-duck.js`, Pyodide (`drishti_calc-worker.js`, `static/calc/bi_driver.py`) for BI | **replace** | DSQL on the server (A); browser paths deleted (B) |
+| console `routes/model_routes.py`, `core/model_layer.py`, `drishti_bi-model-designer.js`, `bi-wizard*.js` | **keep** | grow into the designers of section 8 (A, C) |
 
 ### 12.2 The three waves
 
@@ -1179,18 +1179,18 @@ against them.
 
 **Console lane (paste as the brief):**
 
-1. **ExpressionEditor** (`web/static/js/bi-expr-editor.js`, new; used by `bi-model-designer.js`, `bi-wizard-steps.js`,
-   report local measures in `bi-design-panes.js`): completion of fields, `measure('…')`, functions with signature and
+1. **ExpressionEditor** (`web/static/js/drishti_bi-expr-editor.js`, new; used by `drishti_bi-model-designer.js`, `drishti_bi-wizard-steps.js`,
+   report local measures in `drishti_bi-design-panes.js`): completion of fields, `measure('…')`, functions with signature and
    example from `/bi/expr/functions`, keyword arguments; inline problems with the fix as a button; *Try it* preview.
-2. **Dataset wizard v2** (`bi-wizard.js`, `bi-wizard-steps.js`, `routes/model_routes.py`, `core/model_layer.py`): steps
+2. **Dataset wizard v2** (`drishti_bi-wizard.js`, `drishti_bi-wizard-steps.js`, `routes/model_routes.py`, `core/model_layer.py`): steps
    pick root → columns → filter → grain/de-dup → derive (expression or Python item) → group → preview (server) → save;
    an *SQL view* path with the DSQL editor.
-3. **Model designer completion** (`bi-model-designer.js`): field properties pane, perspectives, `hidden-for`, contract
+3. **Model designer completion** (`drishti_bi-model-designer.js`): field properties pane, perspectives, `hidden-for`, contract
    diff with the semver bump proposed, *Used by* and impact, *Preview as* any role.
-4. **Query panel and Analyse on DSQL** (`bi-design-panes.js`, `routes/explore_routes.py`, `core/explore.py`): MQ ⇄ DSQL
+4. **Query panel and Analyse on DSQL** (`drishti_bi-design-panes.js`, `routes/explore_routes.py`, `core/explore.py`): MQ ⇄ DSQL
    view under each visual; Analyse SQL cells sent to `/bi/sql` (server is the default engine; the browser engine stays
    selectable only until B).
-5. **Fields everywhere from `describe`** (`bi-design.js`, `bi-report.js`): one field list with inherited properties and
+5. **Fields everywhere from `describe`** (`drishti_bi-design.js`, `drishti_bi-report.js`): one field list with inherited properties and
    perspective filter; YAML round trip on a concrete syntax tree (comments and order kept) in `core/model_layer.py`.
 6. **Docs** (with the server lane's input): `docs/guides/BI_LANGUAGE_REFERENCE.md` (3.3.8: grammar, every function, error codes,
    40+ recipes, Python/DAX differences), `BI_LANGUAGE_REFERENCE.md` (DSQL reference), BI_GUIDE.md v2, MODELS.md, API guide; tutorials
@@ -1227,7 +1227,7 @@ round's findings are fixed before the drill.
 
 **Console lane:**
 
-1. **No browser compute.** Delete `bi-explore-duck.js`, the BI uses of `calc-worker.js` and `static/calc/bi_driver.py`,
+1. **No browser compute.** Delete `bi-explore-duck.js`, the BI uses of `drishti_calc-worker.js` and `static/calc/bi_driver.py`,
    DuckDB-Wasm and Pyodide from report and Analyse pages; manifests' `target` is server only; Analyse Python cells
    run on the backend; BI pages lose `'wasm-unsafe-eval'`.
 2. **Runner.** Fork-server in `core/pyrunner.py` / `pyrunner_worker.py`; the Py-node endpoint the Java planner calls;
@@ -1277,10 +1277,10 @@ D and E; Python data prep and the browser Python console moved into C).
 
 1. **BI Studio as one product:** the shell of 8.1; format pane generated from the schemas; themes; conditional formatting;
    interactions editor; tooltip pages; small multiples; the matrix.
-   *Built:* the Studio shell around the report, model and theme designers (`bi-studio.js`: the Explorer with New, the open items, the dock with
-   Problems and Query), the generated Format pane (`bi-format-pane.js`) and the rules editor (`bi-format-rules.js`), the theme designer
-   (`bi-theme-designer.js`), Edit interactions in Format and on the canvas, tooltip pages (`bi-tooltips.js`), small multiples (`bi-multiples.js`), the matrix
-   at every level (`bi-matrix.js`), board pages in the viewer and the designer (`bi-report-board.js`, `bi-design-v2.js`); the acceptance (1) is
+   *Built:* the Studio shell around the report, model and theme designers (`drishti_bi-studio.js`: the Explorer with New, the open items, the dock with
+   Problems and Query), the generated Format pane (`drishti_bi-format-pane.js`) and the rules editor (`drishti_bi-format-rules.js`), the theme designer
+   (`drishti_bi-theme-designer.js`), Edit interactions in Format and on the canvas, tooltip pages (`drishti_bi-tooltips.js`), small multiples (`drishti_bi-multiples.js`), the matrix
+   at every level (`drishti_bi-matrix.js`), board pages in the viewer and the designer (`drishti_bi-report-board.js`, `drishti_bi-design-v2.js`); the acceptance (1) is
    `drishti-console/tests/test_bi_studio_browser.py` ([BI_GUIDE.md section 26](../guides/BI_GUIDE.md#26-bi-studio-authoring-as-one-product)).
    Not in it: a report visual bound to a field parameter (gap 9: field parameters are in the model and its parameter slicers, but a report's
    well cannot name `param.<name>` yet; moved to wave D, 2.6.0, below).
@@ -1334,7 +1334,7 @@ settled at a product cause): `test_bi_gov_browser`, `test_pack_new_browser`, `te
 `test_bi_reports_cross_browser`, `test_controls_browser`, `test_embed_report_browser`; the Drishti*net gap that two nodes disabling the
 last administrators at the same moment could leave none enabled (CLUSTER_DEPLOYMENT.md › Drishti*net: many servers, one Drishti, section 11); members advertise only real addresses.
 Moved to 2.6.5 (ends with a full drill): `test_showcase_clean_browser[map]` (the workbench of the map example now and then never loads:
-`window.drishtiWorkbench` unset after 120 s, a script error at start suspected) and `test_embed_elements_browser`
+`window.Drishti.workbench` unset after 120 s, a script error at start suspected) and `test_embed_elements_browser`
 (`test_pivot_regroups_without_saving_inside_the_element[firefox|webkit]`: the live netting set redraws its panels on every tick, so the
 Pivot tab is replaced before a pointer click settles; an in-one-step click was written but not yet proven).
 
@@ -1365,7 +1365,7 @@ Pivot tab is replaced before a pointer click settles; an in-one-step click was w
 **Console lane:**
 
 1. **Statement designer** for paginated reports, previewed page by page.
-   *Built:* Format → Layout → statement, the designer's **Paper** tab (`bi-statement.js`: paper, header and footer, period, and the server's
+   *Built:* Format → Layout → statement, the designer's **Paper** tab (`drishti_bi-statement.js`: paper, header and footer, period, and the server's
    pages drawn one at a time), each band's Format → Statement (from the format schemas); `test_bi_wave_d_browser.py`.
 2. ~~**Feeds and embedding UI**~~: unscheduled, with integration and send and push.
 3. **Field parameters in the Studio's wells**, with a browser test.
@@ -1408,7 +1408,7 @@ the bell, `drishti.py bi runs`, Admin → BI → Runs, help cards and the browse
   move to HTTP/2 (gossip stays on its own HTTP/1.1 client). Tested across views, history, search and live relay, with a soak comparison
   against 2.6.6.
 * **Chart any table** ([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#chart-any-table-the-design)): a Chart icon and K on every table (Sutra panels, search results and pick
-  lists, history, BI tables), one shared `table-chart.js` over the pivot engine and ECharts; chart all N through the panel records, the
+  lists, history, BI tables), one shared `drishti_table-chart.js` over the pivot engine and ECharts; chart all N through the panel records, the
   search pivot or a BI run; save, export, Promote to Sutra as a new `chart` panel kind, Open in BI. Build steps C1–C10, one console and
   one server builder.
 * **Mixed Delta and Iceberg storage** ([DEMO_DATA.md](../connectors/DEMO_DATA.md#mixed-delta-and-iceberg-storage)): each source system's trades in Delta or
@@ -3727,8 +3727,8 @@ begins with, ends with, does not contain); sort ascending and descending. Filter
 column shows a funnel; one key clears them all. Column filters are part of the view state (URL, shares) and become a
 report's visual-level filters in Rūpaka. They extend today's single *Filter rows* box, which stays as the quick search.
 
-**As built (delivery 1).** The column filters are in the terminal (`static/js/colfilter.js`, called by `tables.js` and `tree-rows.js`;
-`colfilter.css`; also inside `<drishti-view>`). Decisions taken: the checklist lists only the values the other columns' filters leave,
+**As built (delivery 1).** The column filters are in the terminal (`static/js/drishti_colfilter.js`, called by `drishti_tables.js` and `drishti_tree-rows.js`;
+`drishti_colfilter.css`; also inside `<drishti-view>`). Decisions taken: the checklist lists only the values the other columns' filters leave,
 with counts; a column uses its ticked values or one condition; a masked value (`•••`) is never listed, all masked cells are one
 *(masked)* entry and never satisfy a condition; types are detected from the cells (80% numbers or ISO dates); in a matrix a row
 matches on its own cells and its ancestors stay open; the URL form is `?f.<panel>.<column heading>=in:a,b | gt:1m | bt:1~9 | top:10 |
@@ -3753,7 +3753,7 @@ and [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#the-controls-tab). Wha
   stream was opened with. Options are read from the record as the caller may see it (a masked value is never an option, a condition on a masked
   value never holds). Relative dates (`next-90d`, `this-month`, `ytd`, `next-5bd`) resolve on the request's business date and the **server's** business
   calendar, not a per-pack calendar, and a range always holds its resolved dates.
-- *Console.* One script, `static/js/controls.js`, draws every kind (native selects and inputs, a checklist, a switch, a radio group with arrow keys; 44 px on
+- *Console.* One script, `static/js/drishti_controls.js`, draws every kind (native selects and inputs, a checklist, a switch, a radio group with arrow keys; 44 px on
   touch; both themes), also inside `<drishti-view>`. A change asks `GET /v/{kind}/{id}/panels` for **only the panels that read the control** (plus the
   strip and the controls: a cascading child's options move with its parent) and swaps them in place. Measured on a warm local server, an interest-rate
   swap: the whole view 17.0 ms and 12.8 KB; the one panel 10.1 ms and 5.5 KB (the server still fetches the document and resolves the layout; the saving is
@@ -4273,7 +4273,7 @@ the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.
 
 * **`<drishti-report>`**, a Drishti Element beside `<drishti-view>`: a **published** report, one page of it (`page`) or one visual of it (`visual`; the `<drishti-visual>` of section 15 is this attribute), in a Shadow DOM with **no iframe**, under a strict host policy (adopted style
   sheets, no inline script or style, nothing written as markup: the element builds its DOM from the report's model and the query results). It signs in as `<drishti-view>` does (the host's token provider, an embed token on every call) and is **always masked**. Slicers, the page's tabs,
-  the business date, bookmarks, highlight or filter on a click, **cross-filtering** between its visuals, "show as a table" and the live indicator are the console viewer's, drawn by the same code (`bi-visuals.js`, `bi-grids.js`, `bi-frame.js`). **Live**: a report over a live table follows
+  the business date, bookmarks, highlight or filter on a click, **cross-filtering** between its visuals, "show as a table" and the live indicator are the console viewer's, drawn by the same code (`drishti_bi-visuals.js`, `drishti_bi-grids.js`, `drishti_bi-frame.js`). **Live**: a report over a live table follows
   it over the page's one embed connection (`bilive:<report>` on the embed channel), each tick asking the visuals again as the person looking. Attributes: `report`, `page`, `visual`, `filters` (initial slicers, date, selections and mode as JSON), `chrome` (`full` or `bare`),
   `theme`, `live`, `server`, `label`; the property `filters` reads and sets them; events `drishti:loaded`, `filter-changed`, `page-changed`, `masked`, `tick`, `state`, `error`, `token-needed`; methods `selectPage`, `clearFilters`, `refresh`, `reload`, `pause`, `resume`.
 * **Admin → Embedding governs which hosts may embed which reports.** The existing allow-list of a host application (`kinds`) takes `report:<id>` (one report) and `report:*` (every report); the new scope `embed:report` opens the three server paths a report needs
@@ -4281,7 +4281,7 @@ the settings `drishti.embed.scopes` (`[embed:report]`) and the console's `embed.
   is embedded (`DRS-8005` otherwise). Masks, row rules and the three-queries-at-a-time limit are the server's, per call, for the token's user.
 * **Per-report phone layouts.** A report may declare `layouts: { phone: { <page id>: { order, hide, span } } }`: at **640 px and narrower** the page shows the visuals in `order` first (the rest follow in the grid's reading order), leaves out those in `hide` (they are **not queried**), and gives a visual
   `span` grid rows of height (1 to 40; the width is the whole screen). A page with no entry keeps today's automatic single column. The viewer (the screen's width), `<drishti-report>` (**the element's own width**, so a report in a narrow card of a wide page uses it) and the designer's preview
-  share one file (`bi-phone.js`). The server parses and checks it (`DRS-9031` for a page or visual that does not exist, a repeated or both ordered and hidden visual, a height out of range) and writes it back in the YAML.
+  share one file (`drishti_bi-phone.js`). The server parses and checks it (`DRS-9031` for a page or visual that does not exist, a repeated or both ordered and hidden visual, a height out of range) and writes it back in the YAML.
 * **The designer's Phone tab.** For the page being edited: the visuals in phone order, **drag** a row (or its arrows) to reorder, a **Hide** box, a **Rows** height, and a **390 px** preview drawn to scale beside it; one history step per change, *Back to automatic* removes the entry; a visual or page the layout names that is later
   deleted or renamed is dropped from it by the designer itself. The sample report *Live trading desk* ships with a phone layout.
 * **Drishti Elements steps 11 to 15** ([CLIENT_RENDERER.md › Drishti Elements: the design, section 16](CLIENT_RENDERER.md#steps-11-to-15-implementation)): the foreign-origin host page test, the versioned library with `integrity.json` and the npm package folder with TypeScript declarations, the developer guide and ADR, `<drishti-panel>`.
@@ -4331,7 +4331,7 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals
 * **Server runner (13.2, decision row 5).** Worker subprocesses of the console, **one per call** (not a warm pool), `python -I`, empty environment, a scratch folder, `RLIMIT_CPU` and `RLIMIT_AS` and a file-size limit, a wall-clock kill of the process group, an audit hook (no sockets, processes, loader; writes only in the scratch folder, reads only in the Python installation and the scratch folder), an import guard
   (the manifest's packages, on the console's allow-list, and a short list of safe standard-library modules), a **network namespace** with no interfaces when the machine allows `unshare --user --net` (`bi.python.network_namespace`), a pool of `bi.python.workers` (2) with a bounded wait, input and output size limits. Failures are `DRS-9071` to `9074`; the traceback is for `bi-author` only. The output is derived from the rows the server
   masked for the reader, so it cannot reveal a masked field; the "masked again on the way out" of 13.2 is therefore not needed and **not built**. The sandbox is defence in depth, not a kernel sandbox ([BI_GUIDE.md](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python) section 7 lists what is enforced and what is not).
-* **Browser target (13.2).** The same item in Pyodide in **Calc's own worker** (`calc-worker.js`, the vendored runtime, loaded on the first browser run), on the JSON the viewer's own query returned; `static/calc/bi_driver.py` runs it. The report page keeps the strict policy: only the worker's response has `'wasm-unsafe-eval'`. `run: auto` asks the server first and falls back to the browser. The browser has numpy, pandas, scipy and statsmodels, not pyarrow.
+* **Browser target (13.2).** The same item in Pyodide in **Calc's own worker** (`drishti_calc-worker.js`, the vendored runtime, loaded on the first browser run), on the JSON the viewer's own query returned; `static/calc/bi_driver.py` runs it. The report page keeps the strict policy: only the worker's response has `'wasm-unsafe-eval'`. `run: auto` asks the server first and falls back to the browser. The browser has numpy, pandas, scipy and statsmodels, not pyarrow.
 * **The sample.** *Desk P&L risk (Python)*: the Python measure **Desk P&L volatility** (in `trades-basic`) and a Python histogram of one-day P&L on the trades sample, both items in `config/bi/python/`; the designer offers the visual under *Python*, with Format for the item, *Run on* and the parameters.
 * **Measured.** A server call is about 220 to 320 ms on the development machine (a process start and the pandas import): the **< 50 ms** of section 18 is **not met**, and a warm pool is the fix; a first browser run takes about 3.3 s.
 
@@ -4437,7 +4437,7 @@ Nine items that the earlier phases listed as not built, now built; each is descr
 * **Incremental live measures.** `LiveAggregate` keeps, for each rollup declared on a live table, the sums, counts, minimums and maximums by group and business date in a small engine table, written in the transaction of the batch that changed the live table. A replaced, deleted or evicted row first leaves its old group (sums and counts move by the difference); a lost minimum or maximum is read again for **that group alone**. The routing that answers a query from a stored rollup reads it, so `meta.layer` is `live` and `meta.rollup` the rollup's name; measures that are not plain stored aggregates, and `layer: columns`, recompute. `drishti.bi.live.incremental-aggregates` switches it off. BI_GUIDE.md 7.1.
 * **Refresh state that survives a restart.** The jobs' state and the last `drishti.bi.refresh.history` runs of each are written to `<BI store>/refresh/state.json` after every run and planned time; an interrupted run is shown as such and a time that passed while the server was down runs once at start-up. The dataset page has **Refresh now** (bi-author, audited), the last and next run and **Recent refreshes**. BI_GUIDE.md 7.2.
 * **The relative-date slicer.** `format.mode: relative-date` with named windows (`last-N-days|business-days|weeks|months`, `this-` and `previous-` `week|month|quarter|year`, `all`), worked out **on the server** from the report's as-of date and the pack's business-day calendar before the visual's query is built, so a screen, an export and a subscription agree; its `default` applies when no one chose. The `DRS-9033` reservation is removed. BI_GUIDE.md 6.1.
-* **Tablet layouts.** `layouts.tablet.<page>` (`order`, `hide`, `span`, `wide`) beside `layouts.phone`; a tablet is wider than 640 px and up to 1024 px, two half-width columns with `wide` visuals across. The shared `bi-phone.js` decides for the viewer, `<drishti-report>` (library 1.3.0) and the designer's new Tablet tab. BI_GUIDE.md 14.1.
+* **Tablet layouts.** `layouts.tablet.<page>` (`order`, `hide`, `span`, `wide`) beside `layouts.phone`; a tablet is wider than 640 px and up to 1024 px, two half-width columns with `wide` visuals across. The shared `drishti_bi-phone.js` decides for the viewer, `<drishti-report>` (library 1.3.0) and the designer's new Tablet tab. BI_GUIDE.md 14.1.
 * **Expected values.** `tests: [{ visual | measure, by, row, column, filters, date, expect (a number or a range), tolerance, role }]` on a report or a dataset (`ExpectedValue`), run by `ExpectedValueRunner` as the caller or as a role (the caller's own, or any for a bi-steward; the load is the caller's, the query the role's). `POST /api/v1/bi/items/{id}/tests`, the designer's Check and the dataset page show each as pass, fail or error; **publish refuses a failing or unrunnable test with `DRS-9043` unless a bi-admin forces it** (`drishti.bi.governance.refuse-failing-tests`). BI_GUIDE.md 17, BI_GUIDE.md 8.1.
 * **The entity view.** `type: entity-view` with a `key` well: when another visual selects one value of that field, the viewer shows the console's own view page of that entity (`/v/<kind>/<id>?embed=1`) in a frame of the visual's size. It is built for the person looking (their masks and rights); the visual asks the dataset nothing and an export leaves it out. BI_GUIDE.md 3.4.
 * **Region sample data.** The pack kind `region-economy` of the `world-economy` pack (Australian states and territories and US states, **illustrative rounded figures, labelled as such**) and the sample *Region economics* dataset and report, which drill from the world map to the regions and shade them.
@@ -4452,7 +4452,7 @@ Nine items that the earlier phases listed as not built, now built; each is descr
 * **BI content in pack archives.** `config/bi/<kinds>/` in a pack becomes a bundle (`PackBi`, `BiBundles.packBundle`) and goes through the import: a dry run in the upload check, a real import into the shared workspace `packs` at the deploy (published, the pack as audience, never certified), kept for rollback; a refused import does not undo the deploy. A pack with no `sutras/` folder now passes the Sutra checks as "nothing to lint".
 * **Lineage past the connector.** `ConnectorSource` adds, under each table, the settings of its connector file that name the place (table, topic, path, bucket, host ...), with credentials dropped and, for people who are not administrators, the values masked.
 * **History of a live table.** `live.history` makes a bounded, time-indexed table of sampled measures (`LiveHistory`, sampled by `LiveTables` on a timer without counting as use), queryable as the dataset table `history` with generated `<measure> history` measures; masks follow the underlying columns, a row rule the history cannot honour refuses the query. The sample *Live trading desk* has a last-hour line of it.
-* **Tile alert hysteresis.** `alert.hysteresis` on a board tile: the colour and the notification drop a level only when the value is back inside the threshold by that much (`TileLevel`, `bi-live.js`), the same state machine as a measure alert.
+* **Tile alert hysteresis.** `alert.hysteresis` on a board tile: the colour and the notification drop a level only when the value is back inside the threshold by that much (`TileLevel`, `drishti_bi-live.js`), the same state machine as a measure alert.
 * **The board designer.** `/bi/design/board/<id>`: the grid of tiles with drag, resize and keys, pages, kiosk rotation, a threshold alert (with hysteresis and notify) for each tile, the YAML as a second view (`POST /boards/format`, the writer the report designer uses), Save as a draft and Publish through the item page, so review, impact and audit apply.
 * **One temp folder for each process.** `drishti-<pid>` (server) and `drishti-console-<pid>` (console) under `DRISHTI_TMP_DIR` / `DRISHTI_CONSOLE_TMP_DIR`, set as `java.io.tmpdir` / `tempfile.tempdir` before libraries load, cleaned on stop, left-over ones listed on Health (never deleted automatically), one helper for every temp file (`TempFiles`, `core/tmpdir.py`) with tests that forbid any other, shown in Admin, Health.
 
@@ -4461,9 +4461,9 @@ Nine items that the earlier phases listed as not built, now built; each is descr
 #### 20.13 Python everywhere, Vega-Lite, the browser's own SQL and promotion
 
 * **A measure that mixes grains (a correctness fix).** A measure whose expression only combines other measures (`[MTM] / [Exposure]`, `[A] / ([B] + 1)`) and whose components have different grains is no longer one aggregate of one base table (which repeated the one-side figure once per many-side row). `SqlCompiler.expandMixed` replaces it by the measures it is made of (those with aggregates of their own, found through any chain of pure combinations); each is aggregated **at its own grain at the query's grouping** by the several-facts machinery of 20.12, the parts are joined, and the expression is worked out **over the joined results** (`SqlEmitter.overJoined` writes each measure name as its part's column). Filters on such a measure and sorts work the same way; a mask on any component masks the result. A measure with aggregates of its own *and* another table's measure in one expression is not split (it has no grain to split by). `GrainTest` (a brute-force check of trades per desk by region: 1, 2 and the twice-that second-level combination) and `MultiFactTest` (the `Mixed` measure of two unrelated facts is now answered, as the two measures divided). The 20.12 "not built" note about it is removed.
-* **Vega-Lite.** `type: vega-lite` (group `chart`; wells `axis`, `legend`, `values`; `format.spec`), and a Python visual's `output: vega-lite`. Drawn with vendored Vega 6.4.0, Vega-Lite 6.5.0, vega-embed 7.3.0 and **vega-interpreter** (`ast: true`, `expr: vegaInterpreter`): the expression tree is walked, never compiled, so the page keeps the strict policy; vega-embed's own `<style>` is switched off (`defaultStyle: false`), a loader that rejects every URL, canvas, no actions, no tooltip plug-in. `data.url`, `url`, `loader` are refused at design time (`VegaSpecs`, `DRS-9032`), in the Python worker (`DRS-9073`) and in the page. `bi-vega.js`; no new server endpoint.
+* **Vega-Lite.** `type: vega-lite` (group `chart`; wells `axis`, `legend`, `values`; `format.spec`), and a Python visual's `output: vega-lite`. Drawn with vendored Vega 6.4.0, Vega-Lite 6.5.0, vega-embed 7.3.0 and **vega-interpreter** (`ast: true`, `expr: vegaInterpreter`): the expression tree is walked, never compiled, so the page keeps the strict policy; vega-embed's own `<style>` is switched off (`defaultStyle: false`), a loader that rejects every URL, canvas, no actions, no tooltip plug-in. `data.url`, `url`, `loader` are refused at design time (`VegaSpecs`, `DRS-9032`), in the Python worker (`DRS-9073`) and in the page. `drishti_bi-vega.js`; no new server endpoint.
 * **Tests shipped with a Python item.** `tests:` in the manifest (`PythonTests`: shape checked by the server, `DRS-9070` with the path; inline `input` frames or a dataset `sample`, `params`, `by`, `expect`, `tolerance`; measures, visuals (`kind` and dotted `has` paths) and transforms). The console runs them in the sandbox (`core/pytests.py`): **Check** shows each as passed, failed or could-not-run; **publish and approve through the console** are refused with `DRS-9076` while one fails (a bi-admin may `force`). Because only the console has Python, a call straight to the server's API is not gated (said in the docs, not hidden).
-* **Python on boards and in alerts.** A board tile may be a python visual (`bi-board.js` runs it through `bi-python.js`; no tile alert of its own). An alert's measure may be a **Python measure** (`PythonAlertReader`): the server builds the person's rows (the engine applies their row rules and masks), a masked column makes the reading masked and nothing runs, and `TransformRunner.measure` (`ProcessTransformRunner`, the same process boundary a Transform uses: `transform_cli.py` in `measure` mode over `core/pyrunner.py`) answers a number for each group, reduced to one. No new endpoint and no shared secret: the server starts the console's runner itself, as for Transforms (the alternative of the server calling the console over HTTP was built first and removed: a second authenticated door for no gain).
+* **Python on boards and in alerts.** A board tile may be a python visual (`bi-board.js` runs it through `drishti_bi-python.js`; no tile alert of its own). An alert's measure may be a **Python measure** (`PythonAlertReader`): the server builds the person's rows (the engine applies their row rules and masks), a masked column makes the reading masked and nothing runs, and `TransformRunner.measure` (`ProcessTransformRunner`, the same process boundary a Transform uses: `transform_cli.py` in `measure` mode over `core/pyrunner.py`) answers a number for each group, reduced to one. No new endpoint and no shared secret: the server starts the console's runner itself, as for Transforms (the alternative of the server calling the console over HTTP was built first and removed: a second authenticated door for no gain).
 * **Calc's `drishti_bi`.** `query` / `datasets` / `describe` (and `_async` forms) ask the BI engine through the page's `/bi/api/datasets/...` as the person (masks and row rules the server's), returning DataFrames. **`drishti_bi.walk(df)`** shows **Graphic Walker 0.5.3** (vendored, PygWalker's front end; **PygWalker itself cannot be vendored offline**: a Jupyter package that needs a server and the internet) in an `<iframe sandbox="allow-scripts">` whose page has its own policy (`unsafe-eval`, inline styles, `connect-src 'none'`, `sandbox`): the only place the console allows them, and a frame that has no cookie, storage or way to reach the console. The bundle is built from the npm package (`tools/vendor-js/`); its map chart's `react-leaflet` (Hippocratic-2.1) is replaced by a stand-in so none of that code is vendored; the library's service hosts are rewritten to `blocked.invalid`.
 * **DuckDB-Wasm in Analyse.** Slice (one `GROUP BY`, finished by the same code as the JavaScript pivot) and SQL cells run in the browser on the extract the page holds, with the server's SQLite and the JavaScript pivot as the fallback (this was removed with DuckDB-Wasm: not installed, `bi.explore.browser_engine: server`, a start slower than `browser_start_seconds`, further extracts). The **page keeps the strict policy**: only DuckDB's worker compiles WebAssembly, under the worker policy of that one file; after the load `enable_external_access = false` and `lock_configuration = true`, one read-only statement, a runaway query has its worker ended. `bi-explore-duck.js`; a Chromium test compares the two engines' tables and SQL results.
 * **Promote to a report visual.** `core/promote_report.py`: a slice (with its filters) or a SQL cell (read for plain columns, `GROUP BY`, `sum/avg/count/min/max`, simple conditions; the rest named in the notes) becomes a `matrix`, `table` or `card` in a new report draft or **added to an existing draft** (read by the server's checker, written again by the designer's writer, saved as the draft). A value is a dataset measure only when one is exactly that aggregate.
@@ -4562,7 +4562,7 @@ Section 2 explains what in today's code these decisions meet, and what had to ch
 #### 2.1 Today's query path
 
 ```
- console (bi-report.js, bi-report-board.js, Analyse, the SQL editor)
+ console (drishti_bi-report.js, drishti_bi-report-board.js, Analyse, the SQL editor)
    │  B.enqueue (three at a time; a 429 retried 8 times)   →  /bi/api/... (routes/bi_routes.py proxy, waits up to 35 s)
    ▼
  drishti-server
@@ -4604,7 +4604,7 @@ The request thread does all of it, start to end, and the browser holds the conne
 | `BiExporter`, `ViewExporter`, `XlsxWriter`, `CsvWriter` | exports of views and reports | export of a run's result |
 | `ShardDirectory` | rendezvous hashing of a model key over alive nodes | the node that runs a model's heavy runs (section 13) |
 | identity schema files `drishti-identity/src/main/resources/db/schema-sqlite.sql`, `schema-postgres.sql` | every relational table Drishti owns; applied idempotently at start | two new tables, `drishti_bi_run` and `drishti_bi_run_schedule` (section 3.4) |
-| `drishti-console/routes/bi_routes.py` (`_ALLOWED`, `QUERY_WAIT_SECONDS` 35 s), `web/static/js/bi-lib.js` (`B.api`, `B.enqueue`, `MAX_PARALLEL` 3) | the console's BI proxy and request queue | gains `runs`, the async request header and the run card (section 6) |
+| `drishti-console/routes/bi_routes.py` (`_ALLOWED`, `QUERY_WAIT_SECONDS` 35 s), `web/static/js/drishti_bi-lib.js` (`B.api`, `B.enqueue`, `MAX_PARALLEL` 3) | the console's BI proxy and request queue | gains `runs`, the async request header and the run card (section 6) |
 | `drishti-console/web/templates/bi/workspace.html` | the workspace page, sections *Items* and *Members* | becomes three tabs: *Items*, *Runs*, *Members* (section 7) |
 
 #### 2.3 What the real code forced
@@ -4905,7 +4905,7 @@ step S4 lands. The planner does not care which wrote them; it reads `peek`.
 
 #### 5.3 Interactions never become jobs
 
-A request from a slicer, cross-filter or drill carries `interaction: true`. The console sets it in `stateFor` in `bi-report.js` when
+A request from a slicer, cross-filter or drill carries `interaction: true`. The console sets it in `stateFor` in `drishti_bi-report.js` when
 the page's state changed by an interaction, not on the page's first draw. Such a question:
 
 * runs only if the planner says *interactive* or *known heavy*;
@@ -5019,7 +5019,7 @@ which expands to its visuals, and the bell rings once, when the last of them fin
   that the person may see (section 9.1).
 * The BI rail gets **Runs**, a link to `/bi/w/me?tab=runs`, with a small count of the person's running runs.
 * `BI RUNS <GO>` in the top bar opens it.
-* The bell's count includes finished-run notices, as it does every other notice (`inbox.js`, `drishti:unread`).
+* The bell's count includes finished-run notices, as it does every other notice (`drishti_inbox.js`, `drishti:unread`).
 
 #### 7.2 The list
 
@@ -5612,7 +5612,7 @@ added, and the console ignores fields it does not know.
 
 #### 14.5 The console contract: implementation (server lane)
 
-The console lane (`bi-runs.js`, `bi-lib.js`, `runs_admin.html`) was built against 14.1 to 14.3. These points settle what the server answers:
+The console lane (`drishti_bi-runs.js`, `drishti_bi-lib.js`, `runs_admin.html`) was built against 14.1 to 14.3. These points settle what the server answers:
 
 1. **`409 DRS-9082`** carries `estimate`, `confirmToken`, `runId`, `run` (the run object, state `awaiting-confirm`, its `confirmToken` set) and
    `confirm` (the path). Either confirm it with `POST /api/v1/bi/runs/{runId}/confirm {confirmToken}`, or ask the question again with
@@ -5835,9 +5835,9 @@ Targeted tests only between steps, on the 10K-trade lake at most, one heavy proc
 
 | Step | Work | Done when |
 |---|---|---|
-| **R1c** Runs tab | `workspace.html` tab strip (Items · Runs · Members, `?tab=`); `bi-runs.js`: the list, filters, live rows from `/runs/events`, the run drawer and every action, as the run's `can` allows; the rail link and count; `BI RUNS <GO>`; `routes/bi_routes.py` `_ALLOWED` gains `runs` | against the stubs; `test_bi_runs_page.py` |
-| **R2c** inline wait | `bi-lib.js` `B.api` sends `Prefer: respond-async, wait=<inlineWait>` for visual, MQ and SQL queries and handles `202`, `409 DRS-9082` and `409 DRS-9089`; `bi-report.js` and `bi-report-board.js`: the run card, progress, cancel, drawing from the result on `done`, `?run=<id>`; `interaction` and `supersedes` from `stateFor`; the confirm dialog; Analyse and the SQL editor likewise; the proxy's wait for asynchronous calls | `test_bi_runs_inline.py` (the proxy and the JS contract) |
-| **R3c** bell and inbox | `bi-run` notices render with their link (`inbox.js`, the inbox template); the group rings once | test |
+| **R1c** Runs tab | `workspace.html` tab strip (Items · Runs · Members, `?tab=`); `drishti_bi-runs.js`: the list, filters, live rows from `/runs/events`, the run drawer and every action, as the run's `can` allows; the rail link and count; `BI RUNS <GO>`; `routes/bi_routes.py` `_ALLOWED` gains `runs` | against the stubs; `test_bi_runs_page.py` |
+| **R2c** inline wait | `drishti_bi-lib.js` `B.api` sends `Prefer: respond-async, wait=<inlineWait>` for visual, MQ and SQL queries and handles `202`, `409 DRS-9082` and `409 DRS-9089`; `drishti_bi-report.js` and `drishti_bi-report-board.js`: the run card, progress, cancel, drawing from the result on `done`, `?run=<id>`; `interaction` and `supersedes` from `stateFor`; the confirm dialog; Analyse and the SQL editor likewise; the proxy's wait for asynchronous calls | `test_bi_runs_inline.py` (the proxy and the JS contract) |
+| **R3c** bell and inbox | `bi-run` notices render with their link (`drishti_inbox.js`, the inbox template); the group rings once | test |
 | **R4c** CLI | `tools/biruns.py` (14.4), `bi mq` / `bi sql` `--async`, completion (`tools/completion.py`) | `tools/test_cli_biruns.py` |
 | **R5c** Admin and help | `/admin/bi/runs` (17.2); help cards in `drishti-console/config/help.yaml` for the Runs tab, the run card and the confirm dialog | `test_help.py`, `test_help_links.py` |
 | **R6c** browser test | section 19.6 | passes in the drill |

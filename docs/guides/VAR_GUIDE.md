@@ -3412,7 +3412,7 @@ without a stress set still answers (no current window, said in `currentNote`).
 
 **Where it lives.** `StressWindows` (drishti-compute: the rolling VaR, the candidates, the worst day) by the engine's own rank rule
 (`VarMath`), so the current window's figure is the stressed VaR to the bit; `VarStressWindow`, `VarStressProposals` and
-`VarStressWindowController` in the server; the page `terminal/stress_window.html` with `stress-window.js`. A position-level full run
+`VarStressWindowController` in the server; the page `terminal/stress_window.html` with `drishti_stress-window.js`. A position-level full run
 (every trade over the whole history) is not part of the tool: the node grain is what the monthly review needs.
 
 **Tested:** `StressWindowsTest` (every window the VaR of its own days to the bit, the third worst of 250 at 99%, candidates apart,
@@ -3977,7 +3977,7 @@ as the viewer; packs stay declarative.
 | the stored data | `risk-store` (Delta), the vectors in a `list<double>` column (`layout.<kind>.vectors: [PNL]`); demo data from `tools/packgen/var/make_var_data.py` |
 | the engine | **in the server, in Java**: the generic vector store, ordinal sets, parallel sums and the VaR maths in the module `drishti-compute` beside the compute workers (`com.ash.drishti.compute.vector`, `com.ash.drishti.compute.var`); loading, entitlements, baskets, captures, official records and the API in `drishti-server` (`com.ash.drishti.server.var`). Base VaR is additions and sorts, which Java does next to the data without moving vectors to a worker |
 | the what-if | `VarWhatIf` (`drishti-server`) over `VarWhatIfMath` (`drishti-compute`): copies of booked trades or scopes and vectors priced elsewhere added to a scope, before and after ([section 8.2](#82-the-what-if-the-java-engine)) |
-| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/var-explorer.js`, `var-charts.js`, `web/static/css/var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
+| the explorer | a console page (`/var`, `drishti-console/routes/var_routes.py`, `web/static/js/drishti_var-explorer.js`, `drishti_var-charts.js`, `web/static/css/drishti_var.css`) over `/api/v1/var`, not a Sutra: a Sutra's `source:` reads a kind, and the parametrised sources a VaR panel needs came with reactive connectors. The portfolio and position pages are Sutras, with the UI kit fragment `pnl-distribution@1` |
 
 **The compute boundary.** Base VaR is sums of stored vectors and measures over the sums, in the server's JVM on a bounded pool
 (`drishti.var.threads`). The heavy work that needs Python or a pricer (what-if pricing over the scenarios, intraday repricing:

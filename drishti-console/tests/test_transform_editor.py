@@ -178,7 +178,7 @@ def test_the_editor_page_keeps_the_strict_policy(made):
     client, _ = made
     r = client.get("/bi/transform")
     assert r.status_code == 200 and r.headers["content-security-policy"] == CSP
-    assert 'id="tx"' in r.text and "bi-transform.js" in r.text and "calc-worker" not in r.text
+    assert 'id="tx"' in r.text and "drishti_bi-transform.js" in r.text and "calc-worker" not in r.text
     s = client.get("/bi/transform/snippets").json()["snippets"]
     assert any(x["id"] == "asof-fx" and any(p["kind"] == "input" for p in x["params"]) for x in s)
 
@@ -210,7 +210,7 @@ def test_the_console_page_is_not_a_bi_page_and_keeps_the_strict_policy(made):
     client, _ = made
     r = client.get("/pyconsole")
     assert r.status_code == 200 and r.headers["content-security-policy"] == CSP and "wasm" not in r.headers["content-security-policy"]
-    assert "/static/js/calc-worker.js" in r.text and 'id="pc"' in r.text                                # Calc's worker, the one script that compiles WebAssembly
+    assert "/static/js/drishti_calc-worker.js" in r.text and 'id="pc"' in r.text                                # Calc's worker, the one script that compiles WebAssembly
     assert not (CONSOLE / "web/templates/bi/pyconsole.html").exists()
 
 
@@ -265,7 +265,7 @@ def test_analyse_profiles_the_readers_extract(made):
     b = client.post("/bi/explore/profile", json={"extract": spec}).json()
     assert b["masked"] == ["NOTIONAL"] and {c["name"]: c for c in b["columns"]}["NOTIONAL"]["nullPct"] == 100.0
     r = client.get("/bi/explore")
-    assert 'data-tab="profile"' in r.text and "bi-explore-profile.js" in r.text and 'href="/pyconsole"' in r.text
+    assert 'data-tab="profile"' in r.text and "drishti_bi-explore-profile.js" in r.text and 'href="/pyconsole"' in r.text
 
 
 def test_the_preview_rows_setting_is_read(made):

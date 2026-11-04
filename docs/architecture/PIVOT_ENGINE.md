@@ -519,7 +519,7 @@ source (`VarCubeSource`, `VarCubeExtras`, `VarCubeController`) and the console's
 
 **Kept as they are:** saved and shared views (`CubeViews`, now `PivotViews`: a shared view opens with the reader's entitlements, never
 a copy of numbers), provenance ids per answer, the cell budget and the busy-protection check, the diversification view, the console's
-grid (`cube-core.js` becomes `pivot-grid.js`, the MR cube's landings keep their look), the `MCUBE` command word and its text grammar (it
+grid (`cube-core.js` becomes `drishti_pivot-grid.js`, the MR cube's landings keep their look), the `MCUBE` command word and its text grammar (it
 becomes the MR cube's preset of the `PIVOT` grammar), the MR source's arithmetic and every test of the branch, which must pass
 unchanged against the engine (the MR cube's acceptance test of phase P1).
 

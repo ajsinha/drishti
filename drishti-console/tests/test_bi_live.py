@@ -99,14 +99,14 @@ def test_every_bi_page_has_the_strict_policy_even_with_a_2_1_perspective_visual(
         csp = page.headers["content-security-policy"]
         assert csp == CSP and "wasm" not in csp and "sha256" not in csp, path
         assert "bi-perspective.js" not in page.text and "vendor/perspective" not in page.text and "data-perspective" not in page.text, path
-    assert "/static/js/bi-live.js" in live.get(f"/bi/r/{LIVE}").text
+    assert "/static/js/drishti_bi-live.js" in live.get(f"/bi/r/{LIVE}").text
 
 
 def test_a_board_is_a_report_with_board_pages_and_keeps_the_strict_policy(live):
     moved = live.get(f"/bi/b/{BOARD}", follow_redirects=False)                       # 2.4.0 (R7): the report viewer draws board pages
     assert moved.status_code == 307 and moved.headers["location"].startswith("/bi/r/")
     page = live.get(moved.headers["location"])
-    assert page.headers["content-security-policy"] == CSP and 'data-bi-page="report"' in page.text and "/static/js/bi-report-board.js" in page.text
+    assert page.headers["content-security-policy"] == CSP and 'data-bi-page="report"' in page.text and "/static/js/drishti_bi-report-board.js" in page.text
 
 
 def test_the_board_and_the_report_open_from_the_item_page(live):
@@ -177,7 +177,7 @@ def test_a_report_stream_reaches_the_browser_over_the_one_channel():
 
 
 def test_the_hub_forwards_the_two_new_events():
-    hub = (CONSOLE / "web/static/js/live-hub.js").read_text(encoding="utf-8")
+    hub = (CONSOLE / "web/static/js/drishti_live-hub.js").read_text(encoding="utf-8")
     assert "'tick'" in hub and "'status'" in hub
 
 
@@ -197,7 +197,7 @@ def test_the_live_settings_reach_the_page_and_are_bounded(live):
 
 def test_the_new_scripts_open_no_stream_no_blob_and_no_markup_of_their_own():
     js = CONSOLE / "web/static/js"
-    for name in ("bi-live.js", "bi-report-board.js"):
+    for name in ("drishti_bi-live.js", "drishti_bi-report-board.js"):
         text = (js / name).read_text(encoding="utf-8")
         assert "EventSource(" not in text and "createObjectURL" not in text and "new Blob" not in text and "innerHTML" not in text and "eval(" not in text, name
         assert "http://" not in text and "https://" not in text, name                                         # nothing from outside

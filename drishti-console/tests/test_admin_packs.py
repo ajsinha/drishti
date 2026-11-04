@@ -42,7 +42,7 @@ def test_the_page_offers_deploy_history_rollback_and_the_data_source(client, bac
     with_admin(backend, monkeypatch, [])
     page = client.get("/admin/packs").text
     for text in ("Deploy an archive", "data-deploy", 'data-max-mb="50"', "pack only, never data", "History and roll back", "data-rollback", "Roll back to this",
-                 "shipped with the server (0.9.0)", "data-datasource", "data-ds-dialog", "admin-packs.js", "admin-packs.css",
+                 "shipped with the server (0.9.0)", "data-datasource", "data-ds-dialog", "drishti_admin-packs.js", "drishti_admin-packs.css",
                  "from trading-1.1.0.tar.gz", "Admin &rarr; Connectors"):
         assert text in page, text
     assert 'aria-labelledby="dsTitle"' in page and 'role="status"' in page                      # the dialog is named; messages are announced
@@ -136,7 +136,7 @@ def test_the_packs_list_shows_sutra_problems_connectors_the_change_time_and_poll
     assert ">trading-store<" in page                                                                    # a connector the pack names by template or route
     assert "2026-10-05 06:00 New York" in page and "files on disk" in page                                      # Changed is filled after a deploy
     assert "Needed by credit: switch those off first" in page and 'data-needed-note' in page          # visible text, not only a tooltip
-    assert 'data-watch="/admin/api/packs/stamp"' in page and "admin-watch.js" in page
+    assert 'data-watch="/admin/api/packs/stamp"' in page and "drishti_admin-watch.js" in page
     assert "data-ask-dialog" in page                                                                   # Switch off, Unload and Load use the styled dialog
 
 

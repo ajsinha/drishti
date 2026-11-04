@@ -27,7 +27,7 @@ icons:
   favicon-png: icons/favicon-32.png  # the browser icon (32 px PNG)
   app-192: icons/icon-192.png  # the home-screen icon, 192 px
   app-512: icons/icon-512.png  # the home-screen icon, 512 px
-# The colours of the console's two base themes (drishti-console/web/static/css/tokens.css), named after its --d-* tokens.
+# The colours of the console's two base themes (drishti-console/web/static/css/drishti_tokens.css), named after its --d-* tokens.
 themes:
   terminal:
     bg: "#0e1628"  # the page background (--d-bg)

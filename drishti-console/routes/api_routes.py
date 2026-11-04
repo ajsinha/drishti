@@ -452,7 +452,7 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
     """Everything live a BROWSER needs, on ONE connection: the views of all its tabs (a workspace's panes included), the
     alerts bell and monitors (s=view:trade/T-1, s=alerts, s=monitor:<name>). Browsers allow only six connections to a
     site over HTTP/1.1; a stream per view, and later a channel per tab, used them up, and every other page of the site
-    then waited forever (UX-01). The browser's tabs share this channel through live-hub.js. Each event carries its
+    then waited forever (UX-01). The browser's tabs share this channel through drishti_live-hub.js. Each event carries its
     subscription: {"ch": "view:trade/T-1", "d": …}; the first, ``channel``, says whose session it runs as (``who``).
     Every frame is built for the signed-in user of the request that opened it. Upstream streams are closed within
     seconds of the browser going away, even when they are quiet."""

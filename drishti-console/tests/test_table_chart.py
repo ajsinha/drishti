@@ -14,7 +14,7 @@
 
 """Chart any table, the console's server side (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 8.4, 10, 13, 14): the raw values a search
 page and a history page hand the chart (masks kept, numbers as numbers, named as the table heads them), the Chart button and its key
-on those pages, the help address of the dialog's ?, the lazy loading from tables.js, the BI table's K beside the kiosk's, and the
+on those pages, the help address of the dialog's ?, the lazy loading from drishti_tables.js, the BI table's K beside the kiosk's, and the
 palette's contrast in every theme."""
 import json
 import re
@@ -103,25 +103,25 @@ def test_the_dialogs_help_opens_the_user_guides_section(client):
 
 
 def test_tables_load_the_chart_on_first_use_and_k_is_bound_on_the_table_only():
-    tables = (JS / "tables.js").read_text()
-    for src in ("vendor/echarts/echarts.min.js", "js/pivot-engine.js", "js/table-chart-engine.js", "js/table-chart-sources.js", "js/table-chart.js"):
+    tables = (JS / "drishti_tables.js").read_text()
+    for src in ("vendor/echarts/echarts.min.js", "js/drishti_pivot-engine.js", "js/drishti_table-chart-engine.js", "js/drishti_table-chart-sources.js", "js/drishti_table-chart.js"):
         assert f"'{src}'" in tables, src
-    assert "css/table-chart.css" in tables and "data-no-chart" in tables
+    assert "css/drishti_table-chart.css" in tables and "data-no-chart" in tables
     assert re.search(r"case 'k': case 'K': if \(chartable && !e\.altKey && !e\.ctrlKey && !e\.metaKey\)", tables)
     base = (CONSOLE / "web" / "templates" / "base.html").read_text()
     assert "table-chart" not in base                                                  # nothing loads until a chart is opened
 
 
 def test_a_bi_table_takes_k_before_the_kiosk_and_the_kiosk_respects_it():
-    report = (JS / "bi-report.js").read_text()
-    board = (JS / "bi-report-board.js").read_text()
+    report = (JS / "drishti_bi-report.js").read_text()
+    board = (JS / "drishti_bi-report-board.js").read_text()
     assert "(e.key === 'k' || e.key === 'K') && chartable(spec)) { e.preventDefault();" in report
     assert "e.defaultPrevented) { return; }" in board
     assert "'data-act': 'chart'" in report
 
 
 def test_charts_js_exports_the_theme_helpers_the_dialog_uses():
-    charts = (JS / "charts.js").read_text()
+    charts = (JS / "drishti_charts.js").read_text()
     assert charts.count("tokens: tokens, palette: palette, compact: compact, axis: axis") == 2
 
 

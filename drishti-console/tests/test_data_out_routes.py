@@ -45,7 +45,7 @@ def test_the_page_opens_in_the_view_asked_with_the_answer(client, backend, monke
     calls = []
     _fake(backend, monkeypatch, calls)
     page = client.get("/admin/data-out")
-    assert page.status_code == 200 and 'data-dout-view="page"' in page.text and "admin-data-out.js" in page.text
+    assert page.status_code == 200 and 'data-dout-view="page"' in page.text and "drishti_admin-data-out.js" in page.text
     assert "drishti-main" in page.text and "10.20.4.11" in page.text                                  # the answer, in the page's JSON
     assert 'data-dout-view="map"' in client.get("/admin/data-out?view=map").text
     assert ("GET", "/data-out") in calls

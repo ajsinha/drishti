@@ -100,13 +100,13 @@ def _app():
 def test_the_view_has_one_side_drawer_with_two_tabs_and_no_notes_drawer():
     c, _ = _app()
     page = c.get("/v/trade/IRS-48213").text
-    assert page.count('id="aboutDrawer"') == 1 and 'id="notesDrawer"' not in page and "notes.js" not in page
+    assert page.count('id="aboutDrawer"') == 1 and 'id="notesDrawer"' not in page and "drishti_notes.js" not in page
     assert 'role="tablist"' in page and 'data-tab="about"' in page and 'data-tab="discussion"' in page
     assert 'data-tab-panel="about"' in page and 'data-tab-panel="discussion"' in page
     assert 'data-discussion-open' in page and 'aria-keyshortcuts="Alt+N"' in page and 'data-about-open' in page
-    for js in ("discussion-compose.js", "discussion-view.js", "discussion.js"):
+    for js in ("drishti_discussion-compose.js", "drishti_discussion-view.js", "drishti_discussion.js"):
         assert f"/static/js/{js}" in page
-    assert page.index("/static/js/about.js") < page.index("/static/js/discussion.js")        # the host first
+    assert page.index("/static/js/drishti_about.js") < page.index("/static/js/drishti_discussion.js")        # the host first
     assert 'data-page-asof="live"' in page                                                      # the page's own date, for a post's pin
 
 

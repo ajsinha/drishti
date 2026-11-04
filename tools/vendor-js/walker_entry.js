@@ -15,7 +15,7 @@
  */
 import { embedGraphicWalker } from './node_modules/@kanaries/graphic-walker/dist/vanilla.js';
 
-// The page of the sandboxed frame (static/calc/walker.html) calls DrishtiWalker.mount(element, { fields, data, dark }) with what it received by postMessage.
+// The page of the sandboxed frame (static/calc/drishti_walker.html) calls DrishtiWalker.mount(element, { fields, data, dark }) with what it received by postMessage.
 window.DrishtiWalker = {
   mount(element, spec) {
     return embedGraphicWalker(element, {

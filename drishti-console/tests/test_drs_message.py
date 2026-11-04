@@ -42,5 +42,5 @@ def test_a_backend_error_and_the_missing_page_say_the_code_once(client, backend,
 
 def test_every_page_script_builds_problem_text_with_the_shared_helper():
     js = "".join(p.read_text() for p in (CONSOLE / "web" / "static" / "js").glob("*.js"))
-    assert "window.drsMessage" in js
+    assert "window.Drishti.drsMessage" in js
     assert "(res.b.code || 'Error') + ': '" not in js and "(res.body.code || 'Error') + ': '" not in js

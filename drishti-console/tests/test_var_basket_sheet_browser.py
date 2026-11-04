@@ -168,7 +168,7 @@ def paste(pg, text):
 
 def answered(pg):
     """Waits until the figures are the engine's answer for what the sheet holds now."""
-    wait(pg, "(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.VarBasket.signature()"
+    wait(pg, "(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.Drishti.VarBasket.signature()"
              " && !l.classList.contains('computing'); })()", 15)
 
 
@@ -279,7 +279,7 @@ def test_paste_check_save_reopen_edit_and_delete(served, browser):
         # a portfolio is the bank's: Edit a copy opens its parts as your own unsaved basket
         pg.click('[data-vx-pick="system"] [data-vx-pick-btn]')                 # System baskets: the bank's portfolios
         pg.click('[data-vx-edit="PORT:PF-USD-RATES"]')
-        wait(pg, "window.VarBasket.state.copyOf === 'PF-USD-RATES'", 15)
+        wait(pg, "window.Drishti.VarBasket.state.copyOf === 'PF-USD-RATES'", 15)
         assert cell(pg, "POS", 1).inner_text() == "POS-B"
         assert "your own basket" in pg.inner_text("[data-vb-save]")
         assert "copy" in pg.inner_text("[data-vb-msg]")

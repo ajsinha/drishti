@@ -102,7 +102,7 @@ def test_the_compliance_export_is_streamed_not_held_whole():           # B3-12
 
 
 def test_the_edit_button_goes_when_the_window_closes_and_the_phone_box_fits():        # B3-08, B3-09
-    js = (JS / "discussion-view.js").read_text()
+    js = (JS / "drishti_discussion-view.js").read_text()
     assert "editWindow" in js and "setTimeout" in js
-    css = (CONSOLE / "web" / "static" / "css" / "collab.css").read_text()
+    css = (CONSOLE / "web" / "static" / "css" / "drishti_collab.css").read_text()
     assert "box-sizing: border-box" in css.split(".disc-box textarea")[1].split("}")[0] and "minmax(0, 1fr)" in css

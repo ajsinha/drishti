@@ -84,7 +84,7 @@ def test_outline_routes(client, on):
     assert r.status_code == 303 and "design=" in r.headers["location"]
     draft = r.headers["location"].split("design=")[1]
     page = client.get(r.headers["location"]).text
-    assert "data-ol-tree" in page and f'data-draft="{draft}"' in page and "designer-outline.js" in page
+    assert "data-ol-tree" in page and f'data-draft="{draft}"' in page and "drishti_designer-outline.js" in page
     st = client.get(f"/designer/outline/state/{draft}").json()
     assert [p["title"] for p in st["sections"][0]["panels"]] == ["Deal ticket", "Flows", "Data provenance"]
     body = {"kind": "trade", "id": "IRS-47102"}

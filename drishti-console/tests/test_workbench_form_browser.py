@@ -28,7 +28,7 @@ SUTRA = ("rachana: 1\nsutra: form-e2e\nversion: 1\ndescription: Where a shipment
 
 
 def _paths(page):
-    return page.evaluate("() => window.drishtiWorkbench.form.model().map(f => f.path)")
+    return page.evaluate("() => window.Drishti.workbench.form.model().map(f => f.path)")
 
 
 def test_build_a_form_from_the_samples_reorder_and_edit_it(live_console, page):
@@ -84,7 +84,7 @@ def test_build_a_form_from_the_samples_reorder_and_edit_it(live_console, page):
     # typed YAML rebuilds the cards; a mistake is listed with its code
     page.locator("[data-form-yamlbox] summary").click()
     page.fill("[data-form-src]", "- {path: carrier, type: enum, values: [Maersk, MSC]}\n- {path: reefer, type: bool}\n")
-    page.wait_for_function("() => window.drishtiWorkbench.form.model().length === 2", timeout=10000)
+    page.wait_for_function("() => window.Drishti.workbench.form.model().length === 2", timeout=10000)
     assert _paths(page) == ["carrier", "reefer"]
     page.locator("[data-form-preview] label", has_text="Maersk").wait_for(timeout=10000)
     page.fill("[data-form-src]", "- {path: carrier, type: money}\n")
@@ -99,7 +99,7 @@ def test_build_a_form_from_the_samples_reorder_and_edit_it(live_console, page):
     assert saved["form"] == "- {path: carrier, type: text}\n"
     page.locator("[data-form-problems]").click()                                                       # focus outside any box: the design's own Ctrl+Z
     page.keyboard.press("Control+z")
-    page.wait_for_function("() => window.drishtiWorkbench.form.value() !== '- {path: carrier, type: text}\\n'", timeout=10000)
+    page.wait_for_function("() => window.Drishti.workbench.form.value() !== '- {path: carrier, type: text}\\n'", timeout=10000)
     assert page.request.get(f"{live_console}/build/designs/{id_}").json()["form"] != "- {path: carrier, type: text}\n"
 
 
@@ -108,8 +108,8 @@ def test_the_starter_writes_a_form_from_the_samples(live_console, page):
     page.locator("#wbTabForm").click()
     page.locator("[data-form-palette] button").first.wait_for(timeout=15000)
     page.locator("[data-form-starter]").click()
-    page.wait_for_function("() => window.drishtiWorkbench.form.model().length >= 4", timeout=10000)
-    types = page.evaluate("() => Object.fromEntries(window.drishtiWorkbench.form.model().map(f => [f.path, f.type]))")
+    page.wait_for_function("() => window.Drishti.workbench.form.model().length >= 4", timeout=10000)
+    types = page.evaluate("() => Object.fromEntries(window.Drishti.workbench.form.model().map(f => [f.path, f.type]))")
     assert types["shipmentId"] == "id" and types["departed"] == "date" and types["reefer"] == "bool" and types["weightKg"] in ("amount", "number")
     page.wait_for_timeout(2500)
     assert "shipmentId" in page.request.get(f"{live_console}/build/designs/{id_}").json()["form"]

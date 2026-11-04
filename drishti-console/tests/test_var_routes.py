@@ -86,11 +86,11 @@ def test_the_basket_trays_hints_and_what_if_go_to_the_engine_as_the_user(client,
 def test_the_basket_is_on_the_var_page_not_in_the_top_bar(client):
     """2.9.4: the top bar has no Basket button; the VaR explorer offers "Construct your basket" (Alt+B there) and loads the tray."""
     html = client.get("/t").text
-    assert "data-basket-btn" not in html and "/static/js/var-basket.js" not in html and "/static/css/var-basket.css" not in html
+    assert "data-basket-btn" not in html and "/static/js/drishti_var-basket.js" not in html and "/static/css/drishti_var-basket.css" not in html
     page = client.get("/var?scope=BANK").text
     assert "data-basket-btn" not in page
     assert "data-vx-basket-open" in page and 'aria-keyshortcuts="Alt+B"' in page and "data-basket-count" in page
-    assert "/static/js/var-basket.js" in page and "/static/css/var-basket.css" in page
+    assert "/static/js/drishti_var-basket.js" in page and "/static/css/drishti_var-basket.css" in page
 
 
 def test_in_a_currency_the_command_opens_the_page_in_it():
@@ -158,11 +158,11 @@ def test_no_confidence_is_hard_coded_the_labels_follow_the_answer(client):
     html = client.get("/var?scope=BANK").text
     assert "VaR 99%" not in html and "ES 97.5%" not in html
     js = Path(__file__).resolve().parents[1] / "web" / "static" / "js"
-    for f in ("var-explorer.js", "var-basket.js"):
+    for f in ("drishti_var-explorer.js", "drishti_var-basket.js"):
         text = (js / f).read_text(encoding="utf-8")
         assert "99%" not in text and "97.5%" not in text, f
-    assert "d.confidence" in (js / "var-explorer.js").read_text(encoding="utf-8")
-    assert "w.confidence" in (js / "var-basket.js").read_text(encoding="utf-8")
+    assert "d.confidence" in (js / "drishti_var-explorer.js").read_text(encoding="utf-8")
+    assert "w.confidence" in (js / "drishti_var-basket.js").read_text(encoding="utf-8")
 
 
 def test_any_configured_hierarchy_is_kept_in_the_page_and_a_configured_word_opens_by_scope(client):
@@ -174,7 +174,7 @@ def test_any_configured_hierarchy_is_kept_in_the_page_and_a_configured_word_open
     assert 'data-hierarchy="MGMT"' in client.get("/var?scope=BANK&hierarchy=ll-1%3Cx%3E").text
     assert var_command("VAR SCOPE LL:LL-0003".split(), "asha") == "/var?scope=LL%3ALL-0003"
     assert var_command("VAR NODE LL~LL-0003/DESK-RATES".split(), "asha") == "/var?scope=NODE%3ALL~LL-0003/DESK-RATES"
-    js = client.get("/static/js/var-explorer.js").text
+    js = client.get("/static/js/drishti_var-explorer.js").text
     assert "/^NODE:(MGMT|LEGAL)~/" not in js and "hierarchyInfo" in js and "setHierarchy" in js
 
 
@@ -296,19 +296,19 @@ def test_the_basket_sheet_goes_to_the_engine_as_lists_and_comes_back_as_its_answ
 def test_the_var_page_draws_the_basket_as_a_sheet_with_edit(client):
     """The chip tray is retired: the page loads the sheet's grid and the sheet; a saved basket has Edit, a portfolio Edit a copy."""
     page = client.get("/var?scope=BANK").text
-    assert page.index("/static/js/var-basket-sheet.js") < page.index("/static/js/var-basket.js")
-    js = client.get("/static/js/var-basket.js").text
+    assert page.index("/static/js/drishti_var-basket-sheet.js") < page.index("/static/js/drishti_var-basket.js")
+    js = client.get("/static/js/drishti_var-basket.js").text
     assert "basket/sheet" in js and "Start from the whole bank" in js and "Download as .xlsx" in js and "vb-chip" not in js
-    vx = client.get("/static/js/var-explorer.js").text
+    vx = client.get("/static/js/drishti_var-explorer.js").text
     assert "Edit a copy" in vx and "B.edit(scope)" in vx
 
 
 def test_the_var_page_offers_delete_through_the_confirm_dialog(client):
     page = client.get("/var?scope=BANK").text
-    assert "/static/js/scope-delete.js" in page and 'data-admin="true"' in page          # the test console's user is an administrator
-    js = client.get("/static/js/var-explorer.js").text
-    assert "DrishtiScopeDelete.ask" in js and "b.owner === S.user || S.admin" in js
-    sd = client.get("/static/js/scope-delete.js").text
+    assert "/static/js/drishti_scope-delete.js" in page and 'data-admin="true"' in page          # the test console's user is an administrator
+    js = client.get("/static/js/drishti_var-explorer.js").text
+    assert "Drishti.ScopeDelete.ask" in js and "b.owner === S.user || S.admin" in js
+    sd = client.get("/static/js/drishti_scope-delete.js").text
     assert "showModal" in sd and "version" in sd and "reason" in sd
 
 
@@ -328,7 +328,7 @@ def test_admin_ad_hoc_scopes_lists_every_persons_baskets_with_delete(client, bac
     html = page.text
     assert 'data-basket="rita/unwind"' in html and 'data-version="3"' in html and 'data-shared="ola,role:risk"' in html
     assert "Unwind candidates" in html and "ola, role:risk" in html and "312 B" in html and "data-scope-delete" in html
-    assert "/static/js/scope-delete.js" in html and "/static/js/admin-scopes.js" in html
+    assert "/static/js/drishti_scope-delete.js" in html and "/static/js/drishti_admin-scopes.js" in html
     assert 'href="/admin/scopes"' in client.get("/admin/users").text
 
 

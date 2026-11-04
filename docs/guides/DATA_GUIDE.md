@@ -829,8 +829,8 @@ search page**.
   is sent as JSON, with `200`: the caller reads the `Content-Type`.
 
 The console passes the server's Arrow through unchanged and writes no Arrow of its own: when the server answers JSON (an answer given in
-time by a BI run, a table Arrow is not written with) the browser gets that JSON, which `drishtiFetchTable` reads as well. A Python
-program reads Drishti's data through Arrow Flight ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)). In the browser, **`drishtiFetchTable(url, opts)`** (`/static/js/drishti-table.js`) asks with
+time by a BI run, a table Arrow is not written with) the browser gets that JSON, which `Drishti.fetchTable` reads as well. A Python
+program reads Drishti's data through Arrow Flight ([FLIGHT_GUIDE.md](FLIGHT_GUIDE.md)). In the browser, **`Drishti.fetchTable(url, opts)`** (`/static/js/drishti_table.js`) asks with
 `Accept: application/vnd.apache.arrow.stream, application/json;q=0.9` when the page loaded Arrow JS and `application/json` otherwise,
 and returns one column-oriented table whichever format came back: `names`, `length`, `column(name)` (a `Float64Array` for numbers, NaN
 for a null; an array for text), `value(name, i)` (the cell as JSON has it), `answer()` (the whole JSON answer, equal cell for cell). Types:

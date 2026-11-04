@@ -77,20 +77,20 @@ class Console(unittest.TestCase):
         self.assertIn("def to_jsonl(", text(CONSOLE / "core" / "export.py"))
 
     #: every UI menu or button that offers CSV or Excel: the file and what proves JSON Lines is offered beside it
-    UI = {"web/static/js/table-chart.js": "self.grid('jsonl')",
+    UI = {"web/static/js/drishti_table-chart.js": "self.grid('jsonl')",
           "web/templates/terminal/pivot.html": 'data-pv-export="jsonl"',
-          "web/static/js/bi-runs.js": "b('jsonl', 'Export JSONL')",
+          "web/static/js/drishti_bi-runs.js": "b('jsonl', 'Export JSONL')",
           "web/templates/bi/report.html": 'data-export-fmt="jsonl"',
-          "web/static/js/bi-statement.js": "'.jsonl?page='",
+          "web/static/js/drishti_bi-statement.js": "'.jsonl?page='",
           "web/templates/terminal/view.html": 'data-export-fmt="jsonl"',
           "web/templates/_macros/panels.html": 'data-export-ext="jsonl"',
-          "web/static/js/view.js": "data-export-ext",
+          "web/static/js/drishti_view.js": "data-export-ext",
           "web/templates/terminal/history.html": 'data-hx-export="jsonl"',
           "web/templates/terminal/search.html": "/export/search.jsonl",
           "web/templates/terminal/form.html": "/export/search.jsonl",
-          "web/static/js/exposure-explorer.js": 'format: "jsonl"',
+          "web/static/js/drishti_exposure-explorer.js": 'format: "jsonl"',
           "web/templates/terminal/exposure.html": "data-xx-jsonl",
-          "web/static/js/var-explorer.js": '"/jsonl"',
+          "web/static/js/drishti_var-explorer.js": '"/jsonl"',
           "web/templates/terminal/var.html": "data-vx-jsonl-path",
           "web/templates/subscribe.html": 'value="jsonl"',
           "web/templates/reports.html": 'value="jsonl"'}

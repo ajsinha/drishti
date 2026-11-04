@@ -129,7 +129,7 @@ def test_the_health_page_shows_connectors_packs_and_live(client, backend, monkey
     assert "Disk 30.0 GB free of 1024.0 GB · guard 20.0 GB" in flat and "amber" in flat and "42.0 GB / 40.0 GB" in flat and "red" in flat
     body = client.get("/admin/health", params={"partial": 1}).text
     assert "<html" not in body and "trading-store" in body
-    assert "data-health-body" not in body and "setInterval" in client.get("/static/js/admin.js").text
+    assert "data-health-body" not in body and "setInterval" in client.get("/static/js/drishti_admin.js").text
 
 
 def test_the_health_page_shows_direct_memory_and_open_files(client, backend, monkeypatch):

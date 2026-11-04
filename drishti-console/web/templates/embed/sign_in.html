@@ -23,8 +23,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
   <title>Sign in · {{ PRODUCT }}</title>
-  <link rel="stylesheet" href="/static/css/tokens.css?v={{ ASSET_V }}">
-  <link rel="stylesheet" href="/static/css/embed-sign-in.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/drishti_tokens.css?v={{ ASSET_V }}">
+  <link rel="stylesheet" href="/static/css/drishti_embed-sign-in.css?v={{ ASSET_V }}">
 </head>
 <body class="esi"{% if payload %} data-sign-in="{{ payload | tojson | forceescape }}"{% endif %}>
   <main class="esi-card">
@@ -37,6 +37,6 @@
     <p class="esi-hint" data-esi-hint hidden>You can close this window and return to the page.</p>
     {% endif %}
   </main>
-  <script src="/static/js/embed-sign-in.js?v={{ ASSET_V }}"></script>
+  <script src="/static/js/drishti_embed-sign-in.js?v={{ ASSET_V }}"></script>
 </body>
 </html>

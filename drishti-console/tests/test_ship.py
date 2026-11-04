@@ -63,7 +63,7 @@ def test_submit_for_review_goes_through_the_evidence_endpoint_and_the_status_fol
     assert r.status_code == 200 and r.json()["proposal"]["id"] == "P-000042" and r.json()["status"] == "proposed(P-000042)"
     assert seen["note"] == "first cut" and backend.proposed == [{"id": id_, "note": "first cut"}]
     assert app_client.get(f"/build/designs/{id_}").json()["status"] == "proposed(P-000042)"
-    assert "/propose" in (JS / "build" / "saving.js").read_text() and "/save'" not in (JS / "build" / "saving.js").read_text()
+    assert "/propose" in (JS / "build" / "drishti_saving.js").read_text() and "/save'" not in (JS / "build" / "drishti_saving.js").read_text()
 
 
 def test_the_old_save_route_is_gone_the_server_endpoint_replaced_it(app_client):
@@ -146,8 +146,8 @@ def test_import_refuses_other_bodies(app_client):
 
 def test_new_offers_the_import_and_the_script_is_served(app_client):
     page = app_client.get("/build/new").text
-    assert 'id="import"' in page and "data-import-zip" in page and "data-import-folder" in page and "build-import.js" in page
-    assert app_client.get("/static/js/build-import.js").status_code == 200
+    assert 'id="import"' in page and "data-import-zip" in page and "data-import-folder" in page and "drishti_build-import.js" in page
+    assert app_client.get("/static/js/drishti_build-import.js").status_code == 200
 
 
 # ---- sharing --------------------------------------------------------------------------------------------------------------------------
@@ -161,7 +161,7 @@ def test_a_share_link_shows_sutra_ops_and_sample_names_never_contents_and_can_be
     assert "a.json" in page.text and "b.json" in page.text and "sutra: ship" in page.text
     assert "T-1" not in page.text and "rates" not in page.text                    # the sample contents never reach the page
     assert "data-save" not in page.text and "data-yaml-src" not in page.text       # no editing controls
-    assert "/static/js/build/shared.js" in page.text and app_client.get("/static/js/build/shared.js").status_code == 200
+    assert "/static/js/build/drishti_shared.js" in page.text and app_client.get("/static/js/build/drishti_shared.js").status_code == 200
     assert app_client.get(f"/build/d/{id_}?share=wrong").status_code == 404
     assert app_client.get(f"/build/designs/{id_}").json()["shared"] is True
     assert app_client.delete(f"/build/designs/{id_}/share").json() == {"shared": False}
@@ -188,8 +188,8 @@ def test_a_link_holder_previews_with_their_own_json_or_a_stored_entity(app_clien
 def test_the_workbench_has_the_ship_menu_and_a_share_box(app_client):
     id_ = _design(app_client)
     page = app_client.get(f"/build/d/{id_}").text
-    assert "data-ship-menu" in page and "data-share-box" in page and "/static/js/build/ship.js" in page
-    assert "Bind to a file" not in app_client.get("/static/js/build/ship.js").text.split("fileBinding")[0]    # the item only appears with the setting
+    assert "data-ship-menu" in page and "data-share-box" in page and "/static/js/build/drishti_ship.js" in page
+    assert "Bind to a file" not in app_client.get("/static/js/build/drishti_ship.js").text.split("fileBinding")[0]    # the item only appears with the setting
 
 
 # ---- file binding ---------------------------------------------------------------------------------------------------------------------------
@@ -217,15 +217,15 @@ def test_with_binding_on_save_writes_the_file_and_a_disk_edit_is_synced(app_clie
 
 
 def test_the_ship_script_saves_to_the_file_when_bound_and_polls_for_disk_edits():
-    ship = (JS / "build" / "ship.js").read_text()
-    saving = (JS / "build" / "saving.js").read_text()
+    ship = (JS / "build" / "drishti_ship.js").read_text()
+    saving = (JS / "build" / "drishti_saving.js").read_text()
     assert "hooks.ship.bound()" in saving and "/save-file" in ship and "/sync" in ship and "setInterval(sync" in ship
     assert len(ship.splitlines()) < 400
 
 
 def test_the_workbench_reloads_a_design_from_its_sutra_field():
     """GET /build/designs/{id} answers the Sutra as ``sutra`` (the server's field); the reloads after a 409, an auto-design and a disk sync read that."""
-    for name in ("ops.js", "workbench.js", "ship.js"):
+    for name in ("drishti_ops.js", "drishti_workbench.js", "drishti_ship.js"):
         text = (JS / "build" / name).read_text()
         assert "g.body.yaml" not in text and "r.body.yaml || ''" not in text, name
 
@@ -247,8 +247,8 @@ def test_a_design_whose_base_moved_is_flagged_and_the_rebase_is_forwarded(app_cl
     monkeypatch.setattr(backend, "designs", spy)
     r = app_client.post(f"/build/designs/{id_}/rebase", json={"baseRev": 2})
     assert r.status_code == 200 and r.json()["replayed"] == 1 and seen == [("POST", f"/{id_}/rebase", {"baseRev": 2})]
-    ship = (JS / "build" / "ship.js").read_text()
-    problems = (JS / "build" / "problems.js").read_text()
+    ship = (JS / "build" / "drishti_ship.js").read_text()
+    problems = (JS / "build" / "drishti_problems.js").read_text()
     assert "/rebase" in ship and "baseMoved" in problems
     assert "data-base-name" in (CONSOLE / "web" / "templates" / "build" / "design.html").read_text()      # the header names the base, so a rebase can update it
     assert "store.state.baseMoved = null" in ship and "store.emit('basemoved')" in ship   # after a rebase the flag and the old base name go

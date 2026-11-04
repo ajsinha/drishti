@@ -15,7 +15,7 @@
 
 """The client-side renderer's phase 2 on the console's side (docs/architecture/CLIENT_RENDERER.md section 16), without a browser:
 ``ui.render`` (mode, pages, the short form, ``?render=``), the entity page as the client draws it (the embedded ViewModel, the scripts
-deferred after the renderer's module, no live.js) and as the server draws it (unchanged), About as JSON, panels answered with their
+deferred after the renderer's module, no drishti_live.js) and as the server draws it (unchanged), About as JSON, panels answered with their
 JSON, the channel's ``vm:`` subscriptions, the embed API v2 (the ViewModel with its contract, its parts as JSON, the renderer's
 versioned files, Elements 2.x's address), and the three console fixes phase 1 found (a panel with no data, the candles' texts, a bar
 list that never widens the page)."""
@@ -60,7 +60,7 @@ def _page(client, path):
 
 def test_the_server_page_is_unchanged_and_the_client_page_embeds_its_view_model(client):
     server = _page(client, "/v/trade/IRS-48213")
-    assert "data-render-host" not in server and "view-render.js" not in server and "live.js" in server
+    assert "data-render-host" not in server and "drishti_view-render.js" not in server and "drishti_live.js" in server
     assert ' defer>' not in server.split("{% block scripts %}")[0] and '<section class="vhead">' in server and 'id="p-legs"' in server
     page = _page(client, "/v/trade/IRS-48213?render=client")
     boot = json.loads(html.unescape(re.search(r'data-render-boot="([^"]+)"', page).group(1)))
@@ -68,17 +68,17 @@ def test_the_server_page_is_unchanged_and_the_client_page_embeds_its_view_model(
     assert boot["vm"]["ref"] == vm["ref"] and [p["id"] for p in boot["vm"]["panels"]] == [p["id"] for p in vm["panels"]]
     assert boot["asOf"] == "live" and boot["backToLive"].startswith("/asof?d=live&next=/v/trade/IRS-48213")
     assert '<section class="vhead">' not in page and 'id="p-legs"' not in page, "the panels are drawn by the library, not the macros"
-    module = page.index('src="/static/js/view-render.js')
-    assert page.index('src="/static/vendor/echarts/echarts.min.js') < module < page.index('src="/static/js/view.js')
-    assert re.search(r'src="/static/js/view\.js\?v=[^"]*" defer>', page) and re.search(r'src="/static/js/tables\.js', page)
-    assert "/static/js/live.js" not in page, "the renderer's page follows the channel itself"
+    module = page.index('src="/static/js/drishti_view-render.js')
+    assert page.index('src="/static/vendor/echarts/echarts.min.js') < module < page.index('src="/static/js/drishti_view.js')
+    assert re.search(r'src="/static/js/drishti_view\.js\?v=[^"]*" defer>', page) and re.search(r'src="/static/js/drishti_tables\.js', page)
+    assert "/static/js/drishti_live.js" not in page, "the renderer's page follows the channel itself"
     assert 'data-render-chrome' in page and 'data-share=' in page, "the console's tools are on the page, placed after the paint"
     pane = _page(client, "/v/trade/IRS-48213?embed=1&render=client")
     assert "data-render-host" in pane and '"backToLive": null' in html.unescape(pane)
 
 
 def test_view_render_imports_the_current_renderer():
-    text = (WEB / "static/js/view-render.js").read_text(encoding="utf-8")
+    text = (WEB / "static/js/drishti_view-render.js").read_text(encoding="utf-8")
     assert f"from '../render/{rd.VERSION}/drishti-render.js'" in text
 
 
@@ -172,7 +172,7 @@ def test_the_candles_data_table_prints_the_servers_texts():
 
 
 def test_a_bar_list_never_widens_the_page():
-    css = (WEB / "static/css/terminal.css").read_text(encoding="utf-8")
+    css = (WEB / "static/css/drishti_terminal.css").read_text(encoding="utf-8")
     li = re.search(r"\.bars li \{[^}]*\}", css).group(0)
     bl = re.search(r"\n\.bl \{[^}]*\}", css).group(0)
     assert "fit-content(40%)" in li and "max-content" in li and "minmax(3.4rem, max-content)" not in li

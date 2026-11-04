@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 #}
-{# One macro per panel kind. Each renders first paint; static/js/view.js enhances (tabs, charts, keys), static/js/charts.js draws the
+{# One macro per panel kind. Each renders first paint; static/js/drishti_view.js enhances (tabs, charts, keys), static/js/drishti_charts.js draws the
    waterfall, histogram, scatter, candlestick and graph kinds. #}
 
 {% macro cell_text(c) -%}
@@ -32,7 +32,7 @@
 {%- endmacro %}
 
 {# The rows of a tree table (Sutra children:), a row then the rows under it. A row at depth k is shown while k < expand;
-   static/js/tree-rows.js opens and closes them, filters them (keeping the ancestors of a match) and keeps the toggles in step. #}
+   static/js/drishti_tree-rows.js opens and closes them, filters them (keeping the ancestors of a match) and keeps the toggles in step. #}
 {% macro tree_rows(d, rows, depth) -%}
 {% for r in rows %}{% set kids = r.children or [] %}{% set open = (depth + 1) < d.expand %}
     <tr class="tr-node{% if r.highlight %} hl{% endif %}" data-depth="{{ depth }}"{% if kids %} data-kids{% endif %}{% if depth >= d.expand %} hidden{% endif %}{% if r.path %} data-path="{{ r.path }}"{% endif %}>
@@ -44,7 +44,7 @@
 
 {# A table whose Sutra says levels: a drill-down. Every level is a table of its own (sorted, filtered, paged and walked with the
    keyboard like any table); a row that has rows under it opens them (its first cell is a link, Enter follows it) in place of the
-   level, with the breadcrumb above and the parent row's values and the level's count and total on top. static/js/drill.js shows one
+   level, with the breadcrumb above and the parent row's values and the level's count and total on top. static/js/drishti_drill.js shows one
    level at a time, keeps the address (?dr.<panel>=1.6) so a level can be shared and Back goes up, and Esc / Backspace go up too. #}
 {% macro dr_head(heads, numeric) -%}
 <thead><tr>{% for h in (heads or []) %}<th{% if (numeric or [])[loop.index0] %} class="num"{% endif %}>{{ h }}</th>{% endfor %}</tr></thead>
@@ -204,7 +204,7 @@
 </ul>
 {%- endmacro %}
 
-{# hbar with shape: donut: each row's share of the total as a ring (static/js/charts.js), the total in the middle; the rows with their
+{# hbar with shape: donut: each row's share of the total as a ring (static/js/drishti_charts.js), the total in the middle; the rows with their
    amounts and shares stay under it as a list, so nothing is only in the picture. #}
 {% macro donut(p) -%}
 {% set d = p.data %}{% set ok = (d.bars or []) | selectattr('value', 'number') | list %}
@@ -223,7 +223,7 @@
 </ul>
 {%- endmacro %}
 
-{# ---- chart and aggregate kinds: static/js/charts.js draws data-xchart with ECharts; "Data" shows the same numbers as a
+{# ---- chart and aggregate kinds: static/js/drishti_charts.js draws data-xchart with ECharts; "Data" shows the same numbers as a
      table (keyboard and screen readers reach it, and it is what prints), so nothing is only in the picture. ---- #}
 {% macro xchart(p, label, cls='') -%}
 <div class="chart xchart{{ cls }}" data-xchart="{{ p.data | tojson | forceescape }}" data-kind="{{ p.kind }}" role="img"
@@ -285,7 +285,7 @@
 {%- endmacro %}
 
 {% macro geomap(p) -%}
-{# the shapes are vendored files drawn by static/js/geomap.js and charts.js; this holds the codes and figures (data-xchart) and, for keyboards, screen readers and print,
+{# the shapes are vendored files drawn by static/js/drishti_geomap.js and drishti_charts.js; this holds the codes and figures (data-xchart) and, for keyboards, screen readers and print,
    the same figures as a table and a list of the places a click opens #}
 {% set d = p.data %}{% set sh = d.shade or {} %}{% set fig = sh.get('items') or [] %}
 {{ xchart(p, (('regions of ' ~ d.region) if d.mode == 'region' else ('world map' ~ ((', ' ~ d.highlight ~ ' highlighted') if d.highlight else ''))) ~ (', shaded by ' ~ sh.label if fig else ''), ' xmap') }}
@@ -304,8 +304,8 @@
 {% if d.more %}<p class="pnl-note">{{ d.more }} earlier events not shown</p>{% endif %}
 {%- endmacro %}
 
-{# A pivot by several fields (Sutra by: [a, b]): the rows nest; every figure is the pivot engine's (ChartBinder). static/js/tree-rows.js
-   draws them with the pivot grid (pivot-grid.js: + and − on the groups, subtotals) from data-pv-tree, and this plain table stays for pages without it. #}
+{# A pivot by several fields (Sutra by: [a, b]): the rows nest; every figure is the pivot engine's (ChartBinder). static/js/drishti_tree-rows.js
+   draws them with the pivot grid (drishti_pivot-grid.js: + and − on the groups, subtotals) from data-pv-tree, and this plain table stays for pages without it. #}
 {% macro pivot(d) -%}
 {% if d.levels %}<div class="pv-tree-host" data-pv-tree="{{ d | tojson | forceescape }}">{{ pivot_table(d) }}</div>{% else %}{{ pivot_table(d) }}{% endif %}
 {%- endmacro %}
@@ -364,7 +364,7 @@
 {%- endmacro %}
 
 {# A panel whose source is computed (DATA_ARCHITECTURE.md 12.4): its state in words, never a blank panel. Computing: a progress bar
-   (static/js/compute.js moves it from the live channel and fetches the panel again when the result lands), the last good result dimmed
+   (static/js/drishti_compute.js moves it from the live channel and fetches the panel again when the result lands), the last good result dimmed
    under it; stale: amber; failed or refused: why, with the connector named, over the last good result if there is one. #}
 {% macro compute_state(p) -%}
 {% set c = p.compute %}{% set pr = c.progress if c.progress is mapping else {} %}{% set pct = ((pr.done / pr.of * 100) | round | int) if (pr.done is number and pr.of is number and pr.of > 0) else none %}
@@ -377,7 +377,7 @@
 {%- endmacro %}
 
 {# The phone display (MOBILE_DISPLAY.md 5.3, core/phone.py): a glance chart as a sparkline with its last value and change, and the
-   Show all of a compact panel (static/js/phone.js fetches the whole panel in its place). #}
+   Show all of a compact panel (static/js/drishti_phone.js fetches the whole panel in its place). #}
 {% macro phone_spark(p) -%}
 {% set sp = p.phone.spark %}<div class="ph-spark" role="img" aria-label="{{ p.title or p.id }}: {% for l in sp.lines %}{{ l.label }} {{ l.last }}{% if l.change %}, {{ l.change }}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}">
   <svg viewBox="0 0 {{ sp.w }} {{ sp.h }}" preserveAspectRatio="none" aria-hidden="true">{% for l in sp.lines %}<polyline class="ph-line{% if l.second %} ph-line2{% endif %}" points="{{ l.points }}"/>{% endfor %}</svg>
@@ -391,7 +391,7 @@
 {%- endmacro %}
 
 {% macro panel(p, embed=false, ref=none) -%}
-{# span (1-12 columns) and height (grid rows) come from the Sutra, or the user's own layout (core/layouts.py); static/css/layout.css sizes them #}
+{# span (1-12 columns) and height (grid rows) come from the Sutra, or the user's own layout (core/layouts.py); static/css/drishti_layout.css sizes them #}
 {% set span = p.span if (p.span is number and 1 <= p.span < 12) else none %}{% set rows = p.height if (p.height is number and 1 <= p.height <= 24) else none %}
 <section class="pnl{% if span %} c-span-{{ span }}{% endif %}{% if rows %} c-h-{{ rows }}{% endif %}{% if p.hidden %} pnl-off{% endif %}" id="p-{{ p.id }}" data-panel="{{ p.id }}" data-kind="{{ p.kind }}"{% if p.key %} data-key="{{ p.key }}"{% endif %}
   data-span="{{ span or 12 }}" data-height="{{ rows or 0 }}" tabindex="-1" aria-labelledby="h-{{ p.id }}"{% if p.phone %} data-phone="{{ p.phone.tier }}"{% if p.phone.compact %} data-phone-compact{% endif %}{% endif %}{% if p.wire %} data-wire="{{ p.wire | tojson | forceescape }}"{% endif %}{% if p.refresh and p.refresh.every %} data-refresh="{{ p.refresh.every | int }}" data-refresh-pause="{{ 0 if p.refresh.userCanPause == false else 1 }}"{% endif %}{% if p.provenance %} data-prov="{{ p.provenance | tojson | forceescape }}"{% endif %}{% if p.form and not embed %} data-form="{{ p.form | tojson | forceescape }}"{% endif %}{% if p.compute %} data-compute="{{ p.compute.state }}" data-compute-req="{{ p.compute.requestId }}" data-compute-connector="{{ p.compute.connector }}"{% if p.compute.stamp %} data-compute-stamp="{{ p.compute.stamp | tojson | forceescape }}"{% endif %}{% endif %}>
