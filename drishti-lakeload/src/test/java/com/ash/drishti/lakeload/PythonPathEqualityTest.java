@@ -71,7 +71,9 @@ class PythonPathEqualityTest {
         String said = new String(p.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
         assertThat(p.waitFor(10, TimeUnit.MINUTES)).isTrue();
         assertThat(p.exitValue()).as(String.join(" ", args) + "\n" + said).isIn(0, 2);
-        return LakeLoadTest.JSON.readTree(summary.toFile());
+        JsonNode s = LakeLoadTest.JSON.readTree(summary.toFile());
+        JsonNode tables = s.path("tables");                               // a tar: its one table's own summary
+        return tables.isObject() && tables.size() == 1 ? tables.elements().next() : s;
     }
 
     private static boolean python() {
