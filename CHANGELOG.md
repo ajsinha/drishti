@@ -32,7 +32,8 @@
   Iceberg connectors read an id two loads wrote on one date as the newest load's copy (the larger `_load_id`, then commit order) in fetches,
   lists, columns and vector reads. `drishti.py lake undo LOAD_ID`, `POST /api/v1/admin/dataload/undo` and Admin → Data loads → Inbox →
   Undo a load (a check first, then the load id typed again) remove a load's rows, one commit per table and date, and give a date a load
-  replaced back as it was.
+  replaced back as it was. A table built before the load columns gains them on its first load, with no file rewritten (Delta: a
+  metadata commit; Iceberg: the columns added). Its rows read as the oldest load, and undoing a later load leaves them as they were.
 - **The data inbox loads tar archives table by table, all or nothing,** routes a table from a file's name, may create a table when asked
   (`new-table: true`, `drishti.dataload.new-tables`), holds a file whose `.ready` says `hold: true`, pairs a short `.ready` name
   (`trades.2026-11-03.ready`), and appends by default (`drishti.dataload.default-mode`).

@@ -166,4 +166,100 @@ class AppendNewestLoadTest {
         assertThat(restored).singleElement().satisfies(u -> assertThat(u).containsEntry("replaced", true).containsEntry("restored", 2L));
         assertThat(read("iceberg", lake, new HashMap<>())).containsOnlyKeys("A", "B").containsEntry("A", 1.0);
     }
+
+    /** The table's data files (relative paths), to show an append into an old table rewrites none of them. */
+    private static java.util.Set<String> dataFiles(Path table) throws Exception {
+        try (var s = Files.walk(table)) {
+            return s.filter(f -> f.toString().endsWith(".parquet")).map(f -> table.relativize(f).toString()).collect(java.util.stream.Collectors.toSet());
+        }
+    }
+
+    /**
+     * A table made before the load columns (as the lakes already built were made: no {@code _load_id}, no {@code _source_file}), on Delta
+     * and Iceberg: the connector reads it as before; an append adds the two columns (Delta: one metadata commit; Iceberg: the columns
+     * added) and rewrites no file; its old rows read as the oldest load, so the appended copy of an id wins; undoing the append leaves the
+     * old rows as they were; a replace into it, undone, gives the old rows back.
+     */
+    @Test
+    void anOldTableWithoutLoadColumnsTakesAppendsReplacesAndUndo() throws Exception {
+        Path first = PvData.write(tmp.resolve("o1/scenario-pv." + DAY + ".jsonl"), List.of(row("A", 1), row("B", 2)));
+        PvData.write(tmp.resolve("o1/scenario-pv." + DAY.minusDays(1) + ".jsonl"), List.of(row("A", 5)));         // a date the append leaves alone
+        Path second = PvData.write(tmp.resolve("o2/scenario-pv." + DAY + ".jsonl"), List.of(row("A", 10), row("C", 3)));
+        for (String format : List.of("delta", "iceberg")) {
+            Path lake = tmp.resolve("old-" + format);
+            RowPlan.loadColumns = false;                                       // the loader before the load columns
+            try {
+                assertThat(load(first.getParent(), lake, format).path("exit").asInt()).isZero();
+            } finally {
+                RowPlan.loadColumns = true;
+            }
+            Map<String, Map<String, Object>> old;
+            TableDump.keepLoadColumns = true;
+            try {
+                old = LakeLoadTest.dump(format, lake);
+            } finally {
+                TableDump.keepLoadColumns = false;
+            }
+            assertThat(old.values()).as(format + ": made without the load columns").allSatisfy(r -> assertThat(r).doesNotContainKey("_load_id"));
+            assertThat(read(format, lake, new HashMap<>())).as(format + ": read as before").containsOnlyKeys("A", "B").containsEntry("A", 1.0);
+            Path table = lake.resolve(format.equals("delta") ? "risk/scenario-pv" : "risk");
+            java.util.Set<String> oldFiles = dataFiles(table);
+            assertThat(oldFiles).isNotEmpty();
+
+            JsonNode s2 = load(second.getParent(), lake, format);
+            assertThat(s2.path("exit").asInt()).as(format + ": " + s2.path("said").asText() + s2.path("error").asText()).isZero();
+            assertThat(s2.toString()).as(format + ": the load columns were added, not left out").doesNotContain("leftOut");
+            String id2 = s2.path("loads").fieldNames().next();
+            assertThat(dataFiles(table)).as(format + ": no file rewritten").containsAll(oldFiles);
+            if (format.equals("delta")) {
+                try (var logs = Files.list(table.resolve("_delta_log"))) {
+                    for (Path l : logs.filter(f -> f.toString().endsWith(".json")).toList()) {
+                        String text = Files.readString(l);
+                        for (String f : oldFiles) {
+                            String name = f.substring(f.lastIndexOf('/') + 1);
+                            assertThat(text.contains("\"remove\"") && text.contains(name)).as(l + " removes " + f).isFalse();
+                        }
+                    }
+                }
+            }
+            Map<String, Map<String, Object>> rows;
+            TableDump.keepLoadColumns = true;
+            try {
+                rows = LakeLoadTest.dump(format, lake);
+            } finally {
+                TableDump.keepLoadColumns = false;
+            }
+            assertThat(rows).hasSize(5);
+            assertThat(rows.values()).extracting(r -> String.valueOf(r.get("_load_id"))).containsExactlyInAnyOrder("null", "null", "null", id2, id2);
+            assertThat(read(format, lake, new HashMap<>())).as(format + ": the old rows are the oldest load")
+                    .containsOnlyKeys("A", "B", "C").containsEntry("A", 10.0).containsEntry("B", 2.0);
+
+            assertThat(dryRunDates(format, lake, id2)).as(format + ": only the date the load wrote (the old files read for their column alone)")
+                    .containsExactly(DAY.toString());
+            undo(format, lake, id2);
+            assertThat(read(format, lake, new HashMap<>())).as(format + ": undone, the old rows as they were")
+                    .containsOnlyKeys("A", "B").containsEntry("A", 1.0).containsEntry("B", 2.0);
+
+            String id3 = load(second.getParent(), lake, format, "target.mode=replace-date").path("loads").fieldNames().next();
+            assertThat(read(format, lake, new HashMap<>())).containsOnlyKeys("A", "C");
+            undo(format, lake, id3);
+            assertThat(read(format, lake, new HashMap<>())).as(format + ": the replace undone").containsOnlyKeys("A", "B").containsEntry("A", 1.0);
+        }
+    }
+
+    private List<String> dryRunDates(String format, Path lake, String id) throws Exception {
+        if (format.equals("delta")) {
+            return LakeUndo.undo(lake.toString(), id, List.of(), true).stream().map(LakeUndo.Done::date).toList();
+        }
+        return com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id, true, tmp).stream()
+                .map(u -> String.valueOf(u.get("date"))).toList();
+    }
+
+    private void undo(String format, Path lake, String id) throws Exception {
+        if (format.equals("delta")) {
+            assertThat(LakeUndo.undo(lake.toString(), id, List.of(), false)).isNotEmpty();
+        } else {
+            assertThat(com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id, false, tmp)).isNotEmpty();
+        }
+    }
 }

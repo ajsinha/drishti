@@ -179,6 +179,34 @@ class LakeBuildTest(unittest.TestCase):
         r = next(x for x in self.rows() if x["id"] == "1000")
         self.assertEqual((str(r["business_date"]), json.loads(r["doc"])["TRADE_DATE"]), ("2026-11-03", "2026-11-02"))
 
+    def test_an_old_table_without_load_columns_gains_them(self):
+        """A table built before the load columns (the lakes already built): an append adds _load_id and _source_file (schema merge), its
+        old rows null, its files kept; a replace of a date works too."""
+        import shutil
+        from deltalake import DeltaTable, write_deltalake
+        (self.src / "deal.2026-11-02.jsonl").write_bytes(lines([deal(i, None) for i in range(3)]))
+        code, s, _ = self.run_build(pack=str(self.packs / "book"), kind="deal")
+        self.assertEqual(code, 0, s.get("error"))
+        path = self.lake / "trading" / "deal"
+        t = DeltaTable(str(path)).to_pyarrow_table()
+        old = t.drop_columns(["_load_id", "_source_file"])
+        shutil.rmtree(path)
+        write_deltalake(str(path), old, partition_by=["business_date"])               # as the loader wrote it before
+        self.assertNotIn("_load_id", [f.name for f in DeltaTable(str(path)).schema().fields])
+        before = set(DeltaTable(str(path)).file_uris())
+        (self.src / "deal.2026-11-02.jsonl").write_bytes(lines([deal(i, None) for i in range(2, 5)]))
+        code, s, _ = self.run_build(pack=str(self.packs / "book"), kind="deal")
+        self.assertEqual(code, 0, s.get("error"))
+        load = next(iter(s["loads"]))
+        rows = self.rows()
+        self.assertEqual(sorted((r["id"], r["_load_id"] or "") for r in rows),
+                         sorted([("1000", ""), ("1001", ""), ("1002", ""), ("1002", load), ("1003", load), ("1004", load)]))
+        self.assertTrue(before <= set(DeltaTable(str(path)).file_uris()), "an append rewrites no old file")
+        (self.src / "deal.2026-11-02.jsonl.ready").write_text("mode: replace\n")
+        code, s, _ = self.run_build(pack=str(self.packs / "book"), kind="deal")
+        self.assertEqual(code, 0, s.get("error"))
+        self.assertEqual(sorted(r["id"] for r in self.rows()), ["1002", "1003", "1004"])
+
     def test_as_of_and_ready_marker(self):
         f = self.src / "deal.2026-11-03.jsonl"
         f.write_bytes(lines([deal(i, "2026-11-03") for i in range(4)]))

@@ -217,7 +217,13 @@ final class NativeMaintenance {
                 boolean maybe = false;
                 for (int f = 0; f < day.files().size() && !maybe; f++) {
                     String[] b = k.textBounds(l, day, f, KindTable.LOAD_ID);
-                    maybe = b[0] == null || b[1] == null || (b[0].compareTo(id) <= 0 && b[1].compareTo(id) >= 0);
+                    if (b[0] == null || b[1] == null) {                  // no bounds (a file written before the column): its column is read
+                        boolean[] hit = {false};
+                        k.scan(l, day, f, List.of(KindTable.LOAD_ID), null, r -> hit[0] |= r[0] != null && id.equals(r[0].toString()));
+                        maybe = hit[0];
+                    } else {
+                        maybe = b[0].compareTo(id) <= 0 && b[1].compareTo(id) >= 0;
+                    }
                 }
                 if (!maybe || LocalDate.MIN.equals(day.date())) {
                     continue;

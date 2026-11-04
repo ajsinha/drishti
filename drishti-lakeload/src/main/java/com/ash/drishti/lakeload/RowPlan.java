@@ -64,6 +64,12 @@ final class RowPlan {
 
     /** The load column names every row carries. */
     static final String LOAD_ID = "_load_id";
+
+    /**
+     * Whether the targets write the load columns ({@code _load_id}, {@code _source_file}). Always true in use; a test sets it false to
+     * make a table as the loader made it before them (AppendNewestLoadTest: an append into such a table adds the columns).
+     */
+    static volatile boolean loadColumns = true;
     static final String SOURCE_FILE = "_source_file";
     /** The timestamp field that decides which duplicate is kept ({@link Latest}); null: the last read. */
     final String latestBy;

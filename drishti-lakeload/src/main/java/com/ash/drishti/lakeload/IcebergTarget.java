@@ -88,8 +88,10 @@ final class IcebergTarget implements TableTarget {
             // a number column when every value seen is a number; a column never seen with a value is text (as the Iceberg loader types it)
             want.put(c.promoted().get(i), c.numeric()[i] && c.seen()[i] ? Type.Primitive.DOUBLE : Type.Primitive.STRING);
         }
-        want.put(RowPlan.LOAD_ID, Type.Primitive.STRING);               // every row: the load that wrote it, and its file
-        want.put(RowPlan.SOURCE_FILE, Type.Primitive.STRING);
+        if (RowPlan.loadColumns) {
+            want.put(RowPlan.LOAD_ID, Type.Primitive.STRING);           // every row: the load that wrote it, and its file
+            want.put(RowPlan.SOURCE_FILE, Type.Primitive.STRING);
+        }
         List<String> vectors = plan.vectors.stream().map(RowPlan.Vector::column).toList();
         table = catalog.load(name).orElse(null);
         if (table == null) {
