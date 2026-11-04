@@ -169,12 +169,18 @@
   lifespan's tasks read their own app's, and code outside a request reads the newest app's (one app per process in production: as
   before). `tests/test_engines_per_app.py` keeps it so; reproduced and passing in that order (`test_workbench_metric_browser.py` then the
   inbox file) and alone.
-- **Busy protection refuses for memory only after a real clean-up (fixes the Drill A flake of `test_var_regulatory_browser.py`).** The
-  reading "after clean-up" was the heap after the last collection of any kind; after a young collection the old generation's garbage still
-  counts, so a 768 MB server holding 462 MB of live data read 94% and refused sign-ins for 45 s (`DRS-9501`; the test's sign-in timed out
-  at 45 s, alone 3 runs of 3). A reading over a refusal level is now confirmed by a full collection (at most once every 10 s; in between
-  the last one's result) before sign-ins or heavy work wait (`Signals.heapAfterCleanupBytes`, `AdmissionGate`); a server really that full
-  is refused as before. `AdmissionGateTest` covers both; the file passes alone and after a live-console file.
+- **Busy protection reads the heap after the old generation's clean-up, and the VaR regulatory browser test gets the heap its server needs
+  (the Drill A flake of `test_var_regulatory_browser.py`; OPERATIONS.md "Busy protection").** The test's sign-in timed out at 45 s because
+  its server refused new sign-ins for 45 s (`DRS-9501`, "94% in use after clean-up"). The collector's own log of that server shows why:
+  a year of official VaR history, its backtests by desk and three report runs kept 89-97% of the test stack's 768 MB heap live after G1's
+  own full compactions, so the refusal was right; the file's stack now runs its server with 1.5 GB (`wb_live._stack(heap=...)`), and the
+  file passes alone and after a live-console file. Two things the investigation found in busy protection are fixed: the reading was taken
+  after any collection, young-only ones included (they leave the old generation's garbage counted, so a heap mostly garbage could read as
+  full); it is now taken only after a collection that cleans the old generation (a full one, a G1 mixed collection, the end of a concurrent
+  cycle that freed old regions), and a fresh server with none refuses nothing for memory. Over a refusal level the server asks for a
+  concurrent cycle only where `System.gc()` starts one (`-XX:+ExplicitGCInvokesConcurrent`), at most once every 10 s, and never forces a
+  stop-the-world full collection (`Signals.HeapAfterGc`, `AdmissionGate`). `AdmissionGateTest`: young-only readings never refuse, a heap of
+  garbage is let in, a truly full one refused.
 - **Nothing the console keeps for one person is served to another (security review F2, F3, F5 to F8, F10, F12; USER_MANAGEMENT.md
   section 6, "What the console keeps of each person").** Describe's mnemonic table was one process-wide copy of the first person's packs:
   now per server, pack set and roles on the app (and the "My page" migration per server). Drishti Trading's and Market's caches are keyed

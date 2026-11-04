@@ -1840,10 +1840,13 @@ never gated, so a busy server slows nobody who is already working.
 
 **What it reads.** Each reading has a warn level (Health turns amber) and a wait level (new work waits):
 
-- **Memory in use after clean-up**: the heap the last garbage collection left, as a share of `-Xmx` (every collector's own report, read
-  at no cost). The heap in use at any moment includes garbage, and so does the heap after a young collection (the old generation is not
-  cleaned by it), so a reading over a refusal level is confirmed before anything waits: the server collects the whole heap (at most once
-  every 10 s, and only then) and decides on what is left, what is really held.
+- **Memory in use after clean-up**: the heap left by the last collection that cleaned the old generation, as a share of `-Xmx` (every
+  collector's own report, read at no cost): a full collection, a G1 mixed collection or the end of a concurrent cycle that freed old
+  regions (the old generation's pool smaller after it than before); with a single-generation collector (ZGC, Shenandoah) every cycle.
+  A young-only collection is never read: it leaves the old generation's garbage in place, so a heap mostly garbage would read as nearly
+  full. A fresh server with no such collection yet refuses nothing for memory. When a reading is over a refusal level the server asks for
+  a concurrent cycle, without waiting and at most once every 10 s, only where `System.gc()` starts one (`-XX:+ExplicitGCInvokesConcurrent`);
+  it never forces a stop-the-world full collection (on a large heap that pauses the server for seconds, just when it is under pressure).
 - **Loads running**: per engine (VaR, exposure), the date loads running and waiting against `load-threads`; a load the server starts by
   itself (a pinned date, a date prefetched) takes a slot but never waits for one.
 - **The open dates' heap** against their safety net (the open-heap limit of [VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md)): the net

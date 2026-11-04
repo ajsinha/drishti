@@ -19,8 +19,11 @@ import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -29,26 +32,29 @@ import javax.management.NotificationEmitter;
 import javax.management.openmbean.CompositeData;
 
 /**
- * What busy protection reads (docs/admin/OPERATIONS.md, "Busy protection"): the heap after the last collection, the requests being
+ * What busy protection reads (docs/admin/OPERATIONS.md, "Busy protection"): the heap after the last clean-up, the requests being
  * answered, the free disk. The loads running and the open dates' heap are told to the gate by the engines themselves.
  */
 public interface Signals {
 
-    /** The heap in use after the last collection, in bytes (before the first collection: the heap in use now). */
+    /**
+     * The heap in use after the last collection that cleaned the old generation (a full collection, a mixed collection, or the end of a
+     * concurrent cycle that freed old regions), in bytes; -1 while there has been none (a fresh server: nothing is refused for memory).
+     * A young-only collection leaves the old generation's garbage in place, so its reading is never used: a heap mostly garbage would read
+     * as nearly full.
+     */
     long heapAfterGcBytes();
 
     /**
-     * The heap in use after a real clean-up, read before a refusal for memory (OPERATIONS.md, "Busy protection": the levels are "after
-     * clean-up"). The reading after the last collection of any kind counts what a young collection leaves in the old generation, garbage
-     * included, so a heap mostly garbage reads as nearly full; this collects the whole heap first (the live JVM's at most once every
-     * {@link #CLEANUP_EVERY_MS}, the last clean-up's result in between) and reads what is left. By default (a test's readings) the last
-     * reading.
+     * Asks the JVM, without waiting, for a clean-up of the old generation that never stops the world: a concurrent cycle, only when
+     * {@code System.gc()} starts one ({@code -XX:+ExplicitGCInvokesConcurrent}), at most once every {@link #CLEANUP_EVERY_MS}; else
+     * nothing. True when one was asked. A full collection is never forced (on a large heap it pauses the server for seconds).
      */
-    default long heapAfterCleanupBytes() {
-        return heapAfterGcBytes();
+    default boolean requestCleanup() {
+        return false;
     }
 
-    /** At most one forced clean-up this often (only while a reading is over a refusal level); a decision in between reads its result. */
+    /** At most one concurrent cycle asked for this often (only while a reading is over a refusal level). */
     long CLEANUP_EVERY_MS = 10_000L;
 
     /** {@code -Xmx}. */
@@ -76,8 +82,8 @@ public interface Signals {
                 return heap.bytes();
             }
 
-            public long heapAfterCleanupBytes() {
-                return heap.cleanedUp();
+            public boolean requestCleanup() {
+                return heap.requestConcurrentCycle();
             }
 
             public long heapMaxBytes() {
@@ -99,67 +105,76 @@ public interface Signals {
     }
 
     /**
-     * The heap after the last collection: each collector's notification carries every pool's use after it; the heap pools' sum is kept.
-     * Reading it costs nothing (a field), so every admission may read it.
+     * The heap after the last clean-up of the old generation: each collector's notification carries every pool's use before and after it;
+     * a collection counts when it is a full one ({@code end of major GC}) or the old generation's pool is smaller after it than before (a
+     * G1 mixed collection, a concurrent cycle's clean-up). A collector with no old-generation pool (single-generation ZGC, Shenandoah)
+     * collects the whole heap every cycle: each cycle counts.
      */
     final class HeapAfterGc {
 
         private final AtomicLong after = new AtomicLong(-1);
         private final Set<String> heapPools = new HashSet<>();
+        private final Set<String> oldPools = new HashSet<>();
+        private final AtomicLong lastRequest = new AtomicLong(Long.MIN_VALUE / 2);
+        private final boolean concurrentExplicit;
 
-        long bytes() {
-            long a = after.get();
-            if (a >= 0) {
-                return a;
-            }
-            Runtime r = Runtime.getRuntime();
-            return r.totalMemory() - r.freeMemory();
-        }
-
-        private long cleanedAt = Long.MIN_VALUE / 2;
-        private long cleaned = -1;
-
-        /**
-         * What a full collection leaves (what is live): one now, or the last one's when it is under {@link Signals#CLEANUP_EVERY_MS} old
-         * (never the readings after young collections in between: those count the old generation's garbage again). A JVM that ignores
-         * {@code System.gc()} gives the last reading.
-         */
-        synchronized long cleanedUp() {
-            long now = System.currentTimeMillis();
-            if (cleaned >= 0 && now - cleanedAt < CLEANUP_EVERY_MS) {
-                return cleaned;
-            }
-            long before = collections();
-            System.gc();                                                 // G1: a full collection (unless the JVM is told to ignore it)
-            if (collections() <= before) {
-                return bytes();
-            }
-            long used = 0;
-            for (MemoryPoolMXBean p : ManagementFactory.getMemoryPoolMXBeans()) {
-                if (p.getType() == MemoryType.HEAP) {
-                    used += p.getUsage().getUsed();
-                }
-            }
-            cleaned = used;
-            cleanedAt = now;
-            after.set(used);
-            return used;
-        }
-
-        private static long collections() {
-            long n = 0;
-            for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
-                n += Math.max(0, gc.getCollectionCount());
-            }
-            return n;
-        }
-
-        void listen() {
+        /** The JVM's own pools (call {@link #listen()} to follow its collections). */
+        HeapAfterGc() {
             for (MemoryPoolMXBean p : ManagementFactory.getMemoryPoolMXBeans()) {
                 if (p.getType() == MemoryType.HEAP) {
                     heapPools.add(p.getName());
+                    if (isOld(p.getName())) {
+                        oldPools.add(p.getName());
+                    }
                 }
             }
+            this.concurrentExplicit = explicitGcIsConcurrent();
+        }
+
+        /** Given pools (a test's): no listener, no cycle ever asked. */
+        HeapAfterGc(Set<String> heap, Set<String> old) {
+            heapPools.addAll(heap);
+            oldPools.addAll(old);
+            this.concurrentExplicit = false;
+        }
+
+        static boolean isOld(String pool) {
+            return pool.contains("Old") || pool.contains("Tenured");
+        }
+
+        long bytes() {
+            return after.get();
+        }
+
+        /** One collection's report: kept when it cleaned the old generation (see the class). */
+        void onCollection(String gcAction, Map<String, Long> before, Map<String, Long> afterUse) {
+            if (!cleansOld(gcAction, before, afterUse)) {
+                return;                                                  // young only: the old generation's garbage is still counted
+            }
+            long sum = 0;
+            for (Map.Entry<String, Long> e : afterUse.entrySet()) {
+                if (heapPools.contains(e.getKey())) {
+                    sum += e.getValue();
+                }
+            }
+            after.set(sum);
+        }
+
+        private boolean cleansOld(String gcAction, Map<String, Long> before, Map<String, Long> afterUse) {
+            if ("end of major GC".equals(gcAction) || oldPools.isEmpty()) {
+                return true;
+            }
+            for (String p : oldPools) {
+                Long b = before.get(p);
+                Long a = afterUse.get(p);
+                if (b != null && a != null && a < b) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        void listen() {
             for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
                 if (gc instanceof NotificationEmitter em) {
                     em.addNotificationListener((n, h) -> {
@@ -167,15 +182,40 @@ public interface Signals {
                             return;
                         }
                         com.sun.management.GarbageCollectionNotificationInfo info = com.sun.management.GarbageCollectionNotificationInfo.from(cd);
-                        long sum = 0;
-                        for (var e : info.getGcInfo().getMemoryUsageAfterGc().entrySet()) {
-                            if (heapPools.contains(e.getKey())) {
-                                sum += e.getValue().getUsed();
-                            }
-                        }
-                        after.set(sum);
+                        onCollection(info.getGcAction(), used(info.getGcInfo().getMemoryUsageBeforeGc()), used(info.getGcInfo().getMemoryUsageAfterGc()));
                     }, null, null);
                 }
+            }
+        }
+
+        private static Map<String, Long> used(Map<String, MemoryUsage> m) {
+            Map<String, Long> out = new HashMap<>();
+            m.forEach((k, v) -> out.put(k, v.getUsed()));
+            return out;
+        }
+
+        /** A concurrent cycle asked for in the background (see {@link Signals#requestCleanup()}). */
+        boolean requestConcurrentCycle() {
+            if (!concurrentExplicit) {
+                return false;
+            }
+            long now = System.currentTimeMillis();
+            long last = lastRequest.get();
+            if (now - last < CLEANUP_EVERY_MS || !lastRequest.compareAndSet(last, now)) {
+                return false;
+            }
+            Thread.ofVirtual().name("drishti-gc-request").start(System::gc);   // with ExplicitGCInvokesConcurrent: starts a concurrent cycle
+            return true;
+        }
+
+        /** True when {@code System.gc()} starts a concurrent cycle rather than a stop-the-world full collection. */
+        static boolean explicitGcIsConcurrent() {
+            try {
+                com.sun.management.HotSpotDiagnosticMXBean hs = ManagementFactory.getPlatformMXBean(com.sun.management.HotSpotDiagnosticMXBean.class);
+                return hs != null && "true".equals(hs.getVMOption("ExplicitGCInvokesConcurrent").getValue())
+                        && !"true".equals(hs.getVMOption("DisableExplicitGC").getValue());
+            } catch (RuntimeException e) {
+                return false;                                            // another JVM: never ask
             }
         }
     }
