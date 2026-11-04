@@ -115,6 +115,9 @@ final class ExposureLakeFixture {
                 "Alpha Fund"), Map.of("COUNTERPARTY_ID", "CP-2", "BUSINESS_DATE", day.toString(), "NAME", "Beta Bank")), List.of(), null);
         table(root, work, "counterparty-group", "GROUP_ID", List.of(Map.of("GROUP_ID", "GRP-1", "BUSINESS_DATE", day.toString(), "MEMBERS",
                 List.of(Map.of("ID", "CP-1")))), List.of(), null);
+        // CP-1's stored credit limit, 2.2m on the peak PFE (read only by a test that routes credit-limit: the CCR cube's)
+        table(root, work, "credit-limit", "LIMIT_ID", List.of(Map.of("LIMIT_ID", "LIM-CP-1", "BUSINESS_DATE", day.toString(), "COUNTERPARTY", "CP-1",
+                "LIMIT", 2.2 * M, "MEASURE", "PFE")), List.of(), null);
         return root;
     }
 

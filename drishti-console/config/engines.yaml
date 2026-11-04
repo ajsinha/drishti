@@ -252,27 +252,27 @@ engines:
     ai-tools: []
   - id: ccr-cube
     title: CCR cube
-    about: "The counterparty cube: limit board, allocation, group roll-up, pre-deal overlay"
+    about: "The counterparty cube on the pivot engine: limit board by tenor bucket, peak PFE of each cell's own summed paths, a netting set, pre-deal, EAD and FVA"
     file: ccr-cube.yaml
     switch: drishti.engines.ccr-cube.enabled
     env: DRISHTI_CCR_CUBE_ENABLED
     aliases: []
-    shipped: false
-    installed: false
+    shipped: true
+    installed: true
     live-on: true
     prefixes: [drishti.cube.ccr]
-    needs: [exposure]
+    needs: [exposure, pivot]
     uses: [sa-ccr, fva]
-    api: [/api/v1/cube/ccr]
-    console: [/ccube, /api/ccube/]
+    api: [/api/v1/pivot/ccr]
+    console: [/ccube, /api/pivot/ccr/]
     words: [CCUBE]
     menus: [ccube]
-    help: []
+    help: [docs-tutorials-42-the-ccr-cube-on-the-pivot-engine]
     landings: [ccr-cube]
     tiles: []
     lenses: [ccr-cube]
     bi: []
-    cli: [cube ccr]
+    cli: [pivot ccr]
     playgrounds: []
     connectors: []
     kinds: []

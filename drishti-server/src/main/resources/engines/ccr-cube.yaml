@@ -12,11 +12,18 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/ccr-cube.yaml: the counterparty cube (not installed in this release). Read at start, imported by application.yaml after the jar's copy of this
-# file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
-# (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
+# config/engines/ccr-cube.yaml: the counterparty cube (docs/guides/EXPOSURE_GUIDE.md section 30): the pivot engine's source ccr over the
+# exposure engine, with the CCR lens. Read at start, imported by application.yaml after the jar's copy of this file, so a key here wins over the
+# shipped one and application.local.yaml and the environment win over both (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines
+# writes the switch and changed: only; every other key is edited here.
 drishti:
   engines:
     ccr-cube:
-      enabled: ${DRISHTI_CCR_CUBE_ENABLED:false}   # run the counterparty cube on this node once it is installed (its settings will live under drishti.cube.ccr.*)
+      enabled: ${DRISHTI_CCR_CUBE_ENABLED:true}   # run the CCR cube on this node: CCUBE, /api/v1/pivot/ccr, the pivot engine's source ccr; needs exposure and pivot, uses sa-ccr (EAD) and fva (FVA)
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  cube:
+    ccr:                             # the CCR cube's settings (EXPOSURE_GUIDE.md section 30.6); the cell budget and cache are the pivot engine's (drishti.pivot.*)
+      buckets: {}                    # the limit board's tenor buckets, each label: from-to in years, (from, to] ({ 0-1Y: "0-1", 1-5Y: "1-5", 5Y+: "5-" }); empty: those three
+      warning-at: 0.8                # the limit use from which a bucket is near its limit (amber); over 1 is a breach (red)
+      max-cells: 2000                # the most cells one view of the cube computes (each on its own netting sets' summed paths)
+      headline-names: 5              # the most counterparties the headline names in its over-limit and near-limit tiles

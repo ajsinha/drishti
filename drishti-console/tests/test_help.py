@@ -221,7 +221,8 @@ def test_the_help_centre_has_eight_sections_and_internal_and_about_sixty_pages()
     # 63: plus the eighth Knowledge page, Companies, funds and ETFs (2.9.3).
     # 64: plus Using Drishti with Databricks Delta Lake or Apache Iceberg (docs/guides/DATA_GUIDE.md, 2.9.5), the product owner's
     # request of 2026-10-28: one page, under Data beside the connector guides.
-    assert 30 <= total <= 70, total
+    # 72: plus SA-CCR's and FVA's two each and the Exposure Playground's tutorial (2.9.12; 74 with the CCR cube's two).
+    assert 30 <= total <= 80, total
 
 
 def test_every_old_help_address_still_opens_something(client):

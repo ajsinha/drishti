@@ -182,7 +182,7 @@ def test_the_search_box_shows_past_search_over_engines(backend, monkeypatch, tmp
     monkeypatch.setattr(menus, "_console_dir", lambda request: tmp_path)
     app = _app(backend, monkeypatch)
     page = _client(app).get("/t").text
-    assert "data-engines-q" in page and 'placeholder="Search' in page and "pages of 5 engines" in page
+    assert "data-engines-q" in page and 'placeholder="Search' in page and "pages of 6 engines" in page
 
 
 def test_the_risk_edition_draws_engines_in_place_of_var_and_exposure(backend, monkeypatch):

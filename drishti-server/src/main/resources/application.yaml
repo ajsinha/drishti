@@ -351,6 +351,7 @@ drishti:
       - /api/v1/pivot/mr/detail          # what-if side by side, each computed by the VaR engine as the caller, written nowhere
       - /api/v1/pivot/mr/history
       - /api/v1/pivot/mr/what-if
+      - /api/v1/pivot/ccr/headline       # the CCR cube's lens (EXPOSURE_GUIDE.md section 30): a view's headline, computed by the exposure engine as the caller
       - /api/v1/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
       - /api/v1/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
       - /api/v1/command

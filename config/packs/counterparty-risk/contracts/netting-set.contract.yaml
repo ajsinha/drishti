@@ -121,6 +121,13 @@ fields:
   example: CVA-ALDERSHOT-FRA
   pattern: ^CVA-
   link: cva
+- name: SACCR
+  type: id
+  presence: optional
+  description: 'The id the set''s stored SA-CCR calculation had (SACCR-…). The stored kind is retired: SA-CCR is computed when asked
+    (saccr-result), and SACCR with this id opens the set''s computed SA-CCR (SACCR NSET:<id>).'
+  example: SACCR-ALDERSHOT-FRA
+  pattern: ^SACCR-
 - name: SIMM
   type: id
   presence: required

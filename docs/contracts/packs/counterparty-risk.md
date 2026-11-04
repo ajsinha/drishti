@@ -23,7 +23,7 @@ One section per command of the pack: the shape of its data, how it is stored and
 |---|---|---|---|---|---|
 | [AGR](#agr-master-agreement-agreement) | `agreement` | fundamental | active | 9 | 4 |
 | [CSA](#csa-credit-support-annex-csa) | `csa` | fundamental | active | 18 | 5 |
-| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 18 | 9 |
+| [NSET](#nset-netting-set-netting-set) | `netting-set` | fundamental | active | 19 | 9 |
 | [LIM](#lim-credit-limit-credit-limit) | `credit-limit` | fundamental | active | 11 | 5 |
 | [CVA](#cva-cva--xva-cva) | `cva` | fundamental | active | 10 | 6 |
 | [COLL](#coll-collateral-balance-collateral-balance) | `collateral-balance` | fundamental | active | 8 | 5 |
@@ -218,6 +218,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `CSA` | id | required |  | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9); absent for an unmargined set. | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` |
 | `CREDIT_LIMIT` | id | required |  | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` |
 | `CVA_RESULT` | id | required |  | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` |
+| `SACCR` | id | optional |  | The id the set's stored SA-CCR calculation had (SACCR-…). The stored kind is retired: SA-CCR is computed when asked (saccr-result), and SACCR with this id opens the set's computed SA-CCR (SACCR NSET:<id>). | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) |  |
 | `SIMM` | id | required |  | The counterparty's SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…). | `SIMM-ALDERSHOT` (pattern `^SIMM-`) | `simm` |
 | `COLLATERAL_BALANCE` | id | required |  | The set's collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…). | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) | `collateral-balance` |
 | `LEGAL_ENTITY` | id | required |  | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | `LE-FRA` (pattern `^LE-`) | `legal-entity` |
