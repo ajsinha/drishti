@@ -118,6 +118,10 @@ def test_an_arrow_answer_is_the_json_answer(stack, browser, path, shape, at):  #
     a, j = got["a"], got["j"]
     a.pop("computeMs", None)
     j.pop("computeMs", None)
+    if shape == "records":                     # a contribution row's parametric ? lines travel only in JSON (VarController: the columns as columns)
+        for r in j.get(at) or []:
+            if isinstance(r, dict):
+                r.pop("describe", None)
     assert json.dumps(a, sort_keys=True) == json.dumps(j, sort_keys=True)
     pg.context.close()
 
