@@ -46,7 +46,7 @@ final class ListFunctions {
         t.fn("last", 1, 1, (a, c) -> a.get(0) instanceof DataNode n ? n.get(-1) : null);
         t.fn("flatten", 1, 1, (a, c) -> flatten(a.get(0)));
         t.form("group", 2, 4, GroupForm::group);
-        t.form("sort", 1, 3, ListFunctions::sort);
+        t.form("sort", 1, 17, ListFunctions::sort);
         t.fn("unique", 1, 1, (a, c) -> unique(a.get(0)));
         t.fn("take", 2, 2, (a, c) -> slice("take", a, true));
         t.fn("drop", 2, 2, (a, c) -> slice("drop", a, false));
@@ -95,42 +95,60 @@ final class ListFunctions {
     /**
      * {@code sort(list, [key], [desc])}: the elements ordered by {@code key} (an expression over {@code @}, the element itself
      * by default), ascending unless {@code desc} is true; numbers as numbers, text as text (ISO dates order), numbers before
-     * text, empty keys last either way; equal keys keep their order. Masked when a key is masked.
+     * text, empty keys last either way; equal keys keep their order. Several keys, each with its own direction, order as
+     * MATLAB's {@code sortrows} and SQL's {@code ORDER BY}: {@code sort(list, key1, desc1, key2, desc2, ...)}, the later keys
+     * ordering what the earlier leave equal. Masked when a key is masked.
      */
     private static Object sort(List<Expr> args, EvalContext c) {
         Object v = listOf("sort", args.get(0), c);
         if (!(v instanceof DataNode.Arr list)) {
             return v;
         }
-        boolean desc = false;
-        if (args.size() > 2) {
-            Object d = args.get(2).eval(c);
-            if (Values.masked(d)) {
-                return Values.mask();
+        int keys = Math.max(1, args.size() / 2);                           // (list), (list, k), (list, k, d), (list, k, d, k2) …
+        boolean[] desc = new boolean[keys];
+        for (int j = 0; j < keys; j++) {
+            int at = 2 + 2 * j;
+            if (args.size() > at) {
+                Object d = args.get(at).eval(c);
+                if (Values.masked(d)) {
+                    return Values.mask();
+                }
+                desc[j] = Values.truthy(d);
             }
-            desc = Values.truthy(d);
         }
         List<Object[]> keyed = new ArrayList<>(list.size());
         for (int i = 0; i < list.size(); i++) {
             DataNode e = list.get(i);
-            Object k = args.size() > 1 ? args.get(1).eval(c.withRow(e, i)) : e;
-            if (Values.masked(k)) {
-                return Values.mask();                                     // an order by a hidden value would tell it
+            Object[] row = new Object[keys + 1];
+            for (int j = 0; j < keys; j++) {
+                Object k = args.size() > 1 + 2 * j ? args.get(1 + 2 * j).eval(c.withRow(e, i)) : e;
+                if (Values.masked(k)) {
+                    return Values.mask();                                 // an order by a hidden value would tell it
+                }
+                row[j] = Values.simplify(k);
             }
-            keyed.add(new Object[] {Values.simplify(k), e});
+            row[keys] = e;
+            keyed.add(row);
         }
-        boolean descending = desc;
         keyed.sort((x, y) -> {
-            boolean xe = Args.empty(x[0]);
-            boolean ye = Args.empty(y[0]);
-            if (xe || ye) {
-                return Boolean.compare(xe, ye);                           // empty keys last, ascending or not
+            for (int j = 0; j < keys; j++) {
+                boolean xe = Args.empty(x[j]);
+                boolean ye = Args.empty(y[j]);
+                if (xe || ye) {
+                    if (xe != ye) {
+                        return Boolean.compare(xe, ye);                   // empty keys last, ascending or not
+                    }
+                    continue;
+                }
+                int order = compare(x[j], y[j]);
+                if (order != 0) {
+                    return desc[j] ? -order : order;
+                }
             }
-            int order = compare(x[0], y[0]);
-            return descending ? -order : order;
+            return 0;
         });
         List<DataNode> out = new ArrayList<>(keyed.size());
-        keyed.forEach(k -> out.add((DataNode) k[1]));
+        keyed.forEach(k -> out.add((DataNode) k[keys]));
         return new DataNode.Arr(List.copyOf(out));
     }
 

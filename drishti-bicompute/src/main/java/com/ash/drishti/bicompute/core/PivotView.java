@@ -121,9 +121,28 @@ public record PivotView(String source, String date, String asOf, List<Dim> rows,
      * @param measure the function's text ({@code sum(NOTIONAL_USD)})
      * @param as its column header (null: the text)
      * @param showAs a show-as transform of the finished figure: {@code pct-grand}, {@code pct-row}, {@code pct-column},
-     *     {@code pct-parent-row}, {@code rank} (null: the figure)
+     *     {@code pct-parent-row}, {@code rank}, {@code ntile:<n>}, {@code diff:<n>:<dimension>}, {@code pct-change:<n>:<dimension>}
+     *     (null: the figure). A measure written as a share, rank or window around an aggregate ({@code pct_of_total(sum(NOTIONAL))},
+     *     {@link com.ash.drishti.bicompute.functions.Windows}) is read here into the aggregate and its show-as, its header the text as
+     *     written.
      */
     public record Value(String measure, String as, String showAs) {
+        public Value {
+            showAs = showAs == null || showAs.isBlank() ? null : showAs.strip();
+            com.ash.drishti.bicompute.functions.Windows.Wrapped w = com.ash.drishti.bicompute.functions.Windows.unwrap(measure);
+            if (w != null) {
+                if (showAs != null) {
+                    throw bad(measure.strip() + " is already a share, rank or window: leave its show-as out");
+                }
+                as = as == null || as.isBlank() ? measure.strip() : as;
+                measure = w.inner();
+                showAs = w.showAs();
+            }
+            if (showAs != null) {
+                com.ash.drishti.bicompute.functions.Windows.check(showAs);
+            }
+        }
+
         public String label() {
             return as == null || as.isBlank() ? measure : as;
         }

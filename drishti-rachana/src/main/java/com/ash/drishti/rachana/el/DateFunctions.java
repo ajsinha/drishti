@@ -146,22 +146,26 @@ final class DateFunctions {
         if (x == null || y == null || basis == null) {
             return null;
         }
+        return Args.out(yearFraction("yearfrac", x, y, basis).round(MathContext.DECIMAL64));
+    }
+
+    /** The year fraction from x to y (either order, never negative) on a basis of {@link #BASES}, in decimal (34 digits). */
+    static BigDecimal yearFraction(String fn, LocalDate x, LocalDate y, String basis) {
         if (!BASES.contains(basis)) {
-            throw Args.error("yearfrac", basisProblem(basis));
+            throw Args.error(fn, basisProblem(basis));
         }
         if (x.isAfter(y)) {
             LocalDate t = x;
             x = y;
             y = t;
         }
-        BigDecimal f = switch (basis) {
+        return switch (basis) {
             case "ACT/360" -> ratio(ChronoUnit.DAYS.between(x, y), 360);
             case "ACT/365F" -> ratio(ChronoUnit.DAYS.between(x, y), 365);
             case "30/360" -> ratio(days360Us(x, y), 360);
             case "30E/360" -> ratio(days360European(x, y), 360);
             default -> actActIsda(x, y);
         };
-        return Args.out(f.round(MathContext.DECIMAL64));
     }
 
     private static BigDecimal ratio(long days, int year) {

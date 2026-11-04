@@ -44,7 +44,9 @@ public final class FunctionCataloguePage {
         FAMILIES.put("logic", "Logic (scalars)");
         FAMILIES.put("text", "Text (scalars)");
         FAMILIES.put("dates", "Dates, on the bank's calendars (scalars)");
-        FAMILIES.put("lists", "Lists (Excel's dynamic arrays, over [*])");
+        FAMILIES.put("lists", "Lists (Excel's dynamic arrays and MATLAB's list functions, over [*])");
+        FAMILIES.put("statistics", "Distributions and test statistics (scalars)");
+        FAMILIES.put("finance", "Finance on given flows (scalars)");
     }
 
     private FunctionCataloguePage() {}
@@ -84,6 +86,17 @@ public final class FunctionCataloguePage {
             }
             b.append('\n');
         }
+        b.append("## Shares, ranks and windows: the pivot engine's, over an answer's cells\n\n");
+        b.append("A pivot value written around an aggregate: the aggregate is computed as any other, then shown from the finished figures ")
+                .append("of the answer's cells (a total is never broken; no rows are read again). Pivot values only: a list in Rachana has ")
+                .append("no rows and columns.\n\n");
+        b.append("| Function | Arguments | Means | Example | Excel | SAS | Runs | Source |\n|---|---|---|---|---|---|---|---|\n");
+        for (com.ash.drishti.bicompute.functions.Windows.Info w : com.ash.drishti.bicompute.functions.Windows.FUNCTIONS) {
+            b.append("| `").append(w.name()).append("` | ").append(cell(w.args())).append(" | ").append(cell(w.description())).append(" | `")
+                    .append(cell(w.example())).append("` | ").append(cell(w.excel())).append(" | ").append(cell(w.sas())).append(" | E | ")
+                    .append(EngineFunctions.SOURCE).append(" |\n");
+        }
+        b.append('\n');
         b.append("## Old spellings (read for existing Sutras, never offered)\n\n| Old | Write instead |\n|---|---|\n");
         Functions.oldSpellings().forEach((old, one) -> b.append("| `").append(old).append("` | `").append(one).append("` |\n"));
         return b.toString();

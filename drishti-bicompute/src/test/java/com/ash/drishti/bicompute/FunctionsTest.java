@@ -73,14 +73,22 @@ class FunctionsTest {
             }
             List<String> fields = switch (n) {
                 case "count" -> List.of("x");
-                case "wavg" -> List.of("x", "w");
+                case "wavg", "corr", "covar", "slope", "intercept", "rsq", "covar_pop", "steyx", "sumproduct" -> List.of("x", "w");
                 case "sum_once", "count_once", "avg_once" -> List.of("x", "p");
                 default -> List.of("x");
             };
-            AggFunction<Object> f = Functions.builtIn(n, fields, "percentile".equals(n) ? List.of(0.99) : List.of()).orElseThrow();
+            List<Double> numbers = switch (n) {
+                case "percentile" -> List.of(0.99);
+                case "trimmean" -> List.of(0.1);
+                case "kth_largest", "kth_smallest" -> List.of(5.0);
+                case "percentile_exc" -> List.of(0.25);
+                case "rank_avg", "percent_rank_of" -> List.of(0.0);
+                default -> List.of();
+            };
+            AggFunction<Object> f = Functions.builtIn(n, fields, numbers).orElseThrow();
             Batch in = n.endsWith("_once") ? once(b)
-                    : n.equals("count_distinct") ? new Batch(b.rows(), new Object[] {b.columns()[2]})
-                    : n.equals("wavg") ? new Batch(b.rows(), new Object[] {b.columns()[0], b.columns()[1]}) : new Batch(b.rows(), new Object[] {b.columns()[0]});
+                    : List.of("count_distinct", "mode", "string_agg", "mode_multi").contains(n) ? new Batch(b.rows(), new Object[] {b.columns()[2]})
+                    : fields.size() == 2 ? new Batch(b.rows(), new Object[] {b.columns()[0], b.columns()[1]}) : new Batch(b.rows(), new Object[] {b.columns()[0]});
             FunctionHarness.Report rep = FunctionHarness.run(f, in, 5, 1e-12);
             assertThat(rep.passed()).as(n + ": worst " + rep.worst()).isTrue();
             assertThat(rep.runs()).hasSizeGreaterThan(30);

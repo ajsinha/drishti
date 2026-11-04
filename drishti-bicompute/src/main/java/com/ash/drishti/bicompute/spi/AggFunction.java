@@ -58,6 +58,22 @@ public interface AggFunction<S> {
     /** The figure; null when the cell has nothing to say (no values), with the reason given by {@link #emptyNote}. */
     Double finish(S state);
 
+    /**
+     * The figure as the cell shows it: {@link #finish}'s number, or text for a function whose answer is text ({@code string_agg}, the
+     * {@code mode} of names). Null as {@link #finish} is null. Everything that does arithmetic on a figure reads {@link #finish}.
+     */
+    default Object result(S state) {
+        return finish(state);
+    }
+
+    /**
+     * The unit of the figure when it is not the input's: {@code count} for a count, the empty text for a pure number (a correlation, a
+     * skewness, a ratio), null (the default) for the input's own unit or currency.
+     */
+    default String resultUnit() {
+        return null;
+    }
+
     /** Why {@link #finish} is null for a state (shown in the cell, never a blank without a reason). */
     default String emptyNote() {
         return "no values in the cell";
