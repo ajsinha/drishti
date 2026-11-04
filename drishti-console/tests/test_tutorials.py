@@ -46,7 +46,7 @@ def anchors(path: Path) -> set:
 
 
 def test_there_are_thirty_three_written_tutorials_and_the_index_names_every_one():
-    numbers = list(range(1, 34)) + [36]      # 34 and 35 are on wip/lake-config and wip/flight (2.9.11.c): 1 to 36 once merged
+    numbers = list(range(1, 34)) + [36, 37, 38]   # 34 and 35 are on wip/lake-config and wip/flight (2.9.11.c): 1 to 38 once merged
     assert [p.name[:2] for p in WRITTEN] == [f"{i:02d}" for i in numbers]
     index = (TUTORIALS / "README.md").read_text()
     rows = re.findall(r"^\|\s*(\d{1,2})\s*\|", index, re.M)

@@ -21,6 +21,9 @@ class), check its totals against `VAR BANK` and see the diversification, read a 
 what-if side by side, and save, share and export a view. Each step shows the UI, the command line and the view's JSON. The guide is
 [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md); the pivot screen itself is [tutorial 33](33-the-pivot-engine.md).
 
+> Screenshots marked *(filled in the heavy run)* are taken when the steps are run against a built server (`tools/docs/screenshots.py`);
+> until then the marker stands where the picture goes.
+
 ## Time to complete
 
 About 25 minutes.
@@ -60,7 +63,9 @@ drishti.py pivot mr headline --source var
  "values": [{"measure": "var()", "as": "VaR"}], "options": {"scope": "BANK"}, "expandTo": {"rows": 1, "columns": 1}}
 ```
 
-Check: the grand total equals `VAR BANK` to the cent, and the headline's VaR is the same number.
+*(screenshot filled in the heavy run: the MR cube's landing: desks by risk class, the headline strip and the lens controls)*
+
+**You should see** desks by risk class with a grand total; the grand total equals `VAR BANK` to the cent, and the headline's VaR is the same number.
 
 ## Step 2 · Totals are never sums: the diversification
 
@@ -75,7 +80,9 @@ drishti.py pivot run --source var --rows MGMT.DESK --values "var()" --json | jq 
 
 **JSON.** The answer's grand row: `{"kind": "grand", "diversification": {"VaR": <Σ desks − bank>}}`.
 
-Check: pick one desk's cell and run `VAR <its scope>` (the scope is in the cell's provenance, step 3): the same VaR to the cent.
+*(screenshot filled in the heavy run: the headline's Σ desks − total tile beside the grand total)*
+
+**You should see** a grand total below the desks' sum and the difference in the Σ desks − total tile; pick one desk's cell and run `VAR <its scope>` (the scope is in the cell's provenance, step 3): the same VaR to the cent.
 
 ## Step 3 · A cell's tail, provenance and why it moved
 
@@ -98,7 +105,9 @@ drishti.py pivot mr explain --scope "(NODE:MGMT~DESK-RATES) & (WHERE:PRODUCT_GRO
  "coords": {"MGMT.DESK": "DESK-RATES", "RISK_CLASS": "IR"}}
 ```
 
-Check: the detail's `var` equals the cell's VaR, and its `k` says which worst loss it is (the 6th of 509 at 99%).
+*(screenshot filled in the heavy run: the RATES × IR cell's provenance, its histogram and Explain the move)*
+
+**You should see** the cell's scope, its scenario P&L histogram with V and E marked and its steps; the detail's `var` equals the cell's VaR, and its `k` says which worst loss it is (the 6th of 509 at 99%).
 
 ## Step 4 · The lens: 10 days, 97.5%, stressed, another currency
 
@@ -114,7 +123,9 @@ drishti.py pivot run --source var --rows MGMT.BOOK --values "var()" --option sco
 
 **JSON.** The options of the view: `"options": {"scope": "DESK:RATES", "horizon": "10d", "confidence": "0.975", "ccy": "EUR"}`.
 
-Check: `VAR DESK:RATES H 10D` on the VaR explorer gives the total of the 10-day view.
+*(screenshot filled in the heavy run: the lens at 10 days and 97.5%, the scope DESK:RATES)*
+
+**You should see** every cell computed again for the lens; `VAR DESK:RATES H 10D` on the VaR explorer gives the total of the 10-day view.
 
 ## Step 5 · Re-pivot and open a desk down to its trades
 
@@ -131,7 +142,9 @@ drishti.py pivot export --source var --rows MGMT.DESK --values "var()" --what ro
 
 **JSON.** The node opened: `"expanded": [{"axis": "rows", "path": [["MGMT.DESK", "DESK-RATES"]], "by": "MGMT.BOOK"}]`.
 
-Check: each book's VaR is its own (`VAR BOOK:<book>`), and the desk's subtotal is not their sum.
+*(screenshot filled in the heavy run: RATES opened to its books with CURRENCY across)*
+
+**You should see** RATES's books and nothing else computed; each book's VaR is its own (`VAR BOOK:<book>`), and the desk's subtotal is not their sum.
 
 ## Step 6 · Components, the waterfall, the ladder and a what-if
 
@@ -150,7 +163,9 @@ drishti.py pivot mr whatif --source var --rows MGMT.DESK --copy <a trade id> --f
 
 **JSON** (`POST /api/v1/pivot/mr/what-if`): `{"view": {...}, "items": [{"copyOf": "<a trade id>", "factor": -1}]}`.
 
-Check: the components' sum equals the bank's VaR to the cent; the what-if's *Total* row's *before* equals the grand total.
+*(screenshot filled in the heavy run: tab B (components and the waterfall) and tab C (the DV01 ladder and the what-if))*
+
+**You should see** the components with the hedges negative, the ladder and the what-if before and after; the components' sum equals the bank's VaR to the cent; the what-if's *Total* row's *before* equals the grand total.
 
 ## Step 7 · Save, share and export
 
@@ -167,9 +182,11 @@ drishti.py pivot export --view you/morning --format xlsx -o morning.xlsx
 
 **JSON.** The saved view is the view itself, options included; never its numbers.
 
-Check: open the workbook: the VaR column's totals are values, not formulas; a Comp VaR total is a `SUM`.
+*(screenshot filled in the heavy run: the view saved as morning, shared with role:risk, and the workbook)*
 
-## What next
+**You should see** the view in your saved views and its workbook; open the workbook: the VaR column's totals are values, not formulas; a Comp VaR total is a `SUM`.
+
+## Next steps
 
 - The guide: [MR_CUBE_GUIDE.md](../guides/MR_CUBE_GUIDE.md) (every measure, option, setting and code).
 - The pivot screen: [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md); the VaR engine: [VAR_GUIDE.md](../guides/VAR_GUIDE.md).

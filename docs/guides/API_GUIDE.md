@@ -3331,7 +3331,7 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `DELETE /api/v1/pivot/live/{id}` | ends the caller's live pivot (`204`); audited `pivot.live.end` |
 | `GET /api/v1/pivot/views/{owner}/{name}/comments?cell=&open=` | a saved view's cell comments, oldest first: `{id, version, open, comments: [{id, cell, cellId, coords, label, measure, text, by, at, version, resolved: {by, at} \| null, older}]}`; `cell` is the coordinates' text (`DESK=RATES`, `*`) or the answer's cell key |
 | `POST /api/v1/pivot/views/{owner}/{name}/comments` | `{coords: {DIM: V}, measure, text}`: a comment by anyone who may open the view; `400 DRS-5722` when refused; audited `pivot.comment.add` (never the text) |
-| `POST .../comments/{id}/resolve`, `POST .../comments/{id}/reopen`, `DELETE .../comments/{id}` | the author or the view's owner; audited |
+| `POST /api/v1/pivot/views/{owner}/{name}/comments/{id}/resolve`, `POST /api/v1/pivot/views/{owner}/{name}/comments/{id}/reopen`, `DELETE /api/v1/pivot/views/{owner}/{name}/comments/{id}` | the author or the view's owner; audited |
 | `POST /api/v1/net/pivot/partials` | the cluster's nodes only (signed, on behalf of the person): `{plan, parts}` or a plan with its shard; the node's partial states per cell set and key (`{sets: [[{key, members, states: [base64], scope, notes}]], stats}`) |
 
 The estimate also answers `range` (half to twice its seconds), `nodes`, `rollup` (the rollup that covers the view, or null) and `options`
@@ -3630,7 +3630,7 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `ai:use` | `POST /ai/chat`, `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) and the BI hooks `POST /bi/ai/draft`, `/bi/ai/ask`, `/bi/ai/explain`, `/bi/ai/suggest`, `/bi/ai/explain-checks`, `/bi/ai/dataset-helper` ([BI with AI](#bi-with-ai-apiv1biai)) | any signed-in user, under the AI policy (and the BI power each hook needs) |
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
 | `pivot:write` | `DELETE /pivot/live/{id}`, `POST /pivot/functions` and `POST /pivot/functions/{owner}/{ref}/submit` ([custom functions](#pivot-custom-functions-explain-and-what-if)) | the author to save and submit; any user of the pivot engine to end their live pivot |
-| `pivot:comment` | `POST /pivot/views/{owner}/{name}/comments`, `POST .../comments/{id}/resolve` and `/reopen`, `DELETE .../comments/{id}` | anyone who may open the view; the author or the view's owner to resolve, reopen and delete |
+| `pivot:comment` | `POST /pivot/views/{owner}/{name}/comments`, `POST /pivot/views/{owner}/{name}/comments/{id}/resolve` and `/reopen`, `DELETE /pivot/views/{owner}/{name}/comments/{id}` | anyone who may open the view; the author or the view's owner to resolve, reopen and delete |
 | `pivot:approve` | `POST /pivot/functions/{owner}/{ref}/approve` and `/revoke` | an approver who is not the author (`pivot-approver` or admin) |
 | `pivot:admin` | `POST /pivot/rollups`, `DELETE /pivot/rollups/{id}`, `POST /pivot/rollups/{id}/refresh` | `admin` |
 | `node:drain` | `POST /admin/node/drain` (the drain before a stop, [node readiness and drain](#administration-node-readiness-and-the-drain-before-a-stop)); give the stop hooks' token this scope alone | `admin` |

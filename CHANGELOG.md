@@ -148,7 +148,7 @@
 - **Tutorial 36, Load files automatically with the data inbox** (the inbox's second document, beside DATA_GUIDE.md section 7): the
   engine switched on, a routing rule, a day of trades dropped with its `.ready`, the Inbox screen from waiting to loaded, `ready.all`,
   a failed file fixed and retried, a duplicate, the outbox and the ledger; UI, `drishti.py dataload status|run|retry` and YAML at every
-  step (outputs and screenshots filled in the heavy run). Its Help entry is paired with the data guide (62 help pages).
+  step (outputs and screenshots filled in the heavy run). Its Help entry is paired with the data guide.
 - **Admin → Data loads → Inbox: the data inbox's status board (mock-up A; DATA_GUIDE.md section 7.8; DATALOAD_INBOX.md sections 10 and
   14; API_GUIDE.md, Data loads).** Three columns that follow the folders: *Waiting* (`inbox/`: each file's state, ready, ready via
   `ready.all`, not yet stable, no marker, refused, and the rule that will route it, or *no rule matches* before it fails), *Loading*

@@ -21,6 +21,9 @@ someone else approve it and use it in a view, withdraw it, then explain why one 
 add up, and try a what-if. Each step shows the UI, the command line and the JSON or YAML. The guide is
 [PIVOT_GUIDE.md, sections 19 to 22](../guides/PIVOT_GUIDE.md#19-custom-functions).
 
+> Screenshots marked *(filled in the heavy run)* are taken when the steps are run against a built server (`tools/docs/screenshots.py`);
+> until then the marker stands where the picture goes.
+
 ## Time to complete
 
 About 25 minutes.
@@ -58,7 +61,9 @@ drishti.py pivot run --source trade --rows productType --values "sum(notional, w
 {"source": "trade", "rows": ["productType"], "values": [{"measure": "sum(notional, where=notional > 1000000) / sum(notional)", "as": "Large share"}]}
 ```
 
-Check: the grand total equals the sum of the large trades' notional divided by the sum of all notional (`DATA trade`, filter and sum).
+*(screenshot filled in the heavy run: the trades by product type with the large-notional share as a value)*
+
+**You should see** one ratio per product type and a grand total that equals the sum of the large trades' notional divided by the sum of all notional (`DATA trade`, filter and sum).
 
 ## Step 2 · The playground: a function and its harness
 
@@ -93,7 +98,9 @@ drishti.py pivot functions test wret.yaml --sample rows.csv --group g
 
 **JSON** (`POST /api/v1/pivot/functions/test`): the YAML's keys, plus `"sample": [{"r": 0.012, "w": 3, "g": "A"}, ...]` and `"group": "g"`.
 
-Check: the final figure is (0.012·3 − 0.004·1 + 0.020·2 + 0.001·5) / 11 = 0.077 / 11 = 0.007.
+*(screenshot filled in the heavy run: the playground with "Passes the harness", the states part by part and the sample's pivot)*
+
+**You should see** *Passes the harness*; the final figure is (0.012·3 − 0.004·1 + 0.020·2 + 0.001·5) / 11 = 0.077 / 11 = 0.007.
 
 ## Step 3 · An SQL macro: rewritten into states, or holistic
 
@@ -103,7 +110,7 @@ each cell's figure is computed by DuckDB from its own rows) and the harness runs
 
 **CLI.** The same with `language: sql` and `code: "CREATE MACRO slope(r, w) AS regr_slope(r, w)"`.
 
-Check: a macro that names a table or a file (`read_csv(...)`) is refused in words (DRS-5710): a macro is SQL over its inputs only.
+**You should see** *mergeable* for `wret2` and *holistic* for `slope`; a macro that names a table or a file (`read_csv(...)`) is refused in words (DRS-5710): a macro is SQL over its inputs only.
 
 ## Step 4 · Save, approve, use
 
@@ -122,7 +129,9 @@ drishti.py pivot run --source trade --rows productType --values "fn:you/wret@1(m
 **JSON.** `POST /api/v1/pivot/functions/you/wret@1/approve` with `{"scope": "everyone", "reason": "reviewed: a weighted mean"}`; the view's
 value is `{"measure": "fn:you/wret@1(mtm, notional)"}`.
 
-Check: approving your own function is refused (DRS-5712: "an author never approves their own function"); Admin → Audit shows
+*(screenshot filled in the heavy run: the view with the column `fn:you/wret@1 ... by you`)*
+
+**You should see** the new column in every row and the total; approving your own function is refused (DRS-5712: "an author never approves their own function"); Admin → Audit shows
 `pivot.function.save`, `pivot.function.approve` and `pivot.function.use`, with the version.
 
 ## Step 5 · Withdraw
@@ -131,6 +140,8 @@ Check: approving your own function is refused (DRS-5712: "an author never approv
 by … on …: reason", with no figure; the other values answer as before.
 
 **CLI.** `drishti.py pivot functions revoke you/wret@1 --reason "superseded"`.
+
+**You should see** "function withdrawn by …" in each cell of the column and no figure; the function's list marks it *withdrawn*.
 
 ## Step 6 · Why did it move?
 
@@ -153,7 +164,9 @@ drishti.py pivot explain --source trade --rows productType --values "sum(notiona
  "from": {"productType": "IRS"}, "to": {"productType": "FXFWD"}, "by": "counterparty"}
 ```
 
-Check: the sum of the steps plus the residual equals `difference`; the residual is named ("rounding"). For a cell on two dates, give
+*(screenshot filled in the heavy run: the waterfall of two product types split by counterparty)*
+
+**You should see** the words and the waterfall; the sum of the steps plus the residual equals `difference`; the residual is named ("rounding"). For a cell on two dates, give
 `fromDate` and `toDate` (`--from`, `--to`) instead of a second cell.
 
 ## Step 7 · What-if
@@ -174,7 +187,9 @@ drishti.py pivot whatif --source trade --rows productType --values "sum(notional
  "whatIf": {"exclude": {"productType": ["FXFWD"]}, "changes": [{"field": "notional", "scale": 1.1, "where": {"counterparty": ["CP-001"]}}]}}
 ```
 
-Check: FXFWD is gone from the what-if side, and the grand total moved by 10 % of CP-001's notional less FXFWD's.
+*(screenshot filled in the heavy run: the what-if beside the original, the changed cells listed)*
+
+**You should see** the what-if beside the original: FXFWD is gone from the what-if side, and the grand total moved by 10 % of CP-001's notional less FXFWD's.
 
 ## Step 8 · Python (an administrator turns it on)
 
@@ -183,13 +198,18 @@ language **Python** takes a class decorated with `@function` ([PIVOT_GUIDE.md se
 it runs in the node's sandboxed `pivot-fn` workers (no network, no files, no processes), fed Arrow batches over a pipe, and passes the same
 harness. Python functions never read memory-only data.
 
+**You should see** **Python** offered in the language list once it is on (and, while it is off, refused in words: DRS-5713).
+
 ## Step 9 · BI's totals are the engine's
 
 Open a BI report with a matrix (the sample *trades overview*). Every total and subtotal row comes from the pivot engine's
 one statement over the model's rows: the average's total is the average over all the trades, a sum's total is the engine's sum. A
 year-to-date measure shows a dash in the total row; the answer's warnings say why ([BI_GUIDE.md section 3.2](../guides/BI_GUIDE.md#32-true-totals)).
 
-## What next
+**You should see** the matrix's totals and subtotals as before (the figures are the same: `BiParityTest`) and a dash, with its reason,
+where a measure has no total.
+
+## Next steps
 
 - [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 19 to 22: the languages, the harness, approval, explain, what-if, BI's totals.
 - [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md) sections 8, 10 and 12: the design.
