@@ -95,7 +95,9 @@
     var share = mem.cap ? Math.min(100, Math.round(100 * mem.used / mem.cap)) : 0;
     $('[data-dout-gauge]').innerHTML = '<div class="dout-gauge"><div class="t"><b>Arrow memory</b><span class="mono">' + bytes(mem.used) + ' of ' +
       bytes(mem.cap) + ' cap · ' + share + ' %</span></div><div class="track"><div class="fill ' + (share >= 90 ? 'r' : share >= 70 ? 'a' : 'g') +
-      '" style="width:' + share + '%"></div></div><div class="dout-sub">busy protection counts it with the rest of the server (Health, arrow-flight)</div></div>';
+      '" data-dout-w="' + share + '"></div></div><div class="dout-sub">busy protection counts it with the rest of the server (Health, arrow-flight)</div></div>';
+    // the width through the CSSOM: an inline style attribute is refused by the page's Content Security Policy (style-src 'self')
+    document.querySelectorAll('[data-dout-gauge] [data-dout-w]').forEach(function (f) { f.style.width = f.getAttribute('data-dout-w') + '%'; });
     var live = data.live || [];
     $('[data-dout-live-count]').textContent = live.length + ' now';
     $('[data-dout-live]').innerHTML = '<thead><tr><th class="l">token · person</th><th class="l">reading</th><th class="l">node</th><th>rows</th><th>bytes</th>' +
