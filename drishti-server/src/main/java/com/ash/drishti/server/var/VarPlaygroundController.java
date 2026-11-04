@@ -75,11 +75,18 @@ public class VarPlaygroundController {
     public Map<String, Object> grid(@RequestParam(required = false) String scope, @RequestParam(required = false) String ids,
             @RequestParam(required = false) String ccy, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) Double esConfidence,
-            @RequestParam(required = false) String set, @RequestParam(required = false) String view, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String set, @RequestParam(required = false) String view,
+            @RequestParam(required = false) String measure, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         VarPlayground.Ask a = ask(scope, ids, asOf, ccy, horizon, method, confidence, esConfidence, set);
         VarPlayground.Built b = playground.build(p, a, playground.settings().maxPositions());
-        return VarPlaygroundAnswer.grid(b, playground, view);
+        Map<String, Object> out = VarPlaygroundAnswer.grid(b, playground, view);
+        if (parametric(measure)) {                                       // PLAY PVAR: the Parametric tab's figures, steps and columns
+            out = new LinkedHashMap<>(out);
+            List<String> shownIds = b.model().positions.stream().map(VarPlaygroundModel.Pos::id).toList();
+            out.put("parametric", VarPlaygroundParametric.answer(playground.parametric(b), b.scope(), shownIds, playground.describer()));
+            out.put("measure", "parametric");
+        }
+        return out;
     }
 
     @GetMapping("/playground/estimate")
@@ -99,8 +106,8 @@ public class VarPlaygroundController {
     public ResponseEntity<StreamingResponseBody> export(@RequestParam(required = false) String scope, @RequestParam(required = false) String ids,
             @RequestParam(required = false) String ccy, @RequestParam(required = false) String horizon, @RequestParam(required = false) String method,
             @RequestParam(required = false) Double confidence, @RequestParam(required = false) Double esConfidence,
-            @RequestParam(required = false) String set, @RequestParam(required = false) String count, AsOf asOf,
-            @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+            @RequestParam(required = false) String set, @RequestParam(required = false) String count,
+            @RequestParam(required = false) String measure, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         int n = count(count);
         VarPlayground.Ask a = ask(scope, ids, asOf, ccy, horizon, method, confidence, esConfidence, set);
         VarPlayground.Built b = playground.build(p, a, n);                 // built before a byte is sent: a refusal is still a problem answer
@@ -109,7 +116,10 @@ public class VarPlaygroundController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the workbook of " + (n == 0 ? "all " + b.total() : n) + " positions cannot be made: " + est.refused());
         }
         VarPlaygroundBook book = new VarPlaygroundBook(b.model(), b.engine(), b.about(), playground.template(), true);
-        String name = fileName(b);
+        if (parametric(measure)) {
+            book.parametric(playground.parametric(b));                  // the Parametric tab after PnL
+        }
+        String name = parametric(measure) ? fileName(b).replace("var-playground", "pvar-playground") : fileName(b);
         StreamingResponseBody body = book::write;
         return ResponseEntity.ok().contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + name + "\"").header(HttpHeaders.CACHE_CONTROL, "no-store")
@@ -128,6 +138,17 @@ public class VarPlaygroundController {
         return ResponseEntity.ok().contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"var-playground-template-" + positions + "x" + scenarios + ".xlsx\"")
                 .body(body);
+    }
+
+    /** {@code measure=parametric} (PLAY PVAR); anything else but blank or {@code historical} is refused. */
+    static boolean parametric(String measure) {
+        if (measure == null || measure.isBlank() || measure.equalsIgnoreCase("historical")) {
+            return false;
+        }
+        if (measure.equalsIgnoreCase("parametric")) {
+            return true;
+        }
+        throw new DrishtiException(ErrorCode.BAD_REQUEST, "measure is historical or parametric, not " + measure);
     }
 
     /** {@code all} (or 0) is every position; else a positive count. */

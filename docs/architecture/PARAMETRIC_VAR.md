@@ -367,7 +367,7 @@ covariance → its component → the check that the components add up.
 | `PMu` | `=SUMPRODUCT(W, PF)` |
 | `PSigma` | equal: `=SQRT(SUMPRODUCT((PF-PMu)^2)/(N-1))`; ewma: `=SQRT(SUMPRODUCT(W,(PF-PMu)^2))` |
 | `PZ` | `=NORM.S.INV(PConfidence)` |
-| `PEsFactor` | `=EXP(-NORM.S.INV(PEsConfidence)^2/2)/SQRT(2*PI())/(1-PEsConfidence)` |
+| `PEsFactor` | `=EXP(-(NORM.S.INV(PEsConfidence)^2)/2)/SQRT(2*PI())/(1-PEsConfidence)` (the brackets matter: a spreadsheet squares the negated value without them) |
 | `PVaR`, `PES` | `=PZ*PSigma-PMu`; `=PSigma*PEsFactor-PMu` |
 | μᵢ | `=SUMPRODUCT(W, Pᵢ)` |
 | cov(pᵢ, v) | equal: `=SUMPRODUCT((Pᵢ-μᵢ)*(PF-PMu))/(N-1)`; ewma: `=SUMPRODUCT(W,(Pᵢ-μᵢ)*(PF-PMu))` |

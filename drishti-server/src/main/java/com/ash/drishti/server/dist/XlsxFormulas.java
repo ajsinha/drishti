@@ -41,7 +41,8 @@ public final class XlsxFormulas {
 
     /** The functions a formula may call. */
     public static final Set<String> ALLOWED = Set.of("SUM", "SUMPRODUCT", "SMALL", "LARGE", "AVERAGE", "COUNT", "INDEX", "MATCH", "ROUNDDOWN",
-            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER", "EXP", "SUMIFS", "SUMIF");
+            "ROUNDUP", "SQRT", "IF", "ABS", "MAX", "MIN", "AND", "OR", "ISNUMBER", "EXP", "SUMIFS", "SUMIF",
+            "NORM.S.INV", "PI");                                         // 2.9.11.c: parametric VaR (Excel 2010+, LibreOffice 4.2+, Google Sheets)
 
     /** A function call: a name then an opening parenthesis (a sheet name or a defined name is never followed by one). */
     private static final Pattern CALL = Pattern.compile("([A-Za-z_][A-Za-z0-9_.]*)\\s*\\(");
@@ -69,7 +70,7 @@ public final class XlsxFormulas {
         Set<String> out = new LinkedHashSet<>();
         Matcher m = CALL.matcher(plain);
         while (m.find()) {
-            out.add(m.group(1).toUpperCase(Locale.ROOT));
+            out.add(m.group(1).toUpperCase(Locale.ROOT).replaceFirst("^_XLFN\\.", ""));   // Excel 2010's functions are stored as _xlfn.NAME
         }
         return List.copyOf(out);
     }

@@ -73,6 +73,13 @@ final class VarPlaygroundBook {
     private final SeriesLayout pnl;
     private final List<String> fxCols;
     private final Map<String, String> names = new LinkedHashMap<>();
+    /** PLAY PVAR: the engine's parametric figures, and the Parametric tab written after PnL (null: the historical playground). */
+    private VarPlaygroundParametric.Engine parametric;
+
+    VarPlaygroundBook parametric(VarPlaygroundParametric.Engine p) {
+        this.parametric = p;
+        return this;
+    }
     private final Map<String, Object> values = new LinkedHashMap<>();
 
     VarPlaygroundBook(VarPlaygroundModel m, Engine e, About about, PlaygroundTemplate t, boolean cached) {
@@ -139,6 +146,9 @@ final class VarPlaygroundBook {
             data(w.sheet("Data", "B08A2E"));
             fx(w.sheet("FX", "B08A2E"));
             pnl(w.sheet("PnL", "2E5A88"));
+            if (parametric != null) {
+                VarPlaygroundParametric.sheet(w.sheet("Parametric", "2E5A88"), w, refs(), parametric);
+            }
             explain(w.sheet("Explain", "6B7686"));
             provenance(w.sheet("Provenance", "6B7686"));
             names.forEach((n, ref) -> w.name(n, "Main", ref));
@@ -151,6 +161,43 @@ final class VarPlaygroundBook {
 
     private String ct(String s) {
         return cached ? s : null;
+    }
+
+    /** The PnL tab's ranges and the items, for the Parametric tab. */
+    private VarPlaygroundParametric.Refs refs() {
+        return new VarPlaygroundParametric.Refs() {
+            public boolean columns() {
+                return pnl.itemsAsColumns();
+            }
+
+            public boolean cached() {
+                return cached;
+            }
+
+            public int scenarios() {
+                return m.n;
+            }
+
+            public int items() {
+                return items;
+            }
+
+            public String item(int i) {
+                return itemId(i);
+            }
+
+            public String itemRange(int i) {
+                return pnlRange(i);
+            }
+
+            public String portfolioRange() {
+                return series("Portfolio");
+            }
+
+            public String date(int j) {
+                return m.dates.get(j).toString();
+            }
+        };
     }
 
     // ---- references ----------------------------------------------------------------------------------------------------------------

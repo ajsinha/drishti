@@ -84,7 +84,8 @@ final class VarPlayground {
     private record Candidate(int index, double size) {}
 
     /** Everything one playground answer is made of. */
-    record Built(VarPlaygroundModel model, VarPlaygroundBook.Engine engine, VarPlaygroundBook.About about, VarService.Scoped scoped, int total) {}
+    record Built(VarPlaygroundModel model, VarPlaygroundBook.Engine engine, VarPlaygroundBook.About about, VarService.Scoped scoped, int total,
+            double[] scope, List<double[]> parts) {}
 
     private final VarService svc;
     private final VarViews views;
@@ -262,7 +263,7 @@ final class VarPlayground {
         VarPlaygroundBook.About about = new VarPlaygroundBook.About(s.label() == null ? s.res().canonical() : s.label(), s.res().canonical(),
                 s.res().canonical(), s.date().date().toString(), p == null ? "" : p.user(), java.time.Instant.now().truncatedTo(java.time.temporal.ChronoUnit.SECONDS)
                         .toString(), all.size(), all.size() - shown, prov);
-        return new Built(model, engine, about, s, all.size());
+        return new Built(model, engine, about, s, all.size(), ev, engineParts);
     }
 
     private static VarPlaygroundModel.Fx fxOf(ScenarioFx fx, String c, int width) {
@@ -406,6 +407,23 @@ final class VarPlayground {
         m.put("Settings", "max-positions " + settings.maxPositions() + ", incremental-positions " + settings.incremental() + ", rank-rule "
                 + svc.props().rankRule() + ", component-window " + svc.props().componentWindow() + ", component-scale-to-var " + svc.props().componentScaleToVar());
         return m;
+    }
+
+    /**
+     * PLAY PVAR (PARAMETRIC_VAR.md section 10): the parametric figures of what was built, the 1-day portfolio and its positions (Rest of
+     * scope included), with the server's parametric settings; refused in words while the measure is off.
+     */
+    VarPlaygroundParametric.Engine parametric(Built b) {
+        VarParametric par = views.parametric();
+        if (par == null || !par.enabled()) {
+            throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN,
+                    "parametric VaR is switched off on this server (drishti.var.parametric.enabled): PLAY PVAR is not offered");
+        }
+        return VarPlaygroundParametric.engine(b.scope(), b.parts(), b.model().set.confidence(), b.model().set.esConfidence(), par.props().settings());
+    }
+
+    VarParametric describer() {
+        return views.parametric();
     }
 
     /** Writes the workbook of {@code a} with {@code count} positions ({@code 0}: all), refusing a size no application opens. */
