@@ -429,8 +429,21 @@ public final class SourceRegistry implements AutoCloseable, com.ash.drishti.comm
         }
     }
 
+    /**
+     * The settings a connector's plugin is given: its own, secrets resolved, and for a Delta or Iceberg connector that names
+     * {@code lake:} what its lake file says of its kinds (root, storage, table folders, promoted columns, vectors:
+     * docs/guides/LAKE_GUIDE.md). Every connector passes here, whichever file or template it came from, so the lake file is read in one
+     * place. A lake that is not known, or a connector that names a lake and repeats one of its keys, fails the connector with the reason.
+     */
     static Map<String, String> ownSettings(String name, SourcesProperties.ConnectorSettings c) {
         Map<String, String> own = new LinkedHashMap<>(com.ash.drishti.common.ConnectorSecrets.resolve(c.settings()));
+        try {
+            own = new LinkedHashMap<>(com.ash.drishti.lakeconfig.ConnectorLake.expand(name, c.plugin(), c.kinds(), own,
+                    com.ash.drishti.lakeconfig.Lakes::current,
+                    LOG::warn));
+        } catch (IllegalArgumentException | java.io.UncheckedIOException e) {
+            throw new IllegalStateException(e.getMessage(), e);
+        }
         String given = own.get("source-name");
         if (given == null || given.isBlank()) {
             own.put("source-name", name);       // documents say which connector they came from (a blank setting, as a form sends, counts as none)

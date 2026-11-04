@@ -1,0 +1,38 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Lakes, the lake files (docs/guides/LAKE_GUIDE.md): every lake of config/lakes/ and its tables, as the server reads them, from
+   GET /api/v1/admin/lakes/files. Read-only: a lake is edited in its file. #}
+<h2 class="lk-h2" id="lkFiles">The lakes <a class="emb-help" href="/help/lake-guide" aria-label="Help: the lake configuration" title="Help: the lake configuration">?</a></h2>
+<p class="text-muted-d">From <span class="mono">{{ lake_files.dir }}</span>, one file per lake. Every table is partitioned by business date first;
+  a lake is edited in its file (<span class="mono">drishti.py lake show</span>, <span class="mono">drishti.py lake check</span>).</p>
+{% if lake_files.error %}<p class="lk-files-error" role="alert">The lake files were refused: {{ lake_files.error }}</p>{% endif %}
+{% for l in lake_files.lakes or [] %}
+<details class="lk-files" {% if loop.first %}open{% endif %}>
+  <summary><strong>{{ l.lake }}</strong> · {{ l.format }} · <span class="mono">{{ l.root }}</span>{% if l['in-memory'] %} · held in memory{% endif %} ·
+    {{ l.tables | length }} table{{ '' if l.tables | length == 1 else 's' }}</summary>
+  <div class="tbl-wrap"><table class="tbl adm-tbl lk-files-tables">
+    <caption class="visually-hidden">The tables of lake {{ l.lake }}: path, partitions, promoted columns, vectors and load mode</caption>
+    <thead><tr><th scope="col">Table</th><th scope="col">Kind</th><th scope="col">Path</th><th scope="col">Partitioned by</th><th scope="col">Promoted</th>
+      <th scope="col">Vectors</th><th scope="col">Id</th><th scope="col">Loads</th></tr></thead>
+    <tbody>{% for t in l.tables %}<tr>
+      <td class="mono">{{ t.name }}</td><td>{{ t.kind }}</td><td class="mono">{{ t.path }}</td><td class="mono">{{ t['partition-columns'] | join(', ') }}</td>
+      <td title="{{ t.promote | join(', ') }}">{{ t.promote | length }}</td><td class="mono">{{ t.vectors | join(', ') }}</td><td class="mono">{{ t.id or '' }}</td>
+      <td>{{ 'append (each batch once)' if t['load-mode'] == 'append' else 'replace each date' }}</td></tr>{% else %}<tr><td colspan="8" class="text-muted-d">No table yet: a pack's recommended entry is copied here the first time a writer meets its kind.</td></tr>{% endfor %}</tbody>
+  </table></div>
+</details>
+{% else %}
+<p class="text-muted-d">No lake file yet: <span class="mono">drishti.py lake migrate-config</span> writes them from the connector files.</p>
+{% endfor %}

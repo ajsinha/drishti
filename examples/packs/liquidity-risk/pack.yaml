@@ -89,8 +89,8 @@ connectors:
     - liquidity-stress
     - intraday-liquidity
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: liquidity
+      lake: demo
+      lake-tables: liquidity.lcr,liquidity.nsfr,liquidity.maturity-ladder,liquidity.hqla-holding,liquidity.funding-source,liquidity.liquidity-stress,liquidity.intraday-liquidity
 routes:
   lcr: liquidity-store
   nsfr: liquidity-store
@@ -270,3 +270,12 @@ roles:
     - counterparty
     - bond
     raw: true
+lake:
+  tables:
+    liquidity.lcr: null
+    liquidity.nsfr: null
+    liquidity.maturity-ladder: null
+    liquidity.hqla-holding: null
+    liquidity.funding-source: null
+    liquidity.liquidity-stress: null
+    liquidity.intraday-liquidity: null

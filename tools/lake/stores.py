@@ -204,14 +204,77 @@ def _resolve(value: str, data: pathlib.Path, env: str) -> pathlib.Path:
     return (p if p.is_absolute() else ROOT / p).resolve()
 
 
-def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path) -> str:
+ICEBERG_LAKE = "demo-iceberg"
+
+
+def _template(pack: dict, name: str, store: str, lake: pathlib.Path, data: pathlib.Path, ice: pathlib.Path | None = None,
+              folder: pathlib.Path | None = None) -> dict:
+    """A pack's template for the store: as it is (``lake: demo``) for Delta at the demo lake's own root; for Iceberg, the template naming
+    the lake ``demo-iceberg`` (its lake file written beside the connector folder, :func:`iceberg_lake`); for Delta in another folder,
+    its tables written out from the pack's lake: entries with that root (the older form: the server says so once)."""
+    sys.path.insert(0, str(ROOT / "tools"))
+    import packlake
+    raw = pack["connectors"][name]
+    if store == "delta" and lake.resolve() == _resolve(DELTA_DEFAULT, data, "DRISHTI_DELTA_ROOT"):
+        return raw
+    if store == "iceberg" and "lake" in (raw.get("settings") or {}) and ice is not None and folder is not None:
+        st = dict(raw["settings"])
+        iceberg_lake(folder, pack, raw, ice, data)
+        st["lake"] = ICEBERG_LAKE
+        st["engine"] = "native"
+        return {**raw, "settings": st}
+    return packlake.view(pack)["connectors"][name]
+
+
+def lakes_folder(connectors: pathlib.Path) -> pathlib.Path:
+    """The lake folder beside a connector folder (config/connectors -> config/lakes), where the server reads lake files."""
+    return connectors.parent / "lakes"
+
+
+def iceberg_lake(connectors: pathlib.Path, pack: dict, template: dict, ice: pathlib.Path, data: pathlib.Path) -> pathlib.Path:
+    """``demo-iceberg.yaml``: the Iceberg store of the demo tables moved by --store, one entry per table the template reads, copied from
+    the pack's recommended entries (LAKE_GUIDE.md section 7; Iceberg keeps a partition field as a promoted column). Entries already
+    there are kept as they are: the lake file is the truth once written."""
+    import yaml
+    sys.path.insert(0, str(ROOT / "tools"))
+    import packlake
+    f = lakes_folder(connectors) / f"{ICEBERG_LAKE}.yaml"
+    doc = yaml.safe_load(f.read_text(encoding="utf-8")) if f.is_file() else None
+    if not isinstance(doc, dict):
+        doc = {"lake": ICEBERG_LAKE, "format": "iceberg",
+               "root": ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice),
+               "tables": {}}
+    tables = doc.setdefault("tables", {}) or {}
+    doc["tables"] = tables
+    for kind in template.get("kinds") or []:
+        e = packlake.entry_of(pack, template, kind)
+        if not e:
+            continue
+        name = e.pop("name")
+        e.pop("domain")
+        part = e.pop("partition-by", None) or []
+        if part:
+            e["promote"] = [p for p in part if p not in (e.get("promote") or [])] + list(e.get("promote") or [])
+        tables.setdefault(name, e or None)
+    f.parent.mkdir(parents=True, exist_ok=True)
+    f.write_text(f"# Written by tools/build_demo_lakes.py --store: the demo tables kept in Iceberg (docs/guides/LAKE_GUIDE.md); edit here.\n"
+                 + yaml.safe_dump(doc, sort_keys=False, width=140), encoding="utf-8")
+    return f
+
+
+def connector_text(system: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
+                   folder: pathlib.Path | None = None) -> str:
     """trade-<system>.yaml for its store: the trading pack's template (one source system of the union, table trade_<system>) with
     plugin and root set; ``engine: native`` for Iceberg."""
     import yaml
     pack = yaml.safe_load((ROOT / "config" / "packs" / "trading" / "pack.yaml").read_text(encoding="utf-8"))
-    tpl = pack["connectors"][f"trade-{system}"]
+    tpl = _template(pack, f"trade-{system}", store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
-    if store == "iceberg":
+    if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
+        where = f"{system.upper()}'s trades in Iceberg ({ice / DOMAIN / f'trade_{system}'}, lake {ICEBERG_LAKE})"
+    elif "lake" in settings:                          # the demo lake in Delta: the template as it is (lake: demo)
+        where = f"{system.upper()}'s trades in Delta ({lake / DOMAIN / f'trade_{system}'}, config/lakes/demo.yaml)"
+    elif store == "iceberg":
         root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
         settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
         where = f"{system.upper()}'s trades in Iceberg ({ice / DOMAIN / f'trade_{system}'})"
@@ -238,7 +301,7 @@ def switch(folder: pathlib.Path, system: str, store: str, lake: pathlib.Path, ic
         hist.mkdir(parents=True, exist_ok=True)
         (hist / f"trade-{system}.{datetime.now().strftime('%Y%m%dT%H%M%S%f')[:-3]}.yaml").write_text(f.read_text(encoding="utf-8"), encoding="utf-8")
     folder.mkdir(parents=True, exist_ok=True)
-    f.write_text(connector_text(system, store, lake, ice, data), encoding="utf-8")
+    f.write_text(connector_text(system, store, lake, ice, data, folder), encoding="utf-8")
     return f"trade-{system}: now reads {store}, was {now} ({f}; a running server restarts this connector by itself)"
 
 
@@ -278,15 +341,19 @@ def current_domain(folder: pathlib.Path, domain: str) -> str:
 
 
 def domain_connector_text(domain: str, store: str, lake: pathlib.Path, ice: pathlib.Path, data: pathlib.Path,
-                          pair: tuple[str, str] | None = None) -> str:
+                          pair: tuple[str, str] | None = None, folder: pathlib.Path | None = None) -> str:
     """One of the domain's connector files for its store: the pack's template (kinds, layouts with their vector columns) with plugin and
     root set; ``engine: native`` for Iceberg. ``pair`` (pack, connector): by default the domain's first."""
     import yaml
     pack_name, name = pair or DOMAIN_STORES[domain][0]
     pack = yaml.safe_load((ROOT / "config" / "packs" / pack_name / "pack.yaml").read_text(encoding="utf-8"))
-    tpl = pack["connectors"][name]
+    tpl = _template(pack, name, store, lake, data, ice, folder)
     settings = dict(tpl.get("settings") or {})
-    if store == "iceberg":
+    if settings.get("lake") == ICEBERG_LAKE:          # Iceberg: the lake demo-iceberg (its file beside the connector folder)
+        where = f"every {domain} table in Iceberg ({ice / domain}, lake {ICEBERG_LAKE})"
+    elif "lake" in settings:                          # the demo lake in Delta: the template as it is (lake: demo)
+        where = f"every {domain} table in Delta ({lake / domain}, config/lakes/demo.yaml)"
+    elif store == "iceberg":
         root = ICEBERG_DEFAULT if ice.resolve() == _resolve(ICEBERG_DEFAULT, data, "DRISHTI_ICEBERG_ROOT") else str(ice)
         settings = {"root": root, "engine": "native", **{k: v for k, v in settings.items() if k != "root"}}
         where = f"every {domain} table in Iceberg ({ice / domain})"
@@ -322,7 +389,7 @@ def _switch_one(folder: pathlib.Path, domain: str, pair: tuple[str, str], store:
         f.unlink()
         return f"{f.stem}: now reads delta, was {now} (the pack's own connector; a running server restarts it by itself)"
     folder.mkdir(parents=True, exist_ok=True)
-    f.write_text(domain_connector_text(domain, store, lake, ice, data, pair), encoding="utf-8")
+    f.write_text(domain_connector_text(domain, store, lake, ice, data, pair, folder), encoding="utf-8")
     return f"{f.stem}: now reads {store}, was {now} ({f}; a running server restarts this connector by itself)"
 
 

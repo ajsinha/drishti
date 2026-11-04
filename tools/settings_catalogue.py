@@ -375,6 +375,10 @@ def engine_rows() -> tuple[list[Row], list[str]]:
     on_disk = {p.name for p in ENGINES_DIR.glob("*.yaml")}
     for name in sorted(on_disk - files):
         problems.append(f"config/engines/{name}: no engine of the catalogue (drishti-server/src/main/resources/engines/catalogue.yaml) names it")
+    for lake in sorted((ROOT / "config" / "lakes").glob("*.yaml")):                  # the shipped lake files and their jar copies (Lakes)
+        jar = ROOT / "drishti-lakeconfig/src/main/resources/drishti/lakes" / lake.name
+        if not jar.is_file() or lake.read_bytes() != jar.read_bytes():
+            problems.append(f"config/lakes/{lake.name} differs from its jar copy drishti-lakeconfig/src/main/resources/drishti/lakes/{lake.name}")
     app_keys = _flat_keys(yaml.safe_load((ROOT / "drishti-server/src/main/resources/application.yaml").read_text(encoding="utf-8")))
     for e in catalogue:
         f = ENGINES_DIR / e["file"]

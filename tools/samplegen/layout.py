@@ -77,13 +77,23 @@ class Layout:
         return [column_name(p) for p in self.columns]
 
 
+def _view(manifest: dict) -> dict:
+    """The manifest with its lake-form templates read through the pack's lake: entries (tools/packlake.py)."""
+    import sys
+    tools = str(pathlib.Path(__file__).resolve().parents[1])
+    if tools not in sys.path:
+        sys.path.insert(0, tools)
+    import packlake
+    return packlake.view(manifest)
+
+
 def layouts_for_domain(domain: str, packs: pathlib.Path = PACKS) -> dict[str, Layout]:
     """Every kind's layout declared by a Delta connector of `domain` in config/packs/*/pack.yaml."""
     import yaml
 
     out: dict[str, Layout] = {}
     for f in sorted(packs.glob("*/pack.yaml")):
-        manifest = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
         for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
             settings = conn.get("settings") or {}
             if conn.get("plugin") != "delta" or settings.get("domain") != domain:
@@ -103,7 +113,7 @@ def layouts_by_table(domain: str, packs: pathlib.Path = PACKS) -> dict[str, tupl
 
     out: dict[str, tuple[str, Layout]] = {}
     for f in sorted(packs.glob("*/pack.yaml")):
-        manifest = yaml.safe_load(f.read_text(encoding="utf-8")) or {}
+        manifest = _view(yaml.safe_load(f.read_text(encoding="utf-8")) or {})
         for conn in (manifest.get("connectors") if isinstance(manifest.get("connectors"), dict) else manifest.get("connector-templates") or {}).values():
             settings = conn.get("settings") or {}
             if conn.get("plugin") != "delta" or settings.get("domain") != domain:

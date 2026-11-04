@@ -170,7 +170,9 @@ def pack_defaults(pack: pathlib.Path, kind: str | None, connector: str | None = 
     ``connector`` that Delta connector of the pack (one of several serving a kind, one per source system: trade-endur ...), else the
     first; ``table`` is its ``table.<kind>`` folder when it names one (trade_endur), else the kind."""
     import yaml
-    m = yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {}
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1]))
+    import packlake                                   # a lake-form template read with the pack's lake: entries
+    m = packlake.view(yaml.safe_load((pack / "pack.yaml").read_text(encoding="utf-8")) or {})
     out: dict = {"pack": m.get("pack") or pack.name}
     defs = m.get("connectors") if isinstance(m.get("connectors"), dict) else (m.get("connector-templates") or {})
     delta = [(n, c) for n, c in (defs or {}).items() if isinstance(c, dict) and c.get("plugin") == "delta"]
@@ -223,6 +225,7 @@ def plan(a) -> dict:
             p["promote"] = d.get("promote") or []
         p["flatten"] = d.get("flatten") or {}
         p["vectors"] = p.get("vectors") or d.get("vectors") or []
+    lake_layout(a, p)
     p["key"] = p["key"] or "id"
     p["latest_by"] = stage.LATEST_BY if p["latest_by"] is None else (p["latest_by"].strip() or None)
     if p["table"] and (not str(p["table"]).replace("_", "").replace("-", "").isalnum()):
@@ -241,6 +244,51 @@ def plan(a) -> dict:
     if getattr(a, "format", "delta") == "iceberg" and a.mode != "overwrite-dates":
         raise BuildError(f"--format iceberg replaces each business date of the input (overwrite-dates); --mode {a.mode} is Delta's only")
     return p
+
+
+def lake_layout(a, p: dict) -> None:
+    """``--lake NAME`` naming a lake of config/lakes/ (docs/guides/LAKE_GUIDE.md): the table's location, partitioning, promoted columns,
+    vectors, flattened fields, id, date, latest-by and load mode come from its lake file, read by the one reader (lakeconfig.py runs
+    drishti-lakeconfig). A --partition-by, --promote or --vector that says otherwise is refused, naming both; a kind the lake file has
+    no entry for is refused (a writer never creates a table its lake file does not describe). ``--lake-root DIR`` writes the same
+    layout under another folder (a scratch or test lake); ``--lake DIR`` alone is the old form: the options and the pack decide."""
+    import lakeconfig
+    name = getattr(a, "lake", None)
+    if not lakeconfig.is_lake_name(name):
+        return
+    try:
+        t = lakeconfig.table(name, p["kind"] or a.kind, getattr(a, "domain", None), p.get("table"))
+        lakeconfig.disagree("--partition-by", split(a.partition_by), t["partition-by"], t)
+        lakeconfig.disagree("--promote", split(a.promote), t["promote"], t)
+        lakeconfig.disagree("--vector", split(getattr(a, "vector", None)), t["vectors"], t)
+        lakeconfig.disagree("--key", a.key, t.get("id") or a.key, t)
+        lakeconfig.disagree("--format", getattr(a, "format", "delta") if getattr(a, "format", "delta") != "delta" else None, t["format"], t)
+    except lakeconfig.LakeConfigError as e:
+        raise BuildError(str(e))
+    parent, _, folder = t["path"].rpartition("/")
+    p["domain"], p["kind"], p["table"] = parent.rpartition("/")[2] or t["domain"], t["kind"], folder
+    p["partition_by"], p["promote"], p["vectors"] = list(t["partition-by"]), list(t["promote"]), list(t["vectors"])
+    p["flatten"] = dict(t.get("flatten") or {}) or p.get("flatten") or {}
+    p["key"] = t.get("id") or p["key"]
+    p["date"] = p["date"] or t.get("date")
+    if t.get("latest-by") is not None and getattr(a, "latest_by", None) is None:
+        p["latest_by"] = t["latest-by"]
+    root = t["root"].rstrip("/")
+    if "/" in parent:                                   # a table nested deeper than <domain>/<table>: the rest belongs to the root
+        root = root + "/" + parent.rpartition("/")[0]
+    a.lake = str(getattr(a, "lake_root", None) or root)
+    a.format = t["format"]
+    if t.get("load-mode") == "append":
+        # an append records its batch in the commit so it is never appended twice; one implementation of that rule, the parallel
+        # loader's (LAKE_GUIDE.md section 4): the Python path refuses rather than append without it
+        if getattr(a, "engine", "auto") != "java":
+            raise BuildError(f"table {t['name']} of lake {name} appends (load-mode: append): each batch is recorded in the commit so it is "
+                             "never appended twice, which the parallel loader does: add --engine java --batch-id ID (the file's name, a run id)")
+        if not getattr(a, "batch_id", None):
+            raise BuildError(f"table {t['name']} of lake {name} appends (load-mode: append): give --batch-id ID (the file's name, a run id), "
+                             "so a repeated or retried load is never appended twice")
+        a.mode = "append"
+    p["lake_entry"], p["lake_name"] = t["name"], name
 
 
 def split(s) -> list[str]:
@@ -289,6 +337,13 @@ def run(a, say=print) -> tuple[int, dict]:
         if not lake and not remote and not a.dry_run:
             raise BuildError("give --lake DIR (the Delta root the connector reads)")
         p = plan(a)
+        if p.get("lake_entry"):                            # --lake NAME: the root the lake file (or --lake-root) gave
+            remote = "://" in str(a.lake) and not str(a.lake).startswith("file:")
+            lake = pathlib.Path(a.lake) if not remote else None
+            summary.update(lake=a.lake, lakeEntry=p["lake_entry"], mode=a.mode)
+            if remote and a.format != "iceberg" and getattr(a, "engine", "auto") != "java":
+                raise BuildError(f"lake {p['lake_entry']} is in object storage ({a.lake}): a Delta table there is built locally with "
+                                 "--lake-root DIR and published with lake publish, or written by --engine java")
         as_of = date.fromisoformat(a.as_of) if a.as_of else None
         summary.update({k: p[k] for k in ("pack", "domain", "kind", "key", "promote")}, partitionBy=p["partition_by"],
                        date=None if as_of else p["date"], asOf=as_of.isoformat() if as_of else None)
@@ -620,7 +675,10 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--vector", action="append", metavar="COL[,COL]",
                    help="list-of-numbers fields kept as list<double> columns, out of the document (default: the pack's layout vectors)")
     g = p.add_argument_group("where")
-    g.add_argument("--lake", metavar="DIR", help="the lake root (the connector's root: DRISHTI_DELTA_ROOT, or DRISHTI_ICEBERG_ROOT with --format iceberg)")
+    g.add_argument("--lake", metavar="NAME|DIR", help="the lake: a NAME of config/lakes/ (its file gives the table's location and layout; "
+                   "docs/guides/LAKE_GUIDE.md), or a folder, the old form (the options and the pack decide)")
+    g.add_argument("--lake-root", metavar="DIR", help="with --lake NAME: write the lake's layout under this folder instead of its root (a scratch "
+                   "or test lake)")
     g.add_argument("--domain", help="the lake domain (default: the pack's Delta connector's domain)")
     g.add_argument("--pack", metavar="DIR", help="a pack folder: domain, kind, key, date and promoted columns from its pack.yaml")
     g.add_argument("--connector", help="which of the pack's Delta connectors the table is for (one per source system: trade-endur); default: the first")
@@ -642,6 +700,8 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
                    help="--engine java: a setting of the parallel loader (memory.budget-mb=4096, memory.spill-dir=/mnt/ebs, parallel.writers=16, "
                         "target.layout.sort-by=[LEGAL_ENTITY,DESK,id]; docs/guides/TOOLS.md section 4.13); repeatable")
     g.add_argument("--mode", choices=MODES, default="overwrite-dates", help="overwrite-dates (default), overwrite-partitions or append")
+    g.add_argument("--batch-id", metavar="ID", help="--engine java, an append (a lake file's load-mode: append, or --mode append): the load's batch, "
+                   "recorded in each date's commit so the same batch is never appended twice (docs/guides/LAKE_GUIDE.md section 4)")
     g.add_argument("--batch-rows", type=int, default=50_000, help="most rows per batch written (default 50,000; also the most rows sorted at once)")
     g.add_argument("--batch-mb", type=int, default=128, help="most MB of documents per batch (default 128): large documents make smaller batches, so memory stays flat")
     g.add_argument("--jar", help="the drishti-server exec jar (default: DRISHTI_JAR, then drishti-server/target)")

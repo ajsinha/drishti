@@ -124,7 +124,9 @@ class Packs:
     def __init__(self, packs_dir: pathlib.Path):
         import yaml
         self.dir = packs_dir
-        self.specs = {p.name: yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8"))
+        sys.path.insert(0, str(ROOT / "tools"))
+        import packlake                               # a lake-form template read with the pack's lake: entries
+        self.specs = {p.name: packlake.view(yaml.safe_load((p / "pack.yaml").read_text(encoding="utf-8")))
                       for p in sorted(packs_dir.iterdir()) if (p / "pack.yaml").is_file()}
 
     def connector(self, pack: str, name: str) -> dict:
@@ -212,6 +214,7 @@ class DemoLake:
         self.a = a
         self.testdata = pathlib.Path(a.testdata)
         self.lake = pathlib.Path(a.lake).resolve()
+        self.lake_name = getattr(a, "lake_name", None) or "demo"      # the lake file whose layout the demo tables take (config/lakes/demo.yaml)
         self.data = demo_data_dir(a, self.lake)
         self.staging = self.data / "build" / "lake-demo"
         self.packs = Packs(pathlib.Path(a.packs))
@@ -494,7 +497,7 @@ class DemoLake:
                             fh.write(json.dumps(doc, separators=(",", ":"), ensure_ascii=False) + "\n")
                             rows += 1
         argv = ["--from", str(stage), "--pack", str(self.packs.dir / ds["pack"]), "--kind", ds["kind"], "--connector", ds["connector"],
-                "--key", ds["key"], "--date", ds["dated-by"], "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
+                "--key", ds["key"], "--date", ds["dated-by"], "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
         code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
         if code:
             print(f"  {domain}/{table}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
@@ -527,9 +530,7 @@ class DemoLake:
                 for line in state.values():
                     fh.write(self.names.rewrite_line(line if "snapshot" in ds else self.redate(line)) + "\n")   # the configured names
             argv = ["--from", str(stage), "--pack", str(self.packs.dir / pack), "--kind", kind, "--connector", connector, "--key", key,
-                    "--as-of", day, "--lake", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
-            for p in ds.get("partition-by") or []:
-                argv += ["--partition-by", p]
+                    "--as-of", day, "--lake", self.lake_name, "--lake-root", str(self.lake), "--engine", self.a.engine, "-q", "--no-stamp"]
             code, summary = self.lb.run(self.lb.build_parser().parse_args(argv), say=lambda *x, **k: None)
             if code:
                 print(f"  {domain}/{table} {day}: {summary.get('status')} {summary.get('error', '')}", file=sys.stderr)
@@ -671,6 +672,7 @@ class DemoLake:
 
 def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     p.add_argument("--testdata", default=str(ROOT / "data" / "testdata"), help="the committed test data (default data/testdata)")
+    p.add_argument("--lake-name", default="demo", help="the lake file (config/lakes/<name>.yaml) that gives every demo table its layout (default demo)")
     p.add_argument("--lake", default=str(data_dir() / "delta"), help="the Delta root to build (default <data>/delta, what the packs read)")
     p.add_argument("--data-dir", help="the data folder the feeds and the staging go to (default DRISHTI_DATA_DIR, else the folder holding "
                    "--lake when it is a delta/ folder, else data/): the server's own data folder")

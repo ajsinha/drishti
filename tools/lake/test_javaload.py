@@ -43,7 +43,8 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
                            "promote": ["LEGAL_ENTITY", "DESK"], "vectors": ["SCENARIO_PV"], "flatten": {"NOTIONAL": "LEGS[0].NOTIONAL"},
                            "partition-by": [], "latest-by": ""}   # Iceberg keeps the partition field as a column, as lake build's Iceberg path does
     assert javaload.config(a, {**p, "latest_by": "COMPUTED_AT"}, None, "/lake", True, tmp_path, {})["source"]["latest-by"] == "COMPUTED_AT"
-    assert c["target"]["format"] == "iceberg" and c["target"]["lake"] == "/lake" and c["target"]["kind"] == "scenario-pv"
+    assert c["target"]["format"] == "iceberg" and c["target"]["path"] == "/lake/risk/scenario-pv" and c["target"]["kind"] == "scenario-pv"
+    assert "lake" not in c["target"]                # a folder goes as the table's path, never as target.lake (a lake's name)
     assert c["target"]["iceberg"]["s3.region"] == "eu-west-2"
     assert c["target"]["iceberg"]["token"] == "${DRISHTI_LOADER_SECRET_1}" and env["DRISHTI_LOADER_SECRET_1"] == "s3cr3t"
     assert "s3cr3t" not in json.dumps(c)
@@ -52,6 +53,11 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
     d = javaload.config(args(src=["x.jsonl"]), {**p, "table": "pv_endur"}, date(2026, 10, 28), "/lake", False, tmp_path, {})
     assert d["source"]["as-of"] == "2026-10-28" and "date" not in d["source"]
     assert d["source"]["partition-by"] == ["LEGAL_ENTITY"] and d["target"]["table"] == "pv_endur"
+    assert d["target"]["path"] == "/lake/risk/pv_endur"
+
+    named = javaload.config(args(src=["x.jsonl"]), {**p, "table": "pv_endur", "lake_name": "demo"}, None, "/lake", False, tmp_path, {})
+    assert named["target"]["lake"] == "demo" and named["target"]["kind"] == "scenario-pv" and named["target"]["table"] == "pv_endur"
+    assert "partition-by" not in named["source"] and "promote" not in named["source"]   # the lake file decides
 
 
 def test_auto_picks_the_loader_only_for_large_json_lines(tmp_path, monkeypatch):

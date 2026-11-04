@@ -98,6 +98,8 @@ plugins:
     tls: true
     proxy: true
     settings:
+      - { name: lake, desc: "The lake this connector reads (config/lakes/<lake>.yaml, docs/guides/LAKE_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.<kind> and layout.<kind>.* are refused here. Not set: the older form (those keys in this file, one warning)", group: connection }
+      - { name: lake-tables, type: list, desc: "With lake: the lake file's entries this connector reads (trading.trade_endur), where a kind has several tables; not set: the one table of each kind", group: connection }
       - { name: root, type: path, default: "<data dir>/delta", desc: "Lake root (folder, or s3://bucket/prefix); default: the delta folder of the data directory", group: connection }
       - { name: domain, desc: "The data-domain folder under the root; may not contain `..` or start with `/`", group: connection }
       - { name: kinds, type: list, desc: "Kinds to serve (comma list); not set: every table found under the domain", group: mapping }
@@ -150,6 +152,8 @@ plugins:
     tls: true
     proxy: true
     settings:
+      - { name: lake, desc: "The lake this connector reads (config/lakes/<lake>.yaml, docs/guides/LAKE_GUIDE.md): root, storage, catalog, table folders, promoted columns and vectors come from its file; with lake set, root, domain, table.<kind> and layout.<kind>.* are refused here. Not set: the older form (those keys in this file, one warning)", group: connection }
+      - { name: lake-tables, type: list, desc: "With lake: the lake file's entries this connector reads (trading.trade_endur), where a kind has several tables; not set: the one table of each kind", group: connection }
       - { name: "layout.*", desc: "Per-kind layout: layout.<kind>.columns (promoted document paths), layout.<kind>.vectors (list<double> columns such as a P&L vector, read in bulk and put back into documents)", group: mapping }
       - { name: doc-disk-cache.enabled, type: bool, default: "true", desc: "Documents already read also kept on disk (RocksDB, one per connector), keyed by the date's files: answered without reading a data file, also after a restart", group: tuning }
       - { name: doc-disk-cache.dir, type: path, default: "<data dir>/cache/<connector>/docs", desc: "Its folder", group: tuning }

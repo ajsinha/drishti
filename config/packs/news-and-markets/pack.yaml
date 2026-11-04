@@ -165,8 +165,17 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [news-topic, listed-company, news, quote]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: news
+      lake: demo
+      lake-tables: news.news-topic,news.listed-company,news.news,news.quote
 routes:
   news: news
   quote: yfinance
+
+# The tables this pack recommends (docs/guides/LAKE_GUIDE.md section 7): copied into a lake file the first time a writer meets
+# the kind; config/lakes/demo.yaml holds them for the demo lake. Its connectors above name the lake and these entries.
+lake:
+  tables:
+    news.news-topic: null
+    news.listed-company: null
+    news.news: null
+    news.quote: null

@@ -81,6 +81,35 @@ class MaintainTest(unittest.TestCase):
             self.assertLessEqual(len([p for p in parquet_on_disk if "_delta_log" not in str(p)]), 11)  # vacuumed
             self.assertTrue(any(Path(uri, "_delta_log").glob("*.checkpoint.parquet")))
 
+    def test_the_lake_files_settings_are_read_in_this_modules_keys(self):
+        import maintconfig
+        conf, notes = maintconfig.from_lake_entry({"retention": "2y", "time-travel": "30d",
+                                                   "maintenance": {"compaction": "false", "expire-snapshots": "7d", "checkpoint-interval": "20",
+                                                                   "colour": "red"}})
+        self.assertEqual(conf["keep-business-days"], 2 * maintconfig.BUSINESS_DAYS_A_YEAR)
+        self.assertFalse(conf["compact"])
+        self.assertEqual(conf["vacuum-hours"], 168)
+        self.assertTrue(conf["checkpoint"])
+        self.assertEqual(maintconfig.with_time_travel(dict(conf))["vacuum-hours"], 720)   # time travel: never vacuumed below 30 days
+        self.assertTrue(any("colour" in n for n in notes) and any("checkpoint-interval" in n for n in notes))
+        self.assertEqual(maintconfig.from_lake_entry({"retention": "260d"})[0], {"keep-business-days": 260})
+        self.assertEqual(maintconfig.from_lake_entry({})[0], {})
+
+    def test_a_tables_lake_file_settings_win_over_the_maintenance_file(self):
+        from deltalake import DeltaTable
+        with tempfile.TemporaryDirectory() as tmp:
+            uri = self.lake(Path(tmp))
+            # the maintenance file keeps every date; the table's lake file (as the one reader dumps it) keeps ten business dates
+            lakes = [{"lake": "t", "root": tmp, "tables": [{"path": "trading/trade", "retention": "10", "maintenance": {"vacuum": "0h"}}]}]
+            config = {"_lakes": lakes, "lakes": [{"root": tmp, "keep-business-days": None, "max-drop-share": 0.7, "compact": True,
+                                                  "checkpoint": True, "vacuum-hours": 168}]}
+            report = maintain.run_detailed(config, dry_run=False, today=date(2026, 9, 30), quiet=True)
+            self.assertEqual(report["failures"], 0, report)
+            self.assertIn("keep-business-days", report["tables"][0]["lake-file"])
+            import pyarrow as pa
+            dates = sorted({r["business_date"] for r in pa.table(DeltaTable(uri).to_pyarrow_table()).to_pylist()})
+            self.assertEqual(len(dates), 11)                                                          # the lake file's retention
+
     def test_retention_that_would_delete_most_of_a_table_needs_force_drop(self):
         from deltalake import DeltaTable
         with tempfile.TemporaryDirectory() as tmp:

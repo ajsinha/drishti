@@ -99,8 +99,8 @@ connectors:
     - cyber-incident
     - oprisk-capital
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: oprisk
+      lake: demo
+      lake-tables: oprisk.loss-event,oprisk.risk-control,oprisk.key-risk-indicator,oprisk.issue,oprisk.oprisk-scenario,oprisk.third-party,oprisk.cyber-incident,oprisk.oprisk-capital
 routes:
   loss-event: oprisk-store
   risk-control: oprisk-store
@@ -291,3 +291,13 @@ roles:
     - desk
     - legal-entity
     raw: true
+lake:
+  tables:
+    oprisk.loss-event: null
+    oprisk.risk-control: null
+    oprisk.key-risk-indicator: null
+    oprisk.issue: null
+    oprisk.oprisk-scenario: null
+    oprisk.third-party: null
+    oprisk.cyber-incident: null
+    oprisk.oprisk-capital: null

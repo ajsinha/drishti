@@ -56,18 +56,36 @@ This guide sets one up end to end, explains what the server does with it, and li
 
 ## 2. Setting up a memory-only feed
 
-Two files. The connector:
+Three files. The connector:
 
 ```yaml
 # config/connectors/news-store.yaml (config/connectors.examples/memory/news-store.yaml)
 plugin: delta
 kinds: [news-topic, listed-company, news, quote]
 settings:
-  root: mem://news
-  domain: ""          # the tables sit at mem://news/<kind>: without it the pack's template adds domain: news
+  lake: news          # config/lakes/news.yaml (below): root mem://news, the tables at mem://news/<kind>
+  lake-tables: news.news-topic,news.listed-company,news.news,news.quote
 ```
 
-The store and its tables, in the in-memory lake's own file `config/engines/memory-lake.yaml` (with its switch,
+The store is a lake like any other ([LAKE_GUIDE.md section 6](LAKE_GUIDE.md#6-in-memory-stores)): its own lake file, its root
+`mem://<store>`, its cap and contract under `memory:`:
+
+```yaml
+# config/lakes/news.yaml (config/lakes.examples/memory/news.yaml)
+lake: news
+root: mem://news
+memory:
+  max-mb: 256                 # the hard cap
+  chunk-kb: 64                # small tables: every file holds at least one chunk
+  contract: VX-2026-07        # shown on every refusal and on Admin -> Lakes
+tables:                       # the tables sit at mem://news/<kind>
+  news.news-topic: {path: news-topic}
+  news.listed-company: {path: listed-company}
+  news.news: {path: news}
+  news.quote: {path: quote}
+```
+
+Its tables' replenish jobs, below, stay in the in-memory lake's own file `config/engines/memory-lake.yaml` (the engine's work, with its switch,
 `drishti.engines.memory-lake.enabled`, off as shipped: set it to `true`, or turn it on in Admin → Engines, then restart, since the
 stores' caps size the direct memory at start; [OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)), or as
 before in `application.local.yaml` in the server's working folder or the environment (stores configured there keep the lake on):
@@ -77,12 +95,7 @@ before in `application.local.yaml` in the server's working folder or the environ
 drishti:
   lake:
     memory:
-      stores:
-        news:
-          max-mb: 256                 # the hard cap
-          chunk-kb: 64                # small tables: every file holds at least one chunk
-          contract: VX-2026-07        # shown on every refusal and on Admin -> Lakes
-      tables:
+      tables:                         # the store news is config/lakes/news.yaml (above); a store under stores: here is the older form
         - name: news
           store: news
           source: { url: "https://feeds.example.com/news.jsonl", headers: { Authorization: "Bearer ${VENDOR_TOKEN}" } }

@@ -17,6 +17,8 @@
 # connector stays idle. The endpoint, the signing, the region and the namespace (the domain) follow from the ARN; the kinds are
 # read from the S3 Tables tables of the same names with underscores (pnl-vector is pnl_vector). No key is written here:
 # credentials come from the AWS default chain (the ECS task role, a profile, AWS_ACCESS_KEY_ID). Guide: ICEBERG_CONNECTOR.md section 20.
+# The lake (iceberg, its root or catalog, storage and tables) is config/lakes.examples/s3tables/s3tables.yaml: copy it to
+# config/lakes/s3tables.yaml beside this file (docs/guides/LAKE_GUIDE.md). This file keeps only what the connector reads.
 plugin: iceberg
 kinds:
 - stress-scenario
@@ -35,22 +37,6 @@ kinds:
 - pnl-history
 description: risk-store read from AWS S3 Tables (the market-risk pack's risk domain with its P&L vectors, scenario PVs, hierarchy and limits)
 settings:
-  catalog: s3tables
-  table-bucket-arn: ${DRISHTI_S3TABLES_ARN:}
-  domain: risk
+  lake: s3tables
+  lake-tables: risk.stress-scenario,risk.stress-result,risk.frtb-sensitivity,risk.pnl-explain,risk.trade-valuation,risk.portfolio,risk.pnl-vector,risk.scenario-pv,risk.fx-scenario,risk.scenario-set,risk.risk-hierarchy,risk.var-limit,risk.desk-pnl,risk.pnl-history
   engine: native
-  layout.trade-valuation.columns: VALUATION_ID,TRADE_ID,SOURCE_SYSTEM,PRODUCT_TYPE,PRODUCT_GROUP,PORTFOLIO,DESK,COUNTERPARTY,NETTING_SET,TRADER_ID,BUY_SELL_CODE,TRADE_STATUS,CURRENCY,NOTIONAL,MTM,MTM_CURRENCY,PNL_1D,DV01,TRADE_DATE,MATURITY_DATE,VALUATION_DATE
-  layout.trade-valuation.sort-by: id
-  layout.trade-valuation.file-rows: 250000
-  layout.trade-valuation.row-group-rows: 1000
-  layout.pnl-vector.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,LIMIT_LETTER,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,PV,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,REPORTING_CCY,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS,TRADE_CURRENCY
-  layout.pnl-vector.vectors: PNL
-  layout.scenario-pv.columns: VALUE_TYPE,GRAIN,TRADE_ID,POSITION_ID,CURRENCY,SOURCE_SYSTEM,SECURITY_ID,INSTRUMENT,LEGAL_ENTITY,DIVISION,DESK,TT_BOOK,LIMIT_LETTER,PORTFOLIO,STRATEGY,PRODUCT_GROUP,PRODUCT_TYPE,COUNTERPARTY,DIRECTION,QUANTITY,BASE_PV,VALUATION_DATE,BASE_VALUATION_DATE,TAGS,TRADE_STATUS,MATURITY_DATE,STATUS,SCENARIO_SET_ID,BATCH_ID,RUN_KIND,COMPUTED_AT,TRADE_IDS
-  layout.scenario-pv.vectors: SCENARIO_PV
-  layout.fx-scenario.columns: CURRENCY,RATE,SCENARIO_SET_ID
-  layout.risk-hierarchy.columns: NODE_ID,HIERARCHY,LEVEL,PARENT_ID,NAME
-  layout.var-limit.columns: LIMIT_ID,HIERARCHY,NODE_ID,LIMIT_VAR,CURRENCY
-  layout.desk-pnl.columns: DESK_PNL_ID,DESK_ID,LEGAL_ENTITY,ACTUAL_PNL,HYPOTHETICAL_PNL,FEES_AND_COMMISSIONS,CURRENCY,SOURCE,AS_OF
-  layout.pnl-history.columns: HIERARCHY,NODE_ID,LEVEL,CURRENCY,FIRST_DAY,LAST_DAY,DAY_COUNT
-  layout.pnl-history.vectors: PNL
-  layout.portfolio.columns: PORTFOLIO_ID,NAME,TYPE,OWNER

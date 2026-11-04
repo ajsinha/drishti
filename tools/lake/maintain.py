@@ -289,6 +289,7 @@ def run_detailed(config: dict, dry_run: bool, today: date | None = None, force_d
             out["failures"] += 1
             out["tables"].append({"root": root, "table": f"{root.rstrip('/')}/{name}", "name": name, "error": "no such table under this lake"})
         owned = ownership.built(root)
+        lake = {**lake, "_lake-file": maintconfig.lake_file_settings(root, config.get("_lakes"))}   # the tables' own settings
         lock = None
         if not dry_run and "://" not in root and Path(root).is_dir():
             import build
@@ -331,7 +332,16 @@ def _one(uri, root, lake, base, owned, want, day, dry_run, force_drop, force_for
         res["forced"] = True
         log(event="warning", table=uri, warning="maintaining a table Drishti did not build (--force-foreign): its publisher may rewrite "
                                                  "or vacuum it too, and a run here may break what it expects")
-    conf, floor = maintconfig.retention_floor(name, {**base, **((lake.get("tables") or {}).get(name) or {})}, lake.get("retain-years"))
+    # the table's settings: the maintenance file's lake defaults, its own entry there, then its lake file's (LAKE_GUIDE.md: everything
+    # specific to a table lives in the lake file), and the domain's retention floor over all of them
+    own, said = maintconfig.from_lake_entry((lake.get("_lake-file") or {}).get(name) or {})
+    if own:
+        res["lake-file"] = sorted(k for k in own if k != "time-travel-hours")
+    for n in said:
+        if not quiet:
+            log(event="note", table=uri, note=n)
+    conf, floor = maintconfig.retention_floor(name, maintconfig.with_time_travel({**base, **((lake.get("tables") or {}).get(name) or {}), **own}),
+                                              lake.get("retain-years"))
     if floor:
         res["retention-floor"] = floor
         if not quiet:

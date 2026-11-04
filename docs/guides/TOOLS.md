@@ -143,6 +143,21 @@ the Delta connector reads:
   document (DOUBLE when every value is a number, else STRING);
 * at `<lake>/<domain>/<kind>/`, the folder a Delta connector with `root: <lake>` and `domain: <domain>` reads for that kind.
 
+**With a lake file** (`--lake NAME`, a lake of `config/lakes/`: [LAKE_GUIDE.md](LAKE_GUIDE.md)) the table's place, partitions, promoted
+columns, vectors, id, date, latest-by and load mode come from the file, read by the one lake reader (`tools/lake/lakeconfig.py` runs
+drishti-lakeconfig's `LakesCli`). A `--partition-by`, `--promote`, `--vector` or `--key` that says otherwise is refused, naming both; a kind
+the file has no entry for is refused. `--lake-root DIR` writes the same layout under another folder (a scratch or test lake). `--lake DIR`
+alone is the older form: the options and the pack decide. A table whose lake file says `load-mode: append` is written by the parallel
+loader only (`--engine java --batch-id ID`: the batch recorded in each date's commit, never appended twice); the Python path refuses it.
+
+```bash
+python3 tools/drishti.py lake build --from drop/endur-2026-10-28.jsonl.gz --as-of 2026-10-28 --pack config/packs/trading \
+    --connector trade-endur --lake demo                  # partitioned by business_date and PRODUCT_TYPE, as config/lakes/demo.yaml says
+python3 tools/drishti.py lake show                       # every lake and table as the server reads them
+python3 tools/drishti.py lake check                      # connectors name known lakes; lake files match the tables on disk
+python3 tools/drishti.py lake migrate-config [--write]   # lake files from connector files that still describe their lake
+```
+
 Memory stays flat: documents are decoded one at a time, staged on disk per business date and partition, and written in batches
 bounded by rows (`--batch-rows`, 50,000) and bytes (`--batch-mb`, 128). The staged rows, and the Java writer's own temporary
 files, go in a folder beside the lake (never the system temp folder), removed when the run ends. Section 12 has the numbers.
@@ -696,6 +711,13 @@ python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --
 `overwrite-dates` (smaller loads, JSON arrays and the other modes go the Python way). `--loader-set KEY=VALUE` (repeatable)
 sets any key below; `DRISHTI_LAKE_LOADER_HEAP` is the JVM's heap (default `4g`); `--from s3://…` and a Delta `--lake s3://…` need
 `--engine java`.
+
+**Through a lake file**: `target.lake: <name>` and `target.kind` (and `target.table` where a kind has several tables) take the table's
+location, partitions, promoted columns, vectors, id, date, latest-by, file layout and load mode from `config/lakes/<name>.yaml` (the
+folder: `-Ddrishti.lakes.dir` or `DRISHTI_LAKES_DIR`); a key of the load file that says otherwise is refused with both named.
+`load-mode: append` in the lake file (or `target.mode: append`) adds the rows instead of replacing the dates, and needs
+`target.batch-id`: the batch is recorded in each date's commit and a batch already committed for a date is skipped, never appended twice
+([LAKE_GUIDE.md section 4](LAKE_GUIDE.md#4-replace-and-append)). A `target.lake` that is a folder is the older form (one warning).
 
 **On its own** (a scheduler, a container, a machine without the console's Python):
 

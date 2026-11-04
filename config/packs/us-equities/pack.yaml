@@ -109,25 +109,28 @@ connectors:
     enabled: ${DRISHTI_LAKE_ENABLED:true}
     kinds: [us-company, index-membership, filing-feed, filing, financial-fact]
     settings:
-      root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
-      domain: us-equities
+      lake: demo
+      lake-tables: us-equities.us-company,us-equities.index-membership,us-equities.filing-feed,us-equities.filing,us-equities.financial-fact
       layout:
         us-company:
-          columns: [TICKER, NAME, LEI_LEGAL_NAME, CIK, LEI, EXCHANGE, INDEX_TEXT, SECTOR, SIC, SIC_DESCRIPTION, STATE_OF_INCORPORATION,
-                    REVENUE]
-          type-ahead: [NAME, LEI, LEI_LEGAL_NAME]
+          type-ahead:
+          - NAME
+          - LEI
+          - LEI_LEGAL_NAME
         index-membership:
-          columns: [INDEX, NAME, MEMBERS]
-          type-ahead: [NAME]
+          type-ahead:
+          - NAME
         filing-feed:
-          columns: [FEED, NAME, FILINGS]
-          type-ahead: [NAME]
+          type-ahead:
+          - NAME
         filing:
-          columns: [ACCESSION, COMPANY, COMPANY_NAME, FORM, FILED, REPORT_DATE]
-          type-ahead: [COMPANY, FORM]
+          type-ahead:
+          - COMPANY
+          - FORM
         financial-fact:
-          columns: [FACT_ID, COMPANY, COMPANY_NAME, CONCEPT, LABEL, LATEST, LATEST_YEAR]
-          type-ahead: [COMPANY_NAME, LABEL]
+          type-ahead:
+          - COMPANY_NAME
+          - LABEL
   us-equities-prices:
     plugin: yfinance
     enabled: ${DRISHTI_US_EQUITIES_PRICES_ENABLED:false}
@@ -205,3 +208,49 @@ routes:
   filing: us-equities-store
   financial-fact: us-equities-store
   price-history: us-equities-prices
+
+# The tables this pack recommends (docs/guides/LAKE_GUIDE.md section 7): copied into a lake file the first time a writer meets
+# the kind; config/lakes/demo.yaml holds them for the demo lake. Its connectors above name the lake and these entries.
+lake:
+  tables:
+    us-equities.us-company:
+      promote:
+      - TICKER
+      - NAME
+      - LEI_LEGAL_NAME
+      - CIK
+      - LEI
+      - EXCHANGE
+      - INDEX_TEXT
+      - SECTOR
+      - SIC
+      - SIC_DESCRIPTION
+      - STATE_OF_INCORPORATION
+      - REVENUE
+    us-equities.index-membership:
+      promote:
+      - INDEX
+      - NAME
+      - MEMBERS
+    us-equities.filing-feed:
+      promote:
+      - FEED
+      - NAME
+      - FILINGS
+    us-equities.filing:
+      promote:
+      - ACCESSION
+      - COMPANY
+      - COMPANY_NAME
+      - FORM
+      - FILED
+      - REPORT_DATE
+    us-equities.financial-fact:
+      promote:
+      - FACT_ID
+      - COMPANY
+      - COMPANY_NAME
+      - CONCEPT
+      - LABEL
+      - LATEST
+      - LATEST_YEAR

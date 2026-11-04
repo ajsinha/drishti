@@ -15,6 +15,43 @@
 -->
 # Changelog
 
+## 2.9.11.c (unreleased)
+
+- **The lake configuration: one file per lake (LAKE_GUIDE.md; LAKE_CONFIG.md "As built"; DELTA_CONNECTOR.md and ICEBERG_CONNECTOR.md,
+  As a connector file; DATA_GUIDE.md section 3; TOOLS.md sections 4 and 4.13).** `config/lakes/<lake>.yaml` says where a lake is (a
+  folder, `s3://`, or `mem://<store>`), how to reach it, and every table in it: path, partitions after `business_date` (always first, at
+  most four more), promoted columns, vectors, id, date, latest-by, load mode, file layout, retention, properties. A new module,
+  `drishti-lakeconfig` (plain Java and Jackson), reads and checks it once; the Python tools run its `LakesCli` for the JSON, so the
+  rules exist once. Writers refer to it: the parallel loader (`target.lake: <name>` and `target.kind`; a load key that contradicts the
+  file, such as `--partition-by`, is refused with both named; a kind the file lacks is refused), the data inbox (rules name a lake, `demo`
+  as shipped; a kind the lake lacks gets its pack's recommended entry copied into the file once), `lake build --lake <name>` (with
+  `--lake-root` for a scratch lake), `lake demo` and `build_demo_lakes.py` (the hard-coded `PRODUCT_TYPE` partition is gone:
+  `config/lakes/demo.yaml` describes the demo lake like any other). Readers refer to it: a Delta or Iceberg connector names `lake:` (and
+  `lake-tables:` where a kind has several tables), and its root, folders, storage, catalog, promoted columns and vectors come from the
+  file. **Append**: `load-mode: append` adds rows instead of replacing dates; each load's batch id is recorded in the commit (Delta: a
+  transaction id per batch and date; Iceberg: the snapshot summary), so a repeated or retried batch is never appended twice; the inbox
+  sends one for every load. **In-memory stores are lakes** (`root: mem://<store>`, `memory: {max-mb, contract, ...}`); the engine file
+  keeps the switch, the replenish jobs and the compaction policy. **Checks**: `drishti.py lake check` (connectors name known lakes; each
+  lake file matches its tables on disk: format, partition columns, promoted columns; reported, never rewritten) and `drishti.py lake
+  show`. **Admin → Lakes** lists every lake and table from the files, read-only (`GET /api/v1/admin/lakes/files`). **Migration**:
+  `drishti.py lake migrate-config [--write]` writes lake files from connector files that still carry `root`, `domain`, `table.<kind>` or
+  `layout.<kind>.*` and rewrites them to `lake: <name>`; until then such a connector starts as before with one warning (the old keys are
+  removed one release later). Nothing under the data folder changes. Help: Data → Loads and lakes → Lake guide, and tutorial 34
+  (one file per lake). **Every shipped pack** now ships its tables as a `lake:` block and its Delta templates name `lake: demo` and
+  `lake-tables:` (the generators write it through `tools/packlake.py`; the tools that read a template's layout read it through the same
+  module); `config/lakes/demo.yaml` holds their entries and ships inside the server too, so a container or a stack node knows the demo
+  lake. A template update never adds `lake:` to an older connector file. References nest (`${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}`).
+  The connector examples are in the lake form with their lake files in `config/lakes.examples/`; the stack's synthetic lakes are laid
+  out by the demo lake file. `lake build` passes the parallel loader a lake by name (or the table's path, never a folder as a lake) and
+  `--batch-id`; its Python path refuses a lake-file append table (the batch rule lives in the loader only). **The official results**
+  are lakes of their own (`config/lakes/var-official.yaml`, `ccr-official.yaml`: format, root and storage from the publishers' settings),
+  so `var-results` and `exposure-results` name them and the demo has no older-form connector left; the server only makes them Iceberg
+  when the publisher writes Iceberg. **The data inbox's loader** is handed the settings the lake files refer to as the server resolves
+  them (a `DRISHTI_DELTA_ROOT` given as a `--setting` reaches it). **`build_demo_lakes.py --store ...=iceberg`** writes its connectors in
+  the lake form (`lake: demo-iceberg`, its lake file beside the connector folder). **`lake maintain`** acts on a table's lake file:
+  `retention`, `maintenance` (compaction, vacuum or expire-snapshots age, checkpoint, target size; `checkpoint-interval` set by the
+  writers as `delta.checkpointInterval`) and `time-travel`, over the maintenance file and under the domain's retention floor.
+
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (2026-11-04)
 
 - **The VaR screen's layout (2.9.11.b, the product owner's approved mock-up A, `docs/lenses/mockups/var-layout/A.html` and

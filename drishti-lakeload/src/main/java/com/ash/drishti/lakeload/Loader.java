@@ -299,6 +299,16 @@ final class Loader {
                 int done = 0;
                 for (Map.Entry<Integer, List<Runs.Run>> e : byDate.entrySet()) {
                     LocalDate date = LocalDate.ofEpochDay(e.getKey());
+                    if (target.appended(date)) {           // this batch's append of the date is committed already: never twice
+                        progress.phase("skipping " + date + ": batch " + cfg.target().batchId() + " was appended already");
+                        report.skippedBatch(date);
+                        for (Runs.Run r : e.getValue()) {
+                            r.close();
+                        }
+                        e.getValue().clear();
+                        progress.done(++done, byDate.size());
+                        continue;
+                    }
                     progress.phase("writing " + date);
                     target.begin(date);
                     List<Runs.Run> runs = fanIn(date, e.getValue());

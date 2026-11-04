@@ -46,7 +46,11 @@ public class MemoryLakeConfiguration {
     /** {@code drishti.lake.memory.*}, bound onto the module's settings record (none configured: no stores, no tables). */
     @Bean
     public MemoryLakeSettings memoryLakeSettings(Environment env) {
-        return Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class).orElseGet(MemoryLakeSettings::none);
+        MemoryLakeSettings bound = Binder.get(env).bind("drishti.lake.memory", MemoryLakeSettings.class).orElseGet(MemoryLakeSettings::none);
+        // the stores are lakes (config/lakes/<store>.yaml, root: mem://<store>, LAKE_GUIDE.md section 6); the engine file keeps the switch,
+        // the replenish jobs and the compaction policy (the engine's work, not the lake's description)
+        return bound.withLakeStores(com.ash.drishti.lakeconfig.Lakes.current(),
+                m -> org.slf4j.LoggerFactory.getLogger(MemoryLakeConfiguration.class).warn(m));
     }
 
     @Bean(destroyMethod = "close")

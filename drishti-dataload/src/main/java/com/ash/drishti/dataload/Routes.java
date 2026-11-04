@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 /**
  * Routing a file to a table (DATALOAD_INBOX.md section 5): the {@code .ready} file's keys first, then the first rule of
  * {@code config/dataload.yaml} whose glob matches the file's name. A route names a loaded pack and one of its kinds; the loader takes the
- * table, its layout, its key and its date field from the pack (its {@code PackLayout}), so nothing of a table is written here. A file no
+ * table from the route's lake file (config/lakes/, the pack's recommended entry copied there once), so nothing of a table is written here. A file no
  * rule matches is refused with the reason ({@code unmatched: fail}): never guessed. The rules are read again every cycle.
  */
 public final class Routes {
