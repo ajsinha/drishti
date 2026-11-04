@@ -320,7 +320,7 @@ engines:
     needs: []
     uses: []
     api: [/api/v1/admin/dataload]
-    console: []
+    console: [/admin/loads/inbox, /admin/api/dataload/]
     words: []
     menus: []
     help: []

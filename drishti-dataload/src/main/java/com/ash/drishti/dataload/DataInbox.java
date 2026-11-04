@@ -267,14 +267,58 @@ public final class DataInbox {
             Outbox ob = new Outbox(root, clock, zone);
             List<Path> failed = ob.failedCopies();
             out.put("failed", failed.subList(Math.max(0, failed.size() - 50), failed.size()).reversed().stream().map(ob::describeFailed).toList());
-            out.put("ledger", new Ledger(root.resolve("ledger"), clock).recent(20));
+            out.put("ledger", Ledger.tail(root.resolve("ledger"), 20));
         } catch (IOException e) {
             out.put("error", "the inbox's folders cannot be read: " + e.getMessage());
         }
+        List<Cycle.Report> cycles;
         synchronized (history) {
-            out.put("cycles", List.copyOf(history));
+            cycles = List.copyOf(history);
         }
+        out.put("cycles", cycles);
+        // the Admin screen's board (Waiting, Loading, Last cycles, failures, duplicates, rules, settings): every figure in words, from here
+        new InboxStatus(settings, node, clock, zone, packs).addTo(out, started(), next, current, cycles);
         return out;
+    }
+
+    /**
+     * A report of a handled file, for the Admin screen's links: {@code <file>.loaded.json}, {@code <file>.failed.json}, or a loader's
+     * {@code load-<n>.summary.json} / {@code load-<n>.rejects.jsonl} (the first 500 lines), under {@code outbox/} or {@code failed/} only.
+     * Refuses any other path (no {@code ..}, no data file, nothing outside those folders).
+     */
+    public Object report(String path) throws IOException {
+        if (path == null || path.isBlank() || path.contains("..") || path.contains("\\") || path.startsWith("/")) {
+            throw new IllegalArgumentException("give a report's path under outbox/ or failed/ as the status names it");
+        }
+        Path root = Path.of(settings.dir()).toAbsolutePath().normalize();
+        Path p = root.resolve(path).normalize();
+        String name = p.getFileName().toString();
+        boolean json = name.endsWith(".loaded.json") || name.endsWith(".failed.json") || name.endsWith(".summary.json") || name.equals(Cycle.Plan.FILE);
+        boolean rejects = name.startsWith(Recovery.LOAD) && name.endsWith(".rejects.jsonl");
+        if (!(p.startsWith(root.resolve("outbox")) || p.startsWith(root.resolve("failed"))) || !(json || rejects) || name.startsWith(".")) {
+            throw new IllegalArgumentException(path + " is not a report of the inbox (a .loaded.json, .failed.json, .summary.json or .rejects.jsonl "
+                    + "under outbox/ or failed/)");
+        }
+        if (!java.nio.file.Files.isRegularFile(p, java.nio.file.LinkOption.NOFOLLOW_LINKS)) {
+            throw new java.nio.file.NoSuchFileException("no report at " + path + " (the outbox keeps " + settings.keepOutboxDays() + " days)");
+        }
+        if (json) {
+            return JSON.readTree(p.toFile());
+        }
+        List<JsonNode> lines = new ArrayList<>();
+        try (var r = java.nio.file.Files.newBufferedReader(p, java.nio.charset.StandardCharsets.UTF_8)) {
+            String line;
+            while ((line = r.readLine()) != null && lines.size() < 500) {
+                if (!line.isBlank()) {
+                    try {
+                        lines.add(JSON.readTree(line));
+                    } catch (IOException e) {
+                        lines.add(JSON.getNodeFactory().textNode(line));
+                    }
+                }
+            }
+        }
+        return lines;
     }
 
     private static Map<String, Object> entry(String name, long size, Instant modified, String state) {

@@ -53,21 +53,25 @@ public class DataLoadController {
     @GetMapping("/api/v1/admin/dataload")
     public Map<String, Object> status(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
-        Map<String, Object> out = new LinkedHashMap<>(inbox.status());
-        var s = inbox.settings();
-        Map<String, Object> cfg = new LinkedHashMap<>();
-        cfg.put("stableSeconds", s.stableSeconds());
-        cfg.put("maxFiles", s.maxFiles());
-        cfg.put("maxGb", s.maxGb());
-        cfg.put("loaderHeap", s.loaderHeap());
-        cfg.put("loadTimeout", s.loadTimeout().toString());
-        cfg.put("rejectMaxPercent", s.rejectMaxPercent());
-        cfg.put("reloadDuplicates", s.reloadDuplicates());
-        cfg.put("keepOutboxDays", s.keepOutboxDays());
-        cfg.put("lake", s.lake());
-        cfg.put("rulesFile", s.rulesFile());
-        out.put("settings", cfg);
-        return out;
+        return inbox.status();               // the settings, the rules and the Admin screen's board included: DataInbox.status, the one source
+    }
+
+    /**
+     * A report the status links to: a handled file's {@code .loaded.json} or {@code .failed.json}, a loader's summary or its rejects (the
+     * first 500 lines), by its path under the inbox's folder ({@code failed/2026-11-03/<run>/x.jsonl.gz.failed.json}); nothing else.
+     */
+    @GetMapping("/api/v1/admin/dataload/report")
+    public Object report(@RequestParam(name = "path") String path, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        try {
+            return inbox.report(path);
+        } catch (NoSuchFileException e) {
+            throw new DrishtiException(ErrorCode.ENTITY_NOT_FOUND, e.getMessage());
+        } catch (IllegalArgumentException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
+        } catch (IOException e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the report could not be read: " + e.getMessage());
+        }
     }
 
     /**

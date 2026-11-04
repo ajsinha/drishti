@@ -145,6 +145,22 @@
   `extract(text, group)` and `groups()`: capture groups and lazy repeats in the same linear-time engine, which `regex_extract` uses.
   The editor schema (`x-rachana-functions`) marks an old spelling `oldSpellingOf`; the Sutra editor checks it but offers only the one
   names, with help for the new functions.
+- **Tutorial 36, Load files automatically with the data inbox** (the inbox's second document, beside DATA_GUIDE.md section 7): the
+  engine switched on, a routing rule, a day of trades dropped with its `.ready`, the Inbox screen from waiting to loaded, `ready.all`,
+  a failed file fixed and retried, a duplicate, the outbox and the ledger; UI, `drishti.py dataload status|run|retry` and YAML at every
+  step (outputs and screenshots filled in the heavy run). Its Help entry is paired with the data guide (62 help pages).
+- **Admin → Data loads → Inbox: the data inbox's status board (mock-up A; DATA_GUIDE.md section 7.8; DATALOAD_INBOX.md sections 10 and
+  14; API_GUIDE.md, Data loads).** Three columns that follow the folders: *Waiting* (`inbox/`: each file's state, ready, ready via
+  `ready.all`, not yet stable, no marker, refused, and the rule that will route it, or *no rule matches* before it fails), *Loading*
+  (`inprocess/<run>/`: the run and its tables one after another, committed with versions, rows and rejects, or loading) and *Last cycles*
+  (`outbox/`: loaded, nothing ready, duplicate, failed, skipped while a run loads); failures with the reason, the report and **Retry**;
+  today's duplicates; the routing rules (read-only) and the settings; on top the switch, owner node, lock, next cycle and **Load now**,
+  whose *skipped: run … still loading (n min)* answer is said in words. The page redraws itself from the server (5 s while a run loads,
+  30 s when quiet), stacks the columns on a phone with 44 px controls, and is gone with the engine. Every figure is the server's:
+  `GET /api/v1/admin/dataload` gains the board (`InboxStatus`: `board`, `lastCycles`, `rules`, `folders`, `nextCycleText`, `lockText`,
+  `ownerText`, and the run's files and tables under `running`), from the run's plan `inprocess/<run>/load-plan.json` that each cycle now
+  writes (kept in `outbox/<day>/<run>/loads/`); new `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/`.
+  The status reads the ledger's newest lines without opening (indexing) the whole ledger on every call.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

@@ -1451,7 +1451,9 @@ shipped (`config/engines/dataload.yaml`, Admin → Engines). Its folder, `drisht
   the next one; it never doubles the work.
 - **Stopping the server** in the middle is safe: the next cycle puts claimed files back, completes a load that committed, moves what
   was not moved and sends the signals not sent.
-- `drishti.py dataload status` (or `GET /api/v1/admin/dataload`) shows what waits, what failed and why, and the last cycles.
+- `drishti.py dataload status` (or `GET /api/v1/admin/dataload`) shows what waits, what failed and why, and the last cycles; Admin → Data
+  loads → Inbox draws the same as a board (waiting, loading table by table, last cycles, failures with Retry, Load now: [DATA_GUIDE.md
+  section 7.8](../guides/DATA_GUIDE.md#8-the-inbox-screen-admin--data-loads--inbox)).
 
 ## 12. Memory and caches
 

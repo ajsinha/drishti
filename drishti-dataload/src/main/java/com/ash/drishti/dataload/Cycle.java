@@ -187,15 +187,21 @@ public final class Cycle {
                     groups.computeIfAbsent(cl.route().group(), k -> new ArrayList<>()).add(cl);
                 }
             }
+            Plan plan = groups.isEmpty() ? null : new Plan(claims.run(run), run, t0, groups.values());
             faults.at("claimed");
+            int t = 0;
             for (List<Claimed> g : groups.values()) {
+                t++;
                 if (!lock.held()) {
                     for (Claimed c : g) {
                         giveBack(run, c, Ledger.RETURNED, "the folder lock was lost (another runner took it): back in the inbox", ledger, outbox, files);
                     }
+                    plan.ended(t, files);
                     continue;
                 }
+                plan.loading(t);
                 load(run, g, ledger, outbox, files, notices);
+                plan.ended(t, files);
             }
             sent = recovery.finish(run);
             outbox.readyAll(run, found.readyAll());
@@ -416,5 +422,99 @@ public final class Cycle {
             summary.path("commit").path("dates").fields().forEachRemaining(e -> out.put(e.getKey(), e.getValue().path("version").asLong()));
         }
         return out;
+    }
+
+    /**
+     * The run's plan, {@code inprocess/<run>/load-plan.json} (the Admin screen's Loading column): the files claimed and the tables they load
+     * into, one after another, each {@code waiting}, {@code loading}, {@code committed}, {@code failed} or {@code returned}, with its start,
+     * end, versions, rows and rejects. Rewritten whole (a temporary {@code .part} renamed over it) at each table's start and end, and moved
+     * with the loader's files to {@code outbox/<day>/<run>/loads/} at the run's end. A file of facts only: nothing reads it to decide.
+     */
+    final class Plan {
+
+        static final String FILE = Recovery.LOAD + "plan.json";
+
+        private final Path file;
+        private final ObjectNode doc;
+
+        /** The files that load (a duplicate or a refused file of the run is already in the outbox or failed/), by table. */
+        Plan(Path dir, String run, Instant started, java.util.Collection<List<Claimed>> groups) {
+            this.file = dir.resolve(FILE);
+            doc = JSON.createObjectNode().put("run", run).put("node", node).put("startedAt", started.toString());
+            var fs = doc.putArray("files");
+            for (List<Claimed> g : groups) {
+                for (Claimed c : g) {
+                    fs.addObject().put("file", c.name()).put("size", c.size());
+                }
+            }
+            var ts = doc.putArray("tables");
+            int n = 0;
+            for (List<Claimed> g : groups) {
+                Routes.Route r = g.get(0).route();
+                ObjectNode t = ts.addObject().put("n", ++n).put("pack", r.pack()).put("kind", r.kind()).put("connector", r.connector())
+                        .put("table", r.table()).put("state", "waiting");
+                var names = t.putArray("files");
+                long bytes = 0;
+                for (Claimed c : g) {
+                    names.addObject().put("file", c.name()).put("size", c.size());
+                    bytes += c.size();
+                }
+                t.put("bytes", bytes);
+            }
+            save();
+        }
+
+        private ObjectNode table(int n) {
+            return (ObjectNode) doc.path("tables").get(n - 1);
+        }
+
+        void loading(int n) {
+            table(n).put("state", "loading").put("startedAt", clock.instant().toString());
+            save();
+        }
+
+        /** A table's end, from what became of its files: committed when any loaded, else failed, else returned to the inbox. */
+        void ended(int n, List<FileOutcome> outcomes) {
+            ObjectNode t = table(n);
+            java.util.Set<String> mine = new java.util.HashSet<>();
+            t.path("files").forEach(f -> mine.add(f.path("file").asText()));
+            int loaded = 0;
+            int failed = 0;
+            long rows = 0;
+            long rejected = 0;
+            Map<String, Long> versions = new java.util.TreeMap<>();
+            String reason = null;
+            for (FileOutcome o : outcomes) {
+                if (!mine.contains(o.file())) {
+                    continue;
+                }
+                if (Ledger.LOADED.equals(o.outcome())) {
+                    loaded++;
+                    versions.putAll(o.versions());
+                    rows = Math.max(rows, o.rows());                        // the files of one load share its summary: its rows, once
+                    rejected = Math.max(rejected, o.rejected());
+                } else if (Ledger.FAILED.equals(o.outcome())) {
+                    failed++;
+                    reason = o.reason();
+                } else if (reason == null) {
+                    reason = o.reason();
+                }
+            }
+            t.put("state", loaded > 0 ? "committed" : failed > 0 ? "failed" : "returned").put("finishedAt", clock.instant().toString())
+                    .put("loadedFiles", loaded).put("failedFiles", failed).put("rows", rows).put("rejected", rejected).put("reason", reason);
+            t.set("versions", JSON.valueToTree(versions));
+            save();
+        }
+
+        private void save() {
+            Path part = file.resolveSibling(FILE + ".part");
+            try {
+                Files.createDirectories(file.getParent());
+                Files.writeString(part, doc.toPrettyString());
+                Files.move(part, file, java.nio.file.StandardCopyOption.REPLACE_EXISTING, java.nio.file.StandardCopyOption.ATOMIC_MOVE);
+            } catch (IOException | RuntimeException e) {
+                LOG.debug("data inbox: the run's plan could not be written: {}", e.toString());   // facts for the screen only: the load goes on
+            }
+        }
     }
 }

@@ -46,7 +46,7 @@ class CycleTest {
                 org.assertj.core.groups.Tuple.tuple("trades-a.jsonl", "loaded"), org.assertj.core.groups.Tuple.tuple("trades-b.jsonl", "loaded"));
         assertThat(r.files().get(0).versions()).containsEntry("2026-11-02", 10L).containsEntry("2026-11-03", 11L);
         assertThat(f.tree("outbox")).containsExactly("outbox/2026-11-03/RUN/loads/load-1.log", "outbox/2026-11-03/RUN/loads/load-1.route.json",
-                "outbox/2026-11-03/RUN/loads/load-1.summary.json", "outbox/2026-11-03/RUN/loads/load-1.yaml",
+                "outbox/2026-11-03/RUN/loads/load-1.summary.json", "outbox/2026-11-03/RUN/loads/load-1.yaml", "outbox/2026-11-03/RUN/loads/load-plan.json",
                 "outbox/2026-11-03/RUN/trades-a.jsonl", "outbox/2026-11-03/RUN/trades-a.jsonl.loaded.json", "outbox/2026-11-03/RUN/trades-a.jsonl.ready",
                 "outbox/2026-11-03/RUN/trades-b.jsonl", "outbox/2026-11-03/RUN/trades-b.jsonl.loaded.json", "outbox/2026-11-03/RUN/trades-b.jsonl.ready");
         assertThat(f.tree("inbox")).as("a file without its marker is never touched").containsExactly("inbox/trades-c.jsonl");

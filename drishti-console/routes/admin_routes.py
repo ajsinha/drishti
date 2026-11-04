@@ -34,6 +34,10 @@ def _forbidden(request: Request):
     return render(request, "admin/forbidden.html", status_code=403)
 
 
+def _admins_only() -> JSONResponse:
+    return JSONResponse({"code": "DRS-5002", "detail": "administrators only"}, status_code=403)
+
+
 def _problem(e: BackendError) -> JSONResponse:
     return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.status)
 
@@ -365,7 +369,82 @@ async def all_loads(request: Request):
             return {"name": name, "title": p.get("title") or name, "loads": [], "expectations": [], "error": str(e)}
     summary = await asyncio.gather(*(one(p) for p in packs))
     attention = sum(1 for s in summary for x in s["expectations"] if x.get("state") in ("late", "missing", "failed"))
-    return render(request, "admin/loads_all.html", packs=summary, attention=attention, states=LOAD_STATES, status=await _status(request))
+    return render(request, "admin/loads_all.html", packs=summary, attention=attention, states=LOAD_STATES, status=await _status(request),
+                  **await _inbox_tab(request, me))
+
+
+async def _inbox_tab(request: Request, me) -> dict:
+    """The Data loads tabs' Inbox entry: shown while the data inbox runs somewhere, with the server's count of failed files on it."""
+    from core import engines
+    if not engines.engine_available("dataload"):
+        return {"inbox_shown": False, "inbox_failed": 0}
+    try:
+        st = await request.app.state.backend.admin("GET", "/dataload", me)
+    except BackendError:
+        return {"inbox_shown": True, "inbox_failed": 0}
+    return {"inbox_shown": True, "inbox_failed": ((st or {}).get("board") or {}).get("failedTotal") or 0}
+
+
+@router.get("/loads/inbox")
+async def loads_inbox(request: Request, partial: int = 0):
+    """Admin → Data loads → Inbox (DATALOAD_INBOX.md section 10, mock-up A): the status board of the data inbox, three columns that follow
+    the folders (Waiting inbox/, Loading inprocess/<run>/, Last cycles outbox/), failures with Retry, duplicates, the rules and settings.
+    Every figure is the server's (GET /api/v1/admin/dataload); ``partial=1`` is the board alone, for the page's own refresh."""
+    me = ident(request)
+    if not me.is_admin:
+        return _forbidden(request)
+    error = None
+    try:
+        st = await request.app.state.backend.admin("GET", "/dataload", me)
+    except BackendError as e:
+        if e.status in (401, 403):
+            return render(request, "admin/forbidden.html", status_code=e.page_status, error=e)
+        st, error = {}, e
+    if partial:
+        return render(request, "admin/_inbox_body.html", st=st, error=error)
+    return render(request, "admin/inbox.html", st=st, error=error, status=await _status(request), inbox_shown=True,
+                  inbox_failed=(st.get("board") or {}).get("failedTotal") or 0)
+
+
+@router.post("/api/dataload/run")
+async def dataload_run(request: Request):
+    """Load now: the server starts a cycle, or answers skipped while a run still loads (runs never overlap); the page says which."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        return await request.app.state.backend.admin("POST", "/dataload/run", me, {})
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.post("/api/dataload/retry")
+async def dataload_retry(request: Request):
+    """Retry: a failed file and its marker back into the inbox (the next cycle or Load now loads it)."""
+    body = await json_body(request)
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    name = str(body.get("file") or "").strip() if isinstance(body, dict) else ""
+    if not name:
+        return JSONResponse({"code": "DRS-5001", "detail": "give the failed file's name"}, status_code=400)
+    try:
+        return await request.app.state.backend.admin("POST", "/dataload/retry", me, {"file": name})
+    except BackendError as e:
+        return _problem(e)
+
+
+@router.get("/api/dataload/report")
+async def dataload_report(request: Request, path: str = ""):
+    """A report the board links to (a file's .loaded.json or .failed.json, a loader's summary or rejects), as the server gives it."""
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    try:
+        # the query in the address: admin()'s own first argument is called path
+        return await request.app.state.backend.admin("GET", "/dataload/report?path=" + quote(path, safe="/"), me)
+    except BackendError as e:
+        return _problem(e)
 
 
 @router.get("/packs/{name}/loads")
