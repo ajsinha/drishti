@@ -18,6 +18,13 @@
       Splits the console test files into two lanes and orders each longest first (from the recorded durations):
       browser.txt  the files that drive a browser or start a live stack on the scratch ports (worker_port, a *_stack module)
       other.txt    the rest; they share no scratch port with the browser lane, so the two lanes run side by side safely
+  drill_plan.py workers [--mem-gb GB] [--threads N] [--per-worker-gb GB] [--reserve-gb GB] [--max N]
+      The browser lane's worker count: the memory available (MemAvailable unless given) less what the drill's other jobs need,
+      divided by one browser worker's measured budget, capped at the CPU threads less two and at the scratch ports' limit
+      (docs/architecture/TEST_HARNESS.md, "Worker sizing").
+  drill_plan.py budget --timings FILE [--budget SECONDS] [--exceptions FILE] [--out FILE]
+      The files of one run over the per-file time budget (a file's tests' seconds together), each flagged; exit 0 (a report).
+      A file whose tests are spread one by one (marked ``spread``) has no file budget: the workers share its tests.
   drill_plan.py merge  --durations FILE TIMINGS...
       Folds one run's per-file seconds (tools/drillkit/drill_timings.py) into the recorded durations.
   drill_plan.py rerun  --report FILE... --durations FILE --known FILE --logs DIR --python PY [--parallel N] [--label NAME]
@@ -53,6 +60,13 @@ COLLECT_ERROR = re.compile(r"^ERROR ([^ :]+\.py)(?: - .*)?$")
 FAILED_LINE = re.compile(r"^(?:FAILED|ERROR) ([^ ]+::[^ ]+(?: [^-][^ ]*)*)(?: - .*)?$")
 BROWSER_WORDS = re.compile(r"playwright|chromium", re.IGNORECASE)
 PORT_WORDS = re.compile(r"worker_ports?\(|PYTEST_XDIST_WORKER")
+SPREAD_WORDS = re.compile(r"pytest\.mark\.spread\b")
+# one browser worker's memory at its peak (its Chromium, its stand-in console, its real server's JVM and that of the file it runs),
+# measured on the release machine (TEST_HARNESS.md, "Measurements"); the drill's Java verify and other lane are reserved beside it
+PER_WORKER_GB = 2.5
+RESERVE_GB = 24.0
+MAX_WORKERS = 12             # drishti-console/tests/scratch_ports.py MAX_WORKERS: each worker's ports in a block of their own
+BUDGET_SECONDS = 300         # a browser file's tests together; a longer file is split into spread tests or listed with its reason
 
 
 # ---- durations ---------------------------------------------------------------------------------------------------------------
@@ -148,6 +162,27 @@ def plan_lanes(tests: Path, durations: dict[str, float], exclude: set[str]) -> d
     return lanes
 
 
+def spread_files(tests: Path) -> set[str]:
+    """The test files whose tests are spread one by one (marked ``spread``): repository-relative paths."""
+    return {os.path.relpath(p, ROOT) for p in tests.glob("test_*.py") if SPREAD_WORDS.search(p.read_text(encoding="utf-8", errors="replace"))}
+
+
+def lane_makespan(files: list[tuple[str, float]], spread: set[str], workers: int) -> float:
+    """The lane's wall time: the file groups longest first on the workers, then the spread files' tests filling them evenly."""
+    loads = [0.0] * max(1, workers)
+    for secs in sorted((x for p, x in files if p not in spread), reverse=True):
+        loads[loads.index(min(loads))] += secs
+    rest = sum(x for p, x in files if p in spread)
+    while rest > 0.01:                       # water-filling: the spread work goes to the least loaded workers
+        loads.sort()
+        k = sum(1 for x in loads if x <= loads[0] + 1e-9)
+        step = min(rest / k, (loads[k] - loads[0]) if k < len(loads) else rest / k)
+        for i in range(k):
+            loads[i] += step
+        rest -= step * k
+    return max(loads)
+
+
 def cmd_lanes(a) -> int:
     durations = load_durations(Path(a.durations))
     exclude = set()
@@ -162,8 +197,67 @@ def cmd_lanes(a) -> int:
         secs = [s for _, s in files]
         measured = sum(1 for p, _ in files if p in durations)
         top = ", ".join(f"{Path(p).name} {s:.0f}s" for p, s in files[:3])
-        print(f"drill: console lane {lane}: {len(files)} files ({measured} with a recorded time), {sum(secs):.0f}s of work, about "
-              f"{lpt_makespan(secs, workers[lane]):.0f}s on {workers[lane]} workers; longest: {top}")
+        spread = spread_files(Path(a.tests)) if lane == "browser" else set()
+        print(f"drill: console lane {lane}: {len(files)} files ({measured} with a recorded time, {len(spread)} spread by test), {sum(secs):.0f}s "
+              f"of work, about {lane_makespan(files, spread, workers[lane]):.0f}s on {workers[lane]} workers; longest: {top}")
+    return 0
+
+
+# ---- worker sizing and budgets ------------------------------------------------------------------------------------------------
+
+def mem_available_gb() -> float:
+    try:
+        for line in Path("/proc/meminfo").read_text().splitlines():
+            if line.startswith("MemAvailable:"):
+                return int(line.split()[1]) / 1048576
+    except OSError:
+        pass
+    return 16.0
+
+
+def browser_workers(mem_gb: float, threads: int, per_worker_gb: float = PER_WORKER_GB, reserve_gb: float = RESERVE_GB,
+                    cap: int = MAX_WORKERS) -> int:
+    """How many browser workers fit: (memory less the reserve) / one worker's budget, at most threads - 2 and the ports' cap, at least 1."""
+    by_mem = int(max(0.0, mem_gb - reserve_gb) // per_worker_gb)
+    return max(1, min(by_mem, max(1, threads - 2), cap))
+
+
+def cmd_workers(a) -> int:
+    mem = a.mem_gb if a.mem_gb is not None else mem_available_gb()
+    threads = a.threads or os.cpu_count() or 4
+    print(browser_workers(mem, threads, a.per_worker_gb, a.reserve_gb, a.max))
+    return 0
+
+
+def load_exceptions(path: Path) -> dict[str, str]:
+    """{file: reason} from a budget exceptions file: one ``path  # reason`` per line."""
+    out = {}
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if line.strip() and not line.lstrip().startswith("#"):
+                name, _, why = line.partition("#")
+                out[name.strip()] = why.strip()
+    except OSError:
+        pass
+    return out
+
+
+def over_budget(timings: dict[str, float], budget: float, exceptions: dict[str, str]) -> list[tuple[str, float, str]]:
+    """(file, seconds, reason or "") for every file over the budget, longest first; a listed file keeps its reason."""
+    return sorted(((f, x, exceptions.get(f, "")) for f, x in timings.items() if x > budget), key=lambda r: -r[1])
+
+
+def cmd_budget(a) -> int:
+    spread = spread_files(Path(a.tests))          # spread by test: the workers share them, a file's total is not a wall time
+    timings = {f: x for f, x in _read_files(Path(a.timings)).items() if f not in spread}
+    rows = over_budget(timings, a.budget, load_exceptions(Path(a.exceptions)) if a.exceptions else {})
+    lines = [f"OVER BUDGET {x:6.0f}s > {a.budget:.0f}s  {f}"
+             + (f"  (listed: {why})" if why else "  (not listed: split it into spread tests, or list it with its reason)") for f, x, why in rows]
+    text = "".join(line + "\n" for line in lines)
+    if a.out:
+        Path(a.out).write_text(text, encoding="utf-8")
+    print(f"drill: per-file budget {a.budget:.0f}s: {len(rows)} file(s) over ({sum(1 for r in rows if not r[2])} not listed)")
+    sys.stdout.write(text)
     return 0
 
 
@@ -309,6 +403,20 @@ def main(argv: list[str] | None = None) -> int:
     s.add_argument("--browser-workers", type=int, default=4)
     s.add_argument("--other-workers", type=int, default=8)
     s.set_defaults(run=cmd_lanes)
+    s = sub.add_parser("workers", help="the browser lane's worker count from the memory available and the CPU threads")
+    s.add_argument("--mem-gb", type=float)
+    s.add_argument("--threads", type=int)
+    s.add_argument("--per-worker-gb", type=float, default=PER_WORKER_GB)
+    s.add_argument("--reserve-gb", type=float, default=RESERVE_GB)
+    s.add_argument("--max", type=int, default=MAX_WORKERS)
+    s.set_defaults(run=cmd_workers)
+    s = sub.add_parser("budget", help="flag the files of one run over the per-file time budget")
+    s.add_argument("--timings", required=True)
+    s.add_argument("--tests", default=str(ROOT / "drishti-console" / "tests"))
+    s.add_argument("--budget", type=float, default=BUDGET_SECONDS)
+    s.add_argument("--exceptions")
+    s.add_argument("--out")
+    s.set_defaults(run=cmd_budget)
     s = sub.add_parser("merge", help="fold one run's per-file seconds into the recorded durations")
     s.add_argument("--durations", required=True)
     s.add_argument("timings", nargs="*")
