@@ -48,13 +48,12 @@ class AdmissionGateTest {
             return heap.get();
         }
 
-        /** What a real clean-up would leave (-1: the same as the last reading); counts the clean-ups asked for. */
-        final AtomicLong cleaned = new AtomicLong(-1);
+        /** The concurrent cycles asked for. */
         final AtomicInteger cleanups = new AtomicInteger();
 
-        public long heapAfterCleanupBytes() {
+        public boolean requestCleanup() {
             cleanups.incrementAndGet();
-            return cleaned.get() < 0 ? heap.get() : cleaned.get();
+            return true;
         }
 
         long max = 4 * GB;                                                // a 4 GB heap: at 85% about 600 MB is left, under memory-free-min-mb
@@ -125,24 +124,69 @@ class AdmissionGateTest {
         assertThat(s.getMessage()).contains("Sign-ins are paused for a moment");
     }
 
+    /** Signals over a {@link Signals.HeapAfterGc} fed by hand: pools Eden and Old, a heap of {@code max}. */
+    private Signals reportsOf(Signals.HeapAfterGc heap, long max) {
+        Fake f = sig;
+        return new Signals() {
+            public long heapAfterGcBytes() {
+                return heap.bytes();
+            }
+
+            public boolean requestCleanup() {
+                return f.requestCleanup();
+            }
+
+            public long heapMaxBytes() {
+                return max;
+            }
+
+            public int requestsInFlight() {
+                return 0;
+            }
+
+            public long freeDiskBytes() {
+                return 500 * GB;
+            }
+        };
+    }
+
+    private static java.util.Map<String, Long> pools(long eden, long old) {
+        return java.util.Map.of("Eden", eden, "Old", old);
+    }
+
     @Test
-    void aHeapFullOfGarbageIsNotRefusedTheRefusalIsConfirmedAfterACleanUp() {
-        // after a young collection the old generation's garbage still counts: 95% read, 60% live (the 2.9.11.b Drill A refusal of a sign-in
-        // on a 768 MB server whose live data was 462 MB)
-        sig.memory(0.95);
-        sig.cleaned.set((long) (0.60 * sig.max));
-        assertThatCode(() -> gate.admit(Work.SIGN_IN, "k.mehta", "Sign in")).doesNotThrowAnyException();
-        assertThatCode(() -> gate.admit(Work.DOWNLOAD, "Download trade-valuation")).doesNotThrowAnyException();
-        assertThat(sig.cleanups.get()).isEqualTo(2);
-        sig.cleaned.set((long) (0.94 * sig.max));                                     // live data really that high: refused, in the same words
-        BusyRefusal s = refused(() -> gate.admit(Work.SIGN_IN, "k.mehta", "Sign in"));
+    void youngOnlyReadingsNeverRefuse() {
+        // the heap the gate reads is the one after a clean-up of the old generation; a fresh server has none: nothing is refused for memory
+        Signals.HeapAfterGc heap = new Signals.HeapAfterGc(java.util.Set.of("Eden", "Old"), java.util.Set.of("Old"));
+        long max = 4 * GB;
+        AdmissionGate g = new AdmissionGate(AdmissionProperties.defaults(), reportsOf(heap, max), now::get, audit, () -> who);
+        heap.onCollection("end of minor GC", pools(GB, (long) (0.50 * max)), pools(0, (long) (0.97 * max)));   // promoted: old grew
+        assertThat(heap.bytes()).as("a young-only collection is no reading").isEqualTo(-1);
+        assertThatCode(() -> g.admit(Work.SIGN_IN, "k.mehta", "Sign in")).doesNotThrowAnyException();
+        assertThatCode(() -> g.admit(Work.DOWNLOAD, "Download trade-valuation")).doesNotThrowAnyException();
+        heap.onCollection("end of minor GC", pools(GB, (long) (0.97 * max)), pools(0, (long) (0.60 * max)));   // mixed: old regions freed
+        assertThat(heap.bytes()).isEqualTo((long) (0.60 * max));
+        heap.onCollection("end of minor GC", pools(GB, (long) (0.60 * max)), pools(0, (long) (0.98 * max)));   // young again: ignored
+        assertThat(heap.bytes()).isEqualTo((long) (0.60 * max));
+        assertThatCode(() -> g.admit(Work.SIGN_IN, "k.mehta", "Sign in")).doesNotThrowAnyException();
+        assertThat(sig.cleanups.get()).as("nothing asked while the reading is under the levels").isZero();
+    }
+
+    @Test
+    void aHeapFullOfGarbageIsLetInAndATrulyFullOneRefusedWithoutAFullCollection() {
+        Signals.HeapAfterGc heap = new Signals.HeapAfterGc(java.util.Set.of("Eden", "Old"), java.util.Set.of("Old"));
+        long max = 4 * GB;
+        AdmissionGate g = new AdmissionGate(AdmissionProperties.defaults(), reportsOf(heap, max), now::get, audit, () -> who);
+        // the 2.9.11.b Drill A case: 462 MB live of 768 MB, read as 94% after young collections; here 60% live, 95% after a young one
+        heap.onCollection("end of minor GC", pools(GB, (long) (0.90 * max)), pools(0, (long) (0.60 * max)));
+        heap.onCollection("end of minor GC", pools(GB, (long) (0.60 * max)), pools(0, (long) (0.95 * max)));
+        assertThatCode(() -> g.admit(Work.SIGN_IN, "k.mehta", "Sign in")).doesNotThrowAnyException();
+        assertThatCode(() -> g.admit(Work.DOWNLOAD, "Download trade-valuation")).doesNotThrowAnyException();
+        heap.onCollection("end of major GC", pools(GB, (long) (0.95 * max)), pools(0, (long) (0.94 * max)));   // a full one: really held
+        BusyRefusal s = refused(() -> g.admit(Work.SIGN_IN, "k.mehta", "Sign in"));
         assertThat(s.errorCode()).isEqualTo(ErrorCode.BUSY_SIGN_IN);
         assertThat(s.getMessage()).contains("94% in use after clean-up");
-        sig.memory(0.50);
-        sig.cleaned.set(-1);
-        int before = sig.cleanups.get();
-        assertThatCode(() -> gate.admit(Work.DOWNLOAD, "Download trade-valuation")).doesNotThrowAnyException();
-        assertThat(sig.cleanups.get()).as("no clean-up while the reading is under the levels").isEqualTo(before);
+        assertThat(sig.cleanups.get()).as("a concurrent cycle asked for (the live JVM: only when it never stops the world)").isEqualTo(1);
     }
 
     @Test

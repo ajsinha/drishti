@@ -254,12 +254,10 @@ public final class AdmissionGate {
         if (!props.enabled()) {
             return null;
         }
-        double mem = memoryShare();
+        double mem = memoryShare();                                     // after the old generation's last clean-up (-1 none yet: 0)
         double memLevel = work == Work.SIGN_IN ? props.memoryRefuseSignIn() : props.memoryRefuseHeavy();
         if (mem >= memLevel && memoryFreeBytes() < props.memoryFreeMinMb() * MB) {
-            mem = cleanedUpShare();                                     // confirmed after a real clean-up: never refused for garbage
-        }
-        if (mem >= memLevel && memoryFreeBytes() < props.memoryFreeMinMb() * MB) {
+            signals.requestCleanup();                                   // a concurrent cycle, when the JVM can (never a full collection)
             return new Why(Cause.MEMORY, String.format(Locale.ROOT, "the server is short of memory: %.0f%% in use after clean-up (new %s waits over %.0f%%)",
                     mem * 100, work == Work.SIGN_IN ? "sign-ins" : "heavy work", memLevel * 100));
         }
@@ -427,18 +425,14 @@ public final class AdmissionGate {
     /** The heap left after the last collection: the memory levels act only while it is under {@code memory-free-min-mb}. */
     long memoryFreeBytes() {
         long max = signals.heapMaxBytes();
-        return max <= 0 ? Long.MAX_VALUE : Math.max(0, max - signals.heapAfterGcBytes());
-    }
-
-    /** The heap's share in use after a real clean-up ({@link Signals#heapAfterCleanupBytes()}); the readings follow it. */
-    double cleanedUpShare() {
-        long max = signals.heapMaxBytes();
-        return max <= 0 ? 0 : (double) signals.heapAfterCleanupBytes() / max;
+        long used = signals.heapAfterGcBytes();
+        return max <= 0 || used < 0 ? Long.MAX_VALUE : Math.max(0, max - used);
     }
 
     double memoryShare() {
         long max = signals.heapMaxBytes();
-        return max <= 0 ? 0 : (double) signals.heapAfterGcBytes() / max;
+        long used = signals.heapAfterGcBytes();
+        return max <= 0 || used < 0 ? 0 : (double) used / max;
     }
 
     /** True when some new work waits now (a remembered refusal still running). */
@@ -470,7 +464,7 @@ public final class AdmissionGate {
         List<Map<String, Object>> gauges = new ArrayList<>();
         Map<String, Object> m = gauge("memory", "Memory in use after clean-up", mem, props.memoryWarn(), props.memoryRefuseHeavy(),
                 level(mem, props.memoryWarn(), props.memoryRefuseHeavy()));
-        m.put("usedBytes", signals.heapAfterGcBytes());
+        m.put("usedBytes", signals.heapAfterGcBytes() < 0 ? null : signals.heapAfterGcBytes());
         m.put("maxBytes", signals.heapMaxBytes());
         m.put("refuseSignIn", props.memoryRefuseSignIn());
         m.put("note", String.format(Locale.ROOT, "warn at %.0f%% · new loads, downloads, BI runs and bulk loads wait over %.0f%% · new sign-ins wait over "
