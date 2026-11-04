@@ -40,8 +40,10 @@
   `trade_<system>/<date>/` folders and refuse the older `YYYY-MM-DD.jsonl` with the name to give; `var intraday --load`, `var_bench`,
   `pivot_bench` and the AWS `load-day.sh` date their loads from outside (the name or `--as-of`). Checked: the same 983,924 rows in the
   same 1,762 (table, business date) pairs, by count and checksum of every row, before and after; the demo lake built from the old
-  inputs by develop's tools and from the new ones the same, table by table and date by date; the VaR tree the same (below). The Java
-  tests read the files through drishti-testkit `FeedFiles`.
+  inputs by develop's tools and from the new ones the same (89 tables, 4,846 table and date pairs, 4,835,519 rows, every row's checksum
+  equal); the VaR tree of two servers on the two lakes the same (MGMT, LEGAL and LL, three dates, 1-day and 10-day: 786 nodes, VaR, ES
+  and trades, no difference); look-alike ENDUR files through `--endur-dir` the same table either way. The Java tests read the files
+  through drishti-testkit `FeedFiles`.
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
