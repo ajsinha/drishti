@@ -188,7 +188,9 @@ class MultiSumsTest {
                     }
                 };
                 List<double[]> got = MultiSums.sums(s, sets, pool, counted, density);
-                assertThat(gemms.get()).as("tiles multiplied by OpenBLAS").isPositive();
+                if (density == 0) {
+                    assertThat(gemms.get()).as("tiles multiplied by OpenBLAS").isPositive();
+                }
                 double worst = 0;
                 for (int i = 0; i < sets.size(); i++) {
                     double[] want = pool.sum(s, sets.get(i));

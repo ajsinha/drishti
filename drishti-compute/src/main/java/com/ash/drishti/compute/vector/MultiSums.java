@@ -49,8 +49,25 @@ public final class MultiSums {
     static final int SUB = 256;
     /** The default density from which a tile is a {@code dgemm} on OpenBLAS (measured: BENCHMARK.md, the many-scope rows). */
     public static final double DEFAULT_MIN_DENSITY = 0.25;
+    /**
+     * The fewest sets a tile must feed for a {@code dgemm} to pay for turning its rows into float64 (measured: below about 32 the Java
+     * additions win, BENCHMARK.md).
+     */
+    static final int MIN_GEMM_SETS = 32;
 
     private MultiSums() {}
+
+    /** Each pool thread's tile of rows for {@code dgemm} (4 MB at 509 scenarios), kept between calls. */
+    private static final ThreadLocal<double[]> ROWS = new ThreadLocal<>();
+
+    static double[] buffer(int n) {
+        double[] b = ROWS.get();
+        if (b == null || b.length < n) {
+            b = new double[n];
+            ROWS.set(b);
+        }
+        return b;
+    }
 
     /** {@link #sums(Vectors, List, ParallelSums, LinearAlgebra, double)} with the process's binding and the default density. */
     public static List<double[]> sums(Vectors store, List<OrdinalSet> sets, ParallelSums pool) {
@@ -115,6 +132,7 @@ public final class MultiSums {
         final ParallelSums pool;
         final LinearAlgebra la;
         final double minDensity;
+        final int minGemmSets;
 
         Pass(Vectors store, GroupedVectors grouped, List<OrdinalSet> all, List<Integer> large, ParallelSums pool, LinearAlgebra la, double minDensity) {
             this.store = store;
@@ -122,6 +140,7 @@ public final class MultiSums {
             this.pool = pool;
             this.la = la;
             this.minDensity = minDensity;
+            this.minGemmSets = minDensity <= 0 ? 2 : MIN_GEMM_SETS;    // a density of 0 asks for dgemm wherever two sets share a tile (tests)
             this.width = store.width();
             int n = large.size();
             this.sets = new OrdinalSet[n];
@@ -134,7 +153,8 @@ public final class MultiSums {
                 block[i] = ParallelSums.blockRows(sets[i].size());
                 bm = Math.max(bm, block[i]);
             }
-            this.bmax = bm;
+            // the chunk: a power of two, a multiple of every set's block, about four a thread, at most 65,536 rows
+            this.bmax = Math.max(bm, Math.min(1 << 16, Integer.highestOneBit(Math.max(1, store.rows() / (Math.max(1, pool.threads()) * 4)))));
         }
 
         void run(double[][] out) {
@@ -252,8 +272,8 @@ public final class MultiSums {
 
         /** One worker's {@code dgemm} buffers, reused tile after tile. */
         final class Gemm {
-            final double[] rowsBuf = new double[width * TILE];
             final double[] row = new double[width];
+            double[] rowsBuf;
             final int[] at = new int[TILE];
             final int[] active = new int[sets.length];
             final int[] counts = new int[sets.length];
@@ -276,6 +296,13 @@ public final class MultiSums {
                 if (ka == 0) {
                     return true;
                 }
+                int most = 0;
+                for (int i = 0; i < ka; i++) {
+                    most = Math.max(most, counts[i]);
+                }
+                if (ka < minGemmSets || members < minDensity * ka * most) {    // few sets, or sparse (the union holds the largest set)
+                    return false;
+                }
                 Arrays.fill(at, 0, t1 - t0, -1);
                 int[] u = {0};
                 for (int i = 0; i < ka; i++) {
@@ -288,9 +315,10 @@ public final class MultiSums {
                     });
                 }
                 int rows = u[0];
-                if (ka < 2 || members < minDensity * ka * rows) {
+                if (members < minDensity * ka * rows) {
                     return false;
                 }
+                rowsBuf = rowsBuf != null ? rowsBuf : buffer(width * TILE);
                 for (int r = t0; r < t1; r++) {                              // the tile's member rows, float64, one column each
                     int c = at[r - t0];
                     if (c >= 0) {
