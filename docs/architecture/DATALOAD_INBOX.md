@@ -53,17 +53,17 @@ file dropped twice cannot be handled safely (sections 7 and 8).
 
 ## 3. The hand-shake
 
-1. The writer puts the data file in `inbox/`, then, **when it is complete**, an empty `<file>.ready` beside it (`trades-2026-11-03.jsonl.gz`
-   and `trades-2026-11-03.jsonl.gz.ready`). A file without its `.ready` is never touched.
+1. The writer puts the data file in `inbox/`, then, **when it is complete**, an empty `.ready` file beside it (`trades.2026-11-03.jsonl.gz`
+   and `trades.2026-11-03.jsonl.gz.ready`, or `trades.2026-11-03.ready`). A file without its `.ready` is never touched.
 2. **`ready.all`** in `inbox/` makes every data file in the inbox ready in that cycle, with or without its own `.ready`; after the cycle
    `ready.all` goes to the outbox of that run, so it applies once.
 3. **Stable files only**: a file is taken when its size and modification time have not changed for `stable-seconds` (default 30), even
    with a `.ready`, a second guard against a writer that sets the marker early (and a must under `ready.all`).
 4. Names: visible names only (no leading dot), no links (refused into `failed/`), extensions `.jsonl`, `.ndjson`, `.json`, each plain or
    `.gz`/`.zst`, `.zip`, `.tar`, `.tar.gz`/`.tgz`. Anything else is moved to `failed/` with the reason.
-5. **Optional contents of `.ready`** (YAML or JSON; empty is fine): `pack`, `kind`, `table`, `business-date`, `mode`
-   (`replace` the dates it holds, or `append`; the default is the table's `load-mode` in the lake configuration, LAKE_CONFIG.md, and `replace` until that exists), `sha256` and `rows` (checked before and after loading). They override the
-   routing of section 5 for that file.
+5. **Optional contents of `.ready`** (YAML or JSON; empty is fine; DATA_LOAD_RULES.md section 5): `business-date`, `table`, `pack`,
+   `kind`, `connector`, `mode` (`append` or `replace`), `new-table`, `key`, `folders`, `sha256` and `rows` (checked before and after
+   loading), `hold`. An unknown key sends the file to `failed/`. They override the routing of section 5 for that file.
 
 ## 4. One cycle
 
@@ -112,7 +112,7 @@ dataload:
       pack: trading
       kind: trade
       connector: trade-endur                  # the table that connector reads
-      date-from: auto                         # auto (default): the date in the name, else each row's; name: required; field: rows only
+      date-from: auto                         # auto (default): the .ready date, the name's, else today; name: a date in the name required
     - match: "scenario-pv-*.jsonl.gz"
       pack: market-risk
       kind: scenario-pv
@@ -121,27 +121,24 @@ dataload:
 
 An archive follows the loader's own rule: one dataset named after the archive, or one per top-level folder.
 
-### 5.1 The business date: from outside first
+### 5.1 Table, business date and mode: the load rules
 
-The business date is the partition every load replaces, so it can be enforced from outside, for automated loads too. The rule is the
-loaders' own (DATA_GUIDE.md section 2.8: `FileDates` in Java, `tools/lake/filedate.py` in Python, one shared list of cases):
+The inbox follows the load rules every loader follows ([DATA_LOAD_RULES.md](DATA_LOAD_RULES.md); DATA_GUIDE.md section 2.8):
 
-1. **The `.ready` file's `business-date:`**: every row of the file under it (the load's `source.as-of`).
-2. **The date at the end of the file's name** (`trades 20261103.jsonl.gz`, `trades_2026-11-03.zip`; a separator, then `YYYYMMDD` or
-   `YYYY-MM-DD`, a real date): every row of the file under it, whatever its own date field says. Inside an archive a member's own name's
-   date wins over the archive's. The inbox passes `source.date-from: auto` and the loader applies it per file and per member, so one load
-   of several files can write several dates, one per file.
-3. **Each row's date field** (the rule's `date-field`, else the pack's `ingest.<kind>.date`).
-
-A rule's `date-from`: `auto` (the default) as above; `name` requires a date in the name (a `YYYY-MM-DD` anywhere in it counts too) and
-refuses the file into `failed/` without one, the date applied to every row (`source.as-of`); `field` ignores the name
-(`source.date-from: field`). A `.ready` file's `date-field:` means the rows' own dates (`field`).
-
-Rows whose own date disagrees with the name's are loaded under the name's date and counted: the loader's summary (`fileDates`,
-`otherDateRows`, `dateNotes`), the file's `.loaded.json` report (`load`), the ledger's `loaded` line (`fileDates`), the Loading table and
-the cycle's line on the Admin board (*2 rows of trades 20261104.jsonl carried another date in BUSINESS_DATE; loaded under 2026-11-04 from
-the file name*). Before a load, each waiting file's rule preview says the date it will load under and where it comes from: *2026-11-04
-from the name*, *2026-11-05 from the .ready file*, *each row's date field (the pack's)*.
+- **The table**: the `.ready` file's `pack:`/`kind:` (or `table:`), else the first matching rule, else the name's table
+  (`<table>[.<date>].<extension>`): the pack with a kind of that name, else a pack of that name with one kind. Unknown or in two packs:
+  `failed/` with the candidates (`Routes.byTable`).
+- **The business date**: the `.ready` file's `business-date:` (passed to the loader as `source.as-of`), else the name's date, else the
+  business today; the loader decides each file the same way (`FileDates.decide`), so one load of several files writes one date per file.
+  A rule's `date-from: name` refuses a name without a date. A row's own date field never decides; the rows whose own date differs are
+  counted: the loader's summary (`fileDates`, `otherDateRows`, `dateNotes`), the file's `.loaded.json`, the ledger's `loaded` line, the
+  Loading table and the cycle's line on the board (*2 rows of trades.2026-11-02.jsonl carried another date in BUSINESS_DATE; loaded under
+  2026-11-02*). Each waiting file's preview says the date it will load under and where it comes from.
+- **A tar** names its own tables and dates (`<table>/<YYYY-MM-DD>/`): a `.ready` `business-date:` or `table:` refuses it.
+- **The mode**: the `.ready` file's `mode:` (`append` or `replace`); else `replace` until the loader's append reaches the inbox's
+  default (`append`, the rules' default).
+- **The marker**: `<file>.ready` or the name without its data extension (`trades.2026-11-03.ready`); a short marker two data files could
+  claim releases neither, and the board says why. A claimed marker takes its file's full name (`inprocess/<run>/<file>.ready`).
 
 ## 6. Running in the server, safely
 
@@ -226,7 +223,7 @@ and the lock on NTFS (the Windows workflow).
 | D6 | The `.ready` file's optional contents (pack, kind, date, mode, checksum, rows) | **Optional**, empty works |
 | D7 | Which nodes run it | **The configured owner only**, plus the folder lock |
 | D8 | `tar.tz` in the request | read as **`.tar.gz`/`.tgz`**; `.zip` and `.zst` come with the loader |
-| D9 | The business date of an automated load | **From outside first**: the `.ready` date, else the date at the end of the file's name, else each row's (section 5.1); rows that disagree with the name are loaded under it and counted |
+| D9 | The table, business date and mode of a file | **The load rules** (DATA_LOAD_RULES.md, section 5.1): the date from outside only (the `.ready` file, the name, the business today), never a row |
 
 ## 14. As built
 

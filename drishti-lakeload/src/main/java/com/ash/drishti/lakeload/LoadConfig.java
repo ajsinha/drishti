@@ -312,8 +312,8 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             } catch (IOException e) {
                 throw new IllegalArgumentException("source.pack " + packDir + ": " + e.getMessage());
             }
-            if (date == null && asOf == null) {
-                date = pack.date();
+            if (date == null) {
+                date = pack.date();                 // a row's own date field: only counted when it differs from its file's date
             }
         }
 

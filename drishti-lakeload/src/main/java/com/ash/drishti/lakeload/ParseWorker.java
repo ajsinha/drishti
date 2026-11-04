@@ -99,7 +99,7 @@ final class ParseWorker implements Callable<Void> {
     final Map<String, long[]> fileDates = new HashMap<>();
     static final String[] SOURCES = {"folder", "given", "name", "today", "ready"};
     private final RowPlan plan;
-    private final java.time.LocalDate today = java.time.LocalDate.now();
+    private final java.time.LocalDate today = FileDates.today();
     private Inputs.InputFile lastFile;
     private long[] lastFileDate;
     final Map<String, Long> rejectsByReason = new LinkedHashMap<>();

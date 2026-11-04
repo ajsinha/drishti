@@ -96,9 +96,9 @@ class FileDatesTest {
             FileDates.Layout lay = FileDates.tarLayout(entries, today, known);
             Map<String, Map<String, List<String>>> tables = new LinkedHashMap<>();
             lay.tables().forEach((tb, ds) -> ds.forEach((day, fs) -> tables.computeIfAbsent(tb, k -> new LinkedHashMap<>()).put(day.toString(), fs)));
-            assertThat(JSON.valueToTree(tables)).as(t.path("case").asText()).isEqualTo(t.path("tables"));
-            assertThat(JSON.valueToTree(lay.errors())).as(t.path("case").asText()).isEqualTo(t.path("errors"));
-            assertThat(JSON.valueToTree(lay.ignored())).as(t.path("case").asText()).isEqualTo(t.path("ignored"));
+            assertThat((JsonNode) JSON.valueToTree(tables)).as(t.path("case").asText()).isEqualTo(t.path("tables"));
+            assertThat((JsonNode) JSON.valueToTree(lay.errors())).as(t.path("case").asText()).isEqualTo(t.path("errors"));
+            assertThat((JsonNode) JSON.valueToTree(lay.ignored())).as(t.path("case").asText()).isEqualTo(t.path("ignored"));
         }
     }
 

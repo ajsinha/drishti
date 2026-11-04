@@ -17,19 +17,16 @@
 
 ## 2.9.11.c (unreleased)
 
-- **The business date from outside: a date in a file's name (DATA_GUIDE.md section 2.8; DATALOAD_INBOX.md section 5.1; TOOLS.md
-  sections 4 and 4.13; CLI_GUIDE.md `data ingest`).** The product owner (2026-11-04): a file named `abc 20261103.jsonl`,
-  `abc.20261103.jsonl.zip`, `abc 20261103.zip`, `.gz` or `.tar.gz` loads under 2026-11-03, enforced from outside even for automated loads,
-  since the business date is the Delta partition. The rule: the base name, its data and archive extensions stripped, ends with a space,
-  `.`, `_` or `-` and `YYYYMMDD` or `YYYY-MM-DD`, a real calendar date (1900 to 2999); an archive member's own name's date wins over the
-  archive's. The order: a date given for the load (`--as-of`, `source.as-of`, a `.ready` file's `business-date:`), then the name's date,
-  then each row's own date field. The name's date goes on every row of the file; rows whose own date field disagrees are loaded under it
-  and counted (summary `fileDates`, `otherDateRows`, `dateNotes`; the command output; the inbox's `.loaded.json`, ledger and Admin board).
-  One rule in each language, `FileDates` (drishti-lakeload) and `tools/lake/filedate.py`, both tested against one list of cases,
-  `tools/lake/testdata/file-dates/names.json`. Every loader: `lake build` and `data ingest` (`--date-from auto|field`; `data ingest`'s
-  `--as-of` now dates every kind and a kind taken from a dated stem drops the date), the parallel loader (`source.date-from: auto|field`,
-  per file, so one run can write one date per file; with no date field only dated files load), the data inbox (a rule's `date-from`:
-  `auto`, the new default, `name` or `field`; each waiting file's preview says the date and where it comes from). `field` turns it off.
+- **The load rules: the table, pack, business date and mode of every load (DATA_LOAD_RULES.md, decided by the product owner on
+  2026-11-04; DATA_GUIDE.md section 2.8; DATALOAD_INBOX.md section 5.1; TOOLS.md sections 4 and 4.13; CLI_GUIDE.md `data ingest`).** A
+  file's name is `<table>[.<YYYY-MM-DD>].<extension>`; a plain file (`.jsonl`, `.gz`, `.zst`, `.zip`) is one table and one business date; a
+  tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<table>/<YYYY-MM-DD>/` folders and is checked whole before anything is written. The
+  business date comes from outside the data only: `--as-of`, the `.ready` file's `business-date:`, the name's date, the business today; a
+  row's own date field is only counted when it differs. The `.ready` file pairs by full name or without the data extension and is read by
+  the command-line loaders too; its keys are checked. A table resolves to one pack (or is refused with the candidates). Append is the
+  default mode (the parallel loader appends to Delta and Iceberg; replace on request). Empty files are ignored. One rule per language,
+  `tools/lake/filedate.py` and `FileDates`, both tested against `tools/lake/testdata/file-dates/names.json`; the command line's and the
+  `.ready` file's routing in `tools/lake/feedroute.py` and drishti-dataload `Routes`/`ReadyNote`. `lake build --plan` shows the plan.
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 

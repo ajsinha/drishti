@@ -99,7 +99,7 @@ final class Loader {
                 if (f.isArchive()) {
                     throw new IllegalStateException(f.path() + ": an archive is read through its plan (DatasetLoads)");
                 }
-                FileDates.Decided d = ParseWorker.decide(plan, f, LocalDate.now());
+                FileDates.Decided d = ParseWorker.decide(plan, f, FileDates.today());
                 if (d.error() != null) {
                     throw new IllegalArgumentException(d.error() + " (nothing was loaded)");
                 }

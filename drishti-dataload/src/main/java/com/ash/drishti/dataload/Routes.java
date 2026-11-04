@@ -259,7 +259,7 @@ public final class Routes {
         String kind = n.kind() != null ? n.kind() : rule == null ? null : rule.kind();
         String by;
         if (pack == null || kind == null) {
-            String table = n.table() != null ? n.table() : name.table();
+            String table = n.table() != null ? n.table().toLowerCase(java.util.Locale.ROOT) : name.table();
             if (table == null) {
                 throw new Unrouted(name.error() != null ? name.error() : "no routing rule matches " + fileName + " (" + source + ", " + rules.size()
                         + " rule" + (rules.size() == 1 ? "" : "s") + ") and its .ready file names no pack and kind");

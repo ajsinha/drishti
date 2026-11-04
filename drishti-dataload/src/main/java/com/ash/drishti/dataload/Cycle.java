@@ -333,6 +333,7 @@ public final class Cycle {
         for (Claimed c : go) {
             ObjectNode rep = report(c.name(), run, Ledger.LOADED).put("sha256", c.sha()).put("size", c.size());
             rep.set("route", routeNode);
+            rep.put("dateBy", c.route().dateBy());                              // this file's business date, and where it came from
             rep.set("filesInLoad", JSON.valueToTree(go.stream().map(Claimed::name).toList()));
             if (l.summary() != null) {
                 rep.set("load", l.summary());

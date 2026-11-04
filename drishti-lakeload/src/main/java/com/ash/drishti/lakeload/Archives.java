@@ -322,7 +322,7 @@ final class Archives {
                 byName.put(String.join("/", parts), e);
             }
         }
-        FileDates.Layout lay = FileDates.tarLayout(listed, java.time.LocalDate.now(), null);
+        FileDates.Layout lay = FileDates.tarLayout(listed, FileDates.today(), null);
         if (!lay.errors().isEmpty()) {
             throw new ArchiveException(name + ": refused, nothing was loaded (" + lay.errors().size() + " problem" + (lay.errors().size() > 1 ? "s" : "")
                     + "): " + String.join("; ", lay.errors()));

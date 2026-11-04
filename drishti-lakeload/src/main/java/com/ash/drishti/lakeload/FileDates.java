@@ -73,9 +73,14 @@ public final class FileDates {
         return d == DayOfWeek.SATURDAY ? today.minusDays(1) : d == DayOfWeek.SUNDAY ? today.minusDays(2) : today;
     }
 
+    /** Today in the system's time zone (the zone the loaders and the server run in). */
+    public static LocalDate today() {
+        return LocalDate.now(java.time.ZoneId.systemDefault());
+    }
+
     /** The business today of the system's clock. */
     public static LocalDate businessToday() {
-        return businessToday(LocalDate.now());
+        return businessToday(today());
     }
 
     /** The last part of a path (after '/', '\' or an archive's '!/'). */
@@ -115,7 +120,7 @@ public final class FileDates {
 
     /** The table and date {@code name} carries, or why it is refused (class doc), against the system's today. */
     public static Name parse(String name) {
-        return parse(name, LocalDate.now());
+        return parse(name, today());
     }
 
     /** The table and date {@code name} carries, or why it is refused (class doc). */
@@ -227,7 +232,7 @@ public final class FileDates {
                     com.fasterxml.jackson.databind.JsonNode n = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper().readTree(r.toFile());
                     String d = n == null ? null : n.path("business-date").asText(null);
                     return d == null || d.isBlank() ? null : LocalDate.parse(d.trim());
-                } catch (java.io.IOException | java.time.format.DateTimeException e) {
+                } catch (java.io.IOException | java.time.DateTimeException e) {
                     throw new IllegalArgumentException(r.getFileName() + ": its business-date is not YYYY-MM-DD (" + e.getMessage() + ")");
                 }
             }

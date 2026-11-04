@@ -388,7 +388,7 @@ final class LoadReport {
                 .put("dryRun", cfg.report().dryRun()).put("mode", cfg.target().appends() ? "append" : "overwrite-dates").put("format", cfg.target().format())
                 .put("engine", "java-loader").put("engineWhy", "the parallel lake loader (drishti-lakeload)").put("table", cfg.tablePath())
                 .put("domain", dt[0]).put("kind", cfg.target().kind() != null ? cfg.target().kind() : dt[1]).put("key", plan.key);
-        s.put("date", plan.asOf != null ? null : plan.date).put("asOf", plan.asOf == null ? null : plan.asOf.toString());
+        s.put("date", plan.date).put("asOf", plan.asOf == null ? null : plan.asOf.toString());
         ArrayNode promote = s.putArray("promote");
         plan.promoted.forEach(p -> promote.add(p.path()));
         ArrayNode pb = s.putArray("partitionBy");

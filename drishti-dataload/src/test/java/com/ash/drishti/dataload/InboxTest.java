@@ -45,8 +45,28 @@ class InboxTest {
         assertThat(found.ready()).extracting(Inbox.Ready::name).containsExactly("trades-a.jsonl");
         assertThat(found.ready().get(0).marker()).isEqualTo(f.inbox().resolve("trades-a.jsonl.ready"));
         assertThat(found.waiting()).extracting(Inbox.Waiting::name, Inbox.Waiting::why).containsExactly(
-                org.assertj.core.groups.Tuple.tuple("trades-b.jsonl", "no trades-b.jsonl.ready yet"));
+                org.assertj.core.groups.Tuple.tuple("trades-b.jsonl", "no trades-b.jsonl.ready (or trades-b.ready) yet"));
         assertThat(found.readyAll()).isNull();
+    }
+
+    @Test
+    void aShortMarkerPairsWithItsOneFileAndReleasesNeitherOfTwo() throws IOException {
+        Fixture f = new Fixture(tmp);
+        f.drop("trades.2026-11-02.jsonl.gz", Fixture.rows("2026-11-02", "1"), null);
+        Files.writeString(f.inbox().resolve("trades.2026-11-02.ready"), "");
+        f.drop("eod.tar", "x", null);
+        Files.writeString(f.inbox().resolve("eod.ready"), "");
+        f.drop("deals.jsonl", Fixture.rows("2026-11-02", "2"), null);
+        f.drop("deals.jsonl.gz", Fixture.rows("2026-11-02", "3"), null);
+        Files.writeString(f.inbox().resolve("deals.ready"), "");
+        f.age(f.inbox().resolve("trades.2026-11-02.ready"), f.inbox().resolve("eod.ready"), f.inbox().resolve("deals.ready"));
+        Inbox.Found found = look(f);
+        assertThat(found.ready()).extracting(Inbox.Ready::name).containsExactlyInAnyOrder("trades.2026-11-02.jsonl.gz", "eod.tar");
+        assertThat(found.ready()).filteredOn(r -> r.name().equals("eod.tar")).singleElement()
+                .satisfies(r -> assertThat(r.marker()).isEqualTo(f.inbox().resolve("eod.ready")));
+        assertThat(found.waiting()).extracting(Inbox.Waiting::why).allMatch(w -> w.contains("deals.ready could release")
+                && w.contains("it releases neither"));
+        assertThat(found.orphanMarkers()).isEmpty();
     }
 
     @Test

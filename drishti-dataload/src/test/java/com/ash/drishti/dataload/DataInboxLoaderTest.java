@@ -95,7 +95,7 @@ class DataInboxLoaderTest {
         assertThat(first.files().get(0).rows()).isEqualTo(6);
         assertThat(f.signals).extracting(Signal.Landed::date, Signal.Landed::rows).containsExactly(
                 org.assertj.core.groups.Tuple.tuple(LocalDate.parse("2026-11-02"), 3L), org.assertj.core.groups.Tuple.tuple(LocalDate.parse("2026-11-03"), 3L));
-        assertThat(f.tree("outbox")).contains("outbox/2026-11-03/RUN/trades-c.2026-11-03.jsonl.zst", "outbox/2026-11-03/RUN/trades-c.2026-11-03.ready",
+        assertThat(f.tree("outbox")).contains("outbox/2026-11-03/RUN/trades-c.2026-11-03.jsonl.zst", "outbox/2026-11-03/RUN/trades-c.2026-11-03.jsonl.zst.ready",   // a short marker takes its file's full name
                 "outbox/2026-11-03/RUN/trades-c.2026-11-03.jsonl.zst.loaded.json", "outbox/2026-11-03/RUN/loads/load-1.log",
                 "outbox/2026-11-03/RUN/loads/load-1.summary.json");
 
@@ -154,7 +154,7 @@ class DataInboxLoaderTest {
         JsonNode report = Fixture.JSON.readTree(f.root.resolve("outbox/2026-11-03").toFile().listFiles()[0].toPath()
                 .resolve("trades-d.2026-11-02.jsonl.loaded.json").toFile());
         assertThat(report.path("load").path("dateNotes").toString()).contains("2 rows of trades-d.2026-11-02.jsonl");
-        assertThat(report.path("route").path("dateBy").asText()).isEqualTo("2026-11-02 from the name");
+        assertThat(report.path("dateBy").asText()).isEqualTo("2026-11-02 from the name");
         assertThat(inbox.status().toString()).contains("2 rows of trades-d.2026-11-02.jsonl carried another date in BUSINESS_DATE");
     }
 
