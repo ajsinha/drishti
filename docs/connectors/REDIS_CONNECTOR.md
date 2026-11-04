@@ -801,7 +801,7 @@ Moved here from the former connector guide. From nothing to a running view:
 docker run -d --name redis -m 2g -p 6379:6379 redis:8 --maxmemory 1gb
 tools/load-redis.sh redis://localhost:6379                         # the samples, 10 business days
 tools/load-redis.sh redis://localhost:6379 --trades 10000          # and 10,000 trades a day for 3 days
-SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,redis DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Use a free host port if a Redis of yours already listens on 6379 (`-p 16379:6379`, and the URI to match). Health

@@ -299,7 +299,7 @@ Routes (`kind -> connector`) are the pack's `routes:`; the server's own settings
 **4. Start the server**, then the console in a second terminal:
 
 ```bash
-java -jar drishti-server/target/drishti-server-*-exec.jar
+java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 

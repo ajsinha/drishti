@@ -89,7 +89,7 @@ class Server:
         from javacmd import java_cmd
         d = work / name
         (d / "logs").mkdir(parents=True, exist_ok=True)
-        env = {**os.environ, "DRISHTI_PORT": str(port), "DRISHTI_DATA_DIR": str(d), "DRISHTI_CONNECTORS_DIR": str(d / "connectors"),
+        env = {**os.environ, "DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_SEED_ADMIN": "true", "DRISHTI_PORT": str(port), "DRISHTI_DATA_DIR": str(d), "DRISHTI_CONNECTORS_DIR": str(d / "connectors"),
                "DRISHTI_DELTA_ROOT": str(d / "delta"), "DRISHTI_NET_DIR": str(d / "net"), "DRISHTI_MCP_DIR": str(d / "mcp"),
                "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true", "DRISHTI_PACKS": "core,trading"}
         env.pop("DRISHTI_ICEBERG_ROOT", None)

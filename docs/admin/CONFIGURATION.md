@@ -87,7 +87,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in the bundled file: the first read of a date on a large table loads its id index first, and a panel's own source (another pack's data) is read within the same limit.
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in 
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -349,7 +349,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_RABBITMQ_ENABLED` | `drishti.sources.plugins.rabbitmq.enabled` | `false` | Run the `rabbitmq` source as itself. |
 | `DRISHTI_S3_ENABLED` | `drishti.sources.plugins.s3.enabled` | `false` | Run the `s3` source as itself. |
 | `DRISHTI_CALENDAR` | `drishti.business-date.calendar` | `USNY` | The holiday calendar that rolls the business date back (`USNY`, `GBLO`, `EUTA`, `JPTO`, `CATO` (Toronto), or joined with `+`). |
-| `DRISHTI_SECURITY_ENABLED` | `drishti.security.enabled` | `false` | Turn sign-in and role checks on. |
+| `DRISHTI_SECURITY_ENABLED` | `drishti.security.enabled` | `true` | Sign-in and role checks; on by default (the server refuses to start without `DRISHTI_TOKEN_SECRET`); `false`, or the `dev` profile, for local development. |
 | `DRISHTI_TOKEN_SECRET` | `drishti.security.secret` | empty | The token signing secret (at least 32 bytes), shared with the console. |
 | `DRISHTI_METRICS_TOKEN` | `drishti.security.metrics-token` | empty | A bearer token for Prometheus to scrape `/actuator/prometheus` with security on. |
 | `DRISHTI_OIDC_ENABLED` | `drishti.security.oidc.enabled` | `false` | Verify single-sign-on ID tokens. |
@@ -432,7 +432,7 @@ files (`application-files.yaml`, `application-postgres.yaml`, …) and packs hav
 | `DRISHTI_AUDIT_FILE` | `drishti.identity.audit-file` | `./data/identity/audit.jsonl` | The pre-1.10 audit file, imported once. |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `drishti.identity.force-password-change-on-create` | `false` | Force a password change for newly created users. |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `drishti.identity.force-password-change-on-reset` | `false` | Force a password change after an administrator reset. |
-| `DRISHTI_SEED_ADMIN` | `drishti.identity.seed-admin` | `true` | Create the development admin on first start with no users; `false` for production. |
+| `DRISHTI_SEED_ADMIN` | `drishti.identity.seed-admin` | `false` | Create the first administrator on first start with no users (the development admin unless `DRISHTI_SEED_USERNAME`/`DRISHTI_SEED_PASSWORD` name one); on in the `dev` profile, off otherwise unless set to `true`. |
 | `DRISHTI_SEED_USERNAME` | `drishti.identity.seed-username` | `drishti-dev-admin` | The seeded administrator's user name; with `DRISHTI_SEED_PASSWORD` it is the first administrator you chose (`deploy/docker/compose.yaml` requires both). |
 | `DRISHTI_SEED_PASSWORD` | `drishti.identity.seed-password` | `drishti-dev-admin123` | Its password. Only the built-in default shows the "default password" warning. |
 | `DRISHTI_API_DOCS` | `springdoc.api-docs.enabled`, `springdoc.swagger-ui.enabled` | `true` | The OpenAPI description and its UI; set explicitly so a start does not warn they are on by default. |
@@ -749,7 +749,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -758,19 +758,24 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
 `curl -s localhost:18480/api/v1/packs` lists each loaded pack. If the console runs from another directory,
 set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folder.
 
-### Turn security on (production)
+### Security (on by default)
+
+Security is on by default: give the server a token secret, or it refuses to start and says so. For local development only, start
+with the `dev` profile (`--spring.profiles.active=dev`, or beside another profile: `dev,duckdb`): sign-in off and the development admin
+(`drishti-dev-admin`) seeded on the first start with no users.
 
 ```bash
-export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
-export DRISHTI_SEED_ADMIN=false
+# the first administrator, once, on an empty user store (or create users another way); nothing is seeded otherwise
+export DRISHTI_SEED_ADMIN=true DRISHTI_SEED_USERNAME=my-admin DRISHTI_SEED_PASSWORD='a-long-password'
+
 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
@@ -815,7 +820,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -1072,7 +1077,7 @@ servers). The environment variables of this section are in the [environment vari
 | `min-password-length` | `10` | The shortest password accepted. |
 | `max-failed-attempts` / `lockout` | `5` / `15m` | Failed sign-ins before an account locks, and for how long. |
 | `force-password-change-on-create` / `-on-reset` | `false` / `false` (`DRISHTI_FORCE_PW_CHANGE_ON_CREATE`, `_ON_RESET`) | Require a new password at the first sign-in of a new user, or after an administrator's reset. |
-| `seed-admin` | `true` (`DRISHTI_SEED_ADMIN`) | On first start with no users, create the development administrator. `false` in production. |
+| `seed-admin` | `false` (`DRISHTI_SEED_ADMIN`) | On first start with no users, create the first administrator (`seed-username`, `seed-password`). On in the `dev` profile; elsewhere only when set to `true`. |
 | `seed-username` / `seed-password` | `drishti-dev-admin` / the built-in development password (`DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD`) | Its sign-in. Change the password at once; the console warns until you do. |
 | `seed-roles` / `seed-display-name` | `[admin]` / `Drishti dev admin` | Its roles and the name shown for it. |
 | `users-file` / `audit-file` / `preferences-dir` | `./data/identity/users.json` / `./data/identity/audit.jsonl` / `./data/identity/preferences` | Files of an older identity store, imported once into an empty database and renamed `*.imported`. |
@@ -2444,7 +2449,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2470,7 +2475,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 ---
@@ -3030,7 +3035,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.security.enabled` | boolean | `false` | `DRISHTI_SECURITY_ENABLED` | server | Off for local development. Production: enabled: true and DRISHTI\_TOKEN\_SECRET (&gt;= 32 bytes, shared with the console). | restart |  |
+| `drishti.security.enabled` | boolean | `true` | `DRISHTI_SECURITY_ENABLED` | server | On by default: every call needs a token, and DRISHTI\_TOKEN\_SECRET (&gt;= 32 bytes, shared with the console) must be set or the server refuses to start. For local development run the dev profile (--spring.profiles.active=dev; application-dev.yaml): sign-in off and the development admin seeded. | restart |  |
 | `drishti.security.secret` | string | empty | `DRISHTI_TOKEN_SECRET` | server | the token signing secret (at least 32 bytes), shared with the console; from the environment only | restart |  |
 | `drishti.security.registered-users-only` | boolean | `true` |  | server | a signed token is refused when its user was deleted or disabled (false: trust the token alone) | restart |  |
 | `drishti.security.clock-skew` | duration | `30s` |  | server | clock difference tolerated when checking a token's expiry | restart |  |
@@ -3485,7 +3490,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.identity.lockout` | duration | `15m` |  | server | how long a locked account stays locked | restart |  |
 | `drishti.identity.force-password-change-on-create` | boolean | `false` | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | server | Nobody is forced to change a password unless configured here (an admin can still tick it per user). (secret) | restart |  |
 | `drishti.identity.force-password-change-on-reset` | boolean | `false` | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | server | after an administrator resets a password, the user must change it at the next sign-in (secret) | restart |  |
-| `drishti.identity.seed-admin` | boolean | `true` | `DRISHTI_SEED_ADMIN` | server | On first start with no users, create a development admin. Change its password at once; the console warns until you do. Turn off (DRISHTI\_SEED\_ADMIN=false) for production. | restart |  |
+| `drishti.identity.seed-admin` | boolean | `false` | `DRISHTI_SEED_ADMIN` | server | On first start with no users, create the first administrator: off by default; on in the dev profile (the development admin; change its password at once, the console warns until you do) or with DRISHTI\_SEED\_ADMIN=true set explicitly. | restart |  |
 | `drishti.identity.seed-username` | string | `drishti-dev-admin` | `DRISHTI_SEED_USERNAME` | server | With DRISHTI\_SEED\_USERNAME / DRISHTI\_SEED\_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first administrator you chose, not the development admin. | restart |  |
 | `drishti.identity.seed-password` | string | `drishti-dev-admin123` | `DRISHTI_SEED_PASSWORD` | server | the first administrator's password; only this built-in default shows the default password warning (secret) | restart |  |
 | `drishti.identity.seed-roles` | list | `[admin]` |  | server | the first administrator's roles | restart |  |
@@ -6344,9 +6349,9 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_S3_ENABLED` | `drishti.sources.plugins.s3.enabled` | `false` | server | run the s3 source as itself |
 | `DRISHTI_SACCR_ENABLED` | `drishti.engines.sa-ccr.enabled` (engine) | `false` | engine | run SA-CCR exposure at default on this node once it is installed (its settings will live under drishti.ccr.saccr.\*) |
 | `DRISHTI_SECURE_COOKIE` | `auth.secure_cookie` | `true` | console | mark cookies Secure (false only for plain-HTTP development with sign-in on) |
-| `DRISHTI_SECURITY_ENABLED` | `drishti.security.enabled` | `false` | server | Off for local development. Production: enabled: true and DRISHTI\_TOKEN\_SECRET (&gt;= 32 bytes, shared with the console). |
+| `DRISHTI_SECURITY_ENABLED` | `drishti.security.enabled` | `true` | server | On by default: every call needs a token, and DRISHTI\_TOKEN\_SECRET (&gt;= 32 bytes, shared with the console) must be set or the server refuses to start. For local development run the dev profile (--spring.profiles.active=dev; application-dev.yaml): sign-in off and the development admin seeded. |
 | `DRISHTI_SEC_USER_AGENT` | SEC fetch | none | tools | The User-Agent (with a contact) the SEC requires of the us-equities refresh script |
-| `DRISHTI_SEED_ADMIN` | `drishti.identity.seed-admin` | `true` | server | On first start with no users, create a development admin. Change its password at once; the console warns until you do. Turn off (DRISHTI\_SEED\_ADMIN=false) for production. |
+| `DRISHTI_SEED_ADMIN` | `drishti.identity.seed-admin` | `false` | server | On first start with no users, create the first administrator: off by default; on in the dev profile (the development admin; change its password at once, the console warns until you do) or with DRISHTI\_SEED\_ADMIN=true set explicitly. |
 | `DRISHTI_SEED_PASSWORD` | `drishti.identity.seed-password` | `drishti-dev-admin123` | server | the first administrator's password; only this built-in default shows the default password warning |
 | `DRISHTI_SEED_USERNAME` | `drishti.identity.seed-username` | `drishti-dev-admin` | server | With DRISHTI\_SEED\_USERNAME / DRISHTI\_SEED\_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first administrator you chose, not the development admin. |
 | `DRISHTI_SENSITIVITIES_ENABLED` | `drishti.engines.sensitivities.enabled` (engine) | `true` | engine | run position sensitivities on this node: /api/v1/sensitivities, /api/v1/risk-factors; FRTB-SA and SIMM need it (live) |

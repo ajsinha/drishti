@@ -30,6 +30,8 @@ public class SecurityConfiguration {
         String secret = props.secret();
         if (!props.enabled() && (secret == null || secret.length() < 32)) {
             secret = "development-only-secret-not-used-when-disabled";
+        } else if (secret == null || secret.isBlank()) {
+            throw new SecurityNotConfiguredException();             // security on (the default) and no secret: refuse to start, in words
         }
         return new TokenVerifier(secret, props.clockSkew().toSeconds());
     }

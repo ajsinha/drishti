@@ -29,6 +29,7 @@ gossip:                            # nodes/<node>/net/gossip.yaml of a new node
 
 settings:                          # every server and the console (not secret)
   DRISHTI_SECURITY_ENABLED: "true"
+  DRISHTI_SEED_ADMIN: "true"         # the development admin on a node's first start with no users (the server seeds nobody by default)
   DRISHTI_AUTH_ENABLED: "true"
   DRISHTI_SECURE_COOKIE: "false"
   DRISHTI_DEMO_ENABLED: "false"

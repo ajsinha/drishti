@@ -302,7 +302,7 @@ Switch feeds on with their variables (on top of the server settings you start wi
 ```bash
 DRISHTI_FEED_NYFED_SOFR=true DRISHTI_FEED_ECB_FX=true DRISHTI_FEED_US_TREASURY=true \
 DRISHTI_FEED_FRED=true FRED_API_KEY=… DRISHTI_FRED_SERIES=DGS10,DFF,SOFR \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 ### 4.2 The site form

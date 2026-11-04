@@ -275,10 +275,10 @@ mkdir -p data/tmp/server
 java -Djava.io.tmpdir=data/tmp/server -Xmx4g -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
-**B. The smallest start** (sign-in off, the packs' samples ticking live):
+**B. The smallest start**, for local development only (the `dev` profile: sign-in off and the development admin seeded; security is on by default, and without `DRISHTI_TOKEN_SECRET` and the profile the server refuses to start), the packs' samples ticking live:
 
 ```bash
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 What the settings do:
@@ -288,7 +288,7 @@ What the settings do:
 | `-Djava.io.tmpdir=data/tmp/server` (and the `mkdir` before it) | Java's temp folder for this server: DuckDB, RocksDB and CatBoost unpack their native libraries there (DuckDB 60 MB a start), not in `/tmp`, and the server removes stale copies from it at start. Only the command line moves it (since JDK 17); without it the server warns in its log and on Admin, Health. `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=…` works too. [CONFIGURATION.md](../admin/CONFIGURATION.md#pass--djavaiotmpdir-to-java) |
 | `DRISHTI_PACKS` | The packs to load, comma-separated. A pack's parents load with it: `market-risk` brings `core`, `market-data` and `trading`. Without it the same seven load (they are the default). |
 | `DRISHTI_STUDIO_SAVE=true` | Lets the Build workbench save Sutras (the view layouts). Leave it out if you will not edit Sutras. |
-| `DRISHTI_SECURITY_ENABLED=true` | Sign-in on: every call needs a token. Off by default. |
+| `DRISHTI_SECURITY_ENABLED=true` | Sign-in on: every call needs a token. On by default: without `DRISHTI_TOKEN_SECRET` the server refuses to start; for local development without sign-in, start with `--spring.profiles.active=dev` (sign-in off, the development admin seeded). |
 | `DRISHTI_TOKEN_SECRET` | The secret the server and the console share to sign tokens (at least 32 characters). The value above is the run configurations' development secret: never use it on a shared machine. |
 | `DRISHTI_SEED_ADMIN`, `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | On the first start with no users, create this administrator (the values above are the defaults too). |
 | `DRISHTI_EXTERNAL_LIB` | The folder of extra jars and Python modules (`external_lib/java`, `external_lib/python`); default `external_lib` in the repository. |
@@ -380,8 +380,9 @@ says *Sign-in is off on this server*.
 *Health*, *Caches* and *Capacity* (*Lakes*, `/admin/lakes`, opens from *Connectors* and *Data loads*). Users, roles and
 packs per user are explained in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 
-> **Production:** set `DRISHTI_SEED_ADMIN=false` (or your own `DRISHTI_SEED_USERNAME`/`DRISHTI_SEED_PASSWORD`, as the Docker
-> setup does), and long random secrets (`openssl rand -hex 32`). See [OPERATIONS.md](../admin/OPERATIONS.md).
+> **Production:** security is on and nothing is seeded by default: never the `dev` profile; seed your own first administrator once
+> (`DRISHTI_SEED_ADMIN=true` with `DRISHTI_SEED_USERNAME`/`DRISHTI_SEED_PASSWORD`, as the Docker setup does), and long random secrets
+> (`openssl rand -hex 32`). See [OPERATIONS.md](../admin/OPERATIONS.md).
 
 ## Step 9 · Your first views
 
@@ -1026,7 +1027,7 @@ It writes the same 89 tables under `data\delta` as on Linux (sixty business days
 The script checks that Java is 21 or newer, sets `DRISHTI_DELTA_ENGINE=native`, and starts the jar with
 `-XX:+UseCompactObjectHeaders` only on Java 25 or newer (Java 21, the production target, refuses to start with it). It runs in the
 window until `Ctrl+C`. Set `$env:DRISHTI_DEMO_ENABLED='false'` first to read every page from the lakes, and the sign-in variables
-of Step 6 A (`$env:DRISHTI_SECURITY_ENABLED='true'` and the rest) to sign in. Its options:
+of Step 6 A (`$env:DRISHTI_SECURITY_ENABLED='true'` and the rest) to sign in; without them it starts as the `dev` profile does (sign-in off, the development admin seeded). Its options:
 
 | Option | Default | Meaning |
 |---|---|---|
@@ -1052,7 +1053,7 @@ To run the jar by hand instead:
 
 ```powershell
 $env:DRISHTI_PACKS = 'market-risk'
-& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.9.11.b-exec.jar
+& "$env:DRISHTI_JAVA_HOME\bin\java.exe" -Xmx2g -jar drishti-server\target\drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev   # local development: sign-in off
 ```
 
 The native Delta engine is the default, so nothing else is needed.

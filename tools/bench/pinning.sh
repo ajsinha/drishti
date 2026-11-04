@@ -76,7 +76,7 @@ cmd_run() {
   run="$D/run/$cfg-j$jdk"; rm -rf "$run"; mkdir -p "$run/identity" "$run/tmp"; cd "$run"
   if (exec 3<>"/dev/tcp/127.0.0.1/$PORT") 2>/dev/null; then echo "port $PORT is in use" >&2; exit 2; fi
   local jar; jar=$(ls -t "$REPO"/drishti-server/target/drishti-server-*-exec.jar | head -1)
-  local env=(DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_PACKS_DIR="$REPO/packs" DRISHTI_DELTA_ROOT="$D/lake"
+  local env=(DRISHTI_SECURITY_ENABLED=false DRISHTI_SEED_ADMIN=true DRISHTI_PORT="$PORT" DRISHTI_PACKS=market-risk,counterparty-risk DRISHTI_PACKS_DIR="$REPO/packs" DRISHTI_DELTA_ROOT="$D/lake"
     DRISHTI_IDENTITY_DB_URL="jdbc:sqlite:$run/identity/drishti.db" DRISHTI_USERS_FILE="$run/identity/users.json"
     DRISHTI_AUDIT_FILE="$run/identity/audit.jsonl" DRISHTI_GOVERNANCE_DIR="$run/governance" DRISHTI_REPORTS_DIR="$run/reports"
     DRISHTI_PACKS_OVERLAY="$run/packs/added.yaml" DRISHTI_PACKS_INSTALLED="$run/packs/installed" DRISHTI_FEEDS="$run/feeds"

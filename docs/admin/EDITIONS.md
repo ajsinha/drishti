@@ -69,7 +69,7 @@ drishti:
 or in the environment, from the repository root:
 
 ```bash
-DRISHTI_EDITION=risk java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_EDITION=risk java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 Leave `DRISHTI_PACKS` unset: the edition's packs load. If `DRISHTI_PACKS` is set it still wins (site configuration beats the edition), but
@@ -335,7 +335,7 @@ news and quotes (news-and-markets), US companies and filings (us-equities), lega
 section 1 says with `world` in place of `risk`:
 
 ```bash
-DRISHTI_EDITION=world java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_EDITION=world java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 or offer it as a lens beside Drishti Risk (`drishti.lenses: risk,world`, section 5). The public-data lakes must be built
@@ -385,7 +385,7 @@ spot, forwards and vols, swaption and cap vols, credit curves, bonds, equities, 
 (the market-data pack, with the core pack it extends). No trades and no VaR. Run it as section 1 says with `market` in place of `risk`:
 
 ```bash
-DRISHTI_EDITION=market java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_EDITION=market java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 or offer it as a lens beside the others (`drishti.lenses: risk,world,market,trading`, section 5). The market-data lake must be built (`lake demo`
@@ -435,7 +435,7 @@ reads; regulatory, stress, collateral operations and macro economics are left ou
 `risk`:
 
 ```bash
-DRISHTI_EDITION=trading java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_EDITION=trading java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 or open it as a lens: it is the fourth of the default lenses (`drishti.lenses: risk,world,market,trading`, section 5).

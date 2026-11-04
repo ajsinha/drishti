@@ -158,7 +158,7 @@ def serve(work: Path) -> list:
                     str(key) + ".pem", "--publisher", "acme"], check=True, capture_output=True)
     (work / "application.yaml").write_text(f"drishti:\n  packs:\n    registry:\n      trusted-keys:\n        acme: {public}\n", encoding="utf-8")
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-25-openjdk-amd64") + "/bin/java"
-    env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=LISTED, DRISHTI_PACKS_DIR=str(packs), DRISHTI_PACK_REGISTRY=str(reg),
+    env = dict(os.environ, DRISHTI_SECURITY_ENABLED="false", DRISHTI_SEED_ADMIN="true", DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=LISTED, DRISHTI_PACKS_DIR=str(packs), DRISHTI_PACK_REGISTRY=str(reg),
                DRISHTI_STUDIO_SAVE="true", DRISHTI_SUTRAS=str(work / "sutras"), DRISHTI_PACKS_INSTALLED=str(work / "data" / "packs" / "installed"))
     (work / "sutras").mkdir()
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)

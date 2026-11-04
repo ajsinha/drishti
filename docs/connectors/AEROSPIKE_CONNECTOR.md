@@ -602,7 +602,7 @@ docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test                                 # 1,791 documents x 10 business days
 tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3       # and a book of a million trades a day
 SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=counterparty-risk,market-risk \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
    How the loader works, its JSON-line input, retention (`--ttl-days`) and counting with `asinfo` are in
@@ -664,7 +664,7 @@ routes:
 ```bash
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 30
-SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=trading java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,aerospike DRISHTI_PACKS=trading java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 ## Connection pool

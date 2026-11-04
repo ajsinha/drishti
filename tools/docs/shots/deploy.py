@@ -91,7 +91,7 @@ def start_servers(work: Path) -> list:
         sys.exit("pack bundle failed: " + done.stdout + done.stderr)
     STATE["archive"], STATE["dr"] = dist / "desk-lake-1.1.0.tar.gz", str(dr)
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
-    env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=PACKS + ",desk-lake", DRISHTI_PACKS_DIR=str(packs), DRISHTI_STUDIO_SAVE="true",
+    env = dict(os.environ, DRISHTI_SECURITY_ENABLED="false", DRISHTI_SEED_ADMIN="true", DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS=PACKS + ",desk-lake", DRISHTI_PACKS_DIR=str(packs), DRISHTI_STUDIO_SAVE="true",
                DRISHTI_SUTRAS=str(work / "sutras"), DRISHTI_PACKS_INSTALLED=str(work / "data" / "installed"), DRISHTI_PACKS_SETTINGS=str(work / "data" / "settings"),
                DRISHTI_PACKS_DEPLOY_HISTORY=str(work / "data" / "history.jsonl"))
     (work / "sutras").mkdir()

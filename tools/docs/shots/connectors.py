@@ -76,7 +76,7 @@ def start_servers(work: Path) -> list:
         (work / name).symlink_to(ROOT / name)
     (work / "application.local.yaml").write_text(site_config(work))
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-25-openjdk-amd64") + "/bin/java"
-    env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="counterparty-risk",
+    env = dict(os.environ, DRISHTI_SECURITY_ENABLED="false", DRISHTI_SEED_ADMIN="true", DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="counterparty-risk",
                DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="false")
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jar)], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"

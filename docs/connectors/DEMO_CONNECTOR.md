@@ -192,8 +192,8 @@ drishti:
 Switching it off for one start, or for good:
 
 ```bash
-DRISHTI_DEMO_ENABLED=false java -jar drishti-server/target/drishti-server-*-exec.jar
-java -jar drishti-server/target/drishti-server-*-exec.jar --drishti.sources.plugins.demo.enabled=false
+DRISHTI_DEMO_ENABLED=false java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
+java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev --drishti.sources.plugins.demo.enabled=false
 ```
 
 The run configurations set it: **Drishti server (demo lakes)** has `DRISHTI_DEMO_ENABLED=false`; **Drishti server** leaves the default

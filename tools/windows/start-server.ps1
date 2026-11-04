@@ -110,6 +110,12 @@ if ($DemoLakes) {
     $env:DRISHTI_STUDIO_SAVE = 'true'
     $env:DRISHTI_EXTERNAL_LIB = Join-Path $root 'external_lib'
 }
+# a development server: sign-in is on by default in the server and needs DRISHTI_TOKEN_SECRET, so unless sign-in was set up above
+# (-DemoLakes) or by you, start as the dev profile does: sign-in off and the development admin seeded
+if (-not $env:DRISHTI_SECURITY_ENABLED) {
+    $env:DRISHTI_SECURITY_ENABLED = 'false'
+    if (-not $env:DRISHTI_SEED_ADMIN) { $env:DRISHTI_SEED_ADMIN = 'true' }
+}
 if (-not $Heap) { $Heap = '2g' }
 $env:DRISHTI_DELTA_ENGINE = $Engine
 $env:DRISHTI_PORT = "$Port"

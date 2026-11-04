@@ -500,7 +500,7 @@ class path or in the plugin folder (`DRISHTI_PLUGIN_DIR`).
 docker compose -f deploy/docker/compose.data.yaml up -d postgres          # user, password and database: drishti
 docker compose -f deploy/docker/compose.data.yaml exec -T postgres psql -U drishti -d drishti < desk.sql   # the SQL above
 DESK_DB_URL=jdbc:postgresql://localhost:5432/drishti DESK_DB_USER=drishti DESK_DB_PASSWORD=drishti \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 ```bash

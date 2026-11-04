@@ -283,7 +283,7 @@ class Soak:
             (work / "connectors" / f"{cname}.yaml").write_text(text, encoding="utf-8")
         assert port not in FORBIDDEN and not listening(port), f"port {port} is in use"
         env = dict(os.environ, DRISHTI_NET_SECRET=KEY, DRISHTI_TOKEN_SECRET=TOKEN_SECRET, DRISHTI_SECURITY_ENABLED="true",
-                   DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_DELTA_ROOT=str(self.work / "lakes" / lake), DRISHTI_PACKS=packs,
+                   DRISHTI_SEED_ADMIN="true", DRISHTI_DATA_DIR=str(work / "data"), DRISHTI_DELTA_ROOT=str(self.work / "lakes" / lake), DRISHTI_PACKS=packs,
                    DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"), DRISHTI_CONNECTORS_DIR=str(work / "connectors"),
                    DRISHTI_NET_DIR=str(work / "net"), DRISHTI_ACCESS_LOG="false", **server_env(getattr(self.a, "server_env", None)))
         args = [*jvm_args(self.a.heap, getattr(self.a, "jvm_arg", None)), "-jar", self.jar, f"--server.port={port}", f"--drishti.net.dir={work / 'net'}", "--drishti.net.poll=1s",

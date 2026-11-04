@@ -55,7 +55,7 @@ edit:
 ```
 
 ```bash
-DRISHTI_EDIT_ENABLED=true java -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_EDIT_ENABLED=true java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 **You should see** in the server's log `write-back: on; edit log sqlite (auto: this node is alone), 64 lanes, node local`. **In the UI**,

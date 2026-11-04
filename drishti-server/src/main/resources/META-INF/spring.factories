@@ -1,3 +1,4 @@
 org.springframework.boot.env.EnvironmentPostProcessor=com.ash.drishti.server.http.SiteProxyEnvironmentPostProcessor,\
   com.ash.drishti.server.http.SitePoolEnvironmentPostProcessor,\
   com.ash.drishti.server.engines.EngineKeyAliases
+org.springframework.boot.diagnostics.FailureAnalyzer=com.ash.drishti.server.security.SecurityNotConfiguredException$Analyzer

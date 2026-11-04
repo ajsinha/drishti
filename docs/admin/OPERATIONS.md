@@ -553,7 +553,7 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 | Variable | Default | Setting | What it does |
 |---|---|---|---|
 | `DRISHTI_PORT` | `18480` | `server.port` | HTTP port of the server |
-| `DRISHTI_SECURITY_ENABLED` | `false` | `drishti.security.enabled` | require a bearer token on every `/api/v1` call; **must be `true` in production** |
+| `DRISHTI_SECURITY_ENABLED` | `true` | `drishti.security.enabled` | require a bearer token on every `/api/v1` call; on by default, and the server refuses to start without `DRISHTI_TOKEN_SECRET`; `false` (or the `dev` profile) only for local development |
 | `DRISHTI_TOKEN_SECRET` | empty | `drishti.security.secret` | HS256 key the console signs tokens with; at least 32 bytes; the same value on the console. The server refuses to start with security on and a shorter secret |
 | `DRISHTI_OIDC_ENABLED` | `false` | `drishti.security.oidc.enabled` | accept single sign-on ID tokens |
 | `DRISHTI_OIDC_ISSUER` | empty | `drishti.security.oidc.issuer` | the provider's issuer URL (https) |
@@ -578,7 +578,7 @@ Defined in `drishti-server/src/main/resources/application.yaml`.
 
 | Variable | Default | What it does |
 |---|---|---|
-| `DRISHTI_SEED_ADMIN` | `true` | on first start with no users, create `drishti-dev-admin` / `drishti-dev-admin123`. Set `false` in production once you have a real admin |
+| `DRISHTI_SEED_ADMIN` | `false` | on first start with no users, create the first administrator (`DRISHTI_SEED_USERNAME` / `DRISHTI_SEED_PASSWORD`; without them the development admin `drishti-dev-admin` / `drishti-dev-admin123`). On in the `dev` profile; elsewhere only when set to `true` |
 | `DRISHTI_SEED_USERNAME`, `DRISHTI_SEED_PASSWORD` | `drishti-dev-admin`, `drishti-dev-admin123` | the administrator that first start creates: set both to choose your own instead of the development admin |
 | `DRISHTI_FORCE_PW_CHANGE_ON_CREATE` | `false` | new users must change their password at first sign-in |
 | `DRISHTI_FORCE_PW_CHANGE_ON_RESET` | `false` | users must change a password an admin reset |
@@ -913,8 +913,8 @@ Work through this list for every shared installation. Each item says how to chec
    (10 s by default), and signing out ends the session on the server.
 3. **The development admin is gone.** The compose file never creates it (it seeds the administrator of
    `DRISHTI_ADMIN_USER` / `DRISHTI_ADMIN_PASSWORD`). On any other install sign in as `drishti-dev-admin`, create your
-   own admin, then either change the development admin's password or disable it, and set `DRISHTI_SEED_ADMIN=false`
-   (or give `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD` for the first start). Check: the console no longer
+   own admin, then either change the development admin's password or disable it, and leave `DRISHTI_SEED_ADMIN` unset (seeding is off by
+   default; or give `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD` for the first start). Check: the console no longer
    shows the default-password warning (the server reports `"defaultAdminPasswordInUse": false` at
    `/api/v1/admin/status`).
 4. **Single sign-on (optional).** `DRISHTI_OIDC_ENABLED=true`, `DRISHTI_OIDC_ISSUER` (https) and

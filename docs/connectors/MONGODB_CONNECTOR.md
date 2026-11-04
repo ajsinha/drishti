@@ -661,7 +661,7 @@ Moved here from the former connector guide. From nothing to a running view:
 docker run -d --name mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
 tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples, 10 business days
 tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and 10,000 trades a day for 3 days
-SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 MongoDB 8.0 does not start on some recent Linux kernels; `mongo:7` does. Use a free host port if a MongoDB of yours

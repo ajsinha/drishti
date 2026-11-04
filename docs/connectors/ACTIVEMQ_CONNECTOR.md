@@ -850,7 +850,7 @@ You want `LIM <id>` to show the latest version, live.
 
 ```bash
 docker run -d --name amq -p 61616:61616 -p 61613:61613 -p 8161:8161 apache/activemq-classic
-DRISHTI_LIMITS_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar     # with the pack form above
+DRISHTI_LIMITS_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev     # with the pack form above
 ```
 
 3. **Send a message** with an `id` property, for example over STOMP (ActiveMQ turns STOMP headers into message

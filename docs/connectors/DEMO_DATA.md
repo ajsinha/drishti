@@ -161,7 +161,7 @@ memory, partitions and promoted columns ([TOOLS.md](../guides/TOOLS.md)).
 docker compose -f deploy/docker/compose.data.yaml up -d postgres                                       # or your own server
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti                                 # the samples, 10 days
 tools/load-postgres.sh jdbc:postgresql://localhost:5432/drishti --trades 10000                  # and a book
-SPRING_PROFILES_ACTIVE=postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,postgres DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 The profile is deprecated; the same connectors as files are in `config/connectors.examples/postgres/` (copy them to
@@ -176,7 +176,7 @@ load within a minute. Layout and design: [POSTGRES_CONNECTOR.md](POSTGRES_CONNEC
 ```bash
 tools/load-iceberg.sh ./data/iceberg                       # the samples
 tools/load-iceberg.sh ./data/iceberg --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,iceberg DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md). (`load-iceberg.sh` builds the plugin with Maven; on Windows use
@@ -187,7 +187,7 @@ Design: [ICEBERG_CONNECTOR.md](ICEBERG_CONNECTOR.md). (`load-iceberg.sh` builds 
 ```bash
 tools/load-duckdb.sh data/duckdb/drishti.duckdb                              # the samples
 tools/load-duckdb.sh data/duckdb/drishti.duckdb --trades 10000 --days 3      # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,duckdb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 No server to run: one file holds every data domain, and the server reads it in-process. Each load writes a new file and renames it
@@ -200,7 +200,7 @@ over the old one, so it can run while the server answers; the server picks it up
 docker run -d --name drishti-mongo -m 2g -p 27017:27017 mongo:7 --wiredTigerCacheSizeGB 0.5
 tools/load-mongodb.sh mongodb://localhost:27017 drishti                       # the samples
 tools/load-mongodb.sh mongodb://localhost:27017 drishti --trades 10000        # and a book, for a laptop
-SPRING_PROFILES_ACTIVE=mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,mongodb DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 Design: [MONGODB_CONNECTOR.md](MONGODB_CONNECTOR.md).
@@ -212,7 +212,7 @@ docker run -d --name drishti-redis -m 2g -p 6380:6379 redis:8 --maxmemory 1gb
 tools/load-redis.sh redis://localhost:6380                       # the samples
 tools/load-redis.sh redis://localhost:6380 --trades 10000        # and a book, for a laptop
 DRISHTI_REDIS_URI=redis://localhost:6380 SPRING_PROFILES_ACTIVE=redis DRISHTI_PACKS=market-risk,counterparty-risk \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 (Port 6380 on the host leaves a Redis you already run on 6379 alone.) Redis holds everything in memory: about 1 GB per million trades
@@ -225,7 +225,7 @@ a day, so keep large books for a server. Each load replaces the business days it
 docker compose -f deploy/docker/compose.data.yaml up -d aerospike
 tools/load-aerospike.sh localhost:3000 test                                  # the samples
 tools/load-aerospike.sh localhost:3000 test --trades 10000                   # and a book
-SPRING_PROFILES_ACTIVE=aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,aerospike DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 `--ttl-days N` lets Aerospike expire each day after N days. The default namespace of the Docker image keeps data in memory and is too
@@ -249,7 +249,7 @@ expires cells after N days; `--keep-days N` drops the older days. See [CASSANDRA
 ```bash
 tools/load-files.sh                              # the samples: data/files
 tools/load-files.sh --trades 10000               # and 10,000 trades a day for 3 days
-SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 One file per kind per business day, `data/files/<domain>/<date>/<kind>.jsonl`: see [FILE_CONNECTOR.md](FILE_CONNECTOR.md).
@@ -264,7 +264,7 @@ instead (streamed, flat memory).
 ```bash
 # Delta lake (default): <root>/<domain>/<kind>/business_date=...; serve with DRISHTI_DELTA_ROOT
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from data/trade.jsonl --pack config/packs/my-bank --lake /tmp/lake
-DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=/tmp/lake java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 # JSON-lines files (stdlib + PyYAML only): <root>/<domain>/<date>/<kind>.jsonl; serve with DRISHTI_FILES_ROOT
 drishti-console/.venv/bin/python tools/drishti.py data ingest --from your-folder/ --domain my-bank --key trade=TRADE_ID --date trade=BUSINESS_DATE \
     --store files --root /tmp/files --dry-run

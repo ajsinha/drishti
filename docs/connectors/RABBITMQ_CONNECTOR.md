@@ -801,7 +801,7 @@ body:        {"CALL_ID": "MC-ALDERSHOT-FRA-2", "CALL_DATE": "2026-09-30", "MARGI
    docker run -d --name rabbit -p 5672:5672 -p 15672:15672 rabbitmq:management
    curl -u guest:guest -X PUT -H 'content-type: application/json' \
      http://localhost:15672/api/exchanges/%2f/collateral -d '{"type":"topic","durable":true}'
-   DRISHTI_MARGIN_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_MARGIN_MQ=true java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
    ```
 
 2. **Publish through the management API:**

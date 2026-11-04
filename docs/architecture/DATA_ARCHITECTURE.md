@@ -173,7 +173,7 @@ looking at today's business date. Pick a past date in the top bar and every view
 
 The server streams over Server-Sent Events (SSE): a plain HTTP response that never ends, made of text
 events. `curl -N` (no buffering) shows them as they arrive. The examples run against a local server with
-security off (`drishti.security.enabled: false`); with security on, add an `Authorization: Bearer …`
+security off (the `dev` profile, or `drishti.security.enabled: false`); with security on (the default), add an `Authorization: Bearer …`
 header (see [API_GUIDE.md](../guides/API_GUIDE.md)).
 
 #### 1. Stream one view from the server
@@ -846,7 +846,7 @@ connectors:
 2. Start the server with the connector on:
 
    ```bash
-   DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 java -jar drishti-server/target/drishti-server-*-exec.jar
+   DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=localhost:9092 java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
    ```
 
    `curl -s http://localhost:18480/api/v1/sources` should now list `trading-stream` with `"live":true` and

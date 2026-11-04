@@ -328,8 +328,10 @@ drishti:
     max-concurrent: 16                      # history requests running at once on this server
     cache-mb: 256                           # heap for cached answers (keyed by the data's version), one budget for every caller
   security:
-    # Off for local development. Production: enabled: true and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console).
-    enabled: ${DRISHTI_SECURITY_ENABLED:false}
+    # On by default: every call needs a token, and DRISHTI_TOKEN_SECRET (>= 32 bytes, shared with the console) must be set or the
+    # server refuses to start. For local development run the dev profile (--spring.profiles.active=dev; application-dev.yaml):
+    # sign-in off and the development admin seeded.
+    enabled: ${DRISHTI_SECURITY_ENABLED:true}
     secret: ${DRISHTI_TOKEN_SECRET:}  # the token signing secret (at least 32 bytes), shared with the console; from the environment only
     registered-users-only: true      # a signed token is refused when its user was deleted or disabled (false: trust the token alone)
     clock-skew: 30s  # clock difference tolerated when checking a token's expiry
@@ -958,9 +960,9 @@ drishti:
     force-password-change-on-create: ${DRISHTI_FORCE_PW_CHANGE_ON_CREATE:false}
     # after an administrator resets a password, the user must change it at the next sign-in
     force-password-change-on-reset: ${DRISHTI_FORCE_PW_CHANGE_ON_RESET:false}
-    # On first start with no users, create a development admin. Change its password at once;
-    # the console warns until you do. Turn off (DRISHTI_SEED_ADMIN=false) for production.
-    seed-admin: ${DRISHTI_SEED_ADMIN:true}
+    # On first start with no users, create the first administrator: off by default; on in the dev profile (the development admin;
+    # change its password at once, the console warns until you do) or with DRISHTI_SEED_ADMIN=true set explicitly.
+    seed-admin: ${DRISHTI_SEED_ADMIN:false}
     # With DRISHTI_SEED_USERNAME / DRISHTI_SEED_PASSWORD set (deploy/docker/compose.yaml requires both) it is the first
     # administrator you chose, not the development admin.
     seed-username: ${DRISHTI_SEED_USERNAME:drishti-dev-admin}

@@ -199,7 +199,7 @@ class Bench:
         for cname, text in net_soak.connector_files(Path(self.a.lake), PACKS).items():
             (home / "connectors" / f"{cname}.yaml").write_text(text, encoding="utf-8")
         env = dict(os.environ, JAVA_HOME=self.java, DRISHTI_TOKEN_SECRET=self.secret, DRISHTI_NET_SECRET=self.net_key,
-                   DRISHTI_SECURITY_ENABLED="true", DRISHTI_DEMO_ENABLED="false", DRISHTI_OFFLINE="true", DRISHTI_DATA_DIR=str(home / "data"),
+                   DRISHTI_SECURITY_ENABLED="true", DRISHTI_SEED_ADMIN="true", DRISHTI_DEMO_ENABLED="false", DRISHTI_OFFLINE="true", DRISHTI_DATA_DIR=str(home / "data"),
                    DRISHTI_DELTA_ROOT=str(Path(self.a.lake).resolve()), DRISHTI_PACKS=PACKS, DRISHTI_PACKS_DIR=str(ROOT / "config" / "packs"),
                    DRISHTI_CONNECTORS_DIR=str(home / "connectors"), DRISHTI_STORE_ROOT=str(home / "data" / "fstore"), MALLOC_ARENA_MAX="2")
         jfr = self.work / "jfr" / f"{n}-run.jfr"

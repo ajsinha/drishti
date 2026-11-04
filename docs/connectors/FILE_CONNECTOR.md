@@ -155,7 +155,7 @@ The connector takes `<root>/<domain>` as its folder, `domain` coming from the pa
 tools/load-files.sh                              # the samples: 1,791 documents x 10 business days, into data/files
 tools/load-files.sh --trades 10000               # and a book of 10,000 trades a day for 3 days
 tools/load-files.sh /tmp/files --trades 50000    # somewhere else, a larger book
-SPRING_PROFILES_ACTIVE=files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
+SPRING_PROFILES_ACTIVE=dev,files DRISHTI_PACKS=market-risk,counterparty-risk java -jar drishti-server/target/drishti-server-*-exec.jar
 ```
 
 ```
@@ -519,7 +519,7 @@ cat > /tmp/limits/2026-09-30/credit-limit/LIM-HARBOURVIEW.json <<'EOF'
 {"limitId": "LIM-HARBOURVIEW", "counterpartyName": "Harbourview Capital LLP", "counterparty": "CP-HARBOURVIEW",
  "measure": "PFE 95 peak", "limit": 250000000.0, "used": 187500000, "utilisation": 0.75, "status": "Within limit"}
 EOF
-LIMITS_DROP_DIR=/tmp/limits java -jar drishti-server/target/drishti-server-*-exec.jar
+LIMITS_DROP_DIR=/tmp/limits java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 ```bash

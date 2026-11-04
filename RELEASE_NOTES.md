@@ -13,6 +13,19 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.c — release notes (unreleased)
+
+## Upgrade
+
+- **Security is on by default; for local development use the dev profile.** `drishti.security.enabled` now defaults to `true`: a server
+  without `DRISHTI_TOKEN_SECRET` (at least 32 bytes, the console's too) refuses to start and says what to set. The development admin
+  (`drishti-dev-admin`) is no longer seeded by default: only in the new `dev` profile (`--spring.profiles.active=dev`, or
+  `SPRING_PROFILES_ACTIVE=dev,duckdb` beside another profile), which also turns sign-in off, or with `DRISHTI_SEED_ADMIN=true` set
+  explicitly. A production server that already sets `DRISHTI_SECURITY_ENABLED=true` and the secret is unaffected; one that relied on the
+  seeded admin on an empty user store must now set `DRISHTI_SEED_ADMIN=true` (with `DRISHTI_SEED_USERNAME` and `DRISHTI_SEED_PASSWORD`)
+  once. The run configurations, `tools/windows/start-server.ps1`, the Docker compose file and drishti-stack set what they need
+  (CONFIGURATION.md, Security; GETTING_STARTED.md, Step 6).
+
 # Drishti 2.9.11.b — release notes
 
 *Released 2026-11-04.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR

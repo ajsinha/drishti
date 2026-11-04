@@ -156,7 +156,7 @@ Start each server with its own data folder and its own `config/net/` folder, and
 
 ```bash
 DRISHTI_NET_SECRET=$KEY DRISHTI_NET_DIR=~/drishti/b/net DRISHTI_DATA_DIR=~/drishti/b/data \
-  java -jar drishti-server/target/drishti-server-*-exec.jar --server.port=18784
+  java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev --server.port=18784
 ```
 
 Each logs its join and each member it learns. Node b's log, as captured:

@@ -52,7 +52,7 @@ The compute-demo pack is **synthetic** (a seeded random walk): nothing in it is 
 ```bash
 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,compute-demo \
 DRISHTI_COMPUTE_ENABLED=true DRISHTI_PYTHON=$PWD/drishti-console/.venv/bin/python \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 **You should see** in the server's log:

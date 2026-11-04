@@ -650,7 +650,7 @@ aws --endpoint-url http://localhost:9000 s3 mb s3://risk-docs
 aws --endpoint-url http://localhost:9000 s3 cp STR-CLIMATE-2026Q3.json \
     s3://risk-docs/eod/2026-09-30/stress-result/STR-CLIMATE-2026Q3.json
 # connector settings: endpoint: http://localhost:9000 (credentials from the same environment variables)
-DRISHTI_RISK_DOCS=true java -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_RISK_DOCS=true java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 #### In the terminal

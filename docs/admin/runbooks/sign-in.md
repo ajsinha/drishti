@@ -175,7 +175,7 @@ is the expected result when a role lacks that kind; nothing is broken.
    [USER_MANAGEMENT.md](../USER_MANAGEMENT.md). Back the existing store up first and keep it
    ([OPERATIONS.md](../OPERATIONS.md) lists what to back up), so the audit log and users can be restored.
 3. Sign in as `drishti-dev-admin`, change its password at once (the console warns until you do), restore real
-   admins, then turn `DRISHTI_SEED_ADMIN` back to `false`.
+   admins, then remove `DRISHTI_SEED_ADMIN=true` again (seeding is off by default).
 
 The server refuses to delete, disable or demote the last admin (`DRS-6006`), so this situation arises only from
 lost passwords or lockouts, not from an admin removing the last admin.

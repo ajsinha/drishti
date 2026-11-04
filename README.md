@@ -259,9 +259,9 @@ uv pip install --python drishti-console/.venv/bin/python -r drishti-console/requ
 # 3. The demo lakes from the committed test data: sixty business days, 85 tables (about 15 minutes, 3.4 GB)
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 
-# 4. The server on :18480 (native libraries unpack in its own folder, not /tmp)
+# 4. The server on :18480, the dev profile (sign-in off: security is on by default; native libraries unpack in its own folder, not /tmp)
 mkdir -p data/tmp/server
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 
 # 5. In a second terminal: the console on http://localhost:17480
 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py

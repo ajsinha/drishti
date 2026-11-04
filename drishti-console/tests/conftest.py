@@ -34,6 +34,10 @@ os.environ.setdefault("DRISHTI_DISK_MINFREEPERCENT", "1")
 # their servers run with -Xmx768m, where the heap after a collection sits past busy protection's 85% in its steady state: busy
 # protection is off for them (drishti.admission.enabled); its own tests use a stand-in server or set it themselves
 os.environ.setdefault("DRISHTI_ADMISSION_ENABLED", "false")
+# the servers the tests start: sign-in off and the development admin seeded unless a test sets its own, never the shipped defaults
+# (security on, nothing seeded: the server refuses to start without DRISHTI_TOKEN_SECRET)
+os.environ.setdefault("DRISHTI_SECURITY_ENABLED", "false")
+os.environ.setdefault("DRISHTI_SEED_ADMIN", "true")
 if not os.environ.get("DRISHTI_CONSOLE_DATA_DIR"):
     # what the console keeps between runs (user stamps, net/servers.json): a folder of the test run's own, never the repository's data/
     import atexit

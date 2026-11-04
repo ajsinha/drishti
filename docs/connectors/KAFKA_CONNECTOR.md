@@ -957,7 +957,7 @@ docker compose -f deploy/docker/compose.data.yaml up -d kafka            # apach
 uv run --with kafka-python python tools/samplegen/stream.py \
     --bootstrap localhost:9092 --topic drishti.trading.trades --samples config/packs/trading/samples --rate 5 --seconds 0
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false \
-  java -jar drishti-server/target/drishti-server-*-exec.jar
+  java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 `stream.py` reads the pack's `samples/trade.jsonl` under `--samples` (765 trades in the trading pack), drops each one's `_meta`, and
@@ -1072,7 +1072,7 @@ connector reads the topic is in [section 2](#2-how-the-connector-reads-a-topic),
 
    ```bash
    DRISHTI_STREAM_TRADING=true DRISHTI_DEMO_ENABLED=false DRISHTI_PACKS=counterparty-risk,market-risk \
-     java -jar drishti-server/target/drishti-server-*-exec.jar
+     java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
    ```
 
 4. **Look at it in the terminal.** `TRD MX-20000001 <GO>` on Live: the *Live* badge shows, provenance is

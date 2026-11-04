@@ -1051,7 +1051,7 @@ write_deltalake("data/delta/trading/trade", table, mode="overwrite",
 drishti-console/.venv/bin/python tools/drishti.py lake demo
 # or one pack's samples into one domain (tools/samplegen/lake.py: JSONL rows, then loaded; section 5)
 drishti-console/.venv/bin/python tools/samplegen/lake.py --samples config/packs/market-data/samples --root data/delta --domain market --days 10
-java -jar drishti-server/target/drishti-server-*-exec.jar          # DRISHTI_PACKS unset: the seven packs
+java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev          # DRISHTI_PACKS unset: the seven packs
 ```
 
    What the writers produce is described in [section 5](#5-writing-the-lake). For S3, build locally and copy the folders up

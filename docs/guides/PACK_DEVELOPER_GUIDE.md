@@ -141,13 +141,14 @@ It is not in `config/packs/`, so no server loads it by accident. To follow along
 ports of their own, so that nothing of yours is touched: the seven shipped packs plus the one you are writing
 (`DRISHTI_PACKS` is explained in [Part V. Domain packs: the packs that ship, turning them on, who sees which](#turning-packs-on); the start-up recipe, the token and the run configurations are in
 [GETTING_STARTED.md](GETTING_STARTED.md)). Keep the demo source on (`DRISHTI_DEMO_ENABLED=true`, the default): it serves the pack's
-`samples/`. Security is off unless you turn it on, so the `curl` lines below need no token; on a server with security on add
+`samples/`. The `curl` lines below need no token on a development server (the `dev` profile: security off); security is on by
+default, and then you add
 `-H "Authorization: Bearer $DRISHTI_TOKEN"`.
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -2086,8 +2087,8 @@ roles:
 | `calc` | may use Calc, Python in the browser on what the role opens ([USER_GUIDE.md](USER_GUIDE.md#9-roles-who-may-use-calc)) |
 
 The core always has `viewer`, `author`, `approver` and `admin`. Roles are given to users by an administrator; see
-[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md). Security is off by default for local development; roles take effect when
-it is on.
+[USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md). Security is on by default (the `dev` profile turns it off for local
+development); roles take effect when it is on.
 
 A pack's roles appear in *Admin → Roles* marked **built-in**, read-only: change them in the pack (or, for a
 generated pack, in its generator). An administrator can also define new roles there without touching any pack;
@@ -3138,7 +3139,7 @@ Copy (or write) the folder into the packs folder of a running server, and it is 
 
 ```bash
 # start the server with only the library pack
-DRISHTI_PACKS=library java -jar drishti-server/target/drishti-server-*-exec.jar
+DRISHTI_PACKS=library java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev
 ```
 
 or alongside others: `DRISHTI_PACKS=market-risk,library`. The console reads the guide from the server, so it needs no restart. Then:
@@ -3316,7 +3317,7 @@ packs/my-bank/
 ```
 
 ```bash
-DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar drishti-server/target/drishti-server-*-exec.jar     # alone: see the note below
+DRISHTI_PACKS=my-bank DRISHTI_DELTA_ROOT=$PWD/lake java -jar drishti-server/target/drishti-server-*-exec.jar --spring.profiles.active=dev     # alone: see the note below
 ```
 
 - **The folder name is the pack name.** `--out` defaults to `config/packs/<name>`; a folder with another name makes `sutra lint` refuse the
@@ -3675,7 +3676,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
@@ -4454,7 +4455,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -5764,7 +5765,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server

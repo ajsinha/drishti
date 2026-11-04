@@ -83,7 +83,7 @@ def start_servers(work: Path) -> list:
     for d in ("data/legacy", "data/desk-quotes", "delta"):
         (work / d).mkdir(parents=True, exist_ok=True)
     java = os.environ.get("JAVA_HOME", "/usr/lib/jvm/java-21-openjdk-amd64") + "/bin/java"
-    env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="trading,desk-demo", DRISHTI_PACKS_DIR=str(packs), DRISHTI_CONNECTORS_DIR=str(conns),
+    env = dict(os.environ, DRISHTI_SECURITY_ENABLED="false", DRISHTI_SEED_ADMIN="true", DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="trading,desk-demo", DRISHTI_PACKS_DIR=str(packs), DRISHTI_CONNECTORS_DIR=str(conns),
                DRISHTI_DEMO_ENABLED="false", DRISHTI_LAKE_ENABLED="true", DRISHTI_DELTA_ROOT=str(work / "delta"), LEDGER_DB_PASSWORD="not-a-real-password",
                LEDGER_TRUSTSTORE_PASSWORD="changeit")
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jar)], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)

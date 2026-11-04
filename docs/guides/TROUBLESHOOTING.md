@@ -147,7 +147,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -165,7 +165,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar --spring.profiles.active=dev
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -286,8 +286,8 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
 ### There is no sign-in page, and no users or roles apply
 
-- **Cause:** this is the local-development default: security is off on the server
-  (`DRISHTI_SECURITY_ENABLED=false`) and sign-in is off in the console (`DRISHTI_AUTH_ENABLED=false`).
+- **Cause:** the server runs the local-development `dev` profile (or `DRISHTI_SECURITY_ENABLED=false`): security is off on the
+  server, and sign-in is off in the console (`DRISHTI_AUTH_ENABLED=false`). Without either, security is on by default.
   `curl -s http://localhost:18480/api/v1/about` shows `"securityEnabled": false`.
 - **Fix:** to sign in with users and roles, turn both on and share one secret:
 

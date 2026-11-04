@@ -17,6 +17,18 @@
 
 ## 2.9.11.c (unreleased)
 
+- **Secure defaults** ([CONFIGURATION.md, Security](docs/admin/CONFIGURATION.md), OPERATIONS.md, GETTING_STARTED.md, USER_MANAGEMENT.md):
+  `drishti.security.enabled` defaults to `true`, and a server with security on and no `DRISHTI_TOKEN_SECRET` refuses to start with the
+  reason and what to set (a start-up failure analysis, never a stack trace). `drishti.identity.seed-admin` defaults to `false`: the
+  development admin is seeded only in the new `dev` profile (`application-dev.yaml`: sign-in off, the development admin seeded; with
+  another profile `dev,duckdb`) or with `DRISHTI_SEED_ADMIN=true` set explicitly. The server tests state both in their own properties,
+  the console's test servers in conftest, and every scratch server of the tools (the docs screenshots, the pack screenshots, the benches,
+  stores equality) its own; `tools/windows/start-server.ps1` starts as the dev profile does unless sign-in is set up; drishti-stack seeds
+  its admin explicitly; the guides' local `java -jar` lines name the dev profile. RELEASE_NOTES: the upgrade note.
+- **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
+  definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
+  built, uncertified), MR_CUBE_LENS.md and COMPUTED_ATTRIBUTES.md no longer say they are planned.
+
 - **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
   outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
   pivot view with Rachana paths over trade legs (`sum($.LEGS[*].NOTIONAL)` by desk, a desk-by-year grid, trades with a JPY leg); a desk's

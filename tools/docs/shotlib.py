@@ -182,7 +182,9 @@ def start_servers(work: Path, extra_env: dict | None = None) -> list:
             (work / name).symlink_to(ROOT / name)
     (work / "sutras").mkdir(exist_ok=True)
     # a guide's SERVER_ENV wins over these (tutorial 27 loads the public-data packs too)
-    env = {**os.environ, "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true",
+    # a scratch development server: sign-in off and the development admin seeded unless the guide's SERVER_ENV says otherwise
+    env = {**os.environ, "DRISHTI_SECURITY_ENABLED": "false", "DRISHTI_SEED_ADMIN": "true",
+           "DRISHTI_PORT": str(SERVER_PORT), "DRISHTI_PACKS": PACKS, "DRISHTI_STUDIO_SAVE": "true", "DRISHTI_BUILDER_FILE_BINDING": "true",
            "DRISHTI_SUTRAS": str(work / "sutras"), "DRISHTI_PACKS_INSTALLED": str(work / "data" / "packs" / "installed"), **(extra_env or {})}
     server = subprocess.Popen(java_cmd(java, ["-jar", str(jars[-1])], cwd=work, env=env), cwd=work, env=env, stdout=(work / "server.log").open("w"), stderr=subprocess.STDOUT)
     py = ROOT / "drishti-console" / ".venv" / "bin" / "python"

@@ -47,7 +47,8 @@ what-if. In banking it sits **between the pricing engines and the people**: it c
 (ActiveViam Atoti, Opensee) and with the aggregation and reporting layers of enterprise risk systems, and it complements the trading
 platforms and pricing libraries it reads from. Outside banking it is a domain-grammar alternative to BI tools and internal-app
 builders for organisations that want one governed, on-premises, explainable view of their own data. It is young: one author, no
-reference client, no certifications, and the capital engines (FRTB, SA-CCR, SIMM, XVA) are planned, not built.
+reference client, no certifications; FRTB-SA and SIMM are built (uncertified), while FRTB-IMA, SA-CCR and the XVA family are planned,
+not built.
 
 ### 1.2 The five strongest differentiators
 
@@ -76,8 +77,10 @@ reference client, no certifications, and the capital engines (FRTB, SA-CCR, SIMM
 1. **No pricing models and no market-data content of its own.** Drishti consumes P&L vectors, scenario PVs and exposure paths; it
    does not price a trade. A bank without a capable upstream engine cannot use the risk side alone. (A pre-deal pricing service from
    QLRisk is planned.)
-2. **Capital engines are planned, not built:** FRTB-SA, FRTB-IMA, SIMM, SA-CCR, the XVA family (CVA, BA-CVA, SA-CVA, FVA, MVA, KVA)
-   and wrong-way risk. These are what the incumbents sell first.
+2. **Most capital engines are planned, not built:** FRTB-IMA, SA-CCR, the XVA family (CVA, BA-CVA, SA-CVA, FVA, MVA, KVA) and
+   wrong-way risk. These are what the incumbents sell first. FRTB-SA (the sensitivities-based method, the DRC and the RRAO) and ISDA
+   SIMM are built, with their playgrounds ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md), [SIMM_GUIDE.md](../guides/SIMM_GUIDE.md)), but
+   not certified, and SIMM needs the bank's licensed ISDA parameter file.
 3. **No institutional proof:** no reference client, never deployed at a supervised institution, no SOC 2 or ISO 27001, no model
    validation pack, no regulator acceptance, one author and no support organisation.
 4. **Scale proof is single-server.** 1,000,000 positions is measured on one workstation; the three-node cluster is measured at
@@ -111,8 +114,8 @@ Drishti's own capabilities are given in two columns throughout:
 
 - **Today**: built, released and documented (the guides linked in the text say how).
 - **Planned**: in the agreed release plan ([IMPLEMENTATION_PLAN](../architecture/IMPLEMENTATION_PLAN.md)), proposed and not started.
-  We name the release theme, not the number, because numbers move. The themes in order: *sensitivities and market-risk capital*
-  (position sensitivities, FRTB-SA, SIMM, the market-risk cube); *counterparty engines* (SA-CCR, the counterparty cube, FVA, the
+  We name the release theme, not the number, because numbers move. Done: *sensitivities and market-risk capital* (position
+  sensitivities, FRTB-SA, SIMM, the market-risk cube: today). The themes to come, in order: *counterparty engines* (SA-CCR, the counterparty cube, FVA, the
   exposure playground); *Java 25 and performance*; *oversight* (breaches and escalation, the board pack, market-data checks);
   *regulatory reporting* (BCAR, Pillar 3 MR1/MR2, FFIEC 102, §217.212, Volcker); *native performance* (BLAS, direct lake scans);
   *XVA and wrong-way risk* (CVA, BA-CVA, SA-CVA, MVA, KVA, WWR); *advanced market risk* (FRTB-IMA, pre-deal pricing through QLRisk);
@@ -160,9 +163,9 @@ Drishti columns: **T** = today, **P** = after the planned releases. Groups as in
 | Stressed VaR, 10-day, period averages | ● | ● | ◐ | ● | ● | ◐ | ○ | ◐ |
 | VaR change explained (day over day, by driver) | ● | ● (Shapley order planned) | ◐ | ◐ | ◐ | ○ | ○ | ◐ |
 | Backtesting with traffic light | ● | ● | ◐ | ● | ● | ◐ | ○ | ◐ |
-| FRTB-SA | ○ | ● | ● | ● | ● | ◐ | ○ | ○ |
+| FRTB-SA | ● (built, not certified) | ● | ● | ● | ● | ◐ | ○ | ○ |
 | FRTB-IMA (ES by liquidity horizon, NMRF, PLA) | ○ | ● | ● | ● | ◐ | ○ | ○ | ○ |
-| ISDA SIMM | ○ | ● | ◐ | ● | ● | ○ | ○ | ◐ |
+| ISDA SIMM | ◐ (built, not certified; the bank's licensed parameter file) | ● | ◐ | ● | ● | ○ | ○ | ◐ |
 | SA-CCR | ○ | ● | ◐ | ● | ● | ◐ | ○ | ○ |
 | EE / PFE / EPE / EEPE for any scope, with netting and collateral | ● (from supplied paths) | ● | ◐ | ● | ● | ○ | ○ | ○ |
 | XVA family (CVA, DVA, FVA, MVA, KVA; BA-CVA, SA-CVA) | ○ | ● (aggregation of supplied paths and inputs) | ◐ | ● | ● | ○ | ○ | ○ |
@@ -202,7 +205,7 @@ Each entry: what it is, its strengths (claimed), where Drishti wins, where it lo
 - **Where Drishti wins.** The day's change explained and the formula workbook; any-scope algebra typed as text; a terminal over the
   whole bank's data, not only risk cubes; BI and boards on the same data; open lake storage; a footprint a risk department can run
   itself; one grammar for every screen.
-- **Where Drishti loses.** FRTB-SA and IMA are built and certified there and planned here; reference clients and awards; a sales and
+- **Where Drishti loses.** FRTB-SA is certified there and built but uncertified here; FRTB-IMA is built there and planned here; reference clients and awards; a sales and
   support organisation; pricing now in the same house.
 - **Position.** **Replace** for VaR aggregation and explanation in a market-risk department; **coexist** where Atoti FRTB is already
   live (Drishti as the terminal and explanation layer reading the same vectors) until the market-risk capital release is built.
