@@ -60,7 +60,7 @@ COLLECT_ERROR = re.compile(r"^ERROR ([^ :]+\.py)(?: - .*)?$")
 FAILED_LINE = re.compile(r"^(?:FAILED|ERROR) ([^ ]+::[^ ]+(?: [^-][^ ]*)*)(?: - .*)?$")
 BROWSER_WORDS = re.compile(r"playwright|chromium", re.IGNORECASE)
 PORT_WORDS = re.compile(r"worker_ports?\(|PYTEST_XDIST_WORKER")
-SPREAD_WORDS = re.compile(r"pytest\.mark\.spread\b")
+SPREAD_WORDS = re.compile(r"^(?:@pytest\.mark\.spread\b|pytestmark\s*=.*\bpytest\.mark\.spread\b)", re.MULTILINE)
 # one browser worker's memory at its peak (its Chromium, its stand-in console, its real server's JVM and that of the file it runs),
 # measured on the release machine (TEST_HARNESS.md, "Measurements"); the drill's Java verify and other lane are reserved beside it
 PER_WORKER_GB = 2.5

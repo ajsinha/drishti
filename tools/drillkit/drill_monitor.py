@@ -143,7 +143,8 @@ def cmd_watch(a) -> int:
 
 
 def summarise(path: Path) -> dict:
-    rows = list(csv.DictReader(path.open()))
+    with path.open(newline="") as fh:
+        rows = list(csv.DictReader(fh))
     if not rows:
         return {"samples": 0}
     num = lambda r, k: float(r[k])  # noqa: E731
