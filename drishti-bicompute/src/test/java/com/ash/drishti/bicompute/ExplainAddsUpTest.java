@@ -92,7 +92,7 @@ class ExplainAddsUpTest {
         try (PivotFixture fx = new PivotFixture(2_000, StateCache.none(), PivotCore.Settings.defaults())) {
             Overlay o = Overlay.parse(Map.of("exclude", Map.of("DESK", List.of("FX")), "changes", List.of(Map.of("field", "NOTIONAL", "scale", 2,
                     "where", Map.of("REGION", List.of("EMEA")))), "add", List.of(Map.of("REGION", "APAC", "DESK", "RATES", "NOTIONAL", 1000))));
-            Map<String, Object> w = WhatIf.run(fx.core, Viewer.of("rita"), view("sum(NOTIONAL)"), o);
+            Map<String, Object> w = WhatIf.run(fx.plain, Viewer.of("rita"), view("sum(NOTIONAL)"), o);
             double expected = fx.exec.query("SELECT sum(CASE WHEN REGION = 'EMEA' THEN NOTIONAL * 2 ELSE NOTIONAL END) + 1000 FROM trades "
                     + "WHERE DESK <> 'FX'", List.of(), rs -> {
                         rs.next();

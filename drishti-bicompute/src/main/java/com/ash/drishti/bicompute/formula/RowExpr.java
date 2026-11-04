@@ -239,9 +239,10 @@ final class RowExpr {
             return null;
         }
         int c;
-        if (l instanceof String || r instanceof String) {
+        if (l instanceof String && r instanceof String) {
             c = text(l).compareTo(text(r));
         } else {
+            // a number beside a number or a text value compares as numbers (as the SQL path's cast does); text that is no number: nothing
             double a = toNum(l);
             double b = toNum(r);
             if (Double.isNaN(a) || Double.isNaN(b)) {

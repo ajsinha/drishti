@@ -694,7 +694,7 @@ drishti.py pivot run --source trade --rows DESK --values "distinct(COUNTERPARTY)
 How a sketch is made on the tabular provider: HyperLogLog's (register, rank) pairs come from DuckDB's 64-bit `hash()` in the same
 `GROUP BY GROUPING SETS` statement as every other state; KLL is built in Java from the cell's quantile points (`quantile_disc` at 2k + 1
 fractions) and its count; Space-Saving from the cell's value counts, kept to its counters. KLL is written in the module (Apache
-DataSketches, allowed by decision 2, is not resolvable in the offline build); its error is measured by `SketchErrorTest`. A document
+DataSketches, allowed by decision 2, is not resolvable in the offline build); its error is measured by `SketchErrorTest`. Up to about 10,000 distinct values (2.5 × the 4,096 registers) a distinct count is linear counting over the registers, which is closer there than the harmonic mean. A document
 source ([PIVOT_ENGINE.md section 6.7](../architecture/PIVOT_ENGINE.md#67-documents-paths-arrays-and-grains)) is sketched the same way at
 its view's grain: `distinct($.LEGS[*].CURRENCY)` counts the legs' currencies.
 

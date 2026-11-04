@@ -43,6 +43,8 @@ final class PivotFixture implements AutoCloseable {
     final DuckDbExecutor exec = new DuckDbExecutor(DuckDbExecutor.Settings.small());
     final TabularProvider provider;
     final PivotCore core;
+    /** The same engine over the tabular provider itself, not the counting wrapper: what needs the tabular provider (a what-if) runs here. */
+    final PivotCore plain;
     final List<String> statements = new ArrayList<>();
 
     /** With units: NOTIONAL and PNL are money in each row's CCY, RATE_PCT a percentage. */
@@ -161,6 +163,7 @@ final class PivotFixture implements AutoCloseable {
         this.provider = base;
         PivotProvider counting = new Counting(base, statements);
         this.core = new PivotCore(List.of(counting), cache, settings);
+        this.plain = new PivotCore(List.of(base), cache, settings);
     }
 
     /** One number from a naive query. */

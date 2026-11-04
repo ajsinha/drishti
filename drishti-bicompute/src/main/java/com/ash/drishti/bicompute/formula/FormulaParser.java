@@ -186,6 +186,12 @@ public final class FormulaParser {
                     out.add(new Tok(T.OP, String.valueOf(c), i, null));
                     i++;
                 } else {
+                    // Python that is not DEL (a lambda's colon, a for's): name the word, not the character it stopped at
+                    for (Tok w : out) {
+                        if (w.type() == T.NAME && REFUSED.contains(w.text())) {
+                            throw new FormulaException("'" + w.text() + "' is not DEL: a formula is an expression of aggregates", w.start());
+                        }
+                    }
                     throw new FormulaException("'" + c + "' is not part of a formula", i);
                 }
             }

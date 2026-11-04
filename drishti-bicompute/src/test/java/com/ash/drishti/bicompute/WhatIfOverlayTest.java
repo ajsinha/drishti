@@ -54,7 +54,7 @@ class WhatIfOverlayTest {
     @Test
     void leavingMembersOutKeepsEveryOtherRow() {
         try (PivotFixture fx = new PivotFixture(2_000, StateCache.none(), PivotCore.Settings.defaults())) {
-            Map<String, Object> w = WhatIf.run(fx.core, Viewer.of("rita"), view(), Overlay.parse(Map.of("exclude", Map.of("DESK", List.of("FX", "RATES")))));
+            Map<String, Object> w = WhatIf.run(fx.plain, Viewer.of("rita"), view(), Overlay.parse(Map.of("exclude", Map.of("DESK", List.of("FX", "RATES")))));
             assertThat(grand(w, "whatIf")).isCloseTo(sql(fx, "SELECT sum(NOTIONAL) FROM trades WHERE DESK NOT IN ('FX', 'RATES')"), offset(1e-6));
             assertThat(grand(w, "original")).isCloseTo(sql(fx, "SELECT sum(NOTIONAL) FROM trades"), offset(1e-6));
         }
@@ -63,7 +63,7 @@ class WhatIfOverlayTest {
     @Test
     void aChangeWithoutAConditionAppliesToEveryRow() {
         try (PivotFixture fx = new PivotFixture(2_000, StateCache.none(), PivotCore.Settings.defaults())) {
-            Map<String, Object> w = WhatIf.run(fx.core, Viewer.of("rita"), view(), Overlay.parse(Map.of("changes", List.of(Map.of("field", "NOTIONAL",
+            Map<String, Object> w = WhatIf.run(fx.plain, Viewer.of("rita"), view(), Overlay.parse(Map.of("changes", List.of(Map.of("field", "NOTIONAL",
                     "scale", 2)))));
             assertThat(grand(w, "whatIf")).isCloseTo(2 * sql(fx, "SELECT sum(NOTIONAL) FROM trades"), offset(1e-6));
         }

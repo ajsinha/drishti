@@ -136,7 +136,7 @@ public final class Hll {
         return out;
     }
 
-    /** The estimate: the harmonic mean of 2^-register, bias-corrected, with linear counting while registers are empty (small ranges). */
+    /** The estimate: linear counting while it is at most 2.5 m (small ranges), else the harmonic mean of 2^-register, bias-corrected. */
     public double estimate() {
         int m = reg.length;
         double z = 0;
@@ -147,12 +147,16 @@ public final class Hll {
                 zeros++;
             }
         }
-        double alpha = 0.7213 / (1 + 1.079 / m);
-        double e = alpha * m * (double) m / z;
-        if (e <= 2.5 * m && zeros > 0) {
-            return m * Math.log((double) m / zeros);
+        // linear counting while it says the range is small (up to 2.5 m): the raw estimate is biased upwards there (a few per cent near
+        // 2.5 m), so the choice is made on linear counting's own figure, not on the raw one (HyperLogLog++'s observation, Heule et al.)
+        if (zeros > 0) {
+            double lc = m * Math.log((double) m / zeros);
+            if (lc <= 2.5 * m) {
+                return lc;
+            }
         }
-        return e;
+        double alpha = 0.7213 / (1 + 1.079 / m);
+        return alpha * m * (double) m / z;
     }
 
     /** True when no value was added. */
