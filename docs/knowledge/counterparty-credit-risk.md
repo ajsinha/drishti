@@ -133,7 +133,7 @@ exposure-path    XPATH <run>~<trade>~<grid index>   one trade's MtM on every pat
                         ▼
 any scope text  (BANK, LE:LE-LDN, GROUP:GRP-ALDERSHOT, CPTY:CP-ALDERSHOT, NSET:NS-ALDERSHOT-LDN, DESK:, BOOK:, TRD:, WHERE:, + - &)
    └─► exposure-result         EXP <scope>     computed when asked: profile, PFE, EPE, EEPE, contributions (never stored)
-   └─► exposure-whatif         XWIF            a pre-deal what-if (the Python engine)
+   └─► the pre-deal what-if    EXP explorer    POST /api/v1/exposure/what-if: the same engine, exact by paths or the addon proxy
    └─► exposure-official-cpty  XOFC            the official figures of every netting set and counterparty, published once a day
 ```
 

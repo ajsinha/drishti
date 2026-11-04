@@ -36,9 +36,7 @@ import java.util.Map;
  * of the positive part of a normal of that spread), added to the scope's profile; SF is SA-CCR's supervisory factor of the candidate's
  * asset class, d its adjusted notional (an interest-rate trade's notional times its supervisory duration), delta its sign. The exact
  * {@code paths} method (the candidate's paths on the date's run added to its netting set per path, collateral and exposure computed
- * again) runs in the Python exposure engine ({@code exposure-whatif}, docs/guides/EXPOSURE_GUIDE.md section 19.5), asked by
- * {@link ExposureWhatIfPaths} as the person (DRS-5446 when it is not running); a candidate's paths of another run are refused (DRS-5442)
- * either way.
+ * again) is {@link ExposureWhatIfPaths}, in this engine too; a candidate's paths of another run are refused (DRS-5442) either way.
  */
 final class ExposureWhatIf {
 
@@ -201,7 +199,7 @@ final class ExposureWhatIf {
         out.put("candidates", cands.size());
         out.put("flags", List.of("proxy"));
         out.put("note", "a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the "
-                + "exact method (paths) runs in the Python exposure engine");
+                + "exact method is paths (the candidates' paths on the run added to their netting sets)");
         svc.audit(p, "ccr-whatif", base, "method=addon candidates=" + cands.size());
         return out;
     }

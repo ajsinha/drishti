@@ -87,7 +87,6 @@ menus:
           - { id: exp-explorer, href: /exposure, cmd: EXP, icon: graph-up, label: Exposure explorer, desc: "EE, PFE and EPE of the bank, then any counterparty", match: /exposure, requires: [word:EXP] }
           - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
           - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
-          - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
       - engine: frtb-sa
         title: FRTB-SA
         word: FRSA
@@ -161,7 +160,6 @@ menus:
           - { id: cpty, cmd: CPTY, icon: building, label: Counterparties, desc: "Every counterparty, its trades and exposure", requires: [cmd:CPTY] }
           - { id: nset, cmd: NSET, icon: diagram-2, label: Netting sets, desc: "Every netting set and its agreement", requires: [cmd:NSET] }
           - { id: lim, cmd: LIM, icon: speedometer2, label: Credit limits, desc: "Each credit limit and how much of it is used", requires: [cmd:LIM] }
-          - { id: xwif, cmd: XWIF, icon: sliders, label: Pre-deal check, desc: "A new trade's exposure against the limit before it is done", requires: [cmd:XWIF] }
           - { id: exp, cmd: EXP, icon: graph-up, label: Exposure, desc: "EE, PFE and EPE of a counterparty or netting set", match: /exposure, requires: [word:EXP] }
   - id: curves
     label: Curves

@@ -45,10 +45,7 @@ public final class Sdk {
             "drishti_compute/pivot_fn.py",
             "drishti_compute/samples/__init__.py",
             "drishti_compute/samples/vectors.py",
-            "drishti_compute/samples/paths.py",
-            "drishti_compute/exposure/__init__.py",
-            "drishti_compute/exposure/measures.py",
-            "drishti_compute/exposure/whatif.py");
+            "drishti_compute/samples/paths.py");
 
     private static final String RESOURCES = "drishti-compute-sdk/";
 

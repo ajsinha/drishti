@@ -269,11 +269,6 @@ public enum ErrorCode {
     EXPOSURE_ROW_REJECTED("DRS-5444", 422),
     /** Exposure: a date's netting-set matrices need more memory than the budget (drishti.ccr.exposure.memory-budget-gb). */
     EXPOSURE_CAPACITY("DRS-5445", 503),
-    /**
-     * Exposure: the exact what-if (method {@code paths}) could not be answered: the Python exposure engine (the reactive connector
-     * {@code exposure-whatif} and its compute pool) is not running on this server, or did not answer in time.
-     */
-    EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 503),
     /** SA-CCR: a bad scope or parameter, or a what-if candidate row the method refuses (the reason names the field). */
     SACCR_BAD_REQUEST("DRS-5410", 400),
     /** SA-CCR: asked with {@code strict=true}, a netting set of the scope has live derivatives without a classification row. */

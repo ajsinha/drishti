@@ -35,9 +35,6 @@ About 35 minutes.
 - The counterparty-risk and core packs loaded (they are in the quick-start packs).
 - For the command-line steps: `DRISHTI_SERVER=http://localhost:18480` and `DRISHTI_TOKEN=...` (My account → API tokens), or `--user`
   with sign-in off. The outputs below were captured as the user `rita` with sign-in off.
-- For step 7's exact method only: the compute workers on (`DRISHTI_COMPUTE_ENABLED=true`; a Python 3.10 or newer, the console's own is
-  enough: the exposure engine uses the standard library). Without them the `paths` method answers `503 DRS-5446` and the `addon` proxy
-  still works.
 
 The exposure paths are **synthetic** (one correlated factor per asset class and a walk of each trade's own, made by
 `tools/packgen/ccr/`), not a bank's simulator.
@@ -50,7 +47,7 @@ The exposure paths are **synthetic** (one correlated factor per asset class and 
 - why collateral can raise exposure (when the bank has posted it) and how the path fan shows the spread;
 - the difference between a trade alone and its contribution inside its netting set (the netting benefit);
 - scopes with `+`, `-` and `&`; captures and compare;
-- a pre-deal what-if by the exact `paths` method (the Python engine, `XWIF`) and by the conservative `addon` proxy;
+- a pre-deal what-if by the exact `paths` method and by the conservative `addon` proxy;
 - the official end-of-day record and where it is published.
 
 ## Step 1 · Build the exposure data and open the bank
@@ -407,7 +404,7 @@ Figure    Before       After        Incremental
 Peak PFE  401,456,810  398,357,466   -3,099,344
 EPE        64,977,553   64,362,265     -615,288
 Peak EE   264,093,896  261,258,147   -2,835,749
-  exact: each candidate's paths on the run XR-2026-09-30-01 added to its netting set path by path, collateral and exposure computed again by the Python exposure engine (exposure-whatif)
+  exact: each candidate's paths on the run XR-2026-09-30-01 added to its netting set path by path, collateral (lagged) and exposure computed again by the Java exposure engine
 ```
 
 and the proxy (`--like` sends the trade's asset class, notional, maturity, MtM and delta, read from its netting set's contributions:
@@ -421,7 +418,7 @@ Figure    Before       After        Incremental
 Peak PFE  401,456,810  957,232,427  555,775,617
 EPE        64,977,553  137,421,691   72,444,139
 Peak EE   264,093,896  283,307,935            —
-  a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the exact method (paths) runs in the Python exposure engine
+  a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the exact method is paths (the candidates' paths on the run added to their netting sets)
 ```
 
 A candidate that is not a copy of a booked trade comes from a candidates file with the same terms; this one gives the same answer:
@@ -440,34 +437,21 @@ Figure    Before       After        Incremental
 Peak PFE  401,456,810  957,232,427  555,775,617
 EPE        64,977,553  137,421,691   72,444,139
 Peak EE   264,093,896  283,307,935            —
-  a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the exact method (paths) runs in the Python exposure engine
+  a conservative proxy: each candidate a netting set of its own, uncollateralised, with SA-CCR's supervisory factor; the exact method is paths (the candidates' paths on the run added to their netting sets)
 ```
 
-The exact method is the Python exposure engine, the computed kind `exposure-whatif` (`XWIF`) on the compute pool `exposure`
-(`config/compute/compute.yaml`):
-
-```yaml
-compute:
-  enabled: ${DRISHTI_COMPUTE_ENABLED:false}
-  pools:
-    exposure:                      # the Python exposure engine (the exact what-if)
-      type: python
-      engines: [drishti_compute.exposure.whatif:ExposureWhatIfEngine]
-      environment: system          # standard library only
-      memory: 2GB
-```
+Both methods are the server's exposure engine's, wherever exposure runs: there is nothing to configure for them (the engine's own
+settings are in `config/engines/exposure.yaml`).
 
 **What it means.** Unwinding the swap barely moves Aldershot's peak (−3,099,344) and its EPE (−615,288): inside its netting set the
 other trades already offset most of its exposure, so taking it out removes little. The proxy cannot see that: it puts the candidate in a
 netting set of its own, uncollateralised, sized by SA-CCR's supervisory factor on its notional, so an unwind *adds* 557.3 million. Use `addon` as a
-conservative first answer when the compute workers are off; `paths` is the answer.
+conservative first answer for a trade with no paths on the run yet; `paths` is the answer.
 
-**You should see** `exact` with −3,099,344 by paths, `proxy` with +555,775,617 by the addon. With the compute workers off, `paths` answers
-`503 DRS-5446` (the Python exposure engine is not running).
+**You should see** `exact` with −3,099,344 by paths, `proxy` with +555,775,617 by the addon.
 
 **Further in the guide:** [section 7](../guides/EXPOSURE_GUIDE.md#7-pre-deal-what-if) (pre-deal, the two methods),
-[section 8](../guides/EXPOSURE_GUIDE.md#8-exposure-as-a-kind) (`exposure-result` and `exposure-whatif` as kinds),
-[section 12](../guides/EXPOSURE_GUIDE.md#12-settings) (the compute pool).
+[section 19.5](../guides/EXPOSURE_GUIDE.md#195-the-exact-what-if-in-the-java-engine) (how the exact method computes).
 
 ## Step 8 · The official end-of-day results
 
@@ -554,6 +538,6 @@ published tables in the lake.
 |---|---|
 | *no exposure paths for this netting set* (or `404 DRS-1001 no exposure paths for the netting set …`) | the run does not cover it: in the demo, CP-SUMMIT and CP-NORTHPLAINS have no paths; the tree marks them *no paths* |
 | other numbers than these | you built the lake with `--as-of today` or `--exposure committed`; rebuild with `--as-of data` and the default `--exposure demo` |
-| the `paths` what-if answers `503 DRS-5446` | the compute workers are off: `DRISHTI_COMPUTE_ENABLED=true`, and Admin → Compute shows the pool `exposure` |
+| the `paths` what-if answers `400 DRS-5440` "the netting set … is not one the scope … covers whole" | `--set` names a netting set of another counterparty, or one the scope cuts | one of the scope's netting sets (`EXP CPTY:<id>` lists them), or leave `--set` out (a netting set of its own) |
 | the `addon` what-if adds nothing | a `--candidates` entry without `assetClass`, `notional` or `maturityDate` (the addon is sized on them; `--like` fills them from the booked trade) |
 | no *official* chip | the date's record is not taken yet: it is taken at start once the connectors are up, or by an administrator with `drishti.py exposure official --capture` |

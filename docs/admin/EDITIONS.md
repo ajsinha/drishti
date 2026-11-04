@@ -135,7 +135,7 @@ outside it are skipped, and they load again when you switch back.
 | Area | Included | Hidden |
 |---|---|---|
 | **Packs** | core, market-data, trading, counterparty-risk, market-risk (allow-only) | world-economy, news-and-markets, us-equities, gleif, funds, the example packs |
-| **Commands** | `VAR` and the VaR page (its basket sheet's what-if included); `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`; `EXP` and the exposure page; `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`; the derived totals `NSMTM`, `CPMTM`; `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` (the Data view), `SMAT` (the scenario matrix), `PLAY` (the VaR Playground) | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; `FORM`, `RUPAKA` |
+| **Commands** | `VAR` and the VaR page (its basket sheet's what-if included); `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`; `EXP` and the exposure page; `XRUN`, `XPATH`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`; the derived totals `NSMTM`, `CPMTM`; `CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`; `TRD`, `CTRD`, `PTRD`, `LTRD`; `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` (the Data view), `SMAT` (the scenario matrix), `PLAY` (the VaR Playground) | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and vol surfaces, `ISS`, `CAL`, `CLR`; `FORM`, `RUPAKA` |
 | **Menus** | Views (above), BI, Admin, Help (Help centre, Knowledge, Install and run, About); footer: Help, About, Release notes | Build, Forms, the competitive analysis link |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Admin pages** | users, roles, packs, commands, tokens, access, connectors, artifacts, loads, lakes, audit, net, health, caches, capacity, BI, scopes (Ad-hoc scopes: every person's VaR baskets) | AI, collaboration, embedding, edits, compute |
@@ -485,8 +485,8 @@ asks about. A role without raw sees trader ids masked, so the Desk head's figure
 **Check a new trade.** Pick a product (the products of your live trades), the side, a notional (`250m`, `1.5bn`), the counterparty and the
 book, then **Check**: one VaR what-if on the book (the VaR page's what-if) and one pre-deal check on the counterparty (the exposure page's),
 each on a copy of a booked trade of the product scaled to your notional, give one verdict: *Fits my VaR · 6.12m → 6.30m · limit use 83% →
-85%* and *Counterparty near its limit · peak PFE 401.5m → 409.2m · 97% of limit*. When the Python exposure engine is off the counterparty
-half is the engine's add-on proxy, labelled **proxy**; the VaR half is the server's VaR engine, which needs no compute workers.
+85%* and *Counterparty near its limit · peak PFE 401.5m → 409.2m · 97% of limit*. When the trade copied has no paths on the day's run the
+counterparty half is the engine's add-on proxy, labelled **proxy**; both halves are the server's engines and need no compute workers.
 
 **Other settings** (all in `trading:`): `near-limit` (0.8: from this share of a limit a book is "near"), `limit-days` (5),
 `pnl-var-days` (60), `max-rows` (20,000 valuations a date before the figures say **partial**), `live-statuses` (`NEW`, `VALIDATED`,
@@ -557,7 +557,7 @@ packs:
   allow-only: true
 commands:
   allow: [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, TRD, CTRD, PTRD, LTRD, FX, HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES,
-          VOFF, AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC, NSMTM, CPMTM]
+          VOFF, AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XOFC, NSMTM, CPMTM]
   words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on }
 features: { bi: edition, var: on, exposure: on, calc: off, pyconsole: off, python: off, designer: off, studio: off, build: off,
             forms: off, datamap: on, layouts: on, workspaces: on, monitors: on, alerts: on, reports: on, lakes: on, ai: off, embed: off }
@@ -604,7 +604,7 @@ Optional blocks: `server:` and `console:` hold raw settings of either side (a pr
 | Area | Shown | Hidden |
 |---|---|---|
 | **Packs** | core, market-data, trading, counterparty-risk, market-risk | world economy, news and markets, US equities, GLEIF, funds, the example packs (refused: `DRS-1017`) |
-| **Commands** | VaR (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`), exposure (`EXP`, `XRUN`, `XPATH`, `XWIF`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`), the derived totals (`NSMTM`, `CPMTM`), reference data (`CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`), trades (`TRD`, `CTRD`, `PTRD`, `LTRD`), `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and surfaces, `ISS`, `CAL`, `CLR`; the words `FORM` and `RUPAKA` |
+| **Commands** | VaR (`VAR`, `VRES`, `VOFF`, `VLIM`, `HIER`, `PORT`, `POS`, `PNLV`, `SPV`, `FXS`, `SSET`), exposure (`EXP`, `XRUN`, `XPATH`, `XOFC`, `AGR`, `CSA`, `NSET`, `LIM`, `COLL`, `MC`), the derived totals (`NSMTM`, `CPMTM`), reference data (`CPTY`, `GRP`, `LE`, `BOOK`, `DESK`, `TRDR`, `CCP`), trades (`TRD`, `CTRD`, `PTRD`, `LTRD`), `FX`; the words `BI`, `FUNC`, `WHAT`, `DATAMAP`, `DATA` | `FRTB`, stress (`STR`, `SCN`, `SSPNL`), `PNL`, `TVAL`, `CVA`, `SACCR`, `SIMM`, the curves and surfaces, `ISS`, `CAL`, `CLR`; the words `FORM` and `RUPAKA` |
 | **Menus** | Views: Terminal, Search, Functions, Data map, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; BI; Admin (its pages); Help: Help centre, Knowledge, Install and run, About | Build; Forms; the competitive analysis link in the footer |
 | **Features** | BI (the edition's datasets), VaR, exposure, layouts, workspaces, monitors, alerts, reports, lakes, the data map | Calc, the Python console and Python visuals, the Sutra designer, Studio, Build, Forms, AI, embedding |
 | **Home** | the Drishti Risk landings (section 7); signed out, today's Home without its general sections | the grammar, the seven stages, the capabilities, the showcase, the stats |
@@ -887,7 +887,7 @@ their View as choice (`tradingView`). Nothing in the engines changed.
 | Area | Shown | Hidden |
 |---|---|---|
 | **Packs** | core, market-data, trading, market-risk, counterparty-risk (allow-only; trading extends core and market-data, market-risk extends market-data and trading, counterparty-risk extends trading) | the public-data packs, the sample and example packs (`DRS-1017`) |
-| **Commands** | the blotter `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`; books and positions `BOOK`, `DESK`, `TRDR`, `POS`; risk on my book `VLIM`, `VRES`, `TVAL`, `PNLV`, `HIER`, `PORT`; counterparties `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `XWIF`, `EXP`; market data `CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`; the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT`, `DATA` | regulatory (`FRTB`, `SACCR`, `CVA`, `SIMM`), stress (`SCN`, `STR`, `SSPNL`), collateral operations (`COLL`, `MC`), the exposure engine's runs, paths and official records, VaR's scenario inputs, macro economics; the words `DATAMAP`, `FORM`, `RUPAKA`. `PSUM`, `PSTRIP` and `PBOOK` (asked for) are the compute-demo **sample** pack's synthetic P&L strips, not a trading pack: left out |
+| **Commands** | the blotter `TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`; books and positions `BOOK`, `DESK`, `TRDR`, `POS`; risk on my book `VLIM`, `VRES`, `TVAL`, `PNLV`, `HIER`, `PORT`; counterparties `CPTY`, `GRP`, `NSET`, `NSMTM`, `CPMTM`, `LIM`, `EXP`; market data `CRV`, `FX`, `FXV`, `EQ`, `EQX`, `CMD`, `CMDC`, `BND`, `CDS`; the words `VAR`, `EXP`, `BI`, `FUNC`, `WHAT`, `DATA` | regulatory (`FRTB`, `SACCR`, `CVA`, `SIMM`), stress (`SCN`, `STR`, `SSPNL`), collateral operations (`COLL`, `MC`), the exposure engine's runs, paths and official records, VaR's scenario inputs, macro economics; the words `DATAMAP`, `FORM`, `RUPAKA`. `PSUM`, `PSTRIP` and `PBOOK` (asked for) are the compute-demo **sample** pack's synthetic P&L strips, not a trading pack: left out |
 | **Menus** | Views: Terminal, Search, Functions, VaR, Exposure, Reports, Workspaces, Monitors, Alerts; BI; Admin; Help | Forms, Data map, Build |
 | **Features** | VaR, exposure, BI (the edition's datasets), layouts, workspaces, monitors, alerts, reports, lakes | Calc, the Python console and visuals, the designer, Studio, Build, forms (as Drishti Risk), the data map, AI, embedding |
 | **Help** | Knowledge (Trades and products, Market risk, Counterparty credit risk, Entities and ownership, Market data; the glossary; data and contracts), Start, Use, BI, Data, Operate | Build; the public-data packs' Knowledge pages |
@@ -924,7 +924,7 @@ Desk head's figures by trader say so instead of guessing (tested: `test_scoping_
 Drawn in the terminal look with a **green accent** (`#4fd18b` on the dark themes, `#1a7f4b` on the light ones). One template,
 `home/trading_landing.html`, with `static/js/trading-landing.js` and `static/css/trading-landing.css`. The figures are worked out by
 `core/trading_landing.py` and served read-only by `/api/home/trading/{me,valuations,blotter,risk,limits,pnl-var,traders}` and
-`POST /api/home/trading/check` (`404 DRS-4023` unless the person's edition or lens shows `TRD`; the check also the word `VAR` and `XWIF`), cached
+`POST /api/home/trading/check` (`404 DRS-4023` unless the person's edition or lens shows `TRD`; the check also the words `VAR` and `EXP`), cached
 two minutes per person, date and scope; two panels needing the same valuations wait for one read.
 
 - **A "trader", Trader desk** (the default; traders):
@@ -985,7 +985,7 @@ copy's).
   from it, **breaches** above 100%; no limit: the change only. When the engine cannot answer (no vectors for the book on the date) the half says why.
 - **Counterparty**: `POST /api/v1/exposure/what-if {scope: CPTY:<cp>, method: paths, q: the limit's confidence, candidates: [the copy into
   the counterparty's largest netting set]}` (the exposure page's pre-deal check) gives peak PFE before and after against the counterparty's
-  credit limit: fits, near or breaches. When the exact `paths` method cannot run (the Python exposure engine off, `DRS-5446`, or no netting
+  credit limit: fits, near or breaches. When the exact `paths` method cannot run (the trade copied has no paths on the run, or no netting
   set to deal into) the engine's own conservative `addon` proxy answers, labelled **proxy** with the reason.
 
 #### What the data does not give (left out or labelled, never invented)

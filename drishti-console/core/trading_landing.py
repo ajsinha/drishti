@@ -867,7 +867,8 @@ async def _var_check(backend, me, book: str | None, tid: str, factor: float, lab
 async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float, notional: float, sign: float, label: str,
                           near: float) -> dict:
     """The pre-deal exposure check on the counterparty (``POST /exposure/what-if``): exact (``paths``, the copy's paths into the
-    counterparty's largest netting set) when the engine runs, else the engine's own conservative proxy (``addon``), said."""
+    counterparty's largest netting set) when the copy has paths on the date's run, else the engine's own conservative proxy (``addon``),
+    said."""
     scope = f"CPTY:{cp}"
     head, why, code = await _ask(backend.exposure, "GET", "/scope", me, scope=scope)
     if head is None:
@@ -889,7 +890,7 @@ async def _exposure_check(backend, me, cp: str, tid: str, t: dict, factor: float
     if sets:
         body["candidates"] = [{**cand, "nettingSet": sets[0].get("nettingSet"), "paths": {"copyOf": tid, "factor": factor}}]
         w, fell_back, code = await _ask(backend.exposure, "POST", "/what-if", me, body=body)
-    if w is None:                                  # no netting set to deal into, or the paths engine is not running: the engine's own proxy
+    if w is None:                                  # no netting set to deal into, or the copy has no paths on the run: the engine's own proxy
         body = {**body, "method": "addon", "candidates": [cand]}
         w, why, code = await _ask(backend.exposure, "POST", "/what-if", me, body=body)
         if w is None:

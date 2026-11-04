@@ -415,13 +415,10 @@ field: value` lines and then the profile.
 
 | Method | How | Where it runs | Flag |
 |---|---|---|---|
-| **`paths`** (exact) | the candidate's values on every path of **the same run** are added to its netting set's V; the set's collateral and exposure are computed again, then the scope's figures; incremental = with − without, per figure and per primary date | the **Python exposure engine** (`drishti_compute.exposure.whatif`, reactive connector `exposure-whatif`, compute pool `exposure`) | none (`exact`) |
+| **`paths`** (exact) | the candidate's values on every path of **the same run** are added to its netting set's V; the set's collateral and exposure are computed again, then the scope's figures; incremental = with − without, per figure and per primary date | the Java engine (`ExposureWhatIfMath` with `ExposureMath`, the same code as every exposure figure) | none (`exact`) |
 | **`addon`** (conservative proxy) | the candidate as a netting set of its own, no netting, no collateral: PFE add-on `max(MTM, 0) + z_q · SF · d · |δ| · sqrt(min(t, M))`, EE add-on with `1/sqrt(2π)` in place of z_q, with SA-CCR's supervisory factor SF | the Java engine | `proxy` |
 
-**The `paths` method needs compute on.** The Python engine runs in Drishti's compute pool: start the server with
-`DRISHTI_COMPUTE_ENABLED=true` (the pool `exposure` in `config/compute/compute.yaml`, standard library only, up to
-`DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers, 2 GB each). Without it `method: paths` answers `503 DRS-5446` ("the exact what-if … runs in
-the Python exposure engine … which is not running on this server; ask method addon for the conservative proxy"); `addon` always works.
+**Both methods run in the server's exposure engine**, wherever exposure runs: no compute pool, no worker, no setting of their own.
 
 **The candidate.** A candidate's paths are one of:
 - `{copyOf: <trade>, factor}`: a booked trade's paths on the run, scaled (`factor: -1` is its unwind) — what the explorer and
@@ -448,32 +445,31 @@ answer has the same layout as the netting set's tab: before, after, the incremen
 
 `--method addon`, or `--candidates new-swap.json`. **API**: `POST /api/v1/exposure/what-if`, [section 11](#11-the-api).
 
-**How the exact method gets its inputs**: the Java engine serves them as the asking person through the computed kind `exposure-result`
-with `detail=whatif` (the scope's E and N matrices, G_primary × P, the grid, the horizon, the candidate sets' ids) and `detail=set` (a
-netting set's V, G × P, E, N, CSA terms, holdings); the candidates go into the person's private sandbox, the connector is asked as them,
-and the sandbox is deleted after. The engine is deterministic (no random numbers) and reproduces the Java maths
-(`drishti_compute.exposure.measures`, tested against the worked example and the test data). Details: [section 19](#19-what-drishti-answers), 19.5.
+**How the exact method computes**: the engine reads the scope and each netting set a candidate joins as the asking person (their
+entitlements apply; a set must be one the scope covers whole), adds each candidate's paths to its set's value V path by path, computes
+the set's collateral and exposure again with `ExposureMath` (the CSA's terms, today's holdings, the look-back points, the asked
+collateral model), and replaces the set's E and N in the scope's: `E_scope − E_set + E'_set` on every path. A candidate of its own adds
+`max(M, 0)`. The current exposure moves the same way, and the horizon is the longest remaining life, at most a year. Deterministic (no
+random numbers), nothing stored. Each candidate is also measured alone (`peakPfeAlone`, uncollateralised) and added alone
+(`incrementalPeakPfe`). Details: [section 19](#19-what-drishti-answers), 19.5.
 
 ## 8. Exposure as a kind
 
 | Kind | Command | Class | What |
 |---|---|---|---|
 | `exposure-result` | `EXP <scope>` | computed (reactive connector `exposure-engine`, Java `ExposureResultEngine`) | a scope's figures, profile, netting sets, flags, provenance |
-| `exposure-whatif` | `XWIF <scope>` | computed (reactive connector `exposure-whatif`, Python, pool `exposure`) | a scope before and after the candidates in the person's sandbox, exact |
 | `simulation-run` | `XRUN` | input | the run's identity and grid |
 | `exposure-path` | `XPATH` | input (Delta connector `exposure-store`) | every trade's MtM on every path at every grid date |
 
 The id of a computed answer is the scope text with parameters after `~`: `CPTY:CP-ALDERSHOT~q=0.99`. `exposure-result` takes `q`,
-`collateral` (`lagged`, `current`, `none`), `run` (empty: the newest complete run), and, for the Python engine, `detail` (`none`, `whatif`,
-`set`) and `sets`. `exposure-whatif` takes `sandbox`, `q`, `collateral` and `sets`; its result has `BEFORE_`, `AFTER_` and `CHANGE_` of
-`EPE`, `EEPE`, `PEAK_PFE`, `PEAK_EE`, `CE`, a `profile` table and an `items` table. Both kinds' contracts are generated pages in
-`docs/contracts/` (`exposure-result.contract.yaml`, `exposure-whatif.contract.yaml` in the pack).
+`collateral` (`lagged`, `current`, `none`) and `run` (empty: the newest complete run). Its contract is a generated page in
+`docs/contracts/` (`exposure-result.contract.yaml` in the pack). The pre-deal what-if is not a kind: it is the engine's
+`POST /api/v1/exposure/what-if` ([section 7](#7-pre-deal-what-if)).
 
 Because they are kinds, the usual tools work: `/v/exposure-result/NSET:NS-ALDERSHOT-FRA`, Sutra pages (the netting-set and counterparty
 pages read the engine's figures under `EXPOSURE_ENGINE`: EPE and peak PFE 95% in the strip, the profile panel, a "how it was computed"
 panel), Calc (`exposure_profile_stats.py`, `cva_from_ee.py`, `collateral_mpor_mc.py`, `concentration_hhi.py`, the core pack's
-`group_exposure.py`), BI over the published official results. Large `detail=whatif` answers pass through the connector cache: see
-[section 28](#28-open-items).
+`group_exposure.py`), BI over the published official results.
 
 ## 9. Who sees what: entitlements and audit
 
@@ -543,10 +539,7 @@ All under `/api/v1/exposure`. Every `GET` takes `asOf` (the business date; defau
 | `POST /official` | `asOf` | take the official capture now (administrators) |
 | `POST /reload` | | drop the loaded dates (administrators) |
 
-The computed kind `exposure-result` takes **`detail`** (`none`, `whatif`: the scope's exposure matrices for the Python engine, `set`: a
-netting set's value matrix and CSA terms) with `sets` (the netting sets a candidate may join; empty: every set the scope covers whole, at
-most 50); see [section 19](#19-what-drishti-answers), 19.5. Codes: [section 21](#21-validation-errors-and-data-quality). The full
-endpoint list of Drishti is [API_GUIDE.md](API_GUIDE.md).
+Codes: [section 21](#21-validation-errors-and-data-quality). The full endpoint list of Drishti is [API_GUIDE.md](API_GUIDE.md).
 
 ## 12. Settings
 
@@ -554,9 +547,7 @@ Every setting is under `drishti.ccr.exposure` in the engine's own file, `config/
 
 Every setting of this part, with its type, default, environment variable, meaning and whether a change needs a restart, is in the one configuration document: [CONFIGURATION.md, `drishti.ccr.exposure`](../admin/CONFIGURATION.md#drishticcrexposure) (also at Help → Configuration in the console).
 
-Also: the compute pool **`exposure`** in `config/compute/compute.yaml` (Python, `drishti_compute.exposure.whatif:ExposureWhatIfEngine`,
-system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CPU-seconds, 60 s timeout), active only with
-`DRISHTI_COMPUTE_ENABLED=true`; and the token rules: `POST /api/v1/exposure/what-if` is `read`, `POST /captures` `risk:write`, `POST
+Also the token rules: `POST /api/v1/exposure/what-if` is `read`, `POST /captures` `risk:write`, `POST
 /reload` and `POST /official` never a token's.
 
 ## 13. Troubleshooting
@@ -565,7 +556,7 @@ system environment, `DRISHTI_COMPUTE_EXPOSURE_WORKERS` workers (4), 2 GB, 300 CP
 |---|---|---|
 | "no exposure paths for the netting set NS-… on <date>" (`404 DRS-1001`; the kind's `STATUS: no-paths`) | the reference data knows the set or counterparty, the day's run does not cover it (CP-SUMMIT's and CP-NORTHPLAINS's three sets in the default demo lake; 68 of 76 with `--exposure committed`) | expected for those sets; in production, check the simulator's coverage: `drishti.py exposure status` counts `setsWithoutPaths` |
 | `404 DRS-1001` "no run for the date" | no complete `simulation-run` on `asOf` | another date (`--date`), or load the run; the load signal reloads it |
-| `501`/`503 DRS-5446` on a what-if | `method: paths` and the Python engine is not running | start with `DRISHTI_COMPUTE_ENABLED=true` (pool `exposure`); or `--method addon` |
+| `400 DRS-5440` "the netting set NS-… is not one the scope … covers whole" on a what-if | a candidate's `nettingSet` is outside the scope, or only part of it is in the scope | ask on the counterparty or the netting set, or leave `nettingSet` out (a netting set of its own) |
 | `400 DRS-5442` | candidate paths of another run, or another number of paths | candidates from the same `RUN_ID`, P paths each |
 | `400 DRS-5440` | a bad scope word (VaR's `DIV:`, `NODE:`, `POS:`, `PORT:`, `BASKET:`, `CAPTURE:`) or parameter (`q`, `collateral`, `date` not a primary date, `by`, `figure`, `run`) | [section 4](#4-scopes) |
 | `409 DRS-5441`, or the flag `stale-run` | the date's run is not one run (two batch ids, a duplicate row, a trade in two sets, a bad grid) | fix the upstream run; until then the date before answers with a warning (`strict=true` refuses) |
@@ -593,9 +584,8 @@ and [WWR.md](../contracts/WWR.md) read too. Sections marked **Implementation** a
 
 **Sources of truth checked (1.2):** `tools/packgen/ccr/` (`paths.py`, `ccrmath.py`, `make_ccr_data.py`); `drishti-compute`
 (`com.ash.drishti.compute.ccr`: `ExposureGrid`, `CsaTerms`, `ExposureMath`, `ExposureBook`, `ExposureHotFile`, `ExposureScopes`,
-`ExposureCalc`; the Python `drishti_compute.exposure`: `measures`, `whatif`); `drishti-server` (`com.ash.drishti.server.exposure`,
-`ExposureWhatIfPaths`, `ExposureWhatIfInputs`); `drishti.ccr.exposure` in `config/engines/exposure.yaml`; the pool `exposure` in
-`config/compute/compute.yaml`; the counterparty-risk pack's `pack.yaml` (`exposure-store`, `exposure-engine`, `exposure-whatif`);
+`ExposureCalc`, `ExposureWhatIfMath`); `drishti-server` (`com.ash.drishti.server.exposure`, `ExposureWhatIf`, `ExposureWhatIfPaths`);
+`drishti.ccr.exposure` in `config/engines/exposure.yaml`; the counterparty-risk pack's `pack.yaml` (`exposure-store`, `exposure-engine`);
 `data/testdata/counterparty-risk/{simulation-run,exposure-path}`.
 
 ## 14. The contract at a glance
@@ -610,7 +600,7 @@ netting set, a counterparty, a connected group, a legal entity or any ad-hoc sco
 **Commands.** `EXP NSET:NS-ALDERSHOT-FRA <GO>` (as typed; the spaced `EXP NSET NS-ALDERSHOT-FRA <GO>` too), `EXP CPTY:CP-ALDERSHOT <GO>`,
 `EXP GROUP:GRP-ALDERSHOT <GO>`, `EXP LE:LE-NY <GO>`, `EXP TRD:<trade> <GO>`; the API `/api/v1/exposure`; the netting-set and counterparty
 pages show the engine's figures as they open. **Implementation:** `EXP` is the computed kind `exposure-result`; its main screen is the
-exposure explorer ([section 3](#3-the-explorer-screen-by-screen)); `XWIF <scope>` is the exact what-if (`exposure-whatif`).
+exposure explorer ([section 3](#3-the-explorer-screen-by-screen)), whose Pre-deal tab asks the engine's what-if.
 
 **Not stored:** the kind `exposure-profile` (`EXP-*` records with `EPE`, `EEPE`, `PFE_PEAK`, `BUCKETS[]`), and
 the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14). Its ids open the computed page (§22).
@@ -622,9 +612,9 @@ the profile figures on `netting-set` ([NSET.md](../contracts/NSET.md) section 14
 | Netting per path, collateral per path with the margin period of risk, EE, ENE, EPE, EEE, EEPE, PFE, peaks, contributions | BUILT |
 | Tiered memory: netting-set path matrices in memory-mapped per-date files, trade paths read only for drills and what-ifs | BUILT (one node; sharding PLANNED) |
 | Incremental exposure before dealing: the conservative proxy (`addon`) | BUILT |
-| Incremental exposure before dealing: exact with candidate paths of the same run (`paths`, the Python engine) | BUILT |
+| Incremental exposure before dealing: exact with candidate paths of the same run (`paths`, the Java engine) | BUILT |
 | Computed kind `exposure-result`, reactive connector `exposure-engine` (Java) | BUILT |
-| Reactive connector `exposure-whatif` (Python, kind `exposure-whatif` XWIF, pool `exposure`), the exposure explorer, the CLI's exposure commands (`drishti.py exposure`) | BUILT |
+| The exposure explorer, the CLI's exposure commands (`drishti.py exposure`) | BUILT |
 | The benchmark at a large bank's size | BUILT at a workstation's size, extrapolated ([section 27.4](#274-the-benchmark-measured-and-extrapolated)) |
 | Official end-of-day results `exposure-official`, `exposure-official-cpty` | BUILT |
 | No stored `exposure-profile`, and no exposure figures on the netting set and counterparty | BUILT (§22) |
@@ -934,23 +924,23 @@ counterparties; a counterparty: its netting sets; a netting set: its trades; oth
 | `paths` (exact) | the candidate's paths on **the same run** (same `RUN_ID`, same P, same path order) come with the request or from the upstream what-if service | the candidate's `MTM_c(p,k)` is added to its netting set's V, collateral and E recomputed, then the scope's figures; incremental = with − without, per figure and per primary date |
 | `addon` (conservative proxy) | no candidate paths | the candidate is treated as its own netting set (no netting benefit, no collateral): `E_c(k) = max(MTM_c,0) + z_q · SF · d · δ · sqrt(min(t_k, M))` added to the PFE profile, with SA-CCR's supervisory factor SF, adjusted notional d, delta δ (SACCR.md section 6) and z_0.95 = 1.645; flagged `proxy` |
 
-The `paths` method runs in the Python engine (§19.5) on the netting sets the candidate touches (2 MB per set matrix), well inside
+The `paths` method runs in the Java engine (§19.5) on the netting sets the candidate touches (2 MB per set matrix), well inside
 interactive time.
 
 **Implementation:** `POST /api/v1/exposure/what-if` with `method: addon` answers in Java (`ExposureWhatIf`): each candidate's PFE add-on
 is `max(MTM, 0) + z_q · SF · d · |δ| · sqrt(min(t_k, M))` and its EE add-on `max(MTM, 0) + SF · d · |δ| · sqrt(min(t_k, M)) / sqrt(2π)` (the
 mean positive part of a normal of that spread), added to the scope's profile; SF by asset class (rates 0.5%, FX 4%, credit 0.54%, equity
 32%, commodity 18%), d the notional (rates: times the supervisory duration), z the normal quantile; flagged `proxy`. `method: paths` is
-answered by the Python exposure engine (part 2, below); candidate paths of another run are refused with `400 DRS-5442`.
+answered by the same engine (below); candidate paths of another run are refused with `400 DRS-5442`.
 
-**Implementation:** `method: paths` (the default of the CLI and the explorer) is asked by `ExposureWhatIfPaths` as the person:
-the candidates go into a private sandbox, the reactive connector `exposure-whatif` computes the kind `exposure-whatif` from the scope's
-`exposure-result` with `detail=whatif` and the touched netting sets' with `detail=set` (§19.5), and the sandbox is deleted after. A
-candidate's paths are `{copyOf, factor}` (a booked trade's paths on the run, scaled), `{runId, mtm}` (G × P numbers, grid-date-major) or
-`{runId, arrow}` (base64 Arrow IPC); a candidate without `nettingSet` is a netting set of its own, uncollateralised. When the Python
-engine is not running (compute off, the pool `exposure` absent) the answer is `503 DRS-5446`; its own errors are `400`. The answer:
-`base`, `with`, `incremental {epe, peakPfe, profile[]}` (per primary date `eeBase`, `ee`, `pfeBase`, `pfe`, `incrementalPfe`), `items`
-(each candidate's peak PFE alone and its incremental peak PFE added alone), `method`, `flags`.
+**Implementation:** `method: paths` (the default of the CLI and the explorer) is `ExposureWhatIfPaths` in the server, computed by
+`ExposureWhatIfMath` in `drishti-compute` (§19.5): it reads the scope and each netting set a candidate joins as the person, so their
+entitlements apply. A candidate's paths are `{copyOf, factor}` (a booked trade's paths on the run, scaled), `{runId, mtm}` (G × P
+numbers, grid-date-major) or `{runId, arrow}` (base64 Arrow IPC); a candidate without `nettingSet` is a netting set of its own,
+uncollateralised; a `nettingSet` the scope does not cover whole is `400 DRS-5440`. The answer: `base`, `with`,
+`incremental {epe, eepe, peakPfe, peakEe, ce, profile[]}` (per primary date `eeBase`, `ee`, `pfeBase`, `pfe`, `incrementalEe`,
+`incrementalPfe`), `items` (each candidate's peak PFE alone and its incremental peak PFE added alone), `method`, `flags` (`exact`),
+`engine`.
 
 ### 18.8 Where it runs
 
@@ -958,12 +948,13 @@ engine is not running (compute off, the pool `exposure` absent) the answer is `5
 |---|---|---|
 | Building V and E matrices per netting set at date load | Java (`drishti-compute`, planned `com.ash.drishti.compute.ccr.ExposureStore`), streaming the sorted `exposure-path` table, fanned out across the cluster's nodes by netting-set ranges | billions of float additions; SIMD loops; no copy to Python |
 | Statistics of a scope (sum of matrices, means, quantiles) | Java | per request: sum of the scope's set matrices (P × G), then a sort of P values per date |
-| What-if with candidate paths, other collateral models, stressed runs, custom quantile methods, path analytics | Python engine on the compute pool (`risk` pool), Arrow in and out | heavy or rarely used; the scope's few matrices are shipped, never the date |
+| What-if with candidate paths, other collateral models | Java, the same engine | the scope's and the joined sets' matrices are in memory already; one implementation of the maths |
+| Stressed runs, custom quantile methods, path analytics | PLANNED | not built |
 
 **Implementation:** everything in Java on one node: the maths in `drishti-compute` (`com.ash.drishti.compute.ccr`: `ExposureMath`,
 `ExposureBook`, `ExposureCalc`, `ExposureScopes`, `ExposureHotFile`), the service in `drishti-server` (`com.ash.drishti.server.exposure`).
-Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the
-Python engine (`drishti_compute.exposure`, the compute pool `exposure`, part 2). Fan-out across nodes is PLANNED.
+Other collateral models (`collateral=current|none`) are computed in Java from the value matrices. The exact what-if runs in the same
+engine (`ExposureWhatIfMath`, §19.5). Fan-out across nodes is PLANNED.
 
 ## 19. What Drishti answers
 
@@ -1062,79 +1053,36 @@ PROFILE], types: { EPE: number, PEAK_PFE: number } }`, `triggers` on the data ve
 `netting-set`, `csa`, `collateral-balance`, `coalesce` 1 s / 10 s, `cache` 1,000 for 1 h, `limits` 60 s / 5 s / 4 per user; enabled by
 `DRISHTI_EXPOSURE_ENABLED`. The scope limit is the engine's setting `max-scope-netting-sets`. No `reads:`: the engine reads its store.
 
-### 19.5 The Python engine (what-if and analytics)
+### 19.5 The exact what-if in the Java engine
 
-The proposal; the **implementation** below:
+The pre-deal what-if is not a kind: it is the engine's `POST /api/v1/exposure/what-if` (section 11), both methods in the server's
+exposure engine, the exact one (`paths`) by the same maths as every exposure figure:
 
-```yaml
-# config/connectors/exposure-whatif.yaml                        (in the pack's pack.yaml)
-plugin: reactive
-mode: reactive
-kinds:
-  exposure-whatif:
-    params:
-      sandbox: { type: sandbox-ref, required: true }               # the candidate trades and their paths
-      q:       { type: decimal, default: 0.95, min: 0.5, max: 0.9999 }
-      method:  { type: enum, options: [paths, addon], default: paths }
-reads:
-  - { kind: exposure-result, as: base, id: "{id}" }
-engine:
-  type: python
-  entry: drishti_ccr.exposure:ExposureWhatIfEngine
-  pool: risk
-  version: "1.0"
-limits: { timeout: 30s, wait: 100ms, max-inflight-per-user: 2 }
-requires: { python: { version: "3.12", lock: requires/drishti-ccr.lock } }
+```java
+// drishti-compute: com.ash.drishti.compute.ccr.ExposureWhatIfMath
+ExposureWhatIfMath.Result r = ExposureWhatIfMath.of(
+        new Scope(e, n, ce, lifeYears),        // the scope as booked: E and N (G_primary x P), CE, the longest remaining life
+        sets,                                  // each netting set a candidate joins: V (G x P), its E and N in the scope, CSA, MtM today, CE
+        candidates,                            // id, label, netting set ("" = its own), MTM (G x P), MtM today, life
+        grid, paths, times, q, model, rule, scope);
+// r.before(), r.after(): ExposureMath.Stats (EE, ENE, EEE, PFE, EPE, EEPE, the peaks, CE); r.items(): alone and added alone
 ```
 
-The engine interface (worker SDK, [PYTHON_COMPUTE.md](../architecture/PYTHON_COMPUTE.md) section 8), as proposed in a package `compute/drishti-ccr`:
+For each netting set a candidate joins: `V' = V + Σ MTM_c` on every path at every grid date; the set's collateral and exposure again by
+`ExposureMath.exposure` (section 18.3: the CSA's terms, today's holdings, the look-back points, the asked collateral model); the
+scope's `E' = E − E_set + E'_set` and `N' = N − N_set + N'_set` path by path; its current exposure `CE − CE_set + CE'_set`, with the
+set's MtM today plus the candidates'. A candidate without a netting set adds `max(MTM_c, 0)` and `min(MTM_c, 0)` (uncollateralised) and
+`max(MTM0_c, 0)` to the current exposure. The horizon is `min(1 year, the longest remaining life)`, the candidates' included. Then
+`ExposureMath.statistics` before and after; incremental = after − before for every figure and every primary date. Each candidate alone:
+its peak PFE uncollateralised (`peakPfeAlone`) and the scope's peak PFE change with only it added (`incrementalPeakPfe`).
 
-```python
-# compute/drishti-ccr/src/drishti_ccr/exposure.py               (drishti_compute/exposure/whatif.py)
-from drishti_compute import Engine, Request, Inputs, Progress, Result
-
-class ExposureWhatIfEngine(Engine):
-    kinds = ("exposure-whatif",)
-
-    def compute(self, req: Request, inputs: Inputs, progress: Progress) -> Result:
-        grid = inputs.arrow("grid")          # GRID_INDEX int32, T float64, ROLE string, LOOKBACK_OF int32
-        sets = inputs.arrow("set_paths")     # NETTING_SET string, GRID_INDEX int32, V fixed_size_list<float32>[P]  (the touched sets only)
-        csa = inputs.arrow("csa")            # NETTING_SET, TH_THEM, TH_US, MTA_THEM, MTA_US, IA, ROUNDING, MPOR_DAYS, IM_HELD (USD, float64)
-        cand = inputs.arrow("candidates")    # TRADE_ID, NETTING_SET, GRID_INDEX, MTM fixed_size_list<float32>[P]
-        ...                                  # V' = V + candidates; C, E per section 18.3; statistics per section 18.4
-        return Result(rows=[{"EPE": ..., "PEAK_PFE": ..., "INCREMENTAL_PEAK_PFE": ...}],
-                      tables={"profile": profile_table})   # TENOR, DATE, T, EE, ENE, EEE, PFE, EE_BASE, PFE_BASE
-```
-
-Deterministic (no random numbers); a missing candidate path or a different P is `ComputeError("the candidate's paths are not of run
-XR-…: 2,000 paths, the run has 5,000")`.
-
-**Implementation:** the connector `exposure-whatif` is in the counterparty-risk pack's `pack.yaml` (written by
-`tools/packgen/banking/ccr_kinds.py`), enabled by `DRISHTI_EXPOSURE_ENABLED`: kind `exposure-whatif` (mnemonic `XWIF`), `params`
-`sandbox` (sandbox-ref), `q`, `collateral`, `sets`; `result: { required: [BEFORE_PEAK_PFE, AFTER_PEAK_PFE] }`; `reads` the base
-`exposure-result` at `{id}~collateral=…~detail=whatif~q=…~sets=…` and the sets `{inputs.base.WHATIF_SETS}` (at most 50) with
-`detail=set`; `engine: { type: python, entry: drishti_compute.exposure.whatif:ExposureWhatIfEngine, pool: exposure }`; `triggers` on
-the data versions of `simulation-run`, `exposure-path`, `netting-set`, `csa`, `collateral-balance`; `coalesce` 1 s / 10 s; `cache` 200
-for 1 h; `limits` 60 s / 250 ms / 2 per user. The pool `exposure` (`config/compute/compute.yaml`): Python, the system environment
-(standard library only), 0 to `DRISHTI_COMPUTE_EXPOSURE_WORKERS` (4) workers, 2 GB, 300 CPU-seconds, 60 s; it runs only with
-`DRISHTI_COMPUTE_ENABLED=true`. The package is `drishti-compute/src/main/python/drishti_compute/exposure/` (shipped in the worker SDK):
-`measures.py` (the measures by `ExposureMath`'s rules: lagged collateral, E, N, EE, ENE, EEE, PFE by the rank rule, EPE and EEPE over the
-horizon) and `whatif.py`.
-
-Its inputs, read as the viewer from the Java engine (`ExposureWhatIfInputs`):
-
-| Read | From | Fields |
-|---|---|---|
-| `base` (one row) | `exposure-result` with `detail=whatif` | `E_SCOPE`, `N_SCOPE` (G_primary × P, row-major), `TIMES`, `PRIMARY`, `LOOKBACK_FOR`, `TENORS`, `DATES`, `RULE`, `CE_SCOPE`, `LIFE_YEARS`, `WHATIF_SETS` / `WHATIF_SET_IDS` (the sets named in `sets`, else every set the scope covers whole, at most 50), `PATHS`, `RUN_ID`, `CONFIDENCE`, the scope's ids |
-| `sets` (a row per set) | `exposure-result` with `detail=set` on `NSET:<id>` | `NETTING_SET`, `V` (G × P), `E_SET`, `N_SET`, the CSA's terms in USD, `HELD_TODAY`, `IM_HELD`, `V0`, `CE_SET` |
-| `sandbox` | the person's private sandbox | `TRADE_ID`, `LABEL`, `NETTING_SET` (empty: its own), `MTM` (G × P), `MTM0`, `LIFE_YEARS`, `RUN_ID` |
-
-The scope's exposure becomes `E_scope − E_set + E'_set` path by path for every set a candidate joins. The result: one row (`SCOPE`,
-`CANONICAL`, `BUSINESS_DATE`, `RUN_ID`, `CONFIDENCE`, `COLLATERAL_MODEL`, `METHOD`, `ITEMS`, `BEFORE_`, `AFTER_` and `CHANGE_` of `EPE`,
-`EEPE`, `PEAK_PFE`, `PEAK_EE`, `CE`, `BEFORE_PEAK_PFE_TENOR`, `AFTER_PEAK_PFE_TENOR`, `FLAGS`) and the tables `profile` (`TENOR`, `DATE`,
-`T`, `EE_BASE`, `EE`, `ENE_BASE`, `ENE`, `PFE_BASE`, `PFE`, `INCREMENTAL_EE`, `INCREMENTAL_PFE`) and `items`. Its contract is
-`exposure-whatif.contract.yaml` (computed). Tests: `drishti-compute/src/test/python/test_exposure_engine.py` (the worked example of
-§2.1 and the test data against the Java figures).
+**Implementation:** `ExposureWhatIfPaths` (`drishti-server`, `com.ash.drishti.server.exposure`) turns the request's candidates into
+paths (`copyOf` reads the booked trade's paths on the run from the lake; `mtm` or `arrow` as sent; another run or length `400
+DRS-5442`), reads the scope and each joined netting set as the person (`NSET:<id>`: their entitlements apply; a set the scope does not
+cover whole `400 DRS-5440`; at most 50 sets), computes with `ExposureWhatIfMath` and audits the ask (`ccr-whatif`). Deterministic, nothing
+stored, no compute pool. Tests: `ExposureWhatIfMathTest` (the worked example of §2.1, and reference answers on a book of four netting
+sets under the three collateral models and both rank rules, `drishti-compute/src/test/resources/ccr/whatif-parity.json`, given to the
+cent) and `ExposureApiTest` (an unwind of a whole netting set, a copy of its own, a set outside the scope).
 
 ## 20. Official end-of-day results
 
@@ -1213,8 +1161,7 @@ trade in two netting sets; the date before answers with a warning and the flag `
 `DRS-5442` (400, what-if candidate paths of another run), `DRS-5443` (503, the scope sums more netting sets than an interactive answer
 may: the official capture computes it), `DRS-5444` (422, a row rejected at load: another vector length, NaN or infinity, a grid index or
 date outside the grid; counted and listed in the provenance, never padded), `DRS-5445` (503, the date's matrices over the memory
-budget), `DRS-5446` (503 since part 2: the what-if `paths` method's Python exposure engine is not running or not answering; it was 501
-before the engine existed; the engine's own errors are 400), `DRS-1001` (404, no run for the date, or no paths
+budget), `DRS-1001` (404, no run for the date, or no paths
 for the netting set or counterparty), `DRS-1003` (502, unreadable input). **Implementation checks:** sparse rows are checked to maturity plus 14
 calendar days (the engine has no calendar; the generator writes rows to maturity plus 10 business days); the t₀ check lists trades whose
 paths' mean at the first grid date departs from their MtM today by more than `t0-tolerance` of it or 5% of the notional (the test data's
@@ -1455,12 +1402,12 @@ largest value). `lake demo` moves the run id, the rows' ids and the grid dates w
 | Piece | Where | What |
 |---|---|---|
 | the maths | `drishti-compute`, `com.ash.drishti.compute.ccr` | `ExposureGrid` (the grid, roles, look-back map, Δt), `CsaTerms` (thresholds, MTA, IA, rounding, called collateral), `ExposureMath` (E, N, EE, ENE, EEE, PFE, EPE, EEPE, contributions), `ExposureBook` (a date's netting sets and trades), `ExposureHotFile` (`DRSHEXP1`), `ExposureScopes` (the scope words), `ExposureCalc`; the benchmark `ExposureTierBenchmark` (drishti-server tests, §27.4) |
-| the service | `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` + `ExposureWhatIfInputs` (the exact method through the Python engine), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
-| the Python engine | `drishti-compute/src/main/python/drishti_compute/exposure/` | `measures.py` (the measures by the Java engine's rules), `whatif.py` (`ExposureWhatIfEngine`, kind `exposure-whatif`); tests `drishti-compute/src/test/python/test_exposure_engine.py` |
+| the service | `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureLoader` and `ExposureIntake` (a date from the lake, checks), `ExposureTier` (the hot files, eviction), `ExposureService` (scopes as the viewer, answers, cache), `ExposureViews` and `ExposureExplorer` (profile, distribution and fan, contributions, tree, ancestors, collateral), `ExposureCaptures`, `ExposureWhatIf` (addon) and `ExposureWhatIfPaths` (the exact method, with `ExposureWhatIfMath`), `ExposureOfficial`, `ExposureOfficialStore`, `ExposurePublisher`, `ExposureRetention`, `ExposureAccess`, `ExposureResultEngine` (the kind), `ExposureFigures` (the netting-set and counterparty pages), `ExposureController` |
+| the exact what-if | `drishti-compute`, `com.ash.drishti.compute.ccr` and `drishti-server`, `com.ash.drishti.server.exposure` | `ExposureWhatIfMath` (candidates added to their netting sets, by `ExposureMath`), `ExposureWhatIfPaths` (the request, the paths, the reads as the viewer); tests `ExposureWhatIfMathTest` (with `ccr/whatif-parity.json`), `ExposureApiTest` |
 | the console | `drishti-console` | `routes/exposure_routes.py` (`EXP` and `/exposure`, stored-profile ids), `web/templates/terminal/exposure.html`, `web/static/js/exposure-explorer.js`, `exposure-charts.js` (plain SVG), `web/static/css/exposure.css`; tests `tests/test_exposure_routes.py`, `tests/test_exposure_explorer_browser.py` (the explorer in a browser) |
 | the CLI | `tools/expcli.py` (`drishti.py exposure`) | tests `tools/test_expcli.py` |
 | test data | `tools/packgen/ccr/` | `paths.py`, `ccrmath.py` (the reference maths in Python), `make_ccr_data.py` (`--check`, `--full`, `--reconcile`), `test_ccr_data.py` |
-| the pack | `config/packs/counterparty-risk/pack.yaml` (written by `tools/packgen/banking/ccr_kinds.py`) | kinds `simulation-run`, `exposure-path`, `exposure-result`, `exposure-whatif`; connectors `exposure-store` (Delta), `exposure-engine` and `exposure-whatif` (reactive) |
+| the pack | `config/packs/counterparty-risk/pack.yaml` (written by `tools/packgen/banking/ccr_kinds.py`) | kinds `simulation-run`, `exposure-path`, `exposure-result`; connectors `exposure-store` (Delta) and `exposure-engine` (reactive) |
 
 Everything runs on one node; sharding across Drishti\*net is planned ([section 26](#26-one-date-in-memory-and-the-hot-file),
 26.2 "Sharding").
@@ -1609,7 +1556,6 @@ command, every figure and what limits a large bank: [BENCHMARK.md section 6](../
 | **Sharding across Drishti\*net** | planned: counterparties in contiguous ranges aligned to groups, two replicas, a group across nodes summed by the coordinator (§26.2); today it is one node. The full design (key `COUNTERPARTY`, `NETTING_SET`; partial path matrices; quantiles after the combine; the migration) is [CLUSTER_DEPLOYMENT.md section 6](../architecture/CLUSTER_DEPLOYMENT.md#6-exposure-sharding-in-depth-planned), plan row CD10 |
 | **The restricted (wall-crossed) list** | not built (§9): access is by counterparty, group or legal entity at `trades`, `aggregate` or `none` |
 | **Stored credit limits read very low utilisation** | the `credit-limit` records (read as stored, `kinds.limit`) were sized on stored profiles, 3 to 30 times the computed peaks on the large sets (§22.2: median computed / stored 0.08), so the board's *used* reads 0.1% to a few percent. Limits (LIM) are parked; resizing them on the computed PFE comes with the LIM engine |
-| **Large `detail=whatif` answers in the connector cache** | `exposure-result` with `detail=whatif` or `set` carries G × P matrices (a set of 24 dates × 200 paths is small; at P = 5,000 and G = 100 a set's V is 4 MB as JSON numbers and more), and the reactive connector caches answers (1,000 for 1 h). Excluding detail answers from the cache, or passing the matrices as Arrow, is open |
 | Several runs on one date (`STRESSED`, `EAD_IMM_STRESSED`) | not built (§24.1, question 4) |
 | Path cash flows (`CASHFLOW`) | optional, not read (§24.1, question 6) |
 | `upstreamRef` candidates (an upstream what-if service) | not built (§24.1, question 8) |

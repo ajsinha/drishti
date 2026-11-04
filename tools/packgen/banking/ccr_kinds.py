@@ -17,10 +17,8 @@ beside the taxonomy's kinds, as var_kinds.py does for VaR. The engine's inputs (
 ``simulation-run`` and ``exposure-path``) are written by tools/packgen/ccr/make_ccr_data.py into data/testdata/counterparty-risk/ and
 served by the pack's Delta connector exposure-store from the risk lake's domain (``risk/``), the paths as a list<double> column
 (``vectors: [MTM]``). No kind stores an exposure figure: the computed kind exposure-result (EXP <scope> <GO>) is answered by the
-server's Java engine through the reactive connector exposure-engine, read as the viewer; exposure-whatif (XWIF <scope> <GO>) by the Python
-exposure engine in the compute pool exposure (the exact pre-deal what-if: candidates' paths added to their netting sets, from a private
-sandbox), through the reactive connector exposure-whatif; the netting-set and counterparty pages show
-the engine's figures computed as they open (EXPOSURE_ENGINE, and FVA's: FVA_ENGINE). The computed kind fva-result (FVAR <scope> <GO>) is
+server's Java engine through the reactive connector exposure-engine, read as the viewer; the pre-deal what-if is the same engine's
+(POST /api/v1/exposure/what-if), not a kind; the netting-set and counterparty pages show the engine's figures computed as they open (EXPOSURE_ENGINE, and FVA's: FVA_ENGINE). The computed kind fva-result (FVAR <scope> <GO>) is
 FVA as a kind, answered by the server's FVA engine through the reactive connector fva-engine. The stored exposure-profile kind was retired in 2.9.0 (EXPOSURE_GUIDE.md section 22).
 The published official end-of-day results of every netting set, counterparty and group (risk-results/exposure-official-cpty, written by
 the server's ExposurePublisher, EXPOSURE_GUIDE.md section 20) are the read-only kind exposure-official-cpty of the Delta connector
@@ -33,7 +31,6 @@ KINDS = {
     "exposure-path": ("XPATH", "Exposure path (a trade's MtM on every path at a grid date)", "^XR-[^~]+~.+~[0-9]+$", "PATH_ROW_ID"),
     # the computed kind: its id is a scope (NSET:NS-ALDERSHOT-FRA), so no id pattern claims it
     "exposure-result": ("EXP", "Exposure profile of a scope (computed)", None, None),
-    "exposure-whatif": ("XWIF", "Exposure what-if before dealing (computed, Python)", None, None),
     # FVA of a scope (docs/guides/FVA_GUIDE.md): computed by the server's FVA engine from the exposure engine's profile; the word FVA opens
     # the FVA screen, so the kind's command is FVAR; its id is a scope, so no id pattern claims it
     "fva-result": ("FVAR", "FVA of a scope (computed)", None, None),
@@ -98,7 +95,7 @@ DERIVED = {
 _ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 #: the connectors the kinds are served by
 SERVED_BY = {"simulation-run": "exposure-store", "exposure-path": "exposure-store", "exposure-result": "exposure-engine",
-             "exposure-whatif": "exposure-whatif", "exposure-official-cpty": "exposure-results", "nset-mtm": "ccr-derived",
+             "exposure-official-cpty": "exposure-results", "nset-mtm": "ccr-derived",
              "cpty-mtm": "ccr-derived", "saccr-trade": "exposure-store",
              "saccr-result": "saccr-engine", "fva-result": "fva-engine"}
 #: the published columns of risk-results/exposure-official-cpty that readers scan (ExposurePublisher.CPTY_COLUMNS less the JSON texts)
@@ -143,9 +140,7 @@ CONNECTORS = {
         "kinds": {"exposure-result": {"compute": "exposure-result",
                                       "params": {"q": {"type": "decimal", "default": 0.95, "min": 0.5, "max": 0.9999},
                                                  "collateral": {"type": "enum", "options": ["lagged", "current", "none"], "default": "lagged"},
-                                                 "run": {"type": "text", "default": ""},
-                                                 "detail": {"type": "enum", "options": ["none", "whatif", "set"], "default": "none"},
-                                                 "sets": {"type": "text", "default": ""}},
+                                                 "run": {"type": "text", "default": ""}},
                                       "result": {"required": ["SCOPE", "STATUS", "PROFILE"],
                                                  "types": {"EPE": "number", "PEAK_PFE": "number"}}}},
         "engine": {"type": "java", "class": "com.ash.drishti.server.exposure.ExposureResultEngine", "version": "1.0"},
@@ -171,27 +166,6 @@ CONNECTORS = {
         "cache": {"results": 1000, "ttl": "1h"},
         "limits": {"timeout": "60s", "wait": "5s", "max-inflight-per-user": 4},
     },
-    "exposure-whatif": {
-        "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_EXPOSURE_ENABLED:true}",
-        "description": "A scope's exposure before and after candidate trades (a private sandbox), exact: each candidate's paths on the run "
-                       "added to its netting set, collateral and exposure computed again by the Python exposure engine in the compute pool "
-                       "exposure from the scope's exposure-result: XWIF <scope> <GO>",
-        "kinds": {"exposure-whatif": {"compute": "exposure-whatif",
-                                      "params": {"sandbox": {"type": "sandbox-ref"},
-                                                 "q": {"type": "decimal", "default": 0.95, "min": 0.5, "max": 0.9999},
-                                                 "collateral": {"type": "enum", "options": ["lagged", "current", "none"], "default": "lagged"},
-                                                 "sets": {"type": "text", "default": ""}},
-                                      "result": {"required": ["BEFORE_PEAK_PFE", "AFTER_PEAK_PFE"],
-                                                 "types": {"BEFORE_PEAK_PFE": "number", "AFTER_PEAK_PFE": "number"}}}},
-        "reads": [{"kind": "exposure-result", "as": "base",
-                   "id": "{id}~collateral={params.collateral}~detail=whatif~q={params.q}~sets={params.sets}"},
-                  {"kind": "exposure-result", "as": "sets", "ids": "{inputs.base.WHATIF_SETS}", "limit": 50}],
-        "engine": {"type": "python", "entry": "drishti_compute.exposure.whatif:ExposureWhatIfEngine", "pool": "exposure", "version": "1.0"},
-        "triggers": [{"on": "data-version", "kinds": _INPUTS, "affects": "all"}],
-        "coalesce": {"quiet": "1s", "max-wait": "10s"},
-        "cache": {"results": 200, "ttl": "1h"},
-        "limits": {"timeout": "60s", "wait": "250ms", "max-inflight-per-user": 2},
-    },
 }
 CONNECTORS["saccr-engine"] = {
     "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_SACCR_ENABLED:true}",
@@ -216,7 +190,7 @@ FORM_COLUMNS = {"simulation-run": ["CALIBRATION", "PATHS", "STATUS"],
                 "nset-mtm": ["COUNTERPARTY", "NET_MTM", "TRADE_COUNT", "GROSS_POSITIVE_MTM", "PAST_MATURITY_COUNT"],
                 "cpty-mtm": ["NET_MTM", "TRADE_COUNT", "NETTING_SET_COUNT", "CE_UNCOLLATERALISED"],
                 "saccr-trade": ["TRADE_ID", "NETTING_SET", "ASSET_CLASS", "HEDGING_SET", "TRANSACTION_TYPE", "DIRECTION"]}
-COMPUTED = ("exposure-result", "exposure-whatif", "saccr-result", "fva-result")
+COMPUTED = ("exposure-result", "saccr-result", "fva-result")
 EXAMPLES = [("EXP NSET:NS-ALDERSHOT-FRA", "Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths"),
             ("EXP CPTY:CP-ALDERSHOT", "A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)"),
             ("FVAR NSET:NS-ALDERSHOT-FRA", "FVA of a netting set as a kind · FCA, FBA and FVA with the terms by date (the FVA screen: FVA NSET:…)")]

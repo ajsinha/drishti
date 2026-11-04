@@ -227,7 +227,7 @@ person's edition or lens shows `TRD`), cached two minutes per person, date and s
 ### 4.3 C: Explorer (`explorer`)
 
 A big command line; the chips of `home.chips` (`TRD 1000001`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`,
-`VAR DESK DESK-RATES`, `XWIF`, `CRV CRV-USD-OIS`); the commands grouped (blotter, books and positions, risk on my book, counterparties,
+`VAR DESK DESK-RATES`, `EXP CPTY:CP-ALDERSHOT`, `CRV CRV-USD-OIS`); the commands grouped (blotter, books and positions, risk on my book, counterparties,
 market data); Recently opened (the person's own history, Trading's commands only).
 
 ### 4.4 The new-trade check
@@ -239,7 +239,7 @@ largest notional) and scales it (factor = notional ÷ its notional, negative whe
 - **VaR**: `POST /api/v1/var/what-if` on `BOOK:<book>` with the copy and factor (the server's VaR engine) → VaR before and after, limit use
   before and after: **fits**, **near**, **breaches**; when the engine cannot answer (a book without vectors on the date) the half says why.
 - **Counterparty**: `POST /api/v1/exposure/what-if` on `CPTY:<cp>` (method `paths`, the copy into the counterparty's largest netting set) →
-  peak PFE before and after against the credit limit; the `addon` proxy, labelled, when `paths` cannot run (`DRS-5446`, or no netting set).
+  peak PFE before and after against the credit limit; the `addon` proxy, labelled, when `paths` cannot run (the trade copied has no paths on the run, or no netting set).
 
 **What a trader should know about it.** A scaled copy is exact for a **linear** product with the same terms (a swap of the same tenor and
 currency); for an option, a different strike or tenor, or a new currency pair, it is an approximation that the answer does not quantify.
@@ -610,7 +610,7 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
 |---|---|---|---|---|---|---|
-| T1 | Bar and who (A, B) | `DRISHTI Trading` (amber, *Trading* green); a command line (*TRD, POS, VAR NODE …, XWIF*); *A. Shah · **Rates · Swaps and options** · BOOK-RATES-1, BOOK-RATES-2* (B: *T. Brennan · Commodities desk head*) | `/api/home/trading/me`; `trading.people`, a trader record, View as | View as | — | **Built** |
+| T1 | Bar and who (A, B) | `DRISHTI Trading` (amber, *Trading* green); a command line (*TRD, POS, VAR NODE …, EXP CPTY:CP-ALDERSHOT*); *A. Shah · **Rates · Swaps and options** · BOOK-RATES-1, BOOK-RATES-2* (B: *T. Brennan · Commodities desk head*) | `/api/home/trading/me`; `trading.people`, a trader record, View as | View as | — | **Built** |
 | T2 | Meta line (A) | *Business date **2026-09-30** · intraday as of **14:05** · 732 trades in my books* | `/api/home/trading/risk` (`intraday.lastAt`), valuations | — | — | **Built** |
 | T3 | Tile: P&L today (A) | **+1.84m** green, *MtM change since yesterday's close*, green edge | `/api/home/trading/valuations` (`TVAL` on both dates) | — | — | **Built** |
 | T4 | Tile: My VaR (A) | *My VaR (99%, 1-day)* **6.12m** *intraday · −0.3m since morning* | `/api/home/trading/risk` (the engine's VaR of my books' union) | — | — | **Partly built**: VaR and *intraday · N trades updated · hh:mm*; the change **since the morning** is not shown (TL14) |
@@ -632,8 +632,8 @@ phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md sec
 | T20 | Card: P&L against VaR (B) | *last 60 days · a breach is a loss beyond the VaR line*: green and red daily bars around zero, an orange −VaR line, the exception circled; *1 exception in 60 days (09-08)* | `/api/home/trading/pnl-var` (the desk's official history; `trading.pnl-var-days`) | — | — | **Built** (hypothetical P&L; the bank's actual P&L is TL3; left out when the history is a replay) |
 | T21 | Card: Overnight movers (B) | Trade, Book, Change: CMDF-31877 WTI Dec BOOK-COMM-1 −4.8m; CMDS-22014 Henry Hub swap +3.1m; CMDO-11520 Brent option +1.7m | valuations on both dates | click a trade | — | **Built** |
 | T22 | Menu bar (C) | **Views · Blotter · Positions · Risk · Counterparties · BI · Help** | [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | LX1 | **Built**: Blotter, Positions, Risk and Counterparties menus of their own ([section 11.2](#112-the-lens-menus-lx1-menusahtml)) |
-| T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `XWIF CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | — | **Built** |
-| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `XWIF`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
+| T23 | Big command line and chips (C) | *a trade, a book, a counterparty, a position…*; chips `TRD IRS-48213`, `BOOK BOOK-RATES-1`, `CTRD CP-ALDERSHOT`, `POS BOOK-RATES-1`, `VAR DESK DESK-RATES`, `EXP CPTY:CP-ALDERSHOT`, `CRV CRV-USD-OIS` | `trading.yaml` `home.chips` | type, `<GO>`; click a chip | — | **Built** |
+| T24 | Command groups (C) | Blotter (`TRD`, `CTRD`, `PTRD`, `LTRD`, `ITRD`); Books and positions (`BOOK`, `DESK`, `TRDR`, `POS`, `PSUM`, `PSTRIP`); Risk on my book (`VAR`, `VLIM`, `TVAL`, `PNLV`); Counterparties (`CPTY`, `NSET`, `NSMTM`, `LIM`, `EXP`); Market data (`CRV`, `FX`, `FXV`, `EQ`, `CMDC`) | the template's groups | click a command | — | **Built** (more commands per group; `PSUM` and `PSTRIP` left out by design: the compute-demo sample pack's, not a trading pack's) |
 | T25 | Recently opened (C) | *IRS-48213 · BOOK-RATES-1 · CP-ALDERSHOT* | the person's command history (Trading's commands only) | click | — | **Built** |
 | T26 | Default by role (footer) | "A as the default for traders, B as the default for desk heads (by role, with a person's own choice remembered), C behind a link" | `trading.landing-by-role`, the person's settings | the landing switch | — | **Built** |
 
@@ -659,7 +659,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X2 | Blotter menu | Trades `TRD`; By counterparty `CTRD`; By portfolio `PTRD`; By legal entity `LTRD` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X3 | Positions menu | Books `BOOK`; Desks `DESK`; Traders `TRDR`; Positions `POS` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X4 | Risk menu | My VaR `VAR`; VaR limits `VLIM`; Trade valuations `TVAL`; P&L vectors `PNLV` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
-| X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Pre-deal check `XWIF`; Exposure `EXP` | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
+| X5 | Counterparties menu | Counterparties `CPTY`; Netting sets `NSET`; Credit limits `LIM`; Exposure `EXP` (its Pre-deal tab is the pre-deal check) | a subject menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), each item shown only when the edition keeps its command | click an item: its page or command | **Built** |
 | X6 | Phone form | below 640 px the subject menus fold into one **Trading** menu, a column per subject (option C) | [`core/menus.py`](../../drishti-console/core/menus.py) `lens_menu`; the bar's template and [`phone.js`](../../drishti-console/web/static/js/phone.js) put it in below 640 px | tap the lens menu, then an item | **Built** |
 
 On a phone (below 640 px) the subject menus fold into one menu named after the lens, first in the bar (option C's form, [menus/C](mockups/menus/C.html)): a column per subject, each item 44 px high with its command beside it; a wider screen keeps the subject menus in the bar, and the folded menu is not drawn there. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).

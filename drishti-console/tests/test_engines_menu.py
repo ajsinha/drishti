@@ -128,7 +128,7 @@ def test_an_engines_commands_follow_the_same_rule_as_its_menu_column(backend, mo
     app = _app(backend, monkeypatch)
     _people(app, monkeypatch)
     mira = _client(app, "mira")                                                         # market risk: VaR, FRTB-SA, SIMM; not Exposure
-    for typed in ("EXP CPTY:CP-ALDERSHOT", "XWIF", "exp bank"):
+    for typed in ("EXP CPTY:CP-ALDERSHOT", "PLAY EXP", "exp bank"):
         r = mira.get("/go", params={"q": typed + " <GO>"}, follow_redirects=False)
         assert r.status_code == 303 and "Exposure is not opened for your role; ask an administrator." in unquote(r.headers["location"]), typed
     bea = _client(app, "bea")

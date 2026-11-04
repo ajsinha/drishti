@@ -427,16 +427,6 @@ connectors:
           run:
             type: text
             default: ''
-          detail:
-            type: enum
-            options:
-            - none
-            - whatif
-            - set
-            default: none
-          sets:
-            type: text
-            default: ''
         result:
           required:
           - SCOPE
