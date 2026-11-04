@@ -6,7 +6,11 @@
 
 # Parametric VaR and ES: the normal cross-check from the scenario P&L vectors
 
-**Status: designed, not built.** Planned for release 2.9.11.c. The product owner decided the measure on 2026-11-03: parametric
+**Status: built in 2.9.11.c** (as built: [VAR_GUIDE.md sections 3.12 and 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check);
+tutorial 43). The product owner's decisions at the build: the command **PVAR** opens the VaR explorer in parametric mode with the views
+A (the default), B and C on the same screen; `VAR` stays historical with *Compare with parametric*; `pvar()` in the pivot and the MR cube;
+PLAY PVAR's named cells and checks live on the workbook's own **Parametric** tab with its own band (Main is unchanged); the eleven
+recommendations of section 16 stand. The product owner decided the measure on 2026-11-03: parametric
 (variance–covariance) VaR and ES computed from the scenario P&L vectors Drishti already holds, shown beside historical VaR with a
 **?** tooltip that says how it was calculated, and the normal curve drawn over the VaR screens' P&L histogram. Every name below
 (settings, fields, words) is a proposal until the build; the mock-ups to choose from are in [section 14](#14-mock-ups-and-the-build-checklist).
