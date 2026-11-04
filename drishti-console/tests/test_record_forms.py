@@ -49,10 +49,10 @@ def test_a_page_with_a_form_loads_the_form_scripts(client, backend, monkeypatch)
         vm = await real(kind, id_, user, controls, panels)
         vm["panels"][0]["form"] = FORM
         return vm
-    assert "record-forms.js" not in client.get("/v/trade/IRS-47102").text
+    assert "drishti_record-forms.js" not in client.get("/v/trade/IRS-47102").text
     monkeypatch.setattr(backend, "view", view)
     page = client.get("/v/trade/IRS-47102").text
-    assert "form-expr.js" in page and "record-forms.js" in page and "record-forms.css" in page
+    assert "drishti_form-expr.js" in page and "drishti_record-forms.js" in page and "drishti_record-forms.css" in page
 
 
 def test_drafts_pass_through_as_the_person_with_the_issues_of_a_refusal(client, backend, monkeypatch):

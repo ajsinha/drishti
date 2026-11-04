@@ -30,7 +30,7 @@ ALERT = {"on": "MTM", "warn": {"op": "lt", "value": 100}, "crit": {"op": "lt", "
 def level(alert, value, previous=""):
     res = {"columns": [{"name": "MTM", "type": "decimal"}], "rows": [[value]]}
     script = ("global.window = {}; require(%s); console.log(JSON.stringify(window.drishtiBi.live.level(%s, %s, %s)))"
-              % (json.dumps(str(STATIC / "js/bi-live.js")), json.dumps(alert), json.dumps(res), json.dumps(previous)))
+              % (json.dumps(str(STATIC / "js/drishti_bi-live.js")), json.dumps(alert), json.dumps(res), json.dumps(previous)))
     out = subprocess.run([node, "-e", script], capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout)

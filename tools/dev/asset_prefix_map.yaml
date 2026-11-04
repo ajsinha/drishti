@@ -1,0 +1,888 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+#
+# The asset-prefix mapping: written by `python3 tools/dev/asset_prefix.py scan`, read by `apply` (tools/dev/asset_prefix.py).
+# A scan only ADDS entries: an entry once written is kept (so the names stay mapped after the rename, for the branches still to
+# merge), and a hand edit wins: set status to manual to keep a name, to rename to have apply change it. `patches` are written by hand.
+#   files       old -> new, relative to drishti-console/web/static
+#   globals     window.<name> -> window.Drishti.<to>; keep = a frozen library reads it (a published contract)
+#   events      custom event names; keep = a frozen library uses it
+#   classes     the generic CSS classes our sheets define; rename = every use is one the rewriter recognises, manual = not proven
+#   data_attrs  data- attributes other libraries also use; same statuses
+#   storage, elements   checked only: every key starts drishti, every custom element drishti-
+files:
+  calc/quant.py: calc/drishti_quant.py
+  calc/walker-frame.js: calc/drishti_walker-frame.js
+  calc/walker-shim.js: calc/drishti_walker-shim.js
+  calc/walker.css: calc/drishti_walker.css
+  calc/walker.html: calc/drishti_walker.html
+  css/about.css: css/drishti_about.css
+  css/admin-artifacts.css: css/drishti_admin-artifacts.css
+  css/admin-caches.css: css/drishti_admin-caches.css
+  css/admin-capacity.css: css/drishti_admin-capacity.css
+  css/admin-compute.css: css/drishti_admin-compute.css
+  css/admin-connectors.css: css/drishti_admin-connectors.css
+  css/admin-data-out.css: css/drishti_admin-data-out.css
+  css/admin-detail.css: css/drishti_admin-detail.css
+  css/admin-embedding.css: css/drishti_admin-embedding.css
+  css/admin-engines.css: css/drishti_admin-engines.css
+  css/admin-inbox.css: css/drishti_admin-inbox.css
+  css/admin-lakes.css: css/drishti_admin-lakes.css
+  css/admin-loads.css: css/drishti_admin-loads.css
+  css/admin-net.css: css/drishti_admin-net.css
+  css/admin-packs.css: css/drishti_admin-packs.css
+  css/bi-ai.css: css/drishti_bi-ai.css
+  css/bi-board.css: css/drishti_bi-board.css
+  css/bi-consume.css: css/drishti_bi-consume.css
+  css/bi-design.css: css/drishti_bi-design.css
+  css/bi-explore.css: css/drishti_bi-explore.css
+  css/bi-expr.css: css/drishti_bi-expr.css
+  css/bi-layer.css: css/drishti_bi-layer.css
+  css/bi-report.css: css/drishti_bi-report.css
+  css/bi-runs.css: css/drishti_bi-runs.css
+  css/bi-statement.css: css/drishti_bi-statement.css
+  css/bi-studio.css: css/drishti_bi-studio.css
+  css/bi-transform.css: css/drishti_bi-transform.css
+  css/bi-wizard.css: css/drishti_bi-wizard.css
+  css/bi.css: css/drishti_bi.css
+  css/build-pack.css: css/drishti_build-pack.css
+  css/build-workbench.css: css/drishti_build-workbench.css
+  css/build.css: css/drishti_build.css
+  css/busy.css: css/drishti_busy.css
+  css/colfilter.css: css/drishti_colfilter.css
+  css/collab.css: css/drishti_collab.css
+  css/compute.css: css/drishti_compute.css
+  css/controls.css: css/drishti_controls.css
+  css/data-view.css: css/drishti_data-view.css
+  css/datamap.css: css/drishti_datamap.css
+  css/designer-grid.css: css/drishti_designer-grid.css
+  css/designer-outline.css: css/drishti_designer-outline.css
+  css/designer.css: css/drishti_designer.css
+  css/dist.css: css/drishti_dist.css
+  css/drill.css: css/drishti_drill.css
+  css/dyk.css: css/drishti_dyk.css
+  css/embed-sign-in.css: css/drishti_embed-sign-in.css
+  css/exposure.css: css/drishti_exposure.css
+  css/form.css: css/drishti_form.css
+  css/frtb-sa.css: css/drishti_frtb-sa.css
+  css/functions.css: css/drishti_functions.css
+  css/gradients.css: css/drishti_gradients.css
+  css/help-config.css: css/drishti_help-config.css
+  css/help.css: css/drishti_help.css
+  css/history.css: css/drishti_history.css
+  css/layout.css: css/drishti_layout.css
+  css/market-landing.css: css/drishti_market-landing.css
+  css/mr-lens.css: css/drishti_mr-lens.css
+  css/nav.css: css/drishti_nav.css
+  css/phone.css: css/drishti_phone.css
+  css/pivot-screen.css: css/drishti_pivot-screen.css
+  css/pivot.css: css/drishti_pivot.css
+  css/readme.css: css/drishti_readme.css
+  css/record-forms.css: css/drishti_record-forms.css
+  css/refresh.css: css/drishti_refresh.css
+  css/risk-landing.css: css/drishti_risk-landing.css
+  css/scenario-matrix.css: css/drishti_scenario-matrix.css
+  css/screen-grid.css: css/drishti_screen-grid.css
+  css/server-watch.css: css/drishti_server-watch.css
+  css/stress-window.css: css/drishti_stress-window.css
+  css/table-chart.css: css/drishti_table-chart.css
+  css/terminal.css: css/drishti_terminal.css
+  css/theme.css: css/drishti_theme.css
+  css/tokens.css: css/drishti_tokens.css
+  css/touch.css: css/drishti_touch.css
+  css/trading-landing.css: css/drishti_trading-landing.css
+  css/var-basket.css: css/drishti_var-basket.css
+  css/var-layout.css: css/drishti_var-layout.css
+  css/var-playground.css: css/drishti_var-playground.css
+  css/var-regulatory.css: css/drishti_var-regulatory.css
+  css/var.css: css/drishti_var.css
+  css/wire.css: css/drishti_wire.css
+  css/world-landing.css: css/drishti_world-landing.css
+  img/drishti-icon.png: img/drishti_icon.png
+  img/drishti-logo.png: img/drishti_logo.png
+  img/drishti-mark.svg: img/drishti_mark.svg
+  img/guide/business-date.png: img/guide/drishti_business-date.png
+  img/guide/layout-mode.png: img/guide/drishti_layout-mode.png
+  img/guide/pivot-netting-set.png: img/guide/drishti_pivot-netting-set.png
+  img/guide/pivot-search.png: img/guide/drishti_pivot-search.png
+  img/guide/strip.png: img/guide/drishti_strip.png
+  img/guide/studio.png: img/guide/drishti_studio.png
+  img/guide/sutra-bond-desk.png: img/guide/drishti_sutra-bond-desk.png
+  img/guide/sutra-counterparty-desk.png: img/guide/drishti_sutra-counterparty-desk.png
+  img/guide/sutra-risk-desk.png: img/guide/drishti_sutra-risk-desk.png
+  img/guide/view-trade.png: img/guide/drishti_view-trade.png
+  img/icons/apple-touch-icon.png: img/icons/drishti_apple-touch-icon.png
+  img/icons/favicon-16.png: img/icons/drishti_favicon-16.png
+  img/icons/favicon-32.png: img/icons/drishti_favicon-32.png
+  img/icons/favicon-48.png: img/icons/drishti_favicon-48.png
+  img/icons/favicon.ico: img/icons/drishti_favicon.ico
+  img/icons/favicon.svg: img/icons/drishti_favicon.svg
+  img/icons/icon-192.png: img/icons/drishti_icon-192.png
+  img/icons/icon-512.png: img/icons/drishti_icon-512.png
+  img/icons/icon-maskable-512.png: img/icons/drishti_icon-maskable-512.png
+  img/shot-commodity-future.png: img/drishti_shot-commodity-future.png
+  img/shot-fx-swap.png: img/drishti_shot-fx-swap.png
+  img/shot-irs.png: img/drishti_shot-irs.png
+  img/shot-netting-set.png: img/drishti_shot-netting-set.png
+  js/about-ask.js: js/drishti_about-ask.js
+  js/about-hints.js: js/drishti_about-hints.js
+  js/about.js: js/drishti_about.js
+  js/admin-ai-test.js: js/drishti_admin-ai-test.js
+  js/admin-artifacts.js: js/drishti_admin-artifacts.js
+  js/admin-busy.js: js/drishti_admin-busy.js
+  js/admin-cards.js: js/drishti_admin-cards.js
+  js/admin-collab.js: js/drishti_admin-collab.js
+  js/admin-compute.js: js/drishti_admin-compute.js
+  js/admin-connector-templates.js: js/drishti_admin-connector-templates.js
+  js/admin-connectors.js: js/drishti_admin-connectors.js
+  js/admin-data-out.js: js/drishti_admin-data-out.js
+  js/admin-embedding.js: js/drishti_admin-embedding.js
+  js/admin-engines.js: js/drishti_admin-engines.js
+  js/admin-inbox.js: js/drishti_admin-inbox.js
+  js/admin-index.js: js/drishti_admin-index.js
+  js/admin-lake-maintain.js: js/drishti_admin-lake-maintain.js
+  js/admin-lakes.js: js/drishti_admin-lakes.js
+  js/admin-loads.js: js/drishti_admin-loads.js
+  js/admin-net-ring.js: js/drishti_admin-net-ring.js
+  js/admin-net.js: js/drishti_admin-net.js
+  js/admin-pack-data.js: js/drishti_admin-pack-data.js
+  js/admin-packs.js: js/drishti_admin-packs.js
+  js/admin-retry.js: js/drishti_admin-retry.js
+  js/admin-scopes.js: js/drishti_admin-scopes.js
+  js/admin-watch.js: js/drishti_admin-watch.js
+  js/admin.js: js/drishti_admin.js
+  js/alert-form.js: js/drishti_alert-form.js
+  js/alerts-live.js: js/drishti_alerts-live.js
+  js/alerts-page.js: js/drishti_alerts-page.js
+  js/alerts.js: js/drishti_alerts.js
+  js/app.js: js/drishti_app.js
+  js/artifact-uninstall.js: js/drishti_artifact-uninstall.js
+  js/bi-ai.js: js/drishti_bi-ai.js
+  js/bi-consume.js: js/drishti_bi-consume.js
+  js/bi-dataset-layer.js: js/drishti_bi-dataset-layer.js
+  js/bi-dataset-steps.js: js/drishti_bi-dataset-steps.js
+  js/bi-dataset.js: js/drishti_bi-dataset.js
+  js/bi-design-canvas.js: js/drishti_bi-design-canvas.js
+  js/bi-design-copilot.js: js/drishti_bi-design-copilot.js
+  js/bi-design-datasets.js: js/drishti_bi-design-datasets.js
+  js/bi-design-model.js: js/drishti_bi-design-model.js
+  js/bi-design-panes.js: js/drishti_bi-design-panes.js
+  js/bi-design-phone.js: js/drishti_bi-design-phone.js
+  js/bi-design-v2.js: js/drishti_bi-design-v2.js
+  js/bi-design.js: js/drishti_bi-design.js
+  js/bi-env.js: js/drishti_bi-env.js
+  js/bi-explore-cells.js: js/drishti_bi-explore-cells.js
+  js/bi-explore-extracts.js: js/drishti_bi-explore-extracts.js
+  js/bi-explore-profile.js: js/drishti_bi-explore-profile.js
+  js/bi-explore.js: js/drishti_bi-explore.js
+  js/bi-export.js: js/drishti_bi-export.js
+  js/bi-expr-editor.js: js/drishti_bi-expr-editor.js
+  js/bi-extras.js: js/drishti_bi-extras.js
+  js/bi-format-pane.js: js/drishti_bi-format-pane.js
+  js/bi-format-rules.js: js/drishti_bi-format-rules.js
+  js/bi-frame.js: js/drishti_bi-frame.js
+  js/bi-govern.js: js/drishti_bi-govern.js
+  js/bi-grids.js: js/drishti_bi-grids.js
+  js/bi-layer-ops.js: js/drishti_bi-layer-ops.js
+  js/bi-layer.js: js/drishti_bi-layer.js
+  js/bi-lib.js: js/drishti_bi-lib.js
+  js/bi-live.js: js/drishti_bi-live.js
+  js/bi-matrix.js: js/drishti_bi-matrix.js
+  js/bi-model-ai.js: js/drishti_bi-model-ai.js
+  js/bi-model-calc.js: js/drishti_bi-model-calc.js
+  js/bi-model-designer.js: js/drishti_bi-model-designer.js
+  js/bi-model-fields.js: js/drishti_bi-model-fields.js
+  js/bi-model-tabs.js: js/drishti_bi-model-tabs.js
+  js/bi-model.js: js/drishti_bi-model.js
+  js/bi-models.js: js/drishti_bi-models.js
+  js/bi-multiples.js: js/drishti_bi-multiples.js
+  js/bi-phone.js: js/drishti_bi-phone.js
+  js/bi-python.js: js/drishti_bi-python.js
+  js/bi-query-panel.js: js/drishti_bi-query-panel.js
+  js/bi-report-board.js: js/drishti_bi-report-board.js
+  js/bi-report.js: js/drishti_bi-report.js
+  js/bi-runs-admin.js: js/drishti_bi-runs-admin.js
+  js/bi-runs-tab.js: js/drishti_bi-runs-tab.js
+  js/bi-runs.js: js/drishti_bi-runs.js
+  js/bi-statement.js: js/drishti_bi-statement.js
+  js/bi-studio.js: js/drishti_bi-studio.js
+  js/bi-theme-designer.js: js/drishti_bi-theme-designer.js
+  js/bi-tooltips.js: js/drishti_bi-tooltips.js
+  js/bi-transform-view.js: js/drishti_bi-transform-view.js
+  js/bi-transform.js: js/drishti_bi-transform.js
+  js/bi-vega.js: js/drishti_bi-vega.js
+  js/bi-visuals-format.js: js/drishti_bi-visuals-format.js
+  js/bi-visuals.js: js/drishti_bi-visuals.js
+  js/bi-wizard-steps.js: js/drishti_bi-wizard-steps.js
+  js/bi-wizard.js: js/drishti_bi-wizard.js
+  js/bi.js: js/drishti_bi.js
+  js/build-designs.js: js/drishti_build-designs.js
+  js/build-files.js: js/drishti_build-files.js
+  js/build-import.js: js/drishti_build-import.js
+  js/build-new.js: js/drishti_build-new.js
+  js/build-shape-tree.js: js/drishti_build-shape-tree.js
+  js/build/about.js: js/build/drishti_about.js
+  js/build/actions.js: js/build/drishti_actions.js
+  js/build/canvas.js: js/build/drishti_canvas.js
+  js/build/commands.js: js/build/drishti_commands.js
+  js/build/controls-tab.js: js/build/drishti_controls-tab.js
+  js/build/data.js: js/build/drishti_data.js
+  js/build/draft.js: js/build/drishti_draft.js
+  js/build/drag.js: js/build/drishti_drag.js
+  js/build/expr.js: js/build/drishti_expr.js
+  js/build/form-tab.js: js/build/drishti_form-tab.js
+  js/build/forms.js: js/build/drishti_forms.js
+  js/build/grid-keys.js: js/build/drishti_grid-keys.js
+  js/build/inspector.js: js/build/drishti_inspector.js
+  js/build/menus.js: js/build/drishti_menus.js
+  js/build/notes.js: js/build/drishti_notes.js
+  js/build/ops.js: js/build/drishti_ops.js
+  js/build/palette.js: js/build/drishti_palette.js
+  js/build/problems.js: js/build/drishti_problems.js
+  js/build/saving.js: js/build/drishti_saving.js
+  js/build/shared.js: js/build/drishti_shared.js
+  js/build/ship.js: js/build/drishti_ship.js
+  js/build/tests.js: js/build/drishti_tests.js
+  js/build/versions.js: js/build/drishti_versions.js
+  js/build/workbench.js: js/build/drishti_workbench.js
+  js/build/yamlmodel.js: js/build/drishti_yamlmodel.js
+  js/build/yamltab.js: js/build/drishti_yamltab.js
+  js/busy.js: js/drishti_busy.js
+  js/calc-worker.js: js/drishti_calc-worker.js
+  js/calc.js: js/drishti_calc.js
+  js/capacity-page.js: js/drishti_capacity-page.js
+  js/capacity.js: js/drishti_capacity.js
+  js/channel.js: js/drishti_channel.js
+  js/charts.js: js/drishti_charts.js
+  js/cm-yaml.js: js/drishti_cm-yaml.js
+  js/colfilter.js: js/drishti_colfilter.js
+  js/command.js: js/drishti_command.js
+  js/compute.js: js/drishti_compute.js
+  js/configuration.js: js/drishti_configuration.js
+  js/controls.js: js/drishti_controls.js
+  js/data-view.js: js/drishti_data-view.js
+  js/datamap.js: js/drishti_datamap.js
+  js/designer-describe.js: js/drishti_designer-describe.js
+  js/designer-forms.js: js/drishti_designer-forms.js
+  js/designer-grid.js: js/drishti_designer-grid.js
+  js/designer-modes.js: js/drishti_designer-modes.js
+  js/designer-outline.js: js/drishti_designer-outline.js
+  js/designer-settings.js: js/drishti_designer-settings.js
+  js/designer.js: js/drishti_designer.js
+  js/discussion-compose.js: js/drishti_discussion-compose.js
+  js/discussion-view.js: js/drishti_discussion-view.js
+  js/discussion.js: js/drishti_discussion.js
+  js/drill.js: js/drishti_drill.js
+  js/drishti-table.js: js/drishti_table.js
+  js/dyk.js: js/drishti_dyk.js
+  js/embed-sign-in.js: js/drishti_embed-sign-in.js
+  js/engines-menu.js: js/drishti_engines-menu.js
+  js/exposure-charts.js: js/drishti_exposure-charts.js
+  js/exposure-explorer.js: js/drishti_exposure-explorer.js
+  js/form-expr.js: js/drishti_form-expr.js
+  js/form.js: js/drishti_form.js
+  js/forms-home.js: js/drishti_forms-home.js
+  js/frtb-sa.js: js/drishti_frtb-sa.js
+  js/functions.js: js/drishti_functions.js
+  js/geomap.js: js/drishti_geomap.js
+  js/help.js: js/drishti_help.js
+  js/history-page.js: js/drishti_history-page.js
+  js/history.js: js/drishti_history.js
+  js/inbox.js: js/drishti_inbox.js
+  js/landing.js: js/drishti_landing.js
+  js/layout-rules.js: js/drishti_layout-rules.js
+  js/layout.js: js/drishti_layout.js
+  js/live-hub.js: js/drishti_live-hub.js
+  js/live.js: js/drishti_live.js
+  js/login-busy.js: js/drishti_login-busy.js
+  js/market-landing.js: js/drishti_market-landing.js
+  js/monitor.js: js/drishti_monitor.js
+  js/mr-lens.js: js/drishti_mr-lens.js
+  js/multiselect.js: js/drishti_multiselect.js
+  js/pack-kinds.js: js/drishti_pack-kinds.js
+  js/pack-new.js: js/drishti_pack-new.js
+  js/pack-preview.js: js/drishti_pack-preview.js
+  js/pack-profile.js: js/drishti_pack-profile.js
+  js/pack-read.js: js/drishti_pack-read.js
+  js/pack-ui.js: js/drishti_pack-ui.js
+  js/people.js: js/drishti_people.js
+  js/phone.js: js/drishti_phone.js
+  js/pivot-engine.js: js/drishti_pivot-engine.js
+  js/pivot-functions.js: js/drishti_pivot-functions.js
+  js/pivot-grid.js: js/drishti_pivot-grid.js
+  js/pivot-switches.js: js/drishti_pivot-switches.js
+  js/pivot.js: js/drishti_pivot.js
+  js/play-link.js: js/drishti_play-link.js
+  js/pyconsole.js: js/drishti_pyconsole.js
+  js/raw-viewer.js: js/drishti_raw-viewer.js
+  js/record-forms.js: js/drishti_record-forms.js
+  js/refresh.js: js/drishti_refresh.js
+  js/reports-find.js: js/drishti_reports-find.js
+  js/risk-landing.js: js/drishti_risk-landing.js
+  js/roles.js: js/drishti_roles.js
+  js/scenario-matrix.js: js/drishti_scenario-matrix.js
+  js/scope-delete.js: js/drishti_scope-delete.js
+  js/screen-grid.js: js/drishti_screen-grid.js
+  js/server-watch.js: js/drishti_server-watch.js
+  js/share-reply.js: js/drishti_share-reply.js
+  js/share.js: js/drishti_share.js
+  js/simm.js: js/drishti_simm.js
+  js/smat-link.js: js/drishti_smat-link.js
+  js/stress-window.js: js/drishti_stress-window.js
+  js/studio-assist.js: js/drishti_studio-assist.js
+  js/studio-yaml.js: js/drishti_studio-yaml.js
+  js/subscribe-recipients.js: js/drishti_subscribe-recipients.js
+  js/subscribe-when.js: js/drishti_subscribe-when.js
+  js/sutra-wire.js: js/drishti_sutra-wire.js
+  js/table-chart-engine.js: js/drishti_table-chart-engine.js
+  js/table-chart-sources.js: js/drishti_table-chart-sources.js
+  js/table-chart.js: js/drishti_table-chart.js
+  js/tables.js: js/drishti_tables.js
+  js/theme-init.js: js/drishti_theme-init.js
+  js/trading-landing.js: js/drishti_trading-landing.js
+  js/tree-rows.js: js/drishti_tree-rows.js
+  js/var-backtesting.js: js/drishti_var-backtesting.js
+  js/var-basket-sheet.js: js/drishti_var-basket-sheet.js
+  js/var-basket.js: js/drishti_var-basket.js
+  js/var-charts.js: js/drishti_var-charts.js
+  js/var-explain.js: js/drishti_var-explain.js
+  js/var-explorer.js: js/drishti_var-explorer.js
+  js/var-layout.js: js/drishti_var-layout.js
+  js/var-playground.js: js/drishti_var-playground.js
+  js/var-reports.js: js/drishti_var-reports.js
+  js/view-render.js: js/drishti_view-render.js
+  js/view.js: js/drishti_view.js
+  js/workspace.js: js/drishti_workspace.js
+  js/world-landing.js: js/drishti_world-landing.js
+  js/write-back.js: js/drishti_write-back.js
+  js/zoom.js: js/drishti_zoom.js
+  manifest.webmanifest: drishti_manifest.webmanifest
+globals:
+  DrishtiArtifacts:
+    to: Artifacts
+    status: move
+  DrishtiBusy:
+    to: Busy
+    status: move
+  DrishtiChannel:
+    to: Channel
+    status: move
+  DrishtiCompose:
+    to: Compose
+    status: move
+  DrishtiFiles:
+    to: Files
+    status: move
+  DrishtiGridKeys:
+    to: GridKeys
+    status: move
+  DrishtiLayoutRules:
+    to: LayoutRules
+    status: move
+  DrishtiLiveHub:
+    to: LiveHub
+    status: move
+  DrishtiNet:
+    to: Net
+    status: move
+  DrishtiPackKinds:
+    to: PackKinds
+    status: move
+  DrishtiPackPreview:
+    to: PackPreview
+    status: move
+  DrishtiPackProfile:
+    to: PackProfile
+    status: move
+  DrishtiPackRead:
+    to: PackRead
+    status: move
+  DrishtiPackUI:
+    to: PackUI
+    status: move
+  DrishtiPeople:
+    to: People
+    status: move
+  DrishtiRaw:
+    to: Raw
+    status: move
+  DrishtiScopeDelete:
+    to: ScopeDelete
+    status: move
+  DrishtiShapeTree:
+    to: ShapeTree
+    status: move
+  DrishtiShare:
+    to: Share
+    status: move
+  DrishtiThreadView:
+    to: ThreadView
+    status: move
+  DrishtiWB:
+    to: WB
+    status: move
+  ExposureCharts:
+    to: ExposureCharts
+    status: move
+  ExposureExplorer:
+    to: ExposureExplorer
+    status: move
+  PivotCore:
+    to: PivotCore
+    status: move
+  PivotScreen:
+    to: PivotScreen
+    status: move
+  PivotSwitches:
+    to: PivotSwitches
+    status: move
+  VarBasket:
+    to: VarBasket
+    status: move
+  VarBasketGrid:
+    to: VarBasketGrid
+    status: move
+  VarCharts:
+    to: VarCharts
+    status: move
+  VarExplorer:
+    to: VarExplorer
+    status: move
+  VarLayout:
+    to: VarLayout
+    status: move
+  __drishtiControls:
+    to: __controls
+    status: move
+  __drishtiServerWatch:
+    to: __serverWatch
+    status: move
+  drishti:
+    to: view
+    status: move
+  drishtiAbout:
+    to: about
+    status: move
+  drishtiAboutNode:
+    to: aboutNode
+    status: move
+  drishtiAsk:
+    to: ask
+    status: move
+  drishtiAssist:
+    to: assist
+    status: move
+  drishtiBeforeLeave:
+    to: beforeLeave
+    status: move
+  drishtiBi:
+    to: drishtiBi
+    status: keep
+    why: 'a frozen library (static/render/<version>, web/embed) reads it: a published contract'
+  drishtiCalc:
+    to: calc
+    status: move
+  drishtiCapacity:
+    to: capacity
+    status: move
+  drishtiCharts:
+    to: charts
+    status: move
+  drishtiCommand:
+    to: command
+    status: move
+  drishtiCompute:
+    to: compute
+    status: move
+  drishtiControls:
+    to: controls
+    status: move
+  drishtiDesignerForms:
+    to: designerForms
+    status: move
+  drishtiDesignerSettings:
+    to: designerSettings
+    status: move
+  drishtiDiscussion:
+    to: discussion
+    status: move
+  drishtiDrill:
+    to: drill
+    status: move
+  drishtiFetchTable:
+    to: fetchTable
+    status: move
+  drishtiFormExpr:
+    to: formExpr
+    status: move
+  drishtiForms:
+    to: forms
+    status: move
+  drishtiFreshGrid:
+    to: freshGrid
+    status: move
+  drishtiGeo:
+    to: drishtiGeo
+    status: keep
+    why: 'a frozen library (static/render/<version>, web/embed) reads it: a published contract'
+  drishtiKey:
+    to: key
+    status: move
+  drishtiLayout:
+    to: layout
+    status: move
+  drishtiLw:
+    to: lw
+    status: move
+  drishtiModel:
+    to: model
+    status: move
+  drishtiModules:
+    to: drishtiModules
+    status: keep
+    why: 'a frozen library (static/render/<version>, web/embed) reads it: a published contract'
+  drishtiPanelNode:
+    to: panelNode
+    status: move
+  drishtiPhone:
+    to: phone
+    status: move
+  drishtiPivotEngine:
+    to: pivotEngine
+    status: move
+  drishtiPyConsole:
+    to: pyConsole
+    status: move
+  drishtiRefresh:
+    to: refresh
+    status: move
+  drishtiRender:
+    to: render
+    status: move
+  drishtiScreenGrid:
+    to: screenGrid
+    status: move
+  drishtiStripNode:
+    to: stripNode
+    status: move
+  drishtiTable:
+    to: table
+    status: move
+  drishtiTableChart:
+    to: tableChart
+    status: move
+  drishtiTableChartEngine:
+    to: tableChartEngine
+    status: move
+  drishtiTableChartSources:
+    to: tableChartSources
+    status: move
+  drishtiTransform:
+    to: transform
+    status: move
+  drishtiVarExplain:
+    to: varExplain
+    status: move
+  drishtiWire:
+    to: wire
+    status: move
+  drishtiWizard:
+    to: wizard
+    status: move
+  drishtiWorkbench:
+    to: workbench
+    status: move
+  drishtiWriteBack:
+    to: writeBack
+    status: move
+  drishtiYaml:
+    to: yaml
+    status: move
+  drishtiZoom:
+    to: zoom
+    status: move
+  drsMessage:
+    to: drsMessage
+    status: move
+events:
+  bi:item:
+    to: drishti:bi-item
+    status: rename
+  bi:refused:
+    to: drishti:bi-refused
+    status: rename
+  bi:reload:
+    to: drishti:bi-reload
+    status: rename
+  bx:extract:
+    to: drishti:bx-extract
+    status: rename
+  bx:extras:
+    to: drishti:bx-extras
+    status: rename
+  exposure:painted:
+    to: drishti:exposure-painted
+    status: rename
+  pivot:answer:
+    to: drishti:pivot-answer
+    status: rename
+  pivot:cell:
+    to: drishti:pivot-cell
+    status: rename
+  var:currency:
+    to: drishti:var-currency
+    status: rename
+  var:explain-ready:
+    to: drishti:var-explain-ready
+    status: rename
+  var:explained:
+    to: drishti:var-explained
+    status: rename
+  var:lens:
+    to: drishti:var-lens
+    status: rename
+  var:painted:
+    to: drishti:var-painted
+    status: rename
+  vb:live:
+    to: drishti:vb-live
+    status: rename
+  vb:saved:
+    to: drishti:vb-saved
+    status: rename
+classes:
+  avatar:
+    to: drishti-avatar
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  axis:
+    to: drishti-axis
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  bar:
+    to: drishti-bar
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  btn:
+    to: drishti-btn
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  chart:
+    to: drishti-chart
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  chip:
+    to: drishti-chip
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  dot:
+    to: drishti-dot
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  dropdown:
+    to: drishti-dropdown
+    status: manual
+    why: 'used where the script cannot prove it is a class: plan.py:2, bi_backend.py:1, bi_report_shots.py:1, bi_runs_backend.py:1 ...'
+  grid:
+    to: drishti-grid
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  legend:
+    to: drishti-legend
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  line:
+    to: drishti-line
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  links:
+    to: drishti-links
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  mono:
+    to: drishti-mono
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  muted:
+    to: drishti-muted
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  num:
+    to: drishti-num
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  ok:
+    to: drishti-ok
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  'on':
+    to: drishti-on
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  pill:
+    to: drishti-pill
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  sep:
+    to: drishti-sep
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  small:
+    to: drishti-small
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  sr-only:
+    to: drishti-sr-only
+    status: manual
+    why: 'used where the script cannot prove it is a class: colfilter.js:1, discussion-view.js:1'
+  tbl:
+    to: drishti-tbl
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  tool:
+    to: drishti-tool
+    status: manual
+    why: a frozen library's markup or sheet uses it
+  visually-hidden:
+    to: drishti-visually-hidden
+    status: manual
+    why: a frozen library's markup or sheet uses it
+data_attrs:
+  action:
+    to: drishti-action
+    status: manual
+    why: a frozen library reads or writes it
+  dismiss:
+    to: drishti-dismiss
+    status: manual
+    why: 'built at run time where the script cannot follow it: bi-runs-admin.js:2'
+  side:
+    to: drishti-side
+    status: manual
+    why: 'built at run time where the script cannot follow it: canvas.js:6, controls-tab.js:1, grid-keys.js:2, controls.js:4'
+  state:
+    to: drishti-state
+    status: manual
+    why: a frozen library reads or writes it
+  target:
+    to: drishti-target
+    status: manual
+    why: a frozen library reads or writes it
+  theme:
+    to: drishti-theme
+    status: manual
+    why: a frozen library reads or writes it
+  toggle:
+    to: drishti-toggle
+    status: manual
+    why: 'built at run time where the script cannot follow it: about.js:1, admin-inbox.js:1, bi-format-pane.js:1, bi-model-fields.js:1'
+storage:
+  'drishti-device-drawn:': ok
+  drishti-edit-mark: ok
+  'drishti-wizard-draft:': ok
+  drishti.about.layers: ok
+  drishti.artifacts.flash: ok
+  drishti.bi.catalogue.tab.: ok
+  drishti.bi.designer.hideFilters: ok
+  drishti.bi.lastWorkspace: ok
+  drishti.bi.studio.tabs: ok
+  drishti.capacity.inputs: ok
+  drishti.columnFilters: ok
+  drishti.form: ok
+  drishti.forms.recent.: ok
+  drishti.packnew.v1: ok
+  drishti.rememberFilters: ok
+  drishti.tableRows: ok
+  drishti.theme: ok
+  drishti.trail: ok
+  drishti.var.ccy: ok
+  drishti.varBasket: ok
+  drishti.varBasket2: ok
+elements:
+  drishti-about: ok
+  drishti-panel: ok
+  drishti-report: ok
+  drishti-screen: ok
+  drishti-search: ok
+  drishti-view: ok
+anchors:
+  121-the-palette-and-the-add-panel-chooser-palettejs: 121-the-palette-and-the-add-panel-chooser-drishti_palettejs
+  122-what-a-new-panel-starts-with-actionsjs: 122-what-a-new-panel-starts-with-drishti_actionsjs
+  23-c1-table-chart-enginejs: 23-c1-drishti_table-chart-enginejs
+  9-the-console-macro-styles-and-for-charts-chartsjs: 9-the-console-macro-styles-and-for-charts-drishti_chartsjs
+  94-an-echarts-kind-chartsjs-and-the-data-table: 94-an-echarts-kind-drishti_chartsjs-and-the-data-table
+  in-the-browser-channeljs: in-the-browser-drishti_channeljs
+patches:
+- file: drishti-console/routes/embed_routes.py
+  old: path = WEB / "static/js" / f"{name}.js"
+  new: path = WEB / "static/js" / f"drishti_{name}.js"
+  why: 'the Elements 1.x enhancer route: the URL keeps the public name, the file is drishti_<name>.js'
+- file: drishti-console/routes/embed_v2_routes.py
+  old: STATIC / "js" / f"{name}.js"
+  new: STATIC / "js" / f"drishti_{name}.js"
+  why: 'the v2 behaviour-script route: the public name in the URL, the drishti_ file'
+- file: drishti-console/routes/embed_v2_routes.py
+  old: STATIC / "css" / f"{name}.css"
+  new: STATIC / "css" / f"drishti_{name}.css"
+  why: 'the v2 sheet route: the public name in the URL, the drishti_ file'
+- file: drishti-console/web/templates/landing.html
+  old: /static/img/shot-{{ s.slug }}.png
+  new: /static/img/drishti_shot-{{ s.slug }}.png
+  why: 'the showcase pictures: the name is built from the slug'
+- file: drishti-console/tests/test_landing.py
+  old: f"shot-{shot}.png"
+  new: f"drishti_shot-{shot}.png"
+  why: as landing.html
+- file: drishti-console/config/application.yaml
+  old: web/static/img/shot-<slug>.png
+  new: web/static/img/drishti_shot-<slug>.png
+  why: the setting's description
+- file: drishti-console/web/templates/build/design.html
+  old: /static/js/build/{{ f }}.js
+  new: /static/js/build/drishti_{{ f }}.js
+  why: 'the workbench scripts: a loop over their names'
+- file: drishti-console/tests/test_live_deleted.py
+  old: 'global.window = { DrishtiChannel: { subscribe: (ch, h) => { handlers = h; return () => {}; } } };'
+  new: 'global.window = { Drishti: { Channel: { subscribe: (ch, h) => { handlers = h; return () => {}; } } } };'
+  why: 'a Node stub of window: the global moved into the namespace'
+- file: drishti-it/src/test/java/com/ash/drishti/it/AggregationOwnerTest.java
+  old: rel.contains("/static/js/pivot")
+  new: rel.contains("/static/js/drishti_pivot")
+  why: the pivot scripts by the start of their name
+- file: drishti-console/web/templates/bi/design.html
+  old: static/js/bi-design*.js
+  new: static/js/drishti_bi-design*.js
+  why: a pattern of names in a comment
+- file: drishti-console/tests/test_bi_reports.py
+  old: re.findall(r"/static/js/([a-z-]+)\.js"
+  new: re.findall(r"/static/js/drishti_([a-z-]+)\.js"
+  why: the page's scripts by name, read with a pattern
+- file: drishti-console/tests/test_bi_runs_page.py
+  old: re.findall(r"/static/js/([a-z-]+)\.js"
+  new: re.findall(r"/static/js/drishti_([a-z-]+)\.js"
+  why: the page's scripts by name, read with a pattern
+- file: drishti-console/routes/embed_routes.py
+  old: "async def enhancer_js(request: Request, name: str):\n    if name not in ENHANCERS:"
+  new: "async def enhancer_js(request: Request, name: str):\n    name = name.removeprefix(\"drishti_\")\n    if name not in ENHANCERS:"
+  why: the public name in the address; the drishti_ name too, which a script finding its siblings beside itself asks for
+- file: drishti-console/routes/embed_v2_routes.py
+  old: "async def script(request: Request, name: str):\n    if name not in SCRIPTS:"
+  new: "async def script(request: Request, name: str):\n    name = name.removeprefix(\"drishti_\")\n    if name not in SCRIPTS:"
+  why: the public name in the address; the drishti_ name too, which a script finding its siblings beside itself asks for
+- file: drishti-console/routes/embed_v2_routes.py
+  old: "async def sheet(request: Request, name: str):\n    if name not in CSS:"
+  new: "async def sheet(request: Request, name: str):\n    name = name.removeprefix(\"drishti_\")\n    if name not in CSS:"
+  why: the public name in the address; the drishti_ name too, which a script finding its siblings beside itself asks for
+after:
+- python3 tools/settings_catalogue.py

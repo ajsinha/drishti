@@ -15,7 +15,7 @@
 #}
 {# A help section's own page (2.9.11.a, mock-up help-hub/A, scene 2): its pages grouped (config/help.yaml groups:), each guide on a row
    with its tutorial beside it (pair:), a search of this section only (/help/search?section=<id>; the rows also filter as you type,
-   static/js/help.js), and for an administrator the pages of an engine that runs on no server, greyed and never links. #}
+   static/js/drishti_help.js), and for an administrator the pages of an engine that runs on no server, greyed and never links. #}
 {% extends "base.html" %}
 {% block title %}{{ section.name }} · Help · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal help-page{% endblock %}
@@ -59,4 +59,4 @@
   <p class="help-none" data-help-none hidden>No page of {{ section.name }} matches. <a href="#" data-help-fulltext>Search inside every page of this section</a>.</p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_help.js?v={{ ASSET_V }}"></script>{% endblock %}

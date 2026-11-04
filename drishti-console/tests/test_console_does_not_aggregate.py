@@ -48,18 +48,18 @@ KNOWN = {
     # LAYOUT: arithmetic for drawing, on figures the server sent
     "core/designer_grid.py: if sum(widths) != UNITS:": "LAYOUT: a designer grid's column widths",
     'core/designer_grid.py: raise DesignerError(f"the columns share {UNITS} units: these add up to': "LAYOUT: the same, in the message",
-    "web/static/js/designer-grid.js: var sum = out.reduce(function (a, b) { return a + b; }, 0);": "LAYOUT: column widths",
-    "web/static/js/screen-grid.js: bar.setAttribute('aria-valuenow', String(Math.round(cols.slice(0, k).r": "LAYOUT: a column splitter's position",
-    "web/static/js/screen-grid.js: var want = (ev.clientX - box.left) / box.width * 12, have = cols.slice": "LAYOUT: the same, while dragging",
-    "web/static/js/admin-net-ring.js: var total = weights.reduce(function (a, b) { return a + b; }, 0) || 1;": "LAYOUT: a ring's arc lengths",
-    "web/static/js/bi-visuals.js: const total = sr.values.reduce((a, v) => a + (typeof v === 'number' ? ":
+    "web/static/js/drishti_designer-grid.js: var sum = out.reduce(function (a, b) { return a + b; }, 0);": "LAYOUT: column widths",
+    "web/static/js/drishti_screen-grid.js: bar.setAttribute('aria-valuenow', String(Math.round(cols.slice(0, k).r": "LAYOUT: a column splitter's position",
+    "web/static/js/drishti_screen-grid.js: var want = (ev.clientX - box.left) / box.width * 12, have = cols.slice": "LAYOUT: the same, while dragging",
+    "web/static/js/drishti_admin-net-ring.js: var total = weights.reduce(function (a, b) { return a + b; }, 0) || 1;": "LAYOUT: a ring's arc lengths",
+    "web/static/js/drishti_bi-visuals.js: const total = sr.values.reduce((a, v) => a + (typeof v === 'number' ? ":
         "LAYOUT: a donut's angles from the values the server sent",
-    "web/static/js/table-chart-engine.js: var t = on.reduce(function (a, d) { return a + (num(d.data[j]) ? Math.":
+    "web/static/js/drishti_table-chart-engine.js: var t = on.reduce(function (a, d) { return a + (num(d.data[j]) ? Math.":
         "LAYOUT: a stacked chart's height scale",
     # OWN: the console's own data, not a risk or BI figure
-    "web/static/js/capacity-page.js: var x = p[0].split('+').reduce(function (a, n) { return a + (v(n) || 0":
+    "web/static/js/drishti_capacity-page.js: var x = p[0].split('+').reduce(function (a, n) { return a + (v(n) || 0":
         "OWN: the capacity planner's inputs (a person's sizing sums)",
-    "web/static/js/admin-lake-maintain.js: var tabs = h.tables || [], sum = function (side, k) { return tabs.redu":
+    "web/static/js/drishti_admin-lake-maintain.js: var tabs = h.tables || [], sum = function (side, k) { return tabs.redu":
         "OWN: files and bytes of lake maintenance",
     'core/bi_usage.py: total = sum(x["questions"] for x in models)': "OWN: BI usage counts",
     'core/bi_usage.py: cached = sum(x["cached"] for x in models)': "OWN: BI usage counts",

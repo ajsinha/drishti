@@ -115,10 +115,10 @@ def manifest(request: Request):
     ed = edition_routes.edition_of(request)
     name = (ed.branding("product") if ed.lens else "") or str(g.get("PRODUCT") or "")
     tagline = (ed.branding("tagline") if ed.lens else "") or str(g.get("TAGLINE") or "")
-    icons = [{"src": "/static/img/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
-             {"src": "/static/img/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
-             {"src": "/static/img/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
-             {"src": "/static/img/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
+    icons = [{"src": "/static/img/icons/drishti_icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+             {"src": "/static/img/icons/drishti_icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+             {"src": "/static/img/icons/drishti_icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"},
+             {"src": "/static/img/icons/drishti_favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any"}]
     if g.get("APPLE_TOUCH_ICON") or g.get("FAVICON"):
         icons = [{"src": str(g.get("APPLE_TOUCH_ICON") or g.get("FAVICON")), "sizes": "any", "purpose": "any"}]
     body = {"name": name, "short_name": name, "description": " ".join(x for x in (tagline, str(g.get("COPYRIGHT") or "")) if x),
@@ -129,7 +129,7 @@ def manifest(request: Request):
 @router.get("/favicon.ico", include_in_schema=False)
 def favicon():
     """Browsers ask for /favicon.ico on their own (feeds, error pages, bookmarks); it is the logo mark, built by tools/make_icons.py."""
-    return FileResponse(ICONS / "favicon.ico", media_type="image/x-icon", headers={"Cache-Control": "public, max-age=86400"})
+    return FileResponse(ICONS / "drishti_favicon.ico", media_type="image/x-icon", headers={"Cache-Control": "public, max-age=86400"})
 
 
 @router.get("/healthz")
@@ -143,7 +143,7 @@ def healthz(request: Request):
 @router.get("/healthz/backend")
 async def healthz_backend(request: Request):
     """Whether the console can reach the server this browser uses, as the console's watch last saw it (core/backend_watch.py):
-    {reachable, since, lastError, version, server, checkSeconds}. What server-watch.js polls while a page shows the banner. No secrets."""
+    {reachable, since, lastError, version, server, checkSeconds}. What drishti_server-watch.js polls while a page shows the banner. No secrets."""
     from core import servers
 
     sid = servers.current()

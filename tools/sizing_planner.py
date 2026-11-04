@@ -67,7 +67,7 @@ def _branding() -> dict:
 
 # ---------------------------------------------------------------------------------------------------------------- the planner's one file
 # drishti-server/src/main/resources/capacity/planner.yaml holds the inputs, coefficients, results, settings, JVM arguments, warnings,
-# calibration lines and the Explain tab's examples. The server serves it to Admin -> Capacity, whose capacity.js evaluates the same
+# calibration lines and the Explain tab's examples. The server serves it to Admin -> Capacity, whose drishti_capacity.js evaluates the same
 # expressions; this module turns it into the workbook. The tuples below keep the shapes the workbook code and the tests read.
 PLANNER = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "planner.yaml"
 TEMPLATE_OUT = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "template"
@@ -600,7 +600,7 @@ def workbook_cells(overrides: dict | None = None) -> dict:
 
 def plan_cells(plan: dict, overrides: dict | None = None) -> dict:
     """Every named cell of a planner document (planner.yaml as read, or as a server serves it), {@code overrides} replacing inputs: what
-    drishti.py admin capacity and capacity.js evaluate."""
+    drishti.py admin capacity and drishti_capacity.js evaluate."""
     cells = {i["name"]: i["default"] for i in plan["inputs"]}
     cells.update(overrides or {})
     cells.update({c["name"]: c["value"] for c in plan["coefficients"]})
@@ -888,7 +888,7 @@ def template_parts() -> dict:
 def vectors() -> dict:
     """Every named figure at three shapes: the shared test vectors the Python, Java and JavaScript evaluators are checked against."""
     out = {"comment": "Written by tools/sizing_planner.py from capacity/planner.yaml: every named figure at three shapes. Numbers rounded to 6 "
-                      "decimals; text exact. The console's capacity.js and the server's test check their evaluation against these.", "shapes": {}}
+                      "decimals; text exact. The console's drishti_capacity.js and the server's test check their evaluation against these.", "shapes": {}}
     for shape, inputs in VECTOR_SHAPES.items():
         inputs = BENCH_SHAPE if inputs is None else inputs
         cells = workbook_cells(inputs)

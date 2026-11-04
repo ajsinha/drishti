@@ -33,17 +33,17 @@ GLOSS = TEXT + "    glossary:\n      carrier: { term: Carrier, means: The line t
 
 
 def _set(page, text):
-    page.evaluate("t => window.drishtiWorkbench.about.editor.setValue(t)", text)
+    page.evaluate("t => window.Drishti.workbench.about.editor.setValue(t)", text)
 
 
 def _value(page):
-    return page.evaluate("() => window.drishtiWorkbench.about.value()")
+    return page.evaluate("() => window.Drishti.workbench.about.value()")
 
 
 def _saved(page, base, id_, ok, what):
     """Waits until the editor has saved its text (nothing waiting, the design's text is the editor's) and the server holds it as wanted: the
     editor saves a moment after the last change (a step of the log), later under load, so a fixed pause raced the save."""
-    page.wait_for_function("() => { const w = window.drishtiWorkbench; return !w.about.pending() && w.store.state.about === w.about.value(); }",
+    page.wait_for_function("() => { const w = window.Drishti.workbench; return !w.about.pending() && w.store.state.about === w.about.value(); }",
                            timeout=30000)
     end = time.monotonic() + 30
     while True:
@@ -68,7 +68,7 @@ def test_edit_the_about_text_and_the_card_updates_by_keyboard_alone_and_it_expor
     assert page.evaluate("document.activeElement.matches('[data-about-starter]')")
     page.keyboard.press("Enter")                                        # the starter on the empty box
     # the starter text arrives from the server; Tab before it is in walked through an editor still being filled (one run in six)
-    page.wait_for_function("() => window.drishtiWorkbench.about.value().indexOf('about: 1') === 0", timeout=10000)
+    page.wait_for_function("() => window.Drishti.workbench.about.value().indexOf('about: 1') === 0", timeout=10000)
     page.keyboard.press("Tab")                                          # (the editor is next; it does not trap Tab)
     page.keyboard.press("Tab")
     assert page.evaluate("!document.activeElement.closest('.CodeMirror')")
@@ -103,7 +103,7 @@ def test_edit_the_about_text_and_the_card_updates_by_keyboard_alone_and_it_expor
     # undo brings the earlier text back (focus outside the box: the design's own Ctrl+Z)
     page.locator("[data-about-card]").click()
     page.keyboard.press("Control+z")
-    page.wait_for_function("() => window.drishtiWorkbench.about.value().indexOf('carrier: {') < 0", timeout=10000)
+    page.wait_for_function("() => window.Drishti.workbench.about.value().indexOf('carrier: {') < 0", timeout=10000)
     _saved(page, live_console, id_, lambda t: t != GLOSS, "the text before the glossary (undone)")
 
     # the fragment carries the text

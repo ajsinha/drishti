@@ -16,12 +16,12 @@
 {# The VaR Playground, PLAY VAR <scope|ids> (docs/architecture/VAR_PLAYGROUND.md, the approved option A with option B's Rest of scope):
    the spreadsheet-like grid (positions across, scenarios down, results below) with its formula bar on the left, the tall explanation of
    the selected cell on the right, the VaR page's pickers above, and Export to Excel with the count chosen and its estimate stated before
-   the download. A shell: var-playground.js fills it from /api/play/grid. On a phone the glance form: the headline and the explanation. #}
+   the download. A shell: drishti_var-playground.js fills it from /api/play/grid. On a phone the glance form: the headline and the explanation. #}
 {% extends "base.html" %}
 {% block title %}VaR Playground · {{ target or 'PLAY VAR' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}play{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-playground.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg" data-play data-scope="{{ scope }}" data-ids="{{ ids }}" data-ccy="{{ ccy }}" data-h="{{ lens.h }}" data-m="{{ lens.m }}"
@@ -86,5 +86,5 @@
     so the portfolio is still the scope and its VaR the VaR page's.</p>
   {% endif %}
 </div>
-<script src="/static/js/var-playground.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_var-playground.js?v={{ ASSET_V }}"></script>
 {% endblock %}

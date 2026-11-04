@@ -79,8 +79,8 @@ def test_a_click_fills_the_listeners_and_the_row_and_a_new_click_replaces_them(s
 
 PLACE = """place => {
   const sec = document.getElementById('p-trades'), html = document.getElementById('p-limit').outerHTML.replace(/p-limit/g, 'p-kid1').replace(/h-limit/g, 'h-kid1');
-  window.drishtiWire.close('trades');
-  window.drishtiWire.open(sec, null, { parent: 'trades', group: 0, place, show: 'on-select', hidden: false,
+  window.Drishti.wire.close('trades');
+  window.Drishti.wire.open(sec, null, { parent: 'trades', group: 0, place, show: 'on-select', hidden: false,
     panels: [{ id: 'kid1', title: 'One', html }, { id: 'kid2', title: 'Two', html: html.replace(/kid1/g, 'kid2') }] });
   const box = document.querySelector('[data-wire-kids="trades"]'), r = box.getBoundingClientRect(), s = sec.getBoundingClientRect();
   return { place: box.dataset.place, right: r.left >= s.right - 1, below: r.top >= s.bottom - 1, tabs: box.querySelectorAll('[role=tab]').length,

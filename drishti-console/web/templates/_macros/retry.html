@@ -15,7 +15,7 @@
 #}
 {#
   "failed — next retry in Ns (attempt k)" and the last error, for a thing the server or the console is retrying by itself, and the
-  "Retry now" button (handled by /static/js/admin-retry.js). `r` is the retry map the server sends: attempt, nextRetryInSeconds
+  "Retry now" button (handled by /static/js/drishti_admin-retry.js). `r` is the retry map the server sends: attempt, nextRetryInSeconds
   (-1 when retrying is off), lastError, permanent.
 #}
 {% macro retry_note(r) -%}

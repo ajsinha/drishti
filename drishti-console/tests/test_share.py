@@ -173,7 +173,7 @@ def test_the_share_button_carries_what_the_dialog_needs():
     html = c.get("/v/trade/IRS-48213?asOf=2026-09-29&knownAt=2026-09-29T14:30:00Z").text
     assert 'data-share-asof="2026-09-29"' in html and 'data-share-known="2026-09-29T14:30:00Z"' in html and 'aria-keyshortcuts="Alt+S"' in html
     assert 'data-share-dialog' in html and 'role="dialog" aria-modal="true"' in html and 'role="combobox"' in html
-    assert "/static/js/people.js" in html and "/static/js/share.js" in html
+    assert "/static/js/drishti_people.js" in html and "/static/js/drishti_share.js" in html
     assert "data-share-dialog" not in c.get("/v/trade/IRS-48213?embed=1").text           # a workspace pane has no dialog (one dialog, in the parent)
 
 

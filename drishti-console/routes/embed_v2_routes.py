@@ -165,16 +165,18 @@ async def elements(request: Request, version: str):
 
 @router.get("/js/{name}.js")
 async def script(request: Request, name: str):
+    name = name.removeprefix("drishti_")
     if name not in SCRIPTS:
         return await refuse(request, 404, "DRS-9404", f"no such script: {name}")
-    return await static(request, STATIC / "js" / f"{name}.js")
+    return await static(request, STATIC / "js" / f"drishti_{name}.js")
 
 
 @router.get("/css/{name}.css")
 async def sheet(request: Request, name: str):
+    name = name.removeprefix("drishti_")
     if name not in CSS:
         return await refuse(request, 404, "DRS-9404", f"no such sheet: {name}")
-    return await static(request, STATIC / "css" / f"{name}.css")
+    return await static(request, STATIC / "css" / f"drishti_{name}.css")
 
 
 @router.get("/vendor/{rest:path}")

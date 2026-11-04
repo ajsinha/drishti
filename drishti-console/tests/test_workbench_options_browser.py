@@ -42,7 +42,7 @@ def pick(page, panel):
 
 
 def option_value(page, panel, option):
-    return page.evaluate("([p, o]) => window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).panels.filter(x => x.id === p)[0].values[o]", [panel, option])
+    return page.evaluate("([p, o]) => window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).panels.filter(x => x.id === p)[0].values[o]", [panel, option])
 
 
 def test_every_option_of_every_kind_in_the_schema_has_a_labelled_editor(live_console, page):

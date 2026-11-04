@@ -125,7 +125,7 @@ def test_the_report_sheet_is_not_stale_and_is_a_small_second_sheet():
 
 
 def test_a_report_page_the_viewer_and_the_element_share_the_phone_rules():
-    """bi-phone.js is one file for the viewer, the element and the designer: the element sheet's container rule and the viewer's media rule agree on 640 px."""
-    js = (es.WEB / "static/js/bi-phone.js").read_text(encoding="utf-8")
+    """drishti_bi-phone.js is one file for the viewer, the element and the designer: the element sheet's container rule and the viewer's media rule agree on 640 px."""
+    js = (es.WEB / "static/js/drishti_bi-phone.js").read_text(encoding="utf-8")
     assert "P.MAX = 640" in js
     assert "max-width: 640px" in es.REPORT_ADDENDUM

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The keys that move and size a panel (build/grid-keys.js), shared by layout mode and the workbench canvas, run in Node: layout mode's
+"""The keys that move and size a panel (build/drishti_grid-keys.js), shared by layout mode and the workbench canvas, run in Node: layout mode's
 arrows move the panel; the workbench's arrows select and Alt+arrows move; Shift+arrows size in both."""
 import json
 from pathlib import Path
@@ -21,7 +21,7 @@ import subprocess
 
 import pytest
 
-JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "build" / "grid-keys.js"
+JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "build" / "drishti_grid-keys.js"
 NODE = shutil.which("node")
 pytestmark = pytest.mark.skipif(NODE is None, reason="needs node")
 

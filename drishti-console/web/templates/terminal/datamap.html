@@ -15,14 +15,14 @@
 #}
 {% extends "base.html" %}
 {% block title %}Data map · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/datamap.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_datamap.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}datamap{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {# The data map, DATAMAP <GO> (docs/guides/USER_GUIDE.md "The data map"; routes/datamap_routes.py, core/datamap.py). Everything drawn is
    inferred: kinds and joins from the packs' data contracts, counts and each join's coverage from the data, positions from an automatic
-   layout. Map (default) and Cards share the selection, the domain chips and Find; static/js/datamap.js keeps them in the address, draws
+   layout. Map (default) and Cards share the selection, the domain chips and Find; static/js/drishti_datamap.js keeps them in the address, draws
    the side panel from data-model and follows /datamap/data while the server is still counting and checking. #}
 {% set sel = selected.kind if selected else '' %}
 {% set dom = open_domain.id if open_domain else '' %}
@@ -96,4 +96,4 @@
   <noscript><p class="text-muted-d">The side panel needs JavaScript; every node still opens its kind.</p></noscript>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/datamap.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_datamap.js?v={{ ASSET_V }}"></script>{% endblock %}

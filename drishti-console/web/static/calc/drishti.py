@@ -38,12 +38,12 @@ import re
 import sys
 import traceback
 
-from _drishti_bridge import emit as _emit, request as _request   # registered by calc-worker.js
+from _drishti_bridge import emit as _emit, request as _request   # registered by drishti_calc-worker.js
 
 __all__ = ["view", "get", "search", "columns", "history", "show", "chart", "get_async", "search_async", "columns_async",
            "history_async", "help", "DrishtiError", "LIMITS"]
 
-# drishti is also a package: its submodules (quant.py, the snippets' pricing maths) are written here by calc-worker.js the
+# drishti is also a package: its submodules (drishti_quant.py, the snippets' pricing maths) are written here by drishti_calc-worker.js the
 # first time a cell names them, so `from drishti import quant`, `import drishti.quant` and `drishti.quant` all work.
 __path__ = ["/home/pyodide/drishti_pkg"]
 
@@ -542,7 +542,7 @@ def _traceback(e: BaseException, full: bool = False) -> str:
 
 
 async def _run(code: str, context: str) -> str:
-    """Runs one cell (called by calc-worker.js): the view first, then the code, then its last value and any figures."""
+    """Runs one cell (called by drishti_calc-worker.js): the view first, then the code, then its last value and any figures."""
     global view
     from pyodide.code import eval_code_async
     _Budget.sent, _Budget.capped = 0, False

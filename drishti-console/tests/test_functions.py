@@ -61,7 +61,7 @@ def test_an_administrator_sees_the_matrix_with_off_commands_the_everyone_switch_
                  'data-command="FRTB"', 'data-on="false"', "FRTB SA sensitivities.", "FRTB FRTB-RATES-1", 'data-switch="pack" data-name="market-risk"',
                  'data-needed-by="counterparty-risk"', "Review changes", "data-undo", "Reason (kept in the audit log)", "data-show",
                  "Applies on every server of the cluster within seconds", "Version on each server", "n-b", "catching up", "in step",
-                 "1 of 2 in step", "data-cluster", "History", "functions.js", "functions.css"):
+                 "1 of 2 in step", "data-cluster", "History", "drishti_functions.js", "drishti_functions.css"):
         assert text in page, text
     assert "1 off" in page and "3 commands" in page
     assert ">auditor<" not in page and "cmd-role" not in page and "role columns" not in page, "only the Everyone column (the approved mock-up)"
@@ -77,7 +77,7 @@ def test_a_user_sees_only_the_commands_they_can_use_and_nothing_of_the_switches(
     with_admin(backend, monkeypatch, calls)
     page = client.get("/func").text
     for text in ("data-functions", 'data-command="TRD"', "One trade.", "TRD T-1", "1 command you can use", '<a href="/go?q=TRD%20T-1"',
-                 '<a class="cmd-pack-name" href="/form/finance" title="Its search form: FORM finance">Finance</a>', "functions.js"):
+                 '<a class="cmd-pack-name" href="/form/finance" title="Its search form: FORM finance">Finance</a>', "drishti_functions.js"):
         assert text in page, text
     for text in ("data-commands", "data-switch", "Everyone", "Review changes", "data-undo", "Reason (kept in the audit log)", "data-show",
                  "Version on each server", "data-history", "data-cluster", " off<"):

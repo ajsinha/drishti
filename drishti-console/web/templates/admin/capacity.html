@@ -15,13 +15,13 @@
 #}
 {% extends "base.html" %}
 {% block title %}Capacity · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-capacity.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-capacity.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {# Admin -> Capacity (RESOURCES_AND_SCALE.md 9.7; mock-ups docs/architecture/mockups/capacity/, options B and A): today against the plan,
-   and the planner behind "Edit the plan". capacity.js evaluates capacity/planner.yaml's expressions; capacity-page.js draws. Phone tiers
+   and the planner behind "Edit the plan". drishti_capacity.js evaluates capacity/planner.yaml's expressions; drishti_capacity-page.js draws. Phone tiers
    (MOBILE_DISPLAY.md): data-tier must, glance, more (folded on a phone), desk (a note on a phone). #}
 <div class="adm cap" data-capacity data-help="{{ help_url }}">
   <h1>Capacity</h1>
@@ -127,4 +127,4 @@
 </div>
 {% endblock %}
 {% block footer %}{% include "_footer.html" %}{% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/capacity.js?v={{ ASSET_V }}"></script><script src="/static/js/capacity-page.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_capacity.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_capacity-page.js?v={{ ASSET_V }}"></script>{% endblock %}

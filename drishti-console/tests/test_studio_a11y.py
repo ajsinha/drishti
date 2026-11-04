@@ -16,7 +16,7 @@
 approved proposal's review page that still shows what it changed."""
 from pathlib import Path
 
-JS = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "build" / "yamltab.js").read_text()
+JS = (Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "build" / "drishti_yamltab.js").read_text()
 
 OLD = "rachana: 1\nsutra: s-test\nversion: 3\nmatch: { kind: trade }\npanels:\n  - id: legs\n    kind: kv\n"
 

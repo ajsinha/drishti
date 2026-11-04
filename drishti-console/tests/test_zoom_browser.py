@@ -254,7 +254,7 @@ SIZE_JS = """(() => { const t = document.querySelector('#p-cashflows table.tbl')
   const last = t.closest('.tbl-wrap').getBoundingClientRect().bottom, room = b.getBoundingClientRect().bottom - parseFloat(getComputedStyle(b).paddingBottom);
   return { rows: rows.length, first: rows[0].cells[0].textContent, scroll: b.scrollHeight > b.clientHeight + 1,
            gap: room - last, rowH: rows[0].offsetHeight, opt: document.querySelector('#p-cashflows .tbl-pg-size').selectedOptions[0].textContent,
-           saved: localStorage.getItem(window.drishtiKey('drishti.tableRows')) }; })()"""
+           saved: localStorage.getItem(window.Drishti.key('drishti.tableRows')) }; })()"""
 
 
 def sizes(page):

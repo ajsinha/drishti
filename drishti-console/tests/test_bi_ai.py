@@ -27,7 +27,7 @@ from core.app import create_app
 from core.backend import BackendError
 from core.config import load_settings
 
-JS = (CONSOLE / "web/static/js/bi-ai.js").read_text(encoding="utf-8")
+JS = (CONSOLE / "web/static/js/drishti_bi-ai.js").read_text(encoding="utf-8")
 
 
 class AiBackend(BiBackend):
@@ -78,8 +78,8 @@ def test_the_servers_refusals_reach_the_page_with_their_codes(client, status, co
 def test_only_the_ai_paths_are_passed_on_and_the_pages_carry_the_script(client):
     assert client.post("/bi/api/aix/ask", json={}).status_code == 404
     assert client.post("/bi/api/ai/../admin/ai", json={}).status_code in (404, 405)
-    assert "/static/js/bi-ai.js" in client.get("/bi/r/file:report:x").text
-    assert "/static/js/bi-ai.js" in client.get("/bi/design/file:report:x").text
+    assert "/static/js/drishti_bi-ai.js" in client.get("/bi/r/file:report:x").text
+    assert "/static/js/drishti_bi-ai.js" in client.get("/bi/design/file:report:x").text
 
 
 def test_the_script_is_plain_same_origin_and_safe():

@@ -24,7 +24,7 @@ named under *On desktop*). The tier is configured, never coded, resolved per pan
    (``max: glance``): a cap wins over every layer, the strictest cap of all;
 5. the person's own pins: decided for later (MOBILE_DISPLAY.md section 11), not in this build.
 
-The browser says what it is (``X-Drishti-Device`` on a request, or the ``drishti-device`` cookie static/js/phone.js keeps from the screen
+The browser says what it is (``X-Drishti-Device`` on a request, or the ``drishti-device`` cookie static/js/drishti_phone.js keeps from the screen
 width); the console never guesses from the user agent. A phone gets the must and glance panels only (glance ones cut on the console
 before they are sent), so the phone downloads and draws a fraction of the page; a tablet gets must, glance and more, with desk panels
 behind *More on this page*. ``drishti-phone-all=1`` (*Show everything*) gives the whole page for the session.
@@ -58,7 +58,7 @@ SPARK_W, SPARK_H = 120, 28
 
 def device(request) -> str:
     """The device class this request is for: the ``X-Drishti-Device`` header (an embedding page or the API), else the cookie the page keeps
-    from the screen width, else ``desk`` (a first visit draws the desktop page; phone.js then sets the cookie and draws the phone one)."""
+    from the screen width, else ``desk`` (a first visit draws the desktop page; drishti_phone.js then sets the cookie and draws the phone one)."""
     for v in (request.headers.get(HEADER), request.cookies.get(COOKIE)):
         v = (v or "").strip().lower()
         if v in DEVICES:

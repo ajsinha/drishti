@@ -64,7 +64,7 @@ LOOKUP_WAIT = 3.0                                        # the server answers wi
 
 @lookup_router.get("/lookup")
 async def lookup(request: Request):
-    """An entity field's live search (record-forms.js): ``/api/v1/forms/lookup`` as the signed-in person, ``{kind, q, results: [{id,
+    """An entity field's live search (drishti_record-forms.js): ``/api/v1/forms/lookup`` as the signed-in person, ``{kind, q, results: [{id,
     label}]}``. The server reads as the caller (masks, entitlements), caps the limit and keeps a short budget."""
     q = {k: str(v)[:100] for k, v in request.query_params.items() if k in LOOKUP_KEYS and v}
     if not q.get("kind"):

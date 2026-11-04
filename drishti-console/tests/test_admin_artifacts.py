@@ -59,8 +59,8 @@ def with_artifacts(backend, monkeypatch, calls, fail=None):
 def test_the_page_lists_every_kind_with_state_origin_and_problems(client, backend, monkeypatch):
     with_artifacts(backend, monkeypatch, [])
     page = client.get("/admin/artifacts").text
-    for text in ("Artifacts", "trading", "widgets", "trading-lake", "scratch", "trades-basic", "broken", "kind &#39;trade&#39; is owned by pack trading", "admin-artifacts.js",
-                 "admin-artifacts.css", "artifact-uninstall.js", "/help/admin-artifacts", "Installed (6)", "Uninstalled (1)", "2 packs, 2 connectors, 2 BI files", "2 with a problem",
+    for text in ("Artifacts", "trading", "widgets", "trading-lake", "scratch", "trades-basic", "broken", "kind &#39;trade&#39; is owned by pack trading", "drishti_admin-artifacts.js",
+                 "drishti_admin-artifacts.css", "drishti_artifact-uninstall.js", "/help/admin-artifacts", "Installed (6)", "Uninstalled (1)", "2 packs, 2 connectors, 2 BI files", "2 with a problem",
                  "Filter by name", "Any origin", "Place in config/bi", "Deploy a pack archive", "Open Connectors", "/srv/drishti/data/uninstalled", "30 days",
                  'aria-label="Uninstall trading"', 'aria-label="Disable trading"', 'aria-label="Enable scratch"', 'data-kind="bi" data-subtype="dataset" data-name="trades-basic"',
                  "data-uninstall-dialog", "data-typed-dialog", 'role="tablist"', "20261006T090000-connector-scratch", "Restore scratch", "Delete scratch permanently"):
@@ -133,9 +133,9 @@ def test_the_packs_and_connectors_pages_carry_the_shared_safe_uninstall(client, 
     from test_admin_packs import with_admin
     with_admin(backend, monkeypatch, [])
     packs = client.get("/admin/packs").text
-    for text in ("data-uninstall-dialog", 'data-kind="pack" data-name="trading"', "artifact-uninstall.js", "admin-artifacts.css"):
+    for text in ("data-uninstall-dialog", 'data-kind="pack" data-name="trading"', "drishti_artifact-uninstall.js", "drishti_admin-artifacts.css"):
         assert text in packs, text
     with_connectors(backend, monkeypatch, [])
     conns = client.get("/admin/connectors").text
-    assert "data-uninstall-dialog" in conns and 'data-kind="connector" data-name="off-one"' in conns and "artifact-uninstall.js" in conns
+    assert "data-uninstall-dialog" in conns and 'data-kind="connector" data-name="off-one"' in conns and "drishti_artifact-uninstall.js" in conns
     assert 'data-kind="connector" data-name="trading-lake"' not in conns            # a pack-template connector has no Uninstall

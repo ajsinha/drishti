@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Controls on the console's side (BI_DESIGN.md 8.1, RACHANA_REFERENCE.md "Controls"): the ``ctl.<id>`` values of the address reach the server for
-the page, for the panel fragments, for the JSON view and for the live subscription; the page carries the controls for controls.js; the share
+the page, for the panel fragments, for the JSON view and for the live subscription; the page carries the controls for drishti_controls.js; the share
 link keeps them. The server decides what a value means: nothing here evaluates a control."""
 import asyncio
 import json
@@ -74,7 +74,7 @@ def test_the_page_passes_the_values_on_and_carries_the_controls(client, backend)
     data = re.search(r'data-controls="([^"]*)"', r.text).group(1)
     parsed = json.loads(data.replace("&#34;", '"').replace("&quot;", '"').replace("&amp;", "&"))
     assert [c["id"] for c in parsed] == ["legs", "when"] and parsed[0]["value"] == "2"
-    assert '/static/js/controls.js' in r.text and "controls.css" in r.text
+    assert '/static/js/drishti_controls.js' in r.text and "drishti_controls.css" in r.text
     assert "data-selects=" in r.text
     # the link a person copies keeps what they see
     share = re.search(r'data-share="([^"]*)"', r.text).group(1)
@@ -83,7 +83,7 @@ def test_the_page_passes_the_values_on_and_carries_the_controls(client, backend)
 
 def test_a_page_without_controls_is_as_before(client, backend):
     r = client.get("/v/trade/IRS-48213")
-    assert r.status_code == 200 and "data-controls" not in r.text and "/static/js/controls.js" not in r.text
+    assert r.status_code == 200 and "data-controls" not in r.text and "/static/js/drishti_controls.js" not in r.text
 
 
 def test_the_panel_fragment_builds_only_the_named_panels(client, backend):

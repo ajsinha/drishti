@@ -105,6 +105,16 @@
   the lake form (`lake: demo-iceberg`, its lake file beside the connector folder). **`lake maintain`** acts on a table's lake file:
   `retention`, `maintenance` (compaction, vacuum or expire-snapshots age, checkpoint, target size; `checkpoint-interval` set by the
   writers as `delta.checkpointInterval`) and `time-travel`, over the maintenance file and under the domain's retention floor.
+- **Every static asset we wrote is named `drishti_<name>`, and the console puts one global on `window` (product owner, 2026-11-03).** The
+  console's own files under `web/static/` (`js/`, `js/build/`, `css/`, `img/`, `calc/`, the web manifest) are renamed by
+  `tools/dev/asset_prefix.py` (`bi-runs-tab.js` -> `drishti_bi-runs-tab.js`, `drishti-logo.png` -> `drishti_logo.png`), with every template, route,
+  test, tool and document that names them; vendored libraries and the published renderer versions keep their names. Every global the scripts
+  set moves under `window.Drishti` (`window.drishtiWorkbench` -> `window.Drishti.workbench`, `window.DrishtiBusy` -> `window.Drishti.Busy`), except
+  `drishtiModules`, `drishtiBi` and `drishtiGeo`, which the published renderer and Elements versions read. Custom events start `drishti:`
+  (`bi:reload` -> `drishti:bi-reload`). The embed routes keep their public names (`/embed/v2/js/tables.js` serves `drishti_tables.js`), and
+  `/static/js/<name>.js` for an old name answers with the `drishti_` file, so renderer 1.0.0-1.2.0 pages keep working. Guard:
+  `drishti-console/tests/test_asset_names.py` (file names, window globals, storage keys, custom elements and events, no new generic CSS class
+  or third-party data- attribute). The mapping is `tools/dev/asset_prefix_map.yaml`.
 
 - **One linear-algebra seam** (`compute.linalg.LinearAlgebra`: `dgemm`, `dgemv`, `ddot`, `daxpy`) with a pure-Java implementation and
   **OpenBLAS 0.3.26 bundled** through JavaCPP (`org.bytedeco:openblas`, the `linux-x86_64` and `windows-x86_64` builds only, about

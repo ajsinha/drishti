@@ -68,3 +68,32 @@ The drill runs both: its Java 21 build uses the `api-docs` profile, and its tool
 * **Python**: a docstring on every public function, class and method, and type hints on every parameter and return. A helper that is
   not part of the surface starts with `_`, or the module lists its public names in `__all__`.
 * A new surface (a module, a package) is added to `tools/api_docs.yaml` and, for Java, to the module's `drishti.apidocs.packages`.
+
+## Static asset names and the one namespace
+
+The console's static files, scripts and styles share pages with other libraries (vendored ones) and, embedded, with a host's own. So that
+nothing of ours collides with theirs:
+
+* **Files.** Every file we write under `drishti-console/web/static/` (`js/`, `js/build/`, `css/`, `img/`, `img/guide/`, `img/icons/`, `calc/`
+  and the web manifest) is named `drishti_<name>.<ext>`: the rest of the name says what it is (`drishti_bi-runs-tab.js`,
+  `drishti_tokens.css`, `drishti_logo.png`). The Calc module `calc/drishti.py` is already ours by name. Vendored libraries
+  (`static/vendor/`, listed in VENDOR.md) keep their own names, and a published renderer version (`static/render/<version>/`) is never
+  changed.
+* **One global.** Our scripts put one name on `window`: `Drishti`. A script that exports something starts with
+  `(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis);` and sets
+  `window.Drishti.<name>` (`Drishti.workbench`, `Drishti.Busy`, `Drishti.pivotEngine`, `Drishti.drsMessage`). Three older names stay on
+  `window` because the published renderer and Elements versions read them: `drishtiModules` (the root-scoped behaviours), `drishtiBi` (the
+  report code) and `drishtiGeo` (the map).
+* **Events, storage, elements.** A custom event is named `drishti:<what>` (`drishti:bi-reload`, `drishti:var-painted`); a browser storage
+  key starts `drishti.` or `drishti-`; a custom element is `drishti-<name>`.
+* **Classes and data- attributes.** A new CSS class is `drishti-<name>`, never a generic word. The generic classes the sheets already
+  define (`on`, `ok`, `mono`, `pill`...) and the data- attributes other libraries also read (`data-theme`, `data-state`, `data-target`,
+  `data-action`, `data-toggle`...) are shared with the published renderer and Elements versions, so they keep their names while those
+  versions are served.
+* **Addresses.** The embed routes keep their public names (`/embed/v1/js/<name>.js`, `/embed/v2/js/<name>.js`, `/embed/v2/css/<name>.css`
+  serve `drishti_<name>`), and `/static/js/<name>.js` or `/static/css/<name>.css` for a name without the prefix answers with the
+  `drishti_` file: what a page pinned to an older renderer version asks for.
+
+`drishti-console/tests/test_asset_names.py` refuses a new file, global, event, storage key or custom element without the prefix, and a new
+generic class or third-party data- attribute. `tools/dev/asset_prefix.py` makes the change on any checkout (`scan`, `apply`, `check`), from
+the mapping in `tools/dev/asset_prefix_map.yaml`; a second run changes nothing.

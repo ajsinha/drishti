@@ -16,10 +16,10 @@
 {# The dataset wizard, version 2 (docs/architecture/BI_DESIGN.md sections 3.1 and 8.1; docs/guides/BI_GUIDE.md "Make a dataset in the wizard"): pick the
    root, then the columns, a filter, the grain (one row per, with an explicit de-duplication), derived columns (an expression or a Python item), an optional
    grouping, a preview the server answers as you, and save; or an SQL view over a model. No YAML typing; the draft is kept across refresh and Back, and the
-   server's Check is beside each step. Drawn by static/js/bi-dataset-layer.js (state, document, navigation, save) and bi-dataset-steps.js (the steps). #}
+   server's Check is beside each step. Drawn by static/js/drishti_bi-dataset-layer.js (state, document, navigation, save) and drishti_bi-dataset-steps.js (the steps). #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}New dataset{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-layer.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-expr.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-layer.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <div data-lw-root data-ready="" data-workspace="{{ workspace }}">
 <header class="bi-head"><p class="bi-crumb"><a href="/bi/models">Models and datasets</a></p><h1>New dataset</h1>
@@ -93,4 +93,4 @@
 <p class="bi-actions bi-lw-nav"><button type="button" class="btn-pill btn-ghost" data-back>Back</button> <button type="button" class="btn-pill btn-accent" data-next>Next</button></p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-dataset-steps.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-expr-editor.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-query-panel.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-dataset-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-dataset-steps.js?v={{ ASSET_V }}"></script>{% endblock %}

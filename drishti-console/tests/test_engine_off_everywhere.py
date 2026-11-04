@@ -136,7 +136,7 @@ def test_the_engines_page_draws_the_servers_answer_and_carries_the_batch(monkeyp
     monkeypatch.setattr(app.state.backend, "admin", admin)
     page = c.get("/admin/engines")
     assert page.status_code == 200
-    assert "data-eng-table" in page.text and "drishti-main" in page.text and "/static/js/admin-engines.js" in page.text
+    assert "data-eng-table" in page.text and "drishti-main" in page.text and "/static/js/drishti_admin-engines.js" in page.text
     r = c.post("/admin/api/engines", json={"reason": "capital on var-1", "changes": [{"engine": "frtb-sa", "on": False}], "expected": {"frtb-sa": "abc"}})
     assert r.status_code == 200 and r.json()["outcomes"][0]["outcome"] == "live"
     assert ("POST", "/engines", {"reason": "capital on var-1", "node": "", "changes": [{"engine": "frtb-sa", "on": False}], "withNeeds": False,

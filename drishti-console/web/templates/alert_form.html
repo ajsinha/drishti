@@ -16,7 +16,7 @@
 {# An alert on a number: new, or an existing one with its history (BI_DESIGN.md › Rūpaka: the original design and every phase as built, section 20). #}
 {% extends "base.html" %}
 {% block title %}{{ 'Alert ' ~ alert.name if alert else 'New alert' }} · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/dist.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_dist.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -155,4 +155,4 @@
   {% endif %}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/alert-form.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_alert-form.js?v={{ ASSET_V }}"></script>{% endblock %}

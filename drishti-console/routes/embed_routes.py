@@ -209,8 +209,8 @@ async def icons_font(request: Request):
 
 @router.get("/charts.js")
 async def charts_js(request: Request):
-    """charts.js (waterfall, histogram, ...), served with CORS so a module can import it; the element loads it as a script."""
-    return await send(request, (WEB / "static/js/charts.js").read_bytes(), "text/javascript", f'"{(WEB / "static/js/charts.js").stat().st_mtime_ns:x}"')
+    """drishti_charts.js (waterfall, histogram, ...), served with CORS so a module can import it; the element loads it as a script."""
+    return await send(request, (WEB / "static/js/drishti_charts.js").read_bytes(), "text/javascript", f'"{(WEB / "static/js/drishti_charts.js").stat().st_mtime_ns:x}"')
 
 
 @router.get("/world-countries.json")
@@ -252,9 +252,10 @@ ENHANCERS = ("view", "geomap", "charts", "colfilter", "tables", "tree-rows", "pi
 
 @router.get("/js/{name}.js")
 async def enhancer_js(request: Request, name: str):
+    name = name.removeprefix("drishti_")
     if name not in ENHANCERS:
         return await refuse(request, 404, "DRS-9404", f"no such script: {name}")
-    path = WEB / "static/js" / f"{name}.js"
+    path = WEB / "static/js" / f"drishti_{name}.js"
     return await send(request, path.read_bytes(), "text/javascript", f'"{path.stat().st_mtime_ns:x}"')
 
 

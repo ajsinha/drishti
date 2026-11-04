@@ -114,7 +114,7 @@ def test_a_formula_changes_the_preview_in_place_and_a_cell_reads_another_cells_s
     assert "@A2.open.ref" in pg.inner_text('[data-gd-cell="B2"] .gd-f')
     doc = yaml.safe_load(pg.locator("[data-gd-sutra]").text_content())
     assert doc["panels"][2]["source"]["id"] == "@trades.open.ref"
-    wait(pg, "!!(document.querySelector('[data-gd-preview]').contentWindow.drishtiWire && document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
+    wait(pg, "!!(document.querySelector('[data-gd-preview]').contentWindow.Drishti && document.querySelector('[data-gd-preview]').contentWindow.Drishti.wire && document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
     preview(pg).locator("#p-trades tbody tr[data-ev] td:nth-child(2)").first.click()
     wait(pg, "!!document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-who dd, #p-who td')")
     pg.close()
@@ -314,7 +314,7 @@ def test_a_panel_a_click_in_an_opened_panel_opens_is_a_cell_one_step_further_in(
     assert pg.inner_text("[data-gd-red]") == "A1"
     pg.press("[data-gd-formula]", "Escape")
     # in the preview: a trade opens its cash flows, a click on a flow opens the grandchild, which fills
-    wait(pg, "!!(document.querySelector('[data-gd-preview]').contentWindow.drishtiWire && document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
+    wait(pg, "!!(document.querySelector('[data-gd-preview]').contentWindow.Drishti && document.querySelector('[data-gd-preview]').contentWindow.Drishti.wire && document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-trades tbody tr[data-ev]'))")
     assert preview(pg).locator("#p-event").count() == 0
     preview(pg).locator("#p-trades tbody tr[data-ev] td:nth-child(2)").first.click()
     wait(pg, "!!document.querySelector('[data-gd-preview]').contentDocument.querySelector('#p-flows tbody tr[data-ev]')")

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""static/js/bi-phone.js (Rupaka phase 7, per-report phone layouts): the one file the viewer, <drishti-report> and the designer's Phone tab share to decide what a phone
+"""static/js/drishti_bi-phone.js (Rupaka phase 7, per-report phone layouts): the one file the viewer, <drishti-report> and the designer's Phone tab share to decide what a phone
 shows and in which order and height. Run in Node (skipped when Node is not installed), with the browser's `window` faked: the file touches nothing else."""
 import json
 import shutil
@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-JS = Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "bi-phone.js"
+JS = Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_bi-phone.js"
 node = shutil.which("node")
 pytestmark = pytest.mark.skipif(node is None, reason="needs Node to run the shared phone-layout code")
 

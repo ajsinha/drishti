@@ -15,14 +15,14 @@
 #}
 {% extends "base.html" %}
 {% block title %}Data out · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-data-out.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-data-out.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}admin{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {# Admin -> Data out (docs/guides/FLIGHT_GUIDE.md section 9): one screen, two views of the same answer (GET /admin/api/data-out), switched by
    the toggle: the page (mock-up A, the default) and the map of clients and nodes (mock-up B). The service bar, the node cards, the stream
-   detail and Stop are shared by both views; admin-data-out.js draws everything from the JSON below and refreshes it every 5 seconds. #}
+   detail and Stop are shared by both views; drishti_admin-data-out.js draws everything from the JSON below and refreshes it every 5 seconds. #}
 <div class="adm dout" data-dout data-dout-view="{{ view }}">
   <h1>Data out</h1>
   {% with tab='data-out' %}{% include "admin/_nav.html" %}{% endwith %}
@@ -75,5 +75,5 @@
   </div>
   <div hidden data-dout-json="{{ d | tojson | forceescape }}"></div>
 </div>
-<script src="/static/js/admin-data-out.js?v={{ ASSET_V }}" defer></script>
+<script src="/static/js/drishti_admin-data-out.js?v={{ ASSET_V }}" defer></script>
 {% endblock %}

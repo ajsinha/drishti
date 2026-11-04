@@ -381,9 +381,9 @@ def pyconsole(c: Ctx):
         if (box.get_attribute("value").split(".")[-1] in ("TRADE_ID", "TRADE_STATUS", "PORTFOLIO", "CURRENCY", "NOTIONAL")) != box.is_checked():
             box.click()
     p.click("[data-open-go]")
-    p.wait_for_function("() => window.drishtiPyConsole && window.drishtiPyConsole.ex", timeout=60000)
+    p.wait_for_function("() => window.Drishti.pyConsole && window.Drishti.pyConsole.ex", timeout=60000)
     p.wait_for_function("() => document.getElementById('pc').getAttribute('data-ready') === 'true'", timeout=180000)
-    p.evaluate("(code) => window.drishtiPyConsole.setCode(code)", CONSOLE_CODE)
+    p.evaluate("(code) => window.Drishti.pyConsole.setCode(code)", CONSOLE_CODE)
     p.click("[data-run]")
     p.wait_for_function("() => document.getElementById('pc').getAttribute('data-ran') && document.getElementById('pc').getAttribute('data-running') === 'false'", timeout=180000)
     p.locator("[data-out] [data-pc-chart] canvas").wait_for(timeout=30000)

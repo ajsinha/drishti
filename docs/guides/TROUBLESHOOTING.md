@@ -422,7 +422,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
   connection per tab. Each **browser** holds one live
   connection, shared by all its tabs and panes (see [DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#one-connection-per-browser)).
 - **Fix:** hard-refresh old tabs once (**Ctrl+Shift+R**) so they load the new scripts. To check, run
-  `DrishtiChannel.transport()` in the browser console of any tab: `shared-worker`, `leader` or `follower` means the
+  `Drishti.Channel.transport()` in the browser console of any tab: `shared-worker`, `leader` or `follower` means the
   tab shares the browser's connection; the network panel shows a single `/api/channel?s=…` request for the whole
   browser (in the SharedWorker's own panel, `chrome://inspect/#workers`, when it runs there).
 
@@ -1298,7 +1298,7 @@ Every setting of a connector is in its plugin's README and its own document ([CO
 * **`ModuleNotFoundError: No module named 'drishti_bi'`.** The module is fetched into the worker when a cell **names** `drishti_bi`; write `import drishti_bi` in the cell that uses it (a cell that only calls `walk` through another name does not trigger it).
 * **`needs JavaScript Promise Integration`.** Write `await drishti_bi.query_async(...)` (also `datasets_async`, `describe_async`).
 * **`DRS-9002` or an empty frame.** The call is a BI read as you: you need the `bi` power, and a masked column comes back masked (`df.attrs["masked"]`).
-* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [USER_GUIDE.md › Calc: Python on any view, section 19](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
+* **The Graphic Walker frame stays blank.** Open the browser console: a refusal of `/static/calc/drishti_walker.html` or of its script means a proxy rewrote the policy header (the page needs the console's own `Content-Security-Policy` for that path, [USER_GUIDE.md › Calc: Python on any view, section 19](USER_GUIDE.md#19-the-bi-client-and-graphic-walker)). A refused stylesheet and image from `blocked.invalid` is expected and harmless.
 
 ### Analyse: the extract is short, a SQL cell is refused, a Python cell will not run
 

@@ -77,7 +77,7 @@ def test_the_explorer_draws_the_same_from_arrow_and_from_json(stack, browser):  
     shots = {}
     for name, query in (("arrow", ""), ("json", "&tables=json")):
         pg = open_page(browser, base, query)
-        assert pg.evaluate("window.drishtiTable.available()") is (name == "arrow")
+        assert pg.evaluate("window.Drishti.table.available()") is (name == "arrow")
         snap = pg.evaluate(SNAPSHOT)
         contributions(pg, "child")
         snap["child"] = pg.evaluate(SNAPSHOT)["contrib"]
@@ -111,7 +111,7 @@ def test_an_arrow_answer_is_the_json_answer(stack, browser, path, shape, at):  #
       const j = await (await fetch(url, { headers: { Accept: 'application/json' } })).json();
       const r = await fetch(url, { headers: { Accept: 'application/vnd.apache.arrow.stream' } });
       const kind = r.headers.get('content-type');
-      const t = await window.drishtiTable.fromResponse(r, shape, at);
+      const t = await window.Drishti.table.fromResponse(r, shape, at);
       return { kind, json: JSON.stringify(j, Object.keys(j).sort()), a: t.answer(), j };
     }""", ["/api/var/" + path, shape, at])
     assert "arrow" in got["kind"], got["kind"]
@@ -124,7 +124,7 @@ def test_an_arrow_answer_is_the_json_answer(stack, browser, path, shape, at):  #
 
 def test_without_arrow_js_the_page_asks_json_and_works(stack, browser):  # noqa: F811
     pg = open_page(browser, str(stack), "", block_arrow=True)
-    assert pg.evaluate("window.drishtiTable.available()") is False
+    assert pg.evaluate("window.Drishti.table.available()") is False
     contributions(pg, "trade")
     assert pg.locator("[data-vx-pathtable] tbody tr").count() > 10
     assert all("arrow" not in a for _, a in pg.accepts), pg.accepts

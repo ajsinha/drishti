@@ -63,40 +63,40 @@ def screen(browser, base, theme="terminal", size=None):
     pg.fetches = []
     pg.on("request", lambda q: pg.fetches.append(q.url) if "/panels?" in q.url or q.url.endswith("/events") or "/events?" in q.url else None)
     pg.goto(base + r["open"])
-    wait(pg, "window.drishtiRefresh && document.querySelectorAll('[data-fresh]').length > 1")
+    wait(pg, "window.Drishti.refresh && document.querySelectorAll('[data-fresh]').length > 1")
     key = pg.locator("[data-view]").get_attribute("data-screen")
     pg.request.patch(base + "/api/settings", data=json.dumps({"refresh": {key: None}}), headers={"Content-Type": "application/json"})
     pg.goto(base + r["open"])
-    wait(pg, "window.drishtiRefresh && document.querySelectorAll('[data-fresh]').length > 1 && document.querySelector('#p-trades tr[data-ev]')")
+    wait(pg, "window.Drishti.refresh && document.querySelectorAll('[data-fresh]').length > 1 && document.querySelector('#p-trades tr[data-ev]')")
     pg.evaluate("window.__doc = 1")                          # gone if the page reloads
     pg.fetches.clear()
     return pg
 
 
 def refreshing(pg):
-    return pg.evaluate("Object.keys(drishtiRefresh.state()).filter(k => drishtiRefresh.state()[k].every)")
+    return pg.evaluate("Object.keys(Drishti.refresh.state()).filter(k => Drishti.refresh.state()[k].every)")
 
 
 def fetched(pg, pid):
-    return pg.evaluate("id => drishtiRefresh.state()[id].fetched", pid)
+    return pg.evaluate("id => Drishti.refresh.state()[id].fetched", pid)
 
 
 def test_panels_refresh_on_their_interval_without_a_reload_and_the_freshness_ticks(stack, browser):
     pg = screen(browser, stack)
     ids = refreshing(pg)
-    assert "trades" in ids and pg.evaluate("drishtiRefresh.min") == 2
+    assert "trades" in ids and pg.evaluate("Drishti.refresh.min") == 2
     assert pg.locator(".fresh-bar [data-refresh-all]").is_visible()
     t0 = fetched(pg, "trades")
     text0 = pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text()
     assert text0.startswith("updated ") and text0.endswith(" ago")
-    wait(pg, "drishtiRefresh.state().trades.fetched > %d" % t0)
+    wait(pg, "Drishti.refresh.state().trades.fetched > %d" % t0)
     assert pg.evaluate("window.__doc") == 1                   # the same document: no reload
     assert any("/panels?" in u and "trades" in u for u in pg.fetches)
     assert pg.evaluate("document.querySelectorAll('#p-trades').length") == 1
     pg.wait_for_timeout(1100)
     assert pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text().startswith("updated ")
-    first = pg.evaluate("drishtiRefresh.state().trades.fetched")
-    wait(pg, "drishtiRefresh.state().trades.fetched > %d" % first)
+    first = pg.evaluate("Drishti.refresh.state().trades.fetched")
+    wait(pg, "Drishti.refresh.state().trades.fetched > %d" % first)
     pg.close()
 
 
@@ -111,12 +111,12 @@ def test_pause_resume_a_slower_interval_and_pause_all_are_remembered(stack, brow
     assert not [u for u in pg.fetches if "panels=" in u and "trades" in u.split("panels=")[1]], pg.fetches
     t = fetched(pg, "trades")
     pg.click(box + " [data-refresh-toggle]")                  # resumed: fetched at once
-    wait(pg, "drishtiRefresh.state().trades.fetched > %d" % t, seconds=3)
+    wait(pg, "Drishti.refresh.state().trades.fetched > %d" % t, seconds=3)
     assert pg.locator(box + " [data-refresh-toggle]").get_attribute("aria-pressed") == "false"
     options = pg.eval_on_selector(box + " [data-refresh-every]", "s => [...s.options].map(o => +o.value)")
     assert options[0] == 2 and min(options) == 2                # never faster than the Sutra's interval or the minimum
     pg.select_option(box + " [data-refresh-every]", "10")
-    assert pg.evaluate("drishtiRefresh.state().trades.chosen") == 10
+    assert pg.evaluate("Drishti.refresh.state().trades.chosen") == 10
     pg.click(box + " [data-refresh-toggle]")
     pg.click(".fresh-bar [data-refresh-all]")
     assert pg.locator(".fresh-bar [data-refresh-said]").inner_text() == "Refresh paused on this page"
@@ -124,7 +124,7 @@ def test_pause_resume_a_slower_interval_and_pause_all_are_remembered(stack, brow
     pg.wait_for_timeout(800)                                  # the choices are saved (debounced)
     pg.screenshot(path=str(IMG / "refresh-controls.jpg"), type="jpeg", quality=84, clip={"x": 0, "y": 0, "width": 1500, "height": 700})
     pg.reload()
-    wait(pg, "window.drishtiRefresh && document.querySelector('[data-fresh=\"trades\"] [data-refresh-every]')")
+    wait(pg, "window.Drishti.refresh && document.querySelector('[data-fresh=\"trades\"] [data-refresh-every]')")
     assert pg.locator(box + " [data-refresh-every]").input_value() == "10"
     assert pg.locator(box + " [data-refresh-toggle]").get_attribute("aria-pressed") == "true"
     assert pg.locator(".fresh-bar [data-refresh-all]").get_attribute("aria-pressed") == "true"
@@ -144,7 +144,7 @@ def test_a_hidden_tab_fetches_nothing_and_catches_up_when_shown(stack, browser):
     assert not [u for u in pg.fetches if "/panels?" in u], pg.fetches
     t = fetched(pg, "trades")
     pg.evaluate("Object.defineProperty(document, 'hidden', { configurable: true, get: () => false }); document.dispatchEvent(new Event('visibilitychange'))")
-    wait(pg, "drishtiRefresh.state().trades.fetched > %d" % t)
+    wait(pg, "Drishti.refresh.state().trades.fetched > %d" % t)
     pg.close()
 
 
@@ -194,9 +194,9 @@ def test_a_panel_with_its_own_source_says_its_sources_freshness_and_the_others_t
     words = pg.locator("[data-fresh='trades'] [data-fresh-text]").inner_text()
     assert words.startswith("stale · limits-store last had new data "), words
     t = fetched(pg, other)
-    wait(pg, "drishtiRefresh.state()[%s].fetched > %d" % (json.dumps(other), t))
+    wait(pg, "Drishti.refresh.state()[%s].fetched > %d" % (json.dumps(other), t))
     assert pg.locator(f"[data-fresh='{other}']").get_attribute("data-state") == "ok"
-    assert pg.evaluate("drishtiRefresh.state().trades.prov.source") == "limits-store"
+    assert pg.evaluate("Drishti.refresh.state().trades.prov.source") == "limits-store"
     pg.unroute("**/panels?*")
 
     pg.route("**/panels?*", lambda route: route.fulfill(status=502, content_type="application/json",
@@ -216,9 +216,9 @@ def test_a_picked_row_and_what_it_opened_survive_refreshes(stack, browser):
     wait(pg, "window.__wire.length === 1 && document.querySelector('tr.wire-kids')")
     driven = pg.evaluate("window.__wire[0].panels")
     t = fetched(pg, "trades")
-    wait(pg, "drishtiRefresh.state().trades.fetched > %d" % t)
+    wait(pg, "Drishti.refresh.state().trades.fetched > %d" % t)
     t = fetched(pg, "trades")
-    wait(pg, "drishtiRefresh.state().trades.fetched > %d" % t)       # two refreshes later
+    wait(pg, "Drishti.refresh.state().trades.fetched > %d" % t)       # two refreshes later
     assert pg.locator("#p-trades tbody tr[aria-selected='true']").count() == 1
     assert pg.evaluate("document.querySelectorAll('#p-trades tbody tr[data-ev]')[0].getAttribute('aria-selected')") == "true"
     assert pg.locator("tr.wire-kids").count() == 1

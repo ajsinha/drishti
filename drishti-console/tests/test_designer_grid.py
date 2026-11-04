@@ -344,7 +344,7 @@ def test_grid_routes(client, on):  # noqa: F811
     assert r.status_code == 303 and "design=" in r.headers["location"]
     draft = r.headers["location"].split("design=")[1]
     page = client.get(r.headers["location"]).text
-    assert "data-grid" in page and f'data-draft="{draft}"' in page and "designer-grid.js" in page
+    assert "data-grid" in page and f'data-draft="{draft}"' in page and "drishti_designer-grid.js" in page
     st = client.get(f"/designer/grid/state/{draft}").json()
     assert st["grid"]["mode"] == "flow" and st["grid"]["cells"][1]["formula"].startswith("table(id: flows")
     assert any(f["ref"] for f in st["suggest"]["fragments"]) and st["suggest"]["panels"][1]["cell"] == "A2"

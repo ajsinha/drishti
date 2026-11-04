@@ -67,7 +67,7 @@ def test_the_pages_and_the_api_are_read_as_the_person(backend, monkeypatch):
     r = c.get("/go", params={"q": "PLAY FRTB RUN FR-AB12CD34-1 <GO>"}, follow_redirects=False)
     assert r.status_code == 303 and r.headers["location"] == "/play/frtb?recipe=FR-AB12CD34-1"
     page = c.get("/frtb?scope=DESK:RATES").text
-    assert 'data-frtb data-mode="capital" data-scope="DESK:RATES"' in page and "frtb-sa.js" in page and "data-fr-stack" in page and "Scenarios" in page
+    assert 'data-frtb data-mode="capital" data-scope="DESK:RATES"' in page and "drishti_frtb-sa.js" in page and "data-fr-stack" in page and "Scenarios" in page
     page = c.get("/play/frtb?scope=EXAMPLE").text
     assert 'data-mode="play"' in page and "data-fr-choices" in page and "Save recipe" in page and "Export to Excel" in page
     j = c.get("/api/frtb/playground", params={"scope": "EXAMPLE", "girr-correlation": "exact", "override": ["GIRR.delta.across-buckets=0.6"],

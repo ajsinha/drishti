@@ -26,7 +26,7 @@ from test_bi_model_layer import make
 def test_every_page_that_writes_an_expression_loads_the_editor(url):
     client, _ = make()
     text = client.get(url).text
-    assert "bi-expr-editor.js" in text and "bi-expr.css" in text
+    assert "drishti_bi-expr-editor.js" in text and "drishti_bi-expr.css" in text
 
 
 def test_the_proxy_passes_the_language_endpoints_on():
@@ -87,7 +87,7 @@ def test_the_wizard_page_has_every_step_and_the_sql_view():
     text = client.get("/bi/datasets/new-layer").text
     for step in ("root", "columns", "filter", "grain", "derive", "group", "preview", "save"):
         assert f'data-step="{step}"' in text
-    assert 'data-src="sql"' in text and "bi-dataset-steps.js" in text and "bi-query-panel.js" in text and "data-dedup=\"latest\"" in text
+    assert 'data-src="sql"' in text and "drishti_bi-dataset-steps.js" in text and "drishti_bi-query-panel.js" in text and "data-dedup=\"latest\"" in text
 
 
 PUBLISHED = {"rachana": 2, "model": "trading-risk", "version": "1.2.0", "title": "Trading risk",

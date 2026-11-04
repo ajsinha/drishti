@@ -41,7 +41,7 @@ panels:
 def _open(page, base, name, sutra=SUTRA):
     id_ = new_design(page, base, name, sutra=sutra, files={"a.json": '{"tradeId": "T-1", "book": "CONFIDENTIAL-BOOK"}', "b.json": '{"tradeId": "T-2", "book": "rates"}'})
     page.goto(f"{base}/build/d/{id_}")
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     page.locator("[data-preview] [data-panel]").first.wait_for(timeout=BROWSER_WAIT_MS)
     return id_
 
@@ -107,5 +107,5 @@ def test_a_bound_design_saves_to_the_file_and_an_edit_on_disk_comes_back(live_sh
 
     # an edit made elsewhere (the IDE) is read back into the design by the sync
     target.write_text(SUTRA.replace("ship-e2e", "bound-e2e") + "# edited in the IDE\n")
-    wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('# edited in the IDE') >= 0", seconds=20)
+    wait(page, "window.Drishti.workbench.store.state.yaml.indexOf('# edited in the IDE') >= 0", seconds=20)
     wait(page, "document.querySelector('[data-say]').textContent.indexOf('changed on disk') >= 0")

@@ -1157,7 +1157,7 @@ def open_studio(client, url, **params):
     return client.post("/studio", data=form, follow_redirects=False)
 
 
-# The phone display (MOBILE_DISPLAY.md): below 640 px the console draws the phone page and static/js/phone.js reloads a page drawn for
+# The phone display (MOBILE_DISPLAY.md): below 640 px the console draws the phone page and static/js/drishti_phone.js reloads a page drawn for
 # another device. A browser test that is not about the phone display reads the whole page at any width, as a person who chose *Show
 # everything* does (the drishti-phone-all cookie, set before the first navigation, so no reload happens under the test); the phone
 # display's own tests keep it.
@@ -1201,7 +1201,7 @@ def _show_everything_in_browsers():
 
 
 def _sign_in_waits_like_a_navigation():
-    """The sign-in page sends its form in the background (static/js/login-busy.js, busy protection), so a click on Sign in starts no
+    """The sign-in page sends its form in the background (static/js/drishti_login-busy.js, busy protection), so a click on Sign in starts no
     navigation for Playwright to wait on, and a helper's wait_for_url("**/bi") matches the sign-in page's own ?next=/bi at once. A click
     on a submit button of the sign-in page waits, as for a navigation, until the form has been answered: the page's data-signing-in mark
     gone (the next page, the page with its error, or the busy countdown)."""

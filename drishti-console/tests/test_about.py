@@ -96,17 +96,17 @@ def test_an_unknown_entity_answers_with_the_servers_problem(client):
 
 
 def test_the_f1_key_yields_to_the_drawer_and_the_drawer_is_wired_to_the_guide():
-    app_js = (WEB / "static" / "js" / "app.js").read_text()
+    app_js = (WEB / "static" / "js" / "drishti_app.js").read_text()
     assert re.search(r"key === 'F1'\) \{\s*if \(e\.defaultPrevented\) \{ return; \}", app_js)
-    about_js = (WEB / "static" / "js" / "about.js").read_text()
-    assert "e.key === 'F1'" in about_js and "if (isOpen() && current === 'about') { return; }" in about_js      # F1 again inside the drawer: app.js goes to the guide
+    about_js = (WEB / "static" / "js" / "drishti_about.js").read_text()
+    assert "e.key === 'F1'" in about_js and "if (isOpen() && current === 'about') { return; }" in about_js      # F1 again inside the drawer: drishti_app.js goes to the guide
     assert "e.key === '?'" in about_js and "typing(e.target)" in about_js            # `?` is ignored in a text field
 
 
 def test_the_drawer_uses_theme_tokens_only():
-    css = (WEB / "static" / "css" / "about.css").read_text()
-    assert not re.search(r"#[0-9a-fA-F]{3,6}\b|rgba?\(", css)                      # colours come from tokens.css, so all seven themes work
-    tokens = (WEB / "static" / "css" / "tokens.css").read_text()
+    css = (WEB / "static" / "css" / "drishti_about.css").read_text()
+    assert not re.search(r"#[0-9a-fA-F]{3,6}\b|rgba?\(", css)                      # colours come from drishti_tokens.css, so all seven themes work
+    tokens = (WEB / "static" / "css" / "drishti_tokens.css").read_text()
     for t in set(re.findall(r"var\((--d-[a-z0-9-]+)\)", css)):
         assert t + ":" in tokens, t
 
@@ -129,11 +129,11 @@ def test_the_packs_own_text_leads_layer_one_and_a_masked_value_stays_masked(clie
 
 
 def test_the_idle_prefetch_follows_the_setting(client, monkeypatch):
-    # ui.about_prefetch (default on) marks the drawer so about-hints.js fetches the explanation once the page is idle; off,
+    # ui.about_prefetch (default on) marks the drawer so drishti_about-hints.js fetches the explanation once the page is idle; off,
     # nothing is fetched until the drawer opens (one explain per page view saved on a busy installation)
     from core import app as app_module
     assert "data-about-prefetch" in client.get("/v/trade/IRS-48213").text
-    js = (app_module.WEB / "static" / "js" / "about-hints.js").read_text()
+    js = (app_module.WEB / "static" / "js" / "drishti_about-hints.js").read_text()
     assert "hasAttribute('data-about-prefetch')" in js, "the idle fetch must depend on the setting"
     monkeypatch.setitem(client.app.state.templates.env.globals, "ABOUT_PREFETCH", False)
     assert "data-about-prefetch" not in client.get("/v/trade/IRS-48213").text

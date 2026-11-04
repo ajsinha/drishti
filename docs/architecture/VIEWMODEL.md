@@ -148,7 +148,7 @@ any link present is one the caller may open.
 ### Tones
 
 A tone is a word, not a colour; the client maps it to its theme (the console: `t-<tone>` classes on tokens in
-`tokens.css`) and always pairs colour with a sign or glyph. The values the server sends:
+`drishti_tokens.css`) and always pairs colour with a sign or glyph. The values the server sends:
 
 | Tone | Meaning | Comes from |
 |---|---|---|
@@ -785,7 +785,7 @@ on "frame": for p in frame.patches (in order):
 
 The console is the reference renderer. `drishti-console/web/templates/_macros/panels.html` has one macro per kind (first
 paint, server side, Jinja); `pbody(p)` dispatches on `p.kind`, after the `waits`, `empty` and `denied` checks above. Charts
-are drawn in the browser by `static/js/charts.js` (ECharts) from the same `data`, embedded in the page.
+are drawn in the browser by `static/js/drishti_charts.js` (ECharts) from the same `data`, embedded in the page.
 
 | Kind | Macro (panels.html) | Drawn by |
 |---|---|---|
@@ -793,19 +793,19 @@ are drawn in the browser by `static/js/charts.js` (ECharts) from the same `data`
 | `provenance` | inline `<dl class="prov">` (links the Sutra and the connector) | HTML |
 | `table`, `ladder` | `pivotable(p)`, or `drill(p)` when `data.levels` | HTML |
 | `tabs` | `tabs(p)` (inner panels through `panel()`) | HTML |
-| `line`, `area` | `chart(p)` | charts.js |
-| `hbar` | `bars(p.data)`, or `donut(p)` when `shape` is `donut` | HTML / charts.js |
-| `surface` | `surface(p)` | charts.js (ECharts GL for `3d`) |
+| `line`, `area` | `chart(p)` | drishti_charts.js |
+| `hbar` | `bars(p.data)`, or `donut(p)` when `shape` is `donut` | HTML / drishti_charts.js |
+| `surface` | `surface(p)` | drishti_charts.js (ECharts GL for `3d`) |
 | `links` | `links(p.data)` | HTML |
 | `markdown` | `<p>{{ p.data.text }}</p>` | HTML |
-| `waterfall`, `histogram`, `scatter`, `candlestick`, `graph` | one macro each | charts.js |
+| `waterfall`, `histogram`, `scatter`, `candlestick`, `graph` | one macro each | drishti_charts.js |
 | `timeline` | `timeline(p.data)` | HTML |
-| `map` | `geomap(p)` | charts.js |
+| `map` | `geomap(p)` | drishti_charts.js |
 | `pivot` | `pivot(p.data)` | HTML |
 | `metric` | inline | HTML |
 | `gauge` | inline (`value / max` as a bar) | HTML |
 
-Live: `static/js/live.js` applies `strip` patches in place (text and tone, then a flash), hands `line` and `area` panels new
+Live: `static/js/drishti_live.js` applies `strip` patches in place (text and tone, then a flash), hands `line` and `area` panels new
 data (`drishti.updateChart`), swaps every other panel for the console-rendered `html` the channel adds, and handles
 `provenance`, `deleted` and `restored` as in section 5.
 

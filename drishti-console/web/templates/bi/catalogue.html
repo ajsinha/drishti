@@ -19,7 +19,7 @@
 <header class="bi-head"><h1>Catalogue</h1>
   <p class="text-muted-d">Every published item you may open. Certified items come first. <kbd>/</kbd> searches.</p></header>
 <p class="bi-msg" data-msg role="status" aria-live="polite"></p>
-{# The catalogue by kind: one tab per kind, ?kind= keeps the one shown (core/bi_catalogue_tabs.py maps each item kind to its tab). bi.js turns them. #}
+{# The catalogue by kind: one tab per kind, ?kind= keeps the one shown (core/bi_catalogue_tabs.py maps each item kind to its tab). drishti_bi.js turns them. #}
 <nav class="bi-tabs bi-ws-tabs bi-cat-tabs" role="tablist" aria-label="Kinds of item" data-cat-tabs>
   {% for key, label, icon in [('reports', 'Reports', 'bar-chart-line'), ('boards', 'Boards', 'speedometer2'), ('models', 'Models', 'boxes'), ('datasets', 'Datasets', 'hdd-stack'), ('python', 'Python', 'code-slash'), ('all', 'All', 'grid')] %}
   <a role="tab" href="?kind={{ key }}" id="cTab-{{ key }}" aria-controls="cPanel" aria-selected="{{ 'true' if loop.first else 'false' }}" data-cat-tab="{{ key }}"><i class="bi bi-{{ icon }}" aria-hidden="true"></i> {{ label }} <small class="bi-cat-count" data-cat-count></small></a>
@@ -43,4 +43,4 @@
 <p class="bi-empty" data-empty hidden>Nothing of this kind matches. Try the All tab, clear a filter, or check the spelling.</p>
 </div>
 {% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-runs.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-runs.css?v={{ ASSET_V }}">{% endblock %}

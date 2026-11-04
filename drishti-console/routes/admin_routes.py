@@ -704,7 +704,7 @@ CAPACITY_HELP = "/help/operations#124-admin--capacity-today-against-the-plan"
 
 @router.get("/capacity")
 async def capacity(request: Request):
-    """Today against the plan (headroom, what breaks first, growth) and, behind Edit the plan, the planner; capacity.js evaluates."""
+    """Today against the plan (headroom, what breaks first, growth) and, behind Edit the plan, the planner; drishti_capacity.js evaluates."""
     me = ident(request)
     if not me.is_admin:
         return _forbidden(request)

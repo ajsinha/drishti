@@ -27,9 +27,9 @@ PIN = lake_days(2)[0]                      # the business day before the demo la
 
 
 def done(c: Ctx, action):
-    n = c.page.evaluate("(window.__drishtiControls || []).length")
+    n = c.page.evaluate("(window.Drishti.__controls || []).length")
     action()
-    c.until(f"(window.__drishtiControls || []).length > {n}", 30)
+    c.until(f"(window.Drishti.__controls || []).length > {n}", 30)
     c.page.wait_for_timeout(400)
 
 

@@ -37,7 +37,7 @@ panels:
 
 
 def ids(page):
-    return page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    return page.evaluate("window.Drishti.workbench.canvas.ids()")
 
 
 def comments(text):
@@ -68,7 +68,7 @@ def test_the_header_trash_button_removes_one_panel_and_the_toast_undo_brings_it_
     assert "Removed" in page.locator("[data-live]").text_content() or "Removed" in page.locator("[data-say]").text_content()
     rev = state(page, "rev")
     toast.get_by_role("button", name="Undo").click()
-    wait(page, f"window.drishtiWorkbench.store.state.opsAt < window.drishtiWorkbench.store.state.opsCount")
+    wait(page, f"window.Drishti.workbench.store.state.opsAt < window.Drishti.workbench.store.state.opsCount")
     assert ids(page) == ["facts", "note", "last"]                                  # back in its place
     assert state(page, "yaml") == before
 

@@ -206,7 +206,7 @@ def test_the_model_designer_writes_expressions_field_properties_and_perspectives
     page.locator('[data-persp-pick="desk-view:trade.DESK"]').check()
     page.locator('[data-persp-pick="desk-view:Sum of MTM"]').check()
     shoot(page, "[data-fields-pane]", "model-fields-tab")
-    page.wait_for_function("() => window.drishtiModel.yaml.indexOf('measures: [Sum of MTM]') >= 0", timeout=10000)          # the YAML follows each edit once Check has run
+    page.wait_for_function("() => window.Drishti.model.yaml.indexOf('measures: [Sum of MTM]') >= 0", timeout=10000)          # the YAML follows each edit once Check has run
     text = w1.yaml_tab(page)
     capture("model-fields.yaml", text)
     for line in ("trade.MTM: {description:", "folder: Risk", "trade.PORTFOLIO: {hidden: true}", "desk-view: {title: Desk view, fields: [trade.DESK], measures: [Sum of MTM]}",
@@ -218,8 +218,8 @@ def test_the_model_designer_writes_expressions_field_properties_and_perspectives
     page.locator('[data-hidden-pick="trade.NOTIONAL"]').check()
     page.click("[data-hidden-add]")
     expect(page.locator('[data-hidden-entry="0"]')).to_contain_text("desk-head", timeout=15000)
-    page.wait_for_function("() => window.drishtiModel.yaml.indexOf('hidden-for') >= 0", timeout=10000)
-    assert "hidden-for: [{roles: [desk-head], fields: [trade.NOTIONAL]}]" in page.evaluate("window.drishtiModel.yaml"), page.evaluate("window.drishtiModel.yaml")
+    page.wait_for_function("() => window.Drishti.model.yaml.indexOf('hidden-for') >= 0", timeout=10000)
+    assert "hidden-for: [{roles: [desk-head], fields: [trade.NOTIONAL]}]" in page.evaluate("window.Drishti.model.yaml"), page.evaluate("window.Drishti.model.yaml")
     expect(page.locator("[data-valid]")).to_have_text("Valid", timeout=15000)
     shoot(page, "[data-hidden-for]", "model-hidden-for")
     page.click("[data-save]")
@@ -320,7 +320,7 @@ def test_a_report_on_a_model_has_its_own_measures_and_the_query_as_mq_or_sql(bro
     expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    name = page.evaluate("window.drishtiModel.doc.model")
+    name = page.evaluate("window.Drishti.model.doc.model")
     page.click("[data-report]")
     page.click("[data-ask-go]")
     page.wait_for_url("**/bi/design/**", timeout=20000)
@@ -378,7 +378,7 @@ def test_an_sql_view_dataset_in_the_wizard_and_an_analyse_cell_on_the_server(bro
     expect(page.locator('[data-measure="Sum of MTM"]')).to_be_visible(timeout=15000)
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
-    ref = page.evaluate("window.drishtiModel.doc.model") + "@1"
+    ref = page.evaluate("window.Drishti.model.doc.model") + "@1"
     # the wizard: an SQL view over the model, checked by the server, previewed, saved
     page.evaluate("window.sessionStorage.clear()")
     wizard(page)
@@ -436,7 +436,7 @@ def test_a_reports_fields_pane_inherits_the_models_properties_and_perspectives(b
     page.click("[data-persp-add]")
     page.locator('[data-persp-pick="desk-view:trade.DESK"]').check()
     page.locator('[data-persp-pick="desk-view:Sum of MTM"]').check()
-    page.wait_for_function("() => window.drishtiModel.yaml.indexOf('measures: [Sum of MTM]') >= 0", timeout=10000)
+    page.wait_for_function("() => window.Drishti.model.yaml.indexOf('measures: [Sum of MTM]') >= 0", timeout=10000)
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
     page.click("[data-report]")

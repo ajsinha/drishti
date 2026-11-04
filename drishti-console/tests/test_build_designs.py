@@ -78,7 +78,7 @@ def test_new_page_offers_the_five_ways_to_bring_data_and_the_start_choices(app_c
     for anchor in ("files", "schema", "store", "examples", "sutra"):
         assert f'id="{anchor}"' in page
     assert 'value="auto" checked' in page and 'value="existing"' in page and 'value="empty"' in page
-    assert "build-new.js" in page and "build-files.js" in page and 'aria-live="polite"' in page
+    assert "drishti_build-new.js" in page and "drishti_build-files.js" in page and 'aria-live="polite"' in page
     names = sorted(p.name[: -len(".sutra.yaml")] for p in EXAMPLES.glob("*.sutra.yaml"))
     assert len(names) >= 10 and all(f'data-example="{n}"' in page for n in names)       # every example is a card
     assert "irs-vanilla@3" in page                                                       # the registry's Sutras
@@ -130,9 +130,9 @@ def test_the_design_page_is_the_workbench_with_its_panes_and_samples(app_client)
     for pane in ("Design", "YAML", "Summary", "Inspector", "Problems", "Tests"):
         assert f'role="tab"' in page and f">{pane}" in page
     assert '"name": "a.json"' in page.replace("&#34;", '"') and '"name": "b.json"' in page.replace("&#34;", '"')
-    assert "data-autodesign" in page and "build/workbench.js" in page and "build-design.js" not in page
+    assert "data-autodesign" in page and "build/drishti_workbench.js" in page and "build-design.js" not in page
     assert "data-preview-file" in page and "data-undo" in page and "data-redo" in page and 'aria-live="polite"' in page
-    assert "build-workbench.css" in page
+    assert "drishti_build-workbench.css" in page
 
 
 def test_a_missing_or_foreign_design_is_a_404_page(app_client, backend):

@@ -16,12 +16,12 @@
 {# Backtesting, VAR <scope> BACKTEST (VAR_GUIDE.md section 18.11; the approved mock-up backtesting A): one scope at a time, the chart of
    the 250 days (actual P&L bars, hypothetical P&L line, -VaR 99% and 97.5% of the day before, exceptions marked), the zone card with both
    counts and the multiplier, the bank and its desks with their own counts and a small chart, then the exceptions with the desks that
-   drove them. A shell: var-backtesting.js fills it from /api/var/backtesting. On a phone: the zone card only. #}
+   drove them. A shell: drishti_var-backtesting.js fills it from /api/var/backtesting. On a phone: the zone card only. #}
 {% extends "base.html" %}
 {% block title %}Backtesting · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-backtesting{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-backtesting data-scope="{{ scope }}" data-asof="{{ as_of }}">
@@ -77,4 +77,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/var-backtesting.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-backtesting.js?v={{ ASSET_V }}"></script>{% endblock %}

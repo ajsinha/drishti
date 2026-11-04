@@ -61,7 +61,7 @@ def test_the_map_is_served_from_the_console_and_to_the_element_with_cors(backend
 
 
 def test_every_new_type_is_in_the_catalogue_of_the_designer_and_has_an_icon():
-    panes = (STATIC / "js/bi-design-panes.js").read_text(encoding="utf-8")
+    panes = (STATIC / "js/drishti_bi-design-panes.js").read_text(encoding="utf-8")
     groups = re.search(r"\['Charts', \[([^\]]+)\]\]", panes).group(1)
     icons = re.search(r"const ICONS = \{(.*?)\};", panes, re.S).group(1)
     for t in ("bubble", "funnel", "histogram", "box", "map"):
@@ -75,7 +75,7 @@ def test_every_new_type_is_in_the_catalogue_of_the_designer_and_has_an_icon():
 
 def run(script: str):
     prelude = ("global.window = { drishtiBi: { h: () => ({}), visuals: {}, fmt: (v) => String(v), compact: (v) => String(v), label: (x) => x, clear: (x) => x, column: () => null } };"
-               "for (const f of ['bi-visuals.js', 'bi-grids.js']) { require(%s + '/' + f); } const V = window.drishtiBi.visuals;" % json.dumps(str(STATIC / "js")))
+               "for (const f of ['drishti_bi-visuals.js', 'drishti_bi-grids.js']) { require(%s + '/' + f); } const V = window.drishtiBi.visuals;" % json.dumps(str(STATIC / "js")))
     out = subprocess.run([node, "-e", prelude + script], capture_output=True, text=True, timeout=30)
     assert out.returncode == 0, out.stderr
     return json.loads(out.stdout)
@@ -109,7 +109,7 @@ def test_the_engines_totals_are_looked_up_by_the_fields_and_values_of_the_group(
 
 
 def test_the_new_scripts_carry_no_cdn_url_inline_code_or_markup_strings():
-    for rel in ("js/bi-visuals.js", "js/bi-grids.js", "js/bi-dataset.js", "js/bi-design-panes.js"):
+    for rel in ("js/drishti_bi-visuals.js", "js/drishti_bi-grids.js", "js/drishti_bi-dataset.js", "js/drishti_bi-design-panes.js"):
         text = (STATIC / rel).read_text(encoding="utf-8")
         assert "https://" not in text and "innerHTML" not in text and "eval(" not in text, rel
         assert len(text.splitlines()) < 1500, rel
@@ -118,7 +118,7 @@ def test_the_new_scripts_carry_no_cdn_url_inline_code_or_markup_strings():
 
 
 def test_the_new_visuals_stay_inside_the_phone_rules():
-    css = (STATIC / "css/bi-report.css").read_text(encoding="utf-8")
+    css = (STATIC / "css/drishti_bi-report.css").read_text(encoding="utf-8")
     for t in ("bubble", "funnel", "histogram", "box", "map"):
         assert f".bi-vis-{t}" in css, t
     assert "overflow-wrap: anywhere" in css                       # the note under a map wraps instead of widening the page

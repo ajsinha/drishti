@@ -70,7 +70,7 @@ def open_view(ctx, stack, path=VIEW, wait="#p-flows [data-table-chart]"):
 def drawn(page):
     page.wait_for_selector(DLG + " .tc-canvas svg path", state="attached", timeout=15000)
     page.wait_for_selector("dialog.tc-dlg:not([aria-busy])", state="attached", timeout=15000)   # the engine has answered the last change
-    return page.evaluate("""(() => { const c = window.drishtiTableChart.current();
+    return page.evaluate("""(() => { const c = window.Drishti.tableChart.current();
         return { type: c.settings.type, x: c.settings.x.field, series: c.option.series.map(s => s.name), kinds: c.option.series.map(s => s.type),
                  sum: document.querySelector('.tc-sum').textContent, status: document.querySelector('[data-tc-status]').textContent,
                  label: document.querySelector('.tc-canvas').getAttribute('aria-label') }; })()""")
@@ -129,11 +129,11 @@ def test_x_split_top_n_and_a_second_series_redraw_and_the_summary_follows(ctx, s
     page.select_option('[data-tc-k="s1-axis"]', "right")
     d = drawn(page)
     assert len(d["series"]) == 2
-    assert page.evaluate("Array.isArray(window.drishtiTableChart.current().option.yAxis) && window.drishtiTableChart.current().option.yAxis.length") == 2
+    assert page.evaluate("Array.isArray(window.Drishti.tableChart.current().option.yAxis) && window.Drishti.tableChart.current().option.yAxis.length") == 2
     page.fill('[data-tc-k="top"]', "2")
     page.locator('[data-tc-k="top"]').dispatch_event("change")
     drawn(page)
-    xs = page.evaluate("window.drishtiTableChart.current().last.x")
+    xs = page.evaluate("window.Drishti.tableChart.current().last.x")
     assert len(xs) == 3 and xs[-1] == "Others"
 
 
@@ -146,10 +146,10 @@ def test_a_masked_column_is_offered_greyed_and_never_plotted(ctx, stack):
         assert opt.count() == 1 and opt.is_disabled() and "hidden for your role" in opt.inner_text()
     assert "Limit hidden for your role, not charted" in d["status"]
     # a crafted choice of the masked column is refused by the engine's normalise
-    page.evaluate("(() => { const c = window.drishtiTableChart.current(); c.change(n => { n.series[0].field = 'Limit'; n.x.field = 'Limit'; }); })()")
+    page.evaluate("(() => { const c = window.Drishti.tableChart.current(); c.change(n => { n.series[0].field = 'Limit'; n.x.field = 'Limit'; }); })()")
     d = drawn(page)
     assert all("Limit" not in s for s in d["series"]) and d["x"] != "Limit"
-    assert "•••" not in page.evaluate("JSON.stringify(window.drishtiTableChart.current().gridData())")
+    assert "•••" not in page.evaluate("JSON.stringify(window.Drishti.tableChart.current().gridData())")
 
 
 def test_search_results_chart_the_raw_values_and_chart_all_asks_the_pivot_engine(ctx, stack):
@@ -163,7 +163,7 @@ def test_search_results_chart_the_raw_values_and_chart_all_asks_the_pivot_engine
     page.click('[data-tc-type="bar"]')
     d = drawn(page)
     assert d["x"] == "Desk" and d["series"] == ["Notional (sum)"]
-    total = page.evaluate("window.drishtiTableChart.current().last.series[0].data.reduce((a, b) => a + b, 0)")
+    total = page.evaluate("window.Drishti.tableChart.current().last.series[0].data.reduce((a, b) => a + b, 0)")
     assert total == sum(1_000_000 * ((i * 37) % 50 + 1) for i in range(30))
     allb = page.locator(".tc-all")
     assert allb.is_visible() and allb.is_enabled() and "Chart all 500 rows" in allb.inner_text()
@@ -173,7 +173,7 @@ def test_search_results_chart_the_raw_values_and_chart_all_asks_the_pivot_engine
     assert len(backend.pivot_calls) == before + 1
     assert backend.pivot_calls[-1]["source"] == "trade" and backend.pivot_calls[-1]["rows"] == ["desk"]
     assert backend.pivot_calls[-1]["values"] == [{"measure": "sum(notional)", "as": "v0"}]
-    assert page.evaluate("window.drishtiTableChart.current().last.series[0].data").count(None) == 0
+    assert page.evaluate("window.Drishti.tableChart.current().last.series[0].data").count(None) == 0
     assert "Chart the shown rows" in allb.inner_text()
     page.select_option('[data-tc-k="split"]', "Currency")                     # a change while charting all asks the server again
     page.wait_for_function(f"document.querySelector('[data-tc-status]').textContent.includes('Every match')")
@@ -251,7 +251,7 @@ def test_empty_single_row_and_big_tables(ctx, stack):
     page.click("#p-big [data-table-chart]")
     d = drawn(page)
     assert d["type"] == "bar" and "top 20 and Others" in d["status"]
-    assert len(page.evaluate("window.drishtiTableChart.current().last.x")) == 21
+    assert len(page.evaluate("window.Drishti.tableChart.current().last.x")) == 21
 
 
 def test_a_phone_gets_a_full_screen_sheet_with_no_sideways_scroll(browser, stack):
@@ -287,7 +287,7 @@ def test_every_theme_draws_with_its_own_tokens_only(ctx, stack):
         got = page.evaluate("""(() => {
             const s = getComputedStyle(document.documentElement), tok = {};
             ['link','accent','ok','neg','warn','bad','muted','ink','faint','border','surface'].forEach(k => tok[k] = s.getPropertyValue('--d-' + k).trim().toLowerCase());
-            const o = window.drishtiTableChart.current().option;
+            const o = window.Drishti.tableChart.current().option;
             return { tok, colours: o.series.map(x => String(x.itemStyle.color).toLowerCase()),
                      bg: getComputedStyle(document.querySelector('dialog.tc-dlg')).backgroundColor,
                      fills: Array.from(document.querySelectorAll('.tc-canvas svg path[fill]')).map(p => p.getAttribute('fill').toLowerCase()) };

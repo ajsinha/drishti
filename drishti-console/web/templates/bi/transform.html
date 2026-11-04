@@ -14,11 +14,11 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# Wave C (2.4.0), the Transform editor (docs/guides/BI_GUIDE.md › Python in BI: measures, visuals and data prep written in Python, section 17): a Python Transform built step by step, with a preview and a profile after each
-   step, a snippets picker and no YAML to type (the YAML is shown, and may be edited and read back). Drawn by static/js/bi-transform.js; the steps run on the
+   step, a snippets picker and no YAML to type (the YAML is shown, and may be edited and read back). Drawn by static/js/drishti_bi-transform.js; the steps run on the
    console's sandbox (POST /bi/transform/steps), so this page keeps the strict policy of every BI page. #}
 {% extends "bi/shell.html" %}
 {% block bi_title %}Transform editor{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-transform.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-transform.css?v={{ ASSET_V }}">{% endblock %}
 {% block bi_main %}
 <header class="bi-head"><h1>Transform editor</h1>
   <p class="text-muted-d">Build a Python Transform step by step. Add the inputs it reads (a pack kind straight through its connector, or a model), then add steps from the snippets or write your own.
@@ -111,4 +111,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-transform-view.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-transform.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-layer.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-transform-view.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-transform.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -107,7 +107,7 @@ def test_the_page_shows_this_node_every_member_and_the_files(client, backend, mo
     page = client.get("/admin/net").text
     for text in ("Drishti*net", "Cluster on", "n-a", "n-b", "n-c", "region:emea", "region:apac", "market-risk", "suspect", "dead", "drained",
                  "3.2 ms", "Key set", "Add seed", "data-remove=\"n-c\"", "Drain", "Leave", "/srv/drishti/data/net/peers.json", "drishti-b",
-                 'role="tablist"', 'role="tab"', 'aria-selected="true"', "admin-net.js", "admin-net.css", "/help/net", "gossip.yaml", "refused",
+                 'role="tablist"', 'role="tab"', 'aria-selected="true"', "drishti_admin-net.js", "drishti_admin-net.css", "/help/net", "gossip.yaml", "refused",
                  "peers/drishti-b.yaml", "not there (defaults)"):
         assert text in page, text
     assert 'data-remove="n-b"' not in page                                   # only a dead or left member can be removed
@@ -155,7 +155,7 @@ def test_routing_explains_a_request_and_shows_the_forwarded_traffic(client, back
     with_net(backend, monkeypatch, calls)
     page = client.get("/admin/net?tab=routing").text
     for text in ('id="netTabRouting"', "Explain a request", "data-explain-form", 'data-traffic="n-b"', "act-chart", "Slowest peers",
-                 "average 11.4 ms over 8 calls", "Latest calls", "admin-detail.css"):
+                 "average 11.4 ms over 8 calls", "Latest calls", "drishti_admin-detail.css"):
         assert text in page, text
     r = client.get("/admin/net/api/explain?kind=trade&id=X&role=risk&junk=1").json()
     assert r["route"] == "view"
@@ -197,7 +197,7 @@ def test_the_members_tab_has_the_hash_ring_and_its_data_says_what_each_node_hold
 
     with_net(backend, monkeypatch, [])
     page = client.get("/admin/net").text
-    for text in ("data-ring", "data-ring-arcs", "data-ring-count", "1 / 3", "admin-net-ring.js", "the console's server", "net-sw-dead"):
+    for text in ("data-ring", "data-ring-arcs", "data-ring-count", "1 / 3", "drishti_admin-net-ring.js", "the console's server", "net-sw-dead"):
         assert text in page, text
     body = client.get("/admin/net/api/members").json()
     assert body["holds"] == {"n-a": ["trade"], "n-c": ["trade"]}                 # the capability map's holders, per node

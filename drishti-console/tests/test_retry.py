@@ -248,7 +248,7 @@ def test_the_admin_pages_show_failed_next_retry_in_n_seconds_attempt_k(client, b
                        ("/admin/health", ['data-retries', 'data-retry-now="all"'])):
         page = client.get(url).text
         assert expect in page and "next retry in" in page and "(attempt 3)" in page and "connection refused" in page, url
-        assert "admin-retry.js" in page, url
+        assert "drishti_admin-retry.js" in page, url
         for text in extra:
             assert text in page, (url, text)
 

@@ -16,7 +16,7 @@
 {% extends "base.html" %}
 {% block title %}{{ guide.title }} · Help · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal help-page{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/help-config.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_help-config.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% include "help/_nav.html" %}{% endblock %}
 {% block content %}
 <div class="help-wrap help-guide cfg-page" data-cfg-page>
@@ -50,4 +50,4 @@
   </article>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script><script src="/static/js/configuration.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_help.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_configuration.js?v={{ ASSET_V }}"></script>{% endblock %}

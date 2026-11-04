@@ -97,7 +97,7 @@ def gridded(client, backend, monkeypatch):
 
 def test_a_grid_page_draws_its_areas(client, gridded):
     html = client.get("/v/trade/IRS-47102").text
-    assert "data-sgrid" in html and 'class="vgrid sg sg-areas"' in html and "screen-grid.js" in html
+    assert "data-sgrid" in html and 'class="vgrid sg sg-areas"' in html and "drishti_screen-grid.js" in html
     assert re.search(r'data-sg-area="header".*?id="p-built"', html, re.S) and re.search(r'data-sg-area="detail".*?data-sg-tab="refs"', html, re.S)
     assert 'class="vmain"' not in html and "data-layout-open" not in html          # layout mode (Alt+L) gives way to the grid
     assert "data-sg-arrange" in html and "Reset layout" in html
