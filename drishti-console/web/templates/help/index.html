@@ -15,7 +15,7 @@
 #}
 {# The help centre's front door (2.9.11.a, mock-up help-hub/A): one search box over all of Help, the most used pages, and a tile per
    section (config/help.yaml sections:) with its one line and how many pages this person can open in it; a tile opens the section's own
-   page (help/section.html). Old addresses /help#cat-<id> lead to their section (static/js/help.js, data-help-sections). #}
+   page (help/section.html). Old addresses /help#cat-<id> lead to their section (static/js/drishti_help.js, data-help-sections). #}
 {% extends "base.html" %}
 {% block title %}Help · {{ PRODUCT }}{% endblock %}
 {% block body_class %}terminal help-page{% endblock %}
@@ -55,4 +55,4 @@
     {% if competitive %}<a href="/help/competitive-analysis"><i class="bi bi-binoculars" aria-hidden="true"></i> Competitive analysis</a>{% endif %}</p>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_help.js?v={{ ASSET_V }}"></script>{% endblock %}

@@ -75,8 +75,8 @@ def landing_for(request, ed: Edition) -> str | None:
 
 async def render_landing(request, ed: Edition, landing: str, cards: list):
     """One of the edition's landings: a shell (``home.template``) whose panels read the servers' own answers, drawn by the script the
-    template names (Drishti Risk: the engines' /api/var and /api/exposure, risk-landing.js; Drishti World: the packs' kinds through
-    /api/home/search and /api/raw, world-landing.js). What the page needs of the person is read here: their monitors (Risk's
+    template names (Drishti Risk: the engines' /api/var and /api/exposure, drishti_risk-landing.js; Drishti World: the packs' kinds through
+    /api/home/search and /api/raw, drishti_world-landing.js). What the page needs of the person is read here: their monitors (Risk's
     ``command``) and their recent commands of the edition (World's ``explorer``)."""
     titles = ed.landing_titles()
     offered = [{"id": x, "title": titles[x], "href": f"/home/landing/{x}"} for x in ed.landings()]

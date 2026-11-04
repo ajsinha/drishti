@@ -79,7 +79,7 @@ def opened(pg):
 
 
 def view(pg):
-    return pg.evaluate("window.PivotScreen.view()")
+    return pg.evaluate("window.Drishti.PivotScreen.view()")
 
 
 def grand(answer):
@@ -169,7 +169,7 @@ def test_tab_b_components_add_up_and_the_10_day_lens_asks_again(stack, browser):
     pg.click('[data-mr-tab="pivot"]')
     one_day = scope_var(pg, "BANK")
     pg.click('[data-mr-seg="horizon"] button[data-v="10d"]')
-    wait(pg, "(window.PivotScreen.view().options || {}).horizon === '10d'", 60)
+    wait(pg, "(window.Drishti.PivotScreen.view().options || {}).horizon === '10d'", 60)
     wait(pg, "!!document.querySelector('[data-mr-tiles] .mr-tile .mr-tv')", 60)
     ten = fetch(pg, "POST", "/api/pivot/mr/headline", {"view": view(pg)})["body"]
     assert abs(ten["var"] - one_day * 10 ** 0.5) < 0.05

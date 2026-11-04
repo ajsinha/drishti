@@ -28,9 +28,9 @@
   ],
   "sha256": "dc6880a81698bcc027fcbdd4d7e17771d4a42fb74861d453822e1f310506d10e",
   "sources": [
-    "css/bi.css",
-    "css/bi-report.css",
-    "css/bi-board.css",
+    "css/drishti_bi.css",
+    "css/drishti_bi-report.css",
+    "css/drishti_bi-board.css",
     "vendor/bootstrap-icons/bootstrap-icons.css"
   ],
   "version": "b4fbf79d41a8"

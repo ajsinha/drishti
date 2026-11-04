@@ -27,7 +27,7 @@ from core.nextpath import login_url
 
 def live_who(request: Request) -> str:
     """Whose live data a page shows: a fingerprint of the server, user and sign-in session (never the session id itself).
-    The browser's one live connection (live-hub.js) is shared only by pages with the same fingerprint as the
+    The browser's one live connection (drishti_live-hub.js) is shared only by pages with the same fingerprint as the
     connection's own (the ``channel`` event's ``who``), so frames built for one session never reach another's page."""
     from core import servers
 

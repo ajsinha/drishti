@@ -35,20 +35,20 @@ OUT_DIR = WEB / "elements"
 SHEET_FILE, MANIFEST_FILE = "drishti-view.css", "drishti-view.manifest.json"
 REPORT_FILE, REPORT_MANIFEST = "drishti-report.css", "drishti-report.manifest.json"
 # <drishti-report> adopts the view sheet (tokens, theme, buttons, inputs) and then this one: the BI sheets, rewritten the same way, with the glyphs the report code names
-REPORT_SHEETS = ("css/bi.css", "css/bi-report.css", "css/bi-board.css")
-REPORT_ICON_SOURCES = ("static/js/bi-visuals.js", "static/js/bi-visuals-format.js", "static/js/bi-grids.js", "static/js/bi-matrix.js", "static/js/bi-multiples.js", "static/js/bi-frame.js", "static/js/bi-live.js", "static/js/bi-phone.js", "static/js/bi-lib.js",
+REPORT_SHEETS = ("css/drishti_bi.css", "css/drishti_bi-report.css", "css/drishti_bi-board.css")
+REPORT_ICON_SOURCES = ("static/js/drishti_bi-visuals.js", "static/js/drishti_bi-visuals-format.js", "static/js/drishti_bi-grids.js", "static/js/drishti_bi-matrix.js", "static/js/drishti_bi-multiples.js", "static/js/drishti_bi-frame.js", "static/js/drishti_bi-live.js", "static/js/drishti_bi-phone.js", "static/js/drishti_bi-lib.js",
                        "embed/report.js", "embed/report-page.js")
 # glyphs the code builds from parts (a class such as "bi bi-" + (x ? a : b)) or hands to a helper by name
 REPORT_NAMED_ICONS = ("table", "x-circle", "play-fill", "pause-fill", "caret-down-fill", "caret-up-fill", "dash-square", "plus-square", "arrow-left", "cursor", "funnel", "sliders",
                       "arrow-down-circle-fill", "arrow-right-circle-fill", "arrow-up-circle-fill", "circle-fill", "x-circle-fill", "exclamation-circle-fill", "check-circle-fill", "flag-fill")
 REPORT_ICON_CALL = re.compile(r"icon\('([a-z0-9]+(?:-[a-z0-9]+)*)'\)")
 # the console's own sheets, in the order base.html loads them (the icon sheet is handled apart: only its used glyphs go in)
-SHEETS = ("css/tokens.css", "css/theme.css", "css/terminal.css", "css/layout.css", "css/gradients.css", "css/pivot.css", "css/colfilter.css", "css/controls.css", "css/about.css", "css/touch.css")
+SHEETS = ("css/drishti_tokens.css", "css/drishti_theme.css", "css/drishti_terminal.css", "css/drishti_layout.css", "css/drishti_gradients.css", "css/drishti_pivot.css", "css/drishti_colfilter.css", "css/drishti_controls.css", "css/drishti_about.css", "css/drishti_touch.css")
 ICON_SHEET = "vendor/bootstrap-icons/bootstrap-icons.css"
 GZIP_TARGET = 25 * 1024
 # where a glyph can be named: the macros every embedded view is rendered with, and the scripts that run inside the element
-ICON_SOURCES = ("templates/_macros/panels.html", "templates/_macros/view.html", "static/js/tables.js", "static/js/colfilter.js", "static/js/tree-rows.js",
-                "static/js/view.js", "static/js/zoom.js", "static/js/charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js")
+ICON_SOURCES = ("templates/_macros/panels.html", "templates/_macros/view.html", "static/js/drishti_tables.js", "static/js/drishti_colfilter.js", "static/js/drishti_tree-rows.js",
+                "static/js/drishti_view.js", "static/js/drishti_zoom.js", "static/js/drishti_charts.js", "embed/enhancers.js", "embed/element.js", "embed/assets.js")
 ICON_NAME = re.compile(r"(?<![\w-])bi-([a-z0-9]+(?:-[a-z0-9]+)*)")
 BASE_ICON_CLASSES = {"bi"}          # the font's base rule is always kept
 _LICENCE = re.compile(r"\A/\*.*?\*/\s*", re.S)
@@ -131,7 +131,7 @@ def _compact(text: str) -> str:
 
 
 def public_names(paths) -> str:
-    """The sheets a generated sheet is built from, by their public names (``css/tokens.css``, as the embed routes name them, not the
+    """The sheets a generated sheet is built from, by their public names (``css/drishti_tokens.css``, as the embed routes name them, not the
     file's ``drishti_`` name): a published sheet's bytes then do not depend on how the console names its files."""
     return ", ".join(re.sub(r"(^|/)drishti_", r"\1", p) for p in paths)
 

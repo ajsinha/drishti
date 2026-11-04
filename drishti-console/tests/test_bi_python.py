@@ -171,14 +171,14 @@ def test_the_python_paths_of_the_server_are_reachable_from_the_page_script():
 def test_the_report_page_wires_python_without_inline_script_and_without_a_browser_runtime():
     client, _ = make(MEASURE)
     page = client.get("/bi/r/file:report:python-desk-risk").text
-    assert "/static/js/bi-python.js" in page and 'data-author="true"' in page
-    assert "data-py-runtime" not in page and "data-py-driver" not in page and "calc-worker.js" not in page and "pyodide" not in page.lower()
+    assert "/static/js/drishti_bi-python.js" in page and 'data-author="true"' in page
+    assert "data-py-runtime" not in page and "data-py-driver" not in page and "drishti_calc-worker.js" not in page and "pyodide" not in page.lower()
     assert "<script>" not in page.replace("<script src", "") and " onclick=" not in page
     reader, _ = make(MEASURE, powers=("bi",))
     assert 'data-author="false"' in reader.get("/bi/r/file:report:python-desk-risk").text
     assert client.get("/bi/r/file:report:python-desk-risk").headers["content-security-policy"].count("wasm-unsafe-eval") == 0
     assert client.get("/static/calc/bi_driver.py").status_code == 404
-    assert client.get("/static/js/bi-python.js").status_code == 200
+    assert client.get("/static/js/drishti_bi-python.js").status_code == 200
 
 
 def test_the_run_route_takes_json_from_this_console_only():

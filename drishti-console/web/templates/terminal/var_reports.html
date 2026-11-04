@@ -15,13 +15,13 @@
 #}
 {# Reports, review and sign-off, VAR REPORT <report> <period> (VAR_GUIDE.md section 18.14; the approved mock-up report-signoff A): the
    pilot pack, the period statistics, the report as it will be filed (every cell drills to its lineage), the narrative; on the right the
-   sign-off chain with the approve action, the checks, and the selected cell's lineage. A shell: var-reports.js fills it from
+   sign-off chain with the approve action, the checks, and the selected cell's lineage. A shell: drishti_var-reports.js fills it from
    /api/var/reports. #}
 {% extends "base.html" %}
 {% block title %}Reports · {{ report or 'review and sign-off' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var-reports{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_var-regulatory.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="rg" data-reports data-report="{{ report }}" data-period="{{ period }}" data-version="{{ version }}" data-user="{{ user }}">
@@ -76,4 +76,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_var-reports.js?v={{ ASSET_V }}"></script>{% endblock %}

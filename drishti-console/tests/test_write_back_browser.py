@@ -39,7 +39,7 @@ def stack(tmp_path_factory):
 def open_desk(browser, base, size=None):
     pg = browser.new_page(viewport=size or {"width": 1500, "height": 950})
     pg.goto(base + DESK)
-    wait(pg, "window.drishtiForms && Object.keys(drishtiForms.state()).length > 0 && window.drishtiWriteBack")
+    wait(pg, "window.Drishti.forms && Object.keys(Drishti.forms.state()).length > 0 && window.Drishti.writeBack")
     return pg
 
 
@@ -58,7 +58,7 @@ def approve_as(stack, change, user):
 
 def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(stack, browser):
     pg = open_desk(browser, stack)
-    assert pg.evaluate("drishtiWriteBack.settings().then(s => s.enabled && s.mayEdit)")
+    assert pg.evaluate("Drishti.writeBack.settings().then(s => s.enabled && s.mayEdit)")
     i, trade, notional = row_under_limit(pg)
     assert i >= 0
     pg.click(f"#p-trades tbody tr[data-frow='{i}'] td:nth-child(2)")
@@ -104,7 +104,7 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
 def test_the_sheet_at_phone_width(stack, browser):
     pg = open_desk(browser, stack, {"width": 390, "height": 844})
     i, trade, notional = row_under_limit(pg)
-    pg.evaluate(f"drishtiForms.open('trades', {i})")
+    pg.evaluate(f"Drishti.forms.open('trades', {i})")
     pg.locator("[data-fm-side]").wait_for()
     pg.fill("[data-fm-side] [data-field='notional']", f"{int(notional) + 10:,}")
     pg.click("[data-fm-side] [data-fm-submit]")

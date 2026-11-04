@@ -12,7 +12,7 @@
 #
 #   See the LICENSE file in the root of this repository for the full terms.
 
-"""Builds the console's favicon and app icons from the logo mark (drishti-console/web/static/img/drishti-mark.svg).
+"""Builds the console's favicon and app icons from the logo mark (drishti-console/web/static/img/drishti_mark.svg).
 
 The mark is the logo's own drawing: amber braces around an eye. Every icon puts it, scaled to fill, on the logo's navy,
 with the eye's outline in white (as on the dark app icon) so it reads on light and dark browser tabs alike. Sizes of 32
@@ -37,7 +37,7 @@ ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "drishti-console" / "web" / "static" / "img" / "icons"
 
 NAVY, AMBER, WHITE = "#16233F", "#E39B2D", "#FFFFFF"
-# the mark's drawing, from drishti-mark.svg (viewBox 0 0 200 120; content spans x 19..181, y 18..102)
+# the mark's drawing, from drishti_mark.svg (viewBox 0 0 200 120; content spans x 19..181, y 18..102)
 BRACES = ("M42,18 C29,18 31,30 31,40 L31,49 C31,56 27,60 19,60 C27,60 31,64 31,71 L31,80 C31,90 29,102 42,102",
           "M158,18 C171,18 169,30 169,40 L169,49 C169,56 173,60 181,60 C173,60 169,64 169,71 L169,80 C169,90 171,102 158,102")
 EYE = "M50,60 Q100,12 150,60 Q100,108 50,60 Z"
@@ -70,15 +70,15 @@ def icon_svg(*, fill: float, radius: float, heavy: bool) -> str:
 
 # name -> (pixels, svg options); the svg files themselves are written too
 PNGS = {
-    "favicon-16.png": (16, dict(fill=0.90, radius=0.18, heavy=True)),
-    "favicon-32.png": (32, dict(fill=0.92, radius=0.18, heavy=True)),
-    "favicon-48.png": (48, dict(fill=0.92, radius=0.18, heavy=False)),
-    "apple-touch-icon.png": (180, dict(fill=0.80, radius=0.0, heavy=False)),     # iOS rounds the corners itself
-    "icon-192.png": (192, dict(fill=0.86, radius=0.18, heavy=False)),
-    "icon-512.png": (512, dict(fill=0.86, radius=0.18, heavy=False)),
-    "icon-maskable-512.png": (512, dict(fill=0.66, radius=0.0, heavy=False)),   # mark inside the 80 % safe zone
+    "drishti_favicon-16.png": (16, dict(fill=0.90, radius=0.18, heavy=True)),
+    "drishti_favicon-32.png": (32, dict(fill=0.92, radius=0.18, heavy=True)),
+    "drishti_favicon-48.png": (48, dict(fill=0.92, radius=0.18, heavy=False)),
+    "drishti_apple-touch-icon.png": (180, dict(fill=0.80, radius=0.0, heavy=False)),     # iOS rounds the corners itself
+    "drishti_icon-192.png": (192, dict(fill=0.86, radius=0.18, heavy=False)),
+    "drishti_icon-512.png": (512, dict(fill=0.86, radius=0.18, heavy=False)),
+    "drishti_icon-maskable-512.png": (512, dict(fill=0.66, radius=0.0, heavy=False)),   # mark inside the 80 % safe zone
 }
-SVGS = {"favicon.svg": dict(fill=0.92, radius=0.18, heavy=False)}
+SVGS = {"drishti_favicon.svg": dict(fill=0.92, radius=0.18, heavy=False)}
 
 
 def build(dest: Path) -> list[Path]:
@@ -97,8 +97,8 @@ def build(dest: Path) -> list[Path]:
             subprocess.run(["inkscape", str(src), "--export-type=png", f"--export-filename={dest / name}",
                             f"--export-width={px}", f"--export-height={px}"], check=True, capture_output=True)
             made.append(dest / name)
-    ico = dest / "favicon.ico"
-    subprocess.run(["convert", str(dest / "favicon-16.png"), str(dest / "favicon-32.png"), str(dest / "favicon-48.png"), str(ico)],
+    ico = dest / "drishti_favicon.ico"
+    subprocess.run(["convert", str(dest / "drishti_favicon-16.png"), str(dest / "drishti_favicon-32.png"), str(dest / "drishti_favicon-48.png"), str(ico)],
                    check=True, capture_output=True)
     made.append(ico)
     return made
@@ -114,7 +114,7 @@ def main(argv: list[str] | None = None) -> int:
     args = ap.parse_args(argv)
     if args.check:
         stale = [n for n, o in SVGS.items() if not (OUT / n).is_file() or (OUT / n).read_text(encoding="utf-8") != icon_svg(**o)]
-        missing = [n for n in [*PNGS, "favicon.ico"] if not (OUT / n).is_file()]
+        missing = [n for n in [*PNGS, "drishti_favicon.ico"] if not (OUT / n).is_file()]
         for n in stale + missing:
             print(f"make_icons: {n} is stale or missing; run python3 tools/make_icons.py")
         return 1 if stale or missing else 0

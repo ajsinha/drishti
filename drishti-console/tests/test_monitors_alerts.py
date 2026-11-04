@@ -37,6 +37,6 @@ def test_alerts_page_rules_and_bell(client, backend):
     bad = client.post("/alerts/api/Bad", json={"kind": "trade", "id": "IRS-48213", "when": "$.mtm <"})
     assert bad.status_code == 422 and bad.json()["code"] == "DRS-2101"
     view = client.get("/v/trade/IRS-48213").text
-    assert "data-bell" in view and "/static/js/alerts.js" in view and "/alerts?kind=trade&id=IRS-48213" in view
+    assert "data-bell" in view and "/static/js/drishti_alerts.js" in view and "/alerts?kind=trade&id=IRS-48213" in view
     with client.stream("GET", "/api/alerts/stream") as s:
         assert "event: alert" in "".join(s.iter_text())

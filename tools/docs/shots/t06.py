@@ -47,7 +47,7 @@ def open_design(c: Ctx):
 
 
 def paste_sutra(c: Ctx):
-    c.page.evaluate("(y) => window.drishtiWorkbench.store.send([{ op: 'text', yaml: y }], 'Sutra')", SUTRA)
+    c.page.evaluate("(y) => window.Drishti.workbench.store.send([{ op: 'text', yaml: y }], 'Sutra')", SUTRA)
     c.page.wait_for_timeout(2500)
 
 

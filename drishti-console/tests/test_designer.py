@@ -344,7 +344,7 @@ def test_off_by_default_nothing_changes(client):
     assert client.post("/designer/customize", json={"kind": "trade", "id": "IRS-47102"}).status_code == 404
     assert client.get("/designer/new", follow_redirects=False).headers["location"] == "/build/new"
     page = client.get("/v/trade/IRS-47102").text
-    assert "data-customize-open" not in page and "designer.js" not in page
+    assert "data-customize-open" not in page and "drishti_designer.js" not in page
     assert "data-describe-offer" not in client.get("/build/new").text
 
 

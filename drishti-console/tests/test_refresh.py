@@ -45,7 +45,7 @@ def test_the_page_carries_the_minimum_the_screen_and_the_readers_choices(client,
     monkeypatch.setattr(backend, "settings", settings)
     page = client.get("/v/trade/IRS-47102").text
     view = re.search(r"<div class=\"view\" data-view[^>]*>", page, re.S).group(0)
-    assert 'data-refresh-min="5"' in view and "refresh.js" in page and "refresh.css" in page
+    assert 'data-refresh-min="5"' in view and "drishti_refresh.js" in page and "drishti_refresh.css" in page
     screen = re.search(r'data-screen="([^"]+)"', view).group(1)
     assert screen.startswith("trade/")
     prefs = json.loads(re.search(r'data-refresh-prefs="([^"]*)"', view).group(1).replace("&#34;", '"').replace("&quot;", '"'))

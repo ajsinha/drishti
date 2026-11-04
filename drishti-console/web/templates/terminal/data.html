@@ -15,13 +15,13 @@
 #}
 {% extends "base.html" %}
 {% block title %}Data · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/data-view.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_functions.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_data-view.css?v={{ ASSET_V }}">{% endblock %}
 {% block screen %}data{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
 {# The Data view, DATA <GO> (docs/guides/DATA_GUIDE.md "The Data view"; routes/data_routes.py). Download only, never a viewer: the list of
-   every dataset on the left, the chosen dataset and its selection on the right. static/js/data-view.js keeps the selection in the address,
+   every dataset on the left, the chosen dataset and its selection on the right. static/js/drishti_data-view.js keeps the selection in the address,
    asks for the row count as it changes and fills the read-back, the download link and the CLI line. #}
 <div class="adm dv" data-dataview data-kind="{{ kind }}" data-sel="{{ sel | tojson | forceescape }}"
      data-dataset="{{ (chosen or {}) | tojson | forceescape }}">
@@ -121,4 +121,4 @@
   </div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/data-view.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_data-view.js?v={{ ASSET_V }}"></script>{% endblock %}

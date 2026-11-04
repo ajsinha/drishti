@@ -115,7 +115,7 @@ def test_console_behaviours_bring_the_funnels_and_chart_any_table_into_the_conta
 
 
 def test_the_pivot_tab_of_a_published_renderer_opens_the_pivot_screen_on_the_panel(lab, site):
-    # renderers up to 1.1.0 draw a Table | Pivot switch; its Pivot is now a thin entry into the pivot screen (static/js/pivot.js)
+    # renderers up to 1.1.0 draw a Table | Pivot switch; its Pivot is now a thin entry into the pivot screen (static/js/drishti_pivot.js)
     render(lab, "tables", {"behaviours": "console"})
     tab = lab.locator("#host #p-trades [data-pv-tab='pivot']")
     if tab.count() == 0:

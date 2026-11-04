@@ -59,17 +59,17 @@ def test_the_item_page_offers_the_wizard_for_a_dataset_and_the_wizard_page_takes
 def test_the_subscribe_page_searches_recipients_and_keeps_the_bi_links(client):
     page = client.get("/reports/subscribe?type=report&id=file:report:trades-overview&title=Trades")
     assert page.status_code == 200
-    for marker in ("data-find-people", "data-find-list", "dist-binav", "/bi/catalogue", "dist-check", "/static/js/subscribe-recipients.js", "/static/js/people.js"):
+    for marker in ("data-find-people", "data-find-list", "dist-binav", "/bi/catalogue", "dist-check", "/static/js/drishti_subscribe-recipients.js", "/static/js/drishti_people.js"):
         assert marker in page.text, marker
 
 
 def test_the_save_helpers_name_the_stale_code_and_the_three_choices():
-    lib = (STATIC / "js" / "bi-lib.js").read_text(encoding="utf-8")
+    lib = (STATIC / "js" / "drishti_bi-lib.js").read_text(encoding="utf-8")
     assert "DRS-9007" in lib and "baseEtag" in lib
     for choice in ("data-stale-reload", "data-stale-copy", "data-stale-overwrite"):
         assert choice in lib, choice
     # every editor saves through the guarded helper, none sends a bare PUT of its body
-    for name in ("bi-design.js", "bi-theme-designer.js", "bi-model.js", "bi-wizard-steps.js"):
+    for name in ("drishti_bi-design.js", "drishti_bi-theme-designer.js", "drishti_bi-model.js", "drishti_bi-wizard-steps.js"):
         assert "B.saveItem(" in (STATIC / "js" / name).read_text(encoding="utf-8"), name
 
 

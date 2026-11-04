@@ -114,9 +114,9 @@ def test_one_competitive_analysis(client):
 def test_mobile_ready(client):
     html = client.get("/v/trade/IRS-48213").text
     assert "viewport-fit=cover" in html and 'rel="manifest"' in html and "apple-touch-icon" in html
-    m = client.get("/static/manifest.webmanifest")
+    m = client.get("/static/drishti_manifest.webmanifest")
     assert m.status_code == 200 and '"start_url": "/t"' in m.text
-    css = client.get("/static/css/terminal.css").text
+    css = client.get("/static/css/drishti_terminal.css").text
     assert "@media (max-width: 640px)" in css and "safe-area-inset-bottom" in css and "font-size: 16px" in css
 
 
@@ -174,12 +174,12 @@ def test_the_build_menu_learn_links_point_at_the_new_guides(client):
 
 
 def test_guide_screenshots_fit_their_column_and_open_full_size(client):
-    """UX-03: a guide's screenshots are wrapped in a link to the image itself, and help.css fits them to the column."""
+    """UX-03: a guide's screenshots are wrapped in a link to the image itself, and drishti_help.css fits them to the column."""
     import re
     page = client.get("/help/sutra-developer-guide").text
     imgs = re.findall(r'(<a [^>]*>)?\s*<img [^>]*src="(/help/files/guides/img/sutras/[^"]+)"', page)
     assert len(imgs) >= 5
-    css = client.get("/static/css/help.css").text
+    css = client.get("/static/css/drishti_help.css").text
     assert re.search(r"\.help-article img \{[^}]*max-width: 100%;[^}]*height: auto;", css)
 
 

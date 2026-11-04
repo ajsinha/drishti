@@ -26,7 +26,7 @@ import statistics
 MEDIA = "application/vnd.apache.arrow.stream"
 
 #: In the page: fetch the payload both ways (same URL, same body), then parse each `runs` times. Arrow: read the stream into the table
-#: (drishtiTable.fromArrow) and rebuild the whole answer (what a page that reads rows would do); JSON: JSON.parse of the text.
+#: (Drishti.table.fromArrow) and rebuild the whole answer (what a page that reads rows would do); JSON: JSON.parse of the text.
 PARSE = """async ([url, method, body, shape, at, runs]) => {
   const ask = (accept) => fetch(url, { method, credentials: 'same-origin', headers: Object.assign({ Accept: accept }, body ? { 'Content-Type': 'application/json' } : {}),
                                         body: body ? JSON.stringify(body) : undefined });
@@ -42,7 +42,7 @@ PARSE = """async ([url, method, body, shape, at, runs]) => {
   for (let i = 0; i < runs; i++) {
     let s = performance.now(); const j = JSON.parse(new TextDecoder().decode(jb)); out.json.push(performance.now() - s);
     if (!isArrow) { continue; }
-    s = performance.now(); const t = window.drishtiTable.fromArrow(ab); out.arrowColumns.push(performance.now() - s); t.answer(); out.arrow.push(performance.now() - s);
+    s = performance.now(); const t = window.Drishti.table.fromArrow(ab); out.arrowColumns.push(performance.now() - s); t.answer(); out.arrow.push(performance.now() - s);
     void j;
   }
   return out;
@@ -74,7 +74,7 @@ PARSE_GIVEN = """([j64, a64, runs]) => {
   const jb = bytes(j64), ab = bytes(a64), out = { json: [], arrow: [] };
   for (let i = 0; i < runs; i++) {
     let s = performance.now(); JSON.parse(new TextDecoder().decode(jb)); out.json.push(performance.now() - s);
-    s = performance.now(); window.drishtiTable.fromArrow(ab).answer(); out.arrow.push(performance.now() - s);
+    s = performance.now(); window.Drishti.table.fromArrow(ab).answer(); out.arrow.push(performance.now() - s);
   }
   return out;
 }"""

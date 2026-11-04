@@ -195,7 +195,7 @@ the **second line's governance** (limit framework, breach approval, RNIV, sign-o
 
 ## 4. The landings
 
-One template, `home/risk_landing.html`, with `static/js/risk-landing.js` and `static/css/risk-landing.css`; every figure is the engines' own
+One template, `home/risk_landing.html`, with `static/js/drishti_risk-landing.js` and `static/css/drishti_risk-landing.css`; every figure is the engines' own
 answer through the console's `/api/var/...` and `/api/exposure/...` (`scope`, `scope/history`, `tree`, `intraday/streams`, `official`,
 `baskets`). Not Sutras: a Sutra lays out one entity's view, and these pages span the engines with no entity; a "home" Sutra kind would be
 needed (product owner may ask later). No new panel kind (the heat map is a CSS grid of links). One column on a phone. All three mock-ups
@@ -543,7 +543,7 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 [Open the mock-up](mockups/risk/risk-landing.html). **Chosen:** all three, as the person's choice of Home (`home.landings: [desk, command,
 map]`, `desk` the default) ([EDITIONS.md section 7](../admin/EDITIONS.md#7-drishti-risks-home-three-landings)). The mock-up's footer
 proposed "pick one or combine"; the product owner kept all three. **Code:** [`risk_landing.html`](../../drishti-console/web/templates/home/risk_landing.html),
-[`risk-landing.js`](../../drishti-console/web/static/js/risk-landing.js), [`risk-landing.css`](../../drishti-console/web/static/css/risk-landing.css),
+[`drishti_risk-landing.js`](../../drishti-console/web/static/js/drishti_risk-landing.js), [`drishti_risk-landing.css`](../../drishti-console/web/static/css/drishti_risk-landing.css),
 [`risk.yaml`](../../config/editions/risk.yaml) `home`. Figures on the mock-up are the demo's on 2026-09-30 where the guides quote them
 (VaR 112.04m, ES, the limit letter `LL-0003` 16.07m, EPE 945.58m); the rest are illustrative.
 
@@ -558,7 +558,7 @@ under it.
 failed answer says `Not available: <reason>` in place of that panel (the others carry on); a tile shows `—` and the reason in its subline.
 *Empty:* "No desks in MGMT", "No counterparty exposure on this date", "No limits set in MGMT", "Nothing yet today", "No baskets yet: build
 one on the VaR page", "No monitors yet: make one"; a node without a limit says "no limit". **Phone** (600 px and below): one column, the
-tiles two to a row, the big command line 46 px high ([`risk-landing.css`](../../drishti-console/web/static/css/risk-landing.css)); the
+tiles two to a row, the big command line 46 px high ([`drishti_risk-landing.css`](../../drishti-console/web/static/css/drishti_risk-landing.css)); the
 mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBILE_DISPLAY.md section 8](../architecture/MOBILE_DISPLAY.md#8-beyond-sutra-pages)): the command line, the tiles and the first card in full, the other tables at a glance (five rows, *Show all*), charts, maps and the quick links under *More on this page*.
 
 | # | Panel (option) | Contents on the mock-up | Data, API or contract | Interaction | Gap row | Status |
@@ -602,7 +602,7 @@ mock-up drew no phone form; on a phone the landing takes the phone tiers ([MOBIL
 [Open the mock-up](mockups/risk/scenario-matrix-B.html). **Chosen:** option B, *matrix with a chart of the selected scenario* (product
 owner, 2026-10-31); only option B was kept in the mock-ups folder. In Drishti Risk and Drishti Trading
 (`commands.words.SMAT: on`); refused in Market and World. **Code:** [`smat.html`](../../drishti-console/web/templates/terminal/smat.html),
-[`scenario-matrix.js`](../../drishti-console/web/static/js/scenario-matrix.js), [`scenario-matrix.css`](../../drishti-console/web/static/css/scenario-matrix.css),
+[`drishti_scenario-matrix.js`](../../drishti-console/web/static/js/drishti_scenario-matrix.js), [`drishti_scenario-matrix.css`](../../drishti-console/web/static/css/drishti_scenario-matrix.css),
 [`smat_routes.py`](../../drishti-console/routes/smat_routes.py). **Guide:** [VAR_GUIDE section 3.9](../guides/VAR_GUIDE.md#39-the-scenario-matrix-smat).
 On the Risk landings themselves `SMAT` is not yet a chip (RL13).
 
@@ -640,8 +640,8 @@ count, a scenario picker and the details; the matrix on a larger screen (the moc
 [Open the mock-up](mockups/risk/var-horizon-picker.html). **Chosen:** the design shown (three states of the VaR page header; its
 alternatives for small spaces, a menu and a full-width phone control, were "considered"); approved for the 10-day VaR work, to which the product
 owner added a **Confidence** picker (and ES's own) on 2026-10-30. **Code:** [`var.html`](../../drishti-console/web/templates/terminal/var.html)
-(the header strip), [`var-explorer.js`](../../drishti-console/web/static/js/var-explorer.js) (tiles, the method strip, the lens),
-[`var.css`](../../drishti-console/web/static/css/var.css). **Guide:** [VAR_GUIDE section 3.1](../guides/VAR_GUIDE.md#31-open-it) (*Horizon
+(the header strip), [`drishti_var-explorer.js`](../../drishti-console/web/static/js/drishti_var-explorer.js) (tiles, the method strip, the lens),
+[`drishti_var.css`](../../drishti-console/web/static/css/drishti_var.css). **Guide:** [VAR_GUIDE section 3.1](../guides/VAR_GUIDE.md#31-open-it) (*Horizon
 and Confidence*) and [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen).
 The mock-up's figures: 1-day 112.04m (the demo's), √10 354.31m (exact), the 10-day sum 331.7m (illustrative; the demo's is 274.5m).
 
@@ -689,7 +689,7 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 | X1 | Bar | `DRISHTI Risk`; the command line; menus **Views · Engines · BI · Admin · Help** | the edition's top menus by id, in order (`menus.top`), [`menus.yaml`](../../drishti-console/config/menus.yaml) | open a menu | **Built**: `menus.top` in [`risk.yaml`](../../config/editions/risk.yaml), drawn by [`core/menus.py`](../../drishti-console/core/menus.py); Build is not named (off in the lens). The mock-up's VaR and Exposure menus are one **Engines** menu since 2.9.11.a (mock-up [engines-menu/A](../architecture/mockups/engines-menu/A.html)) |
 | X2 | VaR column of the Engines menu | VaR explorer `VAR BANK`; Why it moved `VAR BANK EXPLAIN`; VaR Playground `PLAY VAR`; Scenario matrix `SMAT`; Regulatory reports; Backtesting `VAR BANK BACKTEST`; Stress window `SWIN BANK`; VaR results `VRES`; Official records `VOFF`; Hierarchies and limit letters `HIER` | the `engines` menu in [`menus.yaml`](../../drishti-console/config/menus.yaml), its `var` column; each item shown only when the edition keeps its command | click an item: its page or command | **Built**: the Playground, Regulatory reports and Backtesting items show once their screens are on the server (`route:`) |
 | X3 | Exposure column of the Engines menu | Exposure explorer `EXP`; A counterparty `EXP CPTY …`; A netting set `EXP NSET …`; Pre-deal check `XWIF` | its `exposure` column | click an item: its page or command | **Built**: A counterparty and A netting set put `EXP CPTY` and `EXP NSET` in the command line for the id |
-| X4 | Phone form | below 640 px the Engines menu's columns fold into a drawer, one engine open at a time | the bar's template and [`engines-menu.js`](../../drishti-console/web/static/js/engines-menu.js) | tap Engines, an engine, then an item | **Built** |
+| X4 | Phone form | below 640 px the Engines menu's columns fold into a drawer, one engine open at a time | the bar's template and [`drishti_engines-menu.js`](../../drishti-console/web/static/js/drishti_engines-menu.js) | tap Engines, an engine, then an item | **Built** |
 
 On a phone (below 640 px) the Engines menu opens as a drawer: a row per running engine with its command word, the first open, a tap on another opens it and closes the first; each item 44 px high with its command beside it. The items marked *new* on the mock-up: the Stress window
 (`SWIN BANK`, [VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) is in the menu; the VaR Playground and Backtesting items show once their screens are on the server. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).

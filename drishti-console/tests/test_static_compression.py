@@ -94,5 +94,5 @@ def test_the_console_serves_its_own_static_files_compressed():
     from core.app import create_app
     from core.config import load_settings
     client = TestClient(create_app(load_settings(CONSOLE / "config")))
-    r = client.get("/static/js/bi.js", headers={"accept-encoding": "gzip"})
+    r = client.get("/static/js/drishti_bi.js", headers={"accept-encoding": "gzip"})
     assert r.status_code == 200 and r.headers["content-encoding"] == "gzip" and b"Rupaka phase 1" in r.content

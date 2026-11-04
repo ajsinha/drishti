@@ -32,7 +32,7 @@ def test_the_map_draws_every_kind_the_server_infers_with_counts_joins_and_a_find
     page = client.get("/datamap").text
     for text in ("data-datamap", 'data-view="map"', "Data map", "DATAMAP", 'data-kind="trade"', 'data-kind="counterparty"', "15,000", "computed",
                  'class="dm-n dm-computed"', 'data-from="trade" data-to="counterparty"', "dm-j-low", "1 finding",
-                 "Trade.PORTFOLIO → Book: 1 of 4 ids match (25%)", ">Trades<", ">Organisation<", ">Counterparty credit<", "datamap.js", "datamap.css",
+                 "Trade.PORTFOLIO → Book: 1 of 4 ids match (25%)", ">Trades<", ">Organisation<", ">Counterparty credit<", "drishti_datamap.js", "drishti_datamap.css",
                  'data-set-view="cards"', 'data-chip-set="trades"', "stored in the lake", "computed on demand, never stored"):
         assert text in page, text
     assert 'style="' not in page.split("data-datamap", 1)[1], "no inline style (CSP): positions are SVG attributes"

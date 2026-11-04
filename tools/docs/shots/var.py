@@ -78,14 +78,14 @@ def basket_pick(c: Ctx, text: str) -> None:
     c.page.locator("[data-vb-find]").fill("")
     c.page.locator("[data-vb-find]").type(text, delay=20)
     c.until("document.querySelector('[data-vb-hints]').dataset.q === %r && document.querySelectorAll('[data-vb-hint]').length > 0" % text, 30)
-    n = c.page.evaluate("window.VarBasket.parts()")
+    n = c.page.evaluate("window.Drishti.VarBasket.parts()")
     c.page.locator("[data-vb-find]").press("Enter")
-    c.until("window.VarBasket.parts() > %d" % n)
+    c.until("window.Drishti.VarBasket.parts() > %d" % n)
 
 
 def basket_live(c: Ctx) -> None:
     """Waits until the sheet shows the server's answer for what it holds now."""
-    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.VarBasket.signature()"
+    c.until("(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.Drishti.VarBasket.signature()"
             " && !l.classList.contains('computing'); })()", 60)
 
 

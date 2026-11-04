@@ -31,7 +31,7 @@ had to be decided: **where the rendering happens**, and **how the code reaches t
    implementation of every panel kind and every accessibility detail, for ever. We accept larger payloads (3 to 6 times before compression) and that a host
    cannot restyle a panel's inner structure beyond the custom properties and parts we expose.
 2. **A report is drawn in the browser by the console viewer's own code**, because a report is not server-rendered HTML: it is a model plus one query per visual, drawn by
-   `bi-visuals.js` and friends. `<drishti-report>` loads that same code (served with CORS under `/embed/v1/js/`), builds its DOM with `textContent` only, and asks the
+   `drishti_bi-visuals.js` and friends. `<drishti-report>` loads that same code (served with CORS under `/embed/v1/js/`), builds its DOM with `textContent` only, and asks the
    embed API for the model and the rows. There is one renderer of a report, shared by the viewer, the element and the designer's preview.
 3. **The embed token is the identity, on every call.** The host's backend exchanges its credentials and its user's identity for a short-lived, read-only token
    (RFC 8693) at the Drishti server; the server verifies it on every call, applies the user's row rules and **always masks**. Which hosts may show which kinds and

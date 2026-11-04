@@ -1,0 +1,235 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
+/* User administration and the account page. Every action goes to same-origin /admin/api/... (the server
+   enforces the admin role) and reports the server's message; the page reloads to show the new state. */
+(function () {
+  'use strict';
+  function post(url, body) {
+    return fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body || {}) })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (b) { return { ok: r.ok, body: b }; }); });
+  }
+  function say(el, text, bad) { if (el) { el.textContent = text; el.classList.toggle('t-bad', !!bad); el.classList.toggle('t-ok', !bad); } }
+
+  // ---- account: change own password ----------------------------------------------------------
+  var pw = document.querySelector('[data-password]');
+  if (pw) {
+    pw.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var msg = pw.querySelector('[data-msg]'), f = pw.elements;
+      if (f.next.value !== f.repeat.value) { say(msg, 'The new passwords differ.', true); return; }
+      post('/account/password', { current: f.current.value, next: f.next.value }).then(function (res) {
+        if (res.ok && pw.hasAttribute('data-must')) { location.href = '/t'; return; }
+        if (res.ok) { pw.reset(); say(msg, 'Password changed.'); } else { say(msg, Drishti.drsMessage(res.body), true); }
+      });
+    });
+  }
+
+  // ---- account: API tokens ---------------------------------------------------------------------
+  var tk = document.querySelector('[data-tokens]');
+  if (tk) {
+    var tmsg = tk.querySelector('[data-msg]');
+    tk.querySelector('[data-token-new]').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var f = e.target.elements;
+      fetch('/api/tokens', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: f.name.value, days: f.days.value || null,
+          scopes: Array.prototype.map.call(e.target.querySelectorAll('input[name=scope]:checked'), function (c) { return c.value; }) }) })
+        .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+        .then(function (res) {
+          if (!res.ok) { say(tmsg, Drishti.drsMessage(res.body), true); return; }
+          tk.querySelector('[data-secret-text]').textContent = res.body.secret;
+          tk.querySelector('[data-secret]').hidden = false;
+          say(tmsg, 'Created ' + res.body.token.name + '. Reload the page to see it in the list, after copying the secret.');
+          e.target.reset();
+        });
+    });
+    tk.querySelector('[data-copy-secret]').addEventListener('click', function () {
+      var t = tk.querySelector('[data-secret-text]').textContent;
+      if (navigator.clipboard) { navigator.clipboard.writeText(t).then(function () { say(tmsg, 'Copied.'); }); }
+    });
+    tk.querySelectorAll('[data-revoke]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var id = b.closest('tr').getAttribute('data-token');
+        if (!window.confirm('Revoke this token? Anything using it stops working at once.')) { return; }
+        fetch('/api/tokens/' + encodeURIComponent(id), { method: 'DELETE' }).then(function (r) {
+          if (r.ok) { location.reload(); } else { r.json().then(function (b) { say(tmsg, Drishti.drsMessage(b), true); }); }
+        });
+      });
+    });
+  }
+
+  // ---- account: aliases ------------------------------------------------------------------------
+  var al = document.querySelector('[data-aliases]');
+  if (al) {
+    al.addEventListener('click', function (e) {
+      if (e.target.closest('[data-remove]')) { e.target.closest('tr').remove(); }
+    });
+    al.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var body = {}, msg = al.querySelector('[data-msg]');
+      al.querySelectorAll('tbody tr').forEach(function (tr) {
+        var n = tr.querySelector('[name=name]').value.trim(), c = tr.querySelector('[name=body]').value.trim();
+        if (n && c) { body[n] = c; }
+      });
+      fetch('/api/aliases', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+        .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, body: b }; }); })
+        .then(function (res) {
+          if (res.ok) { say(msg, 'Saved ' + Object.keys(res.body).length + ' aliases.'); setTimeout(function () { location.reload(); }, 500); }
+          else { say(msg, Drishti.drsMessage(res.body), true); }
+        });
+    });
+  }
+
+  // ---- users page -------------------------------------------------------------------------------
+  var root = document.querySelector('[data-admin]');
+  if (!root) { return; }
+  var msg = root.querySelector('[data-msg]'), dlg = root.querySelector('[data-dialog]'), form = root.querySelector('[data-form]');
+  var dmsg = root.querySelector('[data-dlg-msg]'), editing = null;
+  function api(user, action, body) { return post('/admin/api/users/' + encodeURIComponent(user) + '/' + action, body); }
+  function done(res, text) { if (res.ok) { say(msg, text); setTimeout(function () { location.reload(); }, 500); } else { say(msg, Drishti.drsMessage(res.body), true); } }
+
+  function open(user) {
+    editing = user;
+    form.reset();
+    say(dmsg, '');
+    root.querySelector('[data-title]').textContent = user ? 'Edit ' + user.username : 'New user';
+    form.elements.username.value = user ? user.username : '';
+    form.elements.username.readOnly = !!user;
+    form.querySelectorAll('[data-pw]').forEach(function (el) { el.hidden = !!user; });
+    form.elements.password.required = !user;
+    if (user) {
+      form.elements.displayName.value = user.displayName || '';
+      form.elements.desk.value = user.desk || '';
+      form.elements.email.value = user.email || '';
+      form.elements.enabled.checked = !!user.enabled;
+      form.querySelectorAll('[name="roles"]').forEach(function (c) { c.checked = user.roles.indexOf(c.value) >= 0; });
+      form.querySelectorAll('[name="packs"]').forEach(function (c) { c.checked = !user.packs || user.packs.indexOf(c.value) >= 0; });
+    }
+    dlg.showModal();
+    (user ? form.elements.displayName : form.elements.username).focus();
+  }
+
+  root.querySelector('[data-new]').addEventListener('click', function () { open(null); });
+  root.querySelector('[data-cancel]').addEventListener('click', function () { dlg.close(); });
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var f = form.elements, roles = [];
+    form.querySelectorAll('[name="roles"]:checked').forEach(function (c) { roles.push(c.value); });
+    var body = { displayName: f.displayName.value, desk: f.desk.value, email: f.email.value, roles: roles, enabled: f.enabled.checked };
+    var packs = [].map.call(form.querySelectorAll('[name="packs"]:checked'), function (c) { return c.value; });
+    if (form.querySelector('[name="packs"]')) { body.packs = packs; }
+    var call = editing ? api(editing.username, 'update', body)
+      : post('/admin/api/users', Object.assign(body, { username: f.username.value.trim(), password: f.password.value, mustChangePassword: f.mustChangePassword.checked }));
+    call.then(function (res) {
+      if (res.ok) { dlg.close(); done(res, editing ? 'Saved ' + editing.username + '.' : 'Created ' + f.username.value + '.'); }
+      else { say(dmsg, Drishti.drsMessage(res.body), true); }
+    });
+  });
+
+  root.querySelectorAll('[data-user]').forEach(function (row) {
+    var user = JSON.parse(row.getAttribute('data-json'));
+    row.querySelector('[data-edit]').addEventListener('click', function () { open(user); });
+    row.querySelector('[data-toggle]').addEventListener('click', function () {
+      api(user.username, 'enabled', { enabled: !user.enabled }).then(function (res) { done(res, (user.enabled ? 'Disabled ' : 'Enabled ') + user.username + '.'); });
+    });
+    row.querySelector('[data-reset]').addEventListener('click', function () {
+      var p = window.prompt('New password for ' + user.username + ' (at least 10 characters, letters and digits):');
+      if (p) { api(user.username, 'password', { password: p }).then(function (res) { done(res, 'Password reset for ' + user.username + '.'); }); }
+    });
+    row.querySelector('[data-delete]').addEventListener('click', function () {
+      if (window.confirm('Delete ' + user.username + '? This cannot be undone.')) {
+        api(user.username, 'delete').then(function (res) { done(res, 'Deleted ' + user.username + '.'); });
+      }
+    });
+  });
+})();
+
+/* Caches page: purge one cache, all, or one business date (on this server, or the whole cluster), then reload to show the new
+   sizes; a cache's dates open below its row (a server-drawn fragment). 2.9.7. */
+(function () {
+  'use strict';
+  var root = document.querySelector('[data-caches]');
+  if (!root) { return; }
+  var status = root.querySelector('[data-purge-status]');
+  var cluster = root.querySelector('[data-purge-cluster]');
+  function purge(b, name, date) {
+    var where = cluster && cluster.checked ? ' on every member of the cluster' : ' on this server';
+    if (name === 'all' && !window.confirm('Purge every cache' + where + '? Views refill from the sources; the first reads will be slower.')) { return; }
+    if (date && !window.confirm('Purge ' + date + ' from ' + name + where + '?')) { return; }
+    var q = [];
+    if (date) { q.push('date=' + encodeURIComponent(date)); }
+    if (cluster && cluster.checked) { q.push('scope=cluster'); }
+    b.disabled = true;
+    fetch('/admin/api/caches/' + encodeURIComponent(name) + '/purge' + (q.length ? '?' + q.join('&') : ''), { method: 'POST' })
+      .then(function (r) { return r.json().then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        var d = res.d;
+        var text = res.ok ? 'Purged ' + d.purged.join(', ') + (d.date ? ' for ' + d.date : '') + ' in ' + d.elapsedMs + ' ms'
+          + (d.purgedWhole && d.purgedWhole.length ? ' (whole, no purge by date: ' + d.purgedWhole.join(', ') + ')' : '')
+          + (d.members ? '; members: ' + d.members.map(function (m) { return m.node + ' ' + (m.status === 200 ? 'done' : 'failed (' + m.status + ')'); }).join(', ') : '')
+          + '.' : Drishti.drsMessage(d);
+        status.textContent = text;
+        if (res.ok) { window.setTimeout(function () { window.location.reload(); }, 1500); }
+      })
+      .catch(function (err) { status.textContent = 'Purge failed: ' + err; })
+      .then(function () { b.disabled = false; });
+  }
+  root.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-purge]');
+    if (b) { purge(b, b.getAttribute('data-purge'), ''); return; }
+    var bd = e.target.closest('[data-purge-date]');
+    if (bd) {
+      var name = bd.getAttribute('data-purge-date');
+      var input = root.querySelector('[data-purge-date-for="' + name + '"]');
+      if (!input || !input.value) { status.textContent = 'Choose the business date to purge from ' + name + ' first.'; if (input) { input.focus(); } return; }
+      purge(bd, name, input.value);
+      return;
+    }
+    var dl = e.target.closest('[data-cache-dates]');
+    if (dl) {
+      var n = dl.getAttribute('data-cache-dates');
+      var row = root.querySelector('[data-dates-of="' + n + '"]');
+      if (!row) { return; }
+      var open = row.hidden;
+      row.hidden = !open;
+      dl.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) {
+        var body = row.querySelector('[data-dates-body]');
+        body.textContent = 'Loading…';
+        fetch('/admin/caches/' + encodeURIComponent(n) + '/dates', { headers: { Accept: 'text/html' } })
+          .then(function (r) { return r.text(); })
+          .then(function (html) { body.innerHTML = html; })
+          .catch(function (err) { body.textContent = 'The dates could not be read: ' + err; });
+      }
+    }
+  });
+})();
+
+/* Health: re-render the body every few seconds from the server (no client-side templating). */
+(function () {
+  'use strict';
+  var root = document.querySelector('[data-health]');
+  if (!root) { return; }
+  var body = root.querySelector('[data-health-body]');
+  var every = +root.getAttribute('data-refresh') || 5000;
+  setInterval(function () {
+    if (document.hidden) { return; }
+    fetch('/admin/health?partial=1', { headers: { Accept: 'text/html' } })
+      .then(function (r) { return r.ok ? r.text() : null; })
+      .then(function (html) { if (html) { body.innerHTML = html; } })
+      .catch(function () { /* offline: keep the last picture */ });
+  }, every);
+})();

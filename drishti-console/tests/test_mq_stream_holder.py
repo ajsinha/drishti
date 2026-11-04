@@ -118,8 +118,8 @@ def test_the_channel_passes_the_refusal_on_to_the_browser():
 
 
 def test_the_browser_subscribes_again_once_on_drs_9180_and_says_why_in_words():
-    consume = (JS / "bi-consume.js").read_text(encoding="utf-8")
+    consume = (JS / "drishti_bi-consume.js").read_text(encoding="utf-8")
     assert "d.code === 'DRS-9180' && !again" in consume and "subscribe();" in consume and "gone: lost" in consume
     assert "reconnecting: 'Reconnecting'" in consume and "C.reason = function" in consume
-    css = (CONSOLE / "web/static/css/bi-board.css").read_text(encoding="utf-8")
+    css = (CONSOLE / "web/static/css/drishti_bi-board.css").read_text(encoding="utf-8")
     assert "old:" not in css

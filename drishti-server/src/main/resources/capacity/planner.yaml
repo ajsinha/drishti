@@ -15,7 +15,7 @@
 # The single-node capacity planner (docs/architecture/RESOURCES_AND_SCALE.md 9.7): ONE file read by three evaluators that must agree.
 #   tools/sizing_planner.py   writes docs/architecture/Drishti-Sizing-Planner.xlsx and the server's template (capacity/template/)
 #   the server                GET /api/v1/admin/capacity serves this file as JSON; capacity.xlsx fills the template's Inputs
-#   the console               static/js/capacity.js evaluates the expressions as you type (Admin -> Capacity)
+#   the console               static/js/drishti_capacity.js evaluates the expressions as you type (Admin -> Capacity)
 # Expressions are a small Excel subset over the names below: + - * / ^ & (text), comparisons (= <> < > <= >=), IF, MAX, MIN, CEILING,
 # INT, ROUND, AND, OR, CHAR. MB is BytesPerMB (1,024 x 1,024 bytes); GB is 1,024 MB. After a change run
 # python3 tools/sizing_planner.py (the workbook, the template and the test vectors follow); --check says when they drift.

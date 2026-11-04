@@ -321,9 +321,9 @@ def test_a_live_tick_and_a_control_move_the_same_panels_either_way(browser, cont
         assert page.locator("#p-schedule [data-ctl='legs']").count() == 1, f"{mode}: the header's control stays through a tick"
         page.evaluate("document.querySelector('#p-other').setAttribute('data-mark', 'kept')")
         page.locator("[data-ctl='legs'] summary").click()
-        n = page.evaluate("(window.__drishtiControls || []).length")
+        n = page.evaluate("(window.Drishti.__controls || []).length")
         page.locator("[data-ctl='legs'] input[value='2']").uncheck()
-        page.wait_for_function("(n) => (window.__drishtiControls || []).length > n", arg=n, timeout=10000)
+        page.wait_for_function("(n) => (window.Drishti.__controls || []).length > n", arg=n, timeout=10000)
         page.wait_for_timeout(600)
         legs = page.evaluate("() => [...document.querySelectorAll('#p-schedule tbody tr')].map((r) => r.cells[0].textContent.trim())")
         kept = page.evaluate("document.querySelector('#p-other').getAttribute('data-mark')")

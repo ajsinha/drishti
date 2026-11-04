@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Start order does not matter (server-watch.js): the console starts with no server, the page shows the banner, the server
+"""Start order does not matter (drishti_server-watch.js): the console starts with no server, the page shows the banner, the server
 starts and the page recovers by itself (no manual reload), the server stops and the banner returns."""
 from __future__ import annotations
 

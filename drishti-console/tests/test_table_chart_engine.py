@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.1): table-chart-engine.js under Node, as
+"""Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, section 19.1): drishti_table-chart-engine.js under Node, as
 with the pivot engine's answer stood in (the server's engine aggregates: PivotApiTest, RowsProviderTest). Classify, defaults, normalise,
 the mapping onto the pivot engine, the figures per X, Top N
 and Others, buckets and gaps, the pie refusal, masks, the summary, the export grid and the ECharts option (two axes,
@@ -26,12 +26,12 @@ from pathlib import Path
 
 import pytest
 
-ENGINE = Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "table-chart-engine.js"
+ENGINE = Path(__file__).resolve().parent.parent / "web" / "static" / "js" / "drishti_table-chart-engine.js"
 pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run the chart engine")
 
 HARNESS = """
 const E = require(process.argv[1]);
-const P = require(require('path').join(require('path').dirname(process.argv[1]), 'pivot-engine.js'));
+const P = require(require('path').join(require('path').dirname(process.argv[1]), 'drishti_pivot-engine.js'));
 const input = JSON.parse(process.argv[2]);
 // The pivot engine's answer as the server gives it (POST /api/pivot/inline; RowsProviderTest and PivotApiTest prove the figures): one cell
 // per pair of key prefixes, blanks left out of every function, members in the engine's order. A stand-in so the drawing is tested alone.
@@ -447,7 +447,7 @@ def test_long_text_labels_make_horizontal_bars_and_a_negative_single_bar_uses_ne
 
 
 def test_the_engine_answer_of_the_shown_rows_draws_the_chart():
-    """The shown rows go to the engine renamed d0.. and v0.. (POST /api/pivot/inline); its answer, laid out by pivot-engine.js, draws the chart."""
+    """The shown rows go to the engine renamed d0.. and v0.. (POST /api/pivot/inline); its answer, laid out by drishti_pivot-engine.js, draws the chart."""
     body = BUILD + """
 const prep = E.prepare(input.r, n.settings, cols, {});
 const arr = E.toArrangement(n.settings, prep).arrangement;

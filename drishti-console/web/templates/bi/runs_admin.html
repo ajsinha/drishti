@@ -15,11 +15,11 @@
 #}
 {#
   Admin → BI → Runs (docs/architecture/BI_DESIGN.md › BI runs: every BI query as a bounded, visible job (built in 2.6.7), section 17.2): the engine's gate now, what runs and waits, the result store, how honest the estimates are and
-  how often the inline wait was enough. A shell: bi-runs-admin.js draws it from GET /api/v1/bi/admin/runs. State, sizes and nodes only, never a value.
+  how often the inline wait was enough. A shell: drishti_bi-runs-admin.js draws it from GET /api/v1/bi/admin/runs. State, sizes and nodes only, never a value.
 #}
 {% extends "base.html" %}
 {% block title %}BI runs · {{ PRODUCT }}{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/bi-runs.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/drishti_admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/drishti_bi-runs.css?v={{ ASSET_V }}">{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
 {% block content %}
@@ -50,4 +50,4 @@
     <tbody></tbody></table></div>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-runs.js?v={{ ASSET_V }}"></script><script src="/static/js/bi-runs-admin.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/js/drishti_command.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-lib.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-runs.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti_bi-runs-admin.js?v={{ ASSET_V }}"></script>{% endblock %}

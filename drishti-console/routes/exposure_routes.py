@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The exposure explorer (docs/guides/EXPOSURE_GUIDE.md section 3): ``EXP <scope> <GO>`` opens ``/exposure?scope=<scope>``. The page
-is a shell; web/static/js/exposure-explorer.js fills it from the same-origin JSON below, which asks the server's exposure engine
+is a shell; web/static/js/drishti_exposure-explorer.js fills it from the same-origin JSON below, which asks the server's exposure engine
 (/api/v1/exposure) as the user, so entitlements by counterparty, group and legal entity and the name mask apply as on every screen.
 
 Commands: ``EXP`` (the bank), ``EXP NSET:NS-ALDERSHOT-FRA`` as typed, and the spaced forms ``EXP NSET NS-ALDERSHOT-FRA``, ``EXP CPTY

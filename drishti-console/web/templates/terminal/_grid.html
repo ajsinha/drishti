@@ -14,10 +14,10 @@
   See the LICENSE file in the root of this repository for the full terms.
 #}
 {# A screen laid out with layout: (RACHANA_REFERENCE.md 13; core/screen_grid.py): named areas (a split, tabs, a sticky area) or the flow grid
-   with collapsible sections. The picture's template is set by static/js/screen-grid.js (style-src 'self': no style attributes);
+   with collapsible sections. The picture's template is set by static/js/drishti_screen-grid.js (style-src 'self': no style attributes);
    without script the areas stack in reading order. Keeps the class vgrid, so Customize and live updates find the panels. #}
 {% from "_macros/view.html" import panels %}
-<link rel="stylesheet" href="/static/css/screen-grid.css?v={{ ASSET_V }}">
+<link rel="stylesheet" href="/static/css/drishti_screen-grid.css?v={{ ASSET_V }}">
 <div class="vgrid sg sg-{{ grid.mode }}" data-sgrid data-sg-sutra="{{ vm.provenance.sutra or '' }}"{% if grid.arrange and not embed %} data-sg-arrange{% endif %}{% if grid.own %} data-sg-own{% endif %}
      data-sg="{{ {'picture': grid.picture or [], 'columns': grid.columns, 'tablet': grid.tablet or [], 'tabletColumns': grid.tabletColumns or [], 'split': grid.split, 'phone': grid.phone, 'fold': grid.fold, 'sticky': grid.sticky, 'mine': grid.mine, 'mode': grid.mode} | tojson | forceescape }}">
   {% if grid.arrange and not embed %}
@@ -51,4 +51,4 @@
   {% endfor %}
   {% endif %}
 </div>
-<script src="/static/js/screen-grid.js?v={{ ASSET_V }}"></script>
+<script src="/static/js/drishti_screen-grid.js?v={{ ASSET_V }}"></script>

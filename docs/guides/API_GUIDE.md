@@ -572,7 +572,7 @@ EOF
 ```
 
 `drishti-console/core/arrow_answer.py` (`decode`) rebuilds the whole JSON answer from such a stream; in a browser page,
-`drishtiTable.fromArrow` (`/static/js/drishti-table.js`) does.
+`Drishti.table.fromArrow` (`/static/js/drishti_table.js`) does.
 
 ## Endpoint reference
 

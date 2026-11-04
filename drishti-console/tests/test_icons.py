@@ -26,7 +26,7 @@ ICONS = CONSOLE / "web" / "static" / "img" / "icons"
 def test_the_generated_icons_are_committed_and_current():
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "make_icons.py"), "--check"], capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
-    svg = (ICONS / "favicon.svg").read_text(encoding="utf-8")
+    svg = (ICONS / "drishti_favicon.svg").read_text(encoding="utf-8")
     assert "#E39B2D" in svg and "#16233F" in svg                                   # the logo's amber and navy
 
 
@@ -34,17 +34,17 @@ def test_favicon_ico_is_served_without_signing_in(client):
     r = client.get("/favicon.ico")
     assert r.status_code == 200 and r.headers["content-type"] == "image/x-icon"
     assert r.content[:4] == b"\x00\x00\x01\x00"                                     # an ICO file
-    assert r.content == (ICONS / "favicon.ico").read_bytes()
+    assert r.content == (ICONS / "drishti_favicon.ico").read_bytes()
 
 
 def test_pages_link_the_logo_icons(client):
     html = client.get("/").text
-    assert 'href="/favicon.ico"' in html and "/static/img/icons/favicon.svg" in html and "/static/img/icons/apple-touch-icon.png" in html
-    assert "drishti-icon.png" not in html
+    assert 'href="/favicon.ico"' in html and "/static/img/icons/drishti_favicon.svg" in html and "/static/img/icons/drishti_apple-touch-icon.png" in html
+    assert "drishti_icon.png" not in html
 
 
 def test_the_manifest_lists_icons_that_exist():
-    manifest = json.loads((CONSOLE / "web" / "static" / "manifest.webmanifest").read_text(encoding="utf-8"))
+    manifest = json.loads((CONSOLE / "web" / "static" / "drishti_manifest.webmanifest").read_text(encoding="utf-8"))
     srcs = [i["src"] for i in manifest["icons"]]
     assert any(i["purpose"] == "maskable" for i in manifest["icons"])
     for src in srcs:

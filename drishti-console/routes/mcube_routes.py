@@ -14,7 +14,7 @@
 
 """The MR cube in the console (docs/guides/MR_CUBE_GUIDE.md): not a page of its own but the pivot screen (terminal/pivot.html) on source
 ``var`` with the MR lens (``lens=mr``: the headline strip, the lens controls, the time-travel slider and tabs A, B and C drawn by
-web/static/js/mr-lens.js). ``MCUBE <GO>`` opens the source's landing view (the catalogue's defaultView: desks by risk class, VaR);
+web/static/js/drishti_mr-lens.js). ``MCUBE <GO>`` opens the source's landing view (the catalogue's defaultView: desks by risk class, VaR);
 ``MCUBE <scope> [BY rows[,columns]] [MEASURE m,...] [DATE d] [SORT desc] <GO>`` lays what was typed over it (the MR cube's preset of the
 PIVOT grammar); ``MCUBE @owner/name <GO>`` opens a saved pivot view. The lens's own answers are the server's ``/api/v1/pivot/mr/...``,
 asked as the person through the same-origin proxy ``/api/pivot/mr/...``; the grid is the pivot engine's (pivot_routes.py)."""

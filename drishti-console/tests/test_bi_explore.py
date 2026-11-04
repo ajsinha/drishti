@@ -272,7 +272,7 @@ def test_the_page_is_live_strict_and_wired():
     client, _ = make()
     r = client.get("/bi/explore")
     assert r.status_code == 200 and "Not built yet" not in r.text and 'data-bi-page="explore"' in r.text
-    for js in ("bi-explore.js", "bi-explore-cells.js", "bi-python.js"):
+    for js in ("drishti_bi-explore.js", "drishti_bi-explore-cells.js", "drishti_bi-python.js"):
         assert "/static/js/" + js in r.text
     assert "wasm-unsafe-eval" not in r.headers.get("content-security-policy", "")                              # strict: browser Python runs in Calc's worker
     assert "<script>" not in r.text.replace("<script src", "") and " onclick=" not in r.text and " style=" not in r.text

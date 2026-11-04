@@ -11,7 +11,7 @@
 # written permission of the copyright holder.
 #
 # See the LICENSE file in the root of this repository for the full terms.
-"""A live view whose entity the source deletes: the console relays the deleted patch, and live.js shows it."""
+"""A live view whose entity the source deletes: the console relays the deleted patch, and drishti_live.js shows it."""
 import json
 import shutil
 import subprocess
@@ -19,8 +19,8 @@ from pathlib import Path
 
 import pytest
 
-LIVE_JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "live.js"
-CSS = Path(__file__).resolve().parents[1] / "web" / "static" / "css" / "terminal.css"
+LIVE_JS = Path(__file__).resolve().parents[1] / "web" / "static" / "js" / "drishti_live.js"
+CSS = Path(__file__).resolve().parents[1] / "web" / "static" / "css" / "drishti_terminal.css"
 
 DELETED = {"seq": 7, "generation": 42, "latencyMs": 1.0, "p99Ms": 3.0,
            "patches": [{"op": "deleted", "at": "2026-10-01T09:30:05Z"}]}
@@ -44,7 +44,7 @@ def test_a_deleted_view_is_greyed_with_a_banner_not_an_error():
     assert '[data-live-state="deleted"]' in css
 
 
-# A DOM just big enough for live.js: the view, its head, panels, the strip and the top bar's live indicator.
+# A DOM just big enough for drishti_live.js: the view, its head, panels, the strip and the top bar's live indicator.
 HARNESS = r"""
 class El {
   constructor(tag, attrs) { this.tag = tag; this.attrs = Object.assign({}, attrs || {}); this.children = []; this.classes = new Set();
@@ -80,7 +80,7 @@ global.location = { reload: () => { reloaded = true; } };
 global.document = { addEventListener() {}, querySelector: s => s === '[data-live-status]' ? live : s === '[data-live-text]' ? liveText : root.querySelector(s),
   querySelectorAll: s => s === '.strip-i dd' ? [] : root.querySelectorAll(s), createElement: t => new El(t), getElementById: () => null };
 let handlers = null;
-global.window = { DrishtiChannel: { subscribe: (ch, h) => { handlers = h; return () => {}; } } };
+global.window = { Drishti: { Channel: { subscribe: (ch, h) => { handlers = h; return () => {}; } } } };
 require(process.argv[2]);
 handlers.view({});
 handlers.frame(JSON.parse(process.argv[3]));
@@ -100,7 +100,7 @@ console.log(JSON.stringify(out));
 """
 
 
-@pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run live.js")
+@pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run drishti_live.js")
 def test_live_js_shows_when_the_entity_was_deleted_and_repaints_when_it_comes_back(tmp_path):
     harness = tmp_path / "harness.js"
     harness.write_text(HARNESS)

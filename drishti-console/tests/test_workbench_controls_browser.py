@@ -14,7 +14,7 @@
 
 """The workbench's Controls tab in a real browser over a real server: reached by keyboard alone, a control added and set from its card, the YAML
 following the cards and the cards following typed YAML, reordered by Alt+Down, the controls kept as one step of the log (undo brings the old
-ones back), a mistake located, and the small preview working the controls (the console's own controls.js) over the sample.
+ones back), a mistake located, and the small preview working the controls (the console's own drishti_controls.js) over the sample.
 
 Skipped when Playwright, its Chromium, the server jar or a JDK 21 is missing."""
 import json
@@ -28,11 +28,11 @@ SUTRA = ("rachana: 1\nsutra: ctl-e2e\nversion: 1\ndescription: Cashflows by leg.
 
 
 def _ids(page):
-    return page.evaluate("() => window.drishtiWorkbench.controls.model().map(c => c.id)")
+    return page.evaluate("() => window.Drishti.workbench.controls.model().map(c => c.id)")
 
 
 def _saved(page, text):
-    wait(page, f"window.drishtiWorkbench.store.state.yaml.indexOf({json.dumps(text)}) >= 0")
+    wait(page, f"window.Drishti.workbench.store.state.yaml.indexOf({json.dumps(text)}) >= 0")
 
 
 def test_add_control_from_a_card_see_the_yaml_and_try_it_on_the_sample(live_console, page):
@@ -57,18 +57,18 @@ def test_add_control_from_a_card_see_the_yaml_and_try_it_on_the_sample(live_cons
 
     # kept as ONE step of the log, validated as the Sutra is
     _saved(page, "controls:")
-    yaml = page.evaluate("window.drishtiWorkbench.store.state.yaml")
-    assert page.evaluate("window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).controls.map(c => [c.id, c.kind, c.panel, c.options].join('|'))") == [
+    yaml = page.evaluate("window.Drishti.workbench.store.state.yaml")
+    assert page.evaluate("window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).controls.map(c => [c.id, c.kind, c.panel, c.options].join('|'))") == [
         "legs|multi-select|cf|$.cashflows[*].leg"] and yaml.index("controls:") < yaml.index("panels:")
     assert page.locator("[data-ctl-problems]").inner_text().strip() == "The controls read without problems."
 
     # a panel reads it; the small preview works the control over the sample
-    page.evaluate("""() => window.drishtiWorkbench.store.send([{ op: 'setOption', panel: 'cf', option: 'where', value: 'oneOf(@.leg, ctl.legs)' }], 'Condition set')""")
-    wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('ctl.legs') >= 0")
+    page.evaluate("""() => window.Drishti.workbench.store.send([{ op: 'setOption', panel: 'cf', option: 'where', value: 'oneOf(@.leg, ctl.legs)' }], 'Condition set')""")
+    wait(page, "window.Drishti.workbench.store.state.yaml.indexOf('ctl.legs') >= 0")
     page.locator("#wbTabProb").click()                                                              # a Sutra that reads its controls has no problems
     assert page.locator("[data-problem-count]").is_hidden(), page.locator("[data-problems]").inner_text()
     page.locator("#wbTabCtl").click()
-    page.evaluate("window.drishtiWorkbench.controls.preview()")
+    page.evaluate("window.Drishti.workbench.controls.preview()")
     page.locator("[data-ctl-preview] [data-ctl='legs'] summary").wait_for(timeout=20000)
     assert page.locator("[data-ctl-preview] tbody tr").count() == 3
     page.locator("[data-ctl-preview] [data-ctl='legs'] summary").click()
@@ -82,13 +82,13 @@ def test_add_control_from_a_card_see_the_yaml_and_try_it_on_the_sample(live_cons
     # undo brings the old controls back (focus outside the boxes: the design's own Ctrl+Z)
     page.locator("#wbTabIns").focus()
     page.keyboard.press("Control+z")
-    wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('ctl.legs') < 0")
+    wait(page, "window.Drishti.workbench.store.state.yaml.indexOf('ctl.legs') < 0")
     page.keyboard.press("Control+z")
-    wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('controls:') < 0")
-    wait(page, "window.drishtiWorkbench.controls.model().length === 0")
+    wait(page, "window.Drishti.workbench.store.state.yaml.indexOf('controls:') < 0")
+    wait(page, "window.Drishti.workbench.controls.model().length === 0")
     page.keyboard.press("Control+Shift+z")
-    wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('controls:') >= 0")
-    wait(page, "window.drishtiWorkbench.controls.model().length === 1")
+    wait(page, "window.Drishti.workbench.store.state.yaml.indexOf('controls:') >= 0")
+    wait(page, "window.Drishti.workbench.controls.model().length === 1")
     assert page.request.get(f"{live_console}/build/designs/{id_}").json()["sutra"].count("controls:") == 1
 
 
@@ -97,9 +97,9 @@ def test_typed_yaml_makes_cards_reorder_by_keyboard_and_a_mistake_is_located(liv
     page.locator("#wbTabCtl").click()
     page.locator("[data-ctl-src]").evaluate("e => e.closest('details').open = true")
     page.locator("[data-ctl-src]").fill("- { id: a, kind: search }\n- { id: b, kind: top-n, options: [5, 10], default: 10 }\n- { id: c, kind: date-range, default: next-90d }\n")
-    wait(page, "window.drishtiWorkbench.controls.model().length === 3")                          # the cards follow typed YAML
+    wait(page, "window.Drishti.workbench.controls.model().length === 3")                          # the cards follow typed YAML
     assert _ids(page) == ["a", "b", "c"]
-    wait(page, "window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).controls.length === 3")
+    wait(page, "window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).controls.length === 3")
     assert page.locator("[data-ctl-list] li").nth(1).locator("input[aria-label='b options']").input_value() == "5, 10"
 
     page.locator("[data-ctl-list] li").first.focus()
@@ -108,15 +108,15 @@ def test_typed_yaml_makes_cards_reorder_by_keyboard_and_a_mistake_is_located(liv
     assert page.evaluate("document.activeElement.getAttribute('data-i')") == "1"
     page.locator("[data-ctl-list] button[aria-label='Move c up']").click()
     assert _ids(page) == ["b", "c", "a"]
-    wait(page, "window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).controls.map(c => c.id).join() === 'b,c,a'")
-    yaml = page.evaluate("window.drishtiWorkbench.store.state.yaml")
-    assert page.evaluate("window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).controls.map(c => c.id)") == ["b", "c", "a"]
+    wait(page, "window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).controls.map(c => c.id).join() === 'b,c,a'")
+    yaml = page.evaluate("window.Drishti.workbench.store.state.yaml")
+    assert page.evaluate("window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).controls.map(c => c.id)") == ["b", "c", "a"]
 
     # a mistake is located: a date default that is not a date is DRS-2039, and the Sutra keeps its last good controls
     page.locator("[data-ctl-list] li").nth(1).locator("input[aria-label='c default']").fill("soon")
     page.locator("[data-ctl-problems]").get_by_text("DRS-2039").wait_for(timeout=20000)
     assert "next-90d" in page.locator("[data-ctl-problems]").inner_text()
-    assert "soon" not in page.evaluate("window.drishtiWorkbench.store.state.yaml")
+    assert "soon" not in page.evaluate("window.Drishti.workbench.store.state.yaml")
     page.locator("[data-ctl-list] li").nth(1).locator("input[aria-label='c default']").fill("this-month")
     page.locator("[data-ctl-problems]").get_by_text("read without problems").wait_for(timeout=20000)
 

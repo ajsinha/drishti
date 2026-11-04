@@ -102,7 +102,7 @@ def test_each_kind_has_a_picture_options_linked_to_the_reference_and_a_yaml_exam
 def test_the_help_links_into_the_catalogue_use_headings_that_exist():
     found = anchors(PANELS.read_text())
     macro = (CONSOLE / "web" / "templates" / "_macros" / "panels.html").read_text()
-    inspector = (CONSOLE / "web" / "static" / "js" / "build" / "inspector.js").read_text()
+    inspector = (CONSOLE / "web" / "static" / "js" / "build" / "drishti_inspector.js").read_text()
     assert "/help/panels#{{ p.kind }}" in macro and "'/help/rachana-reference#' + kind" in inspector
     assert set(KINDS) <= set(found)
 
@@ -127,15 +127,15 @@ def test_the_developer_guide_walks_through_metric_with_the_real_code():
         "drishti-engine/src/main/java/com/ash/drishti/engine/view/Emptiness.java": "case PanelData.Metric m -> m.value() == null || blank(List.of(m.value()));",
         "drishti-engine/src/main/java/com/ash/drishti/engine/bind/Binder.java": "case METRIC -> metric(p, c);",
         "drishti-console/core/export.py": "if isinstance(d.get(\"value\"), dict):",
-        "drishti-console/web/static/js/build/palette.js": "['metric', 'hash',",
-        "drishti-console/web/static/css/terminal.css": ".metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem);",
+        "drishti-console/web/static/js/build/drishti_palette.js": "['metric', 'hash',",
+        "drishti-console/web/static/css/drishti_terminal.css": ".metric-v { font-size: clamp(1.1rem, 16cqi, 2.2rem);",
         "drishti-rachana/src/main/java/com/ash/drishti/rachana/design/ops/Bind.java": '"sum", "delta", "highlight", "region");',
     }
     for path, snippet in sources.items():
         assert snippet in (ROOT / path).read_text(), f"{path} no longer has the snippet the guide quotes"
         assert snippet in text, f"the guide does not quote {path}"
     for step in ("PanelKind.java", "PanelOptions.java", "SutraExpressions.java", "RachanaSchema.java", "PanelData.java", "Emptiness.java", "Binder.java",
-                 "panels.html", "terminal.css", "charts.js", "export.py", "Bind.java", "PanelChooser.java", "AutoDesigner.java", "palette.js", "actions.js",
+                 "panels.html", "drishti_terminal.css", "drishti_charts.js", "export.py", "Bind.java", "PanelChooser.java", "AutoDesigner.java", "drishti_palette.js", "drishti_actions.js",
                  "SampleChecker", "test_terminal.py", "StudioTest", "test_examples.py", "test_workbench_options_browser.py", "CHANGELOG.md"):
         assert step in text, step
     for guard in ("test_guide_images.py", "test_panel_kinds.py", "MetricPanelTest.java", "test_metric.py", "test_workbench_metric_browser.py"):

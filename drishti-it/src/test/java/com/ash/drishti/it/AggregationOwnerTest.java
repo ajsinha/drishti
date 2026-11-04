@@ -55,7 +55,7 @@ class AggregationOwnerTest {
                 found.add(rel + ": writes GROUPING SETS (the grouping-sets compiler is drishti-bicompute's)");
             }
             boolean pivotCode = rel.startsWith("drishti-server/src/main/java/com/ash/drishti/server/pivot/") || rel.endsWith("VarPivotProvider.java")
-                    || rel.contains("/static/js/pivot") || rel.contains("routes/pivot");
+                    || rel.contains("/static/js/drishti_pivot") || rel.contains("routes/pivot");
             if (pivotCode && GROUP_BY.matcher(text).find()) {
                 found.add(rel + ": writes GROUP BY in pivot code (ask the engine)");
             }

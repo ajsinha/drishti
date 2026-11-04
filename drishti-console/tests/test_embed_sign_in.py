@@ -127,7 +127,7 @@ def test_the_callback_hands_the_token_to_the_page_s_exact_origin(win):
     assert m["refresh"] and "rt-1" not in m["refresh"], "the provider's refresh token is sealed, never readable in the page"
     assert win.seen["handed"] == [{"token": "header.payload.sig", "nonce": q["nonce"][0], "origin": HOST, "refreshed": False}]
     assert any(c.startswith('drishti_embed_signin=""') or "drishti_embed_signin=;" in c or "Max-Age=0" in c for c in back.headers.get_list("set-cookie"))
-    assert '/static/js/embed-sign-in.js' in back.text and "<script>" not in back.text
+    assert '/static/js/drishti_embed-sign-in.js' in back.text and "<script>" not in back.text
 
 
 def test_a_refusal_by_the_server_is_said_in_the_window_and_to_the_page(win, backend, monkeypatch):

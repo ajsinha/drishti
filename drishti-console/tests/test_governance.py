@@ -45,7 +45,7 @@ def test_studio_submits_for_review_when_review_is_on(client, backend):
     saved.clear()
     r = client.post(f"/build/designs/{d['id']}/propose", json={"note": "from the workbench"})        # the design's own Sutra, not text sent along
     assert r.status_code == 200 and r.json()["proposal"]["id"] == "P-000008" and saved == {"text": "x", "note": "from the workbench"}
-    assert "r.body.proposal" in client.get("/static/js/build/saving.js").text
+    assert "r.body.proposal" in client.get("/static/js/build/drishti_saving.js").text
 
 
 def test_reviews_list_diff_and_decisions(client, backend):

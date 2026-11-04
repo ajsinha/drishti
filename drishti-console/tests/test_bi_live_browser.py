@@ -187,7 +187,7 @@ def test_a_tab_in_the_background_gives_back_its_stream_and_redraws_when_shown(st
     wait_state(page, "live")
     page.evaluate("""() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => true });
       Object.defineProperty(document, 'visibilityState', { configurable: true, get: () => 'hidden' }); document.dispatchEvent(new Event('visibilitychange')); }""")
-    wait_state(page, "hidden", timeout=20000)                                      # after ten seconds of being hidden (channel.js)
+    wait_state(page, "hidden", timeout=20000)                                      # after ten seconds of being hidden (drishti_channel.js)
     assert "background" in page.inner_text(".bi-live-state [data-live-text]")
     start = page.evaluate(ROUND)
     page.evaluate("""() => { Object.defineProperty(document, 'hidden', { configurable: true, get: () => false });
@@ -202,8 +202,8 @@ def test_the_watch_says_stale_failed_and_hidden_and_the_rules_colour_tiles(stack
     page = sign_in(browser)
     open_report(page)
     result = page.evaluate("""async () => {
-      const B = window.drishtiBi, saved = window.DrishtiChannel, handlers = {}, seen = [];
-      window.DrishtiChannel = { subscribe: (key, h) => { handlers[key] = h; return () => { delete handlers[key]; }; } };
+      const B = window.drishtiBi, saved = window.Drishti.Channel, handlers = {}, seen = [];
+      (window.Drishti ??= Object()).Channel = { subscribe: (key, h) => { handlers[key] = h; return () => { delete handlers[key]; }; } };
       const w = B.live.watch(['r1'], { staleSeconds: 1, onState: (i) => seen.push(i.state + ':' + i.reason) });
       const h = handlers['bilive:r1'];
       const states = [];
@@ -224,7 +224,7 @@ def test_the_watch_says_stale_failed_and_hidden_and_the_rules_colour_tiles(stack
       h.paused();
       states.push(w.state());
       w.close();
-      window.DrishtiChannel = saved;
+      (window.Drishti ??= Object()).Channel = saved;
       return { states, gen: w.info().generation };
     }""")
     assert result["states"] == ["live", "stale", "live", "failed kafka is down", "stale", "disconnected", "live", "hidden"]

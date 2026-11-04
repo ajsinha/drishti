@@ -117,15 +117,15 @@ def test_walk_hands_the_frame_to_graphic_walker_with_field_types(bi):
 
 
 def test_the_page_asks_the_bi_proxy_as_the_person_and_the_worker_loads_the_module_on_demand():
-    js = (ROOT / "drishti-console/web/static/js/calc.js").read_text()
-    assert "'/bi/api/datasets'" in js and "'/bi/api/mq'" in js and "m.op === 'bi.query'" in js and "walker.html" in js and "'allow-scripts'" in js
+    js = (ROOT / "drishti-console/web/static/js/drishti_calc.js").read_text()
+    assert "'/bi/api/datasets'" in js and "'/bi/api/mq'" in js and "m.op === 'bi.query'" in js and "drishti_walker.html" in js and "'allow-scripts'" in js
     assert "allow-same-origin" not in js
-    worker = (ROOT / "drishti-console/web/static/js/calc-worker.js").read_text()
+    worker = (ROOT / "drishti-console/web/static/js/drishti_calc-worker.js").read_text()
     assert "drishti_bi.py" in worker and "drishti_bi" in worker.split("const DATA")[1].split("\n")[0]
 
 
 def test_the_walker_page_has_its_own_narrow_policy_and_everything_else_keeps_the_strict_one(client):
-    r = client.get("/static/calc/walker.html")
+    r = client.get("/static/calc/drishti_walker.html")
     csp = r.headers["content-security-policy"]
     assert r.status_code == 200 and "sandbox allow-scripts" in csp and "connect-src 'none'" in csp and "script-src 'self' 'unsafe-eval'" in csp
     assert "form-action 'none'" in csp and "default-src 'none'" in csp
@@ -140,4 +140,4 @@ def test_the_vendored_walker_has_no_react_leaflet_code_and_carries_its_licences(
     text = (walker / "walker.js").read_text(encoding="utf-8")
     assert "useLeafletContext" not in text and "Hippocratic" not in (walker / "LICENSES.txt").read_text(encoding="utf-8")
     assert "Apache License" in (walker / "LICENSE").read_text()
-    assert not any("http" in line for line in (CALC / "walker-frame.js").read_text().splitlines() if "Copyright" not in line and "docs/" not in line)
+    assert not any("http" in line for line in (CALC / "drishti_walker-frame.js").read_text().splitlines() if "Copyright" not in line and "docs/" not in line)

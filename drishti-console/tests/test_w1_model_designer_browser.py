@@ -322,7 +322,7 @@ def test_pack_dataset_to_model_to_report(browser):
     page.click("[data-save]")
     expect(page.locator("[data-state]")).to_have_text("Saved draft", timeout=15000)
     expect(page.locator("[data-valid]")).to_have_text(re.compile(r"^Valid(, \d+ warnings?)?$"))      # valid; a warning pinned on the canvas is counted
-    name = page.evaluate("window.drishtiModel.doc.model")
+    name = page.evaluate("window.Drishti.model.doc.model")
     assert name.startswith("trades-and-desks"), name
     page.click("[data-report]")
     page.click("[data-ask-go]")

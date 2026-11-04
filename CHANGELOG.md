@@ -15,6 +15,19 @@
 -->
 # Changelog
 
+## 2.9.11.c — The lake configuration, Arrow Flight and the client examples (unreleased)
+
+- **Every static asset we wrote is named `drishti_<name>`, and the console puts one global on `window` (product owner, 2026-11-03).** The
+  console's own files under `web/static/` (`js/`, `js/build/`, `css/`, `img/`, `calc/`, the web manifest) are renamed by
+  `tools/dev/asset_prefix.py` (`bi-runs-tab.js` -> `drishti_bi-runs-tab.js`, `drishti-logo.png` -> `drishti_logo.png`), with every template, route,
+  test, tool and document that names them; vendored libraries and the published renderer versions keep their names. Every global the scripts
+  set moves under `window.Drishti` (`window.drishtiWorkbench` -> `window.Drishti.workbench`, `window.DrishtiBusy` -> `window.Drishti.Busy`), except
+  `drishtiModules`, `drishtiBi` and `drishtiGeo`, which the published renderer and Elements versions read. Custom events start `drishti:`
+  (`bi:reload` -> `drishti:bi-reload`). The embed routes keep their public names (`/embed/v2/js/tables.js` serves `drishti_tables.js`), and
+  `/static/js/<name>.js` for an old name answers with the `drishti_` file, so renderer 1.0.0-1.2.0 pages keep working. Guard:
+  `drishti-console/tests/test_asset_names.py` (file names, window globals, storage keys, custom elements and events, no new generic CSS class
+  or third-party data- attribute). The mapping is `tools/dev/asset_prefix_map.yaml`.
+
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
 - **The MR cube on the pivot engine (2.9.11.b, moved from 2.9.11.a by the product owner on 2026-11-03; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot

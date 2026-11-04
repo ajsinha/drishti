@@ -45,7 +45,7 @@ def test_the_page_has_the_tab_the_view_switch_and_the_export(client):
         assert f'data-vw-view="{v}"' in html
     assert 'data-vw-view="matrix" aria-pressed="true"' in html
     assert "Download the working (.xlsx)" in html and "/api/var/explain.xlsx?scope=DESK%3ADESK-RATES" in html
-    assert "/static/js/var-explain.js" in html and html.index("var-explorer.js") < html.index("var-explain.js")
+    assert "/static/js/drishti_var-explain.js" in html and html.index("drishti_var-explorer.js") < html.index("drishti_var-explain.js")
     plain = client.get("/var?scope=BANK&tab=nonsense&view=pie").text                # not a tab, not a view: the defaults
     assert 'data-tab="path"' in plain and 'data-pane="why" data-view="waterfall"' in plain
 

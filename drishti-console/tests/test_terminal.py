@@ -79,8 +79,8 @@ def test_json_proxy_for_the_browser(client, backend):
 
 
 def test_live_views_load_the_live_script(client):
-    assert "/static/js/live.js" in client.get("/v/trade/IRS-48213").text
-    assert "/static/js/live.js" not in client.get("/v/trade/CFT-77120").text
+    assert "/static/js/drishti_live.js" in client.get("/v/trade/IRS-48213").text
+    assert "/static/js/drishti_live.js" not in client.get("/v/trade/CFT-77120").text
 
 
 def test_stream_relays_frames_with_server_rendered_panels(client, backend):
@@ -117,7 +117,7 @@ def test_impact_page(client, backend):
     r = client.get("/impact/curve/USD-SOFR")
     assert r.status_code == 200 and "Impact of" in r.text and "IRS-48213" in r.text and "total −394,160" in r.text
     assert "1 netting set you do not have access to" in r.text
-    assert "window.location.href = '/impact/'" in client.get("/static/js/view.js").text
+    assert "window.location.href = '/impact/'" in client.get("/static/js/drishti_view.js").text
 
 
 def test_the_business_date_is_chosen_in_the_top_bar_and_sent_to_the_server(client, backend):
@@ -351,14 +351,14 @@ def test_one_channel_carries_every_live_subscription_of_a_tab(client, backend, m
 
 
 def test_pages_never_open_their_own_event_streams():
-    """Browsers allow six connections per site: every live feature shares the browser's one channel (channel.js, which
-    hands every tab's subscriptions to the hub in live-hub.js, the only code that opens it)."""
+    """Browsers allow six connections per site: every live feature shares the browser's one channel (drishti_channel.js, which
+    hands every tab's subscriptions to the hub in drishti_live-hub.js, the only code that opens it)."""
     from pathlib import Path
     js = Path(__file__).resolve().parent.parent / "web" / "static" / "js"
-    offenders = [f.name for f in js.glob("*.js") if "EventSource(" in f.read_text() and f.name != "live-hub.js"]
+    offenders = [f.name for f in js.glob("*.js") if "EventSource(" in f.read_text() and f.name != "drishti_live-hub.js"]
     assert offenders == []
     page = (Path(__file__).resolve().parent.parent / "web" / "templates" / "base.html").read_text()
-    assert page.index("live-hub.js") < page.index("channel.js") < page.index("alerts.js")
+    assert page.index("drishti_live-hub.js") < page.index("drishti_channel.js") < page.index("drishti_alerts.js")
 
 
 def test_a_channel_takes_new_subscriptions_without_reconnecting(client):
@@ -432,7 +432,7 @@ def test_the_pack_overview_shows_the_readme_summary_and_data_structures_the_user
     page = client.get("/p/market-data").text
     assert asked == ["market-data"]
     assert 'data-pack-readme="market-data"' in page and "Curves and surfaces of the market." in page
-    assert "A vendor (Restricted)" in page and "internal only" in page and "/static/css/readme.css" in page
+    assert "A vendor (Restricted)" in page and "internal only" in page and "/static/css/drishti_readme.css" in page
     assert "data-readme-structures" in page and "CURVE_ID" in page and "CRV-USD-SOFR" in page
     assert "<script>alert(1)</script>" not in page and 'href="javascript:' not in page
     assert "Not shown here." not in page and "Curves.</p>" not in page          # only the summary and the Data structures
@@ -538,7 +538,7 @@ def test_field_history_and_searches_compared_between_dates(client):
     assert [p["value"] for p in r["points"]] == [110, 125]
     page = client.get("/s", params={"q": "TRD where mtm > 0", "vs": "2026-09-28"}).text
     assert "125  (+25)" in page and "added" in page and 'value="2026-09-28"' in page
-    assert "history.js" in client.get("/v/trade/IRS-48213").text
+    assert "drishti_history.js" in client.get("/v/trade/IRS-48213").text
     module = client.app.state.templates.env.get_template("_macros/panels.html").module
     html = str(module.table({"columns": ["MTM"], "numeric": [True], "rows": [{"cells": [{"text": "125", "path": "$.mtm"}]}]}))
     assert 'data-path="$.mtm"' in html
@@ -564,7 +564,7 @@ def test_a_view_says_how_fresh_its_data_is_and_warns_when_stale(client, monkeypa
 
 def test_notes_on_an_entity_and_its_fields(client, backend):
     page = client.get("/v/trade/IRS-48213").text
-    assert "data-discussion-open" in page and "discussion.js" in page and "notes.js" not in page and 'data-me="' in page
+    assert "data-discussion-open" in page and "drishti_discussion.js" in page and "drishti_notes.js" not in page and 'data-me="' in page
     r = client.post("/api/notes/trade/IRS-48213", json={"body": "Restated after the fixing", "path": "$.mtm"}).json()
     assert r["author"] and r["path"] == "$.mtm"
     assert [n["body"] for n in client.get("/api/notes/trade/IRS-48213").json()] == ["Restated after the fixing"]

@@ -45,7 +45,7 @@ def test_landing_commands_come_from_the_installed_packs(client, with_packs):
     page = client.get("/").text
     assert "IRS-48213" not in page and "FXS-20931" not in page and "CFT-77120" not in page
     assert "TRD MX-20000001 &lt;GO&gt;" in page and "data-commands=" in page
-    assert "IRS-48213" not in client.get("/static/js/landing.js").text
+    assert "IRS-48213" not in client.get("/static/js/drishti_landing.js").text
 
 
 def test_landing_without_packs_names_no_entity(client, with_packs):

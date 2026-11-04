@@ -1,5 +1,5 @@
 {
- "comment": "Written by tools/sizing_planner.py from capacity/planner.yaml: every named figure at three shapes. Numbers rounded to 6 decimals; text exact. The console's capacity.js and the server's test check their evaluation against these.",
+ "comment": "Written by tools/sizing_planner.py from capacity/planner.yaml: every named figure at three shapes. Numbers rounded to 6 decimals; text exact. The console's drishti_capacity.js and the server's test check their evaluation against these.",
  "shapes": {
   "production": {
    "inputs": {},

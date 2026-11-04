@@ -465,7 +465,7 @@ async def view_panels(request: Request, kind: str, id_: str, panels: str = ""):
         return JSONResponse({"code": e.code, "detail": e.detail}, status_code=e.page_status)
     layout = await request.app.state.layouts.context(request, vm, False)
     if vm.get("layout"):
-        layout["panels"] = vm.get("panels") or []      # a grid screen: the Sutra's sizes (screen-grid.js keeps the reader's)
+        layout["panels"] = vm.get("panels") or []      # a grid screen: the Sutra's sizes (drishti_screen-grid.js keeps the reader's)
     shown = layout["panels"]
     env = request.app.state.templates.env
     parts = env.get_template("_macros/view.html").module

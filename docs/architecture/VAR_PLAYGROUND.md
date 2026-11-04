@@ -386,7 +386,7 @@ calculation on that frame.
 | `ExportSizing` | `server/playground` | the estimate of a count (columns, rows, cells, size, recalculation time, the applications that open it, or why not) |
 | `XlsxFormulas`, `XlsxWriter.formula` | `server/dist` | the common function set, the check of every formula written, the scan of a finished file |
 | `LibreOfficeRecalc` | the tests' `server/playground` | `recalc(xlsx, work)` and `cells(file, sheet)`: the drill's recalculation, one LibreOffice at a time |
-| The screen | `drishti-console`: `play_routes.py`, `terminal/play.html`, `var-playground.js`, `var-playground.css` | `PLAY <METRIC>` (add the word to `METRICS`); the windowed grid, formula bar and explanation take the metric's columns, rows and steps |
+| The screen | `drishti-console`: `play_routes.py`, `terminal/play.html`, `drishti_var-playground.js`, `drishti_var-playground.css` | `PLAY <METRIC>` (add the word to `METRICS`); the windowed grid, formula bar and explanation take the metric's columns, rows and steps |
 
 A metric adds its model (the formulas' arithmetic, for the cached values: VaR's is `VarPlaygroundModel`), its generator (VaR's
 `VarPlaygroundBook`: the tabs and formulas through `SeriesLayout`), its inputs as the person (VaR's `VarPlayground`), its endpoints

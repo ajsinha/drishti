@@ -158,7 +158,7 @@ def test_the_workbench_page_has_studios_toolbar_and_the_new_panes(app_client):
     d = _new(app_client, "Tools", kind="trade", empty=True)
     page = app_client.get(f"/build/d/{d['id']}").text
     for marker in ("data-file-menu", "data-file-input", ".yaml,.yml,.json", "data-save", "data-palette-open", 'data-tab="versions"', "data-versions", 'data-tab="summary"',
-                   "build/saving.js", "build/versions.js", "build/commands.js", "tree-table"):
+                   "build/drishti_saving.js", "build/drishti_versions.js", "build/drishti_commands.js", "tree-table"):
         assert marker in page, marker
     assert "Open in Studio" not in page and "data-studio-link" not in page
 

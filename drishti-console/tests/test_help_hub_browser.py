@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The help centre's front door and a section's page in a real browser (2.9.11.a, mock-up help-hub/A; help/index.html, help/section.html,
-static/js/help.js), dark and light:
+static/js/drishti_help.js), dark and light:
 - the front door: the search box, the most used row and nine tiles (an administrator: Internal too), with no script error;
 - a tile opens its section; the section's rows filter as you type (a group with none left folds away), Enter searches that section only;
 - an old address /help#cat-<id> opens the section that took it over;

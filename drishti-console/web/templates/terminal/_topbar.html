@@ -74,7 +74,7 @@
   <nav class="tbar-menus"{% if MENU | length > 6 %} data-many{% endif %}{% if LENS %} data-lens-menu{% endif %} aria-label="Main">
   {% if LENS %}
   {# The lens menus' phone form (LX1 option C): below 640 px the subject menus fold into this one menu named after the lens, a column per
-     subject. It waits in a template: static/js/phone.js puts it in the bar below 640 px (phone.css then hides the subject menus) and takes it
+     subject. It waits in a template: static/js/drishti_phone.js puts it in the bar below 640 px (drishti_phone.css then hides the subject menus) and takes it
      out above, so a wide screen has each item once. #}
   <template data-lens-fold-tpl><div class="dropdown tbar-menu tbar-lens" data-lens-fold>
     <button class="tbar-menu-btn tbar-lens-btn" type="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false" title="{{ LENS.title }}: {{ LENS.subjects | join(', ') }}">
@@ -99,7 +99,7 @@
     {% if ENGINES and label == ENGINES.label %}
     {# The Engines menu: a column per engine, its command word in the head, every page one click away with its command on the right; a
        search box when many engines run; Admin -> Engines and the engines not running for an administrator. On a phone (below 640 px)
-       the columns fold: an engine's head opens its pages, one engine at a time (static/js/engines-menu.js, nav.css). #}
+       the columns fold: an engine's head opens its pages, one engine at a time (static/js/drishti_engines-menu.js, drishti_nav.css). #}
     {% set n = ENGINES.columns | length %}
     <div class="dropdown tbar-menu tbar-engines" data-engines-menu>
       <button class="tbar-menu-btn{% if ns.active %} active{% endif %}" type="button" data-bs-toggle="dropdown" data-bs-display="static" data-bs-auto-close="outside"

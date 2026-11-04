@@ -16,7 +16,7 @@
 import re
 from pathlib import Path
 
-TOKENS = (Path(__file__).resolve().parent.parent / "web" / "static" / "css" / "tokens.css").read_text()
+TOKENS = (Path(__file__).resolve().parent.parent / "web" / "static" / "css" / "drishti_tokens.css").read_text()
 
 
 def _theme(name):
@@ -47,7 +47,7 @@ def test_contrast_all_themes():
 
 
 def test_the_about_drawer_text_reads_in_every_theme():
-    """About this page (about.css) draws ink, muted and link text on the surface, its headings in the accent, its health words in
+    """About this page (drishti_about.css) draws ink, muted and link text on the surface, its headings in the accent, its health words in
     pos / accent / neg, and ink on the key caps (surface-2): all at 4.5:1."""
     for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         t = _theme(name)
@@ -113,7 +113,7 @@ def test_the_css_colours_text_only_with_checked_tokens():
     console's CSS is one of them or --d-on-accent (or a fixed colour on a fixed ground, such as white on a badge)."""
     used = set()
     for f in CSS.glob("*.css"):
-        if f.name == "tokens.css":
+        if f.name == "drishti_tokens.css":
             continue
         used |= set(re.findall(r"(?<![-\w])color:\s*var\(--d-([a-z0-9-]+)\)", f.read_text()))
     checked = set(TEXT_TOKENS) | {"on-accent", "on-fill"}
@@ -131,7 +131,7 @@ def test_the_light_fallback_is_the_light_theme():
 
 
 def test_the_share_dialog_and_inbox_read_in_every_theme():
-    """Share with a note (collab.css): ink, muted, accent, warn and neg text on the surface; ink on the chips (surface-2), on an unread row
+    """Share with a note (drishti_collab.css): ink, muted, accent, warn and neg text on the surface; ink on the chips (surface-2), on an unread row
     (emph-bg) and on the highlighted option (accent-tint): all at 4.5:1."""
     for name in ("terminal", "light", "wallstreet", "blue", "green", "crimson", "crimson-dark", "terminal-green", "terminal-crimson", "terminal-blue"):
         t = _theme(name)
@@ -172,7 +172,7 @@ def test_buttons_fill_with_the_fill_tokens_only():
     """QA2-03: a button (or a pressed control) takes its ground from --d-fill / --d-fill-strong, the pair whose label
     (--d-on-fill) test_labels_on_button_fills_read_in_every_theme checks: a gradient of the bright text accent under a white
     label read 2:1 in Crimson Terminal. A rule that writes --d-on-fill puts it on those fills, never on another token."""
-    sheets = [f for f in sorted(CSS.glob("*.css")) if f.name != "tokens.css"] + [CSS.parent.parent / "elements" / "drishti-view.css"]
+    sheets = [f for f in sorted(CSS.glob("*.css")) if f.name != "drishti_tokens.css"] + [CSS.parent.parent / "elements" / "drishti-view.css"]
     assert not (bad := button_fill_problems(sheets)), "\n".join(bad)
 
 

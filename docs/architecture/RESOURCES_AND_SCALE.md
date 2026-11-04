@@ -626,7 +626,7 @@ small files appends leave (a rewrite saves what the extra footers and dictionari
 
 **Today.** The console (`drishti-console`, uvicorn, `server.workers` processes, default 4: `drishti-console/config/application.yaml:21`,
 `run_drishti_web.py` (lines 59-67)) turns each ViewModel into HTML with Jinja (`render(...)` in `routes/*`); charts are already drawn in the
-browser (vendored ECharts, `web/static/js/charts.js`, `var-charts.js`, `exposure-charts.js`). Python visuals return chart specifications,
+browser (vendored ECharts, `web/static/js/drishti_charts.js`, `drishti_var-charts.js`, `drishti_exposure-charts.js`). Python visuals return chart specifications,
 not pictures (`core/pyrunner_worker.py` (lines 747-762)). Measured: about 40 pages a second per worker process (`run_drishti_web.py:63`); one
 console of 4 workers about 69 to 70 pages a second at 50 users, against 140 to 150 requests a second for one server
 ([BENCHMARK.md section 8.4](../admin/BENCHMARK.md#84-sizing-for-millions-of-trades-a-day)). **The console
@@ -1086,7 +1086,7 @@ Every expression is in a small Excel subset over the names: `+ - * / ^`, `&` (te
   shared test vectors (`drishti-server/src/test/resources/capacity/test-vectors.json`: every named figure at the production shape, the
   1,000,000-position benchmark and a large Java 25 shape with exposure);
 - the server serves it to **Admin → Capacity** ([OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)),
-  whose `capacity.js` evaluates the expressions as you type, and fills the template's Inputs for **Download the working (.xlsx)**, so
+  whose `drishti_capacity.js` evaluates the expressions as you type, and fills the template's Inputs for **Download the working (.xlsx)**, so
   the downloaded workbook keeps every formula live;
 - `drishti.py admin capacity` evaluates the server's planner with the Python evaluator.
 

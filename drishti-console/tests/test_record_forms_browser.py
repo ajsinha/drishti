@@ -55,7 +55,7 @@ def page(browser, base, path, theme="terminal", size=None):
         d.accept()
     pg.on("dialog", on_dialog)
     pg.goto(base + path)
-    wait(pg, "window.drishtiForms && Object.keys(drishtiForms.state()).length > 0")
+    wait(pg, "window.Drishti.forms && Object.keys(Drishti.forms.state()).length > 0")
     return pg
 
 
@@ -72,7 +72,7 @@ def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, brows
     pg = page(browser, stack, DESK)
     forget_drafts(pg, stack)
     pg.reload()
-    wait(pg, "window.drishtiForms && Object.keys(drishtiForms.state()).length > 0")
+    wait(pg, "window.Drishti.forms && Object.keys(Drishti.forms.state()).length > 0")
     pg.click("#p-trades tbody tr[data-frow='1'] td:nth-child(2)")
     side = pg.locator("[data-fm-side]")
     side.wait_for()
@@ -89,7 +89,7 @@ def test_a_form_beside_the_table_with_words_a_draft_and_resuming_it(stack, brows
     assert side.locator("[data-fm-badge]").inner_text() == "Draft · not saved"
     pg.click("[data-fm-side] .fm-save")                          # an error: not saved, the field it names is focused
     assert pg.evaluate("document.activeElement.getAttribute('data-field')") == "comment"
-    assert pg.evaluate("drishtiForms.state().trades.dirty")
+    assert pg.evaluate("Drishti.forms.state().trades.dirty")
     pg.fill("[data-fm-side] [data-field='comment']", "Client hedge for the Q4 roll")
     assert side.locator(".fm-error").count() == 0 and warn.count() == 1
     pg.fill("[data-fm-side] [data-field='executed_at']", "2026-10-22T09:41")      # a date and time, in its time zone
@@ -124,7 +124,7 @@ def test_a_masked_field_is_hidden_and_offers_nothing(stack, browser):
       const s = document.querySelector('#p-trades'); const f = JSON.parse(s.getAttribute('data-form'));
       f.fields.forEach(x => { if (x.id === 'counterparty') { x.masked = true; delete x.options; } if (x.id === 'trade_status') { x.locked = 'locked: you can view, not change'; } });
       f.rows.forEach(r => { delete r.values.counterparty; r.masked = ['counterparty']; });
-      drishtiForms.reset('trades', f);
+      Drishti.forms.reset('trades', f);
     }""")
     pg.click("#p-trades tbody tr[data-frow='0'] td:nth-child(2)")
     side = pg.locator("[data-fm-side]")
@@ -183,7 +183,7 @@ def test_cells_edited_like_a_spreadsheet_with_reasons_under_the_row(stack, brows
     assert len(drafts) == 1 and drafts[0]["mode"] == "cells" and drafts[0]["changes"] == 2
     pg.click(".fm-undo")
     assert pg.locator("#p-buckets td.fm-changed").count() == 0
-    pg.evaluate("drishtiForms.reset('buckets', window.__f)")
+    pg.evaluate("Drishti.forms.reset('buckets', window.__f)")
     hidden = pg.locator("#p-buckets tr[data-frow='4'] td[data-fcell='limit']")
     assert hidden.inner_text() == "Hidden for you" and "fm-editable" not in hidden.get_attribute("class")
     pg.close()

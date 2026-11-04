@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""Admin -> Capacity's evaluator as it runs in the browser (static/js/capacity.js under Node): every named figure of the planner
+"""Admin -> Capacity's evaluator as it runs in the browser (static/js/drishti_capacity.js under Node): every named figure of the planner
 (drishti-server/src/main/resources/capacity/planner.yaml) at the three shapes of the shared test vectors
 (drishti-server/src/test/resources/capacity/test-vectors.json, written by tools/sizing_planner.py) agrees with the Python evaluator the
 workbook is checked with, text exactly (the YAML block and the command line too), numbers to a millionth; and today against the plan
@@ -26,7 +26,7 @@ import pytest
 import yaml
 
 ROOT = Path(__file__).resolve().parents[2]
-JS = ROOT / "drishti-console" / "web" / "static" / "js" / "capacity.js"
+JS = ROOT / "drishti-console" / "web" / "static" / "js" / "drishti_capacity.js"
 PLANNER = ROOT / "drishti-server" / "src" / "main" / "resources" / "capacity" / "planner.yaml"
 VECTORS = ROOT / "drishti-server" / "src" / "test" / "resources" / "capacity" / "test-vectors.json"
 
@@ -36,7 +36,7 @@ const fs = require('fs');
 eval(fs.readFileSync(process.argv[1], 'utf8'));
 const plan = JSON.parse(fs.readFileSync(0, 'utf8'));
 const vec = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'));
-const C = window.drishtiCapacity, bad = [];
+const C = window.Drishti.capacity, bad = [];
 let n = 0;
 for (const [shape, s] of Object.entries(vec.shapes)) {
   const ev = C.evaluate(plan, Object.assign({ServerJar: s.results.ServerJar}, s.inputs));
@@ -56,13 +56,13 @@ global.window = global;
 const fs = require('fs');
 eval(fs.readFileSync(process.argv[1], 'utf8'));
 const input = JSON.parse(fs.readFileSync(0, 'utf8'));
-const C = window.drishtiCapacity, ev = C.evaluate(input.plan, input.inputs);
+const C = window.Drishti.capacity, ev = C.evaluate(input.plan, input.inputs);
 const rows = C.headroom(input.plan, ev, input.live);
 const g = C.growth(input.plan, input.inputs, [1, 2]).map(r => [r.factor, r.trades, r.ev.value('XmxGB'), r.ev.value('GcChoice')]);
 process.stdout.write(JSON.stringify({rows: rows.map(r => [r.id, r.state, Math.round(r.need), r.has == null ? null : Math.round(r.has)]), growth: g}));
 """
 
-pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run capacity.js")
+pytestmark = pytest.mark.skipif(shutil.which("node") is None, reason="needs Node.js to run drishti_capacity.js")
 
 
 def node(script: str, stdin: dict, *args) -> dict:

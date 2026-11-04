@@ -16,7 +16,7 @@
 panel's place; this groups the view's panels into areas (a picture of the screen in named areas, a split, tabs, a sticky area) or into
 the flow grid's collapsible sections, sorted by ``order``, with the reader's own arrangement applied (the split's position and what is
 folded always; each panel's area, width and order only where the Sutra says ``user-can-arrange: true``). The arrangement is kept per
-reader and Sutra on the server (``/me/arrange``); ``static/js/screen-grid.js`` draws the picture, the divider, tabs and folds."""
+reader and Sutra on the server (``/me/arrange``); ``static/js/drishti_screen-grid.js`` draws the picture, the divider, tabs and folds."""
 from __future__ import annotations
 
 from typing import Any
@@ -83,7 +83,7 @@ def arrange(layout: dict | None, panels: list[dict], mine: dict | None = None) -
                             "collapsed": bool(folded.get(s["id"], s.get("collapsed", False))),
                             "panels": [q for q in ordered if q["grid"]["section"] == s["id"]]} for s in sections]
     out["phone"] = _phone(phone, ordered, names)
-    out["mine"] = {k: mine[k] for k in ("columns", "collapsed", "panels") if k in mine}           # what screen-grid.js saves on top of
+    out["mine"] = {k: mine[k] for k in ("columns", "collapsed", "panels") if k in mine}           # what drishti_screen-grid.js saves on top of
     out["fold"] = {q["id"]: q["grid"]["collapsed"] for q in ordered if q["grid"]["collapsible"]}   # panels the reader may fold
     return out
 

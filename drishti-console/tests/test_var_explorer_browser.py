@@ -229,7 +229,7 @@ def test_the_tabs_path_history_and_contributions(stack, browser):
     pg.locator('.vx-tab[data-tab="contrib"]').click()
     wait(pg, "document.querySelector('[data-var]').dataset.tabPainted === 'contrib'")
     total = pg.evaluate("Number(document.querySelector('[data-vx-ctable] tr.vx-total td:nth-child(4)').textContent.replace(/,/g, ''))")
-    var = pg.evaluate("window.VarExplorer.state.head.var")
+    var = pg.evaluate("window.Drishti.VarExplorer.state.head.var")
     assert abs(total - var) <= len(pg.locator("[data-vx-ctable] tbody tr[data-scope]").all())   # rounded each: within a unit a row
     pg.locator('.vx-segb[data-by="trade"]').click()
     wait(pg, "document.querySelectorAll('[data-vx-ctable] tbody tr[data-scope^=\"TRD:\"]').length > 0")
@@ -238,7 +238,7 @@ def test_the_tabs_path_history_and_contributions(stack, browser):
 
 def sheet_live(pg):
     """Waits until the sheet shows the server's answer for what it holds now (its lists)."""
-    wait(pg, "(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.VarBasket.signature()"
+    wait(pg, "(() => { const l = document.querySelector('[data-vb-live]'); return l && l.dataset.sig === window.Drishti.VarBasket.signature()"
              " && !l.classList.contains('computing'); })()", 60)
 
 
@@ -304,7 +304,7 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     checks = pg.locator("[data-vb-checks]").inner_text()
     assert "1 not found" in checks and "TRD:10000000 is not a live trade" in checks, checks
     # the figures are the engine's: the same VaR as the scope the server composed
-    scope = pg.evaluate("window.VarBasket.compose()")
+    scope = pg.evaluate("window.Drishti.VarBasket.compose()")
     assert scope.endswith(" - TRD:" + trades[2]) and "PORT:PF-USD-RATES" in scope, scope
     sel_var = float(pg.get_attribute("[data-vb-live]", "data-var"))
     head = pg.evaluate("(s) => fetch('/api/var/scope?scope=' + encodeURIComponent(s)).then(r => r.json())", scope)
@@ -331,9 +331,9 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert dl.value.suggested_filename.endswith(".xlsx")
     # open without saving: the explorer on the ad-hoc scope
     pg.locator("[data-vb-open]").click()
-    wait(pg, "window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'adhoc'"
-             " && document.querySelector('[data-var]').dataset.painted === window.VarBasket.compose()", 60)
-    assert pg.evaluate("window.VarExplorer.state.head.var") == sel_var
+    wait(pg, "window.Drishti.VarExplorer.state.head && window.Drishti.VarExplorer.state.head.kind === 'adhoc'"
+             " && document.querySelector('[data-var]').dataset.painted === window.Drishti.VarBasket.compose()", 60)
+    assert pg.evaluate("window.Drishti.VarExplorer.state.head.var") == sel_var
     assert "unsaved basket" in pg.locator(".vx-crumb").inner_text()
     # save: a basket kept as the sheet's lists; the explorer moves to it
     pg.locator("[data-vb-name]").fill("rates-mix")
@@ -341,7 +341,7 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     wait(pg, "document.querySelector('[data-var]').dataset.saved && (document.querySelector('[data-var]').dataset.painted || '').indexOf('BASKET:') === 0", 60)
     basket = pg.get_attribute("[data-var]", "data-saved")
     assert basket.endswith("/rates-mix")
-    assert pg.evaluate("window.VarExplorer.state.head.var") == sel_var
+    assert pg.evaluate("window.Drishti.VarExplorer.state.head.var") == sel_var
     assert "saved basket · " + basket in pg.locator("[data-vb-state]").inner_text()
     kept = pg.evaluate("(id) => fetch('/api/var/baskets/' + id).then(r => r.json())", basket)
     assert kept["sheet"]["TRD"][:2] == trades[:2] and kept["version"] == 1
@@ -365,8 +365,8 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     ctx = browser.new_context(viewport={"width": 1600, "height": 1000})
     pg = ctx.new_page()
     pg.goto(str(stack) + "/go?q=" + f"VAR SCOPE {basket} <GO>".replace(" ", "+"))
-    wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarExplorer.state.head.kind === 'basket'", 60)
-    wait(pg, "window.VarBasket.state.saved && window.VarBasket.state.saved.id === %r && window.VarBasket.parts() === 6" % basket)
+    wait(pg, "window.Drishti.VarExplorer && window.Drishti.VarExplorer.state.head && window.Drishti.VarExplorer.state.head.kind === 'basket'", 60)
+    wait(pg, "window.Drishti.VarBasket.state.saved && window.Drishti.VarBasket.state.saved.id === %r && window.Drishti.VarBasket.parts() === 6" % basket)
     assert pg.locator("[data-vx-basket]").is_hidden()                       # loaded; the sheet waits for the link
     pg.locator("[data-vx-basket-open]").click()
     wait(pg, "!document.querySelector('[data-vx-basket]').hidden && !!document.querySelector('[data-vb-cell=\"TRD:2\"]')")
@@ -385,12 +385,12 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert kept["version"] == 2 and "DESK" not in kept["sheet"]
     # the selection survives a reload
     pg.reload()
-    wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarBasket.parts() === 5", 60)
+    wait(pg, "window.Drishti.VarExplorer && window.Drishti.VarExplorer.state.head && window.Drishti.VarBasket.parts() === 5", 60)
     assert pg.locator("[data-vx-basket]").is_hidden()                       # kept, not opened: only the link opens it
     # a portfolio is the bank's: Edit a copy opens its parts as your own unsaved basket
     pg.locator(".vx-adhoc-row", has=pg.locator('[data-vx-edit="PORT:PF-USD-RATES"]')).hover()   # its buttons show on hover
     pg.locator('[data-vx-adhoc] [data-vx-edit="PORT:PF-USD-RATES"]').click()
-    wait(pg, "window.VarBasket.state.copyOf === 'PF-USD-RATES' && !document.querySelector('[data-vx-basket]').hidden")
+    wait(pg, "window.Drishti.VarBasket.state.copyOf === 'PF-USD-RATES' && !document.querySelector('[data-vx-basket]').hidden")
     assert "your own basket" in pg.locator("[data-vb-save]").inner_text()
     # Delete, through the confirm dialog
     # the sheet's cell gives up its focus first (its edit is committed and the explorer follows), then the row's Delete
@@ -410,8 +410,8 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     pg.wait_for_timeout(300)
     assert pg.locator("[data-vb-popup]").count() == 0 and pg.locator("[data-vb-sheet]").count() == 0
     pg.goto(str(stack) + "/var?scope=BANK")
-    wait(pg, "window.VarExplorer && window.VarExplorer.state.head", 60)
-    n = pg.evaluate("window.VarBasket.parts()")
+    wait(pg, "window.Drishti.VarExplorer && window.Drishti.VarExplorer.state.head", 60)
+    n = pg.evaluate("window.Drishti.VarBasket.parts()")
     assert n > 0 and int(pg.locator("[data-vx-basket-open] [data-basket-count]").inner_text().replace(",", "")) == n
     pg.keyboard.press("Alt+b")
     wait(pg, "!document.querySelector('[data-vx-basket]').hidden && !!document.querySelector('[data-vb-sheet]')")
@@ -426,7 +426,7 @@ def test_the_pre_deal_what_if_under_the_sheet(stack, browser):
     painted(pg, "DESK:DESK-FX")
     trd = pg.evaluate("fetch('/api/var/scope/contributions?scope=DESK:DESK-FX&by=trade').then(r => r.json()).then(d => d.rows[0].key)")
     pg.locator("[data-vx-whatif]").click()                                   # the provenance column's What-if…: the desk into the sheet
-    wait(pg, "!document.querySelector('[data-vx-basket]').hidden && window.VarBasket.parts() === 1")
+    wait(pg, "!document.querySelector('[data-vx-basket]').hidden && window.Drishti.VarBasket.parts() === 1")
     pg.locator("[data-vb-whatif-trade]").fill(trd)
     pg.locator("[data-vb-whatif-factor]").fill("-1")
     pg.locator("[data-vb-whatif-run]").click()

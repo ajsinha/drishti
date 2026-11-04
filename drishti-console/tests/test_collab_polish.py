@@ -114,7 +114,7 @@ def test_the_dialog_has_the_discussion_tick_and_sends_it_with_the_servers_defaul
     c, fake, _ = _app()
     html = c.get("/v/trade/IRS-48213").text
     assert 'name="postToThread"' in html and "Also start a discussion on the view" in html
-    js = (JS / "share.js").read_text()
+    js = (JS / "drishti_share.js").read_text()
     assert "conf.postToThread" in js and "postToThread: !!form.elements.postToThread.checked" in js        # default from /collab, sent in the body
     assert c.get("/api/collab").json()["postToThread"] is True                                              # the server's setting reaches the dialog
     assert c.post("/api/share", json={"kind": "trade", "id": "IRS-48213", "to": {"users": ["ravi"], "roles": []}, "postToThread": True}).status_code == 201
@@ -127,7 +127,7 @@ def test_the_parties_of_a_share_get_a_reply_box_and_see_the_replies_in_the_conso
     c, fake, _ = _app()
     fake.shares[SID] = share("recipient")
     html = c.get(f"/v/trade/IRS-48213?share={SID}").text
-    assert "data-share-reply-form" in html and "first reply" in html and "share-reply.js" in html
+    assert "data-share-reply-form" in html and "first reply" in html and "drishti_share-reply.js" in html
     assert "2026-09-30 10:01 New York" in html                                                              # 14:01 UTC, the top bar's zone and label
     fake.shares[SID] = share("sender")
     assert "data-share-reply-form" in c.get(f"/v/trade/IRS-48213?share={SID}").text
@@ -222,9 +222,9 @@ def test_a_server_refusal_is_told_not_hidden():
 
 
 def test_the_admin_script_is_wired_and_keyboard_friendly():
-    js = (JS / "admin-collab.js").read_text()
+    js = (JS / "drishti_admin-collab.js").read_text()
     html = _app()[0].get("/admin/collab").text
-    assert "/static/js/admin-collab.js" in html and 'aria-live="polite"' in html and 'aria-label="Threads found"' in html
+    assert "/static/js/drishti_admin-collab.js" in html and 'aria-live="polite"' in html and 'aria-label="Threads found"' in html
     assert "innerHTML" not in js and js.count("\n") < 400                                                   # textContent only, the house size rule
 
 
@@ -243,9 +243,9 @@ def test_the_inbox_the_share_banner_and_comments_show_local_times():
     fake.shares[SID] = share()
     html = c.get(f"/v/trade/IRS-48213?share={SID}").text
     assert 'data-share-when>2026-09-30 10:00 New York<' in html and " UTC<" not in html.split("data-share-banner")[1].split("</section>")[0]
-    js = (JS / "discussion-view.js").read_text()
+    js = (JS / "drishti_discussion-view.js").read_text()
     assert "c.createdAtLocal" in js and "c.editedAtLocal" in js
-    assert "v.atLocal" in (JS / "discussion.js").read_text()
+    assert "v.atLocal" in (JS / "drishti_discussion.js").read_text()
     pin = c.get("/v/trade/IRS-48213?asOf=2026-09-29&knownAt=2026-09-29T14:30:00Z&gen=1742").text
     assert "as known at" in pin and "New York</b>" in pin                                                    # the pin banner names the zone
 
@@ -261,7 +261,7 @@ global.document = { createElement: node, createTextNode: (t) => ({ text: t }),
   querySelectorAll: () => cells.map((c) => ({ getAttribute: () => c.path, textContent: c.text, closest: () => null })) };
 eval(require('fs').readFileSync(process.argv[1], 'utf8'));
 const c = JSON.parse(process.argv[3]), ctx = JSON.parse(process.argv[4]);
-const p = window.DrishtiThreadView.comment(c, {}, ctx);
+const p = window.Drishti.ThreadView.comment(c, {}, ctx);
 const q = []; (function walk(n) { (n.children || []).forEach((k) => { if (k.className && k.className.indexOf('disc-quote') >= 0) q.push(k.textContent); walk(k); }); })(p);
 console.log(JSON.stringify(q));
 """
@@ -271,7 +271,7 @@ def quoted(parts, cells, pin_gen=1742, page_gen="1742"):
     if not shutil.which("node"):
         pytest.skip("needs node")
     c = {"id": "cm_1", "revision": 1, "author": "a", "pin": {"generation": pin_gen}, "state": "live", "parts": parts}
-    out = subprocess.run(["node", "-e", HARNESS, str(JS / "discussion-view.js"), json.dumps(cells), json.dumps(c), json.dumps({"pageGen": page_gen})],
+    out = subprocess.run(["node", "-e", HARNESS, str(JS / "drishti_discussion-view.js"), json.dumps(cells), json.dumps(c), json.dumps({"pageGen": page_gen})],
                          capture_output=True, text=True, check=True).stdout
     return json.loads(out)
 

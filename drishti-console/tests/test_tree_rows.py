@@ -111,7 +111,7 @@ def _chrome():
 
 def _run(chrome, tmp_path, body, script):
     page = tmp_path / "page.html"
-    scripts = "".join(f'<script src="{(STATIC / js).as_uri()}"></script>' for js in ("pivot-grid.js", "tree-rows.js"))
+    scripts = "".join(f'<script src="{(STATIC / js).as_uri()}"></script>' for js in ("drishti_pivot-grid.js", "drishti_tree-rows.js"))
     page.write_text(f'<!doctype html><html><body>{body}{scripts}<script>var out = {{}};{script}'
                     'document.body.insertAdjacentHTML("beforeend", "<pre id=result>" + JSON.stringify(out) + "</pre>");</script></body></html>')
     # Chromium puts its process-singleton socket in a throwaway profile under TMPDIR; a socket path longer than the system's limit (108
@@ -155,7 +155,7 @@ def test_in_a_browser_a_table_row_expands_collapses_and_the_filter_keeps_its_anc
 
 
 def test_in_a_browser_a_pivot_group_toggles_with_the_pivot_grid(client, tmp_path):
-    """The nested pivot panel is drawn by the one pivot grid (pivot-grid.js, the Pivot screen's) from the engine's figures."""
+    """The nested pivot panel is drawn by the one pivot grid (drishti_pivot-grid.js, the Pivot screen's) from the engine's figures."""
     chrome = _chrome()
     if not chrome:
         pytest.skip("needs Chromium (playwright install chromium, or CHROME_BIN)")

@@ -12,7 +12,7 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""The pivot screen's Why, What-if and Functions cards (pivot-functions.js; docs/guides/PIVOT_GUIDE.md sections 19 to 21): the cards and
+"""The pivot screen's Why, What-if and Functions cards (drishti_pivot-functions.js; docs/guides/PIVOT_GUIDE.md sections 19 to 21): the cards and
 their script on the page, and every call passed to the server as the person through the same-origin proxy (explain, what-if, the
 functions' list, test, a version, approve and withdraw), the server's refusals passed on in words. The figures, the harness and the
 approval rules are the server's and the engine's tests (CustomFunctionsTest, ExplainAddsUpTest, PivotFunctionsApiTest)."""
@@ -34,7 +34,7 @@ def test_the_cards_and_their_calls_are_the_persons(backend, monkeypatch):
     monkeypatch.setattr(backend, "pivot", pivot, raising=False)
     app, c = _app(backend, monkeypatch, RISK_ABOUT)
     page = c.get("/pivot?source=trade").text
-    assert "pivot-functions.js" in page
+    assert "drishti_pivot-functions.js" in page
     for marker in ('data-pf-open="explain"', 'data-pf-open="whatif"', 'data-pf-open="functions"', 'data-pf-card="explain"',
                    "data-pf-waterfall", "data-pf-by", "data-pf-exclude", "data-pf-change", "data-pf-code", "data-pf-sample", "data-pf-check",
                    "data-pf-save"):

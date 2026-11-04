@@ -137,8 +137,8 @@ def test_schemas_and_a_folder_to_a_verified_bundle_a_deploy_and_a_rollback(brows
     links = page.locator("a:has-text('Open in Build')")
     assert links.count() >= 1, "the pack page lists no Sutra to open in Build"
     links.first.click()                                             # a link on Drishti's own page: straight in, no confirmation
-    page.wait_for_function("() => window.drishtiWorkbench && window.drishtiWorkbench.store.state.id", timeout=BROWSER_WAIT_MS)
-    yaml_text = page.evaluate("() => window.drishtiWorkbench.store.state.yaml || ''")
+    page.wait_for_function("() => window.Drishti.workbench && window.Drishti.workbench.store.state.id", timeout=BROWSER_WAIT_MS)
+    yaml_text = page.evaluate("() => window.Drishti.workbench.store.state.yaml || ''")
     assert "panels" in yaml_text or "sections" in yaml_text, "the designer opened empty: " + yaml_text[:200]
     assert "match: { kind: sg" in yaml_text and "my-layout" not in yaml_text, yaml_text[:300]   # the pack's own Sutra, not a blank starter
 

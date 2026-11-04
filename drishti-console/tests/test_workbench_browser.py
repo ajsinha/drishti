@@ -14,7 +14,7 @@
 
 """The workbench (/build/d/{id}) in a real browser, over a real server: the all-panels showcase built from its samples by mouse and by
 keyboard alone, a panel moved and sized with the YAML changing and its comments kept, a stale revision (409), undo and redo,
-"Preview with a file...", the tests matrix following the design, and layout mode still working on the shared grid-keys.js.
+"Preview with a file...", the tests matrix following the design, and layout mode still working on the shared drishti_grid-keys.js.
 
 Runs Chromium through Playwright against ``wb_live.py``'s server; skipped when Playwright, its Chromium, the server jar or JDK 25 is
 missing."""
@@ -81,7 +81,7 @@ def wait(page, js, seconds=BROWSER_WAIT_MS / 1000):   # generous: the full suite
     # say what the page was doing: a timeout on its own cannot tell a slow machine from a page that failed to start
     try:
         state = page.evaluate("({url: location.href, title: document.title, ready: document.readyState,"
-                              " wb: typeof window.drishtiWorkbench, text: (document.body ? document.body.innerText : '').slice(0, 400)})")
+                              " wb: typeof window.Drishti.workbench, text: (document.body ? document.body.innerText : '').slice(0, 400)})")
     except Exception as e:                                   # the page itself is gone
         state = {"evaluate": repr(e)}
     errors = getattr(page, "errors", None)
@@ -92,22 +92,22 @@ def wait(page, js, seconds=BROWSER_WAIT_MS / 1000):   # generous: the full suite
 def open_design(page, base, name, **kw):
     id_ = new_design(page, base, name, **kw)
     page.goto(f"{base}/build/d/{id_}")
-    wait(page, "window.drishtiWorkbench && window.drishtiWorkbench.store.state.id")
+    wait(page, "window.Drishti.workbench && window.Drishti.workbench.store.state.id")
     page.locator("[data-preview] [data-panel]").first.wait_for(timeout=BROWSER_WAIT_MS)
     return id_
 
 
 def state(page, key):
-    return page.evaluate(f"window.drishtiWorkbench.store.state.{key}")
+    return page.evaluate(f"window.Drishti.workbench.store.state.{key}")
 
 
 def kinds(page):
-    return page.evaluate("window.DrishtiWB.model(window.drishtiWorkbench.store.state.yaml).panels.map(p => p.kind)")
+    return page.evaluate("window.Drishti.WB.model(window.Drishti.workbench.store.state.yaml).panels.map(p => p.kind)")
 
 
 def settle(page, rev):
     """Waits until the Design is past revision ``rev`` and the screen has drawn it."""
-    wait(page, f"window.drishtiWorkbench.store.state.rev > {rev}")
+    wait(page, f"window.Drishti.workbench.store.state.rev > {rev}")
     page.wait_for_timeout(250)
 
 
@@ -182,11 +182,11 @@ def test_the_showcase_is_built_from_its_samples_by_keyboard_alone(live_console, 
     assert sorted(set(kinds(page)) & set(ALL_KINDS)) == sorted(ALL_KINDS)
     # arrows select, Alt+arrows move, Shift+arrows size, B binds
     page.evaluate("document.querySelector('[data-preview] [data-panel=\"kv\"]').focus()")
-    order = page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    order = page.evaluate("window.Drishti.workbench.canvas.ids()")
     rev = state(page, "rev")
     page.keyboard.press("Alt+ArrowDown")
     settle(page, rev)
-    after = page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    after = page.evaluate("window.Drishti.workbench.canvas.ids()")
     assert after.index("kv") == order.index("kv") + 1
     rev = state(page, "rev")
     page.keyboard.press("Shift+ArrowLeft")
@@ -206,7 +206,7 @@ def test_the_showcase_is_built_from_its_samples_by_keyboard_alone(live_console, 
     page.evaluate("document.querySelector('[data-preview] [data-panel=\"kv\"]').focus()")
     page.keyboard.press("Delete")
     settle(page, rev)
-    assert "kv" not in page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    assert "kv" not in page.evaluate("window.Drishti.workbench.canvas.ids()")
     assert "removed" in page.locator("[data-live]").inner_text().lower()
     assert not page.errors
 
@@ -227,7 +227,7 @@ def test_moving_and_sizing_a_panel_changes_the_yaml_and_keeps_the_comments(live_
     page.mouse.move(terms["x"] + 20, terms["y"] + 40, steps=8)
     page.mouse.up()
     settle(page, rev)
-    ids = page.evaluate("window.drishtiWorkbench.canvas.ids()")
+    ids = page.evaluate("window.Drishti.workbench.canvas.ids()")
     assert ids.index("ops") < ids.index("terms")
     rev = state(page, "rev")
     t = page.locator('[data-preview] [data-panel="terms"]')
@@ -252,10 +252,10 @@ def test_the_yaml_editor_follows_the_canvas_after_a_typed_edit_and_a_save_does_n
     page.get_by_role("tab", name="YAML").click()
     rev = state(page, "rev")
     page.evaluate("document.querySelector('.CodeMirror').CodeMirror.replaceRange('# typed in the tab\\n', {line: 0, ch: 0})")
-    wait(page, "window.drishtiWorkbench.store.state.yaml.indexOf('# typed in the tab') >= 0")
+    wait(page, "window.Drishti.workbench.store.state.yaml.indexOf('# typed in the tab') >= 0")
     settle(page, rev)
     rev = state(page, "rev")
-    page.evaluate("window.drishtiWorkbench.store.send([{op: 'setMatch', match: {kind: 'trade', priority: 777}}])")
+    page.evaluate("window.Drishti.workbench.store.send([{op: 'setMatch', match: {kind: 'trade', priority: 777}}])")
     settle(page, rev)
     wait(page, "document.querySelector('.CodeMirror').CodeMirror.getValue().indexOf('priority: 777') >= 0")      # the editor followed
     assert "# typed in the tab" in page.evaluate("document.querySelector('.CodeMirror').CodeMirror.getValue()")
@@ -360,10 +360,10 @@ def test_layout_mode_still_moves_and_sizes_with_the_shared_grid_keys(browser):
     root = CONSOLE / "web" / "static" / "js"
     page = browser.new_page()
     page.set_content(LAYOUT_PAGE)
-    for f in ("layout-rules.js", "build/grid-keys.js", "layout.js"):
+    for f in ("drishti_layout-rules.js", "build/drishti_grid-keys.js", "drishti_layout.js"):
         page.add_script_tag(path=str(root / f))
     page.keyboard.press("Alt+l")
-    assert page.evaluate("window.drishtiLayout.active()")
+    assert page.evaluate("window.Drishti.layout.active()")
     first = page.locator('[data-panel="a"]')
     first.focus()
     page.keyboard.press("ArrowDown")                                          # layout mode: the arrows themselves move the panel

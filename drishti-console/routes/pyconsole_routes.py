@@ -16,7 +16,7 @@
 Pyodide on a masked extract of a model, and promotion of a result to run on the console backend.
 
 It is deliberately **not a BI page** (BI_DESIGN.md principle P3: no BI page computes). It lives at ``/pyconsole``, outside ``/bi``, and is what Calc already is
-for a terminal view: the person's own code, in Calc's Web Worker (``calc-worker.js``, the only script allowed to compile WebAssembly), on rows they may see.
+for a terminal view: the person's own code, in Calc's Web Worker (``drishti_calc-worker.js``, the only script allowed to compile WebAssembly), on rows they may see.
 The server side is two routes:
 
 * ``POST /pyconsole/extract``: the extract, built by the server **as the signed-in person** (a model query of rows: their row rules, a masked column

@@ -46,8 +46,8 @@ def page():
 
 
 def _doc(tmp_path, body: str, scripts: bool = False) -> str:
-    css = "".join(f'<link rel="stylesheet" href="{(STATIC / "css" / f).as_uri()}">' for f in ("tokens.css", "theme.css", "terminal.css", "layout.css"))
-    js = "".join(f'<script src="{(STATIC / s).as_uri()}"></script>' for s in ("vendor/echarts/echarts.min.js", "js/charts.js")) if scripts else ""
+    css = "".join(f'<link rel="stylesheet" href="{(STATIC / "css" / f).as_uri()}">' for f in ("drishti_tokens.css", "drishti_theme.css", "drishti_terminal.css", "drishti_layout.css"))
+    js = "".join(f'<script src="{(STATIC / s).as_uri()}"></script>' for s in ("vendor/echarts/echarts.min.js", "js/drishti_charts.js")) if scripts else ""
     f = tmp_path / "p.html"
     f.write_text(f"<!doctype html><meta charset=utf-8>{css}<body>{body}{js}", encoding="utf-8")
     return f.as_uri()
@@ -71,7 +71,7 @@ def test_status_labels_wrap_and_never_overlap(page, tmp_path, width):
 
 def test_waterfall_labels_fit_flat_when_wide_turn_up_when_narrow_and_go_when_tiny(page, tmp_path):
     page.goto(_doc(tmp_path, "<p>x</p>", scripts=True))
-    fit = lambda n, w, h=360: page.evaluate("([n, w, h]) => window.drishtiCharts.labelFit(Array.from({length: n}, () => ({text: '+12,345,678'})), {width: w, height: h}).mode", [n, w, h])  # noqa: E731
+    fit = lambda n, w, h=360: page.evaluate("([n, w, h]) => window.Drishti.charts.labelFit(Array.from({length: n}, () => ({text: '+12,345,678'})), {width: w, height: h}).mode", [n, w, h])  # noqa: E731
     assert fit(4, 900) == "flat"
     assert fit(9, 400) == "up"
     assert fit(40, 400) == "none"

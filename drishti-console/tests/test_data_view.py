@@ -98,7 +98,7 @@ def test_a_chosen_dataset_shows_its_facts_dates_columns_and_the_selection_from_t
     assert 'value="TRADE_ID" data-col' in page and 'value="MTM" data-col' in page
     assert '<option value="2026-09-30" selected>' in page
     assert "DESK = DESK-COMM" in page and "MTM \\u003e 1000000" in page       # the selection rides in data-sel for the script
-    assert "DATA trade-valuation 2026-09-30" in page and "/static/js/data-view.js" in page
+    assert "DATA trade-valuation 2026-09-30" in page and "/static/js/drishti_data-view.js" in page
 
 
 def test_data_and_a_dataset_and_a_date_go_to_it(client, backend, monkeypatch):
