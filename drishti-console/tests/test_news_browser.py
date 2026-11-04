@@ -114,7 +114,7 @@ def test_with_the_live_connectors_off_and_offline_mode_off_the_snapshot_serves_t
     import json
     import urllib.request
 
-    if not list((news_stack.ROOT / "data" / "testdata" / "news-and-markets" / "news").glob("snapshot-*.jsonl.gz")):
+    if not list((news_stack.ROOT / "data" / "testdata" / "news-and-markets" / "news").glob("news.*.jsonl.gz")):
         pytest.skip("no captured market snapshot in data/testdata (tools/testdata/capture_market.py)")
     stack = _stack(tmp_path_factory, False, lake=True)
     try:
@@ -143,7 +143,7 @@ def test_offline_mode_serves_the_captured_snapshot_and_never_calls_out(tmp_path_
     import urllib.request
 
     snap = news_stack.ROOT / "data" / "testdata" / "news-and-markets" / "quote"
-    if not list(snap.glob("snapshot-*.jsonl.gz")):
+    if not list(snap.glob("*.*.jsonl.gz")):
         pytest.skip("no captured market snapshot in data/testdata (tools/testdata/capture_market.py)")
     stack = _stack(tmp_path_factory, True, offline=True)                         # the connectors switched on in their files: offline wins
     try:

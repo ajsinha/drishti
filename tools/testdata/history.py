@@ -28,9 +28,11 @@
                   fields quoted next to it move with it (BID/ASK around MID, a bond's YIELD, Z_SPREAD and MOD_DURATION against its PRICE,
                   a curve's points together), QA2-201
 
-Files: <folder>/snapshot-<first day>.jsonl.gz and <folder>/changes-<day>.jsonl.gz (one document a line, sorted by key; a day with no
-change writes an empty file), split into .part-001, .part-002 ... when a file would pass the part limit (default 9 MB compressed).
-Deterministic: the same universe writes the same bytes (gzip without a time stamp)."""
+Files (docs/architecture/DATA_LOAD_RULES.md section 10): one per business date, <folder>/<table>.<day>.jsonl.gz, named by the lake table
+the dataset feeds (trade_endur, counterparty ...): the first day's holds the whole snapshot, each later day's only what changed that day
+(the manifest, testdata.yaml, says which: kind snapshot or changes); one document a line, sorted by key; a day with no change writes an
+empty file (a loader ignores it). Never split: a day is one file. Deterministic: the same universe writes the same bytes (gzip without a
+time stamp)."""
 from __future__ import annotations
 
 import gzip
@@ -72,9 +74,10 @@ def dumps(doc: dict) -> str:
 
 
 class GzParts:
-    """Writes lines into <folder>/<stem>.jsonl.gz, or .part-NNN.jsonl.gz files of at most ``limit`` compressed bytes each."""
+    """Writes lines into <folder>/<stem>.jsonl.gz, or .part-NNN.jsonl.gz files of at most ``limit`` compressed bytes each (None: one
+    file, never split)."""
 
-    def __init__(self, folder: Path, stem: str, limit: int = PART_BYTES):
+    def __init__(self, folder: Path, stem: str, limit: int | None = PART_BYTES):
         self.folder, self.stem, self.limit = folder, stem, limit
         self.parts: list[Path] = []
         self.lines = 0
@@ -88,7 +91,7 @@ class GzParts:
         self.gz = gzip.GzipFile(filename="", mode="wb", fileobj=self.raw, mtime=0, compresslevel=9)
 
     def write(self, line: str) -> None:
-        if self.raw.tell() > self.limit - 256 * 1024 and self.lines:
+        if self.limit is not None and self.raw.tell() > self.limit - 256 * 1024 and self.lines:
             self._close_one()
             self._open()
         self.gz.write(line.encode("utf-8") + b"\n")
@@ -129,20 +132,22 @@ class Days:
 class DatasetHistory:
     """One dataset's days: ``day(i)`` the documents of day i by key (JSON text), from which the snapshot and the changes are written."""
 
-    def __init__(self, folder: Path, key: str, days: Days):
-        self.folder, self.key, self.days = folder, key, days
+    def __init__(self, folder: Path, key: str, days: Days, table: str):
+        self.folder, self.key, self.days, self.table = folder, key, days, table
         self.written: list[dict] = []
 
     def write(self, states) -> dict:
         """states: an iterable of {key: json text} per day, in order. Returns what was written (files, counts)."""
         prev: dict[str, str] = {}
+        for old in self.folder.glob("*.jsonl.gz") if self.folder.is_dir() else ():
+            old.unlink()                                      # the folder holds this dataset's days only
         for i, state in enumerate(states):
             day = self.days.dates[i]
             if i == 0:
-                out, stem = state, f"snapshot-{day}"
+                out = state
             else:
-                out, stem = {k: v for k, v in state.items() if prev.get(k) != v}, f"changes-{day}"
-            w = GzParts(self.folder, stem)
+                out = {k: v for k, v in state.items() if prev.get(k) != v}
+            w = GzParts(self.folder, f"{self.table}.{day}", limit=None)   # one file a day (the rules: one table, one date)
             for k in sorted(out, key=_order):
                 w.write(out[k])
             files = w.close()

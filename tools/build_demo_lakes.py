@@ -17,10 +17,13 @@
    the same documents on every day), every business day of the committed test data (data/testdata), moved to end on ``--as-of``
    (default: the date of your newest ENDUR file when ``--endur-dir`` is given, else today's business date), and the connector files
    pointed at the lake. No pack's data is served by the demo connector: start the server with it off.
-2. With ``--endur-dir``: the synthetic ENDUR trades are replaced by your files, one ``YYYY-MM-DD.jsonl`` (or ``.json``, ``.gz``)
-   per business date, or one archive per business date (``YYYY-MM-DD.zip``, ``.tar.gz``, ``.tgz``, ``.tar``: its JSON Lines, in name
-   order, without folders; docs/guides/DATA_GUIDE.md section 2.7), each loaded with ``drishti.py lake build`` exactly as the Windows
-   QA guide's step 3.2 does.
+2. With ``--endur-dir``: the synthetic ENDUR trades are replaced by your files, named by the load rules
+   (docs/architecture/DATA_LOAD_RULES.md): one file per business date, ``trade_endur.YYYY-MM-DD.jsonl`` (or ``.jsonl.gz``,
+   ``.jsonl.zip``: a zip of that date's JSON Lines), or a tar archive of ``trade_endur/YYYY-MM-DD/`` folders (``.tar``, ``.tgz``,
+   ``.tar.gz``, ``.tar.zip``) holding any number of dates; a ``.ready`` file beside one is honoured. Each is loaded with
+   ``drishti.py lake build`` (its dates from its name or folders, mode replace), exactly as the Windows QA guide's step 3.2 does.
+   A name the rules refuse (the older ``YYYY-MM-DD.jsonl``, a file of another table) stops the run before anything is written, saying
+   the name to give it.
 3. A summary: the tables, the dates, your files and what to start next.
 
 Examples::
@@ -88,17 +91,46 @@ DRISHTI = ROOT / "tools" / "drishti.py"
 STORES_PY = ROOT / "tools" / "lake" / "stores.py"
 sys.path.insert(0, str(ROOT / "tools" / "lake"))
 import stores  # noqa: E402  (tools/lake/stores.py: Delta or Iceberg per source system)
-DATED = re.compile(r"^(\d{4}-\d{2}-\d{2})\.(?:(?:jsonl|json)(?:\.gz)?|zip|tar\.gz|tgz|tar)$", re.I)
+import filedate  # noqa: E402  (tools/lake/filedate.py: the load rules' names and tar layout)
+REPLACE = "overwrite-dates"                      # the load rules' mode replace (lake build --mode): each date loaded replaced
 
 
-def endur_files(folder: Path) -> list[tuple[str, Path]]:
-    """Your ENDUR files, oldest first: (business date, path) for every file named by its date."""
-    out = []
+def endur_files(folder: Path, system: str = "endur") -> tuple[list[tuple[str, Path]], list[str]]:
+    """Your files for ``system``'s table trade_<system> by the load rules, oldest first: ([(business date, path)], problems). A plain
+    file's date is its name's (none: the business today); a tar's are its folders (its newest given). A file the rules refuse, or of
+    another table, is a problem (with the name to give it): the run stops before anything is written. ``.ready`` files are skipped
+    (lake build reads the one beside its file)."""
+    import archives
+    table = f"trade_{system}"
+    out, problems = [], []
     for p in sorted(folder.iterdir()):
-        m = DATED.match(p.name)
-        if p.is_file() and m:
-            out.append((m.group(1), p))
-    return out
+        if not p.is_file() or p.name.lower().endswith(".ready") or p.name.startswith("."):
+            continue
+        n = filedate.parse(p.name)
+        if n.tar:
+            try:
+                plan = archives.plan(p, layout="feed")
+            except (ValueError, OSError) as e:
+                problems.append(str(e))
+                continue
+            other = sorted(t for t in plan.datasets if t != table)
+            if other:
+                problems.append(f"{p.name}: folders {', '.join(other)} are not {table} (a tar of {table}/<YYYY-MM-DD>/ folders)")
+                continue
+            days = sorted({m.date.isoformat() for ms in plan.datasets.values() for m in ms})
+            if days:
+                out.append((days[-1], p))
+            continue
+        if n.error:
+            problems.append(n.error)
+            continue
+        if n.table != table:
+            old = re.fullmatch(r"(\d{4}-\d{2}-\d{2})", n.table or "")
+            problems.append(f"{p.name}: the file of table {n.table}, not {table}" + (
+                f"; name it {table}.{old.group(1)}{p.name[len(old.group(1)):]} (the load rules: <table>.<YYYY-MM-DD>.jsonl)" if old else ""))
+            continue
+        out.append(((n.date or filedate.business_today()).isoformat(), p))
+    return sorted(out, key=lambda x: (x[0], x[1].name)), problems
 
 
 HEARTBEAT_SECONDS = int(os.environ.get("DRISHTI_HEARTBEAT_SECONDS", "30"))
@@ -198,8 +230,8 @@ def first_trade(path: Path) -> str | None:
     try:
         import archives
         if archives.is_archive(path.name):
-            plan = archives.plan(path)
-            with archives.Archive(plan) as a, a.open(plan.members()[0]) as f:
+            plan = archives.plan(path, layout="feed" if filedate.is_tar(path.name) else "rows")
+            with archives.Archive(plan) as a, a.open(plan.members()[-1]) as f:
                 m = TRADE_ID.search(f.read(1 << 20))
             return m.group(1).decode() if m else None
         opener = gzip.open if path.name.endswith(".gz") else open
@@ -233,8 +265,8 @@ def tell(server: str, token: str | None, pack: str, kind: str, day: str, dry: bo
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0], formatter_class=argparse.RawDescriptionHelpFormatter,
                                  epilog=__doc__.split("\n\n", 1)[1])
-    ap.add_argument("--endur-dir", type=Path, help="a folder of your ENDUR files, one per business date, named YYYY-MM-DD.jsonl "
-                                                       "(or .json, .gz, or an archive: .zip, .tar.gz, .tgz, .tar)")
+    ap.add_argument("--endur-dir", type=Path, help="a folder of your ENDUR files by the load rules: trade_endur.YYYY-MM-DD.jsonl (or "
+                                                       ".jsonl.gz, .jsonl.zip) one per business date, or tars of trade_endur/YYYY-MM-DD/ folders")
     ap.add_argument("--source-dir", type=Path, help="the same for the system --system names (the same as --endur-dir with --system endur)")
     ap.add_argument("--system", default="endur", choices=("endur", "calypso", "murex"),
                     help="whose files --source-dir holds: they go into trading/trade_<system> through connector trade-<system> (default endur)")
@@ -281,9 +313,13 @@ def main(argv: list[str] | None = None) -> int:
         folder = src.expanduser().resolve()
         if not folder.is_dir():
             ap.error(f"{'--endur-dir' if a.endur_dir else '--source-dir'} {folder} is not a folder")
-        files = endur_files(folder)
+        files, problems = endur_files(folder, system)
+        if problems:
+            ap.error(f"{folder}: {len(problems)} file{'s' if len(problems) > 1 else ''} the load rules refuse, nothing was loaded:\n  "
+                     + "\n  ".join(problems))
         if not files:
-            ap.error(f"no file named YYYY-MM-DD.jsonl (or .json, .gz, .zip, .tar.gz, .tgz, .tar) in {folder}")
+            ap.error(f"no file named trade_{system}.YYYY-MM-DD.jsonl (or .jsonl.gz, .jsonl.zip; or a tar of trade_{system}/YYYY-MM-DD/ "
+                     f"folders) in {folder}")
     if a.token_file and not a.server:
         ap.error("--token-file goes with --server")
     token = None
@@ -347,10 +383,10 @@ def main(argv: list[str] | None = None) -> int:
                 shutil.rmtree(table)
         if iceberg and not a.dry_run:
             shutil.rmtree(into, ignore_errors=True)
-        for day, path in files:
-            run([py, str(DRISHTI), "lake", "build", "--from", str(path), "--as-of", day,
+        for day, path in files:                          # each file's dates from its name (a tar's from its folders): the load rules
+            run([py, str(DRISHTI), "lake", "build", "--from", str(path),
                  "--pack", str(ROOT / "config" / "packs" / "trading"), "--connector", f"trade-{system}", "--key", "TRADE_ID",
-                 "--partition-by", "PRODUCT_TYPE", "--mode", "overwrite-dates", "--lake", str(into)], a.dry_run,
+                 "--partition-by", "PRODUCT_TYPE", "--mode", REPLACE, "--lake", str(into)], a.dry_run,
                 f"2/3 {path.name} ({day})", into / "trading" / f"trade_{system}")
         if iceberg:
             plan.to_iceberg(system, into / "trading" / f"trade_{system}", replace=False)

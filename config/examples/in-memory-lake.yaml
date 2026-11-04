@@ -29,14 +29,14 @@ drishti:
       tables:
         - name: news
           store: news
-          source: { file: data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz }
+          source: { file: data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz }
           key: [NEWS_ID]
           every: 15m
           warm-up: 1
           pin: true
         - name: quote
           store: news
-          source: { file: data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz }
+          source: { file: data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz }
           key: [QUOTE_ID]
           every: 15m
           warm-up: 2

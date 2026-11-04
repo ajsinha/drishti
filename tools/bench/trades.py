@@ -97,11 +97,11 @@ def evolve(doc: dict, i: int, k: int, day: str) -> dict:
 
 
 def snapshot_of(system: str) -> Path:
-    """The committed test data's first-day snapshot of a system's trades (data/testdata/trades/<system>/snapshot-<date>.jsonl.gz),
+    """The committed test data's first-day snapshot of a system's trades (data/testdata/trades/<system>/trade_<system>.<date>.jsonl.gz, its first date),
     whatever its date: the test data's days move when it is regenerated (make_testdata.py --days)."""
-    found = sorted((ROOT / "data" / "testdata" / "trades" / system).glob("snapshot-*.jsonl.gz"))
+    found = sorted((ROOT / "data" / "testdata" / "trades" / system).glob(f"trade_{system}.*.jsonl.gz"))
     if not found:
-        raise SystemExit(f"no snapshot-*.jsonl.gz in data/testdata/trades/{system}: run tools/testdata/make_testdata.py")
+        raise SystemExit(f"no trade_{system}.<date>.jsonl.gz in data/testdata/trades/{system}: run tools/testdata/make_testdata.py")
     return found[0]
 
 

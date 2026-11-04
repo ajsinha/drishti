@@ -27,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -66,9 +65,8 @@ final class SimmTestData {
             Path dir = root().resolve("data/testdata").resolve(domain).resolve(k);
             List<DataNode> out = new ArrayList<>();
             try (var files = Files.list(dir)) {
-                // the snapshot first, then the day files in date order (the newest record of a key last)
-                for (Path f : files.filter(x -> x.toString().endsWith(".jsonl.gz"))
-                        .sorted(Comparator.comparing((Path x) -> !x.getFileName().toString().startsWith("snapshot")).thenComparing(Path::toString)).toList()) {
+                // <kind>.<YYYY-MM-DD>.jsonl.gz in date order: the first day's snapshot, then each day's changes (the newest record of a key last)
+                for (Path f : files.filter(x -> x.toString().endsWith(".jsonl.gz")).sorted().toList()) {
                     try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(f)), StandardCharsets.UTF_8))) {
                         for (String line = r.readLine(); line != null; line = r.readLine()) {
                             out.add(DataNode.of(JSON.readValue(line, Object.class)));

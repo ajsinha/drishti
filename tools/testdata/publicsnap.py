@@ -15,8 +15,10 @@
 pattern every pack follows: the documents live in data/testdata/<pack>/<kind>/, `drishti.py lake demo` (tools/build_demo_lakes.py)
 builds them into the Delta (or Iceberg) lake, and the pack's own Delta connector serves them. Never the demo connector.
 
-    data/testdata/us-equities/us-company/snapshot-2026-10-24.jsonl.gz     one gzipped JSON Lines file per kind: the published data as
-    data/testdata/gleif/lei-entity/snapshot-2026-10-24.jsonl.gz           retrieved on that date (real, dated: never re-dated)
+    data/testdata/us-equities/us-company/us-company.2026-10-24.jsonl.gz   one gzipped JSON Lines file per kind, named by the load rules
+    data/testdata/gleif/lei-entity/lei-entity.2026-10-25.jsonl.gz         (<table>.<YYYY-MM-DD>, docs/architecture/DATA_LOAD_RULES.md):
+                                                                          the published data as retrieved on that date (real: never re-dated)
+    data/testdata/funds/fund/fund.tar                                     a large kind: a tar of fund/<YYYY-MM-DD>/snapshot.part-NN.jsonl.gz
 
 A snapshot is the same documents on every business day of the demo lakes (as the news-and-markets pack's captured quotes): the pages
 open as of today's business date and every earlier day the lakes hold. The generators (tools/packgen/us_equities/make.py,
@@ -35,10 +37,14 @@ from __future__ import annotations
 import gzip
 import io
 import json
+import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 TESTDATA = ROOT / "data" / "testdata"
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 
 #: per pack: its Delta connector, the source of its data, and the id field of each kind (the lake's key)
 PACKS: dict[str, dict] = {
@@ -53,8 +59,8 @@ PACKS: dict[str, dict] = {
               "source": "SEC Form N-PORT, Form N-CEN and risk/return summary data sets, SEC and Nasdaq Trader ticker files, GLEIF (tools/publicdata/funds.py)",
               "keys": {"fund": "TICKER", "fund-holder": "TICKER", "index-funds": "INDEX"}, "part-bytes": 1_200_000},
 }
-#: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes (snapshot-<date>.part-NN.jsonl.gz),
-#: so no committed file is large (tools/testdata/test_testdata.py fails over 5 MB); one part keeps the plain name snapshot-<date>.jsonl.gz
+#: a pack with "part-bytes" has each kind's snapshot cut into parts of about that many compressed bytes, so no member is large; a kind
+#: in several parts is a tar of <kind>/<date>/snapshot.part-NN.jsonl.gz (<kind>.tar), one part the plain <kind>.<date>.jsonl.gz
 #: the kinds computed since 2.9.2 instead of stored (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md): never written to the test data again
 COMPUTED = {"us-equities": ["sic-sector"], "gleif": ["lei-group", "lei-country"]}
 #: the documents a pack's samples/ keep as reference (README data structures, docs); the rest of each kind: the first REFERENCE_EACH
@@ -112,17 +118,17 @@ def _parts(kind_docs: dict[str, dict], part_bytes: int | None) -> list[str]:
 
 
 def files(pack: str, docs: dict[str, dict[str, dict]]) -> dict[str, bytes]:
-    """{"<pack>/<kind>/snapshot-<date>.jsonl.gz": bytes} for every kind the pack keeps in the test data; a large kind in parts,
-    snapshot-<date>.part-01.jsonl.gz, part-02 ..."""
+    """{"<pack>/<kind>/<kind>.<date>.jsonl.gz": bytes} for every kind the pack keeps in the test data; a large kind in parts, as a tar
+    "<pack>/<kind>/<kind>.tar" of <kind>/<date>/snapshot.part-01.jsonl.gz, part-02 ..."""
     when = captured(docs)
     out = {}
     for kind in PACKS[pack]["keys"]:
         parts = _parts(docs.get(kind, {}), PACKS[pack].get("part-bytes"))
         if len(parts) == 1:
-            out[f"{pack}/{kind}/snapshot-{when}.jsonl.gz"] = _gzip(parts[0])
+            out[f"{pack}/{kind}/{FF.plain_name(kind, when)}"] = _gzip(parts[0])
         else:
-            for i, text in enumerate(parts, 1):
-                out[f"{pack}/{kind}/snapshot-{when}.part-{i:02d}.jsonl.gz"] = _gzip(text)
+            out[f"{pack}/{kind}/{FF.tar_name(kind)}"] = FF.tar_bytes(kind, {when: [(f"snapshot.part-{i:02d}.jsonl.gz", _gzip(text))
+                                                                                  for i, text in enumerate(parts, 1)]})
     return out
 
 
@@ -130,7 +136,7 @@ def write(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> list[P
     testdata = Path(testdata)
     want = files(pack, docs)
     for kind in PACKS[pack]["keys"]:
-        for old in (testdata / pack / kind).glob("snapshot-*.jsonl.gz"):
+        for old in FF.files(testdata / pack / kind) if (testdata / pack / kind).is_dir() else []:
             if str(old.relative_to(testdata)).replace("\\", "/") not in want:
                 old.unlink()
     out = []
@@ -143,18 +149,11 @@ def write(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> list[P
     return out + [testdata / "testdata.yaml"]
 
 
-def _newest_all(testdata: Path, pack: str, kind: str) -> list[Path]:
-    """The files of a kind's newest snapshot: one, or its parts in order."""
-    got = sorted((Path(testdata) / pack / kind).glob("snapshot-*.jsonl.gz"))
-    if not got:
-        return []
-    day = got[-1].name[len("snapshot-"):len("snapshot-") + 10]
-    return [f for f in got if f.name[len("snapshot-"):len("snapshot-") + 10] == day]
-
-
-def _newest(testdata: Path, pack: str, kind: str) -> Path | None:
-    got = _newest_all(testdata, pack, kind)
-    return got[0] if got else None
+def _newest_all(testdata: Path, pack: str, kind: str) -> list:
+    """The parts (feedfiles.Part) of a kind's newest snapshot: its one file, or its tar's members in order."""
+    folder = Path(testdata) / pack / kind
+    got = FF.read_table(folder) if folder.is_dir() else {}
+    return got[max(got)] if got else []
 
 
 def read(testdata: Path, pack: str) -> dict[str, dict[str, dict]]:
@@ -164,9 +163,8 @@ def read(testdata: Path, pack: str) -> dict[str, dict[str, dict]]:
         if not fs:
             continue
         out[kind] = {}
-        for f in fs:
-            with gzip.open(f, "rt", encoding="utf-8") as fh:
-                out[kind].update({_id(d, key): d for d in (json.loads(x) for x in fh if x.strip())})
+        for part in fs:
+            out[kind].update({_id(d, key): d for d in (json.loads(x) for x in part.lines())})
     return out
 
 
@@ -180,18 +178,21 @@ def differences(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> 
     testdata = Path(testdata)
     bad = []
     want = files(pack, docs)
-    for rel, data in want.items():
-        f = testdata / rel
-        if not f.is_file():
-            bad.append(f"data/testdata/{rel} (missing)")
-        elif gzip.decompress(f.read_bytes()) != gzip.decompress(data):
-            bad.append(f"data/testdata/{rel}")
+    with tempfile.TemporaryDirectory(prefix="drishti-publicsnap-") as tmp:
+        for rel, data in want.items():
+            f = testdata / rel
+            if not f.is_file():
+                bad.append(f"data/testdata/{rel} (missing)")
+                continue
+            w = Path(tmp) / rel.replace("/", "_")
+            w.write_bytes(data)
+            if FF.contents(f) != FF.contents(w):                   # compared uncompressed: zlib versions may differ
+                bad.append(f"data/testdata/{rel}")
     for kind in PACKS[pack]["keys"]:
-        for f in (testdata / pack / kind).glob("snapshot-*.jsonl.gz"):
+        for f in FF.files(testdata / pack / kind) if (testdata / pack / kind).is_dir() else []:
             if str(f.relative_to(testdata)).replace("\\", "/") not in want:
                 bad.append(f"data/testdata/{f.relative_to(testdata)} (not written by the generator)")
-    listed = {(d["pack"], d["kind"], name) for d in _manifest(testdata).get("datasets") or []
-              for name in (d.get("parts") or [d.get("snapshot")])}
+    listed = {(d["pack"], d["kind"], name) for d in _manifest(testdata).get("datasets") or [] for name in (d.get("files") or [])}
     for rel in want:
         p, kind, name = rel.split("/")
         if (p, kind, name) not in listed:
@@ -207,15 +208,11 @@ def datasets(testdata: Path) -> list[dict]:
             fs = _newest_all(testdata, pack, kind)
             if not fs:
                 continue
-            n = 0
-            for f in fs:
-                with gzip.open(f, "rt", encoding="utf-8") as fh:
-                    n += sum(1 for x in fh if x.strip())
+            n = sum(1 for part in fs for _ in part.lines())
+            names = sorted({part.path.name for part in fs})
             entry = {"folder": f"{pack}/{kind}", "pack": pack, "kind": kind, "connector": spec["connector"], "key": key,
-                     "snapshot": fs[0].name, "captured": fs[0].name[len("snapshot-"):len("snapshot-") + 10], "source": spec["source"],
-                     "documents": n, "bytes": sum(f.stat().st_size for f in fs)}
-            if len(fs) > 1:
-                entry["parts"] = [f.name for f in fs]
+                     "snapshot": True, "captured": fs[0].date, "source": spec["source"], "documents": n, "files": names,
+                     "bytes": sum((Path(testdata) / pack / kind / x).stat().st_size for x in names)}
             out.append(entry)
     return out
 

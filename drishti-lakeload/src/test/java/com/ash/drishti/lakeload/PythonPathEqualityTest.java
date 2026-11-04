@@ -98,14 +98,11 @@ class PythonPathEqualityTest {
     @Test
     void theMarketRiskPacksScenarioPvsGiveTheSameTables() throws Exception {
         assumeTrue(python(), "python3 with PyYAML is not available");
-        Path data = REPO.resolve("data/testdata/market-risk/scenario-pv");
-        assumeTrue(Files.isDirectory(data), "no market-risk scenario PVs in data/testdata");
-        List<String> common = new ArrayList<>();
-        try (var files = Files.list(data)) {                                    // the last date's files, dated from outside (--as-of)
-            files.filter(f -> f.getFileName().toString().contains("2026-09-30")).sorted().forEach(f -> common.addAll(List.of("--from", f.toString())));
-        }
-        common.addAll(List.of("--as-of", "2026-09-30", "--pack", REPO.resolve("config/packs/market-risk").toString(), "--kind",
-                "scenario-pv", "--key", "SCENARIO_PV_ID", "--date", "BUSINESS_DATE"));
+        // the last date's tar (scenario-pv/2026-09-30/: the normal set's files and the stress set's), dated by its folder
+        Path data = REPO.resolve("data/testdata/market-risk/scenario-pv/scenario-pv-2026-09-30.tar");
+        assumeTrue(Files.isRegularFile(data), "no market-risk scenario PVs in data/testdata");
+        List<String> common = new ArrayList<>(List.of("--from", data.toString(), "--pack", REPO.resolve("config/packs/market-risk").toString(),
+                "--kind", "scenario-pv", "--key", "SCENARIO_PV_ID"));
         compare(common, null, "SCENARIO_PV", null, LocalDate.parse("2026-09-30"));
     }
 
