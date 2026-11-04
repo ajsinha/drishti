@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.file;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -61,7 +62,7 @@ class JsonlFilesTest extends DatedSourceContract {
         root = Files.createTempDirectory("jsonl");
         Path in = Files.createTempFile("rows", ".jsonl");
         Files.write(in, ROWS.stream().map(JsonlFilesTest::line).toList(), StandardCharsets.UTF_8);
-        JsonlLoader.main(new String[] {in.toString(), root.toString()});
+        JsonlLoader.main(new String[] {LoaderRows.rewrite(in).toString(), root.toString()});
         FileSourcePlugin p = new FileSourcePlugin();
         p.start(context(Map.of("root", root.toString(), "domain", "desk", "mode.counterparty", "effective", "source-name", "desk-files",
                 "layout.trade.columns", "mtm,nettingSet")));
@@ -70,14 +71,21 @@ class JsonlFilesTest extends DatedSourceContract {
     }
 
     @Test
-    void aFutureDatedRowIsNotWritten() throws Exception {
+    void aRowsOwnDateNeverFilesItAndAFutureBusinessDateIsRefused() throws Exception {
         Path into = Files.createTempDirectory("jsonl-future");
-        Path in = Files.createTempFile("rows", ".jsonl");
-        Files.write(in, List.of("{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-1\",\"date\":\"2026-09-30\",\"doc\":\"{}\"}",
-                "{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-TYPO\",\"date\":\"2099-03-01\",\"doc\":\"{}\"}"), StandardCharsets.UTF_8);
-        assertThatThrownBy(() -> JsonlLoader.main(new String[] {in.toString(), into.toString()})).hasMessageContaining("1 rows not loaded");
-        assertThat(into.resolve("desk/2026-09-30/trade.jsonl")).exists();
+        String typo = "{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-TYPO\",\"date\":\"2099-03-01\",\"doc\":\"{}\"}";
+        // the load rules: the file's date (its name's) files both rows; the row that says 2099 is counted, not filed under 2099
+        Path in = Files.createTempDirectory("rows").resolve("trade.2026-09-30.jsonl");
+        Files.write(in, List.of("{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-1\",\"date\":\"2026-09-30\",\"doc\":\"{}\"}", typo),
+                StandardCharsets.UTF_8);
+        JsonlLoader.main(new String[] {in.toString(), into.toString()});
+        assertThat(Files.readAllLines(into.resolve("desk/2026-09-30/trade.jsonl"))).hasSize(2);
         assertThat(into.resolve("desk/2099-03-01")).doesNotExist();
+        // a tar folder dated in the future is refused whole: nothing written
+        Path future = LoaderRows.write(List.of(typo, typo.replace("2099-03-01", "2026-09-29")));   // trade/2099-03-01/, trade/2026-09-29/
+        assertThatThrownBy(() -> JsonlLoader.main(new String[] {future.toString(), into.toString()})).hasMessageContaining("in the future");
+        assertThat(into.resolve("desk/2099-03-01")).doesNotExist();
+        assertThat(into.resolve("desk/2026-09-29")).doesNotExist();
     }
 
     @Test

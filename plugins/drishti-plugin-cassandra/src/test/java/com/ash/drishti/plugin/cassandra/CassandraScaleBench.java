@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.cassandra;
 
+import com.ash.drishti.common.RowFeed;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -24,7 +25,6 @@ import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.io.BufferedReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,8 +41,8 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 /**
  * The measurements of docs/connectors/CASSANDRA_CONNECTOR.md section 9, at the connector (no HTTP): a generated trade book
- * ({@code bulk_trades.py --jsonl}) loaded into the shared Cassandra 5 node, then each read path timed, medians of 25. Runs
- * only when asked: {@code -Ddrishti.cassandra.bench=<the JSON lines file>} (keep it at 10,000 trades a day locally).
+ * ({@code bulk_trades.py --jsonl FILE.tar}) loaded into the shared Cassandra 5 node, then each read path timed, medians of 25. Runs
+ * only when asked: {@code -Ddrishti.cassandra.bench=<the tar of trade/<YYYY-MM-DD>/ folders>} (keep it at 10,000 trades a day locally).
  */
 @EnabledIfSystemProperty(named = "drishti.cassandra.bench", matches = ".+")
 class CassandraScaleBench {
@@ -74,11 +74,14 @@ class CassandraScaleBench {
         List<String> ids = new ArrayList<>();
         Map<String, Long> perDay = new HashMap<>();
         String portfolio = null;
-        try (BufferedReader in = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+        try (RowFeed in = RowFeed.open(file.toString(), null)) {
             String line;
-            while ((line = in.readLine()) != null) {
+            while ((line = in.next()) != null) {
+                if (line.isBlank()) {
+                    continue;
+                }
                 JsonNode n = JSON.readTree(line);
-                perDay.merge(n.get("date").asText(), 1L, Long::sum);
+                perDay.merge(in.date().toString(), 1L, Long::sum);              // the day it is filed under: its folder's
                 n.get("columns").fieldNames().forEachRemaining(f -> {
                     if (!paths.contains(f)) {
                         paths.add(f);
@@ -98,7 +101,7 @@ class CassandraScaleBench {
         long t0 = System.nanoTime();
         CassandraLoader.Result r;
         try (CassandraLoader loader = new CassandraLoader(CassandraLoader.parse(args), LoadGuard.fromArgs(args));
-             BufferedReader in = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
+             RowFeed in = RowFeed.open(file.toString(), null)) {
             r = loader.load(in);
         }
         double loadS = (System.nanoTime() - t0) / 1e9;

@@ -163,6 +163,63 @@ def tar_bytes(table: str, days: dict[str, list[tuple[str, bytes]]]) -> bytes:
     return buf.getvalue()
 
 
+def rows_tar(path: pathlib.Path, by_table: dict[str, dict[str, list[str]]], member: str = "rows.jsonl") -> pathlib.Path:
+    """A deterministic tar of several tables' rows: ``<table>/<YYYY-MM-DD>/<member>`` holding each table's and date's lines (the rows of
+    a generator that writes several tables, as the banking lake rows and loader rows); tables and dates in name order."""
+    members = []
+    for table, days in by_table.items():
+        for d, lines in days.items():
+            _check(table, d)
+            members.append((f"{table}/{d}/{member}", ("\n".join(lines) + "\n").encode("utf-8")))
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w", format=tarfile.USTAR_FORMAT) as t:
+        for name, data in sorted(members):
+            info = tarfile.TarInfo(name)
+            info.size, info.mtime, info.mode, info.uid, info.gid, info.uname, info.gname = len(data), 0, 0o644, 0, 0, "", ""
+            t.addfile(info, io.BytesIO(data))
+    pathlib.Path(path).write_bytes(buf.getvalue())
+    return pathlib.Path(path)
+
+
+class RowsTarStream:
+    """Rows of several tables and dates written as a tar stream to ``out`` (a binary pipe: a store loader's standard input, which reads
+    a tar of ``<table>/<YYYY-MM-DD>/`` folders as it reads a tar file): ``add(table, day, line)`` in any order; each (table, date)'s
+    lines go out as members ``<table>/<day>/part-NNNNN.jsonl`` of at most ``chunk_rows`` lines, so memory holds one chunk per open
+    (table, date); ``close()`` writes the rest and the tar's end."""
+
+    def __init__(self, out, chunk_rows: int = 20000):
+        self._tar = tarfile.open(fileobj=out, mode="w|", format=tarfile.USTAR_FORMAT)
+        self._chunk = chunk_rows
+        self._open: dict[tuple[str, str], list[str]] = {}
+        self._parts: dict[tuple[str, str], int] = {}
+
+    def add(self, table: str, day: str, line: str) -> None:
+        key = (table, day)
+        rows = self._open.get(key)
+        if rows is None:
+            _check(table, day)
+            rows = self._open[key] = []
+        rows.append(line if line.endswith("\n") else line + "\n")
+        if len(rows) >= self._chunk:
+            self._flush(key)
+
+    def _flush(self, key: tuple[str, str]) -> None:
+        rows = self._open.pop(key, None)
+        if not rows:
+            return
+        n = self._parts.get(key, 0) + 1
+        self._parts[key] = n
+        data = "".join(rows).encode("utf-8")
+        info = tarfile.TarInfo(f"{key[0]}/{key[1]}/part-{n:05d}.jsonl")
+        info.size, info.mtime, info.mode, info.uid, info.gid, info.uname, info.gname = len(data), 0, 0o644, 0, 0, "", ""
+        self._tar.addfile(info, io.BytesIO(data))
+
+    def close(self) -> None:
+        for key in sorted(self._open):
+            self._flush(key)
+        self._tar.close()
+
+
 def pack_tar(path: pathlib.Path, table: str, days: dict[str, list[pathlib.Path]], remove: bool = True) -> pathlib.Path:
     """A deterministic tar of files already on disk (``days``: date -> the date's .jsonl.gz files), streamed (a large date never held in
     memory): ``<table>/<date>/<file name>``; ``remove``: the files deleted once packed."""

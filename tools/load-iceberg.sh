@@ -23,8 +23,8 @@
 #   tools/load-iceberg.sh s3a://risk-lake/iceberg --set s3.endpoint=http://localhost:9000 --set s3.access-key=K ...
 # --keep-days N removes each loaded table's business days older than its newest N on or before today (and expires
 # week-old snapshots).
-# Dates are guarded (LoadGuard): a row dated after tomorrow in the business zone is not loaded (--future-days N, --zone Z)
-# and the load ends with an error naming it; retention counts back from --as-of (today), never from the newest date
+# Dates are guarded (LoadGuard): a day after tomorrow in the business zone (a tar folder's date) is not loaded (--future-days N, --zone Z)
+# and the load ends with an error naming it; retention counts back from the business today, never from the newest date
 # loaded, and dropping more than --max-drop-share (0.5) of a table needs --force-drop.
 # The loader sorts each day by id with an external sort: its run files go to --spill-dir (default: the system temp
 # folder) and take about the size of the loaded JSON; put them on a disk, not a memory-backed /tmp, for a large book.
@@ -45,24 +45,23 @@ while [[ $# -gt 0 ]]; do
     --days) DAYS="$2"; shift 2 ;;
     --engine|--catalog|--uri|--warehouse|--credential|--token|--keep-days|--spill-dir|--set|--threads|--buffer-mb|--file-rows|--row-group-mb)
       OPTS+=("$1" "$2"); shift 2 ;;
-    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
     --force-drop) OPTS+=("$1"); shift ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
+# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-iceberg -am
 CP="plugins/drishti-plugin-iceberg/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-iceberg -Dmdep.outputFile=/dev/stdout)"
 # a failed load ends with the loader's one line (which bucket, which endpoint, what to check: QA3B-12), never a stack trace
-if ! {
-  cat "$DATA/banking.jsonl"
-  if [[ -n "$TRADES" ]]; then
-    # the bulk book straight from the generator: no file of gigabytes in between
-    uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl -
-  fi
-} | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader - "$ROOT" "${OPTS[@]}"; then
-  rm -f "$DATA/banking.jsonl"
+if [[ -n "$TRADES" ]]; then
+  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"            # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders
+fi
+if ! "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.iceberg.IcebergLoader "$ROWS" "$ROOT" "${OPTS[@]}"; then
+  rm -rf "$ROWS"
   echo "load-iceberg: the load did not finish: see the line above" >&2
   exit 1
 fi
-rm -f "$DATA/banking.jsonl"
+rm -rf "$ROWS"

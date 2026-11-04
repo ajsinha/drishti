@@ -69,6 +69,18 @@
   (`make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`) write `<name>-history.tar` and `<name>-restated.tar`;
   checked against develop's: the same 25,477 rows in the same 517 table-and-date groups, the same ten partition dates (2026-09-17 to
   2026-09-30), and the two lakes the same (47 tables, 470 table-and-date pairs, 25,430 rows, every row equal).
+  The store loaders the same (product owner, 2026-11-04; the connector guides, DEMO_DATA.md, TOOLS.md section 6, CLI_GUIDE.md
+  `data load`, OPERATIONS.md): PostgreSQL, DuckDB, MongoDB, Redis, Cassandra, Aerospike, Iceberg and the files loader read through one
+  feed (drishti-common `RowFeed`, on `FileDates`, now in drishti-common) and file each row under a business date from outside it (a
+  tar's `<kind>/<YYYY-MM-DD>/` folder; a plain file's `--as-of`, `.ready` date, name's or the business today), never its `date`,
+  which is counted when it differs; a plain file of two kinds is refused (send a tar), and so is `--as-of` with a tar; a tar's layout
+  is checked whole before any row is read; a folder argument loads every tar and JSONL file in it; standard input takes a tar stream
+  too (lake build's Iceberg writer and the Delta-to-Iceberg copy send one); one note line per tar (its dates). `make_data.py --jsonl`
+  and `bulk_trades.py --jsonl` write tars of `<kind>/<YYYY-MM-DD>/` folders (`bulk_trades.py --jsonl -` or a plain file only with
+  `--days 1`); `tools/load-*.sh`, `load-cassandra.ps1`, `load-iceberg.ps1` and `bench/pinning.sh` write them under
+  `<data folder>/build/loader-rows/`, load them and remove them, and no longer pass `--as-of` (retention counts back from the
+  business today). Checked against develop's generators: the same 25,430 sample rows and 900 book rows, each in the folder of its own
+  date (0 rows elsewhere), and a DuckDB store loaded from the tars holds exactly develop's rows under the same dates.
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 

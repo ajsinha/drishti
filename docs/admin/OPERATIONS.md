@@ -507,7 +507,8 @@ the document and the pack's promoted fields as bins), `<domain>_ix` (a record pe
 tools/load-aerospike.sh localhost:3000 test --trades 1000000 --days 3 --ttl-days 730
 ```
 
-`--trades N --days D` streams `bulk_trades.py` straight into the loader (no file in between). `--ttl-days N` gives
+`--trades N --days D` has `bulk_trades.py` write the book as a tar of `trade/<YYYY-MM-DD>/` folders under
+`<data folder>/build/loader-rows/` (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), loads it and removes it. `--ttl-days N` gives
 every record written a time to live of N days, so Aerospike expires old business dates by itself: there is no
 maintenance job, unlike the lake ([section 11](#11-the-lake-where-it-lives-and-keeping-it-bounded)). Without it,
 records never expire. In the generated book a day record takes about 7 KB of namespace storage and an index record

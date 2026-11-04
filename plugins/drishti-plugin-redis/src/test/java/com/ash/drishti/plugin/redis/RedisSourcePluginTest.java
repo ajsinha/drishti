@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.redis;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -201,7 +202,7 @@ class RedisSourcePluginTest extends DatedSourceContract {
         System.arraycopy(flags, 0, args, 2, flags.length);
         RedisLoader.Options o = RedisLoader.Options.parse(args);
         try (RedisConnection c = RedisConnection.open(o.uri(), false, null, null, Duration.ofSeconds(10))) {
-            new RedisLoader(o, c).load(new BufferedReader(new StringReader(lines(rows).replace("\"domain\":\"desk\"", "\"domain\":\"" + domain + "\""))));
+            new RedisLoader(o, c).load(LoaderRows.feed(lines(rows).replace("\"domain\":\"desk\"", "\"domain\":\"" + domain + "\"")));
         }
     }
 

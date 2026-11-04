@@ -393,16 +393,19 @@ Every loader except Delta Lake's reads the same JSON lines, one per entity per b
 ```
 
 `columns` carries the fields the pack promotes (the trading pack's `layout.trade.columns`), taken from the same document. Two
-generators write it:
+generators write it, by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): rows of several kinds or days go
+in a tar of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders, each row in its own date's folder, and the loaders file each row under its
+folder's date (never the row's `date`, which stays in the row as data):
 
 ```bash
-drishti-console/.venv/bin/python tools/packgen/banking/make_data.py --jsonl data/build/banking.jsonl   # the samples, 10 days: 25,710 lines
-drishti-console/.venv/bin/python tools/samplegen/bulk_trades.py --trades 10000 --days 3 --jsonl - \
-    | <a loader reading standard input>                                                                   # a book, streamed
+drishti-console/.venv/bin/python tools/packgen/banking/make_data.py --jsonl data/build/loader-rows/banking.tar   # the samples, 10 days
+drishti-console/.venv/bin/python tools/samplegen/bulk_trades.py --trades 10000 --days 3 --jsonl data/build/loader-rows/bulk-trades.tar
 ```
 
-(`make_data.py --jsonl` took 11 s on a fresh clone and wrote 25,710 lines over the ten days 2026-09-17 to 2026-09-30, 7,650 of them
-trades.) So any store a new connector adds can be loaded with the same demo data.
+(`make_data.py --jsonl` took 9 s and wrote 25,430 rows over the ten days 2026-09-17 to 2026-09-30, 7,650 of them trades: 450 folders,
+45 kinds a day.) A plain file, or standard input (`-`), is one kind on one date: `--as-of`, else its `.ready` file's, else its
+name's (`trade.2026-09-30.jsonl`), else the business today; `bulk_trades.py --jsonl -` writes one only with `--days 1`. So any store
+a new connector adds can be loaded with the same demo data.
 
 ## The scripts
 
@@ -411,18 +414,18 @@ trades.) So any store a new connector adds can be loaded with the same demo data
 | `tools/drishti.py lake demo [--lake DIR] [--as-of today\|data\|DATE] [--only …] [--with-real FILE] [--server URL] [--no-signal]` | the demo lakes from `data/testdata` (`tools/lake/demo.py`) |
 | `tools/drishti.py lake build --from FILE --pack DIR --kind K …` | one Delta table from a large JSON export, streamed (`tools/lake/build.py`) |
 | `tools/testdata/make_testdata.py [--check]` | writes `data/testdata` |
-| `tools/load-files.sh [root] [--trades N] [--days D]` | `make_data.py --jsonl`, then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
+| `tools/load-files.sh [root] [--trades N] [--days D]` | `make_data.py --jsonl` (a tar), then `JsonlLoader` into `<root>/<domain>/<date>/<kind>.jsonl` |
 | `tools/load-delta.sh [root] [--trades N] [--days D]` | `make_data.py --lake --no-load` (JSONL rows), `samplegen/load_rows.py` (into Delta), then `bulk_trades.py` (JSONL, then `lake build`) |
-| `tools/load-postgres.sh [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl`, then `PostgresLoader` (samples with `--recreate`), then the bulk book streamed |
-| `tools/load-iceberg.sh [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl`, then `IcebergLoader` (each day sorted by id), then the bulk book streamed |
-| `tools/load-duckdb.sh [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl`, then `DuckDbLoader` (samples with `--recreate`), then the bulk book streamed; each load builds `<database>.loading` and renames it over the database |
-| `tools/load-mongodb.sh [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl`, then `MongoLoader`, then the bulk book streamed |
-| `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl`, then `RedisLoader`, then the bulk book streamed |
-| `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl`, then `AerospikeLoader`, then the bulk book streamed |
-| `tools/load-cassandra.sh [contact-points] [datacenter] [--create] [--create-keyspace RF] [--trades N] [--days D] [--ttl-days N] [--keep-days N]` | `make_data.py --jsonl` and the bulk book as one stream into `CassandraLoader` |
-| `tools/packgen/banking/make_data.py` | the samples, `--lake` (JSONL rows, then loaded; `--no-load`), `--jsonl`, `--check` |
+| `tools/load-postgres.sh [jdbc-url] [--trades N] [--days D] [--keep-months N] [--user U] [--password P] [--writers N]` | `make_data.py --jsonl` (a tar), then `PostgresLoader` (samples with `--recreate`), then the bulk book's tar |
+| `tools/load-iceberg.sh [root] [--trades N] [--days D] [--keep-days N] [--catalog rest --uri U --warehouse W]` | `make_data.py --jsonl` and the bulk book (two tars), then `IcebergLoader` on their folder in one load (each day sorted by id) |
+| `tools/load-duckdb.sh [database] [--trades N] [--days D] [--keep-days N] [--memory-limit M] [--parsers N] [--threads N]` | `make_data.py --jsonl` (a tar), then `DuckDbLoader` (samples with `--recreate`), then the bulk book's tar; each load builds `<database>.loading` and renames it over the database |
+| `tools/load-mongodb.sh [uri] [db] [--trades N] [--days D] [--keep-days N \| --ttl-days N] [--doc-format string\|bson]` | `make_data.py --jsonl` (a tar), then `MongoLoader`, then the bulk book's tar |
+| `tools/load-redis.sh [uri] [--trades N] [--days D] [--ttl-days N] [--merge] [--publish] [--cluster]` | `make_data.py --jsonl` (a tar), then `RedisLoader`, then the bulk book's tar |
+| `tools/load-aerospike.sh [hosts] [namespace] [--trades N] [--days D] [--ttl-days N]` | `make_data.py --jsonl` (a tar), then `AerospikeLoader`, then the bulk book's tar |
+| `tools/load-cassandra.sh [contact-points] [datacenter] [--create] [--create-keyspace RF] [--trades N] [--days D] [--ttl-days N] [--keep-days N]` | `make_data.py --jsonl` and the bulk book (two tars), then `CassandraLoader` on their folder in one load |
+| `tools/packgen/banking/make_data.py` | the samples, `--lake` (JSONL rows, then loaded; `--no-load`), `--jsonl FILE.tar` (loader rows), `--check` |
 | `tools/samplegen/load_rows.py --rows F --restated F --root R` | loads dated loader rows (JSONL) into the lake |
-| `tools/samplegen/bulk_trades.py` | a large trade book for one source system: JSONL a day, then `lake build` (`--no-lake`), or loader rows (`--jsonl`) |
+| `tools/samplegen/bulk_trades.py` | a large trade book for one source system: JSONL a day, then `lake build` (`--no-lake`), or loader rows (`--jsonl FILE.tar`, a tar of `trade/<YYYY-MM-DD>/` folders) |
 
 `lake demo` and `lake build` need only the console's Python (`drishti-console/.venv`, with PyYAML, deltalake and pyarrow). The
 `load-*.sh` scripts need `uv` (Python), Java 21 or newer (`JAVA_HOME`; the scripts default to Java 21), and Maven's offline cache for the

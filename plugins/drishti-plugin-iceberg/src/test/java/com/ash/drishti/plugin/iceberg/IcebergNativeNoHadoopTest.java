@@ -150,10 +150,19 @@ public class IcebergNativeNoHadoopTest {                          // public: the
             }
         }
         java.util.Collections.shuffle(rows, new java.util.Random(3));
-        Files.write(lines, rows);
         String spill = Path.of(root).resolve("spill").toString();
-        IcebergLoader.load(new String[] {lines.toString(), root, "--engine", "native", "--file-rows", "10", "--buffer-mb", "0", "--spill-dir", spill,
-            "--keep-days", "2", "--as-of", "2026-09-30"});
+        // the load rules: a file is one kind on one date (its name's); the last day's load, under --as-of, keeps two days
+        for (int d = 28; d <= 30; d++) {
+            String day = "2026-09-" + d;
+            Path f = lines.resolveSibling("trade." + day + ".jsonl");
+            Files.write(f, rows.stream().filter(r -> r.contains("\"date\":\"" + day + "\"")).toList());
+            List<String> args = new ArrayList<>(List.of(f.toString(), root, "--engine", "native", "--file-rows", "10", "--buffer-mb", "0",
+                    "--spill-dir", spill));
+            if (d == 30) {
+                args.addAll(List.of("--keep-days", "2", "--as-of", day));
+            }
+            IcebergLoader.load(args.toArray(new String[0]));
+        }
         IcebergMaintenance.main(new String[] {root, "--domain", "desk", "--engine", "native", "--relayout", "--force", "--rewrite-manifests",
             "--columns", "trade:mtm", "--expire-hours", "0", "--spill-dir", spill});
         IcebergSourcePlugin p = new IcebergSourcePlugin();

@@ -24,7 +24,8 @@
                                                                 banking-history.tar and banking-restated.tar), then load them with
                                                                 tools/samplegen/load_rows.py into data/delta/<domain>/<kind>/, each kind in the
                                                                 layout its pack declares (the trade table's); --no-load stops after the JSONL
-    python3 tools/packgen/banking/make_data.py --jsonl data/banking.jsonl   rows for tools/load-postgres.sh and load-aerospike.sh
+    python3 tools/packgen/banking/make_data.py --jsonl data/banking.tar     loader rows (a tar of <kind>/<YYYY-MM-DD>/ folders) for the store
+                                                                loaders (tools/load-postgres.sh, load-aerospike.sh ...)
 
 Generation and loading are separate steps (docs/guides/DATA_GUIDE.md): every output is JSON Lines. --lake and --jsonl write rows
 only: they never rewrite the packs' samples, the Sutra tests or the feed (the feed is written when the data folder has none, so the
@@ -316,21 +317,27 @@ def main() -> None:
 
         out = Path(sys.argv[sys.argv.index("--jsonl") + 1])
         days = int(sys.argv[sys.argv.index("--days") + 1]) if "--days" in sys.argv else 10
+        if not out.name.endswith(".tar"):
+            raise SystemExit(f"--jsonl {out}: the loader rows of several kinds and dates go in a tar of <kind>/<YYYY-MM-DD>/ folders "
+                             "(docs/architecture/DATA_LOAD_RULES.md): name it <name>.tar")
+        sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "tools" / "lake"))
+        import feedfiles
         n = 0
+        by_kind: dict[str, dict[str, list[str]]] = {}
         out.parent.mkdir(parents=True, exist_ok=True)
-        with out.open("w", encoding="utf-8") as f:
-            for domain in layout.DOMAINS:
-                kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
-                layouts = layouts_for_domain(domain)
-                for kind, id_, d, body in final_rows(kinds, N.AS_OF, days, Calendar.of("USNY")):
-                    row = {"domain": domain, "kind": kind, "id": id_, "date": d.isoformat(), "doc": body}
-                    lay = layouts.get(kind)
-                    if lay:                             # the fields the pack promotes, by path (Aerospike stores them as bins)
-                        names = dict(zip(lay.names, lay.columns))
-                        row["columns"] = {names[k]: v for k, v in promote(json.loads(body), lay).items()}
-                    f.write(json.dumps(row, ensure_ascii=False) + "\n")
-                    n += 1
-        print(f"jsonl: {n} rows in {out} (tools/load-postgres.sh and tools/load-aerospike.sh load them)")
+        for domain in layout.DOMAINS:
+            kinds = {k: docs.get(k, {}) for k in (x for p in layout.PACKS.values() for d, ks in p["kinds"].items() if d == domain for x in ks)}
+            layouts = layouts_for_domain(domain)
+            for kind, id_, d, body in final_rows(kinds, N.AS_OF, days, Calendar.of("USNY")):
+                row = {"domain": domain, "kind": kind, "id": id_, "date": d.isoformat(), "doc": body}
+                lay = layouts.get(kind)
+                if lay:                             # the fields the pack promotes, by path (Aerospike stores them as bins)
+                    names = dict(zip(lay.names, lay.columns))
+                    row["columns"] = {names[k]: v for k, v in promote(json.loads(body), lay).items()}
+                by_kind.setdefault(kind, {}).setdefault(d.isoformat(), []).append(json.dumps(row, ensure_ascii=False))
+                n += 1
+        feedfiles.rows_tar(out, by_kind)
+        print(f"jsonl: {n} rows in {out} (<kind>/<YYYY-MM-DD>/rows.jsonl; tools/load-postgres.sh, load-aerospike.sh and the other store loaders load it)")
     if "--lake" in sys.argv:
         from samplegen.dates import Calendar
         from samplegen.lake import rows_dir, write_rows

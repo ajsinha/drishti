@@ -76,6 +76,24 @@ class FeedFilesTest(unittest.TestCase):
         self.assertEqual([x for _d, x in FF.lines(out)], ['{"p":1}', '{"p":2}'])
         self.assertEqual(list(src.iterdir()), [], "the parts removed once packed")
 
+    def test_rows_of_several_dates_stream_as_a_tar_of_table_and_date_folders(self):
+        """A store loader's standard input (lake build's Iceberg writer, stores.copy): each row in its own date's folder, in chunks."""
+        import io
+        import tarfile
+        buf = io.BytesIO()
+        out = FF.RowsTarStream(buf, chunk_rows=2)
+        for i, day in enumerate(["2026-09-30", "2026-09-29", "2026-09-30", "2026-09-30"]):
+            out.add("trade", day, f'{{"id":"T-{i}","date":"{day}"}}')
+        out.close()
+        buf.seek(0)
+        with tarfile.open(fileobj=buf) as t:
+            got = {m.name: t.extractfile(m).read().decode().splitlines() for m in t.getmembers()}
+        self.assertEqual(sorted(got), ["trade/2026-09-29/part-00001.jsonl", "trade/2026-09-30/part-00001.jsonl", "trade/2026-09-30/part-00002.jsonl"])
+        self.assertEqual(len(got["trade/2026-09-30/part-00001.jsonl"]), 2)
+        self.assertTrue(all(f'"date":"{n.split("/")[1]}"' in line for n, lines in got.items() for line in lines))
+        with self.assertRaises(ValueError):
+            FF.RowsTarStream(io.BytesIO()).add("a.b", "2026-09-30", "{}")
+
     def test_a_file_without_a_date_or_with_a_bad_name_is_refused(self):
         (self.dir / "t").mkdir()
         (self.dir / "t" / "trades.jsonl.gz").write_bytes(gz("{}"))

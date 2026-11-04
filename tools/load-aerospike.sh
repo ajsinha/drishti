@@ -36,13 +36,15 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
+# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-aerospike -am
 CP="plugins/drishti-plugin-aerospike/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-aerospike -Dmdep.outputFile=/dev/stdout)"
-"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.aerospike.AerospikeLoader "$DATA/banking.jsonl" "$HOSTS" "$NS" "${TTL[@]}"
+"$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.aerospike.AerospikeLoader "$ROWS/banking.tar" "$HOSTS" "$NS" "${TTL[@]}"
 if [[ -n "$TRADES" ]]; then
-  # the bulk book straight from the generator into the loader: no file of gigabytes in between
-  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.aerospike.AerospikeLoader - "$HOSTS" "$NS" "${TTL[@]}"
+  # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders (the load rules), then the loader on it
+  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"
+  "$JAVA_HOME/bin/java" -Djava.io.tmpdir="$JTMP" -Xmx"${DRISHTI_LOADER_HEAP:-4g}" -Djdk.nio.maxCachedBufferSize=262144 -cp "$CP" com.ash.drishti.plugin.aerospike.AerospikeLoader "$ROWS/bulk-trades.tar" "$HOSTS" "$NS" "${TTL[@]}"
 fi
-rm -f "$DATA/banking.jsonl"
+rm -rf "$ROWS"

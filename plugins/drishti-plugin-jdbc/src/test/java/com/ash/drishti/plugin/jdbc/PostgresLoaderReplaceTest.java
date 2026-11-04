@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.jdbc;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -77,9 +78,8 @@ class PostgresLoaderReplaceTest {
     }
 
     private static void load(List<String> lines, String... options) throws Exception {
-        Path f = Files.createTempFile("rows", ".jsonl");
+        Path f = LoaderRows.write(lines);                       // the load rules: a tar of <kind>/<date>/ folders, or one dated file
         try {
-            Files.write(f, lines, StandardCharsets.UTF_8);
             List<String> args = new ArrayList<>(List.of(f.toString(), POSTGRES.getJdbcUrl(), "--user", POSTGRES.getUsername(), "--password",
                     POSTGRES.getPassword(), "--writers", "2", "--batch", "200"));
             args.addAll(List.of(options));
@@ -313,14 +313,14 @@ class PostgresLoaderReplaceTest {
     }
 
     @Test
-    void aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff() throws Exception {
+    void aFileOfAFutureBusinessDateIsNotLoaded() throws Exception {
         List<String> history = new ArrayList<>(day("future", "2026-08-03", 10, 1));
         history.addAll(day("future", D2, 10, 1));
         load(history, "--recreate");
-        assertThatThrownBy(() -> load(List.of(row("future", "2099-03-01", "T-TYPO", 1)), "--keep-months", "2", "--as-of", D2))
-                .hasMessageContaining("1 rows not loaded").hasMessageContaining("business date is after");
+        assertThatThrownBy(() -> load(List.of(row("future", "2099-03-01", "T-TYPO", 1), row("future", D2, "T-TYPO", 2))))   // a tar
+                .hasMessageContaining("in the future");                             // the load rules: refused whole
         assertThat(query("SELECT count(*) FROM future.entities WHERE business_date > '2027-01-01'")).isEqualTo("0");
-        assertThat(seen("future", "2026-08-03")).as("August stays: two months back from 2026-09-30").isEqualTo("10 v1 10");
+        assertThat(seen("future", "2026-08-03")).as("history stays").isEqualTo("10 v1 10");
         assertThat(seen("future", D2)).isEqualTo("10 v1 10");
         assertThat(query("SELECT count(*) FROM pg_class WHERE relname = 'entities_y2099m03'")).isEqualTo("0");
     }

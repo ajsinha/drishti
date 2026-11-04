@@ -35,13 +35,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 UV = """#!/usr/bin/env bash
-# stands in for uv: make_data.py --jsonl FILE writes two sample lines; bulk_trades.py --jsonl - prints three book lines
+# stands in for uv: make_data.py --jsonl FILE.tar writes two sample lines; bulk_trades.py --jsonl FILE.tar three book lines (the
+# lines only: the scripts' wiring is under test, not the tars)
 args="$*"
+out="${args##*--jsonl }"; out="${out%% *}"
 if [[ "$args" == *make_data.py* ]]; then
-  out="${args##*--jsonl }"; out="${out%% *}"
   printf '{"kind":"trade","id":"S1"}\\n{"kind":"trade","id":"S2"}\\n' > "$out"
 elif [[ "$args" == *bulk_trades.py* ]]; then
-  printf '{"kind":"trade","id":"B1"}\\n{"kind":"trade","id":"B2"}\\n{"kind":"trade","id":"B3"}\\n'
+  printf '{"kind":"trade","id":"B1"}\\n{"kind":"trade","id":"B2"}\\n{"kind":"trade","id":"B3"}\\n' > "$out"
 fi
 """
 MVNW = """#!/usr/bin/env bash
@@ -49,10 +50,10 @@ MVNW = """#!/usr/bin/env bash
 exit 0
 """
 JAVA = """#!/usr/bin/env bash
-# stands in for java: records each loader call and the lines it read (from its file argument, or stdin for -)
+# stands in for java: records each loader call and the lines it read (its file argument, or every file of its folder argument)
 input=""
 for a in "$@"; do case "$a" in *Loader) seen=1 ;; *) if [[ -n "$seen" && -z "$input" ]]; then input="$a"; fi ;; esac; done
-if [[ "$input" == "-" ]]; then n=$(wc -l); else n=$(wc -l < "$input"); fi
+if [[ -d "$input" ]]; then n=$(cat "$input"/* | wc -l); else n=$(wc -l < "$input"); fi
 echo "loader $n" >> "$CALLS"
 if [[ -n "$LOADER_FAILS" ]]; then echo "iceberg: the bucket 'warehouse' does not exist at http://localhost:9000" >&2; exit 1; fi
 """
@@ -79,7 +80,7 @@ class LoadScripts(unittest.TestCase):
             env.pop("DRISHTI_TMP_DIR", None)
             r = subprocess.run(["bash", str(tmp / "tools" / script), *args], cwd=tmp, env=env, capture_output=True, text=True, timeout=60)
             self.assertEqual(r.returncode, 0, r.stderr)
-            self.assertFalse((tmp / "data" / "banking.jsonl").exists(), "the input file is removed after the load")
+            self.assertFalse((tmp / "data" / "build" / "loader-rows").exists(), "the input files are removed after the load")
             return calls.read_text().split("\n")[:-1]
 
     def test_a_failed_iceberg_load_ends_with_the_loaders_line_and_removes_its_input(self):
@@ -98,7 +99,7 @@ class LoadScripts(unittest.TestCase):
             self.assertEqual(r.returncode, 1, r.stderr)
             self.assertEqual(r.stderr.strip().splitlines(), ["iceberg: the bucket 'warehouse' does not exist at http://localhost:9000",
                                                               "load-iceberg: the load did not finish: see the line above"])
-            self.assertFalse((tmp / "data" / "banking.jsonl").exists())
+            self.assertFalse((tmp / "data" / "build" / "loader-rows").exists())
         ps1 = (ROOT / "tools" / "windows" / "load-iceberg.ps1").read_text()
         after = ps1[ps1.index("& $java @jvm"):]
         self.assertNotIn("throw", after.split("Write-Host")[0], "a failed load is the loader's line, not a PowerShell error record")
@@ -113,28 +114,33 @@ class LoadScripts(unittest.TestCase):
     def test_cassandra_loads_the_samples_and_the_book_once(self):
         self.assertEqual(self.run_script("load-cassandra.sh", ["localhost:9042", "dc1", "--trades", "3", "--days", "1"]), ["loader 5"])
 
-    def test_the_powershell_twins_call_their_loader_once_after_adding_the_book(self):
+    def test_the_powershell_twins_call_their_loader_once_on_the_folder_of_both_tars(self):
         for script, loader in (("load-iceberg.ps1", "IcebergLoader"), ("load-cassandra.ps1", "CassandraLoader")):
             text = (ROOT / "tools" / "windows" / script).read_text()
             code = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("#"))
             self.assertEqual(len(re.findall(r"^\s*& \$java\b", code, re.M)), 1, f"{script}: one loader call")
             self.assertIn(loader, code)
-            self.assertLess(code.index("Add-Content"), code.index("& $java"), f"{script}: the book joins the samples' file before the load")
+            self.assertNotIn("Add-Content", code, f"{script}: no file of several tables (the load rules: a tar each)")
+            self.assertIn("'bulk-trades.tar'", code)
+            self.assertLess(code.index("'bulk-trades.tar'"), code.index("& $java"), f"{script}: the book's tar is written before the load")
 
     def test_every_loader_heap_is_drishti_loader_heap_and_its_input_is_under_the_data_folder(self):
-        """QA2-21: no loader has a fixed -Xmx (or none at all: a quarter of the machine); none writes data/banking.jsonl in the
-        repository when DRISHTI_DATA_DIR is set; each removes its input after the load."""
+        """QA2-21: no loader has a fixed -Xmx (or none at all: a quarter of the machine); none writes its rows in the repository's
+        data/ when DRISHTI_DATA_DIR is set; each removes its input after the load. The load rules: tars, never `--jsonl -`."""
         for script in sorted((ROOT / "tools").glob("load-*.sh")):
             text = script.read_text()
-            if "banking.jsonl" not in text:
+            if "make_data.py --jsonl" not in text:
                 continue
             with self.subTest(script.name):
                 self.assertIsNone(re.search(r"-Xmx\d", text), "a fixed heap")
                 for call in re.findall(r'"\$JAVA_HOME/bin/java"[^\n]*', text):
                     self.assertIn('-Xmx"${DRISHTI_LOADER_HEAP:-4g}"', call)
-                self.assertNotIn(" data/banking.jsonl", text)
+                self.assertNotIn("banking.jsonl", text)
+                self.assertNotIn("--jsonl -", text)
                 self.assertIn('DATA="${DRISHTI_DATA_DIR:-data}"', text)
-                self.assertIn('rm -f "$DATA/banking.jsonl"', text)
+                self.assertIn('ROWS="$DATA/build/loader-rows"', text)
+                self.assertIn('make_data.py --jsonl "$ROWS/banking.tar"', text)
+                self.assertIn('rm -rf "$ROWS"', text)
 
     def test_make_data_writes_the_feeds_under_drishti_data_dir(self):
         """QA2-21: make_data.py wrote data/feeds in the repository even with DRISHTI_DATA_DIR set."""

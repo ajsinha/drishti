@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.lakeload;
 
+import com.ash.drishti.common.FileDates;
 import com.ash.drishti.iceberg.io.FileAccess;
 import com.ash.drishti.lakeio.RangeReader;
 import java.io.IOException;
@@ -56,7 +57,7 @@ import java.util.zip.InflaterInputStream;
  */
 final class Archives {
 
-    static final List<String> ARCHIVE_SUFFIXES = List.of(".tar.gz", ".tgz", ".tar", ".zip");
+    static final List<String> ARCHIVE_SUFFIXES = FileDates.ARCHIVE_SUFFIXES;
     static final List<String> JSONL_SUFFIXES = List.of(".jsonl", ".ndjson", ".json");
     static final List<String> NESTED_SUFFIXES = List.of(".zip", ".tar", ".tgz", ".tar.gz", ".tar.zst", ".tar.bz2", ".tar.xz", ".7z", ".rar");
     static final Pattern NAME = Pattern.compile("^[A-Za-z0-9][A-Za-z0-9._-]*$");
@@ -65,11 +66,7 @@ final class Archives {
     static final double DEFAULT_MAX_RATIO = 200;
     static final int DEFAULT_MAX_MEMBERS = 100000;
     /** Names compare as Python's do: character (code point) by character. */
-    static final Comparator<String> BY_NAME = (a, b) -> {
-        int[] x = a.codePoints().toArray();
-        int[] y = b.codePoints().toArray();
-        return java.util.Arrays.compare(x, y);
-    };
+    static final Comparator<String> BY_NAME = FileDates.BY_NAME;
 
     private Archives() {}
 
@@ -148,8 +145,7 @@ final class Archives {
     }
 
     static boolean isArchive(String name) {
-        String n = name.toLowerCase(Locale.ROOT);
-        return ARCHIVE_SUFFIXES.stream().anyMatch(n::endsWith);
+        return FileDates.isArchive(name);
     }
 
     /** {@code trade.tar.gz} → {@code trade}. */

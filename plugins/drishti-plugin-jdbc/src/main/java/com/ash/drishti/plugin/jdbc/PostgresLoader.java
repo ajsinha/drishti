@@ -19,12 +19,7 @@ import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonToken;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.StringReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.Statement;
 import java.time.LocalDate;
@@ -43,13 +38,17 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.postgresql.PGConnection;
 import com.ash.drishti.api.pool.PoolSettings;
 import com.ash.drishti.api.pool.ResourcePool;
+import com.ash.drishti.common.RowFeed;
 
 /**
  * Loads rows into PostgreSQL in {@link PostgresLayout}: {@code java -cp <plugin classpath>
  * com.ash.drishti.plugin.jdbc.PostgresLoader FILE|- [jdbc-url] [--user U] [--password P] [--writers N] [--batch N]
  * [--recreate] [--keep-months N] [--as-of yyyy-MM-dd] [--future-days N] [--zone Z] [--max-drop-share F]
  * [--force-drop] [--pool-size N]}. Each line is {@code {"domain", "kind", "id", "date", "doc", "columns": {path: value}}}, as
- * {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads a stream.
+ * {@code make_data.py --jsonl} and {@code bulk_trades.py --jsonl} write it; {@code -} reads a stream. The input and the business date
+ * each row is filed under follow the load rules ({@link RowFeed}): a tar of {@code <kind>/<YYYY-MM-DD>/} folders, or a file (or a
+ * stream) of one kind and one date ({@code --as-of}, its {@code .ready} file's date, its name's, or the business today); a row's own
+ * {@code date} is kept as data and only counted when it differs.
  *
  * <p>Each data domain goes to {@code <domain>.entities}. A kind's business date is replaced whole, and readers never
  * see it half done ({@link PostgresStage}): rows are written with {@code COPY} in batches of {@code --batch} (2,000) on
@@ -68,6 +67,9 @@ import com.ash.drishti.api.pool.ResourcePool;
 public final class PostgresLoader {
 
     private record Row(String schema, String kind, String id, LocalDate date, String doc, Map<String, Object> columns, long line) {}
+
+    /** The business date given for a plain input ({@code --as-of}; {@link RowFeed}), null: its name's, or today. */
+    private LocalDate asOf;
 
     private final String url;
     private final String user;
@@ -107,7 +109,9 @@ public final class PostgresLoader {
         // --pool-size N (default 20, or DRISHTI_DB_POOL_SIZE): connections the load may hold at once, the admin connection included
         Map<String, String> pool = new HashMap<>();
         pool.put("pool-size", option(args, "--pool-size", env("DRISHTI_DB_POOL_SIZE", String.valueOf(PoolSettings.DEFAULT_SIZE))));
-        new PostgresLoader(url, user, password, writers, batch, recreate, LoadGuard.fromArgs(args), PoolSettings.resolve(pool)).load(file, keepMonths);
+        PostgresLoader loader = new PostgresLoader(url, user, password, writers, batch, recreate, LoadGuard.fromArgs(args), PoolSettings.resolve(pool));
+        loader.asOf = RowFeed.asOf(args);
+        loader.load(file, keepMonths);
     }
 
     private static String env(String name, String fallback) {
@@ -156,18 +160,19 @@ public final class PostgresLoader {
     private void stage(Connection admin, ResourcePool<Connection> pool, String file) throws Exception {
         Semaphore inFlight = new Semaphore(writers * 2);
         JsonFactory json = new JsonFactory();
-        try (BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                     : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8);
+        try (RowFeed in = RowFeed.open(file, asOf);
              ExecutorService copy = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Row> batch = new ArrayList<>(batchSize);
             String line;
             long lineNo = 0;
-            while ((line = in.readLine()) != null && failed.get() == null) {
+            while ((line = in.next()) != null && failed.get() == null) {
                 lineNo++;
                 if (line.isBlank()) {
                     continue;
                 }
-                Row row = parse(json, line, lineNo);
+                Row read = parse(json, line, lineNo);
+                Row row = new Row(read.schema(), read.kind(), read.id(), in.place(read.schema() + "/" + read.kind(), read.date()), read.doc(),
+                        read.columns(), read.line());
                 if (!guard.accept(row.date(), row.schema() + " " + row.kind() + " " + row.id())) {
                     continue;
                 }
@@ -186,6 +191,7 @@ public final class PostgresLoader {
                 submit(copy, pool, inFlight, batch);
             }
             inFlight.acquire(writers * 2);                                 // every batch written
+            in.notes().forEach(n -> System.err.println("postgres: " + n));
         }
         if (failed.get() != null) {
             throw failed.get();
@@ -434,10 +440,10 @@ public final class PostgresLoader {
                 }
             }
         }
-        if (domain == null || kind == null || id == null || date == null || doc == null) {
-            throw new java.io.IOException("a row needs domain, kind, id, date and doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
+        if (domain == null || kind == null || id == null || doc == null) {
+            throw new java.io.IOException("a row needs domain, kind, id and doc: " + (line.length() > 200 ? line.substring(0, 200) + "…" : line));
         }
-        return new Row(PostgresLayout.schema(domain), kind, id, LocalDate.parse(date), doc, columns, lineNo);
+        return new Row(PostgresLayout.schema(domain), kind, id, date == null ? null : LocalDate.parse(date), doc, columns, lineNo);
     }
 
     private static Object skip(JsonParser p) throws java.io.IOException {

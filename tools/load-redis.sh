@@ -40,14 +40,16 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --ttl-days|--codec|--level|--chunk-rows|--in-flight|--threads|--keep-replaced-seconds) OPTS+=("$1" "$2"); shift 2 ;;
     --cluster|--publish|--retrain|--replace|--merge) OPTS+=("$1"); shift ;;
-    --as-of|--future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
+    --future-days|--zone|--max-drop-share) OPTS+=("$1" "$2"); shift 2 ;;
     --force-drop) OPTS+=("$1"); shift ;;
     --trades) TRADES="$2"; shift 2 ;;
     --days) DAYS="$2"; shift 2 ;;
     *) echo "unknown option $1" >&2; exit 2 ;;
   esac
 done
-uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$DATA/banking.jsonl"
+# loader rows by the load rules (docs/architecture/DATA_LOAD_RULES.md): tars of <kind>/<YYYY-MM-DD>/ folders, each row under its folder's date
+ROWS="$DATA/build/loader-rows"; rm -rf "$ROWS"; mkdir -p "$ROWS"
+uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$ROWS/banking.tar"
 ./mvnw -q -o install -DskipTests -pl plugins/drishti-plugin-redis -am
 CP="plugins/drishti-plugin-redis/target/classes:$(./mvnw -q -o dependency:build-classpath -pl plugins/drishti-plugin-redis -Dmdep.outputFile=/dev/stdout)"
 # the loader keeps one day's promoted values per kind (about 230 MB per million trades) until the input ends
@@ -58,10 +60,10 @@ if [[ -n "$TRADES" && " ${OPTS[*]} " != *" --replace "* ]]; then
   # not refused for dropping most of its trades (they are a subset of it)
   SAMPLE_OPTS+=(--merge)
 fi
-"${JAVA[@]}" com.ash.drishti.plugin.redis.RedisLoader "$DATA/banking.jsonl" "$URI" "${SAMPLE_OPTS[@]}"
+"${JAVA[@]}" com.ash.drishti.plugin.redis.RedisLoader "$ROWS/banking.tar" "$URI" "${SAMPLE_OPTS[@]}"
 if [[ -n "$TRADES" ]]; then
-  # the bulk book straight from the generator into the loader: no file of gigabytes in between
-  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl - \
-    | "${JAVA[@]}" com.ash.drishti.plugin.redis.RedisLoader - "$URI" "${OPTS[@]}"
+  # the bulk book: a tar of trade/<YYYY-MM-DD>/ folders (the load rules), then the loader on it
+  uv run -q --with deltalake --with pyarrow --with pyyaml python tools/samplegen/bulk_trades.py --trades "$TRADES" --days "$DAYS" --jsonl "$ROWS/bulk-trades.tar"
+  "${JAVA[@]}" com.ash.drishti.plugin.redis.RedisLoader "$ROWS/bulk-trades.tar" "$URI" "${OPTS[@]}"
 fi
-rm -f "$DATA/banking.jsonl"
+rm -rf "$ROWS"

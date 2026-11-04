@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.jdbc;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -64,8 +65,7 @@ class PostgresLayoutTest extends DatedSourceContract {
     }
 
     private static void load(List<String> lines, String... options) throws Exception {
-        Path f = Files.createTempFile("rows", ".jsonl");
-        Files.write(f, lines, StandardCharsets.UTF_8);
+        Path f = LoaderRows.write(lines);                       // the load rules: a tar of <kind>/<date>/ folders, or one dated file
         List<String> args = new ArrayList<>(List.of(f.toString(), POSTGRES.getJdbcUrl(), "--user", POSTGRES.getUsername(), "--password",
                 POSTGRES.getPassword(), "--writers", "2"));
         args.addAll(List.of(options));
@@ -121,8 +121,8 @@ class PostgresLayoutTest extends DatedSourceContract {
     @Test
     void monthsOlderThanTheRetentionAreDropped() throws Exception {
         String old = "{\"domain\":\"hist\",\"kind\":\"trade\",\"id\":\"T-9\",\"date\":\"%s\",\"doc\":\"{}\"}";
-        load(List.of(old.formatted("2026-06-15"), old.formatted("2026-08-03"), old.formatted("2026-09-30")), "--recreate", "--keep-months", "2",
-                "--as-of", "2026-09-30");
+        load(List.of(old.formatted("2026-06-15"), old.formatted("2026-08-03")), "--recreate");             // a tar of two days
+        load(List.of(old.formatted("2026-09-30")), "--keep-months", "2", "--as-of", "2026-09-30");         // the day's file, under --as-of
         try (Connection c = DriverManager.getConnection(POSTGRES.getJdbcUrl(), POSTGRES.getUsername(), POSTGRES.getPassword());
              Statement st = c.createStatement();
              ResultSet rs = st.executeQuery("SELECT string_agg(business_date::text, ',' ORDER BY business_date) FROM hist.entities")) {

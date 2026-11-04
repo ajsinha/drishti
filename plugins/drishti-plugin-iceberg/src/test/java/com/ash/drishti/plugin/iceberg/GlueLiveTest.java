@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -122,7 +123,7 @@ class GlueLiveTest {
             }
             Path file = tmp.resolve(label + ".jsonl");
             Files.write(file, lines, StandardCharsets.UTF_8);
-            List<String> args = new ArrayList<>(List.of(file.toString()));
+            List<String> args = new ArrayList<>(List.of(LoaderRows.rewrite(file).toString()));
             s.forEach((k, v) -> {
                 if (!k.equals("domain")) {
                     args.add("--set");

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """The table and the business date a file's name carries, and a tar archive's layout (DATA_GUIDE.md section 2.8): the Python half of
-one rule. drishti-lakeload ``FileDates`` is the Java half; both are tested against ``tools/lake/testdata/file-dates/names.json``.
+one rule. drishti-common ``FileDates`` is the Java half (the lake loader, the data inbox and the store loaders use it); both are tested against ``tools/lake/testdata/file-dates/names.json``.
 
 **Names.** ``<table>.<date>.<extensions>`` or ``<table>.<extensions>``: the table is everything before the first ``.`` (letters, digits,
 ``_`` and ``-``); the date, when there is one, is the second segment, ``YYYY-MM-DD`` (or ``YYYYMMDD``), a calendar date from 1900, not

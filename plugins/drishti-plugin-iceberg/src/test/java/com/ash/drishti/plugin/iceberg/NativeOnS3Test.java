@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.ash.drishti.api.AsOf;
@@ -130,7 +131,7 @@ class NativeOnS3Test {
                     + "}\",\"columns\":{\"mtm\":" + i + "}}");
         }
         Files.write(lines, rows);
-        List<String> args = new ArrayList<>(List.of(lines.toString(), "s3://lake/warehouse", "--engine", "native", "--file-rows", "8",
+        List<String> args = new ArrayList<>(List.of(LoaderRows.rewrite(lines).toString(), "s3://lake/warehouse", "--engine", "native", "--file-rows", "8",
                 "--spill-dir", lines.getParent().resolve("spill").toString()));
         for (String k : List.of("s3.endpoint", "s3.access-key", "s3.secret-key", "s3.region")) {
             args.addAll(List.of("--set", k + "=" + s.get(k)));

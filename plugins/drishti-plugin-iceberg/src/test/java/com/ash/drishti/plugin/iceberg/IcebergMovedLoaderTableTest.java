@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static com.ash.drishti.testkit.DatedSourceContract.context;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -58,7 +59,7 @@ class IcebergMovedLoaderTableTest {
             }
         }
         Files.writeString(lines, sb);
-        IcebergLoader.load(new String[] {lines.toString(), written.toString(), "--engine", "native", "--spill-dir", base.resolve("spill").toString()});
+        IcebergLoader.load(new String[] {LoaderRows.rewrite(lines).toString(), written.toString(), "--engine", "native", "--spill-dir", base.resolve("spill").toString()});
         moved = base.resolve("ice2");
         Files.move(written, moved);
     }
