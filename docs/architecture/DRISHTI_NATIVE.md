@@ -59,6 +59,13 @@ service, the pivot executor and the DuckDB connector call the interface. There i
 it does not ship for), the server says so at start in plain words (what failed, the platforms supported) and does not start. The
 self-test, the version check and the status follow section 4; the breaker does not switch to Java, it fails the query in words.
 
+### 2.2 SQLite: required, without a fallback
+
+*Product owner, 2026-11-04.* SQLite, the default database of a single server, is required in the same way as DuckDB: there is no
+pure-Java SQLite, and a third schema (H2) is not added (the two complete schema files stay SQLite and PostgreSQL). Its driver is
+registered with `drishti-native` for status and version; if it cannot load, the server says so at start in plain words (what failed;
+use PostgreSQL, or a supported platform) and does not start.
+
 ## 3. The module
 
 ```
