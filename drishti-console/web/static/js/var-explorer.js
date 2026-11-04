@@ -95,9 +95,12 @@
     return o;
   }
 
+  /** PVAR (pm=1): the parametric blocks come with the answers; VAR asks them away (parametric=false: lean answers, historical only). */
+  var PM = root.dataset.pm === "1", PARAMETRIC_PATHS = { scope: 1, "scope/path": 1, "scope/contributions": 1, tree: 1 };
   function api(path, q, fresh) {
     var p = new URLSearchParams();
     Object.keys(q || {}).forEach(function (k) { if (q[k] !== undefined && q[k] !== null && q[k] !== "") p.set(k, q[k]); });
+    if (!PM && PARAMETRIC_PATHS[path] && !p.has("parametric")) p.set("parametric", "false");
     if (LENS_PATHS[path]) { var lp = lensParams(); Object.keys(lp).forEach(function (k) { if (!p.has(k)) p.set(k, lp[k]); }); }
     if (S.asOf) p.set("asOf", S.asOf);
     // stressed VaR is in USD, the stress set's own currency: the page's currency is not sent with it
@@ -235,7 +238,7 @@
       lensLink(u);
       history.pushState({ scope: scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
     }
-    $("[data-vx-cmd]").textContent = words(scope);
+    $("[data-vx-cmd]").textContent = (PM ? "P" : "") + words(scope);
     var topIn = document.querySelector("#cmd, input[name=q]");
     if (topIn && document.activeElement !== topIn) topIn.value = words(scope) + " <GO>";
     markTree();
@@ -346,7 +349,10 @@
     renderCrumb(d);
     renderIntraday(d.intraday);
     renderProv(d.provenance, d);
-    document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+    if (PM && window.VarParametric) window.VarParametric.headline(d);   // the parametric tiles, each with its ? (var-parametric.js)
+    var cmp = $("[data-vx-pvar]");
+    if (cmp) cmp.href = "/go?q=" + encodeURIComponent("P" + words(S.scope));
+    document.title = (PM ? "PVAR · " : "VaR · ") + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
   function ordinal(k) { return k + (k % 100 >= 11 && k % 100 <= 13 ? "th" : k % 10 === 1 ? "st" : k % 10 === 2 ? "nd" : k % 10 === 3 ? "rd" : "th"); }
@@ -472,7 +478,8 @@
   }
 
   function drawPath(d) {
-    C.histogram($("[data-vx-histo]"), { edges: d.histogram.edges, counts: d.histogram.counts, "var": d["var"], es: d.es });
+    C.histogram($("[data-vx-histo]"), { edges: d.histogram.edges, counts: d.histogram.counts, "var": d["var"], es: d.es,
+      parametric: PM && window.VarParametric && window.VarParametric.curveOn() ? d.parametric : null });
     C.bars($("[data-vx-tail]"), d.worst.map(function (w, r) {
       return { k: "#" + w.rank, v: w.pnl, cls: r === d.k - 1 ? "var" : r < d.esCount ? "tail" : "",
                tip: "#" + w.rank + " · " + w.date + "\n" + C.signed(w.pnl) + (r === d.k - 1 ? "\nthe VaR scenario" : ""), date: w.date };
@@ -1061,15 +1068,19 @@
     var t = $("[data-vx-tree]");
     t.textContent = "";
     var hd = h("div", "vx-row hdr");
-    ["Scope", "VaR " + S.ccy, "ES", "Limit"].forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
+    var pcols = PM && window.VarParametric && window.VarParametric.view() === "a";
+    ["Scope", "VaR " + S.ccy, "ES", "Limit"].concat(pcols ? ["Parametric", "Gap"] : []).forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
+    t.classList.toggle("vp-cols", !!pcols);
     t.appendChild(hd);
     var shown = {};
     (S.tree.nodes || []).forEach(function (n) {
       var parent = n.parent && S.byId[n.parent];
       if (parent && (!shown[parent.id] || !S.expanded[parent.scope])) return;
       shown[n.id] = true;
-      t.appendChild(treeRow(n.name, n.scope, n.depth, n["var"], n.es, n.limitUse, { expandable: n.expandable,
-        noLimitText: n.limitComparable === false ? "n/c" : "no limit" }));          // 2.9.7: a limit of another horizon or confidence
+      var tr = treeRow(n.name, n.scope, n.depth, n["var"], n.es, n.limitUse, { expandable: n.expandable,
+        noLimitText: n.limitComparable === false ? "n/c" : "no limit" });          // 2.9.7: a limit of another horizon or confidence
+      if (pcols) window.VarParametric.treeCells(tr, n);                         // the Parametric and Gap columns, each with its ?
+      t.appendChild(tr);
       if (n.level === "book" && S.expanded[n.scope]) appendChildren(t, n.scope, n.depth + 1);
     });
     markTree();
@@ -1338,5 +1349,8 @@
   } else {
     select(S.scope, { noPush: true });
   }
-  window.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S };
+  window.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,
+    lensWords: lensWords, renderTree: function () { if (S.tree) renderTree(); },
+    redrawPath: function () { if (S.path && S.path.series && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); } };
+  if (PM && window.VarParametric) window.VarParametric.start(window.VarExplorer);
 })();

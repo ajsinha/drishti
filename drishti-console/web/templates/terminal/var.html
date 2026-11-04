@@ -26,14 +26,14 @@
 {% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}">{% endblock %}
-{% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-parametric.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=('PVAR ' if parametric_mode else 'VAR ') ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
 {{ back(request) }}
 <div class="vx" data-var data-tab="{{ tab or 'path' }}" data-scope="{{ scope }}" data-capture="{{ capture }}" data-hierarchy="{{ hierarchy }}" data-user="{{ user }}" data-admin="{{ 'true' if admin else '' }}" data-ccy="{{ ccy }}"
      data-h="{{ lens.h if lens else '' }}" data-m="{{ lens.m if lens else '' }}" data-q="{{ lens.q if lens else '' }}" data-esq="{{ lens.esq if lens else '' }}"
-     data-set="{{ lens.set if lens and lens.set else '' }}">
+     data-set="{{ lens.set if lens and lens.set else '' }}" data-pm="{{ '1' if parametric_mode else '' }}" data-pv="{{ pview or 'a' }}">
   <div class="vx-status" aria-live="polite">
     <span class="vx-cmd mono" data-vx-cmd>VAR {{ scope | replace(':', ' ') }}</span>
     <span>Business date <b class="mono" data-vx-date>…</b></span>
@@ -93,6 +93,27 @@
     <section class="vx-main">
       <nav class="vx-crumb" aria-label="Scope path" data-vx-crumb></nav>
       <div class="vx-tiles" data-vx-tiles aria-live="polite"{{ part(PP, 'tiles') }}></div>
+      {# parametric VaR (PVAR; docs/architecture/PARAMETRIC_VAR.md, VAR_GUIDE.md section 3.12): the views A, B and C, the Normal curve
+         toggle (N), the three tiles, each figure's ? from the server's describe lines; VAR shows only the link to it #}
+      {% if parametric_mode %}
+      <div class="vp-bar" data-vp-bar>
+        <span class="vp-badge" title="Parametric VaR is a cross-check computed from the same scenario P&amp;L vector: never the official VaR">Historical + parametric · cross-check, not official</span>
+        <span class="vx-seg" role="group" aria-label="Parametric view">
+          <button type="button" class="vx-segb" data-vp-view="a" aria-pressed="{{ 'true' if (pview or 'a') == 'a' else 'false' }}" title="Beside historical: the tree's Parametric and Gap columns, the tiles, the curve on the P&amp;L path">A · Beside historical</button>
+          <button type="button" class="vx-segb" data-vp-view="b" aria-pressed="{{ 'true' if pview == 'b' else 'false' }}" title="The distribution against the normal: the tail bin by bin, the gap per child">B · Distribution</button>
+          <button type="button" class="vx-segb" data-vp-view="c" aria-pressed="{{ 'true' if pview == 'c' else 'false' }}" title="Euler components that add up exactly, and the correlation matrix">C · Components &amp; correlations</button>
+        </span>
+        <label class="vp-toggle" title="Normal curve on the histogram (key N)"><input type="checkbox" data-vp-curve checked> Normal curve <kbd>N</kbd></label>
+        <a class="btn btn-sm vx-btn" data-vp-historical href="#" title="The VaR explorer, historical only (VAR)">Historical only</a>
+        <a class="btn btn-sm vx-btn" data-vp-play href="#" title="Every parametric figure worked in a grid and a workbook of formulas (PLAY PVAR)">PLAY PVAR</a>
+      </div>
+      <p class="vx-notice" data-vp-off role="status" hidden></p>
+      <div class="vx-tiles vp-tiles" data-vp-tiles aria-live="polite"></div>
+      <div class="vx-panel vp-pane" data-vp-pane="b" hidden></div>
+      <div class="vx-panel vp-pane" data-vp-pane="c" hidden></div>
+      {% else %}
+      <p class="vp-compare"><a href="#" data-vx-pvar title="The same scope with parametric VaR beside historical (PVAR): the fat-tail gap, the normal curve, Euler components">Compare with parametric</a></p>
+      {% endif %}
       <p class="vx-method" data-vx-method aria-live="polite"{{ part(PP, 'method') }}></p>
       <div class="vx-panel">
         <div class="vx-tabs" role="tablist" data-vx-tabs>
@@ -182,4 +203,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explain.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script>{% if parametric_mode %}<script src="/static/js/var-parametric.js?v={{ ASSET_V }}"></script>{% endif %}<script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explain.js?v={{ ASSET_V }}"></script>{% endblock %}
