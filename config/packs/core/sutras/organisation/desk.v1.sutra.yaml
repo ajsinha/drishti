@@ -56,7 +56,7 @@ panels:
     rows: $.POSITIONS
     fmt: compact
     tone: sign
-    by: "@.BOOK"                           # Rachana paths over the row (ONE_GRAMMAR.md part 3); the engine aggregates
+    by: "@.BOOK"
     across: "@.CURRENCY"
     value: sum(@.MTM)
     heat: true
