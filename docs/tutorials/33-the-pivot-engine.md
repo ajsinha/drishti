@@ -23,7 +23,7 @@ and export a view to Excel. Each step shows the UI, the command line and the vie
 
 ## Time to complete
 
-About 25 minutes.
+About 30 minutes.
 
 ## Before you start
 
@@ -39,7 +39,10 @@ About 25 minutes.
 - why Others and every total are made from their own members;
 - where a cell's figures come from (provenance, rows, a reference);
 - how a document's lists (a trade's legs) are pivoted with Rachana paths, and why a trade's figure is counted once per trade;
-- why a non-additive total (VaR) is never a sum, and how the chart and the Excel export respect it.
+- why a non-additive total (VaR) is never a sum, and how the chart and the Excel export respect it;
+- how the switches Exact / Auto / ≈, Progressive and Use rollups change how a figure is computed (never what it means), and how Live
+  keeps a view current;
+- how a comment stays on its cell through re-arrangements and new versions of a saved view.
 
 ## Step 1 · A first pivot of the trades
 
@@ -203,14 +206,65 @@ drishti.py pivot views
 
 **JSON** (`POST /api/v1/pivot/views`): `{"name": "desk-var", "view": {...}, "sharedWith": ["role:risk"]}`
 
+## Step 9 · Exact or ≈, rollups, and Live
+
+**UI.** Back on the trades pivot, put `counterparty` on Rows and add `distinct(counterparty)` to Values. Under the toolbar, the line
+beside the switches reads `exact`. Press **≈**: the distinct count now reads `≈ …`, the line says `≈ from a sketch (distinct(counterparty))`
+and its tooltip the error (±1.6%). Keep the top 5 counterparties by `count()` (step 3): with ≈ on, the line adds
+`top N ≈ by a summary, figures exact`: five counterparties were chosen by a Space-Saving summary before the level was read, and each
+count shown is still exact; Others says "≈". Press **Exact** to rank every member again. Untick **Use rollups**: if an administrator
+defined a rollup covering the view, the line no longer says `from rollup …` and the figures are the same. Press `L` (or tick **Live**):
+the line ends `live`; when a load of the trades lands for this date (an administrator's `drishti.py data load` or Admin → Data loads),
+the cells that moved flash with their new figures and nothing else is redrawn.
+
+**CLI.**
+
+```
+drishti.py pivot run --source trade --rows counterparty --values "count()" --values "distinct(counterparty)" --top counterparty=5 --approximate
+drishti.py pivot run --source trade --rows productType --values "count()" --no-rollups
+drishti.py pivot live start --source trade --rows productType --values "count()"
+drishti.py pivot live list
+drishti.py pivot live stop lp-…
+```
+
+**JSON** (`POST /api/v1/pivot/query`, then `POST /api/v1/pivot/live`):
+`{"view": {...}, "exact": false, "rollups": false}`; every answer's `computedAs.words` says how it was computed.
+
+**You should see** the same counts under Exact and ≈ (only the distinct count and the choice of the top 5 change, each marked), the
+line beside the switches change with every press, and with Live on a load's moved cells flash while the rest stay as they were.
+
+## Step 10 · A comment on a cell
+
+**UI.** Open the view you saved in step 8 (`PIVOT @you/desk-var <GO>`), click a desk's VaR cell and, in the popover, write "checked with
+the desk" (`M` puts the cursor in the box) and press **Comment**. The cell gets a marker in its corner. Move CURRENCY to Columns and back,
+or save the view again: the comment stays on its cell, named by its coordinates (`DESK=DESK-X`); after the new save it says "on an older
+version". Press **Resolve**: the marker dims.
+
+**CLI.**
+
+```
+drishti.py pivot comments you/desk-var --cell DESK=DESK-X --add "checked with the desk" --measure VaR
+drishti.py pivot comments you/desk-var --open
+drishti.py pivot comments you/desk-var --resolve c-…
+```
+
+**JSON** (`POST /api/v1/pivot/views/you/desk-var/comments`): `{"coords": {"DESK": "DESK-X"}, "measure": "VaR", "text": "checked with the desk"}`
+
+**You should see** the marker on the commented cell wherever the cell moves, the comment in its popover with your name and the time,
+"on an older version" after the view is saved again, and a dimmed marker once it is resolved.
+
 ## What you learned
 
 Every figure in a pivot is the server's, made from its cell's own members: a mergeable total from its own rows' state, a holistic one
 (VaR, a median) from its own members, Others from its own rows. A document's lists are pivoted at their own grain with Rachana paths, a
 coarser figure is counted once per parent, and two lists are never crossed. Open rows are computed on demand and the rest come from the
-cache. A chart and an Excel file never add up what does not add up.
+cache. A chart and an Excel file never add up what does not add up. The switches change how a figure is computed and say so, never what
+it means; a live view sends only what moved; a comment belongs to a cell's coordinates, not its place on the screen.
 
 ## Next steps
+
+- [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 24 to 26: the switches, live pivots and cell comments in full.
+- [Tutorial 36](36-custom-functions-and-explain.md): custom functions, explain the difference and what-if.
 
 - The worked examples over documents, each with its figures, picture, command and saved view:
   [PIVOT_GUIDE.md, Documents](../guides/PIVOT_GUIDE.md#documents-paths-lists-and-grains).

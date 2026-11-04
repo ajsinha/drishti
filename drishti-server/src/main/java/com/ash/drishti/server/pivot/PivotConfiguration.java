@@ -162,8 +162,13 @@ public class PivotConfiguration {
      * tables are released.
      */
     @Bean
-    public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, PanelSources panels, DuckDbExecutor exec) {
+    public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, PanelSources panels, DuckDbExecutor exec,
+            ObjectProvider<PivotLiveConfiguration.Live> live) {
         return new com.ash.drishti.server.engines.BasicEngine("pivot").onStop(() -> {
+            PivotLiveConfiguration.Live l = live.getIfAvailable();
+            if (l != null) {
+                l.pivots().clear();                            // every live view ended, its stream told why
+            }
             states.clear();
             kinds.release(exec);
             panels.release(exec);
@@ -173,5 +178,11 @@ public class PivotConfiguration {
     @Bean
     public PivotViews pivotViews(ContentStore store) {
         return new PivotViews(store);
+    }
+
+    /** Cell comments, kept with a saved view's versions. */
+    @Bean
+    public PivotCellComments pivotCellComments(PivotViews views) {
+        return new PivotCellComments(views, java.time.Clock.systemUTC());
     }
 }

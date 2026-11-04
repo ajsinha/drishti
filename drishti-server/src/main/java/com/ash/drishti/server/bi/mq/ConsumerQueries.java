@@ -20,6 +20,7 @@ import com.ash.drishti.server.bi.DatasetService;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Resolver;
 import com.ash.drishti.server.bi.engine.QueryRequest;
+import com.ash.drishti.server.bi.engine.QueryService;
 import com.ash.drishti.server.security.Principal;
 import java.util.ArrayList;
 import java.util.List;
@@ -54,6 +55,21 @@ public final class ConsumerQueries implements DatasetService.ModelGateway {
         } catch (MqException e) {
             throw e.legacy();                                          // the endpoint's code as before; the problems keep the language's codes and fixes
         }
+    }
+
+    @Override
+    public QueryService.Result detail(Principal p, BiStore.Item item, QueryRequest q) {
+        if (catalog.isVersion1(p, item)) {
+            return catalog.askVersion1(p, item, q, false);
+        }
+        MqService.Bound b = catalog.bindItem(p, item);
+        return b.runner().run(b.view().flat(), q, false);
+    }
+
+    @Override
+    public QueryService.Result detailModel(Principal p, String model, String consumer, QueryRequest q) {
+        MqService.Bound b = consumer == null ? catalog.bind(p, model) : catalog.bindVia(p, model, consumer);
+        return b.runner().run(b.view().flat(), q, false);
     }
 
     @Override

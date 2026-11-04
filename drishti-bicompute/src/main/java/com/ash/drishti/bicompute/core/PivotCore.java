@@ -31,8 +31,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
 
 /**
  * The pivot engine's core (PIVOT_ENGINE.md sections 3, 4 and 11): a view becomes cell sets (the cells, every open node's subtotals, the
@@ -72,10 +75,48 @@ public final class PivotCore {
         void admit(Viewer v, String what);
     }
 
+    /**
+     * The scale extension points (phase P3, PIVOT_ENGINE.md section 9): a host adds hooks for sketches chosen by size, rollups (aggregate
+     * awareness), the cluster's scatter and gather, sampled first answers and measured scan rates. Each method has a default that does
+     * nothing, so the core runs alone exactly as without them.
+     */
+    public interface Hooks {
+        /** The view's parsed functions, before anything runs: a policy may answer a measure ≈ (its sketch) or exact; notes say so. */
+        default void functions(Viewer v, PivotView view, PivotProvider p, ScaleOptions o, List<FunctionCall> functions,
+                Supplier<PivotProvider.Estimate> estimate, List<String> notes) {}
+
+        /** A plan answered before the provider is asked (a rollup, the cluster's nodes); empty when this hook does not answer it. */
+        default Optional<Routed> route(Viewer v, PivotProvider p, AggregationPlan plan, ScaleOptions o) {
+            return Optional.empty();
+        }
+
+        /** A provider that reads a sample of {@code fraction} of the rows (a ≈ first answer); empty: the core samples by row hash. */
+        default Optional<PivotProvider> sampler(PivotProvider p, double fraction) {
+            return Optional.empty();
+        }
+
+        /** A provider run finished, the whole plan read (measured scan rates); not called for a sampled run. */
+        default void ran(Viewer v, PivotProvider p, AggregationPlan plan, Partials parts, long millis) {}
+
+        /** The scan estimate's answer, to add to (the rollup that covers it, the nodes, the measured rate, the options). */
+        default void estimated(Viewer v, PivotProvider p, AggregationPlan plan, Map<String, Object> answer) {}
+    }
+
+    /**
+     * A plan answered by a hook.
+     *
+     * @param partials the states, as the provider would have answered them
+     * @param how in words, for the answer's notes and provenance ("from the rollup desk-month")
+     * @param cacheable true when the states equal the provider's (a rollup, the cluster); false for anything approximate
+     */
+    public record Routed(Partials partials, String how, boolean cacheable) {}
+
+    private final List<Hooks> hooks = new CopyOnWriteArrayList<>();
     private final List<PivotProvider> providers;
     private final StateCache cache;
     private volatile Settings settings;
     private volatile Admission admission;
+    private volatile Functions.Resolver resolver;
     private final Map<String, Map<String, Object>> provenance;
     /** The provenance ids in the order they were given: the oldest leave first beyond {@code provenanceKept}. */
     private final java.util.concurrent.ConcurrentLinkedDeque<String> provenanceOrder = new java.util.concurrent.ConcurrentLinkedDeque<>();
@@ -89,6 +130,20 @@ public final class PivotCore {
 
     public void admission(Admission a) {
         this.admission = a;
+    }
+
+    /** Adds scale hooks; routes are tried in the order added (rollups before the cluster). */
+    public void hooks(Hooks h) {
+        hooks.add(h);
+    }
+
+    public List<Hooks> hooks() {
+        return List.copyOf(hooks);
+    }
+
+    /** Custom functions (PIVOT_ENGINE.md section 8): the host's resolver of {@code fn:owner/name@v(...)} calls (null: none). */
+    public void functions(Functions.Resolver r) {
+        this.resolver = r;
     }
 
     public Settings settings() {
@@ -170,10 +225,13 @@ public final class PivotCore {
         int setsAsked;
         int setsFromCache;
         int queries;
+        double sampled;
         long rowsRead = -1;
         long providerMs;
         final List<String> statements = new ArrayList<>();
         final List<String> notes = new ArrayList<>();
+        /** How plans were answered other than by the provider (a rollup, the cluster), for the answer's "computed as". */
+        final List<String> routes = new ArrayList<>();
     }
 
     /** A view being computed: its provider, catalogue, functions, axes, the cells known and the work done. */
@@ -191,11 +249,20 @@ public final class PivotCore {
         final Work work = new Work();
         final long t0 = System.nanoTime();
         final boolean holistic;
+        final ScaleOptions scale;
+        boolean uncacheable;
         final Map<String, String> units = new HashMap<>();
         final AggregationPlan.Money money;
+        /** Levels whose top N a Space-Saving summary chose first (parent node key and dimension), with the words for provenance. */
+        final Map<String, String> topChosen = new LinkedHashMap<>();
 
         Computation(Viewer viewer, PivotView asked) {
+            this(viewer, asked, ScaleOptions.AUTO);
+        }
+
+        Computation(Viewer viewer, PivotView asked, ScaleOptions scale) {
             this.viewer = viewer;
+            this.scale = scale == null ? ScaleOptions.AUTO : scale;
             this.provider = provider(asked.source());
             this.view = provider.prepare(viewer, asked);             // a document source's paths, grain and once-per-parent figures
             this.catalogue = provider.catalogue(viewer, view.source(), view.date());
@@ -204,7 +271,7 @@ public final class PivotCore {
                 units.put(f.name(), f.unit());
             });
             for (PivotView.Value v : view.values()) {
-                FunctionCall f = Functions.parse(v.measure(), v.label(), provider);
+                FunctionCall f = Functions.parse(v.measure(), v.label(), provider, resolver, viewer);
                 for (String in : f.inputs()) {
                     field(in);
                 }
@@ -234,8 +301,20 @@ public final class PivotCore {
             }
             this.rows = new Axis("rows", view.rows());
             this.cols = new Axis("columns", view.columns());
-            this.holistic = functions.stream().anyMatch(f -> f.fn().kind() == Kind.HOLISTIC);
             this.money = money();
+            if (!hooks.isEmpty()) {
+                PivotProvider.Estimate[] once = new PivotProvider.Estimate[1];
+                Supplier<PivotProvider.Estimate> est = () -> {
+                    if (once[0] == null) {
+                        once[0] = provider.estimate(viewer, plan(List.of(CellSet.of(List.of(), Map.of()))));
+                    }
+                    return once[0];
+                };
+                for (Hooks h : hooks) {
+                    h.functions(viewer, view, provider, this.scale, functions, est, work.notes);
+                }
+            }
+            this.holistic = functions.stream().anyMatch(f -> f.fn().kind() == Kind.HOLISTIC);
             for (FunctionCall f : functions) {
                 for (String in : f.inputs()) {
                     String u = units.getOrDefault(in, "");
@@ -376,17 +455,19 @@ public final class PivotCore {
                 if (++round > 64) {
                     throw PivotView.bad("the view opens more than 64 levels");
                 }
+                newRows = TopFirst.choose(this, newRows, Axis.Group.total(cols.root));
+                newCols = TopFirst.choose(this, newCols, Axis.Group.total(rows.root));
                 LinkedHashSet<CellSet> sets = new LinkedHashSet<>();
                 List<Axis.Group> colsNow = new ArrayList<>(allCols);
                 colsNow.addAll(newCols);
                 for (Axis.Group r : newRows) {
                     for (Axis.Group c : colsNow) {
-                        sets.add(r.cross(c));
+                        sets.addAll(r.crossAll(c));
                     }
                 }
                 for (Axis.Group c : newCols) {
                     for (Axis.Group r : allRows) {
-                        sets.add(r.cross(c));
+                        sets.addAll(r.crossAll(c));
                     }
                 }
                 evaluate(new ArrayList<>(sets));
@@ -424,7 +505,8 @@ public final class PivotCore {
                 }
                 if (g.others()) {
                     if (!values.isEmpty()) {
-                        Axis.Node o = g.parent().child(g.dim(), CellKey.OTHERS, true, g.parent().levelMembers - g.kept().size());
+                        boolean sketched = topChosen.containsKey(g.parent().key() + "\u0001" + g.dim());
+                        Axis.Node o = g.parent().child(g.dim(), CellKey.OTHERS, true, sketched ? -1 : g.parent().levelMembers - g.kept().size());
                         o.childDim = null;
                     }
                     continue;
@@ -451,6 +533,10 @@ public final class PivotCore {
                 }
             }
             return next;
+        }
+
+        boolean matchesAt(CellKey k, Map<String, String> at) {
+            return matches(k, at);
         }
 
         private boolean matches(CellKey k, Map<String, String> at) {
@@ -524,7 +610,7 @@ public final class PivotCore {
                 work.setsAsked++;
                 List<Integer> missing = new ArrayList<>();
                 for (int f = 0; f < functions.size(); f++) {
-                    Object hit = cache.get(prefix + s.signature() + "|" + functions.get(f).id());
+                    Object hit = scale.sampled() ? null : cache.get(prefix + s.signature() + "|" + functions.get(f).id());
                     if (hit instanceof Cached c) {
                         absorb(c, f);
                     } else {
@@ -565,7 +651,9 @@ public final class PivotCore {
                             }
                             bytes += 96 + 2L * x.getKey().canonical().length() + fns.get(j).fn().bytes(st);
                         }
-                        cache.put(prefix + r.set().signature() + "|" + functions.get(f).id(), c, bytes);
+                        if (!scale.sampled() && !uncacheable) {
+                            cache.put(prefix + r.set().signature() + "|" + functions.get(f).id(), c, bytes);
+                        }
                         absorb(c, f);
                     }
                 }
@@ -573,7 +661,53 @@ public final class PivotCore {
         }
 
         /** The plan run: one pass, or split into this node's shards and merged in order (mergeable plans of a provider that shards). */
-        private Partials run(AggregationPlan p) {
+        Partials run(AggregationPlan p) {
+            long t = System.nanoTime();
+            Partials out = route(p);
+            for (Hooks h : scale.sampled() ? List.<Hooks>of() : hooks) {
+                h.ran(viewer, provider, p, out, (System.nanoTime() - t) / 1_000_000);
+            }
+            return out;
+        }
+
+        /** A sample (the ≈ first answer), a hook's route (a rollup, the cluster), or the provider. */
+        private Partials route(AggregationPlan p) {
+            if (scale.sampled()) {
+                return sample(p);
+            }
+            for (Hooks h : hooks) {
+                Optional<Routed> r = h.route(viewer, provider, p, scale);
+                if (r.isPresent()) {
+                    if (!work.notes.contains(r.get().how())) {
+                        work.notes.add(r.get().how());
+                        work.routes.add(r.get().how());
+                    }
+                    uncacheable |= !r.get().cacheable();
+                    return r.get().partials();
+                }
+            }
+            return direct(p);
+        }
+
+        /** The plan on a sample: a hook's sampling provider, else one row-hash shard of 1/f (mergeable plans of a provider that shards). */
+        private Partials sample(AggregationPlan p) {
+            for (Hooks h : hooks) {
+                Optional<PivotProvider> sp = h.sampler(provider, scale.sampleFraction());
+                if (sp.isPresent()) {
+                    work.sampled = scale.sampleFraction();
+                    return sp.get().evaluate(viewer, p);
+                }
+            }
+            int every = (int) Math.max(2, Math.round(1 / scale.sampleFraction()));
+            if (provider.capabilities().shards() && OrderedMerge.mergeable(p)) {
+                work.sampled = 1.0 / every;
+                return provider.evaluate(viewer, p.on(new AggregationPlan.Shard(0, every)));
+            }
+            work.sampled = 1.0;
+            return direct(p);
+        }
+
+        private Partials direct(AggregationPlan p) {
             int n = settings.localShards();
             if (n <= 1 || !provider.capabilities().shards() || !OrderedMerge.mergeable(p)) {
                 return provider.evaluate(viewer, p);
@@ -627,7 +761,15 @@ public final class PivotCore {
 
     /** The view's answer (section 4.4): the axes as shown, every visible cell's figures, totals, provenance id. */
     public Map<String, Object> query(Viewer v, PivotView view) {
-        Computation c = new Computation(v, view);
+        return query(v, view, ScaleOptions.AUTO);
+    }
+
+    /**
+     * The view's answer computed as {@code scale} asks: exact on request, ≈ by sketches, or from a sample (the first answer of a
+     * progressive pair, PIVOT_ENGINE.md section 9.8; never cached).
+     */
+    public Map<String, Object> query(Viewer v, PivotView view, ScaleOptions scale) {
+        Computation c = new Computation(v, view, scale);
         c.run();
         Map<String, Object> answer = PivotAnswer.build(this, c);
         keep(c, answer);
@@ -650,6 +792,11 @@ public final class PivotCore {
     }
 
     /** The view on two dates, cell by cell (time travel and compare, section 10 item 2): each side's answer and the differences. */
+    /** Two answers of the same view, cell by cell ({@code {answer, other, diff}}): what-if against the original, two dates. */
+    public static Map<String, Object> compareAnswers(Map<String, Object> a, Map<String, Object> b) {
+        return PivotAnswer.compare(a, b);
+    }
+
     public Map<String, Object> compare(Viewer v, PivotView view, String otherDate) {
         Map<String, Object> a = query(v, view);
         Map<String, Object> b = query(v, view.on(otherDate));
@@ -671,6 +818,9 @@ public final class PivotCore {
         boolean confirm = e.seconds() > settings.confirmSeconds() || e.rows() > settings.confirmRows();
         m.put("confirm", confirm);
         m.put("words", PivotAnswer.estimateWords(e, confirm));
+        for (Hooks h : hooks) {
+            h.estimated(v, c.provider, c.plan(sets), m);
+        }
         return m;
     }
 
@@ -693,6 +843,44 @@ public final class PivotCore {
         out.put("values", PivotAnswer.values(this, c, cell).get("values"));
         out.put("scope", cell.scope);
         return out;
+    }
+
+    /**
+     * The merged states of every cell of one set (explain and what-if, PIVOT_ENGINE.md section 10 items 1 and 3): the view's functions, and
+     * per cell key its members and one state per function, made by the provider from the cells' own rows (through the cache). An extension
+     * point for the module's explain and what-if; the view's own answer is unchanged.
+     *
+     * @param functions the view's functions, in its value order
+     * @param states cell key to its states
+     * @param members cell key to its members
+     * @param date the business date read
+     */
+    public record SetStates(List<FunctionCall> functions, Map<CellKey, Object[]> states, Map<CellKey, Long> members, String date) {}
+
+    /** The states of the cells of {@code set} for the view's values, filters and date. */
+    public SetStates states(Viewer v, PivotView view, CellSet set) {
+        Computation c = new Computation(v, view);
+        set.grouping().forEach(k -> c.dim(Dim.parse(k)));
+        set.at().keySet().forEach(k -> c.dim(Dim.parse(k)));
+        c.evaluate(List.of(set));
+        Map<CellKey, Object[]> states = new TreeMap<>();
+        Map<CellKey, Long> members = new TreeMap<>();
+        java.util.Set<String> shape = new java.util.TreeSet<>(set.grouping());
+        shape.addAll(set.marks().keySet());
+        for (Map.Entry<CellKey, Cell> e : c.cells.entrySet()) {
+            CellKey k = e.getKey();
+            if (!k.coords().keySet().equals(shape) || !c.matchesAt(k, set.at())) {
+                continue;
+            }
+            states.put(k, e.getValue().states.clone());
+            members.put(k, e.getValue().members);
+        }
+        return new SetStates(List.copyOf(c.functions), states, members, c.catalogue.date());
+    }
+
+    /** The resolver of custom functions (null: none). */
+    public Functions.Resolver functions() {
+        return resolver;
     }
 
     /** A cell's member rows (drill-through), paged, as the person may see them. */

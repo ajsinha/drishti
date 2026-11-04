@@ -14,7 +14,7 @@
 
 """`drishti.py pivot ...`: the pivot engine from the command line (docs/guides/PIVOT_GUIDE.md; the API: /api/v1/pivot), as the token's user
 sees it: a view's answer (pivot run), its scan estimate (pivot estimate), an export (pivot export), the sources and a source's fields (pivot
-sources, pivot fields) and saved views (pivot views, pivot save). Every figure is the server's. Exit codes: 0, 1 (the server said no),
+sources, pivot fields) and saved views (pivot views, pivot save); custom functions, explain and what-if are tools/pivotfncli.py's. Every figure is the server's. Exit codes: 0, 1 (the server said no),
 2 (usage)."""
 from __future__ import annotations
 
@@ -28,7 +28,11 @@ EPILOG = ("examples:\n  drishti.py pivot sources\n  drishti.py pivot fields trad
           "  drishti.py pivot run --view asha/desk-risk --csv out.csv\n"
           "  drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx\n"
           "  drishti.py pivot export --source trade --rows productType --values \"count()\" --what definition -o view.yaml\n"
-          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views")
+          "  drishti.py pivot save desk-risk --source var --rows DESK --values \"var()\" --share role:risk\n  drishti.py pivot views\n"
+          "  drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK\n"
+          "  drishti.py pivot functions approve asha/wret@1 --reason \"reviewed\" --scope group:rates\n"
+          "  drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-30 --to 2026-10-30 --by BOOK\n"
+          "  drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17")
 
 
 def fmt(v) -> str:
@@ -88,6 +92,8 @@ def render(a: dict, out) -> None:
             for m in ms:
                 line += f"{fmt(cell['values'].get(m['label'])) if cell else '':>26}"
         out(line)
+    if (a.get("computedAs") or {}).get("words"):
+        out(f"computed as: {a['computedAs']['words']}")
     for n in a.get("notes", []):
         out("note: " + n)
 
@@ -127,7 +133,12 @@ def register(groups, srv, ctx: dict) -> None:
                 if res.get("functions"):
                     print("  functions: " + ", ".join(f"{f['name']}({f['args']})" for f in res["functions"]))
         elif c == "run":
-            res = api.json("POST", "/api/v1/pivot/query", body(a))
+            q = body(a)
+            if a.exact or a.approximate:
+                q["exact"] = bool(a.exact)          # exact on request, or every distinct count and percentile by its sketch
+            if a.no_rollups:
+                q["rollups"] = False                # the screen's "Use rollups" off: the table is read
+            res = api.json("POST", "/api/v1/pivot/query", q)
             if a.csv:
                 b = body(a)
                 b.update({"format": "csv", "shape": "grid"})
@@ -162,6 +173,74 @@ def register(groups, srv, ctx: dict) -> None:
             v = build_view(a)
             res = api.json("POST", "/api/v1/pivot/views", {"name": a.name, "view": v, "sharedWith": a.share or []})
             say_json(res) if a.json else print(f"saved {res['id']} (version {res['version']}): PIVOT @{res['id']} opens it, as the reader")
+        elif c == "live":
+            if a.action == "start":
+                q = body(a)
+                if a.approximate:
+                    q["exact"] = False
+                res = api.json("POST", "/api/v1/pivot/live", q)
+                say_json(res) if a.json else print(f"live {res['id']} on {res.get('node') or 'this server'}: {res.get('words', '')}\n"
+                                                    f"stream: GET /api/v1/pivot/live/{res['id']}/events · stop: drishti.py pivot live stop {res['id']}")
+            elif a.action == "list":
+                res = api.json("GET", "/api/v1/pivot/live")
+                if a.json:
+                    say_json(res)
+                else:
+                    for x in res.get("live", []):
+                        print(f"{x['id']:<18} {x['source']:<20} {x.get('date') or 'latest'} · {x['recomputes']} recomputes, {x['unchanged']} unchanged"
+                              f"{' · streaming' if x.get('streaming') else ''}")
+            else:
+                api.request("DELETE", f"/api/v1/pivot/live/{urllib.parse.quote(a.id or '')}")
+                print(f"stopped {a.id}")
+        elif c == "comments":
+            base = "/api/v1/pivot/views/" + "/".join(urllib.parse.quote(x) for x in a.view_id.split("/", 1)) + "/comments"
+            if a.add:
+                spec = {"coords": dict(p.partition("=")[::2] for p in a.cell.split(",")) if a.cell and a.cell != "*" else {}, "text": a.add}
+                if a.measure:
+                    spec["measure"] = a.measure
+                res = api.json("POST", base, spec)
+                say_json(res) if a.json else print(f"comment {res['id']} on {res['cell']} (version {res['version']})")
+            elif a.resolve or a.reopen:
+                cid = a.resolve or a.reopen
+                res = api.json("POST", f"{base}/{urllib.parse.quote(cid)}/{'resolve' if a.resolve else 'reopen'}", {})
+                say_json(res) if a.json else print(f"{cid}: {'resolved' if a.resolve else 'open again'}")
+            elif a.delete:
+                api.json("DELETE", f"{base}/{urllib.parse.quote(a.delete)}")
+                print(f"deleted {a.delete}")
+            else:
+                q = {k: v for k, v in {"cell": a.cell or "", "open": "true" if a.open else ""}.items() if v}
+                res = api.json("GET", base + ("?" + urllib.parse.urlencode(q) if q else ""))
+                if a.json:
+                    say_json(res)
+                else:
+                    for x in res.get("comments", []):
+                        state = f"resolved by {x['resolved']['by']}" if x.get("resolved") else "open"
+                        print(f"{x['id']:<16} {x['cell']:<28} {x['by']:<12} {x['at'][:16]} {state}{' · older version' if x.get('older') else ''}\n"
+                              f"    {x['text']}")
+        elif c == "rollups":
+            if a.action == "list":
+                res = api.json("GET", "/api/v1/pivot/rollups")
+                if a.json:
+                    say_json(res)
+                else:
+                    built = {r["id"]: r for r in res.get("built", [])}
+                    for d in res.get("definitions", []):
+                        b = built.get(d["id"])
+                        state = f"{b['rows']:,} rows at {b['version']} ({b['lastRefresh']})" if b else "not built yet"
+                        print(f"{d['id']:<28} {d['source']} by {' x '.join(d['grain']) or 'nothing'}: {state}")
+                    for x in res.get("advice", []):
+                        print("advice: " + x["words"])
+            elif a.action == "define":
+                spec = {"id": a.id, "source": a.source, "grain": (a.grain or "").split(",") if a.grain else [],
+                        "functions": a.functions or [], "dates": a.dates}
+                res = api.json("POST", "/api/v1/pivot/rollups", spec)
+                say_json(res) if a.json else print(f"defined {res['id']}: refresh {res.get('refresh')}")
+            elif a.action == "refresh":
+                res = api.json("POST", f"/api/v1/pivot/rollups/{urllib.parse.quote(a.id)}/refresh" + (f"?date={a.date}" if a.date else ""), {})
+                say_json(res) if a.json else print(res["words"])
+            elif a.action == "remove":
+                res = api.json("DELETE", f"/api/v1/pivot/rollups/{urllib.parse.quote(a.id)}")
+                say_json(res) if a.json else print(f"removed {res['removed']}")
         return 0
 
     def view_args(p) -> None:
@@ -189,7 +268,27 @@ def register(groups, srv, ctx: dict) -> None:
     r = ps.add_parser("run", help="a view's answer: rows as shown, every cell from its own members", parents=[srv])
     view_args(r)
     r.add_argument("--csv", metavar="FILE", help="write the grid as CSV instead of printing it")
+    ex = r.add_mutually_exclusive_group()
+    ex.add_argument("--exact", action="store_true", help="exact on request: distinct counts and percentiles from their values at any size")
+    ex.add_argument("--approximate", action="store_true", help="distinct counts and percentiles by their sketches (≈, with a stated error) at any size; never VaR")
+    r.add_argument("--no-rollups", action="store_true", help="read the table even when a rollup covers the view (the screen's Use rollups off)")
     r.set_defaults(func=cmd, pivot_cmd="run")
+    lv = ps.add_parser("live", help="live pivots: start one (its first answer and id), list yours, stop one", parents=[srv])
+    lv.add_argument("action", choices=["start", "list", "stop"])
+    lv.add_argument("id", nargs="?", help="stop: the live pivot's id")
+    view_args(lv)
+    lv.add_argument("--approximate", action="store_true", help="a live view of the sketches (≈); a live view is exact otherwise")
+    lv.set_defaults(func=cmd, pivot_cmd="live")
+    cm = ps.add_parser("comments", help="cell comments of a saved view: list, add, resolve, reopen, delete", parents=[srv])
+    cm.add_argument("view_id", metavar="OWNER/NAME")
+    cm.add_argument("--cell", metavar="DIM=V,DIM=V", help="the cell (* the grand total); with no --add: list that cell's comments")
+    cm.add_argument("--open", action="store_true", help="list only the comments not resolved")
+    cm.add_argument("--add", metavar="TEXT", help="add a comment on --cell")
+    cm.add_argument("--measure", help="with --add: the measure the comment is about")
+    cm.add_argument("--resolve", metavar="ID")
+    cm.add_argument("--reopen", metavar="ID")
+    cm.add_argument("--delete", metavar="ID")
+    cm.set_defaults(func=cmd, pivot_cmd="comments")
     e = ps.add_parser("estimate", help="what the view reads before it runs", parents=[srv])
     view_args(e)
     e.set_defaults(func=cmd, pivot_cmd="estimate")
@@ -207,3 +306,19 @@ def register(groups, srv, ctx: dict) -> None:
     view_args(sv)
     sv.add_argument("--share", action="append", metavar="WHO", help="a person or role:<role>, repeatable")
     sv.set_defaults(func=cmd, pivot_cmd="save")
+    ru = ps.add_parser("rollups", help="rollups of partial states: list (with advice), define, refresh, remove (administrators change them)",
+                       parents=[srv])
+    ru.add_argument("action", choices=["list", "define", "refresh", "remove"])
+    ru.add_argument("id", nargs="?", help="the rollup's id (define, refresh, remove)")
+    ru.add_argument("--source", help="define: the source")
+    ru.add_argument("--grain", help="define: dimensions, DESK,CURRENCY,TRADE_DATE:month")
+    ru.add_argument("--functions", action="append", help="define: a function kept, sum(NOTIONAL_USD); repeatable")
+    ru.add_argument("--dates", choices=["latest", "all"], default="latest")
+    ru.add_argument("--date", metavar="YYYY-MM-DD", help="refresh: the date (default: the source's latest)")
+    ru.set_defaults(func=cmd, pivot_cmd="rollups")
+    import importlib.util  # noqa: WPS433 (custom functions, explain and what-if: tools/pivotfncli.py)
+    import os  # noqa: WPS433
+    spec = importlib.util.spec_from_file_location("pivotfncli", os.path.join(os.path.dirname(os.path.abspath(__file__)), "pivotfncli.py"))
+    fncli = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(fncli)
+    fncli.register(ps, srv, ctx, view_args, body)

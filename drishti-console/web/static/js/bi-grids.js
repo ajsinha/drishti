@@ -26,13 +26,6 @@
   const V = B.visuals;
   const NONE = { dispose() {}, resize() {} };
 
-  /** True for a measure whose total is the sum of its parts: a sum or a count and nothing else. */
-  V.additive = function (ctx, name) {
-    const m = ctx.index.measures[name];
-    const e = m && m.expr ? m.expr : '';
-    return /^\s*(sum|count)\s*\(/.test(e) && !/(avg|ratio|distinct|percentile|min\(|max\(|\/|\[)/.test(e);
-  };
-
   /** The engine's totals of a visual's answer: `find(by, values, measure)` is the figure for the group with these values of these fields; undefined when the engine gave none. */
   V.trueTotals = function (res) {
     const levels = (res && res.totals) || [];

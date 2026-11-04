@@ -39,6 +39,56 @@ drishti:
       confirm-above-rows: 500000000  # an estimate over this many rows asks the person first
     aggregate-only:
       min-members-per-cell: 1        # a cell with fewer members shows no figures (1: no limit; a site may set 5)
+    functions:                       # custom aggregation functions (docs/guides/PIVOT_GUIDE.md, custom functions)
+      formula: true                  # DEL formulas of the built-ins as custom functions
+      sql-macros: true               # DuckDB SQL macros as custom functions (a formula of built-ins is rewritten into states; any other is holistic)
+      require-approval: true         # sharing a function needs an approver who is not its author (audited)
+      approver-role: pivot-approver  # members of this role approve functions; administrators always may
+      holistic-max-rows: 5000000     # the most rows of one cell a holistic custom function receives (over it: refused for that cell, never cut)
+      holistic-max-mb: 512           # the most megabytes of one cell's rows for a holistic custom function
+      harness:
+        tolerance: 1.0e-12           # the relative difference split-and-merge may show against one pass (a function's own tolerance wins)
+        seeds: 5                     # seeds of the random splits into 2, 3 and 16 parts
+        max-ns-per-row: 2000         # the cost limit a row (judged on samples of 1,000 rows or more)
+      python:
+        enabled: false               # Python custom functions on this node (the pivot-fn pool); off as shipped
+        interpreter: ""              # the Python to run (blank: python3, python on Windows)
+        workers: 2                   # sandboxed worker processes in the pivot-fn pool
+        timeout-seconds: 30          # the longest one call (a batch, a merge) may take; its worker is stopped past it
+        memory-mb: 1024              # memory a worker may use
+        batch-rows: 65536            # rows in each batch a function is fed (Python and Java plug-ins without an SQL form)
+      java:
+        enabled: false               # Java plug-in functions (a jar approved by an administrator, pinned by its SHA-256); off as shipped
+        dir: ./plugins/pivot-functions   # the plug-in folder
     export:
       xlsx-max-rows: 1000000         # the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered
       rows-max: 1000000              # the most member rows an export of the underlying rows writes
+    sketches:                        # distinct counts, percentiles and top values with a stated error (PIVOT_GUIDE.md, scale)
+      hll-precision: 12              # HyperLogLog: 2^p registers (11 to 16); 12: 4,096 registers, ±1.6% (1.04/√m)
+      kll-k: 200                     # KLL's k: ±1.65% of rank at 200 (with SQL's quantile points ±1.8%)
+      top-capacity-factor: 10        # Space-Saving keeps this many counters per value shown by top(x, n)
+      approximate-above-rows: 10000000   # a view reading more rows answers count_distinct, median and percentile by their sketches (≈; exact on request); 0: never by size
+    progressive:                     # ≈ first, then exact (never for VaR or any holistic measure)
+      enabled: true                  # false: one exact answer only
+      after-ms: 2000                 # a view estimated over this answers ≈ from a sample first
+      sample-fraction: 0.02          # the share of rows the first answer reads
+    rollups:                         # rollups of partial states, refreshed on load, chosen automatically (aggregate awareness)
+      enabled: true                  # rollups answer views and are refreshed
+      refresh-seconds: 60            # how often each rollup's source version is checked: a load is merged in within this
+      advise-after-scans: 10         # a grain scanned this many times is proposed as a rollup (GET /api/v1/pivot/rollups, advice)
+      dir: ""                        # where rollups are kept (blank: <data dir>/pivot/rollups)
+      definitions: []                # rollups: {id, source, grain: [DESK, TRADE_DATE:month], functions: [sum(NOTIONAL_USD), count()], dates: latest|all}
+    live:                            # live pivots: a view kept current, only its moved cells pushed (PIVOT_GUIDE.md, live pivots)
+      enabled: true                  # false: no Live switch, POST /api/v1/pivot/live refused (DRS-5721)
+      max-per-person: 5              # live views one person may hold
+      max-total: 200                 # live views this node holds
+      min-interval-ms: 1000          # the least time between two recomputes of one view; changes in between are coalesced (the latest wins)
+      max-cells: 5000                # the most visible cells a live view keeps current
+      max-rows: 50000000             # the most rows an exact live recompute may read (estimated); a larger view is live only when it asks ≈ (0: no limit)
+      idle-seconds: 60               # a live view no stream reads is ended after this
+      heartbeat-seconds: 15          # a status event to every live stream this often (also when idle views are ended)
+    cluster:                         # a view's partial states computed on every node running the engine and merged in node order
+      enabled: true                  # false: this node computes its views alone
+      hedge-after-seconds: 20        # a node's share not answered by then is asked of the next node too; the first answer wins
+      deadline-seconds: 300          # a share with no answer by then refuses the view in words (DRS-5720), never a partial figure
+      min-rows: 5000000              # views estimated under this many rows stay on this node

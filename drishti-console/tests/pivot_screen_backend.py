@@ -56,8 +56,87 @@ class PivotBackend(ChartBackend):
                       "rowDimensions": [rd] if rd else [], "columnDimensions": [cd] if cd else [], "provenance": "stand-in-1",
                       "measures": [{"id": v["measure"], "label": v["as"], "kind": "holistic" if v["measure"].startswith("median") else "mergeable",
                                     "exact": True} for v in values],
-                      "cellCount": len(a["cells"]), "exactness": "exact", "computed": "2026-10-30T18:00:00Z"})
+                      "cellCount": len(a["cells"]), "exactness": "exact", "computed": "2026-10-30T18:00:00Z",
+                      "computedAs": self.computed_as(body)})
+            self.asked.append((path[1:], body))
             return a
         if path == "/inline":
             return await super().pivot(method, path, ident, body=body, raw=raw, **params)
+        live = await self._switches(method, path, ident, body, params)
+        if live is not None:
+            return live
         raise BackendError(404, "DRS-1001", "no such pivot call in the stand-in")
+
+    # ---- the screen's switches, live pivots and cell comments (PIVOT_GUIDE.md) --------------------------------------------------------
+    asked: list = []
+    comments: list = []
+    ended: list = []
+
+    @staticmethod
+    def computed_as(body):
+        """The answer's computedAs as the engine words it, for the options asked (the stand-in has no sketches or rollups)."""
+        exact = (body or {}).get("exact", "auto")
+        word = "exact" if exact is True else "approximate" if exact is False else "auto"
+        words = ["exact"] if exact is not False else ["≈ from a sketch (Distinct)"]
+        if (body or {}).get("rollups") is False:
+            words.append("rollups off")
+        return {"asked": {"exact": word, "progressive": (body or {}).get("progressive", True), "rollups": (body or {}).get("rollups", True)},
+                "words": "; ".join(words), "exact": exact is not False, "sketches": [], "routes": [], "topChosen": []}
+
+    async def answer(self, ident, body):
+        a = await self.pivot("POST", "/query", ident, body=body)
+        for k, cell in a["cells"].items():
+            cell["key"] = "c:" + k
+            cell["coords"] = {} if k == "*|*" else {"DESK": k.split("|")[0].split("=")[-1]}
+        a["computedAs"] = self.computed_as(body)
+        return a
+
+    async def _switches(self, method, path, ident, body, params):
+        if path.startswith("/provenance/"):
+            row = str(params.get("cell", "*|*")).split("|")[0]
+            coords = {} if row == "*" else {"DESK": row.split("=")[-1]}
+            return {"id": "stand-in-1", "source": "trade", "date": "2026-10-30", "version": "v1", "provider": "tabular", "filters": "none",
+                    "queries": 1, "sets": 1, "fromCache": 0, "computeMs": 1, "functions": [],
+                    "cell": {"coords": coords, "values": {}, "members": 100}}
+        if path == "/live" and method == "POST":
+            self.asked.append(("live", body))
+            return {"id": "lp-1", "node": "", "answer": await self.answer(ident, body), "options": {"exact": True}}
+        if path.startswith("/live/") and method == "DELETE":
+            self.ended.append(path)
+            return {}
+        if path == "/views/u/desk" and method == "GET":
+            return {"id": "u/desk", "version": 2, "owner": "u", "view": {"source": "trade", "rows": ["DESK"], "columns": [],
+                    "values": [{"measure": "count()", "as": "count()"}]}}
+        if path == "/views/u/desk/comments":
+            if method == "POST":
+                c = {"id": f"c-{len(self.comments) + 1}", "cell": "DESK=" + body["coords"].get("DESK", "*"), "text": body["text"], "by": "alice",
+                     "at": "2026-11-03T18:00:00Z", "version": 2, "resolved": None, "older": False,
+                     "cellId": "c:DESK=" + body["coords"]["DESK"] + "|*" if body["coords"].get("DESK") else "c:*|*"}
+                self.comments.append(c)
+                return c
+            return {"id": "u/desk", "version": 2, "comments": list(self.comments), "open": len(self.comments)}
+        return None
+
+    async def sse(self, path, ident=None, opened=None, node=None):
+        """A live pivot's stream: its answer, then one patch of the Rates row (its count doubled), as the engine would push it."""
+        import asyncio
+        import json
+        a = await self.answer(ident, (self.asked[-1][1] if self.asked else {}) or {})
+        yield "answer", json.dumps({"id": "lp-1", "seq": 0, "answer": a})
+        await asyncio.sleep(0.3)
+        k = next(x for x in a["cells"] if x.startswith("DESK=Rates"))
+        cell = dict(a["cells"][k])
+        cell["values"] = {m: v * 2 for m, v in cell["values"].items()}
+        yield "patch", json.dumps({"id": "lp-1", "seq": 1, "kind": "patch", "cells": {k: cell}, "removed": [], "changed": 1,
+                                   "computedAs": a["computedAs"], "causes": ["a load of trade for 2026-10-30"]})
+        await asyncio.sleep(30)
+
+    async def sse_post(self, path, ident, body, node=None):
+        """A progressive answer: ≈ first (marked approximate), then exact."""
+        import json
+        self.asked.append(("progressive", body))
+        a = await self.answer(ident, body)
+        approx = dict(a, exactness="approximate", computedAs=dict(a["computedAs"], words="≈ from a 2% sample", exact=False),
+                      progressive={"phase": "approximate"})
+        yield "approximate", json.dumps(approx)
+        yield "exact", json.dumps(a)

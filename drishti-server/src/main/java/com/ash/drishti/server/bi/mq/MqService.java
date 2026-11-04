@@ -281,7 +281,9 @@ public final class MqService {
         String signature = b.signature();
         QueryRequest main = prepared.main();
         ResultCache.Key key = cache.enabled() && b.generation() != null && !explain
-                ? new ResultCache.Key(plan.hash() + (engineLimit ? "|engine-limit" : "") + "|top:" + tops(compiled), signature, b.generationFor(plan, q), plan.immutable()) : null;
+                ? new ResultCache.Key(plan.hash() + (engineLimit ? "|engine-limit" : "") + "|top:" + tops(compiled)
+                        + (QueryService.aggregation() == null ? "" : "|pivot:" + QueryService.aggregation().signature()), signature, b.generationFor(plan, q),
+                        plan.immutable()) : null;
         Ran hit = key == null ? null : cache.get(key);
         if (hit != null) {
             return new Ran(q, c, compiled, servedAgain(hit.raw()), servedAgain(hit.shown()), hit.totals(), hit.warnings(), t0, plan, signature, true, Map.of("cache", "hit"));
@@ -309,17 +311,14 @@ public final class MqService {
         }
         QueryService.Result shown = withoutGuards(r);
         List<Map<String, Object>> totals = new ArrayList<>();
-        for (MqCompiler.Level level : compiled.totals()) {
-            QueryRequest lq = level.query();
-            List<String> sqlMeasures = lq.measures().stream().filter(m -> !py.contains(m)).toList();
-            if (sqlMeasures.isEmpty()) {
-                continue;                                                       // a Python measure has no total (it is not additive)
-            }
-            if (sqlMeasures.size() < lq.measures().size()) {
-                lq = new QueryRequest(lq.fields(), sqlMeasures, lq.filters(), lq.from(), lq.to(), lq.orderBy(), lq.limit(), lq.layer(), lq.detail());
-            }
-            QueryService.Result tr = b.runner().run(compiled.dataset(), lq, false);
-            totals.add(Map.of("by", level.by(), "measures", lq.measures(), "rows", rows(tr)));
+        if (!compiled.totals().isEmpty()) {                                       // every level in one statement of the pivot engine (BI_DESIGN.md, totals)
+            QueryRequest lq = compiled.totals().get(0).query();
+            List<String> measures = lq.measures().stream().filter(m -> !py.contains(m)).toList();   // a Python measure has no total
+            com.ash.drishti.server.bi.pivot.BiAggregate.Totals t = com.ash.drishti.server.bi.pivot.BiAggregate.totals(compiled.dataset(),
+                    compiled.totals().stream().map(MqCompiler.Level::by).toList(), measures, lq, props.maxLimit(),
+                    dq -> b.runner().run(compiled.dataset(), dq, false));
+            t.levels().forEach(l -> totals.add(l.toMq()));
+            t.notTotalled().forEach((m, why) -> warnings.add("no total for " + m + ": " + why));
         }
         Map<String, Object> timings = new LinkedHashMap<>();
         timings.put("engineMillis", Math.round(engineNanos / 1e5) / 10.0);

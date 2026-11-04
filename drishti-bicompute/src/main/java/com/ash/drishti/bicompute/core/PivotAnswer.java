@@ -52,7 +52,11 @@ final class PivotAnswer {
             m.put("label", f.label());
             m.put("kind", f.fn().kind().word());
             m.put("plainSum", f.fn().plainSum());
-            m.put("exact", f.fn().kind() != Kind.SKETCH);
+            m.put("exact", f.fn().kind() != Kind.SKETCH && c.work.sampled == 0);
+            if (f.fn() instanceof com.ash.drishti.bicompute.functions.Sketches.Sketch sk) {
+                m.put("error", sk.error());
+                m.put("errorValue", sk.errorValue());
+            }
             m.put("showAs", view.values().get(i).showAs());
             m.put("unit", c.unit(f));
             measures.add(m);
@@ -100,9 +104,13 @@ final class PivotAnswer {
         computed.put("providerMs", c.work.providerMs);
         computed.put("ms", c.millis());
         computed.put("lazy", "only open nodes are computed; closed nodes' children are not");
+        if (c.work.sampled > 0) {
+            computed.put("sampled", c.work.sampled);
+        }
         out.put("computed", computed);
         boolean anySketch = c.functions.stream().anyMatch(f -> f.fn().kind() == Kind.SKETCH);
-        out.put("exactness", anySketch ? "partial" : "exact");
+        out.put("exactness", c.work.sampled > 0 ? "approximate" : anySketch ? "partial" : "exact");
+        out.put("computedAs", computedAs(c, anySketch));
         String id = "pv:" + (c.catalogue.date() == null ? "current" : c.catalogue.date()) + ":"
                 + CellKey.hash(view.toMap().toString() + System.nanoTime()).substring(0, 10);
         out.put("provenance", id);
@@ -111,6 +119,51 @@ final class PivotAnswer {
             out.put("notes", c.work.notes);
         }
         return out;
+    }
+
+    /**
+     * How the answer was computed, for the screen's switches and its provenance line (PIVOT_GUIDE.md, the screen's switches): what was
+     * asked ({@code exact}, {@code auto} or {@code approximate}; progressive; rollups on or off) and what answered: {@code exact}, the
+     * sketches (each measure answered ≈ with its stated error), a level's top N chosen by a summary, a sample, the rollups or nodes that
+     * answered, each in words ("≈ from a sketch", "from rollup desk-month", "exact").
+     */
+    static Map<String, Object> computedAs(PivotCore.Computation c, boolean anySketch) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        Map<String, Object> asked = new LinkedHashMap<>();
+        asked.put("exact", c.scale.word());
+        asked.put("progressive", c.scale.progressive());
+        asked.put("rollups", c.scale.rollups());
+        m.put("asked", asked);
+        List<Map<String, Object>> sketches = new ArrayList<>();
+        for (FunctionCall f : c.functions) {
+            if (f.fn().kind() == Kind.SKETCH && f.fn() instanceof com.ash.drishti.bicompute.functions.Sketches.Sketch sk) {
+                sketches.add(Map.of("measure", f.label(), "error", sk.error()));
+            }
+        }
+        m.put("sketches", sketches);
+        m.put("topChosen", new ArrayList<>(c.topChosen.values()));
+        m.put("routes", new ArrayList<>(c.work.routes));
+        m.put("sampled", c.work.sampled);
+        List<String> words = new ArrayList<>();
+        if (c.work.sampled > 0) {
+            words.add(String.format(java.util.Locale.ROOT, "≈ from a %.0f%% sample", c.work.sampled * 100));
+        }
+        if (anySketch) {
+            words.add("≈ from a sketch (" + String.join(", ", sketches.stream().map(x -> String.valueOf(x.get("measure"))).toList()) + ")");
+        }
+        if (!c.topChosen.isEmpty()) {
+            words.add("top N ≈ by a summary, figures exact");
+        }
+        for (String r : c.work.routes) {
+            String rollup = r.startsWith("answered from the rollup ") ? r.substring(25, r.indexOf(' ', 25) < 0 ? r.length() : r.indexOf(' ', 25)) : null;
+            words.add(rollup != null ? "from rollup " + rollup : r);
+        }
+        if (!c.scale.rollups()) {
+            words.add("rollups off");
+        }
+        m.put("words", words.isEmpty() ? "exact" : String.join("; ", words));
+        m.put("exact", c.work.sampled == 0 && !anySketch && c.topChosen.isEmpty());
+        return m;
     }
 
     /** A cell's finished figures, members, notes and scope. */
@@ -153,7 +206,8 @@ final class PivotAnswer {
 
     private static String label(PivotCore.Computation c, Axis.Node n) {
         if (n.others) {
-            return "Others (" + n.othersCount + " of " + n.parent.levelMembers + ")";
+            return n.othersCount < 0 ? "Others (≈: the rest after a top N chosen by a summary)"
+                    : "Others (" + n.othersCount + " of " + n.parent.levelMembers + ")";
         }
         return n.value;
     }
@@ -173,7 +227,10 @@ final class PivotAnswer {
         m.put("expanded", n.open() && !n.children.isEmpty());
         m.put("by", n.childDim);
         if (n.others) {
-            m.put("others", n.othersCount);
+            m.put("others", n.othersCount < 0 ? null : n.othersCount);
+            if (n.othersCount < 0) {
+                m.put("approximateTop", true);
+            }
         }
         return m;
     }
@@ -399,7 +456,8 @@ final class PivotAnswer {
             m.put("kind", f.fn().kind().word());
             m.put("how", switch (f.fn().kind()) {
                 case MERGEABLE -> "each cell and total from its own rows' state; exact";
-                case SKETCH -> "a sketch with a stated error";
+                case SKETCH -> "a sketch with a stated error" + (f.fn() instanceof com.ash.drishti.bicompute.functions.Sketches.Sketch sk
+                        ? ": " + sk.error() : "") + "; exact on request";
                 case HOLISTIC -> "each cell and total recomputed from its own members, never from other cells' figures";
             });
             fns.add(m);
@@ -427,7 +485,7 @@ final class PivotAnswer {
 
     /** Two answers of one view on two dates: the differences per cell and measure, new and gone cells marked. */
     @SuppressWarnings("unchecked")
-    static Map<String, Object> compare(Map<String, Object> a, Map<String, Object> b) {
+    public static Map<String, Object> compare(Map<String, Object> a, Map<String, Object> b) {
         Map<String, Map<String, Object>> ca = (Map<String, Map<String, Object>>) a.get("cells");
         Map<String, Map<String, Object>> cb = (Map<String, Map<String, Object>>) b.get("cells");
         Map<String, Object> diff = new LinkedHashMap<>();

@@ -262,15 +262,16 @@ class MqEngineTest {
     }
 
     @Test
-    void totalsAreAskedOnlyForTheMeasuresThatDoNotAddUp() {
+    void everyTotalIsThePivotEnginesFromItsOwnRows() {
         Map<String, Object> a = ask(MqHarness.RITA, "{ mq: 1, model: desk-risk, select: { fields: [trades.desk, trades.currency], measures: [MTM, AvgMTM] }, totals: subtotals }");
         @SuppressWarnings("unchecked")
         List<Map<String, Object>> totals = (List<Map<String, Object>>) a.get("totals");
         assertThat(totals).extracting(t -> t.get("by")).containsExactly(List.of(), List.of("trades.desk"));
-        assertThat(totals.get(0).get("measures")).isEqualTo(List.of("AvgMTM"));
+        assertThat(totals.get(0).get("measures")).as("every measure: the engine makes all levels in one statement").isEqualTo(List.of("MTM", "AvgMTM"));
         @SuppressWarnings("unchecked")
         List<List<Object>> grand = (List<List<Object>>) totals.get(0).get("rows");
-        assertThat(((Number) grand.get(0).get(0)).doubleValue()).isEqualTo(sum(null, true) / 40, org.assertj.core.data.Offset.offset(1e-9));
+        assertThat(((Number) grand.get(0).get(0)).doubleValue()).isEqualTo(sum(null, true), org.assertj.core.data.Offset.offset(1e-6));
+        assertThat(((Number) grand.get(0).get(1)).doubleValue()).isEqualTo(sum(null, true) / 40, org.assertj.core.data.Offset.offset(1e-9));
     }
 
     @Test
