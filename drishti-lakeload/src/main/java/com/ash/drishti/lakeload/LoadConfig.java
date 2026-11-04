@@ -352,6 +352,9 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             promote = s.has("promote") ? agree(entry, "promote", promote, entry.promote()) : entry.promote();
             vectors = s.has("vectors") || s.has("vector") ? agree(entry, "vectors", vectors, entry.vectors()) : entry.vectors();
             flatten.putAll(entry.flatten());
+            if (flatten.isEmpty() && pack != null) {             // a lake entry without flatten: the pack's (its ingest block), as lake build
+                flatten.putAll(pack.flatten());
+            }
             id = id != null ? agree(entry, "id", id, entry.id() == null ? id : entry.id()) : entry.id();
             latestBy = latestBy != null ? agree(entry, "latest-by", latestBy, entry.latestBy() == null ? latestBy : entry.latestBy()) : entry.latestBy();
         } else if (pack != null) {

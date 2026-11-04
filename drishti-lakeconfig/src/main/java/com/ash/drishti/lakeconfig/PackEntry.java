@@ -56,8 +56,14 @@ public record PackEntry(String domain, String table, String key, String date, Li
             if (entryKind.equals(kind) && (wanted == null || wanted.equals(folder) || e.getValue().path("path").asText("").endsWith("/" + wanted))) {
                 LakeTable t = Lakes.table(new Lakes.Values(file.toString(), System::getenv), file.toString(), "delta", e.getKey(), e.getValue(),
                         JsonNodeFactory.instance.objectNode());
+                Map<String, String> flat = t.flatten();
+                if (ingest.path("flatten").size() > 0) {        // the ingest block's flatten replaces the entry's, as on the older path
+                    flat = new LinkedHashMap<>();
+                    Map<String, String> into = flat;
+                    ingest.path("flatten").fields().forEachRemaining(f -> into.put(f.getKey(), f.getValue().asText()));
+                }
                 return new PackEntry(t.domain(), t.folder().equals(kind) ? null : t.folder(), t.id() != null ? t.id() : text(ingest, "key"),
-                        t.date() != null ? t.date() : text(ingest, "date"), t.promote(), t.vectors(), t.flatten(), t.sortBy(),
+                        t.date() != null ? t.date() : text(ingest, "date"), t.promote(), t.vectors(), flat, t.sortBy(),
                         t.latestBy() != null ? t.latestBy() : text(ingest, "latest-by"), t);
             }
         }
