@@ -38,14 +38,14 @@ def test_a_view_the_lens_hides_names_the_lens_never_the_id(backend, monkeypatch)
     app = _app(backend, monkeypatch)
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["world"]})
     alice = _client(app)
-    alice.get("/lens/world")
+    alice.post("/lens/world")
     _hidden(monkeypatch, backend)
     r = alice.get("/api/view/trade/IRS-48213")
     assert r.status_code == 404 and r.json()["code"] == "DRS-4023"
     assert r.json()["fix"] == HINT and r.json()["lens"] == {"name": "world", "title": "Drishti World"}
     page = alice.get("/v/trade/IRS-48213")
     assert HINT in page.text and "check the kind" not in page.text.lower() and "check the identifier" not in page.text.lower()
-    alice.get("/lens/leave")
+    alice.post("/lens/leave")
     plain = alice.get("/api/view/trade/IRS-48213").json()
     assert plain["lens"] is None and "lens" not in plain["fix"].split(":")[0] and "does not include trades" in plain["fix"]
 
@@ -82,7 +82,7 @@ def test_the_playground_opens_on_an_entity_the_server_holds_in_the_lens(backend,
         return {"rows": []}
     monkeypatch.setattr(backend, "functions", functions)
     monkeypatch.setattr(backend, "search", search, raising=False)
-    alice.get("/lens/world")
+    alice.post("/lens/world")
     got = alice.get("/render/demo/start").json()
     assert got["ref"] == {"kind": "country", "id": "CAN"} and got["lens"]["title"] == "Drishti World" and asked == ["CTRY limit 1"]
     assert "IRS-48213" not in json.dumps(got)

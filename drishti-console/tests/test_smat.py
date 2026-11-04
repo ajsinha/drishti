@@ -189,11 +189,11 @@ def test_a_market_or_world_lens_on_a_full_instance_hides_it_for_that_person_only
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk", "market", "world"]})
     alice, bob = edition_client(app, "alice"), edition_client(app, "bob")
     for lens in ("market", "world"):
-        assert alice.get(f"/lens/{lens}", follow_redirects=False).status_code == 303
+        assert alice.post(f"/lens/{lens}", follow_redirects=False).status_code == 303
         assert "data-smat-link" not in alice.get("/v/trade/IRS-48213").text, lens
         assert alice.get("/smat?id=T1").status_code == 404, lens
         r = alice.get("/go", params={"q": "SMAT T1 <GO>"}, follow_redirects=False)
         assert "DRS-4023" in r.headers["location"], lens
-    assert alice.get("/lens/risk", follow_redirects=False).status_code == 303
+    assert alice.post("/lens/risk", follow_redirects=False).status_code == 303
     assert "data-smat-link" in alice.get("/v/trade/IRS-48213").text and alice.get("/smat?id=T1").status_code == 200
     assert "data-smat-link" in bob.get("/v/trade/IRS-48213").text                     # bob, on the full product, has it throughout

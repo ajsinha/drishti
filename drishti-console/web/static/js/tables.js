@@ -35,7 +35,7 @@
   var CF = (window.drishtiModules || {}).colFilter;     // column filters; loaded before this script
   var SIZES = [25, 50, 100, 250];
   var MIN_FIT = 5;
-  var KEY = 'drishti.tableRows';
+  var KEY = (window.drishtiKey ? window.drishtiKey('drishti.tableRows') : 'drishti.tableRows');
   var VER = me && /[?&]v=([^&]+)/.exec(me.src || '') ? /[?&]v=([^&]+)/.exec(me.src)[1] : '';
   // where the chart kit comes from: beside this script (the console's /static/, or /embed/v2/ for the client-side renderer on another site)
   var ROOT = me && /\/js\/tables\.js/.test(me.src || '') ? me.src.replace(/js\/tables\.js.*$/, '') : '/static/';

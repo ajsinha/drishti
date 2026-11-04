@@ -148,10 +148,10 @@ def test_home_offers_the_three_landings_and_remembers_the_choice(backend, monkey
     assert 'data-risk-landing="desk"' in home                                          # A, the default
     assert 'data-home-card="VAR BANK"' in home and 'data-home-card="EXP CPTY:CP-ALDERSHOT"' in home
     assert 'href="/home/landing/command"' in home and 'href="/home/landing/map"' in home
-    assert c.get("/home/landing/map", follow_redirects=False).status_code == 303
+    assert c.post("/home/landing/map", follow_redirects=False).status_code == 303
     assert app.state.store["alice"]["homeLanding"] == "map"
     assert 'data-risk-landing="map"' in c.get("/").text                               # remembered (the person's settings)
-    assert 'data-risk-landing="command"' in c.get("/home/landing/command").text
+    assert 'data-risk-landing="command"' in c.post("/home/landing/command").text
     classic = c.get("/", params={"landing": "today"}).text
     assert "data-risk-landing" not in classic and 'id="grammar"' not in classic and 'id="pipeline"' not in classic
     # another person keeps the default
@@ -163,7 +163,7 @@ def test_a_role_mapping_wins_over_the_remembered_choice_only_when_configured(bac
     app.state.editions.learn(RISK_ABOUT)
     app.state.editions.instance.spec["home"]["landing-by-role"] = {"*": "command"}
     c = _client(app)
-    c.get("/home/landing/map")
+    c.post("/home/landing/map")
     assert 'data-risk-landing="command"' in c.get("/").text
 
 
@@ -172,7 +172,7 @@ def test_a_lens_focuses_one_person_and_leaves_everyone_else_alone(backend, monke
     app.state.editions.learn({"product": "Drishti", "edition": None, "lenses": ["risk"]})
     alice, bob = _client(app, "alice"), _client(app, "bob")
     assert "/lens/risk" in _menu_links(alice.get("/t").text)                            # the link, in Views
-    assert alice.get("/lens/risk", follow_redirects=False).status_code == 303
+    assert alice.post("/lens/risk", follow_redirects=False).status_code == 303
     assert app.state.store["alice"]["lens"] == "risk"
     page = alice.get("/t").text                                                         # every page keeps it (a refresh too)
     assert 'data-product="Drishti Risk"' in page and "/lens/leave" in _menu_links(page) and "/forms" not in _menu_links(page)
@@ -196,7 +196,7 @@ def test_a_lens_focuses_one_person_and_leaves_everyone_else_alone(backend, monke
     bob.get("/api/suggest", params={"q": "VRE"})
     assert sent == {}
     # leaving it: the full product again
-    alice.get("/lens/leave")
+    alice.post("/lens/leave")
     assert "lens" not in app.state.store["alice"]
     assert alice.get("/admin/ai").status_code == 200 and "/lens/risk" in _menu_links(alice.get("/t").text)
 
@@ -206,7 +206,7 @@ def test_an_instance_with_an_edition_shows_no_lens_link_and_refuses_one(backend,
     app.state.editions.learn({**RISK_ABOUT, "lenses": ["risk"]})
     c = _client(app)
     assert not [h for h in _menu_links(c.get("/t").text) if h.startswith("/lens/")]
-    r = c.get("/lens/risk", follow_redirects=False)
+    r = c.post("/lens/risk", follow_redirects=False)
     assert "DRS-4023" in r.headers["location"]
 
 
@@ -278,7 +278,7 @@ def test_world_home_offers_its_three_landings_and_remembers_the_choice(backend, 
     assert 'data-home-card="ECON CAN"' in home and 'data-home-card="FUND SPY"' in home
     assert ">World desk<" in home and ">Explorer<" in home and ">World map<" in home
     assert 'href="/home/landing/explorer"' in home and 'href="/home/landing/map"' in home
-    assert c.get("/home/landing/explorer", follow_redirects=False).status_code == 303
+    assert c.post("/home/landing/explorer", follow_redirects=False).status_code == 303
     assert app.state.store["alice"]["homeLanding"] == "explorer"
     explorer = c.get("/").text                                                          # remembered (the person's settings)
     assert 'data-world-landing="explorer"' in explorer and 'id="wlCmd"' in explorer
@@ -287,8 +287,8 @@ def test_world_home_offers_its_three_landings_and_remembers_the_choice(backend, 
     recents = explorer[at:explorer.index("</ul>", at)]
     assert "ECON CAN" in recents and "FUND SPY" in recents and "TRD" not in recents and "VAR" not in recents
     assert recents.count(">ECON CAN<") == 1
-    assert 'data-world-landing="map"' in c.get("/home/landing/map").text
-    c.get("/home/landing/command")                                                     # a Risk landing is not World's: not kept
+    assert 'data-world-landing="map"' in c.post("/home/landing/map").text
+    c.post("/home/landing/command")                                                     # a Risk landing is not World's: not kept
     assert app.state.store["alice"]["homeLanding"] == "map"
     assert 'data-world-landing="desk"' in _client(app, "bob").get("/").text             # another person keeps the default
 
@@ -300,14 +300,14 @@ def test_the_landings_read_through_a_search_that_follows_the_edition(backend, mo
     _world_searches(backend, monkeypatch, sent)
     c = _client(app)
     assert c.get("/api/home/search", params={"q": "ECON limit 1"}).status_code == 404     # no edition, no lens: no landing read
-    c.get("/lens/world")
+    c.post("/lens/world")
     r = c.get("/api/home/search", params={"q": "ECON where GDP_USD_BN > 0 order by GDP_USD_BN desc limit 12"})
     assert r.status_code == 200 and r.json()["matched"] == 213
     assert sent[-1] == ("ECON where GDP_USD_BN > 0 order by GDP_USD_BN desc limit 12", {"X-Drishti-Lens": "world"})
     for hidden in ("VRES limit 1", "TRD limit 1", "FORM", "DATAMAP"):
         r = c.get("/api/home/search", params={"q": hidden})
         assert r.status_code == 404 and r.json()["code"] == "DRS-4023", hidden
-    c.get("/lens/risk")                                                                 # in Risk, the World commands are hidden
+    c.post("/lens/risk")                                                                 # in Risk, the World commands are hidden
     assert c.get("/api/home/search", params={"q": "ECON limit 1"}).status_code == 404
 
 
@@ -321,7 +321,7 @@ def test_two_lenses_each_person_opens_either_and_switches_between_them(backend, 
     assert "Open Drishti Risk" in page and "Open Drishti World" in page
     home = alice.get("/").text                                                          # on the product's Home too
     assert 'data-lens-link="risk"' in home and 'data-lens-link="world"' in home
-    alice.get("/lens/risk")
+    alice.post("/lens/risk")
     assert app.state.store["alice"]["lens"] == "risk"
     page = alice.get("/t").text
     assert 'data-product="Drishti Risk"' in page and "/var" in _menu_links(page)
@@ -329,21 +329,21 @@ def test_two_lenses_each_person_opens_either_and_switches_between_them(backend, 
     assert _menu_links(page).index("/lens/leave") < _menu_links(page).index("/lens/world")
     risk_home = alice.get("/").text
     assert 'data-risk-landing="desk"' in risk_home and 'data-lens-link="world"' in risk_home
-    alice.get("/home/landing/map")                                                      # chosen in Risk ...
-    alice.get("/lens/world")                                                            # ... switching: no need to leave first
+    alice.post("/home/landing/map")                                                      # chosen in Risk ...
+    alice.post("/lens/world")                                                            # ... switching: no need to leave first
     assert app.state.store["alice"]["lens"] == "world"
     page = alice.get("/t").text
     assert 'data-product="Drishti World"' in page and "/var" not in _menu_links(page) and "/forms" in _menu_links(page)
     assert "Leave Drishti World" in page and "Switch to Drishti Risk" in page
     assert 'data-world-landing="map"' in alice.get("/").text                            # map is both editions' third landing
     assert alice.get("/var").status_code == 404
-    alice.get("/home/landing/explorer")
-    alice.get("/lens/risk")
+    alice.post("/home/landing/explorer")
+    alice.post("/lens/risk")
     assert 'data-risk-landing="desk"' in alice.get("/").text                            # World's explorer is not Risk's: its default
     # bob, at the same time, sees the full product with both links
     other = bob.get("/t").text
     assert 'data-product="Drishti"' in other and "/lens/risk" in _menu_links(other) and "/lens/world" in _menu_links(other)
-    alice.get("/lens/leave")
+    alice.post("/lens/leave")
     assert "lens" not in app.state.store["alice"]
     back = alice.get("/t").text
     assert "/lens/risk" in _menu_links(back) and "/lens/world" in _menu_links(back) and 'data-product="Drishti"' in back
@@ -405,7 +405,7 @@ def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(m
         assert f'data-home-card="{card}"' in home, card
     assert ">Market desk<" in home and ">Explorer<" in home and ">Quality<" in home
     assert 'data-ml-tile="exceptions"' in home and 'href="/home/landing/quality"' in home
-    assert c.get("/home/landing/explorer", follow_redirects=False).status_code == 303
+    assert c.post("/home/landing/explorer", follow_redirects=False).status_code == 303
     assert app.state.store["alice"]["homeLanding"] == "explorer"
     explorer = c.get("/").text
     assert 'data-market-landing="explorer"' in explorer and 'id="mlCmd"' in explorer
@@ -416,11 +416,11 @@ def test_market_home_offers_desk_explorer_and_quality_and_remembers_the_choice(m
     recents = explorer[at:explorer.index("</ul>", at)]
     assert "CRV CRV-USD-OIS" in recents and "FXV FXV-EURUSD" in recents
     assert "ECON" not in recents and "VAR" not in recents and "TRD" not in recents and recents.count(">CRV CRV-USD-OIS<") == 1
-    quality = c.get("/home/landing/quality").text
+    quality = c.post("/home/landing/quality").text
     assert 'data-market-landing="quality"' in quality and 'data-stale-days="2"' in quality
     assert "no update in 2 business days" in quality
     assert "Impact on VaR and valuations comes in a later release" in quality and "VaR at stake" not in quality
-    c.get("/home/landing/map")                                                         # a World landing is not Market's: not kept
+    c.post("/home/landing/map")                                                         # a World landing is not Market's: not kept
     assert app.state.store["alice"]["homeLanding"] == "quality"
 
 
@@ -431,10 +431,10 @@ def test_the_market_figures_follow_the_edition_and_the_lens(market, monkeypatch)
     for part in ("desk", "moves", "quality"):                                          # no edition, no lens: not a landing's
         r = c.get(f"/api/home/market/{part}")
         assert r.status_code == 404 and r.json()["code"] == "DRS-4023", part
-    c.get("/lens/world")
+    c.post("/lens/world")
     assert c.get("/api/home/market/quality").status_code == 404                        # World shows no curves
     assert c.get("/api/home/search", params={"q": "CRV limit 1"}).status_code == 404
-    c.get("/lens/market")
+    c.post("/lens/market")
     q = c.get("/api/home/market/quality").json()
     assert len(q["critical"]) == 3 and len(q["warnings"]) == 4 and q["cleanPct"] == pytest.approx(57.1)
     d = c.get("/api/home/market/desk").json()
@@ -451,7 +451,7 @@ def test_the_stale_threshold_comes_from_the_edition_file(market, monkeypatch):
     app = _app(market, monkeypatch)
     app.state.editions.learn(MARKET_ABOUT)
     app.state.editions.instance.spec["quality"] = {"stale-days": 5}
-    page = _client(app).get("/home/landing/quality").text
+    page = _client(app).post("/home/landing/quality").text
     assert 'data-stale-days="5"' in page and "no update in 5 business days" in page
     assert not [e for e in _client(app).get("/api/home/market/quality").json()["warnings"] if e["check"] == "stale"]
 
@@ -465,23 +465,23 @@ def test_three_lenses_each_person_opens_any_and_switches_between_them(market, mo
     assert "/lens/risk" in links and "/lens/world" in links and "/lens/market" in links
     assert "Open Drishti Risk" in page and "Open Drishti World" in page and "Open Drishti Market" in page
     assert 'data-lens-link="market"' in alice.get("/").text
-    alice.get("/lens/market")
+    alice.post("/lens/market")
     assert app.state.store["alice"]["lens"] == "market"
     page = alice.get("/t").text
     assert 'data-product="Drishti Market"' in page and "/var" not in _menu_links(page) and "/forms" in _menu_links(page)
     assert "Leave Drishti Market" in page and "Switch to Drishti Risk" in page and "Switch to Drishti World" in page
     assert "Open Drishti Market" not in page and "Switch to Drishti Market" not in page
     assert 'data-market-landing="desk"' in alice.get("/").text
-    alice.get("/home/landing/quality")
-    alice.get("/lens/world")                                                           # switching: no need to leave first
+    alice.post("/home/landing/quality")
+    alice.post("/lens/world")                                                           # switching: no need to leave first
     assert 'data-world-landing="desk"' in alice.get("/").text                          # quality is not World's: its default
     assert "Switch to Drishti Market" in alice.get("/t").text
-    alice.get("/lens/risk")
+    alice.post("/lens/risk")
     assert 'data-risk-landing="desk"' in alice.get("/").text
-    alice.get("/lens/market")
+    alice.post("/lens/market")
     assert 'data-market-landing="quality"' in alice.get("/").text                      # the choice made in Market is kept
     assert alice.get("/var").status_code == 404
-    alice.get("/lens/leave")
+    alice.post("/lens/leave")
     assert "lens" not in app.state.store["alice"]
 
 
@@ -578,17 +578,17 @@ def test_trading_home_offers_trader_desk_and_explorer_and_remembers_the_choice(t
     assert "/static/js/trading-landing.js" in home and "/static/css/trading-landing.css" in home
     assert ">Trader desk<" in home and ">Desk head<" in home and ">Explorer<" in home
     assert 'data-tl-tile="pnl"' in home and 'data-tl-check' in home and 'data-home-card="VAR BOOK BOOK-RATES-1"' in home
-    assert c.get("/home/landing/desk", follow_redirects=False).status_code == 303
+    assert c.post("/home/landing/desk", follow_redirects=False).status_code == 303
     assert app.state.store["alice"]["homeLanding"] == "desk"
     desk = c.get("/").text
     assert 'data-trading-landing="desk"' in desk and 'data-tl-heat' in desk and 'data-tl-traders' in desk and 'data-tl-pnlvar' in desk
-    explorer = c.get("/home/landing/explorer").text
+    explorer = c.post("/home/landing/explorer").text
     assert 'data-trading-landing="explorer"' in explorer and 'id="tlCmd"' in explorer and "CTRD CP-ALDERSHOT" in explorer
     at = explorer.index("data-tl-recents")
     recents = explorer[at:explorer.index("</ul>", at)]
     assert "TRD MX-20000001" in recents and "BOOK BOOK-RATES-1" in recents and "CTRD CP-ALDERSHOT" in recents and "VAR BANK" in recents
     assert "ECON" not in recents and "SCN" not in recents and recents.count(">TRD MX-20000001<") == 1
-    c.get("/home/landing/quality")                                                     # a Market landing is not Trading's: not kept
+    c.post("/home/landing/quality")                                                     # a Market landing is not Trading's: not kept
     assert app.state.store["alice"]["homeLanding"] == "explorer"
 
 
@@ -600,7 +600,7 @@ def test_the_first_landing_follows_the_trading_role_and_the_persons_own_choice_w
     head = _client(app, "t.brennan")
     assert 'data-trading-landing="desk"' in head.get("/").text                         # a desk head opens on B
     assert 'data-trading-landing="trader"' in _client(app, "drishti-dev-admin").get("/").text   # a trader on A
-    head.get("/home/landing/trader")
+    head.post("/home/landing/trader")
     assert 'data-trading-landing="trader"' in head.get("/").text                       # their own choice wins
     app.state.editions.instance.spec["home"]["landing-by-role"] = {"viewer": "explorer"}   # the RBAC hook, when set, still wins
     assert 'data-trading-landing="explorer"' in head.get("/").text
@@ -682,12 +682,12 @@ def test_the_trading_routes_follow_the_edition_and_the_lens(trading, monkeypatch
         assert r.status_code == 404 and r.json()["code"] == "DRS-4023", path
     assert c.post("/api/home/trading/check", json=body).status_code == 404
     for lens in ("world", "market"):
-        c.get(f"/lens/{lens}")
+        c.post(f"/lens/{lens}")
         assert c.get("/api/home/trading/risk").status_code == 404, lens
         assert c.post("/api/home/trading/check", json=body).status_code == 404, lens
-    c.get("/lens/risk")                                                                 # Risk shows trades but not the what-if pair's words
+    c.post("/lens/risk")                                                                 # Risk shows trades but not the what-if pair's words
     assert c.get("/api/home/trading/me").status_code == 200
-    c.get("/lens/trading")
+    c.post("/lens/trading")
     assert c.get("/api/home/trading/me").json()["scope"]["id"] == "TRDR-ASHAH"
     assert c.post("/api/home/trading/check", json=body).json()["ok"]
     assert c.get("/api/home/trading/nope").status_code == 404
@@ -704,19 +704,19 @@ def test_four_lenses_each_person_opens_any_and_switches_between_them(trading, mo
     for name in ("Risk", "World", "Market", "Trading"):
         assert f"/lens/{name.lower()}" in _menu_links(page) and f"Open Drishti {name}" in page, name
     assert 'data-lens-link="trading"' in alice.get("/").text                           # on Home too
-    alice.get("/lens/trading")
+    alice.post("/lens/trading")
     assert app.state.store["alice"]["lens"] == "trading"
     page = alice.get("/t").text
     assert 'data-product="Drishti Trading"' in page and "/var" in _menu_links(page) and "/forms" not in _menu_links(page)
     assert "Leave Drishti Trading" in page and all(f"Switch to Drishti {n}" in page for n in ("Risk", "World", "Market"))
     assert 'data-trading-landing="trader"' in alice.get("/").text
-    alice.get("/home/landing/desk")
-    alice.get("/lens/market")
+    alice.post("/home/landing/desk")
+    alice.post("/lens/market")
     assert 'data-market-landing="desk"' in alice.get("/").text                         # desk is Market's too: kept
     assert "Switch to Drishti Trading" in alice.get("/t").text
-    alice.get("/lens/world")
+    alice.post("/lens/world")
     assert 'data-world-landing="desk"' in alice.get("/").text
-    alice.get("/lens/trading")
+    alice.post("/lens/trading")
     assert 'data-trading-landing="desk"' in alice.get("/").text
-    alice.get("/lens/leave")
+    alice.post("/lens/leave")
     assert "lens" not in app.state.store["alice"]

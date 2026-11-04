@@ -24,7 +24,7 @@
   if (!canvas || !B || !B.layer || !canvas.querySelector('[data-lw-root]')) { return; }
   const h = B.h, q = (s) => B.q(s, canvas);
   const root = q('[data-lw-root]');
-  const KEEP = 'drishti.bi.layer.wizard.v2';
+  const KEEP = (window.drishtiKey ? window.drishtiKey('drishti.bi.layer.wizard.v2') : 'drishti.bi.layer.wizard.v2');
   const STEPS = { extends: ['root', 'columns', 'filter', 'grain', 'derive', 'group', 'preview', 'save'], connector: ['root', 'columns', 'filter', 'grain', 'derive', 'group', 'preview', 'save'],
     python: ['root', 'columns', 'filter', 'grain', 'derive', 'group', 'preview', 'save'], model: ['root', 'columns', 'filter', 'grain', 'derive', 'group', 'preview', 'save'], sql: ['root', 'preview', 'save'] };
   const LABELS = { root: 'Source', columns: 'Columns', filter: 'Rows', grain: 'One row is', derive: 'Worked-out columns', group: 'Group', preview: 'Preview', save: 'Save' };

@@ -43,12 +43,12 @@ from __future__ import annotations
 import asyncio
 import math
 import re
-import time
 from dataclasses import asdict, dataclass, field, replace
 from datetime import date, timedelta
 from typing import Any
 
 from core import asof
+from core.user_cache import LRU, user_key
 from core import engine_figures as engine
 from core.backend import BackendError
 
@@ -59,9 +59,10 @@ PAGE = 1000                                   # the server's most rows per searc
 #: the valuation fields read per trade (all of them columns of the trade-valuation store, so the search reads no document)
 FIELDS = ("TRADE_ID", "PORTFOLIO", "DESK", "COUNTERPARTY", "PRODUCT_TYPE", "PRODUCT_GROUP", "TRADE_STATUS", "TRADER_ID", "BUY_SELL_CODE",
           "NOTIONAL", "DV01", "CURRENCY")
-_CACHE: dict[tuple, tuple[float, Any]] = {}
-_FLIGHT: dict[tuple, asyncio.Future] = {}
 _TTL = 120.0
+#: what was read, per person (core/user_cache.py: server, user, roles, as-of and known-at, lens), two minutes each, the 64 most recent
+_CACHE = LRU(64, _TTL)
+_FLIGHT: dict[tuple, asyncio.Task] = {}      # one read per key at a time; the key is the person's (above)
 
 
 # -- configuration ----------------------------------------------------------------------------------------------------------------
@@ -187,7 +188,7 @@ async def resolve(backend, me, ed, settings, user_settings: dict | None) -> Scop
     entry = cfg["people"].get(str(me.user).lower())
     mapped = _mapping(entry) if entry else None
     view = parse_view((user_settings or {}).get("tradingView"))
-    key = ("scope", me.user, ed.name if ed is not None else "", str(mapped), str(view), asof.current())
+    key = user_key(me, ed, "scope", str(mapped), str(view), asof.current())
     hit = _cached(key)
     if hit is not None:
         return replace(hit, books=list(hit.books), problems=list(hit.problems))
@@ -257,40 +258,35 @@ async def options(backend, me) -> dict:
 
 # -- caching ------------------------------------------------------------------------------------------------------------------------
 def _cached(key: tuple) -> Any:
-    hit = _CACHE.get(key)
-    if hit and time.monotonic() - hit[0] < _TTL:
-        return hit[1]
-    return None
+    return _CACHE.get(key)
 
 
 def _put(key: tuple, value: Any) -> Any:
-    if len(_CACHE) > 64:                     # a scope's valuations may be large: few kept, two minutes each
-        _CACHE.clear()
-    _CACHE[key] = (time.monotonic(), value)
-    return value
+    return _CACHE.put(key, value)            # a scope's valuations may be large: few kept, the least recently used goes first
 
 
 async def _once(key: tuple, make):
-    """One read per key at a time (two panels asking for the same valuations wait for one answer), kept for two minutes."""
+    """One read per key at a time (two panels asking for the same valuations wait for one answer), kept for two minutes. The read is a
+    task of its own: the request that started it may be cancelled (the person left the page) without failing the others waiting."""
     hit = _cached(key)
     if hit is not None:
         return hit
-    running = _FLIGHT.get(key)
-    if running is not None:
-        return await asyncio.shield(running)
-    fut = asyncio.get_running_loop().create_future()
-    _FLIGHT[key] = fut
-    try:
-        value = await make()
-        _put(key, value)
-        fut.set_result(value)
-        return value
-    except BaseException as e:
-        fut.set_exception(e)
-        fut.exception()                       # retrieved: a failure nobody else waited for is not logged as unhandled
-        raise
-    finally:
-        _FLIGHT.pop(key, None)
+    task = _FLIGHT.get(key)
+    if task is None:
+        async def read():
+            return _put(key, await make())
+
+        task = asyncio.ensure_future(read())
+        _FLIGHT[key] = task
+
+        def done(t: asyncio.Task) -> None:
+            if _FLIGHT.get(key) is t:
+                _FLIGHT.pop(key, None)
+            if not t.cancelled():
+                t.exception()                 # retrieved: a failure nobody waited for is not logged as unhandled
+
+        task.add_done_callback(done)
+    return await asyncio.shield(task)
 
 
 def forget() -> None:
@@ -395,7 +391,7 @@ async def valuations(backend, me, scope: Scope, cfg: dict) -> dict:
     if cond is None or business is None:
         return {"available": False, "reason": "no books in your scope" if cond is None else "the server gave no business date"}
     max_rows = _count(cfg, "max-rows", 20000, PAGE, 200000)
-    key = ("tval", me.user, scope.kind, scope.id, ",".join(scope.books), business.isoformat())
+    key = user_key(me, None, "tval", scope.kind, scope.id, ",".join(scope.books), business.isoformat())   # the books carry the lens's scope
 
     async def make():
         now = await read_valuations(backend, me, cond, max_rows)
@@ -570,7 +566,7 @@ async def blotter(backend, me, scope: Scope, cfg: dict) -> dict:
     q = (f"TRD where {cond} and SOURCE_UPDATE_TIME startswith {_q(business.isoformat())} and (TRADE_ACTION != null or TRADE_VERSION != null "
          f"or COUNTERPARTY != null or PRODUCT_TYPE != null or TRADE_STATUS != null or TRADE_DATE != null) order by SOURCE_UPDATE_TIME desc "
          f"limit {PAGE}")
-    key = ("blotter", me.user, scope.kind, scope.id, ",".join(books), business.isoformat())
+    key = user_key(me, None, "blotter", scope.kind, scope.id, ",".join(books), business.isoformat())
 
     async def make():
         try:

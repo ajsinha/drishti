@@ -175,6 +175,17 @@
   at 45 s, alone 3 runs of 3). A reading over a refusal level is now confirmed by a full collection (at most once every 10 s; in between
   the last one's result) before sign-ins or heavy work wait (`Signals.heapAfterCleanupBytes`, `AdmissionGate`); a server really that full
   is refused as before. `AdmissionGateTest` covers both; the file passes alone and after a live-console file.
+- **Nothing the console keeps for one person is served to another (security review F2, F3, F5 to F8, F10, F12; USER_MANAGEMENT.md
+  section 6, "What the console keeps of each person").** Describe's mnemonic table was one process-wide copy of the first person's packs:
+  now per server, pack set and roles on the app (and the "My page" migration per server). Drishti Trading's and Market's caches are keyed
+  by one helper, `core/user_cache.py` (server, user, sorted roles, as-of and known-at, lens) and bounded by an LRU instead of clearing
+  everyone's past a size; a cancelled request no longer fails the others waiting for the same read. The help library is kept per pack set
+  (eight at most) and built off the event loop; SQL over extracts lets one person hold two of the four slots at most. What pages keep in the
+  browser is named per person (`window.drishtiKey`) and **Sign out** sends `Clear-Site-Data: "storage"`. Opening or leaving a lens and
+  choosing Home's landing are POSTs (a GET shows a form). The shared server client keeps no cookies; Calc's permission follows the person's
+  change stamp; every non-static response is `Cache-Control: private, no-store`. Guards: `tests/test_two_people_share_nothing.py` (two
+  people with different packs and roles, and one person on two servers, at the same time: each answer equals the one they get alone; all
+  four failed before) and `tests/test_no_shared_user_state.py` (module-level state is a constant or listed with its reason).
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

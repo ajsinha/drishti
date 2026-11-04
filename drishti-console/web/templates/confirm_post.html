@@ -1,0 +1,29 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# A change asked for by a link (a lens opened or left, Home's landing chosen) is made by POST only: a GET of its address shows this
+   form (a link followed by a crawler, a prefetch or another site changes nothing); pages post it directly (theme-init.js). #}
+{% extends "base.html" %}
+{% block title %}{{ title }} · {{ PRODUCT }}{% endblock %}
+{% block content %}
+<div class="login">
+  <form method="post" action="{{ action }}" class="login-box" data-confirm-post>
+    <h1>{{ title }}</h1>
+    <p>{{ text }}</p>
+    <button type="submit" class="btn-pill btn-accent">{{ title }}</button>
+    <a class="lnk" href="/">Not now</a>
+  </form>
+</div>
+{% endblock %}

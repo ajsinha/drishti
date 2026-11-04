@@ -29,12 +29,12 @@ from __future__ import annotations
 import asyncio
 import math
 import re
-import time
 from datetime import date, timedelta
 from typing import Any
 
 from core import engine_figures as engine
 from core.backend import BackendError
+from core.user_cache import LRU, user_key
 
 #: the market-data pack's kinds and their commands (config/packs/market-data/pack.yaml)
 COMMANDS = {"ir-curve": "CRV", "repo-curve": "REPO", "fx-spot": "FX", "fx-forward-curve": "FXF", "fx-vol-surface": "FXV", "ir-vol-cube": "IRV",
@@ -49,8 +49,8 @@ MOVERS = (("ir-curve", "TEN_Y", "bp"), ("credit-curve", "SPREAD_5Y", "spread"), 
           ("equity-index", "LEVEL", "pct"))
 SIGMA_MIN_DAYS = 10            # daily changes needed before a move is measured against its own history
 TENOR = re.compile(r"^(\d+(?:\.\d+)?)\s*([DWMY])$", re.I)
-_CACHE: dict[tuple, tuple[float, Any]] = {}
 _TTL = 120.0
+_CACHE = LRU(200, _TTL)                   # per person (the key is core/user_cache.cache_key's, made by routes/edition_routes.py)
 
 
 # -- business days ----------------------------------------------------------------------------------------------------------------
@@ -155,15 +155,11 @@ def day_change(series: dict | None, holidays: set[str]) -> dict | None:
 
 
 def _cached(key: tuple):
-    hit = _CACHE.get(key)
-    return hit[1] if hit and time.monotonic() - hit[0] < _TTL else None
+    return _CACHE.get(key)
 
 
 def _keep(key: tuple, value):
-    if len(_CACHE) > 200:
-        _CACHE.clear()
-    _CACHE[key] = (time.monotonic(), value)
-    return value
+    return _CACHE.put(key, value)
 
 
 async def _business(reader: Reader) -> tuple[date | None, set[str]]:
@@ -205,9 +201,10 @@ def _tile(key: str, label: str, value, unit: str, cmd: str, sub: str, change: di
             "change": None if change is None else {"delta": round(change["delta"] * scale, 4), "since": change["since"]}}
 
 
-async def desk(backend, me, key: tuple = ()) -> dict:
+async def desk(backend, me, key: tuple | None = None) -> dict:
     """A's tiles (USD OIS 10Y, USD 2s10s, EUR/USD 1M ATM vol, the CDS 5Y median) and its USD curves (OIS today, a week ago when the
     history has it, and projection)."""
+    key = key or user_key(me)                                    # never shared between people (core/user_cache.py)
     hit = _cached(("desk",) + key)
     if hit is not None:
         return hit
@@ -297,10 +294,11 @@ def _move_value(kind_unit: str, d0: float, d1: float) -> tuple[float, str]:
     return ((d1 - d0) / d0 * 100 if d0 else 0.0), "%"
 
 
-async def moves(backend, me, key: tuple = (), days: int = 21, top: int = 6) -> dict:
+async def moves(backend, me, key: tuple | None = None, days: int = 21, top: int = 6) -> dict:
     """The biggest moves of the latest day: each item's change against the business day before, sized in standard deviations of its own
     daily changes when the lake holds ``SIGMA_MIN_DAYS`` of them (``sigma``), else the largest moves in percent of the level
     (``absolute``), else none (``none``: the lake keeps no history per date)."""
+    key = key or user_key(me)                                    # never shared between people (core/user_cache.py)
     hit = _cached(("moves",) + key)
     if hit is not None:
         return hit
@@ -464,8 +462,9 @@ def run_checks(docs: dict[str, dict[str, dict]], latest: dict[str, tuple[str, di
             "checks": list(checks.values())}
 
 
-async def quality(backend, me, stale_days: int, key: tuple = ()) -> dict:
+async def quality(backend, me, stale_days: int, key: tuple | None = None) -> dict:
     """C's checks over the pack's own answers: the curves and surfaces read whole, every other kind by its latest load."""
+    key = key or user_key(me)                                    # never shared between people (core/user_cache.py)
     hit = _cached(("quality", stale_days) + key)
     if hit is not None:
         return hit

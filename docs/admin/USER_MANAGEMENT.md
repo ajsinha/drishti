@@ -600,6 +600,29 @@ Admins also have:
   and the planner behind **Edit the plan**; **Download the working (.xlsx)** is audited (`capacity-workbook-downloaded`). See
   [OPERATIONS.md 12.4](OPERATIONS.md#124-admin--capacity-today-against-the-plan).
 
+### What the console keeps of each person
+
+The console keeps a few answers for a moment so pages draw quickly. Nothing it keeps for one person is served to another:
+
+- **One key for everything read as a person** (`core/user_cache.py`): the server of the request, the user, their roles (sorted), the as-of
+  date and its known-at, and the lens the page is seen through. The same person on two servers, or with a role changed, is someone else to
+  every cache. Drishti Trading's and Drishti Market's landing figures, the Describe mode's mnemonic table (per server, pack set and roles)
+  and the help library (per pack set) are kept this way; each store is bounded and drops the least recently used entry, never everyone's.
+- **Calc's permission, BI's powers and the sign-in check** follow the person's change stamp, so a role change made through one worker
+  process is seen at once by the others.
+- **Responses**: every page and answer is sent `Cache-Control: private, no-store` (the static files excepted), so neither a shared proxy nor
+  the browser's back button shows a person's page after they sign out.
+- **The browser**: what pages keep in this browser (the VaR basket, Calc's drafts and history, column filters, table sizes, the capacity
+  plan, BI Studio's tabs and drafts, the controls' choices) is named per person (`window.drishtiKey`), and **Sign out** clears it
+  (`Clear-Site-Data: "storage"`).
+- **Links that change something** (open or leave a lens, choose Home's landing) are posted; opening their address shows a form, so a
+  crawler, a prefetch or another site's link changes nothing.
+- **The server connection** keeps no cookie a server sets: who calls is said by each call's own headers.
+- **SQL over a BI extract** runs in four shared worker threads, at most two of them one person's at a time.
+
+A new module-level dict, list or set in the console fails `tests/test_no_shared_user_state.py` until it is keyed this way or listed with
+the reason it holds nothing of a person's.
+
 ---
 
 ## 7. The API

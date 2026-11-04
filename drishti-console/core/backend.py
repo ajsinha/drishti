@@ -21,6 +21,8 @@ from typing import Any
 
 from urllib.parse import quote
 
+from http.cookiejar import CookieJar, DefaultCookiePolicy
+
 import httpx
 
 from core import asof, collab, edition
@@ -114,8 +116,10 @@ class BackendClient:
     def __init__(self, base_url: str, timeout: float = 5.0, pool: int = 64, servers=None):
         """``servers``: a :class:`core.cluster.ServerPool` when ``backend.urls`` names several servers (Drishti*net): every call then goes
         to the server the session uses, and a read that fails there is tried once on another; None for the one ``base_url``."""
+        # one client for every person: it keeps no cookie a server sets (a jar whose policy accepts none), so a cookie one person's answer
+        # carried never rides on the next person's call; who calls is said by each call's own headers
         self._client = httpx.AsyncClient(
-            base_url=base_url.rstrip("/"), timeout=timeout,
+            base_url=base_url.rstrip("/"), timeout=timeout, cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),
             limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool))
         self._servers = servers
 

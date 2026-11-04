@@ -302,7 +302,7 @@
       var s = p.toString();
       history.replaceState(history.state, '', location.pathname + (s ? '?' + s.replace(/%2C/g, ',').replace(/%3A/g, ':') : '') + location.hash);
     }
-    function memoKey(id) { return 'drishti.ctl.' + (view.getAttribute('data-me') || '') + '.' + memo + '.' + id; }
+    function memoKey(id) { var k = 'drishti.ctl.' + memo + '.' + id; return window.drishtiKey ? window.drishtiKey(k) : k; }
     function keep(id, value) {
       if (!byId[id].remember) { return; }
       try { localStorage.setItem(memoKey(id), value); } catch (e) { /* a private window: not remembered */ }

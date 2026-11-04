@@ -155,6 +155,9 @@ async def logout(request: Request):
         auth.forget(user=claimed.user, session=claimed.session)   # every worker of this console drops its check at once (QA3A-04)
     r = RedirectResponse("/?signedout=1" if auth.enabled else "/", status_code=303)
     r.delete_cookie(auth.cookie)
+    # what pages kept in this browser (a basket, drafts, filters: window.drishtiKey) goes too: the next person starts clean. The theme
+    # comes back from the next person's settings (data-user-theme) when they sign in
+    r.headers["Clear-Site-Data"] = '"storage"'
     return r
 
 
