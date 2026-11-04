@@ -205,7 +205,7 @@ def test_lake_build_loads_an_archive_and_refuses_a_folder_of_another_table(tmp_p
     pytest.importorskip("deltalake")
     import subprocess
     cli = [sys.executable, str(HERE.parent / "drishti.py"), "lake", "build", "--domain", "fixture", "--kind", "trade", "--key", "id",
-           "--date", "date", "--lake", str(tmp_path / "lake")]
+           "--lake", str(tmp_path / "lake")]
     ok = subprocess.run(cli + ["--from", str(FIX / "trade.zip")], capture_output=True, text=True, timeout=300)
     assert ok.returncode == 0, ok.stdout + ok.stderr
     assert "rows written: 6" in ok.stdout

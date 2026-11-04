@@ -22,8 +22,8 @@ the US Treasury par yield curve, SOFR (New York Fed) and euro short-term rate (E
     python3 tools/publicdata/official_market_data.py refresh us-treasury sofr --since 2020
 
 The pack reads the same sources live through its feed connectors (nyfed-sofr-feed, ecb-estr-feed, ecb-fx-feed, us-treasury-feed;
-off by default). This script writes them as documents in the pack's own shapes, one file a kind (fx-spot.jsonl, ir-curve.jsonl,
-rate-fixing.jsonl), so tools/ingest_jsonl.py can load them into the lake. The pack's committed samples are synthetic and are
+off by default). This script writes them as documents in the pack's own shapes, one file a kind and business
+date named by the load rules (fx-spot.<AS_OF>.jsonl, ir-curve.<AS_OF>.jsonl, rate-fixing.<AS_OF>.jsonl), so tools/ingest_jsonl.py can load them into the lake. The pack's committed samples are synthetic and are
 never overwritten: the output always goes to the data folder (or --out outside the repository). Guide: docs/guides/EXTERNAL_DATA.md.
 """
 from __future__ import annotations
@@ -251,19 +251,28 @@ LOAD = ("uv run --with deltalake --with pyarrow --with pyyaml python tools/inges
 
 
 def write(out: Path, sources: list[MarketSource]) -> list[Path]:
-    """One <kind>.jsonl a kind, sorted by id; a kind's documents from sources not in this run are kept (re-runs are idempotent)."""
+    """One <kind>.<YYYY-MM-DD>.jsonl a kind and business date (the load rules, docs/architecture/DATA_LOAD_RULES.md: each document under
+    its AS_OF, the day its newest observation is of), sorted by id; a kind's documents from sources not in this run are kept (re-runs
+    are idempotent)."""
     out.mkdir(parents=True, exist_ok=True)
     written = []
     for kind in sorted({s.kind for s in sources}):
-        path, key = out / f"{kind}.jsonl", KEYS[kind]
-        docs = {}
-        if path.is_file():
-            docs = {d[key]: d for d in (json.loads(x) for x in path.read_text(encoding="utf-8").splitlines() if x.strip())}
+        key = KEYS[kind]
+        docs, old = {}, sorted(out.glob(f"{kind}.*.jsonl")) + ([out / f"{kind}.jsonl"] if (out / f"{kind}.jsonl").is_file() else [])
+        for f in old:
+            docs.update({d[key]: d for d in (json.loads(x) for x in f.read_text(encoding="utf-8").splitlines() if x.strip())})
         for s in sources:
             if s.kind == kind:
                 docs.update({d[key]: d for d in s.docs})
-        path.write_text("".join(json.dumps(docs[k], ensure_ascii=False, separators=(",", ":")) + "\n" for k in sorted(docs)), encoding="utf-8")
-        written.append(path)
+        for f in old:
+            f.unlink()
+        by_day: dict[str, list[str]] = {}
+        for k in sorted(docs):
+            by_day.setdefault(str(docs[k].get("AS_OF") or "")[:10], []).append(k)
+        for day, ks in sorted(by_day.items()):
+            path = out / (f"{kind}.{day}.jsonl" if day else f"{kind}.jsonl")
+            path.write_text("".join(json.dumps(docs[k], ensure_ascii=False, separators=(",", ":")) + "\n" for k in ks), encoding="utf-8")
+            written.append(path)
     return written
 
 
@@ -271,7 +280,7 @@ def check(files: list[Path]) -> list[str]:
     """Every line a JSON document with its id, no duplicate ids, every number finite."""
     problems = []
     for f in files:
-        key, seen = KEYS[f.stem], set()
+        key, seen = KEYS[f.name.split(".")[0]], set()
         for n, line in enumerate(f.read_text(encoding="utf-8").splitlines(), 1):
             d = json.loads(line)
             if not d.get(key) or d[key] in seen:
@@ -293,7 +302,7 @@ def refresh(a, log=print) -> int:
     if a.dry_run:
         log(f"dry run: {PACK} -> {out}")
         for s in selected:
-            log(f"  {s.name} ({s.licence}): {s.kind}.jsonl from {s.first(run)}; " + "; ".join(s.plan(run)[:2])
+            log(f"  {s.name} ({s.licence}): {s.kind}.<date>.jsonl from {s.first(run)}; " + "; ".join(s.plan(run)[:2])
                 + (" ..." if len(s.plan(run)) > 2 else ""))
         return 0
     man = B.Manifest(PACK)
@@ -328,7 +337,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if a.command == "status":
             return B.status(PACK, SOURCES, Path(a.cache) if a.cache else B.data_dir() / "publicdata" / "cache" / PACK,
-                            "<data>/publicdata/market-data (fx-spot.jsonl, ir-curve.jsonl, rate-fixing.jsonl)")
+                            "<data>/publicdata/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)")
         return refresh(a)
     except B.Refusal as e:
         print(e, file=sys.stderr)

@@ -54,7 +54,11 @@
   inputs by develop's tools and from the new ones the same (89 tables, 4,846 table and date pairs, 4,835,519 rows, every row's checksum
   equal); the VaR tree of two servers on the two lakes the same (MGMT, LEGAL and LL, three dates, 1-day and 10-day: 786 nodes, VaR, ES
   and trades, no difference); look-alike ENDUR files through `--endur-dir` the same table either way. The Java tests read the files
-  through drishti-testkit `FeedFiles`.
+  through drishti-testkit `FeedFiles`. No caller dates rows from a field any more: Admin → Data loads → Lakes says the business date
+  (the file name's, else the business today) and takes an optional other date (`--as-of`), never a field (a bound connector's layout no
+  longer lists the load's own `_load_id` and `_source_file`); `lake scan` reports the rows' date field as counted only; the tests,
+  examples, run configuration and `official_market_data.py` (one `<kind>.<AS_OF>.jsonl` a date) load by the name or `--as-of`.
+  DEMO_DATA.md says the test data's snapshot-plus-changes files are a generator format that `lake demo` replays, not feed files.
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 

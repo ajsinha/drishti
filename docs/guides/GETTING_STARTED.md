@@ -817,8 +817,9 @@ This is the walk a tester follows without a terminal. It uses ports 18580 (serve
 
    | Parameter | Meaning | Placeholder |
    |---|---|---|
-   | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them) | `$USER_HOME$/Downloads/YOUR_BIG_FILE.json` |
-   | `--kind`, `--key`, `--date` | entity kind, its id field, its business-date field | `trade`, `TRADE_ID`, `TRADE_DATE` (use your file's business-date field) |
+   | `--from` | your big `.json` array, `.jsonl` or `.gz` (or a folder of them), named by its business date: the rows go under the date in the name ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)); add `--as-of YYYY-MM-DD` to give another | `$USER_HOME$/Downloads/trade.YYYY-MM-DD.json` |
+   | `--kind`, `--key` | entity kind, its id field | `trade`, `TRADE_ID` |
+   | `--mode` | `overwrite-dates`: a re-run of the same date replaces it (append, the default, would add the rows again) | `overwrite-dates` |
    | `--partition-by` | the column(s) the Delta table is split by | `PRODUCT_TYPE` |
    | `--lake` | where the Delta table goes | `data/qa/delta` |
    | `--pack` | the pack folder from step 6 (the folder that holds `pack.yaml`) | `data/qa/packs/qa-pack/pack/qa-pack` |

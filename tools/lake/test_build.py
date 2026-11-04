@@ -413,7 +413,7 @@ class CommandLineTest(unittest.TestCase):
             src.write_text("\n".join(json.dumps(d) for d in book(12)) + "\n{}\n", encoding="utf-8")
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
-                code = drishti.main(["lake", "build", "--from", str(src), "--kind", "deal", "--key", "TRADE_ID", "--date", "TRADE_DATE",
+                code = drishti.main(["lake", "build", "--from", str(src), "--kind", "deal", "--key", "TRADE_ID", "--as-of", "2026-10-01",
                                      "--domain", "trading", "--lake", str(lake), "--engine", "deltalake", "--partition-by", "DESK"])
             self.assertEqual(code, 2, out.getvalue())                          # written, one reject
             self.assertIn("rejected 1: no id (field 'TRADE_ID' is missing or empty)", out.getvalue())
@@ -426,7 +426,8 @@ class CommandLineTest(unittest.TestCase):
             out = io.StringIO()
             with contextlib.redirect_stdout(out):
                 self.assertEqual(drishti.main(["lake", "scan", str(src)]), 0)
-            self.assertIn("suggested --key TRADE_ID   --date TRADE_DATE", out.getvalue())
+            self.assertIn("suggested --key TRADE_ID", out.getvalue())
+            self.assertIn("the rows' date field: TRADE_DATE (counted only", out.getvalue())
 
 
 class ScanTest(unittest.TestCase):

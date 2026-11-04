@@ -91,8 +91,8 @@ class PythonPathEqualityTest {
         List<String> lines = new ArrayList<>(PvData.lines(1500, 80, 2, 11));
         lines.add(17, "{\"BUSINESS_DATE\":\"2026-10-27\"}");                     // a reject: no id
         Path in = PvData.byDate(tmp.resolve("in"), lines);                       // one file a date, dated by its name
-        List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID", "--date",
-                "BUSINESS_DATE", "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
+        List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID",
+                "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
         compare(common, "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "SCENARIO_PV", "P-1000003",
                 LocalDate.parse("2026-10-28"));
     }
@@ -134,8 +134,8 @@ class PythonPathEqualityTest {
             Path in = tmp.resolve("dups-" + stamped);
             PvData.gzip(in.resolve("pv.jsonl.gz"), gz, 2);
             PvData.write(in.resolve("pv.jsonl"), plain);
-            List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID", "--date",
-                    "BUSINESS_DATE", "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
+            List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID",
+                    "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
             JsonNode s = compare("dups-" + stamped + "-", common, "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY",
                     "SCENARIO_PV", "P-1000030", FileDates.businessToday());           // names without a date: the business today
             long dropped = 0;

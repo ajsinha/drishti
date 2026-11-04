@@ -156,7 +156,7 @@ us-treasury  Public domain (US Government work)            committable  never   
 sofr         NY Fed terms of use: reuse with attribution   committable  never           -
 estr         ECB: free reuse with the source acknowledged  committable  never           -
 
-pack market-data: writes <data>/publicdata/market-data (fx-spot.jsonl, ir-curve.jsonl, rate-fixing.jsonl)
+pack market-data: writes <data>/publicdata/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)
 cache ~/drishti/data/publicdata/cache/market-data
 manifest ~/drishti/data/publicdata/market-data/manifest.json
 ```
@@ -221,7 +221,7 @@ dry run: world-economy, sources worldbank, imf, undp, factbook, years 2015-2025
 ```console
 $ python3 tools/publicdata/official_market_data.py refresh --dry-run
 dry run: market-data -> ~/drishti/data/publicdata/market-data
-  ecb-fx (ECB: free reuse with the source acknowledged): fx-spot.jsonl from 2025-10-26; https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip
+  ecb-fx (ECB: free reuse with the source acknowledged): fx-spot.<date>.jsonl from 2025-10-26; https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip
   us-treasury (Public domain (US Government work)): ir-curve.jsonl from 2025-10-26; https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2025/all?type=daily_treasury_yield_curve
   sofr (NY Fed terms of use: reuse with attribution): rate-fixing.jsonl from 2025-10-26; https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate=2025-10-26&endDate=2026-10-26
   estr (ECB: free reuse with the source acknowledged): rate-fixing.jsonl from 2025-10-26; https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT?startPeriod=2025-10-26&format=csvdata
@@ -712,15 +712,19 @@ python3 tools/publicdata/official_market_data.py refresh ecb-fx --years 5 --scop
 python3 tools/publicdata/official_market_data.py refresh us-treasury sofr --since 2020
 ```
 
-It writes one file a kind, in the pack's own shapes (UPPER_SNAKE): `fx-spot.jsonl` (`FX-EURUSD` and eleven more pairs, crosses
-through EUR, with daily `HISTORY`), `ir-curve.jsonl` (`CRV-USD-UST-PAR`: the latest par curve and the 2Y, 10Y and 30Y history)
-and `rate-fixing.jsonl` (`FIX-SOFR`, `FIX-ESTR`, newest fixing first). A rerun of one source keeps the other sources' documents
-in the same file. Every document carries `PROVENANCE` (source, URL, licence, retrieval time). Load them into the lake:
+It writes one file a kind and business date, named by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+the date is each document's `AS_OF`, the day of its newest observation, in the pack's own shapes (UPPER_SNAKE): `fx-spot.<date>.jsonl`
+(`FX-EURUSD` and eleven more pairs, crosses through EUR, with daily `HISTORY`), `ir-curve.<date>.jsonl` (`CRV-USD-UST-PAR`: the latest
+par curve and the 2Y, 10Y and 30Y history) and `rate-fixing.<date>.jsonl` (`FIX-SOFR`, `FIX-ESTR`, newest fixing first; two files when
+the two fixings are of different days). A rerun of one source keeps the other sources' documents. Every document carries `PROVENANCE` (source, URL, licence, retrieval time). Load them into the lake:
 
 ```bash
 uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from data/publicdata/market-data \
     --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --date AS_OF --lake data/delta
 ```
+
+Each file goes under the date in its name; `--date AS_OF` names the field the documents carry their own date in (`data ingest` loads a
+kind only when it has one), and is only counted: it never chooses the date.
 
 **Check it:** the script checks every document it wrote; after loading, `FIX FIX-SOFR <GO>` shows the fixing history. **Offline:**
 `refresh --offline` rebuilds the files from the cache.

@@ -62,6 +62,14 @@ the data-load signal for each table and date, or, when none is reachable, finds 
 and clears its stored BI columns and rollups; a running server also sees each rebuilt Delta date by itself. The test data itself is
 regenerated with `python3 tools/testdata/make_testdata.py` (deterministic, the same bytes on every Python version: `tools/testdata/test_testdata.py` and `test_deterministic.py` guard it).
 
+**The test data's files are a generator's format, not feed files.** Each sixty-day dataset is one file a business date named by the
+load rules (`trade_endur.2026-07-09.jsonl.gz`, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10), but only the first
+day's holds the whole table (the snapshot, `kind: snapshot` in `testdata.yaml`); each later day's holds only the documents new or
+changed that day. `lake demo` replays them, the snapshot with every change up to the day applied by key, and loads each day's whole
+table under its dated name. Loaded on its own (`lake build --from` one of them, or a folder of them), a later day's file is only that
+day's changes, not the day's table: build the demo tables with `lake demo` (`--only <folder>` for one dataset). The VaR, exposure and
+public-data folders are whole tables, a date each, and load as they are.
+
 ## Mixed Delta and Iceberg storage
 
 (decided by the product owner on 2026-10-20) each source system's trades can be stored in **Delta Lake or Apache Iceberg**,

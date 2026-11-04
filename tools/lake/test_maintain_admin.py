@@ -133,7 +133,7 @@ class LakeTest(unittest.TestCase):
             src = root.parent / f"{kind}.{d}.jsonl"
             src.write_text("\n".join(json.dumps({"TRADE_ID": f"{kind}-{d}-{i}", "TRADE_DATE": d, "QUANTITY": i}) for i in range(n)))
             code = quiet(build.main, ["--from", str(src), "--lake", str(root), "--domain", "trading", "--kind", kind, "--key", "TRADE_ID",
-                                      "--date", "TRADE_DATE", "--engine", "deltalake", "--pack-name", "trading", "--mode", "append", "-q"])
+                                      "--engine", "deltalake", "--pack-name", "trading", "--mode", "append", "-q"])
             self.assertEqual(code, 0)
         return str(root / "trading" / kind)
 

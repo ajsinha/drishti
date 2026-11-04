@@ -170,13 +170,14 @@ LEASE_PERPETUITY_FLAG                  500         3  text  (477), N(12), Y(11)
 SETTLEMENT_DATE                        500         1  text  (500)
 LEGS                                   500         0  array
 EVENTS                                 500         0  array
-suggested --key TRADE_ID   --date START_DATE   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTFOLIO
+suggested --key TRADE_ID   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTFOLIO   the rows' date field: START_DATE (counted only: the business date is the file name's or --as-of)
 ```
 
 `(456)` is a blank value counted 456 times. The id is a field present in (nearly) every document with every value different;
-the business date ranks names such as *business*, *cob*, *as of* and *snapshot* first; the classifiers are text fields rarely
-blank with 2 to 40 values, *product* and *type* first. This export is a snapshot of the book (its dates are trade and start
-dates, not the day of the extract), so the walk-through below uses `--as-of` for the day the file was taken, 2026-09-22.
+the rows' date field ranks names such as *business*, *cob*, *as of* and *snapshot* first, and is only reported: a load takes its
+business date from outside the rows ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), the file's name
+(`trade_endur.2026-07-08`) or `--as-of`; the classifiers are text fields rarely blank with 2 to 40 values, *product* and *type* first.
+The walk-through below uses `--as-of` for another day, 2026-09-22.
 
 ### 4.2 The first load
 
@@ -688,8 +689,8 @@ the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md). `tool
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --pack config/packs/market-risk --kind scenario-pv \
-    --key SCENARIO_PV_ID --date BUSINESS_DATE --lake /var/lib/drishti/delta \
+python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack config/packs/market-risk --kind scenario-pv \
+    --key SCENARIO_PV_ID --mode overwrite-dates --lake /var/lib/drishti/delta \
     --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
 ```
 
@@ -779,11 +780,12 @@ source:
   files: /data/pv/2026-10-28/*.jsonl.gz
   pack: config/packs/market-risk
   id: SCENARIO_PV_ID
-  date: BUSINESS_DATE
+  as-of: 2026-10-28                       # the day's folder: its business date, given (a row's own date is only counted)
 target:
   format: delta
   lake: s3://bank-lake/delta
   kind: scenario-pv                       # the table s3://bank-lake/delta/risk/scenario-pv (domain from the pack)
+  mode: replace                           # the date replaced on a re-run (append is the default)
   storage-options: {region: us-east-1}
   layout: {sort-by: [LEGAL_ENTITY, DESK, id], file-size-mb: 256, shard-aligned: true}
 parallel: {writers: 16}
@@ -798,7 +800,7 @@ source:
   files: s3://landing/pv/2026-10-28/*.jsonl.zst
   storage-options: {region: us-east-1, endpoint: '${MINIO_ENDPOINT}', path-style: true}
   id: POSITION_ID
-  date: BUSINESS_DATE
+  as-of: 2026-10-28
   promote: [LEGAL_ENTITY, DESK, TT_BOOK, CCY]
   vectors: [PV]
 target:
@@ -812,14 +814,14 @@ memory: {budget-mb: 8192, spill-dir: /scratch}
 **A REST catalog** (AWS Glue's Iceberg endpoint): add `target.iceberg: {catalog: rest, uri: 'https://glue.us-east-1.amazonaws.com/iceberg',
 warehouse: '<account id>', catalog.rest.signing-name: glue}` (the domain is the namespace).
 
-**An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/…jsonl.gz` and `position/…jsonl`; each folder its own table,
+**An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/2026-10-28/…jsonl.gz` and `position/2026-10-28/…jsonl`: each
+table folder its own table, each date folder its business date ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 2);
 every dataset read and checked before the first commit; a folder not listed under `datasets:` refuses the run):
 
 ```yaml
 source:
   files: /landing/2026-10-28/bundle.tar.gz
   id: id
-  date: BUSINESS_DATE
 target:
   lake: /var/lib/drishti/delta
   domain: trading
@@ -840,10 +842,9 @@ datasets: 2
 
 ```yaml
 source:
-  files: 'C:\drishti-private\pv\cob-2026-10-28.*.jsonl.gz'
+  files: 'C:\drishti-private\pv\scenario-pv.2026-10-28.jsonl.gz'      # dated by its name
   pack: 'C:\drishti\config\packs\market-risk'
   id: SCENARIO_PV_ID
-  date: BUSINESS_DATE
 target:
   format: delta
   lake: 'C:\drishti\data\delta'
@@ -995,15 +996,15 @@ first as above (`lake scan` reads `.gz` directly).
 `data ingest` writes JSON Lines into a Delta lake (the pack's layout, `business_date` partitions only) or the File connector's
 folders (`--store files`); `--watch DIR` turns a drop folder into a feed. Use `lake build` instead for JSON arrays, gzip, large
 files, classifier partitions or a lock and a summary; use `data ingest --store files` for the File connector. A dry run on the
-300 trades, by start date:
+300 trades, under a business date given from outside (`--date` names the field the rows carry their own date in: it is only
+counted, never the date they are stored under):
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py data ingest --from build/tools-walk --domain trading --key TRADE_ID --date START_DATE --store files --root build/tools-walk/files --dry-run | tail -n 5
-trade               2026-09-01             18
-trade               2026-10-01             13
-trade               2026-11-01              7
-trade               2026-12-01              3
+$ drishti-console/.venv/bin/python tools/drishti.py data ingest --from build/tools-walk --domain trading --key TRADE_ID --date START_DATE --as-of 2026-09-22 --store files --root build/tools-walk/files --dry-run | tail -n 4
+trade               2026-09-22            300
 total rows: 300
+business date 2026-09-22 from the name of trade.jsonl
+300 rows of trade.jsonl carried another date in START_DATE; loaded under 2026-09-22
 ```
 
 `data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|cassandra|iceberg` runs the store's demo loader (section 6);
@@ -1738,9 +1739,11 @@ from its Delta log alone (no data file is opened, so it opens at once on a table
 1. **The file.** Choose a `.json` (array), `.jsonl`, `.ndjson` or `.gz` file. It is streamed to the console's temporary folder as
    it uploads (a progress bar; never held in memory; up to `lakes.max_upload_mb`, 4,096 MB).
 2. **Id, business date and classifiers.** The console scans the file as a stream (the first `lakes.scan_docs`, 20,000, documents)
-   and lists every field with how often it is present, how many values it has and the most frequent ones. The suggested id, date
-   and first classifier are selected; *None: one date for the whole file* is the `--as-of` of a snapshot. Tick **Classifier** for
-   the partition columns and **Promote** for the real columns.
+   and lists every field with how often it is present, how many values it has and the most frequent ones. The suggested id and first
+   classifier are selected. **Business date** says the date the rows go under, by the load rules
+   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): the date in the file's name (`book.2026-10-16.json`), else the business
+   today; never a field of the rows. *Another business date for the whole file* gives one (the build's `--as-of`). Tick **Classifier**
+   for the partition columns and **Promote** for the real columns.
 3. **Where it goes.** A new lake (a root from `lakes.roots`, a domain, a kind) or an existing table (its partitioning is then
    kept and shown); what to do when a date is already there (the three modes of 4.4); and the pack whose Delta connector should
    read it. **Bind** writes the connector's file through the connector API (validated, written atomically, audited, the old text
