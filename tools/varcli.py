@@ -103,6 +103,12 @@ def render_headline(h: dict, say) -> None:
     say(f"  {p.get('tier')} · {p.get('method')} · {p.get('computeMs')} ms ({p.get('cache')})")
     for w in p.get("warnings") or []:
         say(f"  warning: {w}")
+    pm = h.get("parametric")
+    if pm:                                                              # PVAR (PARAMETRIC_VAR.md): the cross-check, never official
+        gp = pm.get("gapPct")
+        say(f"  parametric VaR {money(pm.get('var'))} {cur} = z·σ − μ = {pm.get('z', 0):.4f} × {money(pm.get('sigma'))} − ({money(pm.get('mu'))})   "
+            f"ES {money(pm.get('es'))}   fat-tail gap {'+' if (pm.get('gap') or 0) >= 0 else ''}{money(pm.get('gap'))}"
+            + (f" ({100 * gp:+.1f}%)" if gp is not None else "") + "   a cross-check, not official")
 
 
 def shown_line(c: dict) -> str:
@@ -116,11 +122,21 @@ def shown_line(c: dict) -> str:
 def render_parts(c: dict, top: int, say) -> None:
     say(f"{c.get('canonical')}  by {c.get('by')}  VaR {money(c.get('var'))}  ES {money(c.get('es'))} {c.get('currency') or 'USD'}  "
         f"sum of components {money(c.get('sumComponent'))}" + (f"  ({shown_line(c)})" if c.get("truncated") else ""))
-    rows = [["Part", "Standalone VaR", "Component VaR", "% of VaR", "Incremental VaR", "Component ES"]]
+    pm = c.get("parametric")
+    rows = [["Part", "Standalone VaR", "Component VaR", "% of VaR", "Incremental VaR", "Component ES"] + (["Param. component", "ρ"] if pm else [])]
     for r in (c.get("rows") or [])[:top]:
         rows.append([str(r.get("label") or r.get("key")), money(r.get("standaloneVar")), money(r.get("componentVar")),
-                     f"{100 * (r.get('pct') or 0):.1f}", money(r.get("incrementalVar")), money(r.get("componentEs"))])
+                     f"{100 * (r.get('pct') or 0):.1f}", money(r.get("incrementalVar")), money(r.get("componentEs"))]
+                    + ([money(r.get("pComponentVar")), f"{r.get('rho') or 0:.3f}"] if pm else []))
     table(rows, say)
+    if pm:
+        say(f"parametric VaR {money(pm.get('var'))}: the components add up to {money(pm.get('pSumComponent'))}"
+            + ("" if pm.get("addsUp") else " (the parts shown are not all the scope)") + f"; diversification {money(pm.get('pDiversification'))}")
+        m = pm.get("matrix")
+        if m:
+            say(f"correlations ({m.get('engine')}{', the largest ' + str(len(m.get('keys') or [])) if m.get('truncated') else ''}):")
+            labels = [str(x)[:12] for x in m.get("labels") or []]
+            table([[""] + labels] + [[labels[i]] + [f"{v:.2f}" for v in row] for i, row in enumerate(m.get("correlation") or [])], say)
 
 
 def render_path(pth: dict, say) -> None:
@@ -210,6 +226,10 @@ def render_matrix(m: dict, top: int, say) -> None:
 def render_playground(g: dict, say) -> None:
     """The VaR Playground (VAR_GUIDE.md section 3.10) in a few lines: the headline, the checks and the largest positions' figures."""
     f, ln = g.get("figures") or {}, g.get("lens") or {}
+    pm = g.get("parametric")
+    if pm:                                                              # the Parametric tab: the server's steps, as the page shows them
+        for s in pm.get("steps") or []:
+            say(s)
     say(f"{g.get('label')} on {g.get('businessDate')} in {g.get('currency')}: {g.get('shown')} of {g.get('total')} positions, "
         f"{len(g.get('scenarios') or [])} scenarios")
     say(f"VaR {100 * (ln.get('confidence') or 0.99):g}% {f.get('var'):,.2f} (k {f.get('k')}, scenario {f.get('varScenarioDate')}), "
@@ -500,11 +520,14 @@ def register(groups, srv, ctx: dict) -> None:
                         q[k] = v
             else:
                 lensed(a, q)
+            if a.no_parametric:
+                q["parametric"] = "false"
             res = api.json("GET", "/api/v1/var/scope?" + enc(dated(a, q)))
             say_json(res) if a.json else render_headline(res, print)
         elif c == "parts":
             res = api.json("GET", "/api/v1/var/scope/contributions?" + enc(lensed(a, dated(a, {"scope": a.scope, "by": a.by, **(
-                {"scenario": a.scenario} if a.scenario else {})}))))
+                {"scenario": a.scenario} if a.scenario else {}), **({"matrix": "true"} if a.matrix else {}),
+                **({"parametric": "false"} if a.no_parametric and not a.matrix else {})}))))
             say_json(res) if a.json else render_parts(res, a.top, print)
         elif c == "path":
             res = api.json("GET", "/api/v1/var/scope/path?" + enc(lensed(a, dated(a, {"scope": a.scope, "page": a.page, "size": a.size}))))
@@ -552,6 +575,8 @@ def register(groups, srv, ctx: dict) -> None:
                 render_matrix(res, a.top, print)
         elif c == "playground":
             q = {"ids": a.ids} if a.ids else {"scope": a.scope}
+            if a.measure == "parametric":                             # the Parametric figures, and the workbook's Parametric tab
+                q["measure"] = "parametric"
             if a.estimate:
                 res = api.json("GET", "/api/v1/var/playground/estimate?" + enc(lensed(a, dated(a, q))))
                 say_json(res) if a.json else render_estimate(res, print)
@@ -560,8 +585,8 @@ def register(groups, srv, ctx: dict) -> None:
                 _, body = api.request("GET", "/api/v1/var/playground.xlsx?" + enc(lensed(a, dated(a, q))))
                 with open(a.xlsx, "wb") as f:
                     f.write(body)
-                print(f"wrote {a.xlsx} ({len(body):,} bytes): the VaR Playground workbook, every figure a formula (Main, Config, Data, FX, PnL, "
-                      "Explain, Provenance)")
+                tabs = "Main, Config, Data, FX, PnL, " + ("Parametric, " if getattr(a, "measure", None) == "parametric" else "") + "Explain, Provenance"
+                print(f"wrote {a.xlsx} ({len(body):,} bytes): the VaR Playground workbook, every figure a formula ({tabs})")
             else:
                 res = api.json("GET", "/api/v1/var/playground?" + enc(lensed(a, dated(a, q))))
                 say_json(res) if a.json else render_playground(res, print)
@@ -720,7 +745,10 @@ def register(groups, srv, ctx: dict) -> None:
     sh.add_argument("--confidence", type=float, metavar="Q", help="VaR at this confidence (one of drishti.var.confidences: 0.95 or 95; "
                     "another, with --window, the 2.9.4 comparison); never official")
     sh.add_argument("--es-confidence", type=float, metavar="Q", help="ES at this confidence (one of drishti.var.es-confidences); never official")
+    sh.add_argument("--no-parametric", action="store_true", help="leave out the parametric line (PVAR's cross-check; parametric=false)")
     pr = scoped("parts", "a scope's contributions: standalone, component, incremental VaR per part")
+    pr.add_argument("--matrix", action="store_true", help="the parametric components and the parts' correlation matrix (matrix=true)")
+    pr.add_argument("--no-parametric", action="store_true", help="leave out the parametric columns (parametric=false)")
     pr.add_argument("--by", default="child", choices=["child", "node", "position", "trade", "desk", "book"])
     pr.add_argument("--scenario", metavar="YYYY-MM-DD", help="each part's P&L on this scenario day")
     pr.add_argument("--top", type=int, default=25, help="parts printed (default 25; --json has them all)")
@@ -744,9 +772,11 @@ def register(groups, srv, ctx: dict) -> None:
     pg = scoped("playground", "the VaR Playground (PLAY VAR, VAR_GUIDE.md section 3.10): a scope's VaR worked out position by position; "
                 "--xlsx writes the workbook of real formulas")
     pg.add_argument("--ids", metavar="ID,ID", help="positions or trades instead of the scope (at most drishti.var.playground.max-ids, 50)")
-    pg.add_argument("--xlsx", metavar="FILE", help="write the workbook (Main, Config, Data, FX, PnL, Explain, Provenance) to FILE")
+    pg.add_argument("--xlsx", metavar="FILE", help="write the workbook (Main, Config, Data, FX, PnL, Explain, Provenance; with --measure parametric also Parametric) to FILE")
     pg.add_argument("--count", default="500", help="positions in the workbook: 100, 500 (default), 1000, 10000 or all; the rest in Rest of scope")
     pg.add_argument("--estimate", action="store_true", help="each export size's estimated file size, recalculation time and the applications that open it")
+    pg.add_argument("--measure", choices=["historical", "parametric"], default="historical",
+                    help="parametric: the playground's Parametric tab, the parametric figures and the workbook's Parametric tab (PARAMETRIC_VAR.md section 10)")
     ex = sub.add_parser("explain", help="why VaR moved (VAR EXPLAIN, VAR_GUIDE.md section 3.11): the change between two business dates in "
                         "causes that add up exactly (restatement, hierarchy, trades out, the window, the market, trades in), with who drove each",
                         parents=[srv])

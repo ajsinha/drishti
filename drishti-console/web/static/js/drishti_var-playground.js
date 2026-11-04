@@ -49,6 +49,7 @@
     ["ccy", "h", "m", "q", "esq", "set"].forEach(function (k) { if (d[k]) { q.set(k, d[k]); } });
     var asOf = new URLSearchParams(window.location.search).get("asOf");
     if (asOf) { q.set("asOf", asOf); }
+    if (d.measure) { q.set("measure", d.measure); }                 // the Parametric tab: the parametric figures, and the workbook's Parametric tab
     return q;
   }
   function load() {
@@ -98,6 +99,7 @@
     var v = d.figures.varScenario;
     S.sel = { r: HEAD + Math.max(0, v), c: 1 };
     draw();
+    if (d.parametric) { parametric(d); }
     scrollToSel(true);
     select(S.sel.r, S.sel.c);
   }
@@ -318,6 +320,29 @@
       : "✗ " + d.checks.filter(function (x) { return !x.ok; }).map(function (x) { return x.name; }).join(" · ")) + "</div>";
     explain.innerHTML = h;
   }
+  /** The Parametric tab's panel: the server's figures, steps, positions and scenario columns placed as they come (nothing computed here). */
+  function parametric(d) {
+    var p = d.parametric, f = $("[data-pg-param-figures]");
+    if (!f) { return; }
+    var rows = [["n", num(p.n, 0)], ["Weighting", p.weighting + (p.lambda ? ", λ " + p.lambda : "")], ["μ", money(p.mu)], ["σ", money(p.sigma)],
+      ["z", num(p.z, 6)], ["φ(z_ES)/(1 − c)", num(p.esFactor, 6)], ["Parametric VaR = z·σ − μ", money(p["var"])], ["Parametric ES", money(p.es)],
+      ["Σ components", money(p.sumComponent)]];
+    f.innerHTML = '<table class="pg-param-table">' + rows.map(function (r) { return "<tr><th>" + esc(r[0]) + '</th><td class="num">' + esc(r[1]) + "</td></tr>"; }).join("") + "</table>";
+    $("[data-pg-param-steps]").innerHTML = (p.steps || []).map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("");
+    $("[data-pg-param-positions]").innerHTML = "<thead><tr><th>Position</th><th>μᵢ</th><th>σᵢ</th><th>cov(Pᵢ, P)</th><th>ρᵢ</th><th>Component VaR</th><th>Component ES</th><th>Standalone VaR</th></tr></thead><tbody>"
+      + p.positions.map(function (r) {
+        return "<tr><td>" + esc(r.id) + '</td><td class="num">' + money(r.mu) + '</td><td class="num">' + money(r.sigma) + '</td><td class="num">'
+          + Number(r.cov).toExponential(4) + '</td><td class="num">' + num(r.rho, 4) + '</td><td class="num">' + money(r.componentVar) + '</td><td class="num">'
+          + money(r.componentEs) + '</td><td class="num">' + money(r.standaloneVar) + "</td></tr>";
+      }).join("") + "</tbody>";
+    var c = p.columns, sc = d.scenarios;
+    $("[data-pg-param-scenarios]").innerHTML = "<thead><tr><th>#</th><th>Date</th><th>wⱼ</th><th>vⱼ − μ</th><th>(vⱼ − μ)²</th></tr></thead><tbody>"
+      + c.w.map(function (w, j) {
+        return "<tr><td>" + (j + 1) + "</td><td>" + esc(sc[j]) + '</td><td class="num">' + num(w, 8) + '</td><td class="num">' + money(c.dev[j])
+          + '</td><td class="num">' + Number(c.sq[j]).toExponential(4) + "</td></tr>";
+      }).join("") + "</tbody>";
+  }
+
   function ordinal(k) { var s = ["th", "st", "nd", "rd"], v = k % 100; return k + (s[(v - 20) % 10] || s[v] || s[0]); }
 
   // ------------------------------------------------------------------------------------------------------------ pickers and export

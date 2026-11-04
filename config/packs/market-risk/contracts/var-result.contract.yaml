@@ -17,7 +17,7 @@
 kind: var-result
 mnemonic: VRES
 pack: market-risk
-version: '1.2'
+version: '1.3'
 class: computed
 status: active
 title: VaR of a scope (computed)
@@ -169,6 +169,72 @@ fields:
   presence: required
   unit: CURRENCY
   description: The scope's P&L under each scenario day, oldest first (unrounded).
+- name: PARAMETRIC_VAR
+  type: amount
+  presence: optional
+  description: 'Parametric VaR, a cross-check beside historical (PARAMETRIC_VAR.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit''s measure.'
+  unit: CURRENCY
+- name: PARAMETRIC_ES
+  type: amount
+  presence: optional
+  description: 'Parametric ES: σ·φ(z_ES)/(1 − ES_CONFIDENCE) − μ.'
+  unit: CURRENCY
+- name: PARAMETRIC_MU
+  type: amount
+  presence: optional
+  description: 'μ of the lens''s vector (the normal''s mean).'
+  unit: CURRENCY
+- name: PARAMETRIC_SIGMA
+  type: amount
+  presence: optional
+  description: 'σ of the lens''s vector (sample, N − 1, or EWMA-weighted).'
+  unit: CURRENCY
+- name: PARAMETRIC_Z
+  type: amount
+  presence: optional
+  description: 'Φ⁻¹(CONFIDENCE).'
+- name: PARAMETRIC_N
+  type: integer
+  presence: optional
+  description: 'Scenarios (or 10-day windows) the fit used.'
+- name: PARAMETRIC_WEIGHTING
+  type: text
+  presence: optional
+  description: 'equal or ewma.'
+- name: PARAMETRIC_LAMBDA
+  type: amount
+  presence: optional
+  description: 'EWMA''s decay; null with equal weights.'
+- name: PARAMETRIC_HORIZON_RULE
+  type: text
+  presence: optional
+  description: 'lens or square-root-of-time.'
+- name: PARAMETRIC_SKEW
+  type: amount
+  presence: optional
+  description: 'The vector''s skewness (a normal: 0).'
+- name: PARAMETRIC_EXCESS_KURTOSIS
+  type: amount
+  presence: optional
+  description: 'The vector''s excess kurtosis (a normal: 0).'
+- name: FAT_TAIL_GAP
+  type: amount
+  presence: optional
+  description: 'VAR minus PARAMETRIC_VAR: positive when the scenario tail is heavier than the normal''s.'
+  unit: CURRENCY
+- name: FAT_TAIL_GAP_PCT
+  type: rate
+  presence: optional
+  description: 'FAT_TAIL_GAP over PARAMETRIC_VAR.'
+- name: FAT_TAIL_ES_GAP
+  type: amount
+  presence: optional
+  description: 'ES minus PARAMETRIC_ES.'
+  unit: CURRENCY
+- name: PARAMETRIC_OFFICIAL
+  type: boolean
+  presence: optional
+  description: 'Always false: parametric VaR is a cross-check, never official.'
 - name: PROVENANCE
   type: record
   presence: required

@@ -252,7 +252,7 @@ def test_the_tutorials_page_renders_the_tutorials_index_and_each_tutorial_opens_
     page = client.get("/help/tutorials")
     assert page.status_code == 200 and "Your first 15 minutes" in page.text and "Run it in production" in page.text
     links = sorted(set(re.findall(r'href="(/help/docs-tutorials-[0-9a-z-]+)"', page.text)))
-    assert len(links) == 38, links                     # 38: plus tutorials 36 (the data inbox), 37 (custom functions) and 38 (the MR cube), 2.9.11.b; 34 (one file per lake) and 35 (Data out with Arrow Flight), 2.9.11.c
+    assert len(links) == 39, links                     # 39: plus tutorials 36 (the data inbox), 37 (custom functions) and 38 (the MR cube), 2.9.11.b; 34 (one file per lake), 35 (Data out with Arrow Flight) and 43 (parametric VaR), 2.9.11.c
     shots = 0
     for href in links:
         t = client.get(href)

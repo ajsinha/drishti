@@ -17,6 +17,11 @@
 
 ## 2.9.11.c (unreleased)
 
+- **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
+  definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
+  built, uncertified), MR_CUBE_LENS.md and COMPUTED_ATTRIBUTES.md no longer say they are planned. The generated READMEs of the
+  compute-demo and news-and-markets packs and of the delta and iceberg plugins regenerated (they were stale).
+
 ### Security
 
 - **A BI dataset's declared mask always holds (a leak fixed).** A column a dataset lists under `security.masked` was masked only when the
@@ -154,6 +159,18 @@
   scopes on Java (a WARN banner names the member), never a refusal. The `dgemm` thresholds are settings
   (`drishti.native.blas.gemm-min-sets`, `gemm-min-density`), tuned on one machine. The release's VaR regression check runs `java`
   (bit-exact against the previous release) and `auto` (within 1e-12, the same VaR dates): BENCHMARK.md section 17.
+- **Parametric VaR and ES beside historical** ([VAR_GUIDE.md sections 3.12 and 18.15](docs/guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check),
+  [PARAMETRIC_VAR.md](docs/architecture/PARAMETRIC_VAR.md), tutorial 43): the normal fitted to a scope's own scenario P&L vector
+  (z·σ − μ; ES σ·φ(z_ES)/(1 − c) − μ; equal weights or EWMA λ 0.94; the horizon follows the lens), a **cross-check, never official**.
+  On the VaR explorer it is a **Parametric toggle** and **columns** (product review, 2026-11-04): the tiles, the tree's Parametric and Gap
+  columns, the normal curve over the P&L histogram with both markers, shaded tails and the fat-tail gap bracket (the N toggle), and a **?**
+  on every figure with the server's own lines; `PVAR` is an alias that opens the explorer with the toggle on (no screen, view or menu
+  item of its own). The VaR Playground gains a **Parametric tab** (the figures, the steps, each position's Euler component with the −μᵢ
+  term adding up exactly). The API's `parametric`
+  block on `/scope`, `/tree`, `/scope/path` and `/scope/contributions` (`parametric=false`, `matrix=true`), `/status`, VRES 1.3's optional
+  fields (the correlation matrix through the BLAS seam with `matrix=true`), `pvar()` in the pivot and the MR cube, `drishti.py var
+  show|parts --matrix|playground --measure parametric`, and the playground's workbook gains its Parametric tab (recalculated by LibreOffice
+  equal to the engine to the cent; `NORM.S.INV` and `PI` join the common function set). Settings `drishti.var.parametric.*`.
 - Docs: [OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas) (server requirements, platforms,
   verification, the fallback and the warning), [HIGH_PERFORMANCE_NATIVE.md section 6](docs/architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)
   as built, TROUBLESHOOTING, CONFIGURATION.md regenerated, THIRD-PARTY-NOTICES.

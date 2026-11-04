@@ -35,7 +35,7 @@ router = APIRouter(include_in_schema=False)
 WORD = "MCUBE"
 KEYWORDS = ("BY", "MEASURE", "MEASURES", "DATE", "SORT")
 #: the measure words of the MR cube's grammar and the column headers they get (the VaR source's native measures)
-LABELS = {"var": "VaR", "es": "ES", "comp_var": "Comp VaR", "comp_es": "Comp ES", "incr_var": "Incr VaR", "pv": "PV", "trades": "Trades",
+LABELS = {"var": "VaR", "es": "ES", "pvar": "Parametric VaR", "comp_var": "Comp VaR", "comp_es": "Comp ES", "incr_var": "Incr VaR", "pv": "PV", "trades": "Trades",
           "limit": "Limit", "limit_use": "Limit use", "svar": "Stressed VaR", "dv01": "DV01", "cs01": "CS01", "sbm": "SBM capital"}
 
 

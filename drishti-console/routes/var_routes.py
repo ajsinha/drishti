@@ -190,13 +190,15 @@ def var_suggestions(q: str) -> list[dict]:
     (``VAR BANK 10D``, ``VAR BANK 10D SUM``, ``VAR BANK 10D SQRT``, ``VAR BANK 95``, ``VAR BANK ES 97.5``); nothing before a scope."""
     text = (q or "").replace("<GO>", "").strip()
     words = text.split()
-    if len(words) < 2 or words[0].upper() != "VAR":
+    if len(words) < 2 or words[0].upper() not in ("VAR", "PVAR"):
         return []
+    head = words[0].upper()                                       # PVAR: the same scope and lens words, in parametric mode
+    words = ["VAR"] + words[1:]
     base, lens = split_lens(words)
     kind = VAR_WORDS.get(base[1].upper(), "") if len(base) > 1 else ""
     if not kind or (kind != "BANK" and len(base) < 3) or kind == "CAPTURE":
         return []
-    stem = " ".join(base)
+    stem = " ".join([head] + base[1:])
     out = []
     picks = [("10D", "10-day VaR by the default method (a setting: √10 unless changed)"), ("10D SUM", "10-day VaR: the sum of 10 consecutive "
              "1-day scenario P&Ls (500 overlapping windows of 509)"), ("10D SQRT", "10-day VaR: the 1-day figures × √10"),
@@ -206,10 +208,10 @@ def var_suggestions(q: str) -> list[dict]:
              ("EXPLAIN", "why it moved: the change since the previous business date in causes that add up exactly")]
     typed_tail = " ".join(words[len(base):]).upper()
     for tail, what in picks:
-        if lens and not tail.upper().startswith(typed_tail):
+        if lens and not tail.upper().startswith(typed_tail) or head == "PVAR" and tail == "EXPLAIN":
             continue
         cmd = f"{stem} {tail}"
-        out.append({"mnemonic": "VAR", "title": cmd, "subtitle": what, "complete": cmd, "href": "/go?q=" + quote(cmd), "type": "var"})
+        out.append({"mnemonic": head, "title": cmd, "subtitle": what, "complete": cmd, "href": "/go?q=" + quote(cmd), "type": "var"})
     return out[:10]
 
 
@@ -301,7 +303,7 @@ def explain_view(request: Request, view: str) -> str:
 
 @router.get("/var")
 async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = "", h: str = "", m: str = "",
-               q: str = "", esq: str = "", set: str = "", tab: str = "", view: str = ""):  # noqa: A002 (the link's word)
+               q: str = "", esq: str = "", set: str = "", tab: str = "", view: str = "", pm: str = ""):  # noqa: A002 (the link's word)
     """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
     (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one); ``h``,
     ``m``, ``q``, ``esq``, ``set`` the lens (horizon, 10-day method, confidences, Normal or Stressed; none: the person's last choice, else
@@ -309,12 +311,13 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
     me = getattr(request.state, "identity", None)
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
                   user=(me.user if me else "") or "", admin=bool(me and me.is_admin), screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
-                  lens=lens_of(request, h, m, q, esq, set), tab=tab if tab in TABS else "path", explain_view=explain_view(request, view))
+                  lens=lens_of(request, h, m, q, esq, set), tab=tab if tab in TABS else "path", explain_view=explain_view(request, view),
+                  parametric_mode=pm == "1")
 
 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
-_GETS = {"scope": ("scope",), "hints": ("q", "limit"), "scope/path": ("scope", "page", "size"), "scope/history": ("scope",),
-         "scope/contributions": ("scope", "by", "scenario"), "tree": ("hierarchy",), "baskets": (), "captures": ("scope",),
+_GETS = {"scope": ("scope", "parametric"), "hints": ("q", "limit"), "scope/path": ("scope", "page", "size", "parametric"), "scope/history": ("scope",),
+         "scope/contributions": ("scope", "by", "scenario", "parametric", "matrix"), "tree": ("hierarchy", "parametric"), "baskets": (), "captures": ("scope",),
          "compare": ("a", "b"), "status": (), "official": (), "scope/currencies": ("scope",), "currencies": (),
          "intraday/streams": (), "basket/sheet": ("scope",),         # a scope laid into the basket sheet (a basket, a portfolio's copy)
          # the stress window selection (VAR_GUIDE.md section 18.9): the analysis of a node and the frozen proposals
@@ -423,9 +426,23 @@ async def api_delete_basket(request: Request, owner: str, name: str):
     return Response(status_code=204)
 
 
+def pvar_command(words: list[str], user: str) -> str | None:
+    """Where ``PVAR <scope> [lens]`` goes (docs/architecture/PARAMETRIC_VAR.md, VAR_GUIDE.md section 3.12): the VaR explorer in parametric
+    toggle on (``pm=1``: the parametric tiles, the tree's Parametric and Gap columns, the normal curve), the scope and the lens read as
+    ``VAR`` reads them; ``PVAR`` alone: the bank. An alias of ``VAR``: no screen of its own. None when the words are not a PVAR command."""
+    w = [x for x in words if x.upper() != "<GO>"]
+    if not w or w[0].upper() != "PVAR":
+        return None
+    where = var_command(["VAR"] + (w[1:] or ["BANK"]), user)
+    if not where:
+        return None
+    return where + ("&" if "?" in where else "?") + "pm=1"
+
+
 def redirect_for(typed: str, user: str) -> RedirectResponse | None:
-    """The terminal's ``/go`` asks here first: a VaR explorer command or a stress window command (``SWIN``), or None."""
-    where = swin_command(typed.split()) or var_command(typed.split(), user)
+    """The terminal's ``/go`` asks here first: a VaR explorer command, its parametric mode (``PVAR``) or a stress window command
+    (``SWIN``), or None."""
+    where = swin_command(typed.split()) or pvar_command(typed.split(), user) or var_command(typed.split(), user)
     return RedirectResponse(where, status_code=303) if where else None
 
 

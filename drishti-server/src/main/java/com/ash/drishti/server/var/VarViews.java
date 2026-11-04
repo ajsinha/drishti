@@ -59,6 +59,35 @@ final class VarViews {
         return svc;
     }
 
+    /** Parametric VaR beside historical (PARAMETRIC_VAR.md; null or off: no parametric block). */
+    private VarParametric parametric;
+
+    VarViews parametric(VarParametric p) {
+        this.parametric = p;
+        return this;
+    }
+
+    VarParametric parametric() {
+        return parametric;
+    }
+
+    /** The scope's parametric figures through its lens, or null when the measure is off or the scope has no scenario. */
+    com.ash.drishti.compute.var.ParametricVar.Figures pFigures(VarService.Scoped s) {
+        return parametric == null || !parametric.enabled() || s.vector().length == 0 ? null
+                : parametric.figures(s.vector(), s.oneDay(), lens(s));
+    }
+
+    /** The headline's parametric block (with the tooltip's lines), or null. */
+    Map<String, Object> pHeadline(VarService.Scoped s) {
+        var f = pFigures(s);
+        if (f == null) {
+            return null;
+        }
+        List<LocalDate> d = s.dates();
+        return parametric.headline(f, lens(s), s.label(), s.date().book().scenarioSet(), d.isEmpty() ? null : d.get(d.size() - 1).toString(),
+                s.measures().var(), s.measures().es(), s.measures().k());
+    }
+
     /** The basket tray's terms, parts, notices and hints. */
     VarSelection selection() {
         return selection;
@@ -228,6 +257,10 @@ final class VarViews {
         out.put("method", lens(s).methodName());
         out.put("set", lens(s).set());
         out.put("lens", lensNote(s));
+        Map<String, Object> pBlock = pHeadline(s);
+        if (pBlock != null) {
+            out.put("parametric", pBlock);                             // the cross-check beside historical (PARAMETRIC_VAR.md section 6)
+        }
         if (lens(s).stressed()) {                                      // the 12-week average over the node's official records
             out.put("stressAverage", stressAverage(s));
         }
@@ -831,6 +864,11 @@ final class VarViews {
     }
 
     Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy, VarLens lens) {
+        return contributions(p, scope, date, by, scenario, ccy, lens, false);
+    }
+
+    /** The same, {@code matrix}: with the parts' correlation and covariance matrix (parametric, PARAMETRIC_VAR.md section 3). */
+    Map<String, Object> contributions(Principal p, String scope, LocalDate date, String by, String scenario, String ccy, VarLens lens, boolean matrix) {
         VarService.Scoped s = svc.scoped(p, scope, date, ccy, lens);
         VarBook b = s.date().book();
         String column = VarAttributeGroups.column(by);
@@ -849,10 +887,19 @@ final class VarViews {
         List<Map<String, Object>> rows = new ArrayList<>();
         double standalone = 0;
         double comp = 0;
+        var pf = pFigures(s);
+        double pComp = 0;
+        double pAlone = 0;
         for (int i = 0; i < parts.size(); i++) {
             Part pt = parts.get(i);
             VarCalc.Contribution c = cs.get(i);
             Map<String, Object> r = new LinkedHashMap<>();
+            if (pf != null) {                                          // the parametric columns: Euler components that add up exactly
+                var pc = com.ash.drishti.compute.var.ParametricVar.component(pt.vector(), s.vector(), pf);
+                r.putAll(parametric.row(pc, pf, pt.size(), pt.label(), s.label(), !ps.truncated(), parts.size()));
+                pComp += pc.componentVar();
+                pAlone += pc.standaloneVar();
+            }
             r.put("key", pt.key());
             r.put("scope", pt.scope());
             r.put("label", pt.label());
@@ -908,6 +955,18 @@ final class VarViews {
             out.put("scenarioRank", rankOf(s.measures().order(), scen));
         }
         out.put("rows", rows);
+        if (pf != null) {
+            Map<String, Object> pt = parametric.totals(pf, pComp, pAlone, !ps.truncated());
+            if (matrix) {
+                if (parts.size() < 2) {
+                    throw new DrishtiException(ErrorCode.BAD_REQUEST, "matrix=true needs a scope with parts (" + s.label() + " has "
+                            + parts.size() + ")");
+                }
+                pt.put("matrix", parametric.matrix(parts.stream().map(Part::key).toList(), parts.stream().map(Part::label).toList(),
+                        parts.stream().map(Part::vector).toList(), pf.fit().sigma()));
+            }
+            out.put("parametric", pt);
+        }
         out.put("computeMs", s.computeMs());
         return out;
     }
@@ -1029,6 +1088,10 @@ final class VarViews {
         hist.put("edges", roundAll(h.edges()));
         hist.put("counts", h.counts());
         out.put("histogram", hist);
+        Map<String, Object> pBlock = pHeadline(s);
+        if (pBlock != null) {                                          // the normal curve over the histogram, every point from here
+            out.put("parametric", parametric.path(pBlock, pFigures(s), h.edges(), s.measures().var()));
+        }
         List<Map<String, Object>> worst = new ArrayList<>();
         for (int r = 0; r < Math.min(25, order.length); r++) {
             worst.add(scenarioRow(dates, all, windows, order[r], r + 1, v[order[r]]));
@@ -1328,6 +1391,10 @@ final class VarViews {
         m.put("trades", s.set().size());
         m.put("hidden", s.hidden());
         m.put("expandable", !n.children().isEmpty() || s.view().seesPositions(s.set()));
+        var pf = pFigures(s);
+        if (pf != null) {
+            m.put("parametric", parametric.treeCell(pf, lens(s), n.name(), s.measures().var(), s.measures().es()));
+        }
         rows.add(m);
         for (String c : n.children()) {
             VarBook.Node cn = b.node(c);

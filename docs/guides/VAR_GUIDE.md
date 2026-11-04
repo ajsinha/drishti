@@ -970,6 +970,33 @@ share of the state's tail), `cache-minutes` (10: answers are kept, never stored)
 child nodes). The API: `GET /api/v1/var/explain`, `/explain/matrix` and `/explain.xlsx` ([section 11.1](#111-the-endpoints)); the same
 entitlements as the scope's VaR (a scope is resolved as you on each date).
 
+### 3.12 Parametric VaR beside historical (PVAR)
+
+The explorer's **Parametric** toggle (beside the tiles) adds, beside historical VaR as always, **parametric VaR**: the normal
+distribution fitted to the scope's own scenario P&L vector (z·σ − μ; [section 18.15](#1815-parametric-var-and-es-a-cross-check)). It is a
+**cross-check, never the official VaR**: limits, limit use, backtesting, official records and regulatory reports stay historical, and
+every parametric figure says so. The toggle is kept in the link (`pm=1`); the command **PVAR `<scope>`** is an alias that opens the
+explorer with it on, reading the scope and lens words as VAR does: `PVAR DESK DESK-RATES 10D SUM 95`, `PVAR BANK IN EUR`. Off, the
+explorer is historical only.
+
+With the toggle on:
+
+| Where | What it shows |
+|---|---|
+| **Tiles** | parametric VaR, parametric ES and the **fat-tail gap** = historical − parametric, with skew and excess kurtosis |
+| **The tree** | the **Parametric** and **Gap** columns beside each node's VaR, ES and limit |
+| **The P&L path** | the **normal curve** over the histogram, the historical marker (solid) and the parametric one (dashed), both tails lightly shaded and the gap bracket between the markers |
+
+**The ? on every parametric figure** (a tile, a tree cell, the curve) opens the server's own lines: the method, the window, the
+weighting, the confidence and z, the horizon, n, μ and σ, the formula with the scope's numbers, ES, historical VaR beside it and the gap
+with its reading. Every number comes from the answer (the browser computes nothing); on a phone it is a bottom sheet.
+
+**The Normal curve toggle** (key **N**) hides the curve, the parametric marker, its tail and the gap bracket; the choice is remembered
+for you and in the link (`nc=0`). **Worked in the playground** (and the ? popovers' foot) opens the VaR Playground's **Parametric tab**
+on the scope ([section 3.10](#310-the-var-playground-play-var)): the figures, the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the
+Euler components that add up to the parametric VaR, and the workbook's Parametric tab. The MR cube and the pivot offer `pvar()` beside
+`var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
+
 ## 4. Positions: derived, never delivered
 
 Nobody sends positions: Drishti **derives** them each time it loads a date, from the date's trades and the market-risk pack's
@@ -3561,6 +3588,44 @@ with each cell's lineage, a maker-checker-approver sign-off (one person a step),
 approval (`VarReports`, `VarReportSignoff`; `VAR REPORT <report> <period>`, `drishti.py var report`). The pilot pack is
 `annual-report-var` and `var-backtesting-chart`. Definitions, checks, runs, sign-off, restatements, files and screens:
 [REGULATORY_VAR_REPORTING.md section 6](REGULATORY_VAR_REPORTING.md#6-controls-definitions-checks-frozen-runs-and-sign-off).
+
+### 18.15 Parametric VaR and ES (a cross-check)
+
+For any scope, the server fits a normal distribution to the scope's own summed scenario P&L vector, the very vector historical VaR ranks
+(the lens's: 1-day, 10-day √10, or the 10-day windows), and reads VaR and ES from it (`ParametricVar` in drishti-compute;
+[PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md) is the design with the worked example). **Not official**, never a limit's measure;
+no new input.
+
+| Figure | Formula |
+|---|---|
+| μ | `(1/N) Σ vⱼ` (equal weights), or `Σ wⱼ vⱼ` with EWMA weights `wⱼ = (1−λ)λ^(N−j)/(1−λ^N)` (the newest the largest; λ = 0.94) |
+| σ | `√(Σ (vⱼ − μ)² / (N − 1))` (equal: Excel's STDEV.S), or `√(Σ wⱼ (vⱼ − μ)²)` (EWMA) |
+| z | `Φ⁻¹(c)`: 2.3263 at 99%, 1.6449 at 95% (Acklam's approximation refined to the double's precision) |
+| **parametric VaR** | `z·σ − μ`, positive for a loss (a scope that made money on average has a lower one); never floored |
+| **parametric ES** | `σ·φ(z_ES)/(1 − c_ES) − μ` (at 97.5%: σ × 2.3378 − μ) |
+| **fat-tail gap** | `historical VaR − parametric VaR` (and the ES gap): positive when the scope's tail is heavier than a normal with the same σ |
+| shape | skewness and excess kurtosis (a normal: 0 and 0), shown to explain the gap |
+| component VaRᵢ | `z·cov(Pᵢ, P)/σ − μᵢ`: Σ cov = σ² and Σ μᵢ = μ, so the components of parts that partition the scope **add up to the parametric VaR exactly** (the −μᵢ term is what makes them); component ES the same with φ(z_ES)/(1 − c_ES) |
+| standalone, incremental | `z·σᵢ − μᵢ`; `VaR(P) − VaR(P − Pᵢ)` |
+| correlation matrix | the parts' covariance `XᵀX` (X the centred, weighted N × k matrix), one `dgemm` through the BLAS seam (OpenBLAS where loaded, Java otherwise; HIGH_PERFORMANCE_NATIVE.md); the components never come from it |
+
+**Horizon follows the lens** (`horizon-rule: lens`): under `sqrt10` μ and σ scale by √10 with the vector; under `sum` they are the 500
+overlapping windows' (about 50 independent periods, said in the notes). `square-root-of-time` (μ × 10, σ × √10 from the 1-day vector) is
+the setting's other value. The stressed set, the window and the reporting currency apply as for historical VaR.
+
+**Where it shows:** the explorer's Parametric toggle, which `PVAR` opens on ([section 3.12](#312-parametric-var-beside-historical-pvar)); the answers' `parametric` block
+([section 11](#11-the-api)): `/scope`, `/tree` (each node), `/scope/path` (the curve, the expected counts per bin, both markers),
+`/scope/contributions` (`pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pMarginalPer1m`, `pPct`, `rho`, `sigma`,
+`mu`, the totals; `matrix=true` adds the correlation matrix), `parametric=false` leaving it out; `/status`'s `parametric`; VRES 1.3's optional
+`PARAMETRIC_*` and `FAT_TAIL_GAP*` fields; `pvar()` in the pivot and the MR cube; `drishti.py var show` (`--no-parametric`),
+`var parts --matrix`, `var playground --measure parametric`; the VaR Playground's **Parametric tab** (its figures and the workbook's
+Parametric tab: named `PMu`, `PSigma`, `PZ` = `NORM.S.INV(PConfidence)`, `PEsFactor`, `PVaR`, `PES` beside the engine's with checks, a row
+a scenario, a row a position; recalculated by LibreOffice it equals the engine to the cent).
+
+**Settings** (`drishti.var.parametric.*` in `config/engines/var.yaml`; [CONFIGURATION.md](../admin/CONFIGURATION.md)): `enabled` (true; off:
+no block, the toggle shows a notice, the playground's Parametric tab and `parametric=true` are refused in words), `weighting` (`equal` or `ewma`), `lambda` (0.94),
+`horizon-rule` (`lens` or `square-root-of-time`), `curve-points` (121), `matrix-max-parts` (60), `show-curve` (true). Not in the official
+end-of-day records (a capture keeps it on demand).
 
 ## 19. Official end-of-day results
 

@@ -43,7 +43,7 @@ import org.springframework.context.event.EventListener;
  */
 @Configuration
 @EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class, StressWindowProperties.class,
-        VarExplainProperties.class})
+        VarExplainProperties.class, VarParametricProperties.class})
 public class VarConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -135,8 +135,8 @@ public class VarConfiguration {
     }
 
     @Bean
-    VarViews varViews(VarService svc) {
-        VarViews v = new VarViews(svc);
+    VarViews varViews(VarService svc, VarParametricProperties parametric) {
+        VarViews v = new VarViews(svc).parametric(new VarParametric(parametric));
         VarResultEngine.install(v);                                    // the computed kind var-result (the reactive connector var-engine)
         return v;
     }
