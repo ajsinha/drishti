@@ -100,6 +100,10 @@ def with_inbox(backend, monkeypatch, calls, status=None, run_answer=None):
                 raise BackendError(404, "DRS-5011", "no failed file is named nope.jsonl")
             return {"file": body["file"], "from": "failed/2026-11-03/r/" + body["file"], "to": "inbox/" + body["file"],
                     "next": "the next cycle loads it (or Load now)"}
+        if path == "/dataload/undo":
+            line = {"table": "risk/scenario-pv", "date": "2026-11-03", "removed": 2, "restored": 0, "replaced": False, "format": "delta"}
+            done = body.get("confirm") == body["loadId"]
+            return {"loadId": body["loadId"], "undone": done, "lines": [line], "text": ("undone: " if done else "would undo: ") + "1 table date"}
         if path.startswith("/dataload/report?path="):
             return {"file": "x", "reason": "rejected", "path": unquote(path.split("=", 1)[1])}
         if path == "/packs":
@@ -154,6 +158,20 @@ def test_load_now_and_retry_pass_the_servers_answers(client, backend, monkeypatc
     assert r.status_code == 404 and "no failed file is named nope.jsonl" in r.json()["detail"]
     r = client.post("/admin/api/dataload/retry", json={})
     assert r.status_code == 400
+
+
+def test_undo_checks_first_and_undoes_only_when_confirmed_with_the_load_id(client, backend, monkeypatch):
+    calls = []
+    with_inbox(backend, monkeypatch, calls, QUIET)
+    page = client.get("/admin/loads/inbox").text
+    for text in ("Undo a load", "data-undo-id", "data-undo-check", "data-undo-go", "nothing changes until you confirm with the load id"):
+        assert text in page, text
+    r = client.post("/admin/api/dataload/undo", json={"loadId": "R.1"})
+    assert r.status_code == 200 and r.json()["undone"] is False and r.json()["lines"][0]["removed"] == 2
+    assert ("POST", "/dataload/undo", {"loadId": "R.1"}, {}) in calls
+    r = client.post("/admin/api/dataload/undo", json={"loadId": "R.1", "confirm": "R.1"})
+    assert r.json()["undone"] is True and r.json()["text"].startswith("undone")
+    assert client.post("/admin/api/dataload/undo", json={}).status_code == 400
 
 
 def test_the_report_link_is_passed_to_the_server(client, backend, monkeypatch):

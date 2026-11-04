@@ -23,7 +23,9 @@ import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -114,6 +116,54 @@ public class DataLoadController {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, e.getMessage());
         } catch (IOException e) {
             throw new DrishtiException(ErrorCode.BAD_REQUEST, "the file could not be moved back: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Undo a load by its id (docs/architecture/DATA_LOAD_RULES.md section 6.3): {@code {"loadId": "<id>"}} says what would be undone (a
+     * dry run, nothing changed); {@code {"loadId": "<id>", "confirm": "<the same id>"}} undoes it: its rows removed from every Delta and
+     * Iceberg table of the inbox's lake, one commit per table and date, a replace restored. The answer lists each table and date.
+     */
+    @PostMapping("/api/v1/admin/dataload/undo")
+    public Map<String, Object> undo(@RequestBody Map<String, Object> body, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        entitlements.requireAdmin(p);
+        String id = body == null || body.get("loadId") == null ? "" : String.valueOf(body.get("loadId")).trim();
+        if (id.isEmpty() || !id.matches("[0-9A-Za-z._:-]{3,120}")) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "give the load's id: {\"loadId\": \"20261104T093000.123-4242.1\"} (a load report's loads)");
+        }
+        boolean confirmed = id.equals(body.get("confirm") == null ? null : String.valueOf(body.get("confirm")).trim());
+        String lake = inbox.settings().lake();
+        try {
+            List<Map<String, Object>> lines = new ArrayList<>();
+            for (com.ash.drishti.lakeload.LakeUndo.Done d : com.ash.drishti.lakeload.LakeUndo.undo(lake, id, List.of(), !confirmed)) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("table", d.table());
+                m.put("format", "delta");
+                m.put("date", d.date());
+                m.put("removed", d.removed());
+                m.put("restored", d.restored());
+                m.put("replaced", d.replaced());
+                lines.add(m);
+            }
+            for (Map<String, Object> u : com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake, id, !confirmed,
+                    java.nio.file.Path.of(System.getProperty("java.io.tmpdir")))) {
+                Map<String, Object> m = new LinkedHashMap<>(u);
+                m.put("format", "iceberg");
+                lines.add(m);
+            }
+            if (confirmed) {
+                record(p, "dataload.undo", "load/" + id, lines.size() + " table dates undone");
+            }
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("loadId", id);
+            out.put("undone", confirmed);
+            out.put("lines", lines);
+            out.put("text", lines.isEmpty() ? "no row of load " + id + " in " + lake
+                    : (confirmed ? "undone: " : "would undo: ") + lines.size() + " table date" + (lines.size() == 1 ? "" : "s")
+                            + (confirmed ? "" : "; confirm with the load id to undo"));
+            return out;
+        } catch (Exception e) {
+            throw new DrishtiException(ErrorCode.BAD_REQUEST, "the undo failed: " + e.getMessage());
         }
     }
 
