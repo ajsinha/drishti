@@ -2839,7 +2839,7 @@ sign.
 ## Rachana-EL expressions
 
 Bindings, conditions and templates are written in **Rachana-EL**, a small expression language. It is closed (no loops, no assignment
-outside `let(...)`, no list literals, no access to anything but the document and the controls) and side-effect free. The operators and
+outside `let(...)`, no access to anything but the document and the controls) and side-effect free. The operators and
 paths are **total**: a missing field or a division by zero gives an empty value, never an error page. The functions of the
 [function catalogue](../architecture/FUNCTION_CATALOGUE.md) (`round_up`, `left`, `yearfrac` …) say plainly when they are given a value of
 the wrong type (`DRS-2102 round_up: 'abc' is not a number`); `iferror(x, fallback)` turns that into a value. Expressions are bounded in
@@ -2866,6 +2866,7 @@ shows the problem and the rest of the view renders.
 |---|---|---|
 | Document | `$` | the whole document (inside a panel with `source`, the source's document) |
 | Current row | `@` | the element of `rows`/`each`/a filter being evaluated; outside a row it is empty |
+| Parent | `^`, `^^` | the element the current one is in (`^^` its parent): inside `$.LEGS[*].CASH_FLOWS[?...]`, `^` is the leg; for a row of a table, the document; empty where there is none |
 | Row position | `#index` | 0-based position of the row in its list; `-1` outside a row |
 | Field | `.name` | letters, digits and `_`, exactly as the document writes it (`.TRADE_ID`, not `.trade_id`); a name with other characters needs brackets: `$['day-count']` |
 | Element or key | `[expr]` | a number indexes a list (`[0]` first, `[-1]` last); text looks up a field (`$['TRADE_ID']`) |
@@ -2874,14 +2875,17 @@ shows the problem and the rest of the view renders.
 | Bare name | `AMOUNT` | a field of the current row inside a row, otherwise of the document |
 | Control | `ctl.<id>` | the value of a control ([Controls](#controls)); `ctl` is reserved and is never a field of the data |
 | Running value | `@acc` | inside `reduce(list, init, expr)`'s `expr` only: the value so far (elsewhere `@acc` is a panel's events) |
-| Named value | `name = expr` | inside `let(...)` only: binds `name`, read afterwards as a bare word (it hides a field of that name) |
+| Named value | `name = expr` | inside `let(...)`: binds `name`, read afterwards as a bare word (it hides a field of that name) |
+| Named argument | `f(x, name = expr)` | an argument given by its name: `round(x, n = 2)`, `sum(trades.MTM, where = trades.DESK == 'DESK-FX')` ([Named arguments](#named-arguments)) |
+| List | `[a, b, c]`, `[]` | a list written in the expression, a trailing comma allowed; at most 1,000 values |
+| Membership | `x in list`, `x not in list` | strict: an empty list holds nothing ([Lists, membership and the parent](#lists-membership-and-the-parent)) |
 | Text | `'single'` or `"double"` quotes | `\` makes the next character literal (`'it\'s'`; so `'\d'` is the letter `d`); there are no `\n` escapes |
 | Number | `42`, `0.5`, `.5`, `1e6`, `2.5E-3` | a whole number is an integer (`1 + 1` prints `2`) |
-| Literals | `true`, `false`, `null` | there are no list or object literals |
+| Literals | `true`, `false`, `null` | there are no object literals |
 | Grouping | `( … )` | |
 
-Anything else (`&`, `|` alone, `;`, `^`, a lone `#`, `[` starting a value) is a compile error: `unexpected character '&'`,
-`unexpected '['`.
+Anything else (`&`, `|` alone, `;`, a lone `#`) is a compile error: `unexpected character '&'`. DEL's `**` and `//` are refused with
+their Rachana form: `'**' is not Rachana: write power(x, y)`, `'//' is not Rachana: write floor(x / y)`.
 
 A field name with a hyphen is the classic trap: `$.day-count` **compiles**, as `$.day` minus a field `count`, and shows `NaN`. Write
 `$['day-count']`.
@@ -2897,7 +2901,7 @@ left (`a ? b : c ? d : e` is `a ? b : (c ? d : e)`).
 | 2 | `\|\|` | `true`/`false` (not one of the operands) |
 | 3 | `&&` | `true`/`false` |
 | 4 | `==`, `!=` | equality (below) |
-| 5 | `<`, `<=`, `>`, `>=` | ordering (below) |
+| 5 | `<`, `<=`, `>`, `>=`, `in`, `not in` | ordering (below), membership |
 | 6 | `+`, `-` | addition, or text joining for `+` |
 | 7 | `*`, `/`, `%` | arithmetic |
 | 8 | `!x`, `-x` | not, negation |
@@ -2924,8 +2928,12 @@ A value is one of: empty (missing or `null`; the two behave the same), a boolean
 - **Missing never throws.** `$.NOTHING.DEEPER[3].X` is empty. A path through a value that is not an object or list is empty too.
 - **`+`** adds when **both** sides are numbers; otherwise it joins their text: `'Leg ' + 1` → `Leg 1`, `$.MISSING + 'x'` → `x`. A number
   inside quotes is text: `'1' + 1` → `11`.
-- **`-`, `*`, `/`, `%`, unary `-`** convert both sides to numbers (text that is a number counts; `true` is 1). Anything that is not a number
-  makes the result NaN, which shows as `NaN` (`$.QUANTTY * 2`): wrap possibly missing values, `nonblank($.QUANTTY, 0) * 2` → `0`.
+- **Null in, null out.** Arithmetic on an empty value is empty: `$.MISSING * 2`, `1 - $.MISSING`, `-$.MISSING` and `$.MISSING + 1`
+  are empty (since 2.9.11.e, as SQL computes it; they showed `NaN`); `+` still joins a text with an empty value (`'x' + $.MISSING` →
+  `x`). So are the text and date functions given an empty value: `upper($.MISSING)`, `len($.MISSING)`, `year($.MISSING)`.
+- **`-`, `*`, `/`, `%`, unary `-`** convert both sides to numbers (text that is a number counts; `true` is 1). A text that is not a
+  number makes the result NaN, which shows as `NaN`. Two dates (ISO text) subtract to the days between them:
+  `$.MATURITY_DATE - $.TRADE_DATE` → `2408`.
 - **Division and remainder by zero** give empty (`1 / 0`).
 - **Comparisons** `<` `<=` `>` `>=` compare numbers numerically (text that reads as a number counts as one). Two texts that are not numbers
   compare as text, character by character, so ISO dates order correctly: `'2026-01-31' < '2026-02-01'` is true, `$.MATURITY_DATE <
@@ -2933,7 +2941,8 @@ A value is one of: empty (missing or `null`; the two behave the same), a boolean
   against text that is not a number, or anything against empty, is `false`.
 - **Equality** `==` compares numerically when either side is a number (`1 == '1.0'` is true, so `@.LEG_ID == 1` holds for a leg id
   written `1` or `"1"`), otherwise as text (`$.TRADE_STATUS == 'amended'` is false for `AMENDED`: use `lower(...)` or `contains(...)` to
-  ignore case). Empty equals only empty: `$.MISSING == null` is true; an extract's `""` is not `null`.
+  ignore case). **The null rule:** empty equals only empty, so `$.MISSING == null` is true, `$.MISSING == 'X'` is false and
+  `$.MISSING != 'X'` is **true** (BI_FOUNDATION_2911E.md Q1: one rule everywhere, BI's SQL included); an extract's `""` is not `null`.
 - **`&&` and `||`** short-circuit and give `true` or `false` (or `•••` when a masked value decides). For a default value use `nonblank` or
   `coalesce`, not `||`: `$.STRATEGY || 'n/a'` gives `true`, `nonblank($.STRATEGY, 'n/a')` gives the strategy or `n/a`.
 - **Masked values.** A field the viewer's role sees masked (`drishti.security.redact`, roles without `raw`) is the value `•••`, and it
@@ -2951,6 +2960,87 @@ A value is one of: empty (missing or `null`; the two behave the same), a boolean
 - **Bounded.** An expression may nest at most 200 levels and be at most 10,000 characters long; see [Size limits](#size-limits).
 - **Dependency paths.** Each compiled expression reports the document paths it reads (`$.LEGS[0].CASH_FLOWS[0].RATE`). Cells carry that
   path so live updates can flash exactly what changed.
+
+### Lists, membership and the parent
+
+A list is written in brackets, `['DESK-COMM', 'DESK-RATES']`; a masked item stays masked in its place. `x in list` is true when the
+list holds a value equal to `x` (the null rule: `null` equals only `null`); `x not in list` is its opposite. **Membership is strict: an
+empty list, an empty value or nothing at all holds nothing**, so `$.DESK in []` is false and a row rule `$.DESK in user.desks` lets a
+desk-head with no desks see no rows. A value that is not a list is a list of one (`$.DESK in 'DESK-COMM'`). A masked value or list gives
+`•••`. `one_of(x, choices)` stays for controls, where an empty choice means *everything* (nothing chosen yet): the two are not the same
+function on purpose.
+
+| Expression | Result for `MX-20000001` |
+|---|---|
+| `$.DESK in ['DESK-COMM', 'DESK-RATES']` | `true` |
+| `$.DESK not in []` | `true` |
+| `$.STRATEGY in [null, 'CARRY']` | `true` (the strategy is empty) |
+| `one_of($.DESK, [])` | `true` (a control's empty choice) |
+| `$.LEGS[?^.DESK == 'DESK-COMM'][*].LEG_ID` | `[1, 2]`: `^` inside the filter is the trade |
+| `map($.LEGS, ^.TRADE_ID)` | `['MX-20000001', 'MX-20000001']` |
+
+### Named arguments
+
+An argument may be given by its name, `name = value`, after the positional ones: `round($.PRICE, n = 2)`, `shift_date(asof(), -1,
+unit = 'week')`, `business_days_between($.TRADE_DATE, asof(), calendar = 'GBLO')`. The names are the function's signature's (Help →
+Functions); a name it does not have, a name given twice, or a value by place after a named one is a compile error
+(`round has no argument named digits; its arguments: [x, n]`). The engine's functions keep their named arguments for the engine:
+`sum(trades.MTM, where = trades.STATUS == 'LIVE')`, `calc(measure('MTM'), ignore = [desks.NAME])`, `rank(sum(trades.PNL), desc =
+false, by = [trades.DESK])`; over a list they are refused in words (`sum: where = belongs to a measure of a model or a column of a
+table`).
+
+### Checked mode: tables, models and typed pivots
+
+Where the types are known (a table's columns, a model's tables, a pivot over a typed source) an expression is **checked** before it
+runs: the same language, read by the same parser, with DEL's discipline. Checked mode only refuses more; it never makes the same text
+mean something else. It refuses with DEL's codes, at the place written:
+
+| Code | Refuses | Example |
+|---|---|---|
+| `DRS-9127` | a type or a scope the expression may not have: booleans only for conditions (`&&`, `\|\|`, `!`, `?:`), no implicit casts (a text with `+`, a date compared with `'9 Oct'`), a chained comparison (`0 < x <= 10`: write `0 < x && x <= 10`), an aggregate in a row, a bare column in a measure ("wrap it: sum(trades.MTM)"), a path of the source in a measure, `ctl.x`, `@panel`, `$src`, `#index` (a screen's, not data), an old spelling (`startsWith`), nesting of `calc`, `share_of`, `parent_of`, `as_of` deeper than three | `trades.STATUS + 1` |
+| `DRS-9129` | what is not yet in a table or a model: the rest of tier 1 (`concat`, `let`, `median` …) comes in the next release | `concat(trades.DESK, 'x')` |
+| `DRS-9152` | a name the table or model does not have, with "did you mean" | `sum(trades.MTX)` |
+| `DRS-9161` | a filter, `in`, sort or grouping on a field masked for the reader: a hidden value must not be inferred from what a filter keeps | `trades.DESK == 'DESK-FX'` when DESK is masked |
+
+The types are DEL's: integer, decimal, number (a measure), text, boolean, date, timestamp; `date - date` is whole days; a text in ISO
+form compared with a date is that date. The signatures checked mode knows are the 53 functions DEL had, under their Rachana names, and
+`power`, `floor`, `if`, `switch`, `least`, `greatest` (`rachana/el/signatures.yaml`; FUNCTION_CATALOGUE.md says where each runs).
+
+**Scopes.** Where an expression is written decides what it may name:
+
+| Scope | Written in | Names | Aggregates |
+|---|---|---|---|
+| row | a table's column `expr`, its `filter`, `keep:` | the source (`$`, `@`, `^`), a table's columns, `param.x` | refused: "an aggregate belongs in a measure" |
+| rule | a table's `rules[].where`, a model's `security.rows` | the columns and `user.x` | refused; a rule is a condition, never removable by any function |
+| aggregate | a model's measures, MQ `define` and `having`, a report's local measures | `alias.COLUMN` inside an aggregate, `measure('name')`, `param.x` | yes; a bare column is refused ("wrap it: sum(trades.MTM)") |
+| context | the first argument of `calc`, `share_of`, `parent_of`, `as_of` | as aggregate | yes, in an edited filter context |
+
+**The filter-context functions** (computed by the pivot engine, `drishti-bicompute` `context.FilterContext`). A measure is evaluated per
+group of the answer in four layers: (1) security, the reader's row rules and masks, which no function can touch; (2) the query's filters,
+slicers and drill; (3) the group's values; (4) the measure's own `where =` and `calc` edits.
+
+| Function | Means |
+|---|---|
+| `calc(agg, where = c)` | adds the condition to layer 4 |
+| `calc(agg, ignore = [fields])`, `calc(agg, ignore = ALL)` | drops the layer 2 and 3 filters on those fields (or on all): `ALL` is everything **you** may see |
+| `calc(agg, keep = [fields])` | drops every layer 2 and 3 filter except those on the fields |
+| `calc(agg, via = 'r_5')` | follows an inactive relationship (the active one for the same pair off) |
+| `share_of(agg, over = [fields] \| ALL)` | `agg / calc(agg, ignore = over)`; null on 0. Not the pivot's `pct_of_total`, which is of the visible totals |
+| `parent_of(agg, hierarchy = 'name')` | `agg` over the same with the deepest level of the hierarchy in the answer ignored; null at the top |
+| `avg_by(agg, by = [fields])`, `avg_over(agg, date)` | the aggregate per value of the fields, then their mean: iteration written out, never implied |
+| `as_of(agg, date)` | the aggregate at another business date, worked out before the query runs (`shift_date(asof(), -1)`; a date from a row is refused, `DRS-9166`; a live table has no other dates, `DRS-9157`) |
+
+They nest at most three deep (through the measures they name too); every sub-plan is planned for the same reader, so it never sees more;
+a masked field is never a group, in the answer or in a context. `latest(agg, date)` and `earliest(agg, date)` (DEL's `last` and `first`;
+`first(list)` and `last(list)` stay the ends of a list), `opening` and `closing` (with `period = 'month'`), the time functions (`ytd`,
+`mtd`, `qtd`, `fiscal_ytd`, `prior_period`, `same_period_last_year`, `running`) and the windows (`lag`, `lead`, `rank`, `dense_rank`,
+`percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`) are computed over the answer too.
+
+**One compiler.** A checked expression is lowered by the engine's one compiler (`lang.Compiler`): a row expression runs as Rachana
+evaluates it over rows in memory and as SQL over a scan, and the two agree value for value (the differential test, run on every build);
+an aggregate is the engine's own function, the same a pivot cell runs. A function with no SQL form is refused, never computed a second
+way: `shift_date` of a column by business days (the calendar is Java's: shift a fixed date, or by days, weeks, months), and `fx` until
+the table layer brings the FX source.
 
 ### Paths and filters, by example
 
@@ -3081,8 +3171,12 @@ Business days come from the platform's own calendars, the ones the business date
 
 | Function | Arguments | Returns |
 |---|---|---|
-| `today()` | 0 | the business date the view is built for (the document's, else the picked or current date), as ISO text; empty outside a view. `$.EVENTS[?days_between(today(), @.EVENT_DATE) >= 0 && days_between(today(), @.EVENT_DATE) <= 30]` are the events of the next 30 days |
+| `asof()` | 0 | the as-of date of the view or the query: for a Sutra, the business date the view is built for (the document's, else the picked or current date), as ISO text; empty outside a view. `$.EVENTS[?days_between(asof(), @.EVENT_DATE) >= 0 && days_between(asof(), @.EVENT_DATE) <= 30]` are the events of the next 30 days. `today()` is read as `asof()` (an old spelling, BI_FOUNDATION_2911E.md Q7) |
 | `days_between(from, to)` | 2 | whole calendar days from one date to another, negative when `to` is earlier. Old spelling `days`, which gives empty (not a problem) when either is not a date |
+| `date(text)`, `timestamp(text)` | 1 | the date (ISO text, a timestamp's date) or the timestamp (`2026-10-09T09:30`); a text that is not one is a problem |
+| `year(d)`, `quarter(d)`, `month(d)`, `week(d)`, `day(d)` | 1 | the part as a whole number; `week` is the ISO week (`week('2027-01-01')` is `53`) |
+| `business_days_between(a, b, calendar?)` | 2–3 | the business days after `a` up to and including `b` on the calendar (`USNY` by default), negative when `b` is earlier |
+| `shift_date(d, n, unit?, calendar?)` | 2–4 | `d` moved by `n` units: `business-day` (the default, on the calendar), `day`, `week`, `month`, `quarter`, `year`; `shift_date(asof(), -1)` is the business day before the view's |
 | `eomonth(d, n?)` | 1–2 | the last day of the month `n` months after `d`'s (0 by default) |
 | `edate(d, n)` | 2 | the same day `n` months later (earlier for negative `n`); a day the month lacks becomes its last day (`edate('2024-01-31', 1)` is `2024-02-29`) |
 | `yearfrac(a, b, basis)` | 3 | the fraction of a year between two dates (either order, never negative), a decimal of 16 significant digits, on a day-count basis: `'ACT/360'` and `'ACT/365F'` (actual days over 360 or 365), `'30/360'` (US, as Excel's `YEARFRAC` basis 0, February's last day counting as the 30th), `'30E/360'` (European, basis 4), `'ACT/ACT'` (ISDA: each calendar year's days over that year's length). Excel's basis 1 is an average-year rule that differs from ISDA's across a year end; inside one year they agree |

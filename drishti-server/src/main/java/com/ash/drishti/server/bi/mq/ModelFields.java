@@ -15,11 +15,11 @@
  */
 package com.ash.drishti.server.bi.mq;
 
+import com.ash.drishti.rachana.el.check.ElType;
+import com.ash.drishti.rachana.el.check.Fields;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Resolver;
 import com.ash.drishti.server.bi.engine.SqlCompiler;
-import com.ash.drishti.server.bi.expr.DelType;
-import com.ash.drishti.server.bi.expr.Fields;
 import com.ash.drishti.server.bi.layer.Flattener;
 import com.ash.drishti.server.bi.layer.ResolvedDataset;
 import java.util.ArrayList;
@@ -43,13 +43,13 @@ public final class ModelFields implements Fields {
     private final SqlCompiler.Masks masks;
     private final Set<String> hidden;
     private final Map<String, String> ids;
-    private final Map<String, DelType> params;
+    private final Map<String, ElType> params;
 
     ModelFields(Dataset flat, String current, SqlCompiler.Masks masks, Set<String> hidden, Map<String, String> ids) {
         this(flat, current, masks, hidden, ids, Map.of());
     }
 
-    ModelFields(Dataset flat, String current, SqlCompiler.Masks masks, Set<String> hidden, Map<String, String> ids, Map<String, DelType> params) {
+    ModelFields(Dataset flat, String current, SqlCompiler.Masks masks, Set<String> hidden, Map<String, String> ids, Map<String, ElType> params) {
         this.flat = flat;
         this.resolver = new Resolver(flat);
         this.current = current;
@@ -60,15 +60,15 @@ public final class ModelFields implements Fields {
     }
 
     /** The DEL types of a model's parameters ({@code param.name}): a what-if number, text, date or boolean; a field parameter is not a value. */
-    static Map<String, DelType> paramTypes(com.ash.drishti.server.bi.layer.ModelDef def) {
-        Map<String, DelType> out = new java.util.LinkedHashMap<>();
+    static Map<String, ElType> paramTypes(com.ash.drishti.server.bi.layer.ModelDef def) {
+        Map<String, ElType> out = new java.util.LinkedHashMap<>();
         def.calculation().parameters().forEach((name, p) -> {
-            DelType t = switch (p.kind()) {
-                case "number" -> DelType.DECIMAL;
-                case "integer" -> DelType.INTEGER;
-                case "text" -> DelType.STRING;
-                case "date" -> DelType.DATE;
-                case "boolean" -> DelType.BOOLEAN;
+            ElType t = switch (p.kind()) {
+                case "number" -> ElType.DECIMAL;
+                case "integer" -> ElType.INTEGER;
+                case "text" -> ElType.STRING;
+                case "date" -> ElType.DATE;
+                case "boolean" -> ElType.BOOLEAN;
                 default -> null;
             };
             if (t != null) {
@@ -79,7 +79,7 @@ public final class ModelFields implements Fields {
     }
 
     @Override
-    public Optional<DelType> param(String name) {
+    public Optional<ElType> param(String name) {
         return Optional.ofNullable(params.get(name));
     }
 
@@ -122,7 +122,7 @@ public final class ModelFields implements Fields {
             return Optional.empty();
         }
         Dataset.Column c = resolver.column(ref.table(), ref.column());
-        DelType t = ref.part() != null ? (Resolver.isBucket(ref.part()) ? DelType.DATE : DelType.INTEGER) : DelType.ofColumn(c == null ? null : c.type());
+        ElType t = ref.part() != null ? (Resolver.isBucket(ref.part()) ? ElType.DATE : ElType.INTEGER) : ElType.ofColumn(c == null ? null : c.type());
         return Optional.of(new Field(ref.text(), t, masks != null && masks.masked(ref.table(), ref.column())));
     }
 

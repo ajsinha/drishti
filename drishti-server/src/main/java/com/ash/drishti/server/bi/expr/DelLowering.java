@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.server.bi.expr;
 
+import com.ash.drishti.rachana.el.check.Signatures;
 import com.ash.drishti.server.bi.dataset.Node;
 import java.util.ArrayList;
 import java.util.List;
@@ -96,7 +97,7 @@ public final class DelLowering {
         if ("measure".equals(name)) {
             return new Node.MeasureRef(((DelAst.Str) c.args().get(0)).value());
         }
-        FunctionCatalog.Fn f = catalog.function(name).orElseThrow(() -> new DelException(DelParser.CODE, "unknown function '" + name + "'", null, c.start(), c.end()));
+        Signatures.Signature f = catalog.function(name).orElseThrow(() -> new DelException(DelParser.CODE, "unknown function '" + name + "'", null, c.start(), c.end()));
         List<DelAst> positional = new ArrayList<>(c.args());
         String compiled = catalog.toLegacy(name);
         if (Node.CONTEXT.contains(name) || Node.SCALARS_B.contains(name)) {
@@ -127,7 +128,7 @@ public final class DelLowering {
             }
             default -> {
                 for (int i = 0; i < f.params().size(); i++) {                  // positional and keyword arguments in parameter order
-                    FunctionCatalog.Param p = f.params().get(i);
+                    Signatures.Param p = f.params().get(i);
                     if (p.variadic()) {
                         positional.subList(Math.min(i, positional.size()), positional.size()).forEach(a -> args.add(node(a)));
                         break;
@@ -150,10 +151,10 @@ public final class DelLowering {
      * A wave B function keeps its keyword arguments in the tree (docs/architecture/BI_DESIGN.md section 3.3.5): positional arguments in order, then one
      * pseudo-call {@code =name} per keyword, whose arguments are the value (a list's items; {@code ALL} as the reference {@code ALL}).
      */
-    private Node keywords(DelAst.Call c, FunctionCatalog.Fn f) {
+    private Node keywords(DelAst.Call c, Signatures.Signature f) {
         List<Node> args = new ArrayList<>();
         c.args().forEach(a -> args.add(node(a)));
-        for (FunctionCatalog.Param p : f.params()) {
+        for (Signatures.Param p : f.params()) {
             DelAst value = c.keyword(p.name());
             if (value == null) {
                 continue;

@@ -352,6 +352,9 @@ public final class PivotCore {
 
         /** What a measure's figures are in: the report currency, a unit, or blank. */
         String unit(FunctionCall f) {
+            if (f.fn().resultUnit() != null) {
+                return f.fn().resultUnit();
+            }
             if (money.money(f)) {
                 return money.conversion() != null ? money.conversion().report() : "money";
             }

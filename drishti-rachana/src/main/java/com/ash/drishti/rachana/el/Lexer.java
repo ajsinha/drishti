@@ -65,6 +65,8 @@ final class Lexer {
             } else {
                 String two = i + 1 < n ? src.substring(i, i + 2) : "";
                 switch (two) {
+                    case "**" -> throw new ElException("'**' is not Rachana: write power(x, y)", i);
+                    case "//" -> throw new ElException("'//' is not Rachana: write floor(x / y)", i);
                     case "&&", "||", "==", "!=", "<=", ">=" -> {
                         out.add(new Token(Type.OP, two, i));
                         i += 2;
@@ -100,6 +102,7 @@ final class Lexer {
                 Type t = switch (c) {
                     case '$' -> Type.DOLLAR;
                     case '@' -> Type.AT;
+                    case '^' -> Type.CARET;                          // ^: the element's parent (^^ its parent), BI_FOUNDATION_2911E.md Q8
                     case '(' -> Type.LPAREN;
                     case ')' -> Type.RPAREN;
                     case '[' -> Type.LBRACKET;

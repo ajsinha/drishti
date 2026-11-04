@@ -48,7 +48,12 @@ final class ListAggregates {
             Map.entry("percentile", "percentile"), Map.entry("distinct", "count_distinct"), Map.entry("wavg", "wavg"),
             Map.entry("variance", "var_samp"), Map.entry("stddev", "stddev_samp"), Map.entry("variance_pop", "var_pop"),
             Map.entry("stddev_pop", "stddev_pop"), Map.entry("sum_once", "sum_once"), Map.entry("count_once", "count_once"),
-            Map.entry("avg_once", "avg_once"));
+            Map.entry("avg_once", "avg_once"), Map.entry("nmiss", "nmiss"), Map.entry("range", "range"), Map.entry("mode", "mode"),
+            Map.entry("iqr", "iqr"), Map.entry("stderr", "stderr"), Map.entry("cv", "cv"), Map.entry("skewness", "skewness"),
+            Map.entry("kurtosis", "kurtosis"), Map.entry("geomean", "geomean"), Map.entry("harmean", "harmean"),
+            Map.entry("trimmean", "trimmean"), Map.entry("corr", "corr"), Map.entry("covar", "covar"), Map.entry("slope", "slope"),
+            Map.entry("intercept", "intercept"), Map.entry("rsq", "rsq"), Map.entry("kth_largest", "kth_largest"),
+            Map.entry("kth_smallest", "kth_smallest"), Map.entry("string_agg", "string_agg"));
 
     /** {@code name} over the evaluated arguments of a call. */
     static Object apply(String name, List<Object> args) {
@@ -58,9 +63,15 @@ final class ListAggregates {
         List<String> fields = new ArrayList<>();
         List<DataNode.Arr> parallels = new ArrayList<>();
         List<Double> numbers = new ArrayList<>();
+        List<String> texts = new ArrayList<>();
+        int sep = "string_agg".equals(name) ? separator(args) : -1;
         for (int i = 1; i < args.size(); i++) {
             Object a = Values.simplify(args.get(i));
-            if (a instanceof DataNode.Arr arr) {
+            if (i == sep) {
+                texts.add(Values.text(a));
+            } else if (a instanceof Boolean b && "string_agg".equals(name)) {
+                numbers.add(b ? 1.0 : 0.0);
+            } else if (a instanceof DataNode.Arr arr) {
                 parallels.add(arr);
             } else if (a instanceof Number n) {
                 numbers.add(n.doubleValue());
@@ -73,7 +84,7 @@ final class ListAggregates {
                 throw error(name, "argument " + (i + 1) + " is neither a field, a list nor a number");
             }
         }
-        AggFunction<Object> f = function(name, numbers);
+        AggFunction<Object> f = function(name, numbers, texts);
         int inputs = "count".equals(name) ? 1 : f.inputs();
         List<List<DataNode>> columns = columns(name, list, fields, parallels, inputs);
         Object[] batch = new Object[inputs];
@@ -102,17 +113,30 @@ final class ListAggregates {
             }
         }
         Object state = f.add(f.start(), new Batch(list.size(), batch));
-        Double v = f.finish(state);
-        return v == null ? empty(name) : Values.normalise(v);
+        Object v = f.result(state);
+        if (v instanceof Double d && (d.isNaN() || d.isInfinite())) {
+            v = null;
+        }
+        return v == null ? empty(name) : v instanceof Double d ? Values.normalise(d) : v;
+    }
+
+    /** {@code string_agg}'s separator: its last text argument after the list ({@code string_agg($.LEGS, 'CURRENCY', ', ')}). */
+    private static int separator(List<Object> args) {
+        for (int i = args.size() - 1; i >= 1; i--) {
+            if (Values.simplify(args.get(i)) instanceof String) {
+                return i;
+            }
+        }
+        throw error("string_agg", "write the separator: string_agg($.LEGS[*].CURRENCY, ', ')");
     }
 
     /** The engine's function of that name and parameters; a parameter out of range is a problem in words. */
-    private static AggFunction<Object> function(String name, List<Double> numbers) {
+    private static AggFunction<Object> function(String name, List<Double> numbers, List<String> texts) {
         if ("count".equals(name)) {
             return new Builtins.Count(false);
         }
         try {
-            return Functions.builtIn(ENGINE_NAME.get(name), List.of(), numbers)
+            return Functions.builtIn(ENGINE_NAME.get(name), List.of(), numbers, texts)
                     .orElseThrow(() -> error(name, "the pivot engine has no such aggregate"));
         } catch (IllegalArgumentException e) {
             throw error(name, e.getMessage());
@@ -165,9 +189,9 @@ final class ListAggregates {
         return Double.NaN;
     }
 
-    /** What an aggregate of nothing is: 0 for a sum and a count (as Excel's), empty for the rest. */
+    /** What an aggregate of nothing is: 0 for a sum, a count and nmiss (as Excel's), empty for the rest. */
     static Object empty(String name) {
-        return "sum".equals(name) || "count".equals(name) ? (Object) 0L : null;
+        return "sum".equals(name) || "count".equals(name) || "nmiss".equals(name) ? (Object) 0L : null;
     }
 
     static ElException error(String name, String why) {

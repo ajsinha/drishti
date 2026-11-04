@@ -22,6 +22,10 @@ centralise it so BI and other consumers can use it." Status: **design for discus
 built and nothing is decided yet. The product owner's points so far: virtual tables sit on top of connectors, not just the lake, and
 Arrow Flight serves them. Section 10 lists the questions with a recommendation each. (planned)*
 
+**The deeper design for 2.9.11.e** (DEL into Rachana, every dataset and model key mapped, the migration tool, the parity proof, Flight's
+`table` and `model` forms, and questions Q1 to Q30, some of which refine V1 to V5 below): [BI_FOUNDATION_2911E.md](BI_FOUNDATION_2911E.md), a
+design draft for discussion, nothing decided.
+
 ## 1. The idea
 
 Drishti holds data in many shapes: entity documents in a lake (a trade with its `LEGS`, `CASH_FLOWS` and `EVENTS` in one JSON `doc`),

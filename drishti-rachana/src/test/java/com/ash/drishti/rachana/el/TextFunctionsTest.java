@@ -124,6 +124,6 @@ class TextFunctionsTest {
         assertThat(eval("one_of($.DESK, $.DESKS)")).isEqualTo(true);
         assertThat(eval("oneOf($.DESK, $.LEGS[*].CURRENCY)")).isEqualTo(false);
         assertThat(Functions.oldSpellings()).containsEntry("startsWith", "starts_with").containsEntry("matchesCase", "matches_case")
-                .containsEntry("oneOf", "one_of").containsEntry("days", "days_between").hasSize(4);
+                .containsEntry("oneOf", "one_of").containsEntry("days", "days_between").containsEntry("today", "asof").hasSize(5);
     }
 }
