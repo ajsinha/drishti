@@ -55,7 +55,7 @@ final class LoadReport {
 
     private final LoadConfig cfg;
     private final RowPlan plan;
-    final String run = OffsetDateTime.now(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss")) + "-" + ProcessHandle.current().pid();
+    final String run = LakeLoad.runId();
     final String startedAt = now();
     String status = "failed";
     long documents;
@@ -82,6 +82,8 @@ final class LoadReport {
     final List<ObjectNode> fileDates = new ArrayList<>();
     long otherDateRows;
     final List<String> dateNotes = new ArrayList<>();
+    /** Each load id of the run and its data file (the {@code _load_id} of every row the file gave; undo removes a load's rows by it). */
+    final Map<String, String> loads = new LinkedHashMap<>();
     /** Files with no document: ignored, nothing written for them. */
     final List<String> emptyFiles = new ArrayList<>();
     final Map<String, ObjectNode> commits = new TreeMap<>();
@@ -413,6 +415,7 @@ final class LoadReport {
         s.put("otherDateRows", otherDateRows);
         s.set("dateNotes", JSON.valueToTree(dateNotes));
         s.set("emptyFiles", JSON.valueToTree(emptyFiles));
+        s.set("loads", JSON.valueToTree(loads));
         s.put("sampleId", sampleId).put("sampleDate", sampleDate);
         ObjectNode timings = s.putObject("timings");
         timings.put("readSeconds", Meter.round(readSeconds)).put("writeSeconds", Meter.round(writeSeconds)).put("totalSeconds", Meter.round(totalSeconds));

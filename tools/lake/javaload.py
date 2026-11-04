@@ -199,7 +199,7 @@ def run(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, prog
 
 
 MERGED = ("rows", "partitions", "documents", "accepted", "rejected", "rejects", "duplicates", "duplicateExamples", "latestBy", "files", "sampleId", "sampleDate",
-          "dateFrom", "fileDates", "otherDateRows", "dateNotes", "commit", "columns", "throughput", "memory", "sortBy", "manifestFile", "peakMemoryMb")
+          "dateFrom", "fileDates", "otherDateRows", "dateNotes", "emptyFiles", "loads", "commit", "columns", "throughput", "memory", "sortBy", "manifestFile", "peakMemoryMb")
 
 
 def merge(summary: dict, loaded: dict) -> None:

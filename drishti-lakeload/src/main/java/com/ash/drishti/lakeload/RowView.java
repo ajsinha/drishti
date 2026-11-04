@@ -69,7 +69,15 @@ final class RowView {
             int n = Bytes.getInt(a, p);
             p += 4 + Math.max(0, n) * 8;
         }
+        orderOff = p;
         return this;
+    }
+
+    private int orderOff;
+
+    /** The split the record was read from (its place in the input, {@link Latest#split}): its file's load id and name. */
+    int split() {
+        return Latest.split((long) Bytes.LONG.get(a, orderOff));
     }
 
     private int skipValue(int p) {

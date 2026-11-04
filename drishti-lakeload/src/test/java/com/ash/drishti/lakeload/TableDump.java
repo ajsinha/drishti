@@ -178,7 +178,17 @@ final class TableDump {
         return v;
     }
 
+    /**
+     * Whether the dumps keep the load columns ({@code _load_id}, {@code _source_file}): off, so two loads of the same rows compare equal
+     * (their load ids differ by design); a test of the load columns turns it on.
+     */
+    static volatile boolean keepLoadColumns = false;
+
     private static void put(Map<String, Map<String, Object>> out, Map<String, Object> row) {
+        if (!keepLoadColumns) {
+            row.remove("_load_id");
+            row.remove("_source_file");
+        }
         String key = row.get("business_date") + "|" + row.get("id");
         String k = key;
         for (int i = 2; out.containsKey(k); i++) {

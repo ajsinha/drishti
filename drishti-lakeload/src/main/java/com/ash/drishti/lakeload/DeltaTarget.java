@@ -126,6 +126,7 @@ final class DeltaTarget implements TableTarget {
         for (RowPlan.Vector v : plan.vectors) {
             wanted = wanted.add(v.column(), new ArrayType(DoubleType.DOUBLE, true), true);
         }
+        wanted = wanted.add(RowPlan.LOAD_ID, StringType.STRING, true).add(RowPlan.SOURCE_FILE, StringType.STRING, true);
         if (before == null) {
             schema = wanted;
             partitionColumns = parts;

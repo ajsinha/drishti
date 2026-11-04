@@ -210,29 +210,77 @@ abstract class KindTable {
         return out;
     }
 
-    /** The day's ids, read from the id column alone (no document is read), sorted, with the file each is in. */
+    /** The column every row carries: the load that wrote it ({@code <run>.<file>}, in time order; DATA_LOAD_RULES.md section 6.1). */
+    static final String LOAD_ID = "_load_id";
+
+    /**
+     * Per snapshot and day: the ids more than one load wrote, each with the index of the file whose copy readers see (the newest load:
+     * the largest {@code _load_id}, then the later file); empty when none. Kept for a few days.
+     */
+    private final Map<String, Map<String, Integer>> shadows = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+        @Override
+        protected boolean removeEldestEntry(Map.Entry<String, Map<String, Integer>> e) {
+            return size() > 64;
+        }
+    });
+
+    /** The day's shadowed ids ({@link #shadows}), computed by {@link #ids} when the table has {@code _load_id}. */
+    Map<String, Integer> shadow(Layout l, Day day) {
+        if (day.files().size() < 2 || !l.hasColumn(LOAD_ID)) {
+            return Map.of();
+        }
+        String key = l.snapshotId() + "|" + day.date();
+        Map<String, Integer> s = shadows.get(key);
+        if (s == null) {
+            ids(l, day);
+            s = shadows.getOrDefault(key, Map.of());
+        }
+        return s;
+    }
+
+    /** Whether the row of {@code id} in file {@code file} is the one readers see (not shadowed by a newer load's copy). */
+    static boolean seen(Map<String, Integer> shadow, String id, int file) {
+        if (shadow.isEmpty()) {
+            return true;
+        }
+        Integer w = shadow.get(id);
+        return w == null || w == file;
+    }
+
+    /**
+     * The day's ids, read from the id column alone (no document is read), sorted, with the file each is in. An id that several loads
+     * wrote (appends: DATA_LOAD_RULES.md section 6.1) is the newest load's: the largest {@code _load_id}, then the later file.
+     */
     IdMap ids(Layout l, Day day) {
-        List<String[]> perFile = perFile(day, f -> {
+        boolean loads = day.files().size() > 1 && l.hasColumn(LOAD_ID);
+        List<String> read = loads ? List.of(IcebergLayout.ID, LOAD_ID) : List.of(IcebergLayout.ID);
+        List<String[][]> perFile = perFile(day, f -> {
             List<String> ids = new ArrayList<>();
-            scan(l, day, f, List.of(IcebergLayout.ID), null, r -> {
+            List<String> lids = new ArrayList<>();
+            scan(l, day, f, read, null, r -> {
                 if (r[0] != null) {
                     ids.add(r[0].toString());
+                    lids.add(loads && r[1] != null ? r[1].toString() : "");
                 }
             });
-            return ids.toArray(new String[0]);
+            return new String[][] {ids.toArray(new String[0]), lids.toArray(new String[0])};
         });
-        int n = perFile.stream().mapToInt(a -> a.length).sum();
+        if (loads) {
+            return newestWins(l, day, perFile);
+        }
+        List<String[]> idsPerFile = perFile.stream().map(x -> x[0]).toList();
+        int n = idsPerFile.stream().mapToInt(a -> a.length).sum();
         String[] ids = new String[n];
         int[] files = new int[n];
         // files of one laid-out day hold disjoint id ranges: concatenated in order of their first id, they are sorted
-        Integer[] order = new Integer[perFile.size()];
+        Integer[] order = new Integer[idsPerFile.size()];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
-        Arrays.sort(order, Comparator.comparing(i -> perFile.get(i).length == 0 ? "" : perFile.get(i)[0]));
+        Arrays.sort(order, Comparator.comparing(i -> idsPerFile.get(i).length == 0 ? "" : idsPerFile.get(i)[0]));
         int at = 0;
         for (int f : order) {
-            String[] chunk = perFile.get(f);
+            String[] chunk = idsPerFile.get(f);
             System.arraycopy(chunk, 0, ids, at, chunk.length);
             Arrays.fill(files, at, at + chunk.length, f);
             at += chunk.length;
@@ -252,6 +300,41 @@ abstract class KindTable {
             return new Sorted(sortedIds, sortedFiles);
         }
         return new Sorted(ids, files);
+    }
+
+    /** The ids of a day several loads may have written: sorted by id, load id and file; each id's last copy (the newest load's) kept. */
+    private IdMap newestWins(Layout l, Day day, List<String[][]> perFile) {
+        List<String> ids = new ArrayList<>();
+        List<String> lids = new ArrayList<>();
+        List<Integer> fileOf = new ArrayList<>();
+        for (int f = 0; f < perFile.size(); f++) {
+            String[][] x = perFile.get(f);
+            for (int i = 0; i < x[0].length; i++) {
+                ids.add(x[0][i]);
+                lids.add(x[1][i]);
+                fileOf.add(f);
+            }
+        }
+        Integer[] idx = new Integer[ids.size()];
+        for (int i = 0; i < idx.length; i++) {
+            idx[i] = i;
+        }
+        Arrays.sort(idx, Comparator.comparing((Integer i) -> ids.get(i)).thenComparing(lids::get).thenComparing(fileOf::get));
+        List<String> outIds = new ArrayList<>();
+        List<Integer> outFiles = new ArrayList<>();
+        Map<String, Integer> shadow = new HashMap<>();
+        for (int i : idx) {
+            int n = outIds.size();
+            if (n > 0 && outIds.get(n - 1).equals(ids.get(i))) {
+                outFiles.set(n - 1, fileOf.get(i));
+                shadow.put(ids.get(i), fileOf.get(i));
+                continue;
+            }
+            outIds.add(ids.get(i));
+            outFiles.add(fileOf.get(i));
+        }
+        shadows.put(l.snapshotId() + "|" + day.date(), shadow.isEmpty() ? Map.of() : shadow);
+        return new Sorted(outIds.toArray(new String[0]), outFiles.stream().mapToInt(Integer::intValue).toArray());
     }
 
     private static boolean sorted(String[] ids) {
@@ -293,12 +376,16 @@ abstract class KindTable {
         for (int c = 0; c < paths.size(); c++) {
             num[c] = l.numeric(pathToColumn.get(paths.get(c)));
         }
+        Map<String, Integer> shadow = shadow(l, day);
         List<Object[]> perFile = perFile(day, f -> {
             List<String> ids = new ArrayList<>();
             List<List<Object>> values = new ArrayList<>();
             paths.forEach(p -> values.add(new ArrayList<>()));
             scan(l, day, f, cols, null, r -> {
                 Object id = r[0];
+                if (!seen(shadow, id == null ? "" : id.toString(), f)) {
+                    return;                                      // an older load's copy of an id a newer load wrote
+                }
                 ids.add(id == null ? "" : id.toString());
                 for (int c = 0; c < paths.size(); c++) {
                     Object v = r[c + 1];
@@ -353,9 +440,11 @@ abstract class KindTable {
     /** Every entity of one business day: id to JSON text (for small tables only). */
     Map<String, String> read(Layout l, Day day) {
         Map<String, String> out = new LinkedHashMap<>();
+        Map<String, Integer> shadow = shadow(l, day);
         for (int f = 0; f < day.files().size(); f++) {
+            int file = f;
             scan(l, day, f, List.of(IcebergLayout.ID, IcebergLayout.DOC), null, r -> {
-                if (r[0] != null && r[1] != null) {
+                if (r[0] != null && r[1] != null && seen(shadow, r[0].toString(), file)) {
                     out.put(r[0].toString(), r[1].toString());
                 }
             });

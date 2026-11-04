@@ -41,7 +41,8 @@ import jsonstream
 MISSING = object()
 KEEP_REJECTS = 50                    # rejects kept with where and why (all are counted)
 KEEP_DUPLICATE_EXAMPLES = 10         # duplicates named (kept and dropped file:line); all are counted
-LATEST_BY = "COMPUTED_AT"            # the timestamp field that decides which duplicate is kept (TOOLS.md section 4.13)
+LATEST_BY = "COMPUTED_AT"
+LOAD_ID, SOURCE_FILE = "_load_id", "_source_file"   # the columns every row carries (DATA_LOAD_RULES.md section 4)            # the timestamp field that decides which duplicate is kept (TOOLS.md section 4.13)
 OPEN_FILES = 64                      # staged files kept open at once
 DUPLICATE_WATCH = 5_000_000          # ids remembered (8 bytes each) to find duplicates; past this, duplicates are neither found nor dropped
 _YMD = re.compile(r"^(\d{4})(\d{2})(\d{2})$")
@@ -206,6 +207,7 @@ class FileState:
     accepted: int = 0
     other: int = 0
     error: str | None = None
+    load_id: str | None = None
 
 
 class Stager:
@@ -226,6 +228,9 @@ class Stager:
         self.vectors = [v for v in (vectors or []) if v not in self.partition_by and v not in self.promote]
         self.parts: dict[tuple, Part] = {}
         self.stats = Stats(numeric={column_name(p): True for p in self.promote})
+        self.stats.numeric.update({LOAD_ID: False, SOURCE_FILE: False})          # every row: the load that wrote it and its file
+        self.run = ""
+        self._load_ids: dict[str, str] = {}
         self._open: OrderedDict[tuple, object] = OrderedDict()
         self._seen: dict[date, set] = {}
         self.cur: FileState | None = None                                       # the file being read (file())
@@ -234,7 +239,7 @@ class Stager:
         if folder:
             folder.mkdir(parents=True, exist_ok=True)
 
-    def file(self, label: str, name_date: date | None, folder_date: date | None = None, given: date | None = None) -> None:
+    def file(self, label: str, name_date: date | None, folder_date: date | None = None, given: date | None = None, top: str | None = None) -> None:
         """The next documents come from the file ``label``: its tar folder's date, else filedate.decide (--as-of, else ``given``, its
         .ready file's business-date; its name's date; the business today; ``date_from`` name: a name without a date refuses the file)."""
         import filedate
@@ -243,8 +248,14 @@ class Stager:
         else:
             d = filedate.decide(self.as_of or given, name_date, self.date_from, self.today, label)
             s = FileState(label, d.date, "ready" if given and not self.as_of else d.source, error=d.error)
+        key = top or label                              # one load id per data file: an archive's members share their archive's
+        s.load_id = self._load_ids.setdefault(key, f"{self.run}.{len(self._load_ids) + 1}")
         self.cur = s
         self.stats.file_states.append(s)
+
+    def loads(self) -> dict:
+        """Each load id of the run and its data file (the summary's ``loads``; ``lake undo`` removes a load's rows by its id)."""
+        return {i: pathlib.Path(k).name for k, i in self._load_ids.items()}
 
     def refused_files(self) -> list[str]:
         """Why files are refused (date-from name without a date in the name); [] none. Known before a row is read."""
@@ -330,6 +341,8 @@ class Stager:
                 v = id_text(v) if _number(v) else v
             promoted[name] = v
         promoted.update(vecs)
+        if cur is not None:
+            promoted[LOAD_ID], promoted[SOURCE_FILE] = cur.load_id, cur.label
         h = int.from_bytes(hashlib.blake2b(ident.encode("utf-8"), digest_size=8).digest(), "big")
         seen = self._seen.setdefault(day, set())
         if h in seen:

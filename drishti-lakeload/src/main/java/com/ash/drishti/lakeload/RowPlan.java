@@ -55,6 +55,16 @@ final class RowPlan {
     final java.time.LocalDate asOf;
     /** {@code auto} or {@code name}: how a file without {@code as-of} gets its business date ({@link FileDates#decide}). */
     final String dateFrom;
+    /**
+     * Per split: the load id of its data file ({@code _load_id}: one per data file of the input, an archive's members sharing its id) and
+     * the file's label ({@code _source_file}), as UTF-8; set by the loader once the input is split (DATA_LOAD_RULES.md section 4).
+     */
+    volatile byte[][] loadIds = new byte[0][];
+    volatile byte[][] sourceFiles = new byte[0][];
+
+    /** The load column names every row carries. */
+    static final String LOAD_ID = "_load_id";
+    static final String SOURCE_FILE = "_source_file";
     /** The timestamp field that decides which duplicate is kept ({@link Latest}); null: the last read. */
     final String latestBy;
     final List<Promoted> promoted = new ArrayList<>();

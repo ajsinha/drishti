@@ -60,7 +60,35 @@ public final class LakeLoad {
     }
 
     /** Runs a load as the command line would; returns the exit code. */
+    /** The run of this thread's {@link #run}: one id for every dataset it loads, so an archive's commits share their load ids. */
+    private static final ThreadLocal<String> RUN = new ThreadLocal<>();
+    private static final java.util.concurrent.atomic.AtomicInteger RUNS = new java.util.concurrent.atomic.AtomicInteger();
+
+    /**
+     * The current run's id, else a new one: {@code yyyyMMdd'T'HHmmss.SSS-<pid>[-<n>]}, in time order, so the newest load's rows sort last
+     * ({@code _load_id} is {@code <run>.<file>}).
+     */
+    static String runId() {
+        String r = RUN.get();
+        if (r != null) {
+            return r;
+        }
+        int n = RUNS.incrementAndGet();
+        return java.time.OffsetDateTime.now(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss.SSS"))
+                + "-" + ProcessHandle.current().pid() + (n > 1 ? "-" + n : "");
+    }
+
     public static int run(String[] args, PrintStream out) {
+        RUN.set(null);
+        RUN.set(runId());
+        try {
+            return runOnce(args, out);
+        } finally {
+            RUN.remove();
+        }
+    }
+
+    private static int runOnce(String[] args, PrintStream out) {
         long t0 = System.nanoTime();
         String config = null;
         List<String> sets = new ArrayList<>();
