@@ -939,8 +939,8 @@ last column.
 | E0 | Re-point the exposure engine at `trade-valuation` and a membership table, and at COLL's after-haircut VM | engine change | Q1 or NSET's `netting-set-member` | `ExposureLoader`'s reads of `TRADES[].MTM`, `NET` | with NSET |
 | E1 | TVAL totals for any scope | Java engine (TVAL.md) | — | BI's own MtM sums (BI reads TVAL) | planned (parked) |
 | E2 | STR | Java + Python (STR.md) | per-trade scenario P&L or sensitivities | `stress-result.PNL`, `BY_BOOK` | planned (parked) |
-| E3 | FRTB SBM | Java + Python (FRTB.md) | per-trade sensitivities | `frtb-sensitivity` charges, `TOTAL`, `BY_CLASS` | planned (parked) |
-| E4 | SIMM | Python (SIMM.md) | CRIF sensitivities, licensed parameter files | `simm` `TOTAL`, `POSTED`, `RECEIVED`, `RISK_CLASSES` | planned (parked) |
+| E3 | FRTB-SA (SBM, DRC, RRAO) | Java, the server (FRTB_SA_GUIDE.md) | position sensitivities | the capital by risk class and correlation scenario, `TOTAL` | **built** ([FRTB_SA_GUIDE.md](../guides/FRTB_SA_GUIDE.md)) |
+| E4 | SIMM | Java, the server (SIMM_GUIDE.md) | the shared position sensitivities through the CRIF mapping, licensed parameter files | `simm-result` (`GET /api/v1/simm`): IM collected and posted, by product and risk class | **built** ([SIMM_GUIDE.md](../guides/SIMM_GUIDE.md)) |
 | E5 | PNL explain | Java + Python (PNL.md) | two dates of valuations, sensitivities, market moves | `pnl-explain` figures | planned (parked) |
 | E6 | NSET | Java (NSET.md) | `netting-set-member`, E0 | `netting-set` `NET_MTM`, `COLLATERAL`, `UTILISATION`, `CVA`, `BY_ASSET`, `TRADES`, `TRADE_COUNT`, `LIMIT`; counterparty `NET_MTM`; Q1/Q2 derived kinds | planned, order 1 |
 | E7 | SACCR | Java + Python (SACCR.md) | `saccr-trade`, COLL regulatory values | `sa-ccr` (whole kind) | planned, order 2 |
