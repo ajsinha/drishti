@@ -158,7 +158,7 @@ class BatchAndOverlapTest {
             f.drop("trades-" + i + ".jsonl", Fixture.rows("2026-11-02", "T" + i), "");
         }
         f.settings = new DataLoadSettings(true, f.root.toString(), null, 30, 2, null, "256m", null, null, null, null, f.lake.toString(),
-                f.rules.toString(), false);
+                f.rules.toString(), false, null, null);
         assertThat(f.run().files()).hasSize(2);
         assertThat(f.tree("inbox")).hasSize(6);
         Map<String, Object> st = new DataInbox(f.settings, "node-a", f.clock, Fixture.ZONE, f.packs(), f.fakeLoader(), f.signal(), null).status();

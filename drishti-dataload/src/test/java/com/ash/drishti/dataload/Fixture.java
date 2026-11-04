@@ -68,7 +68,7 @@ final class Fixture {
                 connectors:
                   trade-lake:
                     plugin: delta
-                    kinds: [trade]
+                    kinds: [trade, position]
                     settings:
                       domain: demo
                       layout:
@@ -78,6 +78,8 @@ final class Fixture {
                   trade:
                     key: TRADE_ID
                     date: BUSINESS_DATE
+                  position:
+                    key: POSITION_ID
                 """);
         Files.createDirectories(rules.getParent());
         Files.writeString(rules, """
@@ -93,7 +95,7 @@ final class Fixture {
                   unmatched: fail
                 """);
         settings = new DataLoadSettings(true, root.toString(), Duration.ofMinutes(10), 30, null, null, "256m", Duration.ofMinutes(5), 0.0, false, 30,
-                lake.toString(), rules.toString(), false);
+                lake.toString(), rules.toString(), false, null, null);
     }
 
     Path inbox() {

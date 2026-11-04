@@ -85,16 +85,22 @@ public final class LoaderProcess implements LoadRunner {
         ObjectNode s = root.putObject("source");
         ArrayNode list = s.putArray("files");
         files.forEach(f -> list.add(f.toAbsolutePath().toString()));
-        s.put("pack", r.packDir().toAbsolutePath().toString());
+        if (r.newDomain() == null) {
+            s.put("pack", r.packDir().toAbsolutePath().toString());
+        }
         put(s, "connector", r.connector());
         put(s, "date", r.dateField());
         put(s, "as-of", r.asOf() == null ? null : r.asOf().toString());
         put(s, "date-from", r.asOf() == null ? r.dateFrom() : null);
+        put(s, "dataset", r.dataset());                         // a tar's one table folder this load is for
         put(s, "id", r.key());
         ObjectNode t = root.putObject("target");
         t.put("format", r.format());
         t.put("lake", r.lake());
         t.put("kind", r.kind());
+        if (r.newDomain() != null) {
+            t.put("domain", r.newDomain());                     // a new table: the pack's domain, the generic layout
+        }
         t.put("mode", "append".equals(r.mode()) ? "append" : "replace-date");
         put(t, "table", r.table());
         ObjectNode rj = root.putObject("rejects");
