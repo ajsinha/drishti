@@ -38,7 +38,7 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
    - [Raw documents, history and impact](#raw-documents-history-and-impact)
    - [Structured search](#structured-search)
    - [Search by form (`/forms`)](#search-by-form-forms)
-   - [The Pivot tab: panel rows, search pivots, saved pivots](#the-pivot-tab-panel-rows-search-pivots-saved-pivots)
+   - [Pivot of a table, a page's table or a search's matches](#pivot-of-a-table-a-pages-table-or-a-searchs-matches)
    - [Live streams](#live-streams)
    - [Personal: settings, packs, workspaces, monitors, alerts](#personal-settings-packs-workspaces-monitors-alerts)
    - [Python in the browser (Calc) and test entities](#python-in-the-browser-calc-and-test-entities)
@@ -177,7 +177,7 @@ curl -s $B/entities/trade/MX-20000001/raw | jq '.data | {tradeId, productType, a
 Everything you can open in the terminal you can also read from code, as yourself, with a **personal API token**.
 A token reads what you may read (your roles and packs, at the time of each call) and, unless you gave it a **write scope**,
 **never changes anything**: any request other than `GET` with a read-only token is refused (`403 DRS-5002 API tokens only
-read`), except the `POST`s that only read (`/search/pivot/**`, `/command`, the allow-list
+read`), except the `POST`s that only read (`/pivot/query`, `/pivot/estimate`, `/pivot/expand`, `/pivot/compare`, `/pivot/rows`, `/pivot/export`, `/command`, the allow-list
 `drishti.security.token-read-posts`, which also lets a token ask a BI model, `POST /api/v1/bi/mq`). Tools and CI that must change things get a token with the scope for
 that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](CLI_GUIDE.md) and below.
 
@@ -431,7 +431,7 @@ script may open (roles are defined under `drishti.security.roles`; see
 For a caller without `raw`, every field named in `drishti.security.redact` (at any depth, and everything under it)
 reads `•••` in every answer that shows or is computed from its value (masking is by field; see *Copies of a masked value* below for text in other fields): `/entities/…/raw`, `/search` (rows, CSV,
 compare), `/history`, `/search/columns`, the search pivot endpoints, `/views/{kind}/{id}` (strip, title, every panel,
-table totals, keys and links, values a Sutra computes from the field), `/views/…/panels/…/records`, `/views/{kind}/{id}/explain`, the view and
+table totals, keys and links, values a Sutra computes from the field), `/views/{kind}/{id}/explain`, the view and
 monitor streams, `/me/monitors/{name}`, `/studio/preview`, `/impact/{kind}/{id}`, `/command/suggest` and `/phrase`;
 alert rules are evaluated on the document as their owner may see it. The server masks the documents in one place
 (`Entitlements.redactor`) before anything reads them, so nothing about a masked field can be probed: a condition on
@@ -539,7 +539,7 @@ Three catch-alls are worth knowing: a bad argument anywhere (`IllegalArgumentExc
 logged on the server with the stack trace. The full list is in the [error code table](#error-code-table).
 
 **When the server is busy.** New heavy work (a sign-in, opening a VaR or exposure date that is not open yet, a Data view download, a BI
-run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505`. The body adds `busy: true`, `title`
+run, a bulk load) may be asked to wait: `503` with `Retry-After` and a code `DRS-9501` to `DRS-9505` or `DRS-9507` (a large pivot). The body adds `busy: true`, `title`
 and `because` (the same words the console and `drishti.py` show) and `retryAfterSeconds`. A script waits that many seconds and asks
 again, a few times at most; reads of what is already open are never asked to wait. Busy protection is described in
 [OPERATIONS.md section 12.5](../admin/OPERATIONS.md#125-busy-protection-refuse-politely-never-fall-over).
@@ -635,7 +635,6 @@ Entities the caller opened recently (per `X-Drishti-User` or token subject) are 
 | Method | Path | Notes |
 |---|---|---|
 | `GET` | `/views/{kind}/{id}` | as-of. The `ViewModel`, with the caller's [field masks](#field-masks) (`"text":"•••"`); `404 DRS-1001` (no such entity), `404 DRS-1002` (no source serves the kind), `502 DRS-1003` (source failed), `504 DRS-1004` (source timed out); `403 DRS-5002` if the caller may not open the kind |
-| `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. Every row of a table or ladder whose Sutra says `pivot:`, as raw values of its pivot's fields (masked fields `"•••"`), for the [Pivot tab](#the-pivot-tab-panel-rows-search-pivots-saved-pivots); `404 DRS-1001` when the view has no such panel or the panel offers no pivot |
 | `POST` | `/views/{kind}/{id}/ask` | Ask about this page, optional and off by default. Body `{question, locale?}`; answer `{answer, sources[]}` (plain text). `404 DRS-4007` when Ask is off globally or for the page's pack, `502`/`504 DRS-4008` when the model endpoint fails or is slow, `429 DRS-4009` over the per-user rate, `400` for an empty or too long question, `403 DRS-5002` as the view. See [Ask about this page](#ask-about-this-page) |
 | `GET` | `/views/{kind}/{id}/explain` | as-of. About this page, layers 3 and 4 ([design](RACHANA_REFERENCE.md#about-this-page-the-design-of-context-help)): where the data came from and why the page looks as it does, for exactly what the caller sees. Query `panel` (narrows to a panel of the view, else `404 DRS-4006`) and `generation` (the generation your page shows; a newer one on the server adds `"newer":true`). Same rules as the view: `403 DRS-5002`, `404 DRS-1001`, `400 DRS-4003`. See [Explaining a view](#explaining-a-view) |
 | `GET` | `/viewmodel/schema` | The JSON Schema (draft 2020-12, `application/schema+json`) of the `ViewModel`, its panels' `data` and the live stream's frames (`$defs.Frame`), generated from the server's own records. Read only. See [VIEWMODEL.md section 9](../architecture/VIEWMODEL.md#9-the-json-schema) |
@@ -919,10 +918,9 @@ key fields, then the documents the search read; when the scan was partial a name
 
 The condition language is Rachana-EL; see [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md).
 
-When the kind's pack opts its results into a Pivot tab (`pivot:` in `pack.yaml`), the answer also carries `"pivot"`: the
-fields on offer, each with `label`, `fmt` and `promoted` (whether a source keeps it as a column, so the server can
-pivot it from columns), the arrangement it opens with, and the limits (`maxRowKeys`, `maxColumnKeys`,
-`documentScan`). For other kinds `"pivot"` is `null`.
+When the kind's pack opts its results into Pivot (`pivot:` in `pack.yaml`), the answer also carries `"pivot"`:
+`{"source": "<kind>", "fields": [...], "view": {...}}`, the pivot engine's source, the fields on offer and the view it opens with (the
+pack's arrangement). For other kinds `"pivot"` is `null`.
 
 ### Search by form (`/forms`)
 
@@ -947,100 +945,19 @@ a value is cut to 8,192 characters and a match that takes over 50 ms is `DRS-401
 `drishti.search.regex.max-pattern`, `.max-program`, `.max-input` and `.timeout-ms`. The form's other limits are
 `drishti.search.form.max-values` (500, an `in` list), `.max-inferred-fields` (14), `.enum-max` (12), `.sample-rows` (200) and `.enum-scan-rows` (1,000: how many rows of a kind are read to find the values of a dropdown, up to the search's own limit; the first 200 of a kind can all be one product group, such as the rates trades, which left the other products out of the list).
 
-### The Pivot tab: panel rows, search pivots, saved pivots
+### Pivot of a table, a page's table or a search's matches
 
-The console's Pivot tab ([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) is offered only where a
-Sutra (`pivot:` on a table or ladder) or a pack (`pivot:` beside a kind's `columns:`) says so, and these endpoints refuse
-anything else. All follow the business date (`X-Drishti-As-Of`), and the caller must be able to open the kind
-(`403 DRS-5002`). `drishti.pivot.enabled: false` switches them all off.
-
-| Method | Path | Notes |
-|---|---|---|
-| `GET` | `/views/{kind}/{id}/panels/{panel}/records` | as-of. The panel's rows as raw values (below), up to `drishti.pivot.max-records` |
-| `POST` | `/search/pivot/{kind}` | as-of. The cube of a search's matches: body `{"q", "rows", "columns", "values", "filters", "documents"}` |
-| `POST` | `/search/pivot/{kind}/drill` | as-of. The entities behind one cell, a page at a time: the same body plus `"cell": {"rows": [...], "columns": [...]}`, `"offset"`, `"size"` (at most `drishti.pivot.drill-page`) |
-| `POST` | `/search/pivot/{kind}/values` | as-of. A field's values among the matches, with counts (a filter's pick list): `{"q", "field", "documents"}` |
-| `GET` | `/me/pivots` | the caller's saved pivots `{enabled, promote, review, pivots}`; each still valid against its Sutra or pack; `promote` is `author` with Studio saving on |
-| `GET` · `PUT` · `DELETE` | `/me/pivots/panel/{sutra}/{panel}` | the caller's arrangement of a panel's pivot. `PUT` body `{"rows", "columns", "values", "filters", "heat", "chart"}`, checked against the fields the Sutra offers (`400 DRS-5001` with the reason); `DELETE` (back to the Sutra's) answers `204`; `GET` `404 DRS-1001` when none |
-| `GET` · `PUT` · `DELETE` | `/me/pivots/search/{kind}` | the same for a kind's search results (`{kind}` may be a mnemonic) |
-| `GET` | `/me/pivots/panel/{sutra}/{panel}/promotion` | what promoting the saved pivot would propose: `{sutra, panel, kind, fromVersion, version, base, text, changes, review}`, the next version with only the panel's `pivot:` rewritten. Needs `author` and `drishti.rachana.studio-save` |
-| `POST` | `/me/pivots/panel/{sutra}/{panel}/promotion` | body `{"note": "…"}`: proposes it for review (`202` `{proposal}`), or with review off saves it (`200` `{saved}`) |
-
-There is no separate power: keeping a pivot needs only the right to open the kind.
-
-**A panel's rows.** The table data of a view carries the offer (`"pivot": {"fields": [...], "rows": [...], …,
-"maxRows": 50000}`); the rows come separately, all of them, whatever the table's `limit`:
+Pivot is the pivot engine ([Pivot engine](#pivot-engine-apiv1pivot), [PIVOT_GUIDE.md](PIVOT_GUIDE.md)): a table or ladder whose Sutra says
+`pivot:` carries `data.pivot.source` (`panel/<kind>/<panel>/<id>`, the panel's own rows) and a search whose kind's pack says `pivot:`
+carries `"pivot": {"source": "<kind>", "fields": [...], "view": {...}}`. `POST /api/v1/pivot/query` with that source answers the pivot;
+`GET /api/v1/pivot/catalogue?source=` lists its fields and the view it opens with (`defaultView`: the Sutra's or the pack's arrangement).
+An author promotes a panel's view to its Sutra with `POST /api/v1/pivot/promote` `{"sutra", "view", "note", "preview"}` (`preview: true`
+answers the next version's text and the changes without proposing; with review on the promotion is a proposal, `202`).
 
 ```bash
-curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" $B/views/netting-set/NS-NORTHPLAINS-NY/panels/trades/records | jq -c '.rows |= .[0:2]'
+curl -s -H "Authorization: Bearer $DRISHTI_TOKEN" -H 'Content-Type: application/json' $B/pivot/query \
+  -d '{"source": "panel/netting-set/trades/NS-NORTHPLAINS-NY", "rows": ["PRODUCT"], "values": ["sum(NOTIONAL)"]}'
 ```
-
-```json
-{"panel":"trades","fields":[{"name":"PRODUCT","label":"Product","fmt":null},{"name":"ASSET_CLASS","label":"Asset class","fmt":null},
-  {"name":"CURRENCY","label":"Currency","fmt":null},{"name":"BOOK","label":"Book","fmt":null},{"name":"MATURITY_BUCKET","label":"Maturity bucket","fmt":null},
-  {"name":"MATURITY","label":"Maturity date","fmt":"date"},{"name":"NOTIONAL","label":"Notional","fmt":"compact"},
-  {"name":"MTM","label":"MTM (USD)","fmt":"signed0"},{"name":"TRADE_ID","label":"Trade","fmt":null}],
- "rows":[["ENGY-SWAP","Commodity","USD","BOOK-COMM-1","1-2Y","2028-03-31",11332443120.0,-150005504,"1003930"],
-         ["ENGY-SWAP","Commodity","USD","BOOK-COMM-3","1-2Y","2027-10-31",3073970268.0,-138590967,"1000505"]],
- "total":698,"truncated":false,"limit":50000}
-```
-
-(the counterparty-risk pack's netting set of the demo lakes, 698 member trades). `kind` on a field, when the panel declares one, says which entity its values open.
-
-**A search's cube.** The server aggregates every entity the search matches on the date (not only a page; `limit`
-and `order by` in `q` are ignored), over the day's promoted columns, and returns only the cells (a laid-out test table of 40 trades; numbers abridged):
-
-```bash
-curl -s $B/search/pivot/TRD -H 'Content-Type: application/json' -d '{"q": "TRD where mtm != null",
-  "rows": ["book"], "columns": ["currency"], "values": [{"field": "mtm", "agg": "sum"}, {"field": "book", "agg": "count"}]}'
-```
-
-```json
-{"rows":["book"],"columns":["currency"],
- "values":[{"field":"mtm","agg":"sum","show":"value","label":"Sum of MTM (USD)"},{"field":"book","agg":"count","show":"value","label":"Count of Book"}],
- "rowKeys":[["BOOK-A"],["BOOK-B"]],"columnKeys":[["EUR"],["USD"]],
- "cells":{"\u001e":[-1240500,40],"BOOK-A\u001e":[-18900,19],"BOOK-A\u001eEUR":[402100,6],"BOOK-A\u001eUSD":[-421000,13],
-          "\u001eEUR":[…],"\u001eUSD":[…],"BOOK-B\u001e":[…],"BOOK-B\u001eEUR":[…],"BOOK-B\u001eUSD":[…]},
- "count":40,"total":40,"partial":false,"moreRows":false,"moreColumns":false,"masked":[],"source":"columns","elapsedMs":3.1}
-```
-
-- `rowKeys` and `columnKeys` are the innermost groups, full depth, in natural order (numbers by value, `2-5Y` before
-  `10Y+`, `(blank)` last). Keys are text; a missing value is `(blank)`.
-- `cells` has one entry for **every** combination of a row-key prefix and a column-key prefix, so subtotals and totals
-  are there too: the key is the row keys joined by U+001F, then U+001E, then the column keys joined by U+001F
-  (`"\u001e"` alone is the grand total, `"BOOK-A\u001e"` the row total of `BOOK-A`). Each holds one number per value
-  (`null` when no row had a number). `agg` is `sum`, `count` (rows with a value), `avg`, `min`, `max` or `distinct`;
-  `show` (`value`, `pctRow`, `pctColumn`, `pctTotal`) is applied by the client from these cells.
-- `filters` are `{"field", "values": [...]}` (keys kept) or `{"field", "min", "max"}` (inclusive; numbers, or ISO
-  dates as text); a bare field name keeps everything.
-- At most `drishti.pivot.max-row-keys` (2,000) innermost row groups and `max-column-keys` (200) column groups are
-  returned (`moreRows`, `moreColumns`); further groups still count in the totals.
-- `masked` lists the fields the caller's role sees masked, as in a search (a field under a masked one too:
-  `counterparty.name` when `counterparty` is masked): they group under `•••` and are never added up.
-- A field that no source keeps as a column is refused, unless the body says `"documents": true`:
-
-```json
-{"type":"about:blank","title":"bad request","status":400,"code":"DRS-5001",
- "detail":"DRS-5001 not kept as columns for trade: [productType]; these are: [book, counterparty.id, mtm, nettingSet]. Ask for a document read (documents: true) to read up to 20000 trade documents instead; the result is then partial if there are more"}
-```
-
-  With `"documents": true` the documents are read (at most `drishti.pivot.document-scan`), `source` is `documents`
-  and `partial` is `true` when there were more. An arrangement naming a field the pack does not offer is
-  `400 DRS-5001 pivot rows name 'desk', which is not one of its fields (…)`; a kind whose pack offers no pivot is
-  `400 DRS-5001 … search results do not offer a pivot`.
-
-**A cell's entities.** `POST /search/pivot/TRD/drill` with `"cell": {"rows": ["BOOK-A"], "columns": []}` (empty
-prefixes are totals), `"offset": 0`, `"size": 50`:
-
-```json
-{"fields":["book","mtm","nettingSet","counterparty.id"],"labels":{"book":"Book","mtm":"MTM (USD)","nettingSet":"Netting set","counterparty.id":"Counterparty id"},
- "rows":[{"id":"T-001","kind":"trade","values":{"book":"BOOK-A","mtm":-18900,"nettingSet":"NS-1","counterparty.id":"CP-1"}}, …],
- "total":20,"offset":0,"size":50,"partial":false,"masked":[],"source":"columns"}
-```
-
-**A field's values.** `POST /search/pivot/TRD/values` with `{"q": "TRD", "field": "currency"}` answers
-`{"field": "currency", "values": [{"value": "EUR", "count": 14}, …], "more": false, "numeric": false, "min": null,
-"max": null, "partial": false, "source": "columns"}` (at most 500 values; `min` and `max` for numbers).
 
 ### Live streams
 
@@ -1768,6 +1685,18 @@ that did not come. Everything about it (every field, the idempotency rules, the 
 Audited as `data-load-ready`, `data-load-failed`, `data-load-config-changed` and `data-load-config-reset`. `GET /admin/health` lists
 `dataLate` and is `DEGRADED` while it is not empty.
 
+**The data inbox** (files dropped in `<data>/dataload/inbox` with a `.ready` marker, loaded by the server: [DATA_GUIDE.md section 7](DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load);
+the CLI is `drishti.py dataload`). Administrators; a token needs `loads:write` for the two `POST`s. While the inbox's engine is off on every
+server the paths answer `DRS-1020`. In a cluster the inbox's signals reach the other members through the same
+`POST /packs/{pack}/loads`, signed with the cluster key and made as the owner node (`node:<id>`, the service role), which each member takes
+as an administrator's announcement.
+
+| Method | Path | Notes |
+|---|---|---|
+| `GET` | `/admin/dataload` | `{on, owner, node, dir, interval, nextCycleAt, running: {startedAt, trigger}, lock: {run, node, pid, since, heartbeat}, waiting: [{file, size, modified, state}], markersWithoutFile, readyAll, failed: [{file, day, run, reason}], ledger: [the newest 20 lines], cycles: [{run, trigger, started, finished, state: done\|skipped\|failed, why, files: [{file, outcome, reason, pack, kind, versions, rows, rejected}], notices, signals}], settings}` |
+| `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
+| `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
+
 ### Administration: node readiness and the drain before a stop
 
 This server as a node of a cluster ([CLUSTER_DEPLOYMENT.md](../architecture/CLUSTER_DEPLOYMENT.md#91-health-endpoints), `CD1` and `CD2`).
@@ -2126,6 +2055,11 @@ and the fix for the codes that need more than the meaning.
 | DRS-5217 | 422 | var not shardable | VaR sharding: the date cannot be put together from its shards because its data does not cut along the shard key: a book under two legal entities or desks that fall in two shards, or (with a hierarchy built from columns) one position id under two shards. Correct the trades' hierarchy columns upstream, shard by `[LEGAL_ENTITY]` only, or switch sharding off; one server answers the date |
 | DRS-5218 | 503 | disk guard | a hot file, shard book or currency's book was not built because the disk would fall under the free-space guard (`drishti.disk.min-free-percent` 10, `min-free-gb` 20) even after every folder freed down to 90% of its cap; nothing was written, a date already open keeps answering; the message gives what is free, what was needed and the guard ([RESOURCES_AND_SCALE.md 7.2](../architecture/RESOURCES_AND_SCALE.md#72-proposal-hot-files-bounded-by-size-and-the-free-space-guard-o5)) |
 | DRS-5219 | 403 | memory only | the data is held in memory only by contract (a connector whose lake is at `mem://`, [IN_MEMORY_LAKE_GUIDE.md](IN_MEMORY_LAKE_GUIDE.md)) and this place would keep it: a scheduled report, a share's picture or e-mail, a note copying its values, an Ask about the page; nothing was written; the message names the data and its contract; a download is allowed (audited) |
+| DRS-5701 | 400 | pivot: bad view | the pivot engine cannot answer the view: an unknown source field or function, a field twice, a grouping a field's type does not take, a sort or show-as it does not know ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) |
+| DRS-5702 | 422 | pivot: too many cells | the view has more visible cells (totals included) than `drishti.pivot.max-cells` (or `max-holistic-cells`), with the count; or a table has more rows than `stage-max-rows`; or an xlsx export more rows than `export.xlsx-max-rows`; never cut short |
+| DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
+| DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
+| DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
 | DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
@@ -2156,6 +2090,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-9503 | 503 | Busy: a download waits | busy protection: a Data view download did not start (memory, request handlers, disk); nothing was sent; `Retry-After` |
 | DRS-9504 | 503 | Busy: a BI run waits | busy protection: a BI run (or asking a run again) did not start (memory, request handlers); `Retry-After` |
 | DRS-9505 | 503 | Busy: a bulk load waits | busy protection: a bulk load of a pack's data did not start (memory, request handlers, disk); nothing was read or written; `Retry-After` |
+| DRS-9507 | 503 | Busy: a pivot waits | busy protection: a pivot view of more cells than `drishti.pivot.busy-cells` did not open its deeper levels; `Retry-After` |
 | DRS-6001 | 404 | user not found | no such user |
 | DRS-6002 | 409 | user exists | a user with that name already exists |
 | DRS-6003 | 422 | weak password | the password does not meet the password rules |
@@ -3348,6 +3283,38 @@ groups; restricted) for other systems; no engine reads them. The netting-set and
 are never a token's. Answers, captures, what-ifs, exports, reloads and official captures are audited (`ccr-view`, `ccr-capture`,
 `ccr-whatif`, `ccr-export`, `ccr-reload`, `ccr-official`).
 
+## Pivot engine: `/api/v1/pivot`
+
+The pivot engine ([PIVOT_GUIDE.md](PIVOT_GUIDE.md), design [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md)): any table of the Data view,
+or the VaR engine's trades (`source: var`), as a pivot. Every figure is computed by the engine (module `drishti-bicompute`); every total is
+made from its own members; masks apply before aggregation. Every view run and export is audited, never with its values.
+
+| Call | Does |
+|---|---|
+| `GET /api/v1/pivot/sources` | `{sources: [{source, title, provider}]}`: what the caller may pivot |
+| `GET /api/v1/pivot/catalogue?source=&date=` | the source's `fields` (name, type), `measures` (a provider's own: `var`, `es`), `functions` (the built-ins), `date`, `dates`, `version`, `masked`, `notes`, `limits` |
+| `POST /api/v1/pivot/query` | body: a view (or `{"view": {...}}`, or `{"view": "owner/name"}`); answer: `rows` and `columns` in display order, `cells` keyed `rowKey|colKey`, `measures`, `computed`, `cellCount`, `provenance` |
+| `POST /api/v1/pivot/estimate` | `{rows, bytes, columns, ofColumns, seconds, how, confirm, words}`; nothing read |
+| `POST /api/v1/pivot/expand` | `{view, axis: rows, path: [[dim, value], ...], by}`: the view with that node open (only its children computed; the rest from the cache) |
+| `POST /api/v1/pivot/compare` | `{view, otherDate}`: `{answer, other, diff}` (per cell: `delta` per measure, or `status` new or gone) |
+| `POST /api/v1/pivot/rows` | `{view, coords, offset, limit}`: a cell's member rows, as the caller may see them |
+| `GET /api/v1/pivot/cells/{owner}/{name}/{rest}` | the same cell as a path (`/cells/asha/desk-risk/@3/S[DESK=EMEA]`): what a spreadsheet link or a Sutra reference uses |
+| `GET /api/v1/pivot/paths?source=` | an administrator's: the document paths people typed on a source, most used first, each with how it becomes a column read (promote it in the connector's `layout.<kind>.columns`, or add it to a BI dataset as `path:`) |
+| `POST /api/v1/pivot/inline` | `{fields: [{name, type}], rows: [[…]], view}`: rows the caller already holds (a chart of a table's shown rows; at most 100,000) aggregated by the engine's built-ins; a bad field or too many rows is DRS-5701 |
+| `GET /api/v1/pivot/cells?ref=pivot://owner/name@v/Measure[DIM=V, ...]` | one cell of a saved view by reference: `value`, `found` (false with "not in the view"), `newerVersion` |
+| `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
+| `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |
+| `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|jsonl\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
+  -d '{"source":"trade","rows":["productType"],"values":[{"measure":"count()"},{"measure":"median(notional)","as":"Median"}]}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/export \
+  -d '{"view":"asha/desk-risk","format":"xlsx"}' -o desk-risk.xlsx
+```
+
+Refusals: `DRS-5701` to `DRS-5705` and `DRS-9507` ([the error code table](#error-code-table)).
+
 ## Embedding views in another web application
 
 For `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).
@@ -3395,7 +3362,7 @@ Other endpoints: `GET /api/v1/embed/check` answers `{app, user, jti, scopes, exp
 
 **Renewal.** Tokens are short (default 5 minutes) and never refreshed by the browser: when one is about to expire the element asks the host page, whose backend repeats the exchange above for the same user (a fresh `jti`, a later `exp`); the console accepts it on the open stream only when `sub` and `azp` are the same (CLIENT_RENDERER.md › Drishti Elements: the design, section 7.2). Disabling the application or the user takes effect at the next call, and on an open stream at the next re-check.
 
-**4. The console's embed API** (`/embed/v1`, served when the console has `embed.enabled`; the element calls it, a host rarely does): `GET /views/{kind}/{id}` (head, strip and panels as HTML), `GET /views/{kind}/{id}/about` (scope `embed:about`; `<drishti-about>`), `GET /search?q=&limit=` (scope `embed:search`; `<drishti-search>`), `GET /views/{kind}/{id}/panels/{panel}/records`, `GET /resolve?text=` (a typed command or id to `{ref, mnemonic, title}`, read-only), `GET /channel?s=view:{kind}/{id}` (server-sent events: `channel`, `view`, `frame`, `gone`, `end`, `token`), `POST /channel/{cid}` (`{add, remove}`) and `POST /channel/{cid}/token`. Every call carries `Authorization: Bearer <embed token>`; CORS answers only the registered origins. The console verifies the token's signature (the server's key from `/api/v1/embed/jwks`, cached, re-read when a key id is new), expiry, audience and origin, then passes it to the server. A stream outlives its token: at expiry the console sends `event: token`, the element posts a fresh token to `/channel/{cid}/token` (the same user and application, a later expiry) and the stream carries on; with none within `embed.token_grace_seconds` it ends with `gone` `DRS-8001`. Problems are `{"code", "detail"}` (`DRS-8001` to `DRS-8006`; `429` carries `Retry-After`). Responses are gzip or Brotli compressed when accepted. A report is `GET /reports/{id}`, `POST /reports/{id}/query` and the channel key `bilive:{id}`, below. The library itself is served at `GET /embed/v1/elements/{version}/drishti-elements.js`, `.../m/{name}.js` and `.../integrity.json` (an exact semantic version, immutable; `1` and `1.1` answer `302` to it; a version this console does not hold is `410 DRS-8006`; with `embed.lifecycle` set every answer carries `Deprecation` and `Sunset`). Console settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views).
+**4. The console's embed API** (`/embed/v1`, served when the console has `embed.enabled`; the element calls it, a host rarely does): `GET /views/{kind}/{id}` (head, strip and panels as HTML), `GET /views/{kind}/{id}/about` (scope `embed:about`; `<drishti-about>`), `GET /search?q=&limit=` (scope `embed:search`; `<drishti-search>`), `GET /resolve?text=` (a typed command or id to `{ref, mnemonic, title}`, read-only), `GET /channel?s=view:{kind}/{id}` (server-sent events: `channel`, `view`, `frame`, `gone`, `end`, `token`), `POST /channel/{cid}` (`{add, remove}`) and `POST /channel/{cid}/token`. Every call carries `Authorization: Bearer <embed token>`; CORS answers only the registered origins. The console verifies the token's signature (the server's key from `/api/v1/embed/jwks`, cached, re-read when a key id is new), expiry, audience and origin, then passes it to the server. A stream outlives its token: at expiry the console sends `event: token`, the element posts a fresh token to `/channel/{cid}/token` (the same user and application, a later expiry) and the stream carries on; with none within `embed.token_grace_seconds` it ends with `gone` `DRS-8001`. Problems are `{"code", "detail"}` (`DRS-8001` to `DRS-8006`; `429` carries `Retry-After`). Responses are gzip or Brotli compressed when accepted. A report is `GET /reports/{id}`, `POST /reports/{id}/query` and the channel key `bilive:{id}`, below. The library itself is served at `GET /embed/v1/elements/{version}/drishti-elements.js`, `.../m/{name}.js` and `.../integrity.json` (an exact semantic version, immutable; `1` and `1.1` answer `302` to it; a version this console does not hold is `410 DRS-8006`; with `embed.lifecycle` set every answer carries `Deprecation` and `Sunset`). Console settings: [CONFIGURATION.md](../admin/CONFIGURATION.md#console-embed--the-consoles-side-of-embedded-views).
 
 **5. The embed API v2** (`/embed/v2`, beside v1; served when the console has `embed.enabled`; Elements 2.0
 and the client-side renderer call it, [CLIENT_RENDERER.md › Drishti Elements: the design, section 19](../architecture/CLIENT_RENDERER.md#19-elements-20-drawn-by-the-client-side-renderer)).
@@ -3406,7 +3373,6 @@ The same token, CORS, scopes, rates and masks as v1; the difference is the paylo
 | `GET /embed/v2/views/{kind}/{id}` (`?ctl.<id>=`, `?asOf=`) | the ViewModel itself, masked for the token's user, with `"contract": "1.0"`; `Drishti-Subscribe: vm:{kind}/{id}` when it is live |
 | `GET /embed/v2/views/{kind}/{id}/panels?panels=a,b&ctl.<id>=` | `{panels: [{id, kind, title, panel}], stripCells, controls}`: what a control asks for |
 | `GET /embed/v2/views/{kind}/{id}/about` (scope `embed:about`) | `{explain, index}` (About this page as JSON), or `{error: {code, detail}}` |
-| `GET /embed/v2/views/{kind}/{id}/panels/{panel}/records` | a Pivot tab's rows, as v1 |
 | `GET /embed/v2/resolve?text=` | a typed command or id to `{ref, mnemonic, title}`, as v1 |
 | `GET /embed/v2/channel?s=vm:{kind}/{id}`, `POST /embed/v2/channel/{cid}`, `POST /embed/v2/channel/{cid}/token` | the live channel, as v1; a `vm:` key's panel patches are panels (JSON), with no HTML |
 | `GET /embed/v2/render/{version}/{file}` | the renderer's files (`drishti-render.js`, `drishti-elements.js`, `m/*.js`, `drishti-render.css`, `drishti-render.d.ts`, `integrity.json`): immutable; `1` and `1.0` answer `302` to the exact version; one this console does not serve is `410 DRS-8006` |
@@ -3482,7 +3448,7 @@ they are not a public API and have no stability promise, but a script that must 
 | `PATCH /api/settings`, `POST /api/packs`, `POST /api/tokens`, `DELETE /api/tokens/{id}` | the user's settings, active packs and personal API tokens | `/me/settings`, `/me/packs`, `/me/tokens` |
 | `GET` and `POST /api/notes/{kind}/{id}`, `PUT` and `DELETE /api/notes/{noteId}` | notes (deprecated) | `/notes/...` |
 | `PUT` and `DELETE /api/layout/{sutra}/{kind}`, `GET` and `POST .../promotion` | personal layouts and promoting one to a Sutra | `/me/layouts/...` |
-| `GET /api/pivot/records/{kind}/{id}/{panel}`, `POST /api/pivot/search/{kind}` and `/drill` and `/values`, `GET`, `PUT`, `DELETE /api/pivot/saved/panel/{sutra}/{panel}` and `/saved/search/{kind}`, `GET` and `POST .../promotion` | the Pivot tab | `/views/.../panels/{panel}/records`, `/search/pivot/...`, `/me/pivots/...` |
+| `GET /api/pivot/sources`, `GET /api/pivot/catalogue`, `POST /api/pivot/{query, estimate, expand, compare, rows, views, promote}`, `POST /api/pivot/export`, `GET /api/pivot/provenance/{id}`, `GET /api/pivot/cells`, `GET`, `DELETE /api/pivot/views/...` | the pivot screen | `/pivot/...` |
 | `GET /api/calc/snippets`, `PUT` and `DELETE /api/calc/snippets/{name}`, `GET /api/calc/search`, `GET /api/calc/columns/{kind}` | Calc | `/me/calc-snippets`, `/search`, `/search/columns/{kind}` |
 | `GET /api/collab`, `GET /api/directory`, `POST /api/share`, `POST /api/share/preview-picture`, `GET /api/share/{id}/picture`, `POST /api/share/{id}/replies`, `GET /api/inbox/count`, `POST /api/inbox/read` | share with a note, the directory, the inbox | `/collab`, `/directory`, `/shares...`, `/me/inbox...` |
 | `GET` and `POST /api/threads/{kind}/{id}`, `GET /api/thread-counts/{kind}/{id}`, `POST /api/thread/{tid}/comments`, `/state`, `PUT` and `DELETE /api/thread/{tid}/follow`, `PATCH /api/comment/{cid}`, `POST .../retract`, `/hide`, `/unhide`, `GET .../revisions` | comment threads | `/threads/...`, `/comments/...`, `/admin/collab/comments/{cid}/hide` |

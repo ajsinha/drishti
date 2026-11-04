@@ -105,10 +105,16 @@ def word_hidden(word: str) -> bool:
 
 def typed_engine(text: str) -> dict | None:
     """The engine, available nowhere, whose words start the typed command (``PLAY FRTB EXAMPLE`` -> frtb-sa), or None."""
+    return engine_of(text, off())
+
+
+def engine_of(text: str, among: list[dict] | None = None) -> dict | None:
+    """The engine (of ``among``, default every engine of the catalogue) whose command words start the typed text (``PLAY VAR BANK`` ->
+    var, ``EXP CPTY`` -> exposure), or None."""
     parts = str(text or "").replace("<GO>", "").replace("<go>", "").upper().split()
     if not parts:
         return None
-    for e in off():
+    for e in entries() if among is None else among:
         for w in _words(e):
             ws = w.split()
             if parts[:len(ws)] == ws:

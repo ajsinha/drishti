@@ -179,8 +179,8 @@ public class DataViewController {
         }
         // data held in memory only (IN_MEMORY_LAKE.md section 8): a user's download is the one way out, streamed from memory with no
         // temporary file, audited; its audit line keeps the selection's shape, never its values
-        boolean memoryOnly = com.ash.drishti.server.memlake.Retention.current().memoryOnly(kind);
-        com.ash.drishti.server.memlake.Retention.current().require(com.ash.drishti.server.memlake.Retention.Sink.DOWNLOAD, List.of(kind), "This download");
+        boolean memoryOnly = com.ash.drishti.memlake.Retention.current().memoryOnly(kind);
+        com.ash.drishti.memlake.Retention.current().require(com.ash.drishti.memlake.Retention.Sink.DOWNLOAD, List.of(kind), "This download");
         res.setStatus(200);
         res.setContentType("application/gzip");
         res.setHeader("Content-Disposition", "attachment; filename=\"" + file + "\"");

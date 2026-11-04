@@ -15,10 +15,12 @@
 -->
 # The pivot engine: one generalised, very large-scale pivot for all of Drishti
 
-**Status: design, not built.** Nothing in this document is built unless [section 2](#2-what-drishti-has-today) says so and names the
-guide it was read from (2026-11-02). The plan's rows are in
-[IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube)
-(proposed; placement to confirm). The screens are chosen from three mock-ups ([section 25](#25-mock-ups-the-screens-to-build)) before the build.
+**Status: phase P1 partly built (2.9.11.a, unreleased); the rest design, not built.** Built, and described for users in
+[PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md): the module `drishti-bicompute` (the core with declarative cell sets, the provider and function
+SPIs, the mergeable and exact holistic built-ins, the GROUPING SETS compiler and the DuckDB tabular provider over the Data view's tables, the
+ordered merge, the partial-state cache, the split-and-merge harness, xlsx and CSV export), the VaR provider on the new SPI, the API, the
+CLI and the screen of mock-up A. Everything the build checklist ([section 24](#24-build-checklist)) leaves unticked is not built. The plan's
+rows are in [IMPLEMENTATION_PLAN.md, 2.9.11.a](IMPLEMENTATION_PLAN.md#2911a-the-pivot-engine-then-the-mr-cube).
 
 **What the product owner asked for (2026-11-02, in their words):** "build capability of a super scalable very generalized pivot
 capability. Think of MS Excel but more capable. Built in aggregation functions but people can also supply custom aggregation functions.
@@ -120,7 +122,7 @@ Read from the guides and the code on 2026-11-02. The engine reuses every row of 
 | True totals: a total of a measure that does not add up is one more query per level, never the sum of the figures shown | [BI_GUIDE.md, true totals](../guides/BI_GUIDE.md#32-true-totals) | yes | the rule, generalised to every provider |
 | Runs and run cards: a range estimate from Delta statistics, "why it is large", confirm above a minute or 500 million rows, run in background | [BI_GUIDE.md](../guides/BI_GUIDE.md) (runs) | yes | the scan estimate and the background job |
 | The `matrix` visual (rows × columns, subtotals at every level) and Analyse's **Slice** (`POST /bi/explore/pivot`) | [BI_GUIDE.md](../guides/BI_GUIDE.md) | yes | replaced by the pivot engine's answer (they keep their YAML; [section 6.2](#62-the-tabular-provider-duckdb)) |
-| The Pivot tab on a table or ladder (Rachana `pivot`) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder), [USER_GUIDE.md](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way) | yes | becomes a pivot view over the panel's rows |
+| The Pivot tab on a table or ladder (Rachana `pivot`) | [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder), [USER_GUIDE.md](../guides/USER_GUIDE.md#pivot-slice-a-table-your-way) | yes | becomes a pivot view over the panel's rows |
 | Python measures in BI: `compute(table, params)` per group, sandboxed (isolated process, empty environment, no network, scratch folder only, CPU, memory, output limits, package allow-list) | [BI_GUIDE.md section 34](../guides/BI_GUIDE.md#34-python-in-bi-measures-visuals-and-data-prep-written-in-python), [its sandbox](../guides/BI_GUIDE.md#7-the-sandbox-exactly) | yes | the sandbox's guards, unchanged; a Python measure is a holistic custom function |
 | Compute worker pools (`drishti-compute`): fork-server per worker on Linux, warm workers on Windows, Arrow IPC scratch transport, limits, fan-out over nodes | [PYTHON_COMPUTE.md section 7](PYTHON_COMPUTE.md#7-the-worker-pool) | yes (C1 to C3) | the per-node pool that runs Python custom functions |
 | VaR sharding: partial vectors per shard added in shard order, bit-equal to the whole (`ShardedMeasure`, `ShardGather.Combine`) | [VAR_SHARDING.md](VAR_SHARDING.md) | yes | the cluster merge, lifted into the core for every provider |
@@ -395,10 +397,103 @@ When one table is far beyond what a few Drishti nodes scan in minutes (tens of t
 answers come back as mergeable states, and the core is unchanged. Not in this design's build; [section 9.10](#910-duckdbs-limits-stated-honestly)
 says when it is needed, and decision 8 asks whether to keep it parked.
 
+### 6.7 Documents: paths, arrays and grains
+
+*Product owner, 2026-11-03: "our data in lake is in json format so then how pivot will work on it?"; the design below, recommended and
+asked for.*
+
+**How the lake holds an entity.** A kind of reference or numeric data (a risk vector, a scenario PV, a limit) is stored as typed
+columns. An **entity document** (a trade, a counterparty, a netting set) is stored as the whole source document in a text column, `doc`
+(JSON), beside a few **promoted** columns that the pack names in the connector's `layout.<kind>.columns` (for trades `TRADE_ID`,
+`PRODUCT_TYPE`, `COUNTERPARTY`, `PORTFOLIO` …, holding exactly the document's values). A trade from Calypso carries nested parts inside
+`doc`: `LEGS` (a list; each leg has `LEG_ID`, `LEG_TYPE`, `CURRENCY`, `NOTIONAL`, an `INDEX` object …) and `EVENTS` (a list; each event
+has `EVENT_TYPE`, `EVENT_DATE`, `AMOUNT`, `CURRENCY` …).
+
+**One notation: Rachana's paths** (product owner, 2026-11-03: *"$.ABC.DEF kind of Sutra-like notation for nested columns ... keeps our
+pivot and BI in sync"*; *"Rachana grammar can be part of our pivot design"*). Every pivot field is a Rachana path or expression
+([RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md), the document `$`, the element `@`), exactly as a Sutra binds it and as a BI
+dataset column's `path:` names it. The field list writes the path for a person who picks from it; a person may also type one.
+
+| Path | Means | Grain |
+|---|---|---|
+| `$.PRODUCT_TYPE` | a top-level field | trade |
+| `$.LEGS[0].CURRENCY` | the first leg's currency: one value per trade | trade |
+| `$.LEGS[?@.LEG_TYPE == 'FLOAT'][0].INDEX.NAME` | the floating leg's index, wherever the leg sits | trade |
+| `size($.LEGS)` | how many legs a trade has (a Rachana function) | trade |
+| `$.LEGS[*].NOTIONAL` | every leg's notional | **leg** (the `[*]` makes the grain) |
+| `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL` | the fixed legs' notionals | leg |
+| `$.LEGS[*].CASH_FLOWS[*].AMOUNT` | every cash flow of every leg | **cash flow** (two `[*]`: a list inside a list) |
+| `$.EVENTS[*].EVENT_TYPE` | every event's type | **event** |
+
+**The grain comes from the path:** no `[*]` is the entity's grain; each `[*]` steps into a list, and the deepest list a view uses is its
+grain. Two paths whose `[*]` lists are not one inside the other (`$.LEGS[*]` and `$.EVENTS[*]`) are separate lists and are never crossed.
+
+**One parser, no second dialect.** The pivot engine parses paths with Rachana's own expression parser (the `drishti-rachana` module) and
+compiles them: a path a promoted or dataset column holds reads that column; anything else becomes DuckDB JSON over `doc`
+(`json_extract`, `unnest` for `[*]`, `list_filter` for `[?...]`). A Rachana function with no SQL form is refused for a pivot with the
+reason, never evaluated a second way. BI datasets name document columns with the same paths: `path: $.LEGS[0].CURRENCY`, and
+`each: $.LEGS` is `$.LEGS[*]`; the BI guide's examples use the `$.` form, and BI's older dotted form (`LEGS.0.CURRENCY`) is read as the
+same path for existing datasets.
+
+**Three routes from a document field to a pivot, chosen per field, fastest first:**
+
+| Route | What it reads | Cost | When |
+|---|---|---|---|
+| **promoted column** | a typed column of the table | a column scan: fast at any size | the field is in the connector's `layout.<kind>.columns` |
+| **dataset column** | a BI dataset's column (a `path:` into the document, or an `each:` table), extracted once per business date into the BI `cached` layer (Parquet) | a column scan after the first build | the field is declared in a dataset ([BI_GUIDE.md](../guides/BI_GUIDE.md), "Tables and columns") |
+| **ad-hoc path** | DuckDB's JSON functions over `doc` at query time (`json_extract_string(doc, '$.LEGS[*].CURRENCY')`) | every document parsed for the scanned dates | anything else; the scan estimate ([section 9.7](#97-scan-estimates-before-anything-runs)) shows the cost first, and a large one is refused with the cheaper route named ("promote `LEGS.CURRENCY`, or add it to the trades dataset") |
+
+The person never chooses the route: the field list shows the field once, and the engine takes the fastest route that holds it. An
+administrator sees, per pack, the ad-hoc paths people use most with **Promote** and **Add to dataset** buttons.
+
+**The field list follows the document's shape.** It is built from the kind's data contract (every field, its type and meaning) and,
+where the contract is silent, from a sample of documents:
+
+```
+Trade                         (grain: one row per trade)
+  TRADE_ID, TRADE_DATE, PRODUCT_TYPE, COUNTERPARTY, PORTFOLIO, CURRENCY, QUANTITY, PRICE …
+  Legs                        (grain: one row per leg; a list in the document)
+    LEG_ID, LEG_TYPE, LEG_ECONOMIC_TYPE, CURRENCY, NOTIONAL, SETTLEMENT_TYPE
+    Index                     (an object inside the leg: one value per leg)
+      NAME, TENOR …
+  Events                      (grain: one row per event)
+    EVENT_TYPE, EVENT_DATE, AMOUNT, CURRENCY
+```
+
+A **nested object** (a value, not a list) is just more fields of its parent, named by their path (`LEGS.INDEX.NAME` shows as
+*Legs › Index › Name*). A **list** is a **grain** of its own.
+
+**One grain per view, and figures never counted twice.**
+
+1. **The view's grain is the finest one its rows, columns and values use.** Rows *Desk* and values *Sum of Legs › Notional* is a leg-grain
+   view: one row per leg is aggregated. The grid's header says so: *per leg*.
+2. **A coarser figure in a finer view is counted once per parent.** *Sum of Quantity* (a trade field) in a leg-grain view sums each trade's
+   quantity once, by its id, never once per leg; the header says *per trade, once*. A trade with three legs adds its quantity once. The
+   engine compiles it as an aggregate over the distinct parents in each cell (a grouping on the parent id first, then the cell), which
+   the split-and-merge harness tests.
+3. **Two different lists are never crossed.** Legs and Events of the same trade are independent lists: a view that would put a leg field
+   and an event field on the same row is refused with the reason ("Legs and Events are separate lists of a trade; pick one, or compare
+   them side by side as two values"), because crossing them multiplies rows (three legs and four events would give twelve).
+4. **Filters say which grain they mean.** *Legs › Currency = JPY* on a trade-grain view keeps the trades **with any** JPY leg (shown as
+   *trades with a leg in JPY*); on a leg-grain view it keeps the JPY legs. A filter with *all legs* is offered for the trade grain too.
+5. **Masks and row rules apply per path**: a masked field is not offered, at any depth; the trade's row rules decide its legs and events.
+
+**Worked examples on the demo lake** (the pivot guide carries each one with its real figures, its screen, its command line and its
+saved view in YAML, all produced by running it on `drishti.py lake demo`):
+
+| Question | Rows × columns | Values | Grain |
+|---|---|---|---|
+| Notional by desk and month | `$.DESK` × `$.TRADE_DATE` (month) | Sum of `$.LEGS[*].NOTIONAL` | leg |
+| How many trades have a JPY leg, by product | `$.PRODUCT_TYPE` | Count of trades, filter `$.LEGS[*].CURRENCY = 'JPY'` (any leg) | trade |
+| Fixed against floating legs per counterparty | `$.COUNTERPARTY` × `$.LEGS[*].LEG_TYPE` | Count of legs, Sum of `$.LEGS[*].NOTIONAL` | leg |
+| Quantity per desk without double counting | `$.DESK` | Sum of `$.QUANTITY` (*per trade, once*) beside Count of legs | leg, the quantity once per trade |
+| Booking events this week by type | `$.EVENTS[*].EVENT_TYPE` × `$.EVENTS[*].EVENT_DATE` (day) | Count of events | event |
+| VaR beside notional | Desk | VaR (the VaR provider), Sum of Legs › Notional | trade and leg: two providers side by side, each exact |
+
 ## 7. From the MR cube's core to the pivot engine: what is kept, what changes
 
 The paused branch `wip/mr-cube` (at `17a4af0ea`; compiles; its fifteen server tests pass) holds the shared cube core in
-`drishti-server/src/main/java/com/ash/drishti/server/cube/` (`CubeView` with the `MCUBE` text grammar, `CubeMeasure` with
+its `drishti-server` package `com.ash.drishti.server.cube` (on that branch only: `CubeView` with the `MCUBE` text grammar, `CubeMeasure` with
 `Kind {ADDITIVE, VECTOR, FORMULA}` and `needs`, `CubeDimension`, the `CubeSource<A>` and `Universe<A>` SPI on `OrdinalSet` members,
 `CubeEngine` evaluating one batch of R × C + R + C + 1 sets with totals, diversification, the cell budget, busy protection and a
 byte-weighed cache `cube.cells`, `CubeViews` for saved and shared views, `CubeExport`, `CubeController` at `/api/v1/cube`), the VaR
@@ -418,7 +513,7 @@ source (`VarCubeSource`, `VarCubeExtras`, `VarCubeController`) and the console's
 
 **Kept as they are:** saved and shared views (`CubeViews`, now `PivotViews`: a shared view opens with the reader's entitlements, never
 a copy of numbers), provenance ids per answer, the cell budget and the busy-protection check, the diversification view, the console's
-grid (`cube-core.js` becomes `pivot-core.js`, the MR cube's landings keep their look), the `MCUBE` command word and its text grammar (it
+grid (`cube-core.js` becomes `pivot-grid.js`, the MR cube's landings keep their look), the `MCUBE` command word and its text grammar (it
 becomes the MR cube's preset of the `PIVOT` grammar), the MR source's arithmetic and every test of the branch, which must pass
 unchanged against the engine (the MR cube's acceptance test of phase P1).
 
@@ -756,19 +851,23 @@ multi-fact queries and fan-out guards behave exactly as in BI. A pivot view over
 
 ### 12.4 Nothing breaks: the migration
 
-1. **Shadow mode**: the engine computes every BI query beside the current path (a setting, `drishti.pivot.bi.shadow`), on the BI test
-   suites and the shipped sample reports; a comparison test fails on any difference beyond float tolerance (1e-9 relative; exact for
-   counts and decimals), reporting the report, visual, cell and both values.
+*One path, migrated cleanly (product owner, 2026-11-02: "No need to keep BI on old engine ... do a clean migration"; no dual machinery).*
+
+1. **Parity proved by tests before the switch**, on the branch that moves BI, not by running two paths in production: every BI test
+   suite and every shipped sample report is answered by the pivot engine and compared with the figures the current code gives, recorded
+   once from it before the move (a fixture per report, visual and cell); any difference beyond float tolerance (1e-9 relative; exact
+   for counts and decimals) fails, naming the report, visual, cell and both values.
 2. **Known, intended differences** (listed, reviewed, each with a test): none expected for sums, counts, minimums and maximums; averages and
    ratios identical (they are already true totals); a distinct count stays **exact** in BI unless the model's author opts into ≈.
-3. **Switch per model**: `engine: pivot` in a model's YAML (default after the parity gate), with `engine: duckdb` kept as the old path for
-   one release, then removed.
-4. **The parity gate**: every BI test suite and every shipped report equal on both paths, on the drill machine, before the default flips.
+3. **One switch, for everything, in the same release**: when the parity tests pass, BI's matrix, totals, rollups and measures run on the
+   engine and **BI's old aggregation code is deleted** in the same change (git keeps its history). No setting chooses between two paths;
+   a model's YAML needs no change.
+4. **The release's drills** run every BI suite on the new path only.
 
 ### 12.5 When
 
 Phase **PB**, after P1 and P2 ([section 22](#22-phases-and-sizes)): the engine first proves itself on the pivot screen and the MR cube; BI
-then moves with the shadow comparison. Size L.
+then moves, its parity proved by tests and the old code deleted (section 12.4). Size L.
 
 ## 13. The module: drishti-bicompute
 
@@ -979,7 +1078,6 @@ drishti:
       harness: { tolerance: 1.0e-12, splits: [2, 3, 16], seeds: 5, max-ns-per-row: 2000 }
       python: { enabled: false, pool: pivot-fn, timeout-seconds: 30, view-timeout-seconds: 300, memory-mb: 1024, batch-rows: 65536 }
       java: { enabled: false, dir: ./plugins/pivot-functions }
-    bi: { shadow: false }            # phase PB: compute BI queries on both paths and compare
 ```
 
 Memory-only stores add `user-code: allow` in their store entry (`config/engines/memory-lake.yaml`) to let custom Python functions read
@@ -1010,11 +1108,13 @@ Errors are in words with a `DRS-` code assigned when built and listed in API_GUI
 ## 18. The command line
 
 ```
-drishti.py pivot query  --source trading.trades --rows DESK --cols month:TRADE_DATE --values "sum(NOTIONAL_USD)" --date 2026-10-30 [--csv|--arrow out.arrow]
+drishti.py pivot sources
+drishti.py pivot fields trade
+drishti.py pivot run --source trade --rows DESK --cols TRADE_DATE:month --values "sum(NOTIONAL_USD)" --date 2026-10-30 [--csv out.csv]
 drishti.py pivot estimate --view asha/desk-risk
-drishti.py pivot views list | show asha/desk-risk | export asha/desk-risk --xlsx out.xlsx [--native-pivot]
-drishti.py pivot explain --view asha/desk-risk --cell "DESK=EMEA" --from 2026-09-30 --to 2026-10-30
-drishti.py pivot functions list | test fn.py --sample rows.csv | submit asha/trimmed_mean | approve asha/trimmed_mean@3 --reason "..."
+drishti.py pivot export --view asha/desk-risk --format xlsx -o out.xlsx      (also csv, arrow; --what rows --cell DESK=EMEA; --what definition)
+drishti.py pivot views
+drishti.py pivot save desk-risk --source trade --rows DESK --values "sum(NOTIONAL_USD)" --share role:risk
 ```
 
 The same words as the API; `--wait` for background runs; a refused view prints the same sentence as the screen.
@@ -1051,7 +1151,7 @@ The same words as the API; `--wait` for background runs; a refused view prints t
 | `ExplainAddsUpTest` | the steps of every explanation add up to the difference |
 | `ChartStackingTest` | a non-additive measure is never stacked; diversification drawn as its own segment |
 | `XlsxPivotTableTest` | the native PivotTable opens with the view's layout and its totals equal the engine's; non-mergeable measures are not data fields |
-| `BiShadowParityTest` (phase PB) | every BI test suite and shipped report equal on both paths |
+| `BiParityTest` (phase PB) | every BI test suite and shipped report equal to the figures recorded from the code it replaces |
 | `PivotOffTest` | the engine switched off: 404 in words, the words gone everywhere, the cubes refused |
 | browser test | the screen of the chosen mock-up: drag, expand, chart, provenance, playground; dark and light; phone width |
 
@@ -1077,7 +1177,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 | **P1: the core, the tabular provider, the built-ins and the screen** | the module `drishti-bicompute` with the core migrated from `wip/mr-cube` (section 7) and DEL moved from BI; cell keys and grouping sets; mergeable and exact holistic built-ins; the tabular provider (BI layers, lake scans, memory-only); the VaR provider moved; the partial-state cache, budgets, busy protection, the cluster merge; correctness (item 9); provenance (4); time travel and compare (2); cell reference names (8); expand and collapse (section 11, P1 part); the pivot screen of the chosen mock-up with show-as, grouping, slicers, conditional formats, drill-through; pick-and-choose charts (14.3, P1 part); exports xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; the engine switch; API and CLI | XL (two large parts: the core and provider; the screen) | 2.9.11.a |
 | **MR cube on the engine** | the paused branch resumed: its VaR source as a provider, its landings A, B and C on the pivot screen's grid, its tests unchanged; FRTB-SA and SIMM providers when those engines ship | L | 2.9.11.a |
 | **P2: custom functions, explain, what-if** | the four languages, the harness, the playground, versions, approval, audit; Python in the per-node pool (shipped off); explain the difference (1); what-if (3); view versions and cell comments (10); expand by and holistic Others (section 11, P2 part) | L | 2.9.11.b |
-| **PB: BI on the pivot engine** | section 12: shadow mode, the parity gate, models as sources, measures as functions, the switch per model | L | 2.9.11.b |
+| **PB: BI on the pivot engine** | section 12: parity proved by tests, models as sources, measures as functions, one switch with the old code deleted | L | 2.9.11.b |
 | **P3: scale** | sketches (HLL, KLL, Space-Saving) and exact on request; rollups of partial states refreshed incrementally; aggregate awareness; progressive answers; scan estimates with options; scatter and gather of tabular partials across nodes with hedging; live pivots (5); the benchmark B1 to B3 | L | 2.9.11.c |
 | **P4: Excel and advice** | the native PivotTable export and charts bound to it; references in formulas and Excel (8); Python functions on by default where approved; layout advice; ask in words (6); automatic insights (7) | M to L | unscheduled candidate |
 
@@ -1095,7 +1195,7 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 | 6 | Percentile partials across nodes: KLL built in Java from streamed values, or per-node `approx_quantile` points merged | KLL in Java (a stated, tested error); revisit if the benchmark shows the stream costs too much |
 | 7 | Progressive answers on by default for views estimated over 2 s | yes; sampled figures always marked ≈ with their interval; never for VaR |
 | 8 | A distributed SQL backend (Trino, StarRocks, ClickHouse) | parked; revisit only if B3 shows common views over 5 min on 3 nodes |
-| 9 | BI on the engine | in 2.9.11.b behind shadow mode; default flips per model after the parity gate; the old path kept one release |
+| 9 | BI on the engine | in 2.9.11.b: parity proved by tests against recorded figures, then one switch with BI's old aggregation deleted in the same release (product owner, 2026-11-02 and 2026-11-03: no dual machinery) |
 | 10 | Where the screen lives | `PIVOT <GO>`, Views → Pivot, and **Pivot** on every table, model and cube |
 | 11 | The mock-up | A ([section 25](#25-mock-ups-the-screens-to-build)) |
 | 12 | Aggregate-only roles: minimum members per cell | 1 as shipped (no change for anyone); a site may raise it |
@@ -1104,28 +1204,31 @@ come from the seeded generators (JSON Lines to Delta, as every pack's data), clu
 
 ## 24. Build checklist
 
-- [ ] `drishti-bicompute` module (no Spring; dependencies per decision 2); the architecture rule "no other module re-implements aggregation"
-- [ ] core moved from `wip/mr-cube` with the eight changes of section 7; the branch's fifteen tests pass on the engine
+- [x] `drishti-bicompute` module (no Spring; drishti-api, drishti-common, DuckDB); the architecture rule "no other module re-implements aggregation" is a build test (AggregationOwnerTest)
+- [ ] core moved from `wip/mr-cube` with the eight changes of section 7 (built: changes 1 to 8 in the module; the branch's own tests run when the MR cube resumes on the engine)
 - [ ] DEL moved from `server/bi/expr`; BI calls the module
-- [ ] function SPI, kinds, codecs; built-ins of section 5.2; exact quantile by selection
-- [ ] grouping-sets compiler; DuckDB executor; tabular provider (BI layers, lake scans with shipped extensions, memory-only Arrow views)
-- [ ] VaR provider (from `VarCubeSource`); FRTB-SA and SIMM providers with their engines
-- [ ] partial-state cache, cell budgets, busy protection, per-person limits
-- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell
-- [ ] correctness: currencies, units, masks, no truncation, exact or ≈
-- [ ] provenance per answer and cell; time travel; compare; cell references
-- [ ] expand and collapse (section 11), lazy, saved in views and links
-- [ ] the screen (chosen mock-up), show-as, grouping, slicers, conditional formats, drill-through, keyboard, phone tiers
-- [ ] pivot charts (section 14.3), linked both ways, stacking rule
-- [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts
+- [x] function SPI, kinds, codecs; built-ins of section 5.2 except `first`/`last` and the sketches (P3); exact quantile from the values (selection with P3)
+- [ ] grouping-sets compiler; DuckDB executor; tabular provider (built: the Data view's tables staged in memory, direct Delta and Iceberg lake reads of local Parquet files with pruning and skipping, a panel's rows; not yet: BI layers, object stores)
+- [ ] VaR provider (built: `VarPivotProvider`, each cell the engine's scope; `VarCubeSource`'s batching, hierarchy levels and measures with the MR cube); FRTB-SA and SIMM providers with their engines
+- [ ] partial-state cache, cell budgets, busy protection, per-person limits (built: all but the per-person limit)
+- [ ] cluster: partial codec, ordered merge, file assignment, hedging, a node down said in the cell (built: state codecs and the ordered merge of local shards)
+- [ ] correctness: currencies, units, masks, no truncation, exact or ≈ (built: masks before aggregation, no truncation, exact or holistic marked, currencies (explicit conversion, mixed refused per cell), units (rates and percentages never summed, units on headers))
+- [x] provenance per answer and cell; time travel (by business date; data versions pinned with P3); compare; cell references
+- [x] expand and collapse (section 11, P1 part and expand by), lazy, saved in views and links
+- [ ] the screen (chosen mock-up), show-as, grouping, slicers, conditional formats, drill-through, keyboard, phone tiers (built: mock-up A, show-as in the API, grouping, slicers, conditional formats (colour scale, data bars), drill-through, keyboard; not yet: phone tiers)
+- [ ] pivot charts (section 14.3), linked both ways, stacking rule (built: chart of a selection, the stacking rule, a click opens the member; not yet: pinned charts, PNG and SVG export)
+- [ ] exports: xlsx values with outline, csv, Arrow, Power Query, PNG, SVG; later the native PivotTable and bound charts (built: xlsx with outline, formulas and Provenance, csv, Arrow, rows, definition)
 - [ ] custom functions: four languages, harness, playground, versions, approval, audit, labels; Python pool `pivot-fn` with the BI sandbox
 - [ ] explain the difference; what-if overlays; view versions; cell comments
-- [ ] BI shadow mode, parity gate, models as sources, measures as functions
+- [ ] BI parity tests against recorded figures, models as sources, measures as functions, the old aggregation deleted
 - [ ] sketches, rollups of states, incremental refresh, aggregate awareness, progressive answers, scan estimates, live pivots
-- [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md
-- [ ] API, `drishti.py pivot`, error codes in API_GUIDE
+- [ ] `config/engines/pivot.yaml`, the catalogue entry (`mr-cube` and `ccr-cube` need `pivot`), CONFIGURATION.md (built: `config/engines/pivot.yaml`, the catalogue entry, `mr-cube` needs `pivot`; `ccr-cube` when it is built)
+- [x] API, `drishti.py pivot`, error codes in API_GUIDE
 - [ ] tests of section 20; the benchmark of section 21 into BENCHMARK.md
-- [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine
+- [ ] docs: a pivot guide and a tutorial (UI, CLI and YAML at every step), Help entries, a custom-function guide, the MR cube guide on the engine (built: the guide, tutorial 33, Help entries)
+- [ ] Rachana paths as the field notation (one parser, compiled to columns or DuckDB JSON; the grain from `[*]`); BI's examples in the `$.` form (built: the pivot side; the BI datasets' `$.` form to come)
+- [x] documents ([section 6.7](#67-documents-paths-arrays-and-grains)): the field list from the contract and the document's shape; promoted, dataset and ad-hoc routes with the scan estimate; one grain per view; coarser figures once per parent; separate lists never crossed; filters per grain; Promote and Add to dataset for administrators
+- [x] the pivot guide's worked examples of section 6.7, each with its real figures from the demo lake, a screenshot, the command line and the saved view's YAML
 
 ## 25. Mock-ups: the screens to build
 

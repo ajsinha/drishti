@@ -54,8 +54,9 @@ the UI, the command line and the YAML at every step, with real screenshots. The 
   ([RACHANA_REFERENCE.md](docs/guides/RACHANA_REFERENCE.md#panels-the-twenty-two-kinds-and-developing-a-new-one)). Tables filter like Excel and chart in place.
 - **Links** between entities, resolved through the entity graph, with badges; **impact** (F8) shows what depends on an entity, what it
   rolls into and the amount at stake.
-- **The Pivot tab**: an Excel-style pivot of a table or of a search's every match, computed on the server, saved per user and promoted to
-  the Sutra by an author.
+- **Pivot** (`PIVOT <GO>`, [PIVOT_GUIDE.md](docs/guides/PIVOT_GUIDE.md)): any table, a page's table, a search's every match or VaR as a
+  pivot computed by the pivot engine, every total from its own members; saved and shared views, Excel with formulas only where a figure
+  adds up; a page table's arrangement promoted to its Sutra by an author.
 - Guides: [USER_GUIDE.md](docs/guides/USER_GUIDE.md), [COMMAND_CATALOG.md](docs/guides/COMMAND_CATALOG.md). Tutorial:
   [2, Look up anything](docs/tutorials/02-look-up-anything.md).
 
@@ -227,7 +228,7 @@ Schema is generated from the Java records and checked against real views ([VIEWM
 
 **The module layout.** One Spring Boot application on virtual threads, built from Maven modules that depend in one direction: the
 plugin SPI (`drishti-api`, no Spring), the Rachana grammar and inference, the entity graph, the engine, identity, packs, the lake
-engines (`drishti-deltalake`, `drishti-iceberg`, `drishti-lakeio`, `drishti-lakeload`), compute, Drishti\*net, the AI layer, and one
+engines (`drishti-deltalake`, `drishti-iceberg`, `drishti-lakeio`, `drishti-lakeload`), the in-memory lake (`drishti-memlake`), compute, Drishti\*net, the AI layer, and one
 module per connector. The console is a separate Python web application
 ([ARCHITECTURE.md › Module layout](docs/architecture/ARCHITECTURE.md#13-module-layout-java)).
 

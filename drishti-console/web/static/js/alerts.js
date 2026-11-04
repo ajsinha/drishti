@@ -27,7 +27,9 @@
   document.body.appendChild(tray);
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function show() { badge.textContent = String(count); badge.hidden = count <= 0; }
-  window.DrishtiChannel.subscribe('alerts', { alert: onAlert, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (channel.js)
+  window.DrishtiChannel.subscribe('alerts', { hello: onHello, alert: onAlert, notice: onNotice, switches: onSwitches, edit: onEdit });   // on the tab's one live connection (channel.js)
+  // the server's first event on the feed: from here on alerts, notices and write-back edits reach this tab (the bell says so to tests and tools)
+  function onHello() { bell.setAttribute('data-alerts-live', ''); }
   fetch('/api/inbox/count', { headers: { Accept: 'application/json' }, credentials: 'same-origin' })
     .then(function (r) { return r.ok ? r.json() : { unread: 0 }; })
     .then(function (j) { count += (j && j.unread) || 0; show(); })

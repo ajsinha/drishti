@@ -21,7 +21,7 @@
   <parent>
     <groupId>com.ash.drishti</groupId>
     <artifactId>drishti-parent</artifactId>
-    <version>2.9.11</version>
+    <version>2.9.11.a</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
   <artifactId>drishti-engine</artifactId>
@@ -29,6 +29,7 @@
   <description>View pipeline, caches, live hub</description>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-inference</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-bicompute</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-graph</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-diskcache</artifactId></dependency>
     <dependency><groupId>io.micrometer</groupId><artifactId>micrometer-core</artifactId></dependency>

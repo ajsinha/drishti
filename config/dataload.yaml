@@ -1,0 +1,55 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# config/dataload.yaml: the data inbox's routing rules (docs/architecture/DATALOAD_INBOX.md section 5; docs/guides/DATA_GUIDE.md,
+# "The data inbox"). Named by drishti.dataload.rules-file; read again at every cycle, so a change needs no restart.
+# A file in the inbox goes where its .ready file says (pack:, kind:, ...), else where the FIRST rule whose match: fits its name says.
+# The loader takes the table, its layout, its key and its date field from the pack: a rule only names the pack and the kind.
+dataload:
+  rules: []                          # the rules, first match wins: match (a glob on the file name), pack, kind, and optionally connector, table, date-from, date-field, key, lake, format
+  unmatched: fail                    # a file no rule matches goes to failed/ with the reason; fail is the only choice (a file is never guessed)
+
+# Examples for the demo packs (uncomment under rules:, or copy into your own file):
+#
+#   - match: "trades-endur-*.jsonl.gz"       # the trading pack's Endur trades, one file a business date
+#     pack: trading
+#     kind: trade
+#     connector: trade-endur                 # the table that connector reads (trading/trade_endur)
+#     date-from: name                        # the business date is the YYYY-MM-DD in the name (trades-endur-2026-11-03.jsonl.gz)
+#   - match: "trades-calypso-*.jsonl.gz"
+#     pack: trading
+#     kind: trade
+#     connector: trade-calypso
+#     date-from: name
+#   - match: "scenario-pv-*.jsonl.gz"        # the market-risk pack's scenario PVs (its risk-store connector)
+#     pack: market-risk
+#     kind: scenario-pv
+#     date-field: BUSINESS_DATE              # date-from: field (the default): the pack's ingest date field, or this field of each row
+#   - match: "*.zip"                         # an archive: one dataset named after it, or a folder per table (DATA_GUIDE.md section 2.7)
+#     pack: trading
+#     kind: trade
+#     connector: trade-endur
+#     date-from: name
+#
+# Every key of a rule:
+#   match       a glob on the file's name: * any characters, ? one, [abc] one of them, {a,b} either
+#   pack        a loaded pack's name
+#   kind        one of the pack's kinds
+#   connector   the pack's Delta or Iceberg connector whose table is written (default: the first that serves the kind)
+#   table       the table's folder, over the connector's (rare)
+#   date-from   field (default): each row's date field (date-field, else the pack's ingest.<kind>.date); name: YYYY-MM-DD in the file's name
+#   date-field  the field that holds each row's business date
+#   key         the field that holds each row's id (default: the pack's ingest.<kind>.key)
+#   lake        the lake root, over drishti.dataload.lake
+#   format      delta (default) or iceberg

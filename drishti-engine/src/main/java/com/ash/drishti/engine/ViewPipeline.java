@@ -307,7 +307,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
 
     /**
-     * The rows of one table or ladder of {@code ref}'s view, as raw values of its pivot's fields (the Pivot tab): the same
+     * The rows of one table or ladder of {@code ref}'s view, as raw values of its pivot's fields (Pivot (the pivot screen)): the same
      * document, Sutra and business date as the view, every row up to {@code drishti.pivot.max-records}.
      *
      * @throws DrishtiException {@code DRS-1001} when the view has no such panel or the panel offers no pivot

@@ -15,7 +15,109 @@
 -->
 # Changelog
 
-## Unreleased (on develop, after 2.9.11)
+## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
+
+### The data inbox
+
+- **The data inbox: files dropped in a folder are loaded into the lake by themselves (DATALOAD_INBOX.md; DATA_GUIDE.md section 7;
+  OPERATIONS.md 11.4; TOOLS.md 5.3a; API_GUIDE.md, Data loads).** Put JSON Lines files or archives (`.jsonl`, `.ndjson`, `.json`; plain,
+  `.gz`, `.zst`; `.zip`, `.tar`, `.tar.gz`, `.tgz`) in `<data>/dataload/inbox` with a `<file>.ready` beside each (or one `ready.all`);
+  every `interval` (10 minutes) the owner node takes the whole ready, stable batch at once into `inprocess/<run>/` (a run id is its start
+  time and node, `20261103T150000Z-drishti-main`), skips a file whose SHA-256 was loaded before, routes each file by its `.ready` or the
+  first rule of `config/dataload.yaml`, loads the files of each table with the parallel lake loader (`LakeLoad`) started as a child Java
+  process with its own heap (`loader-heap`), records every step in `ledger/`, moves each file with its marker and a report to
+  `outbox/<day>/<run>/` (or `failed/` with the reason), and announces each pack, kind and business date through `LoadService`, as
+  `POST /api/v1/packs/{pack}/loads` does. Runs never overlap: a cycle due while a run loads is recorded as *skipped: run … still loading
+  (n min)*, and Load now says the same. Crash-safe: a stopped server's run is finished at the next cycle, never loaded twice. One runner
+  per folder (`owner`, plus `inbox.lock` with a heartbeat). Busy protection skips a cycle when the server is short. In a cluster
+  every signal is passed on to the other live members by `loads.LoadForwarding` (the path a person's announcement already took, now one
+  class for both), as the owner node: `node:<id>` with the service role, signed with the cluster key; the receiving `LoadController`
+  takes such a signed node signal as an administrator's. A file of lake rows or loader rows is refused with the reason (`RowForms`): the
+  parallel loader has no reader for those forms.
+- **A data-load signal makes a new table readable at once (the Delta connector).** A connector whose domain had no table when it started
+  (the first load into an empty lake) found the new table only at its next periodic reindex, so the signal's verify said *not found*;
+  the signal's refresh (`purgeCaches`, `refreshVersions`) now looks for new tables (`NewTables`, tested by `NewTablesTest`) and lists one it finds at once. Found by the data
+  inbox's end-to-end check.
+- New module `drishti-dataload` (plain Java: `Inbox`, `Claims`, `Ledger`, `Routes`, `ReadyNote`, `LoaderProcess`, `Outbox`, `Recovery`,
+  `Cycle`, `DataInbox`); the server's wiring is `server.dataload` (`DataLoadConfiguration`, `DataLoadController`). New engine `dataload`
+  in the catalogue, `config/engines/dataload.yaml` (off as shipped; every key in CONFIGURATION.md), `config/dataload.yaml` (the routing
+  rules; the demo packs' rules commented). New endpoints `GET /api/v1/admin/dataload`, `POST /api/v1/admin/dataload/run` and
+  `POST /api/v1/admin/dataload/retry` (administrators; the `POST`s in the `loads:write` scope). New command `drishti.py dataload
+  status|run|retry`. `LakeLoad.reads(name)` tells whether the loader reads a file name. Two new rules in `ArchitectureRulesTest`
+  (`dataInboxIsPlainJava`, `dataInboxWritesNoTable`). The Admin screen comes after its mock-ups.
+
+### Menus, Help and fixes
+
+- **Pivot: "show values as" on views of several dimensions.** % of row, % of column, % of parent and rank split a cell's key at its
+  first `|`, but a key of several coordinates holds `|` too, so on a view with two or more row or column dimensions they read the wrong
+  total (or none). The cell is now split by the row and column keys themselves; `ShowAsTest` checks every share against its own total.
+
+- **Pivot: a JSON Lines export** (PIVOT_GUIDE.md, Export). The pivot screen and `POST /api/v1/pivot/export` offer `jsonl` beside Excel, CSV and
+  Arrow: one object a cell and measure, and the rows of a cell one object a row, so every export of the console offers the data standard.
+
+- **One Engines menu (mock-up engines-menu/A; USER_GUIDE.md, The top bar).** The Engines menu replaces the VaR and Exposure top-level
+  menus (and the VaR and Exposure entries of Views): a column per compute engine running in the cluster (VaR `VAR`, Exposure `EXP`,
+  FRTB-SA `FRSA`, SIMM `SIMM`), its command word in the column's head, every page one click away with its command on the right. It is
+  drawn only for a role that opens an engine (`opens:` per engine in `drishti-console/config/menus.yaml`: `role:<name>` or
+  `pack:<name>`; administrators open every engine). The same rule, in one place (`core/menus.py` `engine_refused`), drops an engine's
+  command words from the type-ahead for a role that does not open it and refuses them when typed, in words ("VaR is not opened for
+  your role; ask an administrator."), so the bar is Views, Engines, BI, Build, Admin, Help for a risk administrator and
+  Views, BI, Build, Help for a role that opens none. Past four running engines (`search-over`) a search box filters the pages by name,
+  description or command (Enter opens the first); administrators see *Admin → Engines* and, at the foot, the engines running on no
+  server, greyed. On a phone the columns fold into a drawer, one engine open at a time, 44 px rows. Drishti Risk's bar is Views,
+  Engines, BI, Admin, Help; Drishti Trading keeps its subject menus after Engines.
+- **The help centre reorganised (mock-up help-hub/A; USER_GUIDE.md, Help).** The front door of `/help` is a search box, a "most used"
+  row (User guide, VaR guide, Tutorials, What's new) and a tile per section: Get started, Risk measures, Analytics and BI, Data, Build,
+  Operate, Reference and Knowledge, with Internal for administrators. A tile opens its section's page (`/help/section/<id>`): its pages
+  grouped, every guide on one row with its tutorial beside it, a search of that section only (`/help/search?section=<id>`). Help is
+  documentation, not data: a running engine's pages are open to anyone who can open Help, signed out included; an engine that runs
+  nowhere has its pages left out (an administrator sees them greyed). Config-driven: `drishti-console/config/help.yaml` now has `sections:` with `groups:`, a page's `engine:` and `pair:`,
+  `most-used:`, `aliases:` (old section names: a pack guide's `category:`, an edition's `help.categories`, `/help#cat-<id>`) and
+  `documents:` (the section of an unlisted document by folder); every page belongs to exactly one section (a test checks it). Page
+  addresses, retired slugs and F1 are unchanged; the editions' `help.categories` name the new sections.
+- **Menu items for pages a build holds show again with FastAPI 0.142.** A menu item's `route:` requirement read the app's routes by
+  their `path`, which FastAPI 0.142's included routers no longer carry, so the VaR Playground, Backtesting, FRTB-SA and SIMM items were
+  left out; the routers are now walked into.
+- **The in-memory lake is its own module, `drishti-memlake` (IN_MEMORY_LAKE.md section 16; ARCHITECTURE.md §13,
+  PACK_DEVELOPER_GUIDE.md §1.1 and §1.3).** Plain Java with no Spring: the `mem://` storage (`ChunkPool`, `MemoryStorage`,
+  `MemoryStores`, from `drishti-lakeio` `com.ash.drishti.lakeio.mem`, now `com.ash.drishti.memlake.store`) and the service (`MemoryLake`,
+  `MemoryTable`, `ReplenishSource`, `MemoryCompactor`, `MemoryBinding`, `Retention`, `HostChecks`, from `drishti-server`
+  `com.ash.drishti.server.memlake`, now `com.ash.drishti.memlake`). The settings record is `MemoryLakeSettings` (was the server's
+  `MemoryLakeProperties`); the server keeps only `MemoryLakeConfiguration` (binds `drishti.lake.memory.*`, the beans, the cron parser, the
+  memory budget and busy protection) and `MemoryLakeController`. Expiring a memory table's old versions moved from the Delta writer's
+  `TableUpkeep` to `memlake.MemoryUpkeep` (`TableUpkeep.shape` no longer takes a store). The settings and the REST API are unchanged.
+- **The lake engines reach `mem://` through `drishti-lakeio`'s storage providers.** New `lakeio.StorageProvider` (a scheme, its storage,
+  whether it is memory-only) and `lakeio.StorageProviders` (found with `ServiceLoader`); `drishti-memlake` registers `mem`. The native
+  Delta engine, the lake writer, the Iceberg engine's file access and the Delta and Iceberg connectors ask `StorageProviders` and never
+  name the module; two new rules in `ArchitectureRulesTest` (`memoryLakeIsPlainJava`, `lakeReadersDoNotSeeTheMemoryLake`) keep it so. The
+  memory-lake tests moved with the code (`DeltaInMemoryTest`, `IcebergInMemoryTest`, `MemoryRatiosTest`, `MemoryLakeTest`,
+  `RetentionTest`, `MemoryStorageTest`, `MemoryStorageContractTest`); `drishti-lakeio` and `drishti-deltalake` publish test jars for them.
+
+### Fixes and smaller changes
+
+- **Fixed: answers that arrive late no longer undo what you did meanwhile.** The dataset wizard's YAML and checks show the newest
+  form: an older check answering last (a slow server) had put back the title it was asked about, so the dataset saved under the old
+  name. The VaR regulatory report keeps a comment typed while the previous action's answer was on its way (it was emptied). In the
+  BI Runs tab, the run drawer keeps the focus when it is redrawn, and Esc closes it when the focus has fallen to the page (a button it
+  was on became disabled while it worked); before, Esc did nothing and the drawer stayed over the list. A BI report's visual that
+  is being asked again (a selection, a slicer, a drill) no longer takes a pushed answer to its old question, which drew the old
+  figures and ended its busy state early. The top bar's bell is marked `data-alerts-live` once the live feed has said hello (alerts,
+  notices and write-back edits reach the tab from then on); a zoomed panel is marked `data-table-fitting` while its tables wait to
+  fit its new height.
+
+- **Flaky browser tests fixed at the cause (the drill's `data/drill/flakes.log`).** The exposure and VaR browser tests build their
+  scratch lakes with the Python writer (`lake demo --engine deltalake`): `auto` started Drishti's Java writer in a new JVM for every
+  table and business day, hundreds per lake, and the exposure lake outran its 900 s limit beside the other workers. The scratch BI
+  stacks wait for their server and console until they answer (up to ten minutes, as `wb_live.py` does) and stop waiting at once when
+  the process has exited; they had 150 s and 120 s. The catalogue tests type into the catalogue's own search box (`input[data-search]`;
+  the Engines menu's items carry `data-search` too). The renderer parity test waits until no part of the page is busy, not a fixed
+  time, and prints what differs. The write-back test waits for the other browser's live feed, not 1.5 s; the zoom tests wait for the
+  fit, not 350 ms; the BI Runs test waits for the drawer to close before it clicks under it; the pack wizard's resumed draft is read
+  with an auto-waiting expectation.
+
+
+- **About:** the headline (*See what your data hasn't told you yet.*) is centred with the rest of the page's opening on a wide
+  screen; it had been drawn flush left. The VaR card and the risk area name the basket sheet, which replaced the selection tray.
 
 - **The release drill is faster and stops sooner (tools/drill.sh; PACK_DEVELOPER_GUIDE.md §2.6, TOOLS.md).** A gate of a few
   minutes runs first, every job at once: the licence headers, the generated documents and data that must be current (settings
@@ -34,6 +136,51 @@
   trading pack's generated Sutra fragments and `data/testdata/testdata.yaml` had been reported stale in the tool log without
   failing it). The data samples' pages (`sample_docs.py --check`) and `contracts.py check` are now
   checked by the drill too. The console suite needs pytest-xdist 3.7 or newer.
+
+### The pivot engine
+
+- **Pivots over entity documents (PIVOT_ENGINE.md 6.7; PIVOT_GUIDE.md, Documents).** A pivot field is a Rachana path, parsed by
+  Rachana's own parser: `$.PRODUCT_TYPE`, `$.LEGS[0].CURRENCY`, `$.LEGS[*].NOTIONAL` (one row per leg), `$.LEGS[?@.LEG_TYPE == 'FIXED'][*].NOTIONAL`,
+  `size($.LEGS)`. The field list follows the documents' shape (each list a grain of its own) and takes a typed path; a view has one grain,
+  the finest list it uses; a coarser figure counts each parent once (new built-ins `sum_once`, `count_once`, `avg_once`); two separate lists
+  are refused; a filter on a list keeps the parents with any (or, with `~all`, all) elements matching. Three routes, fastest first: a
+  promoted column, a BI dataset table's cached layer, DuckDB JSON over the documents; the cell's provenance names it. An administrator sees
+  the most used typed paths with Promote and Add to dataset (`GET /api/v1/pivot/paths`). The guide's six worked examples and tutorial 33's
+  new step carry the demo lake's real figures and pictures (`tools/docs/shots/t33.py`).
+- **Chart any table: Top N, Others and the split cap by the pivot engine.** The chart asks the engine for a level's top N (`top: {field:
+  {n, by}}`) and draws its *Others* member, whose figures come from its own rows; the browser merges no cells any more (its `combine`
+  and the extra sum and count of an average are gone).
+- **Client renderer 1.2.0.** A table that offers Pivot is the table and a link to the pivot screen, as the console draws it (the Table |
+  Pivot switch, `pivotTab` and the `pivot` behaviour module are gone); 1.1.0, 1.0.0 and 0.1.0 stay served, unchanged. The pivot grid sets
+  its indents and conditional formats through the CSSOM, so a host's CSP that refuses inline styles is respected.
+- **Nothing else aggregates: the Sutra `pivot` panel and Chart any table on the pivot engine.** A `pivot` panel's cells, subtotals and
+  totals are computed by the engine's in-memory provider (`RowsProvider`, the built-ins' own states; equal to the tabular provider on the same
+  rows) and its nested rows drawn by the one pivot grid (`pivot-grid.js`, the Pivot screen's, which now replaces `pivot-core.js`). *Chart any
+  table* sends the shown rows' chart fields to the new `POST /api/v1/pivot/inline` (at most 100,000 rows) and draws the engine's answer;
+  *Chart all N* on a panel offers *Chart every row*. `pivot-engine.js` is now only the engine's browser client (query, inline, layout,
+  formats): its in-browser `cube` and filters are deleted, as is the old nested grid.
+- **One pivot: the old Pivot tab retired onto the pivot engine (product owner, 2026-11-02: no dual machinery).** A table or ladder whose
+  Sutra says `pivot:` and a search whose kind's pack says `pivot:` now carry **Pivot**, which opens the pivot screen on the panel's own rows
+  (`panel/<kind>/<panel>/<id>`) or on the kind, with the Sutra's or the pack's arrangement as the opening view; an author promotes a page
+  table's view to its Sutra at `/api/v1/pivot/promote`; *Chart all N* asks the pivot engine. Retired: the browser-computed Pivot tab
+  (`pivot.js` of the tab, its saved arrangements `/api/v1/me/pivots`), the search pivot (`/api/v1/search/pivot/**`, `SearchPivot`,
+  `PivotCube`) and the panel records endpoint; the pivot screen now owns `/api/pivot` and `static/js/pivot.js`. `drishti.pivot.enabled` is
+  the old name of the engine's switch (`config/engines/pivot.yaml`); `drishti.pivot.max-row-keys`, `max-column-keys`, `document-scan`,
+  `drill-page` and `budget` are gone. Embedded views: Elements 1.4.4.
+- **The pivot engine as a compute engine; the direct lake route; currencies and units.** `config/engines/pivot.yaml` with its catalogue
+  entry (the MR cube needs it); large Delta and Iceberg tables read straight from their Parquet files by DuckDB (masked columns never
+  read, the filters repeated on the raw columns for statistics skipping); money converted at the view's rates or refused per cell when it
+  mixes currencies, a sum of a rate or percentage refused; the architecture rule test (only `drishti-bicompute` aggregates for a pivot).
+- **The pivot engine, phase P1 (2.9.11.a; PIVOT_GUIDE.md, tutorial 33, PIVOT_ENGINE.md).** A new module `drishti-bicompute` (plain
+  Java): views of declarative cell sets compiled to one `GROUP BY GROUPING SETS` statement per restriction, functions with start, add,
+  merge and finish (mergeable: sum, count, avg, min, max, wavg, variance and standard deviation; holistic and exact: median, percentile,
+  distinct count), partial states merged in a fixed order, a partial-state cache in the one memory budget (`pivot.states`), the
+  split-and-merge harness. Any Data view table (read for the person, masks applied, staged in memory) or VaR (`source: var`, every cell the
+  VaR engine's answer for its scope) as a pivot: `PIVOT <GO>`, Views → Pivot, Pivot on a Data view table; nested rows opened lazily (only
+  open nodes computed), expand by another field per member, top N with an Others of its own members, sorting per level, the provenance of
+  every cell, the scan estimate, a chart that never stacks a non-additive measure, Excel with outline levels, SUM formulas only where a
+  figure adds up and a Provenance sheet, CSV, Arrow, saved and shared views, cell references, compare two dates. `/api/v1/pivot`,
+  `drishti.py pivot`, `drishti.pivot.*` settings, codes DRS-5701 to DRS-5705 and DRS-9507.
 
 ## 2.9.11 — Sensitivities and market-risk capital; the basket as a sheet; the in-memory lake; compute engines; busy protection (2026-11-03)
 
@@ -5131,7 +5278,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
     `description`, `kinds` and `example` lines; `make_packs.py` refuses one over 60 lines and `--check` also fails on a
     generated snippet whose source is gone.
 - **The Pivot tab: an Excel-style pivot, only where a Sutra or pack asks for it**
-  ([USER_GUIDE.md](docs/guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). A **Table | Pivot** switch on the
+  ([USER_GUIDE.md](docs/guides/PIVOT_GUIDE.md)). A **Table | Pivot** switch on the
   tables and ladders whose Sutra says `pivot:`, and on the search results and pick lists of kinds whose pack says
   `pivot:`; nowhere else. A field list and four zones, Rows, Columns (several levels each), Values (sum, count, avg,
   min, max, distinct count; shown as the value or % of row, column or total) and Filters (a pick list of values, or a
@@ -5143,7 +5290,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Rachana:** the `pivot` option of `table` and `ladder` panels, `true` or `{ fields, rows, columns, values, filters,
     heat, chart, totals }` (fields as row paths or `{ field, bind, label, fmt }`), with problem code `DRS-2031`
     (`DRS-2023` on other kinds); in the JSON Schema, so Studio completes and checks it
-    ([reference](docs/guides/RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)).
+    ([reference](docs/guides/PIVOT_GUIDE.md)).
   - **Engines:** a panel's pivot runs in the browser over **all** its rows (`GET /api/v1/views/{kind}/{id}/panels/{panel}/records`,
     beyond the table's `limit`, up to `drishti.pivot.max-records`); a search's pivot runs on the server over every
     match of the business date from the day's promoted columns (`POST /api/v1/search/pivot/{kind}`, `/drill`,
@@ -5152,7 +5299,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   - **Saved pivots** per (Sutra, panel) and per kind (`/api/v1/me/pivots`, preference namespace `pivots`); no new
     power: opening the kind is enough. **Promote to Sutra:** an author's pivot becomes the panel's `pivot:` in the
     Sutra's next version (only that key rewritten, shown as the changes and a diff), proposed through review.
-  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)).
+  - **Packs:** `pivot:` per kind in `pack.yaml` (`drishti.search.pivot.<kind>`, [PACKS.md](docs/guides/PIVOT_GUIDE.md)).
     The banking generators opt in a netting set's and a clearing account's trades (notional by product and maturity
     bucket), a book's largest trades (MTM by product and currency), a desk's new *Trades by book* table and the trading
     pack's new desk P&L Sutra (MTM by book and currency), collateral positions, a trade's cash flows (PV by type and

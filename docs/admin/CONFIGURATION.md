@@ -87,7 +87,7 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -749,7 +749,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -758,7 +758,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -771,7 +771,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -815,7 +815,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -1519,7 +1519,7 @@ Not in the bundled file; the defaults apply until you set them.
 | `max-scan` | `20000` | At most this many entities of a kind are read per search; the result says when it stopped short. |
 | `budget` | `3s` | Time a search may take to list and read; slower sources are left out. |
 | `columns.<kind>` | from packs | A kind's key fields in pick lists and searches (`columns:` in `pack.yaml`). |
-| `pivot.<kind>` | from packs | A Pivot tab on the kind's results: `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)). |
+| `pivot.<kind>` | from packs | Pivot on the kind's results (the pivot screen): `true`, or the pivot as a JSON string (`pivot:` in `pack.yaml`, [PACK_DEVELOPER_GUIDE.md](../guides/PACK_DEVELOPER_GUIDE.md#pivot-pivot-on-search-results)). |
 
 ### `drishti.calc` — Python in the browser
 
@@ -2116,7 +2116,7 @@ as any Studio save (`drishti.governance`).
 
 ### `drishti.pivot` — the Pivot tab
 
-The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)) appears only where a
+The Pivot tab ([USER_GUIDE.md](../guides/USER_GUIDE.md#pivot-slice-a-table-your-way)) appears only where a
 Sutra (`pivot:` on a table or ladder) or a pack (`pivot:` beside a kind's `columns:`) opts in; these keys bound it.
 There is no role power: anyone who may open a kind may pivot and save; promoting a pivot to a Sutra needs `author`,
 `drishti.rachana.studio-save` and goes through review. Saved pivots live in the preference store (namespace `pivots`).
@@ -2444,7 +2444,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2470,7 +2470,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 ---
@@ -2741,14 +2741,14 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,012 settings in 17 areas, and 320 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,069 settings in 18 areas, and 326 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
-| [The server: `application.yaml`](#the-server-applicationyaml) | 541 |
-| [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 218 |
+| [The server: `application.yaml`](#the-server-applicationyaml) | 537 |
+| [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 254 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 210 |
-| [The console's other files](#the-consoles-other-files) | 70 |
+| [The console's other files](#the-consoles-other-files) | 93 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 517 |
 | [Packs: `pack.yaml`](#packs-packyaml) | 135 |
 | [Editions: `config/editions/`](#editions-configeditions) | 71 |
@@ -2760,9 +2760,10 @@ Every key of every kind: 2,012 settings in 17 areas, and 320 environment variabl
 | [Platform alert rules: `config/alerts/platform-alerts.yaml`](#platform-alert-rules-configalertsplatform-alertsyaml) | 13 |
 | [Report definitions: `config/reports/`](#report-definitions-configreports) | 23 |
 | [SIMM parameter files: `drishti.simm.parameters-dir`](#simm-parameter-files-drishtisimmparameters-dir) | 29 |
+| [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 320 |
+| [Environment variable index](#environment-variable-index) | 326 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -2874,6 +2875,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 | `drishti.admission.retry-after.download` | integer | `30` |  | server | a Data view download (DRS-9503) | restart |  |
 | `drishti.admission.retry-after.bi-run` | integer | `60` |  | server | a BI run (DRS-9504) | restart |  |
 | `drishti.admission.retry-after.bulk-load` | integer | `120` |  | server | a bulk load of a pack's data (DRS-9505) | restart |  |
+| `drishti.admission.retry-after.pivot-view` | integer | `20` |  | server | a large pivot view (DRS-9507) | restart |  |
 | `drishti.admission.keep` | integer | `50` |  | server | refusals kept for Admin -&gt; Health (in memory) | restart |  |
 | `drishti.admission.override-max-minutes` | integer | `240` |  | server | the longest an operator's override may last (it ends by itself) | restart |  |
 
@@ -3464,13 +3466,8 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.pivot.enabled` | boolean | `true` | `DRISHTI_PIVOT_ENABLED` | server | ladder) or a pack (pivot: beside a kind's columns:) opts in false hides every Pivot tab, whatever Sutras and packs say | restart |  |
-| `drishti.pivot.max-records` | integer | `50000` |  | server | rows of a panel sent to the browser to pivot (the table's limit does not apply) | restart |  |
-| `drishti.pivot.max-row-keys` | integer | `2000` |  | server | innermost row groups shown (further ones still count in the totals) | restart |  |
-| `drishti.pivot.max-column-keys` | integer | `200` |  | server | column groups shown | restart |  |
-| `drishti.pivot.document-scan` | integer | `20000` |  | server | entities a search pivot reads as documents, when asked to, for fields that are not columns | restart |  |
-| `drishti.pivot.drill-page` | integer | `200` |  | server | underlying rows per drill-down page at most | restart |  |
-| `drishti.pivot.budget` | duration | `20s` |  | server | how long a search pivot waits for a day's columns or documents | restart |  |
+| `drishti.pivot.enabled` | boolean | `true` | `DRISHTI_PIVOT_ENABLED` | server | the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere | restart |  |
+| `drishti.pivot.max-records` | integer | `50000` |  | server | the most rows of a panel a pivot of it reads (the table's limit does not apply); more is refused, never cut short | restart |  |
 
 #### `drishti.identity`
 
@@ -3708,7 +3705,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 ### Compute engines: `config/engines/*.yaml`
 
-One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). The old switch names are listed last: they still work, with a warning at start (`DRS-1024`).
+One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR, FVA, the two cubes, the in-memory lake, the data inbox), `config/engines/<engine>.yaml` (`DRISHTI_ENGINES_DIR`), imported by `application.yaml` after the jar's own copy of the same file: its switch (`drishti.engines.<engine>.enabled`) and every setting of that engine, under the keys they always had. `application.local.yaml`, the environment and the command line still win over a file. Admin → Engines and `drishti.py server engines` write only the switch and `changed`; every other key is edited in the file ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md), [OPERATIONS.md](OPERATIONS.md#21-compute-engines-on-or-off)). The old switch names are listed last: they still work, with a warning at start (`DRS-1024`).
 
 #### `drishti.engines.var`
 
@@ -4074,6 +4071,61 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.lake.memory.compaction.resort-after` | integer | `20` |  | server (each node its own) | appends after which a table is rewritten sorted by its sort-by | restart |  |
 | `drishti.lake.memory.compaction.every-seconds` | integer | `60` |  | server (each node its own) | how often the compactor looks, besides after every commit | restart |  |
 
+#### `drishti.engines.dataload`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.engines.dataload.enabled` | boolean | `false` | `DRISHTI_DATALOAD_ENABLED` | server (each node its own) | run the data inbox on this node: files dropped in &lt;dir&gt;/inbox with a .ready marker are loaded into the lake every interval; off as shipped | restart |  |
+| `drishti.engines.dataload.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.dataload`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.dataload.owner` | boolean | `true` | `DRISHTI_DATALOAD_OWNER` | server (each node its own) | this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out) | restart |  |
+| `drishti.dataload.dir` | string | `./data/dataload` | `DRISHTI_DATALOAD_DIR` | server (each node its own) | the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system | restart |  |
+| `drishti.dataload.interval` | duration | `10m` |  | server (each node its own) | how often a cycle runs; a cycle due while a run still loads is skipped (runs never overlap); Load now starts one at once | restart |  |
+| `drishti.dataload.stable-seconds` | integer | `30` |  | server (each node its own) | a file (and its marker) is taken once unchanged this long, even with its .ready file | restart |  |
+| `drishti.dataload.max-files` | integer | `0` |  | server (each node its own) | the most files one run takes, oldest first (0: no limit, the whole ready batch); when set, the rest wait for the next cycle | restart |  |
+| `drishti.dataload.max-gb` | integer | `0` |  | server (each node its own) | the most gigabytes one run takes (0: no limit); when set, the first file is always taken | restart |  |
+| `drishti.dataload.loader-heap` | string | `4g` | `DRISHTI_DATALOAD_LOADER_HEAP` | server (each node its own) | the loader's own heap (the child Java process's -Xmx): a load never uses the server's heap | restart |  |
+| `drishti.dataload.load-timeout` | duration | `2h` |  | server (each node its own) | a load running longer is stopped and its files go back to the inbox with the reason | restart |  |
+| `drishti.dataload.reject-max-percent` | integer | `0` |  | server (each node its own) | the share of rows a load may reject and still commit (exit 2, rejects in the report); over it nothing is committed and the file goes to failed/ | restart |  |
+| `drishti.dataload.reload-duplicates` | boolean | `false` |  | server (each node its own) | false: a file whose SHA-256 was loaded before is not loaded again (to the outbox, "already loaded"); true: loaded again | restart |  |
+| `drishti.dataload.keep-outbox-days` | integer | `30` |  | server (each node its own) | outbox/ and failed/ day folders older than this are deleted (0: kept for ever); the ledger is kept | restart |  |
+| `drishti.dataload.lake` | string | `./data/delta` | `DRISHTI_DELTA_ROOT` | server (each node its own) | the lake root the tables are written under (a rule's lake: wins for its files) | restart |  |
+| `drishti.dataload.rules-file` | string | `./config/dataload.yaml` | `DRISHTI_DATALOAD_RULES` | server (each node its own) | the routing rules: a file-name pattern to a pack and kind, read again every cycle | restart |  |
+| `drishti.dataload.nice` | boolean | `true` |  | server (each node its own) | run the loader at a lower priority (nice 10) where the system has nice; never on Windows | restart |  |
+
+#### `drishti.engines.pivot`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.engines.pivot.enabled` | boolean | `true` | `DRISHTI_PIVOT_ENGINE_ENABLED` | server (each node its own) | run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -&gt; Pivot, drishti.py pivot (live); its old name drishti.pivot.enabled still works | live |  |
+| `drishti.engines.pivot.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.pivot`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.pivot.max-cells` | integer | `20000` |  | server (each node its own) | visible cells a view may have, totals included; over it: refused with the count (DRS-5702), never cut short | restart |  |
+| `drishti.pivot.max-holistic-cells` | integer | `5000` |  | server (each node its own) | the same for a view with a holistic measure (VaR, an exact median, an exact distinct count) | restart |  |
+| `drishti.pivot.busy-cells` | integer | `2000` |  | server (each node its own) | a view of more cells asks busy protection before it opens deeper levels (DRS-9507) | restart |  |
+| `drishti.pivot.cache-mb` | integer | `512` |  | server (each node its own) | the partial-state cache, weighed in bytes, in the one memory budget (pivot.states) | restart |  |
+| `drishti.pivot.provenance-kept` | integer | `500` |  | server (each node its own) | answers whose provenance (per cell) is kept for the popover | restart |  |
+| `drishti.pivot.local-shards` | integer | `1` |  | server (each node its own) | split a mergeable plan into this many parts on this node and merge them in a fixed order (1: one pass) | restart |  |
+| `drishti.pivot.stage-max-rows` | integer | `5000000` |  | server (each node its own) | the most rows of one table read for a pivot (a table over it is refused in words, never cut short) | restart |  |
+| `drishti.pivot.stage-keep` | integer | `16` |  | server (each node its own) | tables read for pivots kept in the executor (least recently used dropped) | restart |  |
+| `drishti.pivot.duckdb.connections` | integer | `0` |  | server (each node its own) | statements at once (0: one per four cores) | restart |  |
+| `drishti.pivot.duckdb.threads` | integer | `0` |  | server (each node its own) | DuckDB's threads per statement (0: its default) | restart |  |
+| `drishti.pivot.duckdb.memory-limit-mb` | integer | `4096` |  | server (each node its own) | DuckDB's memory limit | restart |  |
+| `drishti.pivot.duckdb.temp-directory` | string | `""` |  | server (each node its own) | where DuckDB may spill (blank: nowhere, so memory-only data is never written) | restart |  |
+| `drishti.pivot.estimate.confirm-above-seconds` | integer | `60` |  | server (each node its own) | an estimate over this asks the person first | restart |  |
+| `drishti.pivot.estimate.confirm-above-rows` | integer | `500000000` |  | server (each node its own) | an estimate over this many rows asks the person first | restart |  |
+| `drishti.pivot.aggregate-only.min-members-per-cell` | integer | `1` |  | server (each node its own) | a cell with fewer members shows no figures (1: no limit; a site may set 5) | restart |  |
+| `drishti.pivot.export.xlsx-max-rows` | integer | `1000000` |  | server (each node its own) | the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered | restart |  |
+| `drishti.pivot.export.rows-max` | integer | `1000000` |  | server (each node its own) | the most member rows an export of the underlying rows writes | restart |  |
+
 #### Old names (still accepted)
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
@@ -4082,6 +4134,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.ccr.exposure.enabled` | boolean | none |  | server | The old name of drishti.engines.exposure.enabled (Exposure): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/exposure.yaml or use Admin → Engines. | live | 2.9.11 |
 | `drishti.frtb.enabled` | boolean | none |  | server | The old name of drishti.engines.frtb-sa.enabled (FRTB-SA): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/frtb-sa.yaml or use Admin → Engines. | live | 2.9.11 |
 | `drishti.simm.enabled` | boolean | none |  | server | The old name of drishti.engines.simm.enabled (SIMM): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/simm.yaml or use Admin → Engines. | live | 2.9.11 |
+| `drishti.pivot.enabled` | boolean | none |  | server | The old name of drishti.engines.pivot.enabled (Pivot): still accepted, and when set above the shipped files it decides, with a warning at start (DRS-1024). Move it to config/engines/pivot.yaml or use Admin → Engines. | live | 2.9.11 |
 
 ### The console: `application.yaml`
 
@@ -4482,9 +4535,18 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 | `menus[].id` | string | none |  | console | The menu's id (what an edition's menus.&lt;id&gt; names) | live |  |
 | `menus[].label` | string | none |  | console | Its name in the top bar | live |  |
 | `menus[].icon` | string | none |  | console | Its Bootstrap icon name | live |  |
-| `menus[].subject` | boolean | `false` |  | console | A lens's subject menu (VaR, Curves, Economies ...): drawn only where an edition's menus.top names it | live |  |
+| `menus[].subject` | boolean | `false` |  | console | A lens's subject menu (Curves, Economies ...): drawn only where an edition's menus.top names it | live |  |
+| `menus[].engines` | boolean | `false` |  | console | The Engines menu: a column per compute engine, drawn for the engines running in the cluster that the person's role opens | live |  |
+| `menus[].search-over` | number | `4` |  | console | The Engines menu: its search box shows when more engines than this run | live |  |
+| `menus[].admin-link` | map | `none` |  | console | The Engines menu: its Admin -&gt; Engines link {href, label, requires} (administrators) | live |  |
+| `menus[].admin-link.href` | string | none |  | console | Where it goes (/admin/engines) | live |  |
+| `menus[].admin-link.label` | string | none |  | console | Its text | live |  |
+| `menus[].admin-link.requires` | list | `[]` |  | console | Conditions that must all hold for it to show (as an item's requires) | live |  |
 | `menus[].columns` | list | none |  | console | The menu's columns, each a title and its items | live |  |
 | `menus[].columns[].title` | string | none |  | console | A column's heading | live |  |
+| `menus[].columns[].engine` | string | `none` |  | console | The Engines menu: the column's engine (its id in config/engines.yaml); drawn only while it runs on a server of the cluster | live |  |
+| `menus[].columns[].word` | string | empty |  | console | The Engines menu: the engine's command word, shown in the column's head | live |  |
+| `menus[].columns[].opens` | list | `[]` |  | console | The Engines menu: who opens the engine, any of role:&lt;name&gt; or pack:&lt;name&gt; (a pack assigned to the person); administrators always; none: everyone. The engine's command words follow it (left out of the type-ahead, refused when typed); Help does not | live |  |
 | `menus[].columns[].items` | list | none |  | console | A column's items | live |  |
 | `menus[].columns[].items[].id` | string | none |  | console | The item's id (what an edition lists to keep it) | live |  |
 | `menus[].columns[].items[].href` | string | none |  | console | Where it goes (blank with cmd: the command run; with fill: the command line filled) | live |  |
@@ -4506,20 +4568,34 @@ The console's content files under `drishti-console/config/`: menus, the help cen
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `categories` | list | `shipped` |  | console | The help centre's sections, in display order | live |  |
-| `categories[].id` | string | none |  | console | The section's id (an edition's help.categories names it) | live |  |
-| `categories[].name` | string | none |  | console | Its heading | live |  |
-| `categories[].icon` | string | none |  | console | Its icon | live |  |
-| `categories[].blurb` | string | none |  | console | The line under the heading | live |  |
-| `categories[].guides` | list | none |  | console | Its guides, in order | live |  |
-| `categories[].guides[].slug` | string | none |  | console | The guide's address, /help/&lt;slug&gt; | live |  |
-| `categories[].guides[].doc` | string | `none` |  | console | A repository document under docs/ rendered as it is; none: the console's own web/guides/&lt;slug&gt;.md | live |  |
-| `categories[].guides[].title` | string | none |  | console | Its title ({product} filled in) | live |  |
-| `categories[].guides[].icon` | string | none |  | console | Its icon | live |  |
-| `categories[].guides[].kind` | string | `guide` |  | console | guide, tutorial or knowledge: the badge shown | live |  |
-| `categories[].guides[].summary` | string | none |  | console | The card's summary, also searched | live |  |
-| `categories[].guides[].packs` | list | `[]` |  | console | The packs it is about: an edition that keeps none of them hides it | live |  |
-| `categories[].guides[].roles` | list | `[]` |  | console | Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it) | live |  |
+| `most-used` | list | `shipped` |  | console | The most used pages, under the search box of the help centre's front door: {slug, label} each (a page the person cannot see is left out) | live |  |
+| `most-used[].slug` | string | none |  | console | The page | live |  |
+| `most-used[].label` | string | `its title` |  | console | A shorter name on its chip | live |  |
+| `aliases` | map | `shipped` |  | console | Old section names to the section that took them over (a pack guide's category, an edition's help.categories, /help#cat-&lt;id&gt;) | live |  |
+| `aliases.<name>` | string | none |  | console | One old name and its section's id | live |  |
+| `documents` | map | `shipped` |  | console | An unlisted document's section by its top folder under docs/ ("" the top-level \*.md, default any other) | live |  |
+| `documents.<name>` | string | none |  | console | One folder and its section's id | live |  |
+| `pack-group` | string | `From the packs` |  | console | The group a pack's own guides join, at the end of their section | live |  |
+| `sections` | list | `shipped` |  | console | The help centre's sections, in display order: a tile each on the front door, opening /help/section/&lt;id&gt; | live |  |
+| `sections[].id` | string | none |  | console | The section's id (an edition's help.categories names it) | live |  |
+| `sections[].name` | string | none |  | console | Its name | live |  |
+| `sections[].icon` | string | none |  | console | Its icon | live |  |
+| `sections[].blurb` | string | none |  | console | Its one line on the tile | live |  |
+| `sections[].roles` | list | `[]` |  | console | Who sees the section: none, everyone; else administrators and holders of these roles (Internal: \[admin]) | live |  |
+| `sections[].groups` | list | none |  | console | Its groups of pages, in order | live |  |
+| `sections[].groups[].title` | string | none |  | console | A group's heading | live |  |
+| `sections[].groups[].words` | list | `[]` |  | console | Command words shown beside the heading | live |  |
+| `sections[].groups[].guides` | list | none |  | console | Its pages, in order; each page belongs to exactly one section | live |  |
+| `sections[].groups[].guides[].slug` | string | none |  | console | The page's address, /help/&lt;slug&gt; | live |  |
+| `sections[].groups[].guides[].doc` | string | `none` |  | console | A repository document under docs/ rendered as it is; none: the console's own web/guides/&lt;slug&gt;.md | live |  |
+| `sections[].groups[].guides[].title` | string | none |  | console | Its title ({product} filled in) | live |  |
+| `sections[].groups[].guides[].icon` | string | none |  | console | Its icon | live |  |
+| `sections[].groups[].guides[].kind` | string | `guide` |  | console | guide, tutorial or knowledge: the badge shown | live |  |
+| `sections[].groups[].guides[].summary` | string | none |  | console | The row's summary, also searched | live |  |
+| `sections[].groups[].guides[].packs` | list | `[]` |  | console | The packs it is about: an edition that keeps none of them hides it | live |  |
+| `sections[].groups[].guides[].roles` | list | `[]` |  | console | Who may see it: none, everyone; else only an administrator or a person holding one of these roles (others get 404 and do not find it) | live |  |
+| `sections[].groups[].guides[].engine` | string | `none` |  | console | The compute engine it is about: left out while it runs on no server (an administrator sees it greyed); open to anyone who can open Help otherwise | live |  |
+| `sections[].groups[].guides[].pair` | string | `none` |  | console | The tutorial drawn beside this guide on its row (a page of the same group) | live |  |
 | `moved` | map | `shipped` |  | console | Retired addresses: old slug -&gt; slug or slug#anchor, answered with a 301 | live |  |
 | `moved.<name>` | string | none |  | console | One retired slug and the page (and section) that took it over | live |  |
 | `knowledge` | map | `shipped` |  | console | "What does this mean?" beside a data page: screen or kind -&gt; the Knowledge page or glossary entry that explains it | live |  |
@@ -5245,7 +5321,7 @@ A connector's settings go under `settings:` in its file, `config/connectors/<nam
 | `graph.impact.formats.<name>` | string | none |  | the pack | One kind's format | live |  |
 | `columns` | map | `{}` |  | the pack | kind -&gt; the key fields of its pick lists and search results | live |  |
 | `columns.<name>` | list | none |  | the pack | One kind's key fields | live |  |
-| `pivot` | map | `{}` |  | the pack | kind -&gt; a Pivot tab on its search results: rows, columns, values, filters, fields | live |  |
+| `pivot` | map | `{}` |  | the pack | kind -&gt; Pivot (the pivot screen on the kind) on its search results: rows, columns, values, filters, fields | live |  |
 | `pivot.<name>` | map | none |  | the pack | One kind's pivot | live |  |
 | `pivot.<name>.rows` | list | none |  | the pack | Fields down the side | live |  |
 | `pivot.<name>.columns` | list | none |  | the pack | Fields across the top | live |  |
@@ -5368,7 +5444,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `bi.datasets` | list | `[market-data-*]` |  | an edition (server and console) | (a dataset named market-data-... or the model market-data, when one is added), never the | restart |  |
 | `bi.models` | list | `[market-data]` |  | an edition (server and console) | VaR or exposure reports; an empty list would offer every BI item of the product | restart |  |
 | `menus.top` | list | `[views, curves, volatility, fx, credit, bi, admin, help]` |  | an edition (server and console) | the top menus by id, in order; one not named is not drawn | restart |  |
-| `menus.views` | list | `[terminal, search, functions, datamap, data, var, exposure, reports, workspac...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |
+| `menus.views` | list | `[terminal, search, functions, datamap, data, reports, workspaces, monitors, a...` |  | an edition (server and console) | the Views menu's items by id, in order (drishti-console/config/menus.yaml) | restart |  |
 | `menus.help` | list | `[help-centre, knowledge, install, about]` |  | an edition (server and console) | the Help menu's items by id | restart |  |
 | `menus.footer` | list | `[help, about, release-notes]` |  | an edition (server and console) | the footer's links by id | restart |  |
 | `menus.placeholder` | string | `"VAR BANK, VAR DESK RATES, EXP CPTY:CP-ALDERSHOT, VRES DESK:RATES …  then <GO>"` |  | an edition (server and console) | the command line's placeholder text | restart |  |
@@ -5381,7 +5457,7 @@ An edition file (`config/editions/<name>.yaml`), the feature presets (`features.
 | `home.sections` | map | `{ stats: off, grammar: off, pipeline: off, capabilities: off, views: off }` |  | an edition (server and console) | the product's Home (signed out, or landing=today) | restart |  |
 | `home.cards` | list | empty |  | an edition (server and console) | quick cards on Home (replace ui.home\_cards) | restart |  |
 | `quality.stale-days` | integer | `2` |  | an edition (server and console) | stale: data older than the business date by more than this many business days | restart |  |
-| `help.categories` | list | `[knowledge, start, use, bi, data, operate]` |  | an edition (server and console) | the Build category hidden | restart |  |
+| `help.categories` | list | `[get-started, risk, analytics, data, operate, reference, knowledge, internal]` |  | an edition (server and console) | the help sections kept (config/help.yaml): Build hidden | restart |  |
 | `help.knowledge` | list | `[market-data]` |  | an edition (server and console) | the Market data Knowledge page (the rest hidden) | restart |  |
 | `help.unlisted-slugs` | string | `refuse` |  | an edition (server and console) | a guide not in the help centre answers 404 (no reaching hidden guides by URL) | restart |  |
 | `admin.pages` | list | `[users, roles, packs, commands, tokens, access, connectors, artifacts, loads,...` |  | an edition (server and console) | the Admin pages kept, by id; the others answer 404 | restart |  |
@@ -5811,6 +5887,17 @@ One YAML per ISDA SIMM version (`drishti.simm.parameters-dir`, default `./config
 | `Commodity.*` | map | `none (licensed)` |  | server | buckets, delta-risk-weights (by bucket, per 1 %), correlation (by bucket), across-buckets, vega-risk-weight, historical-volatility-ratio, concentration-thresholds | restart |  |
 | `FX.*` | map | `none (licensed)` |  | server | high-volatility-currencies, delta-risk-weights (regular-regular, regular-high, high-regular, high-high), correlation (by the calculation currency's group: regular-regular, regular-high, high-high), vega-correlation, vega-risk-weight, historical-volatility-ratio, threshold-groups, concentration-thresholds | restart |  |
 
+### The data inbox's routing rules: `config/dataload.yaml`
+
+Where a file dropped in the data inbox goes: a file-name pattern to a pack and kind (`drishti.dataload.rules-file`), read again at every cycle ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#7-the-data-inbox-drop-files-and-they-load), [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md)). The inbox's own settings are in `config/engines/dataload.yaml`.
+
+#### `dataload`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `dataload.rules` | list | `[]` |  | server (the inbox's owner) | the rules, first match wins: match (a glob on the file name), pack, kind, and optionally connector, table, date-from, date-field, key, lake, format | live |  |
+| `dataload.unmatched` | string | `fail` |  | server (the inbox's owner) | a file no rule matches goes to failed/ with the reason; fail is the only choice (a file is never guessed) | live |  |
+
 ### The UI kit: `config/ui-kit/brand.yaml`
 
 The site's brand for pages built with the Drishti UI kit (`drishti.ui-kit.dir`).
@@ -5991,10 +6078,15 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_CONSOLE_TMP_DIR` | `tmp_dir` | empty | console | base of the console's temp folder drishti-console-&lt;pid&gt; (blank: DRISHTI\_TMP\_DIR, then &lt;data dir&gt;/tmp/console when started by run\_drishti\_web.py); removed on exit; left-over ones are listed on Health, never deleted automatically |
 | `DRISHTI_CONSOLE_URL` | `drishti.embed.audiences`, `drishti.collab.console-url` | `[""]` | server | the consoles that may accept embed tokens (their public URLs); the first is the default |
 | `DRISHTI_CONSOLE_WORKERS` | `server.workers` | `4` | console | processes serving pages (one Python process uses one core: ~40 pages/s measured); 1 = one process |
+| `DRISHTI_DATALOAD_DIR` | `drishti.dataload.dir` (engine) | `./data/dataload` | engine | the inbox's folder: inbox/, inprocess/, outbox/, failed/, ledger/ and inbox.lock, all on one file system |
+| `DRISHTI_DATALOAD_ENABLED` | `drishti.engines.dataload.enabled` (engine) | `false` | engine | run the data inbox on this node: files dropped in &lt;dir&gt;/inbox with a .ready marker are loaded into the lake every interval; off as shipped |
+| `DRISHTI_DATALOAD_LOADER_HEAP` | `drishti.dataload.loader-heap` (engine) | `4g` | engine | the loader's own heap (the child Java process's -Xmx): a load never uses the server's heap |
+| `DRISHTI_DATALOAD_OWNER` | `drishti.dataload.owner` (engine) | `true` | engine | this node runs the inbox's cycles; in a cluster set it true on one node only (the folder lock also keeps a second runner out) |
+| `DRISHTI_DATALOAD_RULES` | `drishti.dataload.rules-file` (engine) | `./config/dataload.yaml` | engine | the routing rules: a file-name pattern to a pack and kind, read again every cycle |
 | `DRISHTI_DATA_DIR` | `drishti.data.dir`, `lakes.data_dir` | `./data` | console, server | The umbrella folder every runtime path below defaults under (identity database, caches, loads, collab, designs, reports, the pack overlay and settings, governance, the sample feeds). Each path's own setting still overrides its default. |
 | `DRISHTI_DEFAULT_PACKS` | `drishti.packs.default-for-users` | empty | server | Packs new users get until an admin says otherwise (empty: every installed pack). |
 | `DRISHTI_DELTA_ENGINE` | `engine` (connector), delta engine | `native` | connector, packs | Reader engine: native (Delta Kernel without Hadoop; Windows), hadoop (also abfs://, gs://) or auto (native on Windows); not set: DRISHTI\_DELTA\_ENGINE, else native |
-| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), every pack's delta connectors' root | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
+| `DRISHTI_DELTA_ROOT` | `drishti.var.official.root` (engine), `drishti.ccr.exposure.official.root` (engine), `drishti.dataload.lake` (engine), every pack's delta connectors' root | `./data/delta` | engine, packs | a folder or s3://bucket/prefix |
 | `DRISHTI_DEMO_ENABLED` | `drishti.sources.plugins.demo.enabled` | `true` | server | run the demo source (the packs' sample data) |
 | `DRISHTI_DOCTOR_PORTS` | drishti.py doctor | none | tools | The ports doctor checks |
 | `DRISHTI_DRAIN_TOKEN` | rolling.py, deploy/bin/drishti-node.sh | none | tools | An administrator's personal API token with the node:drain scope: the stop hooks and the rolling upgrade runner drain a server with it (secret; else DRISHTI\_DRAIN\_TOKEN\_FILE, else DRISHTI\_TOKEN) |
@@ -6119,7 +6211,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_PG_PASSWORD` | postgres profile | `drishti` | profile | Its password (secret) |
 | `DRISHTI_PG_URL` | postgres profile | `jdbc:postgresql://localhost:5432/drishti` | profile | The postgres profile's database (tables &lt;domain&gt;.entities) |
 | `DRISHTI_PG_USER` | postgres profile | `drishti` | profile | Its user |
-| `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | server | ladder) or a pack (pivot: beside a kind's columns:) opts in false hides every Pivot tab, whatever Sutras and packs say |
+| `DRISHTI_PIVOT_ENABLED` | `drishti.pivot.enabled` | `true` | server | the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere |
+| `DRISHTI_PIVOT_ENGINE_ENABLED` | `drishti.engines.pivot.enabled` (engine) | `true` | engine | run the pivot engine on this node: /api/v1/pivot, PIVOT, Views -&gt; Pivot, drishti.py pivot (live); its old name drishti.pivot.enabled still works |
 | `DRISHTI_PLUGIN_DIR` | `drishti.sources.plugin-dir` | empty | server | Optional directory of extra plugin jars; each gets its own class loader. |
 | `DRISHTI_PORT` | `server.port` | `18480` | server | the server's HTTP port |
 | `DRISHTI_PRODUCT` | `drishti.branding.product`, `ui.product` | `Drishti` | console, server | The product's name and legal notices, wherever people see them (pages, the About answer, messages). Change them here, not in code; the console has the same keys under ui: in drishti-console/config/application.yaml. |

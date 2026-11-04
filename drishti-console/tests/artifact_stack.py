@@ -122,11 +122,11 @@ class Stack:
         env = dict(os.environ, DRISHTI_PORT=str(SERVER_PORT), DRISHTI_PACKS="lab-core", DRISHTI_PACKS_DIR=str(packs), DRISHTI_CONNECTORS_DIR=str(self.work / "connectors"),
                    DRISHTI_BI_DIR=str(self.work / "bi"), DRISHTI_DEMO_ENABLED="false", DRISHTI_BI_STORE=str(self.tmp / "store"))
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0]], tmp=self.tmp / "jvm-tmp"), cwd=self.work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
-        wait(SERVER + "/actuator/health", 150)
+        wait(SERVER + "/actuator/health", proc=self.procs["server"])
         cenv = dict(os.environ, DRISHTI_BACKEND_URL=SERVER, DRISHTI_CONSOLE_PORT=str(CONSOLE_PORT), DRISHTI_PACKS_DIR=str(packs))
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py")], cwd=CONSOLE, env=cenv, stdout=open(self.tmp / "console.log", "ab"),
                                                  stderr=subprocess.STDOUT)
-        wait(CONSOLE_URL + "/healthz")
+        wait(CONSOLE_URL + "/healthz", proc=self.procs["console"])
         return self
 
     def close(self) -> None:

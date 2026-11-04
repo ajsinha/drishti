@@ -340,6 +340,7 @@ public final class AdmissionGate {
             case DOWNLOAD -> "The download did not start";
             case BI_RUN -> "The BI run did not start";
             case BULK_LOAD -> "The load did not start";
+            case PIVOT_VIEW -> "The pivot did not start";
         };
     }
 
@@ -352,6 +353,7 @@ public final class AdmissionGate {
             case DOWNLOAD -> "Your selection is kept; " + in + ".";
             case BI_RUN -> "The pages already open keep working; " + in + ".";
             case BULK_LOAD -> "Nothing was written; " + in + ".";
+            case PIVOT_VIEW -> "Smaller pivots and the pages already open keep working; " + in + ".";
         };
     }
 

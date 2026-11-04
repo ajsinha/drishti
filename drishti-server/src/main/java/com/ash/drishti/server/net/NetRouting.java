@@ -102,7 +102,7 @@ public final class NetRouting {
         if (net.config().node().peerOnlyPacks().contains(owner) && !NetCaller.fromPeer()) {
             return Optional.empty();
         }
-        if (com.ash.drishti.server.memlake.MemoryBinding.remoteHere(kind)) {
+        if (com.ash.drishti.memlake.MemoryBinding.remoteHere(kind)) {
             return Optional.empty();                             // its memory store is owned by another node: the request goes there
         }
         return packs.packs().stream().filter(x -> x.name().equals(owner)).findFirst();

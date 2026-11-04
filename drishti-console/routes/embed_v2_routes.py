@@ -19,7 +19,7 @@ The same guards as v1: a bearer embed token on every data call (verified, masked
 host applications the server registered, the console's own channel for live frames. What v2 adds:
 
 * ``/embed/v2/views/{kind}/{id}``: the ViewModel itself (``"contract": "1.0"``), not HTML; ``Drishti-Subscribe`` names its live key;
-* ``/embed/v2/views/{kind}/{id}/panels``, ``/about``, ``/panels/{panel}/records``: panels and About as JSON, a pivot's rows;
+* ``/embed/v2/views/{kind}/{id}/panels``, ``/about``, ``/about``: panels and About as JSON;
 * ``/embed/v2/channel``: the live channel; a ``vm:`` subscription sends panel patches as panels (JSON), with no HTML;
 * ``/embed/v2/render/<version>/...``: the renderer's files (``drishti-render.js``, ``drishti-elements.js`` for Elements 2.0, the sheet, ``m/``),
   immutable, a partial version (``1``, ``1.0``) answering ``302`` to the exact one, ``410 DRS-8006`` for one this console no longer serves;
@@ -51,8 +51,9 @@ WEB = Path(__file__).resolve().parent.parent / "web"
 STATIC = WEB / "static"
 API = "2.0"
 BASE = "/embed/v2"
-ELEMENTS = {"2.0.0": "1.0.0", "2.1.0": "1.1.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js
+ELEMENTS = {"2.0.0": "1.0.0", "2.1.0": "1.1.0", "2.2.0": "1.2.0"}   # Elements 2.x by its own version -> the renderer version that carries its drishti-elements.js
 # What the renderer loads from beside itself (its folder is /embed/v2/render/<v>/, so /embed/v2/ stands for the console's /static/)
+# ("pivot" stays loadable for renderers up to 1.1.0, which ask for it: it is now the pivot screen's script and does nothing in a view)
 SCRIPTS = {"pivot-engine", "pivot-grid", "colfilter", "tables", "tree-rows", "pivot", "drill", "zoom", "multiselect", "controls", "geomap",
            "table-chart", "table-chart-engine", "table-chart-sources"}
 VENDOR = re.compile(r"(echarts/echarts\.min\.js|echarts-gl/echarts-gl\.min\.js|echarts/maps/(world-countries|world-points)\.json|echarts/maps/regions/[A-Z]{3}\.json"
@@ -184,17 +185,6 @@ async def vendor(request: Request, rest: str):
 
 
 # -- the data: the ViewModel and its parts as JSON, as the embed caller (masked) --------------------------------------------------
-@router.get("/views/{kind}/{id_:path}/panels/{panel}/records")
-async def records(request: Request, kind: str, id_: str, panel: str):
-    try:
-        me, _claims = await identity(request)
-        return await reply(request, await request.app.state.backend.panel_records(kind, id_, panel, me))
-    except EmbedError as e:
-        return await refuse(request, e.status, e.code, e.detail, e.retry_after)
-    except BackendError as e:
-        return await refuse(request, e.page_status, e.code, e.detail)
-
-
 @router.get("/views/{kind}/{id_:path}/about")
 async def about(request: Request, kind: str, id_: str, generation: int = 0):
     """About this page as JSON, ``{explain, index}``, which the renderer draws (v1 answers the console's HTML)."""

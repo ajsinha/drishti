@@ -1,0 +1,483 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+package com.ash.drishti.bicompute.core;
+
+import com.ash.drishti.bicompute.core.AggregationPlan.FunctionCall;
+import com.ash.drishti.bicompute.spi.Kind;
+import com.ash.drishti.bicompute.spi.PivotProvider;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.TreeMap;
+
+/**
+ * A computed view as the API answers it (PIVOT_ENGINE.md section 4.4): the rows and columns as shown (nested levels in display order, with
+ * headers and subtotals below or above each open group, Others and the grand totals), every visible cell's finished figures keyed by
+ * {@code rowKey|colKey}, the show-as figures, diversification beside holistic totals, and the provenance shared by every cell.
+ */
+final class PivotAnswer {
+
+    private PivotAnswer() {}
+
+    static Map<String, Object> build(PivotCore core, PivotCore.Computation c) {
+        PivotView view = c.view;
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("source", view.source());
+        out.put("title", c.catalogue.title());
+        out.put("provider", c.provider.id());
+        out.put("date", c.catalogue.date());
+        out.put("version", c.provider.version(c.viewer, view.source(), c.catalogue.date()));
+        out.put("view", view.toMap());
+        List<Map<String, Object>> measures = new ArrayList<>();
+        for (int i = 0; i < c.functions.size(); i++) {
+            FunctionCall f = c.functions.get(i);
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("index", i);
+            m.put("id", f.id());
+            m.put("label", f.label());
+            m.put("kind", f.fn().kind().word());
+            m.put("plainSum", f.fn().plainSum());
+            m.put("exact", f.fn().kind() != Kind.SKETCH);
+            m.put("showAs", view.values().get(i).showAs());
+            m.put("unit", c.unit(f));
+            measures.add(m);
+        }
+        out.put("measures", measures);
+        out.put("rowDimensions", c.rows.dims.stream().map(Dim::id).toList());
+        out.put("columnDimensions", c.cols.dims.stream().map(Dim::id).toList());
+        List<Map<String, Object>> rows = new ArrayList<>();
+        emitRows(c, c.rows.root, rows, "above".equals(view.subtotals()));
+        List<Map<String, Object>> cols = new ArrayList<>();
+        emitCols(c, c.cols.root, cols);
+        Map<String, Map<String, Object>> cells = new LinkedHashMap<>();
+        for (Map<String, Object> r : rows) {
+            if ("header".equals(r.get("kind"))) {
+                continue;
+            }
+            for (Map<String, Object> col : cols) {
+                @SuppressWarnings("unchecked")
+                Map<String, String> coords = new TreeMap<>((Map<String, String>) r.get("coords"));
+                @SuppressWarnings("unchecked")
+                Map<String, String> cc = (Map<String, String>) col.get("coords");
+                coords.putAll(cc);
+                PivotCore.Cell cell = c.cells.get(CellKey.of(coords));
+                if (cell == null) {
+                    continue;
+                }
+                Map<String, Object> e = values(core, c, cell);
+                e.put("coords", coords);
+                e.put("key", CellKey.of(coords).id());
+                cells.put(r.get("key") + "|" + col.get("key"), e);
+            }
+        }
+        showAs(c, rows, cols, cells);
+        diversification(c, rows, cells, cols);
+        out.put("rows", rows);
+        out.put("columns", cols);
+        out.put("cells", cells);
+        int visible = c.visibleCells();
+        out.put("cellCount", visible);
+        Map<String, Object> computed = new LinkedHashMap<>();
+        computed.put("sets", c.work.setsAsked);
+        computed.put("fromCache", c.work.setsFromCache);
+        computed.put("queries", c.work.queries);
+        computed.put("rowsRead", c.work.rowsRead);
+        computed.put("providerMs", c.work.providerMs);
+        computed.put("ms", c.millis());
+        computed.put("lazy", "only open nodes are computed; closed nodes' children are not");
+        out.put("computed", computed);
+        boolean anySketch = c.functions.stream().anyMatch(f -> f.fn().kind() == Kind.SKETCH);
+        out.put("exactness", anySketch ? "partial" : "exact");
+        String id = "pv:" + (c.catalogue.date() == null ? "current" : c.catalogue.date()) + ":"
+                + CellKey.hash(view.toMap().toString() + System.nanoTime()).substring(0, 10);
+        out.put("provenance", id);
+        out.put("provenanceShared", shared(c, id));
+        if (!c.work.notes.isEmpty()) {
+            out.put("notes", c.work.notes);
+        }
+        return out;
+    }
+
+    /** A cell's finished figures, members, notes and scope. */
+    static Map<String, Object> values(PivotCore core, PivotCore.Computation c, PivotCore.Cell cell) {
+        Map<String, Object> e = new LinkedHashMap<>();
+        Map<String, Object> vals = new LinkedHashMap<>();
+        Map<String, String> notes = new LinkedHashMap<>();
+        boolean hidden = cell.members < core.settings().minMembersPerCell();
+        for (int i = 0; i < c.functions.size(); i++) {
+            FunctionCall f = c.functions.get(i);
+            Object st = cell.states == null ? null : cell.states[i];
+            if (hidden) {
+                vals.put(f.label(), null);
+                notes.put(f.label(), "fewer than " + core.settings().minMembersPerCell() + " members: hidden (aggregate-only minimum per cell)");
+                continue;
+            }
+            if (cell.notes.containsKey(i)) {
+                vals.put(f.label(), null);
+                notes.put(f.label(), cell.notes.get(i));
+                continue;
+            }
+            Double v = st == null ? null : f.fn().finish(st);
+            vals.put(f.label(), v == null || v.isNaN() || v.isInfinite() ? null : v);
+            if (v == null) {
+                notes.put(f.label(), st == null ? "not computed" : f.fn().emptyNote());
+            }
+        }
+        e.put("values", vals);
+        if (!notes.isEmpty()) {
+            e.put("notes", notes);
+        }
+        e.put("members", cell.members);
+        if (cell.scope != null && cell.scope.startsWith("currency ")) {
+            e.put("currency", cell.scope.substring(9));
+        } else if (cell.scope != null) {
+            e.put("scope", cell.scope);
+        }
+        return e;
+    }
+
+    private static String label(PivotCore.Computation c, Axis.Node n) {
+        if (n.others) {
+            return "Others (" + n.othersCount + " of " + n.parent.levelMembers + ")";
+        }
+        return n.value;
+    }
+
+    private static Map<String, Object> entry(PivotCore.Computation c, Axis a, Axis.Node n, String kind) {
+        Map<String, Object> m = new LinkedHashMap<>();
+        m.put("key", n.key());
+        m.put("kind", kind);
+        m.put("depth", n.depth());
+        m.put("label", n.path.isEmpty() ? "Grand total" : "total".equals(kind) ? label(c, n) + " total" : label(c, n));
+        m.put("dim", n.dim());
+        m.put("value", n.others ? null : n.value);
+        m.put("path", n.pairs());
+        m.put("coords", n.coords());
+        boolean canOpen = !n.others && !n.path.isEmpty() && (a.defaultChild(n) != null || hasOther(c, a, n));
+        m.put("expandable", canOpen);
+        m.put("expanded", n.open() && !n.children.isEmpty());
+        m.put("by", n.childDim);
+        if (n.others) {
+            m.put("others", n.othersCount);
+        }
+        return m;
+    }
+
+    /** True when a dimension of the source not on the node's path or the other axis could break it down (expand by…). */
+    private static boolean hasOther(PivotCore.Computation c, Axis a, Axis.Node n) {
+        return c.catalogue.fields().size() > n.depth() + (a == c.rows ? c.cols.dims.size() : c.rows.dims.size());
+    }
+
+    private static void emitRows(PivotCore.Computation c, Axis.Node n, List<Map<String, Object>> out, boolean above) {
+        if (n.path.isEmpty()) {
+            if (above || n.children.isEmpty()) {
+                out.add(entry(c, c.rows, n, "grand"));
+            }
+            for (Axis.Node ch : n.children) {
+                emitRows(c, ch, out, above);
+            }
+            if (!above && !n.children.isEmpty()) {
+                out.add(entry(c, c.rows, n, "grand"));
+            }
+            return;
+        }
+        String kind = n.others ? "others" : "node";
+        if (n.open() && !n.children.isEmpty()) {
+            if (above) {
+                out.add(entry(c, c.rows, n, kind));
+                n.children.forEach(ch -> emitRows(c, ch, out, true));
+            } else {
+                out.add(entry(c, c.rows, n, "header"));
+                n.children.forEach(ch -> emitRows(c, ch, out, false));
+                out.add(entry(c, c.rows, n, "total"));
+            }
+        } else {
+            out.add(entry(c, c.rows, n, kind));
+        }
+    }
+
+    private static void emitCols(PivotCore.Computation c, Axis.Node n, List<Map<String, Object>> out) {
+        if (n.path.isEmpty()) {
+            n.children.forEach(ch -> emitCols(c, ch, out));
+            out.add(entry(c, c.cols, n, "grand"));
+            return;
+        }
+        if (n.open() && !n.children.isEmpty()) {
+            n.children.forEach(ch -> emitCols(c, ch, out));
+            out.add(entry(c, c.cols, n, "total"));
+        } else {
+            out.add(entry(c, c.cols, n, n.others ? "others" : "node"));
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Double v(Map<String, Map<String, Object>> cells, String key, String label) {
+        Map<String, Object> e = cells.get(key);
+        if (e == null) {
+            return null;
+        }
+        Object raw = ((Map<String, Object>) e.getOrDefault("raw", Map.of())).get(label);
+        Object x = raw != null ? raw : ((Map<String, Object>) e.get("values")).get(label);
+        return x instanceof Number n ? n.doubleValue() : null;
+    }
+
+    /** Show values as (section 14.1): each from finished figures, so a total is never broken. */
+    @SuppressWarnings("unchecked")
+    private static void showAs(PivotCore.Computation c, List<Map<String, Object>> rows, List<Map<String, Object>> cols,
+            Map<String, Map<String, Object>> cells) {
+        String grandRow = c.rows.root.key();
+        String grandCol = c.cols.root.key();
+        // a cell's key is "row key|column key", and a key of several coordinates has "|" in it too: split by the keys themselves
+        Map<String, String[]> parts = new LinkedHashMap<>();
+        for (Map<String, Object> r : rows) {
+            for (Map<String, Object> col : cols) {
+                String k = r.get("key") + "|" + col.get("key");
+                if (cells.containsKey(k)) {
+                    parts.put(k, new String[] {String.valueOf(r.get("key")), String.valueOf(col.get("key"))});
+                }
+            }
+        }
+        for (PivotView.Value pv : c.view.values()) {
+            String how = PivotView.low(pv.showAs());
+            if (how == null) {
+                continue;
+            }
+            String label = pv.label();
+            Map<String, Double> rawAll = new LinkedHashMap<>();
+            cells.forEach((k, e) -> rawAll.put(k, v(cells, k, label)));
+            for (Map.Entry<String, Map<String, Object>> x : cells.entrySet()) {
+                String[] rc = parts.getOrDefault(x.getKey(), x.getKey().split("\\|", 2));
+                Double raw = rawAll.get(x.getKey());
+                Double base = switch (how) {
+                    case "pct-grand" -> rawAll.get(grandRow + "|" + grandCol);
+                    case "pct-row" -> rawAll.get(rc[0] + "|" + grandCol);
+                    case "pct-column" -> rawAll.get(grandRow + "|" + rc[1]);
+                    case "pct-parent-row" -> rawAll.get(parentKey(rows, rc[0]) + "|" + rc[1]);
+                    default -> null;
+                };
+                Double shown;
+                if ("rank".equals(how)) {
+                    shown = rank(rows, rawAll, rc[0], rc[1]);
+                } else if (how.startsWith("pct-")) {
+                    shown = raw == null || base == null || base == 0 ? null : raw / base;
+                } else {
+                    throw PivotView.bad("show-as '" + pv.showAs() + "': pct-grand, pct-row, pct-column, pct-parent-row or rank");
+                }
+                Map<String, Object> e = x.getValue();
+                ((Map<String, Object>) e.computeIfAbsent("raw", k -> new LinkedHashMap<>())).put(label, raw);
+                ((Map<String, Object>) e.get("values")).put(label, shown);
+            }
+        }
+    }
+
+    private static String parentKey(List<Map<String, Object>> rows, String key) {
+        for (Map<String, Object> r : rows) {
+            if (key.equals(r.get("key"))) {
+                @SuppressWarnings("unchecked")
+                List<List<String>> path = (List<List<String>>) r.get("path");
+                if (path.isEmpty()) {
+                    return key;
+                }
+                Map<String, String> m = new TreeMap<>();
+                path.subList(0, path.size() - 1).forEach(p -> m.put(p.get(0), p.get(1)));
+                return CellKey.of(m).canonical();
+            }
+        }
+        return key;
+    }
+
+    private static Double rank(List<Map<String, Object>> rows, Map<String, Double> raw, String rowKey, String colKey) {
+        String parent = parentKey(rows, rowKey);
+        Double mine = raw.get(rowKey + "|" + colKey);
+        if (mine == null || parent.equals(rowKey)) {
+            return mine == null ? null : 1.0;
+        }
+        int r = 1;
+        for (Map<String, Object> other : rows) {
+            String k = String.valueOf(other.get("key"));
+            if (!k.equals(rowKey) && !"header".equals(other.get("kind")) && !"total".equals(other.get("kind")) && parent.equals(parentKey(rows, k))
+                    && !k.equals(parent)) {
+                Double v = raw.get(k + "|" + colKey);
+                if (v != null && v > mine) {
+                    r++;
+                }
+            }
+        }
+        return (double) r;
+    }
+
+    /** Σ children − node for every holistic measure of every open row node, at the column total (the gap a holistic total shows). */
+    @SuppressWarnings("unchecked")
+    private static void diversification(PivotCore.Computation c, List<Map<String, Object>> rows, Map<String, Map<String, Object>> cells,
+            List<Map<String, Object>> cols) {
+        String grandCol = c.cols.root.key();
+        for (Map<String, Object> r : rows) {
+            String kind = String.valueOf(r.get("kind"));
+            boolean carrier = "total".equals(kind) || "grand".equals(kind) && !c.rows.root.children.isEmpty()
+                    || "node".equals(kind) && Boolean.TRUE.equals(r.get("expanded"));
+            if (!carrier) {
+                continue;
+            }
+            Axis.Node node = find(c.rows.root, (List<List<String>>) r.get("path"));
+            if (node == null || node.children.isEmpty()) {
+                continue;
+            }
+            Map<String, Object> d = new LinkedHashMap<>();
+            for (FunctionCall f : c.functions) {
+                if (f.fn().kind() != Kind.HOLISTIC || f.fn().plainSum()) {
+                    continue;
+                }
+                Double total = v(cells, node.key() + "|" + grandCol, f.label());
+                double sum = 0;
+                boolean any = false;
+                for (Axis.Node ch : node.children) {
+                    Double x = v(cells, ch.key() + "|" + grandCol, f.label());
+                    if (x != null) {
+                        sum += x;
+                        any = true;
+                    }
+                }
+                if (total != null && any) {
+                    d.put(f.label(), sum - total);
+                }
+            }
+            if (!d.isEmpty()) {
+                r.put("diversification", d);
+            }
+        }
+    }
+
+    private static Axis.Node find(Axis.Node root, List<List<String>> path) {
+        Axis.Node n = root;
+        for (List<String> p : path) {
+            Axis.Node next = null;
+            for (Axis.Node ch : n.children) {
+                if (ch.dim().equals(p.get(0)) && (ch.others ? CellKey.OTHERS : ch.value).equals(p.get(1))) {
+                    next = ch;
+                    break;
+                }
+            }
+            if (next == null) {
+                return null;
+            }
+            n = next;
+        }
+        return n;
+    }
+
+    private static Map<String, Object> shared(PivotCore.Computation c, String id) {
+        Map<String, Object> p = new LinkedHashMap<>();
+        p.put("id", id);
+        p.put("source", c.view.source());
+        p.put("title", c.catalogue.title());
+        p.put("provider", c.provider.id());
+        p.put("date", c.catalogue.date());
+        p.put("version", c.provider.version(c.viewer, c.view.source(), c.catalogue.date()));
+        List<String> filters = new ArrayList<>();
+        c.view.filters().forEach((k, f) -> filters.add(k + " " + f.words()));
+        p.put("filters", filters.isEmpty() ? "none" : String.join("; ", filters));
+        List<Map<String, Object>> fns = new ArrayList<>();
+        for (FunctionCall f : c.functions) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("label", f.label());
+            m.put("function", f.id());
+            m.put("kind", f.fn().kind().word());
+            m.put("how", switch (f.fn().kind()) {
+                case MERGEABLE -> "each cell and total from its own rows' state; exact";
+                case SKETCH -> "a sketch with a stated error";
+                case HOLISTIC -> "each cell and total recomputed from its own members, never from other cells' figures";
+            });
+            fns.add(m);
+        }
+        p.put("functions", fns);
+        if (c.view.currency() != null) {
+            PivotView.Currency cc = c.view.currency();
+            p.put("currency", "money converted into " + cc.report() + " at " + cc.rates() + " (" + cc.source() + "), from each row's "
+                    + c.money.currencyField() + "; a row in a currency without a rate is left out");
+        } else if (c.money.guard()) {
+            p.put("currency", "money in each row's own currency (" + c.money.currencyField() + "); a cell over several currencies shows no money "
+                    + "figure until the view converts them");
+        }
+        p.put("notes", c.catalogue.notes());
+        p.put("statements", c.work.statements.size() > 20 ? c.work.statements.subList(0, 20) : c.work.statements);
+        p.put("queries", c.work.queries);
+        p.put("sets", c.work.setsAsked);
+        p.put("fromCache", c.work.setsFromCache);
+        p.put("rowsRead", c.work.rowsRead);
+        p.put("computeMs", c.millis());
+        p.put("viewer", c.viewer.user());
+        p.put("at", java.time.Instant.now().toString());
+        return p;
+    }
+
+    /** Two answers of one view on two dates: the differences per cell and measure, new and gone cells marked. */
+    @SuppressWarnings("unchecked")
+    static Map<String, Object> compare(Map<String, Object> a, Map<String, Object> b) {
+        Map<String, Map<String, Object>> ca = (Map<String, Map<String, Object>>) a.get("cells");
+        Map<String, Map<String, Object>> cb = (Map<String, Map<String, Object>>) b.get("cells");
+        Map<String, Object> diff = new LinkedHashMap<>();
+        java.util.Set<String> keys = new java.util.LinkedHashSet<>(ca.keySet());
+        keys.addAll(cb.keySet());
+        for (String k : keys) {
+            Map<String, Object> x = ca.get(k);
+            Map<String, Object> y = cb.get(k);
+            Map<String, Object> d = new LinkedHashMap<>();
+            if (x == null || y == null) {
+                d.put("status", x == null ? "gone" : "new");
+            } else {
+                Map<String, Object> vx = (Map<String, Object>) x.get("values");
+                Map<String, Object> vy = (Map<String, Object>) y.get("values");
+                Map<String, Object> delta = new LinkedHashMap<>();
+                vx.forEach((m, v) -> delta.put(m, v instanceof Number p && vy.get(m) instanceof Number q ? p.doubleValue() - q.doubleValue() : null));
+                d.put("delta", delta);
+            }
+            diff.put(k, d);
+        }
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("date", a.get("date"));
+        out.put("otherDate", b.get("date"));
+        out.put("answer", a);
+        out.put("other", b);
+        out.put("diff", diff);
+        return out;
+    }
+
+    static String estimateWords(PivotProvider.Estimate e, boolean confirm) {
+        StringBuilder b = new StringBuilder("This pivot reads ");
+        b.append(e.rows() < 0 ? "an unknown number of rows" : "≈" + String.format(Locale.ROOT, "%,d", e.rows()) + " rows");
+        if (e.bytes() >= 0) {
+            b.append(" (≈").append(bytes(e.bytes())).append(e.ofColumns() > 0 ? ", " + e.columns() + " of " + e.ofColumns() + " columns" : "")
+                    .append(")");
+        } else if (e.ofColumns() > 0) {
+            b.append(" (").append(e.columns()).append(" of ").append(e.ofColumns()).append(" columns)");
+        }
+        b.append(", ≈").append(e.seconds() < 1 ? "under a second" : String.format(Locale.ROOT, "%.0f s", e.seconds()));
+        b.append(confirm ? ". Large: run it, narrow it with a filter, or run it in the background." : ".");
+        return b.toString();
+    }
+
+    private static String bytes(long b) {
+        if (b >= 1L << 30) {
+            return String.format(Locale.ROOT, "%.1f GB", b / (double) (1L << 30));
+        }
+        if (b >= 1L << 20) {
+            return String.format(Locale.ROOT, "%.1f MB", b / (double) (1L << 20));
+        }
+        return String.format(Locale.ROOT, "%.0f KB", Math.max(1, b / 1024.0));
+    }
+}

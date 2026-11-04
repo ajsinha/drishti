@@ -41,14 +41,15 @@ import java.util.TreeMap;
 
 /**
  * Reads a Delta table with any engine the way the Delta connector does (scan files, then each file's rows with
- * deletion vectors applied), returning plain Java values so two engines' answers compare with {@code equals}.
+ * deletion vectors applied), returning plain Java values so two engines' answers compare with {@code equals}. Public for the in-memory
+ * lake's tests ({@code drishti-memlake}, through this module's test jar).
  */
-final class TableReader {
+public final class TableReader {
 
     private TableReader() {}
 
     /** {@code business_date|id} to the row's {@code doc}, for the latest version or {@code version}. */
-    static Map<String, String> rows(Engine engine, String table, Long version) throws IOException {
+    public static Map<String, String> rows(Engine engine, String table, Long version) throws IOException {
         Table t = Table.forPath(engine, table);
         Snapshot s = version == null ? t.getLatestSnapshot(engine) : t.getSnapshotAsOfVersion(engine, version);
         Scan scan = s.getScanBuilder().build();
@@ -86,7 +87,7 @@ final class TableReader {
     }
 
     /** The data files of the latest version, as Kernel lists them. */
-    static List<FileStatus> files(Engine engine, String table) throws IOException {
+    public static List<FileStatus> files(Engine engine, String table) throws IOException {
         Scan scan = Table.forPath(engine, table).getLatestSnapshot(engine).getScanBuilder().build();
         List<FileStatus> out = new ArrayList<>();
         try (CloseableIterator<FilteredColumnarBatch> files = scan.getScanFiles(engine)) {

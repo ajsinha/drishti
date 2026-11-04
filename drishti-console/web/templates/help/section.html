@@ -1,0 +1,62 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# A help section's own page (2.9.11.a, mock-up help-hub/A, scene 2): its pages grouped (config/help.yaml groups:), each guide on a row
+   with its tutorial beside it (pair:), a search of this section only (/help/search?section=<id>; the rows also filter as you type,
+   static/js/help.js), and for an administrator the pages of an engine that runs on no server, greyed and never links. #}
+{% extends "base.html" %}
+{% block title %}{{ section.name }} · Help · {{ PRODUCT }}{% endblock %}
+{% block body_class %}terminal help-page{% endblock %}
+{% block nav %}{% include "help/_nav.html" %}{% endblock %}
+{% block content %}
+<div class="help-wrap help-section" data-help-section="{{ section.id }}">
+  <nav class="crumbs help-crumbs" aria-label="Breadcrumb"><a href="/help">Help</a><span class="sep">/</span><span>{{ section.name }}</span></nav>
+  <header class="hub-head">
+    <h1><span class="hub-tile-ic"><i class="bi bi-{{ section.icon }}" aria-hidden="true"></i></span> {{ section.name }}</h1>
+    <p class="hub-sub">{{ count }} page{{ '' if count == 1 else 's' }}{% if paired %} · each guide beside its tutorial{% endif %}
+      {%- if engines_line.on or engines_line.off %} · {% if engines_line.on %}this server runs {{ engines_line.on | join(', ') }}{% endif %}{% if engines_line.on and engines_line.off %}; {% endif %}{% if engines_line.off %}{{ engines_line.off | join(', ') }} {{ 'is' if engines_line.off | length == 1 else 'are' }} off{% endif %}{% endif %}</p>
+  </header>
+  <form class="help-search sec-search" action="/help/search" method="get" role="search">
+    <i class="bi bi-search" aria-hidden="true"></i>
+    <input type="hidden" name="section" value="{{ section.id }}">
+    <label class="visually-hidden" for="sec-q">Search {{ section.name }}</label>
+    <input id="sec-q" name="q" type="search" autocomplete="off" data-help-filter placeholder="Search {{ section.name }}…">
+    <span class="sec-scope">only this section · <a href="/help/search" data-help-all>all of Help</a></span>
+  </form>
+  {% for grp in groups %}
+  <section class="sec-group" data-help-group>
+    <h2 class="sec-gh">{{ grp.title }}{% for w in grp.words %}<code class="sec-word mono">{{ w }}</code>{% endfor %}</h2>
+    <ul class="sec-rows">
+      {% for r in grp.rows %}{% set g = r.guide %}{% set p = r.pair %}
+      <li class="sec-row{% if r.status == 'off' %} sec-off{% endif %}" data-help-row data-search="{{ ((g.title ~ ' ' ~ g.summary ~ ' ' ~ (p.title if p else '') ~ ' ' ~ grp.title) | product) | lower }}">
+        <div class="sec-titles">
+          {% if r.status == 'on' %}<a class="sec-link" href="/help/{{ g.slug }}"><i class="bi bi-{{ g.icon }}" aria-hidden="true"></i> {{ g.title | product }}</a>
+          {%- else %}<span class="sec-link" aria-disabled="true"><i class="bi bi-{{ g.icon }}" aria-hidden="true"></i> {{ g.title | product }}</span>{% endif %}
+          {% if p %}<span class="sec-dot" aria-hidden="true">·</span>
+          {% if r.status == 'on' %}<a class="sec-link sec-tut" href="/help/{{ p.slug }}" data-help-pair><i class="bi bi-{{ p.icon }}" aria-hidden="true"></i> {{ p.title | product }}</a>
+          {%- else %}<span class="sec-link sec-tut" aria-disabled="true">{{ p.title | product }}</span>{% endif %}{% endif %}
+          {% if r.status == 'off' %}<span class="sec-offnote" data-help-off>not running on any server</span>
+          {% else %}<span class="badge-kind">{{ g.kind }}{% if p %} · {{ p.kind }}{% endif %}</span>{% endif %}
+        </div>
+        <p class="sec-sum">{{ g.summary | product }}</p>
+      </li>
+      {% endfor %}
+    </ul>
+  </section>
+  {% endfor %}
+  <p class="help-none" data-help-none hidden>No page of {{ section.name }} matches. <a href="#" data-help-fulltext>Search inside every page of this section</a>.</p>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/help.js?v={{ ASSET_V }}"></script>{% endblock %}

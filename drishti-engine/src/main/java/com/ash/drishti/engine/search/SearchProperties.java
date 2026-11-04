@@ -30,7 +30,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @param budget the time a search may take to list and read them; slower sources are left out
  * @param columns the key fields shown for each kind in pick lists and searches ({@code trade: [productType,
  *     counterparty.name, notional, currency]}); packs declare them ({@code columns:} in pack.yaml)
- * @param pivot the kinds whose search results and pick lists offer a Pivot tab: {@code true} (by the kind's key fields) or
+ * @param pivot the kinds whose search results and pick lists offer Pivot (the pivot screen): {@code true} (by the kind's key fields) or
  *     the pivot as JSON ({@code {"fields": [...], "rows": [...], ...}}); packs declare them ({@code pivot:} in pack.yaml)
  */
 @ConfigurationProperties("drishti.search")

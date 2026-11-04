@@ -60,7 +60,10 @@ def _pages(views: list[str] | None = None) -> list[str]:
         f = CONSOLE.parent / "config" / "engines" / str(e.get("file", ""))
         if f.is_file() and re.search(r"enabled:\s*\$\{[A-Z_]+:false\}", f.read_text()):
             off.update(e.get("help") or [])
-    pages += [f"/help/{g['slug']}" for cat in catalogue["categories"] for g in cat.get("guides", []) if g["slug"] not in off]
+            off.add("engine:" + str(e.get("id")))
+    guides = [g for s in catalogue["sections"] for grp in s["groups"] for g in grp["guides"]]     # the help hub's sections (2.9.11.a)
+    pages += [f"/help/section/{s['id']}" for s in catalogue["sections"]]
+    pages += [f"/help/{g['slug']}" for g in guides if g["slug"] not in off and "engine:" + str(g.get("engine")) not in off]
     # last, a view at a past business date and then as known at a time: the top bar's widest state
     pages += [f"/asof?d=2026-09-29&next=/v/{first}", f"/asof?d=2026-09-29&k=2026-09-29T10:00&next=/v/{first}"]
     return pages

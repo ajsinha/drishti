@@ -28,6 +28,8 @@ import pytest
 
 pytest.importorskip("playwright.sync_api", reason="needs Playwright (pip install playwright)")
 
+from playwright.sync_api import expect  # noqa: E402
+
 from conftest import CONSOLE, FakeBackend  # noqa: E402
 from test_live_tabs_browser import browser  # noqa: E402,F401 - the shared browser fixture
 
@@ -349,7 +351,7 @@ def test_a_draft_is_saved_and_resumed(browser, pack_console, tmp_path):
     page2.click("[data-next]")
     page2.locator(".pk-card").first.wait_for()
     page2.click("[data-next]")
-    assert page2.input_value("#pkp-name") == "draft-pack"
+    expect(page2.locator("#pkp-name")).to_have_value("draft-pack")             # the step is drawn from the resumed draft once Next has planned it
     page2.click("[data-discard]")
     page2.locator("[data-save-msg]:has-text('discarded')").wait_for()
     page2.close()

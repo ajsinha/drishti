@@ -150,13 +150,13 @@ class DataStack:
             (work / "config" / "connectors" / "risk-store.yaml").write_text(RISK_CONNECTOR.format(root=lake / "risk"))
         self.procs["server"] = subprocess.Popen(java_cmd(java, ["-Xmx768m", "-jar", jars[0], f"--server.port={SERVER_PORT}", "--drishti.security.registered-users-only=false",
                                                  f"--drishti.bi.query.store-dir={self.tmp / 'store'}"], tmp=self.tmp / "jvm-tmp"), cwd=work, env=env, stdout=open(self.tmp / "server.log", "ab"), stderr=subprocess.STDOUT)
-        wait(SERVER + "/actuator/health", 150)
+        wait(SERVER + "/actuator/health", proc=self.procs["server"])
         seed(['trading', 'counterparty-risk', 'market-risk'] if self.delta_root else ['trading', 'market-risk'])
         cenv = dict(os.environ, DRISHTI_AUTH_ENABLED="true", DRISHTI_SESSION_SECRET="s" * 40, DRISHTI_TOKEN_SECRET=SECRET, DRISHTI_SECURE_COOKIE="false",
                     DRISHTI_SESSION_RECHECK_SECONDS="1")
         self.procs["console"] = subprocess.Popen([sys.executable, str(CONSOLE / "run_drishti_web.py"), f"--server.port={CONSOLE_PORT}", f"--backend.url={SERVER}"], env=cenv,
                                                  stdout=open(self.tmp / "console.log", "ab"), stderr=subprocess.STDOUT)
-        wait(CONSOLE_URL + "/healthz")
+        wait(CONSOLE_URL + "/healthz", proc=self.procs["console"])
         return self
 
     def close(self) -> None:

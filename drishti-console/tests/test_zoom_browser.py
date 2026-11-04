@@ -262,7 +262,10 @@ def sizes(page):
 
 
 def settle(page):
-    page.wait_for_timeout(350)
+    """The zoomed table's fit has settled: two frames (a size change is observed in the frame after it), then no fit waiting for the panel's
+    size (tables.js marks the panel data-table-fitting meanwhile). A condition: a fixed 350 ms raced the fit's 100 ms timer on a loaded machine."""
+    page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")
+    page.wait_for_function("() => !document.querySelector('[data-table-fitting]')", timeout=30000)
 
 
 def test_zoomed_table_fills_the_height_keeps_the_top_row_and_restores(page):

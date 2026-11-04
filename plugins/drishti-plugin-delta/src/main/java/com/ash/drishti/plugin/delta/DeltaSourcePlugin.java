@@ -92,8 +92,8 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     private record Part(Map<String, String> docs, Map<String, Set<String>> refs) {}
 
     // concurrent: a reindex adds tables that appeared in the lake while reads go on
-    private final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
-    private final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
+    final Map<String, DeltaTable> tables = new java.util.concurrent.ConcurrentHashMap<>();
+    final Map<String, String> modes = new java.util.concurrent.ConcurrentHashMap<>();
     private Engine engine;
     private String idColumn;
     private String docColumn;
@@ -281,7 +281,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         String root = ctx.setting("root", com.ash.drishti.api.DataDir.under("delta"));
         // a lake in memory (mem://, IN_MEMORY_LAKE.md section 8): memory-only by contract, so nothing of it may reach a disk here either:
         // no id-map files, no document cache on disk, no index segments on disk (the memory caches still apply)
-        this.memoryOnly = com.ash.drishti.lakeio.mem.MemoryStores.isMemory(root);
+        this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root);
         this.lake = LakeStore.of(root, ctx.setting("domain", ""), ctx.settings());
         this.engine = lake.engine();
         this.idColumn = ctx.setting("id-column", "id");
@@ -402,20 +402,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         tables.putIfAbsent(kind, new DeltaTable(engine, lake.table(kind), idColumn, docColumn, dateColumn));
     }
 
-    /** New tables in the domain (a kind loaded after start) are served from the next reindex, without a restart. */
-    private void discoverTables() {
-        if (!discover) {
-            return;
-        }
-        try {
-            for (String kind : lake.tables()) {
-                if (!tables.containsKey(kind)) {
-                    add(kind);                                 // shows in /api/v1/sources and Admin → Health
-                }
-            }
-        } catch (IOException | RuntimeException e) {
-            // the lake is unreachable for now: health says so, and the next reindex tries again
-        }
+    /** New tables in the domain (a kind loaded after start), served without a restart ({@link NewTables}); true when one was found. */
+    private boolean discoverTables() {
+        return discover && NewTables.find(lake, tables.keySet(), this::add);
     }
 
     private List<String> kinds(String configured) throws IOException {
@@ -632,7 +621,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** The promoted paths the table really has as columns (a pack may declare more than a writer wrote). */
-    private Map<String, String> promotedColumns(String kind, DeltaTable.Layout l) {
+    Map<String, String> promotedColumns(String kind, DeltaTable.Layout l) {
         Map<String, String> out = new LinkedHashMap<>();
         for (String path : promoted.getOrDefault(kind, List.of())) {
             String column = path.replace(".", "__");
@@ -668,7 +657,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** Partitions to look in for {@code date}, newest first. */
-    private List<LocalDate> candidates(String kind, DeltaTable.Layout l, LocalDate date) {
+    List<LocalDate> candidates(String kind, DeltaTable.Layout l, LocalDate date) {
         var head = date == null ? l.files().descendingKeySet() : l.files().headMap(date, true).descendingKeySet();
         List<LocalDate> out = new ArrayList<>();
         boolean effective = "effective".equals(modes.get(kind));
@@ -690,7 +679,7 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     }
 
     /** The table's layout, recording a log that cannot be read (health says so) and rethrowing: a failure, not "not held". */
-    private Optional<DeltaTable.Layout> readableLayout(String kind, Instant knownAt) {
+    Optional<DeltaTable.Layout> readableLayout(String kind, Instant knownAt) {
         try {
             return layout(kind, knownAt);
         } catch (RuntimeException e) {
@@ -1273,6 +1262,12 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         return out;
     }
 
+    /** The date's Parquet files and the promoted columns, for the pivot engine's direct lake route ({@link DeltaLakeFiles}). */
+    @Override
+    public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, AsOf asOf) {
+        return DeltaLakeFiles.of(this, kind, asOf);
+    }
+
     @Override
     public Optional<com.ash.drishti.api.ColumnSet> columns(String kind, java.util.Collection<String> paths, AsOf asOf) {
         Optional<DeltaTable.Layout> l = readableLayout(kind, asOf.knownAt());
@@ -1390,6 +1385,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
         idMaps.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         columnSets.synchronous().asMap().keySet().removeIf(k -> k.owner().equals(owner));
         docs.asMap().keySet().removeIf(k -> k.startsWith(owner + "\u001f"));
+        if (discoverTables()) {              // a table created by the load just signalled (the first into an empty lake): listed now
+            reindex();
+        }
     }
 
     /** One date's day parts, id maps, column sets and documents of this connector go, in memory and its id-map files on disk (2.9.7). */
@@ -1415,6 +1413,9 @@ public final class DeltaSourcePlugin implements SourcePlugin {
     @Override
     public void refreshVersions() {
         latest.synchronous().invalidateAll();
+        if (discoverTables()) {              // a new table in the domain is listed at once, not at the next reindex
+            loaders.execute(this::reindex);
+        }
         if (memoryOnly) {
             loaders.execute(this::reindex);   // a memory table just filled (or evicted): its kind is found and listed now, not at the next sweep
         }

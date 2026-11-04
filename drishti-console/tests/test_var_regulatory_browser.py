@@ -73,7 +73,7 @@ def stack(tmp_path_factory):
         lake = lake or work / "delta"
         r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                             "--connectors-dir", str(work / "connectors"), "--as-of", "data", "--only", VAR_DATA + ",market-risk/desk-pnl",
-                            "--no-signal", "-q", "--engine", "auto"], capture_output=True, text=True, cwd=ROOT, timeout=1500)
+                            "--no-signal", "-q", "--engine", "deltalake"], capture_output=True, text=True, cwd=ROOT, timeout=1500)   # the Python writer, in this process: auto starts a JVM for every table and business day
         if r.returncode != 0 or not (lake / "risk" / "pnl-vector").is_dir():
             pytest.skip("could not build the VaR demo lake: " + (r.stderr or r.stdout)[-400:])
     assert (lake / "risk" / "desk-pnl").is_dir(), "the lake has no desk-pnl table: " + ", ".join(sorted(p.name for p in (lake / "risk").iterdir()))

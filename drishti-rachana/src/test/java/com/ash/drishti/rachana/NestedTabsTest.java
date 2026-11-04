@@ -112,7 +112,7 @@ class NestedTabsTest {
                 - { id: a, kind: kv }
                 """)).anyMatch(p -> p.startsWith("DRS-2024"));
         assertThat(problems("- { id: a, kind: kv, span: 6 }\n")).anyMatch(p -> p.startsWith("DRS-2030"));
-        assertThat(problems("- { id: a, kind: table, rows: \"@.cashflows\", pivot: true }\n")).anyMatch(p -> p.contains("cannot have a Pivot tab"));
+        assertThat(problems("- { id: a, kind: table, rows: \"@.cashflows\", pivot: true }\n")).anyMatch(p -> p.contains("cannot have Pivot (the pivot screen)"));
     }
 
     @Test

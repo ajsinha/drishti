@@ -48,7 +48,7 @@ public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double mem
         Double diskRefuseGb, RetryAfter retryAfter, Integer keep, Integer overrideMaxMinutes) {
 
     /** The seconds each kind of work waits before it is tried again. */
-    public record RetryAfter(Integer signIn, Integer load, Integer download, Integer biRun, Integer bulkLoad) {
+    public record RetryAfter(Integer signIn, Integer load, Integer download, Integer biRun, Integer bulkLoad, Integer pivotView) {
 
         public RetryAfter {
             signIn = pos(signIn, 45);
@@ -56,6 +56,7 @@ public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double mem
             download = pos(download, 30);
             biRun = pos(biRun, 60);
             bulkLoad = pos(bulkLoad, 120);
+            pivotView = pos(pivotView, 20);
         }
 
         int of(Work w) {
@@ -65,6 +66,7 @@ public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double mem
                 case DOWNLOAD -> download;
                 case BI_RUN -> biRun;
                 case BULK_LOAD -> bulkLoad;
+                case PIVOT_VIEW -> pivotView;
             };
         }
     }
@@ -83,7 +85,7 @@ public record AdmissionProperties(Boolean enabled, Double memoryWarn, Double mem
         queueRefuse = queueRefuse == null || queueRefuse < 0 ? 50 : queueRefuse;
         diskWarnGb = diskWarnGb == null || diskWarnGb < 0 ? 20.0 : diskWarnGb;
         diskRefuseGb = diskRefuseGb == null || diskRefuseGb < 0 ? 10.0 : diskRefuseGb;
-        retryAfter = retryAfter == null ? new RetryAfter(null, null, null, null, null) : retryAfter;
+        retryAfter = retryAfter == null ? new RetryAfter(null, null, null, null, null, null) : retryAfter;
         keep = pos(keep, 50);
         overrideMaxMinutes = pos(overrideMaxMinutes, 240);
     }

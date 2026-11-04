@@ -15,7 +15,7 @@
  */
 /* Chart any table, the engine (docs/guides/RACHANA_REFERENCE.md › Chart any table: the design, sections 6 to 15): pure functions, no DOM. It classifies a
    table's columns (date, number, text; masked; identifiers), picks the smart defaults, normalises a settings document,
-   maps the settings onto the pivot engine (X -> rows, split -> columns, series -> values), turns the cube into drawn
+   maps the settings onto the pivot engine (X -> rows, split -> columns, series -> values; the server's engine aggregates), turns its cube into drawn
    series (date buckets, Top N with Others, split cap, sort, percent, gaps), refuses what cannot be drawn honestly (a pie
    with negative values, 100% of percentages), and builds the ECharts option from the theme tokens it is given (never a
    literal colour). Also the text summary (caption, aria-label) and the export grid. Masks hold: a masked column is never
@@ -26,7 +26,7 @@
   var P = typeof module !== 'undefined' && module.exports ? require('./pivot-engine.js') : null;
   function PE() { return P || root.drishtiPivotEngine || (root.drishtiModules || {}).pivotEngine; }
 
-  var MASK = '•••', OTHERS = 'Others', ROWS = '·rows', DOT = '·';
+  var MASK = '•••', OTHERS = 'Others', ROWS = '·rows', DOT = '·', OTHERS_KEY = '\u0000Others';   // the engine's Others member
   var TYPES = ['line', 'bar', 'area', 'pie', 'scatter', 'combo'];
   var AGGS = ['sum', 'avg', 'count', 'min', 'max'];
   var BUCKETS = ['auto', 'day', 'week', 'month', 'quarter', 'year'];
@@ -290,41 +290,48 @@
     return { records: { fields: outFields, rows: out, truncated: !!(records && records.truncated) }, xKey: xKey, bucket: bucket, time: time, notes: notes };
   }
   /**
-   * The settings as a pivot arrangement: X -> rows, split -> columns, each series -> values. An average also asks its sum
-   * and count, so Others (and a merged split) stays exact. Returns the arrangement and, per series, where its values are.
+   * The settings as a pivot arrangement: X -> rows, split -> columns, each series -> values, and the engine's Top N with Others: on a
+   * category X its top.n (a pie at most pieSlices - 1 and Others) ranked by the sorted series, on the split the splitMax - 1 largest by
+   * the first series. Others is the engine's own member, each figure from its own rows (an average included). Returns the arrangement
+   * and, per series, where its value is.
    */
-  function toArrangement(settings, prep) {
-    var values = [], at = [];
+  function toArrangement(settings, prep, opts) {
+    var L = limits(opts), values = [], at = [], top = {};
     settings.series.forEach(function (e, i) {
-      var f = seriesField(e, i), agg = e.agg === 'none' ? 'sum' : e.agg, slot = { main: values.length, agg: agg };
+      var f = seriesField(e, i), agg = e.agg === 'none' ? 'sum' : e.agg;
+      at.push({ main: values.length, agg: agg });
       values.push({ field: f, agg: agg });
-      if (agg === 'avg') { slot.sum = values.length; values.push({ field: f, agg: 'sum' }); slot.count = values.length; values.push({ field: f, agg: 'count' }); }
-      at.push(slot);
     });
-    return { arrangement: { rows: [prep ? prep.xKey : settings.x.field], columns: settings.split ? [settings.split] : [], values: values }, slots: at };
+    var x = prep ? prep.xKey : settings.x.field, time = !!(prep && prep.time), n = settings.top && settings.top.n;
+    if (settings.type === 'pie') { n = Math.min(n || Infinity, L.pieSlices - 1); }
+    if (n && isFinite(n) && !time) { top[x] = { n: n, by: (at[settings.sort.series || 0] || at[0]).main }; }
+    if (settings.split) { top[settings.split] = { n: L.splitMax - 1, by: at[0].main }; }
+    return { arrangement: { rows: [x], columns: settings.split ? [settings.split] : [], values: values, top: top }, slots: at };
   }
-  /** The cube of the prepared rows (the pivot engine's own aggregation; the chart never aggregates on its own). */
-  function cube(prep, settings, opts) {
-    var L = limits(opts), a = toArrangement(settings, prep);
-    var c = PE().cube(prep.records, a.arrangement, { maxRowKeys: L.rowKeys, maxColumnKeys: L.columnKeys });
-    c.slots = a.slots;
-    return c;
+  /**
+   * The rows ready for the pivot engine: the prepared rows and the arrangement to ask of it (POST /api/pivot/inline through
+   * pivot-engine.js), or, for a scatter of points, the drawn model at once (points are not aggregated). The chart never adds up a figure.
+   */
+  function plan(records, cols, settings, opts) {
+    var prep = prepare(records, settings, cols, opts);
+    if (settings.type === 'scatter' && (settings.series[0] || {}).agg === 'none') { return { prep: prep, model: points(prep, settings, cols, opts) }; }
+    var a = toArrangement(settings, prep, opts);
+    return { prep: prep, arrangement: a.arrangement, slots: a.slots, model: null };
+  }
+  /** The engine's cube of a plan, drawn: at most rowKeys X values and columnKeys split values are kept (the rest is said). */
+  function finish(p, engineCube, settings, cols, opts) {
+    if (p.model) { return p.model; }
+    var L = limits(opts), c = Object.assign({}, engineCube, { slots: p.slots });
+    c.count = c.count != null ? c.count : p.prep.notes.kept;                // the rows the engine aggregated, of the rows shown
+    c.total = p.prep.notes.rows;
+    if (c.rowKeys.length > L.rowKeys) { c.rowKeys = c.rowKeys.slice(0, L.rowKeys); c.moreRows = true; }
+    if (c.columnKeys.length > L.columnKeys) { c.columnKeys = c.columnKeys.slice(0, L.columnKeys); }
+    return series(c, settings, cols, p.prep, opts);
   }
 
   // ---- cube -> drawn series -----------------------------------------------------------------------------------------
-  /** Several cells of one series combined: sums and counts add, min and max fold, an average from its sum and count. */
-  function combine(slot, cells) {
-    var acc = null, s = 0, k = 0, any = false;
-    cells.forEach(function (c) {
-      if (!c) { return; }
-      if (slot.agg === 'avg') { if (num(c[slot.sum])) { s += c[slot.sum]; any = true; } if (num(c[slot.count])) { k += c[slot.count]; } return; }
-      var v = c[slot.main];
-      if (!num(v)) { return; }
-      if (acc === null) { acc = v; } else if (slot.agg === 'min') { acc = Math.min(acc, v); } else if (slot.agg === 'max') { acc = Math.max(acc, v); } else { acc += v; }
-    });
-    if (slot.agg === 'avg') { return any && k ? s / k : null; }
-    return acc;
-  }
+  /** A cell's figure for a series: the engine's own (an Others cell included); never added up here. */
+  function figureOf(slot, c) { var v = c ? c[slot.main] : null; return num(v) ? v : null; }
   function seriesLabel(e, cols) {
     if (e.label) { return e.label; }
     if (!e.field) { return 'Rows'; }
@@ -351,49 +358,43 @@
     var xcol = find(cols, settings.x.field), time = !!(prep && prep.time), bucket = prep ? prep.bucket : null;
     var cell = function (xk, ck) { return c.cells[E.cellKey(xk == null ? [] : [xk], ck == null ? [] : [ck])]; };
     var xs = c.rowKeys.map(function (k) { return k[0]; });
-    var value = function (s, xk, cks) { return combine(slots[s], (cks || [null]).map(function (ck) { return cell(xk, ck); })); };
-    // split: one drawn series per value, the largest splitMax - 1 and Others
+    var value = function (s, xk, ck) { return figureOf(slots[s], cell(xk, ck == null ? null : ck)); };
+    // split: one drawn series per value; past splitMax - 1 values the engine's Others (ranked by the first series)
     var groups = [null];
     if (settings.split) {
-      var ks = c.columnKeys.map(function (k, i) { return { k: k[0], v: value(0, null, [k[0]]), i: i }; });
-      if (ks.length > L.splitMax) {
-        var kept = ks.slice().sort(byValue('desc')).slice(0, L.splitMax - 1).sort(function (a, b) { return a.i - b.i; });
-        var keep = {}; kept.forEach(function (x) { keep[x.k] = true; });
-        groups = kept.map(function (x) { return [x.k]; });
-        groups.push(ks.filter(function (x) { return !keep[x.k]; }).map(function (x) { return x.k; }));
-        groups[groups.length - 1].others = true;
-        notes.push(ks.length + ' values of ' + settings.split + ': the ' + (L.splitMax - 1) + ' largest and Others');
-      } else { groups = ks.map(function (x) { return [x.k]; }); }
+      groups = c.columnKeys.map(function (k) { return k[0]; });
+      if (c.columnOthers) {
+        groups.push(OTHERS_KEY);
+        notes.push((c.columnKeys.length + c.columnOthers) + ' values of ' + settings.split + ': the ' + c.columnKeys.length + ' largest and Others');
+      }
     }
-    // X: Top N with Others (category axes), a pie's slice cap, the sort
-    var items = xs.map(function (k, i) { return { k: k, keys: [k], i: i, v: value(settings.sort.series || 0, k, null) }; });
-    var others = null, n = settings.top.n, forceOthers = false;
-    if (settings.type === 'pie' && items.length > L.pieSlices && (!n || n > L.pieSlices - 1)) { n = L.pieSlices - 1; forceOthers = true; notes.push(items.length + ' slices: the ' + n + ' largest and Others'); }
-    if (n && !time && items.length > n) {
-      var ranked = items.slice().sort(byValue('desc')), top = ranked.slice(0, n), rest = ranked.slice(n);
-      var tk = {}; top.forEach(function (x) { tk[x.k] = true; });
-      items = items.filter(function (x) { return tk[x.k]; });
-      if (settings.top.others || forceOthers) { others = { k: OTHERS, keys: rest.map(function (x) { return x.k; }), others: true, i: Infinity }; }
-      else { notes.push(rest.length + ' smaller values left out (Top ' + n + ')'); }
-    } else if (n && time && settings.top.n) { notes.push('Top N applies to categories, not to a time axis'); }
+    // X: the engine's Top N and its Others (category axes; a pie's slice cap), then the sort
+    var items = xs.map(function (k, i) { return { k: k, i: i, v: value(settings.sort.series || 0, k, null) }; });
+    var others = null;
+    if (c.rowOthers) {
+      var pieCap = settings.type === 'pie' && (!settings.top.n || settings.top.n > L.pieSlices - 1);
+      if (pieCap) { notes.push((items.length + c.rowOthers) + ' slices: the ' + items.length + ' largest and Others'); }
+      if (settings.top.others || pieCap) { others = { k: OTHERS, key: OTHERS_KEY, others: true, i: Infinity }; }
+      else { notes.push(c.rowOthers + ' smaller values left out (Top ' + items.length + ')'); }
+    } else if (settings.top.n && time) { notes.push('Top N applies to categories, not to a time axis'); }
     if (settings.sort.by === 'value') { items.sort(byValue(settings.sort.dir)); }
     else if (settings.sort.dir === 'desc') { items.reverse(); }
-    if (others) { others.v = combine(slots[0], others.keys.map(function (k) { return cell(k, null); })); items.push(others); }
+    if (others) { others.v = value(settings.sort.series || 0, OTHERS_KEY, null); items.push(others); }
     // gaps: a business day the calendar expects but the data lacks is drawn as a gap ("break")
     if (time && bucket === 'day' && settings.x.gaps === 'break' && items.length > 1 && settings.type !== 'pie') {
       var have = {}; items.forEach(function (x) { have[x.k] = true; });
       var dd = items.map(function (x) { return x.k; }).filter(function (k) { return k !== E.BLANK; }).sort();
       var missing = businessDays(dd[0], dd[dd.length - 1], opts && opts.holidays).filter(function (k) { return !have[k]; });
-      missing.forEach(function (k) { items.push({ k: k, keys: [], gap: true, i: -1 }); });
+      missing.forEach(function (k) { items.push({ k: k, gap: true, i: -1 }); });
       items.sort(function (a, b) { return (a.k < b.k ? -1 : a.k > b.k ? 1 : 0) * (settings.sort.dir === 'desc' ? -1 : 1); });
       if (missing.length) { notes.push(missing.length + ' business day' + (missing.length === 1 ? '' : 's') + ' without data drawn as gaps'); }
     }
     var drawn = [];
     settings.series.forEach(function (e, s) {
       groups.forEach(function (g, gi) {
-        var data = items.map(function (it) { return it.gap ? null : combine(slots[s], it.keys.reduce(function (acc, xk) { return acc.concat((g || [null]).map(function (ck) { return cell(xk, ck); })); }, [])); });
-        var base = seriesLabel(e, cols), split = g ? (g.others ? OTHERS : g[0]) : null;
-        drawn.push({ key: s + ':' + gi, index: s, split: split, others: !!(g && g.others), name: split == null ? base : settings.series.length > 1 ? base + ' · ' + split : split,
+        var data = items.map(function (it) { return it.gap ? null : figureOf(slots[s], cell(it.others ? OTHERS_KEY : it.k, g)); });
+        var base = seriesLabel(e, cols), isOthers = g === OTHERS_KEY, split = g == null ? null : isOthers ? OTHERS : g;
+        drawn.push({ key: s + ':' + gi, index: s, split: split, others: isOthers, name: split == null ? base : settings.series.length > 1 ? base + ' · ' + split : split,
           label: base, field: e.field, agg: e.agg, axis: e.axis, type: settings.type === 'combo' ? e.type : settings.type, data: data,
           fmt: e.agg === 'count' ? 'int' : (find(cols, e.field) || {}).fmt || null });
       });
@@ -467,15 +468,17 @@
         field: e.field, agg: 'none', axis: 'left', type: 'scatter', data: groups[g], fmt: (find(cols, e.field) || {}).fmt || null, sized: zi != null }; }),
       notes: notes.concat(exclusions(prep, cols)), refusal: null, empty: !n, single: n === 1, rows: n, total: prep.notes.rows, settings: settings };
   }
-  /** One call: rows -> prepared -> cube (or points) -> drawn model. */
+  /**
+   * One call, for a caller that holds the engine's cube at once (opts.cube(records, arrangement) -> cube): rows -> plan -> the engine's
+   * cube (or points) -> drawn model. The dialog asks the server asynchronously (plan, then finish).
+   */
   function build(records, cols, settings, opts) {
-    var prep = prepare(records, settings, cols, opts);
-    if (settings.type === 'scatter' && (settings.series[0] || {}).agg === 'none') { return points(prep, settings, cols, opts); }
-    return series(cube(prep, settings, opts), settings, cols, prep, opts);
+    var p = plan(records, cols, settings, opts);
+    return p.model || finish(p, opts.cube(p.prep.records, p.arrangement), settings, cols, opts);
   }
   /** A server-aggregated cube (search pivot) drawn the same way; its values must be laid out as toArrangement asks. */
   function fromCube(serverCube, settings, cols, opts) {
-    var c = Object.assign({}, serverCube, { slots: toArrangement(settings, null).slots });
+    var c = Object.assign({}, serverCube, { slots: toArrangement(settings, null, opts).slots });
     return series(c, settings, cols, null, opts);
   }
 
@@ -611,7 +614,7 @@
   var api = { MASK: MASK, OTHERS: OTHERS, TYPES: TYPES, AGGS: AGGS, BUCKETS: BUCKETS, LIMITS: LIMITS,
     toNumber: toNumber, isDate: isDate, dayOf: dayOf, bucketOf: bucketOf, autoBucket: autoBucket, businessDays: businessDays,
     classify: classify, chartable: chartable, types: types, normalise: normalise, defaults: defaults,
-    prepare: prepare, toArrangement: toArrangement, cube: cube, combine: combine, series: series, points: points, build: build, fromCube: fromCube,
+    prepare: prepare, toArrangement: toArrangement, plan: plan, finish: finish, series: series, points: points, build: build, fromCube: fromCube,
     option: option, palette: palette, summary: summary, trend: trend, exportGrid: exportGrid };
   if (typeof module !== 'undefined' && module.exports) { module.exports = api; } else {
     (root.drishtiModules = root.drishtiModules || {}).tableChartEngine = api;

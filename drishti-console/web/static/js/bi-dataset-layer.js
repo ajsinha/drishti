@@ -119,8 +119,13 @@
       box.appendChild(h('li', { class: elsewhere ? 'text-muted-d' : 'bi-ok', 'data-step-clean': '', text: keys.length ? (elsewhere ? 'This step checks clean; ' + elsewhere + ' error' + (elsewhere === 1 ? '' : 's') + ' in other steps (Save lists them).' : 'This step checks clean.') : (check.valid === false ? '' : 'Checks clean.') }));
     }
   };
+  // checks overlap (a step's own on showing, then a field's change): only the newest asked paints, so a slower answer about an older form
+  // never puts back what the person has since changed (a title typed while the step's first check was still out)
+  let checks = 0;
   L.check = function (step) {
+    const asked = ++checks;
     return B.layer.post('dataset-yaml', { doc: L.doc() }).then((r) => {
+      if (asked !== checks) { return r; }
       const list = q('[data-problems-' + step + ']');
       if (list) { L.problems(list, r.check, step); }
       q('[data-yaml]').textContent = r.yaml;

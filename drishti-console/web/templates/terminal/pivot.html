@@ -1,0 +1,94 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The pivot screen, PIVOT [table | @owner/name] <GO> (PIVOT_GUIDE.md; mock-up A of PIVOT_ENGINE.md section 25): Excel-familiar, the field
+   list and its four zones (Filters, Columns, Rows, Values) on the right; the grid with nested rows opened lazily with + and −, ≈ and exact
+   markers, the provenance popover of a cell; the scan-estimate bar above; a chart of the selection below (a non-additive measure is never
+   stacked); the Export menu (Excel with outline and formulas only where a measure adds up, CSV, Arrow, the definition). A shell:
+   pivot-grid.js (the grid) and pivot.js (the screen) fill it from /api/pivot/...; every figure is the server's. #}
+{% extends "base.html" %}
+{% block title %}Pivot{% if source %} · {{ source }}{% endif %} · {{ PRODUCT }}{% endblock %}
+{% block screen %}pivot{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/pivot-screen.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="pv" data-pivot-screen data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}">
+  <div class="pv-head">
+    <h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
+      <span data-pv-title>{{ view_id or source or 'choose a table' }}</span></h1>
+    <span class="pv-meta" data-pv-meta aria-live="polite"></span>
+    <a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (PIVOT_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+  </div>
+  <div class="pv-bar" role="toolbar" aria-label="Pivot controls">
+    <label class="pv-chip">Source <select data-pv-source aria-label="Source"></select></label>
+    <label class="pv-chip">Date <select data-pv-date aria-label="Business date"></select></label>
+    <label class="pv-chip">Compare <select data-pv-compare aria-label="Compare with a date"><option value="">off</option></select></label>
+    <label class="pv-chip">Subtotals <select data-pv-subtotals aria-label="Subtotals"><option value="below">below</option><option value="above">above</option></select></label>
+    <button type="button" class="pv-chip" data-pv-chart title="Chart the selection (G)">Chart <kbd>G</kbd></button>
+    <button type="button" class="pv-chip" data-pv-export-open title="Export (X)" aria-expanded="false">Export <kbd>X</kbd></button>
+    <button type="button" class="pv-chip" data-pv-save title="Save the view (private until shared)">Save view</button>
+    <button type="button" class="pv-chip" data-pv-share title="Save and share with people or roles">Share</button>
+  </div>
+  <div class="pv-slicers" data-pv-slicers role="group" aria-label="Slicers" hidden></div>
+  <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
+  <p class="pv-notice" data-pv-notice role="alert" hidden></p>
+  <div class="pv-main">
+    <section class="pv-card pv-gridcard" aria-labelledby="pvGridTitle">
+      <h2 id="pvGridTitle"><span data-pv-grid-title>Pivot</span> <span class="pv-sub" data-pv-grid-sub></span></h2>
+      <div class="pv-scroll" data-pv-grid tabindex="0" aria-label="The pivot: arrows move, right arrow opens a row, left closes it, Shift+right opens every level below, Enter shows the rows"></div>
+      <p class="pv-keys"><kbd>→</kbd> expand · <kbd>←</kbd> collapse · <kbd>Shift</kbd>+<kbd>→</kbd> all below · <kbd>1</kbd>–<kbd>9</kbd> to level · <kbd>E</kbd> expand by… · <kbd>Enter</kbd> rows · <kbd>G</kbd> chart · <kbd>X</kbd> export</p>
+      <div class="pv-pop" data-pv-pop role="dialog" aria-label="Cell provenance" hidden></div>
+    </section>
+    <aside class="pv-side">
+      <section class="pv-card" aria-labelledby="pvFieldsTitle">
+        <h2 id="pvFieldsTitle">Fields <span class="pv-sub" data-pv-fields-sub></span></h2>
+        <input class="pv-input" type="search" data-pv-field-search placeholder="Search fields…" aria-label="Search fields">
+        <div class="pv-fields" data-pv-fields></div>
+        <div class="pv-zones">
+          <div class="pv-zone" data-pv-zone="filters"><h3>Filters</h3><div data-pv-zone-items></div></div>
+          <div class="pv-zone" data-pv-zone="columns"><h3>Columns</h3><div data-pv-zone-items></div></div>
+          <div class="pv-zone" data-pv-zone="rows"><h3>Rows</h3><div data-pv-zone-items></div></div>
+          <div class="pv-zone" data-pv-zone="values"><h3>Values</h3><div data-pv-zone-items></div></div>
+          <div class="pv-zone pv-zone-wide" data-pv-zone="slicers"><h3>Slicers</h3><div data-pv-zone-items></div></div>
+        </div>
+        <p class="pv-hint">Drag a field to a zone, or select it and press <kbd>R</kbd>, <kbd>C</kbd>, <kbd>V</kbd>, <kbd>F</kbd> or <kbd>S</kbd> (a slicer). A value's
+          format (colour scale, data bars) is drawn from its figures and kept with the view.</p>
+      </section>
+      <section class="pv-card pv-export" data-pv-export hidden aria-labelledby="pvExportTitle">
+        <h2 id="pvExportTitle">Export <span class="pv-sub">as you see it, masks applied</span></h2>
+        <fieldset class="pv-radio"><legend class="pv-sub">What</legend>
+          <label><input type="radio" name="pvWhat" value="pivot" checked> The pivot as shown (outline, subtotals)</label>
+          <label><input type="radio" name="pvWhat" value="rows"> The underlying rows of the selected cell</label>
+          <label><input type="radio" name="pvWhat" value="definition"> The view definition (YAML)</label>
+        </fieldset>
+        <div class="pv-formats">
+          <button type="button" class="pv-btn primary" data-pv-export="xlsx">Excel</button>
+          <button type="button" class="pv-btn" data-pv-export="csv">CSV</button>
+          <button type="button" class="pv-btn" data-pv-export="jsonl">JSON Lines</button>
+          <button type="button" class="pv-btn" data-pv-export="arrow">Arrow</button>
+        </div>
+        <p class="pv-sub">Excel: values with formats, outline levels, SUM formulas only where a figure adds up, a Provenance sheet. Every export is audited.</p>
+      </section>
+    </aside>
+  </div>
+  <section class="pv-card pv-chartcard" data-pv-chartcard hidden aria-labelledby="pvChartTitle">
+    <h2 id="pvChartTitle"><span data-pv-chart-title>Chart of the selection</span> <span class="pv-sub" data-pv-chart-sub></span></h2>
+    <div class="pv-chart" data-pv-chart-box></div>
+    <p class="pv-sub" data-pv-chart-note></p>
+  </section>
+</div>
+{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script>{% endblock %}

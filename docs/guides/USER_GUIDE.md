@@ -45,7 +45,7 @@ centre → Domain packs*) has a *Finding things* section with the same commands 
 | [Screens that respond](#screens-that-respond-clicks-refresh-editing-and-your-own-page) | A click that opens a panel, refresh and freshness, Pause all, editing a record (drafts), a screen you arrange, *Your page* |
 | [Zoom a panel](#zoom-a-panel) | `Z`: one panel fills the view area; restore with `Esc`; shareable as `#zoom=<panel>` |
 | [On a phone](#on-a-phone) | What a phone shows first, *More on this page*, *On desktop*, *Show everything*, the lens menu |
-| [The Pivot tab](#the-pivot-tab-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
+| [Pivot](#pivot-slice-a-table-your-way) | Rows, columns, values and filters over a table or a search's results, by drag or by key; totals, drill-down, chart, export |
 | [Keyboard](#keyboard) | Every key in one table |
 | [Live updates](#live-updates), [Business dates](#business-dates-live-or-a-day-in-the-past), [Compare](#compare-what-changed) | Ticking values, past dates, what changed |
 | [Search by value](#search-by-value) | `where` searches, sorting and limits |
@@ -125,7 +125,7 @@ with `ui.facts.enabled: false` (`DRISHTI_HOME_FACTS=false`) and sets the cards u
 
 ## The top bar
 
-Every page has the same top bar, on one row: the terminal, the views, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
+Every page has the same top bar, on one row: the terminal, the views, the engines, BI, Build, Admin, Help and the landing page when you are signed in, and the public pages (signed out) in the same height, logo and
 wordmark (set in Cinzel; the slogan is in the footer, which also carries Help, About, the competitive analysis and the release notes).
 
 The **Drishti name and logo** at its left end always lead to the landing page, also when you are signed in. The
@@ -133,14 +133,14 @@ landing page then shows **← Back to …** (the view, Build, Admin or Help page
 takes you back where you were; *Open the terminal* goes to the terminal instead.
 
 ```text
-◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
+◉ Drishti  > TRD MX-20000001, CPTY north …  [2026-09-30]   Views ▾  Engines ▾  BI ▾  Build ▾  Admin ▾  Help ▾   [bell] [box 12] [palette] (Live) (A) Ash ▾
 ```
 
 **Beside the brand** (click it to go back to `/`) are the [command line](#the-command-line), which takes the
 free space, and the [business date](#business-dates-live-or-a-day-in-the-past) box.
 Below 1100 pixels wide they move to a line of their own.
 
-**Then the menus**: **Views**, **Build** and **Help** for everyone, **BI** where you hold the `bi` power, **Admin** only for administrators. Below 1280 pixels they show as icons only. Each opens a wide panel
+**Then the menus**: **Views**, **Build** and **Help** for everyone, **Engines** where your role opens a compute engine, **BI** where you hold the `bi` power, **Admin** only for administrators: Views, Engines, BI, Build, Admin, Help for a risk administrator, and Views, BI, Build, Help for a role that opens no engine. Below 1280 pixels they show as icons only. Each opens a wide panel
 (a *mega menu*) in which every entry has an icon and one line saying what it does. The menu holding the page
 you are on is highlighted.
 
@@ -148,6 +148,7 @@ you are on is highlighted.
 |---|---|---|
 | **Views** | Look up | *Terminal* (`/t`), *Search & pick lists* (`/s`), *Forms* (`/forms`: the [forms home](#the-forms-home), query by form), *Functions* (`/func`, also `FUNC <GO>`: every command you can use, what it does and an example; administrators switch commands on or off there, [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)), *Data map* (`/datamap`, also `DATAMAP <GO>`: every kind of data, how it joins and how much there is, [The data map](#the-data-map)), *Data* (`/data`, also `DATA <GO>`: every dataset and its dates, a simple selection, a day downloaded as `.jsonl.gz`, [The Data view](#the-data-view)), *Reports* (`/reports`: every scheduled report and subscription, with a box to find one, and links to your alerts and the BI reports) |
 | | Watch | *Workspaces* (`/w`), *Monitors* (`/m`), *Alerts* (`/alerts`) |
+| **Engines** (a role that opens an engine) | a column per engine running, its command word in the head | **VaR** `VAR`: *VaR explorer* `VAR BANK`, *Why it moved* `VAR BANK EXPLAIN`, *VaR Playground* `PLAY VAR`, *Scenario matrix* `SMAT`, *Regulatory reports*, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Hierarchies and limit letters* `HIER` · **Exposure** `EXP`: *Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF` · **FRTB-SA** `FRSA`: *FRTB-SA capital* `FRSA BANK`, *FRTB-SA Playground* `PLAY FRTB EXAMPLE` · **SIMM** `SIMM`: *Netting sets* `SIMM`, *SIMM Playground* `PLAY SIMM EXAMPLE`; administrators also see *Admin → Engines* and, at the foot, the engines not running on any server (greyed, never links) |
 | **BI** (people with the `bi` power) | Rupaka: business intelligence | *BI home* (`/bi`), *My workspace* (`/bi/w/me`), *Catalogue* (`/bi/catalogue`), then *Recent*: the three items you opened last. Administrators with `bi-admin` also see *BI settings* ([BI_GUIDE.md](BI_GUIDE.md)) |
 | **Build** | Create | *New screen* (`/build/new`), *New pack* (`/build/pack/new`: schema files and/or JSON Lines in, a pack to download or deploy out; [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)), *My designs* (`/build`), *Examples* |
 | | Govern | *Reviews* (`/build/reviews`, with the number waiting) |
@@ -156,18 +157,20 @@ you are on is highlighted.
 | | Operations | *Packs*, *Connectors*, *Artifacts*, *Commands* (opens Functions with the switches), *Data loads*, *Lakes*, *Collaboration*, *Embedding*, *Net* (Drishti\*net: [OPERATIONS.md](../admin/OPERATIONS.md#18-drishtinet-running-several-servers-as-one)), *Health*, *Caches*, *Capacity* (today against the plan; the single-node planner: [OPERATIONS.md 12.4](../admin/OPERATIONS.md#124-admin--capacity-today-against-the-plan)) |
 | **Help** | Learn | *Help centre* (`/help`, also `F1`), *Knowledge* (`WHAT <GO>`), *Install and run*, *About* |
 
-**In an edition or a lens, its own subject menus.** Drishti Risk, Trading, Market and World put their subjects in the bar between **Views** and **BI**, and leave out Build:
+**The Engines menu.** One menu holds every compute engine's pages: a column per engine, its command word (`VAR`, `EXP`, `FRSA`, `SIMM`) in the column's head, each page with its command on the right. It shows only the engines running on a server of the cluster (an engine an administrator turns off in *Admin → Engines* leaves it, with its pages and help) and only those your role opens: a market-risk role sees VaR, FRTB-SA and SIMM, a credit-risk role Exposure and SIMM, an administrator every engine; a role that opens none has no Engines menu at all. The same rule holds on the command line: an engine's command words (`VAR`, `SMAT`, `SWIN`, `PLAY VAR`; `EXP`, `XWIF`; `FRSA`, `PLAY FRTB`; `SIMM`, `PLAY SIMM`) are not offered in the type-ahead to a role that does not open the engine, and typing one says *VaR is not opened for your role; ask an administrator.* instead of running it. Help is not gated: every running engine's guide and tutorial stay open to everyone. With more than four engines running a search box at its top finds a page by its name, description or command (Enter opens the first left). On a phone the columns fold: tap an engine to open its pages, one engine at a time. Who opens which engine is set in `drishti-console/config/menus.yaml` (`opens:` per engine).
+
+**In an edition or a lens, its own subject menus.** Drishti Trading, Market and World put their subjects in the bar between **Views** (and **Engines**) and **BI**, and leave out Build; Drishti Risk keeps Views, Engines, BI, Admin and Help:
 
 | Edition or lens | Menus |
 |---|---|
-| Drishti Risk | Views · **VaR** (*VaR explorer* `VAR BANK`, *VaR results* `VRES`, *Official records* `VOFF`, *Scenario matrix* `SMAT`, *Hierarchies and limit letters* `HIER`; Check and report: *VaR Playground* `PLAY VAR`, *Backtesting* `VAR BANK BACKTEST`, *Stress window* `SWIN BANK`) · **Exposure** (*Exposure explorer* `EXP`, *A counterparty* `EXP CPTY …`, *A netting set* `EXP NSET …`, *Pre-deal check* `XWIF`) · BI · Admin · Help |
-| Drishti Trading | Views · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
+| Drishti Risk | Views · **Engines** · BI · Admin · Help |
+| Drishti Trading | Views · Engines · **Blotter** (`TRD`, `CTRD`, `PTRD`, `LTRD`) · **Positions** (`BOOK`, `DESK`, `TRDR`, `POS`) · **Risk** (*My VaR* `VAR`, `VLIM`, `TVAL`, `PNLV`) · **Counterparties** (`CPTY`, `NSET`, `LIM`, `XWIF`, `EXP`) · BI · Admin · Help |
 | Drishti Market | Views · **Curves** (`CRV`, `REPO`, `FIX`, `INF`) · **Volatility** (`IRV`, `CPV`, `FXV`, `EQV`, `CMDV`) · **FX** (`FX`, `FXF`, `FXV`) · **Credit** (`CDS`, `BND`) · BI · Admin · Help |
 | Drishti World | Views · **Economies** (*A country* `ECON …`, `MACRO`, `FCST`, `REGE`) · **Markets** (`NEWS`, `QUOTE`, `IDX`) · **Companies** (`USEQ`, `EDGAR`, `LEIC`, `FUND`) · BI · Admin · Help |
 
 Each entry shows its command beside its name and runs it as if you had typed it, so a menu never holds anything the command line does not; an entry ending in `…` (*A counterparty*, *A country*) puts its words in the command line for you to type the id. An entry shows only when the edition keeps its command, and the VaR Playground and Backtesting entries only once those screens are on the server. With more than six menus in the bar they show as icons below 1750 pixels wide, so the command line keeps its room. Administrators set the menus in the edition's file ([EDITIONS.md](../admin/EDITIONS.md)).
 
-**On a phone** the subject menus fold into one menu named after the edition (**Risk**, **Trading**, **Market**, **World**), first in the
+**On a phone** the subject menus fold into one menu named after the edition (**Trading**, **Market**, **World**), first in the
 bar: a column per subject, each entry with its command beside it ([On a phone](#on-a-phone)).
 
 **BI and the `BI` keyword (alias `RUPAKA`).** Where your roles hold the `bi` power, a **BI** menu sits between **Views** and **Forms**, and the reserved command
@@ -786,8 +789,8 @@ something under it does. The count reads `2 of 7 rows (filtered)` (matches only)
 open; clear it to open and close rows again. Sorting is not offered in a matrix, to keep the order of the hierarchy.
 
 **Pivots.** A pivot panel by one field is a table: its heading cells (the field, each column) filter its rows. A pivot by several
-fields, drawn as nested groups, and the **Pivot tab** over a table keep their own tools: the tab's **Filters** zone filters the
-*source* fields before the rows are grouped (see [The Pivot tab](#the-pivot-tab-slice-a-table-your-way)), which is the Excel
+fields, drawn as nested groups, and the **Pivot** screen of a table keeps its own tools: its **Filters** zone filters the
+*source* fields before the rows are grouped (see [Pivot](#pivot-slice-a-table-your-way)), which is the Excel
 pivot's report filter; the table's column filters do not reach into the tab.
 
 **Large tables.** Every table today holds the rows the server sent (100 for a pick list), and a filter works on those; a
@@ -847,15 +850,15 @@ once, there is no Apply.
 business date; paging is ignored, so a table on page 2 charts all its filtered rows. The line under the chart says what was
 charted: *Showing 30 of 500 rows*, *after the table's filters*, anything left out. Search results, history and BI tables
 chart the **raw values** the server sent; other tables read the cells as displayed, and the line says *figures as displayed
-(rounded)* (`1.5m` is charted as 1,500,000). A table whose panel also has a Pivot tab charts its raw rows.
+(rounded)* (`1.5m` is charted as 1,500,000). A table whose panel also offers Pivot charts every row through the pivot engine on *Chart all N*.
 
 **Masked values are never charted.** A column hidden for your role is listed greyed in every picker, *(hidden for your
 role)*, and cannot be X, a series or a split; the status line names it. In a column only partly masked, the masked cells
 are left out of every sum, average and count, and the line says how many. Exports carry only what is drawn.
 
 **Chart all N.** When the table shows fewer rows than exist, **Chart all N rows** (or `A`) charts every row: a search whose
-pack offers its Pivot tab is aggregated on the server over every match of the business date (on the pack's pivot fields,
-a date by day); a view's table with a Pivot tab reads all its rows (up to the server's limit, said if reached). Otherwise the
+pack offers Pivot is aggregated by the pivot engine over every match of the business date (on the pack's pivot fields,
+a date by day); a view's table that offers Pivot is aggregated by the pivot engine over all its rows (up to the server's limit, refused in words if over). Otherwise the
 button is absent or greyed with the reason. **Chart the shown rows** goes back.
 
 ![A combo of bars and a line on two axes, by quarter, in the light theme](img/table-chart/combo-two-axes-light.png)
@@ -948,7 +951,7 @@ search over it never finds anything. Controls only choose; they never change dat
 send it to open the same view with the same choices, and a picture of the share (if you attach one) shows the filtered rows. The dialog says
 *with your controls and filters* beside the date when there are any.
 
-**Not yet.** The Pivot tab and CSV download of a panel read **every** row, not the ones the controls leave, and a scheduled export does not
+**Not yet.** Pivot and the CSV download of a panel read **every** row, not the ones the controls leave, and a scheduled export does not
 carry the choices (there is no scheduled delivery yet). Authors add controls in the workbench's
 [Controls tab](RACHANA_REFERENCE.md#the-controls-tab); the Sutra's side of it is in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#controls).
 
@@ -1076,7 +1079,7 @@ whole. A long amount widens its own column. Either way the page never scrolls si
 
 **Drawn by your browser (when your administrator turns it on).** With `ui.render` set to `client` the entity page is drawn in
 your browser from the same data the server would have turned into HTML: it looks and works the same (links, the column funnels,
-*Chart any table*, drill-downs and Back, the Pivot tab, *Customize*, layout mode, downloads, *About this page*, live updates). Add
+*Chart any table*, drill-downs and Back, Pivot, *Customize*, layout mode, downloads, *About this page*, live updates). Add
 `?render=server` to a page's address to see it drawn by the server, for a comparison.
 
 ### 4 · Links
@@ -1378,153 +1381,23 @@ zoom buttons are hidden while you arrange the view.
 **In another application.** Inside `<drishti-view>` the panel fills the element's own box, not the host page; the keys
 work only while the focus is inside the element ([Drishti Elements, keyboard](../architecture/CLIENT_RENDERER.md#58-keyboard)).
 
-## The Pivot tab: slice a table your way
+## Pivot: slice a table your way
 
-Some tables can be turned into an **Excel-style pivot**: drag *Product* down the side, *Maturity bucket* across the
-top, *Notional* into the cells, and read the totals; click any number to see the trades behind it. Such a table has a
-**Table | Pivot** switch above it. Search results and pick lists of some kinds have one too.
+A table or ladder whose Sutra says `pivot:`, and the results of a search whose kind's pack says `pivot:`, carry a **Pivot** button. It opens
+the **pivot screen** (`PIVOT <GO>`; [PIVOT_GUIDE.md](PIVOT_GUIDE.md), [tutorial 33](../tutorials/33-the-pivot-engine.md)) on the table's own
+rows (the same document, Sutra and business date as the page) or on every row of the kind, with the Sutra's or the pack's arrangement as the
+view it opens with. Everything is computed by the server's pivot engine: rows, columns, values and filters by drag or by key (`R`, `C`, `V`,
+`F`), nested rows opened lazily with + and −, totals made from their own rows (an average of a total is never an average of averages),
+the provenance of every cell and its rows, a chart of a selection, Excel with outline levels and formulas only where a figure adds up, CSV
+and Arrow.
 
-The switch is there **only where it was asked for**: a Sutra author adds `pivot:` to a table or ladder
-([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder)), or a pack adds it to a kind's
-search results ([PACK_DEVELOPER_GUIDE.md](PACK_DEVELOPER_GUIDE.md#pivot-a-pivot-tab-on-search-results)), and chooses which fields you may use and
-how it opens. Every other table stays a table. In the seven packs: a netting set's member trades (notional by product and maturity bucket, counterparty-risk), a desk's trades
-(core), collateral balances, a counterparty's and a legal entity's trades (notional by product type and source system, trading), and trade
-searches (the trading pack's `pivot:` on `trade`: source system, portfolio, currency, product group and type, side, status, counterparty).
-
-![The Pivot tab on a netting set's member trades: currency and product down the side, asset class and maturity bucket across, notional summed](/static/img/guide/pivot-netting-set.png)
-
-### Opening it
-
-Click **Pivot** above the table (or `Tab` to the switch and press `→`; `←` goes back to **Table**). The first time,
-the console reads **every row** of the panel, not only the rows the table shows: a netting set table showing its first
-four trades pivots all of them. The pivot opens as the Sutra (or pack) arranged it, or as you saved it last.
-
-Under the switch: the **field list** and four **zones**, a toolbar, a status line (*42 rows · source records · 1 ms*)
-and the grid.
-
-### Fields and zones, with the mouse
-
-| Zone | What a field there does |
+| What | How |
 |---|---|
-| **Rows** | Its values go down the side, one group per value; a second field nests inside the first |
-| **Columns** | Its values go across the top; a second field nests inside the first |
-| **Values** | The numbers in the cells. Each has two choices: **sum**, **count**, **avg**, **min**, **max** or **distinct** (how many different values), and **value**, **% of row**, **% of column** or **% of total** |
-| **Filters** | A chip reading *Currency: all*: click it for a pick list of the values (search box, **All**, **None**, tick what to keep) or, for numbers and dates, a **from** and **to**; **Apply** |
-
-Drag a field from the list into a zone (the zone lights up where it will land), drag a chip to another zone or to
-another place in its zone, or back to the field list to remove it. A field may be in Rows or Columns, not both, and a
-numeric field can be in Values more than once (sum of MTM and count of MTM). At most 4 fields in Rows, 4 in Columns
-and 6 values. Fields marked `#` are numbers.
-
-### Fields and zones, with the keyboard
-
-| Key | On | Does |
-|---|---|---|
-| `←` `→` (`Home`, `End`) | the Table / Pivot switch | Switch between the table and the pivot |
-| `Tab`, then the arrows | the fields | Move between chips |
-| `R` `C` `V` `F` | a chip | Put the field in Rows, Columns, Values or Filters |
-| `Delete` (or `Backspace`) | a chip in a zone | Take it out of the zone |
-| `Alt`+`↑` `↓` (or `←` `→`) | a chip in a zone | Move it earlier or later in its zone (outer or inner level) |
-| `Enter` or `Space` | a chip in the field list | Add it: a number to Values, anything else to Rows |
-| `Enter` | a value's chip | Go to its aggregation and show-as choices (`Esc` comes back) |
-| `Enter` | a filter's chip | Open its pick list (`Esc` closes it) |
-| arrows, `Home` `End`, `PgUp` `PgDn` | the grid | Move from cell to cell |
-| `Enter` or `Space` | a cell | Show the rows under it |
-| `Enter` or `Space` | a value's heading | Sort the rows by it: ascending, descending, then back to key order |
-| `Esc` | the rows under a cell, the promote panel | Close it |
-
-Every change is announced to screen readers (*Currency moved to Rows*, *Rows sorted by Sum of Notional, largest
-first*).
-
-### The grid
-
-- **Totals.** Each group has a subtotal row (*Total GBP*) and column; the last row and column are the grand totals. Untick
-  **Totals** to hide them. The totals cover every row, including groups beyond the grid's limits.
-- **Groups open and close.** ▾ beside a group closes it to its total (▸ opens it); **Collapse all** and **Expand all**.
-- **Sort.** Click a value's heading: within each group the rows are sorted by it, largest first or smallest first.
-- **Group order.** Groups come in natural order: numbers by value, and `0-1Y`, `1-2Y`, `2-5Y`, `5-10Y`, `10Y+`,
-  `BOOK-9` before `BOOK-10`; a missing value is *(blank)*, last. A number used as a group (a notional in Rows, say) is
-  written plainly, as `42408726.01`, never `4.240872601E7`, and to at most 15 significant digits, the same in a panel's
-  pivot and a search's.
-- **Heat.** Tick **Heat** to shade each cell by its value: one colour for a range of positive numbers, two (gains and
-  losses in the theme's colours) when the values have both signs. The number is always written; the shades keep the
-  text readable in every theme.
-- **Shares.** With **% of row**, **% of column** or **% of total**, a cell is its share of its row's total, its column's
-  total or the grand total (the grand total itself reads 100%).
-
-### Rows under a cell, the chart, export, print
-
-- **Drill down.** Click any number (totals too), or press `Enter` on it: a dialog lists the rows behind it (*Rows under
-  GBP · Equity barrier option*) with every field, ids as links that open the entity. `Esc` closes it.
-- **Chart.** Choose **Bar chart**, **Line chart** or **Heatmap** in the toolbar (and which value, when there are
-  several): a chart of the grid as it is now, in the theme's colours, redrawn when you change anything.
-  To chart the table itself, with more types and two axes, use its chart button or `K` ([Chart any table](#chart-any-table)).
-- **CSV**, **Excel** and **JSONL** (JSON Lines, a row a line keyed as the CSV's header) download the grid as shown: one column per row field, then one per column group and value, the
-  subtotal and total rows labelled, numbers as numbers. The Excel file has a bold, frozen header row.
-- **Print** prints the pivot and its chart alone, in the print palette.
-
-### Save, reset, and what follows you
-
-**Save** keeps your arrangement (rows, columns, values, filters, heat, chart) on the server, for you: it belongs to the
-**Sutra and the panel**, so every netting set that Sutra lays out opens its Pivot tab your way, on any browser. A
-search's pivot is kept per kind (every trade search). **Reset** goes back to the arrangement the Sutra or pack chose
-and forgets yours. Nobody else's screen changes.
-
-Keeping a pivot needs no special power: you may arrange the pivot of anything you may open, as you may sort a table.
-When the Sutra changes, an arrangement that names a field it no longer offers is set aside, and the tab opens as the
-Sutra says.
-
-### Promote to Sutra
-
-If your role may author Sutras (and saving is switched on), the toolbar has **Promote to Sutra…**. It saves your
-arrangement and opens a panel with the changes in words (*the pivot of 'trades' opens with rows currency, product (was
-product)*) and the diff of the **next version** of the Sutra: only that panel's `pivot:` changes, written as you
-arranged it; its fields and everything else in the file stay as written. Add a note and **Submit for review**: an
-approver reviews it as any save from the workbench ([Reviews](#reviews-approving-a-sutra)), and once approved everyone's Pivot tab
-opens that way (those who saved their own keep theirs). With review off the button reads **Publish**.
-
-### Search results: computed on the server
-
-On a search or pick list whose kind offers a Pivot tab (`TVAL where MTM > 0`: 7579 of the 15000 trade valuations), the pivot is not limited to the 100
-results the page lists: the server aggregates **every entity the search matches** on the business date and sends only
-the cells. It reads the day's **columns**, the fields a large store keeps beside each document (a bank's trade table
-keeps `PORTFOLIO`, `DESK`, `CURRENCY`, `MTM` and a dozen more), so a whole book pivots without a document being read.
-
-- A field no source keeps as a column is marked **doc**. Using one, or searching a kind whose store keeps no columns
-  (the sample data), the server says so instead of guessing: *no source of trade keeps its fields as columns here. Ask
-  for a document read …*. **Read documents instead** computes from the documents themselves, at most 20,000 of them;
-  when there were more, the status line says *partial: the first 20000 documents*.
-- **Masked fields stay masked.** A field your role may not see (as in a search) groups under `•••` and is never added
-  up, and so does a field under a masked one (`KYC.PD_1Y` when a counterparty's `KYC` is masked); the status line says
-  *hidden from your role: Book*.
-- The rows under a cell come from the server a page at a time (**Previous**, **Next**).
-
-![The Pivot tab on a trade search: a measure by portfolio and currency over the matching entities, read from the columns](/static/img/guide/pivot-search.png)
-
-### Worked example
-
-With the counterparty-risk pack, open `NSET NS-ALDERSHOT-LDN`:
-
-1. On *Member trades*, click **Pivot**. You see notional by product down the side and maturity buckets across
-   (`0-1Y` … `10Y+`), with totals: how much of the netting set's notional matures when.
-2. Drag **Currency** into Rows, before *Product*: each currency is a group, with a *Total* row.
-3. Drag **Asset class** into Columns: each asset class spans its maturity buckets, with its own total column.
-4. Set the value's second choice to **% of total**: each cell is its share of the netting set's notional.
-5. Drag **MTM (USD)** into Values: two numbers per cell.
-6. Click *Currency: all* in Filters, **None**, tick `USD`, **Apply**.
-7. Click the largest number: the trades behind it, with links. `Esc`.
-8. Choose **Bar chart**; then **Excel** to download the grid.
-9. **Save**, and open `NSET NS-ALDERSHOT-NY`: its Pivot tab opens the same way.
-
-The same keyboard-only: `Tab` to the switch, `→`; `Tab` to *Currency* in the field list, `R`; to *Asset class*, `C`;
-to *MTM (USD)*, `V`; to a cell, `Enter`.
-
-### Limits
-
-A panel's pivot reads at most 50,000 rows (*the first 50000 of N rows* when cut short); a pivot shows at most 2,000
-innermost row groups and 200 column groups (further ones are still in the totals, and the status line says *more row
-keys than shown*); a search's drill-down shows 50 rows a page. An administrator sets these (`drishti.pivot`,
-[CONFIGURATION.md](../admin/CONFIGURATION.md#drishtipivot--the-pivot-tab)) and can switch every Pivot tab off.
+| Open it | **Pivot** under a table or above a search's results; or `PIVOT <table>`, `PIVOT @owner/name` |
+| Keep your arrangement | **Save view** (private) or **Share** (people or `role:<role>`): a saved view keeps the definition, never the numbers; a reader opens it with their own masks |
+| Make it everyone's opening | an author's **promotion** (`POST /api/v1/pivot/promote` with the panel's view and its Sutra): the Sutra's next version with the panel's `pivot:` arrangement, through review when review is on ([Reviews](#reviews-approving-a-sutra)) |
+| Masked fields | not read at all: they are not in the field list and cannot be grouped, summed or filtered |
+| Limits | a page's table: at most `drishti.pivot.max-records` rows (50,000), more is refused in words; every view: the cell budget of the pivot engine (`drishti.pivot.max-cells`), refused with the count, never cut short |
 
 ## On a phone
 
@@ -1568,13 +1441,12 @@ quick links wait under *More*.
 
 ![The end of the same Home in the light theme: a table at a glance with Show all, the quick links under More on this page](img/phone/07-landing-more-light.png)
 
-**The lens menu.** In Drishti Risk, Trading, Market or World the subject menus (VaR, Exposure; Blotter, Positions, Risk, Counterparties;
+**The lens menu.** In Drishti Trading, Market or World the subject menus (Blotter, Positions, Risk, Counterparties; Curves, Volatility;
 ...) fold into one menu named after the edition, first in the bar. It opens as a list with a heading per subject; each entry runs its
 command as on a desktop, and an entry ending in `…` puts its words in the command line for you to finish.
 
-![Drishti Risk's lens menu on a phone, dark theme: VaR and Exposure in one Risk menu](img/phone/03-lens-menu-dark.png)
-
-![The same menu in the light theme](img/phone/04-lens-menu-light.png)
+**The Engines menu on a phone** opens as a drawer: a row per engine running with its command word, the first open; tap another to open
+its pages (44 px rows, the command on the right), one engine at a time. Engines not running are left out on the phone.
 
 **Who decides.** Every tier is configured, never coded: a panel kind has a default (tables and charts at a glance, provenance and notes
 under *More*, pivot grids on the desktop), a screen's author sets each panel's tier in its Sutra
@@ -1609,7 +1481,7 @@ wins: a site that says "never more than glance" for a heavy panel keeps it so, w
 | `Alt+S` | Share this view (or panel) with people with a note; `Ctrl+Enter` sends, `Esc` closes |
 | `Alt+N` | Discussion: the second tab of the side drawer ([Discussion](#discussion)) |
 | `Alt+I` | Your inbox: what people sent you |
-| `R` `C` `V` `F`, `Delete`, `Alt+↑` `↓` | On a field of a [Pivot tab](#the-pivot-tab-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#fields-and-zones-with-the-keyboard)) |
+| `R` `C` `V` `F` | On a field of the [pivot screen](#pivot-slice-a-table-your-way): move it to Rows, Columns, Values or Filters, remove it, reorder it ([all its keys](#pivot-slice-a-table-your-way)) |
 | `Ctrl+Enter` | In Calc: run the code (`Cmd+Enter` on a Mac) |
 | `Alt+1`…`Alt+4` | In a workspace: move to pane 1 to 4, also while the focus is inside a pane |
 | `Alt+0` | In a workspace: from a pane back to the workspace's bar |
@@ -1630,7 +1502,7 @@ and everywhere else
 Your administrator can mask fields (`drishti.security.redact`; by default `TRADER_ID`, `TRADER_FIRST_NAME` and `TRADER_LAST_NAME`) for roles
 without raw access. A masked field reads `•••` everywhere you could see or work out its value: the raw JSON, search
 results and their CSV, compare and history, Calc, pivots (grouped under `•••`, never added up), and views: the header
-strip, the title, tables and their totals, the Pivot tab's rows, charts (masked points are left out), anything a
+strip, the title, tables and their totals, the pivot screen's rows, charts (masked points are left out), anything a
 layout computes from the field, the live updates, monitors and the panel CSV export. Impact (`F8`) does not list what
 is tied to the entity only through a masked field, and shows a masked measure and its total as `•••`. The
 type-ahead neither shows nor matches a masked value, and an alert on a masked field never fires.
@@ -1979,7 +1851,7 @@ without `where` opens a single match directly.
 - **CSV** downloads the results. **Watch as a monitor** saves the first 50 results as a live monitor
   (see [Monitors](#monitors)).
 - Where the kind's pack offers it, a **Table | Pivot** switch turns the results into a pivot over **every** match of
-  the day, computed on the server ([The Pivot tab](#search-results-computed-on-the-server)).
+  the day, computed on the server ([Pivot](#pivot-slice-a-table-your-way)).
 
 ## Search with a form (`FORM <pack>`)
 
@@ -1993,7 +1865,7 @@ The buttons in a view's title line, and the **↓** in each panel header.
 |---|---|---|
 | Panel as CSV or JSON Lines | **↓** in a panel header, then **CSV** or **JSON Lines** | Tables and ladders as they are; key/value panels as field and value; charts as one column per series; surfaces as a grid; bars as label and value |
 | Search as CSV or JSON Lines | **CSV**, **JSONL** on the results page (and on a form's results) | One row per result |
-| Pivot as CSV, Excel or JSON Lines | **CSV**, **Excel**, **JSONL** in a [Pivot tab](#the-pivot-tab-slice-a-table-your-way) | The grid as shown: row fields, one column per column group and value, totals labelled; Excel with a bold frozen header |
+| Pivot as Excel, CSV or Arrow | **Export** (`X`) on the [pivot screen](#pivot-slice-a-table-your-way) | The pivot as shown with Excel's own outline levels, SUM formulas only where a figure adds up and a Provenance sheet; CSV one row per cell and measure, or the grid; the cell's rows; the view as YAML (PIVOT_GUIDE.md section 10) |
 | Comparison as CSV or JSON Lines | **CSV** on the Compare page; the same address ending `.jsonl` | One row per change |
 | View as PDF, PNG, Excel, CSV or JSON Lines | **Export** in the title line | The view as you see it, with the controls and filters you set |
 
@@ -2530,7 +2402,7 @@ every role with its kinds (or *every kind*), its powers, how many users hold it,
 | BI (`bi`, `bi-author`, `bi-steward`, `bi-admin`) | four powers for Rūpaka, granted on roles ([BI_GUIDE.md](BI_GUIDE.md#3-who-may-do-what-the-four-powers), [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md#bi-powers-rupaka)); the Roles form above lists only the first six powers |
 | layouts | use [layout mode](#layout-mode-arrange-a-view-your-way) (`Alt+L`) and keep personal layouts. On for every role unless unticked; the built-in `viewer` role does not have it |
 
-There is no power for the [Pivot tab](#the-pivot-tab-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
+There is no power for [Pivot](#pivot-slice-a-table-your-way): anyone who may open a kind may arrange and save its pivots, as they
 may sort a table; promoting one to a Sutra needs **author Sutras** (and goes through review).
 
 Roles marked **built-in** come from the server's configuration and from packs (`viewer`, `author`,
@@ -2687,8 +2559,16 @@ Managing users and roles is explained in [USER_MANAGEMENT.md](../admin/USER_MANA
 
 ## Help
 
-- *Help → Help centre* in the top bar, or `F1`, opens the help centre (`/help`): tutorials, guides, every reference
-  document and each pack's guides, with search (`/help/search?q=`). On a page, `F1` opens the guide for that page
+- *Help → Help centre* in the top bar opens the help centre (`/help`). Its front door is a search box over all of Help
+  (`/help/search?q=`), a row of the most used pages (*User guide*, *VaR guide*, *Tutorials*, *What's new*) and a tile per section:
+  **Get started**, **Risk measures**, **Analytics and BI**, **Data**, **Build**, **Operate**, **Reference** and **Knowledge**, with
+  **Internal** for administrators. Each tile says in one line what its section holds and how many pages you can open in it, and opens
+  the section's own page (`/help/section/<id>`): its pages in groups, every guide on one row with its tutorial beside it, and a search
+  box that searches that section only (*all of Help* beside it widens it). Help is documentation, not data: the pages of a compute engine show to anyone who can
+  open Help, signed in or not, whatever their role, while the engine runs on a server; an administrator sees the pages of an
+  engine that runs nowhere greyed, marked *not running on any server*. Every page keeps its address (`/help/<slug>`), and an old
+  address of a section (`/help#cat-use`) opens the section that took it over. On a phone the search comes first, the most used row
+  scrolls sideways and the tiles stand in one column. On a page, `F1` opens the guide for that page
   (`/help/context/<page>`: Build opens the screen designer guide, BI the BI guide, Admin the users and roles guide, Workspaces, Monitors, Alerts and the inbox their own guides); on a view, `F1` opens [About this page](#about-this-page).
 - The **?** in each panel header explains that panel kind.
 - *Help → Developer* (`/help/developer`) gathers the programming references: the server's REST API (OpenAPI), the renderer's TypeScript API, and the Java and Python API references generated from the code (the plugin and connector SPI, the shard machinery, the compute worker SDK, BI Python items, `drishti.py` and its client library, the pack and test-data generator helpers). When the console has none built, the page says how to build them.

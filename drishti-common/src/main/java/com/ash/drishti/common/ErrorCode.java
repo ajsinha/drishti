@@ -208,6 +208,19 @@ public enum ErrorCode {
      * Only a user's download may leave; the answer names the data and its contract.
      */
     MEMORY_ONLY("DRS-5219", 403),
+    /** The pivot engine (PIVOT_GUIDE.md): a view it cannot answer (an unknown source, field or function, a field twice, a bad filter or sort). */
+    PIVOT_BAD_VIEW("DRS-5701", 400),
+    /**
+     * The pivot's cell budget ({@code drishti.pivot.max-cells}, {@code max-holistic-cells}): a view of more visible cells (totals included)
+     * than the budget is refused with the count, never cut short; narrow it with a filter, collapse a level or show the top N.
+     */
+    PIVOT_TOO_MANY_CELLS("DRS-5702", 422),
+    /** The pivot engine is switched off on this server ({@code drishti.pivot.enabled: false}): its API, screen and words are not offered. */
+    PIVOT_OFF("DRS-5703", 404),
+    /** A saved pivot view, a cell reference or a provenance id that is not there or not shared with the caller. */
+    PIVOT_NOT_FOUND("DRS-5704", 404),
+    /** A masked field asked as a pivot dimension, measure input or filter: masks apply before aggregation, so it cannot be used. */
+    PIVOT_MASKED("DRS-5705", 403),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**
@@ -565,7 +578,9 @@ public enum ErrorCode {
     /** Busy protection: a BI run did not start. */
     BUSY_BI_RUN("DRS-9504", 503),
     /** Busy protection: a bulk load of a pack's data did not start. */
-    BUSY_BULK_LOAD("DRS-9505", 503);
+    BUSY_BULK_LOAD("DRS-9505", 503),
+    /** Busy protection: a large pivot view (more cells than {@code drishti.pivot.busy-cells}) did not start (PIVOT_GUIDE.md). */
+    BUSY_PIVOT_VIEW("DRS-9507", 503);
 
     private final String code;
     private final int httpStatus;

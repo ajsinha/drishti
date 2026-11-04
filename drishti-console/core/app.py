@@ -45,7 +45,7 @@ def _render_modules() -> list[str]:
 
     skip = {"drishti-elements.js", "m/elements.js"}
     return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
-ASSET_VERSION = "2.9.11"
+ASSET_VERSION = "2.9.11.a"
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:
@@ -450,6 +450,13 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["smat_on"] = _smat_on
 
+    def _pivot_on() -> bool:
+        """The pivot screen (PIVOT) as this request's person sees it: offered where the edition or lens has the word."""
+        from core import edition as _ed
+        return app.state.editions.for_request(_ed.current_lens()).word_on("PIVOT")
+
+    templates.env.globals["pivot_on"] = _pivot_on
+
     def _play_on() -> bool:
         """The VaR Playground (PLAY) as this request's person sees it: offered where the edition or lens has the word and VaR."""
         from core import edition as _ed
@@ -464,6 +471,7 @@ def create_app(settings: Settings) -> FastAPI:
     templates.env.globals["command_placeholder"] = _menus.placeholder
     templates.env.globals["lens_links"] = _menus.lens_links
     templates.env.globals["lens_menu"] = _menus.lens_menu          # the subject menus folded into one on a phone (LX1 option C)
+    templates.env.globals["engines_panel"] = _menus.engines_panel  # the Engines menu's panel: search, Admin -> Engines, engines not running
     from core import phone as _phone
     templates.env.globals["phone_parts"] = _phone.page_parts         # the phone display on the VaR, exposure and landing pages (MOBILE_DISPLAY.md 8)
     templates.env.globals["phone_everything"] = _phone.everything
@@ -562,8 +570,6 @@ def create_app(settings: Settings) -> FastAPI:
     from core.layouts import Layouts
 
     app.state.layouts = Layouts(settings, stamps)
-    from core.pivots import Pivots
-    app.state.pivots = Pivots(stamps, user_ttl)
     if app.state.calc.runtime.installed:          # the Python runtime of Calc, from this origin only (tools/fetch-pyodide.sh)
         app.mount(app.state.calc.runtime.base.rstrip("/"), StaticFiles(directory=str(app.state.calc.runtime.folder)), name="pyodide")
     app.include_router(home_routes.router)
@@ -604,7 +610,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(layout_routes.router)
     app.include_router(designer_routes.router)          # the Sutra designer (ui.designer, off by default)
     app.include_router(designer_grid_routes.router)     # its Grid mode
-    app.include_router(pivot_routes.router)
+    app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (PIVOT_GUIDE.md)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)
     app.include_router(collab_admin_routes.router)

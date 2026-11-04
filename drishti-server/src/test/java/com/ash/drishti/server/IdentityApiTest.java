@@ -201,7 +201,7 @@ class IdentityApiTest {
         mvc.perform(post("/api/v1/me/tokens").header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"x\"}"))
                 .andExpect(status().isForbidden());                                                           // tokens only read
         // SEC-15: the POSTs that only read are allow-listed (token-read-posts); every other write stays refused
-        for (String readOnly : new String[] {"/api/v1/command", "/api/v1/search/pivot/trade", "/api/v1/search/pivot/trade/drill"}) {
+        for (String readOnly : new String[] {"/api/v1/command", "/api/v1/pivot/query", "/api/v1/pivot/estimate"}) {
             int answered = mvc.perform(post(readOnly).header("Authorization", bearer).contentType(MediaType.APPLICATION_JSON)
                     .content("{\"text\":\"TRD IRS-48213\"}")).andReturn().getResponse().getStatus();
             org.assertj.core.api.Assertions.assertThat(answered).as(readOnly).isNotIn(401, 403);

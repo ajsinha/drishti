@@ -118,7 +118,7 @@ better, and each piece is optional.
 
 Four kinds: **ticket** (`TKT`), **agent** (`AGT`), **client** (`CLI`) and **agent-load** (`LOAD`), a *derived* kind:
 nothing stores it, the server sums each agent's open tickets. The pack has links with badges, impact (F8), pick-list
-columns and a Pivot tab, two roles, an alert suggestion, a vocabulary, About text, a Sutra with tests, a guide, a starter
+columns and Pivot, two roles, an alert suggestion, a vocabulary, About text, a Sutra with tests, a guide, a starter
 workspace and monitor, a Calc snippet, a file connector for real data and a signed registry entry. It is small enough to
 read in one sitting and uses every part of a pack except the lake layout (the shipped packs show that:
 [Large kinds](#large-kinds-the-lake-layout)).
@@ -147,7 +147,7 @@ ports of their own, so that nothing of yours is touched: the seven shipped packs
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -345,7 +345,7 @@ through the tickets' `CLIENT` field. That answers *which clients are affected if
 dependents through the sources' reverse lookups; the demo source has them, as do the file, lake and database connectors.
 See the [Impact guide](USER_GUIDE.md#f8--impact).
 
-### Step 8. Pick-list columns and a Pivot tab
+### Step 8. Pick-list columns and Pivot
 
 ```yaml
 columns:                          # key fields beside each id in pick lists and searches
@@ -353,7 +353,7 @@ columns:                          # key fields beside each id in pick lists and 
   agent:  [NAME, TEAM, OPEN_TICKETS]
   client: [NAME, TIER, COUNTRY]
 
-pivot:                            # a Pivot tab on the kind's search results
+pivot:                            # Pivot on the kind's search results
   ticket:
     fields: [STATUS, PRIORITY, ASSIGNEE, CLIENT, AGE_HOURS]
     rows: [ASSIGNEE]
@@ -362,7 +362,7 @@ pivot:                            # a Pivot tab on the kind's search results
 ```
 
 `TKT TKT-100` now answers with exactly those five columns (`['$.SUBJECT', '$.STATUS', '$.PRIORITY', '$.ASSIGNEE', '$.AGE_HOURS']`,
-three tickets, and a `pivot` block for the Pivot tab). The server's reply to `TKT STATUS=open` (one match, so the ticket opens at once
+three tickets, and a `pivot` block for Pivot). The server's reply to `TKT STATUS=open` (one match, so the ticket opens at once
 in the terminal) lists them with their labels, the field the command names first:
 
 ```bash
@@ -374,8 +374,8 @@ curl -s -G $B/search --data-urlencode 'q=TKT STATUS=open' | python3 -c 'import j
 {'$.STATUS': 'Status', '$.SUBJECT': 'Subject', '$.PRIORITY': 'Priority', '$.ASSIGNEE': 'Agent', '$.AGE_HOURS': 'Age (h)'}
 ```
 
-(*Agent* and *Age (h)* come from the vocabulary of step 10.) Details, and how the Pivot tab computes on the server:
-[`columns`](#columns-the-key-fields-of-a-pick-list) and [`pivot`](#pivot-a-pivot-tab-on-search-results).
+(*Agent* and *Age (h)* come from the vocabulary of step 10.) Details, and how Pivot computes on the server:
+[`columns`](#columns-the-key-fields-of-a-pick-list) and [`pivot`](#pivot-pivot-on-search-results).
 
 ### Step 9. Roles, field masks and an alert suggestion
 
@@ -553,7 +553,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.9.11-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -819,7 +819,7 @@ this guide.
 | 3 | `samples/catalog.jsonl`, `samples/<kind>.jsonl` | data with no database, a live ticking age |
 | 6 | `graph.fields`, `graph.badges` | links between tickets, agents and clients, with badges |
 | 7 | `graph.impact` | F8 on an agent: tickets, then clients |
-| 8 | `columns`, `pivot` | useful pick lists and a Pivot tab |
+| 8 | `columns`, `pivot` | useful pick lists and Pivot |
 | 9 | `roles`, `alerts` | access control, `raw`, Calc rights; one-click alert rules |
 | 10 | `config/formats.yaml`, `config/semantics.yaml` | `30 h`, *Age (h)* |
 | 10b | `config/about.yaml` | a sentence about the ticket and the meaning of its fields in the *About this page* drawer |
@@ -855,7 +855,7 @@ data from `config/packs/counterparty-risk/pack.yaml`. Every key here is read eit
 | `graph.badges` | server | `agent: "$.OPEN_TICKETS + ' open'"` | Text shown beside a link, read from the target | below |
 | `graph.impact` | server | `follow: [CLIENT]`, `measures: { ticket: "$.AGE_HOURS" }` | What F8 rolls up and sums | below |
 | `columns` | server | `ticket: [SUBJECT, STATUS, PRIORITY]` | Key fields in pick lists and searches | [columns](#columns-the-key-fields-of-a-pick-list) |
-| `pivot` | server | `trade: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM] }` | A Pivot tab on the kind's search results and pick lists | [pivot](#pivot-a-pivot-tab-on-search-results) |
+| `pivot` | server | `trade: { rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM] }` | A Pivot on the kind's search results and pick lists | [pivot](#pivot-pivot-on-search-results) |
 | `form` | server | `trade: [ { path: QUANTITY, type: amount } ]` | The search form of each kind (`FORM <pack>`): its fields, their types and operators | [form](#form-the-search-form-of-a-kind) |
 | `history` | server | `equity: { chart: [PRICE] }` | How a kind looks over time (`EQ EQ-CSCA 3M`): its columns, parts, chart fields and limits; never needed, any dated kind has a history | [history](#history-a-kind-over-time) |
 | `roles` | server | `support: { kinds: [ticket, agent] }` | Roles this pack adds | [Roles](#roles-and-field-masks) |
@@ -916,7 +916,7 @@ routes:
 
 columns:                        # pick-list and search columns per kind
   trade: [SOURCE_SYSTEM, PRODUCT_TYPE, TRADE_STATUS, TRADE_DATE, BUY_SELL_CODE, CURRENCY, QUANTITY, MATURITY_DATE, PORTFOLIO, COUNTERPARTY]
-pivot:                          # a Pivot tab on trade searches (below)
+pivot:                          # Pivot on trade searches (below)
   trade: { fields: [SOURCE_SYSTEM, PORTFOLIO, CURRENCY, …], rows: [PRODUCT_TYPE], columns: [SOURCE_SYSTEM],
            values: [{ field: QUANTITY, agg: sum }], filters: [PRODUCT_GROUP, TRADE_STATUS] }
 form:                           # FORM TRDS: the search form (below)
@@ -1027,12 +1027,11 @@ curl -s -G $B/search --data-urlencode 'q=BOOK limit 1' | python3 -c 'import json
 
 You should see `['$.NAME', '$.DESK_NAME', '$.TRADE_COUNT', '$.MTM', '$.DV01']`.
 
-### `pivot`: a Pivot tab on search results
+### `pivot`: Pivot on search results
 
-A kind's search results and pick lists can offer the same **Table | Pivot** switch a Sutra gives a table
-([USER_GUIDE.md](USER_GUIDE.md#the-pivot-tab-slice-a-table-your-way)). It is offered **only** for the kinds a pack names
-under `pivot:`, beside `columns:`; every other kind's results stay a plain list. From `config/packs/trading/pack.yaml`
-(generated):
+A kind's search results and pick lists can offer **Pivot**, the pivot screen on the kind ([PIVOT_GUIDE.md](PIVOT_GUIDE.md),
+[USER_GUIDE.md](USER_GUIDE.md#pivot-slice-a-table-your-way)). It is offered **only** for the kinds a pack names under `pivot:`, beside
+`columns:`; every other kind's results stay a plain list. From `config/packs/trading/pack.yaml` (generated):
 
 ```yaml
 pivot:                          # KIND: true, or { fields, rows, columns, values, filters, heat, chart }
@@ -1045,25 +1044,18 @@ pivot:                          # KIND: true, or { fields, rows, columns, values
     filters: [PRODUCT_GROUP, TRADE_STATUS]
 ```
 
-The value is the same as a Sutra's [`pivot` option](RACHANA_REFERENCE.md#pivot-a-pivot-tab-on-a-table-or-ladder),
-with one difference: fields are **document paths** (`INDEX.NAME`; `$.` may be written), never
-expressions (`bind` is refused). `pivot: { trade: true }` offers the kind's `columns:` as the fields. `false` (or no
-entry) offers nothing.
+The value is the same as a Sutra's [`pivot` option](RACHANA_REFERENCE.md#pivot-pivot-on-a-table-or-ladder), with one difference:
+fields are **document paths** (`INDEX.NAME`; `$.` may be written), never expressions (`bind` is refused). `pivot: { trade: true }` offers
+the kind's `columns:` as the fields. `false` (or no entry) offers nothing. The arrangement is the view the pivot screen opens with.
 
-Unlike a panel's pivot, which the browser computes from one document's rows, a search's pivot is computed **on the
-server** over every entity the search matches on the business date (not only the page shown), from the day's
-**columns**: the fields its store keeps beside each document ([Large kinds](#large-kinds-the-lake-layout)). So choose
-fields the connector's `layout.<kind>.columns` lists; the trading pack's pivot fields are all among its trade tables'
-columns. A field that no source keeps as a column is marked *doc* in the field list; using it, the server refuses with the reason
-and the user may ask for a **document read** instead (at most `drishti.pivot.document-scan`, 20,000 documents; marked
-partial beyond). The sample data (the demo plugin) keeps no columns, so on samples every search pivot is a document
-read.
-
-Fields the user's role may not see are masked exactly as in a search: grouped under `•••`, never added up.
+The pivot is computed by the server's pivot engine over every row of the kind on the business date (not only the page shown), as the
+Data view reads it: through the kind's connector, or directly from a Delta or Iceberg table's Parquet files when every field is a column
+the connector keeps ([Large kinds](#large-kinds-the-lake-layout)). So choose fields the connector's `layout.<kind>.columns` lists. Fields the
+user's role may not see are not read at all: they are not offered and cannot be grouped, summed or filtered.
 
 The server keeps each kind's declaration as `drishti.search.pivot.<kind>`: `true`, or the mapping as JSON. A site may
 set it directly in its configuration, as `true` or a JSON string (`drishti.search.pivot.trade: '{"rows": ["PRODUCT_TYPE"]}'`). A
-declaration the server cannot read is logged (*no Pivot tab for trade: …*) and that kind offers no Pivot tab; a value
+declaration the server cannot read is logged (*no Pivot for trade: …*) and that kind offers no Pivot; a value
 that is neither `true`, `false` nor a mapping stops the pack from loading. In a generated pack, set it in the
 generator: `PIVOTS` in `tools/packgen/banking/make_packs.py`.
 
@@ -1738,7 +1730,7 @@ You should see two columns, *Leg 1 · FIXED* and *Leg 2 · FLOAT*: the first wit
 available*: a fixed leg has none) and 7 flows; the second with its notional line, the AONIA fixings known so far, and 28 flows, each
 opening (▸) to its two resets. `children` makes a table a tree: a row whose `@.RESETS` is a list gets a ▸ that opens them. A panel
 inside a tab is a `kv`, `status`, `table`, `ladder`, `hbar`, `markdown`, `metric`, `line`, `area` or `timeline`, needs an `id`, and
-cannot have `span`, `height` or a Pivot tab. [Panels inside a tab](/help/rachana-reference#panels-inside-a-tab) lists the rules.
+cannot have `span`, `height` or Pivot. [Panels inside a tab](/help/rachana-reference#panels-inside-a-tab) lists the rules.
 
 ##### 6. A whole Sutra over a nested trade
 
@@ -1995,13 +1987,13 @@ contextual:                     # optional: which guide F1 opens on a screen
   terminal: helpdesk-pack
 ```
 
-The shipped packs file their guides under `category: packs` (*Help → Domain packs*): `core` has `core` and `banking-data-model`, `trading`
+The shipped packs file their guides under `category: packs`, which the help centre reads as its **Data** section (a group *From the packs* at its end): `core` has `core` and `banking-data-model`, `trading`
 has `trading` and `trading-products`, and so on.
 
 | Key | Meaning |
 |---|---|
 | `slug` | the guide's address: `/help/helpdesk-pack`. Must be unique across all packs. |
-| `category` | where the card goes: `start`, `packs`, … (the categories in `drishti-console/config/help.yaml`) |
+| `category` | the help section the guide joins, in its group *From the packs*: a section id of `drishti-console/config/help.yaml` (`get-started`, `data`, `build`, …) or an old name its `aliases:` maps (`start` → Get started, `packs` → Data, `layouts` → Build) |
 | `title`, `summary`, `icon` | the card. `icon` is a Bootstrap Icons name without the `bi-` prefix. |
 | `kind` | `guide` or `tutorial`: the badge shown beside the title |
 | `file` | the Markdown file, relative to the pack folder |
@@ -2605,7 +2597,7 @@ Four layers, from the cheapest. The first three need no server.
 | The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests, every shipped example loads |
 | A scratch server | the [checklist](#verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11-exec.jar sutra …`);
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar sutra …`);
 `pack check` finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the overlay of the checkout they run in (`<data>/packs/added.yaml`), so
 run them where that overlay names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder).
 
@@ -3533,7 +3525,7 @@ product and sub type they book).
 **Pages over many trades** (derived kinds, rebuilt from the trades of every system by the `trade-pages` connector when a load
 changes the data; kept on disk, `store: disk`, so they are complete at any number of trades and served at once after a restart):
 `CTRD <counterparty>`, `PTRD <book>`, `LTRD <legal entity>`, `ITRD <index>`. Each shows the live trades (at most 1,000 listed; the
-count and every total cover all of them; with a Pivot tab by product and system), payments in the next 7, 30 and 90 days (over every
+count and every total cover all of them; with Pivot by product and system), payments in the next 7, 30 and 90 days (over every
 trade) and the upcoming ones listed, notional by product type (a donut), by index, the
 maturity ladder by year and payments by month. On the demo lakes the pack overview (`TRDS <GO>`) counts 15,000 trades, 24
 counterparties, 30 portfolios, 4 legal entities and 57 indexes.
@@ -3681,7 +3673,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
@@ -4221,9 +4213,10 @@ All Java code lives under the package `com.ash.drishti`. The parent POM (`pom.xm
 | `drishti-ai` | `ai` | The LLM provider layer and the MCP client: providers (Anthropic, OpenAI-compatible through Spring AI, a mock), model registry, call policy, prompt masking, MCP clients over streamable HTTP. Depends on `api` and `common` only (`ArchitectureRulesTest.aiLayerDependsOneWay`). **Off by default**; see [AI.md](../admin/AI.md#1-model-providers) and [AI.md](../admin/AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy). | `LlmGateway`, `LlmRegistry`, `LlmProvider`, `AnthropicProvider`, `SpringAiOpenAiProvider`, `McpGateway`, `McpRegistry`, `McpClient` |
 | `drishti-diskcache` | `diskcache` | A disk-backed, size-bounded, self-clearing cache (RocksDB) for live connector state. | `DiskCache` |
 | `drishti-messaging` | `messaging` | The latest-state store and live fan-out shared by the ActiveMQ and RabbitMQ connectors. | `MessageStateSource` |
-| `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters` |
+| `drishti-lakeio` | `lakeio` | Lake file access shared by the native Delta and Iceberg engines, no Hadoop: `Storage` (local disk through `java.nio`, Windows drive letters, backslashes and UNC shares included; S3 through the AWS SDK, with conditional PUTs for commits), byte ranges, Parquet page codecs (`NativeCodecs`, reading and writing) and the per-file Parquet footer cache. Other schemes come from a `StorageProvider` another module registers (`mem://`, the in-memory lake): the engines ask `StorageProviders` and never name that module. | `Storage`, `LocalStorage`, `S3Storage`, `LocalPaths`, `NativeCodecs`, `ParquetFooters`, `StorageProvider`, `StorageProviders` |
 | `drishti-iceberg` | `iceberg` | Drishti's own Apache Iceberg engine without Hadoop, on `drishti-lakeio`: metadata JSON kept whole, path-based, metadata-file and REST catalogs (JDK HTTP client, OAuth2, ETag, vended credentials, SigV4), Avro manifests, planning with partition and metric pruning, field-id Parquet reads with schema evolution and deletes, the Parquet writer with Iceberg metrics, safe commits and the table operations. Its tests prove the writer loads no Hadoop `Configuration`. | `Table`, `catalog.Catalogs`, `scan.Planner`, `read.TaskReader`, `write.Operations`, `write.ParquetDataWriter` |
 | `drishti-deltalake` | `deltalake` | A Delta Kernel engine without Hadoop on `drishti-lakeio` (local disk, Windows paths included, and S3; Parquet through parquet-java with the shared input files and codecs); and Drishti's own Delta writer (`lake build --engine drishti`). Its tests prove in an isolated class loader that no Hadoop `FileSystem`, `Shell` or `Configuration` loads. | `NativeEngine`, `write.LakeManifest` |
+| `drishti-memlake` | `memlake` | The in-memory lake, plain Java with no Spring ([IN_MEMORY_LAKE.md](../architecture/IN_MEMORY_LAKE.md)): the `mem://` memory stores (Parquet files in off-heap chunks under a hard cap; registered with `drishti-lakeio` as the `mem` storage provider), the tables and their replenish jobs, the eviction ladder, automated compaction, the owner node's binding, the never-on-disk guard and the host checks. The server keeps only its Spring wiring (`server.memlake`: settings binding, beans, the Admin, Lakes controller). | `MemoryLake`, `MemoryLakeSettings`, `Retention`, `MemoryBinding`, `store.MemoryStores`, `store.MemoryStorage` |
 | `drishti-lakeload` | `lakeload` | The parallel lake loader: JSON Lines from a folder or S3 into Delta or Iceberg, readers, parsers and writers on every core, memory bounded by `memory.budget-mb` (sorted runs spilled to disk), one commit per business date ([PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md)). | `LakeLoad`, `Loader`, `RowParser`, `Runs`, `DeltaTarget`, `IcebergTarget` |
 | `drishti-testkit` | `testkit` | Contract tests every source plugin of a kind must pass. | `DatedSourceContract`, `MessageSourceContract`, `BrokerOutage` |
 | `drishti-server` | `server` | The Spring Boot application: REST and SSE controllers, security, alerts, Sutra governance, and one sub-package per feature area (`admin`, `ai`, `alerts`, `bi`, `calc`, `cli`, `collab`, `connectors`, `deploy`, `design`, `dist`, `embed`, `explain`, `governance`, `layout`, `loads`, `notify`, `pivot`, `registry`, `reports`). `bi` is Rūpaka, the BI engine (section 4.4). | `DrishtiApplication`, `api.*Controller`, `security.Entitlements`, `security.TokenFilter`, `alerts.AlertEngine`, `governance.SutraGovernance`, `bi.mq.MqService`, `bi.engine.QueryService` |
@@ -4281,15 +4274,17 @@ drishti-messaging                 (api, diskcache)
 drishti-lakeio                    (api)
 drishti-deltalake                 (lakeio)
 drishti-iceberg                   (api, lakeio)
+drishti-memlake                   (api, common, engine, lakeio, deltalake; no Spring code: ArchitectureRulesTest)
 drishti-lakeload                  (api, lakeio, deltalake, iceberg)
 plugins/*                         (api; kafka adds diskcache; activemq and rabbitmq add messaging; delta adds deltalake; iceberg and iceberg-external add iceberg)
-drishti-server                    (engine, identity, packs, ai, lakeload, and all nineteen plugins)
+drishti-server                    (engine, identity, packs, ai, lakeload, memlake, and all nineteen plugins)
 drishti-it                        (server, testkit)
 drishti-benchmarks                (inference)
 ```
 
 `ArchitectureRulesTest` keeps these one-way (see [§3.3](#33-architecture-rules)): nothing below the engine may see `engine` or
-`server`, the engine may not see `server`, `api` sees nothing internal, and `ai` sees only `api` and `common`. The reactor also builds
+`server`, the engine may not see `server`, `api` sees nothing internal, `ai` sees only `api` and `common`, `memlake` sees neither the
+server nor Spring, and the lake engines and connectors never see `memlake` (they reach `mem://` through `lakeio`'s `StorageProviders`). The reactor also builds
 `docs/guides/examples/connector`, the worked example plugin of [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md).
 
 #### 1.4 Everything else
@@ -4457,7 +4452,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -5767,7 +5762,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server

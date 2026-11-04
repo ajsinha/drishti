@@ -111,17 +111,4 @@ public class ViewController {
     void servedBy(org.springframework.beans.factory.ObjectProvider<com.ash.drishti.server.net.NetServedBy> s) {
         this.servedBy = s;
     }
-
-    /**
-     * A table's or ladder's rows as raw values of the fields its Sutra's {@code pivot:} offers, for the console's Pivot tab
-     * ({@code GET /api/v1/views/trade/X/panels/cashflows/records}): every row up to {@code drishti.pivot.max-records}, even
-     * when the table shows only its first {@code limit}. The same document, Sutra and business date as the view, and the
-     * same field masks (a masked field reads {@code •••}).
-     */
-    @GetMapping("/{kind}/{id}/panels/{panel}/records")
-    public com.ash.drishti.engine.bind.PivotBinder.Records records(@PathVariable String kind, @PathVariable String id, @PathVariable String panel,
-            AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal principal) {
-        entitlements.requireOpen(principal, kind);
-        return pipeline.records(EntityRef.of(kind, id), asOf, panel, entitlements.redactor(principal), k -> entitlements.mayOpen(principal, k));
-    }
 }

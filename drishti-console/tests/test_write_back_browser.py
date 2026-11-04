@@ -88,8 +88,7 @@ def test_a_correction_is_submitted_approved_applied_and_seen_by_another_browser(
     queue.close()
 
     other = open_desk(browser, stack)                               # another person watching the book (its source does not stream)
-    wait(other, "window.DrishtiChannel && document.readyState === 'complete'")
-    other.wait_for_timeout(1500)                                    # its console's live connection is open
+    wait(other, "!!document.querySelector('[data-bell][data-alerts-live]')")   # its live feed has said hello: the edit will reach it
     assert approve_as(stack, change, "kim")["state"] in ("queued", "applied")
     wait(pg, f"(document.querySelector('[data-wb-id=\"{change}\"] [data-wb-state]') || {{}}).textContent.startsWith('Applied')")
     pg.screenshot(path=str(IMG / "applied.jpg"), type="jpeg", quality=84)

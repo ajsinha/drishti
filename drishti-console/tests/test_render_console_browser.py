@@ -34,7 +34,7 @@ import render_cases as cases  # noqa: E402
 from conftest import FIXTURES  # noqa: E402
 from table_chart_backend import ChartBackend, serve  # noqa: E402
 from test_render_parity_browser import INTENTIONAL, explain, normalised, pack_views  # noqa: E402,F401 - pack_views: the fixture
-from wb_live import live_console  # noqa: E402,F401 - the fixture pack_views needs
+from wb_live import BROWSER_WAIT_MS, live_console  # noqa: E402,F401 - live_console: the fixture pack_views needs
 import render_harness as H  # noqa: E402
 
 WIDTHS = (390, 1280)
@@ -104,7 +104,7 @@ def open_page(browser, url, width=1280):
     page.on("request", lambda r: reqs.append(r.url))
     page.add_init_script(CSP)
     page.goto(url, wait_until="load")
-    page.wait_for_selector(".view .pnl", state="attached", timeout=20000)
+    page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
     settle(page)
     page.__errors = errors
     page.__reqs = reqs
@@ -112,8 +112,11 @@ def open_page(browser, url, width=1280):
 
 
 def settle(page):
-    """The page's charts and map shapes drawn (a console page keeps its live channel open, so the network is never idle)."""
-    page.wait_for_function("() => !document.querySelector('.chart:not(.pnl-empty), .xchart:not(.pnl-empty)') || [...document.querySelectorAll('.chart, .xchart')].every((el) => el.classList.contains('pnl-empty') || (window.echarts && window.echarts.getInstanceByDom(el)))", timeout=15000)
+    """The page's charts and map shapes drawn, and no part of the page still busy (a control's query, a panel being fetched or swapped in: the
+    library and the page's scripts mark it aria-busy). A console page keeps its live channel open, so the network is never idle. Each wait is a
+    deadline (the suite's BROWSER_WAIT_MS: the drill runs this file beside the other workers), never a pause: it ends when the page is ready."""
+    page.wait_for_function("() => !document.querySelector('.chart:not(.pnl-empty), .xchart:not(.pnl-empty)') || [...document.querySelectorAll('.chart, .xchart')].every((el) => el.classList.contains('pnl-empty') || (window.echarts && window.echarts.getInstanceByDom(el)))", timeout=BROWSER_WAIT_MS)
+    page.wait_for_function("() => document.readyState === 'complete' && !document.querySelector('.view[aria-busy=\"true\"], .view [aria-busy=\"true\"], [data-render-host][aria-busy=\"true\"]')", timeout=BROWSER_WAIT_MS)
     page.wait_for_timeout(400)
     page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")
 
@@ -176,7 +179,7 @@ def test_every_pack_sutra_on_its_sample_is_the_same_page_either_way(browser, con
                 problems.append(f"sideways scroll: server {got['server']['overflow']} px, client {got['client']['overflow']} px")
             if diffs or problems:
                 failures.append(f"{name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}")
-                print(f"DIFF {name} at {width}px: {problems} {sorted(diffs)}")
+                print(f"DIFF {name} at {width}px: {problems} {sorted(diffs)}\n{explain(diffs)}")
     print(f"\nconsole pack parity: {len(names)} views x {len(WIDTHS)} widths x 2 modes = {pages} pages; differing: {len(failures)}")
     assert not failures, f"{len(failures)} of {len(names) * len(WIDTHS)} differ:\n" + "\n\n".join(failures[:6])
 
@@ -251,14 +254,12 @@ def test_about_this_page_says_the_same_and_is_drawn_from_json_on_a_client_page(b
     assert any("format=json" in u for u in asked["client"]) and not any("format=json" in u for u in asked["server"]), asked
 
 
-def test_the_pivot_tab_builds_the_same_grid(browser, console):
-    seen = {}
+def test_a_table_that_offers_pivot_opens_the_pivot_screen_on_its_rows(browser, console):
+    # the server-drawn page and the client renderer (1.2.0) both carry the Pivot link to the pivot screen on the panel's rows
     for mode, page in each_mode(browser, f"{console}/v/netting-set/NS-NORTH-01"):
-        page.locator("#p-trades [data-pv-tab='pivot']").click()
-        page.wait_for_selector("#p-trades .pv-host table", timeout=10000)
-        page.wait_for_timeout(200)
-        seen[mode] = page.locator("#p-trades .pv-host table").first.inner_text()
-    assert seen["server"] == seen["client"] and "Interest rate swap" in seen["client"], seen
+        link = page.locator("#p-trades .pv-open a")
+        assert link.count() == 1, mode
+        assert link.first.get_attribute("href") == "/pivot?source=panel/netting-set/trades/NS-NORTH-01", mode
 
 
 def test_a_nested_pivot_is_drawn_as_the_same_grid(browser, console):

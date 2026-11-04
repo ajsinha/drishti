@@ -64,6 +64,35 @@ class ArchitectureRulesTest {
             .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.engine..", "com.ash.drishti.server..", "org.springframework..",
                     "com.ash.drishti.identity..", "com.ash.drishti.rachana..", "com.ash.drishti.packs..");
 
+    /** The in-memory lake is plain Java: no Spring, nothing of the server (the server wires it in, server.memlake). */
+    @ArchTest
+    static final ArchRule memoryLakeIsPlainJava = noClasses()
+            .that().resideInAPackage("com.ash.drishti.memlake..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..");
+
+    /** The data inbox is plain Java and never names the server (DATALOAD_INBOX.md section 11): the server wires it in, server.dataload. */
+    @ArchTest
+    static final ArchRule dataInboxIsPlainJava = noClasses()
+            .that().resideInAPackage("com.ash.drishti.dataload..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.server..", "org.springframework..");
+
+    /**
+     * The data inbox never writes a table itself: only drishti-lakeload does (its loader, started as a child process). No lake engine,
+     * no table format, no storage of its own.
+     */
+    @ArchTest
+    static final ArchRule dataInboxWritesNoTable = noClasses()
+            .that().resideInAPackage("com.ash.drishti.dataload..")
+            .should().dependOnClassesThat().resideInAnyPackage("com.ash.drishti.deltalake..", "com.ash.drishti.iceberg..", "com.ash.drishti.lakeio..",
+                    "com.ash.drishti.memlake..", "io.delta..", "org.apache.iceberg..", "org.apache.parquet..", "org.apache.arrow..");
+
+    /** The lake engines and connectors reach mem:// through lakeio's StorageProviders, never through the in-memory lake's module. */
+    @ArchTest
+    static final ArchRule lakeReadersDoNotSeeTheMemoryLake = noClasses()
+            .that().resideInAnyPackage("com.ash.drishti.lakeio..", "com.ash.drishti.deltalake..", "com.ash.drishti.iceberg..",
+                    "com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.api..")
+            .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.memlake..");
+
     @ArchTest
     static final ArchRule controllersOnlyInServer = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.server..")

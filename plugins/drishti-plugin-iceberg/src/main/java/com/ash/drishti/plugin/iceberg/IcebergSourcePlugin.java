@@ -209,7 +209,7 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             java.lang.System.getLogger(IcebergSourcePlugin.class.getName()).log(java.lang.System.Logger.Level.WARNING, "{0}: {1}",
                     sourceName, relocateIgnored);
         }
-        this.memoryOnly = com.ash.drishti.lakeio.mem.MemoryStores.isMemory(root) || com.ash.drishti.lakeio.mem.MemoryStores.isMemory(ctx.setting("warehouse", ""));
+        this.memoryOnly = com.ash.drishti.lakeio.StorageProviders.memoryOnly(root) || com.ash.drishti.lakeio.StorageProviders.memoryOnly(ctx.setting("warehouse", ""));
         this.dated = new DatedHitIndex(memoryOnly ? null : sourceName, memoryOnly ? null : DatedHitIndex.defaultRoot(), ctx.settings(), this::dayHits, (k, d) -> {
             Long v = datedSnapshots.get(k);
             return v == null ? null : "s" + v;
@@ -979,6 +979,64 @@ public final class IcebergSourcePlugin implements SourcePlugin {
             Day d = l.days().get(date);
             return new com.ash.drishti.api.RowEstimate(d == null ? 0 : d.rows(), com.ash.drishti.api.RowEstimate.ICEBERG_MANIFESTS);
         });
+    }
+
+    /**
+     * The date's Parquet data files and the promoted columns, for the pivot engine's direct lake route (docs/architecture/PIVOT_ENGINE.md
+     * section 6.2): only a snapshot table on a local disk whose date has no delete files (a reader of the bare files would see deleted
+     * rows). No data file is read: the plan is the cached one.
+     */
+    @Override
+    public Optional<com.ash.drishti.api.LakeFiles> lakeFiles(String kind, com.ash.drishti.api.AsOf asOf) {
+        if (effective(kind) || asOf.knownAt() != null) {
+            return Optional.empty();
+        }
+        Optional<Layout> l = safeLayout(kind);
+        if (l.isEmpty() || l.get().days().isEmpty()) {
+            return Optional.empty();
+        }
+        LocalDate date = asOf.businessDate() == null ? l.get().days().lastKey() : l.get().days().floorKey(asOf.businessDate());
+        KindTable.Day day = date == null ? null : l.get().days().get(date);
+        if (day == null || day.deletes() || day.files().isEmpty()) {
+            return Optional.empty();
+        }
+        List<String> files = new ArrayList<>();
+        long bytes = 0;
+        for (Object o : day.files()) {
+            String loc;
+            long size;
+            String format;
+            if (o instanceof org.apache.iceberg.FileScanTask t) {
+                loc = t.file().location();
+                size = t.file().fileSizeInBytes();
+                format = String.valueOf(t.file().format());
+            } else if (o instanceof com.ash.drishti.iceberg.scan.FileTask t) {
+                loc = t.file().path();
+                size = t.file().fileSizeInBytes();
+                format = String.valueOf(t.file().format());
+            } else {
+                return Optional.empty();
+            }
+            if (!"PARQUET".equalsIgnoreCase(format)) {
+                return Optional.empty();
+            }
+            if (loc.startsWith("file:")) {
+                loc = java.nio.file.Path.of(java.net.URI.create(loc)).toString();
+            } else if (loc.contains("://")) {
+                return Optional.empty();                       // an object store: the connector reads it
+            }
+            files.add(loc);
+            bytes += size;
+        }
+        Map<String, String> columns = new java.util.LinkedHashMap<>();
+        for (String path : promoted.getOrDefault(kind, List.of())) {
+            String c = IcebergLayout.column(path);
+            if (l.get().columns().containsKey(c)) {
+                columns.put(path, c);
+            }
+        }
+        return Optional.of(new com.ash.drishti.api.LakeFiles("iceberg", files, columns, IcebergLayout.ID, date == LocalDate.MIN ? null : date,
+                bytes, day.rows()));
     }
 
     /** The newest business date of the kind's table, from its current snapshot's plan (cached; no data read). */

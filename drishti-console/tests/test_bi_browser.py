@@ -155,11 +155,11 @@ def test_the_catalogue_shows_only_what_the_audience_allows_and_searches_filters_
     assert "Desk P&L" in got and "Counterparty exposure" in got and "Liquidity daily" in got and "Trades (shipped)" in got
     assert "Trades dataset" not in got                                                 # a draft: its workspace only
     assert "Risk ladder" in got                                                        # cat is a member of the workspace, which sees every published item
-    cat.fill("[data-search]", "exposure")
+    cat.fill("input[data-search]", "exposure")
     expect(cat.locator(".bi-card")).to_have_count(1)
     expect(cat.locator("[data-count]")).to_have_text("1 item")
     assert "q=exposure" in cat.url
-    cat.fill("[data-search]", "")
+    cat.fill("input[data-search]", "")
     cat.click('[data-cat-tab="datasets"]')                                             # the kind is a tab since the catalogue split by kind
     expect(cat.locator('[data-cat-panel]')).to_have_attribute("data-cat-shown", "datasets")
     expect(cat.locator(".bi-card h3").filter(has_text="Trades (shipped)")).to_have_count(1)
@@ -172,7 +172,7 @@ def test_the_catalogue_shows_only_what_the_audience_allows_and_searches_filters_
     expect(cat.locator('[data-cat-panel]')).to_have_attribute("data-cat-shown", "reports")
     cat.select_option('[name="sort"]', "title")
     expect(cat.locator(".bi-card h3")).to_have_text(["Desk P&L", "Liquidity daily", "Risk ladder"])   # by title (the exposure board is under Boards)
-    cat.fill("[data-search]", "zzzz-nothing")
+    cat.fill("input[data-search]", "zzzz-nothing")
     expect(cat.locator("[data-empty]")).to_be_visible()
     # sue is a steward outside the workspace: she sees only what its audience names her in
     sue = sign_in(browser, "sue")
@@ -227,13 +227,18 @@ def test_a_workspace_is_created_and_shared_from_the_page(stack, browser):
 
 
 def test_review_before_publish_needs_a_second_person(stack, browser):
+    # its own shared workspace, made here: the test must not depend on the one test_a_workspace_is_created_and_shared_from_the_page makes (a
+    # pytest-xdist run that hands out tests, not files, puts the two on different workers with different servers; ann then had no Credit Desk)
+    status, ws = bi_stack.call("POST", "/bi/workspaces", "ann", ["bi-writer"], {"name": "Review Desk", "description": "review before publishing"})
+    assert status in (200, 201), ws
+    desk = ws["id"]
     ann = sign_in(browser, "ann")
-    ann.goto(CONSOLE_URL + "/bi/w/credit-desk?tab=members")                              # the settings sit on the Members tab (BIR-14)
+    ann.goto(CONSOLE_URL + f"/bi/w/{desk}?tab=members")                                  # the settings sit on the Members tab (BIR-14)
     ann.check("[data-review]")
     expect(ann.locator("[data-msg]")).to_contain_text("Review before publishing is on")
     ann.click('[data-ws-tab="items"]')
     ann.fill('[data-new-item] [name="title"]', "Limits report")
-    new_item(ann)
+    new_item(ann, desk)
     expect(ann.locator('[data-actions] button:has-text("Publish")')).to_have_count(0)
     ann.fill(".bi-note", "please check the limits")
     ann.click("text=Propose for review")
@@ -241,7 +246,7 @@ def test_review_before_publish_needs_a_second_person(stack, browser):
     url = ann.url
     expect(ann.locator('[data-actions] button:has-text("Approve")')).to_have_count(0)
     bob_ws = sign_in(browser, "ann")                                                      # bob must be a member to approve
-    bob_ws.goto(CONSOLE_URL + "/bi/w/credit-desk")
+    bob_ws.goto(CONSOLE_URL + f"/bi/w/{desk}")
     bob_ws.click('[data-ws-tab="members"]')
     bob_ws.fill('[data-add-member] [name="user"]', "bob")
     bob_ws.select_option('[data-add-member] [name="role"]', "member")
@@ -261,7 +266,7 @@ def test_the_keys_work_and_the_help_opens(stack, browser):
     page.keyboard.press("c")
     page.wait_for_url("**/bi/catalogue")
     page.keyboard.press("/")
-    expect(page.locator("[data-search]")).to_be_focused()
+    expect(page.locator("input[data-search]")).to_be_focused()
     page.keyboard.press("Escape")
     page.click("body", position={"x": 5, "y": 300})
     page.keyboard.press("g")
@@ -277,7 +282,7 @@ def test_the_keys_work_and_the_help_opens(stack, browser):
     expect(page.locator("#biKeys")).not_to_be_visible()
     page.keyboard.press("/")                                                              # off the catalogue: goes there, search focused
     page.wait_for_url("**/bi/catalogue?focus=1")
-    expect(page.locator("[data-search]")).to_be_focused()
+    expect(page.locator("input[data-search]")).to_be_focused()
     clean(page)
 
 
@@ -355,11 +360,11 @@ def test_the_bi_folder_is_live_a_file_added_changed_and_deleted_needs_no_restart
     page.goto(CONSOLE_URL + "/bi/catalogue")
     expect(page.locator(".bi-card").first).to_be_visible()
     f.write_text("title: Live demo\ndescription: dropped into the folder\n")
-    page.fill("[data-search]", "live demo")
+    page.fill("input[data-search]", "live demo")
     deadline = time.time() + 20
     while time.time() < deadline and page.locator(".bi-card h3", has_text="Live demo").count() == 0:
-        page.fill("[data-search]", "")
-        page.fill("[data-search]", "live demo")
+        page.fill("input[data-search]", "")
+        page.fill("input[data-search]", "live demo")
         page.wait_for_timeout(700)
     expect(page.locator(".bi-card h3").first).to_have_text("Live demo")
     page.locator(".bi-card h3 a").first.click()

@@ -271,7 +271,8 @@
       method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     if (!ok) { notice(j.detail); return; }
     notice("");
-    $("[data-rp-comment]").value = "";
+    // the comment it sent is used up; one typed while the answer was on its way (the next step's note) stays
+    if ($("[data-rp-comment]").value === body.comment) { $("[data-rp-comment]").value = ""; }
     run = j;
     draw();
     loadPack();

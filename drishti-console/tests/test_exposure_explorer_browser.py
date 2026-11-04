@@ -56,7 +56,7 @@ def stack(tmp_path_factory):
     lake = work / "delta"
     r = subprocess.run([sys.executable, str(ROOT / "tools" / "drishti.py"), "lake", "demo", "--lake", str(lake), "--data-dir", str(work / "data"),
                         "--connectors-dir", str(work / "connectors"), "--as-of", "data", "--only", EXP_DATA, "--no-signal", "-q",
-                        "--engine", "auto", "--exposure", "committed"], capture_output=True, text=True, cwd=ROOT, timeout=900)
+                        "--engine", "deltalake", "--exposure", "committed"], capture_output=True, text=True, cwd=ROOT, timeout=900)   # the Python writer, in this process: auto starts a JVM for every table and business day
     if r.returncode != 0 or not (lake / "risk" / "exposure-path").is_dir():
         pytest.skip("could not build the exposure lake: " + (r.stderr or r.stdout)[-400:])
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
