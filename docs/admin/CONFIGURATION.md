@@ -3606,7 +3606,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.under-construction.file` | string | `./config/under-construction.yaml` | `DRISHTI_UNDER_CONSTRUCTION_FILE` | server | absent: under-construction.yaml beside the packs folder, else nothing registered | restart |  |
+| `drishti.under-construction.file` | string | `./config/under-construction.yaml` | `DRISHTI_UNDER_CONSTRUCTION_FILE` | server | absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing | restart |  |
 
 #### `drishti.packs`
 
@@ -6362,7 +6362,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_UI_PHONE` | `ui.phone.enabled` | `true` | console | true: a phone or tablet gets the tiered page; false: every screen gets every panel, as before |
 | `DRISHTI_UI_RENDER` | `ui.render.mode` | `server` | console | server or client: the renderer of the pages listed in ui.render.pages |
 | `DRISHTI_UI_RENDER_PAGES` | `ui.render.pages` | `view,pane` | console | the pages ui.render.mode applies to: view (an entity page) and pane (the same page in a workspace pane) |
-| `DRISHTI_UNDER_CONSTRUCTION_FILE` | `drishti.under-construction.file`, `under_construction.file` | `./config/under-construction.yaml` | console, server | absent: under-construction.yaml beside the packs folder, else nothing registered |
+| `DRISHTI_UNDER_CONSTRUCTION_FILE` | `drishti.under-construction.file`, `under_construction.file` | `./config/under-construction.yaml` | console, server | absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing |
 | `DRISHTI_UNINSTALLED_DIR` | `drishti.admin.uninstalled-dir` | `./data/uninstalled` | server | an uninstall MOVES the artifact here; nothing is deleted |
 | `DRISHTI_UNINSTALLED_KEEP` | `drishti.admin.uninstalled-keep` | `30d` | server | archives older than this are removed, once a day; 0 keeps them for ever |
 | `DRISHTI_USER` | `ui.user` | `ash` | console | acting user until sign-in lands |

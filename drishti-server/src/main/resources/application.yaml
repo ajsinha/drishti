@@ -1062,7 +1062,7 @@ drishti:
     default-notify-roles: [admin] # told when a pack names no roles or users
     smoke-max: 20                 # most sample entities a pack may ask to be opened
   under-construction:                # the under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): what depends on unbuilt work and how it shows
-    file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:./config/under-construction.yaml}   # absent: under-construction.yaml beside the packs folder, else nothing registered
+    file: ${DRISHTI_UNDER_CONSTRUCTION_FILE:./config/under-construction.yaml}   # absent: under-construction.yaml beside the packs folder, else nothing registered; none: nothing
   packs:
     # Domain packs (config/packs/<name>/pack.yaml): Sutras, mnemonics, links, badges, roles, vocabulary, samples.
     # Site settings below always override what a pack contributes.

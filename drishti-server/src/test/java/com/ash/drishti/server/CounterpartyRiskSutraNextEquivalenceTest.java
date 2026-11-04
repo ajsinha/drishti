@@ -23,7 +23,7 @@ import org.springframework.test.context.DynamicPropertySource;
 /** The counterparty-risk pack's generated fragment Sutras draw what the inline ones drew. */
 @SpringBootTest(properties = {"drishti.rachana.hot-reload=false", "drishti.sources.plugins.demo.settings.ticking=false",
         "drishti.security.enabled=true", "drishti.security.secret=test-secret-that-is-at-least-32-bytes-long",
-        "drishti.packs.enabled=counterparty-risk",
+        "drishti.packs.enabled=counterparty-risk", "drishti.under-construction.file=none",   // the pages as their Sutras say: the registry is its own test
         "drishti.security.redact=ADD_ON,AMOUNT,CALL_DATE,COUNTERPARTY_NAME,CVA,EPE,HELD,IM,MARGIN_TYPE,MTM,REPLACEMENT_COST,TOTAL,TRADE_COUNT,TYPE,UTILISATION",
         "drishti.security.roles.masked.kinds[0]=*", "drishti.security.roles.masked.raw=false",
         "drishti.security.roles.full.kinds[0]=*", "drishti.security.roles.full.raw=true"})

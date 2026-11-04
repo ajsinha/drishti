@@ -61,12 +61,15 @@ public class RachanaConfiguration {
 
     /**
      * The under-construction registry (docs/admin/UNDER_CONSTRUCTION.md): {@code drishti.under-construction.file}, else
-     * {@code under-construction.yaml} beside the packs folder; none when neither exists.
+     * {@code under-construction.yaml} beside the packs folder; none when neither exists, or when the setting is {@code none}.
      */
     @Bean
     public UnderConstruction underConstruction(
             @org.springframework.beans.factory.annotation.Value("${drishti.under-construction.file:}") String file,
             @org.springframework.beans.factory.annotation.Value("${drishti.packs.dir:./config/packs}") String packsDir) {
+        if ("none".equals(file)) {
+            return UnderConstruction.none();                          // nothing registered (a test of the pages as their Sutras say)
+        }
         java.nio.file.Path p = file == null || file.isBlank() ? null : java.nio.file.Path.of(file);
         if (p == null || !java.nio.file.Files.isRegularFile(p)) {
             java.nio.file.Path parent = java.nio.file.Path.of(packsDir).toAbsolutePath().normalize().getParent();
