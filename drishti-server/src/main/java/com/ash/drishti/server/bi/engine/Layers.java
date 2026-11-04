@@ -20,6 +20,7 @@ import com.ash.drishti.common.ErrorCode;
 import com.ash.drishti.server.bi.dataset.Dataset;
 import com.ash.drishti.server.bi.dataset.Node;
 import com.ash.drishti.server.bi.dataset.Rollups;
+import com.ash.drishti.tables.materialize.FileSwap;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;

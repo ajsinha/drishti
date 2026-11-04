@@ -15,7 +15,7 @@
 -->
 # BI's foundation (2.9.11.e): DEL into Rachana, and virtual tables
 
-*Status: **part A (the language) built** on `wip/bi-foundation`, see [section 9](#9-as-built-part-a-the-language); part B (the table layer, the migration, the parity proof, the switch) not built. **Decided by the product owner on 2026-11-03**: every recommendation of section 8 accepted, except Q1, decided the other way (Rachana's null rule, below). Earlier wording: a design draft for discussion, nothing decided beyond what the documents it reads already
+*Status: **part A (the language) built** on `wip/bi-foundation`, see [section 9](#9-as-built-part-a-the-language); part B's foundation (the table layer, the migration, the parity proof) built on `wip/bi-foundation-tables`, see [section 10](#10-as-built-part-b-the-table-layer); the switch not yet. **Decided by the product owner on 2026-11-03**: every recommendation of section 8 accepted, except Q1, decided the other way (Rachana's null rule, below). Earlier wording: a design draft for discussion, nothing decided beyond what the documents it reads already
 record as decided (the release and its scope, product owner 2026-11-03; [VIRTUAL_TABLES.md](VIRTUAL_TABLES.md) V6;
 [ONE_GRAMMAR.md](ONE_GRAMMAR.md) part 4). Every command, path, setting, key and error code below that does not exist today is
 planned and says so on its line. Section 8 lists the questions, each with a recommendation. Nothing is coded until the discussion is
@@ -38,6 +38,7 @@ and 12), [LAKE_CONFIG.md](LAKE_CONFIG.md), [ARROW_FLIGHT.md](ARROW_FLIGHT.md), [
 7. [Risks, size, order of work, drills](#7-risks-size-order-of-work-drills)
 8. [Decisions](#8-decisions-product-owner-2026-11-03-every-recommendation-accepted-q1-decided-as-rachanas-rule)
 9. [As built (part A): the language](#9-as-built-part-a-the-language)
+10. [As built (part B): the table layer](#10-as-built-part-b-the-table-layer)
 
 ## 1. The goal in one page
 
@@ -568,7 +569,7 @@ tolerance, not a difference.
 ### 5.3 How the fixtures are recorded
 
 1. The first commit of the release branch adds the recorder (`BiFoundationRecorder`, planned) and its cases, beside
-   `BiParityRecorder`, enabled only by a system property (planned `drishti.bi.foundation.record=true`), and runs it on the unchanged tree
+   `BiParityRecorder`, enabled only by a system property (`-Ddrishti.bi.foundation.record=true`), and runs it on the unchanged tree
    (develop after 2.9.11.d). Its fixtures go to `drishti-server/src/test/resources/bi/foundation-parity/` (planned), one JSON file per
    report and model, written with sorted keys so a diff is readable.
 2. The fixtures are committed **before** any production code of the release changes; the commit that records them holds nothing else.
@@ -757,3 +758,37 @@ The table layer (`drishti-tables`), the migration tool (it reuses `DelToRachana`
 `ShippedInRachanaTest`), the parity proof, BI's switch onto the layer, the deletion of DEL (`server.bi.expr`, `bi/expr/functions.yaml`,
 `ExprParser`, `Node`, `CalculationParser`, `FormulaParser`, `RowEval`) with `OneGrammarRulesTest`'s exceptions, `fx` and `related`'s
 lowerings, `DocPath` on the one compiler.
+
+## 10. As built (part B): the table layer
+
+Part B (sections 3, 4 and 5) is built on `wip/bi-foundation-tables`, on part A (merged: Rachana's tree, printer and checked mode, the one
+compiler). BI does not read the layer yet: the switch (section 7.3, step 5) flips it in one change once the parity proof passes. The
+reference for every key, check and command is [TABLES_GUIDE.md](../guides/TABLES_GUIDE.md); the walk-through is the
+[virtual tables tutorial](../tutorials/virtual-tables-and-models.md).
+
+| Part | Built | Where |
+|---|---|---|
+| The module | `drishti-tables`, plain Java, on `drishti-rachana` and `drishti-bicompute`; `drishti-server` depends on it; `ArchitectureRulesTest` holds both directions | `com.ash.drishti.tables` |
+| Definitions and files | `TableDef`, `ColumnDef`, `ModelDef` with every key of 3.1 and 3.3 (Q9 to Q14, Q29); `.table.yaml` and `.model.yaml` read by key and written in one canonical form (`rachana: 3`, Q25) | `tables.def`, `tables.yaml` |
+| Expressions | Rachana's tree and printer (the layer has no reader of its own); checked mode with `Fields` built from a table's source paths (typed as the columns that read them) or a model's `alias.COLUMN`, aliases, measures and parameters; a definition reads the source unmasked (masks are its readers'); the layer adds two rules (a bare column is refused with its path; `@` and `^` need a grain) | `tables.lang.Trees`, `tables.check` |
+| `fx` and `related` | lowered by the layer (Q15, Q29): each call becomes a column of the row worked out before the expression runs (the installation's one FX source at the row's date; another table's row by its key; in a model `related(alias.COLUMN)` is the join) | `tables.lang.LateBound` |
+| Catalogue | files by domain folder and stored items (`ItemStore`; the server's `BiItemTableStore` over `drishti_bi_item`, Q16); `was:`; a table over a table with its base's columns, rules and keys; a summary table's implicit model (`table:<name>`); lineage | `tables.catalog`, `server.tables` |
+| Pack tables | a pack's kinds and the lists it names regenerated as tables (`trading.trade`, `trading.trade_legs`, 3.6), never migrated | `tables.catalog.PackTables` |
+| Answers | a model query answered by the layer in memory (3.5): each table as the reader may see it (rules, masks, the model's own rules, may-see-all), joined many-to-one from each measure's fact, filtered, grouped (fields and date parts), every measure compiled by part A's `Compiler` and evaluated by the engine's `RowsEvaluator`; measures of measures in order; what needs an answer (windows, context functions, time intelligence, `convert`) refused by name for the scan route | `tables.answer.ModelAnswers` |
+| Materialisation | `LiveStore` (live by key from pushed entities through the table's definition; sequences, deletions, retention by rows and age) and `ParquetOnLoad` (a date's rows as Parquet under `StoreLayout`, each build its own file moved in with `FileSwap` and swept); the API `Materialization` | `tables.materialize` |
+| Preview | rows over JSONL samples through Rachana's evaluator with the grain's parents; `fx` and `related` from a source and another table | `tables.preview` |
+| Migration | files: every dataset and model key; `rachana: 1` datasets (Q19), a version-1 original beside its converted form recognised; `group:` as rows plus a summary table (Q13); consumers rewritten in place (a binding to a version-1 dataset, `expr:` and `define:`); DEL into Rachana by part A's `DelToRachana` (`server.bi.expr.DelTablesTranslator`, handed to the command line by the server); columns to paths, date parts and Q1's null rule on Rachana's tree; dry run, `--check`, report, audit, idempotent. Stored items: `StoredTablesMigration`, every version of every dataset and model rewritten in place, the draft too, the text before kept as saved states, an event and an audit line per item, a refused item left with its reason | `tables.migrate`, `server.tables` |
+| Parity recorder | `BiFoundationRecorder`, `BiFoundationCases`, `BiFoundationLive`, `BiFoundationParityTest` (5.3) | `drishti-server` tests |
+
+On the shipped `config/bi` all 34 items convert (`trading-cashflows`' chains as `c ? a : b`; the two live originals are the converted
+forms that ship beside them), the outputs pass the layer's checks, the two live reports bind their models, and a second run changes nothing.
+
+**What the switch does, in one change, after the parity proof passes on the heavy run.** BI reads the layer: `MqService` answers a model
+through the layer (the in-memory route above for live tables; the scan route, the same compiled plan over `ParquetOnLoad`'s files or a
+connector's scan with part A's `ScanEvaluator`, written then); the first-start migration (`StoredTablesMigration`) and the server's refusal of
+an old file (`DRS-9196`) wired at start; `BiItemTableStore` in the catalogue; `PackTables` fed by the server's pack descriptions; and BI's own
+machinery deleted with DEL: `Layers`, `TableBuilder`, `DatasetRefresher`, `bi.dataset.Rollups`, `LiveTables`, `LiveTable`, `LiveFeed`,
+`LiveHistory`, `LiveAggregate`, `server.bi.expr` (except the migration's reader, kept to 2.9.14), `ExprParser`, `Node`, `CalculationParser`,
+`RowEval`, `config/bi/datasets` and `config/bi/models` (their outputs committed under `config/tables`). Until then those BI classes stay
+compiled and in use by BI, which is unavoidable: moving them means BI reads the layer's definitions, which is the switch itself. The
+editors and the layer's settings (the store folder) come with it.

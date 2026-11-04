@@ -1313,8 +1313,7 @@ def build_parser() -> argparse.ArgumentParser:
             c.add_argument("--limit", type=int, default=50, help="most changes listed (default 50)")
 
     # connector --------------------------------------------------------------------------------------------
-    cs = group("connector", "Connectors over REST (Admin -> Connectors): list, get, apply a YAML file, test, enable, delete (administrator; a token needs packs:admin)")
-    load_module("serverconnectors", "serverconnectors.py").register(sys.modules[__name__], cs, add, srv)
+    load_module("serverconnectors", "serverconnectors.py").register(sys.modules[__name__], group("connector", "Connectors over REST (Admin -> Connectors): list, get, apply a YAML file, test, enable, delete (administrator; a token needs packs:admin)"), add, srv)
 
     # net --------------------------------------------------------------------------------------------------
     ns = group("net", "Drishti*net's config/net/ folder: list, check, add a peer, set a setting (local files); members of a running server")
@@ -1425,6 +1424,7 @@ def build_parser() -> argparse.ArgumentParser:
     load_module("enginescli", "enginescli.py").register(sv, adm, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # server engines, admin engines (2.9.11)
     load_module("dataloadcli", "dataloadcli.py").register(groups, srv, {"Api": Api, "CliError": CliError, "ApiError": ApiError, "say_json": say_json})   # dataload status|run|retry
     load_module("contracts", "contracts.py").register(groups)                                                       # contract list|show|check|docs|bootstrap
+    load_module("tablescli", "tablescli.py").register(groups, {"find_java": find_java, "find_jar": find_jar, "CliError": CliError})   # tables list|check|preview|lineage|migrate (2.9.11.e)
     vw = group("view", "A rendered entity view in the terminal, as the caller's token sees it (masks apply)")
     for name, what in (("get", "the strip and every panel as text tables (--json: the raw view)"), ("explain", "the About answer: what you are looking at, glossary, data source, why this layout and its match trace")):
         p = add(vw, name, cmd_view, f"view {name}: {what}", [srv], f"examples:\n  drishti.py view {name} trade/BBG-60000001\n  drishti.py view {name} trade/BBG-60000001 --date 2026-10-02")
