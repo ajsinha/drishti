@@ -53,7 +53,7 @@ def test_the_tutorials_card_counts_the_tutorials_it_finds(tmp_path):
         (tmp_path / "tutorials" / f"{n:02d}-x.md").write_text("# x")
     (tmp_path / "tutorials" / "README.md").write_text("# index")
     assert tutorial_count_word(tmp_path) == "Three"
-    assert tutorial_count_word(CONSOLE.parent / "docs") == "Thirty-seven"       # 1 to 34, 36 to 38 (35 comes with 2.9.11.c's Flight)
+    assert tutorial_count_word(CONSOLE.parent / "docs") == "Thirty-eight"       # 1 to 38
 
 
 @pytest.mark.skipif(not shutil.which("node"), reason="needs node")
