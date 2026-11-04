@@ -4488,7 +4488,7 @@ Options: `--docs` (the light drill, below), `--full` (the full drill even when o
 no merge, and it may run on any branch), `--keep-going` (run every job to its end after one has failed, to see every failure at
 once; by default the first failure stops the rest). `DRILL_MVN_ARGS="..."` adds Maven arguments to every Maven run (for example
 `-Ddrishti.test.forks=1` to run the test classes serially). `DRILL_BROWSER_WORKERS` and `DRILL_OTHER_WORKERS` set the console
-lanes' workers, `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
+lanes' workers (the browser lane's default comes from the memory available), `DRILL_BROWSER_RERUNS` the browser-lane files re-run at a time (default 1), `DRILL_LANE_LIMIT` a console lane's
 time limit in seconds (default three hours), `DRILL_GATE_THREADS` the gate build's Maven threads (default `1C`, one per CPU). The
 script prints
 `drill: mode = full` or `drill: mode = docs`, the machine's CPUs and memory with the workers it chose, each job's time, then a
@@ -4532,15 +4532,22 @@ failure that no re-run can change the drill stops the rest, unless `--keep-going
   browser (Playwright, Chromium) or starts a live stack on the scratch ports (`scratch_ports.worker_port`, or a helper module that
   reads `PYTEST_XDIST_WORKER`, at any import depth); the **other lane** holds the rest, which run in-process against the fake
   backend. Two pytest sessions number their workers alike (`gw0`, `gw1`, ...), so every file that adds the worker's port offset runs
-  in the one browser session and the two lanes never share a port. The browser lane gets few workers (one per six CPUs, at most
-  four) at normal priority, because a page under a busy CPU misses its ticks; the other lane gets more (one per three CPUs, at most
-  eight) at lower priority (`nice 5`); each worker is budgeted memory (about 3 GB for a browser worker, 1 GB for another) and the
-  counts come down on a smaller machine. Each lane gives its files to pytest-xdist longest first (`--dist loadfile
-  --no-loadscope-reorder`: a worker takes a whole file, so a browser file keeps its server and browser fixtures), the order taken
-  from the seconds each file took in the last runs (`<data dir>/drill/durations.json`, written by the pytest plugin
-  `tools/drillkit/drill_timings.py` at the end of every run, passed or failed); a file never measured counts as two minutes in the
-  browser lane and fifteen seconds in the other, and the two slowest browser files start first from the first run on. Every live
-  server and console in the tests starts on ports offset by the worker, in the worker's own scratch directory. A lane that runs three
+  in the one browser session and the two lanes never share a port. The **browser lane** gets as many workers as the memory available
+  holds (`drill_plan.py workers`: the memory available less the Java verify's 20 GB, 1 GB per other-lane worker and 4 GB to spare,
+  divided by 2.5 GB per browser worker; at most the CPU threads less two and at most 12, the scratch ports' limit) at normal priority,
+  and its work is handed out **by test** (`--dist loadgroup --no-loadscope-reorder`): the tests of a file that keeps a server or state
+  between them are one group that one worker runs in order, and a small independent test marked `spread` is a unit of its own that any
+  worker takes; the groups go first, longest first, the spread tests fill the workers at the end
+  ([TEST_HARNESS.md](../architecture/TEST_HARNESS.md)). Each browser worker starts one Chromium, one stand-in console and, when a test
+  needs it, one real server, and reuses them for every test it runs. The **other lane** gets one worker per three CPUs, at most eight,
+  at lower priority (`nice 5`), a whole file per worker (`--dist loadfile`). Each lane's order comes from the seconds each file took in
+  the last runs (`<data dir>/drill/durations.json`, written by the pytest plugin `tools/drillkit/drill_timings.py` at the end of every
+  run, passed or failed); a file never measured counts as two minutes in the browser lane and fifteen seconds in the other. Every live
+  server and console in the tests starts on ports in the worker's own block (`scratch_ports.worker_port`), in the worker's own scratch
+  directory. While the browser lane runs, its processes and memory are sampled every five seconds (`monitor-browser.csv`; the peaks
+  are printed when the lane ends: `tools/drillkit/drill_monitor.py`), and afterwards every browser file whose tests took more than 300 s
+  together is flagged in `budget-browser.txt` and in the drill's summary (`drill_plan.py budget`; a file listed in
+  `tools/drill-budgets.txt` is reported with its reason; a spread file has no file budget). A lane that runs three
   hours is stopped and fails the drill (`DRILL_LANE_LIMIT`, seconds).
 - **Re-runs.** When a lane fails, `drill_plan.py rerun` reads the failed tests from the lane's own `FAILED`/`ERROR` summary
   (`pytest.ini` turns the pytest cache off) and runs each once more, file by file, without xdist: one file at a time in the browser
@@ -4555,7 +4562,7 @@ failure that no re-run can change the drill stops the rest, unless `--keep-going
   `test_sutragen`, `test_ingest_jsonl`, `test_convert`, `test_drishti_cli`, `test_pack_bundle`, `test_no_hidden_names`,
   `test_packmake`, `test_pack_authoring`, `test_cli_extras`, `test_pack_deploy`, `test_deploy_aws`, the `test_cli_*` suites,
   `test_pack_form`, `test_schemapack`, `test_contracts`, `test_api_docs`, `tools/testdata/test_testdata.py`, `test_sizing_planner`,
-  `test_capacitycli`), `tools/testdata/make_testdata.py --check` (the committed test data is what its generator writes),
+  `test_capacitycli`, `tools/drillkit/test_drill_plan.py`), `tools/testdata/make_testdata.py --check` (the committed test data is what its generator writes),
   `tools/api_docs.py check-java` (every public Java type and member of the Javadoc the gate built has a comment) and, if `uv` is
   installed, the lake, real-data, compute-SDK and AWS tool tests with their libraries supplied by `uv run --with`, each under a
   10-minute `timeout`. (Tools that start worker processes after pyarrow or deltalake have started threads must spawn them, never

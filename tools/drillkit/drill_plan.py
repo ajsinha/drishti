@@ -274,8 +274,14 @@ def failed_ids(reports: list[Path]) -> list[str]:
         for line in lines:
             m = FAILED_LINE.match(line)
             if m:
-                seen.setdefault(m.group(1), None)
+                seen.setdefault(plain_id(m.group(1)), None)
     return list(seen)
+
+
+def plain_id(test_id: str) -> str:
+    """A test id without the group pytest-xdist appends under --dist loadgroup (``...::test_x[a]@test_file.py``): the id pytest takes."""
+    at = test_id.rfind("@")
+    return test_id[:at] if at > test_id.rfind("]") and at > test_id.rfind("::") else test_id
 
 
 def collection_errors(reports: list[Path]) -> list[str]:

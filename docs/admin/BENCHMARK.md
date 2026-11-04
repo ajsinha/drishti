@@ -46,6 +46,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 15. [Raw results](#15-raw-results)
 16. [The pivot engine at scale](#16-the-pivot-engine-at-scale)
 17. [Many VaR scopes at once (BLAS)](#17-many-var-scopes-at-once-blas)
+18. [The browser test lane](#18-the-browser-test-lane)
 
 ## 1. What is measured, and why
 
@@ -1620,3 +1621,10 @@ The `dgemm` thresholds were **tuned on this one machine** and are settings (`dri
 Measured and **not kept** (slower than the Java loops, so they stay on Java): the FRTB bucket sum as `dgemv` (1,000 factors 1.9 ms loop
 against 8.2 ms; 3,000 factors 20.6 ms against 48.0 ms) and exposure's means and set additions (200 dates x 10,000 paths: means 1.2 ms
 loop against 1.3 ms; ten sets added 6.5 ms loop against 48.7 ms with `daxpy`, the native call copying its arrays).
+
+## 18. The browser test lane
+
+The console's browser tests as the release drill runs them (the design, its rules and how each number is taken:
+[TEST_HARNESS.md](../architecture/TEST_HARNESS.md)). Machine: section 3's (Ryzen AI 9 HX 370, 12 cores / 24 threads, 61 GB).
+
+BROWSER-LANE-RESULTS

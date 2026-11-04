@@ -59,6 +59,16 @@ class Budgets(unittest.TestCase):
             self.assertTrue((ROOT / name).exists(), name)
 
 
+class FailedIds(unittest.TestCase):
+    def test_the_loadgroup_suffix_is_dropped_so_the_rerun_finds_the_test(self):
+        with tempfile.TemporaryDirectory() as d:
+            f = Path(d) / "out.txt"
+            f.write_text("FAILED drishti-console/tests/test_a_browser.py::test_x[1@2]@test_a_browser.py - AssertionError\n"
+                         "ERROR drishti-console/tests/test_b_browser.py::test_y - boom\n", encoding="utf-8")
+            self.assertEqual(P.failed_ids([f]), ["drishti-console/tests/test_a_browser.py::test_x[1@2]",
+                                                 "drishti-console/tests/test_b_browser.py::test_y"])
+
+
 class LaneEstimate(unittest.TestCase):
     def test_spread_work_fills_the_workers_after_the_groups(self):
         files = [("g1", 100.0), ("g2", 50.0), ("s", 90.0)]
