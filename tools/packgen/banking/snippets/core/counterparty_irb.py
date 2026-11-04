@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 # title: Counterparty capital: Basel IRB risk weight from PD
-# description: The counterparty's exposure at default from its netting sets' SA-CCR results, its one-year PD from KYC (floored at 0.03%), LGD 45% (foundation IRB, senior unsecured) and an effective maturity of 2.5 years: the Basel IRB corporate formula for capital (asset correlation, maturity adjustment, 99.9% conditional PD), risk-weighted assets, expected loss, and how capital moves with PD. The corporate curve for every counterparty, a simplification (banks and sovereigns have their own treatment).
+# description: The counterparty's exposure at default computed by the SA-CCR engine (the sum over its netting sets), its one-year PD from KYC (floored at 0.03%), LGD 45% (foundation IRB, senior unsecured) and an effective maturity of 2.5 years: the Basel IRB corporate formula for capital (asset correlation, maturity adjustment, 99.9% conditional PD), risk-weighted assets, expected loss, and how capital moves with PD. The corporate curve for every counterparty, a simplification (banks and sovereigns have their own treatment).
 # kinds: counterparty
 # example: CPTY CP-HALCYON
 
@@ -25,11 +25,8 @@ doc = view.doc
 PD = max((doc.get("KYC") or {}).get("PD_1Y", 0.0), 0.0003)
 LGD, M = 0.45, 2.5
 mine = [n["ID"] for n in doc.get("NETTING_SETS") or []]
-ead = 0.0
-for ns_id in mine:                                                    # each netting set names its SA-CCR result
-    ns = await drishti.get_async("netting-set", ns_id)
-    if ns.get("SACCR"):
-        ead += (await drishti.get_async("sa-ccr", ns["SACCR"]))["EAD"]
+saccr = await drishti.get_async("saccr-result", "CPTY:" + view.id)    # computed by the server's SA-CCR engine: the sum over its sets
+ead = saccr.get("EAD", 0.0)
 
 
 def irb(pd_):

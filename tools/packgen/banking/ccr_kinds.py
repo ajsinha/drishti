@@ -39,6 +39,12 @@ KINDS = {
     # ids are the netting set's and the counterparty's own ids, so no pattern claims them (NS- and CP- name the stored kinds)
     "nset-mtm": ("NSMTM", "Netting-set MtM totals (derived from the trade valuations)", None, "NETTING_SET_ID"),
     "cpty-mtm": ("CPMTM", "Counterparty MtM totals (derived from the trade valuations)", None, "COUNTERPARTY"),
+    # the SA-CCR engine's input (docs/contracts/SACCR.md section 3.3): one classification row per trade and risk driver, written by
+    # tools/packgen/ccr/make_saccr_data.py; its id <TRADE_ID>~<DRIVER> is left unclaimed (trade ids belong to the trade kinds). No kind
+    # stores an SA-CCR figure: the server's Java engine computes EAD when asked (SACCR <scope> <GO>, docs/guides/SACCR_GUIDE.md)
+    "saccr-trade": ("SACT", "SA-CCR classification row (a derivative's asset class, hedging set and terms)", None, "SACCR_ROW_ID"),
+    # the computed kind: its id is a scope (NSET:NS-ALDERSHOT-NY, CPTY:CP-ALDERSHOT), answered by the server's SA-CCR engine as the viewer
+    "saccr-result": ("SACCR", "SA-CCR exposure at default of a scope (computed)", None, None),
 }
 # the engine's inputs (2.9.7, E0: the current MtM and the membership come from trade-valuation, not the netting set's stored copies)
 _INPUTS = ["simulation-run", "exposure-path", "netting-set", "csa", "collateral-balance", "trade-valuation", "credit-limit"]
@@ -89,7 +95,8 @@ _ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 #: the connectors the kinds are served by
 SERVED_BY = {"simulation-run": "exposure-store", "exposure-path": "exposure-store", "exposure-result": "exposure-engine",
              "exposure-whatif": "exposure-whatif", "exposure-official-cpty": "exposure-results", "nset-mtm": "ccr-derived",
-             "cpty-mtm": "ccr-derived"}
+             "cpty-mtm": "ccr-derived", "saccr-trade": "exposure-store",
+             "saccr-result": "saccr-engine"}
 #: the published columns of risk-results/exposure-official-cpty that readers scan (ExposurePublisher.CPTY_COLUMNS less the JSON texts)
 OFFICIAL_COLUMNS = ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "COUNTERPARTY", "LEGAL_ENTITY", "RESULT_VERSION", "RUN_ID",
                     "PATHS", "CE", "EPE", "EEPE", "PEAK_EE", "PEAK_PFE_95", "PEAK_PFE_99", "EAD_IMM", "PEAK_PFE_DATE", "PFE_95_1Y",
@@ -113,12 +120,17 @@ CONNECTORS = {
         "settings": {"root": _ROOT, "domain": "risk-results", "layout": {"exposure-official-cpty": {"columns": OFFICIAL_COLUMNS}}},
     },
     "exposure-store": {
-        "plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": ["simulation-run", "exposure-path"],
+        "plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": ["simulation-run", "exposure-path", "saccr-trade"],
         "settings": {"root": _ROOT, "domain": "risk", "layout": {
             "simulation-run": {"columns": ["RUN_ID", "CALIBRATION", "PATHS", "STATUS", "BATCH_ID"]},
             "exposure-path": {"columns": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY", "DESK", "TT_BOOK", "LIMIT_LETTER", "ASSET_CLASS", "PRODUCT",
                                           "SOURCE_SYSTEM", "MATURITY_DATE", "NOTIONAL", "GRID_INDEX", "GRID_DATE", "RUN_ID", "BATCH_ID", "STATUS"],
-                              "vectors": ["MTM"]}}},
+                              "vectors": ["MTM"]},
+            "saccr-trade": {"columns": ["SACCR_ROW_ID", "TRADE_ID", "SOURCE_SYSTEM", "DRIVER", "NETTING_SET", "COUNTERPARTY", "LEGAL_ENTITY",
+                                        "ASSET_CLASS", "HEDGING_SET", "TRANSACTION_TYPE", "REFERENCE", "IS_INDEX", "CREDIT_QUALITY", "DIRECTION",
+                                        "NOTIONAL_USD", "QUANTITY", "UNDERLYING_PRICE", "START_DATE", "END_DATE", "MATURITY_DATE", "OPTION_TYPE",
+                                        "BOUGHT_SOLD", "EXERCISE_DATE", "STRIKE", "UNDERLYING_FORWARD", "SHIFT", "ATTACHMENT", "DETACHMENT",
+                                        "CLEARED", "SPECIFIC_WWR", "DERIVED_BY", "PRODUCT_TYPE", "BATCH_ID"]}}},
     },
     "exposure-engine": {
         "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_EXPOSURE_ENABLED:true}",
@@ -160,6 +172,18 @@ CONNECTORS = {
         "limits": {"timeout": "60s", "wait": "250ms", "max-inflight-per-user": 2},
     },
 }
+CONNECTORS["saccr-engine"] = {
+    "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_SACCR_ENABLED:true}",
+    "description": "SA-CCR exposure at default (CRE52) of a netting set, counterparty, legal entity or the bank, computed when asked by the "
+                   "server's SA-CCR engine from the classification rows, as the viewer: SACCR <scope> <GO> (docs/guides/SACCR_GUIDE.md)",
+    "kinds": {"saccr-result": {"compute": "saccr-result", "params": {},
+                               "result": {"required": ["SCOPE", "STATUS", "EAD"], "types": {"EAD": "number", "RC": "number", "PFE": "number"}}}},
+    "engine": {"type": "java", "class": "com.ash.drishti.server.saccr.SaccrResultEngine", "version": "1.0"},
+    "triggers": [{"on": "data-version", "kinds": ["saccr-trade", "netting-set", "csa", "collateral-balance", "trade-valuation"], "affects": "all"}],
+    "coalesce": {"quiet": "1s", "max-wait": "10s"},
+    "cache": {"results": 1000, "ttl": "1h"},
+    "limits": {"timeout": "60s", "wait": "5s", "max-inflight-per-user": 4},
+}
 #: link fields the kinds carry (field -> (kind, label)); NETTING_SET, COUNTERPARTY and LEGAL_ENTITY link through the packs' own fields
 FIELDS = {"RUN_ID": ("simulation-run", "Simulation run"),
           # a trade page's Risk links (risk-links@1): set on the view by the exposure engine when the run has the trade
@@ -169,9 +193,10 @@ FORM_COLUMNS = {"simulation-run": ["CALIBRATION", "PATHS", "STATUS"],
                 "exposure-path": ["TRADE_ID", "NETTING_SET", "COUNTERPARTY", "GRID_DATE", "RUN_ID"],
                 "exposure-official-cpty": ["NODE_ID", "HIERARCHY", "COUNTERPARTY", "NODE_NAME", "RESULT_VERSION"],
                 "nset-mtm": ["COUNTERPARTY", "NET_MTM", "TRADE_COUNT", "GROSS_POSITIVE_MTM", "PAST_MATURITY_COUNT"],
-                "cpty-mtm": ["NET_MTM", "TRADE_COUNT", "NETTING_SET_COUNT", "CE_UNCOLLATERALISED"]}
-COMPUTED = ("exposure-result", "exposure-whatif")
+                "cpty-mtm": ["NET_MTM", "TRADE_COUNT", "NETTING_SET_COUNT", "CE_UNCOLLATERALISED"],
+                "saccr-trade": ["TRADE_ID", "NETTING_SET", "ASSET_CLASS", "HEDGING_SET", "TRANSACTION_TYPE", "DIRECTION"]}
+COMPUTED = ("exposure-result", "exposure-whatif", "saccr-result")
 EXAMPLES = [("EXP NSET:NS-ALDERSHOT-FRA", "Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths"),
             ("EXP CPTY:CP-ALDERSHOT", "A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)")]
-#: the kinds whose data this generator does not write (tools/packgen/ccr/make_ccr_data.py does): no samples from make_data.py
-INPUT_KINDS = ("simulation-run", "exposure-path")
+#: the kinds whose data this generator does not write (tools/packgen/ccr/make_ccr_data.py and make_saccr_data.py do): no samples from make_data.py
+INPUT_KINDS = ("simulation-run", "exposure-path", "saccr-trade")

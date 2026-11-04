@@ -40,8 +40,8 @@ router = APIRouter(include_in_schema=False)
 
 WORD = "PLAY"
 #: the metric after PLAY: each metric's playground adds its word here (VAR_PLAYGROUND.md section 13); FRTB: routes/frtb_routes.py; SIMM:
-#: routes/simm_routes.py
-METRICS = ("VAR", "FRTB", "SIMM")
+#: routes/simm_routes.py; SACCR: routes/saccr_routes.py
+METRICS = ("VAR", "FRTB", "SIMM", "SACCR")
 #: the link's lens words and the engine's names for them
 LENS = {"h": "horizon", "m": "method", "q": "confidence", "esq": "esConfidence", "set": "set"}
 
@@ -62,6 +62,9 @@ def play_command(words: list[str], user: str) -> str | None:
     if words[1].upper() == "SIMM":                            # PLAY SIMM <netting set>, PLAY SIMM RUN <id>: the SIMM Playground
         from routes.simm_routes import play_simm_command
         return play_simm_command(rest)
+    if words[1].upper() == "SACCR":                           # PLAY SACCR <netting set>: the SA-CCR Playground
+        from routes.saccr_routes import play_saccr_command
+        return play_saccr_command(rest)
     if not rest:
         return "/play"
     where = var_routes.var_command(["VAR"] + rest, user)

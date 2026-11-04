@@ -18,7 +18,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 description: credit-store read from iceberg (the former application-iceberg.yaml profile)
 settings:
   root: ${DRISHTI_ICEBERG_ROOT:${drishti.data.dir:./data}/iceberg}

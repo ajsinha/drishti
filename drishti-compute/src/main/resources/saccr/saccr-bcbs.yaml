@@ -1,0 +1,49 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# The SA-CCR parameters of the Basel Committee's text (docs/guides/SACCR_GUIDE.md section 4; docs/architecture/COUNTERPARTY_ENGINES.md
+# section 11.1). One file per regulation: a jurisdiction's variant (OSFI CAR chapter 4 next, decided 2026-11-02) is its own file with its
+# own regulation name, named by drishti.ccr.saccr.parameters-file. Every value names its paragraph of the consolidated Basel Framework,
+# chapter CRE52 (in force from 2023-01-01). The engine reads every number by its key (alpha, IR.sf, CREDIT.single.sf.BBB, ...), refuses
+# a file with a missing or out-of-range value (DRS-5413, every problem listed) and names the file's version and SHA-256 in every answer;
+# the playground's Config tab holds these cells and every formula points at them.
+regulation: BCBS
+source: Basel Framework, CRE52 (in force from 2023-01-01)
+version: "1.0"
+alpha:                     { value: 1.4,  ref: CRE52.1 }
+cap-at-unmargined:         { value: true, ref: CRE52.1 }
+multiplier-floor:          { value: 0.05, ref: CRE52.23 }
+supervisory-duration-rate: { value: 0.05, ref: CRE52.34 }
+ir-buckets:                { lower-years: 1, upper-years: 5, ref: CRE52.56 }
+ir-bucket-weights:         { b1b2: 1.4, b2b3: 1.4, b1b3: 0.6, ref: CRE52.57 }
+basis-factor:              { value: 0.5, ref: CRE52.28 }
+volatility-factor:         { value: 5,   ref: CRE52.29 }
+cdo-delta:                 { numerator: 15, slope: 14, ref: CRE52.40 }
+time:                      { mf-days-per-year: 250, sd-days-per-year: 365, min-maturity-days: 10, ref: CRE52.31 }
+mpor-floors-days:          { bilateral: 10, cleared: 5, large-or-illiquid: 20, large-netting-set-trades: 5000, ref: CRE52.50 }
+dispute-doubling:          { disputes-over: 2, factor: 2, ref: CRE52.51 }
+margined-mf-scale:         { value: 1.5, ref: CRE52.52 }
+supervisory-table:         # CRE52.72: the supervisory factor (SF), the correlation (rho) and the supervisory option volatility (sigma)
+  ref: CRE52.72
+  IR:        { sf: 0.005, sigma: 0.50 }
+  FX:        { sf: 0.04,  sigma: 0.15 }
+  CREDIT:
+    single:  { rho: 0.5, sigma: 1.00, sf: { AAA: 0.0038, AA: 0.0038, A: 0.0042, BBB: 0.0054, BB: 0.0106, B: 0.016, CCC: 0.06 } }
+    index:   { rho: 0.8, sigma: 0.80, sf: { IG: 0.0038, SG: 0.0106 } }
+  EQUITY:
+    single:  { sf: 0.32, rho: 0.5, sigma: 1.20 }
+    index:   { sf: 0.20, rho: 0.8, sigma: 0.75 }
+  COMMODITY:
+    ELECTRICITY: { sf: 0.40, rho: 0.4, sigma: 1.50 }
+    other:       { sf: 0.18, rho: 0.4, sigma: 0.70 }     # oil, gas, metals, agricultural, other

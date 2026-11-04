@@ -47,7 +47,7 @@ class EngineCatalogueTest {
         assertThat(c.neededBy("exposure")).containsExactly("fva", "ccr-cube");
         assertThat(c.usedBy("sa-ccr")).containsExactly("ccr-cube");
         assertThat(c.get("memory-lake").orElseThrow().liveOn()).isFalse();
-        assertThat(c.all().stream().filter(e -> !e.installed()).map(EngineCatalogue.Entry::id)).containsExactly("sa-ccr", "fva", "ccr-cube");
+        assertThat(c.all().stream().filter(e -> !e.installed()).map(EngineCatalogue.Entry::id)).containsExactly("fva", "ccr-cube");
         assertThat(c.forPath("/api/v1/frtb/sa").orElseThrow().id()).isEqualTo("frtb-sa");
         assertThat(c.forPath("/api/v1/sensitivities").orElseThrow().id()).isEqualTo("sensitivities");
         assertThat(c.forPath("/api/v1/variance")).isEmpty();

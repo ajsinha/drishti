@@ -19,7 +19,7 @@
 
 Every command (mnemonic) of every pack has a data contract: a YAML file beside its pack (`config/packs/<pack>/contracts/<kind>.contract.yaml`, checked against `tools/contracts.schema.json`) and a section of its pack's page here. The shared rules are in [the contracts README](../README.md); the computed measures that replace the retiring kinds have their own contracts there.
 
-109 contracts, 407 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
+110 contracts, 399 points still to review. Check them with `drishti.py contract check`; draft a new one with `drishti.py contract bootstrap KIND --write`.
 
 | Command | Kind | Pack | Class | Status | Replaced by | To review |
 |---|---|---|---|---|---|---|
@@ -42,7 +42,6 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `NSET` | `netting-set` | [counterparty-risk](counterparty-risk.md#nset-netting-set-netting-set) | fundamental | active |  | 9 |
 | `LIM` | `credit-limit` | [counterparty-risk](counterparty-risk.md#lim-credit-limit-credit-limit) | fundamental | active |  | 5 |
 | `CVA` | `cva` | [counterparty-risk](counterparty-risk.md#cva-cva--xva-cva) | fundamental | active |  | 6 |
-| `SACCR` | `sa-ccr` | [counterparty-risk](counterparty-risk.md#saccr-sa-ccr-exposure-sa-ccr) | fundamental | active |  | 8 |
 | `COLL` | `collateral-balance` | [counterparty-risk](counterparty-risk.md#coll-collateral-balance-collateral-balance) | fundamental | active |  | 5 |
 | `MC` | `margin-call` | [counterparty-risk](counterparty-risk.md#mc-margin-call-margin-call) | fundamental | active |  | 6 |
 | `SIMM` | `simm` | [counterparty-risk](counterparty-risk.md#simm-isda-simm-initial-margin-simm) | fundamental | active |  | 4 |
@@ -53,6 +52,8 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `XOFC` | `exposure-official-cpty` | [counterparty-risk](counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | computed | active |  | 0 |
 | `NSMTM` | `nset-mtm` | [counterparty-risk](counterparty-risk.md#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) | computed | active |  | 0 |
 | `CPMTM` | `cpty-mtm` | [counterparty-risk](counterparty-risk.md#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm) | computed | active |  | 0 |
+| `SACT` | `saccr-trade` | [counterparty-risk](counterparty-risk.md#sact-sa-ccr-classification-row-a-derivatives-asset-class-hedging-set-and-terms-saccr-trade) | fundamental | active |  | 0 |
+| `SACCR` | `saccr-result` | [counterparty-risk](counterparty-risk.md#saccr-sa-ccr-exposure-at-default-of-a-scope-computed-saccr-result) | computed | active |  | 0 |
 | `FUND` | `fund` | [funds](funds.md#fund-fund-or-etf-fund) | fundamental | active |  | 0 |
 | `HELD` | `fund-holder` | [funds](funds.md#held-funds-holding-a-company-fund-holder) | fundamental | active |  | 0 |
 | `TRACK` | `index-funds` | [funds](funds.md#track-funds-tracking-an-index-index-funds) | fundamental | active |  | 0 |

@@ -77,7 +77,7 @@ EXAMPLES = {  # command, what it shows (ids from make_data.py's deterministic da
     "market-risk": [("STR STR-GFC2008-RATES", "Stress · 2008 crisis on the rates desk"),
                     ("PNL PNL-RATES-1", "P&L explain"), ("FRTB FRTB-RATES-1", "FRTB sensitivities and charges")],
     "counterparty-risk": [("AGR AGR-NORTHBRIDGE-ISDA", "ISDA master agreement · elections"), ("NSET NS-ALDERSHOT-NY", "Netting set · its trades, the exposure computed from the paths, CVA"), ("LIM LIM-SUMMIT", "Credit limit · utilisation by tenor"),
-                          ("CVA CVA-SUMMIT-NY", "CVA / XVA"), ("SACCR SACCR-SUMMIT-NY", "SA-CCR exposure at default")],
+                          ("CVA CVA-SUMMIT-NY", "CVA / XVA"), ("SACCR NSET:NS-SUMMIT-NY", "SA-CCR exposure at default · computed from the classification rows")],
 }
 TRADER_KINDS = ["trade", *layout.PACKS["market-data"]["kinds"]["market"], "counterparty", "counterparty-group", "issuer", "book", "desk",
                 "trader", "legal-entity", "calendar", "agreement", "csa", "ccp", "clearing-account", "desk-pnl"]

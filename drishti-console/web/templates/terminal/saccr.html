@@ -1,0 +1,85 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# SA-CCR (docs/guides/SACCR_GUIDE.md sections 7 and 8). mode "screen", SACCR <scope>: one page, three views of one server answer
+   (/api/v1/saccr/scope; the decided mock-ups docs/lenses/mockups/saccr/): A the EAD waterfall of a netting set with its hedging sets (the
+   default), B every netting set of the scope with the selected set's breakdown, C a counterparty's sets side by side. mode "play", PLAY
+   SACCR <netting set>: the playground on the VaR Playground's frame (the grid of the set's trades with the formula bar, the explanation,
+   Export to Excel). A shell: saccr.js fills it; the browser computes nothing. #}
+{% extends "base.html" %}
+{% block title %}{{ 'SA-CCR Playground' if mode == 'play' else 'SA-CCR' }} · {{ scope }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}{{ screen }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/frtb-sa.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/saccr.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="pg fr sc" data-saccr data-mode="{{ mode }}" data-scope="{{ scope }}" data-view="{{ view }}">
+  <div class="pg-head">
+    <h1 class="pg-title"><span class="pg-word mono">{{ 'PLAY SACCR' if mode == 'play' else 'SACCR' }}</span>
+      {{ 'SA-CCR Playground' if mode == 'play' else 'SA-CCR exposure at default' }}</h1>
+    <nav class="pg-path mono" aria-label="The scope">{{ scope }}</nav>
+    <span class="pg-meta" data-sc-meta aria-live="polite">loading…</span>
+    <a class="pg-help" href="/help/context/{{ 'play-saccr' if mode == 'play' else 'saccr' }}" title="Help: SA-CCR (the guide)" aria-label="Help: SA-CCR"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if mode == 'play' %}<a class="pg-link" href="/saccr?scope={{ scope|urlencode }}">SA-CCR page</a>{% else %}<a class="pg-link" data-sc-play href="/play/saccr?scope={{ scope|urlencode }}">Open in the playground</a>{% endif %}
+  </div>
+  <form class="pg-ask" method="get" action="{{ '/play/saccr' if mode == 'play' else '/saccr' }}">
+    <label>Scope <input class="pg-input mono" name="scope" value="{{ scope }}" placeholder="NSET:NS-ALDERSHOT-NY, CPTY:CP-ALDERSHOT, LE:LE-NY, BANK or EXAMPLE" autocomplete="off"></label>
+    {% if mode == 'screen' %}<input type="hidden" name="view" value="{{ view }}">{% endif %}
+    <button type="submit" class="pg-btn primary">Open</button>
+    <a class="pg-link" href="/api/saccr/template.xlsx" download title="The workbook of the hand-built cases: every figure a formula">Template workbook</a>
+  </form>
+  <p class="pg-notice" data-sc-notice role="status" hidden></p>
+  {% if mode == 'screen' %}
+  <div class="sc-tiles" data-sc-tiles aria-live="polite"></div>
+  <div class="fr-tabs" role="tablist" aria-label="Views of the same answer">
+    <button type="button" role="tab" class="fr-tab" data-sc-tab="A" aria-selected="{{ 'true' if view == 'A' else 'false' }}">A · EAD waterfall</button>
+    <button type="button" role="tab" class="fr-tab" data-sc-tab="B" aria-selected="{{ 'true' if view == 'B' else 'false' }}">B · Netting sets</button>
+    <button type="button" role="tab" class="fr-tab" data-sc-tab="C" aria-selected="{{ 'true' if view == 'C' else 'false' }}">C · Sets side by side</button>
+  </div>
+  <section class="sc-view" data-sc-view="A" {{ '' if view == 'A' else 'hidden' }}>
+    <div class="sc-water" data-sc-water aria-label="From RC to EAD"></div>
+    <div class="fr-body">
+      <section class="fr-main"><table class="fr-grid" data-sc-hs aria-label="Add-ons by asset class and hedging set"></table></section>
+      <aside class="pg-explain fr-drill" data-sc-formula aria-live="polite"></aside>
+    </div>
+  </section>
+  <section class="sc-view" data-sc-view="B" {{ '' if view == 'B' else 'hidden' }}>
+    <div class="pg-ctrls" role="toolbar"><span class="sc-filters" data-sc-filters></span></div>
+    <div class="fr-body">
+      <section class="fr-main"><table class="fr-grid" data-sc-sets aria-label="Every netting set of the scope: SA-CCR EAD"></table></section>
+      <aside class="pg-explain fr-drill" data-sc-detail aria-live="polite"><p class="muted">Select a netting set: its RC, add-ons, multiplier, PFE and EAD.</p></aside>
+    </div>
+  </section>
+  <section class="sc-view" data-sc-view="C" {{ '' if view == 'C' else 'hidden' }}>
+    <div class="sc-cols" data-sc-cols aria-label="The netting sets side by side"></div>
+  </section>
+  <details class="sc-prov"><summary>Provenance</summary><table class="fr-mini" data-sc-prov></table></details>
+  {% else %}
+  <div class="pg-ctrls" role="toolbar">
+    <label class="pg-chip">IR bucket offsets <select data-sc-sw="irBucketOffset" aria-label="IR offsets across maturity buckets"><option value="true">on</option><option value="false">off</option></select></label>
+    <label class="pg-chip">Cap at unmargined <select data-sc-sw="cap" aria-label="The cap of a margined set"><option value="true">on</option><option value="false">off</option></select></label>
+    <span class="pg-actions">
+      <button type="button" class="pg-btn primary" data-sc-export title="The workbook of live formulas: Main, Config, Data, Trades, Hedging sets, Explain, Provenance">Export to Excel</button>
+    </span>
+  </div>
+  <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-sc-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-sc-fx>Select a cell</code></div>
+  <div class="pg-body">
+    <section class="pg-gridcard"><div class="pg-scroll" tabindex="0"><table class="fr-grid fr-ws" data-sc-grid aria-label="Each trade's supervisory duration, delta, maturity factors and effective notionals"></table></div></section>
+    <aside class="pg-explain" data-sc-explain aria-live="polite"></aside>
+  </div>
+  {% endif %}
+</div>
+<script src="/static/js/saccr.js?v={{ ASSET_V }}"></script>
+{% endblock %}

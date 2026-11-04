@@ -6,11 +6,12 @@
 
 # SACCR: the standardised approach for counterparty credit risk, the data contract
 
-*Version 1.0 · 2026-10-25 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting sets, CSAs and
+*Version 1.2 · 2026-11-03 · Shared rules: [README.md](README.md) · Model contract: [VAR_GUIDE.md Part II](../guides/VAR_GUIDE.md#14-the-contract-at-a-glance) · Netting sets, CSAs and
 membership: [NSET.md](NSET.md) · Collateral: [COLL.md](COLL.md)*
 
-**Status:** proposed. PLANNED, not built. Every table, column, setting, kind, endpoint and code below is a proposal; names
-may change before the release, and each change will be recorded in [section 16](#16-open-questions-and-the-change-table).
+**Status:** BUILT (2.9.12): the engine, `saccr-trade`, the computed kind `saccr-result`, the API, the page and the playground
+([SACCR_GUIDE.md](../guides/SACCR_GUIDE.md)). The official captures of section 9.5 are still PLANNED. Where the build differs from the
+first proposal the section says so and [section 16](#16-open-questions-and-the-change-table) records it.
 
 This is the contract of Drishti's **SA-CCR engine**: the exposure at default (EAD) of derivative netting sets under the Basel standardised
 approach for counterparty credit risk (BCBS 279, consolidated as CRE52), computed when asked for any scope (a netting set, a counterparty,
@@ -42,18 +43,19 @@ threshold plus the minimum transfer amount less the independent collateral) plus
 add-ons per asset class and hedging set, scaled by a multiplier that credits over-collateralisation. RWA follows from the counterparty's
 risk weight.
 
-**Commands.** `SACCR NSET NS-ALDERSHOT-NY <GO>`, `SACCR CPTY CP-ALDERSHOT <GO>`, `SACCR LE LE-NY <GO>`; the API `/api/v1/saccr`.
+**Commands.** `SACCR NSET:NS-ALDERSHOT-NY <GO>`, `SACCR CPTY CP-ALDERSHOT <GO>`, `SACCR LE:LE-NY <GO>`, `PLAY SACCR <netting set>`;
+the API `/api/v1/saccr`.
 
 **Retired in the same release:** the stored kind `sa-ccr` (`SACCR-*`, 76 records with `REPLACEMENT_COST`, `ADD_ON`, `MULTIPLIER`, `EAD`,
 `RWA`, `ADD_ONS[]`, `HEDGING_SETS[]`). Nothing of it is kept: `ALPHA` becomes a setting.
 
 | Part | Status |
 |---|---|
-| `saccr-trade`: one row per trade (or per risk driver of a complex trade) with its SA-CCR classification and terms | PLANNED |
-| Supervisory duration, maturity factor, supervisory delta, adjusted and effective notional (computed by Drishti) | PLANNED |
-| Hedging-set and asset-class aggregation, multiplier, RC margined and unmargined, EAD with the unmargined cap, RWA hook | PLANNED |
-| Incremental EAD before dealing; standalone EAD per trade | PLANNED |
-| Computed kind `saccr-result`, reactive connector `saccr-engine` (Python formulas over Java's additive aggregates) | PLANNED |
+| `saccr-trade`: one row per trade (or per risk driver of a complex trade) with its SA-CCR classification and terms | BUILT |
+| Supervisory duration, maturity factor, supervisory delta, adjusted and effective notional (computed by Drishti) | BUILT |
+| Hedging-set and asset-class aggregation, multiplier, RC margined and unmargined, EAD with the unmargined cap, RWA hook | BUILT |
+| Incremental EAD before dealing; standalone EAD per trade | BUILT |
+| Computed kind `saccr-result`, reactive connector `saccr-engine` (the server's Java engine: the product owner's rule, every risk number on the server) | BUILT |
 
 ## 2. The measure in one page
 
@@ -303,9 +305,8 @@ EAD; the API never presents them as a decomposition.
 
 | Work | Where |
 |---|---|
-| Per trade: SD, δ, MF (both margined and unmargined), D; per set: the additive aggregates of §7.1 | Java at date load (`com.ash.drishti.compute.ccr.SaccrAggregates`, planned) |
-| The formulas of §6.2–6.7 over the aggregates (bank-wide: about 1,000,000 aggregate rows), what-if, standalone EAD | Python engine `drishti_ccr.saccr:SaccrEngine` on the `risk` pool, Arrow in and out, split by netting set across workers (sums reduce) |
-| Reference implementation for tests | `tools/packgen/ccr/ccrmath.py` (planned), parity-tested against both |
+| Per trade: SD, δ, MF (both), D; per set: the sub-key sums, the add-ons, RC, the multiplier, PFE, EAD and the cap; what-if, standalone EAD | Java on the server (as built): `com.ash.drishti.compute.saccr.Saccr` per netting set, `com.ash.drishti.server.saccr.SaccrService` over a date's inputs (read once per date and kept `cache-minutes`), answers cached per scope |
+| Reference implementation for tests | `tools/packgen/ccr/saccrmath.py` (tests only), equal to the engine to the cent on every demo netting set |
 
 ## 7. What Drishti builds
 
@@ -360,7 +361,7 @@ classes → hedging sets → sub-keys → trades (drill: each level shows its ad
 | `BY_NETTING_SET` | record list | | above a set: `NETTING_SET`, `RC`, `PFE`, `MULTIPLIER`, `EAD`, `MARGINED` |
 | `PROVENANCE` | record | | NSET's, plus `SUPERVISORY_TABLE` (the regulation and version), `DERIVED_ROWS` |
 
-### 9.2 The API (`/api/v1/saccr`, planned)
+### 9.2 The API (`/api/v1/saccr`, built; the full list in [SACCR_GUIDE.md section 9](../guides/SACCR_GUIDE.md#9-api-command-line-and-settings))
 
 | Method and path | Parameters | Answer |
 |---|---|---|
@@ -374,7 +375,11 @@ classes → hedging sets → sub-keys → trades (drill: each level shows its ad
 
 `GET /scope/contributions?by=trade&format=csv`: `trade_id,netting_set,asset_class,hedging_set,sub_key,direction,notional_usd,sd,delta,mf,d,effective_notional`.
 
-### 9.4 The reactive connector and the engine (proposed)
+### 9.4 The reactive connector and the engine (as first proposed; built in Java instead)
+
+As built, the connector `saccr-engine` is a reactive connector over the server's Java engine
+(`engine.type: java`, `class: com.ash.drishti.server.saccr.SaccrResultEngine`) with the triggers below; the Python engine sketched here was
+not built (every risk number is computed on the server). The proposal is kept for the record of the decision.
 
 ```yaml
 # config/connectors/saccr-engine.yaml                           (planned)
@@ -564,6 +569,7 @@ AddOn_credit = √((0.5 × 1.08 − 0.8 × 1.14)² + (1 − 0.25) × 1.08² + (1
 |---|---|---|
 | 1.0 | 2026-10-25 | First version, PLANNED; product owner's decisions of 2026-10-25 applied (load signal reloads the engine, inputs kept 7 years, published official results) |
 | 1.1 | 2026-11-02 | Product owner's decisions of 2026-11-02 applied ([COUNTERPARTY_ENGINES.md section 14](../architecture/COUNTERPARTY_ENGINES.md#14-decisions)): C and NICA at supervisory haircuts; MPOR as written with `MPOR_DAYS` excluding the remargining period; `unclassified` (exclude by default, a conservative stand-in as a setting); OSFI CAR next; `SPECIFIC_WWR` trades in their own set |
+| 1.2 | 2026-11-03 | Built (2.9.12): the engine in Java on the server (not Python), `saccr-trade` in exposure-store (the risk domain), the computed kind `saccr-result` (mnemonic `SACCR`, connector `saccr-engine`), the stored `sa-ccr` retired; the demo's rows derived by rules (`tools/packgen/ccr/make_saccr_data.py`); `DRS-5410` to `DRS-5413` |
 
 ---
 

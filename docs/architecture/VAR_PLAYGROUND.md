@@ -315,7 +315,8 @@ build.
 ## 10. Excel, LibreOffice and Google Sheets
 
 **One file for all three**, no switch. Formulas use only functions the three share: `SUM`, `SUMPRODUCT`, `SMALL`, `LARGE`, `AVERAGE`,
-`COUNT`, `INDEX`, `MATCH`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `IF`, `ABS`, `MAX`, `MIN`, `AND`, `OR`, `ISNUMBER` (the list is
+`COUNT`, `INDEX`, `MATCH`, `ROUNDDOWN`, `ROUNDUP`, `SQRT`, `IF`, `ABS`, `MAX`, `MIN`, `AND`, `OR`, `ISNUMBER`, `EXP`, `LN`,
+`SUMIF`, `SUMIFS`, `COUNTIFS`, `NORMSDIST` (the list is
 `XlsxFormulas.ALLOWED`; a formula naming anything else is refused when it is written). **Never** Excel-365-only dynamic arrays
 (`FILTER`, `SORT`, `SEQUENCE`, `LET`, `LAMBDA`, `XLOOKUP`), structured table references, volatile `INDIRECT` or `OFFSET`, or macros.
 Cached values are written with every formula, so a viewer that does not recalculate (a browser preview, a mail client) shows the right

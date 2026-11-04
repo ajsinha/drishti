@@ -44,16 +44,22 @@ fields:
     GRID_INDEX: "Index into the run's GRID_DATES"
     NETTING_SET: "The trade's netting set (denormalised; the netting set's membership wins)"
   cva: {COMPONENTS: CVA components, SENSITIVITIES: CVA sensitivities, CREDIT_CURVE: The counterparty's credit curve}
-  sa-ccr: {ADD_ONS: Add-ons by asset class, HEDGING_SETS: Hedging sets, ALPHA: The SA-CCR alpha (1.4)}
+  saccr-trade:
+    _: "One derivative's SA-CCR classification and terms (docs/contracts/SACCR.md section 3.3): the input the SA-CCR engine computes every supervisory figure and EAD from"
+    SACCR_ROW_ID: "<trade>~<driver>"
+    DRIVER: "0 the primary risk driver; 1, 2 … further drivers of a complex trade"
+    NETTING_SET: "The trade's netting set (denormalised; the membership wins)"
   collateral-balance: {POSITIONS: Collateral positions held and posted}
   margin-call: {EVENTS: The call's events, CURRENCY: The call's currency}
   simm: {RISK_CLASSES: Initial margin by risk class, COUNTERPARTY: The counterparty's id}
 ---
 ## What it is
 
-Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA, SA-CCR,
-collateral balances, margin calls and SIMM initial margin, and the **exposure engine's inputs**: an upstream simulation run
-(`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`). Exposure is never stored: `EXP
+Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA,
+collateral balances, margin calls and SIMM initial margin, the **exposure engine's inputs**: an upstream simulation run
+(`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`), and the **SA-CCR engine's input**: one
+classification row per derivative (`saccr-trade`); SA-CCR exposure at default is never stored either, `SACCR <scope>` computes it
+(docs/guides/SACCR_GUIDE.md). Exposure is never stored: `EXP
 NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXPOSURE_GUIDE.md Part II](../../../docs/guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)) nets the paths per
 netting set, applies each CSA's collateral path by path with the margin period of risk, and reads EE, ENE, EEE, PFE 95% and 99%, EPE
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's

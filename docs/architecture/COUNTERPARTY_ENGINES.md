@@ -15,8 +15,8 @@
 -->
 # Counterparty engines: SA-CCR, the Exposure playground, FVA and the CCR cube core
 
-Status: design, not built. The data contracts are written (`status: planned`); the engines, screens and playgrounds below are the
-design to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
+Status: SA-CCR is **built** (2.9.12, [section 15](#15-as-built-sa-ccr)); the Exposure playground, FVA and the CCR cube core below are the
+design still to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
 Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
 them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
@@ -45,6 +45,7 @@ results over counterparties, groups, desks and tenors.
 - [12. Mock-ups: the screens to build](#12-mock-ups-the-screens-to-build)
 - [13. The playgrounds' explanations](#13-the-playgrounds-explanations)
 - [14. Decisions](#14-decisions)
+- [15. As built: SA-CCR](#15-as-built-sa-ccr)
 
 ## 1. Scope and principles
 
@@ -233,8 +234,8 @@ never shown as a decomposition.
 | Work | Where |
 |---|---|
 | per trade: S, E, M, T, SD, δ, both MFs, both D; per set and (asset class, hedging set, sub-key): Σ D margined and unmargined | Java at date load (`com.ash.drishti.compute.ccr.SaccrAggregates`, planned): additive sums, 64 bytes an aggregate row |
-| RC, EN, add-ons, multiplier, PFE, EAD, the cap; what-if; standalone | Python `drishti_ccr.saccr:SaccrEngine` on the `risk` pool, Arrow in and out, split by netting set (sums reduce) |
-| the reference implementation for tests | `tools/packgen/ccr/ccrmath.py` (the exposure maths already there; SA-CCR added), parity-tested against both |
+| RC, EN, add-ons, multiplier, PFE, EAD, the cap; what-if; standalone | Java on the server (as built, the product owner's rule): `com.ash.drishti.compute.saccr.Saccr` and `com.ash.drishti.server.saccr.SaccrService` |
+| the reference implementation for tests | `tools/packgen/ccr/saccrmath.py`, equal to the engine to the cent on every demo netting set |
 
 ## 4. The Exposure playground: EE, EPE, EEPE and PFE for one netting set
 
@@ -802,7 +803,7 @@ Drafts here; at build they become files of the counterparty-risk pack's configur
 every answer's provenance. One file per regulation; a jurisdiction's variant is its own file. After BCBS the next file is OSFI CAR
 chapter 4 (`saccr-osfi.yaml`, as the FRTB order); the US final rule and EU CRR2 follow when a client asks (decision 4).
 
-### 11.1 SA-CCR (`config/packs/counterparty-risk/capital-parameters/saccr-bcbs.yaml`, draft, not loaded)
+### 11.1 SA-CCR (built: `drishti-compute/src/main/resources/saccr/saccr-bcbs.yaml`, loaded and checked at start; the draft below is its design)
 
 ```yaml
 regulation: BCBS
@@ -886,7 +887,7 @@ figures on the netting-set and counterparty pages (the term bars per date beside
 by default and light with `#light`, copied to `docs/lenses/mockups/<screen>/` with its build checklist.
 
 **Drawn and decided (product owner, 2026-11-03; the general rule: every option built, A the default, as views of one screen over one API):**
-SA-CCR ([A](../lenses/mockups/saccr/A.html) the EAD waterfall, the default; [B](../lenses/mockups/saccr/B.html) the netting-set list with
+SA-CCR (**built**, 2.9.12: [A](../lenses/mockups/saccr/A.html) the EAD waterfall, the default; [B](../lenses/mockups/saccr/B.html) the netting-set list with
 the selected set's breakdown; [C](../lenses/mockups/saccr/C.html) a counterparty's sets side by side) and FVA
 ([A](../lenses/mockups/fva/A.html) the FVA section of the netting-set page with term bars beside CVA's, the default;
 [B](../lenses/mockups/fva/B.html) the netting sets by FVA; [C](../lenses/mockups/fva/C.html) the counterparty page). The CCR cube's A, B
@@ -927,6 +928,24 @@ The product owner decided every point below on 2026-11-02, taking each recommend
 | 13 | FVA on the collateralised EE (after the CSA) or on the uncollateralised EE? | **Collateralised EE** (as CVA.md): collateral received can be reused to fund; a set with a CSA has little FVA, as in practice | 5.2 |
 | 14 | The demo's credit-limit buckets: three (0–1Y, 1–5Y, 5Y+, as the mock-ups) or the five of today's stored limits? | **Three** for the regenerated demo limits; the contract keeps any number of buckets | 6.3 |
 | 15 | FVA as a CCR cube measure (additive, beside EE and EAD) on landing A's measure chips? | **Yes**, with the counterparty's FVA in C's tiles beside incremental EAD | 6.2 |
+
+## 15. As built: SA-CCR
+
+Built in 2.9.12 as designed in sections 3, 8.1, 9 and 11.1, with these choices made at build:
+
+| Part | As built |
+|---|---|
+| Engine | Java on the server (not the Python engine of section 3.12's first draft): `com.ash.drishti.compute.saccr` (`Saccr`, `SaccrParams`, `SaccrInput`, `SaccrRows`, `SaccrExamples`); every figure per netting set, the scopes summing sets (`com.ash.drishti.server.saccr.SaccrService`) |
+| Parameters | `saccr/saccr-bcbs.yaml` in drishti-compute's jar (section 11.1's values, each with its CRE52 paragraph); another regulation's file by `drishti.ccr.saccr.parameters-file`; a refused file stops the engine with every problem listed (`DRS-5413`) |
+| Times | S, E, M, T in years ACT/365 from the business date; the 10-business-day floors as 10/250 of a year; MF on those years |
+| Collateral | C = the balance's `NET` (after the CSA's haircuts) plus NICA (`INDEPENDENT_AMOUNT`, `IM_HELD`) until COLL delivers `C_REG` and `NICA_REG` (read when present, decision 1); every answer says which |
+| Members | the trade valuations of a live status not past maturity (the exposure engine's rule); V over the classified members; a member without a row is *excluded* (configured non-derivative product groups and types) or *unclassified* |
+| Sets without derivatives | `no derivatives`: EAD 0 (their collateral belongs to their other trades); the demo has 38 such sets of 76 (securities financing only) |
+| Kinds | input `saccr-trade` (exposure-store, risk domain); computed `saccr-result` (mnemonic `SACCR`, reactive connector `saccr-engine`, `SaccrResultEngine`); the stored `sa-ccr` retired with its Sutra, contract, samples and snippet |
+| Screens | one page, views A (default), B and C over `GET /api/v1/saccr/scope` (section 12); `PLAY SACCR` on the VaR Playground's frame; `drishti.py saccr` and `play saccr` |
+| Playground | Main, Config, Data, Trades, Hedging sets, Explain, Provenance (section 8.1); `NORMSDIST` (not `NORM.S.DIST`: no `_xlfn.` prefix in the file), `LN`, `SUMIFS`, `COUNTIFS`; Data holds the times in years as the engine read them |
+| Tests | cases S1 to S7 and SACCR.md section 15 to the cent; every demo set against `saccrmath.py`; the workbook recalculated by LibreOffice; the BCBS 279 Annex 4 sets in the engine but skipped until their inputs are checked against the publication (section 9, case S8) |
+| Not built | official captures (`saccr-official`, SACCR.md section 9.5), alpha overrides and per-counterparty risk weights, OSFI's file |
 
 ---
 

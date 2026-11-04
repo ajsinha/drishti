@@ -20300,6 +20300,18 @@ datasets:
   - cob-2026-09-30.part-004.jsonl.gz
   - cob-2026-09-30.part-005.jsonl.gz
   bytes: 6019069
+- folder: counterparty-risk/saccr-trade
+  pack: counterparty-risk
+  kind: saccr-trade
+  connector: exposure-store
+  key: SACCR_ROW_ID
+  dated-by: BUSINESS_DATE
+  first-date: '2026-09-30'
+  last-date: '2026-09-30'
+  documents: 6527
+  files:
+  - cob-2026-09-30.jsonl.gz
+  bytes: 195767
 - folder: market-risk/position-sensitivity
   pack: market-risk
   kind: position-sensitivity

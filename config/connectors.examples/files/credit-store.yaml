@@ -18,7 +18,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 description: credit-store read from files (the former application-files.yaml profile)
 settings:
   root: ${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}

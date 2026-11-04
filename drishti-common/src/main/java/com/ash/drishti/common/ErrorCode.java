@@ -274,6 +274,14 @@ public enum ErrorCode {
      * {@code exposure-whatif} and its compute pool) is not running on this server, or did not answer in time.
      */
     EXPOSURE_METHOD_UNAVAILABLE("DRS-5446", 503),
+    /** SA-CCR: a bad scope or parameter, or a what-if candidate row the method refuses (the reason names the field). */
+    SACCR_BAD_REQUEST("DRS-5410", 400),
+    /** SA-CCR: asked with {@code strict=true}, a netting set of the scope has live derivatives without a classification row. */
+    SACCR_INCOMPLETE("DRS-5411", 409),
+    /** SA-CCR: a what-if or scope names a netting set the date does not have. */
+    SACCR_UNKNOWN_SET("DRS-5412", 400),
+    /** SA-CCR: the parameter file is refused (a value missing or out of range, every problem listed). */
+    SACCR_PARAMETERS("DRS-5413", 502),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */

@@ -142,7 +142,7 @@ class EngineRegistryTest {
         assertThat(r.state("var")).isEqualTo(EngineRegistry.State.RUNNING);
         assertThat(r.state("exposure")).isEqualTo(EngineRegistry.State.OFF);
         assertThat(r.state("memory-lake")).as("off as shipped").isEqualTo(EngineRegistry.State.OFF);
-        assertThat(r.state("sa-ccr")).isEqualTo(EngineRegistry.State.NOT_INSTALLED);
+        assertThat(r.state("fva")).isEqualTo(EngineRegistry.State.NOT_INSTALLED);
         assertThat(f[1].starts).isZero();
         assertThat(ComputeEngine.threadsNamed(f[1].threadPrefixes())).isZero();
         assertThat(f[1].memoryBytes()).isZero();

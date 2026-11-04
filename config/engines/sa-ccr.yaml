@@ -12,11 +12,27 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-# config/engines/sa-ccr.yaml: SA-CCR exposure at default (not installed in this release). Read at start, imported by application.yaml after the jar's copy of this
+# config/engines/sa-ccr.yaml: the SA-CCR engine (docs/guides/SACCR_GUIDE.md). Read at start, imported by application.yaml after the jar's copy of this
 # file, so a key here wins over the shipped one and application.local.yaml and the environment win over both
 # (docs/architecture/COMPUTE_ENGINES.md section 3). Admin -> Engines writes the switch and changed: only; every other key is edited here.
 drishti:
   engines:
     sa-ccr:
-      enabled: ${DRISHTI_SACCR_ENABLED:false}   # run SA-CCR exposure at default on this node once it is installed (its settings will live under drishti.ccr.saccr.*)
+      enabled: ${DRISHTI_SACCR_ENABLED:true}   # run SA-CCR on this node: /api/v1/saccr, SACCR, PLAY SACCR; reads saccr-trade, netting sets, CSAs, collateral, valuations
       changed: { by: "", at: "", reason: "" }   # the last change made from Admin -> Engines or drishti.py (written by the server)
+  ccr:
+    saccr:                           # SA-CCR exposure at default, CRE52 (docs/guides/SACCR_GUIDE.md section 9)
+      parameters-file: ""            # a regulation's parameter file (blank: the Basel file shipped in the jar, saccr/saccr-bcbs.yaml)
+      trade-kind: saccr-trade        # the classification rows: one per trade and risk driver (docs/contracts/SACCR.md section 3.3)
+      netting-set-kind: netting-set  # the netting sets: counterparty, legal entity, CSA, collateral balance, NETTING_ENFORCEABLE, CLEARED
+      csa-kind: csa                  # the CSAs: THRESHOLD_THEM, MTA_THEM, MPOR_DAYS, MARGIN_FREQUENCY_DAYS, DISPUTES_LAST_2Q, ILLIQUID_COLLATERAL
+      collateral-kind: collateral-balance   # C (NET after haircut, or C_REG when delivered) and NICA
+      valuation-kind: trade-valuation       # each live member's MTM and its netting set (statuses NEW, VALIDATED, AMENDED; not past maturity)
+      excluded-groups: [Securities financing, Money market, Fixed income]   # not derivatives: a member without a row is counted excluded, not unclassified
+      excluded-products: [CLN, REVOLVER, TERM_LOAN, RISK_PARTICIPATION, CONVERTIBLE_BOND, EQ_CASH, AUTOCALLABLE, REVERSE_CONVERTIBLE, INFL_LINKED_BOND, Cash, CallNot, Commodity, FX_SPOT, CAPITAL_PROTECTED_NOTE, CREDIT_BASKET_NOTE, HYBRID_FX_RATES, RANGE_ACCRUAL_NOTE, WORST_OF_NOTE]   # not derivatives either
+      risk-weight: 1.0               # the RWA hook's risk weight (informational: the bank's capital engine owns RWA)
+      max-sets: 20                   # the most netting sets of one counterparty the playground holds side by side
+      max-trades: 5000               # the most classification rows one playground workbook holds
+      browser-trades: 500            # the most trade rows the playground grid shows in the browser
+      cache-minutes: 10              # how long a date's inputs stay in memory after they are read
+      playground-template: ""        # a bank's workbook template folder; blank: the built-in playground/saccr/template/

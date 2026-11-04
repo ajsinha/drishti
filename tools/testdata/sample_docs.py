@@ -126,7 +126,8 @@ LINKS = {
     "simulation-run": [("guides/EXPOSURE_GUIDE.md", "15.2 ")] + _EXP[1:],
     "exposure-path": [("guides/EXPOSURE_GUIDE.md", "15.3 "), ("guides/EXPOSURE_GUIDE.md", "21. ")] + _EXP[1:],
     "netting-set": _EXP, "csa": _EXP, "collateral-balance": _EXP, "agreement": _EXP, "margin-call": _EXP, "credit-limit": _EXP,
-    "cva": _EXP, "sa-ccr": _EXP, "simm": _EXP,
+    "cva": _EXP, "simm": _EXP,
+    "saccr-trade": [("contracts/SACCR.md", "3.3 "), ("guides/SACCR_GUIDE.md", "3. ")],
     "trade-valuation": [("contracts/TVAL.md", "# ")] + _EXP,
     "frtb-sensitivity": [("contracts/FRTB.md", "# ")], "pnl-explain": [("contracts/PNL.md", "# ")], "stress-result": [("contracts/STR.md", "# ")],
     "fund": [("guides/FUNDS_GUIDE.md", "# "), ("tutorials/28-funds-and-etfs.md", "# ")],
@@ -161,7 +162,8 @@ GROUPS = [
     ("Counterparty-risk inputs (exposure)", "You produce this",
      ["counterparty-risk/simulation-run", "counterparty-risk/exposure-path", "counterparty-risk/netting-set", "counterparty-risk/agreement",
       "counterparty-risk/csa", "counterparty-risk/collateral-balance", "counterparty-risk/margin-call", "counterparty-risk/credit-limit",
-      "counterparty-risk/cva", "counterparty-risk/sa-ccr", "counterparty-risk/simm"]),
+      "counterparty-risk/cva", "counterparty-risk/simm"]),
+    ("Counterparty-risk inputs (SA-CCR)", "You produce this", ["counterparty-risk/saccr-trade"]),
     ("Market data", "You produce this", None),               # every market-data folder
     ("Public data (refreshed by Drishti's scripts)", "Public source", None),   # gleif, us-equities, funds, news-and-markets, world-economy
     ("Demonstration only", "Demo", None),                    # compute-demo

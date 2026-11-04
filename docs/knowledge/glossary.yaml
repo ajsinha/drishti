@@ -396,8 +396,8 @@ terms:
     name: standardised approach for counterparty credit risk
     synonyms: [saccr, sa ccr, standardised approach]
     domain: counterparty-credit-risk
-    meaning: "Basel's formula for EAD without a model: 1.4 times (replacement cost plus multiplier times add-ons by asset class). Stored from an upstream engine; Drishti does not compute it."
-    command: SACCR SACCR-ALDERSHOT-FRA
+    meaning: "Basel's formula for EAD without a model: 1.4 times (replacement cost plus multiplier times add-ons by asset class), per netting set, adding over sets. Computed by Drishti's SA-CCR engine from one classification row per derivative."
+    command: SACCR NSET:NS-ALDERSHOT-NY
   - term: SIMM
     name: ISDA Standard Initial Margin Model
     synonyms: [isda simm]

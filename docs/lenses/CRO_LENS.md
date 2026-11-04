@@ -139,7 +139,7 @@ comment, escalate), and only for people with the power to take them ([section 10
 | Comment threads anchored to data | **Built** | [COLLABORATION.md](../architecture/COLLABORATION.md) |
 | Alerts on numbers (inbox, bell, email, chat; hysteresis, cooldown) | **Built**; set up per person, not from a catalogue | [USER_GUIDE.md › Alerts on numbers](../guides/USER_GUIDE.md#alerts-on-numbers) |
 | LCR, NSFR, survival horizon | **Not built**. Example records exist (`examples/packs/liquidity-risk`, camelCase, not loaded); liquidity is a measure of the balance-sheet roadmap | [IMPLEMENTATION_PLAN, balance sheet and regulatory](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory); [OVERSIGHT_LENS section 4.10](OVERSIGHT_LENS.md#410-ro10-liquidity) |
-| CET1 ratio, RWA | **Not built**; nothing in the packs (stored `sa-ccr` and `frtb-sensitivity` charges are partial RWA inputs only) | — |
+| CET1 ratio, RWA | **Not built**; nothing in the packs (the computed SA-CCR EAD and the FRTB-SA charge are partial RWA inputs only) | — |
 | Financed emissions | **Not built**. Example records (`examples/packs/climate-risk`, `financed-emissions`); **climate risk is out of scope as a computed measure** (product owner, 2026-10-25) | [IMPLEMENTATION_PLAN, balance sheet and regulatory](../architecture/IMPLEMENTATION_PLAN.md#2110-balance-sheet-and-regulatory) |
 | News and market moves | **Built** (news-and-markets pack; the World lens's desk) | [EDITIONS.md section 12](../admin/EDITIONS.md#12-drishti-world) |
 | News relevance to the book ("headlines touching the book") | **Not built** (WL9) | [WORLD_LENS section 5.9](WORLD_LENS.md#59-wl9-news-relevance) |

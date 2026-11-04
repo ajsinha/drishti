@@ -26,7 +26,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 - collateral-balance
 - margin-call
 - simm
@@ -37,13 +36,14 @@ kinds:
 - exposure-official-cpty
 - nset-mtm
 - cpty-mtm
+- saccr-trade
+- saccr-result
 commands:
   AGR: agreement
   CSA: csa
   NSET: netting-set
   LIM: credit-limit
   CVA: cva
-  SACCR: sa-ccr
   COLL: collateral-balance
   MC: margin-call
   SIMM: simm
@@ -54,6 +54,8 @@ commands:
   XOFC: exposure-official-cpty
   NSMTM: nset-mtm
   CPMTM: cpty-mtm
+  SACT: saccr-trade
+  SACCR: saccr-result
   CCR: pack overview
 depends-on:
   packs:
@@ -67,6 +69,7 @@ depends-on:
   - exposure-store
   - exposure-whatif
   - legal-store
+  - saccr-engine
   plugins:
   - delta
   - derived
@@ -76,6 +79,7 @@ depends-on:
   - DRISHTI_DELTA_ROOT
   - DRISHTI_EXPOSURE_ENABLED
   - DRISHTI_LAKE_ENABLED
+  - DRISHTI_SACCR_ENABLED
 sources:
 - name: Synthetic sample data (tools/packgen/banking)
   licence: Proprietary (part of Drishti); fictitious names and figures
@@ -90,9 +94,11 @@ generated-by: tools/packgen/banking/make_docs.py
 
 ## What it is
 
-Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA, SA-CCR,
-collateral balances, margin calls and SIMM initial margin, and the **exposure engine's inputs**: an upstream simulation run
-(`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`). Exposure is never stored: `EXP
+Counterparty credit risk over the trading pack's trades: master agreements and CSAs, netting sets, credit limits, CVA,
+collateral balances, margin calls and SIMM initial margin, the **exposure engine's inputs**: an upstream simulation run
+(`simulation-run`) and every trade's mark to market on every path of its grid (`exposure-path`), and the **SA-CCR engine's input**: one
+classification row per derivative (`saccr-trade`); SA-CCR exposure at default is never stored either, `SACCR <scope>` computes it
+(docs/guides/SACCR_GUIDE.md). Exposure is never stored: `EXP
 NSET:NS-ALDERSHOT-FRA <GO>` (the computed kind `exposure-result`, [EXPOSURE_GUIDE.md Part II](../../../docs/guides/EXPOSURE_GUIDE.md#14-the-contract-at-a-glance)) nets the paths per
 netting set, applies each CSA's collateral path by path with the margin period of risk, and reads EE, ENE, EEE, PFE 95% and 99%, EPE
 and EEPE for any scope (`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `TRD:`); the netting-set and counterparty pages show the engine's
@@ -192,7 +198,6 @@ Fields, from 66 sample documents:
 | `CSA` | string | `CSA-ALDERSHOT-FRA` | link to `csa` |
 | `CREDIT_LIMIT` | string | `LIM-ALDERSHOT` | link to `credit-limit` |
 | `CVA_RESULT` | string | `CVA-ALDERSHOT-FRA` | link to `cva` |
-| `SACCR` | string | `SACCR-ALDERSHOT-FRA` | link to `sa-ccr` |
 | `SIMM` | string | `SIMM-ALDERSHOT` | link to `simm` |
 | `COLLATERAL_BALANCE` | string | `COLL-ALDERSHOT-FRA` | link to `collateral-balance` |
 | `LEGAL_ENTITY` | string | `LE-FRA` | The bank's legal entity; link to `legal-entity` |
@@ -205,7 +210,7 @@ Nested structures:
 | `TRADES[]` | `TRADE_ID` (string): The member trade., `STATUS` (string), `PRODUCT` (string): The kind of instrument the trade is., `ASSET_CLASS` (string), `CURRENCY` (string), `BOOK` (string), `NOTIONAL` (number): The reference amount of the trade, in the trade's own currency. (trade currency), `MATURITY` (date): The date the trade ends., `MATURITY_BUCKET` (string), `MTM` (integer): The trade's current value, from the bank's side. (USD) |
 | `BY_ASSET[]` | `ASSET` (string), `MTM` (integer) |
 
-Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCE` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `CREDIT_LIMIT` → `credit-limit`, `CSA` → `csa`, `CVA_RESULT` → `cva`, `LEGAL_ENTITY` → `legal-entity`, `SACCR` → `sa-ccr`, `SIMM` → `simm`, `TRADE_ID` → `trade`.
+Links: `AGREEMENT` → `agreement`, `COLLATERAL_BALANCE` → `collateral-balance`, `COUNTERPARTY` → `counterparty`, `CREDIT_LIMIT` → `credit-limit`, `CSA` → `csa`, `CVA_RESULT` → `cva`, `LEGAL_ENTITY` → `legal-entity`, `SIMM` → `simm`, `TRADE_ID` → `trade`.
 
 ### `credit-limit`
 
@@ -270,36 +275,6 @@ Nested structures:
 | `SENSITIVITIES[]` | `FACTOR` (string): The market input that is bumped to see how the adjustment changes., `BUMP` (string): The size of the move applied to the factor., `DELTA` (integer): The change in the adjustment for the bump. (USD) |
 
 Links: `CREDIT_CURVE` → `credit-curve`, `NETTING_SET` → `netting-set`.
-
-### `sa-ccr`
-
-**SA-CCR exposure** · mnemonic `SACCR` · read through connector `credit-store`.
-
-**Id:** field `CALC_ID`; pattern `^SACCR-`; for example `SACCR-ALDERSHOT-FRA`.
-
-Fields, from 66 sample documents:
-
-| Field | Type | Example | Description |
-|---|---|---|---|
-| `CALC_ID` | string | `SACCR-ALDERSHOT-FRA` | The document's id |
-| `REPLACEMENT_COST` | integer | `0` | The loss if the counterparty defaulted today and the trades were replaced at current market value, less collateral; never below zero. (USD) |
-| `ADD_ON` | integer | `791562` | The potential increase in exposure over the next year, built from the add-ons of each asset class with supervisory factors and correlations. (USD) |
-| `MULTIPLIER` | number | `0.933` | A factor between 5% and 1 that reduces the add-on when the netting set is over-collateralised or its value is negative. (factor) |
-| `EAD` | integer | `1033938` | The SA-CCR exposure: 1.4 times the replacement cost plus the potential future exposure, where the potential future exposure is the multiplier times the add-on. (USD) |
-| `RWA` | integer | `206788` | The exposure at default multiplied by the risk weight of the counterparty. Capital is a percentage of it. (USD) |
-| `ADD_ONS` | list of objects |  | Add-ons by asset class |
-| `HEDGING_SETS` | list of objects |  | Hedging sets |
-| `NETTING_SET` | string | `NS-ALDERSHOT-FRA` | link to `netting-set` |
-| `ALPHA` | number | `1.4` | The SA-CCR alpha (1.4) |
-
-Nested structures:
-
-| Path | Fields |
-|---|---|
-| `ADD_ONS[]` | `ASSET_CLASS` (string), `ADD_ON` (integer) |
-| `HEDGING_SETS[]` | `ASSET_CLASS` (string): The regulatory asset class: interest rate, FX, credit, equity or commodity., `HEDGING_SET` (string): The group of trades within an asset class that can offset one another, for example by currency for interest rates., `EFFECTIVE_NOTIONAL` (integer): The hedging set's notional after supervisory delta and maturity adjustments and netting inside the set. (USD), `SF` (number): The regulatory percentage applied to the effective notional to get the add-on. (% of effective notional) |
-
-Links: `NETTING_SET` → `netting-set`.
 
 ### `collateral-balance`
 
@@ -547,6 +522,54 @@ About: Counterparty totals derived from the trade valuations.
 
 No samples ship: documents are read live from its connector `ccr-derived` (plugin `derived`).
 
+### `saccr-trade`
+
+**SA-CCR classification row (a derivative's asset class, hedging set and terms)** · mnemonic `SACT` · read through connector `exposure-store`.
+
+One derivative's SA-CCR classification and terms (docs/contracts/SACCR.md section 3.3): the input the SA-CCR engine computes every supervisory figure and EAD from
+
+**Id:** set by its connector (no samples ship).
+
+Fields, from 3 sample documents:
+
+| Field | Type | Example | Description |
+|---|---|---|---|
+| `SACCR_ROW_ID` | string | `CLY-3000020~0` | <trade>~<driver> |
+| `BUSINESS_DATE` | date | `2026-09-30` | — |
+| `TRADE_ID` | string | `CLY-3000020` | link to `trade` |
+| `SOURCE_SYSTEM` | string | `CALYPSO` | — |
+| `DRIVER` | integer | `0` | 0 the primary risk driver; 1, 2 … further drivers of a complex trade |
+| `NETTING_SET` | string | `NS-ALDERSHOT-LDN` | The trade's netting set (denormalised; the membership wins); link to `netting-set` |
+| `COUNTERPARTY` | string | `CP-ALDERSHOT` | link to `counterparty` |
+| `LEGAL_ENTITY` | string | `LE-LDN` | link to `legal-entity` |
+| `ASSET_CLASS` | string | `FX` | IR, FX, CREDIT, EQUITY or COMMODITY: the class of the trade's primary risk driver (CRE52.25). |
+| `TRANSACTION_TYPE` | string | `LINEAR` | LINEAR, OPTION, CDO_TRANCHE, BASIS or VOLATILITY: how the supervisory delta and factor are taken. |
+| `DIRECTION` | string | `LONG` | LONG or SHORT in the primary risk factor: a payer swap and sold protection are long; a receiver swap and bought protection short. (in 33%) |
+| `NOTIONAL_USD` | number | `232000000.0` | The adjusted-notional basis: IR and credit the trade notional, FX the foreign leg, equity and commodity units times price. (USD) |
+| `MATURITY_DATE` | date | `2038-08-04` | — |
+| `CLEARED` | boolean | `false` | — |
+| `DERIVED_BY` | string | `rules` | upstream (the bank's capital process delivered the row) or rules (derived from the trade master by configured rules). |
+| `PRODUCT_TYPE` | string | `FX_SWAP` | — |
+| `BATCH_ID` | string | `SB-2026-09-30-01` | — |
+| `HEDGING_SET` | string | `CHFUSD` | The trades that may offset one another: IR the currency, FX the pair, credit and equity one set, commodity energy, metals, agricultural or other; a basis or volatility transaction its own (CRE52.27 to CRE52.29). |
+| `BOUGHT_SOLD` | string | `BOUGHT` | — (in 67%) |
+| `OPTION_TYPE` | string | `PUT` | — (in 67%) |
+| `UNDERLYING_FORWARD` | number | `0.7465` | — (in 67%) |
+| `STRIKE` | number | `0.7265` | — (in 67%) |
+| `EXERCISE_DATE` | date | `2027-06-15` | — (in 67%) |
+
+Links: `COUNTERPARTY` → `counterparty`, `LEGAL_ENTITY` → `legal-entity`, `NETTING_SET` → `netting-set`, `TRADE_ID` → `trade`.
+
+### `saccr-result`
+
+**SA-CCR exposure at default of a scope (computed)** · mnemonic `SACCR` · read through connector `saccr-engine`.
+
+About: SA-CCR exposure at default of a scope.
+
+**Id:** set by its connector (no samples ship).
+
+No samples ship: documents are read live from its connector `saccr-engine` (plugin `reactive`).
+
 ## Screens and commands
 
 | Command | Kind | Opens |
@@ -556,7 +579,6 @@ No samples ship: documents are read live from its connector `ccr-derived` (plugi
 | `NSET` | `netting-set` | Netting set |
 | `LIM` | `credit-limit` | Credit limit |
 | `CVA` | `cva` | CVA / XVA |
-| `SACCR` | `sa-ccr` | SA-CCR exposure |
 | `COLL` | `collateral-balance` | Collateral balance |
 | `MC` | `margin-call` | Margin call |
 | `SIMM` | `simm` | ISDA SIMM initial margin |
@@ -567,6 +589,8 @@ No samples ship: documents are read live from its connector `ccr-derived` (plugi
 | `XOFC` | `exposure-official-cpty` | Exposure official results by netting set and counterparty (published) |
 | `NSMTM` | `nset-mtm` | Netting-set MtM totals (derived from the trade valuations) |
 | `CPMTM` | `cpty-mtm` | Counterparty MtM totals (derived from the trade valuations) |
+| `SACT` | `saccr-trade` | SA-CCR classification row (a derivative's asset class, hedging set and terms) |
+| `SACCR` | `saccr-result` | SA-CCR exposure at default of a scope (computed) |
 | `CCR` | — | The pack's overview: its kinds, how many each holds, an example of each |
 
 Examples:
@@ -577,7 +601,7 @@ Examples:
 | `NSET NS-ALDERSHOT-NY` | Netting set · its trades, the exposure computed from the paths, CVA |
 | `LIM LIM-SUMMIT` | Credit limit · utilisation by tenor |
 | `CVA CVA-SUMMIT-NY` | CVA / XVA |
-| `SACCR SACCR-SUMMIT-NY` | SA-CCR exposure at default |
+| `SACCR NSET:NS-SUMMIT-NY` | SA-CCR exposure at default · computed from the classification rows |
 | `EXP NSET:NS-ALDERSHOT-FRA` | Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths |
 | `EXP CPTY:CP-ALDERSHOT` | A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs) |
 
@@ -594,7 +618,6 @@ Screens (Sutras):
 | `cva` | `cva` | Credit, debit and funding valuation adjustments with sensitivities. |
 | `exposure-result` | `exposure-result` | The exposure profile of any counterparty scope (a netting set, a counterparty, a group, a legal entity, a trade alone), computed from the simulated paths. |
 | `netting-set` | `netting-set` | Trades that net on close-out under one agreement and CSA, with exposure and collateral. |
-| `sa-ccr` | `sa-ccr` | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
 
 ## Data sources and licences
 
@@ -613,15 +636,16 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | Connector | Plugin | Kinds | Enabled |
 |---|---|---|---|
 | `legal-store` | `delta` | `agreement`, `csa` | `${DRISHTI_LAKE_ENABLED:true}` |
-| `credit-store` | `delta` | `netting-set`, `credit-limit`, `cva`, `sa-ccr` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `credit-store` | `delta` | `netting-set`, `credit-limit`, `cva` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `collateral-store` | `delta` | `collateral-balance`, `margin-call`, `simm` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `ccr-derived` | `derived` | `nset-mtm`, `cpty-mtm` | `${DRISHTI_CCR_DERIVED_ENABLED:true}` |
 | `exposure-results` | `delta` | `exposure-official-cpty` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
-| `exposure-store` | `delta` | `simulation-run`, `exposure-path` | `${DRISHTI_LAKE_ENABLED:true}` |
+| `exposure-store` | `delta` | `simulation-run`, `exposure-path`, `saccr-trade` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
+| `saccr-engine` | `reactive` | `saccr-result` | `${DRISHTI_SACCR_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_SACCR_ENABLED`.
 
 ## Refreshing the data
 

@@ -25,8 +25,8 @@ doc:
     class; computed from the trade valuations, beside the stored figures; net MTM by product group (computed); live-status
     trades past their maturity date (data quality: in no total); how the view was built; the entities it links to. The strip
     gives Trades, Net MTM, Collateral (+ held, − posted), EPE (engine), PFE 95 peak (engine), Limit and CVA. Linked entities:
-    counterparty (counterparty), agreement (agreement), CSA (csa), credit limit (credit-limit), CVA (cva), SA-CCR (sa-ccr), SIMM
-    (simm) and collateral (collateral-balance).
+    counterparty (counterparty), agreement (agreement), CSA (csa), credit limit (credit-limit), CVA (cva), SIMM (simm) and
+    collateral (collateral-balance).
   params:
     asset: { type: text, default: '', meaning: "The Asset class control" }
     product: { type: text, default: '', meaning: "The Product control" }

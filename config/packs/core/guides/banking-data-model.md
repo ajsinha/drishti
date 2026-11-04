@@ -74,7 +74,6 @@ desk ─► VaR ─► stress results ◄─ stress scenario        book ─► 
 | `ORIGINAL_COUNTERPARTY` | Original counterparty | `counterparty` | `core` | `reference` |
 | `PORTFOLIO` | Portfolio | `book` | `core` | `reference` |
 | `REPO_CURVE` | Repo curve | `repo-curve` | `market-data` | `market` |
-| `SACCR` | SA-CCR | `sa-ccr` | `counterparty-risk` | `credit` |
 | `SCENARIO` | Scenario | `stress-scenario` | `market-risk` | `risk` |
 | `SIMM` | SIMM | `simm` | `counterparty-risk` | `collateral` |
 | `SWAPTION_VOL_CUBE` | Swaption vol cube | `ir-vol-cube` | `market-data` | `market` |

@@ -168,13 +168,13 @@ engines:
     ai-tools: []
   - id: sa-ccr
     title: SA-CCR
-    about: "SA-CCR exposure at default and its playground"
+    about: "SA-CCR exposure at default (CRE52) per netting set and for any scope of whole sets, and its playground"
     file: sa-ccr.yaml
     switch: drishti.engines.sa-ccr.enabled
     env: DRISHTI_SACCR_ENABLED
     aliases: []
-    shipped: false
-    installed: false
+    shipped: true
+    installed: true
     live-on: true
     prefixes: [drishti.ccr.saccr]
     needs: []
@@ -183,12 +183,12 @@ engines:
     console: [/saccr, /play/saccr, /api/saccr/]
     words: [SACCR, "PLAY SACCR"]
     menus: [saccr, play-saccr]
-    help: []
+    help: [docs-guides-saccr-guide, docs-tutorials-39-saccr-from-the-cases-to-a-counterparty]
     landings: []
     tiles: []
     lenses: []
     bi: [counterparty-saccr-]
-    cli: [saccr]
+    cli: [saccr, play saccr]
     playgrounds: [saccr]
     connectors: []
     kinds: [saccr-result]

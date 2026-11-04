@@ -27,7 +27,6 @@ kinds:
 - netting-set
 - credit-limit
 - cva
-- sa-ccr
 - collateral-balance
 - margin-call
 - simm
@@ -38,6 +37,8 @@ kinds:
 - exposure-official-cpty
 - nset-mtm
 - cpty-mtm
+- saccr-trade
+- saccr-result
 sutras: sutras
 formats: config/formats.yaml
 mnemonics:
@@ -56,9 +57,6 @@ mnemonics:
   CVA:
     kind: cva
     label: CVA / XVA
-  SACCR:
-    kind: sa-ccr
-    label: SA-CCR exposure
   COLL:
     kind: collateral-balance
     label: Collateral balance
@@ -89,6 +87,12 @@ mnemonics:
   CPMTM:
     kind: cpty-mtm
     label: Counterparty MtM totals (derived from the trade valuations)
+  SACT:
+    kind: saccr-trade
+    label: SA-CCR classification row (a derivative's asset class, hedging set and terms)
+  SACCR:
+    kind: saccr-result
+    label: SA-CCR exposure at default of a scope (computed)
 graph:
   id-patterns:
   - pattern: ^AGR-
@@ -101,8 +105,6 @@ graph:
     kind: credit-limit
   - pattern: ^CVA-
     kind: cva
-  - pattern: ^SACCR-
-    kind: sa-ccr
   - pattern: ^COLL-
     kind: collateral-balance
   - pattern: ^MC-
@@ -147,9 +149,6 @@ graph:
     RUN_ID:
       kind: simulation-run
       label: Simulation run
-    SACCR:
-      kind: sa-ccr
-      label: SA-CCR
     SIMM:
       kind: simm
       label: SIMM
@@ -186,7 +185,6 @@ connectors:
     - netting-set
     - credit-limit
     - cva
-    - sa-ccr
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: credit
@@ -332,6 +330,7 @@ connectors:
     kinds:
     - simulation-run
     - exposure-path
+    - saccr-trade
     settings:
       root: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}
       domain: risk
@@ -364,6 +363,41 @@ connectors:
           - STATUS
           vectors:
           - MTM
+        saccr-trade:
+          columns:
+          - SACCR_ROW_ID
+          - TRADE_ID
+          - SOURCE_SYSTEM
+          - DRIVER
+          - NETTING_SET
+          - COUNTERPARTY
+          - LEGAL_ENTITY
+          - ASSET_CLASS
+          - HEDGING_SET
+          - TRANSACTION_TYPE
+          - REFERENCE
+          - IS_INDEX
+          - CREDIT_QUALITY
+          - DIRECTION
+          - NOTIONAL_USD
+          - QUANTITY
+          - UNDERLYING_PRICE
+          - START_DATE
+          - END_DATE
+          - MATURITY_DATE
+          - OPTION_TYPE
+          - BOUGHT_SOLD
+          - EXERCISE_DATE
+          - STRIKE
+          - UNDERLYING_FORWARD
+          - SHIFT
+          - ATTACHMENT
+          - DETACHMENT
+          - CLEARED
+          - SPECIFIC_WWR
+          - DERIVED_BY
+          - PRODUCT_TYPE
+          - BATCH_ID
   exposure-engine:
     plugin: reactive
     mode: reactive
@@ -501,13 +535,54 @@ connectors:
       timeout: 60s
       wait: 250ms
       max-inflight-per-user: 2
+  saccr-engine:
+    plugin: reactive
+    mode: reactive
+    enabled: ${DRISHTI_SACCR_ENABLED:true}
+    description: 'SA-CCR exposure at default (CRE52) of a netting set, counterparty, legal entity or the bank, computed when asked by the server''s
+      SA-CCR engine from the classification rows, as the viewer: SACCR <scope> <GO> (docs/guides/SACCR_GUIDE.md)'
+    kinds:
+      saccr-result:
+        compute: saccr-result
+        params: {}
+        result:
+          required:
+          - SCOPE
+          - STATUS
+          - EAD
+          types:
+            EAD: number
+            RC: number
+            PFE: number
+    engine:
+      type: java
+      class: com.ash.drishti.server.saccr.SaccrResultEngine
+      version: '1.0'
+    triggers:
+    - 'on': data-version
+      kinds:
+      - saccr-trade
+      - netting-set
+      - csa
+      - collateral-balance
+      - trade-valuation
+      affects: all
+    coalesce:
+      quiet: 1s
+      max-wait: 10s
+    cache:
+      results: 1000
+      ttl: 1h
+    limits:
+      timeout: 60s
+      wait: 5s
+      max-inflight-per-user: 4
 routes:
   agreement: legal-store
   csa: legal-store
   netting-set: credit-store
   credit-limit: credit-store
   cva: credit-store
-  sa-ccr: credit-store
   collateral-balance: collateral-store
   margin-call: collateral-store
   simm: collateral-store
@@ -518,6 +593,8 @@ routes:
   exposure-official-cpty: exposure-results
   nset-mtm: ccr-derived
   cpty-mtm: ccr-derived
+  saccr-trade: exposure-store
+  saccr-result: saccr-engine
 form:
   agreement:
   - path: AGREEMENT_ID
@@ -622,25 +699,6 @@ form:
     type: text
   - path: CS01
     label: CS01
-    type: text
-  sa-ccr:
-  - path: CALC_ID
-    label: Calc id
-    type: id
-  - path: REPLACEMENT_COST
-    label: Replacement cost
-    type: amount
-  - path: ADD_ON
-    label: Add on
-    type: text
-  - path: MULTIPLIER
-    label: Multiplier
-    type: text
-  - path: EAD
-    label: Ead
-    type: text
-  - path: RWA
-    label: Rwa
     type: text
   collateral-balance:
   - path: BALANCE_ID
@@ -779,6 +837,28 @@ form:
   - path: CE_UNCOLLATERALISED
     label: Ce uncollateralised
     type: text
+  saccr-trade:
+  - path: SACCR_ROW_ID
+    label: Saccr row id
+    type: id
+  - path: TRADE_ID
+    label: Trade id
+    type: id
+  - path: NETTING_SET
+    label: Netting set
+    type: text
+  - path: ASSET_CLASS
+    label: Asset class
+    type: text
+  - path: HEDGING_SET
+    label: Hedging set
+    type: text
+  - path: TRANSACTION_TYPE
+    label: Transaction type
+    type: text
+  - path: DIRECTION
+    label: Direction
+    type: enum
 console:
   examples:
   - - AGR AGR-NORTHBRIDGE-ISDA
@@ -789,8 +869,8 @@ console:
     - Credit limit · utilisation by tenor
   - - CVA CVA-SUMMIT-NY
     - CVA / XVA
-  - - SACCR SACCR-SUMMIT-NY
-    - SA-CCR exposure at default
+  - - SACCR NSET:NS-SUMMIT-NY
+    - SA-CCR exposure at default · computed from the classification rows
   - - EXP NSET:NS-ALDERSHOT-FRA
     - Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths
   - - EXP CPTY:CP-ALDERSHOT
