@@ -25,8 +25,9 @@ import java.util.TreeMap;
 import java.util.function.Function;
 
 /**
- * The one table of Rachana-EL functions, filled by the families: {@link LogicFunctions}, {@link MathFunctions},
- * {@link TextFunctions}, {@link DateFunctions} and {@link ListFunctions} (FUNCTION_CATALOGUE.md sections 1, 2, 3 and 6).
+ * The one table of Rachana-EL functions, filled by the families: {@link LogicFunctions} and {@link InfoFunctions}, {@link MathFunctions}
+ * and {@link NumberFunctions}, {@link TextFunctions} and {@link TextParts}, {@link DateFunctions} and {@link DateParts}, {@link ListFunctions}
+ * and {@link ListMore}, {@link Distributions} and {@link FinanceFunctions} (FUNCTION_CATALOGUE.md sections 1, 2, 3, 6, 8 and 9).
  * Rachana's own functions are scalars (one value from values). Every aggregate ({@code sum}, {@code count}, {@code avg},
  * {@code min} and {@code max} over one list, {@code median}, {@code percentile} …), the grouping behind {@code group(...)}, and
  * {@code measure(...)} and {@code cell(...)} come from the pivot engine, registered into this table by a {@link FunctionProvider}
@@ -55,10 +56,17 @@ public final class Functions {
     static {
         Table t = new Table();
         LogicFunctions.register(t.family("logic"));
+        InfoFunctions.register(t.family("logic"));
         MathFunctions.register(t.family("math"));
+        NumberFunctions.register(t.family("math"));
         TextFunctions.register(t.family("text"));
+        TextParts.register(t.family("text"));
         DateFunctions.register(t.family("dates"));
+        DateParts.register(t.family("dates"));
         ListFunctions.register(t.family("lists"));
+        ListMore.register(t.family("lists"));
+        Distributions.register(t.family("statistics"));
+        FinanceFunctions.register(t.family("finance"));
         Aggregates.install(t);
         ARITY = Collections.unmodifiableMap(t.arity);
         FUNCTIONS = Map.copyOf(t.functions);
@@ -136,7 +144,8 @@ public final class Functions {
                         + "or any aggregate over @)"));
                 continue;
             }
-            String family = Aggregates.MEASURE_LEVEL.contains(name) ? "measures" : "aggregates";
+            String family = Aggregates.MEASURE_LEVEL.contains(name) ? "measures"
+                    : p != null && "list".equals(p.form()) ? "lists" : "aggregates";
             out.add(new Entry(name, family, "E", source == null ? "none on the class path" : source,
                     p == null ? "" : p.args(), p == null ? "" : p.form(), p == null ? "" : p.description()));
         }

@@ -345,7 +345,7 @@ public final class Holistics {
         }
     }
 
-    private static Double number(String s) {
+    static Double number(String s) {
         try {
             double d = Double.parseDouble(s.strip());
             return Double.isNaN(d) || Double.isInfinite(d) ? null : d;

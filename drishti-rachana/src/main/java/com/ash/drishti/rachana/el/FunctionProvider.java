@@ -51,7 +51,8 @@ public interface FunctionProvider {
      * @param minArgs the fewest arguments
      * @param maxArgs the most arguments
      * @param args its arguments as the catalogue writes them ({@code list, [field]})
-     * @param form {@code mergeable} or {@code holistic} for an aggregate, {@code measure} for a figure from another engine
+     * @param form {@code mergeable} or {@code holistic} for an aggregate, {@code measure} for a figure from another engine, {@code list}
+     *     for a function from a list to a list resting on the provider's aggregates ({@code cumsum}, {@code movmean})
      * @param description what it means, one line
      * @param example an example on the demo data
      * @param function the implementation, its arguments evaluated

@@ -40,11 +40,14 @@ public final class FunctionCataloguePage {
 
     static {
         FAMILIES.put("aggregates", "Aggregates: the pivot engine's (many values to one; a pivot cell runs the same function)");
+        FAMILIES.put("measures", "Measures: the pivot engine's functions of a measure (filter context, time, windows, balances, currency)");
         FAMILIES.put("math", "Math (scalars)");
         FAMILIES.put("logic", "Logic (scalars)");
         FAMILIES.put("text", "Text (scalars)");
         FAMILIES.put("dates", "Dates, on the bank's calendars (scalars)");
-        FAMILIES.put("lists", "Lists (Excel's dynamic arrays, over [*])");
+        FAMILIES.put("lists", "Lists (Excel's dynamic arrays and MATLAB's list functions, over [*])");
+        FAMILIES.put("statistics", "Distributions and test statistics (scalars)");
+        FAMILIES.put("finance", "Finance on given flows (scalars)");
     }
 
     private FunctionCataloguePage() {}
@@ -70,7 +73,7 @@ public final class FunctionCataloguePage {
                 continue;
             }
             b.append("## ").append(family.getValue()).append("\n\n");
-            if ("aggregates".equals(family.getKey())) {
+            if ("aggregates".equals(family.getKey()) || "measures".equals(family.getKey())) {
                 b.append("| Function | Arguments | Form | Means | Runs | Source |\n|---|---|---|---|---|---|\n");
                 for (Functions.Entry e : rows) {
                     b.append("| `").append(e.name()).append("` | ").append(cell(e.args())).append(" | ").append(cell(e.form())).append(" | ")

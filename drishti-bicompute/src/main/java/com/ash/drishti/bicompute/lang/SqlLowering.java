@@ -309,7 +309,7 @@ public final class SqlLowering {
     /** {@code shift_date}: a fixed date worked out now (business days on the calendar); a column moved by a period in SQL. */
     private String shift(List<Expr> args, List<String> a) {
         int n = whole(args, 1, 0);
-        String unit = args.size() > 2 && args.get(2) instanceof Expr.Lit l && l.value() instanceof String u ? u : "business-day";
+        String unit = args.size() > 2 && args.get(2) instanceof Expr.Lit l && l.value() instanceof String u ? DatePartFunctions.unit(u) : "business-day";
         LocalDate fixed = constant(args.get(0));
         if (fixed != null) {
             return "DATE '" + DatePartFunctions.shift(fixed, n, unit, calendar(args, 3)) + "'";
@@ -346,7 +346,7 @@ public final class SqlLowering {
                 if (base == null) {
                     return null;
                 }
-                String unit = c.args().size() > 2 && c.args().get(2) instanceof Expr.Lit u && u.value() instanceof String s ? s : "business-day";
+                String unit = c.args().size() > 2 && c.args().get(2) instanceof Expr.Lit u && u.value() instanceof String s ? DatePartFunctions.unit(s) : "business-day";
                 return DatePartFunctions.shift(base, whole(c.args(), 1, 0), unit, calendar(c.args(), 3));
             }
         }

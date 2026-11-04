@@ -162,6 +162,146 @@
   writes (kept in `outbox/<day>/<run>/loads/`); new `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/`.
   The status reads the ledger's newest lines without opening (indexing) the whole ledger on every call.
 
+## 2.9.11.e — BI's foundation: DEL's language in Rachana, virtual tables and models, the function catalogue complete (unreleased)
+
+### Part A: DEL's language in Rachana
+
+- **Rachana gains DEL's language (BI_FOUNDATION_2911E.md section 2 and 9; RACHANA_REFERENCE.md "Lists, membership and the parent",
+  "Named arguments", "Checked mode").** List literals (`['DESK-COMM', 'DESK-RATES']`, at most 1,000 values); a strict `in` and `not in`
+  (an empty list holds nothing; `one_of` keeps its control meaning, where an empty choice holds everything); the parent path `^` (and
+  `^^`): in `$.LEGS[*].CASH_FLOWS[?^.LEG_TYPE == 'FIXED']`, the leg (`EvalContext.withRow` binds it, `withRows` binds a grain's chain);
+  named arguments bound by the function's signature (`round(x, n = 2)`, `shift_date(asof(), -1, unit = 'week')`; the engine's keep
+  theirs: `sum(trades.MTM, where = ...)`, `calc(..., ignore = [...])`); DEL's `**` and `//` refused with their Rachana form (`power`,
+  `floor(x / y)`); `today()` read as `asof()` (Q7). The null rule (Q1, Rachana's): `null != 'X'` is true, arithmetic on an empty value
+  is empty (it showed `NaN`; `null + 1` was the text `1`), `upper`, `lower` and `abs` of an empty value are empty, `date - date` is the
+  days between.
+- **Checked mode** (`drishti-rachana` `el.check`, `el.CheckedMode`): DEL's type checker moved into Rachana and DEL now calls it
+  (`DelChecker` maps its tree with `DelToRachana`; `DelType`, `Scope`, `Fields` and `DelException.Problem` are Rachana's `ElType`,
+  `Scope`, `Fields`, `Problem`). Where the types are known it refuses with DEL's codes: `DRS-9127` (types, scopes, chained comparisons,
+  paths in measures, a screen's controls in a table or model, nesting of the filter-context functions past three), `DRS-9129` (not yet
+  in a table or model), `DRS-9152` (unknown name), `DRS-9161` (a filter on a masked field). The four scopes: row, rule, aggregate,
+  context. The signatures of the 53 DEL functions under Rachana names (`starts_with`, `ends_with`, `latest`, `earliest`; `cumulative`
+  folded into `running`) and `power`, `floor`, `if`, `switch`, `least`, `greatest` (`rachana/el/signatures.yaml`).
+- **The DEL functions in Rachana and the engine (2.5).** In Rachana: `round`, `len`, `date`, `timestamp`, `year`, `quarter`, `month`,
+  `week` (ISO), `day`, `business_days_between`, `shift_date`, `asof`. From the engine: `ratio`, `avg_by`, `avg_over`, `calc`,
+  `share_of`, `parent_of`, `as_of`, `ytd`, `mtd`, `qtd`, `prior_period`, `same_period_last_year`, `running`, `fiscal_ytd`, `lag`,
+  `lead`, `rank`, `dense_rank`, `percent_rank`, `moving_avg`, `moving_sum`, `moving_min`, `moving_max`, `latest`, `earliest`,
+  `opening`, `closing`, `convert`, `related`, `fx` (over a list they are refused in words; `fx` and `related` are lowered with the table
+  layer).
+- **The filter-context algebra moved into the engine** (`drishti-bicompute` `context.FilterContext`, `context.Periods`): the edited
+  question of each function (BI_DESIGN 3.3.5, rules 1 to 7, word for word), the sub-plan's average, join and read, nesting at most three,
+  `parent_of`'s level, the balances' dates. BI's `Contexts` and `ContextFunctions` ask it.
+- **One compiler from Rachana's tree to the engine** (`drishti-bicompute` `lang.Compiler`, `lang.SqlLowering`, `lang.RowsEvaluator`,
+  `lang.ScanEvaluator`): a row expression in Java (Rachana's evaluator) and in SQL, an aggregate as the engine's own function with its
+  `where =`, measure-level shapes, context sub-plans, windows, time and balances. `DifferentialTest` proves Java and SQL agree value for
+  value over every operator, every Rachana function, the engine's aggregates and the shipped models' expressions on a table of edges; it
+  found, and the compiler fixes, `%` of a negative double, business days on observed holidays, `abs(null)` and `floor(null, 0)`.
+  `ShippedInRachanaTest` reads every expression of `config/bi/models` and `config/bi/datasets` as Rachana (`el.Printer`, the one
+  spelling), checks it in its scope and compiles it.
+- FUNCTION_CATALOGUE.md's statuses (and `pct_of_parent` is no longer called DEL's `parent_of`, Q6); FUNCTIONS.md regenerated;
+  `OneGrammarRulesTest`'s exceptions say where DEL (part B) and `ScopeExpr` (Q20) go. DEL is not deleted and BI is not switched: that is
+  part B, with the migration and the parity proof.
+
+### Part B: virtual tables and models, up to the switch
+
+- **The table layer's foundation: virtual tables and models in a module of their own (BI_FOUNDATION_2911E.md sections 3 to 5 and 9;
+  TABLES_GUIDE.md; VIRTUAL_TABLES.md).** New module `drishti-tables` (plain Java, on Rachana and the pivot engine; `drishti-server`
+  depends on it; `ArchitectureRulesTest` holds the direction): the catalogue of `config/tables/<domain>/<name>.table.yaml` and
+  `.model.yaml` and of stored items (`ItemStore`, kinds `table` and `model`), the definitions with every key of BI's datasets and models
+  (names `<domain>.<name>`, `was:` for one release, built-in columns `id`, `business_date`, `index`, `update_seq`, `updated_at`, rules
+  and masks on the table, model aliases, summary tables, `materialize: none | on-load | { live }`, `related(...)`), the checks of a table,
+  a model and the catalogue (codes `DRS-9600` to `DRS-9614`), lineage, a preview over JSONL samples with the grain expanded and
+  `$`, `@`, `^` walked, and the materialisation's API with its store layout. `FileSwap` moved from BI into the layer. BI does not read the
+  layer yet (the switch).
+- **`drishti.py tables list | check | preview | lineage | migrate`** (CLI_GUIDE.md section 7; `java -jar drishti-server-*-exec.jar tables`,
+  no server): `check` exits 1 on an error and takes `--sample TABLE=FILE.jsonl`; `migrate` turns `config/bi`'s datasets and models into
+  tables and layer models with `--dry-run` (the unified diff and the report), `--check`, `--report`, `--audit`, `--moved-to`, refusing by
+  name (`DRS-9195`). Expressions go through a pluggable DEL translator (the language step provides it; a token stand-in does the mechanical
+  part now), then columns to paths, date parts and Q1's null rule: `a != b` becomes `a != b && a != null` where `a` may be missing, so
+  every figure stays the same (`trading-risk`'s *Open MTM*). Idempotent.
+- **The table layer on part A, and the rest of part B before the switch (BI_FOUNDATION_2911E.md section 10).** The layer's expressions
+  are Rachana's tree, printer and checked mode (its own reader is gone); `fx` (the installation's one FX source, Q15) and `related` (Q29) are
+  lowered by the layer; a model query is answered by the layer in memory through part A's one compiler (`ModelAnswers`: rules, masks and the
+  model's rules per reader, joins, filters, fields and date parts, measures of measures); `LiveStore` and `ParquetOnLoad` materialise a
+  table from its own definition; `PackTables` regenerates a pack's kinds and lists as tables. `tables migrate` reads DEL with part A's
+  `DelToRachana` (all 34 shipped items convert, `trading-cashflows`' chains included), turns a grouped dataset into its rows and a summary
+  table, and rewrites consumers in place (a report bound to a version-1 dataset binds its model; `expr:` and `define:` translated). Stored
+  items: `BiItemTableStore` over `drishti_bi_item` and `StoredTablesMigration` (every version rewritten in place, the text before kept,
+  audited). BI does not read the layer yet: the switch flips it in one change after the parity proof.
+- **The parity recorder of the release** (`BiFoundationRecorder`, `BiFoundationCases`, `BiFoundationLive`, `BiFoundationParityTest`): every
+  shipped model and report, seven persons (a desk-head with two desks and one with none, risk, an analyst, an administrator, a reader
+  without the raw power, a role no rule names), three times, each alias's rows per person, and a live replay; recorded on the tree before
+  anything moves, compared at 1e-9 relative for floating point and exactly for everything else. The parity test is skipped until the
+  fixtures are committed.
+
+### The function catalogue: the engine's statistics, shares and windows; Excel, SAS and MATLAB coverage
+
+- **The engine's tier-1 statistics, shares and windows (FUNCTION_CATALOGUE.md sections 4 and 5,
+  FUNCTIONS.md, PIVOT_GUIDE.md section 4).** In `drishti-bicompute`, once each, registered into Rachana: `nmiss`, `range`, `stderr`,
+  `cv`, `skewness`, `kurtosis` (central moments to the fourth order, merged by Pébay's formulas), `geomean`, `harmean`, `corr`, `covar`,
+  `slope`, `intercept`, `rsq` (co-moments, Chan's merge), every one mergeable and through the split-and-merge harness at 1e-12; `mode`
+  (a number or a name), `iqr`, `trimmean`, `kth_largest`, `kth_smallest` and `string_agg` (in text order, at most 1,000 values) holistic.
+  Excel's documented examples (`SKEW`, `KURT`, `CORREL`, `COVARIANCE.S`, `SLOPE`, `INTERCEPT`, `RSQ`, `TRIMMEAN`, `GEOMEAN`, `HARMEAN`,
+  `MODE.SNGL`, `LARGE`, `SMALL`, `QUARTILE.INC`) give their printed digits. A pivot value may be written around an aggregate:
+  `pct_of_total`, `pct_of_row`, `pct_of_column`, `pct_of_parent` (the level above on the rows; a named hierarchy with DEL's
+  `parent_of` in 2.9.11.e), `ntile(agg, n)`, `diff(agg, [n], order)`, `pct_change(agg, [n], order)`, computed from the answer's
+  finished cells beside Top N and Others (`core.ShowAs`). A function may answer text (`AggFunction.result`) and name its unit
+  (`resultUnit`); a measure may take a quoted text (`string_agg(CCY, ', ', true)`). Fixed: a show-as on a view with two or more row or
+  column dimensions read the wrong total (a cell's key was split at the first `|`, which a key of several coordinates also has).
+  The pivot grid shows a text answer (`string_agg`, the `mode` of names) as its text, escaped (it was blank), and an `ntile` bucket, a
+  rank and a measure whose unit is `count` as whole numbers (an ntile showed two decimals), read from the answer's `unit` and `showAs`
+  (`pivot-grid.js` `fmt`, `tests/test_pivot_grid_fmt.py`).
+- **Excel, SAS and MATLAB/Octave coverage (FUNCTION_CATALOGUE.md section 12).** Every family of Excel's functions, SAS's DATA-step
+  functions and PROC MEANS/UNIVARIATE/FREQ/RANK statistics, and MATLAB's everyday data functions, marked covered (by which Drishti
+  function), added, or not with the reason (non-deterministic, spreadsheet-cell, pricing for QLRisk, the risk engines, the matrix tier,
+  tier 3, locale or legacy, no use yet). 154 functions added, each under its one name; 268 Excel/SAS/MATLAB names were already covered,
+  207 are answered by the added ones, 193 are not added.
+- **Rachana scalars.** Math: `round` (half away from zero, in decimal), `round_sig`, `log(x, base)`, `fact`, `combin`, `permut`, `gcd`,
+  `lcm`, `even`, `odd`, `pi`, `sin` … `atan2`, `sinh`, `cosh`, `tanh`, `radians`, `degrees`, `base`, `decimal`. Information:
+  `is_number`, `is_text`, `is_date`, `is_boolean`, `is_blank`, `is_error`, `type_of`, `choose`. Text: `len`, `proper`, `rept`, `exact`,
+  `char`, `code` (Unicode), `find`, `search` (positions, 0 when not there), `text_before`, `text_after`, `regex_replace` (the linear-time
+  engine; `SafeRegex.replaceAll`), `reverse`, `clean`, `value` (text to a number: groups, currency signs, %, accounting brackets),
+  `text` (a number or a date with an Excel format code). Dates: `date(text)`, `date(y, m, d)` (Excel's carry-over), `year`, `quarter`,
+  `month`, `week` (ISO), `day`, `hour`, `minute`, `second`, `weekday` (Excel's return types), `days360` (US and European), `datedif`,
+  `shift_date` (on the bank's calendars). DEL's `round`, `len`, `date`, `year`, `quarter`, `month`, `week`, `day`, `shift_date` are now
+  also Rachana's, ahead of the fold; DEL keeps its own until then.
+- **Distributions (FUNCTION_CATALOGUE.md section 9).** `norm_dist`, `norm_inv`, `norm_s_dist`, `norm_s_inv`, `lognorm_dist`,
+  `lognorm_inv`, `t_dist`, `t_inv`, `chisq_dist`, `chisq_inv`, `f_dist`, `f_inv`, `binom_dist`, `binom_inv`, `poisson_dist`,
+  `expon_dist`, `gamma_dist`, `gamma_inv`, `gamma`, `gamma_ln`, `beta_dist`, `beta_inv`, `weibull_dist`, `hypgeom_dist`,
+  `negbinom_dist`, `erf`, `erfc`, `standardize`, `confidence_norm`, `confidence_t`, `fisher`, `fisher_inv`, on published numerics
+  (`SpecialFunctions`: Lanczos's gamma, the incomplete gamma and beta by series and continued fractions, erfc from the incomplete
+  gamma, Acklam's inverse normal refined by Halley's step); no library added (commons-math3 is not on Rachana's class path). Every one
+  matches the examples on Excel's own pages.
+- **Finance on given flows (FUNCTION_CATALOGUE.md section 8).** `npv`, `xnpv`, `irr`, `xirr`, `mirr`, `pv`, `fv`, `pmt`, `ipmt`, `ppmt`,
+  `nper`, `rate`, `cumipmt`, `cumprinc`, `effect`, `nominal`, `fvschedule`, `rri`, `pduration`, `accrued` (exact in decimal), `dollarde`,
+  `dollarfr`, `macaulay_duration`, `modified_duration`, `convexity`. `irr`, `xirr` and `rate` find their root by Newton's method, then a
+  scan for a change of sign and bisection, to 1e-12 (`RootFinder`), and say in words when no rate makes the value 0. A missing flow
+  gives an empty figure, never a shifted one. `discount_factor` and `forward_rate` stay planned: Rachana has no clean reader of an
+  `ir-curve` kind.
+- **The engine's aggregates.** `sumproduct`, `sumsq`, `product` (a mantissa and a binary exponent, so a long product never overflows on
+  the way), `devsq`, `skewness_pop`, `covar_pop`, `steyx` (mergeable, each through the split-and-merge harness within 1e-12), `avedev`,
+  `percentile_exc`, `rank_avg`, `percent_rank_of`, `mode_multi` (holistic, merging their values exactly); in a pivot cell and over a
+  Rachana list alike.
+- **MATLAB's list functions.** In Rachana: `fillmissing`, `interp1`, `polyval`, `trapz`, `cumtrapz`, `union`, `intersect`, `difference`,
+  `is_member`, and `sort` by several keys (MATLAB's `sortrows`). From the engine (its aggregates, registered into Rachana): `cumsum`,
+  `cumprod`, `cummax`, `cummin`, `movsum`, `movmean`, `movstd`, `movmedian`, `maxk`, `mink`, `bounds`, `zscore`, `rescale`, `isoutlier`
+  (MATLAB's three scaled MADs), `polyfit` (degree ≤ 6, Householder QR, refused in words when ill-conditioned).
+- **Rules (FUNCTION_CATALOGUE.md, "Rules every function keeps").** The null rule (product owner): `null != 'X'` is true and
+  `null == 'X'` false, a function of a missing value is missing. One rule for text in numbers: no `AVERAGEA`-style forms. No
+  non-deterministic function in a figure.
+- **Docs and tests.** FUNCTION_CATALOGUE.md (sections 1 to 9, the new section 12), FUNCTIONS.md regenerated (285 functions with part A's and the measure-level ones; the
+  catalogue test now checks sections 8 and 9), RACHANA_REFERENCE.md "The Excel, SAS and MATLAB set". Tests: `DistributionsTest`,
+  `FinanceFunctionsTest`, `MoreScalarsTest`, `ListMoreTest` (drishti-rachana), `MoreAggregatesTest`, `RachanaListAnalyticsTest`
+  (drishti-bicompute), each on Excel's or MATLAB's documented examples, with empty, masked and wrong-typed arguments.
+- **One implementation of each function after the merge onto 2.9.11.b.** Part A and the function catalogue both added `round`, `len`,
+  `date`, the date parts and `shift_date`; each is now registered once: `round` in `NumberFunctions` (half away from zero, in decimal,
+  places within ±100), `len` in `TextParts` (characters, counted as code points as the engine's SQL counts them), `date` (one ISO text
+  or year, month, day) and `year` … `second` in `DateParts`, `timestamp`, `business_days_between` and `shift_date` in
+  `DatePartFunctions` (the BI lowering and filter context call its `shift`). `shift_date`'s unit is `'business-day'` (the design's) and
+  `'business_day'` (as `intck` writes it) is read as the same; a calendar moves only business days; at most 100,000 business days.
+  The pivot's show-as is `core.ShowAs` alone (develop's copy inside `PivotAnswer` is gone). Help → Functions lists the engine's
+  measure-level functions (`ratio`, `share_of`, `calc` …) under their own heading.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox

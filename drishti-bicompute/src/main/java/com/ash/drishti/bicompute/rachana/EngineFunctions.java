@@ -118,6 +118,32 @@ public final class EngineFunctions implements FunctionProvider {
         agg(out, "string_agg", 2, 4, "list, [field], sep, [distinct]", "holistic",
                 "the values joined by sep in text order (distinct true: each once); empty past 1,000 values",
                 "string_agg($.LEGS[*].CURRENCY, ', ', true)");
+        agg(out, "skewness_pop", 1, 2, "list, [field]", "mergeable", "the population skewness (Excel's SKEW.P); empty without spread",
+                "skewness_pop($.TRADES[*].PNL)");
+        agg(out, "devsq", 1, 2, "list, [field]", "mergeable", "Σ(x − mean)² (Excel's DEVSQ, SAS's CSS)", "devsq($.TRADES[*].PNL)");
+        agg(out, "covar_pop", 2, 3, "list, aField, bField | as, bs", "mergeable", "the population covariance (Excel's COVARIANCE.P)",
+                "covar_pop($.TRADES, 'PNL', 'NOTIONAL')");
+        agg(out, "steyx", 2, 3, "list, yField, xField | ys, xs", "mergeable",
+                "the standard error of y predicted from x (Excel's STEYX); empty under three pairs", "steyx($.TRADES, 'PNL', 'QUANTITY')");
+        agg(out, "sumproduct", 2, 3, "list, aField, bField | as, bs", "mergeable", "Σ a·b over the pairs both present (Excel's SUMPRODUCT)",
+                "sumproduct($.LEGS, 'NOTIONAL', 'RATE')");
+        agg(out, "sumsq", 1, 2, "list, [field]", "mergeable", "Σ x² (Excel's SUMSQ, SAS's USS)", "sumsq($.TRADES[*].PNL)");
+        agg(out, "product", 1, 2, "list, [field]", "mergeable", "Π x (Excel's PRODUCT); empty for no number",
+                "product(map($.RETURNS, 1 + @)) - 1");
+        agg(out, "avedev", 1, 2, "list, [field]", "holistic", "the mean absolute deviation from the mean (Excel's AVEDEV)",
+                "avedev($.TRADES[*].PRICE)");
+        agg(out, "percentile_exc", 2, 3, "list, [field], p", "holistic",
+                "the p-quantile at rank p·(n + 1) (Excel's PERCENTILE.EXC; QUARTILE.EXC at k/4); empty outside 1..n",
+                "percentile_exc($.TRADES[*].PNL, 0.25)");
+        agg(out, "rank_avg", 2, 4, "list, [field], value, [ascending]", "holistic",
+                "the value's rank among the list's, ties averaged, largest first unless ascending is 1 (Excel's RANK.AVG)",
+                "rank_avg($.TRADES[*].PNL, $.PNL)");
+        agg(out, "percent_rank_of", 2, 4, "list, [field], value, [digits]", "holistic",
+                "the value's rank as a fraction 0..1, cut to 3 significant digits (Excel's PERCENTRANK.INC)",
+                "percent_rank_of($.TRADES[*].PNL, 1000)");
+        agg(out, "mode_multi", 1, 2, "list, [field]", "holistic", "every most frequent value, ascending, as a list (Excel's MODE.MULT)",
+                "mode_multi($.LEGS[*].CURRENCY)");
+        ListAnalytics.register(out);
         measureLevel(out);
         out.add(new Provided("measure", 1, 3, "name, [scope], [options]", "measure",
                 "a compute engine's measure for one scope (VaR, ES …), exactly from its engine, never summed",

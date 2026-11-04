@@ -17,16 +17,15 @@ package com.ash.drishti.rachana.el;
 
 import com.ash.drishti.common.BusinessCalendar;
 import java.time.LocalDate;
-import java.time.temporal.IsoFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 /**
- * The scalars DEL had that Rachana gains with the fold (BI_FOUNDATION_2911E.md 2.5, rows 2, 6 and 10 to 18, 57): {@code round},
- * {@code len}, {@code date}, {@code timestamp}, {@code year}, {@code quarter}, {@code month}, {@code week}, {@code day},
- * {@code business_days_between} and {@code shift_date}. Each keeps its DEL entry's edge cases: null in, null out; a date is ISO text and
+ * The date scalars DEL had that Rachana gains with the fold (BI_FOUNDATION_2911E.md 2.5, rows 11, 17, 18 and 57): {@code timestamp},
+ * {@code business_days_between} and {@code shift_date}. DEL's {@code round}, {@code len}, {@code date} and the date parts are Rachana's
+ * one implementations in {@link NumberFunctions}, {@link TextParts} and {@link DateParts}. Each keeps its DEL entry's edge cases: null in, null out; a date is ISO text and
  * a date result ISO text; {@code week} is the ISO week; business days are the platform's calendars ({@code USNY} when none is named).
  * The engine's compiler writes the same functions in SQL, and the differential test proves the two agree value for value.
  */
@@ -37,32 +36,23 @@ public final class DatePartFunctions {
     /** The units of {@code shift_date}. */
     public static final Set<String> UNITS = Set.of("business-day", "day", "week", "month", "quarter", "year");
 
+    /** The most business days {@code shift_date} walks: about 400 years, a bound on the work. */
+    static final int MAX_BUSINESS_SHIFT = 100_000;
+
     static void register(Functions.Table t) {
-        t.fn("round", 1, 2, (a, c) -> round(a));
-        t.fn("len", 1, 1, (a, c) -> {
-            String s = Args.text("len", a.get(0));
-            return s == null ? null : (Object) (long) s.codePointCount(0, s.length());
-        });
-        t.fn("date", 1, 1, (a, c) -> Args.out(Args.date("date", a.get(0))));
         t.fn("timestamp", 1, 1, (a, c) -> timestamp(a.get(0)));
-        t.fn("year", 1, 1, (a, c) -> part("year", a.get(0)));
-        t.fn("quarter", 1, 1, (a, c) -> part("quarter", a.get(0)));
-        t.fn("month", 1, 1, (a, c) -> part("month", a.get(0)));
-        t.fn("week", 1, 1, (a, c) -> part("week", a.get(0)));
-        t.fn("day", 1, 1, (a, c) -> part("day", a.get(0)));
         t.fn("business_days_between", 2, 3, (a, c) -> businessDays(a)).check("business_days_between",
                 args -> DateFunctions.calendarProblem(Functions.literal(args, 2)));
         t.fn("shift_date", 2, 4, (a, c) -> shift(a)).check("shift_date", DatePartFunctions::checkShift);
     }
 
-    /** {@code round(x, [n])}: to n places (0 by default), a half away from zero, as the database rounds. */
-    private static Object round(List<Object> a) {
-        java.math.BigDecimal x = Args.decimal("round", a.get(0));
-        Integer n = a.size() > 1 && !Values.isNull(a.get(1)) ? Args.whole("round", a.get(1)) : Integer.valueOf(0);
-        if (x == null || n == null) {
-            return null;
-        }
-        return Args.out(x.setScale(n, java.math.RoundingMode.HALF_UP));
+    /**
+     * A unit of {@code shift_date} in its one spelling: {@code business_day}, as {@code intck} writes it, is read as {@code business-day}
+     * (DEL's and the design's), so either spelling moves the same dates.
+     */
+    public static String unit(String u) {
+        String x = u.strip().toLowerCase(Locale.ROOT);
+        return "business_day".equals(x) ? "business-day" : x;
     }
 
     private static Object timestamp(Object v) {
@@ -74,21 +64,6 @@ public final class DatePartFunctions {
             throw Args.typeError("timestamp", v, "a timestamp (yyyy-mm-ddThh:mm)");
         }
         return s.trim().replace(' ', 'T');
-    }
-
-    /** A part of a date: a whole number. */
-    static Object part(String fn, Object v) {
-        LocalDate d = Args.date(fn, v);
-        if (d == null) {
-            return null;
-        }
-        return switch (fn) {
-            case "year" -> (long) d.getYear();
-            case "quarter" -> (long) ((d.getMonthValue() - 1) / 3 + 1);
-            case "month" -> (long) d.getMonthValue();
-            case "week" -> (long) d.get(IsoFields.WEEK_OF_WEEK_BASED_YEAR);
-            default -> (long) d.getDayOfMonth();
-        };
     }
 
     /** The calendar of argument {@code i}: the one named, or the default when none is (null or left out). */
@@ -124,14 +99,24 @@ public final class DatePartFunctions {
     private static Object shift(List<Object> a) {
         LocalDate d = Args.date("shift_date", a.get(0));
         Integer n = Args.whole("shift_date", a.get(1));
-        String unit = a.size() > 2 && !Values.isNull(a.get(2)) ? Args.text("shift_date", a.get(2)).toLowerCase(Locale.ROOT) : "business-day";
+        String unit = a.size() > 2 && !Values.isNull(a.get(2)) ? unit(Args.text("shift_date", a.get(2))) : "business-day";
         if (!UNITS.contains(unit)) {
             throw Args.error("shift_date", "unit is one of " + new java.util.TreeSet<>(UNITS) + ", not '" + unit + "'");
+        }
+        if (a.size() > 3 && !Values.isNull(a.get(3)) && !"business-day".equals(unit)) {
+            throw Args.error("shift_date", "a calendar moves only 'business_day' or 'business-day', not '" + unit + "'");
         }
         if (d == null || n == null) {
             return null;
         }
-        return Args.out(shift(d, n, unit, "business-day".equals(unit) ? calendar("shift_date", a, 3) : null));
+        if ("business-day".equals(unit) && Math.abs(n) > MAX_BUSINESS_SHIFT) {
+            throw Args.error("shift_date", "moves at most " + MAX_BUSINESS_SHIFT + " business days");
+        }
+        try {
+            return Args.out(shift(d, n, unit, "business-day".equals(unit) ? calendar("shift_date", a, 3) : null));
+        } catch (java.time.DateTimeException e) {
+            throw Args.error("shift_date", "the date falls outside the calendar's years");
+        }
     }
 
     /** A date moved by {@code n} units (business days on the calendar: holidays and weekends skipped). */
@@ -154,7 +139,7 @@ public final class DatePartFunctions {
 
     private static String checkShift(List<Expr> args) {
         List<String> problems = new ArrayList<>();
-        if (Functions.literal(args, 2) instanceof String u && !UNITS.contains(u)) {
+        if (Functions.literal(args, 2) instanceof String u && !UNITS.contains(unit(u))) {
             problems.add("unit is one of " + new java.util.TreeSet<>(UNITS) + ", not '" + u + "'");
         }
         String cal = DateFunctions.calendarProblem(Functions.literal(args, 3));

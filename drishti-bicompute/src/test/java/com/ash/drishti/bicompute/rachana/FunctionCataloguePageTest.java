@@ -33,14 +33,14 @@ import org.junit.jupiter.api.Test;
  * The one function catalogue page (ONE_GRAMMAR.md section 5): {@code docs/guides/FUNCTIONS.md} is what the registries give (Rachana's
  * table and the engine's functions in it), and the registries and the reviewed catalogue (FUNCTION_CATALOGUE.md) name the same
  * functions: every registered function is in the catalogue, and every function the catalogue says Rachana or the engine has built
- * (sections 1 to 4, 6 and 7) is registered. Regenerate the page with {@code -Ddrishti.functions.write=true}.
+ * (sections 1 to 4 and 6 to 9) is registered. Regenerate the page with {@code -Ddrishti.functions.write=true}.
  */
 class FunctionCataloguePageTest {
 
     static final Path ROOT = Path.of("..");
     static final Pattern NAME = Pattern.compile("`([a-z_][a-z0-9_]*)\\(");
     static final Pattern SECTION = Pattern.compile("^## (\\d+)\\.");
-    static final Set<Integer> SECTIONS = Set.of(1, 2, 3, 4, 5, 6, 7);
+    static final Set<Integer> SECTIONS = Set.of(1, 2, 3, 4, 5, 6, 7, 8, 9);
 
     @Test
     void theCommittedPageIsWhatTheRegistriesGive() throws Exception {

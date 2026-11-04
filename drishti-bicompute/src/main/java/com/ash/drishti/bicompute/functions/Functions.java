@@ -80,7 +80,23 @@ public final class Functions {
             new Info("kth_largest", "holistic", "x, k", "the k-th largest value (Excel's LARGE)", false),
             new Info("kth_smallest", "holistic", "x, k", "the k-th smallest value (Excel's SMALL)", false),
             new Info("string_agg", "holistic", "x, 'sep', [true]", "the values joined by sep in text order (true: each once), at most "
-                    + Holistics.STRING_AGG_MAX + " values", false));
+                    + Holistics.STRING_AGG_MAX + " values", false),
+            new Info("skewness_pop", "mergeable", "x", "the population skewness, Excel's SKEW.P (moments to the third order)", false),
+            new Info("devsq", "mergeable", "x", "Σ(x − mean)², Excel's DEVSQ, SAS's CSS (moments)", false),
+            new Info("covar_pop", "mergeable", "x, y", "the population covariance, Excel's COVARIANCE.P (co-moments)", false),
+            new Info("steyx", "mergeable", "y, x", "the standard error of y predicted from x, Excel's STEYX (co-moments)", false),
+            new Info("sumproduct", "mergeable", "x, y", "Σ x·y over the rows where both are present, Excel's SUMPRODUCT", true),
+            new Info("sumsq", "mergeable", "x", "Σ x², Excel's SUMSQ, SAS's USS", true),
+            new Info("product", "mergeable", "x", "Π x, Excel's PRODUCT (mantissa and exponent kept apart)", false),
+            new Info("avedev", "holistic", "x", "the mean absolute deviation from the mean, Excel's AVEDEV", false),
+            new Info("percentile_exc", "holistic", "x, p", "the p-quantile at rank p·(n + 1), Excel's PERCENTILE.EXC (QUARTILE.EXC at k/4)",
+                    false),
+            new Info("rank_avg", "holistic", "x, value, [ascending]", "the value's rank among the cell's, ties averaged, Excel's RANK.AVG",
+                    false),
+            new Info("percent_rank_of", "holistic", "x, value, [digits]", "the value's rank as a fraction 0..1, Excel's PERCENTRANK.INC",
+                    false),
+            new Info("mode_multi", "holistic", "x", "every most frequent value, ascending, Excel's MODE.MULT (at most "
+                    + MoreAggregates.MODE_MULTI_MAX + " different values)", false));
 
     private Functions() {}
 
@@ -123,6 +139,17 @@ public final class Functions {
             case "trimmean" -> new Holistics.TrimMean(numbers.isEmpty() ? -1 : numbers.get(0));
             case "kth_largest", "kth_smallest" -> new Holistics.Kth(n, numbers.isEmpty() ? -1 : numbers.get(0));
             case "string_agg" -> new Holistics.StringAgg(texts.isEmpty() ? null : texts.get(0), !numbers.isEmpty() && numbers.get(0) != 0);
+            case "skewness_pop", "devsq" -> new Moments(n);
+            case "covar_pop", "steyx" -> new Comoments(n);
+            case "sumproduct" -> new MoreAggregates.SumProduct();
+            case "sumsq" -> new MoreAggregates.SumSq();
+            case "product" -> new MoreAggregates.Product();
+            case "avedev" -> new MoreAggregates.AveDev();
+            case "percentile_exc" -> new MoreAggregates.PercentileExc(numbers.isEmpty() ? -1 : numbers.get(0));
+            case "rank_avg" -> new MoreAggregates.RankAvg(numbers.isEmpty() ? Double.NaN : numbers.get(0), numbers.size() > 1 ? numbers.get(1) : 0);
+            case "percent_rank_of" -> new MoreAggregates.PercentRankOf(numbers.isEmpty() ? Double.NaN : numbers.get(0),
+                    numbers.size() > 1 ? numbers.get(1) : Double.NaN);
+            case "mode_multi" -> new MoreAggregates.ModeMulti();
             default -> null;
         };
         return Optional.ofNullable(f);

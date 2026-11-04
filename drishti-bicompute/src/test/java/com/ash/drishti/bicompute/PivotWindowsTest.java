@@ -63,7 +63,12 @@ class PivotWindowsTest {
             Map.entry("covar(PNL, NOTIONAL)", "covar_samp(PNL, NOTIONAL)"), Map.entry("slope(PNL, NOTIONAL)", "regr_slope(PNL, NOTIONAL)"),
             Map.entry("intercept(PNL, NOTIONAL)", "regr_intercept(PNL, NOTIONAL)"), Map.entry("rsq(PNL, NOTIONAL)", "regr_r2(PNL, NOTIONAL)"),
             Map.entry("iqr(PNL)", "quantile_cont(PNL, 0.75) - quantile_cont(PNL, 0.25)"),
-            Map.entry("kth_largest(PNL, 3)", "list_sort(list(PNL), 'DESC')[3]"), Map.entry("kth_smallest(PNL, 2)", "list_sort(list(PNL))[2]"));
+            Map.entry("kth_largest(PNL, 3)", "list_sort(list(PNL), 'DESC')[3]"), Map.entry("kth_smallest(PNL, 2)", "list_sort(list(PNL))[2]"),
+            // 2.9.11.e: the new aggregates with a SQL state, computed in the GROUPING SETS statement, against a plain query
+            Map.entry("sumproduct(PNL, NOTIONAL)", "sum(PNL * NOTIONAL)"), Map.entry("sumsq(PNL)", "sum(PNL * PNL)"),
+            Map.entry("devsq(PNL)", "var_pop(PNL) * count(PNL)"), Map.entry("covar_pop(PNL, NOTIONAL)", "covar_pop(PNL, NOTIONAL)"),
+            Map.entry("steyx(PNL, NOTIONAL)", "sqrt((regr_syy(PNL, NOTIONAL) - regr_sxy(PNL, NOTIONAL) * regr_sxy(PNL, NOTIONAL) "
+                    + "/ regr_sxx(PNL, NOTIONAL)) / (regr_count(PNL, NOTIONAL) - 2))"));
 
     @SuppressWarnings("unchecked")
     static Map<String, Map<String, Object>> cells(Map<String, Object> a) {

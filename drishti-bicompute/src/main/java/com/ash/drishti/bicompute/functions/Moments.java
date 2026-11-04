@@ -37,11 +37,14 @@ import java.util.List;
 public final class Moments implements AggFunction<Object> {
 
     /** The names this class answers. */
-    public static final List<String> NAMES = List.of("stderr", "cv", "skewness", "kurtosis");
+    public static final List<String> NAMES = List.of("stderr", "cv", "skewness", "kurtosis", "skewness_pop", "devsq");
 
     private final String name;
 
-    /** {@code name}: stderr, cv, skewness or kurtosis. */
+    /**
+     * {@code name}: stderr, cv, skewness, kurtosis, skewness_pop (the population skewness, Excel's SKEW.P) or devsq (Σ(x − mean)², Excel's
+     * DEVSQ, SAS's CSS).
+     */
     public Moments(String name) {
         if (!NAMES.contains(name)) {
             throw new IllegalArgumentException("no moment statistic " + name);
@@ -66,7 +69,7 @@ public final class Moments implements AggFunction<Object> {
 
     @Override
     public String resultUnit() {
-        return "stderr".equals(name) ? null : "";
+        return "stderr".equals(name) || "devsq".equals(name) ? null : "";
     }
 
     /** The state: {n, mean, M2, M3, M4}. */
@@ -136,6 +139,12 @@ public final class Moments implements AggFunction<Object> {
         double[] st = (double[]) s;
         double n = st[0];
         double m2 = Math.max(0, st[2]);
+        if ("devsq".equals(name)) {
+            return n < 1 ? null : m2;
+        }
+        if ("skewness_pop".equals(name)) {
+            return n < 1 || m2 == 0 ? null : Math.sqrt(n) * st[3] / Math.pow(m2, 1.5);
+        }
         if (n < 2) {
             return null;
         }
@@ -152,6 +161,8 @@ public final class Moments implements AggFunction<Object> {
     @Override
     public String emptyNote() {
         return switch (name) {
+            case "devsq" -> "no values in the cell";
+            case "skewness_pop" -> "no values in the cell, or no spread (Excel's #DIV/0!)";
             case "stderr" -> "fewer than two values in the cell";
             case "cv" -> "fewer than two values in the cell, or a mean of 0";
             case "skewness" -> "fewer than three values in the cell, or no spread (Excel's #DIV/0!)";
@@ -186,7 +197,7 @@ public final class Moments implements AggFunction<Object> {
     /** {@code stderr} and {@code cv} need the second moment only, which SQL gives exactly; the third and fourth are computed from rows. */
     @Override
     public List<String> sqlState(List<String> in) {
-        if ("skewness".equals(name) || "kurtosis".equals(name)) {
+        if ("skewness".equals(name) || "kurtosis".equals(name) || "skewness_pop".equals(name)) {
             return List.of();
         }
         return List.of("count(" + in.get(0) + ")", "avg(" + in.get(0) + ")", "var_pop(" + in.get(0) + ")");
