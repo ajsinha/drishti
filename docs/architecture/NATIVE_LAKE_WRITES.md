@@ -57,7 +57,8 @@ The answer depends on how wide a row is.
 - **Vector rows**: one million a second means parsing about half a billion decimal numbers a second. That needs every core of a large
   server, and even then text is the limit. **For vectors, the input format matters more than the library.** A binary input
   (Arrow IPC or Parquet, for example through Arrow Flight `DoPut`) skips the parsing entirely. That conflicts with the rule that JSON
-  Lines is the data standard, so it is listed as an open question (section 8), not a recommendation.
+  Lines is the data standard; section 7 describes an encoding that keeps the rule (Base64 vectors inside JSON Lines) and the
+  binary file formats, which are open questions (section 9).
 
 ## 4. Delta's own limits
 
@@ -81,6 +82,7 @@ These hold whatever library writes the files.
 | **D. DuckDB's Delta extension writing the table itself** | `INSERT INTO` an attached Delta table (added in 2026) | high | Appends only, as documented; replace mode and the lake configuration's settings would sit outside Drishti. Not recommended over A |
 | **E. simdjson-java** | A pure-Java SIMD JSON parser | parse stage only, perhaps 2 to 4 times | No native code, low risk. Already named in BENCHMARK.md as the parse stage's candidate. Worth doing whatever else is chosen |
 | **F. A binary input path** | Arrow IPC or Parquet files in the inbox, or Arrow Flight `DoPut` | the fastest for vector rows: no parsing | Against the JSON Lines rule; a decision for the product owner |
+| **G. Base64 vectors inside JSON Lines** | the vector field carries its numbers as Base64 binary (section 7) | about 5 to 10 times on the vectors' parse | Keeps the JSON Lines rule |
 
 ## 6. What any native path must keep
 
@@ -92,27 +94,64 @@ These hold whatever library writes the files.
 - **Memory bounded** by the loader's existing budget; the native engine's own memory limit set from it.
 - **The lake configuration** stays the one source of partitions, load mode and table settings.
 
-## 7. The measurements that decide
+## 7. The input encoding: why text is the limit for vectors
+
+For a VaR vector row, most of the loader's time is spent turning 510 decimal numbers into binary doubles: about half a billion numbers
+for 1,000,000 positions and one date. A faster engine (option A) does the same work with more cores and less overhead; it cannot skip
+it. Estimates, to be measured (section 8):
+
+| 1,000,000 positions, one date | Time | Gain |
+|---|---|---|
+| Today: the pure-Java loader, JSON Lines text (measured: 20.0 s for two dates) | about 10 s | |
+| Option A: DuckDB JSON → Parquet, Delta Kernel Java commits | about 3 to 5 s | about 2 to 3 times |
+| A binary vector encoding (below) with option A or a tuned Java pipeline | about 1 to 2 s | about 5 to 10 times |
+| Narrow rows (trades, about 30 fields), 1,000,000 rows: today and option A | about 2 to 3 s; about 0.5 to 1 s | about 3 to 5 times |
+
+The encodings that keep JSON's document model:
+
+| Encoding | What it is | Reading the vectors | JSON Lines rule |
+|---|---|---|---|
+| **JSON Lines text** (today) | numbers as decimal text | the baseline | kept |
+| **Base64 vectors inside JSON Lines** | still one JSON document a line; the vector field holds the Base64 of its numbers as little-endian binary, the other fields are ordinary JSON: `{"POSITION_ID": "P-1", "PNL_ENC": "f64le", "PNL": "AAAA…"}` | about 5 to 10 times faster (Base64 decodes at gigabytes a second; no decimal parsing) | **kept**: it is plain JSON Lines with one encoded field |
+| **CBOR, Smile or MessagePack** (binary JSON) | the same documents in a binary file format, numbers stored as raw 8-byte doubles; Jackson reads CBOR and Smile in pure Java | about 5 to 10 times faster | an exception: the same data model, a different file format |
+| **Arrow IPC or Parquet** | columnar binary, written straight to Parquet | the fastest: no parsing | an exception: not JSON |
+
+**Base64 vectors inside JSON Lines** is the most promising: it keeps the rule and removes most of the parse cost.
+
+- **float32 or float64.** The server already holds vectors as float32. A `f32le` encoding halves the vector's size (510 numbers:
+  about 2.7 KB of Base64 against 5.4 KB of text). The choice is the feed's, named in the field (`PNL_ENC`), and the lake column's
+  type follows the lake configuration as today.
+- **Both forms accepted.** The loader reads a text array or an encoded field, so existing feeds keep working; the data contract names
+  the field's encodings.
+- **Exactness.** `f64le` carries the double exactly; `f32le` rounds once, as the server's float32 store already does. The decimal text
+  of today is converted to the same doubles, so a table loaded from text and from `f64le` is identical to the bit.
+- **The other loaders** (Python, the in-memory lake, Iceberg) and the generators follow the same encoding, one reader each
+  (no second format machinery).
+
+## 8. The measurements that decide
 
 A spike, run on an idle machine with the user's stack down:
 
 1. The same inputs as BENCHMARK.md 7.1: the 400,000-row and 2,000,000-row VaR files, plus a narrow-row file (2,000,000 trades).
-2. For each of today's Java loader, option A, and option E: rows a second end to end, per stage (decompress, parse, write, commit),
+2. Each input in three encodings: JSON Lines text, Base64 vectors (`f64le` and `f32le`), and CBOR.
+3. For each of today's Java loader, option A, and option E: rows a second end to end, per stage (decompress, parse, write, commit),
    peak memory, the number and size of files written, and the table compared to the bit.
-3. Thread scaling: 1, 4, 8, 16 and 24 threads.
-4. Option B only if A is under half of the target on narrow rows.
+4. Thread scaling: 1, 4, 8, 16 and 24 threads.
+5. Option B only if A is under half of the target on narrow rows.
 
 The results go into BENCHMARK.md, with a recommendation.
 
-## 8. Open questions for the product owner
+## 9. Open questions for the product owner
 
-1. **The target per row shape.** Millions a second for narrow rows looks reachable; for 510-number vectors from JSON it needs a very
-   large server. Which shapes must reach it?
-2. **A binary input path** (option F) for the vectors: an exception to the JSON Lines rule, or not?
-3. **Iceberg** at the same speed in the same step, or Delta first?
-4. **When** to run the spike: proposed after 2.9.11.c's benchmark, on the same idle-machine slot.
+1. **The target per row shape.** Millions a second for narrow rows looks reachable; for 510-number vectors it needs a binary vector
+   encoding or a very large server. Which shapes must reach it?
+2. **Base64 vectors inside JSON Lines** (`f64le`, `f32le`): adopt as an accepted form of the JSON Lines standard?
+3. **A binary file format** (CBOR, or Arrow IPC and Parquet through Arrow Flight `DoPut`) for the vectors: an exception to the JSON
+   Lines rule, or not?
+4. **Iceberg** at the same speed in the same step, or Delta first?
+5. **When** to run the spike: proposed after 2.9.11.c's benchmark, on the same idle-machine slot.
 
-## 9. Sources
+## 10. Sources
 
 - delta-rs, with Python and Ruby bindings: <https://github.com/fvaleye/delta-rs>
 - delta-dotnet, .NET bindings on delta-rs through the Arrow C Data Interface: <https://github.com/delta-incubator/delta-dotnet>
