@@ -72,12 +72,9 @@ final class VarPivotCodes {
     }
 
     private final MrCubeProperties props;
-    private final Map<String, Codes> kept = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
-        @Override
-        protected boolean removeEldestEntry(Map.Entry<String, Codes> e) {
-            return size() > 12;
-        }
-    });
+    /** The kept codes, least recently used first (guarded by itself; a plain map, no subclass: nothing here is Serializable). */
+    private final LinkedHashMap<String, Codes> kept = new LinkedHashMap<>(16, 0.75f, true);
+    private static final int KEPT = 12;
 
     VarPivotCodes(MrCubeProperties props) {
         this.props = props;
@@ -116,17 +113,29 @@ final class VarPivotCodes {
     /** The codes of a dimension on a book (kept by the book's key). */
     Codes codes(VarBook book, String bookKey, String dim) {
         String key = bookKey + "|" + System.identityHashCode(book) + "|" + dim;
-        Codes c = kept.get(key);
+        Codes c;
+        synchronized (kept) {
+            c = kept.get(key);
+        }
         if (c == null) {
             c = build(book, dim);
-            kept.put(key, c);
+            synchronized (kept) {
+                kept.put(key, c);
+                java.util.Iterator<String> eldest = kept.keySet().iterator();
+                while (kept.size() > KEPT && eldest.hasNext()) {
+                    eldest.next();
+                    eldest.remove();
+                }
+            }
         }
         return c;
     }
 
     /** Releases every kept code (the engine switched off). */
     void clear() {
-        kept.clear();
+        synchronized (kept) {
+            kept.clear();
+        }
     }
 
     long bytes() {

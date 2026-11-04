@@ -40,6 +40,7 @@ class S3TablesRestTest {
 
     HttpServer server;
     final List<String> calls = new CopyOnWriteArrayList<>();
+    final List<String> refused = new CopyOnWriteArrayList<>();
 
     @BeforeEach
     void start() throws Exception {
@@ -52,6 +53,7 @@ class S3TablesRestTest {
             int status = 200;
             if (!auth.startsWith("AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/") || !auth.contains("/us-east-1/s3tables/aws4_request")) {
                 status = 403;
+                refused.add(ex.getRequestMethod() + " " + path);
                 body = "{\"error\":{\"message\":\"not signed for s3tables\",\"type\":\"ForbiddenException\",\"code\":403}}";
             } else {
                 switch (ex.getRequestMethod() + " " + path) {
@@ -101,7 +103,7 @@ class S3TablesRestTest {
             assertThat(c.missing("scenario-pv")).contains("scenario_pv").contains("the kind scenario-pv is the S3 Tables table scenario_pv");
         }
         assertThat(calls).allMatch(x -> !x.contains("| AWS4") || x.contains("/us-east-1/s3tables/aws4_request"));
-        assertThat(calls).noneMatch(x -> x.contains("403"));
+        assertThat(refused).isEmpty();                     // the stand-in's refusals (a signature's hex may itself contain "403")
         assertThat(calls.get(0)).startsWith("GET /iceberg/v1/config?warehouse=" + S3TablesTest.ENCODED + " | AWS4-HMAC-SHA256 Credential=AKIDEXAMPLE/");
         assertThat(calls).anyMatch(x -> x.startsWith("GET " + P + "/namespaces/risk_results/tables/scenario_pv ") && x.endsWith("| null"));
     }
