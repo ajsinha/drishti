@@ -293,6 +293,14 @@ def test_the_drawn_screen_keeps_every_figure_and_the_explanation_moves_into_the_
         tree_box = pg.locator(".vx-tree-panel").bounding_box()
         main_box = pg.locator(".vx-main").bounding_box()
         assert tree_box["x"] < main_box["x"]
+        # the tree fills the height beside the scope: no empty band down the left (its bottom at the window's, or at the scope's)
+        for width in (1500, 1000):
+            pg.set_viewport_size({"width": width, "height": 1000})
+            pg.wait_for_timeout(200)
+            tb, mb = pg.locator(".vx-tree-panel").bounding_box(), pg.locator(".vx-main").bounding_box()
+            bottom, vh = tb["y"] + tb["height"], pg.evaluate("innerHeight")
+            assert abs(bottom - (vh - 10)) <= 4 or abs(bottom - (mb["y"] + mb["height"])) <= 4, (width, tb, mb, vh)
+        pg.set_viewport_size({"width": 1500, "height": 1000})
         pg.locator('.vx-tree .vx-row[data-scope="NODE:MGMT~DESK-FX"]').click()
         _wait(pg, "document.querySelector('[data-var]').dataset.painted === 'NODE:MGMT~DESK-FX'")
         # the six tabs, each with its pane

@@ -64,6 +64,15 @@
 .vx-how.on { background: var(--d-accent); border-color: var(--d-accent); color: var(--d-on-accent); }
 .vx-how:focus-visible, .vx-newb:focus-visible, .vx-pick-new:focus-visible { outline: 2px solid var(--d-accent); outline-offset: 2px; }
 
+/* The hierarchy tree fills the height beside the scope: its panel stretches to the scope's column, so the left never ends in an empty
+   band while the scope's panels go on; the tree itself stays in view under the top bar as the page scrolls, with its own scroll when it
+   is longer than the window (a stacked column below 800 px keeps its own height) */
+@media (min-width: 800.02px) {
+  .vx-tree-panel { align-self: stretch; }
+  .vx-tree-panel .vx-tree { position: sticky; top: calc(var(--vx-header-h, 0px) + 10px);
+    max-height: calc(100vh - var(--vx-header-h, 0px) - 20px); overflow-y: auto; }
+}
+
 /* How this number was built: a drawer over the right of the screen, below the console's top bar (its height measured by var-layout.js
    into --vx-header-h; under the bar's z-index 1030, so the bar's menus open over it) */
 .vx-drawer { position: fixed; top: var(--vx-header-h, 0px); right: 0; bottom: 0; z-index: 1020; width: 440px; max-width: 100vw; border-radius: 0; border-left: 2px solid var(--d-link);

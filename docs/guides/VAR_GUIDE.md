@@ -376,6 +376,8 @@ Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-lay
 - The **?** in the status line opens this guide.
 
 The keys **B**, **M** and **H** work anywhere on the page except while you type in a box or in the basket's sheet.
+
+![System baskets open on the bank, rates typed: the bank's portfolios that match, each with + basket and Edit a copy; the hierarchy tree on the left](img/var/17-baskets.jpg)
 - **Reporting currency** (the status line's right end): USD, EUR, CAD, JPY, GBP (the configured ones) and **More…** (every
   other currency with scenario FX on the date). Every panel follows it, the tiles say it (`VaR 99% · 1 day · EUR`), the choice stays
   for the session and goes into the link; [section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker).
@@ -552,7 +554,10 @@ owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-
 **How calculated ›** in the toolbar (or the key **H**) slides a drawer over the right of the screen; **Esc** or **✕** closes it and
 the focus goes back to the link. The drawer's state is in the page's link (`&how=1`), so a link can open the page with it open. Its
 content is the server's, as sent with the scope's answer (the browser computes nothing), with **Export CSV** (the scope's path),
-**Capture VaR** and **What-if…** (which closes the drawer and opens the basket's sheet). On a phone it rises from the bottom.
+**Capture VaR** and **What-if…** (which closes the drawer and opens the basket's sheet). It starts under the top bar, so the command
+line and the bar's menus stay in reach. On a phone it rises from the bottom.
+
+![How calculated open on the bank: the drawer under the top bar, over the right of the screen](img/var/18-how-calculated.jpg)
 
 The scope as resolved, the positions and trades included, those without a vector, those outside your entitlement, unknown ids, the
 vector batch and data version, the scenario set and its window, the method and rank rule, the ES rule, how components are allocated,

@@ -26,7 +26,7 @@ from _tut import OUT
 import subprocess
 import sys
 
-from _var import LAKE, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
+from _var import HIGH, LAKE, WIDE, open_var, painted, server, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
 from shotlib import ROOT
 from shotlib import Ctx, register
 
@@ -141,7 +141,10 @@ def position(c: Ctx):
 def provenance(c: Ctx):
     open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1&how=1")    # How calculated open: the drawer (how=1)
     painted(c, "DESK:DESK-RATES - BOOK:BOOK-RATES-1")
+    c.page.set_viewport_size({"width": WIDE, "height": 1900})          # the drawer is the window's height: tall enough for every line
+    c.page.wait_for_timeout(300)
     c.save("10-provenance.jpg", locator=".vx-prov")
+    c.page.set_viewport_size({"width": WIDE, "height": HIGH})
 
 
 @shot("11-var-result.jpg")

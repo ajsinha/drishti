@@ -250,7 +250,7 @@
       wraps or folds (ResizeObserver), so the command line, the date and the bar's icons stay visible and clickable. */
   var bar = document.querySelector("header.tbar");
   function headerHeight() {
-    if (drawer) drawer.style.setProperty("--vx-header-h", (bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0) + "px");
+    root.style.setProperty("--vx-header-h", (bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0) + "px");
   }
   headerHeight();
   if (bar && window.ResizeObserver) new ResizeObserver(headerHeight).observe(bar);
