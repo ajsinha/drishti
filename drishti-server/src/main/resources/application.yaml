@@ -525,6 +525,7 @@ drishti:
           - POST /api/v1/admin/connectors/**
           - POST /api/v1/admin/registry/**
           - POST /api/v1/admin/retry/*
+          - POST /api/v1/admin/dataload/undo    # undo a load by its load id (drishti.py lake undo, Admin -> Data loads -> Undo a load; an administrator)
       "[loads:write]":
         description: "Announce that a batch of data has landed (or failed) for a pack: Drishti then refreshes, verifies, checks alerts and tells the people the pack names. Only for packs your roles reach; needs no admin role."
         allow:
