@@ -18,6 +18,7 @@ package com.ash.drishti.server.flight;
 import com.ash.drishti.flight.FlightLimits;
 import com.ash.drishti.flight.FlightService;
 import com.ash.drishti.flight.FlightSettings;
+import com.ash.drishti.flight.FlightSqlCatalog;
 import com.ash.drishti.identity.ApiTokenStore;
 import com.ash.drishti.identity.AuditLog;
 import com.ash.drishti.identity.UserService;
@@ -111,6 +112,7 @@ public class FlightConfiguration {
     public ServerFlightBackend flightBackend(FlightSettings settings, FlightNodes nodes, ApiTokenStore tokens, UserService users,
             ObjectProvider<AuditLog> audit, ObjectProvider<AdmissionGate> gate, ObjectProvider<DataViewController> data,
             ObjectProvider<ModelCatalog> catalog, ObjectProvider<MqService> mq, ObjectProvider<BiService> bi, ObjectProvider<PivotController> pivot,
+            ObjectProvider<com.ash.drishti.server.bi.sql.SqlService> sql,
             ObjectProvider<MemoryLake> memory, ObjectProvider<FlightForm> measures,
             ObjectProvider<com.ash.drishti.server.embed.EmbedTokenService> embed) {
         List<FlightForm> forms = new ArrayList<>(measures.orderedStream().toList());                 // the engines' own forms (VaR's measure form)
@@ -121,7 +123,7 @@ public class FlightConfiguration {
             forms.add(new LakeFlightForm(com.ash.drishti.lakeconfig.Lakes::current, kinds, dv, memory.getIfAvailable()));   // the lake files (LAKE_CONFIG.md)
         }
         if (catalog.getIfAvailable() != null && mq.getIfAvailable() != null && bi.getIfAvailable() != null) {
-            forms.add(new AnswerFlightForms.Model(catalog.getObject(), mq.getObject(), bi.getObject()));
+            forms.add(new AnswerFlightForms.Model(catalog.getObject(), mq.getObject(), bi.getObject(), sql.getIfAvailable()));
         }
         PivotController pc = pivot.getIfAvailable();
         if (pc != null) {
@@ -132,8 +134,12 @@ public class FlightConfiguration {
     }
 
     @Bean(destroyMethod = "close")
-    public FlightService flightService(FlightSettings settings, ServerFlightBackend backend) {
-        FlightService service = new FlightService(settings, backend, Clock.systemUTC());
+    public FlightService flightService(FlightSettings settings, ServerFlightBackend backend, ObjectProvider<ModelCatalog> catalog,
+            ObjectProvider<BiService> bi, ObjectProvider<com.ash.drishti.server.bi.sql.SqlService> sql) {
+        // Flight SQL on the same port: read-only DSQL over the BI models, answered as a model read (FLIGHT_GUIDE.md, Flight SQL)
+        FlightSqlCatalog models = catalog.getIfAvailable() != null && bi.getIfAvailable() != null && sql.getIfAvailable() != null
+                ? new ServerFlightSqlCatalog(catalog.getObject(), bi.getObject()) : null;
+        FlightService service = new FlightService(settings, backend, Clock.systemUTC(), models);
         backend.nodes().port(service::port);                             // the endpoints name the port in use (0 in the file: any free one)
         return service;
     }

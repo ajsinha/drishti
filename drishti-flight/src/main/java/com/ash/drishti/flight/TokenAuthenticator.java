@@ -45,6 +45,8 @@ public final class TokenAuthenticator implements CallHeaderAuthenticator {
     private final Clock clock;
     private final SecureRandom random = new SecureRandom();
     private final Map<String, Session> sessions = new ConcurrentHashMap<>();
+    /** The live session of a token (by its hash, never the token): a client that sends the token on every call gets the same one. */
+    private final Map<String, String> byToken = new ConcurrentHashMap<>();
 
     private record Session(FlightBackend.Caller caller, Instant expires) {}
 
@@ -84,6 +86,15 @@ public final class TokenAuthenticator implements CallHeaderAuthenticator {
             }
             return result(token, null);
         }
+        String key = hash(token) + "|" + (headers.get(ON_BEHALF_OF) == null ? "" : headers.get(ON_BEHALF_OF));
+        String known = byToken.get(key);
+        if (known != null) {
+            Session s = sessions.get(known);
+            if (s != null && !s.expires.isBefore(now)) {
+                return result(known, known);
+            }
+            byToken.remove(key);
+        }
         FlightBackend.Caller caller;
         try {
             caller = backend.authenticate(token, headers.get(ON_BEHALF_OF));
@@ -98,6 +109,8 @@ public final class TokenAuthenticator implements CallHeaderAuthenticator {
         random.nextBytes(b);
         String id = SESSION_PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(b);
         sessions.put(id, new Session(caller, now.plus(ttl)));
+        byToken.values().removeIf(v -> !sessions.containsKey(v));
+        byToken.put(key, id);
         return result(id, id);
     }
 
@@ -113,6 +126,16 @@ public final class TokenAuthenticator implements CallHeaderAuthenticator {
     /** Ends every session of a token (the token was revoked). */
     public void revoke(String tokenId) {
         sessions.values().removeIf(s -> tokenId.equals(s.caller.tokenId()));
+        byToken.values().removeIf(v -> !sessions.containsKey(v));
+    }
+
+    private static String hash(String token) {
+        try {
+            byte[] d = java.security.MessageDigest.getInstance("SHA-256").digest(token.getBytes(StandardCharsets.UTF_8));
+            return Base64.getUrlEncoder().withoutPadding().encodeToString(d);
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IllegalStateException(e);
+        }
     }
 
     private static AuthResult result(String peer, String issue) {
