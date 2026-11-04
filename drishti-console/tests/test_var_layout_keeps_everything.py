@@ -130,7 +130,7 @@ def test_the_explorer_still_draws_every_tile_es_figure_and_explanation_line(clie
     missing = [needle for needle in EXPLORER_INVENTORY if needle not in js]
     assert not missing, "gone from drishti_var-explorer.js: " + ", ".join(missing)
     explain = client.get("/static/js/drishti_var-explain.js").text
-    assert "drishtiVarExplain" in explain
+    assert "Drishti.varExplain" in explain
 
 
 def test_the_new_layout_baskets_in_two_drop_downs_and_the_drawer(client):

@@ -32,8 +32,8 @@
   var SELF = document.currentScript && document.currentScript.src ? document.currentScript.src : '';
   // an embedded element loads this file from /embed/v1/js/ and the shapes from /embed/v1/ on the same server; the console, from its static folder
   // the client-side renderer (static/render/) loads it from a console that may not be the page's origin: the shapes come from beside it
-  var BASE = /\/embed\/v1\/js\/geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, '')
-    : /\/js\/geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, 'vendor/echarts/maps/') : '/static/vendor/echarts/maps/';   // /static/js/ or /embed/v2/js/: the maps beside it
+  var BASE = /\/embed\/v1\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, '')
+    : /\/js\/(?:drishti_)?geomap\.js/.test(SELF) ? SELF.replace(/js\/(?:drishti_)?geomap\.js.*$/, 'vendor/echarts/maps/') : '/static/vendor/echarts/maps/';   // /static/js/ or /embed/v2/js/: the maps beside it
   var WORLD = 'drishti-world';
   var cache = { world: null, regions: {} };
 

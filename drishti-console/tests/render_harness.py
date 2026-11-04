@@ -146,6 +146,8 @@ class Site:
             return route.fulfill(status=200, body=body, headers={**headers, "Content-Type": ctype + "; charset=utf-8"})
         if path.startswith("/static/"):
             f = (WEB / "static" / path[len("/static/"):]).resolve()
+            if not f.is_file() and f.parent.name in ("js", "css") and not f.name.startswith("drishti_"):
+                f = f.with_name("drishti_" + (f.name[len("drishti-"):] if f.name.startswith("drishti-") else f.name))   # an old name, as CompressedStatic answers it
             if f.is_file() and (WEB / "static") in f.parents:
                 ctype = {".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".woff2": "font/woff2"}.get(f.suffix) or mimetypes.guess_type(f.name)[0] or "application/octet-stream"
                 return route.fulfill(status=200, body=f.read_bytes(), headers={**headers, "Content-Type": ctype})
