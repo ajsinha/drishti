@@ -47,7 +47,7 @@ paths of that design (FFM, the Vector API) as further implementations of the sam
 | **Decompositions and solvers** | `Lapack` (Cholesky, LU, QR, symmetric eigen, SVD, least squares, solve) | LAPACK from the **same** OpenBLAS jar | Hipparchus | new |
 | **Statistics and optimisation** | `Stats`, `Optimise`, `Interpolate`, `Distributions` | none needed | Hipparchus (pure Java; SciPy's role) | new |
 | **Compression** | `Codecs` (zstd, Snappy, LZ4, gzip/deflate) | zstd-jni, snappy-java, lz4-java | aircompressor (pure Java, same formats) | natives used in five modules without a fallback |
-| **Key-value disk store** | `DiskStore` (the disk cache) | RocksDB | a pure-Java store, or memory only with a warning | RocksDB in `drishti-diskcache`, no fallback |
+| **Key-value disk store** | `DiskStore` (the disk cache: get, put, remove, scan in key order) | RocksDB | **H2's MVStore** (pure Java, on disk, keys in order) | RocksDB in `drishti-diskcache`, no fallback |
 | **Embedded SQL engine** | registered for status only | DuckDB | the pivot engine's Java path where it answers; else the feature says it is unavailable | DuckDB in `plugin-duckdb`, `drishti-bicompute`, the server |
 
 DuckDB stays in its modules (it is a whole engine, not a kernel); it is **registered** with `drishti-native` so its status, version and
@@ -61,7 +61,7 @@ drishti-native/
   com.ash.drishti.nativ.linalg    LinearAlgebra, Lapack; JavaBlas, MultiSums, HipparchusLapack; OpenBlas, OpenLapack (JavaCPP)
   com.ash.drishti.nativ.maths     Stats, Optimise, Interpolate, Distributions (Hipparchus)
   com.ash.drishti.nativ.codec     Codecs; Zstd/Snappy/Lz4 natives; aircompressor
-  com.ash.drishti.nativ.store     DiskStore; RocksDbStore; JavaDiskStore
+  com.ash.drishti.nativ.store     DiskStore; RocksDbStore; MvStore (H2 MVStore)
 ```
 
 - **Who depends on it:** `drishti-compute` (VaR and exposure kernels), `drishti-deltalake`, `drishti-lakeio`, `drishti-lakeload`,
@@ -187,4 +187,4 @@ Two drills (a large release); the benchmark with `drishti.native.mode` `off` aga
 | N1 | QuantLib's Windows build | parked with QuantLib (section 6) |
 | N2 | QuantLib version | the latest stable at build time, pinned (for when QuantLib is revisited) |
 | N3 | Out-of-process QuantLib by default? | in-process by default, `worker` mode available (for when QuantLib is revisited) |
-| N4 | The disk store's Java fallback | **memory only with a warning** first; a pure-Java store later if measured as needed |
+| N4 | The disk store's Java fallback | **a pure-Java store on disk, H2's MVStore** (product owner: memory for a disk cache can be a problem). Pure Java, file-backed, ordered keys (the sorted store's scans), compression, concurrent readers; H2 is already a dependency (the JDBC plugin's tests), so the same library family, one pinned version. A cache written by RocksDB is not read by MVStore: each keeps its own folder, and a switch starts the other's cache empty (it is a cache) |
