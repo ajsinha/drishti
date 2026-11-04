@@ -379,6 +379,11 @@ class BackendClient:
         scope computes every netting set of the date: this waits up to a minute."""
         return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
 
+    async def fva(self, method: str, path: str, ident, /, **params) -> Any:
+        """FVA, funding cost and benefit (/api/v1/fva; docs/guides/FVA_GUIDE.md section 6), as the user. ``path`` starts at /api/v1 (``/fva``).
+        The answer reads the exposure engine's (the first of a business date loads its paths): this waits up to a minute."""
+        return await self._send(method, path, ident, params={k: v for k, v in params.items() if v not in (None, "", [])}, timeout=60.0)
+
     async def pivot(self, method: str, path: str, ident, body=None, raw: bool = False, **params) -> Any:
         """The pivot engine (/api/v1/pivot, docs/guides/PIVOT_GUIDE.md), as the user. ``path`` starts after /api/v1/pivot (``/query``);
         ``raw`` returns the bytes and headers of an export. A table's first pivot reads it through its connector: this waits up to two

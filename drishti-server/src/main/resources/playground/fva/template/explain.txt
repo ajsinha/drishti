@@ -77,22 +77,28 @@ FCA + FBA (step 8).
 A flag on every figure computed from a run that is not risk-neutral (step 13).
 ## Term (Main): Engine, Check, Checks, CHECK FAILED, ALL CHECKS PASS
 Engine is the figure Drishti's FVA engine reported for the same scope, date, run and settings, typed in so the workbook can be compared with it; the workbook never uses it in its own calculation. Each check compares a computed figure with the engine's (equal to the cent) or confirms that parts add up. ALL CHECKS PASS means every one holds.
-## Term (Config): Funding spread (flat or points)
-The bank's funding spread over the risk-free rate, a single value or tenor points in decimals, with its source (step 4).
+## Term (Config): Borrowing spread (flat or points)
+The bank's funding (borrowing) spread over the risk-free rate, s_B, a single value or tenor points in decimals, with its source (step 4). FCA uses it.
+## Term (Config): Lending spread
+The spread FBA uses, s_L. With symmetric funding (the default) its cells are formulas that follow the borrowing spread; a bank that lends at another spread names its own curve.
 ## Term (Config): Spread interpolation
 linear in time between the points, flat before the first and after the last.
 ## Term (Config): Discount curve and its points
 The curve's id (the USD overnight-index swap curve by default) and its points (tenor, discount factor), log-linear between them (step 3).
-## Term (Config): Counterparty and bank survival points
-The survival probabilities by tenor from the counterparty's credit curve and the bank's own, used only when FundingSurvival is on (step 10).
-## Term (Config): ee-point, funding-survival, fba
-The three choices of Main as configured (steps 2, 10 and 11).
+## Term (Config): Survival's source
+Where each netting set's survival came from: the counterparty's credit curve (the curve its record names) and the bank's own, survival points log-linear between tenors; a flat hazard rate when a curve is missing, e^(−h t). The values are in Data, column S (step 10).
+## Term (Config): Mode
+profile: EE and ENE in Data are the exposure engine's; paths: they are the means of each netting set's exposures on every path (the Paths tab).
+## Term (Config): EePoint, FundingSurvival, IncludeFba
+The three choices, each a drop-down: end or mid, on or off, on or off (steps 2, 10 and 11). Change one and FVA recomputes.
 ## Term (Config): Sign convention
 Valuation adjustments from the bank's side: costs negative, benefits positive, as CVA and DVA.
-## Term (Data): t, EE, ENE
-Each primary date in years and the exposure engine's EE and ENE at it, after collateral, in USD of that date (step 1).
-## Term (Terms): Δt, DF, s_F, S_C, S_B
-The period, the discount factor, the funding spread and the two survival probabilities at each date (steps 2 to 4 and 10).
+## Term (Data): t, EE, ENE, S
+Each primary date in years and the exposure engine's EE and ENE at it for each netting set, after collateral, in USD of that date (step 1), and S, the product of the counterparty's and the bank's survival probabilities at that date. The first row is today: the current exposure and its negative, read only with the mid point.
+## Term (Paths): E and N
+The paths mode: each netting set's exposure E = max(V − C − IM, 0) and negative exposure N = min(V − C, 0) on every simulated path at each primary date, after the CSA, as the exposure engine computed them; Data's EE and ENE are their averages.
+## Term (Terms): Δt, DF, s_B, s_L, S
+The period, the discount factor, the borrowing and lending spreads at each date (steps 2 to 4); per netting set, S: its survival from Data when FundingSurvival is on, else 1 (step 10).
 ## Term (Terms): EE*, ENE*, FCA term, FBA term
 The discounted exposures and each date's share of FCA and FBA (steps 5 to 7).
 ## Term (Provenance): Sources and flags

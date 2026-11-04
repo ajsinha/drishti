@@ -178,8 +178,8 @@ def forms(name: str, kinds: list[str], specs: dict) -> dict:
         elif k in COLUMNS.get(name, {}):
             out[k] = PF.form_from_columns(COLUMNS[name][k], spec.id_field)
         else:
-            # the exposure engine's figures (exposureEngine.*, added as the page opens) are not stored: never a search field
-            paths = [p for p in dict.fromkeys(STRIP_PATH.findall(" ".join(str(s[1]) for s in spec.strip))) if p not in ("exposureEngine", "EXPOSURE_ENGINE")][:7]
+            # the exposure and FVA engines' figures (exposureEngine.*, fvaEngine.*, added as the page opens) are not stored: never a search field
+            paths = [p for p in dict.fromkeys(STRIP_PATH.findall(" ".join(str(s[1]) for s in spec.strip))) if p not in ("exposureEngine", "EXPOSURE_ENGINE", "fvaEngine", "FVA_ENGINE")][:7]
             out[k] = PF.form_from_columns([p for p in paths if p != spec.id_field], spec.id_field)
     return out
 

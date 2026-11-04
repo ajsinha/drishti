@@ -282,6 +282,11 @@ public enum ErrorCode {
     SACCR_UNKNOWN_SET("DRS-5412", 400),
     /** SA-CCR: the parameter file is refused (a value missing or out of range, every problem listed). */
     SACCR_PARAMETERS("DRS-5413", 502),
+    /**
+     * FVA: refused for the run behind the profile: FVA is a price and needs a risk-neutral run, and the date's run is not
+     * ({@code drishti.ccr.fva.require-risk-neutral}; docs/guides/FVA_GUIDE.md).
+     */
+    FVA_REFUSED("DRS-5447", 409),
     /** A connector file or draft that fails validation. */
     CONNECTOR_INVALID("DRS-5031", 422),
     /** A connector changed since it was read (ETag mismatch), already exists, or is in use and the change was not confirmed. */

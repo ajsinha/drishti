@@ -285,7 +285,25 @@ final class ExposureOfficial implements AutoCloseable {
         f.put("partialSets", s.result().partialSets());
         f.put("trades", s.result().trades.size());
         f.put("flags", s.result().flags);
+        java.util.function.Function<ExposureService.Scoped, Map<String, Object>> priced = fva;
+        if (priced != null) {                                          // FVA of the same answer, captured with it (FVA_GUIDE.md section 6.2)
+            try {
+                Map<String, Object> x = priced.apply(s);
+                if (x != null) {
+                    f.put("fva", x);
+                }
+            } catch (RuntimeException e) {
+                f.put("fva", Map.of("status", "refused", "reason", String.valueOf(e.getMessage())));
+            }
+        }
         return f;
+    }
+
+    /** FVA's figures of an exposure answer (set by the FVA engine's configuration; null or answering null: FVA is not captured). */
+    private volatile java.util.function.Function<ExposureService.Scoped, Map<String, Object>> fva;
+
+    void fva(java.util.function.Function<ExposureService.Scoped, Map<String, Object>> f) {
+        this.fva = f;
     }
 
     private static Long at(ExposureGrid g, ExposureMath.Stats st, int q, String tenor, boolean pfe) {

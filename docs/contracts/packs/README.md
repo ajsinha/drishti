@@ -49,6 +49,7 @@ Every command (mnemonic) of every pack has a data contract: a YAML file beside i
 | `XPATH` | `exposure-path` | [counterparty-risk](counterparty-risk.md#xpath-exposure-path-a-trades-mtm-on-every-path-at-a-grid-date-exposure-path) | input | active |  | 6 |
 | `EXP` | `exposure-result` | [counterparty-risk](counterparty-risk.md#exp-exposure-profile-of-a-scope-computed-exposure-result) | computed | active |  | 0 |
 | `XWIF` | `exposure-whatif` | [counterparty-risk](counterparty-risk.md#xwif-exposure-what-if-before-dealing-computed-python-exposure-whatif) | computed | active |  | 0 |
+| `FVAR` | `fva-result` | [counterparty-risk](counterparty-risk.md#fvar-fva-of-a-scope-computed-fva-result) | computed | active |  | 0 |
 | `XOFC` | `exposure-official-cpty` | [counterparty-risk](counterparty-risk.md#xofc-exposure-official-results-by-netting-set-and-counterparty-published-exposure-official-cpty) | computed | active |  | 0 |
 | `NSMTM` | `nset-mtm` | [counterparty-risk](counterparty-risk.md#nsmtm-netting-set-mtm-totals-derived-from-the-trade-valuations-nset-mtm) | computed | active |  | 0 |
 | `CPMTM` | `cpty-mtm` | [counterparty-risk](counterparty-risk.md#cpmtm-counterparty-mtm-totals-derived-from-the-trade-valuations-cpty-mtm) | computed | active |  | 0 |

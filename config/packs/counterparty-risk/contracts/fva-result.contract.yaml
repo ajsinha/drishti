@@ -1,0 +1,144 @@
+# Project Drishti · Any data. Any domain. One grammar.
+#
+# Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+# All rights reserved.
+#
+# PROPRIETARY AND CONFIDENTIAL.
+#
+# This file is the confidential and proprietary property of Ashutosh Sinha.
+# Unauthorised copying, use, modification, distribution or disclosure of this
+# file, via any medium, is strictly prohibited except with the express prior
+# written permission of the copyright holder.
+#
+# See the LICENSE file in the root of this repository for the full terms.
+
+# Data contract of the fva-result kind (command FVAR): docs/contracts/README.md section 16; the measure's guide is docs/guides/FVA_GUIDE.md
+# (section 6.1) and its design docs/architecture/COUNTERPARTY_ENGINES.md section 5. Written by hand from the engine's record (FvaResultEngine).
+kind: fva-result
+mnemonic: FVAR
+pack: counterparty-risk
+version: '1.0'
+class: computed
+status: active
+title: FVA of a scope (computed)
+description: The funding valuation adjustment of a netting set, counterparty, group, legal entity or the bank (FCA on the expected exposure, FBA
+  on the expected negative exposure, discounted, by the funding spread), computed when asked by the server's FVA engine from the exposure
+  engine's profile after the CSA, as the person asking; never stored.
+source: 'computed by Drishti: the reactive connector fva-engine (java engine com.ash.drishti.server.exposure.FvaResultEngine)'
+grain: One answer per question (the scope asked for, its choices eePoint, fba, survival and spread, and the business date), computed when asked.
+key: []
+dated-by: on request
+cadence:
+  frequency: on change
+  due: computed on request and again when the date's inputs load (data-version trigger)
+storage:
+  connector: fva-engine
+  plugin: reactive
+fields:
+- name: STATUS
+  type: text
+  presence: required
+  enum: [ok]
+  description: ok when computed (a refusal, such as DRS-5447 for a run that is not risk-neutral, is the engine's error, not a record).
+- name: SCOPE
+  type: text
+  presence: required
+  description: The scope's canonical text (the exposure engine's grammar).
+  example: NSET:NS-ALDERSHOT-FRA
+- name: SCOPE_KIND
+  type: text
+  presence: optional
+  enum: [netting-set, counterparty, group, legal-entity, desk, book, bank, trade, trades, adhoc]
+- name: LABEL
+  type: text
+  presence: optional
+- name: BUSINESS_DATE
+  type: date
+  presence: required
+- name: RUN_ID
+  type: id
+  presence: optional
+  link: simulation-run
+- name: CALIBRATION
+  type: text
+  presence: optional
+  description: The exposure run's calibration (REAL_WORLD flags every figure REAL_WORLD_RUN).
+- name: CURRENCY
+  type: text
+  presence: required
+  enum: [USD]
+- name: FCA
+  type: amount
+  presence: required
+  unit: USD
+  description: The funding cost adjustment, −Σ EE·DF·s_B·Δt (never positive).
+- name: FBA
+  type: amount
+  presence: required
+  unit: USD
+  description: The funding benefit adjustment, Σ |ENE|·DF·s_L·Δt (never negative; 0 with FBA off).
+- name: FVA
+  type: amount
+  presence: required
+  unit: USD
+  description: FCA + FBA; adds over netting sets and counterparties.
+- name: EPE_LIFE
+  type: amount
+  presence: optional
+  unit: USD
+  description: EE averaged over the whole life (the EPE reading's average, not the regulatory first-year EPE).
+- name: LIFE
+  type: rate
+  presence: optional
+  description: The last primary date in years.
+- name: FUNDING_SPREAD
+  type: text
+  presence: optional
+  description: The borrowing spread's curve id (or flat value) that priced FCA.
+- name: EE_POINT
+  type: text
+  presence: optional
+  enum: [end, mid]
+- name: FUNDING_SURVIVAL
+  type: boolean
+  presence: optional
+- name: FBA_ON
+  type: boolean
+  presence: optional
+- name: NETTING_SETS
+  type: integer
+  presence: optional
+- name: CVA_STATUS
+  type: text
+  presence: optional
+  enum: [planned]
+- name: BY_NETTING_SET
+  type: record list
+  presence: optional
+  description: Each netting set's NETTING_SET, COUNTERPARTY, NAME, CSA, WHOLE, FCA, FBA, FVA, SUM_EE_DT, LIFE, EPE_LIFE, ENE_LIFE, sorted by
+    FVA; none for a viewer who sees the scope in aggregate only (FLAGS SETS_AGGREGATE).
+- name: TERMS
+  type: record list
+  presence: optional
+  description: Per primary date K, DATE, TENOR, T, DT, DF, SB, SL, SURVIVAL, EE, ENE, EE_STAR, ENE_STAR, EE_POINT, ENE_POINT, FCA, FBA.
+- name: FLAGS
+  type: text list
+  presence: optional
+  description: REAL_WORLD_RUN, FUNDING_FALLBACK, FLAT_DISCOUNT, FLAT_HAZARD, PATHS_DISCOUNTED, SETS_AGGREGATE and the exposure answer's flags.
+- name: PROVENANCE
+  type: record
+  presence: optional
+  description: The answer's provenance in UPPER_SNAKE (the engine, the exposure run, the curves and their sources).
+links:
+- field: RUN_ID
+  kind: simulation-run
+validation:
+- rule: required
+  fields:
+  - SCOPE
+  - STATUS
+  - FVA
+notes:
+- 'No stored key: an answer''s id is the scope asked; FVAR <scope> <GO> opens it as a kind, FVA <scope> <GO> opens the FVA screen on the same answer.'
+- Computed as the viewer with the exposure engine's entitlements; cached per view signature, data version, scope and choices.
+review: []

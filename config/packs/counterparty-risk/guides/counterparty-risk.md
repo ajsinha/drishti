@@ -86,7 +86,7 @@ Collateral terms: thresholds, minimum transfer, eligible collateral and haircuts
 
 Trades that net on close-out under one agreement and CSA, with exposure and collateral.
 
-**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`.
+**Fields its Sutra reads:** `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `EXPOSURE_ENGINE`, `FVA_ENGINE`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`.
 
 **Links:** `COUNTERPARTY` → Counterparty (`counterparty`), `AGREEMENT` → Agreement (`agreement`), `CSA` → CSA (`csa`), `CREDIT_LIMIT` → Credit limit (`credit-limit`), `CVA_RESULT` → CVA (`cva`), `SIMM` → SIMM (`simm`), `COLLATERAL_BALANCE` → Collateral (`collateral-balance`).
 
@@ -156,6 +156,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `XPATH` | `exposure-path` | input | `PATH_ROW_ID` | One row per trade, grid date and run per business date, keyed by PATH_ROW_ID (<run>~<trade>~<grid index>); sparse by maturity. | 21 |
 | `EXP` | `exposure-result` | computed | — | One answer per question (the scope asked for, its parameters q, collateral and run, and the business date), computed when asked. | 27 |
 | `XWIF` | `exposure-whatif` | computed | — | One answer per question (the scope, the sandbox, the parameters q, collateral and sets, the business date), computed when asked. | 27 |
+| `FVAR` | `fva-result` | computed | — | One answer per question (the scope asked for, its choices eePoint, fba, survival and spread, and the business date), computed when asked. | 23 |
 | `XOFC` | `exposure-official-cpty` | computed | `NODE_ID`, `RESULT_VERSION` | One row per scope (netting set, counterparty or group) per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 32 |
 | `NSMTM` | `nset-mtm` | computed | `NETTING_SET_ID` | One record per NETTING_SET_ID of the trade-valuation records, computed when asked. | 32 |
 | `CPMTM` | `cpty-mtm` | computed | `COUNTERPARTY` | One record per COUNTERPARTY of the trade-valuation records, computed when asked. | 20 |
@@ -630,6 +631,45 @@ A scope's exposure before and after candidate trades kept in the person's privat
 - The candidates' paths are supplied in the sandbox (TRADE_ID, LABEL, NETTING_SET, MTM of G x P values of the run, MTM0, LIFE_YEARS, RUN_ID), priced elsewhere (an upstream what-if service, or a copy of a booked trade's paths, scaled); a candidate joins a netting set the scope covers whole, or none (a netting set of its own, uncollateralised).
 - The tables profile (TENOR, DATE, T, EE_BASE, EE, ENE_BASE, ENE, PFE_BASE, PFE, INCREMENTAL_EE, INCREMENTAL_PFE) and items (TRADE_ID, LABEL, NETTING_SET, PEAK_PFE_ALONE, INCREMENTAL_PEAK_PFE) come with the answer.
 
+### FVAR: FVA of a scope (computed) (`fva-result`)
+
+The funding valuation adjustment of a netting set, counterparty, group, legal entity or the bank (FCA on the expected exposure, FBA on the expected negative exposure, discounted, by the funding spread), computed when asked by the server's FVA engine from the exposure engine's profile after the CSA, as the person asking; never stored.
+
+**Class** computed · **Key** — · **Dated by** `on request` · **Cadence** on change · **Stored by** connector `fva-engine` (plugin `reactive`).
+
+**Grain:** One answer per question (the scope asked for, its choices eePoint, fba, survival and spread, and the business date), computed when asked. **Contract:** `contracts/fva-result.contract.yaml` ([full contract page](../../../../docs/contracts/packs/counterparty-risk.md#fvar-fva-of-a-scope-computed-fva-result)).
+
+| Column | Type | Key | Presence | Unit | Example or values | Link | Meaning |
+|---|---|---|---|---|---|---|---|
+| `STATUS` | text |  | required |  | `ok` |  | ok when computed (a refusal, such as DRS-5447 for a run that is not risk-neutral, is the engine's error, not a record). |
+| `SCOPE` | text |  | required |  | `NSET:NS-ALDERSHOT-FRA` |  | The scope's canonical text (the exposure engine's grammar). |
+| `SCOPE_KIND` | text |  | optional |  | `netting-set`, `counterparty`, `group`, `legal-entity`, `desk`, `book`, `bank`, `trade`, `trades`, `adhoc` |  | — |
+| `LABEL` | text |  | optional |  |  |  | — |
+| `BUSINESS_DATE` | date |  | required |  |  |  | — |
+| `RUN_ID` | id |  | optional |  |  | `simulation-run` | — |
+| `CALIBRATION` | text |  | optional |  |  |  | The exposure run's calibration (REAL_WORLD flags every figure REAL_WORLD_RUN). |
+| `CURRENCY` | text |  | required |  | `USD` |  | — |
+| `FCA` | amount |  | required | USD |  |  | The funding cost adjustment, −Σ EE·DF·s_B·Δt (never positive). |
+| `FBA` | amount |  | required | USD |  |  | The funding benefit adjustment, Σ \|ENE\|·DF·s_L·Δt (never negative; 0 with FBA off). |
+| `FVA` | amount |  | required | USD |  |  | FCA + FBA; adds over netting sets and counterparties. |
+| `EPE_LIFE` | amount |  | optional | USD |  |  | EE averaged over the whole life (the EPE reading's average, not the regulatory first-year EPE). |
+| `LIFE` | rate |  | optional |  |  |  | The last primary date in years. |
+| `FUNDING_SPREAD` | text |  | optional |  |  |  | The borrowing spread's curve id (or flat value) that priced FCA. |
+| `EE_POINT` | text |  | optional |  | `end`, `mid` |  | — |
+| `FUNDING_SURVIVAL` | boolean |  | optional |  |  |  | — |
+| `FBA_ON` | boolean |  | optional |  |  |  | — |
+| `NETTING_SETS` | integer |  | optional |  |  |  | — |
+| `CVA_STATUS` | text |  | optional |  | `planned` |  | — |
+| `BY_NETTING_SET` | record list |  | optional |  |  |  | Each netting set's NETTING_SET, COUNTERPARTY, NAME, CSA, WHOLE, FCA, FBA, FVA, SUM_EE_DT, LIFE, EPE_LIFE, ENE_LIFE, sorted by FVA; none for a viewer who sees the scope in aggregate only (FLAGS SETS_AGGREGATE). |
+| `TERMS` | record list |  | optional |  |  |  | Per primary date K, DATE, TENOR, T, DT, DF, SB, SL, SURVIVAL, EE, ENE, EE_STAR, ENE_STAR, EE_POINT, ENE_POINT, FCA, FBA. |
+| `FLAGS` | text list |  | optional |  |  |  | REAL_WORLD_RUN, FUNDING_FALLBACK, FLAT_DISCOUNT, FLAT_HAZARD, PATHS_DISCOUNTED, SETS_AGGREGATE and the exposure answer's flags. |
+| `PROVENANCE` | record |  | optional |  |  |  | The answer's provenance in UPPER_SNAKE (the engine, the exposure run, the curves and their sources). |
+
+**Links:** `RUN_ID` → `simulation-run`.
+
+- No stored key: an answer's id is the scope asked; FVAR <scope> <GO> opens it as a kind, FVA <scope> <GO> opens the FVA screen on the same answer.
+- Computed as the viewer with the exposure engine's entitlements; cached per view signature, data version, scope and choices.
+
 ### XOFC: Exposure official results by netting set and counterparty (published) (`exposure-official-cpty`)
 
 The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input.
@@ -875,6 +915,7 @@ Where each kind's data comes from, how it reaches the lake and how to check it. 
 | `XPATH` | `exposure-path` | synthetic: `python3 tools/packgen/ccr/make_ccr_data.py` | `data/testdata/counterparty-risk/exposure-path/` → `lake demo` → connector `exposure-store` |
 | `EXP` | `exposure-result` | computed by Drishti: the reactive connector exposure-engine (java engine com.ash.drishti.server.exposure.ExposureResultEngine); see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
 | `XWIF` | `exposure-whatif` | computed by Drishti: the reactive connector exposure-whatif (python engine drishti_compute.exposure.whatif:ExposureWhatIfEngine, pool exposure); see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) | nothing to load: computed from its inputs when asked |
+| `FVAR` | `fva-result` | computed by Drishti: the reactive connector fva-engine (java engine com.ash.drishti.server.exposure.FvaResultEngine) | nothing to load: computed from its inputs when asked |
 | `XOFC` | `exposure-official-cpty` | computed by Drishti: the official end-of-day exposure capture (ExposureOfficial), appended by ExposurePublisher to risk-results/exposure-official-cpty; see the [Exposure guide](../../../../docs/guides/EXPOSURE_GUIDE.md) (official results) | published by the server to `<data>/delta/risk-results/exposure-official-cpty/` |
 | `NSMTM` | `nset-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |
 | `CPMTM` | `cpty-mtm` | computed by Drishti: the derived connector ccr-derived over the kind trade-valuation | nothing to load: computed from its inputs when asked |

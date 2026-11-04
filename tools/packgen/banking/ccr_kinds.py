@@ -20,7 +20,8 @@ served by the pack's Delta connector exposure-store from the risk lake's domain 
 server's Java engine through the reactive connector exposure-engine, read as the viewer; exposure-whatif (XWIF <scope> <GO>) by the Python
 exposure engine in the compute pool exposure (the exact pre-deal what-if: candidates' paths added to their netting sets, from a private
 sandbox), through the reactive connector exposure-whatif; the netting-set and counterparty pages show
-the engine's figures computed as they open (EXPOSURE_ENGINE). The stored exposure-profile kind was retired in 2.9.0 (EXPOSURE_GUIDE.md section 22).
+the engine's figures computed as they open (EXPOSURE_ENGINE, and FVA's: FVA_ENGINE). The computed kind fva-result (FVAR <scope> <GO>) is
+FVA as a kind, answered by the server's FVA engine through the reactive connector fva-engine. The stored exposure-profile kind was retired in 2.9.0 (EXPOSURE_GUIDE.md section 22).
 The published official end-of-day results of every netting set, counterparty and group (risk-results/exposure-official-cpty, written by
 the server's ExposurePublisher, EXPOSURE_GUIDE.md section 20) are the read-only kind exposure-official-cpty of the Delta connector
 exposure-results, for BI and other readers only: no engine reads it (tools/test_contracts.py)."""
@@ -33,6 +34,9 @@ KINDS = {
     # the computed kind: its id is a scope (NSET:NS-ALDERSHOT-FRA), so no id pattern claims it
     "exposure-result": ("EXP", "Exposure profile of a scope (computed)", None, None),
     "exposure-whatif": ("XWIF", "Exposure what-if before dealing (computed, Python)", None, None),
+    # FVA of a scope (docs/guides/FVA_GUIDE.md): computed by the server's FVA engine from the exposure engine's profile; the word FVA opens
+    # the FVA screen, so the kind's command is FVAR; its id is a scope, so no id pattern claims it
+    "fva-result": ("FVAR", "FVA of a scope (computed)", None, None),
     # the published official results: one row per netting set, counterparty or group, business date and result version; no pattern
     "exposure-official-cpty": ("XOFC", "Exposure official results by netting set and counterparty (published)", None, None),
     # the netting-set and counterparty MtM totals derived from the trade valuations (COMPUTED_ATTRIBUTES.md section 8.1, Q1 and Q2):
@@ -96,7 +100,7 @@ _ROOT = "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}"
 SERVED_BY = {"simulation-run": "exposure-store", "exposure-path": "exposure-store", "exposure-result": "exposure-engine",
              "exposure-whatif": "exposure-whatif", "exposure-official-cpty": "exposure-results", "nset-mtm": "ccr-derived",
              "cpty-mtm": "ccr-derived", "saccr-trade": "exposure-store",
-             "saccr-result": "saccr-engine"}
+             "saccr-result": "saccr-engine", "fva-result": "fva-engine"}
 #: the published columns of risk-results/exposure-official-cpty that readers scan (ExposurePublisher.CPTY_COLUMNS less the JSON texts)
 OFFICIAL_COLUMNS = ["HIERARCHY", "NODE_ID", "NODE_NAME", "PARENT_ID", "LEVEL", "COUNTERPARTY", "LEGAL_ENTITY", "RESULT_VERSION", "RUN_ID",
                     "PATHS", "CE", "EPE", "EEPE", "PEAK_EE", "PEAK_PFE_95", "PEAK_PFE_99", "EAD_IMM", "PEAK_PFE_DATE", "PFE_95_1Y",
@@ -150,6 +154,23 @@ CONNECTORS = {
         "cache": {"results": 1000, "ttl": "1h"},
         "limits": {"timeout": "60s", "wait": "5s", "max-inflight-per-user": 4},
     },
+    "fva-engine": {
+        "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_FVA_ENABLED:true}",
+        "description": "FVA (FCA + FBA) of any counterparty scope, computed when asked by the server's FVA engine from the exposure engine's EE and "
+                       "ENE profile, the funding spread and the discount curve, as the viewer: FVAR <scope> <GO> (docs/guides/FVA_GUIDE.md)",
+        "kinds": {"fva-result": {"compute": "fva-result",
+                                 "params": {"eePoint": {"type": "enum", "options": ["end", "mid"], "default": "end"},
+                                            "fba": {"type": "enum", "options": ["on", "off"], "default": "on"},
+                                            "survival": {"type": "enum", "options": ["on", "off"], "default": "off"},
+                                            "spread": {"type": "text", "default": ""}},
+                                 "result": {"required": ["SCOPE", "STATUS", "FVA"],
+                                            "types": {"FVA": "number", "FCA": "number", "FBA": "number"}}}},
+        "engine": {"type": "java", "class": "com.ash.drishti.server.exposure.FvaResultEngine", "version": "1.0"},
+        "triggers": [{"on": "data-version", "kinds": _INPUTS + ["ir-curve", "credit-curve"], "affects": "all"}],
+        "coalesce": {"quiet": "1s", "max-wait": "10s"},
+        "cache": {"results": 1000, "ttl": "1h"},
+        "limits": {"timeout": "60s", "wait": "5s", "max-inflight-per-user": 4},
+    },
     "exposure-whatif": {
         "plugin": "reactive", "mode": "reactive", "enabled": "${DRISHTI_EXPOSURE_ENABLED:true}",
         "description": "A scope's exposure before and after candidate trades (a private sandbox), exact: each candidate's paths on the run "
@@ -195,8 +216,9 @@ FORM_COLUMNS = {"simulation-run": ["CALIBRATION", "PATHS", "STATUS"],
                 "nset-mtm": ["COUNTERPARTY", "NET_MTM", "TRADE_COUNT", "GROSS_POSITIVE_MTM", "PAST_MATURITY_COUNT"],
                 "cpty-mtm": ["NET_MTM", "TRADE_COUNT", "NETTING_SET_COUNT", "CE_UNCOLLATERALISED"],
                 "saccr-trade": ["TRADE_ID", "NETTING_SET", "ASSET_CLASS", "HEDGING_SET", "TRANSACTION_TYPE", "DIRECTION"]}
-COMPUTED = ("exposure-result", "exposure-whatif", "saccr-result")
+COMPUTED = ("exposure-result", "exposure-whatif", "saccr-result", "fva-result")
 EXAMPLES = [("EXP NSET:NS-ALDERSHOT-FRA", "Exposure profile of a netting set · EE, PFE 95 and 99, EPE, EEPE computed from the paths"),
-            ("EXP CPTY:CP-ALDERSHOT", "A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)")]
+            ("EXP CPTY:CP-ALDERSHOT", "A counterparty's exposure · its four netting sets summed path by path (PFE is not a sum of PFEs)"),
+            ("FVAR NSET:NS-ALDERSHOT-FRA", "FVA of a netting set as a kind · FCA, FBA and FVA with the terms by date (the FVA screen: FVA NSET:…)")]
 #: the kinds whose data this generator does not write (tools/packgen/ccr/make_ccr_data.py and make_saccr_data.py do): no samples from make_data.py
 INPUT_KINDS = ("simulation-run", "exposure-path", "saccr-trade")

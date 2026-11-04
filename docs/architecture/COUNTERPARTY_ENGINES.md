@@ -15,7 +15,7 @@
 -->
 # Counterparty engines: SA-CCR, the Exposure playground, FVA and the CCR cube core
 
-Status: SA-CCR is **built** (2.9.12, [section 15](#15-as-built-sa-ccr)); the Exposure playground, FVA and the CCR cube core below are the
+Status: SA-CCR is **built** (2.9.12, [section 15](#15-as-built-sa-ccr)); FVA is **built** (2.9.12, section 5.5, as built); the Exposure playground and the CCR cube core below are the
 design still to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
 Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
@@ -35,7 +35,7 @@ results over counterparties, groups, desks and tenors.
 - [2. What each engine computes, from which fields](#2-what-each-engine-computes-from-which-fields)
 - [3. SA-CCR end to end](#3-sa-ccr-end-to-end)
 - [4. The Exposure playground: EE, EPE, EEPE and PFE for one netting set](#4-the-exposure-playground-ee-epe-eepe-and-pfe-for-one-netting-set)
-- [5. FVA: funding cost and benefit](#5-fva-funding-cost-and-benefit)
+- [5. FVA: funding cost and benefit](#5-fva-funding-cost-and-benefit) (as built: [5.5](#55-as-built-fva))
 - [6. The CCR cube core: data flow](#6-the-ccr-cube-core-data-flow)
 - [7. API, command line and screens](#7-api-command-line-and-screens)
 - [8. The playgrounds](#8-the-playgrounds)
@@ -333,10 +333,31 @@ spread" and explains FVA in one line. FBA reads the same with |ENE|.
 ### 5.4 Additivity and where it runs
 
 FCA, FBA and FVA are linear in EE and ENE, which add across netting sets, so FVA adds over sets and counterparties: computed per set at date
-load from the per-set profile, a scope is a sum. A partial scope uses its partial profile. The computation runs in the Python engine
-`drishti_ccr.xva:XvaEngine` (planned; the CVA family later adds CVA and DVA to the same engine) on the `risk` pool; the computed kind is
-`fva-result` with `/api/v1/fva` (decision 9). When CVA is built, `cva-result` reads FVA by reference to `fva-result` rather than
-carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-questions-and-the-change-table)).
+load from the per-set profile, a scope is a sum. A partial scope uses its partial profile. The computation runs in Java on the server
+(every risk number is the server's): the compute engine `fva` (`FvaMath` beside `ExposureMath` in drishti-compute; the CVA family later adds
+CVA and DVA to the same engine), with `/api/v1/fva` (decision 9); the computed kind `fva-result` follows. When CVA is built, `cva-result`
+reads FVA by reference to `fva-result` rather than carrying a second copy ([CVA.md section 16](../contracts/CVA.md#16-open-questions-and-the-change-table)).
+
+### 5.5 As built (FVA)
+
+Built for 2.9.12 on branch `wip/fva`; the reference is [FVA_GUIDE.md](../guides/FVA_GUIDE.md) and the tutorial
+[34](../tutorials/41-fva-funding-cost-and-benefit.md).
+
+| Part | As built |
+|---|---|
+| Engine | `FvaMath` (drishti-compute, package `ccr`) prices a profile; `ExposureCalc.profile` reads each netting set's EE and ENE from the matrices the exposure answer already holds (no second exposure computation); `FvaService` answers any exposure scope as the caller, per set and summed |
+| Spreads | borrowing `funding-spread` (FCA) and lending `lending-spread` (FBA; empty: symmetric, the design's single s_F): a curve id read from the curve kind (`ir-curve`, points `TENOR` and `SPREAD`), else a curve of that id in `drishti.ccr.fva.curves` (the demo's synthetic `CRV-USD-FUNDING`, decision 12), else the flat `fallback-spread`, flagged `FUNDING_FALLBACK` |
+| Discounting | `CRV-USD-OIS` of the date (points `TENOR`, `DF`), log-linear in DF from (0, 1), the last segment's rate beyond; no curve: the flat `discount-rate`, flagged `FLAT_DISCOUNT`; DF = 1 for discounted paths |
+| Survival | off by default; on, each netting set's counterparty survival from the `credit-curve` its record's `CREDIT_CURVE` names and the bank's from `own-curve`, log-linear; flat hazards flagged `FLAT_HAZARD` otherwise |
+| Run | `require-risk-neutral` true refuses a run not `RISK_NEUTRAL` with DRS-5447 (409); the shipped file sets it false through `DRISHTI_FVA_REQUIRE_RISK_NEUTRAL` for the demo's `REAL_WORLD` run, every figure flagged `REAL_WORLD_RUN` |
+| Switch | its own engine `fva` (`config/engines/fva.yaml`, on by default), needing the exposure engine (the catalogue's `needs`) |
+| API | `GET /api/v1/fva/scope`, `/status`, `/playground`, `/playground.xlsx`, `/playground/template`; all reads (the `read` token scope) |
+| Screens | one FVA screen over the one answer, views A (a netting set, default), B (the netting sets by FVA), C (a counterparty), the decided mock-ups; the netting-set page's strip, term bars and Funding panel (`FVA_ENGINE` on the netting-set and counterparty documents); CVA shown as planned |
+| Playground | `PLAY FVA`: Choices, terms by date with the formula bar, explanation; the workbook (Main, Config, Data, Paths, Terms, Explain, Provenance) of live formulas (`LN` joined the common set), equal to the engine to the cent under LibreOffice; the `profile` mode and the `paths` mode (EE and ENE the means of each set's exposures on the paths after the CSA) |
+| Kind | `fva-result` (`FVAR`) through the reactive connector `fva-engine` (`FvaResultEngine`), the one answer in the kinds' names (decision 9) |
+| Official | the exposure engine's official record captures each set's, counterparty's and group's FVA with its exposure; the published tables keep their columns (`fva-official` columns there: not yet) |
+| CCR cube | the pivot source `fva` (`FvaPivotProvider`: netting set, counterparty, legal entity, group; `fva()`, `fca()`, `fba()`), the provider the cube's FVA measure reads (decision 15); the cube itself is not built here |
+| Not yet | FVA columns in the published official tables, the paths mode's collateral as formulas (the Exposure Playground's tabs), a funding curve in the generated market data, CVA and DVA |
 
 ## 6. The CCR cube core: data flow
 

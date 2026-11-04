@@ -1,0 +1,40 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* FVA (terminal/fva.html, fva.js): the tiles, the term bars and the views A, B and C of the decided mock-ups, on the VaR Playground's frame
+   (var-playground.css) and FRTB-SA's grid (frtb-sa.css). The theme's variables only: dark by default, light with the theme. */
+.fv-tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin: 10px 0; }
+.fv-tile { border: 1px solid var(--line, #26345a); border-radius: 8px; padding: 9px 12px; background: var(--panel, #16213a); }
+.fv-tile.lead { border-color: var(--amber, #e8a33a); }
+.fv-tile .k { font-size: 12px; opacity: .75; }
+.fv-tile .v { font-size: 20px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+.fv-tile .s { font-size: 11.5px; opacity: .7; margin-top: 2px; }
+.fv-tile .v.cost { color: var(--neg, #ff7a7a); }
+.fv-tile .v.benefit { color: var(--pos, #5fd39a); }
+.fv-panel { border: 1px solid var(--line, #26345a); border-radius: 8px; padding: 10px 12px; margin-bottom: 12px; background: var(--panel, #16213a); }
+.fv-panel h3 { margin: 0 0 8px; font-size: 14px; }
+.fv-grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 900px) { .fv-grid2 { grid-template-columns: 1fr; } }
+.fv-formula { line-height: 1.7; font-size: 13px; }
+.fv-chart svg { width: 100%; height: auto; display: block; }
+.fv-chart .fca { fill: var(--neg, #f2955a); }
+.fv-chart .fba { fill: var(--pos, #5fd39a); }
+.fv-chart .axis { stroke: var(--line, #26345a); }
+.fv-chart text { fill: currentColor; opacity: .7; font-size: 11px; }
+.fv-legend { display: flex; gap: 14px; font-size: 12px; margin-bottom: 6px; opacity: .85; }
+.fv-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.fv-choices { display: flex; flex-wrap: wrap; gap: 10px; margin: 8px 0; }
+.fv-choices label { display: flex; gap: 6px; align-items: center; }
+.fv-terms td.fr-cell { cursor: pointer; }

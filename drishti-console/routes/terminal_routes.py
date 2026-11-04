@@ -35,6 +35,7 @@ from routes.exposure_routes import redirect_for as exp_redirect
 from routes.frtb_routes import redirect_for as frsa_redirect
 from routes.saccr_routes import redirect_for as saccr_redirect
 from routes.simm_routes import redirect_for as simm_redirect
+from routes.fva_routes import redirect_for as fva_redirect
 from routes.play_routes import redirect_for as play_redirect
 from routes.smat_routes import redirect_for as smat_redirect
 from routes.mcube_routes import redirect_for as mcube_redirect
@@ -156,6 +157,8 @@ async def go(request: Request, q: str = ""):
         return to_simm
     if ed.word_on("VAR") and ed.word_on("PIVOT") and ed.word_on("MCUBE") and (to_mcube := mcube_redirect(typed)) is not None:   # MCUBE [scope BY ...]: the pivot screen with the MR lens (mcube_routes.py)
         return to_mcube
+    if ed.word_on("FVA") and (to_fva := fva_redirect(typed)) is not None:              # FVA [<scope>]: funding cost and benefit (fva_routes.py)
+        return to_fva
     if ed.word_on("PIVOT") and (to_pivot := pivot_redirect(typed)) is not None:        # PIVOT [table | @owner/name]: the pivot screen (pivot_routes.py)
         return to_pivot
     if ed.word_on("SMAT") and (to_smat := smat_redirect(typed)) is not None:          # SMAT <id> [N]: the scenario matrix (smat_routes.py)

@@ -140,6 +140,7 @@ public class PivotConfiguration {
     @Bean
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, States states,
             ObjectProvider<VarService> var, ObjectProvider<MrCubeProperties> mr, ObjectProvider<FrtbService> frtb,
+            ObjectProvider<com.ash.drishti.server.exposure.FvaPivotProvider> fva,
             org.springframework.core.env.Environment env,
             ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         List<PivotProvider> providers = new ArrayList<>();
@@ -149,6 +150,10 @@ public class PivotConfiguration {
             providers.add(new VarPivotProvider(v, () -> running(engines, "var", true), () -> running(engines, "mr-cube", mrSwitch),
                     mr.getIfAvailable(MrCubeProperties::defaults), () -> running(engines, "frtb-sa", true)
                             ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null));
+        }
+        com.ash.drishti.server.exposure.FvaPivotProvider f = fva.getIfAvailable();
+        if (f != null) {                                                // FVA's measures (fva, fca, fba): the CCR cube's FVA source
+            providers.add(f);
         }
         providers.add(new TabularProvider(exec, both(kinds, panels)));
         PivotCore core = new PivotCore(providers, states, props.core());

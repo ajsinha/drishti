@@ -99,6 +99,18 @@ panels:
       - { label: "Current exposure, uncollateralised (per set, then added)", bind: $src.CE_UNCOLLATERALISED, fmt: compact }
       - { label: "Past maturity, not matured (data quality)", bind: $src.PAST_MATURITY_COUNT, fmt: amount0 }
       - { label: Sum currency, bind: $src.CURRENCY_NOTE }
+  - id: fvaEngine
+    kind: kv
+    phone: more
+    title: "Funding: FVA = FCA + FBA over the counterparty's netting sets (CVA planned)"
+    area: right
+    columns:
+      - { label: Status, bind: $.FVA_ENGINE.STATUS, tone: status }
+      - { label: FVA, bind: $.FVA_ENGINE.FVA, fmt: signed0, tone: sign }
+      - { label: FCA (funding cost), bind: $.FVA_ENGINE.FCA, fmt: signed0, tone: sign }
+      - { label: FBA (funding benefit), bind: $.FVA_ENGINE.FBA, fmt: signed0, tone: sign }
+      - { label: CVA, bind: $.FVA_ENGINE.CVA_STATUS }
+      - { label: Note, bind: $.FVA_ENGINE.NOTE }
   - id: computedSets
     kind: table
     phone: more

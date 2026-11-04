@@ -1956,7 +1956,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-1013 | 404 | history: no data | the entity exists but has no data in the range asked; widen the range or move the date box |
 | DRS-1014 | 504 | history timeout | no day of the range was read within `drishti.history.timeout`, or `max-concurrent` history requests were running; when some days were read the answer is `200` with `partial: true` and the others in `problems` |
 | DRS-1016 | 403 | command off | an administrator turned the command off (Functions, `FUNC`, as an administrator; [USER_MANAGEMENT.md (Functions)](../admin/USER_MANAGEMENT.md#functions-func-every-command-and-turning-one-on-or-off)): its page, its view and search endpoints, the typed command, exports, BI reads of its kind and the compute ask answer this, with `command`, `kind` and `since` in the problem; nothing of its data is sent. Ask an administrator to turn it on |
-| DRS-1020 | 404 | engine off | a compute engine is not running on this server and no other server of the cluster runs it ([OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)): every endpoint of its API (`/var`, `/exposure`, `/sensitivities`, `/risk-factors`, `/frtb`, `/simm`, `/admin/lakes/memory`) answers this with `engine` in the problem; in a cluster a node that runs it answers instead. An administrator turns it on in Admin → Engines |
+| DRS-1020 | 404 | engine off | a compute engine is not running on this server and no other server of the cluster runs it ([OPERATIONS.md section 21](../admin/OPERATIONS.md#21-compute-engines-on-or-off)): every endpoint of its API (`/var`, `/exposure`, `/sensitivities`, `/risk-factors`, `/frtb`, `/simm`, `/fva`, `/admin/lakes/memory`) answers this with `engine` in the problem; in a cluster a node that runs it answers instead. An administrator turns it on in Admin → Engines |
 | DRS-1021 | 409 | engine dependency | an engine change refused by a dependency: turning on an engine whose need is off on this server (FRTB-SA without VaR), or off one a running engine needs; the words name both. Turn them together (`withNeeds`, `withDependents`) |
 | DRS-1022 | 503 | engine blocked | logged at start, never answered: an engine on in its file was not started because an engine it needs is off; Admin → Engines and Health show it `blocked` with the reason |
 | DRS-1023 | 409 | engine file conflict | the engine's file changed on disk since the page read it (reload), or the engines' folder cannot be written (`DRISHTI_ENGINES_DIR`) |
@@ -2041,6 +2041,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-5444 | 422 | Exposure row rejected | a row of the date's exposure paths was rejected at load (another vector length, NaN or infinity, a grid index or date outside the run's grid): listed in the provenance, never padded |
 | DRS-5445 | 503 | Exposure capacity | a date's netting-set matrices need more memory than `drishti.ccr.exposure.memory-budget-gb` |
 | DRS-5446 | 503 | What-if method | the exact what-if (`method: paths`) runs in the Python exposure engine (`exposure-whatif`, compute pool `exposure`, `DRISHTI_COMPUTE_ENABLED=true`): it is not running or did not answer in time; use `method: addon` (a conservative proxy) or start compute |
+| DRS-5447 | 409 | FVA needs a risk-neutral run | FVA is a price: the date's exposure run is not calibrated `RISK_NEUTRAL` and `drishti.ccr.fva.require-risk-neutral` is true (with it false, as in the demo, the answer is computed and flagged `REAL_WORLD_RUN`; [FVA_GUIDE.md section 10](FVA_GUIDE.md#10-flags-refusals-and-error-codes)) |
 | DRS-5031 | 422 | connector invalid | a connector file or body is not valid: bad name, unknown plugin or top-level key, missing required setting, wrong type, a `name:` that is not the file name, or a credential that is not an `${ENV_VAR}` or `file:` reference; `detail` names the setting |
 | DRS-5032 | 409 | connector conflict | a connector change conflicts (HTTP 409): the version you read is stale (reload and apply again), a file of that name exists and no `If-Match` was sent, or the change switches off or deletes a connector packs use (repeat with `confirm=true`/`--confirm` once you have read who uses it), or you tried to delete a connector a pack's template names (reset or disable it) |
 | DRS-5033 | 404 | no such connector | no connector of that name (a file, a pack template or the server's configuration) |
@@ -3270,6 +3271,28 @@ members' MTM, its CSA and collateral, as the caller (the guide: [SACCR_GUIDE.md]
 Refusals: `400 DRS-5410` (a scope or row refused), `409 DRS-5411` (`strict=true`, incomplete), `400 DRS-5412` (an unknown set),
 `502 DRS-5413` (the parameter file refused), `404 DRS-1002` when no connector serves `saccr-trade` or `netting-set`, `404 DRS-1020` when the
 engine is off on this server, `403` when the caller sees none of a netting set's trades.
+
+## FVA: `/api/v1/fva`
+
+Funding cost and benefit of any exposure scope, as the caller (the guide: [FVA_GUIDE.md](FVA_GUIDE.md), section 6): the exposure engine's
+EE and ENE profile per netting set, after the CSA, priced with the funding spread and the discount curve; the scope's figures are the sum
+of its sets'. Every endpoint is `GET` and reads only (the `read` token scope); each takes `scope` (the exposure engine's grammar:
+`NSET:`, `CPTY:`, `GROUP:`, `LE:`, `DESK:`, `BANK`), `asOf`, and the choices `eePoint` (`end`, `mid`), `fba` (`on`, `off`), `survival`
+(`on`, `off`) and `spread` (a curve id or a flat fraction).
+
+| Endpoint | What |
+|---|---|
+| `GET /api/v1/fva/scope?scope=…` | the one answer every screen draws: `figures` (`fca`, `fba`, `fva`, `sumEeDt`, `life`, `epeLife`, `eneLife`), `epeReading`, `terms[]` per primary date (`date`, `tenor`, `t`, `dt`, `df`, `sb`, `sl`, `survival`, `ee`, `ene`, `eeStar`, `eneStar`, `eePoint`, `enePoint`, `fca`, `fba`), `nettingSets[]` (each set's figures, `csa`, `fcaTerms`, `fbaTerms`; sorted by FVA), `counterparties[]`, `largest`, `settings` (the choices and the curves' points and sources), `cva` (`planned`), `flags`, `provenance`, `playground` |
+| `GET /api/v1/fva/status` | the settings and the funding and discount curves of the newest date, with their sources and flags |
+| `GET /api/v1/fva/playground?scope=…` | the answer with `choices`, `explainSteps` and `maxSets` (a netting set or up to `playground-max-sets` sets) |
+| `GET /api/v1/fva/playground.xlsx?scope=…&mode=profile\|paths` | the workbook of live formulas (Main, Config with the choice cells, Data, Terms, Explain, Provenance; with `mode=paths` a Paths tab whose means are EE and ENE), equal to the engine to the cent |
+| `GET /api/v1/fva/playground/template` | the same workbook on the hand-built case F1 (b) |
+
+Refusals: `400 DRS-5440` for a bad scope or choice or a playground over `playground-max-sets` netting sets; `403` for the playground when
+the caller sees some of the sets only in aggregate (the scope answer then carries the total alone, flagged `SETS_AGGREGATE`); `409 DRS-5447`
+for a run that is not risk-neutral with `require-risk-neutral: true`; `404 DRS-1020` when FVA or the exposure engine is off on this server.
+The same answer is the computed kind `fva-result` (`POST /api/v1/compute/fva-engine/fva-result`, `/api/v1/entities/fva-result/{scope}/raw`; the
+FVA guide, section 6.1), and each scope's FVA is in the exposure engine's official record (`GET /api/v1/exposure/official`, `fva`).
 
 ## Exposure engine: `/api/v1/exposure`
 

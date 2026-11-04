@@ -142,6 +142,24 @@ public final class ExposureMath {
         return Math.max(v0 - held - csa.imHeld(), 0);
     }
 
+    /** The current negative exposure of a set: {@code min(MTM - C_today, 0)} (FVA's ENE at t0 with the mid point). */
+    public static double currentNegative(double v0, CsaTerms csa, Model model) {
+        if (csa == null || !csa.present() || model == Model.NONE) {
+            return Math.min(v0, 0);
+        }
+        double held = csa.margined() ? csa.heldToday() : csa.ia();
+        return Math.min(v0 - held, 0);
+    }
+
+    /** The mean over paths of every row: a profile ({@code G_primary} values) from a {@code G_primary x P} matrix. */
+    public static double[] means(double[] m, int gp, int p) {
+        double[] out = new double[gp];
+        for (int i = 0; i < gp; i++) {
+            out[i] = mean(m, i, p);
+        }
+        return out;
+    }
+
     /** {@code max(V, 0)} at the primary dates: the exposure without collateral, {@code G_primary x P}. */
     public static double[] positive(double[] v, ExposureGrid grid, int p) {
         int gp = grid.primaryCount();

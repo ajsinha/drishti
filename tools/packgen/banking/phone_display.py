@@ -25,13 +25,14 @@ SCREENS = {
          "  order: [kyc, nettingSets]",
          "  summary: \"${$.NAME} · rated ${$.RATING} · Net MTM ${fmt($.NET_MTM, 'signed0')}\""),
         {"nettingSets": "{ tier: glance, rows: 5, columns: [Netting set, Net MTM], sort: -Net MTM }", "kyc": "must", "hierarchy": "desk",
-         "computed": "more", "computedSets": "more"}),
+         "computed": "more", "computedSets": "more", "fvaEngine": "more"}),
     "netting-set.v1.sutra.yaml": (
         ("phone:                                     # on a phone (docs/architecture/MOBILE_DISPLAY.md): what the set owes first, the trades at a glance",
          "  order: [exposureEngine, exposure, trades, byAsset]",
          "  summary: \"Net MTM ${fmt($.NET_MTM, 'signed0')} · ${$.TRADE_COUNT} trades · PFE 95 peak ${fmt($.EXPOSURE_ENGINE.PEAK_PFE, 'compact')}\""),
         {"exposure": "{ tier: glance, series: [Expected exposure, PFE 95] }", "exposureEngine": "{ tier: must, figures: 6 }",
-         "trades": "{ tier: glance, rows: 5, columns: [Trade, Product, MTM], sort: -MTM }", "computed": "more", "pastMaturity": "more"}),
+         "trades": "{ tier: glance, rows: 5, columns: [Trade, Product, MTM], sort: -MTM }", "computed": "more", "pastMaturity": "more",
+         "fva": "more", "fvaEngine": "more"}),
     "endur-comswap.v1.sutra.yaml": (
         ("phone:                           # on a phone (docs/architecture/MOBILE_DISPLAY.md): the ticket and the two sides, the first leg, the next flows",
          "  order: [ticket, fixed-float, basis, legs, flows]",

@@ -2763,7 +2763,7 @@ Every key of every kind: 2,118 settings in 18 areas, and 326 environment variabl
 | [The data inbox's routing rules: `config/dataload.yaml`](#the-data-inboxs-routing-rules-configdataloadyaml) | 2 |
 | [The UI kit: `config/ui-kit/brand.yaml`](#the-ui-kit-configui-kitbrandyaml) | 19 |
 | [AI providers and MCP servers: `config/ai/`, `config/mcp/`](#ai-providers-and-mcp-servers-configai-configmcp) | 37 |
-| [Environment variable index](#environment-variable-index) | 326 |
+| [Environment variable index](#environment-variable-index) | 327 |
 
 Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.governance.*` and `drishti.ui-kit.*`, the console's `views.refresh_min_seconds`) are rows of the server and console tables below; the Sutra grammar itself is [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md).
 
@@ -4049,8 +4049,34 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.engines.fva.enabled` | boolean | `false` | `DRISHTI_FVA_ENABLED` | server (each node its own) | run funding cost and benefit (FVA) on this node once it is installed (its settings will live under drishti.ccr.fva.\*) | restart |  |
+| `drishti.engines.fva.enabled` | boolean | `true` | `DRISHTI_FVA_ENABLED` | server (each node its own) | run FVA on this node: /api/v1/fva, FVA, PLAY FVA; needs the exposure engine (live) | live |  |
 | `drishti.engines.fva.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.ccr.fva`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.ccr.fva.funding-spread` | string | `CRV-USD-FUNDING` |  | server (each node its own) | the borrowing spread: a curve id (read from curve-kind, else from curves below) or a flat spread such as 0.0050 | restart |  |
+| `drishti.ccr.fva.lending-spread` | string | `""` |  | server (each node its own) | the lending spread FBA uses, as funding-spread; empty: the same (symmetric funding) | restart |  |
+| `drishti.ccr.fva.fallback-spread` | number | `0.0050` |  | server (each node its own) | used, flagged FUNDING\_FALLBACK, when the named curve is found nowhere | restart |  |
+| `drishti.ccr.fva.discount-curve` | string | `CRV-USD-OIS` |  | server (each node its own) | the discount curve (POINTS TENOR and DF, log-linear in DF); DF = 1 when the paths are discounted | restart |  |
+| `drishti.ccr.fva.discount-rate` | number | `0.0` |  | server (each node its own) | flat continuously compounded rate used, flagged FLAT\_DISCOUNT, when the discount curve is not found | restart |  |
+| `drishti.ccr.fva.curve-kind` | string | `ir-curve` |  | server (each node its own) | the kind the curves are read from (the market-data pack's; a funding curve's points carry SPREAD) | restart |  |
+| `drishti.ccr.fva.curves` | list | empty |  | server (each node its own) | funding curves named here, used when curve-kind holds no curve of that id | restart |  |
+| `drishti.ccr.fva.curves[].id` | string | `CRV-USD-FUNDING` |  | server (each node its own) | the curve id funding-spread or lending-spread names | restart |  |
+| `drishti.ccr.fva.curves[].label` | string | `"synthetic demo funding curve: the bank's unsecured spread over OIS (a bank n...` |  | server (each node its own) | what the curve is, shown as its source | restart |  |
+| `drishti.ccr.fva.curves[].points` | list | `[{ tenor: 6M, spread: 0.0040 }, { tenor: 1Y, spread: 0.0045 }, { tenor: 2Y, s...` |  | server (each node its own) | tenor and spread in decimals, linear in t between points, flat beyond | restart |  |
+| `drishti.ccr.fva.ee-point` | string | `end` |  | server (each node its own) | end (the period's end) or mid (the average of both ends) | restart |  |
+| `drishti.ccr.fva.funding-survival` | boolean | `false` |  | server (each node its own) | true: each term x S\_C(t) x S\_B(t): the counterparty's credit curve (its record's CREDIT\_CURVE) and the bank's own-curve | restart |  |
+| `drishti.ccr.fva.credit-curve-kind` | string | `credit-curve` |  | server (each node its own) | the kind the credit curves are read from (CURVE\_ID, POINTS TENOR and SURVIVAL, log-linear) | restart |  |
+| `drishti.ccr.fva.own-curve` | string | `""` |  | server (each node its own) | the bank's own credit curve id; empty: the flat own-hazard | restart |  |
+| `drishti.ccr.fva.counterparty-hazard` | number | `0.0` |  | server (each node its own) | the counterparty's flat hazard rate when its record names no credit curve or the curve is not found (FLAT\_HAZARD) | restart |  |
+| `drishti.ccr.fva.own-hazard` | number | `0.0` |  | server (each node its own) | the bank's own flat hazard rate when own-curve is empty or not found | restart |  |
+| `drishti.ccr.fva.fba` | boolean | `true` |  | server (each node its own) | false: FCA only (asymmetric funding) | restart |  |
+| `drishti.ccr.fva.require-risk-neutral` | boolean | `false` | `DRISHTI_FVA_REQUIRE_RISK_NEUTRAL` | server (each node its own) | true in production: a run not RISK\_NEUTRAL is refused (DRS-5447); false (the demo's REAL\_WORLD run): computed and flagged REAL\_WORLD\_RUN | restart |  |
+| `drishti.ccr.fva.playground-max-sets` | integer | `20` |  | server (each node its own) | the most netting sets one playground and workbook shows side by side | restart |  |
+| `drishti.ccr.fva.playground-max-paths` | integer | `5000` |  | server (each node its own) | the paths mode (mode=paths): the most paths a netting set's Paths tab holds | restart |  |
+| `drishti.ccr.fva.playground-template` | string | `""` |  | server (each node its own) | a bank's workbook template folder (empty: the built-in playground/fva/template/) | restart |  |
 
 #### `drishti.engines.mr-cube`
 
@@ -6200,7 +6226,8 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_FRED_SERIES` | fred-feed series | `DGS10,DFF` | packs | The FRED series read |
 | `DRISHTI_FRTB_ENABLED` | `drishti.engines.frtb-sa.enabled` (engine) | `true` | engine | run FRTB-SA on this node: /api/v1/frtb, FRSA, PLAY FRTB; needs var and sensitivities (live) |
 | `DRISHTI_FRTB_PARAMETERS` | `drishti.frtb.parameters-dir` (engine) | `./config/packs/market-risk/capital` | engine | frtb-sa-sbm.yaml and frtb-sa-drc-rrao.yaml (else the market-risk pack's capital/) |
-| `DRISHTI_FVA_ENABLED` | `drishti.engines.fva.enabled` (engine) | `false` | engine | run funding cost and benefit (FVA) on this node once it is installed (its settings will live under drishti.ccr.fva.\*) |
+| `DRISHTI_FVA_ENABLED` | `drishti.engines.fva.enabled` (engine) | `true` | engine | run FVA on this node: /api/v1/fva, FVA, PLAY FVA; needs the exposure engine (live) |
+| `DRISHTI_FVA_REQUIRE_RISK_NEUTRAL` | `drishti.ccr.fva.require-risk-neutral` (engine) | `false` | engine | true in production: a run not RISK\_NEUTRAL is refused (DRS-5447); false (the demo's REAL\_WORLD run): computed and flagged REAL\_WORLD\_RUN |
 | `DRISHTI_GLEIF_USER_AGENT` | gleif fetch | none | tools | The User-Agent sent to GLEIF by the gleif refresh script |
 | `DRISHTI_GOVERNANCE_DIR` | `drishti.governance.dir` | `./data/governance` | server | where proposals are kept with store: file; with content (the default) the folder is imported once and left in place |
 | `DRISHTI_HEARTBEAT_SECONDS` | build\_demo\_lakes.py | `30` | tools | How often a long lake build prints that it is alive |

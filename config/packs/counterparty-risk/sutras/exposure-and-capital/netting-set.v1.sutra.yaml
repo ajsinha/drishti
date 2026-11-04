@@ -46,6 +46,7 @@ strip:
   - { label: "Collateral (+ held, − posted)", bind: $.COLLATERAL, fmt: signed0 }
   - { label: EPE (engine), bind: $.EXPOSURE_ENGINE.EPE, fmt: compact }
   - { label: PFE 95 peak (engine), bind: $.EXPOSURE_ENGINE.PEAK_PFE, fmt: compact, emphasis: true }
+  - { label: FVA (engine), bind: $.FVA_ENGINE.FVA, fmt: signed0, tone: sign }
   - { label: Limit, bind: $.LIMIT, fmt: compact }
   - { label: CVA, bind: $.CVA, fmt: signed0, tone: sign }
 controls:
@@ -84,6 +85,28 @@ panels:
       - { label: EEPE, bind: $.EXPOSURE_ENGINE.EEPE, fmt: compact }
       - { label: Peak PFE date, bind: $.EXPOSURE_ENGINE.PEAK_PFE_DATE, fmt: date }
       - { label: Note, bind: $.EXPOSURE_ENGINE.NOTE }
+  - id: fva
+    kind: area
+    phone: more
+    title: "FVA by future date: the funding cost (FCA, below) and benefit (FBA, above) of each period, discounted (USD)"
+    rows: $.FVA_ENGINE.TERMS
+    x: TENOR
+    series:
+      - { label: FCA (funding cost), value: FCA, tone: sign }
+      - { label: FBA (funding benefit), value: FBA, tone: pos }
+  - id: fvaEngine
+    kind: kv
+    phone: more
+    title: "Funding: FVA = FCA + FBA, from the same EE and ENE (CVA planned)"
+    area: right
+    columns:
+      - { label: Status, bind: $.FVA_ENGINE.STATUS, tone: status }
+      - { label: FVA, bind: $.FVA_ENGINE.FVA, fmt: signed0, tone: sign }
+      - { label: FCA (funding cost), bind: $.FVA_ENGINE.FCA, fmt: signed0, tone: sign }
+      - { label: FBA (funding benefit), bind: $.FVA_ENGINE.FBA, fmt: signed0, tone: sign }
+      - { label: CVA, bind: $.FVA_ENGINE.CVA_STATUS }
+      - { label: Funding curve, bind: $.FVA_ENGINE.FUNDING_CURVE }
+      - { label: Note, bind: $.FVA_ENGINE.NOTE }
   - id: trades
     kind: table
     phone: { tier: glance, rows: 5, columns: [Trade, Product, MTM], sort: -MTM }
