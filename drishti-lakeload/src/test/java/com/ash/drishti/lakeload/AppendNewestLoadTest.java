@@ -120,4 +120,50 @@ class AppendNewestLoadTest {
         }
         assertThat(Files.exists(tmp.resolve("lake-delta/risk/scenario-pv/_delta_log"))).isTrue();
     }
+
+    /** Undo by load id (DATA_LOAD_RULES.md section 6.3): an append's rows removed; a replace undone by restoring the date as it was. */
+    @Test
+    void undoRemovesALoadsRowsAndRestoresWhatAReplaceReplaced() throws Exception {
+        Path first = PvData.write(tmp.resolve("u1/scenario-pv." + DAY + ".jsonl"), List.of(row("A", 1), row("B", 2)));
+        Path second = PvData.write(tmp.resolve("u2/scenario-pv." + DAY + ".jsonl"), List.of(row("A", 10), row("C", 3)));
+        Path lake = tmp.resolve("lake-undo");
+        String id1 = load(first.getParent(), lake, "delta").path("loads").fieldNames().next();
+        String id2 = load(second.getParent(), lake, "delta").path("loads").fieldNames().next();
+        List<LakeUndo.Done> dry = LakeUndo.undo(lake.toString(), id2, List.of(), true);
+        assertThat(dry).singleElement().satisfies(d -> assertThat(List.of(d.table(), d.date(), String.valueOf(d.removed())))
+                .containsExactly("risk/scenario-pv", DAY.toString(), "2"));
+        assertThat(LakeLoadTest.dump("delta", lake)).as("a dry run changes nothing").hasSize(4);
+        LakeUndo.undo(lake.toString(), id2, List.of(), false);
+        Map<String, Double> docs = read("delta", lake, new HashMap<>());
+        assertThat(docs).containsOnlyKeys("A", "B").containsEntry("A", 1.0);
+        assertThat(LakeUndo.undo(lake.toString(), id2, List.of(), false)).as("nothing left of it").isEmpty();
+
+        // a replace, undone: the date as it was before it
+        String id3 = load(second.getParent(), lake, "delta", "target.mode=replace-date").path("loads").fieldNames().next();
+        assertThat(read("delta", lake, new HashMap<>())).containsOnlyKeys("A", "C");
+        List<LakeUndo.Done> undone = LakeUndo.undo(lake.toString(), id3, List.of(), false);
+        assertThat(undone).singleElement().satisfies(d -> {
+            assertThat(d.replaced()).isTrue();
+            assertThat(d.restored()).isEqualTo(2);
+        });
+        assertThat(read("delta", lake, new HashMap<>())).containsOnlyKeys("A", "B").containsEntry("A", 1.0);
+        assertThat(id1).isLessThan(id3);
+    }
+
+    /** The same on Iceberg (the Iceberg maintenance's undo): an append's rows removed, a replace's date restored. */
+    @Test
+    void undoOnIceberg() throws Exception {
+        Path first = PvData.write(tmp.resolve("i1/scenario-pv." + DAY + ".jsonl"), List.of(row("A", 1), row("B", 2)));
+        Path second = PvData.write(tmp.resolve("i2/scenario-pv." + DAY + ".jsonl"), List.of(row("A", 10), row("C", 3)));
+        Path lake = tmp.resolve("lake-iundo");
+        load(first.getParent(), lake, "iceberg");
+        String id2 = load(second.getParent(), lake, "iceberg").path("loads").fieldNames().next();
+        var undone = com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id2, false, tmp);
+        assertThat(undone).singleElement().satisfies(u -> assertThat(u).containsEntry("table", "risk/scenario-pv").containsEntry("removed", 2L));
+        assertThat(read("iceberg", lake, new HashMap<>())).containsOnlyKeys("A", "B").containsEntry("A", 1.0);
+        String id3 = load(second.getParent(), lake, "iceberg", "target.mode=replace-date").path("loads").fieldNames().next();
+        var restored = com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake.toString(), id3, false, tmp);
+        assertThat(restored).singleElement().satisfies(u -> assertThat(u).containsEntry("replaced", true).containsEntry("restored", 2L));
+        assertThat(read("iceberg", lake, new HashMap<>())).containsOnlyKeys("A", "B").containsEntry("A", 1.0);
+    }
 }

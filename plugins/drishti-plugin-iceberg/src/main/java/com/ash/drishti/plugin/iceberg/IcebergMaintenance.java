@@ -85,6 +85,37 @@ public final class IcebergMaintenance {
     private IcebergMaintenance() {
     }
 
+    /**
+     * Undoes load {@code id} in every Iceberg table of the lake at {@code root} (a local folder: {@code <domain>/<table>}; DATA_LOAD_RULES.md
+     * section 6.3): a line per table and date undone ({@code table}, {@code date}, {@code removed}, {@code restored}, {@code replaced}).
+     */
+    public static List<Map<String, Object>> undoLake(String root, String id, boolean dryRun, Path spillDir) throws Exception {
+        List<Map<String, Object>> out = new ArrayList<>();
+        Path base = Path.of(root);
+        if (!java.nio.file.Files.isDirectory(base)) {
+            return out;
+        }
+        List<Path> domains;
+        try (var s = java.nio.file.Files.list(base)) {
+            domains = s.filter(java.nio.file.Files::isDirectory).filter(d -> !d.getFileName().toString().startsWith("_")).sorted().toList();
+        }
+        for (Path d : domains) {
+            Map<String, String> ns = new HashMap<>(Map.of("root", root, "domain", d.getFileName().toString(), "engine", "native"));
+            try (LayoutLake view = LayoutLake.of(ns)) {
+                for (String kind : view.kinds()) {
+                    com.ash.drishti.iceberg.Table t = ((LayoutLake.Native.Kind) view.load(kind).orElseThrow()).t();
+                    for (Map<String, Object> line : NativeMaintenance.undo(t, id, spillDir, 256L << 20, dryRun)) {
+                        Map<String, Object> m = new java.util.LinkedHashMap<>();
+                        m.put("table", d.getFileName() + "/" + kind);
+                        m.putAll(line);
+                        out.add(m);
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
     public static void main(String[] args) throws Exception {
         Map<String, String> settings = new HashMap<>();
         settings.put("root", args.length > 0 && !args[0].startsWith("--") ? args[0] : com.ash.drishti.api.DataDir.under("iceberg"));
@@ -94,6 +125,7 @@ public final class IcebergMaintenance {
         int keepDays = 0;
         long expireHours = 168;
         boolean relayout = false;
+        String undo = null;                                     // a load id: its rows removed (DATA_LOAD_RULES.md section 6.3)
         boolean force = false;
         boolean manifests = false;
         long budget = 1024L * 1024 * 1024;
@@ -117,6 +149,7 @@ public final class IcebergMaintenance {
                 case "--columns" -> addColumns.put(v.substring(0, v.indexOf(':')), Arrays.asList(v.substring(v.indexOf(':') + 1).split(",")));
                 case "--floor-days" -> floorDays = Integer.parseInt(v);
                 case "--older-than-hours" -> orphanHours = Long.parseLong(v);
+                case "--undo" -> undo = v;                       // a load id: its rows removed (DATA_LOAD_RULES.md section 6.3)
                 case "--remove-orphans" -> {
                     orphans = true;
                     continue;
@@ -179,6 +212,15 @@ public final class IcebergMaintenance {
                     com.ash.drishti.iceberg.Table native0 = ((LayoutLake.Native.Kind) view.load(kind).orElseThrow()).t();
                     try {
                         report.put("before", stats(native0));
+                        if (undo != null) {
+                            List<Map<String, Object>> lines = NativeMaintenance.undo(native0, undo, spill.resolve("drishti-iceberg-" + ProcessHandle.current().pid()),
+                                    budget, dryRun);
+                            report.put("undo", lines);
+                            for (Map<String, Object> u : lines) {
+                                say(json, "%s %s: %s rows of load %s removed%s%n", name, u.get("date"), u.get("removed"), undo,
+                                        Boolean.TRUE.equals(u.get("replaced")) ? ", " + u.get("restored") + " rows of the date before it restored" : "");
+                            }
+                        }
                         if (keepDays > 0) {
                             if (dryRun) {
                                 report.put("keepDays", Map.of("wouldRemove", dropping(native0, keepDays, guard, floor)));

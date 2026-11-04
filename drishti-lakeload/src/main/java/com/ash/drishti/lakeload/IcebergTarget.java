@@ -213,7 +213,12 @@ final class IcebergTarget implements TableTarget {
     public long commit(LocalDate date, List<WrittenFile> files) {
         List<DataFile> add = new ArrayList<>();
         files.forEach(f -> add.add((DataFile) f.handle()));
-        Map<String, String> summary = Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel");
+        java.util.TreeSet<String> ids = new java.util.TreeSet<>();
+        for (byte[] b : plan.loadIds) {
+            ids.add(new String(b, java.nio.charset.StandardCharsets.UTF_8));
+        }
+        Map<String, String> summary = Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel", "drishti.load-ids",
+                String.join(",", ids));                         // an undo finds the commit of a load (and whether it replaced the date)
         Snapshot s = (cfg.target().appends() ? Operations.append(table, add, summary)
                 : Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, summary))
                 .orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));
