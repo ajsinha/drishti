@@ -87,6 +87,7 @@ public final class TableReads implements ModelAnswers.Rows {
     private final Map<String, List<List<Object>>> computed = new HashMap<>();
     private final Map<String, Problem> problems = new LinkedHashMap<>();
     private final AtomicInteger sourceReads = new AtomicInteger();
+    private boolean rules = true;
 
     public TableReads(Catalogue catalogue, SourceRows source, LateBound.Fx fx, long maxRows, Clock clock) {
         this.catalogue = catalogue;
@@ -98,6 +99,14 @@ public final class TableReads implements ModelAnswers.Rows {
 
     public TableReads(Catalogue catalogue, SourceRows source) {
         this(catalogue, source, LateBound.Fx.NONE, DEFAULT_MAX_ROWS, Clock.systemUTC());
+    }
+
+    /**
+     * These reads without the tables' row rules (security off, as BI's dataset rules do not apply then); masks and hidden columns still do.
+     */
+    public TableReads rulesOff() {
+        this.rules = false;
+        return this;
     }
 
     /** How many times a source was read (the shared reads' measure: one per source, date and known-at time). */
@@ -119,7 +128,7 @@ public final class TableReads implements ModelAnswers.Rows {
                 .orElseThrow(() -> new ModelAnswers.Refused(TableCodes.REFERENCE, "no virtual table '" + name + "'"));
         Resolved r = resolve(t);
         LocalDate day = day(r, date);
-        TableAccess access = TableAccess.of(t, who);
+        TableAccess access = TableAccess.of(t, who, !rules);
         if (access.none()) {
             throw new ModelAnswers.Refused(TableCodes.READ, "you may not read " + t.name() + ": none of its rules is for your roles");
         }
@@ -134,6 +143,7 @@ public final class TableReads implements ModelAnswers.Rows {
             }
         }
         List<List<Object>> rows = new ArrayList<>();
+        Set<String> masked = new LinkedHashSet<>(access.masks());
         for (List<Object> row : computed(r, day, knownAt)) {
             DataNode node = node(all, row);
             if (!access.allows(node)) {
@@ -144,12 +154,26 @@ public final class TableReads implements ModelAnswers.Rows {
             }
             List<Object> out = new ArrayList<>(at.size());
             for (int i : at) {
-                out.add(access.masks().contains(all.get(i)) ? DataNode.MASK : row.get(i));
+                Object v = row.get(i);
+                boolean mask = masked.contains(all.get(i)) || Values.masked(v) || DataNode.MASK.equals(v);
+                if (mask) {
+                    masked.add(all.get(i));                    // masked at the source for this reader: the whole column is
+                }
+                out.add(mask ? DataNode.MASK : v);
             }
             rows.add(out);
         }
+        if (masked.size() > access.masks().size()) {
+            for (List<Object> out : rows) {
+                for (int k = 0; k < at.size(); k++) {
+                    if (masked.contains(all.get(at.get(k)))) {
+                        out.set(k, DataNode.MASK);
+                    }
+                }
+            }
+        }
         List<String> types = columns.stream().map(c -> type(t, c)).toList();
-        return new Read(r.def(), day, columns, types, rows, access.masks(), List.copyOf(problems.values()));
+        return new Read(r.def(), day, columns, types, rows, java.util.Collections.unmodifiableSet(masked), List.copyOf(problems.values()));
     }
 
     /** {@link ModelAnswers.Rows}: the table's rows on {@code date} as computed, before any reader's rules (the model applies those). */

@@ -322,12 +322,24 @@
 - **New tables offered.** `read.TableOffer` and `drishti.py tables offer NAME --sample FILE (--kind K | --lake L --table T) [--grain]
   [--write]`: one typed column per scalar field of a sample, the id key when unique, the lists of objects as grains to choose; `--write`
   accepts it as a new file, refused when the name is taken.
-- **Codes.** `DRS-9615` (a read refused) and `DRS-9616` (a name clash), in TABLES_GUIDE.md and API_GUIDE.md.
+- **Codes.** `DRS-9615` (a read refused, HTTP 422), `DRS-9616` (a name clash, 409) and `DRS-9609` (no such table, 404) in the server's
+  error codes, TABLES_GUIDE.md and API_GUIDE.md.
+- **The server reads virtual tables (V5).** `server.tables.TablesService` (`drishti.tables.root`, `read-max-rows`, `scan-warn-rows`): the
+  catalogue read again when a file under it changes, a table named like a stored kind or lake table refused at load and never served, and
+  the reads of one request for one person over `DataViewService.walk` (the kind's entitlement, the edition, the person's masks on every
+  document; a row rule knows `user.name`, `user.roles`, `user.desk`, `user.desks`, `user.email` as BI's do; rules off while security is
+  off). A column masked at the source for the reader is masked in the table.
+- **The pivot reads virtual tables.** Source `table:<domain>.<name>` (PIVOT_GUIDE.md section 3): listed with the kinds a person may open,
+  its columns as fields (masked ones left out), staged in the pivot engine's executor. `StagedRows` is the one staging of rows in hand
+  (moved out of `PanelSources`, which uses it too).
+- **Screens: mock-ups first.** `docs/lenses/mockups/virtual-tables/` A (catalogue and form), B (document, columns, rows; recommended),
+  C (the definition as text), each with the offer for new data; VIRTUAL_TABLES.md section 11. Not built until one is picked.
 - **Build fixes on the branch.** Error Prone's `ReturnValueIgnored` (`lang.Compiler`) and `JavaTimeDefaultTimeZone` (`lang.SqlLowering`,
   the preview's evaluator) and `NullTernary` (`ModelAnswersTest`), which stopped `drishti-bicompute` and `drishti-tables` compiling.
 - **Tests.** `TableReadsTest` (shared reads, rules, masks, hidden columns, conditions, a table over a table, dates, the limit),
   `TableOfferTest` (the offer and its grain pass the checks and preview; name clashes; the scan warning), `TablesCliTest` (offer, `--stored`),
-  `tools/test_tablescli.py`.
+  `tools/test_tablescli.py`, `PivotTablesApiTest` (a table as a pivot source with its kind's counts and its masks; two tables over one
+  kind read it once; stored names).
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

@@ -610,7 +610,13 @@ public enum ErrorCode {
     /** Busy protection: a bulk load of a pack's data did not start. */
     BUSY_BULK_LOAD("DRS-9505", 503),
     /** Busy protection: a large pivot view (more cells than {@code drishti.pivot.busy-cells}) did not start (PIVOT_GUIDE.md). */
-    BUSY_PIVOT_VIEW("DRS-9507", 503);
+    BUSY_PIVOT_VIEW("DRS-9507", 503),
+    /** Virtual tables (TABLES_GUIDE.md): a table or model the catalogue does not hold. */
+    TABLE_NOT_FOUND("DRS-9609", 404),
+    /** Virtual tables: a read refused (a date the source does not hold, known-at without history, too many rows, a condition on a masked column, a reader no rule names). */
+    TABLE_READ("DRS-9615", 422),
+    /** Virtual tables: a table named like a stored table (names are unique across virtual and stored tables). */
+    TABLE_NAME_CLASH("DRS-9616", 409);
 
     private final String code;
     private final int httpStatus;

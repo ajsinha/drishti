@@ -34,8 +34,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * A panel's rows as a pivot source (PIVOT_ENGINE.md section 2: "the Pivot tab on a table or ladder becomes a pivot view over the panel's
@@ -51,14 +49,12 @@ public final class PanelSources implements TabularSource.Resolver {
 
     private final ViewPipeline pipeline;
     private final Entitlements entitlements;
-    private final Map<String, Long> staged = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true));
-    private final Map<String, Object> locks = new ConcurrentHashMap<>();
-    private final int keep;
+    private final StagedRows staged;
 
     public PanelSources(ViewPipeline pipeline, Entitlements entitlements, int keep) {
         this.pipeline = pipeline;
         this.entitlements = entitlements;
-        this.keep = Math.max(4, keep);
+        this.staged = new StagedRows(keep);
     }
 
     /** The source id of a panel of an entity's view. */
@@ -241,53 +237,12 @@ public final class PanelSources implements TabularSource.Resolver {
 
         @Override
         public Relation relation(DuckDbExecutor e) {
-            Object lock = locks.computeIfAbsent(table, k -> new Object());
-            synchronized (lock) {
-                if (!staged.containsKey(table) || !e.exists(table)) {
-                    List<DuckDbExecutor.Column> dc = fields.stream().map(f -> new DuckDbExecutor.Column(f.name(), "number".equals(f.type()) ? "number"
-                            : "text")).toList();
-                    long n = e.stage(table, dc, sink -> {
-                        for (List<Object> row : records.rows()) {
-                            Object[] vals = new Object[cols.size()];
-                            for (int i = 0; i < vals.length; i++) {
-                                Object o = row.get(cols.get(i));
-                                vals[i] = o == null || o instanceof Number || o instanceof String ? o : String.valueOf(o);
-                            }
-                            sink.row(vals);
-                        }
-                        return records.rows().size();
-                    });
-                    staged.put(table, n);
-                    synchronized (staged) {
-                        while (staged.size() > keep) {
-                            String eldest = staged.keySet().iterator().next();
-                            staged.remove(eldest);
-                            try {
-                                e.drop(eldest);
-                            } catch (RuntimeException ex) {
-                                // dropped later
-                            }
-                        }
-                    }
-                }
-            }
-            return new Relation(DuckDbExecutor.quote(table), List.of(), null, List.of());
+            return staged.relation(e, table, fields, cols, records.rows());
         }
     }
 
-    /** Drops every staged panel (the engine switched off). */
+    /** Drops every staged table (the engine switched off). */
     public void release(DuckDbExecutor e) {
-        Set<String> names;
-        synchronized (staged) {
-            names = Set.copyOf(staged.keySet());
-            staged.clear();
-        }
-        for (String t : names) {
-            try {
-                e.drop(t);
-            } catch (RuntimeException ex) {
-                // already gone
-            }
-        }
+        staged.release(e);
     }
 }

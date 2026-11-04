@@ -930,6 +930,10 @@ drishti:
   pivot:                             # the pivot engine's reads of a panel (PIVOT_GUIDE.md); its other settings are in config/engines/pivot.yaml
     enabled: ${DRISHTI_PIVOT_ENABLED:${drishti.engines.pivot.enabled:true}}     # the old name of the pivot engine's switch (config/engines/pivot.yaml); false: no Pivot anywhere
     max-records: 50000               # the most rows of a panel a pivot of it reads (the table's limit does not apply); more is refused, never cut short
+  tables:                            # virtual tables and models (TABLES_GUIDE.md): the pivot, Sutras and Flight read them as the reader may see the source
+    root: ${DRISHTI_TABLES_ROOT:./config/tables}   # the definitions' folder: config/tables/<domain>/<name>.table.yaml and .model.yaml
+    read-max-rows: 2000000           # the most rows one read of a virtual table stages; more is refused, never cut short
+    scan-warn-rows: 1000000          # rows above which an unfiltered side of a model's join across connectors is warned about
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

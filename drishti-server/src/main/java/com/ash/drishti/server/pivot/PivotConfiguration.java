@@ -112,22 +112,35 @@ public class PivotConfiguration {
         return new PanelSources(pipeline, entitlements, props.stageKeep());
     }
 
-    /** The Data view's tables and the panels' rows, one resolver for the tabular provider. */
-    static com.ash.drishti.bicompute.sql.TabularSource.Resolver both(KindSources kinds, PanelSources panels) {
+    /** Virtual tables as sources ({@code table:<domain>.<name>}, TABLES_GUIDE.md section 7a). */
+    @Bean
+    public TableSources pivotTableSources(com.ash.drishti.server.tables.TablesService tables, PivotProperties props) {
+        return new TableSources(tables, props.stageKeep());
+    }
+
+    /** The Data view's tables, the virtual tables and the panels' rows, one resolver for the tabular provider. */
+    static com.ash.drishti.bicompute.sql.TabularSource.Resolver both(KindSources kinds, PanelSources panels, TableSources tables) {
         return new com.ash.drishti.bicompute.sql.TabularSource.Resolver() {
             @Override
             public java.util.Map<String, String> sources(com.ash.drishti.bicompute.spi.Viewer v) {
-                return kinds.sources(v);
+                java.util.Map<String, String> out = new java.util.LinkedHashMap<>(kinds.sources(v));
+                if (tables != null) {
+                    out.putAll(tables.sources(v));
+                }
+                return out;
             }
 
             @Override
             public boolean serves(String source) {
-                return panels.serves(source) || kinds.serves(source);
+                return panels.serves(source) || tables != null && tables.serves(source) || kinds.serves(source);
             }
 
             @Override
             public com.ash.drishti.bicompute.sql.TabularSource open(com.ash.drishti.bicompute.spi.Viewer v, String source, String date) {
-                return panels.serves(source) ? panels.open(v, source, date) : kinds.open(v, source, date);
+                if (panels.serves(source)) {
+                    return panels.open(v, source, date);
+                }
+                return tables != null && tables.serves(source) ? tables.open(v, source, date) : kinds.open(v, source, date);
             }
         };
     }
@@ -138,7 +151,8 @@ public class PivotConfiguration {
     }
 
     @Bean
-    public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, States states,
+    public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, ObjectProvider<TableSources> tables,
+            States states,
             ObjectProvider<VarService> var, ObjectProvider<MrCubeProperties> mr, ObjectProvider<FrtbService> frtb,
             org.springframework.core.env.Environment env,
             ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
@@ -150,7 +164,7 @@ public class PivotConfiguration {
                     mr.getIfAvailable(MrCubeProperties::defaults), () -> running(engines, "frtb-sa", true)
                             ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null));
         }
-        providers.add(new TabularProvider(exec, both(kinds, panels)));
+        providers.add(new TabularProvider(exec, both(kinds, panels, tables.getIfAvailable())));
         PivotCore core = new PivotCore(providers, states, props.core());
         AdmissionGate g = gate.getIfAvailable();
         if (g != null) {
@@ -172,7 +186,7 @@ public class PivotConfiguration {
      */
     @Bean
     public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, PanelSources panels, DuckDbExecutor exec,
-            ObjectProvider<PivotLiveConfiguration.Live> live) {
+            ObjectProvider<PivotLiveConfiguration.Live> live, ObjectProvider<TableSources> tables) {
         return new com.ash.drishti.server.engines.BasicEngine("pivot").onStop(() -> {
             PivotLiveConfiguration.Live l = live.getIfAvailable();
             if (l != null) {
@@ -181,6 +195,10 @@ public class PivotConfiguration {
             states.clear();
             kinds.release(exec);
             panels.release(exec);
+            TableSources t = tables.getIfAvailable();
+            if (t != null) {
+                t.release(exec);
+            }
         }).memory(states::bytes);
     }
 

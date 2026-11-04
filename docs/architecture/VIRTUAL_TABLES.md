@@ -157,3 +157,17 @@ Flight reading it, the checks and preview, docs (a tables guide with real exampl
 
 The deeper design and the questions Q1 to Q30 it settled (2026-11-03) are in
 [BI_FOUNDATION_2911E.md section 8](BI_FOUNDATION_2911E.md#8-decisions-product-owner-2026-11-03-every-recommendation-accepted-q1-decided-as-rachanas-rule).
+
+## 11. Screens: mock-ups first
+
+The editors move from BI (the dataset editor, the Model view) to the layer, reachable from Admin and from BI. Nothing is built until the
+product owner picks one of the three mock-ups of the table editor (each also shows the offer for a table a data load created, V8):
+
+| Option | Mock-up | In one line |
+|---|---|---|
+| A | [virtual-tables/A.html](../lenses/mockups/virtual-tables/A.html) | a catalogue by domain and the table as a form: every key visible, paths typed with completion |
+| B (recommended) | [virtual-tables/B.html](../lenses/mockups/virtual-tables/B.html) | a sample document as a tree (click a field to add a column, a list to set the grain), the columns, and the rows as a chosen role reads them, side by side |
+| C | [virtual-tables/C.html](../lenses/mockups/virtual-tables/C.html) | the definition as YAML with Rachana completion and checks as you type, preview, checks, lineage, versions and the diff as tabs |
+
+The screenshots (`A.png`, `B.png`, `C.png`) are taken in the next heavy run. The model editor (tables, relationships and measures) gets
+its own mock-ups once the table editor is chosen, so both read alike.
