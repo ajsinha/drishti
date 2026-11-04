@@ -17,6 +17,11 @@
 
 ## 2.9.11.c (unreleased)
 
+- **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
+  definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
+  built, uncertified), MR_CUBE_LENS.md and COMPUTED_ATTRIBUTES.md no longer say they are planned. The generated READMEs of the
+  compute-demo and news-and-markets packs and of the delta and iceberg plugins regenerated (they were stale).
+
 ### Security
 
 - **A BI dataset's declared mask always holds (a leak fixed).** A column a dataset lists under `security.masked` was masked only when the
@@ -27,11 +32,6 @@
   `trading-risk-counterparties` and `counterparty-exposure-counterparties` NAME and RATING, `trading-risk-trades` COUNTERPARTY,
   `counterparty-exposure-official` NODE_NAME, `live-trading` and `live-trading-trade` TRADER_ID (and so the models trading-risk,
   counterparty-exposure, live-trading and desk-pnl-vs-exposure-py). `DeclaredMasksTest`.
-
-- **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
-  definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
-  built, uncertified), MR_CUBE_LENS.md and COMPUTED_ATTRIBUTES.md no longer say they are planned. The generated READMEs of the
-  compute-demo and news-and-markets packs and of the delta and iceberg plugins regenerated (they were stale).
 
 - **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
   outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
