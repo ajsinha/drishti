@@ -48,10 +48,16 @@ paths of that design (FFM, the Vector API) as further implementations of the sam
 | **Statistics and optimisation** | `Stats`, `Optimise`, `Interpolate`, `Distributions` | none needed | Hipparchus (pure Java; SciPy's role) | new |
 | **Compression** | `Codecs` (zstd, Snappy, LZ4, gzip/deflate) | zstd-jni, snappy-java, lz4-java | aircompressor (pure Java, same formats) | natives used in five modules without a fallback |
 | **Key-value disk store** | `DiskStore` (the disk cache: get, put, remove, scan in key order) | RocksDB | **H2's MVStore** (pure Java, on disk, keys in order) | RocksDB in `drishti-diskcache`, no fallback |
-| **Embedded SQL engine** | registered for status only | DuckDB | the pivot engine's Java path where it answers; else the feature says it is unavailable | DuckDB in `plugin-duckdb`, `drishti-bicompute`, the server |
+| **Embedded SQL engine** | `SqlEngine` (open a database or an in-memory engine, run a statement with its memory, thread and time limits, answer in Arrow) | DuckDB | **none, by decision** (section 2.1) | DuckDB used directly in `drishti-server` (BI engine, SQL service), `drishti-bicompute` (the pivot executor) and `plugin-duckdb` |
 
-DuckDB stays in its modules (it is a whole engine, not a kernel); it is **registered** with `drishti-native` so its status, version and
-switch appear with the others, and the dependency rule of section 7 names it.
+### 2.1 DuckDB: required, without a fallback
+
+*Product owner, 2026-11-04: "For DuckDB we should not have a fallback: either we have it or we don't."* DuckDB is a **required**
+component, like the JVM itself. Its binding moves into `drishti-native` behind `SqlEngine` (the only code that imports `org.duckdb`), so
+there is one place that loads it, one version, one memory and thread budget, and one status in Health and Admin; the BI engine, the SQL
+service, the pivot executor and the DuckDB connector call the interface. There is no second SQL engine: if DuckDB cannot load (a platform
+it does not ship for), the server says so at start in plain words (what failed, the platforms supported) and does not start. The
+self-test, the version check and the status follow section 4; the breaker does not switch to Java, it fails the query in words.
 
 ## 3. The module
 
@@ -62,6 +68,7 @@ drishti-native/
   com.ash.drishti.nativ.maths     Stats, Optimise, Interpolate, Distributions (Hipparchus)
   com.ash.drishti.nativ.codec     Codecs; Zstd/Snappy/Lz4 natives; aircompressor
   com.ash.drishti.nativ.store     DiskStore; RocksDbStore; MvStore (H2 MVStore)
+  com.ash.drishti.nativ.sql       SqlEngine; DuckDbEngine (required, no fallback: section 2.1)
 ```
 
 - **Who depends on it:** `drishti-compute` (VaR and exposure kernels), `drishti-deltalake`, `drishti-lakeio`, `drishti-lakeload`,
@@ -135,7 +142,7 @@ when revisited: how its Windows library is built (a MinGW cross-compile on Linux
 |---|---|
 | One version per library | Maven Enforcer `dependencyConvergence` and `requireUpperBoundDeps` in the parent POM |
 | No duplicate classes | Enforcer `banDuplicateClasses` (extra-enforcer-rules) |
-| Natives only where allowed | an ArchUnit rule: `org.bytedeco`, `com.github.luben.zstd`, `org.xerial.snappy`, `net.jpountz`, `org.rocksdb` are imported only in `drishti-native` (DuckDB only in its listed modules) |
+| Natives only where allowed | an ArchUnit rule: `org.bytedeco`, `com.github.luben.zstd`, `org.xerial.snappy`, `net.jpountz`, `org.rocksdb`, `org.duckdb` are imported only in `drishti-native` |
 | Platforms | only the `linux-x86_64` and `windows-x86_64` classifiers, never the `-platform` artifacts (which pull every OS) |
 | One list | `docs/admin/NATIVE_DEPENDENCIES.md`, generated from the POMs by a tool and checked by a test: each native library, its version, licence, platforms, the capability it serves and its Java fallback |
 
@@ -174,7 +181,7 @@ console shows the DEGRADED banner when any capability fell back.
 
 1. The module, the contract (section 4), the registry, Health and Admin; BLAS moved in (one commit), its tests green unchanged.
 2. Dependency checks (section 7) and `NATIVE_DEPENDENCIES.md`.
-3. Codecs with aircompressor; the disk store's Java fallback; DuckDB registered.
+3. Codecs with aircompressor; the disk store's Java fallback; DuckDB moved behind `SqlEngine`.
 4. Hipparchus, then LAPACK with parity.
 5. The drill's pure-Java lane; docs (OPERATIONS.md server requirements, CONFIGURATION.md, a native guide); the Python worker design.
 
