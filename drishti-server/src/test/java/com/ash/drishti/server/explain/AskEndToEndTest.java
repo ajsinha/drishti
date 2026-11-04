@@ -65,7 +65,7 @@ class AskEndToEndTest {
     static void provider(DynamicPropertyRegistry r) throws java.io.IOException {
         java.nio.file.Path dir = java.nio.file.Files.createTempDirectory("ask-ai");
         java.nio.file.Files.writeString(dir.resolve("fake.yaml"), "type: openai\nbase-url: " + MODEL.url("") + "\ncompletions-path: /v1/chat/completions\n"
-                + "api-key: test-key-123\ntimeout: 1s\nmodels:\n  - name: fake-model\n    id: fake-model\n");
+                + "api-key: ${ASK_TEST_KEY:-test-key-123}\ntimeout: 1s\nmodels:\n  - name: fake-model\n    id: fake-model\n");
         r.add("drishti.ai.dir", dir::toString);
     }
 

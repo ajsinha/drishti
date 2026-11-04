@@ -1307,6 +1307,10 @@ one panel, updates strip cells in place, and hands chart panels new data — so 
 - **ArchUnit** (`ArchitectureRulesTest`): `drishti-api` is free of Spring and of every internal module; `common`,
   `rachana`, `inference`, `graph` and `identity` never see `engine` or `server`; `engine` never sees `server`;
   `@RestController` only in `drishti-server`; no field injection; no `Serializable`.
+- **Nothing unbuilt looks built:** every figure, panel, menu item, help page or decision that depends on unbuilt work is in the
+  under-construction registry (`config/under-construction.yaml`, [UNDER_CONSTRUCTION.md](../admin/UNDER_CONSTRUCTION.md)) and shows
+  *Under construction*, or is hidden; one mechanism (the matched Sutra is rewritten; the console reads the same file), enforced by
+  `UnderConstructionTest` (drishti-rachana) and `test_under_construction.py` (`tools/under_construction.py --check`).
 - Golden ViewModel tests for the reference entities (`ViewPipelineTest`, `ReferenceSutrasTest`); plugin contract tests
   from `drishti-testkit`; a JMH benchmark of the hot path in `drishti-benchmarks`.
 

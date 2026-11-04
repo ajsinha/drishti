@@ -17,6 +17,23 @@
 
 ## 2.9.11.c (unreleased)
 
+### Under construction (lean)
+
+- **Nothing unbuilt looks built** ([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md), product owner 2026-11-04): figures that are
+  stored rather than computed by their engine show *Under construction* (a chip, tone `uc`, `drishti_under-construction.css`, theme-aware)
+  in place of a number: the `sa-ccr` kind's EAD, RC, add-ons, multiplier, RWA and its panels; the `cva` kind's CVA, DVA, FVA, KVA, CS01,
+  components and sensitivities, and the netting set's stored CVA; a credit limit's stored used amount and utilisation (its strip, columns,
+  the utilisation bars and the checks that read them); the counterparty's stored net MTM (the one computed from the trade valuations
+  stays). The data stays in the lake. **One registry, one mechanism:** `config/under-construction.yaml` lists every item that depends on
+  unbuilt work (what it is, where it shows, the release that builds it, `hidden` or `under-construction`); the server rewrites a kind's
+  Sutra when it is matched (`UnderConstruction` in drishti-rachana, `drishti.under-construction.file`), so pages, phone lines, pivots and
+  the client renderer read the same answer; the console reads the same file for its menu items and help pages (`under_construction.file`;
+  the planned contracts SACCR, CVA, WWR, COLL and MC carry the chip on their help pages). Also registered: the pre-deal limit decision
+  (2.9.11.h). `tools/under_construction.py` writes UNDER_CONSTRUCTION.md (`--check`: every place it names exists, the document is current;
+  it also lists the shipped screenshots to retake); `UnderConstructionTest` and `test_under_construction.py` guard both sides. The rule for
+  new unbuilt items: PACK_DEVELOPER_GUIDE.md (Unbuilt work), ARCHITECTURE.md (Quality rules). EXPOSURE_GUIDE says it; CONFIGURATION.md
+  regenerated.
+
 ### Removed (lean)
 
 - **The engine switches with no engine behind them:** `config/engines/sa-ccr.yaml`, `fva.yaml` and `ccr-cube.yaml` (and their jar copies,

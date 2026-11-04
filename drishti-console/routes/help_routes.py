@@ -19,7 +19,9 @@ from pathlib import Path
 
 from fastapi import APIRouter, Request
 from fastapi.responses import RedirectResponse, Response
+from markupsafe import Markup
 
+from core import under_construction
 from core.backend import BackendError, drs_message
 from routes.common import ident, library, render
 
@@ -308,11 +310,15 @@ async def help_guide(request: Request, slug: str):
     lib = await library(request)
     if slug not in lib.guides and lib.moved.get(slug, "").partition("#")[0] in lib.guides:
         return RedirectResponse(f"/help/{lib.moved[slug]}", status_code=301)       # permanent: the address was retired, the target may carry an #anchor
-    if slug not in lib.guides or not visible(request, lib.guides[slug]):   # a guide the edition or the person's roles hide is not reached by its address either
+    uc = under_construction.of(request)                              # docs/admin/UNDER_CONSTRUCTION.md: a hidden page is not reached either
+    if slug not in lib.guides or not visible(request, lib.guides[slug]) or uc.help_hidden(slug):   # a guide the edition or the person's roles hide is not reached by its address either
         return render(request, "help/search.html", status_code=404, q=slug.replace("-", " "),
                       hits=[h for h in lib.search(slug.replace("-", " ")) if visible(request, h["guide"])], missing=slug, screen="help")
     g = lib.guides[slug]
     page = lib.render(slug)
+    if uc.help_marked(slug):
+        page = {**page, "html": Markup('<p class="drishti_uc-banner">') + under_construction.CHIP
+                + Markup(" What this page describes depends on work not built yet; its figures are not shown in the console.</p>") + page["html"]}
     return render(request, "help/guide.html", guide=g, page=page, category=_siblings(request, lib, g), screen="help")
 
 
