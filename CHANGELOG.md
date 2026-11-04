@@ -27,6 +27,17 @@
   default mode (the parallel loader appends to Delta and Iceberg; replace on request). Empty files are ignored. One rule per language,
   `tools/lake/filedate.py` and `FileDates`, both tested against `tools/lake/testdata/file-dates/names.json`; the command line's and the
   `.ready` file's routing in `tools/lake/feedroute.py` and drishti-dataload `Routes`/`ReadyNote`. `lake build --plan` shows the plan.
+- **Every row carries its load; appends read newest first; undo by load id.** Both loaders write `_load_id` (`<run>.<file>`, in time order;
+  one per data file, an archive's tables sharing it) and `_source_file` on every row, and list the run's loads in the summary. The Delta and
+  Iceberg connectors read an id two loads wrote on one date as the newest load's copy (the larger `_load_id`, then commit order) in fetches,
+  lists, columns and vector reads. `drishti.py lake undo LOAD_ID`, `POST /api/v1/admin/dataload/undo` and Admin → Data loads → Inbox →
+  Undo a load (a check first, then the load id typed again) remove a load's rows, one commit per table and date, and give a date a load
+  replaced back as it was. A table built before the load columns gains them on its first load, with no file rewritten (Delta: a
+  metadata commit; Iceberg: the columns added). Its rows read as the oldest load, and undoing a later load leaves them as they were.
+- **The data inbox loads tar archives table by table, all or nothing,** routes a table from a file's name, may create a table when asked
+  (`new-table: true`, `drishti.dataload.new-tables`), holds a file whose `.ready` says `hold: true`, pairs a short `.ready` name
+  (`trades.2026-11-03.ready`), and appends by default (`drishti.dataload.default-mode`).
+- **Schema to pack has its own guide**, `docs/guides/SCHEMA_TO_PACK_GUIDE.md` (help page *Schema to pack*), from DATA_GUIDE.md.
 - **Our own data follows the load rules (DATA_LOAD_RULES.md section 10; data/testdata/README.md; VAR_GUIDE.md section 30; the Windows
   QA guide).** Every committed test-data file is named `<table>.<YYYY-MM-DD>.jsonl.gz` after the table it feeds (`trade_endur`,
   `counterparty`, `risk-hierarchy` ...; 2,845 files renamed, their bytes unchanged), or is a plain tar of `<table>/<YYYY-MM-DD>/`
@@ -4686,7 +4697,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   call fails with `DRS-5003`, a banner ("Server not reachable - retrying...", Retry now) polls the console with a 2 s to 30 s backoff and, when
   the server is back, says "Connected again" and reloads the page (never one with unsaved edits: it offers Reload). The sign-in page says so too.
 - **One large file of deep trading documents, from Build -> New pack to a deployed pack with its data, all in the browser**
-  ([Schema to pack, A deep trading JSON](docs/guides/DATA_GUIDE.md#appendix-a-deep-trading-json)). *Reading:* a JSON array of any size
+  ([Schema to pack, A deep trading JSON](docs/guides/SCHEMA_TO_PACK_GUIDE.md#appendix-a-deep-trading-json)). *Reading:* a JSON array of any size
   is streamed like JSON Lines (one document in memory at a time); **every row is counted** for the columns that could tell record types apart
   (rare types are found, with their true row count), up to `builder.pack_profile_rows_per_type` (10,000) rows of each type are **profiled**
   (how often each field has a value, digits written as text, every array's size at every depth) and `builder.pack_design_samples_per_type` (50)

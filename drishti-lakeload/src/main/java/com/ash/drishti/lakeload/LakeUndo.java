@@ -223,14 +223,21 @@ public final class LakeUndo {
     /** The dates whose files' {@code _load_id} statistics may hold {@code id} (a file without them may too). */
     static List<String> candidateDates(Engine engine, Snapshot s, String id) throws IOException {
         TreeSet<String> out = new TreeSet<>();
+        if (s.getSchema().indexOf(RowPlan.LOAD_ID) < 0) {
+            return List.of();                                         // a table made before the load columns: no load to undo
+        }
         try (CloseableIterator<FilteredColumnarBatch> it = s.getScanBuilder().build().getScanFiles(engine)) {
             while (it.hasNext()) {
                 try (CloseableIterator<Row> rows = it.next().getRows()) {
                     while (rows.hasNext()) {
                         Row f = rows.next();
                         String date = InternalScanFileUtils.getPartitionValues(f).get("business_date");
+                        if (date == null || out.contains(date)) {
+                            continue;
+                        }
                         String[] b = bounds(f);
-                        if (date != null && (b[0] == null || b[1] == null || (b[0].compareTo(id) <= 0 && b[1].compareTo(id) >= 0))) {
+                        boolean maybe = b[0] == null || b[1] == null ? holds(engine, f, id) : b[0].compareTo(id) <= 0 && b[1].compareTo(id) >= 0;
+                        if (maybe) {
                             out.add(date);
                         }
                     }
@@ -238,6 +245,27 @@ public final class LakeUndo {
             }
         }
         return new ArrayList<>(out);
+    }
+
+    /**
+     * Whether a file without {@code _load_id} statistics holds the load: its {@code _load_id} column alone is read (a file written before
+     * the column, as every file of a lake built before the load columns, has none: only its footer is read, it holds nothing).
+     */
+    private static boolean holds(Engine engine, Row scanFile, String id) throws IOException {
+        io.delta.kernel.types.StructType one = new io.delta.kernel.types.StructType().add(RowPlan.LOAD_ID, io.delta.kernel.types.StringType.STRING, true);
+        try (CloseableIterator<io.delta.kernel.engine.FileReadResult> it = engine.getParquetHandler().readParquetFiles(
+                io.delta.kernel.internal.util.Utils.singletonCloseableIterator(InternalScanFileUtils.getAddFileStatus(scanFile)), one, java.util.Optional.empty())) {
+            while (it.hasNext()) {
+                io.delta.kernel.data.ColumnarBatch b = it.next().getData();
+                io.delta.kernel.data.ColumnVector v = b.getColumnVector(0);
+                for (int r = 0; r < b.getSize(); r++) {
+                    if (!v.isNullAt(r) && id.equals(v.getString(r))) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /** A scan file's {@code _load_id} minimum and maximum from its add action's statistics (null when not stated). */

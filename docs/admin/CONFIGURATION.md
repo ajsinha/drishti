@@ -2645,7 +2645,7 @@ read by both programs, so one set of variables configures both halves.
 | `builder.max_file_mb` | `5` | Largest single file; a larger one is left out and reported, the rest are shaped. |
 | `builder.max_total_mb` | `25` | All files together; over it the upload is refused. |
 | `builder.studio_kind` | `sample` | The kind a new Design and the workbench preview a brought document as (a pasted document has no kind of its own). |
-| `builder.pack_sample_docs` | `200` | **Build → New pack** (`/build/pack/new`, [Schema to pack](../guides/DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)): documents the browser keeps per data file and sends to the console. A sample, never the file. |
+| `builder.pack_sample_docs` | `200` | **Build → New pack** (`/build/pack/new`, [Schema to pack](../guides/SCHEMA_TO_PACK_GUIDE.md)): documents the browser keeps per data file and sends to the console. A sample, never the file. |
 | `builder.pack_read_max_rows` | `500000` | The most rows per file the page may be told to read (the page streams the file and keeps a sample; memory holds only the sample). |
 | `builder.pack_read_max_mb` | `1024` | The most MB per file the page may be told to read before it stops the file and says so. |
 | `builder.pack_max_files` | `200` | Schema and data files in one plan. Over it: `413 DRS-5005`. |

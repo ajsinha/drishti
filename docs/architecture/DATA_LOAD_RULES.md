@@ -117,6 +117,10 @@ Nothing is written before step 4.
 4. **Write.** One commit per table and date.
    - Files of one table and date in one cycle (two plain files, or several files in one date folder) go into one commit.
    - Every row gets `_load_id` (one id per data file, shared by every commit of an archive) and `_source_file`.
+   - A table made before these two columns gains them on its first load: two nullable columns are added to its schema (Delta: one
+     metadata commit, as a merge-schema write does; Iceberg: the columns added). No file is rewritten. Its earlier rows have no load id
+     and count as the oldest load, so a newer load's copy of an id wins. An undo reads only the `_load_id` column of files without
+     statistics for it; for a file written before the column, that read touches only the footer.
    - An archive commits its tables and dates in a fixed order (table, then date).
 5. **Roll back on failure.** If a commit of an archive fails, the commits already made by that load are undone (section 6.3), so an
    archive loads completely or not at all. The report says what failed and what was rolled back.

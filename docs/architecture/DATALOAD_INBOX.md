@@ -134,9 +134,18 @@ The inbox follows the load rules every loader follows ([DATA_LOAD_RULES.md](DATA
   counted: the loader's summary (`fileDates`, `otherDateRows`, `dateNotes`), the file's `.loaded.json`, the ledger's `loaded` line, the
   Loading table and the cycle's line on the board (*2 rows of trades.2026-11-02.jsonl carried another date in BUSINESS_DATE; loaded under
   2026-11-02*). Each waiting file's preview says the date it will load under and where it comes from.
-- **A tar** names its own tables and dates (`<table>/<YYYY-MM-DD>/`): a `.ready` `business-date:` or `table:` refuses it.
-- **The mode**: the `.ready` file's `mode:` (`append` or `replace`); else `replace` until the loader's append reaches the inbox's
-  default (`append`, the rules' default).
+- **A tar** names its own tables and dates (`<table>/<YYYY-MM-DD>/`): a `.ready` `business-date:` or `table:` refuses it. Each table
+  folder is routed on its own (the `.ready` file's `folders:` names a folder's pack, else the pack with that table, else a pack of that
+  name with one kind; any folder unresolved refuses the archive) and loaded by its own loader run (`source.dataset`), in table order, every
+  run with one run id (`--run-id`), so the archive's rows share one load id. If a table's load fails, the tables already committed are
+  undone (`LakeUndo.undoAll`) and the archive goes to `failed/` saying what failed and what was rolled back: all or nothing. An empty
+  archive is ignored (ledger `ignored`, moved to the outbox).
+- **The mode**: the `.ready` file's `mode:` (`append` or `replace`), else `drishti.dataload.default-mode` (`append`).
+- **New tables**: a table no pack has is refused, listing the known ones, unless the `.ready` file says `new-table: true` with its `pack:`
+  and the inbox allows it (`drishti.dataload.new-tables`, off as shipped): the table is written in the pack's domain with the generic layout,
+  its id field `key:` else `id`.
+- **Undo**: Admin → Data loads → Inbox → *Undo a load* (Check, then the load id typed again), `POST /api/v1/admin/dataload/undo`, or
+  `drishti.py lake undo`: a load's rows removed by its `_load_id` (DATA_LOAD_RULES.md section 6.3).
 - **The marker**: `<file>.ready` or the name without its data extension (`trades.2026-11-03.ready`); a short marker two data files could
   claim releases neither, and the board says why. A claimed marker takes its file's full name (`inprocess/<run>/<file>.ready`).
 

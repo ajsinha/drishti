@@ -1701,6 +1701,7 @@ as an administrator's announcement.
 | `GET` | `/admin/dataload/report?path=` | A report the status links to, by its path under the inbox's folder: a file's `.loaded.json` or `.failed.json`, a loader's `load-<n>.summary.json` or `load-plan.json` (JSON), or `load-<n>.rejects.jsonl` (the first 500 lines, an array). Only under `outbox/` and `failed/`; anything else `400 DRS-5001`, a report no longer kept `404` |
 | `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
 | `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
+| `POST` | `/admin/dataload/undo` | body `{loadId}`: what undoing that load would do, nothing changed; `{loadId, confirm}` with `confirm` the same id: the load undone, its rows removed from every Delta and Iceberg table of the inbox's lake, one commit per table and date, a replace restored ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 6.3): `{loadId, undone, lines: [{table, format, date, removed, restored, replaced}], text}`. `400 DRS-5001` no id, or the undo failed. Audited (`dataload.undo`). |
 
 ### Administration: node readiness and the drain before a stop
 

@@ -1349,7 +1349,7 @@ panel), so a copied address opens the same level, in the same tab. Every level's
 
 Up to 6 levels; every expression is checked when the Sutra loads (`DRS-2101`), the shape of `levels` too (`DRS-2029`). The rows are bound
 on the server once, bounded like a tree by `drishti.panels.tree-rows`; the console only shows and hides them. Build → New pack writes this
-for a document whose arrays hold arrays ([Schema to pack, A deep trading JSON](DATA_GUIDE.md#appendix-a-deep-trading-json)).
+for a document whose arrays hold arrays ([Schema to pack, A deep trading JSON](SCHEMA_TO_PACK_GUIDE.md#appendix-a-deep-trading-json)).
 
 #### line
 
@@ -5346,7 +5346,7 @@ Open **Build → New screen**. The page asks two things: *what data do you have?
 ![The New page: five ways to bring data, and the starting points](img/designer/01-new-flow.jpg)
 
 **Bring data** (any mix, in one go). A schema does more than make samples: with **Build → New pack** one or many schemas (and a folder of JSON Lines) become a whole pack of screens, with
-labels, links, About text and tests. The rules are in [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema); the samples below are the same synthetic ones that guide describes.
+labels, links, About text and tests. The rules are in [Schema to pack](SCHEMA_TO_PACK_GUIDE.md); the samples below are the same synthetic ones that guide describes.
 
 | You have | What happens |
 |---|---|

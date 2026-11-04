@@ -179,6 +179,65 @@ class LakeBuildTest(unittest.TestCase):
         r = next(x for x in self.rows() if x["id"] == "1000")
         self.assertEqual((str(r["business_date"]), json.loads(r["doc"])["TRADE_DATE"]), ("2026-11-03", "2026-11-02"))
 
+    def test_an_old_table_without_load_columns_gains_them(self):
+        """A table built before the load columns (the lakes already built): an append adds _load_id and _source_file (schema merge), its
+        old rows null, its files kept; a replace of a date works too."""
+        import shutil
+        from deltalake import DeltaTable, write_deltalake
+        (self.src / "deal.2026-11-02.jsonl").write_bytes(lines([deal(i, None) for i in range(3)]))
+        code, s, _ = self.run_build(pack=str(self.packs / "book"), kind="deal")
+        self.assertEqual(code, 0, s.get("error"))
+        path = self.lake / "trading" / "deal"
+        t = DeltaTable(str(path)).to_pyarrow_table()
+        old = t.drop_columns(["_load_id", "_source_file"])
+        shutil.rmtree(path)
+        write_deltalake(str(path), old, partition_by=["business_date"])               # as the loader wrote it before
+        self.assertNotIn("_load_id", [f.name for f in DeltaTable(str(path)).schema().fields])
+        before = set(DeltaTable(str(path)).file_uris())
+        (self.src / "deal.2026-11-02.jsonl").write_bytes(lines([deal(i, None) for i in range(2, 5)]))
+        code, s, _ = self.run_build(pack=str(self.packs / "book"), kind="deal")
+        self.assertEqual(code, 0, s.get("error"))
+        load = next(iter(s["loads"]))
+        rows = self.rows()
+        self.assertEqual(sorted((r["id"], r["_load_id"] or "") for r in rows),
+                         sorted([("1000", ""), ("1001", ""), ("1002", ""), ("1002", load), ("1003", load), ("1004", load)]))
+        self.assertTrue(before <= set(DeltaTable(str(path)).file_uris()), "an append rewrites no old file")
+        (self.src / "deal.2026-11-02.jsonl.ready").write_text("mode: replace\n")
+        code, s, _ = self.run_build(pack=str(self.packs / "book"), kind="deal")
+        self.assertEqual(code, 0, s.get("error"))
+        self.assertEqual(sorted(r["id"] for r in self.rows()), ["1002", "1003", "1004"])
+
+    def test_the_java_loader_adds_the_load_columns_and_deltalake_reads_them(self):
+        """A table built before the load columns, appended by the Java loader (its metadata commit adds _load_id and _source_file, no
+        file rewritten), read back with the deltalake package the tools use: the schema has the two columns, the old rows null, the
+        new rows their load id and file, every row there. Needs the loader (the server's exec jar, or DRISHTI_LAKE_CLASSPATH)."""
+        import shutil
+        import javaload
+        from deltalake import DeltaTable, write_deltalake
+        if javaload.command(None, None) is None:
+            self.skipTest("no Java lake loader (build the server's exec jar, or set DRISHTI_LAKE_CLASSPATH)")
+        (self.src / "deal.2026-11-02.jsonl").write_bytes(lines([deal(i, None) for i in range(3)]))
+        code, s, _ = self.run_build(pack=str(self.packs / "book"), kind="deal")
+        self.assertEqual(code, 0, s.get("error"))
+        path = self.lake / "trading" / "deal"
+        old = DeltaTable(str(path)).to_pyarrow_table().drop_columns(["_load_id", "_source_file"])
+        shutil.rmtree(path)
+        write_deltalake(str(path), old, partition_by=["business_date"])               # a table as the loaders wrote it before
+        version, before = DeltaTable(str(path)).version(), set(DeltaTable(str(path)).file_uris())
+        (self.src / "deal.2026-11-02.jsonl").write_bytes(lines([deal(i, None) for i in range(2, 6)]))
+        code, s, said = self.run_build(pack=str(self.packs / "book"), kind="deal", engine="java")
+        self.assertEqual(code, 0, f"{s.get('error')}\n{said}")
+        load = next(iter(s["loads"]))
+        t = DeltaTable(str(path))
+        self.assertGreaterEqual(t.version(), version + 2, "a metadata commit, then the append")
+        self.assertTrue({"_load_id", "_source_file"} <= {f.name for f in t.schema().fields})
+        self.assertTrue(before <= set(t.file_uris()), "no old file rewritten")
+        rows = t.to_pyarrow_table().to_pylist()
+        self.assertEqual(len(rows), 7)
+        self.assertEqual(sorted((r["id"], r["_load_id"] or "", r["_source_file"] or "") for r in rows),
+                         sorted([("1000", "", ""), ("1001", "", ""), ("1002", "", "")]
+                                + [(str(1000 + i), load, "deal.2026-11-02.jsonl") for i in range(2, 6)]))
+
     def test_as_of_and_ready_marker(self):
         f = self.src / "deal.2026-11-03.jsonl"
         f.write_bytes(lines([deal(i, "2026-11-03") for i in range(4)]))
