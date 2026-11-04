@@ -210,6 +210,10 @@
 
 ### Fixes
 
+- **Tests: the console's renderer parity test loads a page once more when Docker changed the network under it.** The drill's Java
+  tests start and stop containers beside the browser tests; Chromium then cancels the requests in flight (`net::ERR_NETWORK_CHANGED`) and
+  a page came out without its scripts, or not at all. `test_render_console_browser.py` applies the suite's one-reload rule
+  (`wb_live.should_reload`: once, and only for that cause), with the page drawn as on its first load; a page that failed to open is closed.
 - **A panel's own source that failed or timed out drew its empty text ("no data"); the Versions tab could show the diff of an older save.** A Sutra Next panel's `source:` was read within the link budget (`drishti.graph.link-budget`, 40 ms, meant for a linked entity's label) and a read that timed out or failed was dropped, so under load USEQ AAPL's "Held by funds" said "No fund of the funds pack holds this company". Now a panel's source is read within the sources' fetch timeout, as the page's record is, and a read that still fails draws the panel's failed state with the connector and why (`compute.state: failed`), never its empty text (`PanelSourceBudgetTest`). The workbench's Versions tab marks the diff `aria-busy` (dimmed) while a newer comparison loads and drops a version list answered after a newer one was asked for.
 - **Security: a console with several servers opened live streams on its first server (release blocker; ADR-016 › As built).** A live
   channel ran each subscription in a fresh context holding only the business date, so the server switch read its default: a person

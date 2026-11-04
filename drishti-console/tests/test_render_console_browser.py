@@ -34,7 +34,7 @@ import render_cases as cases  # noqa: E402
 from conftest import FIXTURES  # noqa: E402
 from table_chart_backend import ChartBackend, serve  # noqa: E402
 from test_render_parity_browser import INTENTIONAL, explain, normalised, pack_views  # noqa: E402,F401 - pack_views: the fixture
-from wb_live import BROWSER_WAIT_MS, live_console  # noqa: E402,F401 - live_console: the fixture pack_views needs
+from wb_live import BROWSER_WAIT_MS, live_console, should_reload  # noqa: E402,F401 - live_console: the fixture pack_views needs
 import render_harness as H  # noqa: E402
 
 WIDTHS = (390, 1280)
@@ -97,18 +97,36 @@ CSP = "window.__csp = []; document.addEventListener('securitypolicyviolation', (
 
 
 def open_page(browser, url, width=1280):
+    """The page drawn and settled. Chromium cancels the requests in flight when the machine's network interfaces change (the drill's Java
+    tests start and stop Docker containers beside this suite): a page that lost a script that way is drawn without it, or not at all. Such a
+    page is loaded once more (wb_live.should_reload: once, and only for net::ERR_NETWORK_CHANGED); any other failure is the page's own."""
     ctx = browser.new_context(viewport={"width": width, "height": 900})
-    page = ctx.new_page()
-    errors, reqs = [], []
-    page.on("pageerror", lambda e: errors.append(str(e)))
-    page.on("request", lambda r: reqs.append(r.url))
-    page.add_init_script(CSP)
-    page.goto(url, wait_until="load")
-    page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
-    settle(page)
-    page.__errors = errors
-    page.__reqs = reqs
-    return ctx, page
+    try:
+        page = ctx.new_page()
+        errors, reqs, network = [], [], []
+        page.on("pageerror", lambda e: errors.append(str(e)))
+        page.on("request", lambda r: reqs.append(r.url))
+        page.on("requestfailed", lambda r: network.append(f"request failed: {r.url} ({r.failure})"))
+        page.add_init_script(CSP)
+        page.goto(url, wait_until="load")
+        try:
+            page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
+            settle(page)
+        except Exception:
+            if not should_reload(network, False):
+                raise
+        if should_reload(network, False):          # timed out, or drawn without what the changed network cancelled
+            del errors[:], reqs[:], network[:]
+            ctx.clear_cookies(name="drishti-device")   # drawn as the first load was: phone.js has since named the device (a phone page)
+            page.reload(wait_until="load")
+            page.wait_for_selector(".view .pnl", state="attached", timeout=BROWSER_WAIT_MS)
+            settle(page)
+        page.__errors = errors
+        page.__reqs = reqs
+        return ctx, page
+    except BaseException:
+        ctx.close()                                # a page that failed to open does not stay open beside the next one
+        raise
 
 
 def settle(page):
