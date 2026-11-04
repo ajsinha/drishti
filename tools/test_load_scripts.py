@@ -175,10 +175,14 @@ class LoadScripts(unittest.TestCase):
                                cwd=ROOT, env={**os.environ, "DRISHTI_DATA_DIR": tmp}, capture_output=True, text=True, timeout=300)
             self.assertEqual(r.returncode, 0, r.stderr)
             rows = Path(tmp) / "build" / "lake-rows"
-            self.assertEqual(sorted(f.name for f in rows.iterdir()), ["banking-history.jsonl", "banking-restated.jsonl"])
-            with rows.joinpath("banking-history.jsonl").open(encoding="utf-8") as f:
-                first = json.loads(f.readline())
+            self.assertEqual(sorted(f.name for f in rows.iterdir()), ["banking-history.tar", "banking-restated.tar"])   # the load rules: tars
+            import tarfile
+            with tarfile.open(rows / "banking-history.tar") as t:
+                m = t.getmembers()[0]
+                table, day, _ = m.name.split("/")                          # <table>/<YYYY-MM-DD>/rows.jsonl
+                first = json.loads(t.extractfile(m).readline())
             self.assertEqual(sorted(first), ["date", "doc", "domain", "id", "kind", "table"])
+            self.assertEqual((first["table"], first["date"]), (table, day))
             self.assertTrue((Path(tmp) / "feeds" / "fixing.jsonl").is_file())       # created, as the data folder had none
             self.assertFalse((Path(tmp) / "delta").exists())                         # --no-load: nothing loaded
         self.assertEqual({f: f.stat().st_mtime_ns for f in samples}, before)

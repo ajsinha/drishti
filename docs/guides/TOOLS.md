@@ -154,7 +154,7 @@ files, go in a folder beside the lake (never the system temp folder), removed wh
 table, so an archive's folders, if it has any, must all be that table's name (`--table`, else the kind), and any other folder is
 refused and named; unsafe names, links, nested archives and zip bombs are refused before a row is read. A reject names its member:
 `trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes the same feeds (`trade_endur.2026-10-28.jsonl.zip`, or a tar
-of `trade_endur/<date>/` folders), and `tools/samplegen/load_rows.py --rows` an archive of lake rows, a folder per table.
+of `trade_endur/<date>/` folders), and `tools/samplegen/load_rows.py --rows` a tar of lake rows, a `<table>/<YYYY-MM-DD>/` folder per table and date.
 
 ### 4.1 Look first: lake scan
 
@@ -1609,7 +1609,7 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`load-delta.sh --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE\|-` loader rows for the other stores) |
 | `tools/demonames.py` | the bank's own names in the demo data (`config/demo/names.yaml`): the mapping `lake demo --names` and `build_demo_lakes.py --names` apply as they load, and the pack generators as they write samples ([DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names)) |
 | `tools/convertcmd.py` (`drishti.py convert FILE`) | CSV (deprecated input), a JSON array or a folder of per-entity `.json` files into JSON Lines ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
-| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.jsonl`, `<name>-restated.jsonl`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
+| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.tar`, `<name>-restated.tar`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
 
 The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). It writes the
 same bytes on every Python version and machine: amounts that are sums (a netting set's `NET_MTM`, a counterparty's) are added with

@@ -63,6 +63,12 @@
   business today; the run says which, in `lake build`'s words), `--date`/the pack's ingest date only names the field whose differing
   rows are counted; `pack_from_jsonl --lake` no longer needs `--date` (every kind in the dated store); a file's kind is its name's table
   (`trade.2026-11-03.jsonl` is `trade`) in `sutra gen`, `pack make` and `data ingest` alike.
+  Lake rows the same (product owner, 2026-11-04): `load_rows.py` keeps each row as it is but stores it under its file's business date
+  by the rules (a tar's `<table>/<YYYY-MM-DD>/` folder; a plain file's `--as-of`, `.ready` date, name's or the business today), never
+  the row's `date`, which is counted when it differs; a plain file of several tables is refused (send a tar). The generators
+  (`make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`) write `<name>-history.tar` and `<name>-restated.tar`;
+  checked against develop's: the same 25,477 rows in the same 517 table-and-date groups, the same ten partition dates (2026-09-17 to
+  2026-09-30), and the two lakes the same (47 tables, 470 table-and-date pairs, 25,430 rows, every row equal).
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 

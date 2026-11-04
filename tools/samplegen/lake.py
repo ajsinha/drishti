@@ -20,10 +20,11 @@ loading are separate steps (docs/guides/DATA_GUIDE.md): this writes JSONL; tools
     uv run --with deltalake --with pyarrow --with pyyaml python tools/samplegen/lake.py \\
         --samples examples/packs/finance/samples --root data/delta --domain finance --days 10 [--as-of 2026-09-30] [--rows DIR] [--no-load]
 
-Rows (--rows DIR, default <root>/../build/lake-rows): <name>-history.jsonl, every business date of every kind, and
-<name>-restated.jsonl, the newest date's correction of one document per kind, which the loader writes as a second commit so time
-travel ("as known at") has something to show. --no-load stops after the JSONL. A row:
-{"domain", "kind", "table", "id", "date", "doc"} (doc: the document as JSON text, with its businessDate).
+Rows (--rows DIR, default <root>/../build/lake-rows), by the load rules (docs/architecture/DATA_LOAD_RULES.md: a file is one table and
+one date, a tar holds several): <name>-history.tar, every business date of every kind as <table>/<YYYY-MM-DD>/rows.jsonl, and
+<name>-restated.tar, the newest date's correction of one document per kind, which the loader writes as a second commit so time
+travel ("as known at") has something to show. --no-load stops after the rows. A row:
+{"domain", "kind", "table", "id", "date", "doc"} (doc: the document as JSON text, with its businessDate; date: its folder's date).
 
 Layout (what the connector reads):  <root>/<domain>/<kind>/_delta_log/…
                                     <root>/<domain>/<kind>/business_date=YYYY-MM-DD/part-….parquet
@@ -125,23 +126,50 @@ def final_rows(kinds: dict[str, dict[str, dict]], end: date, days: int, cal: Cal
 
 
 def write_rows(out: pathlib.Path, name: str, tables, end: date, days: int, cal: Calendar) -> tuple[pathlib.Path, pathlib.Path, int]:
-    """Writes out/<name>-history.jsonl (history_rows of every table) and out/<name>-restated.jsonl (each table's restatement
-    of its newest date). tables: (domain, table, kind, {id: document}) in load order; the table name seeds the walk, so a kind
-    split into tables (trade_endur ...) walks as its tables. Returns (history file, restated file, history rows)."""
+    """Writes out/<name>-history.tar (history_rows of every table) and out/<name>-restated.tar (each table's restatement of its newest
+    date), tars of <table>/<YYYY-MM-DD>/rows.jsonl (the load rules: tools/lake/feedfiles.py). tables: (domain, table, kind,
+    {id: document}) in load order; the table name seeds the walk, so a kind split into tables (trade_endur ...) walks as its tables. A
+    table name is a tar's folder: two domains with a table of one name are refused. Returns (history tar, restated tar, history rows)."""
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent / "lake"))
+    import feedfiles
     out.mkdir(parents=True, exist_ok=True)
-    history, restated, n = out / f"{name}-history.jsonl", out / f"{name}-restated.jsonl", 0
-    with history.open("w", encoding="utf-8") as h, restated.open("w", encoding="utf-8") as r:
-        for domain, table, kind, docs in tables:
-            if not docs:
-                continue
-            for _, id_, d, body in history_rows({table: docs}, end, days, cal):
-                h.write(json.dumps({"domain": domain, "kind": kind, "table": table, "id": id_, "date": d.isoformat(), "doc": body},
-                                   ensure_ascii=False) + "\n")
-                n += 1
-            first, fixed = restatement(docs, end)
-            r.write(json.dumps({"domain": domain, "kind": kind, "table": table, "id": first, "date": end.isoformat(), "doc": fixed},
-                               ensure_ascii=False) + "\n")
+    hist: dict[str, dict[str, list[str]]] = {}
+    fixes: dict[str, dict[str, list[str]]] = {}
+    owner: dict[str, str] = {}
+    n = 0
+    for domain, table, kind, docs in tables:
+        if not docs:
+            continue
+        if owner.setdefault(table.lower(), domain) != domain:
+            raise SystemExit(f"write_rows: table {table} in domains {owner[table.lower()]} and {domain}: a tar's folder names one table")
+        for _, id_, d, body in history_rows({table: docs}, end, days, cal):
+            hist.setdefault(table, {}).setdefault(d.isoformat(), []).append(
+                json.dumps({"domain": domain, "kind": kind, "table": table, "id": id_, "date": d.isoformat(), "doc": body}, ensure_ascii=False))
+            n += 1
+        first, fixed = restatement(docs, end)
+        fixes.setdefault(table, {}).setdefault(end.isoformat(), []).append(
+            json.dumps({"domain": domain, "kind": kind, "table": table, "id": first, "date": end.isoformat(), "doc": fixed}, ensure_ascii=False))
+    history, restated = out / feedfiles.tar_name(f"{name}-history"), out / feedfiles.tar_name(f"{name}-restated")
+    for path, by_table in ((history, hist), (restated, fixes)):
+        members = []
+        for table, days_ in by_table.items():
+            for day, lines in days_.items():
+                members.append((f"{table}/{day}/rows.jsonl", ("\n".join(lines) + "\n").encode("utf-8")))
+        path.write_bytes(_tar(members))
     return history, restated, n
+
+
+def _tar(members: list[tuple[str, bytes]]) -> bytes:
+    """A deterministic tar of these (name, bytes) files, in name order (feedfiles.tar_bytes's form, any number of tables)."""
+    import io
+    import tarfile
+    buf = io.BytesIO()
+    with tarfile.open(fileobj=buf, mode="w", format=tarfile.USTAR_FORMAT) as t:
+        for name, data in sorted(members):
+            info = tarfile.TarInfo(name)
+            info.size, info.mtime, info.mode, info.uid, info.gid, info.uname, info.gname = len(data), 0, 0o644, 0, 0, "", ""
+            t.addfile(info, io.BytesIO(data))
+    return buf.getvalue()
 
 
 def rows_dir(root: pathlib.Path) -> pathlib.Path:

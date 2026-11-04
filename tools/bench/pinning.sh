@@ -41,7 +41,7 @@ cmd_data() {
     # generate JSONL rows, then load them (docs/guides/DATA_GUIDE.md)
     uv run -q --with pyyaml python tools/packgen/banking/make_data.py --lake "$D/lake" --rows "$D/build/lake-rows" --no-load
     uv run -q "${WITH[@]}" python tools/samplegen/load_rows.py --root "$D/lake" \
-      --rows "$D/build/lake-rows/banking-history.jsonl" --restated "$D/build/lake-rows/banking-restated.jsonl"
+      --rows "$D/build/lake-rows/banking-history.tar" --restated "$D/build/lake-rows/banking-restated.tar"
     uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$D/lake" --out "$D/build/bulk" --trades "$TRADES" --days 3
   }
   uv run -q --with pyyaml python tools/packgen/banking/make_data.py --jsonl "$D/banking.jsonl"
