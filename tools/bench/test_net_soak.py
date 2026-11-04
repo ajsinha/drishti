@@ -227,7 +227,8 @@ class SoakConfigurationTest(unittest.TestCase):
             doc = yaml.safe_load(files["trade-endur"])
             self.assertEqual(("delta", False, ["trade"]), (doc["plugin"], doc["enabled"], doc["kinds"]))
             self.assertIn("enabled: false\n", files["trade-endur"])                  # a YAML boolean, never the string "false" (SOAK2-02)
-            self.assertEqual("trade_endur", doc["settings"]["table"]["trade"])
+            # the pack's template in the lake form (2.9.11.c): the lake and its entry named, the table's layout in config/lakes/demo.yaml
+            self.assertEqual(("demo", "trading.trade_endur"), (doc["settings"]["lake"], doc["settings"]["lake-tables"]))
             self.assertLessEqual(set(doc), {"plugin", "enabled", "kinds", "description", "settings", "name"})   # CONNECTOR_FILES section 3
             shared = self.lake(Path(tmp) / "shared", ["trading/trade_endur", "trading/trade_calypso", "reference/counterparty"])
             self.assertEqual({"trade-murex", "market-store"}, set(net_soak.connector_files(shared, "trading")))
