@@ -140,8 +140,13 @@ test. Rachana's statistical functions (FUNCTION_CATALOGUE.md) call it through `d
 *Product owner, 2026-11-04: "Let us keep QuantLib out for now. We will revisit this later."* Not part of 2.9.12: it gets a release of its own, not yet scheduled (product owner, 2026-11-04). The decisions made
 before parking hold for when it is revisited: QuantLib in the Java server as the one pricing engine (QLRisk's other models through the
 Python worker), a pure-Java core as its fallback (calendars, day counts, schedules, curves, Black and Bachelier, vanilla swaps, FX
-forwards), sessions for thread safety, input guards, in-process by default with a worker mode, the latest stable version pinned. Open
-when revisited: how its Windows library is built (a MinGW cross-compile on Linux, or Linux native only with Windows on the Java core).
+forwards), sessions for thread safety, input guards, in-process by default with a worker mode, the latest stable version pinned. The route chosen (product owner, 2026-11-04): **`io.github.ralfkonrad.quantlib_for_maven:quantlib`** (Maven Central, versions 1.31.0
+to 1.44.0, following QuantLib's numbers; QuantLib's SWIG Java bindings with prebuilt natives for Linux, macOS and Windows amd64; BSD-3
+packaging, QuantLib's own licence), pinned and vendored in `drishti-native` with its checksum. This settles the Windows build. What
+the binding requires of us: every QuantLib object is `AutoCloseable` with no finalizers, so the `quant` interface owns each object's
+lifetime (callers never hold one) and a leak test guards it; sessions are not documented, so thread safety is verified when built and,
+if absent, pricing runs on an isolated thread pool or in the worker process; it has one maintainer, so our own build script stays the
+fallback route.
 
 ## 7. One version of everything
 
@@ -198,7 +203,7 @@ Two drills (a large release); the benchmark with `drishti.native.mode` `off` aga
 
 | # | Question | Decision (product owner, 2026-11-04) |
 |---|---|---|
-| N1 | QuantLib's Windows build | parked with QuantLib (section 6) |
+| N1 | QuantLib's Windows build | **settled**: the quantlib_for_maven artifact ships Windows amd64 natives (section 6) |
 | N2 | QuantLib version | the latest stable at build time, pinned (for when QuantLib is revisited) |
 | N3 | Out-of-process QuantLib by default? | in-process by default, `worker` mode available (for when QuantLib is revisited) |
 | N4 | The disk store's Java fallback | **a pure-Java store on disk, H2's MVStore** (product owner: memory for a disk cache can be a problem). Pure Java, file-backed, ordered keys (the sorted store's scans), compression, concurrent readers; H2 is already a dependency (the JDBC plugin's tests), so the same library family, one pinned version. A cache written by RocksDB is not read by MVStore: each keeps its own folder, and a switch starts the other's cache empty (it is a cache) |
