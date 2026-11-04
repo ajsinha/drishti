@@ -17,6 +17,11 @@
 
 ## 2.9.11.c (unreleased)
 
+- **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
+  definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
+  built, uncertified), MR_CUBE_LENS.md and COMPUTED_ATTRIBUTES.md no longer say they are planned. The generated READMEs of the
+  compute-demo and news-and-markets packs and of the delta and iceberg plugins regenerated (they were stale).
+
 - **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
   outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
   pivot view with Rachana paths over trade legs (`sum($.LEGS[*].NOTIONAL)` by desk, a desk-by-year grid, trades with a JPY leg); a desk's
