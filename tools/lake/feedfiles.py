@@ -267,3 +267,44 @@ def contents(path: pathlib.Path) -> dict[str, bytes]:
             with p.open() as fh:
                 out[f"{d}/{p.member.rsplit('/', 1)[-1] if p.member else p.path.name}"] = fh.read()
     return out
+
+
+def write_documents(folder: pathlib.Path, table: str, docs: Iterable[dict], date_of=None) -> list[pathlib.Path]:
+    """A producer's documents of one table as feed files in ``folder`` (nothing removed first): with ``date_of`` (the producer's own
+    reading of a document's business date, such as the date field the author of a pack names: an ISO date, a time stamp or YYYYMMDD,
+    or None) one file per business date, ``<table>.<YYYY-MM-DD>.jsonl.gz``; the documents it dates nothing for, and every document
+    without ``date_of``, in ``<table>.jsonl.gz``, which the loaders date by the rules (--as-of, the .ready file, the business today).
+    Pack make and schema to pack write their samples so: the loader never reads a row's date."""
+    import json
+    by_day: dict[str, list[str]] = {}
+    undated: list[str] = []
+    for d in docs:
+        line = json.dumps(d, ensure_ascii=False)
+        day = _iso(date_of(d)) if date_of else None
+        (by_day.setdefault(day, []) if day else undated).append(line)
+    out = write_table(folder, table, {d: [(f"{table}{SUFFIX}", gz_bytes(v))] for d, v in by_day.items()}, clear=False) if by_day else []
+    if undated:
+        _check(table, None)
+        p = pathlib.Path(folder) / f"{table}{SUFFIX}"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_bytes(gz_bytes(undated))
+        out.append(p)
+    return sorted(out)
+
+
+def _iso(value) -> str | None:
+    """An ISO date (YYYY-MM-DD) from a producer's date value (ISO, an ISO time stamp, or YYYYMMDD), None when it is none."""
+    if value is None:
+        return None
+    s = str(value).strip()
+    if len(s) >= 8 and s[:8].isdigit():
+        s = f"{s[:4]}-{s[4:6]}-{s[6:8]}"
+    s = s[:10]
+    if not _ISO.match(s):
+        return None
+    try:
+        import datetime
+        datetime.date.fromisoformat(s)
+    except ValueError:
+        return None
+    return s

@@ -40,6 +40,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import date
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -205,10 +206,18 @@ def run(opts) -> int:
     lake_line = ""
     if target:
         import ingest_jsonl as IJ
-        ia = argparse.Namespace(src=opts.inputs, recursive=opts.recursive, pack=out, domain=None, kind=opts.kind, key=None, date=None,
-                                columns=None, lake=opts.lake, store=opts.store, root=opts.files_root, mode="replace", dry_run=False,
-                                batch_rows=250_000)
-        rep = IJ.ingest(ia, say)
+        sys.path.insert(0, str(ROOT / "tools" / "lake"))
+        import feedfiles
+        # this tool is the feed's producer: a kind whose date field the author named (--date) is written one file per business date
+        # (<kind>.<date>.jsonl.gz, the shared feed writer), the rest as <kind>.jsonl.gz; the load then follows the rules, never a row's date
+        with tempfile.TemporaryDirectory(prefix="pack-from-jsonl-") as staged:
+            for k in sorted(kinds):
+                f = dates.get(k)
+                feedfiles.write_documents(pathlib.Path(staged), k, kinds[k], (lambda d, f=f: SG.doc_date(d, f)) if f else None)
+            ia = argparse.Namespace(src=[pathlib.Path(staged)], recursive=False, pack=out, domain=None, kind=None, key=None, date=None,
+                                    columns=None, lake=opts.lake, store=opts.store, root=opts.files_root, mode="replace", dry_run=False,
+                                    batch_rows=250_000)
+            rep = IJ.ingest(ia, say)
         skipped = sum(rep.no_key.values())
         lake_line = (f"\nDated store ({opts.store}): {sum(rep.rows.values())} rows written to {target} (domain {opts.name}); {skipped} document(s) "
                      f"without an id skipped")
