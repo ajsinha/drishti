@@ -319,6 +319,19 @@ def test_the_drawn_screen_keeps_every_figure_and_the_explanation_moves_into_the_
         assert pg.get_attribute("[data-vx-how]", "aria-expanded") == "true"
         box = drawer.bounding_box()
         assert box["x"] + box["width"] >= 1499 and box["width"] < 700                  # over the right of the screen
+        # below the console's top bar, to the bottom: the bar (command line, date, its icons) stays visible and clickable
+        pg.wait_for_timeout(300)
+        box = drawer.bounding_box()
+        head = pg.locator("header.tbar").bounding_box()
+        assert abs(box["y"] - (head["y"] + head["height"])) <= 1 and abs(box["y"] + box["height"] - 1000) <= 1, (box, head)
+        hits = pg.evaluate("""() => [...document.querySelectorAll('header.tbar input, header.tbar button, header.tbar a')]
+            .filter(e => { const r = e.getBoundingClientRect(); return r.width && r.height && r.right > window.innerWidth - 440; })
+            .map(e => { const r = e.getBoundingClientRect(); const at = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2);
+                        return e === at || e.contains(at); })""")
+        assert hits and all(hits), hits                                              # the bar's right-hand icons are on top
+        pg.locator("#cmdInput").click()                                             # the command line takes a click
+        assert pg.evaluate("document.activeElement.id") == "cmdInput" and drawer.is_visible()
+        pg.locator("[data-vx-how-close]").focus()
         pg.wait_for_timeout(300)
         _shot(pg, f"var-layout-drawer-{theme}")
         pg.keyboard.press("Escape")

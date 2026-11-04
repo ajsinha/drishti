@@ -246,6 +246,16 @@
     setLink(false);
     if (inside) how.focus();
   }
+  /** The drawer starts below the console's top bar (header.tbar, sticky): its measured height is --vx-header-h, kept current as the bar
+      wraps or folds (ResizeObserver), so the command line, the date and the bar's icons stay visible and clickable. */
+  var bar = document.querySelector("header.tbar");
+  function headerHeight() {
+    if (drawer) drawer.style.setProperty("--vx-header-h", (bar ? Math.max(0, Math.round(bar.getBoundingClientRect().bottom)) : 0) + "px");
+  }
+  headerHeight();
+  if (bar && window.ResizeObserver) new ResizeObserver(headerHeight).observe(bar);
+  window.addEventListener("resize", headerHeight);
+  window.addEventListener("scroll", headerHeight, { passive: true });
   if (how) how.addEventListener("click", function () { if (isOpen()) closeHow(); else openHow(); });
   var x = drawer && drawer.querySelector("[data-vx-how-close]");
   if (x) x.addEventListener("click", closeHow);
