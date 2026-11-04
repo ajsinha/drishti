@@ -807,7 +807,7 @@ One derivative's SA-CCR classification and terms per business date and risk driv
 | `START_DATE` | date |  | optional |  | `2026-09-30` |  | — |
 | `END_DATE` | date |  | optional |  | `2036-02-14` |  | — |
 | `SHIFT` | amount |  | optional |  | `0.01` |  | — |
-| `CREDIT_QUALITY` | text |  | optional |  | `A`, `B`, `BB`, `BBB`, `IG`, `SG` |  | — |
+| `CREDIT_QUALITY` | text |  | optional |  | `AAA`, `AA`, `A`, `BBB`, `BB`, `B`, `CCC`, `IG`, `SG` |  | — |
 | `ATTACHMENT` | amount |  | optional |  | `0.03` |  | — |
 | `DETACHMENT` | amount |  | optional |  | `0.07` |  | — |
 
