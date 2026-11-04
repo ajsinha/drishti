@@ -89,12 +89,9 @@ def test_studio_design_and_sample_open_that_design_and_the_page_selects_the_samp
     assert '"sample": "b.json"' in page and '"tab": "split"' in page
 
 
-def test_old_review_addresses_move_to_the_workbench_and_keep_the_query(app_client):
-    assert _target(app_client, "/studio/reviews") == "/build/reviews"
-    assert _target(app_client, "/studio/reviews?status=all") == "/build/reviews?status=all"
-    assert _target(app_client, "/studio/reviews/P-000042") == "/build/reviews/P-000042"
-    r = app_client.post("/studio/reviews/P-000042/approve", data={"comment": "ok"}, follow_redirects=False)
-    assert r.status_code == 307 and r.headers["location"] == "/build/reviews/P-000042/approve"      # the decision's form is sent on as it is
+def test_the_old_review_addresses_are_gone_and_the_reviews_live_in_the_workbench(app_client):
+    # lean (2.9.11.c): the /studio/reviews redirect stubs are deleted; the reviews are /build/reviews
+    assert app_client.get("/studio/reviews", follow_redirects=False).status_code == 404
     assert app_client.get("/build/reviews").status_code in (200, 403)
 
 
@@ -149,7 +146,7 @@ def test_the_studio_help_guide_moved_to_the_designer_guide(app_client):
     assert r.status_code == 301 and r.headers["location"] == "/help/rachana-reference#screen-designer-and-the-build-workbench"
     assert app_client.get("/help/rachana-reference#screen-designer-and-the-build-workbench").status_code == 200
     assert "sutra-studio" not in app_client.get("/help").text
-    assert not (app_client.app.state.settings.get("studio.enabled") is False)
+    assert app_client.app.state.settings.get("studio.enabled") is None     # no studio switch: /studio follows Build (features.build)
 
 
 # ---- the workbench carries Studio's features --------------------------------------------------------------------------------------

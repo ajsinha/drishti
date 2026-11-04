@@ -559,7 +559,7 @@ commands:
   allow: [CPTY, GRP, LE, BOOK, DESK, TRDR, CCP, TRD, CTRD, PTRD, LTRD, FX, HIER, PORT, POS, PNLV, SPV, FXS, SSET, VLIM, VRES,
           VOFF, AGR, CSA, NSET, LIM, COLL, MC, XRUN, XPATH, EXP, XWIF, XOFC, NSMTM, CPMTM]
   words: { BI: on, RUPAKA: off, FORM: off, FUNC: on, WHAT: on, DATAMAP: on, VAR: on, EXP: on }
-features: { bi: edition, var: on, exposure: on, calc: off, pyconsole: off, python: off, designer: off, studio: off, build: off,
+features: { bi: edition, var: on, exposure: on, calc: off, pyconsole: off, python: off, designer: off, build: off,
             forms: off, datamap: on, layouts: on, workspaces: on, monitors: on, alerts: on, reports: on, lakes: on, ai: off, embed: off }
 bi:
   datasets: [market-risk-var-latest, market-risk-var-official, counterparty-exposure-counterparties, ...]
@@ -637,7 +637,7 @@ under the edition exactly as on the full product (the `*RiskEditionTest` classes
    labels fold to icons below 1750 px (`drishti_nav.css`, `.tbar-menus[data-many]`).
 5. **BI.** `server/edition/EditionBi.java`, applied in `BiService.catalogueItems` and `BiService.itemOf`: datasets, models, reports, boards,
    Python visuals and notebooks follow `bi.datasets` and `bi.models`; the Analytics and BI, and Build, help sections follow `help.categories`.
-6. **Feature flags.** `config/editions/features.yaml`; console `features.*`; `studio.enabled` wired (`/studio`).
+6. **Feature flags.** `config/editions/features.yaml`; console `features.*`; `/studio`, the Build workbench's entry, follows `features.build`.
 7. **Home.** `home.sections` in `landing.html`; `home.cards`; the landings (section 7); the hook `home.landing`.
 8. **Help and Knowledge.** `routes/help_routes.py` (`shown`, `sections_for`), `core/guides.py` (`Guide.packs`), `packs:` on the Knowledge
    entries of `config/help.yaml`.

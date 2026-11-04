@@ -35,7 +35,6 @@ features:
   python:        { console: [bi.python.enabled] }
   designer:      { console: [ui.designer] }
   facts:         { console: [ui.facts.enabled] }
-  studio:        { console: [studio.enabled] }
   build:         { console: [features.build] }          # Build: new screens, new packs, designs, reviews, changes
   forms:         { console: [features.forms] }          # query by form (FORM, /forms)
   datamap:       { console: [features.datamap] }        # the data map (DATAMAP, /datamap)

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Sutra governance in the Build workbench (Govern → Reviews): the proposals waiting for an approver, one proposal with its diff,
-and the decision (approve, reject, withdraw). These were Studio's pages (``/studio/reviews``, which redirect here); the rules are
+and the decision (approve, reject, withdraw). These were Studio's pages; the rules are
 the server's (author right to propose, approve right to decide, four eyes), this only draws them."""
 from __future__ import annotations
 
