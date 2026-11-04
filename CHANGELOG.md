@@ -17,6 +17,17 @@
 
 ## 2.9.11.c (unreleased)
 
+### Security
+
+- **A BI dataset's declared mask always holds (a leak fixed).** A column a dataset lists under `security.masked` was masked only when the
+  installation masked some field of its own (`drishti.security.redact` not empty): "raw" was read as "nothing masked for this person". It
+  is now the raw power itself (`Entitlements.rawPower`: a role with `raw`, never through an embedded app), so the column is masked for
+  every reader without it, whatever `redact` names (`DatasetService.masks`; BI's per-reader kept results now name it in their key). With
+  the shipped `redact` list nothing changes. In an installation with an empty `redact`, readers without the raw power now see masked:
+  `trading-risk-counterparties` and `counterparty-exposure-counterparties` NAME and RATING, `trading-risk-trades` COUNTERPARTY,
+  `counterparty-exposure-official` NODE_NAME, `live-trading` and `live-trading-trade` TRADER_ID (and so the models trading-risk,
+  counterparty-exposure, live-trading and desk-pnl-vs-exposure-py). `DeclaredMasksTest`.
+
 - **Docs: FRTB-SA and SIMM are built.** REGULATORY_VAR_REPORTING.md (sections 1 and 8: the FRTB standardised approach built, its reports'
   definitions not yet; internal models still designed), COMPETITIVE_ANALYSIS.md (the gaps and the comparison table: FRTB-SA and SIMM
   built, uncertified), MR_CUBE_LENS.md and COMPUTED_ATTRIBUTES.md no longer say they are planned. The generated READMEs of the
@@ -120,6 +131,49 @@
   `/static/js/<name>.js` for an old name answers with the `drishti_` file, so renderer 1.0.0-1.2.0 pages keep working. Guard:
   `drishti-console/tests/test_asset_names.py` (file names, window globals, storage keys, custom elements and events, no new generic CSS class
   or third-party data- attribute). The mapping is `tools/dev/asset_prefix_map.yaml`.
+
+- **One linear-algebra seam** (`compute.linalg.LinearAlgebra`: `dgemm`, `dgemv`, `ddot`, `daxpy`) with a pure-Java implementation and
+  **OpenBLAS 0.3.26 bundled** through JavaCPP (`org.bytedeco:openblas`, the `linux-x86_64` and `windows-x86_64` builds only, about
+  44 MB); nothing to install on a server, nothing added to the Docker images. Unpacked under `drishti.native.cache-dir`
+  (`<data>/native-cache`); one OpenBLAS thread per call. Only `NativeBlas` names the binding (an ArchUnit rule).
+- **`drishti.native.blas.mode`**: `auto` (default: OpenBLAS where it fits, else Java) or `java` (chosen, quiet). Nothing about BLAS
+  stops the server: a 32-bit JVM, ARM, macOS or a failed load runs on Java with a **WARN banner** in the log, Admin → Health
+  **DEGRADED** (never down) with each member's binding, a notice on Admin → Health and Admin → Engines, the platform alert
+  **`native-blas-fallback`** and the metric `drishti_native_blas{path,reason}`; `drishti.py server health` prints the line.
+- **Resilience**: a start-up self-test of awkward shapes against Java, argument checks in Java before every native call, a per-call
+  size bound (`drishti.native.blas.max-call-mb`), any failure or NaN from finite inputs redone on Java with a circuit breaker for the run,
+  the self-test repeated every `drishti.native.blas.canary-interval` (6 h), JavaCPP's own memory bounded (`drishti.native.max-bytes-mb`).
+- **Many scopes in one pass** (`MultiSums`, behind `VarBook.vectors`: a cube's cells, ad-hoc baskets, many portfolios): on Java the
+  same bits as one set at a time, the rows read once per cache-sized tile for every set; on OpenBLAS dense tiles of many sets are one
+  `dgemm`. At 1M positions x 509 scenarios: 100 overlapping portfolios 3.1x faster, 100 cube cells 2.4x, 100 desks 3.2x
+  ([BENCHMARK.md section 17](docs/admin/BENCHMARK.md#17-many-var-scopes-at-once-blas)). FRTB's bucket sums and exposure's means were
+  measured on BLAS and stay on Java (faster there).
+- **Linear algebra switch, live**: Admin → Engines has a row **Linear algebra: OpenBLAS** (engine `openblas`,
+  `config/engines/openblas.yaml`): off chooses the pure-Java path at once (`java (chosen by admin: ...)`, a notice, never the DEGRADED
+  warning; a server started with it off does not load OpenBLAS); on runs the self-test first and is refused in words if it fails. Written,
+  audited and kept in History like every engine switch, for any member from the Cluster tab; a member switched to Java takes the cluster's
+  many-scope sums to Java. `drishti.py server blas java|native|status`.
+- **The near-tie rule**: scenario P&Ls within a relative 1e-12 of the vector's largest are ordered by scenario date (the older first), so
+  the VaR scenario, its date and every component VaR are the same on the Java and the OpenBLAS paths; VaR and ES agree within 1e-12.
+- **One path for the cluster**: each member publishes its BLAS path in its digest; when any member runs on Java, every member sums many
+  scopes on Java (a WARN banner names the member), never a refusal. The `dgemm` thresholds are settings
+  (`drishti.native.blas.gemm-min-sets`, `gemm-min-density`), tuned on one machine. The release's VaR regression check runs `java`
+  (bit-exact against the previous release) and `auto` (within 1e-12, the same VaR dates): BENCHMARK.md section 17.
+- **Parametric VaR and ES beside historical** ([VAR_GUIDE.md sections 3.12 and 18.15](docs/guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check),
+  [PARAMETRIC_VAR.md](docs/architecture/PARAMETRIC_VAR.md), tutorial 43): the normal fitted to a scope's own scenario P&L vector
+  (z·σ − μ; ES σ·φ(z_ES)/(1 − c) − μ; equal weights or EWMA λ 0.94; the horizon follows the lens), a **cross-check, never official**.
+  On the VaR explorer it is a **Parametric toggle** and **columns** (product review, 2026-11-04): the tiles, the tree's Parametric and Gap
+  columns, the normal curve over the P&L histogram with both markers, shaded tails and the fat-tail gap bracket (the N toggle), and a **?**
+  on every figure with the server's own lines; `PVAR` is an alias that opens the explorer with the toggle on (no screen, view or menu
+  item of its own). The VaR Playground gains a **Parametric tab** (the figures, the steps, each position's Euler component with the −μᵢ
+  term adding up exactly). The API's `parametric`
+  block on `/scope`, `/tree`, `/scope/path` and `/scope/contributions` (`parametric=false`, `matrix=true`), `/status`, VRES 1.3's optional
+  fields (the correlation matrix through the BLAS seam with `matrix=true`), `pvar()` in the pivot and the MR cube, `drishti.py var
+  show|parts --matrix|playground --measure parametric`, and the playground's workbook gains its Parametric tab (recalculated by LibreOffice
+  equal to the engine to the cent; `NORM.S.INV` and `PI` join the common function set). Settings `drishti.var.parametric.*`.
+- Docs: [OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas) (server requirements, platforms,
+  verification, the fallback and the warning), [HIGH_PERFORMANCE_NATIVE.md section 6](docs/architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)
+  as built, TROUBLESHOOTING, CONFIGURATION.md regenerated, THIRD-PARTY-NOTICES.
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (2026-11-04)
 

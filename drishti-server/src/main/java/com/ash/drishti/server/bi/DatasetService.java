@@ -644,7 +644,7 @@ public final class DatasetService {
 
     /** A column is masked for the caller when Drishti's field masks name it ({@code drishti.security.redact}) or the dataset lists it and the caller lacks {@code raw}. */
     public SqlCompiler.Masks masks(Principal p, Dataset ds) {
-        boolean raw = entitlements.raw(p);
+        boolean raw = entitlements.rawPower(p);           // a declared mask holds whatever drishti.security.redact names
         return (table, column) -> {
             Dataset.Table t = ds.tables().get(table);
             Dataset.Column c = t == null ? null : t.columns().get(column);

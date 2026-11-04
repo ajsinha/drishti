@@ -43,7 +43,7 @@ import org.springframework.context.event.EventListener;
  */
 @Configuration
 @EnableConfigurationProperties({VarProperties.class, VarShardingProperties.class, VarReadProperties.class, StressWindowProperties.class,
-        VarExplainProperties.class})
+        VarExplainProperties.class, VarParametricProperties.class})
 public class VarConfiguration {
 
     @Bean(destroyMethod = "close")
@@ -51,7 +51,9 @@ public class VarConfiguration {
             ContentStore store, ObjectProvider<AuditLog> audit, ObjectProvider<PackRegistry> packs,
             ObjectProvider<com.ash.drishti.server.net.NetService> net, ObjectProvider<com.ash.drishti.server.net.DigestService> digests,
             ObjectProvider<com.ash.drishti.server.disk.DiskBudget> disk, VarReadProperties reads,
-            ObjectProvider<com.ash.drishti.engine.time.BusinessDates> businessDates) {
+            ObjectProvider<com.ash.drishti.engine.time.BusinessDates> businessDates,
+            ObjectProvider<com.ash.drishti.server.nativelib.NativeLibraries> nativeLibraries) {
+        nativeLibraries.getIfAvailable();                                 // BLAS bound from drishti.native.* before any sum (OPERATIONS.md 2.1)
         ParallelSums sums = new ParallelSums(props.threads(), props.parallelRows());
         com.ash.drishti.compute.var.VarBook.positionCacheBytes(props.memoryBudgetMb() * 1024 * 1024 / 4);   // heap tier: a quarter of a date's budget
         VarAccess access = new VarAccess(props, entitlements);
@@ -133,8 +135,8 @@ public class VarConfiguration {
     }
 
     @Bean
-    VarViews varViews(VarService svc) {
-        VarViews v = new VarViews(svc);
+    VarViews varViews(VarService svc, VarParametricProperties parametric) {
+        VarViews v = new VarViews(svc).parametric(new VarParametric(parametric));
         VarResultEngine.install(v);                                    // the computed kind var-result (the reactive connector var-engine)
         return v;
     }

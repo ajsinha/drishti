@@ -104,6 +104,7 @@ files:
   css/trading-landing.css: css/drishti_trading-landing.css
   css/var-basket.css: css/drishti_var-basket.css
   css/var-layout.css: css/drishti_var-layout.css
+  css/var-parametric.css: css/drishti_var-parametric.css
   css/var-playground.css: css/drishti_var-playground.css
   css/var-regulatory.css: css/drishti_var-regulatory.css
   css/var.css: css/drishti_var.css
@@ -359,6 +360,7 @@ files:
   js/var-explain.js: js/drishti_var-explain.js
   js/var-explorer.js: js/drishti_var-explorer.js
   js/var-layout.js: js/drishti_var-layout.js
+  js/var-parametric.js: js/drishti_var-parametric.js
   js/var-playground.js: js/drishti_var-playground.js
   js/var-reports.js: js/drishti_var-reports.js
   js/view-render.js: js/drishti_view-render.js
@@ -461,6 +463,9 @@ globals:
     status: move
   VarLayout:
     to: VarLayout
+    status: move
+  VarParametric:
+    to: VarParametric
     status: move
   __drishtiControls:
     to: __controls

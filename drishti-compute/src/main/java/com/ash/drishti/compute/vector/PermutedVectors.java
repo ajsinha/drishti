@@ -25,6 +25,11 @@ public final class PermutedVectors implements Vectors {
     private final Vectors source;
     private final int[] order;
 
+    /** The rows read through the permutation. */
+    public Vectors source() {
+        return source;
+    }
+
     public PermutedVectors(Vectors source, int[] order) {
         if (order.length != source.rows()) {
             throw new IllegalArgumentException("the order names " + order.length + " rows, the source has " + source.rows());

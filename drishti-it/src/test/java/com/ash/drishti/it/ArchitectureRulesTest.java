@@ -93,6 +93,15 @@ class ArchitectureRulesTest {
                     "com.ash.drishti.plugin.delta..", "com.ash.drishti.plugin.iceberg..", "com.ash.drishti.api..")
             .should().dependOnClassesThat().resideInAPackage("com.ash.drishti.memlake..");
 
+    /**
+     * The native BLAS binding is named in one class (HIGH_PERFORMANCE_NATIVE.md section 6.3): every caller uses LinearAlgebra, so the binding
+     * can change there alone and nothing else can reach native code around GuardedBlas's checks.
+     */
+    @ArchTest
+    static final ArchRule onlyNativeBlasNamesTheBinding = noClasses()
+            .that().doNotHaveFullyQualifiedName("com.ash.drishti.compute.linalg.NativeBlas")
+            .should().dependOnClassesThat().resideInAnyPackage("org.bytedeco..", "dev.ludovic.netlib..");
+
     @ArchTest
     static final ArchRule controllersOnlyInServer = noClasses()
             .that().resideOutsideOfPackage("com.ash.drishti.server..")

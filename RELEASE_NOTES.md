@@ -13,6 +13,15 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.c — release notes
+
+*Unreleased.*
+
+## Fixed
+
+- **Security:** a column a BI dataset declares masked is now masked for every reader without the raw power, also in an installation
+  whose `drishti.security.redact` is empty (before, it then showed); with the shipped settings nothing changes.
+
 # Drishti 2.9.11.b — release notes
 
 *Released 2026-11-04.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR

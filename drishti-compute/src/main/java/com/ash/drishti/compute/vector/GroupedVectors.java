@@ -59,6 +59,18 @@ public final class GroupedVectors implements Vectors {
         return members;
     }
 
+    /**
+     * The first group boundary at or after {@code ordinal} (the rows' end past the last): where a range may be cut and its two parts still
+     * add the same rows in the same order as the whole ({@link MultiSums}).
+     */
+    public int boundaryAtOrAfter(int ordinal) {
+        if (ordinal >= groupOf.length) {
+            return groupOf.length;
+        }
+        int g = groupOf[ordinal];
+        return groupFrom[g] == ordinal ? ordinal : groupTo[g];
+    }
+
     @Override
     public int width() {
         return groups.width();

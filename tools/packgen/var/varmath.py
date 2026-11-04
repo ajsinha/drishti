@@ -20,13 +20,16 @@ answer are the same number:
 - ES(a) is minus the mean of the k worst values, k = ceil(N (1 - a)): the 13 worst of 509 at 97.5%.
 - Component VaR of a part: minus its mean P&L over the scope's scenarios ranked k - h .. k + h (h = window // 2, a window of 5 by
   default), scaled so the components add up to the VaR exactly.
-- The worst ranks break ties by scenario index (the older scenario first), so the order is the same everywhere.
+- The worst ranks break ties and near ties by scenario index (the older scenario first): P&Ls within NEAR_TIE (1e-12) of the vector's
+  largest absolute P&L of each other, chained, count as tied, so the order is the same everywhere, whichever path summed the vector
+  (VarMath.order; HIGH_PERFORMANCE_NATIVE.md section 6.2).
 """
 from __future__ import annotations
 
 import math
 
 EPS = 1e-9
+NEAR_TIE = 1e-12
 
 
 def rank_k(n: int, alpha: float) -> int:
@@ -34,8 +37,22 @@ def rank_k(n: int, alpha: float) -> int:
 
 
 def order(v: list[float]) -> list[int]:
-    """Scenario indices from the worst P&L to the best (ties: the lower index first)."""
-    return sorted(range(len(v)), key=lambda j: (v[j], j))
+    """Scenario indices from the worst P&L to the best; ties and near ties (within NEAR_TIE of the largest absolute P&L, chained): the
+    lower index first, as VarMath.order."""
+    idx = sorted(range(len(v)), key=lambda j: (v[j], j))
+    finite = [abs(x) for x in v if math.isfinite(x)]
+    tol = NEAR_TIE * max(finite) if finite else 0.0
+    if tol <= 0:
+        return idx
+    out: list[int] = []
+    i = 0
+    while i < len(idx):
+        j = i + 1
+        while j < len(idx) and v[idx[j]] - v[idx[j - 1]] <= tol:
+            j += 1
+        out.extend(sorted(idx[i:j]))
+        i = j
+    return out
 
 
 def var(v: list[float], alpha: float = 0.99) -> float:
