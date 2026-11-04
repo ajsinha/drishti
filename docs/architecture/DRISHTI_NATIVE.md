@@ -144,8 +144,11 @@ forwards), sessions for thread safety, input guards, in-process by default with 
 to 1.44.0, following QuantLib's numbers; QuantLib's SWIG Java bindings with prebuilt natives for Linux, macOS and Windows amd64; BSD-3
 packaging, QuantLib's own licence), pinned and vendored in `drishti-native` with its checksum. This settles the Windows build. What
 the binding requires of us: every QuantLib object is `AutoCloseable` with no finalizers, so the `quant` interface owns each object's
-lifetime (callers never hold one) and a leak test guards it; sessions are not documented, so thread safety is verified when built and,
-if absent, pricing runs on an isolated thread pool or in the worker process; it has one maintainer, so our own build script stays the
+lifetime (callers never hold one) and a leak test guards it; the jar was checked (1.44.0): it is built **without** sessions (no `sessionId` hook), so QuantLib's evaluation date is process-wide;
+**decided (product owner, 2026-11-04): pricing runs in single-threaded QuantLib worker processes** (each safe by construction; more
+processes for more throughput; a native crash ends only that worker, which the server restarts while the request fails in words; the
+same worker pattern as the Python worker over Arrow Flight). Linux needs glibc 2.32 or newer (Ubuntu 22.04+, RHEL 9+); the Windows DLL
+needs nothing beyond `KERNEL32`. JNA and FFM were considered and rejected: QuantLib is C++, they reach C only; it has one maintainer, so our own build script stays the
 fallback route.
 
 ## 7. One version of everything
@@ -205,7 +208,7 @@ Two drills (a large release); the benchmark with `drishti.native.mode` `off` aga
 |---|---|---|
 | N1 | QuantLib's Windows build | **settled**: the quantlib_for_maven artifact ships Windows amd64 natives (section 6) |
 | N2 | QuantLib version | the latest stable at build time, pinned (for when QuantLib is revisited) |
-| N3 | Out-of-process QuantLib by default? | in-process by default, `worker` mode available (for when QuantLib is revisited) |
+| N3 | Out-of-process QuantLib by default? | **worker processes, decided**: single-threaded QuantLib per process (the artifact has no sessions) |
 | N4 | The disk store's Java fallback | **a pure-Java store on disk, H2's MVStore** (product owner: memory for a disk cache can be a problem). Pure Java, file-backed, ordered keys (the sorted store's scans), compression, concurrent readers; H2 is already a dependency (the JDBC plugin's tests), so the same library family, one pinned version. A cache written by RocksDB is not read by MVStore: each keeps its own folder, and a switch starts the other's cache empty (it is a cache) |
 
 ## 13. Phase 2: native capabilities for every industry (decided 2026-11-04, a later release)
