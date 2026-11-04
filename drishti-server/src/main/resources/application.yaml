@@ -603,7 +603,6 @@ drishti:
       - "* /api/v1/shares/**"
       - "* /api/v1/threads/**"
       - "* /api/v1/comments/**"
-      - "* /api/v1/notes/**"
       - "* /api/v1/workspaces/**"
       - "* /api/v1/views/**"
       - "* /api/v1/command/aliases"
@@ -910,12 +909,7 @@ drishti:
     cache-ttl: 60s                   # how long an answer is served before it is derived again
     ask:                             # Ask about this page (RACHANA_REFERENCE.md): OFF by default; while off no call to any model is ever made
       enabled: ${DRISHTI_ASK_ENABLED:false}  # turn on Ask about this page (also list packs in drishti.explain.ask.packs)
-      # DEPRECATED endpoint/api/api-key: Ask runs on the AI layer (docs/admin/AI.md). Prefer a provider file in
-      # drishti.ai.dir and set model below to its logical model (provider/model). Old settings keep working as provider "ask".
-      endpoint: ${DRISHTI_ASK_ENDPOINT:}   # an OpenAI-compatible chat completions URL, or an Anthropic Messages URL (see api)
-      api: openai                    # openai | anthropic: the request and response shape
-      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model)
-      api-key: ${DRISHTI_ASK_KEY:}   # from the environment only; never logged
+      model: ${DRISHTI_ASK_MODEL:}  # the model Ask uses: a logical model of the AI layer (provider/model; a provider file in drishti.ai.dir, docs/admin/AI.md)
       packs: []                      # packs where the Ask box is on; empty = none (per-pack opt-in)
       values: labels-only            # labels-only | shown: whether the page's rendered text (values) goes into the prompt; masked values never do
       max-question-chars: 500  # longer questions are refused (400)

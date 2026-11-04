@@ -17,6 +17,24 @@
 
 ## 2.9.11.c (unreleased)
 
+### Removed (lean)
+
+- **The engine switches with no engine behind them:** `config/engines/sa-ccr.yaml`, `fva.yaml` and `ccr-cube.yaml` (and their jar copies,
+  their catalogue entries and Admin → Engines rows, `DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`). They come
+  back with their engines. The `sa-ccr` data kind of the counterparty-risk pack is unchanged.
+- **Duplicate menu items:** Pre-deal check (`XWIF`) is only under Counterparties (no longer also in the Engines menu's Exposure column);
+  FX volatility (`FXV`) only under Volatility (no longer also under FX). The commands are unchanged.
+- **The `studio` feature switch** (`features.yaml`, the editions, the console's `studio.enabled`): `/studio`, the Build workbench's entry,
+  follows `features.build`. The `/studio/reviews` redirects are gone (the reviews are `/build/reviews`).
+- **The deprecated notes API** (`/api/v1/notes`, kept one release as a facade over comment threads) and the console's `/api/notes`:
+  use `/api/v1/threads`. Old notes are still imported into threads once at start.
+- **Ask's deprecated model settings** (`drishti.explain.ask.endpoint`, `api`, `api-key`, `DRISHTI_ASK_ENDPOINT`, `DRISHTI_ASK_KEY`): Ask's
+  model is a provider file of the AI layer (`config/ai/<name>.yaml`, `drishti.explain.ask.model: <provider>/<model>`; AI.md).
+- Docs: OPERATIONS (21.1, 21.3, Ask), COMPUTE_ENGINES as built, API_GUIDE (the Notes section), RACHANA_REFERENCE (Ask), USER_GUIDE,
+  EDITIONS, the lens documents, CONFIGURATION.md regenerated. Kept, and why: the client renderer's 0.1.0, 1.0.0 and 1.1.0 folders
+  (released folders are immutable and embeds pin them with subresource integrity); the `/studio` routes the workbench and the published
+  renderer bundles call.
+
 - **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
   outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
   pivot view with Rachana paths over trade legs (`sum($.LEGS[*].NOTIONAL)` by desk, a desk-by-year grid, trades with a JPY leg); a desk's

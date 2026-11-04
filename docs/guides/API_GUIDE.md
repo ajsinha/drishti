@@ -69,13 +69,12 @@ covered in depth in [USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md).
 19. [Personal API tokens](#personal-api-tokens)
 20. [A field over time](#a-field-over-time)
 21. [How fresh a view is](#how-fresh-a-view-is)
-22. [Notes (deprecated)](#notes-deprecated)
-23. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
-24. [Comment threads](#comment-threads)
-25. [Shared workspaces](#shared-workspaces)
-26. [Scheduled reports](#scheduled-reports)
-27. [The access log (administrators)](#the-access-log-administrators)
-28. [A phrase as a search](#a-phrase-as-a-search)
+22. [Share with a note, the directory and the inbox](#share-with-a-note-the-directory-and-the-inbox)
+23. [Comment threads](#comment-threads)
+24. [Shared workspaces](#shared-workspaces)
+25. [Scheduled reports](#scheduled-reports)
+26. [The access log (administrators)](#the-access-log-administrators)
+27. [A phrase as a search](#a-phrase-as-a-search)
 
 ## Before you start
 
@@ -3686,23 +3685,6 @@ Every view's `provenance` has `updatedAt` (when its source last received new dat
 tell), `staleAfter` (the source's `stale-after` as an ISO-8601 duration, or null) and `stale` (true when nothing new
 arrived within `staleAfter`; always false on a picked business date). Admin health carries the same per connector as
 `lastUpdate`, `staleAfter` and `stale`.
-
-## Notes (deprecated)
-
-**Deprecated.** Notes are now comment threads ([below](#comment-threads)); `/notes` stays for one release as a facade with the old shape and
-numbers. Existing notes were imported once as single-comment threads (on the whole view, or on the field of `path`; no business date,
-generation 0). Differences: the text is scrubbed for readers without `raw`, an edit stops after `threads.edit-window` (`403 DRS-7008`),
-and a `DELETE` retracts (the author) or hides (an administrator) instead of erasing: the text stays in the thread's revisions. Writes need
-`collaborate` and `drishti.collab.enabled`. Only notes made here or imported are listed; notes made through `/threads` are not.
-
-| Method | Path | What it does |
-|---|---|---|
-| `GET` | `/notes/{kind}/{id}` | the entity's notes, oldest first: `[{id, kind, entityId, path, author, body, createdAt, updatedAt}]` |
-| `POST` | `/notes/{kind}/{id}` | adds one: `{"body": "…", "path": "$.mtm"}` (`path` optional; at most 2000 characters, 200 notes per entity); `201` |
-| `PUT` | `/notes/{noteId}` | edits the text: the author only (`403` otherwise) |
-| `DELETE` | `/notes/{noteId}` | the author or an administrator; `204` |
-
-Reading and adding need the right to open the kind (`403 DRS-5002` otherwise). Personal API tokens only read.
 
 ## Share with a note, the directory and the inbox
 

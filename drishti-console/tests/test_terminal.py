@@ -565,15 +565,10 @@ def test_a_view_says_how_fresh_its_data_is_and_warns_when_stale(client, monkeypa
 
 
 
-def test_notes_on_an_entity_and_its_fields(client, backend):
+def test_the_entity_page_offers_the_discussion_not_the_old_notes(client, backend):
     page = client.get("/v/trade/IRS-48213").text
     assert "data-discussion-open" in page and "drishti_discussion.js" in page and "drishti_notes.js" not in page and 'data-me="' in page
-    r = client.post("/api/notes/trade/IRS-48213", json={"body": "Restated after the fixing", "path": "$.mtm"}).json()
-    assert r["author"] and r["path"] == "$.mtm"
-    assert [n["body"] for n in client.get("/api/notes/trade/IRS-48213").json()] == ["Restated after the fixing"]
-    assert client.put(f"/api/notes/{r['id']}", json={"body": "Restated twice"}).json()["body"] == "Restated twice"
-    assert client.delete(f"/api/notes/{r['id']}").json() == {"ok": True}
-    assert client.get("/api/notes/trade/IRS-48213").json() == []
+    assert client.get("/api/notes/trade/IRS-48213").status_code == 404           # the deprecated notes API is gone (threads replace it)
 
 
 def test_workspaces_shared_with_you_and_sharing_yours(client, backend):

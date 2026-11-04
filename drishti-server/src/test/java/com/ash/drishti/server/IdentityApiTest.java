@@ -226,24 +226,6 @@ class IdentityApiTest {
     }
 
     @Test
-    void notesAreReadByWhoeverMayOpenTheKindAndChangedByTheirAuthor() throws Exception {
-        String tess = as("tess", "trader");
-        String ravi = as("ravi", "viewer");
-        String created = mvc.perform(post("/api/v1/notes/trade/IRS-48213").header("Authorization", tess).contentType("application/json")
-                .content("{\"body\": \"Restated after the fixing correction\", \"path\": \"$.mtm\"}"))
-                .andExpect(status().isCreated()).andExpect(jsonPath("$.author").value("tess")).andReturn().getResponse().getContentAsString();
-        long id = Long.parseLong(created.replaceAll(".*\"id\":(\\d+).*", "$1"));
-        mvc.perform(get("/api/v1/notes/trade/IRS-48213").header("Authorization", ravi)).andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].path").value("$.mtm"));
-        mvc.perform(put("/api/v1/notes/" + id).header("Authorization", ravi).contentType("application/json").content("{\"body\": \"no\"}"))
-                .andExpect(status().isForbidden());
-        mvc.perform(get("/api/v1/notes/netting-set/NS-NORTH-01").header("Authorization", tess)).andExpect(status().isForbidden());
-        mvc.perform(delete("/api/v1/notes/" + id).header("Authorization", ravi)).andExpect(status().isForbidden());
-        mvc.perform(delete("/api/v1/notes/" + id).header("Authorization", as("ada", "admin"))).andExpect(status().isNoContent());
-        mvc.perform(get("/api/v1/notes/trade/IRS-48213").header("Authorization", ravi)).andExpect(jsonPath("$.length()").value(0));
-    }
-
-    @Test
     void aSharedWorkspaceIsReadOnlyAndHidesPanesTheReaderMayNotOpen() throws Exception {
         String ada = as("ada", "admin");
         String tess = as("tess", "trader");

@@ -30,7 +30,7 @@ class AskPromptTest {
     private static final String ID = "abc123";
 
     private static AskProperties cfg(String values, int promptKb) {
-        return new AskProperties(true, "http://x/", "openai", "m", "", List.of("p"), values, 500, promptKb, 6000, 400, 2000, Duration.ofSeconds(5), 6, 100, true, false, null);
+        return new AskProperties(true, "m", List.of("p"), values, 500, promptKb, 6000, 400, 2000, Duration.ofSeconds(5), 6, 100, true, false);
     }
 
     private static PageContext ctx(String aboutText, String glossaryMeans) {
@@ -47,7 +47,7 @@ class AskPromptTest {
 
     @Test
     void labelsOnlyIsTheDefaultAndSendsNoRenderedText() {
-        AskProperties c = new AskProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        AskProperties c = new AskProperties(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
         assertThat(c.valuesShown()).isFalse();
         assertThat(c.enabled()).isFalse();
         String user = AskPrompt.build(ctx("VAR-1 is 10.96M USD, trader •••", "The loss."), null, "what is this?", cfg("labels-only", 24), ID).user();

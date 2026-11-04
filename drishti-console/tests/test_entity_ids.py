@@ -51,16 +51,14 @@ def test_the_console_asks_the_server_with_the_id_in_the_query():
         await b.view("trade", "sl/ash-6", None)
         await b.series("trade", "sl/ash-6", "mtm", 5)
         await b.impact("trade", "sl/ash-6")
-        await b.notes("trade", "sl/ash-6", None)
         await b.raw("trade", "MX-1")
         await b.aclose()
 
     asyncio.run(run())
     paths = [p.split("?")[0] for p, _ in seen]
-    assert paths[:5] == ["/api/v1/entities/trade/~/raw", "/api/v1/views/trade/~", "/api/v1/history/trade/~/series", "/api/v1/impact/trade/~",
-                         "/api/v1/notes/trade/~"]
-    assert all(q.get("id") == "sl/ash-6" for _, q in seen[:5])
-    assert paths[5] == "/api/v1/entities/trade/MX-1/raw" and "id" not in seen[5][1]
+    assert paths[:4] == ["/api/v1/entities/trade/~/raw", "/api/v1/views/trade/~", "/api/v1/history/trade/~/series", "/api/v1/impact/trade/~"]
+    assert all(q.get("id") == "sl/ash-6" for _, q in seen[:4])
+    assert paths[4] == "/api/v1/entities/trade/MX-1/raw" and "id" not in seen[4][1]
 
 
 def test_console_pages_and_calls_take_an_id_with_a_slash(client, backend):

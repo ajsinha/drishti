@@ -70,7 +70,8 @@ class FakeModel:
                 pass
 
         self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        self.url = f"http://127.0.0.1:{self.server.server_address[1]}/v1/chat/completions"
+        self.base = f"http://127.0.0.1:{self.server.server_address[1]}"
+        self.url = self.base + "/v1/chat/completions"
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
 
     def close(self):
@@ -86,8 +87,11 @@ def model():
 
 @pytest.fixture(scope="module")
 def live_console(tmp_path_factory, model):
-    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_PACKS_EXTRA_DIRS": str(ROOT / "examples" / "packs"), "DRISHTI_ASK_ENABLED": "true", "DRISHTI_ASK_ENDPOINT": model.url,
-                                         "DRISHTI_ASK_MODEL": "fake", "DRISHTI_EXPLAIN_ASK_PACKS": "market-risk"})
+    ai = tmp_path_factory.mktemp("ai")                                 # Ask's model: a provider file of the AI layer (docs/admin/AI.md)
+    (ai / "fake.yaml").write_text(f"type: openai\nbase-url: {model.base}\ncompletions-path: /v1/chat/completions\nmodels:\n  - name: fake\n    id: fake\n")
+    yield from _stack(tmp_path_factory, {"DRISHTI_PACKS": "market-risk,genomics", "DRISHTI_PACKS_EXTRA_DIRS": str(ROOT / "examples" / "packs"), "DRISHTI_ASK_ENABLED": "true",
+                                         "DRISHTI_AI_ENABLED": "true", "DRISHTI_AI_DIR": str(ai),
+                                         "DRISHTI_ASK_MODEL": "fake/fake", "DRISHTI_EXPLAIN_ASK_PACKS": "market-risk"})
 
 
 def open_drawer(page, base, view):
