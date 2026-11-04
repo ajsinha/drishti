@@ -115,7 +115,7 @@ class MaskCoverageTest(unittest.TestCase):
         import gzip
         import json
         import net_soak
-        snap = sorted((Path(__file__).resolve().parents[2] / "data" / "testdata" / "trades" / "murex").glob("snapshot-*.jsonl.gz"))
+        snap = sorted((Path(__file__).resolve().parents[2] / "data" / "testdata" / "trades" / "murex").glob("trade_murex.*.jsonl.gz"))[:1]
         if snap:
             with gzip.open(snap[0], "rt", encoding="utf-8") as fh:
                 doc = json.loads(fh.readline())

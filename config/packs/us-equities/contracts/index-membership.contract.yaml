@@ -187,7 +187,7 @@ notes:
   divisions (docs/guides/GROUPINGS_ANALYTICS_GUIDE.md, section 16). The membership (ROWS) and MEMBERS stay.'
 - '1.1: ROWS[].SECTOR lists every SIC division of the data.'
 review:
-- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/snapshot-2026-10-24.jsonl.gz)):
+- 'required inferred from 100% coverage in 7 documents (1 samples and 6 test-data documents (data/testdata/us-equities/index-membership/index-membership.2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'
 - 'enum values inferred from the data, not from a glossary: ROWS[].SECTOR: confirm they are closed lists.'

@@ -23,10 +23,10 @@ A trading book: owner desk, trades and risk. One row per book per business date,
 
 |  |  |
 |---|---|
-| Path | `data/testdata/core/book/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/core/book/` + `book.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `BOOK_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -42,7 +42,7 @@ A real record, the most complete of the 1,800 (the one with the most non-empty f
   "NAME": "Commodities · book 1",
   "DESK_NAME": "Commodities",
   "TRADE_COUNT": 1000,
-  "MTM": -147967822,
+  "MTM": -148106150,
   "DV01": 0,
   "TOP_TRADES": [
     {
@@ -55,7 +55,7 @@ A real record, the most complete of the 1,800 (the one with the most non-empty f
       "NOTIONAL": 10199198808.0,
       "MATURITY": "2028-03-31",
       "MATURITY_BUCKET": "1-2Y",
-      "MTM": -118986392
+      "MTM": -120455169
     },
     {
       "TRADE_ID": "1000098",
@@ -67,7 +67,7 @@ A real record, the most complete of the 1,800 (the one with the most non-empty f
       "NOTIONAL": 5640972613.63,
       "MATURITY": "2029-05-31",
       "MATURITY_BUCKET": "2-5Y",
-      "MTM": -121749845
+      "MTM": -120728296
     },
     "… 8 more elements of the same shape"
   ],
@@ -88,7 +88,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `NAME` | string | required | The book's display name: its desk's name and the book's number (Commodities · book 1). | — | `"Commodities · book 1"` |
 | `DESK_NAME` | string | required | The name of the desk the book sits under (the desk's NAME). | — | `"Commodities"` |
 | `TRADE_COUNT` | integer | required | How many trades are booked in the book. | — | `1000` |
-| `MTM` | integer | required | The sum of the MTM of the book's trades, in the bank's reporting currency (USD in the demo). | unit: USD | `-147967822` |
+| `MTM` | integer | required | The sum of the MTM of the book's trades, in the bank's reporting currency (USD in the demo). | unit: USD | `-148106150` |
 | `DV01` | integer | required | The sum of the DV01 of the book's trades: the change in value for a one basis point rise in rates, in the bank's reporting currency (USD in the demo) per bp; negative loses when rates rise. | unit: USD per bp | `0` |
 | `TOP_TRADES` | array of objects | required | The book's largest trades by absolute MTM, at most ten: one object per trade, largest first. | — | [10 objects] |
 | `TOP_TRADES[].TRADE_ID` | string | required | The trade: a TRADE_ID of the trading pack's trade kind (text). | pattern `^((MX\|CLY)-)?\d+$`; links to `trade` | `"1003930"` |
@@ -100,7 +100,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `TOP_TRADES[].NOTIONAL` | number | required | The trade's notional, in the trade's own currency. | unit: trade currency | `10199198808.0` |
 | `TOP_TRADES[].MATURITY` | date (YYYY-MM-DD) | required | The trade's maturity date. | — | `"2028-03-31"` |
 | `TOP_TRADES[].MATURITY_BUCKET` | string | required | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | one of `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` | `"1-2Y"` |
-| `TOP_TRADES[].MTM` | number | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-118986392` |
+| `TOP_TRADES[].MTM` | number | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-120455169` |
 | `DESK` | string | required | The desk the book sits under: a DESK_ID of the core pack's desk kind (DESK-…). | pattern `^DESK-`; links to `desk` | `"DESK-COMM"` |
 | `ACCOUNTING_TREATMENT` | string | required | The accounting classification of the book's positions, e.g. Fair value (FVTPL). | — | `"Fair value (FVTPL)"` |
 | `REGULATORY_BOOK` | string | required | Trading book or banking book, as the book is classified for regulatory capital. | — | `"Trading book"` |

@@ -442,7 +442,9 @@ def move_dates(rows: list[dict], day: str) -> list[dict]:
 
 
 def load_intraday(path: str, lake: str, day: str | None, signal: str | None, token: str | None, dry_run: bool, say) -> int:
-    """Appends an intraday file (JSONL, one kind) to the lake with lake build --mode append, then raises its data-load signal."""
+    """Appends an intraday file (JSONL, one kind) to the lake with lake build --mode append, then raises its data-load signal. Its
+    business date by the load rules (docs/architecture/DATA_LOAD_RULES.md): ``day`` (--date, the rows' own dates moved to it), else the
+    file's name (<kind>.<YYYY-MM-DD>.jsonl), else the business today; given to lake build as --as-of, never read from a row."""
     import os
     import subprocess
     import sys
@@ -456,10 +458,20 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
         raise ValueError(f"{path}: no rows")
     if day:
         rows = move_dates(rows, day)
+    import sys as _sys
+    _sys.path.insert(0, str(__import__("pathlib").Path(__file__).resolve().parent / "lake"))
+    import filedate
+    if why := filedate.date_error(src.name):
+        raise ValueError(f"{why}: a file with a wrong date in its name is refused (rename it)")
+    named = filedate.of(src.name)
+    day = day or (named.isoformat() if named else filedate.business_today().isoformat())
+    other = sum(1 for r in rows if str(r.get("BUSINESS_DATE") or "")[:10] not in ("", day))
+    if other:
+        say(f"{path}: {other} rows carry another BUSINESS_DATE than {day}: loaded under {day} (the file's date)")
     kinds = route(rows)
     for kind, kr in kinds.items():
         marked = sum(1 for r in kr if str(r.get("RUN_KIND") or "").upper() == "INTRADAY")
-        say(f"{path}: {len(kr)} {kind} rows ({marked} marked RUN_KIND INTRADAY), business date {kr[0].get('BUSINESS_DATE')}, "
+        say(f"{path}: {len(kr)} {kind} rows ({marked} marked RUN_KIND INTRADAY), business date {day}, "
             f"batches {sorted({str(r.get('BATCH_ID')) for r in kr})}")
     if dry_run:
         say("dry run: nothing written")
@@ -469,11 +481,11 @@ def load_intraday(path: str, lake: str, day: str | None, signal: str | None, tok
     for kind, kr in kinds.items():
         key = "SCENARIO_PV_ID" if kind == "scenario-pv" else "VECTOR_ID"
         with tempfile.TemporaryDirectory(prefix="drishti-intraday-") as tmp:
-            f = Path(tmp) / "rows.jsonl"
+            f = Path(tmp) / f"{kind}.{day}.jsonl"
             f.write_text("".join(json.dumps(r) + "\n" for r in kr), encoding="utf-8")
             cmd = [sys.executable, str(root / "tools" / "drishti.py"), "lake", "build", "--from", str(f), "--pack",
-                   str(root / "config" / "packs" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", key, "--date",
-                   "BUSINESS_DATE", "--mode", "append", "--lake", lake, "-q"]
+                   str(root / "config" / "packs" / "market-risk"), "--connector", "risk-store", "--kind", kind, "--key", key, "--as-of",
+                   day, "--mode", "append", "--lake", lake, "-q"]
             if signal:
                 cmd += ["--signal", signal]                     # each kind's own signal: the engine reads a batch's two kinds apart
             env = dict(os.environ, **({"DRISHTI_TOKEN": token} if token else {}))

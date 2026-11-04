@@ -18,6 +18,7 @@ package com.ash.drishti.lakeload;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.ash.drishti.common.FileDates;
 import com.ash.drishti.iceberg.io.FileAccess;
 import com.ash.drishti.iceberg.io.Relocation;
 import com.ash.drishti.lakeio.S3Settings;
@@ -96,9 +97,20 @@ class ArchivesTest {
         for (JsonNode c : doc.get("cases")) {
             out.add(DynamicTest.dynamicTest(c.path("case").asText(), () -> {
                 try (FileAccess io = io()) {
+                    // the Java loader reads feeds only (DATA_GUIDE.md section 2.8): a tar must be <table>/<YYYY-MM-DD>/, a zip one table
+                    // with its files loose; the shared rule's other layouts (load_rows.py's, Python only) are refused here
+                    String file = c.path("file").asText();
+                    JsonNode want0 = c.get("expect");
+                    boolean folders = want0 != null && want0.get("datasets").size() > 0 && !want0.get("datasets").has(
+                            c.hasNonNull("dataset") ? c.get("dataset").asText() : Archives.stem(file));
+                    if (!c.has("refused") && (FileDates.isTar(file) || folders)) {
+                        assertThatThrownBy(() -> plan(io, c)).isInstanceOf(Archives.ArchiveException.class);
+                        return;
+                    }
                     if (c.has("refused")) {
                         assertThatThrownBy(() -> rows(io, plan(io, c), limits(c))).isInstanceOf(Archives.ArchiveException.class)
-                                .hasMessageContaining(c.get("refused").asText());
+                                .satisfies(e -> assertThat(e.getMessage()).containsAnyOf(c.get("refused").asText(), "refused, nothing was loaded",
+                                        "a .zip is one table and one business date"));
                         return;
                     }
                     Archives.Plan p = plan(io, c);
@@ -141,23 +153,36 @@ class ArchivesTest {
         return TableDump.delta(table.toString(), Map.of()).size();
     }
 
+    /** A feed tar: {@code <table>/<YYYY-MM-DD>/<file>} members. */
+    private Path feed(String name, Map<String, String> members) throws Exception {
+        Map<String, byte[]> m = new LinkedHashMap<>();
+        members.forEach((k, v) -> m.put(k, v.getBytes(StandardCharsets.UTF_8)));
+        Path p = tmp.resolve(name);
+        Files.write(p, FileDatesTest.tar(m));
+        return p;
+    }
+
     @Test
-    void foldersAreDatasetsEachItsOwnTable() throws Exception {
+    void aTarsFoldersAreItsTablesEachDateFolderItsDate() throws Exception {
         Path lake = tmp.resolve("lake");
-        JsonNode s = LakeLoadTest.load(tmp, config(lake, FIX.resolve("bundle.tar.gz").toString(), "datasets: [trade, position]\n"));
+        Path tar = feed("bundle.tar", Map.of("trade/2026-10-01/t1.jsonl", "{\"id\":\"T1\"}\n{\"id\":\"T2\"}\n",
+                "trade/2026-10-02/t2.jsonl", "{\"id\":\"T3\"}\n{\"id\":\"T4\"}\n", "position/2026-10-01/p.jsonl", "{\"id\":\"P1\"}\n{\"id\":\"P2\"}\n{\"id\":\"P3\"}\n"));
+        JsonNode s = LakeLoadTest.load(tmp, config(lake, tar.toString(), "datasets: [trade, position]\n"));
         assertThat(s.path("exit").asInt()).as(s.path("said").asText()).isZero();
         assertThat(DatasetLoads.rows(s)).isEqualTo(new LinkedHashMap<>(Map.of("position", 3L, "trade", 4L)));
         assertThat(rowsOf(lake.resolve("fixture/trade"))).isEqualTo(4);
         assertThat(rowsOf(lake.resolve("fixture/position"))).isEqualTo(3);
-        assertThat(s.path("said").asText()).contains("datasets: 2").containsPattern("trade +4 rows {2}2 files {2}versions 0 to 1")
-                .containsPattern("position +3 rows {2}1 file {2}version 0");
+        assertThat(s.path("datasets").path("trade").path("rows").toString()).contains("2026-10-01").contains("2026-10-02");
         assertThat(s.path("datasets").path("trade").path("files")).hasSize(2);
+        JsonNode one = LakeLoadTest.load(tmp, config(tmp.resolve("lake-one"), tar.toString(), "  kind: trade\n"), "source.dataset=trade");
+        assertThat(one.path("exit").asInt()).as(one.path("said").asText()).isZero();
+        assertThat(one.path("accepted").asLong()).as("the one table this run is for").isEqualTo(4);
     }
 
     @Test
     void aFolderlessArchiveIsTheOneTable() throws Exception {
         Path lake = tmp.resolve("lake");
-        for (String f : List.of("trade.zip", "trade.tgz", "trade.tar")) {
+        for (String f : List.of("trade.zip")) {
             JsonNode s = LakeLoadTest.load(tmp, config(lake, FIX.resolve(f).toString(), "  kind: trade\n"));
             assertThat(s.path("exit").asInt()).as(f + s.path("said").asText()).isZero();
             assertThat(s.path("accepted").asLong()).isEqualTo(6);
@@ -181,13 +206,13 @@ class ArchivesTest {
     void aGlobOfArchivesAndTheirFoldersInOneTable() throws Exception {
         Path in = tmp.resolve("in");
         Files.createDirectories(in);
-        Files.copy(FIX.resolve("trade.tgz"), in.resolve("a.tgz"));
+        Files.copy(FIX.resolve("trade.zip"), in.resolve("a.zip"));
         Files.copy(FIX.resolve("trade.zip"), in.resolve("b.zip"));
         Path lake = tmp.resolve("lake");
         JsonNode s = LakeLoadTest.load(tmp, config(lake, in + "/*", "  kind: trade\n"));
         assertThat(s.path("exit").asInt()).as(s.path("said").asText()).isZero();
         assertThat(s.path("documents").asLong()).isEqualTo(12);
-        assertThat(s.path("duplicates").toString()).contains("2026-10-01");      // the same ids twice: the last read kept, as always
+        assertThat(s.path("duplicates").toString()).contains(FileDates.businessToday().toString());   // the same ids twice: the last read kept
     }
 
     @Test
@@ -195,12 +220,21 @@ class ArchivesTest {
         Path lake = tmp.resolve("lake");
         JsonNode unknown = LakeLoadTest.load(tmp, config(lake, FIX.resolve("unknown.tar.gz").toString(), "datasets: [trade, position]\n"));
         assertThat(unknown.path("exit").asInt()).isEqualTo(LakeLoad.FAILED);
-        assertThat(unknown.path("said").asText()).contains("folders mystery, other match no configured dataset (position, trade)");
+        assertThat(unknown.path("said").asText()).contains("refused, nothing was loaded");
         JsonNode single = LakeLoadTest.load(tmp, config(lake, FIX.resolve("bundle.zip").toString(), "  kind: trade\n"));
-        assertThat(single.path("said").asText()).contains("folder position matches no configured dataset (trade)");
+        assertThat(single.path("said").asText()).contains("a .zip is one table and one business date");
         JsonNode mixed = LakeLoadTest.load(tmp, config(lake, FIX.resolve("mixed.tar.gz").toString(), "  kind: trade\n"));
-        assertThat(mixed.path("said").asText()).contains("mixed archive is refused");
-        JsonNode bomb = LakeLoadTest.load(tmp, config(lake, FIX.resolve("gzbomb.tar").toString(), "  kind: trade\n"),
+        assertThat(mixed.path("said").asText()).contains("at the top; every file is <table>/<YYYY-MM-DD>/<file>.jsonl");
+        Path other = feed("other.tar", Map.of("mystery/2026-10-01/m.jsonl", "{\"id\":\"M\"}\n"));
+        JsonNode unconfigured = LakeLoadTest.load(tmp, config(lake, other.toString(), "datasets: [trade, position]\n"));
+        assertThat(unconfigured.path("said").asText()).contains("folder mystery matches no configured dataset");
+        java.io.ByteArrayOutputStream z = new java.io.ByteArrayOutputStream();
+        try (var gz = new java.util.zip.GZIPOutputStream(z)) {
+            gz.write(new byte[16 << 20]);                                   // 16 MB of zeros in a few kB: a gzip bomb in a feed tar
+        }
+        Path bombTar = tmp.resolve("gzbomb.tar");
+        Files.write(bombTar, FileDatesTest.tar(Map.of("trade/2026-10-01/big.jsonl.gz", z.toByteArray())));
+        JsonNode bomb = LakeLoadTest.load(tmp, config(lake, bombTar.toString(), "  kind: trade\n"),
                 "source.archive.max-ratio=2");
         assertThat(bomb.path("exit").asInt()).isEqualTo(LakeLoad.FAILED);
         assertThat(bomb.path("error").asText()).contains("zip bomb");
@@ -209,13 +243,8 @@ class ArchivesTest {
 
     @Test
     void everyDatasetIsCheckedBeforeTheFirstCommit() throws Exception {
-        Path bad = tmp.resolve("bad.zip");
-        try (var z = new java.util.zip.ZipOutputStream(Files.newOutputStream(bad))) {
-            z.putNextEntry(new java.util.zip.ZipEntry("alpha/a.jsonl"));
-            z.write("{\"id\":\"A-1\",\"date\":\"2026-10-01\"}\n".getBytes(StandardCharsets.UTF_8));
-            z.putNextEntry(new java.util.zip.ZipEntry("beta/b.jsonl"));
-            z.write("{\"id\":\"B-1\",\"date\":\"2026-10-01\"}\nnot json\n".getBytes(StandardCharsets.UTF_8));
-        }
+        Path bad = feed("bad.tar", new LinkedHashMap<>(Map.of("alpha/2026-10-01/a.jsonl", "{\"id\":\"A-1\"}\n",
+                "beta/2026-10-01/b.jsonl", "{\"id\":\"B-1\"}\nnot json\n")));
         Path lake = tmp.resolve("lake");
         String cfg = config(lake, bad.toString(), "datasets: [alpha, beta]\nrejects: {max-pct: 0}\n");
         JsonNode s = LakeLoadTest.load(tmp, cfg);

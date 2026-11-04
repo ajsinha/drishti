@@ -63,11 +63,21 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The input files and what a row is. */
     record Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf,
-            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy) {}
+            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom) {}
 
     /** The table and its layout. */
     record Target(String format, String path, String lake, String domain, String kind, String table, Map<String, String> storage,
-            Map<String, String> properties, Map<String, String> iceberg, Layout layout, String loadMode, String batchId) {
+            Map<String, String> properties, Map<String, String> iceberg, Layout layout, String loadMode, String batchId, String modeFrom) {
+
+        /** Where the load mode came from, in words (the report's {@code modeFrom}). */
+        String modeWords() {
+            return switch (modeFrom == null ? "rules" : modeFrom) {
+                case "given" -> "given (--mode or the .ready file)";
+                case "lake" -> "the lake file's entry";
+                case "default" -> "the inbox's default-mode";
+                default -> "the load rules' default";
+            };
+        }
 
         boolean isIceberg() {
             return format.equals("iceberg");
@@ -110,11 +120,11 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             "s3.session-token", "credential", "token");
     private static final Map<String, Set<String>> KEYS = Map.of(
             "", Set.of("source", "target", "parallel", "memory", "rejects", "report", "lock", "datasets"),
-            "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "promote", "vectors", "vector", "flatten",
+            "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "date-from", "promote", "vectors", "vector", "flatten",
                     "partition-by", "pack", "connector", "latest-by", "dataset", "archive"),
             "source.archive", Set.of("max-mb", "max-ratio", "max-members", "validate"),
             "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout",
-                    "batch-id"),
+                    "batch-id", "default-mode"),
             "target.layout", Set.of("sort-by", "file-size-mb", "row-group-mb", "compression", "vector-compression", "byte-stream-split",
                     "shard-aligned"),
             "parallel", Set.of("readers", "parsers", "writers", "queue-mb", "split-mb"),
@@ -303,6 +313,11 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             throw new IllegalArgumentException("source.as-of " + asOfText + ": give YYYY-MM-DD");
         }
         String date = r.text(s, "date", null);
+        String dateFrom = r.text(s, "date-from", "auto").toLowerCase(Locale.ROOT);
+        if (!dateFrom.equals("auto") && !dateFrom.equals("name")) {
+            throw new IllegalArgumentException("source.date-from " + dateFrom + ": auto (a file's business date: source.as-of, else the date in "
+                    + "its name, <table>.<YYYY-MM-DD>.jsonl, else the business today; the default) or name (a name without a date is refused)");
+        }
         // a pack (as lake build --pack): its connector's domain, table, layout columns, vectors and flattened fields, its ingest key and date
         String packDir = r.text(s, "pack", null);
         PackEntry pack = null;
@@ -316,8 +331,8 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             } catch (IOException e) {
                 throw new IllegalArgumentException("source.pack " + packDir + ": " + e.getMessage());
             }
-            if (date == null && asOf == null) {
-                date = pack.date();
+            if (date == null) {
+                date = pack.date();                 // a row's own date field: only counted when it differs from its file's date
             }
         }
         // a lake file's entry (target.lake naming config/lakes/<lake>.yaml): everything of the table from there, nothing contradicted here
@@ -338,9 +353,6 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         } else if (lakeRef != null && !lakeRef.isBlank()) {
             warnOnce("target.lake " + lakeRef + " is a folder: name a lake of config/lakes/ instead (drishti.py lake migrate-config; "
                     + "docs/guides/LAKE_GUIDE.md); a folder is read this way for one more release");
-        }
-        if (asOf == null && date == null) {
-            throw new IllegalArgumentException("source.date: name the business-date field (or give source.as-of YYYY-MM-DD for every row)");
         }
         List<String> vectors = new ArrayList<>(r.list(s, "vectors"));
         vectors.addAll(r.list(s, "vector"));
@@ -371,7 +383,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         }
         Map<String, String> sourceStorage = storage(r, s.path("storage-options"), "source.storage-options");
         Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, id == null ? "id" : id, date, asOf, promote, vectors, flatten,
-                entry != null ? entry.partitionBy() : r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip());
+                entry != null ? entry.partitionBy() : r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip(), dateFrom);
 
         String tf = r.text(t, "format", entry != null ? entry.format() : "delta").toLowerCase(Locale.ROOT);
         if (entry != null) {
@@ -380,19 +392,25 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
             throw new IllegalArgumentException("target.format " + tf + ": delta or iceberg");
         }
-        String mode = r.text(t, "mode", entry != null && entry.appends() ? "append" : "replace-date");
-        if (!mode.equals("replace-date") && !mode.equals("overwrite-dates") && !mode.equals("append")) {
-            throw new IllegalArgumentException("target.mode " + mode + ": replace-date (each business date of the input replaced by one commit; "
-                    + "overwrite-dates is the same) or append (the rows added; target.batch-id names the load so it is committed once)");
+        // the load mode (docs/architecture/DATA_LOAD_RULES.md section 3): target.mode (--mode, a .ready file's mode:), else the lake file's
+        // entry (the table's default), else target.default-mode (the data inbox's default-mode), else append; replace (overwrite-dates)
+        // replaces each business date
+        String given = r.text(t, "mode", null);
+        String fallback = r.text(t, "default-mode", null);
+        String modeFrom = given != null ? "given" : entry != null ? "lake" : fallback != null ? "default" : "rules";
+        String mode = (given != null ? given : entry != null ? (entry.appends() ? "append" : "replace-date") : fallback != null ? fallback : "append")
+                .toLowerCase(Locale.ROOT);
+        mode = mode.equals("overwrite-dates") || mode.equals("replace") ? "replace-date" : mode;
+        if (!mode.equals("replace-date") && !mode.equals("append")) {
+            throw new IllegalArgumentException("target.mode " + mode + ": append (the default: each business date's rows are added, one commit "
+                    + "per date) or replace-date (each business date of the input replaced by one commit; also replace, overwrite-dates)");
         }
         String loadMode = mode.equals("append") ? LakeTable.APPEND : LakeTable.REPLACE;
-        if (entry != null) {
-            agree(entry, "load-mode", loadMode, entry.loadMode());
-        }
+        // target.batch-id names the batch: an append of it is committed once (a retried load of the same batch is skipped); the data
+        // inbox names every file's. Without one an append is not guarded against a second run (each run's rows carry their _load_id)
         String batchId = r.text(t, "batch-id", null);
-        if (loadMode.equals(LakeTable.APPEND) && (batchId == null || batchId.isBlank())) {
-            throw new IllegalArgumentException("target.batch-id: an append names its batch (the file's name, a run id), so a repeated or retried "
-                    + "load is never appended twice");
+        if (batchId != null && batchId.isBlank()) {
+            batchId = null;
         }
         if (tf.equals("iceberg") && !src.partitionBy().isEmpty()) {
             throw new IllegalArgumentException("source.partition-by is Delta's: an Iceberg table of the layout is partitioned by business date alone "
@@ -452,7 +470,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             }
         }
         Target tgt = new Target(tf, path, r.text(t, "lake", null), domain, r.text(t, "kind", null), table, targetStorage, props, iceberg, layout,
-                loadMode, batchId);
+                loadMode, batchId, modeFrom);
         if (tgt.path() == null && (tgt.lake() == null || tgt.domain() == null || tgt.kind() == null && tgt.table() == null)) {
             throw new IllegalArgumentException("target: give path (the table) or lake, domain and kind (the table <lake>/<domain>/<kind>)");
         }

@@ -41,7 +41,7 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
     c = javaload.config(a, p, None, "/lake", True, tmp_path, env)
     assert c["source"] == {"files": ["/data/pv"], "recursive": True, "id": "POSITION_ID", "date": "BUSINESS_DATE",
                            "promote": ["LEGAL_ENTITY", "DESK"], "vectors": ["SCENARIO_PV"], "flatten": {"NOTIONAL": "LEGS[0].NOTIONAL"},
-                           "partition-by": [], "latest-by": ""}   # Iceberg keeps the partition field as a column, as lake build's Iceberg path does
+                           "partition-by": [], "latest-by": "", "date-from": "auto"}   # Iceberg keeps the partition field as a column, as lake build's Iceberg path does
     assert javaload.config(a, {**p, "latest_by": "COMPUTED_AT"}, None, "/lake", True, tmp_path, {})["source"]["latest-by"] == "COMPUTED_AT"
     assert c["target"]["format"] == "iceberg" and c["target"]["path"] == "/lake/risk/scenario-pv" and c["target"]["kind"] == "scenario-pv"
     assert "lake" not in c["target"]                # a folder goes as the table's path, never as target.lake (a lake's name)
@@ -51,7 +51,8 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
     assert c["memory"]["spill-dir"] == str(tmp_path / "spill")
 
     d = javaload.config(args(src=["x.jsonl"]), {**p, "table": "pv_endur"}, date(2026, 10, 28), "/lake", False, tmp_path, {})
-    assert d["source"]["as-of"] == "2026-10-28" and "date" not in d["source"]
+    assert d["source"]["as-of"] == "2026-10-28" and d["source"]["date"] == "BUSINESS_DATE"     # a row's own date: only counted
+    assert javaload.config(args(src=["x.jsonl"]), {**p, "date_from": "field"}, None, "/lake", False, tmp_path, {})["source"]["date-from"] == "field"
     assert d["source"]["partition-by"] == ["LEGAL_ENTITY"] and d["target"]["table"] == "pv_endur"
     assert d["target"]["path"] == "/lake/risk/pv_endur"
 
@@ -75,8 +76,9 @@ def test_auto_picks_the_loader_only_for_large_json_lines(tmp_path, monkeypatch):
     assert use
     use, why = javaload.wanted(args(java_above_mb=0), [small, arr], None, None)
     assert not use and "not JSON Lines" in why
-    use, why = javaload.wanted(args(java_above_mb=0, mode="append"), [small], None, None)
-    assert not use and "append" in why
+    use, why = javaload.wanted(args(java_above_mb=0, mode="overwrite-partitions"), [small], None, None)
+    assert not use and "overwrite-partitions" in why
+    assert javaload.wanted(args(java_above_mb=0, mode="append"), [small], None, None)[0]
     assert javaload.is_jsonl(small) and not javaload.is_jsonl(arr)
 
 

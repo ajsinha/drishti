@@ -70,11 +70,18 @@ public final class TableUpkeep {
      * lines cannot carry (a vector), so it is left as it is.
      */
     public static List<Staged> rows(Engine engine, String table, Predicate<Map<String, String>> keep) throws IOException {
-        Snapshot s = Table.forPath(engine, table).getLatestSnapshot(engine);
+        return rows(engine, Table.forPath(engine, table).getLatestSnapshot(engine), keep, false);
+    }
+
+    /**
+     * The rows of snapshot {@code s} whose partition values {@code keep} accepts, as staged lines; with {@code vectors} a {@code list<double>}
+     * or {@code list<float>} column is carried too (a JSON array), else such a table gives null.
+     */
+    public static List<Staged> rows(Engine engine, Snapshot s, Predicate<Map<String, String>> keep, boolean vectors) throws IOException {
         StructType schema = s.getSchema();
         List<String> parts = s.getPartitionColumnNames();
         for (StructField f : schema.fields()) {
-            if (!parts.contains(f.getName()) && !simple(f.getDataType())) {
+            if (!parts.contains(f.getName()) && !simple(f.getDataType()) && !(vectors && vector(f.getDataType()))) {
                 return null;
             }
         }
@@ -111,6 +118,11 @@ public final class TableUpkeep {
         return out;
     }
 
+    private static boolean vector(DataType t) {
+        return t instanceof io.delta.kernel.types.ArrayType a
+                && (a.getElementType() instanceof DoubleType || a.getElementType() instanceof io.delta.kernel.types.FloatType);
+    }
+
     private static boolean simple(DataType t) {
         return t instanceof StringType || t instanceof DoubleType || t instanceof LongType || t instanceof DateType || t instanceof IntegerType;
     }
@@ -142,6 +154,18 @@ public final class TableUpkeep {
                 columns.put(name, r.getInt(i));
             } else if (t instanceof DateType) {
                 columns.put(name, LocalDate.ofEpochDay(r.getInt(i)).toString());
+            } else if (vector(t)) {
+                io.delta.kernel.data.ArrayValue a = r.getArray(i);
+                io.delta.kernel.data.ColumnVector e = a.getElements();
+                com.fasterxml.jackson.databind.node.ArrayNode arr = columns.putArray(name);
+                boolean f32 = ((io.delta.kernel.types.ArrayType) t).getElementType() instanceof io.delta.kernel.types.FloatType;
+                for (int k = 0; k < a.getSize(); k++) {
+                    if (e.isNullAt(k)) {
+                        arr.addNull();
+                    } else {
+                        arr.add(f32 ? (double) e.getFloat(k) : e.getDouble(k));
+                    }
+                }
             }
         }
         line.set("columns", columns);
@@ -154,7 +178,9 @@ public final class TableUpkeep {
         List<LakeManifest.Column> out = new ArrayList<>();
         for (StructField f : s.getSchema().fields()) {
             DataType t = f.getDataType();
-            String type = t instanceof DoubleType ? "double" : t instanceof LongType || t instanceof IntegerType ? "long" : t instanceof DateType ? "date" : "string";
+            String type = t instanceof DoubleType ? "double" : t instanceof LongType || t instanceof IntegerType ? "long" : t instanceof DateType ? "date"
+                    : vector(t) ? (((io.delta.kernel.types.ArrayType) t).getElementType() instanceof io.delta.kernel.types.FloatType ? "vector32" : "vector")
+                    : "string";
             out.add(new LakeManifest.Column(f.getName(), type));
         }
         return out;

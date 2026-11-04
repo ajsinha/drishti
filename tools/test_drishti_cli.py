@@ -185,9 +185,10 @@ class Tools(unittest.TestCase):
     def test_data_ingest_writes_the_files_store(self):
         src = self.tmp / "in"
         src.mkdir()
-        (src / "trade.jsonl").write_text('{"id": "T1", "d": "2026-10-01"}\n{"id": "T2", "d": "2026-10-02"}\n')
+        (src / "trade.2026-10-01.jsonl").write_text('{"id": "T1", "d": "2026-10-01"}\n')       # one file a date: the name's
+        (src / "trade.2026-10-02.jsonl").write_text('{"id": "T2", "d": "2026-10-02"}\n')
         root = self.tmp / "files"
-        code, out, _ = run("data", "ingest", "--from", src, "--domain", "dm", "--date", "d", "--store", "files", "--root", root)
+        code, out, _ = run("data", "ingest", "--from", src, "--domain", "dm", "--store", "files", "--root", root)
         self.assertEqual(0, code)
         self.assertTrue((root / "dm" / "2026-10-01" / "trade.jsonl").is_file())
         self.assertIn("total rows: 2", out)

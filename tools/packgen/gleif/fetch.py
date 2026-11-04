@@ -59,9 +59,9 @@ MAPPINGS = ("bic-lei", "isin-lei", "mic-lei", "oc-lei")
 
 
 def newest_snapshot(testdata: Path, pack: str, kind: str) -> Path:
-    """A kind's newest snapshot of the standard test data (<testdata>/<pack>/<kind>/snapshot-<date>.jsonl.gz); a missing path if none."""
-    got = sorted((testdata / pack / kind).glob("snapshot-*.jsonl.gz"))
-    return got[-1] if got else testdata / pack / kind / "snapshot-none.jsonl.gz"
+    """A kind's newest snapshot of the standard test data (<testdata>/<pack>/<kind>/<kind>.<YYYY-MM-DD>.jsonl.gz); a missing path if none."""
+    got = sorted((testdata / pack / kind).glob(f"{kind}.*.jsonl.gz"))
+    return got[-1] if got else testdata / pack / kind / f"{kind}.none.jsonl.gz"
 
 
 #: the us-equities companies the seeds come from: the committed snapshot (a .jsonl or .jsonl.gz file; gleif.py may point it elsewhere)

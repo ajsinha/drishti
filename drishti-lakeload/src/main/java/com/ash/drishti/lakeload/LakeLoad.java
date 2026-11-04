@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The parallel lake loader's command line (docs/guides/TOOLS.md section 4.13):
@@ -60,7 +61,61 @@ public final class LakeLoad {
     }
 
     /** Runs a load as the command line would; returns the exit code. */
+    /** The lake domain of a pack's tables (its first Delta or Iceberg connector's {@code domain}, else the pack's name). */
+    public static String packDomain(java.nio.file.Path pack) throws java.io.IOException {
+        return com.ash.drishti.lakeconfig.PackEntry.read(pack, "_", null).domain();   // no table of the kind: the pack's first Delta or Iceberg connector's domain, else its name
+    }
+
+    /**
+     * The tables and dates a tar feed holds ({@code <table>/<YYYY-MM-DD>/}; DATA_LOAD_RULES.md section 3.1), checked as the loader checks
+     * it (every problem refuses it, an {@link java.io.IOException} saying them all); a local file.
+     */
+    public static Map<String, java.util.SortedSet<java.time.LocalDate>> tarTables(String path) throws java.io.IOException {
+        Map<String, java.util.SortedSet<java.time.LocalDate>> out = new java.util.TreeMap<>();
+        try (com.ash.drishti.iceberg.io.FileAccess io = new com.ash.drishti.iceberg.io.FileAccess(com.ash.drishti.lakeio.S3Settings.from(Map.of()),
+                com.ash.drishti.iceberg.io.Relocation.none(), null)) {
+            Archives.Plan p = Archives.plan(io, path, java.nio.file.Files.size(java.nio.file.Path.of(path)), null,
+                    Archives.Limits.defaults(System::getenv));
+            p.datasets().forEach((table, members) -> members.forEach(m -> out.computeIfAbsent(table, k -> new java.util.TreeSet<>()).add(m.date())));
+        }
+        return out;
+    }
+
+    /** The run of this thread's {@link #run}: one id for every dataset it loads, so an archive's commits share their load ids. */
+    private static final ThreadLocal<String> RUN = new ThreadLocal<>();
+    private static final java.util.concurrent.atomic.AtomicInteger RUNS = new java.util.concurrent.atomic.AtomicInteger();
+
+    /**
+     * The current run's id, else a new one: {@code yyyyMMdd'T'HHmmss.SSS-<pid>[-<n>]}, in time order, so the newest load's rows sort last
+     * ({@code _load_id} is {@code <run>.<file>}).
+     */
+    static String runId() {
+        String r = RUN.get();
+        if (r != null) {
+            return r;
+        }
+        int n = RUNS.incrementAndGet();
+        return java.time.OffsetDateTime.now(java.time.ZoneId.systemDefault()).format(java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss.SSS"))
+                + "-" + ProcessHandle.current().pid() + (n > 1 ? "-" + n : "");
+    }
+
     public static int run(String[] args, PrintStream out) {
+        RUN.set(null);
+        String given = null;
+        for (int i = 0; i + 1 < args.length; i++) {
+            if (args[i].equals("--run-id")) {
+                given = args[i + 1];                    // one id for every table of an archive the inbox loads table by table
+            }
+        }
+        RUN.set(given != null ? given : runId());
+        try {
+            return runOnce(args, out);
+        } finally {
+            RUN.remove();
+        }
+    }
+
+    private static int runOnce(String[] args, PrintStream out) {
         long t0 = System.nanoTime();
         String config = null;
         List<String> sets = new ArrayList<>();
@@ -78,11 +133,23 @@ public final class LakeLoad {
                     case "--no-run-log" -> sets.add("report.run-log=false");
                     case "--dry-run" -> sets.add("report.dry-run=true");
                     case "--dataset" -> sets.add("source.dataset=" + next(args, ++i, a));
+                    // the options of every loader (docs/architecture/DATA_LOAD_RULES.md section 8), over the configuration file
+                    case "--as-of" -> sets.add("source.as-of=" + next(args, ++i, a));
+                    case "--table" -> sets.add("target.table=" + next(args, ++i, a).toLowerCase(java.util.Locale.ROOT));
+                    case "--pack" -> sets.add("source.pack=" + next(args, ++i, a));
+                    case "--kind" -> sets.add("target.kind=" + next(args, ++i, a));
+                    case "--mode" -> sets.add("target.mode=" + next(args, ++i, a));
+                    case "--key" -> sets.add("source.id=" + next(args, ++i, a));
+                    case "--date-from" -> sets.add("source.date-from=" + next(args, ++i, a));
+                    case "--plan" -> sets.add("report.dry-run=true");
+                    case "--run-id" -> i++;                     // read by run(): the run's id (its rows' load ids are <run-id>.<file>)
                     case "--json" -> json = true;
                     case "-q", "--quiet" -> quiet = true;
                     case "-h", "--help" -> {
-                        out.println("usage: LakeLoad --config FILE [--set key.path=value ...] [--summary FILE] [--progress FILE] [--no-lock] "
-                                + "[--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/TOOLS.md section 4.13)");
+                        out.println("usage: LakeLoad --config FILE [--set key.path=value ...] [--as-of YYYY-MM-DD] [--table T] [--pack DIR] "
+                                + "[--kind K] [--mode append|replace] [--key FIELD] [--date-from auto|name] [--plan] [--summary FILE] [--progress FILE] "
+                                + "[--no-lock] [--no-run-log] [--dry-run] [--dataset NAME] [--json] [-q]   (docs/guides/TOOLS.md section 4.13, "
+                                + "docs/architecture/DATA_LOAD_RULES.md)");
                         return OK;
                     }
                     default -> throw new IllegalArgumentException("unknown argument " + a + " (--help)");
@@ -241,6 +308,15 @@ public final class LakeLoad {
             out.println("    e.g. " + r.path("where").asText() + ": " + r.path("reason").asText());
         }
         s.path("duplicates").fields().forEachRemaining(e -> out.printf("  %,d id(s) appear more than once on %s%n", e.getValue().asLong(), e.getKey()));
+        int dated = 0;
+        for (var f : s.path("fileDates")) {
+            if (dated++ == 10) {
+                out.println("  ... and " + (s.path("fileDates").size() - 10) + " more files dated by their names");
+                break;
+            }
+            out.println("  business date " + f.path("date").asText() + " from the name of " + f.path("file").asText());
+        }
+        s.path("dateNotes").forEach(n -> out.println("  " + n.asText()));
         var tp = s.path("throughput");
         tp.fields().forEachRemaining(e -> {
             if (e.getValue().isObject()) {

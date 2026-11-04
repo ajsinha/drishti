@@ -108,8 +108,14 @@ interface TableTarget extends AutoCloseable {
             }
             case 'v' -> r.vector(src.index());
             case 'c' -> promoted(r, src.index(), src.type(), icebergRules);
+            case 'l' -> at(r.plan().loadIds, r.split());
+            case 's' -> at(r.plan().sourceFiles, r.split());
             default -> null;
         };
+    }
+
+    private static byte[] at(byte[][] values, int split) {
+        return split >= 0 && split < values.length ? values[split] : null;
     }
 
     private static Object promoted(RowView r, int i, Type type, boolean icebergRules) {
@@ -239,6 +245,10 @@ interface TableTarget extends AutoCloseable {
                 return new Source('d', 0, type);
             case "business_date":
                 return new Source('t', 0, type);
+            case RowPlan.LOAD_ID:
+                return new Source('l', 0, type);
+            case RowPlan.SOURCE_FILE:
+                return new Source('s', 0, type);
             default:
                 break;
         }

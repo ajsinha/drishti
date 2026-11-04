@@ -32,7 +32,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 /**
  * How long {@link PostgresLoader} takes for a book (run by hand, not in the build): {@code ./mvnw -o test -pl
  * plugins/drishti-plugin-jdbc -Dtest=PostgresLoaderTimingTest -Ddrishti.timing.jsonl=FILE}, FILE written by
- * {@code bulk_trades.py --trades 10000 --days 3 --jsonl FILE}. Prints the first load (an empty table) and three reloads
+ * {@code bulk_trades.py --trades 10000 --days 3 --jsonl FILE.tar} (trade/<YYYY-MM-DD>/ folders). Prints the first load (an empty table) and three reloads
  * of the same days over it.
  */
 @Testcontainers(disabledWithoutDocker = true)

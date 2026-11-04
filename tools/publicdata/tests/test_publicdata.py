@@ -21,6 +21,7 @@ import argparse
 import gzip
 import io
 import json
+import re
 import os
 import shutil
 import sys
@@ -243,7 +244,7 @@ def test_news_snapshot_check(tmp_path):
     folder = tmp_path / NM.PACK / "quote"
     folder.mkdir(parents=True)
     docs = [{"QUOTE_ID": "QUOTE-B", "SNAPSHOT": True}, {"QUOTE_ID": "QUOTE-A"}]
-    with gzip.open(folder / "snapshot-2026-10-24.jsonl.gz", "wt", encoding="utf-8") as fh:
+    with gzip.open(folder / "quote.2026-10-24.jsonl.gz", "wt", encoding="utf-8") as fh:
         fh.write("".join(json.dumps(d) + "\n" for d in docs))
     f, n, problems = NM.snapshot_counts(tmp_path)["quote"]
     assert n == 2 and "ids not unique and sorted" in problems and any("stamped" in p for p in problems)
@@ -280,17 +281,17 @@ def test_overnight_fixings():
 
 def test_market_data_write_is_idempotent_and_checked(tmp_path):
     fx, sofr = MD.EcbFx(), MD.Sofr()
-    fx.docs = [{"PAIR": "FX-EURUSD", "MID": 1.1}]
-    sofr.docs = [{"INDEX_ID": "FIX-SOFR", "LATEST": 0.039}]
+    fx.docs = [{"PAIR": "FX-EURUSD", "MID": 1.1, "AS_OF": "2026-10-23"}]
+    sofr.docs = [{"INDEX_ID": "FIX-SOFR", "LATEST": 0.039, "AS_OF": "2026-10-23"}]
     MD.write(tmp_path, [fx, sofr])
     estr = MD.Estr()
-    estr.docs = [{"INDEX_ID": "FIX-ESTR", "LATEST": 0.019}]
+    estr.docs = [{"INDEX_ID": "FIX-ESTR", "LATEST": 0.019, "AS_OF": "2026-10-23"}]
     files = MD.write(tmp_path, [estr])                             # SOFR, written by an earlier run, is kept
-    lines = (tmp_path / "rate-fixing.jsonl").read_text().splitlines()
+    lines = (tmp_path / "rate-fixing.2026-10-23.jsonl").read_text().splitlines()      # <kind>.<AS_OF>: the load rules' name
     assert [json.loads(x)["INDEX_ID"] for x in lines] == ["FIX-ESTR", "FIX-SOFR"] and MD.check(files) == []
-    first = (tmp_path / "rate-fixing.jsonl").read_bytes()
+    first = (tmp_path / "rate-fixing.2026-10-23.jsonl").read_bytes()
     MD.write(tmp_path, [estr])
-    assert (tmp_path / "rate-fixing.jsonl").read_bytes() == first
+    assert (tmp_path / "rate-fixing.2026-10-23.jsonl").read_bytes() == first
     (tmp_path / "fx-spot.jsonl").write_text('{"PAIR":"FX-A"}\n{"PAIR":"FX-A"}\n')
     assert MD.check([tmp_path / "fx-spot.jsonl"])
 
@@ -318,9 +319,11 @@ def test_market_data_refresh_from_the_cache(tmp_path, data_dir, capsys):
     out = tmp_path / "out"
     rc = MD.main(["refresh", "--offline", "--since", "2026", "--cache", str(c), "--out", str(out)])
     assert rc == 0, capsys.readouterr().out
-    assert sorted(p.name for p in out.iterdir()) == ["fx-spot.jsonl", "ir-curve.jsonl", "manifest.json", "rate-fixing.jsonl"]
+    data = sorted(p.name for p in out.iterdir() if p.name != "manifest.json")       # <kind>.<AS_OF>.jsonl: the load rules' names
+    assert all(re.fullmatch(r"(fx-spot|ir-curve|rate-fixing)\.\d{4}-\d{2}-\d{2}\.jsonl", n) for n in data), data
+    assert {n.split(".")[0] for n in data} == {"fx-spot", "ir-curve", "rate-fixing"} and (out / "manifest.json").is_file()
     man = json.loads((data_dir / "publicdata" / "market-data" / "manifest.json").read_text())
-    assert man["sources"]["sofr"]["rows"] == 3 and len(man["files"]) == 3
+    assert man["sources"]["sofr"]["rows"] == 3 and len(man["files"]) == len(data)
 
 
 @pytest.mark.skipif(os.environ.get("DRISHTI_LIVE_FETCH") != "1", reason="live fetch: set DRISHTI_LIVE_FETCH=1")

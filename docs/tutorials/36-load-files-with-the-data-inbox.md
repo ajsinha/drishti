@@ -126,7 +126,7 @@ trading / trade · trade-endur · date from the name*, then *unmatched: fail*.
 **The command line.** Copy one day of Endur trades from the demo data into the inbox under a name the rule matches:
 
 ```bash
-cp data/testdata/trades/endur/changes-2026-09-30.jsonl.gz data/dataload/inbox/trades-endur-2026-09-30.jsonl.gz
+cp data/testdata/trades/endur/trade_endur.2026-09-30.jsonl.gz data/dataload/inbox/trades-endur-2026-09-30.jsonl.gz
 python3 tools/drishti.py dataload status
 ```
 
@@ -193,8 +193,8 @@ Admin → Data loads made by `dataload` (*inbox:* and its file).
 **The command line.** Drop two days without markers, then one `ready.all`:
 
 ```bash
-cp data/testdata/trades/endur/changes-2026-09-28.jsonl.gz data/dataload/inbox/trades-endur-2026-09-28.jsonl.gz
-cp data/testdata/trades/endur/changes-2026-09-29.jsonl.gz data/dataload/inbox/trades-endur-2026-09-29.jsonl.gz
+cp data/testdata/trades/endur/trade_endur.2026-09-28.jsonl.gz data/dataload/inbox/trades-endur-2026-09-28.jsonl.gz
+cp data/testdata/trades/endur/trade_endur.2026-09-29.jsonl.gz data/dataload/inbox/trades-endur-2026-09-29.jsonl.gz
 touch data/dataload/inbox/ready.all
 python3 tools/drishti.py dataload status
 ```
@@ -213,7 +213,7 @@ to one loader run (one table), each business date one commit. `ready.all` moves 
 **The command line.** Drop a file whose name no rule matches:
 
 ```bash
-cp data/testdata/trades/endur/changes-2026-09-25.jsonl.gz data/dataload/inbox/endur-2026-09-25.jsonl.gz
+cp data/testdata/trades/endur/trade_endur.2026-09-25.jsonl.gz data/dataload/inbox/endur-2026-09-25.jsonl.gz
 touch data/dataload/inbox/endur-2026-09-25.jsonl.gz.ready
 python3 tools/drishti.py dataload run
 python3 tools/drishti.py dataload status

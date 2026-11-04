@@ -33,6 +33,7 @@
   </properties>
   <dependencies>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-api</artifactId></dependency>
+    <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-common</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeconfig</artifactId></dependency>
     <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-lakeio</artifactId></dependency>
     <!-- Delta: Delta Kernel's transaction (the commit), as drishti.py lake build's Java writer (LakeWriter) -->

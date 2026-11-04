@@ -200,8 +200,8 @@ notes:
 - 'Dated by the lake''s business_date partition: `drishti.py lake build` writes each test-data file''s day into it; the documents carry no date
   field of their own.'
 review:
-- 'required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-spot/snapshot-2026-07-08.jsonl.gz,
-  data/testdata/market-data/fx-spot/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
+- 'required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-spot/fx-spot.2026-07-08.jsonl.gz,
+  data/testdata/market-data/fx-spot/fx-spot.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may
   be empty.'
 - 'source ''md-hub'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'the pack also names ''Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors'' for this kind (rate-fixing,

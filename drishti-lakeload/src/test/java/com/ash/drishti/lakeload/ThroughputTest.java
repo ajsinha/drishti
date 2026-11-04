@@ -59,7 +59,8 @@ class ThroughputTest {
         JsonNode s = null;
         for (int run = 0; run < 3; run++) {
             lake = tmp.resolve("lake-" + run);
-            s = LakeLoadTest.load(tmp, PvData.config(files, lake.toString(), "delta"), "target.layout.file-size-mb=8", "report.manifest=" + manifest);
+            s = LakeLoadTest.load(tmp, PvData.config(files, lake.toString(), "delta"), "target.layout.file-size-mb=8", "report.manifest=" + manifest,
+                    "source.as-of=2026-10-27");
             assertThat(s.path("exit").asInt()).as(s.path("error").asText()).isZero();
             assertThat(s.path("accepted").asLong()).isEqualTo(POSITIONS);
             double seconds = s.path("timings").path("totalSeconds").asDouble();
@@ -70,7 +71,8 @@ class ThroughputTest {
         }
         System.out.println("lakeload stages (warm): " + s.path("throughput").toPrettyString());
         System.out.println("lakeload memory: " + s.path("memory"));
-        JsonNode ice = LakeLoadTest.load(tmp, PvData.config(files, tmp.resolve("lake-iceberg").toString(), "iceberg"), "target.layout.file-size-mb=8");
+        JsonNode ice = LakeLoadTest.load(tmp, PvData.config(files, tmp.resolve("lake-iceberg").toString(), "iceberg"), "target.layout.file-size-mb=8",
+                "source.as-of=2026-10-27");
         assertThat(ice.path("exit").asInt()).as(ice.path("error").asText()).isZero();
         System.out.printf("lakeload throughput (iceberg, warm): %.3f s, %,.0f rows/s%n", ice.path("timings").path("totalSeconds").asDouble(),
                 POSITIONS / ice.path("timings").path("totalSeconds").asDouble());
@@ -105,7 +107,8 @@ class ThroughputTest {
 
         // a 24 MB budget: the rows spill as sorted runs and are merged back; the table is the same
         Path small = tmp.resolve("lake-small");
-        JsonNode t = LakeLoadTest.load(tmp, PvData.config(files, small.toString(), "delta"), "target.layout.file-size-mb=8", "memory.budget-mb=24");
+        JsonNode t = LakeLoadTest.load(tmp, PvData.config(files, small.toString(), "delta"), "target.layout.file-size-mb=8", "memory.budget-mb=24",
+                "source.as-of=2026-10-27");
         assertThat(t.path("exit").asInt()).as(t.path("error").asText()).isZero();
         assertThat(t.path("memory").path("spilledMb").asLong()).isPositive();
         System.out.println("lakeload 24 MB budget: " + t.path("memory") + " in " + t.path("timings").path("totalSeconds").asDouble() + " s");
@@ -120,7 +123,7 @@ class ThroughputTest {
         Files.createDirectories(tmp.resolve("jvmtmp"));
         Process p = new ProcessBuilder(Path.of(System.getProperty("java.home"), "bin", "java").toString(), "-Xmx192m",
                 "-Djava.io.tmpdir=" + tmp.resolve("jvmtmp"), "-cp", System.getProperty("java.class.path"), LakeLoad.class.getName(), "--config",
-                cfg.toString(), "--set", "memory.budget-mb=32", "--set", "target.layout.file-size-mb=8", "--summary", summary.toString(), "-q")
+                cfg.toString(), "--set", "memory.budget-mb=32", "--set", "target.layout.file-size-mb=8", "--as-of", "2026-10-27", "--summary", summary.toString(), "-q")
                 .redirectErrorStream(true).start();
         String said = new String(p.getInputStream().readAllBytes(), java.nio.charset.StandardCharsets.UTF_8);
         assertThat(p.waitFor()).as(said).isZero();

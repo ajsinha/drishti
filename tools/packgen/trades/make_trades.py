@@ -19,7 +19,7 @@ trading pack's Delta tables, one per system (trade_endur, trade_calypso, trade_m
     uv run --with deltalake --with pyarrow --with pyyaml python tools/packgen/trades/make_trades.py --trades 3000 --days 7 \\
         --out data/build/trades --lake data/delta
 
---trades is per system (ENDUR, CALYPSO, MUREX; --systems picks some). Each system writes <out>/<system>/trades-<date>.jsonl.gz, one file
+--trades is per system (ENDUR, CALYPSO, MUREX; --systems picks some). Each system writes <out>/<system>/trade_<system>.<date>.jsonl.gz (the load rules' name), one file
 per business day (the last is --as-of, default the samples' date), each the whole book as booked at the end of that day: about 6% of
 the trades are amended each day (amend.py), so dates differ. ENDUR deals come from endur.py (five product types); CALYPSO and MUREX are
 the trading pack's sample trades (every product of the taxonomy) and clones of them with numbers of their own and amounts scaled by a
@@ -113,7 +113,7 @@ def write(system: str, trades: list[dict], days: list[str], out: Path) -> list[P
     for i, day in enumerate(days):
         if i:
             current = [A.amend(t, day) for t in current]
-        f = folder / f"trades-{day}.jsonl.gz"
+        f = folder / f"trade_{system.lower()}.{day}.jsonl.gz"        # <table>.<YYYY-MM-DD>: the load rules' name
         with gzip.open(f, "wt", encoding="utf-8") as fh:
             for t in current:
                 problems = S.problems(t)
@@ -131,7 +131,7 @@ def to_lake(system: str, files: list[Path], days: list[str], lake: Path, engine:
     worst = 0
     for f, day in zip(files, days):
         args = LB.build_parser().parse_args(["--from", str(f), "--pack", str(ROOT / "config" / "packs" / "trading"), "--kind", "trade",
-                                             "--connector", CONNECTOR[system], "--key", "TRADE_ID", "--as-of", day, "--partition-by", "PRODUCT_TYPE",
+                                             "--connector", CONNECTOR[system], "--key", "TRADE_ID", "--mode", "overwrite-dates", "--partition-by", "PRODUCT_TYPE",
                                              "--lake", str(lake), "--engine", engine, "-q"])
         code, summary = LB.run(args, say=lambda *a, **k: None)
         print(f"  {system} {day}: {summary.get('status')} {summary.get('rows', summary.get('documents', ''))} -> {summary.get('table')}"

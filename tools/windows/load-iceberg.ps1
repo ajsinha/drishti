@@ -75,15 +75,15 @@ function Invoke-Tool([string[]]$withs, [string[]]$toolArgs) {
     }
 }
 
-# the loader's input: the samples, then the book, in one file, so each business day of a table is written once and holds both
+# the loader's input: a folder of the samples' tar and the book's, <kind>/<YYYY-MM-DD>/ folders (the load rules,
+# docs/architecture/DATA_LOAD_RULES.md), read in one load, so each business day of a table is written once and holds both
 # (a second load of the same days would replace them: QA2-05)
-$jsonl = Join-Path $data 'banking.jsonl'
-Invoke-Tool @('pyyaml') @('tools/packgen/banking/make_data.py', '--jsonl', $jsonl)
+$jsonl = Join-Path $data 'build\loader-rows'
+if (Test-Path $jsonl) { Remove-Item $jsonl -Recurse -Force }
+New-Item -ItemType Directory -Force -Path $jsonl | Out-Null
+Invoke-Tool @('pyyaml') @('tools/packgen/banking/make_data.py', '--jsonl', (Join-Path $jsonl 'banking.tar'))
 if ($Trades -gt 0) {
-    $book = Join-Path $data 'iceberg-book.jsonl'
-    Invoke-Tool @('deltalake', 'pyarrow', 'pyyaml') @('tools/samplegen/bulk_trades.py', '--trades', "$Trades", '--days', "$Days", '--jsonl', $book)
-    Get-Content $book | Add-Content $jsonl
-    Remove-Item $book
+    Invoke-Tool @('deltalake', 'pyarrow', 'pyyaml') @('tools/samplegen/bulk_trades.py', '--trades', "$Trades", '--days', "$Days", '--jsonl', (Join-Path $jsonl 'bulk-trades.tar'))
 }
 
 & .\mvnw.cmd -q -o install -DskipTests -pl plugins/drishti-plugin-iceberg -am
@@ -103,9 +103,9 @@ $jvm = @("-Djava.io.tmpdir=$jtmp", "-Xmx$Heap", '-Djdk.nio.maxCachedBufferSize=2
 if ($LASTEXITCODE -ne 0) {
     # the loader said why in one line (which bucket, which endpoint, what to check: QA3B-12); no PowerShell error record on top of it
     $code = $LASTEXITCODE
-    Remove-Item $jsonl -ErrorAction SilentlyContinue
+    Remove-Item $jsonl -Recurse -ErrorAction SilentlyContinue
     [Console]::Error.WriteLine('load-iceberg: the load did not finish: see the line above')
     exit $code
 }
-Remove-Item $jsonl
+Remove-Item $jsonl -Recurse
 Write-Host "Iceberg tables ready under $Root (engine: $Engine)"

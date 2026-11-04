@@ -15,6 +15,8 @@
  */
 package com.ash.drishti.plugin.redis;
 
+import com.ash.drishti.common.RowFeed;
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -77,7 +79,7 @@ class RedisLoaderReplaceTest {
         System.arraycopy(flags, 0, args, 2, flags.length);
         RedisLoader.Options o = RedisLoader.Options.parse(args);
         try (RedisConnection c = RedisConnection.open(o.uri(), false, null, null, TIMEOUT)) {
-            new RedisLoader(o, c).load(new BufferedReader(new StringReader(String.join("\n", lines) + "\n")));
+            new RedisLoader(o, c).load(RowFeed.open(LoaderRows.write(lines).toString(), RowFeed.asOf(args)));   // as the loader's main
         }
     }
 
@@ -130,7 +132,7 @@ class RedisLoaderReplaceTest {
         load(rows("broken", "X-", 2, D3), "--codec", "zstd");
         List<String> second = new ArrayList<>(rows("broken", "N-", 500, D3));
         second.add("{\"domain\":\"broken\",\"kind\":\"trade\",\"id\":\"N-BAD\",\"date\":\"2026-09-30\"}");   // no document: the load fails
-        assertThatThrownBy(() -> load(second, "--codec", "zstd", "--threads", "2")).hasMessageContaining("without domain, kind, id, date or doc");
+        assertThatThrownBy(() -> load(second, "--codec", "zstd", "--threads", "2")).hasMessageContaining("without domain, kind, id or doc");
         assertThat(listed("broken", D3)).containsExactly("X-0000", "X-0001");
         assertThat(documents("broken", "N-", D3)).as("documents of the failed load that no column lists").isZero();
         assertThat(documents("broken", "X-", D3)).isEqualTo(2);
@@ -141,7 +143,8 @@ class RedisLoaderReplaceTest {
         load(rows("killed", "X-", 2, D3), "--codec", "zstd");
         String java = ProcessHandle.current().info().command().orElse("java");
         Process loader = new ProcessBuilder(java, "-Djava.io.tmpdir=" + System.getProperty("java.io.tmpdir"), "-cp", System.getProperty("java.class.path"), RedisLoader.class.getName(), "-", uri(), "--codec", "zstd",
-                "--threads", "2", "--in-flight", "50").redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
+                "--threads", "2", "--in-flight", "50", "--as-of", D3.toString())   // a plain stream's business date (the load rules)
+                .redirectErrorStream(true).redirectOutput(ProcessBuilder.Redirect.DISCARD).start();
         try {
             try (OutputStream in = loader.getOutputStream()) {
                 for (String l : rows("killed", "N-", 2000, D3)) {
@@ -245,7 +248,7 @@ class RedisLoaderReplaceTest {
             try {
                 RedisLoader.Options o = RedisLoader.Options.parse(new String[] {"-", uri(), "--codec", "zstd", "--threads", "1"});
                 try (RedisConnection c = RedisConnection.open(o.uri(), false, null, null, TIMEOUT)) {
-                    new RedisLoader(o, c).load(new BufferedReader(in));
+                    new RedisLoader(o, c).load(RowFeed.stream(in, D3));     // a stream of one kind and one day
                 }
             } catch (Exception e) {
                 throw new java.util.concurrent.CompletionException(e);
@@ -280,14 +283,14 @@ class RedisLoaderReplaceTest {
     }
 
     @Test
-    void aFutureDatedRowIsNotLoadedAndCannotMoveTheRetentionCutOff() throws Exception {
+    void aFileOfAFutureBusinessDateIsNotLoaded() throws Exception {
         List<String> history = new ArrayList<>();
         for (LocalDate d = D3.minusDays(2); !d.isAfter(D3); d = d.plusDays(1)) {
             history.add(row("dated", "X-0000", d, 1));
         }
-        load(history, "--codec", "zstd", "--ttl-days", "30", "--as-of", D3.toString());
-        assertThatThrownBy(() -> load(List.of(row("dated", "X-TYPO", LocalDate.of(2099, 3, 1), 1)), "--codec", "zstd", "--ttl-days", "30", "--as-of",
-                D3.toString())).hasMessageContaining("1 rows not loaded");
+        load(history, "--codec", "zstd");                                         // a tar of trade/<date>/ folders
+        assertThatThrownBy(() -> load(List.of(row("dated", "X-TYPO", LocalDate.of(2099, 3, 1), 1), row("dated", "X-0001", D3, 1)), "--codec", "zstd"))
+                .hasMessageContaining("in the future");                             // the load rules: refused whole
         assertThat(days("dated")).containsExactly("20260928", "20260929", "20260930");
     }
 

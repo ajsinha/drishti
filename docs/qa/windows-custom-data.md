@@ -46,7 +46,7 @@ Names used below:
 | Name | Value |
 |---|---|
 | Project folder | `C:\Users\asinh09\IdeaProjects\drishti-orig` |
-| Your ENDUR files | `C:\Users\asinh09\drishti-private\endur\` (for example `2026-10-15.jsonl`, `2026-10-16.jsonl`) |
+| Your ENDUR files | `C:\Users\asinh09\drishti-private\endur\` (for example `trade_endur.2026-10-15.jsonl`, `trade_endur.2026-10-16.jsonl`) |
 | The data folder | `C:\Users\asinh09\IdeaProjects\drishti-orig\data` (the project's own `data` folder) |
 | Server | `http://localhost:18480` |
 | Console (the browser address) | `http://localhost:17480` |
@@ -72,7 +72,9 @@ On a cluster, a connector edit made in Admin is a shared edit (Admin → Connect
 2. **Nothing inside needs unzipping.** The test data in `data\testdata` is `.jsonl.gz`; Drishti reads the `.gz` files
    directly.
 3. Create the folder `C:\Users\asinh09\drishti-private\endur\` and put your real ENDUR `.jsonl` files in it, **one file per
-   business date**, named by the date, for example `2026-10-16.jsonl`.
+   business date**, named by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): the table, a dot, the date,
+   for example `trade_endur.2026-10-16.jsonl` (or `.jsonl.gz`, or `.jsonl.zip`; several dates may also come as one tar of
+   `trade_endur\2026-10-16\` folders). A file named only by its date (`2026-10-16.jsonl`) is refused, with the name to give it.
 
 You should see: `drishti-orig` contains `drishti-server`, `drishti-console`, `tools`, `config`, `data`, `run-configs`.
 
@@ -245,10 +247,10 @@ C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.
    `trade_murex` stay.)
 2. PyCharm, top-right drop-down → **Load ENDUR file into the lake** → **Edit Configurations…**. The configuration runs
    the script `tools\drishti.py` (field *Script path*); the line below is what its *Parameters* box holds. Change only
-   the two things that name your file — the path after `--from` and the date after `--as-of` — for example:
+   the one thing that names your file — the path after `--from`; its business date comes from its name — for example:
 
    ```
-   lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack $PROJECT_DIR$/../config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/../data/delta
+   lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack $PROJECT_DIR$/../config/packs/trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake $PROJECT_DIR$/../data/delta
    ```
 
    → **OK** → ▶ (Run).
@@ -256,16 +258,17 @@ C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.
    Terminal instead (one line, from any folder; full paths, so `$PROJECT_DIR$` is not needed):
 
    ```
-   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl --as-of 2026-10-15 --pack C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta
+   C:\Users\asinh09\IdeaProjects\drishti-orig\drishti-console\.venv\Scripts\python.exe C:\Users\asinh09\IdeaProjects\drishti-orig\tools\drishti.py lake build --from C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl --pack C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\trading --connector trade-endur --key TRADE_ID --partition-by PRODUCT_TYPE --mode overwrite-dates --lake C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta
    ```
 
-   What the options mean: `--from` your file; `--as-of` its business date; `--pack` the trading pack, whose schema
+   What the options mean: `--from` your file (its business date is the date in its name; `--as-of 2026-10-15` would give it
+   another); `--pack` the trading pack, whose schema
    checks each trade; `--connector trade-endur` the table it feeds (`data\delta\trading\trade_endur`); `--key TRADE_ID`
    the id field; `--partition-by PRODUCT_TYPE` one folder per product type; `--mode overwrite-dates` replaces that
    date if it was loaded before; `--lake …\data\delta` the lake folder the server reads (the project's `data\delta`; the
    table lands in `data\delta\trading\trade_endur`). `--pack` and `--lake` are full paths (`$PROJECT_DIR$/..` in the
    configuration), so the folder you run from does not matter.
-3. Repeat step 2 for **each** of your files (each with its own path and date).
+3. Repeat step 2 for **each** of your files (each with its own path).
 
 **The same load with the parallel loader (2.9.6), two ways.** The Python lines above stay the way to do it; these load the same file
 into the same table with the Java loader (every core; the table is the same, so either may be used, and running both is safe: each
@@ -279,15 +282,15 @@ replaces the date). Your file must be JSON Lines (one trade a line, as `.jsonl`)
 
   ```yaml
   source:
-    files: 'C:\Users\asinh09\drishti-private\endur\2026-10-15.jsonl'
+    files: 'C:\Users\asinh09\drishti-private\endur\trade_endur.2026-10-15.jsonl'
     pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\trading'
     connector: trade-endur
-    as-of: 2026-10-15
     partition-by: [PRODUCT_TYPE]
   target:
     format: delta
     lake: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\delta'
     kind: trade
+    mode: replace           # the date replaced if it was loaded before (append, the default, would add the rows again)
   memory: {budget-mb: 2048, spill-dir: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\tmp\spill'}
   ```
 
@@ -654,27 +657,27 @@ Save as `C:\Users\asinh09\drishti-private\load-pv.yaml` (the market-risk pack's 
 
 ```yaml
 source:
-  files: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\testdata\market-risk\scenario-pv\*.jsonl.gz'
+  files: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\testdata\market-risk\scenario-pv\scenario-pv-2026-09-30.tar'
   pack: 'C:\Users\asinh09\IdeaProjects\drishti-orig\config\packs\market-risk'
   id: SCENARIO_PV_ID
-  date: BUSINESS_DATE
 target:
   format: delta
   lake: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\scratch-lake'
   kind: scenario-pv
+  mode: replace             # each date of the input replaced (append is the default)
 memory: {budget-mb: 512, spill-dir: 'C:\Users\asinh09\IdeaProjects\drishti-orig\data\tmp\spill'}
 ```
 
 | # | Do | You should see |
 |---|---|---|
-| 1 | `java -Xmx2g "-Djava.io.tmpdir=data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" -jar $jar --config C:\Users\asinh09\drishti-private\load-pv.yaml` | `2026-09-30  1,339 rows  (version 0, …)`, `rejected: 0`, a line per stage (read, decompress, parse, sortSpill, write, commit) with its threads and rate, `memory: budget 512 MB, peak heap used …`, and the last line `… lake-build ok exit=0 … kind=scenario-pv engine=java-loader …`; `data\scratch-lake\risk\scenario-pv\_delta_log\00000000000000000000.json` exists |
-| 2 | The same command again | `version 1`: the date replaced in one commit, still 1,339 rows (`_delta_log` has `…01.json`) |
+| 1 | `java -Xmx2g "-Djava.io.tmpdir=data\tmp\server" "-Dloader.main=com.ash.drishti.lakeload.LakeLoad" -jar $jar --config C:\Users\asinh09\drishti-private\load-pv.yaml` | `2026-09-30  2,678 rows  (version 0, …)` (the tar's date folder: the normal set's 1,339 and the stress set's 1,339), `rejected: 0`, a line per stage (read, decompress, parse, sortSpill, write, commit) with its threads and rate, `memory: budget 512 MB, peak heap used …`, and the last line `… lake-build ok exit=0 … kind=scenario-pv engine=java-loader …`; `data\scratch-lake\risk\scenario-pv\_delta_log\00000000000000000000.json` exists |
+| 2 | The same command again | `version 1`: the date replaced in one commit, still 2,678 rows (`_delta_log` has `…01.json`) |
 | 3 | The same command with `--set memory.budget-mb=16` at the end | the same rows; `spilled` above 0 MB in the memory line (the rows sorted on disk); the table the same |
 | 4 | With `--set target.format=iceberg --set target.lake=C:\Users\asinh09\IdeaProjects\drishti-orig\data\scratch-iceberg` | `data\scratch-iceberg\risk\scenario-pv\metadata` exists; the same rows |
 | 5 | Open `data\scratch-lake\_drishti-lake\runs\` | the run's `<run>.json` (the summary: `throughput`, `memory`) and `<run>.manifest.json` (each file with its first and last `LEGAL_ENTITY`, `DESK`, id) |
-| 6 | `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\scenario-pv --pack config\packs\market-risk --kind scenario-pv --key SCENARIO_PV_ID --date BUSINESS_DATE --lake data\scratch-lake2 --engine java` | `engine: java-loader`, 1,339 rows, exit 0: `lake build` driving the loader |
+| 6 | `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\scenario-pv --pack config\packs\market-risk --kind scenario-pv --key SCENARIO_PV_ID --mode overwrite-dates --lake data\scratch-lake2 --engine java` | `engine: java-loader`, 5,369 rows over the three dates (each tar's folders), exit 0: `lake build` driving the loader |
 | 7 | Put a line `{not json` into a copy of one file, load it with `--set rejects.file=data\tmp\rejects.jsonl` | exit 2, `rejected 1: not JSON (…)` with `e.g. <file>:<line>`; the line in `data\tmp\rejects.jsonl` |
-| 8 | Into Iceberg through `lake build`: `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\cob-2026-09-30.part-001.jsonl.gz --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch2 --format iceberg --engine java` (or the Java loader on its own, row 4: `target.format: iceberg`) | the rows and no rejects, `engine: java-loader`; `data\iceberg\scratch2\pnl-vector\metadata` exists |
+| 8 | Into Iceberg through `lake build`: `…\.venv\Scripts\python.exe tools\drishti.py lake build --from data\testdata\market-risk\pnl-vector\pnl-vector-2026-09-30.tar --pack config\packs\market-risk --connector risk-store --kind pnl-vector --lake data\iceberg --domain scratch2 --format iceberg --engine java` (or the Java loader on its own, row 4: `target.format: iceberg`) | the rows and no rejects, `engine: java-loader`; `data\iceberg\scratch2\pnl-vector\metadata` exists |
 
 Delete `data\scratch-lake`, `data\scratch-lake2`, `data\scratch-iceberg` and `data\iceberg\scratch2` afterwards (the server does not read them).
 

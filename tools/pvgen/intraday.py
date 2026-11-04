@@ -24,8 +24,8 @@ amended (quantity and every PV moved by a factor of 0.8 to 1.2), new (a copy of 
 (``TRADE_STATUS: CANCELLED``, the vector null), in the ``--mix`` proportions; each row marked ``RUN_KIND: INTRADAY``, the batch's own
 ``BATCH_ID`` (``I-<date>-001``) and a ``COMPUTED_AT`` a minute after the batch before (the first five minutes after the morning run).
 A trade's update comes as scenario PVs when its system is in ``--pv-systems`` (default ENDUR), else as a P&L vector, the engine taking
-either. ``--seed`` makes the same batches every run. Files: ``<out>/intraday-<date>/I-<date>-<NNN>.<kind>.jsonl`` (one kind a
-file; ``.jsonl.gz`` with ``--gzip``). ``--lake`` appends each batch to the lake (``drishti.py lake build --mode append``), ``--server``
+either. ``--seed`` makes the same batches every run. Files: ``<out>/intraday-<date>/I-<date>-<NNN>/<kind>.<date>.jsonl`` (one kind a
+file, named by the load rules, docs/architecture/DATA_LOAD_RULES.md; a batch a folder; ``.jsonl.gz`` with ``--gzip``). ``--lake`` appends each batch to the lake (``drishti.py lake build --mode append``), ``--server``
 raises its data-load signal (the VaR engine applies it without a reload), ``--every 30s`` drips them. Guide:
 docs/guides/VAR_GUIDE.md section 15.12."""
 from __future__ import annotations
@@ -87,7 +87,7 @@ def main(argv=None) -> int:
         if a.dry_run:
             continue
         for kind, krows in by_kind.items():
-            f = C.write_jsonl(folder / f"{batch_id}.{kind}.jsonl", krows, a.gzip)
+            f = C.write_jsonl(folder / batch_id / f"{kind}.{morning.day}.jsonl", krows, a.gzip)
             if a.lake:
                 rc = rc or C.lake_build(f, kind, a.lake, "append", a.server, C.token_of(a.token_file), print)
         if a.lake and wait and n < a.batches - 1:

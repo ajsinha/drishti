@@ -197,6 +197,110 @@ final class NativeMaintenance {
         return rewritten;
     }
 
+    /**
+     * Undoes load {@code id} (docs/architecture/DATA_LOAD_RULES.md section 6.3): each day whose files may hold its rows ({@code _load_id}
+     * bounds) is rewritten without them, one commit a day; a day the load replaced (its commit an overwrite naming the load in
+     * {@code drishti.load-ids}) gets the rows it had before back, with the rows later loads appended kept. Returns a line per day undone.
+     */
+    static List<Map<String, Object>> undo(Table t, String id, Path spillDir, long budget, boolean dryRun) {
+        t.refresh();
+        List<Map<String, Object>> out = new ArrayList<>();
+        if (t.currentSnapshot().isEmpty() || t.metadata().schema().field(KindTable.LOAD_ID) == null) {
+            return out;
+        }
+        int fileRows = NativeLayout.fileRows(t);
+        try (ExecutorService pool = IcebergTable.virtualPool()) {
+            NativeKindTable k = new NativeKindTable(t, pool);
+            Layout l = layout(t, pool);
+            List<NestedField> promoted = t.metadata().schema().columns().stream().filter(f -> f.id() > 3).toList();
+            for (Day day : l.days().values()) {
+                boolean maybe = false;
+                for (int f = 0; f < day.files().size() && !maybe; f++) {
+                    String[] b = k.textBounds(l, day, f, KindTable.LOAD_ID);
+                    if (b[0] == null || b[1] == null) {                  // no bounds (a file written before the column): its column is read
+                        boolean[] hit = {false};
+                        k.scan(l, day, f, List.of(KindTable.LOAD_ID), null, r -> hit[0] |= r[0] != null && id.equals(r[0].toString()));
+                        maybe = hit[0];
+                    } else {
+                        maybe = b[0].compareTo(id) <= 0 && b[1].compareTo(id) >= 0;
+                    }
+                }
+                if (!maybe || LocalDate.MIN.equals(day.date())) {
+                    continue;
+                }
+                LocalDate date = day.date();
+                try (SortedRuns rows = new SortedRuns(spillDir, "undo-" + date)) {
+                    long[] removed = {0};
+                    for (int f = 0; f < day.files().size(); f++) {
+                        copy(k, l, day, f, promoted, rows, budget, id, removed);
+                    }
+                    if (removed[0] == 0) {
+                        continue;
+                    }
+                    long restored = 0;
+                    Long before = replacedFrom(t, id, date);
+                    if (before != null) {
+                        Layout old = k.layout(before, true);
+                        Day was = old.days().get(date);
+                        if (was != null) {
+                            long n0 = rows.rows();
+                            for (int f = 0; f < was.files().size(); f++) {
+                                copy(k, old, was, f, promoted, rows, budget, null, null);
+                            }
+                            restored = rows.rows() - n0;
+                        }
+                    }
+                    Map<String, Object> line = new LinkedHashMap<>();
+                    line.put("date", date.toString());
+                    line.put("removed", removed[0]);
+                    line.put("restored", restored);
+                    line.put("replaced", before != null);
+                    out.add(line);
+                    if (dryRun) {
+                        continue;
+                    }
+                    Set<String> read = new HashSet<>();
+                    Set<String> remove = new HashSet<>();
+                    for (FileTask task : NativeKindTable.tasks(day)) {
+                        read.add(task.file().path());
+                        remove.add(task.file().path());
+                        for (DataFile d : task.deletes()) {
+                            if (date.equals(NativeLayout.dateOf(t, d))) {
+                                read.add(d.path());
+                                remove.add(d.path());
+                            }
+                        }
+                    }
+                    if (rows.rows() == 0) {
+                        Operations.deletePartitions(t, f -> date.equals(NativeLayout.dateOf(t, f)), Map.of("drishti.undo", id));
+                        continue;
+                    }
+                    List<DataFile> files = NativeLayout.writeDay(t, date, rows.merged(), fileRows);
+                    try {
+                        Operations.rewriteFiles(t, remove, files, f -> date.equals(NativeLayout.dateOf(t, f)), read);
+                    } catch (RuntimeException e) {
+                        files.forEach(f -> deleteQuietly(t, f.path()));
+                        throw e;
+                    }
+                }
+            }
+        }
+        return out;
+    }
+
+    /** The snapshot before the commit that replaced {@code date} with load {@code id}'s rows (an overwrite naming it); null when it appended. */
+    private static Long replacedFrom(Table t, String id, LocalDate date) {
+        for (com.ash.drishti.iceberg.meta.Snapshot s : t.metadata().snapshots()) {
+            String ids = s.summary().getOrDefault("drishti.load-ids", "");
+            String dates = s.summary().getOrDefault("drishti.business-dates", "");
+            if ("overwrite".equals(s.operation()) && java.util.Arrays.asList(ids.split(",")).contains(id)
+                    && java.util.Arrays.asList(dates.split(",")).contains(date.toString())) {
+                return s.parentId();
+            }
+        }
+        return null;
+    }
+
     private static void deleteQuietly(Table t, String path) {
         try {
             String r = t.io().resolve(path);
@@ -239,6 +343,12 @@ final class NativeMaintenance {
 
     /** Copies one file's live rows (deletes applied) into the sorter, filling promoted columns the file lacks from the document. */
     private static void copy(NativeKindTable k, Layout l, Day day, int file, List<NestedField> promoted, SortedRuns rows, long budget) {
+        copy(k, l, day, file, promoted, rows, budget, null, null);
+    }
+
+    /** As above, leaving out the rows of load {@code skip} (counted in {@code skipped[0]}); null: every row. */
+    private static void copy(NativeKindTable k, Layout l, Day day, int file, List<NestedField> promoted, SortedRuns rows, long budget, String skip,
+            long[] skipped) {
         DataFile f = NativeKindTable.tasks(day).get(file).file();
         List<String> cols = new ArrayList<>(List.of(IcebergLayout.ID, IcebergLayout.DOC));
         promoted.forEach(p -> cols.add(p.name()));
@@ -261,6 +371,10 @@ final class NativeMaintenance {
                     v = n == null || n.isNull() || n.isContainerNode() ? null : n.isNumber() ? (Object) n.asDouble() : n.asText();
                 }
                 values.put(path, v);
+            }
+            if (skip != null && skip.equals(String.valueOf(values.get(KindTable.LOAD_ID)))) {
+                skipped[0]++;
+                return;
             }
             rows.add(new Row(r[0].toString(), r[1] == null ? null : r[1].toString(), values));
             if (rows.bufferedBytes() > budget) {

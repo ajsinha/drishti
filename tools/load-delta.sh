@@ -38,7 +38,7 @@ BUILD="$(dirname "$ROOT")/build"
 # 1. generate: the history as JSONL rows; 2. load them (the restatement as a second commit)
 uv run -q --with pyyaml python tools/packgen/banking/make_data.py --lake "$ROOT" --rows "$BUILD/lake-rows" --no-load
 uv run -q "${WITH[@]}" python tools/samplegen/load_rows.py --root "$ROOT" \
-  --rows "$BUILD/lake-rows/banking-history.jsonl" --restated "$BUILD/lake-rows/banking-restated.jsonl"
+  --rows "$BUILD/lake-rows/banking-history.tar" --restated "$BUILD/lake-rows/banking-restated.tar"
 if [[ -n "$TRADES" ]]; then
   # the book: one JSONL file a day under $BUILD/bulk, then each through lake build
   uv run -q "${WITH[@]}" python tools/samplegen/bulk_trades.py --root "$ROOT" --out "$BUILD/bulk" --trades "$TRADES" --days "$DAYS"

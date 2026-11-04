@@ -165,7 +165,7 @@ A legal entity from its LEI record: key facts, addresses, registration and renew
 
 **To review (3)**
 
-- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/gleif/lei-entity/snapshot-2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2001 documents (1 samples and 2000 test-data documents (data/testdata/gleif/lei-entity/lei-entity.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: CATEGORY, OTHER_NAMES[].TYPE, PARENT_EXCEPTIONS[].LEVEL, PARENT_EXCEPTIONS[].REASON, PARENT_EXCEPTIONS[].MEANING, PARENTS[].RELATIONSHIP: confirm they are closed lists.
 
@@ -323,7 +323,7 @@ One consolidation relationship from GLEIF's level 2 data: the child, its direct 
 
 **To review (3)**
 
-- required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/snapshot-2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-relationship/lei-relationship.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: LEVEL, REGISTRATION_STATUS, ACCOUNTING_STANDARD, PERIODS[].TYPE: confirm they are closed lists.
 
@@ -441,6 +441,6 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it.
 
 **To review (3)**
 
-- required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-mapping/snapshot-2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/gleif/lei-mapping/lei-mapping.2026-10-25.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - a snapshot refreshed when tools/publicdata/gleif.py runs: confirm the refresh cadence.
 - enum values inferred from the data, not from a glossary: TYPE, MAPPING_FILE: confirm they are closed lists.

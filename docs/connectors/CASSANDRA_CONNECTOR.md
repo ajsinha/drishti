@@ -127,9 +127,11 @@ The last line names the rows, the days (a kind's business day counts once per ki
 
 How the loader works:
 
-- **Its input is JSON lines**, one per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`, the format of
-  `make_data.py --jsonl` and `bulk_trades.py --jsonl` (the Aerospike loader's too). The script sends the samples and the book as **one
-  stream**, so each business day is loaded once.
+- **Its input is loader rows**, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path: value}}`, as
+  `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them: tars of `<kind>/<YYYY-MM-DD>/rows.jsonl` folders (the
+  Aerospike loader's input too). The script gives the loader **the folder holding both tars**, read in one load, so each business day is
+  loaded once.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **A day appears whole or not at all.** Each day of the input gets a new **generation** (the seconds since 2020, or the current one plus
   one if that is larger). The day's rows go to the new generation's partitions; its `entity_days` rows are written; and only when every
   write has succeeded is the `kind_days` row naming the new generation written. Readers follow `kind_days`, so they read the old
@@ -215,7 +217,7 @@ kept, so `versions` is 1 and `knownAt` is refused (`DRS-1007`).
 | Way | How | When |
 |---|---|---|
 | **TTL** | `--ttl-days N`: every row, `entity_days` and `kind_days` row is written `USING TTL`; with `--create`, new tables get `TimeWindowCompactionStrategy` with one-day windows, so whole SSTables expire together | a fixed retention; nothing to run |
-| **Dropped days** | `--keep-days N`: after the load, each loaded kind keeps its newest N days on or before `--as-of` (today); older days' partitions and `kind_days` rows are deleted | a retention that changes; Amazon Keyspaces (its own TTL instead of a compaction choice) |
+| **Dropped days** | `--keep-days N`: after the load, each loaded kind keeps its newest N days on or before the newest business date of the load (a plain file's date, a tar's newest folder); older days' partitions and `kind_days` rows are deleted | a retention that changes; Amazon Keyspaces (its own TTL instead of a compaction choice) |
 
 Dropping more than half of a kind's days needs `--force-drop` (`--max-drop-share`), as for every loader. `entity_days` rows may outlive
 their day's data; such a day is not in the catalogue, so a read passes over it. Only whole partitions (and catalogue rows) are ever
@@ -248,7 +250,7 @@ a read or search on a day Cassandra does not hold falls through to the lake, as 
 ## 9. Measured results
 
 **Measured at 10,000 trades a day (the local limit), on 2026-10-20**, with `CassandraScaleBench` (in the plugin's tests; run it with
-`-Ddrishti.cassandra.bench=<file>` over `bulk_trades.py --trades 10000 --days 3 --jsonl <file>`): a 24-thread workstation shared with
+`-Ddrishti.cassandra.bench=<file>` over `bulk_trades.py --trades 10000 --days 3 --jsonl <file>.tar`): a 24-thread workstation shared with
 other work, one Apache Cassandra 5.0.6 node in Docker with a 1 GB heap, 30,000 production-shaped trade documents (about 18 KB each as
 JSON lines, 546 MB in all) over three business days, 128 buckets a day, 16 promoted columns with values (two more promoted paths are
 null in every trade, so they get no column). Times are at the connector (no HTTP), medians of 25 (5 for whole-day reads):
@@ -303,7 +305,7 @@ Connectors → the connector → Pool its connections.
 | a new day does not appear | the catalogue is re-read every `refresh-seconds`; or the load failed before `kind_days` was written | wait, or Admin → Caches → purge; check the loader's last line |
 | searches say `partial: true` | a field the query reads is not a promoted column | add it to `layout.<kind>.columns` and reload with `--create` |
 | loader: `… does not exist: run the CQL above` | no `--create` | have an administrator run the printed CQL, or pass `--create` |
-| loader: `retention would drop …` | `--keep-days` would drop more than half of the days | check `--as-of` and the dates, or pass `--force-drop` |
+| loader: `retention would drop …` | `--keep-days` would drop more than half of the days | check the dates of the load, or pass `--force-drop` |
 | loader warning `a partition holds about … MB` | `buckets` too low for the book | load with the `--buckets KIND=N` it names |
 
 ## Security: TLS, log-ins and connections

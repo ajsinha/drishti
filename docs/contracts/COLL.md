@@ -311,7 +311,7 @@ As NSET.md section 11. Holdings (which bonds a counterparty posts) are visible a
 the CSA's call rule at the business date (so the expected margin call is small, a few sets deliberately off: one under-collateralised by
 more than the MTA, one with an ineligible corporate bond, one breaching a 25% concentration limit, one with foreign-currency cash, one
 pending settlement); assets drawn from the market-data pack's bonds (G7 governments mostly) and cash; IM holdings for the `VM+IM` CSAs.
-Files `data/testdata/counterparty-risk/{collateral-balance,collateral-holding}/cob-2026-09-30.jsonl.gz`.
+Files `data/testdata/counterparty-risk/{collateral-balance,collateral-holding}/<kind>.2026-09-30.jsonl.gz` (the load rules' names).
 
 ## 14. Retiring the stored version
 

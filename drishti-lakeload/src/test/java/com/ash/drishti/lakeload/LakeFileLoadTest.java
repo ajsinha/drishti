@@ -21,6 +21,7 @@ import com.ash.drishti.lakeconfig.Lakes;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -30,7 +31,7 @@ import org.junit.jupiter.api.io.TempDir;
 /**
  * The loader writing through a lake file (docs/guides/LAKE_GUIDE.md): the table's place and layout from {@code config/lakes/<lake>.yaml},
  * a load key that contradicts it refused with both values named, a kind the lake has no entry for refused, and {@code load-mode: append}
- * adding rows with each batch committed once (a repeated batch skipped, the earlier files kept).
+ * adding rows with each batch committed once (a repeated batch skipped, the earlier files kept); the entry's mode the table's default.
  */
 class LakeFileLoadTest {
 
@@ -106,7 +107,7 @@ class LakeFileLoadTest {
     void anAppendCommitsEachBatchOnceAndKeepsTheEarlierRows() throws Exception {
         lakeFile("append", null);
         Path table = tmp.resolve("lake/risk/scenario-pv");
-        Path in = PvData.write(tmp.resolve("in/pv.jsonl"), PvData.lines(100, 10, 2, 1));
+        Path in = PvData.byDate(tmp.resolve("in"), PvData.lines(100, 10, 2, 1));      // one file a business date (the load rules)
         JsonNode first = LakeLoadTest.load(tmp, config(in), "target.batch-id=b1");
         assertThat(first.path("exit").asInt()).as(first.path("said").asText() + first.path("error").asText()).isZero();
         long after1 = commits(table);
@@ -116,7 +117,7 @@ class LakeFileLoadTest {
         assertThat(again.path("exit").asInt()).as(again.path("error").asText()).isZero();
         assertThat(commits(table)).isEqualTo(after1);
 
-        Path in2 = PvData.write(tmp.resolve("in2/pv.jsonl"), PvData.lines(100, 10, 2, 7));
+        Path in2 = PvData.byDate(tmp.resolve("in2"), PvData.lines(100, 10, 2, 7));
         JsonNode second = LakeLoadTest.load(tmp, config(in2), "target.batch-id=b2");      // another batch: added, nothing removed
         assertThat(second.path("exit").asInt()).as(second.path("error").asText()).isZero();
         assertThat(commits(table)).isEqualTo(after1 + 2);
@@ -124,12 +125,20 @@ class LakeFileLoadTest {
         assertThat(last).doesNotContain("\"remove\"").contains("drishti-batch:b2:");
     }
 
+    /**
+     * The mode (DATA_LOAD_RULES.md section 3): the lake file's entry is the table's default, below an explicit target.mode and above
+     * target.default-mode (the inbox's); without a batch id an append is not guarded, each run's rows carry their load id.
+     */
     @Test
-    void anAppendWithoutABatchIdIsRefused() throws Exception {
+    void theEntrysModeIsTheTablesDefaultAndAnExplicitModeWins() throws Exception {
         lakeFile("append", null);
-        Path in = PvData.write(tmp.resolve("in/pv.jsonl"), PvData.lines(20, 5, 1, 1));
-        JsonNode s = LakeLoadTest.load(tmp, config(in));
-        assertThat(s.path("exit").asInt()).isNotZero();
-        assertThat(s.path("said").asText() + s.path("error").asText()).contains("batch-id");
+        Path in = PvData.byDate(tmp.resolve("in"), PvData.lines(20, 5, 1, 1));
+        JsonNode s = LakeLoadTest.load(tmp, config(in), "target.default-mode=replace-date");
+        assertThat(s.path("exit").asInt()).as(s.path("said").asText() + s.path("error").asText()).isZero();
+        assertThat(List.of(s.path("mode").asText(), s.path("modeFrom").asText())).containsExactly("append", "the lake file's entry");
+        JsonNode r = LakeLoadTest.load(tmp, config(in), "target.mode=replace-date");
+        assertThat(r.path("exit").asInt()).as(r.path("said").asText() + r.path("error").asText()).isZero();
+        assertThat(List.of(r.path("mode").asText(), r.path("modeFrom").asText())).containsExactly("overwrite-dates",
+                "given (--mode or the .ready file)");
     }
 }

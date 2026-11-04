@@ -23,7 +23,7 @@ One trade's (or one position's) P&L under every scenario of the date's scenario 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/pnl-vector/` + `cob-YYYY-MM-DD.part-NNN.jsonl.gz`, `stress-cob-YYYY-MM-DD.part-NNN.jsonl.gz` |
+| Path | `data/testdata/market-risk/pnl-vector/` + `pnl-vector-YYYY-MM-DD.tar!/pnl-vector/YYYY-MM-DD/cob.part-NNN.jsonl.gz`, `pnl-vector-YYYY-MM-DD.tar!/pnl-vector/YYYY-MM-DD/stress-cob.part-NNN.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `VECTOR_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

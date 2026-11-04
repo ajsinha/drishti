@@ -206,9 +206,10 @@ mongodb: loaded 30,000 rows into database drishti in 3 s
 
 How the loader works:
 
-- **Its input is JSON lines**, one per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
-  value}}`, as `make_data.py --jsonl` and `bulk_trades.py --jsonl -` write them (the same input as the Aerospike loader).
-  `-` reads standard input, so a generated book is piped in and never written to a file.
+- **Its input is loader rows**, one JSON line per entity per day: `{"domain", "kind", "id", "date", "doc", "columns": {path:
+  value}}`, as `make_data.py --jsonl FILE.tar` and `bulk_trades.py --jsonl FILE.tar` write them: tars of
+  `<kind>/<YYYY-MM-DD>/rows.jsonl` folders (the same input as the Aerospike loader). `-` reads standard input: one kind on one date.
+- **Each row is filed under a business date from outside it** (the load rules, [DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s): a tar of `<kind>/<YYYY-MM-DD>/` folders files each row under its folder's date, and a plain file (`<kind>.<YYYY-MM-DD>.jsonl[.gz]`, or `-` for standard input) is one kind on one date: `--as-of`, else its `.ready` file's `business-date:`, else the date in its name, else the business today. The row's own `date` stays in the row as data; rows whose date differs are loaded under the file's date and counted (*N rows of trade.jsonl carried another date in date; loaded under 2026-09-30*). A plain file of two kinds is refused (*send a tar*), and so is `--as-of` with a tar (its folders name the dates). A folder argument loads each `.tar`, `.tgz`, `.tar.gz`, `.jsonl` and `.jsonl.gz` in it, in name order. Retention (`--keep-days`, `--ttl-days`, `--keep-months`) counts back from `--as-of`, else the business today.
 - **Each line becomes a replace-or-insert by `_id`** in the domain's collection and, when it has promoted fields, another in
   `<domain>_columns`. Writes go in unordered bulk writes of `--batch` (1,000) operations, at most `--in-flight` (16)
   batches at once on virtual threads; the connection pool is sized above that.
@@ -320,8 +321,8 @@ netting set `NS-SUMMIT-NY` **33–59 ms**.
 Two ways, both set at load time; the connector has no retention setting.
 
 **`--keep-days N`**: after loading, for every kind of every domain collection in the database, the loader finds the
-kind's dates (a distinct scan) and deletes the days older than its N newest on or before `--as-of` (default: today in
-the business zone; a day after it is neither counted nor deleted) from both collections. Every kind is checked first:
+kind's dates (a distinct scan) and deletes the days older than its N newest on or before the newest business date of the load (a plain file's date, a tar's newest folder; a day after
+it is neither counted nor deleted) from both collections. Every kind is checked first:
 when one would lose more than `--max-drop-share` (0.5) of its days, nothing is deleted and the load fails, unless
 `--force-drop`. The delete is
 `deleteMany({kind, date: {$lt: cutoff}})`, a range of the `day_ids` index. Measured: 21,787 documents (one trade day and
@@ -637,7 +638,7 @@ In the connector file's `settings:` (see [As a connector file](#as-a-connector-f
 Every setting of `mongodb`, with its type, default and meaning, is in the plugin's generated README: [plugins/drishti-plugin-mongodb/README.md, Settings](../../plugins/drishti-plugin-mongodb/README.md#settings) (from the settings catalogue Admin → Connectors builds its form from). The shared `tls.*` settings are in [TLS.md](TLS.md).
 
 Loader options (`tools/load-mongodb.sh` and `MongoLoader`): `--keep-days N`, `--ttl-days N`, `--doc-format string|bson`
-(`string`), `--batch N` (1000), `--in-flight N` (16), `--as-of yyyy-MM-dd` (today in the business zone), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
+(`string`), `--batch N` (1000), `--in-flight N` (16), `--as-of yyyy-MM-dd` (a plain file's business date, refused for a tar; nothing else), `--future-days N` (1), `--zone Z` (`DRISHTI_BUSINESS_ZONE`, else `America/New_York`), `--max-drop-share F` (0.5), `--force-drop`, `--trades N --days D` (the script only).
 
 ## 13. Checklist for production
 

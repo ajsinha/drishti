@@ -446,7 +446,7 @@ total liabilities line, it is derived as liabilities and equity less total
 equity. Banks and insurers report revenue under several tags; where none of the standard ones is filed the revenue is left empty.
 
 **Where the data lives.** The documents are committed as Drishti's standard test data: one gzipped JSON Lines snapshot per
-kind, `data/testdata/us-equities/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`
+kind, `data/testdata/us-equities/<kind>/<kind>.<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`. `python3 tools/drishti.py lake demo`
 (or `python3 tools/build_demo_lakes.py`) builds them into the demo lake, the same documents on every business day it holds, and the
 pack's Delta connector `us-equities-store` serves them. Nothing is served by the demo connector: a server with `DRISHTI_DEMO_ENABLED=false`
 opens every page of the pack from the lake. The pack's `samples/` folder keeps only a few reference documents for this guide and the

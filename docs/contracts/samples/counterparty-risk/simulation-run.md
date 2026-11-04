@@ -23,7 +23,7 @@ An upstream exposure simulation of a business date: its paths, its grid of futur
 
 |  |  |
 |---|---|
-| Path | `data/testdata/counterparty-risk/simulation-run/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/counterparty-risk/simulation-run/` + `simulation-run.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `RUN_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

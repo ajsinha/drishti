@@ -34,6 +34,8 @@ from datetime import date, timedelta
 from pathlib import Path
 
 import numpy as np
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "lake"))
+import feedfiles as FF  # noqa: E402  (our dated feed files and tars)
 
 N_SCEN = 509
 FACTORS = 40
@@ -220,26 +222,28 @@ def main(argv=None) -> int:
     bank = Bank(a)
     for d_index, d in enumerate(a.dates.split(",")):
         day = date.fromisoformat(d)
-        stem = f"cob-{d}"
+        stem = f"{{kind}}.{d}"                       # the load rules' name, <table>.<YYYY-MM-DD>.jsonl.gz (DATA_LOAD_RULES.md section 10)
         if "scenario-set" in kinds:
             ds = scenario_dates(day)
-            write_lines(out / "scenario-set" / f"{stem}.jsonl.gz", [json.dumps({
+            write_lines(out / "scenario-set" / f"{stem.format(kind='scenario-set')}.jsonl.gz", [json.dumps({
                 "SCENARIO_SET_ID": "HS-509", "BUSINESS_DATE": d, "SCENARIO_DATES": ds, "SCENARIO_COUNT": N_SCEN, "WINDOW_START": ds[0],
                 "WINDOW_END": ds[-1], "HORIZON_DAYS": 1, "REVALUATION": "full", "WEIGHTS": None, "SOURCE_BATCH": f"B-{d}-01",
                 "DESCRIPTION": "Historical simulation, 509 business days, equal weights (benchmark)"})])
         if "risk-hierarchy" in kinds:
-            n = write_lines(out / "risk-hierarchy" / f"{stem}.jsonl.gz", (json.dumps(r) for r in hierarchy(bank, d)))
+            n = write_lines(out / "risk-hierarchy" / f"{stem.format(kind='risk-hierarchy')}.jsonl.gz", (json.dumps(r) for r in hierarchy(bank, d)))
             print(f"{d}: risk-hierarchy {n:,} nodes", flush=True)
         if "portfolio" in kinds:
-            n = write_lines(out / "portfolio" / f"{stem}.jsonl.gz", (json.dumps(r) for r in portfolios(a, bank, d)))
+            n = write_lines(out / "portfolio" / f"{stem.format(kind='portfolio')}.jsonl.gz", (json.dumps(r) for r in portfolios(a, bank, d)))
             print(f"{d}: portfolio {n:,}", flush=True)
         if "var-limit" in kinds:
-            write_lines(out / "var-limit" / f"{stem}.jsonl.gz", (json.dumps(r) for r in limits(bank, d)))
+            write_lines(out / "var-limit" / f"{stem.format(kind='var-limit')}.jsonl.gz", (json.dumps(r) for r in limits(bank, d)))
         if "pnl-vector" in kinds:
-            total = 0
-            for part, lines in vectors(a, bank, day, d_index):
-                total += write_lines(out / "pnl-vector" / f"{stem}.part-{part + 1:03d}.jsonl.gz", lines)
-            print(f"{d}: pnl-vector {total:,} rows in {a.parts} files", flush=True)
+            total, parts = 0, []
+            for part, lines in vectors(a, bank, day, d_index):         # the date's parts, then one tar of pnl-vector/<date>/ (the rules)
+                parts.append(out / "pnl-vector" / f"part-{part + 1:03d}.jsonl.gz")
+                total += write_lines(parts[-1], lines)
+            FF.pack_tar(out / "pnl-vector" / FF.tar_name("pnl-vector", d), "pnl-vector", {d: parts})
+            print(f"{d}: pnl-vector {total:,} rows in {a.parts} files ({FF.tar_name('pnl-vector', d)})", flush=True)
     return 0
 
 

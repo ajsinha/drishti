@@ -24,11 +24,12 @@ samples/ (catalog.jsonl and samples/<kind>.jsonl, one document a line, up to --c
 titles and glossary entries with TODO text for every field the Sutras show) and a README.md. Then it runs
 `sutra lint` and `sutra test` on the new pack and prints the result.
 
---date FIELD (or kind=FIELD,...) names the business-date field of each document. The pack then reads from a dated
-Delta lake (business_date partition; the business-date picker and history work); --lake DIR writes the documents
-into such a lake (<DIR>/<pack>/<kind>/, partitioned by that date, in the layout pack.yaml declares) so
-DRISHTI_DELTA_ROOT=DIR serves it. Needs: uv run --with deltalake --with pyarrow --with pyyaml. Documents without the
-date are reported and left out of the lake.
+--date FIELD (or kind=FIELD,...) names the field each document carries its own date in: the pack then reads from a dated Delta lake
+(business_date partition; the business-date picker and history work), and the field spreads the samples over dates. --lake DIR (or
+--store files --files-root DIR) writes every kind into such a store (<DIR>/<pack>/<kind>/, in the layout pack.yaml declares), so
+DRISHTI_DELTA_ROOT=DIR serves it; each file goes under its business date by the load rules (docs/architecture/DATA_LOAD_RULES.md: the
+date in its name, trade.2026-11-03.jsonl, else the business today), --date or not: a date field is only counted when a row says another
+date. Needs: uv run --with deltalake --with pyarrow --with pyyaml.
 """
 from __future__ import annotations
 
@@ -39,6 +40,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from datetime import date
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -99,7 +101,8 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--force", action="store_true", help="overwrite an existing --out folder")
     p.add_argument("--catalog-samples", type=int, default=25, help="documents per kind kept in samples/ (default 25)")
     p.add_argument("--sample-part-mb", type=float, default=50, help="split a kind's samples/<kind>.jsonl into parts above this size (default 50)")
-    p.add_argument("--lake", type=pathlib.Path, help="also write the documents into a Delta lake here (needs --date); same as --store delta --lake")
+    p.add_argument("--lake", type=pathlib.Path, help="also write the documents into a Delta lake here (each file under its name's business date); "
+                                                    "same as --store delta --lake")
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="the dated store the pack reads: delta (default) or the File connector's files")
     p.add_argument("--files-root", type=pathlib.Path, help="with --store files: also write the documents as <root>/<pack>/<date>/<kind>.jsonl")
     SG.add_arguments(p)
@@ -121,8 +124,6 @@ def run(opts) -> int:
         if not opts.force:
             raise SystemExit(f"pack_from_jsonl: {out} exists; pass --force to overwrite it")
         shutil.rmtree(out)
-    if (opts.lake or opts.files_root) and not opts.date:
-        raise SystemExit("pack_from_jsonl: --lake needs --date (the business-date field)")
     say = print
     kinds = SG.load_folder(opts.inputs, opts.recursive, opts.kind)
     key_d, key_k = SG.parse_scalar(opts.key)
@@ -144,32 +145,35 @@ def run(opts) -> int:
         taken.add(m)
         mnemonics[m] = {"kind": k, "label": k.replace("-", " ").replace("_", " ").capitalize()}
     columns = {k: scalar_columns(v, keys[k]) for k, v in kinds.items()}
+    target = opts.files_root if opts.store == "files" else opts.lake
+    stored = sorted(kinds) if target else sorted(dates)          # the kinds the dated store holds: every kind once one is written
     lake_cols = {}
-    for k in dates:
-        extra = [f for f in SG.for_kind(k, match_d, match_k) if f != dates[k]]
+    for k in stored:
+        extra = [f for f in SG.for_kind(k, match_d, match_k) if f != dates.get(k)]
         lake_cols[k] = list(dict.fromkeys(extra + columns[k]))
     manifest: dict = {"pack": opts.name, "version": getattr(opts, "version", None) or "1.0.0", "code": pack_code(opts.name), "title": opts.title or opts.name,
                       "description": opts.description or f"Generated from {', '.join(p.name for p in opts.inputs)} by tools/packgen/pack_from_jsonl.py.",
                       "kinds": sorted(kinds), "sutras": "sutras", "samples": "samples", "mnemonics": mnemonics, "columns": columns}
     import packform as PF                   # the form: section (FORM pack): each kind's search form, typed from its sample values
     manifest["form"] = {k: PF.form_from_documents(v, 10, keys[k]) for k, v in sorted(kinds.items())}
-    if dates:
+    if stored:
         if opts.store == "files":
-            conn = {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": sorted(dates),
+            conn = {"plugin": "file", "enabled": "${DRISHTI_FILES_ENABLED:true}", "kinds": stored,
                     "settings": {"root": "${DRISHTI_FILES_ROOT:${drishti.data.dir:./data}/files}", "domain": opts.name, "id-field": "id",
-                                 "layout": {k: {"columns": lake_cols[k]} for k in sorted(dates)}}}
+                                 "layout": {k: {"columns": lake_cols[k]} for k in stored}}}
         else:
-            conn = {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": sorted(dates),
+            conn = {"plugin": "delta", "enabled": "${DRISHTI_LAKE_ENABLED:true}", "kinds": stored,
                     "settings": {"root": "${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}", "domain": opts.name,
                                  "layout": {k: {"columns": lake_cols[k], "sort-by": "id", "file-rows": 250000, "row-group-rows": 1000}
-                                            for k in sorted(dates)}}}
+                                            for k in stored}}}
         manifest["connectors"] = [f"{opts.name}-store"]                  # named by its logical name (docs/connectors/CONNECTOR_FILES.md) ...
         manifest["connector-templates"] = {f"{opts.name}-store": conn}   # ... with the connection settings as the pack's template
-        manifest["routes"] = {k: f"{opts.name}-store" for k in sorted(dates)}
-        manifest["ingest"] = {k: {"key": keys[k], "date": dates[k]} for k in sorted(dates)}
+        manifest["routes"] = {k: f"{opts.name}-store" for k in stored}
+        manifest["ingest"] = {k: {"key": keys[k], **({"date": dates[k]} if k in dates else {})} for k in stored}
     out.mkdir(parents=True, exist_ok=True)
     note = ("# Generated by tools/packgen/pack_from_jsonl.py; now yours to edit.\n"
-            + "".join(f"# business date of {k}: $.{f} (the Delta partition business_date)\n" for k, f in sorted(dates.items())))
+            + "".join(f"# {k}: its own date in $.{f} (counted only: a file's business date is its name's, the Delta partition business_date)\n"
+                      for k, f in sorted(dates.items())))
     (out / "pack.yaml").write_text(note + yaml.safe_dump(manifest, sort_keys=False, width=120, allow_unicode=True), encoding="utf-8")
 
     # samples
@@ -200,17 +204,23 @@ def run(opts) -> int:
 
     # dated store, through the standalone ingest tool
     lake_line = ""
-    target = opts.files_root if opts.store == "files" else opts.lake
     if target:
         import ingest_jsonl as IJ
-        ia = argparse.Namespace(src=opts.inputs, recursive=opts.recursive, pack=out, domain=None, kind=opts.kind, key=None, date=None,
-                                columns=None, lake=opts.lake, store=opts.store, root=opts.files_root, mode="replace", dry_run=False,
-                                batch_rows=250_000)
-        rep = IJ.ingest(ia, say)
-        skipped = sum(rep.no_date.values()) + sum(rep.no_key.values())
-        undated = [k for k in kinds if k not in dates]
+        sys.path.insert(0, str(ROOT / "tools" / "lake"))
+        import feedfiles
+        # this tool is the feed's producer: a kind whose date field the author named (--date) is written one file per business date
+        # (<kind>.<date>.jsonl.gz, the shared feed writer), the rest as <kind>.jsonl.gz; the load then follows the rules, never a row's date
+        with tempfile.TemporaryDirectory(prefix="pack-from-jsonl-") as staged:
+            for k in sorted(kinds):
+                f = dates.get(k)
+                feedfiles.write_documents(pathlib.Path(staged), k, kinds[k], (lambda d, f=f: SG.doc_date(d, f)) if f else None)
+            ia = argparse.Namespace(src=[pathlib.Path(staged)], recursive=False, pack=out, domain=None, kind=None, key=None, date=None,
+                                    columns=None, lake=opts.lake, store=opts.store, root=opts.files_root, mode="replace", dry_run=False,
+                                    batch_rows=250_000)
+            rep = IJ.ingest(ia, say)
+        skipped = sum(rep.no_key.values())
         lake_line = (f"\nDated store ({opts.store}): {sum(rep.rows.values())} rows written to {target} (domain {opts.name}); {skipped} document(s) "
-                     f"without a date or id skipped" + (f"; kinds without --date not loaded: {', '.join(undated)}" if undated else ""))
+                     f"without an id skipped")
         say(lake_line.strip())
 
     (out / "README.md").write_text(readme(opts, kinds, groups, keys, dates, lake_line), encoding="utf-8")

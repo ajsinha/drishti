@@ -29,7 +29,7 @@ Who reads what:
 | writing a pack | this guide |
 | writing the Sutras of a pack | [Sutra guide](SUTRA_DEVELOPER_GUIDE.md), every key in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md), the workbench in [RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#screen-designer-and-the-build-workbench) |
 | connecting a pack to a database, a lake or a queue | [CONNECTOR_FILES.md](../connectors/CONNECTOR_FILES.md), [CONNECTOR_DEVELOPER_GUIDE.md](../connectors/CONNECTOR_DEVELOPER_GUIDE.md) and the per-connector pages they list |
-| turning JSON files or a schema into a pack without writing files by hand | [tutorial 5](../tutorials/05-build-a-pack.md), [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
+| turning JSON files or a schema into a pack without writing files by hand | [tutorial 5](../tutorials/05-build-a-pack.md), [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [Generating a pack from JSON Lines](#generating-a-pack-from-json-lines) |
 
 Contents:
 
@@ -162,7 +162,7 @@ copied into `config/packs/` of a running server is loaded too, without naming it
 
 This is the pack **by hand**, to show every file. If your data is JSON Lines or has a JSON Schema, you do not need to write these files:
 `drishti.py pack new` ([below](#generating-a-pack-from-json-lines)) and [tutorial 5](../tutorials/05-build-a-pack.md) turn a schema or a folder
-into a pack, deploy it and roll it back (the rules are in [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema)), and
+into a pack, deploy it and roll it back (the rules are in [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md)), and
 [tutorial 6](../tutorials/06-design-a-screen.md) designs its screen.
 
 Each step says what to type and what you should see. The outputs are real: they were produced by running the steps on the
@@ -684,8 +684,10 @@ Only roles with `calc: true` see Calc (here `support-lead`). More in [Calc: Pyth
 **Data a pack ships: the standard pattern.** Every document a shipped pack serves follows one pattern, whatever its origin
 (generated, or published public data such as the us-equities and gleif packs):
 
-1. the documents as gzipped JSON Lines under `data/testdata/<pack>/<kind>/` (a snapshot, then a file of changes a business day; or
-   one dated `snapshot-<date>.jsonl.gz` the same on every day), each dataset listed in `data/testdata/testdata.yaml` with its pack,
+1. the documents as gzipped JSON Lines under `data/testdata/<pack>/<kind>/`, named by the load rules
+   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 10): `<table>.<YYYY-MM-DD>.jsonl.gz`, a file a business day (the
+   first the snapshot, then each day's changes), or one dated snapshot the same on every day, or a tar of `<table>/<YYYY-MM-DD>/`
+   folders where a date is several files, each dataset listed in `data/testdata/testdata.yaml` with its pack,
    kind, Delta connector and key (`tools/testdata/make_testdata.py` and `tools/testdata/publicsnap.py` write it; never by hand);
 2. `python3 tools/drishti.py lake demo` (or `tools/build_demo_lakes.py`) builds them into the demo lake;
 3. a Delta connector in the pack's `pack.yaml` serves them (`plugin: delta`, its `domain`, the kinds, `layout.<kind>.columns` for the
@@ -4330,7 +4332,7 @@ server nor Spring, and the lake engines and connectors never see `memlake` (they
 | `tools/samplegen/` | Sample-history helpers: `lake.py` (a pack's sample history as JSONL loader rows), `load_rows.py` (loads such rows into Delta), `layout.py` (the pack-declared lake layout: promoted columns, sorted files), `bulk_trades.py` (a large trading book for one source system: `--trades`, `--days`, `--system`), `stream.py` (Kafka ticker), `dates.py` (business-day calendars) |
 | `tools/load-*.sh` | Load the samples (and a generated book) into PostgreSQL, Iceberg, DuckDB, MongoDB, Redis, Aerospike, Cassandra, JSON-lines files or Delta ([DEMO_DATA.md](../connectors/DEMO_DATA.md)) |
 | `tools/bench/` | The scale benchmark: `scale.sh <store> <trades-a-day>`, `measure.py`, `report.py`; `results/` keeps each run's raw JSON lines; see [BENCHMARK.md](../admin/BENCHMARK.md) |
-| `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema), [CLI_GUIDE.md](CLI_GUIDE.md)) |
+| `tools/packgen/pack_from_jsonl.py`, `tools/packmake.py`, `tools/schemapack.py`, `tools/packbundle.py`, `tools/packform.py`, `tools/packdiff.py`, `tools/packi18n.py`, `tools/packregen.py`, `tools/sutragen.py`, `tools/authoring.py` | Pack authoring: a pack from JSON lines or from schemas, regeneration of unedited generated files, bundles, the `form:` section, `pack diff`, `pack i18n`; the `tools/drishti.py` commands call them (see this document, [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md), [CLI_GUIDE.md](CLI_GUIDE.md)) |
 | `tools/realdata/`, `tools/docs/`, `tools/elements-demo/`, `tools/windows/`, `tools/maps/` | The real-data builds of the world-economy pack ([DATA_GUIDE.md (world-economy)](EXTERNAL_DATA.md#the-world-economy-data-in-detail)); the documentation screenshots (`tools/docs/screenshots.py`, `shots/`, one module per guide and tutorial); a sample host page for Drishti Elements; the PowerShell starters ([GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows)); the map region builder |
 | `tools/packreg/` | `packreg.py`: signing keys, publishing packs to a signed registry, verifying one (ADR-018); `test_packreg.py` |
 | `tools/` (files) | `drill.sh` (verify and publish), `fetch-pyodide.sh` (installs Calc's Python runtime, pinned and verified, into `drishti-console/web/static/vendor/pyodide/`), `elements_sheet.py` (regenerates the Elements stylesheet), `make_icons.py` (favicon and app icons), `ingest_jsonl.py` and `ingest_watch.py` (`data ingest`), `serverpacks.py`, `serverconnectors.py`, `doctor.py`, `completion.py`, `viewcmd.py`, `dataprofile.py`, `license_headers.py` (check or insert the copyright header), `test_no_hidden_names.py` (no hidden names, section 8), `rachana/md_to_yaml.py` (converts Markdown Sutras to `*.sutra.yaml`) |
@@ -4574,16 +4576,16 @@ failure that no re-run can change the drill stops the rest, unless `--keep-going
   `*` matching any text, then a `|` and the reason) is printed with its reason as known and accepted and is not run again; a test
   that fails twice, a file that hits its limit, a file that could not be collected, or a run that failed without a failed test to
   re-run fails the lane. Each re-run's output is in `rerun-<file>.log`.
-- **The Python tool tests** (`tools.log`, at lower priority): the `unittest` suites of `tools/` (`samplegen`, `packreg`,
-  `test_sutragen`, `test_ingest_jsonl`, `test_convert`, `test_drishti_cli`, `test_pack_bundle`, `test_no_hidden_names`,
-  `test_packmake`, `test_pack_authoring`, `test_cli_extras`, `test_pack_deploy`, `test_deploy_aws`, the `test_cli_*` suites,
-  `test_pack_form`, `test_schemapack`, `test_contracts`, `test_api_docs`, `tools/testdata/test_testdata.py`, `test_sizing_planner`,
-  `test_capacitycli`), `tools/testdata/make_testdata.py --check` (the committed test data is what its generator writes),
-  `tools/api_docs.py check-java` (every public Java type and member of the Javadoc the gate built has a comment) and, if `uv` is
-  installed, the lake, real-data, compute-SDK and AWS tool tests with their libraries supplied by `uv run --with`, each under a
-  10-minute `timeout`. (Tools that start worker processes after pyarrow or deltalake have started threads must spawn them, never
-  fork: `bulk_trades.py` uses a `spawn` pool.) `tools/lake/test_build.py` is not in the list: run it by hand
-  (`cd tools/lake && ../../drishti-console/.venv/bin/python -m unittest test_build`).
+- **The Python tool tests**, two lanes side by side at lower priority (`tools-a.log`, `tools-b.log`): **every** test file under
+  `tools/` (`tools/**/test_*.py`, and the `tests/` folders as folders), found rather than listed, so a new test file runs without
+  anyone naming it. Each file runs in a pytest process of its own, all in one `uv run --with` environment (deltalake, pyarrow,
+  PyYAML, pytest, moto), each under a 15-minute `timeout`; every file runs even after one fails, and each prints its seconds.
+  Lane a has the tools' command tests, `tools/testdata/make_testdata.py --check` (the committed test data is what its generator
+  writes) and `tools/api_docs.py check-java` (every public Java type and member of the Javadoc the gate built has a comment).
+  Lane b has the tools' folders (lake, generators, public data, benchmarks, real data), `test_schemapack`, and the compute-SDK and
+  AWS tool tests. Each lane takes about 15 minutes. The tests that start the Java loader use the exec jar the gate built. (Tools
+  that start worker processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a
+  `spawn` pool.)
 - **Java 21** (`java21.log`, at lower priority, `nice 5`), the production runtime: `./mvnw -q -o clean verify -P api-docs`, every test and every rule, containers
   included, in a **copy of the committed tree** (a `git archive` of `HEAD` beside the repository, in `<repository>-drill-copies`,
   `DRISHTI_DRILL_COPY_DIR`, removed afterwards), so it can neither clean nor replace the jar the console runs from the working tree.

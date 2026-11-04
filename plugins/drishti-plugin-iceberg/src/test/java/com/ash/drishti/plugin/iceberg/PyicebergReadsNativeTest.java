@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -125,7 +126,7 @@ class PyicebergReadsNativeTest {
         Path lines = out.resolve("rows.jsonl");
         Files.writeString(lines, "{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-1\",\"date\":\"2026-09-30\",\"doc\":\"{}\",\"columns\":{\"mtm\":1.5}}\n"
                 + "{\"domain\":\"desk\",\"kind\":\"trade\",\"id\":\"T-2\",\"date\":\"2026-09-30\",\"doc\":\"{}\",\"columns\":{\"mtm\":2.5}}\n");
-        IcebergLoader.load(new String[] {lines.toString(), out.toString(), "--engine", "native", "--spill-dir", out.resolve("spill").toString()});
+        IcebergLoader.load(new String[] {LoaderRows.rewrite(lines).toString(), out.toString(), "--engine", "native", "--spill-dir", out.resolve("spill").toString()});
         try (Catalog desk = Catalogs.open(Map.of("root", out.toString(), "domain", "desk"))) {
             written.put("layout", desk.load("trade").orElseThrow().metadataLocation());
         }

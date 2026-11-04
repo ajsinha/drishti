@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.mongodb;
 
+import com.ash.drishti.common.RowFeed;
 import com.ash.drishti.api.LoadGuard;
 import com.fasterxml.jackson.core.JsonFactory;
 import com.fasterxml.jackson.core.JsonParser;
@@ -30,11 +31,6 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.ReplaceOneModel;
 import com.mongodb.client.model.ReplaceOptions;
 import com.mongodb.client.model.WriteModel;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -72,7 +68,8 @@ import org.bson.conversions.Bson;
  * and the load ends with an error naming it ({@link LoadGuard}).
  *
  * <p>{@code --keep-days N} then deletes, in every domain collection of the database, each kind's business days older
- * than its N newest on or before {@code --as-of} (today; a day after it is neither counted nor deleted), and refuses
+ * than its N newest on or before the newest business date of the load (a plain file's date, a tar's newest folder; a
+ * day after it is neither counted nor deleted), and refuses
  * to delete more than {@code --max-drop-share} (0.5) of a kind's days without {@code --force-drop}. {@code --ttl-days
  * N} stamps each document with {@code expireAt} (its business date plus N days) and adds the TTL index, so MongoDB
  * deletes old days by itself. {@code tools/load-mongodb.sh} runs it.
@@ -126,8 +123,7 @@ public final class MongoLoader {
         MongoClientSettings settings = MongoClientSettings.builder().applyConnectionString(new ConnectionString(uri))
                 .applyToConnectionPoolSettings(p -> p.maxSize(poolSize).maxWaitTime(6, java.util.concurrent.TimeUnit.HOURS)).build();
         try (MongoClient client = MongoClients.create(settings);
-             BufferedReader in = file.equals("-") ? new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8), 1 << 20)
-                     : Files.newBufferedReader(Path.of(file), StandardCharsets.UTF_8)) {
+             RowFeed in = RowFeed.open(file, RowFeed.asOf(args))) {        // the load rules: each row's business date (RowFeed)
             MongoLoader loader = new MongoLoader(client.getDatabase(database),
                     MongoLayout.DocFormat.valueOf(options.getOrDefault("doc-format", "string").toUpperCase(java.util.Locale.ROOT)),
                     Integer.parseInt(options.getOrDefault("ttl-days", "0")), Integer.parseInt(options.getOrDefault("batch", "1000")), inFlight,
@@ -150,17 +146,18 @@ public final class MongoLoader {
         return (System.nanoTime() - t0) / 1e9;
     }
 
-    /** Loads every line of {@code in}; returns the rows written. */
-    long load(BufferedReader in) throws Exception {
+    /** Loads every line of {@code in}, each row under the business date the load rules give it ({@link RowFeed}); returns the rows written. */
+    long load(RowFeed in) throws Exception {
         JsonFactory json = new JsonFactory();
         Map<String, List<Row>> batches = new HashMap<>();             // domain -> the batch being filled
         try (ExecutorService writers = Executors.newVirtualThreadPerTaskExecutor()) {
             String line;
-            while ((line = in.readLine()) != null && failed.get() == null) {
+            while ((line = in.next()) != null && failed.get() == null) {
                 if (line.isBlank()) {
                     continue;
                 }
-                Row row = parse(json, line);
+                Row read = parse(json, line);
+                Row row = new Row(read.domain(), read.kind(), read.id(), in.place(read.domain() + "/" + read.kind(), read.date()), read.doc(), read.columns());
                 if (!guard.accept(row.date(), row.domain() + " " + row.kind() + " " + row.id())) {
                     continue;
                 }
@@ -179,6 +176,7 @@ public final class MongoLoader {
             }
             inFlight.acquire(maxInFlight);                             // every batch written
             inFlight.release(maxInFlight);
+            in.notes().forEach(n -> System.err.println("mongodb: " + n));
         }
         if (failed.get() != null) {
             throw failed.get();                                        // the new days stay hidden: a load of them shows them
@@ -249,7 +247,7 @@ public final class MongoLoader {
 
     /**
      * Retention by deletion: for each kind of each domain's collection, every business day older than its {@code keep}
-     * newest on or before {@code --as-of} is deleted (a range of the {@code day_ids} index), in both collections.
+     * newest on or before the load's newest business date ({@link LoadGuard#asOf()}) is deleted (a range of the {@code day_ids} index), in both collections.
      * Every kind is checked first: when one would lose more than {@code --max-drop-share} of its days, nothing is
      * deleted (unless {@code --force-drop}). Returns the documents deleted.
      */
@@ -310,6 +308,6 @@ public final class MongoLoader {
                 }
             }
         }
-        return new Row(domain, kind, id, LocalDate.parse(date), doc, columns);
+        return new Row(domain, kind, id, date == null ? null : LocalDate.parse(date), doc, columns);
     }
 }

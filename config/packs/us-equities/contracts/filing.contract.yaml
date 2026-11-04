@@ -157,6 +157,6 @@ notes: []
 notes:
 - '1.1: ITEMS[].DESCRIPTION is optional (EDGAR gives no description for a few items).'
 review:
-- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/filing/snapshot-2026-10-24.jsonl.gz)):
+- 'required inferred from 100% coverage in 2002 documents (2 samples and 2000 test-data documents (data/testdata/us-equities/filing/filing.2026-10-24.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'a snapshot refreshed when tools/publicdata/us_equities.py runs: confirm the refresh cadence.'

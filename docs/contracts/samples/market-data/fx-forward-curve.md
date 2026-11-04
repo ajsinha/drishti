@@ -23,10 +23,10 @@ Forward points by tenor for a pair. One row per fx forward curve per business da
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/fx-forward-curve/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/fx-forward-curve/` + `fx-forward-curve.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `CURVE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -40,19 +40,19 @@ A real record, the most complete of the 719 (the one with the most non-empty fie
 {
   "CURVE_ID": "FXF-AUDUSD",
   "PAIR": "AUDUSD",
-  "SPOT": 0.68395,
+  "SPOT": 0.68418,
   "POINTS_3M": 1.8,
   "POINTS_1Y": 6.8,
   "POINTS": [
     {
       "TENOR": "ON",
       "PIPS": 0.0,
-      "OUTRIGHT": 0.68395
+      "OUTRIGHT": 0.68418
     },
     {
       "TENOR": "1W",
       "PIPS": 0.1,
-      "OUTRIGHT": 0.68396
+      "OUTRIGHT": 0.68419
     },
     "… 7 more elements of the same shape"
   ],
@@ -68,13 +68,13 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `CURVE_ID` | string | required | The record's id (the business key) | pattern `^FXF-` | `"FXF-AUDUSD"` |
 | `PAIR` | string | required | The currency pair, base then quote currency, six letters (AUDUSD). | — | `"AUDUSD"` |
-| `SPOT` | number | required | The spot rate: units of the quote currency per one unit of the base. | unit: quote currency per base | `0.68395` |
+| `SPOT` | number | required | The spot rate: units of the quote currency per one unit of the base. | unit: quote currency per base | `0.68418` |
 | `POINTS_3M` | number | required | The 3-month forward points: (forward minus spot) times the pip factor (10,000; 100 for a JPY pair). | unit: pips | `1.8` |
 | `POINTS_1Y` | number | required | The 1-year forward points: (forward minus spot) times the pip factor (10,000; 100 for a JPY pair). | unit: pips | `6.8` |
 | `POINTS` | array of objects | required | The forward curve: one object per tenor, shortest first (ON to 2Y). | — | [9 objects] |
 | `POINTS[].TENOR` | string | required | The forward tenor (ON, 1W, 1M … 2Y). | — | `"ON"` |
 | `POINTS[].PIPS` | number | required | The forward points for TENOR: (OUTRIGHT minus spot) times the pip factor (10,000; 100 for a JPY pair). | unit: pips | `0.0` |
-| `POINTS[].OUTRIGHT` | number | required | The outright forward rate for TENOR, in quote currency per one unit of the base. | unit: quote currency per base | `0.68395` |
+| `POINTS[].OUTRIGHT` | number | required | The outright forward rate for TENOR, in quote currency per one unit of the base. | unit: quote currency per base | `0.68418` |
 | `FX_SPOT` | string | required | The pair's spot record: a PAIR of the market-data pack's fx-spot kind (FX-…). | pattern `^FX-`; links to `fx-spot` | `"FX-AUDUSD"` |
 
 ## Fields in other rows

@@ -58,8 +58,8 @@ $build = Join-Path (Split-Path -Parent $Root) 'build'
 $rows = Join-Path $build 'lake-rows'
 # 1. generate: the history as JSONL rows; 2. load them (the restatement as a second commit)
 Invoke-Tool @('tools/packgen/banking/make_data.py', '--lake', $Root, '--rows', $rows, '--no-load')
-Invoke-Tool @('tools/samplegen/load_rows.py', '--root', $Root, '--rows', (Join-Path $rows 'banking-history.jsonl'),
-              '--restated', (Join-Path $rows 'banking-restated.jsonl'))
+Invoke-Tool @('tools/samplegen/load_rows.py', '--root', $Root, '--rows', (Join-Path $rows 'banking-history.tar'),
+              '--restated', (Join-Path $rows 'banking-restated.tar'))
 if ($Trades -gt 0) {
     # the book: one JSONL file a day, then each through lake build
     Invoke-Tool @('tools/samplegen/bulk_trades.py', '--root', $Root, '--out', (Join-Path $build 'bulk'), '--trades', "$Trades", '--days', "$Days")

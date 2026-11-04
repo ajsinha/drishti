@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.plugin.iceberg;
 
+import com.ash.drishti.testkit.LoaderRows;
 import static com.ash.drishti.testkit.DatedSourceContract.context;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -53,7 +54,7 @@ class IcebergNamedTableTest {
         }
         Path lines = base.resolve("rows.jsonl");
         Files.writeString(lines, sb);
-        IcebergLoader.load(new String[] {lines.toString(), root.toString(), "--engine", "native", "--spill-dir", base.resolve("spill").toString()});
+        IcebergLoader.load(new String[] {LoaderRows.rewrite(lines).toString(), root.toString(), "--engine", "native", "--spill-dir", base.resolve("spill").toString()});
     }
 
     private static IcebergSourcePlugin start(String table, boolean kinds) throws Exception {

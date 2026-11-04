@@ -43,12 +43,12 @@ def make_lake(root: Path) -> None:
     """trading/trade built by lake build (two small builds a day for three days), risk/published written by another system."""
     sys.path.insert(0, str(REPO / "tools" / "lake"))
     import build
-    src = root.parent / "trade.jsonl"
     for d in ("2026-10-14", "2026-10-15", "2026-10-16", "2026-10-14", "2026-10-15", "2026-10-16"):
+        src = root.parent / f"trade.{d}.jsonl"                 # the business date from the name (the load rules)
         src.write_text("\n".join(json.dumps({"TRADE_ID": f"T-{d}-{i}-{time.monotonic_ns()}", "TRADE_DATE": d, "QUANTITY": i}) for i in range(20)))
         with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
             assert build.main(["--from", str(src), "--lake", str(root), "--domain", "trading", "--kind", "trade", "--key", "TRADE_ID",
-                               "--date", "TRADE_DATE", "--engine", "deltalake", "--pack-name", "trading", "--mode", "append", "-q"]) == 0
+                               "--engine", "deltalake", "--pack-name", "trading", "--mode", "append", "-q"]) == 0
     import pyarrow as pa
     from datetime import date
     from deltalake import write_deltalake

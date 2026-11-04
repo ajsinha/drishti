@@ -53,17 +53,17 @@ file dropped twice cannot be handled safely (sections 7 and 8).
 
 ## 3. The hand-shake
 
-1. The writer puts the data file in `inbox/`, then, **when it is complete**, an empty `<file>.ready` beside it (`trades-2026-11-03.jsonl.gz`
-   and `trades-2026-11-03.jsonl.gz.ready`). A file without its `.ready` is never touched.
+1. The writer puts the data file in `inbox/`, then, **when it is complete**, an empty `.ready` file beside it (`trades.2026-11-03.jsonl.gz`
+   and `trades.2026-11-03.jsonl.gz.ready`, or `trades.2026-11-03.ready`). A file without its `.ready` is never touched.
 2. **`ready.all`** in `inbox/` makes every data file in the inbox ready in that cycle, with or without its own `.ready`; after the cycle
    `ready.all` goes to the outbox of that run, so it applies once.
 3. **Stable files only**: a file is taken when its size and modification time have not changed for `stable-seconds` (default 30), even
    with a `.ready`, a second guard against a writer that sets the marker early (and a must under `ready.all`).
 4. Names: visible names only (no leading dot), no links (refused into `failed/`), extensions `.jsonl`, `.ndjson`, `.json`, each plain or
    `.gz`/`.zst`, `.zip`, `.tar`, `.tar.gz`/`.tgz`. Anything else is moved to `failed/` with the reason.
-5. **Optional contents of `.ready`** (YAML or JSON; empty is fine): `pack`, `kind`, `table`, `business-date`, `mode`
-   (`replace` the dates it holds, or `append`; the default is the table's `load-mode` in the lake configuration, LAKE_CONFIG.md, and `replace` until that exists), `sha256` and `rows` (checked before and after loading). They override the
-   routing of section 5 for that file.
+5. **Optional contents of `.ready`** (YAML or JSON; empty is fine; DATA_LOAD_RULES.md section 5): `business-date`, `table`, `pack`,
+   `kind`, `connector`, `mode` (`append` or `replace`), `new-table`, `key`, `folders`, `sha256` and `rows` (checked before and after
+   loading), `hold`. An unknown key sends the file to `failed/`. They override the routing of section 5 for that file.
 
 ## 4. One cycle
 
@@ -103,7 +103,7 @@ In this order: the `.ready` contents (section 3.5); a **row form** that names it
 columns}` and *lake rows* with `table`, DATA_GUIDE section 2): the parallel loader reads documents and has no reader for these forms, and
 the inbox writes no second one, so such a file is **refused** into `failed/` with the reason and the tool that loads it (`load_rows.py`
 for lake rows, the store loaders for loader rows); the **rules** in `config/dataload.yaml`: a file-name pattern to a pack and
-kind, with the date taken from the pack's date field or from the name:
+kind, with the business date as section 5.1 says:
 
 ```yaml
 dataload:
@@ -112,7 +112,7 @@ dataload:
       pack: trading
       kind: trade
       connector: trade-endur                  # the table that connector reads
-      date-from: field                        # the pack's date field (ingest.trade.date), or: name  (YYYY-MM-DD in the name)
+      date-from: auto                         # auto (default): the .ready date, the name's, else today; name: a date in the name required
     - match: "scenario-pv-*.jsonl.gz"
       pack: market-risk
       kind: scenario-pv
@@ -120,6 +120,34 @@ dataload:
 ```
 
 An archive follows the loader's own rule: one dataset named after the archive, or one per top-level folder.
+
+### 5.1 Table, business date and mode: the load rules
+
+The inbox follows the load rules every loader follows ([DATA_LOAD_RULES.md](DATA_LOAD_RULES.md); DATA_GUIDE.md section 2.8):
+
+- **The table**: the `.ready` file's `pack:`/`kind:` (or `table:`), else the first matching rule, else the name's table
+  (`<table>[.<date>].<extension>`): the pack with a kind of that name, else a pack of that name with one kind. Unknown or in two packs:
+  `failed/` with the candidates (`Routes.byTable`).
+- **The business date**: the `.ready` file's `business-date:` (passed to the loader as `source.as-of`), else the name's date, else the
+  business today; the loader decides each file the same way (`FileDates.decide`), so one load of several files writes one date per file.
+  A rule's `date-from: name` refuses a name without a date. A row's own date field never decides; the rows whose own date differs are
+  counted: the loader's summary (`fileDates`, `otherDateRows`, `dateNotes`), the file's `.loaded.json`, the ledger's `loaded` line, the
+  Loading table and the cycle's line on the board (*2 rows of trades.2026-11-02.jsonl carried another date in BUSINESS_DATE; loaded under
+  2026-11-02*). Each waiting file's preview says the date it will load under and where it comes from.
+- **A tar** names its own tables and dates (`<table>/<YYYY-MM-DD>/`): a `.ready` `business-date:` or `table:` refuses it. Each table
+  folder is routed on its own (the `.ready` file's `folders:` names a folder's pack, else the pack with that table, else a pack of that
+  name with one kind; any folder unresolved refuses the archive) and loaded by its own loader run (`source.dataset`), in table order, every
+  run with one run id (`--run-id`), so the archive's rows share one load id. If a table's load fails, the tables already committed are
+  undone (`LakeUndo.undoAll`) and the archive goes to `failed/` saying what failed and what was rolled back: all or nothing. An empty
+  archive is ignored (ledger `ignored`, moved to the outbox).
+- **The mode**: the `.ready` file's `mode:` (`append` or `replace`), else `drishti.dataload.default-mode` (`append`).
+- **New tables**: a table no pack has is refused, listing the known ones, unless the `.ready` file says `new-table: true` with its `pack:`
+  and the inbox allows it (`drishti.dataload.new-tables`, off as shipped): the table is written in the pack's domain with the generic layout,
+  its id field `key:` else `id`.
+- **Undo**: Admin → Data loads → Inbox → *Undo a load* (Check, then the load id typed again), `POST /api/v1/admin/dataload/undo`, or
+  `drishti.py lake undo`: a load's rows removed by its `_load_id` (DATA_LOAD_RULES.md section 6.3).
+- **The marker**: `<file>.ready` or the name without its data extension (`trades.2026-11-03.ready`); a short marker two data files could
+  claim releases neither, and the board says why. A claimed marker takes its file's full name (`inprocess/<run>/<file>.ready`).
 
 ## 6. Running in the server, safely
 
@@ -204,6 +232,7 @@ and the lock on NTFS (the Windows workflow).
 | D6 | The `.ready` file's optional contents (pack, kind, date, mode, checksum, rows) | **Optional**, empty works |
 | D7 | Which nodes run it | **The configured owner only**, plus the folder lock |
 | D8 | `tar.tz` in the request | read as **`.tar.gz`/`.tgz`**; `.zip` and `.zst` come with the loader |
+| D9 | The table, business date and mode of a file | **The load rules** (DATA_LOAD_RULES.md, section 5.1): the date from outside only (the `.ready` file, the name, the business today), never a row |
 
 ## 14. As built
 
@@ -218,7 +247,7 @@ and the lock on NTFS (the Windows workflow).
 | Recovery | a claimed file whose load's summary says it committed is completed from the summary (never loaded again); otherwise it goes back. A crash inside the loader's own write, before its summary, sends the file back and it loads again: its dates are replaced, the same data |
 | Cluster | each signal is passed on to every other live member by `loads.LoadForwarding`, the one path a data-load signal takes to the members (a person's announcement goes on as that person): the inbox's as this node, `node:<id>` with the service role, carried on behalf of the node and signed with the cluster key; the receiving member's `LoadController` takes a signed node signal as it takes an administrator's. One hop; a failed load is not passed on |
 | Row forms | `RowForms` looks at the first line of a plain, gzip or zstd file: loader rows and lake rows are refused with the reason. An archive's members are not looked at: rows of these forms there are rejected by the load (no pack id field) and the file fails with the loader's reason |
-| The Admin screen | Admin → Data loads → Inbox (`/admin/loads/inbox`, mock-up A): the console's `admin/inbox.html` and `admin/_inbox_body.html` (the board, redrawn from `?partial=1`), `drishti_admin-inbox.js` (the redraw, Load now and Retry with their answers in words), `drishti_admin-inbox.css`; the Data loads tabs (`admin/_loads_tabs.html`). Its figures come from `DataInbox.status()`, which adds the board through `InboxStatus` (the one status source): each waiting file's state code and the rule that will route it (`Routes.preview`, nothing moved), the run loading table by table from `inprocess/<run>/load-plan.json` (written by `Cycle` at each table's start and end, kept in `outbox/<day>/<run>/loads/`), today's cycles in words, failures with their reports, today's duplicates (the ledger), the rules (`Routes.describe`) and the settings. `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/` only. The page is listed under the engine's `console` paths, so it is gone while the inbox runs on no server |
+| The Admin screen | Admin → Data loads → Inbox (`/admin/loads/inbox`, mock-up A): the console's `admin/inbox.html` and `admin/_inbox_body.html` (the board, redrawn from `?partial=1`), `drishti_admin-inbox.js` (the redraw, Load now and Retry with their answers in words), `drishti_admin-inbox.css`; the Data loads tabs (`admin/_loads_tabs.html`). Its figures come from `DataInbox.status()`, which adds the board through `InboxStatus` (the one status source): each waiting file's state code and the rule that will route it with the business date it will load under and where that comes from (`Routes.preview`, nothing moved), the run loading table by table from `inprocess/<run>/load-plan.json` (written by `Cycle` at each table's start and end, kept in `outbox/<day>/<run>/loads/`), today's cycles in words, failures with their reports, today's duplicates (the ledger), the rules (`Routes.describe`) and the settings. `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/` only. The page is listed under the engine's `console` paths, so it is gone while the inbox runs on no server |
 | Batch | one loader run per table (pack, kind, connector, table, date field or date, key, lake, format); when a run of several files fails without a commit, each file is loaded again alone, so one bad file fails alone |
 
 Still (planned): the three-node and Windows (NTFS) tests.

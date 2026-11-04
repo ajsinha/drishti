@@ -31,6 +31,7 @@ import pathlib
 import subprocess
 import threading
 
+import feedfiles
 import stage
 import stores
 import writers
@@ -71,9 +72,13 @@ def write(lake, domain: str, table: str, by_day: dict, partition_names: list[str
         reader = threading.Thread(target=lambda: said.extend(proc.stdout), daemon=True)
         reader.start()
         try:
+            # the load rules (DATA_LOAD_RULES.md): rows of several dates go as a tar of <table>/<YYYY-MM-DD>/ folders, each row
+            # in its own day's folder (the day lake build decided for it)
+            out = feedfiles.RowsTarStream(proc.stdin.buffer)
             for line in lines(domain, table, by_day, partition_names):
-                proc.stdin.write(line)
+                out.add(table, json.loads(line)["date"], line)
                 n += 1
+            out.close()
             if progress:
                 progress(total, total)
             proc.stdin.close()

@@ -21,7 +21,6 @@ are whole cents, added by math.fsum, not the built-in sum() whose float result d
 from __future__ import annotations
 
 import filecmp
-import gzip
 import json
 import math
 import os
@@ -45,7 +44,7 @@ days = H.Days(MT.business_days(12))
 u = UV.Universe(400).build(days)
 for kind, folder in (("counterparty", "core/counterparty"), ("netting-set", "counterparty-risk/netting-set")):
     docs = u.docs[kind]
-    H.DatasetHistory(__import__("pathlib").Path(out) / folder, MT.key_of(next(iter(docs.values()))), days).write(H.doc_states(kind, docs, days))
+    H.DatasetHistory(__import__("pathlib").Path(out) / folder, MT.key_of(next(iter(docs.values()))), days, kind).write(H.doc_states(kind, docs, days))
 """
 
 
@@ -72,13 +71,11 @@ class DeterministicTest(unittest.TestCase):
         dates = yaml.safe_load((TD / "testdata.yaml").read_text(encoding="utf-8"))["business-dates"]
         for folder, key in (("counterparty-risk/netting-set", "NETTING_SET_ID"), ("core/counterparty", "COUNTERPARTY_ID")):
             state: dict[str, dict] = {}
-            for i, day in enumerate(dates):
-                for f in sorted((TD / folder).glob(f"{'snapshot' if i == 0 else 'changes'}-{day}*.jsonl.gz")):
-                    with gzip.open(f, "rt", encoding="utf-8") as fh:
-                        for line in fh:
-                            if line.strip():
-                                d = json.loads(line)
-                                state[str(d[key])] = d
+            sys.path.insert(0, str(ROOT / "tools" / "lake"))
+            import feedfiles                                 # <table>.<YYYY-MM-DD>.jsonl.gz: the first day's snapshot, then the changes
+            for _day, line in feedfiles.lines(TD / folder):
+                d = json.loads(line)
+                state[str(d[key])] = d
             amounts = [d["NET_MTM"] for d in state.values() if isinstance(d.get("NET_MTM"), float)]
             self.assertTrue(amounts, folder)
             self.assertEqual([], [x for x in amounts if round(x, 2) != x], folder)

@@ -37,7 +37,8 @@ import java.time.Duration;
  * @param nice whether the loader runs at a lower priority ({@code nice}, where the system has it; true)
  */
 public record DataLoadSettings(Boolean owner, String dir, Duration interval, Integer stableSeconds, Integer maxFiles, Double maxGb, String loaderHeap,
-        Duration loadTimeout, Double rejectMaxPercent, Boolean reloadDuplicates, Integer keepOutboxDays, String lake, String rulesFile, Boolean nice) {
+        Duration loadTimeout, Double rejectMaxPercent, Boolean reloadDuplicates, Integer keepOutboxDays, String lake, String rulesFile, Boolean nice,
+        String defaultMode, Boolean newTables) {
 
     public DataLoadSettings {
         owner = owner == null || owner;
@@ -57,17 +58,23 @@ public record DataLoadSettings(Boolean owner, String dir, Duration interval, Int
         lake = blank(lake) ? "demo" : lake.trim();         // a lake of config/lakes/ (a folder is the old form, read with one warning)
         rulesFile = blank(rulesFile) ? "./config/dataload.yaml" : rulesFile.trim();
         nice = nice == null || nice;
+        defaultMode = blank(defaultMode) ? "append" : defaultMode.trim().toLowerCase(java.util.Locale.ROOT);
+        if (!defaultMode.equals("append") && !defaultMode.equals("replace")) {
+            throw new IllegalArgumentException("drishti.dataload.default-mode " + defaultMode + ": append (the rows are added) or replace (each business "
+                    + "date of a file replaced)");
+        }
+        newTables = newTables != null && newTables;
     }
 
     /** Every default (tests, and a server that sets nothing). */
     public static DataLoadSettings defaults() {
-        return new DataLoadSettings(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
+        return new DataLoadSettings(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
     }
 
     /** The same settings with another folder, lake and rules file (tests). */
     public DataLoadSettings at(String dir, String lake, String rulesFile) {
         return new DataLoadSettings(owner, dir, interval, stableSeconds, maxFiles, maxGb, loaderHeap, loadTimeout, rejectMaxPercent, reloadDuplicates,
-                keepOutboxDays, lake, rulesFile, nice);
+                keepOutboxDays, lake, rulesFile, nice, defaultMode, newTables);
     }
 
     /** {@link #maxGb} in bytes ({@link Long#MAX_VALUE}: no limit). */

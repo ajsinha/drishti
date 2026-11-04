@@ -54,6 +54,7 @@ final class IcebergVectors {
         List<String> cols = new ArrayList<>(List.of(IcebergLayout.ID, column));
         cols.addAll(textColumns);
         int[] files = java.util.stream.IntStream.range(0, day.files().size()).filter(keep).toArray();
+        Map<String, Integer> shadow = t.shadow(l, day);
         // file by file in file order; several files decode at once when the reader asked for it (VectorReads, VAR_GUIDE.md 27a.6)
         VectorReads.inFileOrder(files, sink, (f, to) -> {
             double[][] buf = {new double[512]};
@@ -63,7 +64,9 @@ final class IcebergVectors {
                     texts[c] = text(r[c + 2]);
                 }
                 String id = r[0] == null ? "" : r[0].toString();
-                to.row(id, buf[0], copy(r[1], buf), texts);
+                if (KindTable.seen(shadow, id, f)) {                    // not an older load's copy of an id a newer load wrote
+                    to.row(id, buf[0], copy(r[1], buf), texts);
+                }
             });
         });
     }
@@ -118,9 +121,11 @@ final class IcebergVectors {
 
     /** Every document of the day, file by file in file order (deletes applied): id and JSON text. */
     static void documents(KindTable t, Layout l, Day day, BiConsumer<String, String> sink) {
+        Map<String, Integer> shadow = t.shadow(l, day);
         for (int f = 0; f < day.files().size(); f++) {
+            int file = f;
             t.scan(l, day, f, List.of(IcebergLayout.ID, IcebergLayout.DOC), null, r -> {
-                if (r[0] != null && r[1] != null) {
+                if (r[0] != null && r[1] != null && KindTable.seen(shadow, r[0].toString(), file)) {
                     sink.accept(r[0].toString(), r[1].toString());
                 }
             });

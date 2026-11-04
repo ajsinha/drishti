@@ -61,8 +61,8 @@ columns `id`, `doc`, `business_date` and the promoted fields a table's `columns`
 
 | Table | Key | Filled from (the example) |
 |---|---|---|
-| `news` | `NEWS_ID` | `data/testdata/news-and-markets/news/snapshot-2026-10-18.jsonl.gz` |
-| `quote` | `QUOTE_ID` | `data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz` |
+| `news` | `NEWS_ID` | `data/testdata/news-and-markets/news/news.2026-10-18.jsonl.gz` |
+| `quote` | `QUOTE_ID` | `data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz` |
 | `news-topic` | `TOPIC_ID` | `config/packs/news-and-markets/samples/news-topic.jsonl` |
 | `listed-company` | `COMPANY_ID` | `config/packs/news-and-markets/samples/listed-company.jsonl` |
 

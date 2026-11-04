@@ -23,10 +23,10 @@ Collateral held and posted under a CSA, by asset, after haircuts. One row per co
 
 |  |  |
 |---|---|
-| Path | `data/testdata/counterparty-risk/collateral-balance/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/counterparty-risk/collateral-balance/` + `collateral-balance.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `BALANCE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -42,7 +42,7 @@ A real record, the most complete of the 4,560 (the one with the most non-empty f
   "HELD": 0,
   "POSTED": 15251373,
   "NET": -15251373,
-  "AS_OF": "2026-07-09",
+  "AS_OF": "2026-07-08",
   "POSITIONS": [
     {
       "ASSET": "Solaris Energy Corp. 2031",
@@ -81,7 +81,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `HELD` | integer | required | The collateral the bank has received from the counterparty, after haircut: the sum of its Held positions' VALUE (market value less the CSA haircut; F3). | unit: USD | `0` |
 | `POSTED` | integer | required | The collateral the bank has delivered to the counterparty, after haircut: the sum of its Posted positions' VALUE (F3). | unit: USD | `15251373` |
 | `NET` | integer | required | HELD minus POSTED after haircuts: positive when the bank holds more collateral than it has posted, negative when it has posted more. | unit: USD | `-15251373` |
-| `AS_OF` | date (YYYY-MM-DD) | required | The date the balance is valued on: the business date of the file. | — | `"2026-07-09"` |
+| `AS_OF` | date (YYYY-MM-DD) | required | The date the balance is valued on: the business date of the file. | — | `"2026-07-08"` |
 | `POSITIONS` | array of objects | required | The collateral assets behind the balance, one element per asset held or posted, with its market value, haircut and value after the haircut. | — | [3 objects] |
 | `POSITIONS[].ASSET` | string | required | The cash or security that is held or posted. | — | `"Solaris Energy Corp. 2031"` |
 | `POSITIONS[].DIRECTION` | string | required | Whether the bank posted the asset or received it. | one of `Posted`, `Received`, `Held` | `"Posted"` |

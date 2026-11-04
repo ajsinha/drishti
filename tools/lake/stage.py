@@ -41,7 +41,8 @@ import jsonstream
 MISSING = object()
 KEEP_REJECTS = 50                    # rejects kept with where and why (all are counted)
 KEEP_DUPLICATE_EXAMPLES = 10         # duplicates named (kept and dropped file:line); all are counted
-LATEST_BY = "COMPUTED_AT"            # the timestamp field that decides which duplicate is kept (TOOLS.md section 4.13)
+LATEST_BY = "COMPUTED_AT"
+LOAD_ID, SOURCE_FILE = "_load_id", "_source_file"   # the columns every row carries (DATA_LOAD_RULES.md section 4)            # the timestamp field that decides which duplicate is kept (TOOLS.md section 4.13)
 OPEN_FILES = 64                      # staged files kept open at once
 DUPLICATE_WATCH = 5_000_000          # ids remembered (8 bytes each) to find duplicates; past this, duplicates are neither found nor dropped
 _YMD = re.compile(r"^(\d{4})(\d{2})(\d{2})$")
@@ -183,6 +184,7 @@ class Stats:
     files: list = field(default_factory=list)                         # [{file, bytes}]
     doc_bytes: int = 0                                                # characters of the accepted documents (compact JSON)
     sample: tuple | None = None                                       # (id, date) of the first accepted document, to open one
+    file_states: list = field(default_factory=list)                   # [FileState]: each file read, its date and what its rows said
 
     def reject(self, where: str, reason: str) -> None:
         self.rejects[reason] += 1
@@ -192,6 +194,20 @@ class Stats:
     @property
     def rejected(self) -> int:
         return sum(self.rejects.values())
+
+
+@dataclass
+class FileState:
+    """One file of the load (DATA_GUIDE.md section 2.8): its label, its business date (its tar folder's, the CLI's, its name's or the
+    business today), where that came from, its documents and the rows whose own date field said another date."""
+    label: str
+    outside: date | None
+    source: str
+    documents: int = 0
+    accepted: int = 0
+    other: int = 0
+    error: str | None = None
+    load_id: str | None = None
 
 
 class Stager:
@@ -212,16 +228,64 @@ class Stager:
         self.vectors = [v for v in (vectors or []) if v not in self.partition_by and v not in self.promote]
         self.parts: dict[tuple, Part] = {}
         self.stats = Stats(numeric={column_name(p): True for p in self.promote})
+        self.stats.numeric.update({LOAD_ID: False, SOURCE_FILE: False})          # every row: the load that wrote it and its file
+        self.run = ""
+        self._load_ids: dict[str, str] = {}
         self._open: OrderedDict[tuple, object] = OrderedDict()
         self._seen: dict[date, set] = {}
+        self.cur: FileState | None = None                                       # the file being read (file())
+        self.date_from = "auto"
+        self.today: date | None = None
         if folder:
             folder.mkdir(parents=True, exist_ok=True)
+
+    def file(self, label: str, name_date: date | None, folder_date: date | None = None, given: date | None = None, top: str | None = None,
+             dated: str | None = None) -> None:
+        """The next documents come from the file ``label``: its tar folder's date, else filedate.decide (--as-of, else ``given``, its
+        .ready file's business-date; its name's date; the business today; ``date_from`` name: a name without a date refuses the file)."""
+        import filedate
+        if folder_date is not None:
+            s = FileState(label, folder_date, "folder")
+        else:
+            d = filedate.decide(self.as_of or given, name_date, self.date_from, self.today, dated or label)   # dated: the name the date is read from
+            s = FileState(label, d.date, "ready" if given and not self.as_of else d.source, error=d.error)
+        key = top or label                              # one load id per data file: an archive's members share their archive's
+        s.load_id = self._load_ids.setdefault(key, f"{self.run}.{len(self._load_ids) + 1}")
+        self.cur = s
+        self.stats.file_states.append(s)
+
+    def loads(self) -> dict:
+        """Each load id of the run and its data file (the summary's ``loads``; ``lake undo`` removes a load's rows by its id)."""
+        return {i: pathlib.Path(k).name for k, i in self._load_ids.items()}
+
+    def refused_files(self) -> list[str]:
+        """Why files are refused (date-from name without a date in the name); [] none. Known before a row is read."""
+        return [s.error for s in self.stats.file_states if s.error]
+
+    def date_report(self, given_by: str = "the command line") -> dict:
+        """The summary's keys (the Java loader's LoadReport gives the same): ``fileDates`` (each file: its date, where it came from, in
+        words, the rows whose own date field said another date), ``otherDateRows``, ``dateNotes`` (those rows in words) and
+        ``emptyFiles`` (files with no document: ignored, nothing written for them)."""
+        import filedate
+        files, notes = [], []
+        for s in self.stats.file_states:
+            if s.outside is None:
+                continue
+            d = filedate.Decided(s.outside, s.source)
+            files.append({"file": s.label, "date": s.outside.isoformat(), "source": s.source, "dateText": filedate.words(d, given_by),
+                          "rows": s.accepted, "otherDateRows": s.other})
+            if s.other:
+                notes.append(filedate.other_date_note(s.other, s.label, self.date_field, s.outside))
+        return {"fileDates": files, "otherDateRows": sum(s.other for s in self.stats.file_states), "dateNotes": notes,
+                "emptyFiles": [s.label for s in self.stats.file_states if s.documents == 0]}
 
     # ----------------------------------------------------------------------------------------------- one document
 
     def add(self, doc, where: str) -> None:
         st = self.stats
         st.read += 1
+        if self.cur is not None:
+            self.cur.documents += 1
         if isinstance(doc, jsonstream.Bad):
             st.reject(doc.where, doc.reason)
             return
@@ -235,7 +299,15 @@ class Stager:
         ident = id_text(kv)
         if _number(kv) and isinstance(doc, dict) and self.key in doc:       # the document carries its id as text too
             doc = {**doc, self.key: ident}
-        if self.as_of:
+        own = None
+        cur = self.cur
+        if cur is not None:                                  # the file's date (filedate.decide): the row's own only counted
+            if cur.outside is None:
+                st.reject(where, cur.error or "no business date")
+                return
+            day = cur.outside
+            own = parse_day(get(doc, self.date_field)) if self.date_field else None
+        elif self.as_of:
             day = self.as_of
         else:
             raw = get(doc, self.date_field)
@@ -270,6 +342,8 @@ class Stager:
                 v = id_text(v) if _number(v) else v
             promoted[name] = v
         promoted.update(vecs)
+        if cur is not None:
+            promoted[LOAD_ID], promoted[SOURCE_FILE] = cur.load_id, cur.label
         h = int.from_bytes(hashlib.blake2b(ident.encode("utf-8"), digest_size=8).digest(), "big")
         seen = self._seen.setdefault(day, set())
         if h in seen:
@@ -278,6 +352,10 @@ class Stager:
         elif st.accepted < DUPLICATE_WATCH:
             seen.add(h)
         st.accepted += 1
+        if cur is not None:
+            cur.accepted += 1
+            if own is not None and own != day:
+                cur.other += 1
         if st.sample is None:
             st.sample = (ident, day.isoformat())
         part = self.parts.get((day, values))

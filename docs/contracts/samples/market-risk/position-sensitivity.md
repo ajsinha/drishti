@@ -23,7 +23,7 @@ The first-order and curvature sensitivities of each position (or trade) to the s
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/position-sensitivity/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/position-sensitivity/` + `position-sensitivity.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `SENSITIVITY_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

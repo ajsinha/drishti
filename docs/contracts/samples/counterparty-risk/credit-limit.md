@@ -23,10 +23,10 @@ PFE limit by tenor bucket for a counterparty, with utilisation. One row per cred
 
 |  |  |
 |---|---|
-| Path | `data/testdata/counterparty-risk/credit-limit/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/counterparty-risk/credit-limit/` + `credit-limit.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `LIMIT_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -42,21 +42,21 @@ A real record, the most complete of the 1,440 (the one with the most non-empty f
   "COUNTERPARTY_NAME": "Aldershot Pension Trust",
   "MEASURE": "PFE 95 peak",
   "LIMIT": 7980000000.0,
-  "USED": 5964718104,
-  "UTILISATION": 0.66698,
+  "USED": 6001569387,
+  "UTILISATION": 0.666921,
   "STATUS": "Within limit",
   "BUCKETS": [
     {
       "BUCKET": "0-1Y",
       "LIMIT": 7980000000,
-      "USED": 4554270836,
-      "UTILISATION": 0.567793
+      "USED": 4733741826,
+      "UTILISATION": 0.567351
     },
     {
       "BUCKET": "1-3Y",
       "LIMIT": 7980000000,
-      "USED": 6105691666,
-      "UTILISATION": 0.667402
+      "USED": 6428983841,
+      "UTILISATION": 0.667162
     },
     "… 3 more elements of the same shape"
   ],
@@ -76,14 +76,14 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `COUNTERPARTY_NAME` | string | required | The legal entity the limit applies to. | — | `"Aldershot Pension Trust"` |
 | `MEASURE` | string | required | The exposure measure the limit is set on, for example the peak of the 95th-percentile potential future exposure. | — | `"PFE 95 peak"` |
 | `LIMIT` | number | required | The most exposure the bank accepts to the counterparty on this measure. | unit: USD | `7980000000.0` |
-| `USED` | integer | required | The exposure measured today against the limit. | unit: USD | `5964718104` |
-| `UTILISATION` | number | required | The share of the limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | unit: fraction of the limit (0.6671 is 66.71%) | `0.66698` |
+| `USED` | integer | required | The exposure measured today against the limit. | unit: USD | `6001569387` |
+| `UTILISATION` | number | required | The share of the limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | unit: fraction of the limit (0.6671 is 66.71%) | `0.666921` |
 | `STATUS` | string | required | The limit's state from UTILISATION: Within limit below 80% used, Early warning from 80% to 100%, Breach above 100%. | one of `Early warning`, `Within limit` | `"Within limit"` |
 | `BUCKETS` | array of objects | required | The limit and its use by maturity bucket, one element per bucket (0-1Y, 1-3Y, 3-5Y, 5-10Y, 10Y+): LIMIT, USED and UTILISATION. | — | [5 objects] |
 | `BUCKETS[].BUCKET` | string | required | The range of years to maturity the limit is split into; exposure on trades that mature within it is counted against it. | one of `0-1Y`, `1-3Y`, `10Y+`, `3-5Y`, `5-10Y` | `"0-1Y"` |
 | `BUCKETS[].LIMIT` | integer | required | The limit that applies to this tenor bucket. | unit: USD | `7980000000` |
-| `BUCKETS[].USED` | integer | required | The exposure in this tenor bucket. | unit: USD | `4554270836` |
-| `BUCKETS[].UTILISATION` | number | required | The share of the bucket's limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | unit: fraction of the limit (0.567 is 56.7%) | `0.567793` |
+| `BUCKETS[].USED` | integer | required | The exposure in this tenor bucket. | unit: USD | `4733741826` |
+| `BUCKETS[].UTILISATION` | number | required | The share of the bucket's limit that is used: USED divided by LIMIT, as a fraction. Above 1 is a breach. | unit: fraction of the limit (0.567 is 56.7%) | `0.567351` |
 | `COUNTERPARTY` | string | required | The counterparty the limit is set for: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | pattern `^CP-`; links to `counterparty` | `"CP-ALDERSHOT"` |
 | `APPROVED_BY` | string | required | The committee or officer that approved the limit. | — | `"Credit Risk Committee"` |
 | `REVIEW_DUE` | date (YYYY-MM-DD) | required | The date the limit is next due for credit review (YYYY-MM-DD). | — | `"2027-03-19"` |

@@ -36,8 +36,53 @@ import java.util.List;
  */
 public final class Inbox {
 
-    /** The marker's suffix: {@code trades.jsonl.gz.ready}. */
+    /** The marker's suffix: {@code trades.2026-11-03.jsonl.gz.ready} or {@code trades.2026-11-03.ready}. */
     public static final String READY = ".ready";
+    /** The data extensions a short marker's name leaves out (DATA_LOAD_RULES.md section 5), longest first. */
+    static final List<String> DATA_EXTENSIONS = List.of(".tar.gz", ".tar.zip", ".jsonl.gz", ".jsonl.zip", ".jsonl.zst", ".ndjson.gz", ".ndjson.zst",
+            ".json.gz", ".tgz", ".tar", ".jsonl", ".ndjson", ".json", ".gz", ".zip", ".zst");
+
+    /** Whether the marker holds its file ({@code hold: true}); a marker that cannot be read holds nothing (the cycle refuses it with the reason). */
+    private static boolean held(Path marker) {
+        try {
+            return ReadyNote.read(marker).hold();
+        } catch (IOException | RuntimeException e) {
+            return false;
+        }
+    }
+
+    /** A data file's name without its data extension: {@code trades.2026-11-03.jsonl.gz} → {@code trades.2026-11-03}. */
+    static String shortName(String name) {
+        String low = name.toLowerCase(java.util.Locale.ROOT);
+        for (String e : DATA_EXTENSIONS) {
+            if (low.endsWith(e) && name.length() > e.length()) {
+                return name.substring(0, name.length() - e.length());
+            }
+        }
+        return name;
+    }
+
+    /**
+     * The marker of the data file {@code name} among the folder's {@code names}: {@code <name>.ready}, else {@code <short name>.ready}
+     * unless another data file has the same short name (then it releases neither: {@code ambiguous} gets why). Null: none.
+     */
+    static String markerOf(String name, java.util.Set<String> names, String[] ambiguous) {
+        if (names.contains(name + READY)) {
+            return name + READY;
+        }
+        String s = shortName(name) + READY;
+        if (!names.contains(s)) {
+            return null;
+        }
+        List<String> rivals = names.stream().filter(n -> !n.equals(name) && !n.endsWith(READY) && !n.equals(READY_ALL) && shortName(n).equals(shortName(name)))
+                .sorted().toList();
+        if (!rivals.isEmpty()) {
+            ambiguous[0] = s + " could release " + name + " and " + String.join(", ", rivals) + ": it releases neither; name it after its data file in "
+                    + "full (" + name + READY + ")";
+            return null;
+        }
+        return s;
+    }
     /** The marker that makes every data file of the inbox ready for one cycle. */
     public static final String READY_ALL = "ready.all";
 
@@ -56,6 +101,8 @@ public final class Inbox {
     public static final String NO_MARKER = "no-marker";
     public static final String NOT_STABLE = "not-stable";
     public static final String NEXT_CYCLE = "next-cycle";
+    /** A file whose {@code .ready} file says {@code hold: true}: it waits until the key is removed (DATA_LOAD_RULES.md section 5). */
+    public static final String HELD = "held";
 
     /** A file that waits ({@code code}: {@link #NO_MARKER}, {@link #NOT_STABLE}, {@link #NEXT_CYCLE}) and why, in words. */
     public record Waiting(String name, long size, Instant modified, String why, String code) {}
@@ -94,24 +141,29 @@ public final class Inbox {
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir)) {
             ds.forEach(entries::add);
         }
+        java.util.Set<String> names = new java.util.HashSet<>();
+        entries.forEach(p -> names.add(p.getFileName().toString()));
         for (Path p : entries) {
             String name = p.getFileName().toString();
             if (name.startsWith(".") || name.equals(READY_ALL)) {
                 continue;
             }
             if (name.endsWith(READY)) {
-                Path data = p.resolveSibling(name.substring(0, name.length() - READY.length()));
-                if (!Files.exists(data, LinkOption.NOFOLLOW_LINKS)) {
+                String stem = name.substring(0, name.length() - READY.length());
+                if (!names.contains(stem) && names.stream().noneMatch(n -> !n.endsWith(READY) && shortName(n).equals(stem) && !n.equals(stem))) {
                     orphans.add(name);
                 }
                 continue;
             }
-            Path marker = p.resolveSibling(name + READY);
-            boolean marked = Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS);
+            String[] ambiguous = {null};
+            String markerName = markerOf(name, names, ambiguous);
+            Path marker = markerName == null ? null : p.resolveSibling(markerName);
+            boolean marked = marker != null && Files.isRegularFile(marker, LinkOption.NOFOLLOW_LINKS);
             BasicFileAttributes a = Files.readAttributes(p, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
             Instant modified = a.lastModifiedTime().toInstant();
             if (!marked && !readyAll) {
-                waiting.add(new Waiting(name, a.size(), modified, "no " + name + READY + " yet", NO_MARKER));
+                waiting.add(new Waiting(name, a.size(), modified, ambiguous[0] != null ? ambiguous[0] : "no " + name + READY + " (or "
+                        + shortName(name) + READY + ") yet", NO_MARKER));
                 continue;
             }
             Path m = marked ? marker : null;
@@ -126,6 +178,10 @@ public final class Inbox {
             if (!LakeLoad.reads(name)) {
                 refused.add(new Refused(p, m, "the loader does not read " + name + ": JSON Lines (.jsonl, .ndjson, .json; plain, .gz or .zst) "
                         + "or an archive of them (.zip, .tar, .tar.gz, .tgz)"));
+                continue;
+            }
+            if (m != null && held(m)) {
+                waiting.add(new Waiting(name, a.size(), modified, "held: its .ready file says hold: true (remove the key to release it)", HELD));
                 continue;
             }
             Instant markerTime = m == null ? modified : Files.getLastModifiedTime(m, LinkOption.NOFOLLOW_LINKS).toInstant();

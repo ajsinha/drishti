@@ -23,10 +23,10 @@ A trade's valuation from the risk engine, for every source system: MTM, one-day 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/trade-valuation/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/trade-valuation/` + `trade-valuation.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `VALUATION_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | `VALUATION_ID`, `TRADE_ID`, `SOURCE_SYSTEM`, `PRODUCT_TYPE`, `PRODUCT_GROUP`, `PORTFOLIO`, `DESK`, `COUNTERPARTY`, `NETTING_SET`, `TRADER_ID`, `BUY_SELL_CODE`, `TRADE_STATUS`, `CURRENCY`, `NOTIONAL`, `MTM`, `MTM_CURRENCY`, `PNL_1D`, `DV01`, `TRADE_DATE`, `MATURITY_DATE`, `VALUATION_DATE` |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -52,13 +52,13 @@ A real record, the most complete of the 806,304 (the one with the most non-empty
   "TRADE_STATUS": "VALIDATED",
   "CURRENCY": "USD",
   "NOTIONAL": 167969743.2,
-  "MTM": 4098234,
+  "MTM": 4041749,
   "MTM_CURRENCY": "USD",
   "PNL_1D": -277804,
   "DV01": 0,
   "TRADE_DATE": "2025-06-20",
   "MATURITY_DATE": "2028-07-31",
-  "VALUATION_DATE": "2026-07-09"
+  "VALUATION_DATE": "2026-07-08"
 }
 ```
 
@@ -82,13 +82,13 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `TRADE_STATUS` | string | required | The trade's status on the valuation date: NEW, VALIDATED, AMENDED, MATURED or CANCELLED; a trade that ends keeps a row on that date with its last value. | one of `AMENDED`, `CANCELLED`, `MATURED`, `NEW`, `VALIDATED` | `"VALIDATED"` |
 | `CURRENCY` | string | required | The trade's own currency, ISO 4217 (MTM is in USD whatever it is). | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
 | `NOTIONAL` | number | required | The trade's current notional in USD, absolute (the first leg's). | unit: USD | `167969743.2` |
-| `MTM` | number | required | The trade's mark-to-market on the valuation date in USD, dirty (accrued included); positive is an asset of the bank. | unit: USD | `4098234` |
+| `MTM` | number | required | The trade's mark-to-market on the valuation date in USD, dirty (accrued included); positive is an asset of the bank. | unit: USD | `4041749` |
 | `MTM_CURRENCY` | string | required | The currency MTM, PNL_1D and DV01 are reported in (USD in the demo). | — | `"USD"` |
 | `PNL_1D` | number | required | The valuation engine's own one-day P&L of the trade in USD, gain positive. | unit: USD | `-277804` |
 | `DV01` | number | required | The change of MTM in USD for a +1 bp parallel shift of every rate curve (a receiver swap's is positive); 0 when the trade has no rate risk. | unit: USD per basis point | `0` |
 | `TRADE_DATE` | date (YYYY-MM-DD) | required | The date the trade was dealt (YYYY-MM-DD). | — | `"2025-06-20"` |
 | `MATURITY_DATE` | date (YYYY-MM-DD) | required | The trade's maturity date. | — | `"2028-07-31"` |
-| `VALUATION_DATE` | date (YYYY-MM-DD) | required | The date the trade is valued on: the business date of the file. | — | `"2026-07-09"` |
+| `VALUATION_DATE` | date (YYYY-MM-DD) | required | The date the trade is valued on: the business date of the file. | — | `"2026-07-08"` |
 
 ## Fields in other rows
 

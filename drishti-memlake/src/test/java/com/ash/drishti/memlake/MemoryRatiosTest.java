@@ -21,11 +21,10 @@ import com.ash.drishti.deltalake.write.LakeManifest;
 import com.ash.drishti.deltalake.write.LakeWriter;
 import com.ash.drishti.memlake.store.MemoryStorage;
 import com.ash.drishti.memlake.store.MemoryStores;
+import com.ash.drishti.testkit.FeedFiles;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -35,7 +34,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import java.util.zip.GZIPInputStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -60,21 +58,12 @@ class MemoryRatiosTest {
 
     private static List<ObjectNode> read(Path folder, int max) throws Exception {
         List<ObjectNode> out = new ArrayList<>();
-        List<Path> files;
-        try (Stream<Path> s = Files.list(folder)) {
-            files = s.filter(p -> p.toString().endsWith(".jsonl.gz")).sorted().toList();
-        }
-        for (Path f : files) {
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(f)), StandardCharsets.UTF_8))) {
-                String line;
-                while ((line = r.readLine()) != null && out.size() < max) {
-                    if (!line.isBlank()) {
-                        out.add((ObjectNode) JSON.readTree(line));
-                    }
+        for (FeedFiles.Part f : FeedFiles.parts(folder)) {           // its dated files and tars (DATA_LOAD_RULES.md section 10)
+            for (String line : f.lines()) {
+                if (out.size() >= max) {
+                    return out;
                 }
-            }
-            if (out.size() >= max) {
-                break;
+                out.add((ObjectNode) JSON.readTree(line));
             }
         }
         return out;

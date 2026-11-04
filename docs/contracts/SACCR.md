@@ -473,7 +473,7 @@ As NSET.md section 11. Trade-level drill (δ, d, MF per trade) only at `trades` 
 |---|---|
 | Generator | `tools/packgen/ccr/saccr.py` (planned): a mapping table by `PRODUCT_TYPE` (the trading pack's product catalogue) to asset class, hedging set rule, transaction type and direction rule, used both for the test data and as the shipped example of `drishti.ccr.saccr.derive: rules` |
 | Rows | every live derivative member (about 7,000 of the 10,000 trades); credit references from the issuers of the market-data pack with their ratings mapped to quality; options with strike and forward from the trade's `STRIKE_PRICE` and the market-data curves |
-| Folder | `data/testdata/counterparty-risk/saccr-trade/cob-2026-09-30.jsonl.gz` |
+| Folder | `data/testdata/counterparty-risk/saccr-trade/saccr-trade.2026-09-30.jsonl.gz` (the load rules' name) |
 | Tests | `test_ccr_data.py`: every derivative member classified, SFTs and cash excluded; `ccrmath.py` against the worked example of §15 and against the BCBS example netting sets (open question 4) |
 
 ## 14. Retiring the stored version

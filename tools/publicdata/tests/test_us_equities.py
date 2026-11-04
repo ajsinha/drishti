@@ -60,7 +60,7 @@ def ns(cache, **kw):
 
 
 def snap(pack: Path, kind: str) -> list[dict]:
-    """A build's documents of a kind: its snapshot beside the pack folder (<out>/testdata/<pack>/<kind>/snapshot-<date>.jsonl.gz)."""
+    """A build's documents of a kind: its snapshot beside the pack folder (<out>/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz)."""
     return SNAP.kind_docs(pack.name, kind, pack.parent.parent / "testdata")
 
 
@@ -172,7 +172,7 @@ def test_prices_are_internal_only(cache, data_dir):
     a = ns(cache, sources=["prices"], scope="AAPL,MSFT", server="http://x")
     assert UE.refresh(a, log=lambda *_: None, price_getter=getter) == 0
     assert got == [("price-history", "PX-AAPL"), ("price-history", "PX-MSFT")]
-    f = next((data_dir / "publicdata" / "us-equities" / "prices" / "price-history").glob("snapshot-*.jsonl.gz"))
+    f = next((data_dir / "publicdata" / "us-equities" / "prices" / "price-history").glob("price-history.*.jsonl.gz"))
     with gzip.open(f, "rt") as fh:
         docs = [json.loads(x) for x in fh]
     assert [d["PRICE_ID"] for d in docs] == ["PX-AAPL", "PX-MSFT"] and all(d["SNAPSHOT"] for d in docs)

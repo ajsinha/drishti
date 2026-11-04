@@ -23,10 +23,10 @@ Economic group of related counterparties (obligor group). One row per counterpar
 
 |  |  |
 |---|---|
-| Path | `data/testdata/core/counterparty-group/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/core/counterparty-group/` + `counterparty-group.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `GROUP_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -41,7 +41,7 @@ A real record, the most complete of the 1,362 (the one with the most non-empty f
   "GROUP_ID": "GRP-ALDERSHOT",
   "NAME": "Aldershot Pension Trust",
   "LIMIT": 7980000000.0,
-  "UTILISATION": 0.666349,
+  "UTILISATION": 0.666659,
   "MEMBERS": [
     {
       "ID": "CP-ALDERSHOT",
@@ -61,7 +61,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `GROUP_ID` | string | required | The record's id (the business key) | pattern `^GRP-` | `"GRP-ALDERSHOT"` |
 | `NAME` | string | required | The group's name: its ultimate parent's name. | — | `"Aldershot Pension Trust"` |
 | `LIMIT` | number | required | The group's own approved credit limit (decision 7 of COMPUTED_ATTRIBUTES.md: not the sum of its members' limits), in the bank's reporting currency (USD in the demo); a group of several counterparties is approved for less than its members' limits added. | unit: USD | `7980000000.0` |
-| `UTILISATION` | number | required | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | unit: fraction | `0.666349` |
+| `UTILISATION` | number | required | The share of LIMIT in use: the members' used amounts over LIMIT, as a fraction (0.6671 is 66.71%). | unit: fraction | `0.666659` |
 | `MEMBERS` | array of objects | required | The counterparties in the group: one object per member. | — | [1 objects] |
 | `MEMBERS[].ID` | string | required | The member: a COUNTERPARTY_ID of the core pack's counterparty kind (CP-…). | — | `"CP-ALDERSHOT"` |
 | `MEMBERS[].NAME` | string | required | The member's legal name (its counterparty NAME). | — | `"Aldershot Pension Trust"` |

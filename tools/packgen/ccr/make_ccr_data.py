@@ -25,7 +25,9 @@ The committed run covers eight netting sets (EXPOSURE_GUIDE.md section 23): the 
 large positive set, a structured set), NS-HARBOURLINE-LDN-NY and NS-KESTREL-FRA (threshold-zero CSAs: fully margined, the second a
 negative SFT set), NS-AURORA-TKY (the wrong-way set: every trade one way on one factor) and NS-CASCADIA-TKY. Every other netting set has
 no exposure paths in the demo: its pages say so. No figure is written: every EE, PFE and EPE is the engine's, computed when asked.
-Deterministic (Python's Random seeded by text, gzip mtime 0): the same netting sets give the same files, byte for byte.
+Each folder holds its date's files by the load rules (docs/architecture/DATA_LOAD_RULES.md section 10): simulation-run/
+simulation-run.<date>.jsonl.gz, exposure-path/exposure-path.tar (exposure-path/<date>/cob.part-NNN.jsonl.gz: the paths in files of
+about 1.2 MB). Deterministic (Python's Random seeded by text, gzip mtime 0): the same netting sets give the same files, byte for byte.
 
     python3 tools/packgen/ccr/make_ccr_data.py                 write data/testdata/counterparty-risk/{simulation-run,exposure-path}, their
                                                                testdata.yaml entries and the engine's parity reference
@@ -38,7 +40,6 @@ Deterministic (Python's Random seeded by text, gzip mtime 0): the same netting s
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
 import math
 import sys
@@ -50,6 +51,8 @@ ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools"))
 sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import ccrmath as M  # noqa: E402
 import paths as PT  # noqa: E402
 from positions import LIVE, replay  # noqa: E402  (a dataset's documents on its last day; the live trade statuses, as VaR's)
@@ -253,35 +256,13 @@ def dumps(d: dict) -> str:
     return json.dumps(d, separators=(",", ":"), ensure_ascii=False)
 
 
-def _gz_files(folder: Path, stem: str, lines: list[str]) -> list[Path]:
-    """Deterministic gzip, split into files of about PART_BYTES compressed."""
-    folder.mkdir(parents=True, exist_ok=True)
-    for old in folder.glob("*.jsonl.gz"):
-        old.unlink()
-    parts: list[list[str]] = [[]]
-    size = 0
-    for ln in lines:
-        if size > PART_BYTES * 3 and parts[-1]:                    # about 3:1 compression on these files
-            parts.append([])
-            size = 0
-        parts[-1].append(ln)
-        size += len(ln)
-    out = []
-    for i, chunk in enumerate(parts, 1):
-        name = f"{stem}.jsonl.gz" if len(parts) == 1 else f"{stem}.part-{i:03d}.jsonl.gz"
-        path = folder / name
-        with path.open("wb") as raw, gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=9) as gz:
-            gz.write(("\n".join(chunk) + "\n").encode("utf-8"))
-        out.append(path)
-    return out
-
-
 def write(out: Path, docs: dict[str, list[dict]]) -> list[dict]:
-    """Writes the folders; returns their testdata.yaml entries."""
+    """Writes the folders (tools/lake/feedfiles.py: one dated file, the paths' parts a tar of their date's folder); returns their
+    testdata.yaml entries."""
     entries = []
     for kind, rows in docs.items():
         cob = rows[0]["BUSINESS_DATE"]
-        files = _gz_files(out / PACK / kind, f"cob-{cob}", [dumps(r) for r in rows])
+        files = FF.write_table(out / PACK / kind, kind, {cob: FF.gz_parts("cob", [dumps(r) for r in rows], PART_BYTES)})
         entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": CONNECTOR, "key": KEYS[kind],
                         "dated-by": "BUSINESS_DATE", "first-date": cob, "last-date": cob, "documents": len(rows),
                         "files": [f.name for f in files], "bytes": sum(f.stat().st_size for f in files)})
@@ -461,8 +442,9 @@ def main(argv=None) -> int:
         import tempfile
         with tempfile.TemporaryDirectory(prefix="drishti-ccr-check-") as tmp:
             write(Path(tmp), docs)
-            stale = [f"{k}/{f.name}" for k in FOLDERS for f in sorted((Path(tmp) / k).glob("*.jsonl.gz"))
-                     if not (td / k / f.name).is_file() or gzip.decompress((td / k / f.name).read_bytes()) != gzip.decompress(f.read_bytes())]
+            stale = [k for k in FOLDERS if (Path(tmp) / k).is_dir() and not (
+                (td / k).is_dir() and [f.name for f in FF.files(Path(tmp) / k)] == [f.name for f in FF.files(td / k)]
+                and FF.contents(Path(tmp) / k) == FF.contents(td / k))]
         if not REFERENCE.is_file() or REFERENCE.read_text(encoding="utf-8") != reference_text(ref):
             stale.append(str(REFERENCE.relative_to(ROOT)))
         stale += [str(f.relative_to(ROOT)) for f, t in samples(docs).items() if not f.is_file() or f.read_text(encoding="utf-8") != t]

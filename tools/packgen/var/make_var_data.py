@@ -14,7 +14,7 @@
 
 """Writes the VaR engine's demo inputs (docs/guides/VAR_GUIDE.md) into data/testdata/market-risk/, from the committed trades of the business
 dates (data/testdata/trades/*) and the core pack's desks, as an upstream risk batch would deliver them, for the last VAR_DATES (three)
-business dates, each in files of its own (cob-<date>...): each date's trades replayed to it, its scenario window a day further on (a day
+business dates, each date in files of its own (docs/architecture/DATA_LOAD_RULES.md section 10): each date's trades replayed to it, its scenario window a day further on (a day
 keeps its move on every date: factors.Market ``back``), one book moved between desks (MOVED_BOOK), so the VaR change explanation
 (VAR_GUIDE.md section 3.11) compares real dates. The stress set, the desk P&L and the long P&L history are the newest date's only:
 
@@ -25,7 +25,7 @@ keeps its move on every date: factors.Market ``back``), one book moved between d
     fx-scenario/      2.9.4: the scenario FX the batch supplies: per currency, USD per unit today and under each scenario
     scenario-set/     HS-509: the scenario days of the business date
     stress-*          the stress scenario set HS-STRESS-2008 (stress.py): its scenario set, P&L vectors, scenario PVs and scenario FX in
-                      files of their own (stress-cob-<date>...) in the same folders, for stressed VaR
+                      files of their own (stress-cob...) beside the normal set's, under the same table and date, for stressed VaR
     risk-hierarchy/   the MGMT tree (bank, division, desk, book) and the LEGAL tree (bank, legal entity, desk, book); their VaR limits are var-limit rows
     portfolio/        portfolio definitions of the three types (HIERARCHY, RULE, BASKET), overlapping on purpose: no figures
     var-limit/        2.9.5: the VaR limits by hierarchy and node id (USD): every node of the limit-letter hierarchy LL (built by the
@@ -40,9 +40,12 @@ Every P&L and scenario-PV row carries its LIMIT_LETTER (2.9.5, positions.limit_l
 
 No position, no VaR and no node history is written: positions are derived by the server from the trades and the pack's rules (VAR_GUIDE.md
 section 3.7), every figure is computed when asked, and a node's history is its official end-of-day captures. Every live trade is valued
-(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR_GUIDE.md section 23.1 question 1), about 9,600 trades. Every file is
-dated by its documents' BUSINESS_DATE (testdata.yaml ``dated-by``); the vectors are split into files of about 1.2 MB. Deterministic:
-the same trades give the same files, byte for byte.
+(statuses NEW, VALIDATED, AMENDED; maturity on or after the date; VAR_GUIDE.md section 23.1 question 1), about 9,600 trades. Each kind's
+folder holds one file per business date, <kind>.<YYYY-MM-DD>.jsonl.gz, or tar archives of <kind>/<YYYY-MM-DD>/ folders where a date is
+several files or one run writes many dates (TARS: the P&L vectors and scenario PVs one archive a date, their vectors split into files of
+about 1.2 MB; the desks' 260-day P&L one archive; scenario-set and fx-scenario, whose newest date holds the stress set's file too, one
+archive), written by tools/lake/feedfiles.py; every row's BUSINESS_DATE is its file's (folder's) date. Deterministic: the same trades give
+the same files, byte for byte.
 
     python3 tools/packgen/var/make_var_data.py                    write data/testdata/market-risk/<kind>/ and their testdata.yaml entries
     python3 tools/packgen/var/make_var_data.py --check            fail if they differ from what would be written
@@ -51,7 +54,6 @@ the same trades give the same files, byte for byte.
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
 import sys
 from collections import defaultdict
@@ -62,6 +64,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(ROOT / "tools"))
+sys.path.insert(0, str(ROOT / "tools" / "lake"))
+import feedfiles as FF  # noqa: E402  (tools/lake/feedfiles.py: our dated feed files)
 import factors as F  # noqa: E402
 import scenario_fx as SFX  # noqa: E402
 import stress as ST  # noqa: E402
@@ -86,6 +90,11 @@ VAR_DATES = 3
 #: date but one, when it moved to the fixed income desk (both LE-NY, Markets): (book, the desk before, dates back it still sat there from)
 MOVED_BOOK = ("BOOK-FI-3", "DESK-CREDIT", 2)
 PART_BYTES = 1_200_000                       # compressed bytes per file: the vectors are split into a few small files
+#: the kinds written as tar archives of <kind>/<YYYY-MM-DD>/ folders (docs/architecture/DATA_LOAD_RULES.md section 10): the P&L vectors
+#: and scenario PVs one archive per date (a date is ten files, and every date in one archive would be too large to commit), the desks'
+#: daily P&L (260 dates of one run) one archive; a kind whose date holds the stress set's file too (scenario-set, fx-scenario) one
+#: archive of its dates; every other kind one file per date, <kind>.<YYYY-MM-DD>.jsonl.gz
+TARS = {"pnl-vector": "date", "scenario-pv": "date", "desk-pnl": "table"}
 PACK_YAML = ROOT / "config" / "packs" / PACK / "pack.yaml"
 
 
@@ -253,27 +262,14 @@ class Demo:
 
 
 # ---------------------------------------------------------------------------------------------------------------------- writing
-def _gz_files(folder: Path, stem: str, lines: list[str], clear: bool = True) -> list[Path]:
-    """Deterministic gzip, split into files of about PART_BYTES compressed (``clear``: the folder's earlier files removed first)."""
-    folder.mkdir(parents=True, exist_ok=True)
-    for old in folder.glob("*.jsonl.gz") if clear else ():
-        old.unlink()
-    parts: list[list[str]] = [[]]
-    size = 0
-    for ln in lines:
-        if size > PART_BYTES * 3 and parts[-1]:                    # about 3:1 compression on these files
-            parts.append([])
-            size = 0
-        parts[-1].append(ln)
-        size += len(ln)
-    out = []
-    for i, chunk in enumerate(parts, 1):
-        name = f"{stem}.jsonl.gz" if len(parts) == 1 else f"{stem}.part-{i:03d}.jsonl.gz"
-        path = folder / name
-        with path.open("wb") as raw, gzip.GzipFile(filename="", mode="wb", fileobj=raw, mtime=0, compresslevel=9) as gz:
-            gz.write(("\n".join(chunk) + "\n").encode("utf-8"))
-        out.append(path)
-    return out
+def gz_parts(stem: str, lines: list[str]) -> list[tuple[str, bytes]]:
+    """A date's lines as (file name, deterministic gzip) parts of about PART_BYTES compressed each (feedfiles.gz_parts)."""
+    return FF.gz_parts(stem, lines, PART_BYTES)
+
+
+def same_files(want: Path, have: Path) -> bool:
+    """Whether a folder holds the same feed files as another: the same names and, decompressed, the same rows."""
+    return have.is_dir() and [f.name for f in FF.files(want)] == [f.name for f in FF.files(have)] and FF.contents(want) == FF.contents(have)
 
 
 def dumps(d: dict) -> str:
@@ -328,7 +324,7 @@ def documents(demo: Demo, newest_only: bool = True) -> dict[str, list[dict]]:
 
 def write(out: Path, ds: list[Demo], with_samples: bool = True) -> list[dict]:
     """Writes the folders (and the pack's reference samples) for the dates of ``ds`` (the newest last); returns their testdata.yaml
-    entries. Each date of a dated kind has its own files (cob-<date>...); a kind written for the newest date only keeps its stem."""
+    entries. Each date has its own files (tools/lake/feedfiles.py: one dated file, or a tar's date folder, TARS)."""
     entries = []
     demo = ds[-1]
     docs = all_documents(ds)
@@ -343,23 +339,19 @@ def write(out: Path, ds: list[Demo], with_samples: bool = True) -> list[dict]:
     for kind in RETIRED:
         folder = out / PACK / kind
         if folder.is_dir():
-            for f in folder.glob("*.jsonl.gz"):
+            for f in folder.iterdir():
                 f.unlink()
             folder.rmdir()
     stressed = demo.stress().rows()
     for kind, rows in docs.items():
-        dates = sorted({r["BUSINESS_DATE"] for r in rows})
-        if kind in NEWEST_ONLY:
-            stem = f"cob-{dates[-1]}" if len(dates) == 1 else f"history-{dates[0]}-to-{dates[-1]}"
-            files = _gz_files(out / PACK / kind, stem, [dumps(r) for r in rows])
-        else:
-            files = []
-            for i, day in enumerate(dates):
-                files += _gz_files(out / PACK / kind, f"cob-{day}", [dumps(r) for r in rows if r["BUSINESS_DATE"] == day], clear=i == 0)
-            stem = f"cob-{dates[-1]}"
         extra = stressed.get(kind) or []
-        if extra:                                                   # the stress set (newest date): its own files beside the normal set's (stress.py)
-            files += _gz_files(out / PACK / kind, f"{ST.FILE_PREFIX}{stem}", [dumps(r) for r in extra], clear=False)
+        by_day: dict[str, list[tuple[str, bytes]]] = {}
+        for day in sorted({r["BUSINESS_DATE"] for r in rows}):
+            by_day[day] = gz_parts("cob", [dumps(r) for r in rows if r["BUSINESS_DATE"] == day])
+        for day in sorted({r["BUSINESS_DATE"] for r in extra}):     # the stress set (newest date): its own files beside the normal set's (stress.py)
+            by_day.setdefault(day, []).extend(gz_parts(f"{ST.FILE_PREFIX}cob", [dumps(r) for r in extra if r["BUSINESS_DATE"] == day]))
+        dates = sorted(by_day)
+        files = FF.write_table(out / PACK / kind, kind, by_day, TARS.get(kind))
         entries.append({"folder": f"{PACK}/{kind}", "pack": PACK, "kind": kind, "connector": CONNECTOR, "key": KEYS[kind],
                         "dated-by": "BUSINESS_DATE", "first-date": dates[0], "last-date": dates[-1], "documents": len(rows) + len(extra),
                         "files": [f.name for f in files], "bytes": sum(f.stat().st_size for f in files)})
@@ -472,8 +464,7 @@ def main(argv=None) -> int:
             write(Path(tmp), ds, with_samples=False)
             want = samples(demo, documents(demo))
             stale_samples = [str(p) for p, t in want.items() if not p.is_file() or p.read_text(encoding="utf-8") != t]
-            stale = [f"{k}/{f.name}" for k in FOLDERS for f in sorted((Path(tmp) / k).glob("*.jsonl.gz"))
-                     if not (td / k / f.name).is_file() or gzip.decompress((td / k / f.name).read_bytes()) != gzip.decompress(f.read_bytes())]
+            stale = [k for k in FOLDERS if (Path(tmp) / k).is_dir() and not same_files(Path(tmp) / k, td / k)]
             stale += [f"{k} (retired, still on disk)" for k in RETIRED if (td / PACK / k).is_dir()]
         stale += stale_samples + [str(x) for x in retired_samples(want)]
         if stale:

@@ -23,10 +23,10 @@ A traded commodity with its benchmark, unit and venue. One row per commodity per
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/commodity/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/commodity/` + `commodity.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `COMMODITY_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -40,11 +40,19 @@ A real record, the most complete of the 480 (the one with the most non-empty fie
 {
   "COMMODITY_ID": "CMD-BRENT",
   "NAME": "Brent crude oil",
-  "FRONT": 78.65,
+  "FRONT": 79.99,
   "UNIT": "USD/bbl",
   "EXCHANGE": "ICE",
   "SECTOR": "Energy",
   "OHLC": [
+    {
+      "DATE": "2026-04-13",
+      "OPEN": 92.02,
+      "HIGH": 96.44,
+      "LOW": 90.01,
+      "CLOSE": 96.02,
+      "VOLUME": 163625
+    },
     {
       "DATE": "2026-04-14",
       "OPEN": 96.27,
@@ -52,14 +60,6 @@ A real record, the most complete of the 480 (the one with the most non-empty fie
       "LOW": 95.63,
       "CLOSE": 96.88,
       "VOLUME": 138952
-    },
-    {
-      "DATE": "2026-04-15",
-      "OPEN": 97.08,
-      "HIGH": 98.66,
-      "LOW": 95.72,
-      "CLOSE": 97.64,
-      "VOLUME": 402637
     },
     "… 58 more elements of the same shape"
   ],
@@ -85,17 +85,17 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `COMMODITY_ID` | string | required | The record's id (the business key) | pattern `^CMD-` | `"CMD-BRENT"` |
 | `NAME` | string | required | The commodity's name (Brent crude oil, Gold …). | one of `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` | `"Brent crude oil"` |
-| `FRONT` | number | required | The front-month futures price (the last OHLC close), in UNIT. | unit: UNIT | `78.65` |
+| `FRONT` | number | required | The front-month futures price (the last OHLC close), in UNIT. | unit: UNIT | `79.99` |
 | `UNIT` | string | required | The quotation unit of the prices: currency per physical unit (USD/bbl, USD/oz, USc/bu is US cents per bushel …). | one of `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` | `"USD/bbl"` |
 | `EXCHANGE` | string | required | The exchange the futures trade on (ICE, NYMEX, COMEX, CBOT). | one of `CBOT`, `COMEX`, `ICE`, `NYMEX` | `"ICE"` |
 | `SECTOR` | string | required | The commodity sector: Energy, Metals or Agriculture. | one of `Agriculture`, `Energy`, `Metals` | `"Energy"` |
 | `OHLC` | array of objects | required | The front month's daily bars, oldest first: one object per business day (open, high, low and close in UNIT, and a volume). | — | [60 objects] |
-| `OHLC[].DATE` | date (YYYY-MM-DD) | required | A business day of the daily bars, oldest first, ending at the record's date. | — | `"2026-04-14"` |
-| `OHLC[].OPEN` | number | required | The front contract's opening price that day, in SPEC.UNIT. | unit: SPEC.UNIT | `96.27` |
-| `OHLC[].HIGH` | number | required | The day's high price, in SPEC.UNIT. | unit: SPEC.UNIT | `98.33` |
-| `OHLC[].LOW` | number | required | The day's low price, in SPEC.UNIT. | unit: SPEC.UNIT | `95.63` |
-| `OHLC[].CLOSE` | number | required | The day's closing (settlement) price, in SPEC.UNIT. | unit: SPEC.UNIT | `96.88` |
-| `OHLC[].VOLUME` | integer | required | The number of contracts traded that day. | unit: contracts | `138952` |
+| `OHLC[].DATE` | date (YYYY-MM-DD) | required | A business day of the daily bars, oldest first, ending at the record's date. | — | `"2026-04-13"` |
+| `OHLC[].OPEN` | number | required | The front contract's opening price that day, in SPEC.UNIT. | unit: SPEC.UNIT | `92.02` |
+| `OHLC[].HIGH` | number | required | The day's high price, in SPEC.UNIT. | unit: SPEC.UNIT | `96.44` |
+| `OHLC[].LOW` | number | required | The day's low price, in SPEC.UNIT. | unit: SPEC.UNIT | `90.01` |
+| `OHLC[].CLOSE` | number | required | The day's closing (settlement) price, in SPEC.UNIT. | unit: SPEC.UNIT | `96.02` |
+| `OHLC[].VOLUME` | integer | required | The number of contracts traded that day. | unit: contracts | `163625` |
 | `SPEC` | object | required | The futures contract's specification: contract code, unit, exchange, settlement, listing cycle, tick size, trading hours. | — | {…} |
 | `SPEC.CONTRACT` | string | required | The contract's code (WTI, BRENT, NG, GOLD, SILVER, COPPER, CORN, SOY). | one of `BRENT`, `COPPER`, `CORN`, `GOLD`, `NG`, `SILVER`, `SOY`, `WTI` | `"BRENT"` |
 | `SPEC.UNIT` | string | required | The price unit (e.g. USD/bbl, USD/MMBtu, USD/oz, USD/lb, USc/bu). | one of `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` | `"USD/bbl"` |

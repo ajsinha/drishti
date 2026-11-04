@@ -84,6 +84,25 @@ final class PvData {
         return out;
     }
 
+    /**
+     * {@code lines} as one file a business date in {@code folder}, {@code scenario-pv.<date>.jsonl} (docs/architecture/DATA_LOAD_RULES.md:
+     * the date is the file's, from its name); returns the folder.
+     */
+    static Path byDate(Path folder, List<String> lines) throws IOException {
+        java.util.Map<String, List<String>> days = new java.util.TreeMap<>();
+        for (String l : lines) {
+            for (String d : DATES) {
+                if (l.contains("\"BUSINESS_DATE\":\"" + d + "\"")) {
+                    days.computeIfAbsent(d, k -> new java.util.ArrayList<>()).add(l);
+                }
+            }
+        }
+        for (java.util.Map.Entry<String, List<String>> e : days.entrySet()) {
+            write(folder.resolve("scenario-pv." + e.getKey() + ".jsonl"), e.getValue());
+        }
+        return folder;
+    }
+
     static Path write(Path file, List<String> lines) throws IOException {
         Files.createDirectories(file.getParent());
         Files.write(file, lines, StandardCharsets.UTF_8);
@@ -137,7 +156,7 @@ final class PvData {
     /** The YAML of a load of {@code files} into {@code lake} (risk/scenario-pv) as {@code format}, plus {@code extra} lines. */
     static String config(String files, String lake, String format, String... extra) {
         StringBuilder y = new StringBuilder();
-        y.append("source:\n  files: '").append(files).append("'\n  id: POSITION_ID\n  date: BUSINESS_DATE\n")
+        y.append("source:\n  files: '").append(files).append("'\n  id: POSITION_ID\n")       // each file's date: its name (DATA_LOAD_RULES.md)
                 .append("  promote: [LEGAL_ENTITY, DESK, TT_BOOK, TRADE_ID, QUANTITY, BASE_PV, CCY, POSITION_ID]\n  vectors: [SCENARIO_PV]\n");
         y.append("target:\n  format: ").append(format).append("\n  lake: '").append(lake).append("'\n  domain: risk\n  kind: scenario-pv\n");
         for (String e : extra) {

@@ -92,19 +92,28 @@ public final class LoaderProcess implements LoadRunner {
         ObjectNode s = root.putObject("source");
         ArrayNode list = s.putArray("files");
         files.forEach(f -> list.add(f.toAbsolutePath().toString()));
-        s.put("pack", r.packDir().toAbsolutePath().toString());
+        if (r.newDomain() == null) {
+            s.put("pack", r.packDir().toAbsolutePath().toString());
+        }
         put(s, "connector", r.connector());
         put(s, "date", r.dateField());
         put(s, "as-of", r.asOf() == null ? null : r.asOf().toString());
+        put(s, "date-from", r.asOf() == null ? r.dateFrom() : null);
+        put(s, "dataset", r.dataset());                         // a tar's one table folder this load is for
         put(s, "id", r.key());
         ObjectNode t = root.putObject("target");
         t.put("format", r.format());
         t.put("lake", r.lake());
         t.put("kind", r.kind());
+        if (r.newDomain() != null) {
+            t.put("domain", r.newDomain());                     // a new table: the pack's domain, the generic layout
+        }
         // the table: the route's, else the pack connector's (trade-endur: trade_endur), which picks among several tables of one kind
         boolean named = r.lake() != null && r.lake().matches("[a-z0-9][a-z0-9_-]*");      // a lake of config/lakes/ (else a folder: the old form)
-        put(t, "table", r.table() != null || !named || r.connector() == null ? r.table()
+        put(t, "table", r.table() != null || !named || r.connector() == null || r.newDomain() != null ? r.table()
                 : com.ash.drishti.lakeconfig.PackEntry.read(r.packDir(), r.kind(), r.connector()).table());
+        // the mode (DATA_LOAD_RULES.md section 3): the .ready file's, else the lake file's entry for the table, else the inbox's default
+        t.put(r.modeGiven() ? "mode" : "default-mode", "append".equals(r.mode()) ? "append" : "replace-date");
         t.put("batch-id", batchId(files));
         ObjectNode rj = root.putObject("rejects");
         rj.put("max-pct", rejectMaxPercent);

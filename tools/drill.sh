@@ -230,55 +230,62 @@ gate_java() {
 }
 
 # ---- stage two ---------------------------------------------------------------------------------------------------------------
-python_tool_tests() {
+# The tools' tests: EVERY test file under tools/ (tools/**/test_*.py, and the tests/ folders as folders), found, not listed: a test
+# file nobody named never ran. Each file runs in a pytest process of its own (the tools put themselves on sys.path; a module of one
+# must not shadow another's), all in one uv environment (deltalake, pyarrow, PyYAML, pytest, moto for the S3 simulators); a failed
+# file fails its lane after every file ran, so one drill shows every failure. Two lanes run side by side (about 15 minutes each
+# beside each other): tools-a the tools' own command tests and the test data check, tools-b the tools' folders (lake, generators, public data,
+# benchmarks) with three long command tests (schema to pack, the sample pages, the generators). The gate built the exec jar: the tests that start the Java loader run.
+tool_test_files() {   # lane (a or b): its test files and folders
+  local f all=()
+  mapfile -t all < <(find tools \( -name .venv -o -name cache -o -name node_modules \) -prune -o -name 'test_*.py' -print | grep -v '/tests/' | sort)
+  for f in "${all[@]}"; do
+    case "$f" in
+      tools/test_schemapack.py|tools/test_sample_docs.py|tools/test_generators_write_jsonl.py) [[ $1 == b ]] && echo "$f" ;;   # balancing the lanes
+      tools/test_*.py) [[ $1 == a ]] && echo "$f" ;;
+      *) [[ $1 == b ]] && echo "$f" ;;
+    esac
+  done
+  if [[ $1 == b ]]; then find tools \( -name .venv -o -name cache \) -prune -o -type d -name tests -print | sort; fi
+}
+run_tool_tests() {   # files and folders: each in its own pytest process; returns 1 when any failed
+  command -v uv >/dev/null || { echo "drill: the tools' tests need uv (it provides deltalake, pyarrow, PyYAML, pytest and moto)" >&2; return 1; }
+  timeout --kill-after=60 3600 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest --with "moto[server]==5.2.3" bash -c '
+    rc=0
+    for f in "$@"; do
+      t=$SECONDS
+      timeout --kill-after=30 900 python -m pytest -q -p no:cacheprovider "$f" 2>&1 | grep -v "^{\"at\""
+      r=${PIPESTATUS[0]}
+      echo "drill: tools $f: $(( SECONDS - t ))s$( (( r == 0 )) || echo " FAILED (exit $r)")"
+      (( r == 0 )) || rc=1
+    done
+    exit $rc' _ "$@"
+}
+tools_lane_a() {
   set -e
-  python3 -m unittest -q tools/samplegen/test_samplegen.py
-  python3 -m unittest -q tools/packreg/test_packreg.py
-  python3 -m unittest -q tools/test_sutragen.py
-  python3 -m unittest -q tools/test_ingest_jsonl.py
-  python3 -m unittest -q tools/test_convert.py         # drishti.py convert: CSV, JSON arrays and .json folders into JSON Lines
-  python3 -m unittest -q tools/test_generators_write_jsonl.py tools/test_exports_offer_jsonl.py   # the data standard: generators write JSONL, exports offer it
-  python3 -m unittest -q tools/test_drishti_cli.py
-  python3 -m unittest -q tools/test_pack_bundle.py tools/test_no_hidden_names.py
-  python3 -m unittest -q tools/test_packmake.py
-  python3 -m unittest -q tools/test_pack_authoring.py
-  python3 -m unittest -q tools/test_cli_extras.py
-  python3 -m unittest -q tools/bench/test_net_soak.py   # the Drishti*net soak's checker (history, kill windows, memory, verdict): no servers
-  python3 -m unittest -q tools/test_pack_deploy.py
-  python3 -m unittest -q tools/test_deploy_aws.py      # deploy/aws: --help and --dry-run of every script (a fake aws fails if called), templates
-  python3 -m unittest -q tools/test_cli_bi.py
-  python3 -m unittest -q tools/test_cli_bitransform.py
-  python3 -m unittest -q tools/test_cli_connectors.py
-  python3 -m unittest -q tools/test_cli_loads.py
-  python3 -m unittest -q tools/test_pack_form.py
-  python3 -m unittest -q tools/test_schemapack.py
-  python3 -m unittest -q tools/test_contracts.py        # the data contract of every command: valid, current with its pack and data, pages current
-  python3 tools/testdata/make_testdata.py --check     # the committed test data (data/testdata) is what its generator writes
-  python3 -m unittest -q tools/test_api_docs.py        # the API references' checks
+  local files=()
+  mapfile -t files < <(tool_test_files a)
+  (( ${#files[@]} > 40 )) || { echo "drill: only ${#files[@]} tools test files found for lane a" >&2; return 1; }
+  local rc=0
+  run_tool_tests "${files[@]}" || rc=1
+  python3 tools/testdata/make_testdata.py --check || rc=1     # the committed test data (data/testdata) is what its generator writes
   # the API references (Help -> Developer): the gate checked the Python side; in the full drill every public Java type and member of
   # the Javadoc the gate's build made (-P api-docs, doclint on) has a comment
-  if [[ "$MODE" != docs ]]; then python3 tools/api_docs.py check-java; fi
-  python3 -m unittest -q tools/testdata/test_testdata.py
-  python3 -m unittest -q tools/test_sizing_planner.py   # the sizing planner: formulas over named inputs, documented keys, the committed workbook current
-  python3 -m unittest -q tools/test_capacitycli.py      # drishti.py admin capacity: the server's planner evaluated here, --set, --live, --xlsx
-  if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
-    # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py tools/lake/test_maintain_admin.py 2>&1 | grep -v '^{"at"'
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_demo.py
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_names.py   # the bank's names
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_publish.py
-    # the lake tools on S3 simulators (Delta on S3, lake publish's conditional-PUT commit): moto, and the MinIO server binary
-    # on Linux (DRISHTI_MINIO_BIN or tools/cache/minio; it skips, printing why, when no binary can be had). Each prints which
-    # conditional writes its simulator covered. The Java S3Mock and MinIO suites run in the Java verify.
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml --with "moto[server]==5.2.3" python -m unittest -q tools/lake/test_s3_simulators.py 2>&1 | grep -v '^{"at"'
-    # the real-data tools (tools/realdata) are pytest-style functions on recorded fixtures: no network, a few seconds
-    timeout --kill-after=30 600 uv run -q --with pytest --with pyyaml python -m pytest -q -p no:cacheprovider tools/realdata/tests
-    # the compute worker SDK and its engines: pure Python, no servers
-    timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider drishti-compute/src/test/python
-    # the AWS connectors' tool scripts (S3 Tables, Delta on S3): botocore's Stubber and an in-memory S3, no AWS account
-    timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3
-  fi
+  if [[ "$MODE" != docs ]]; then python3 tools/api_docs.py check-java || rc=1; fi
+  return $rc
+}
+tools_lane_b() {
+  set -e
+  local files=()
+  mapfile -t files < <(tool_test_files b)
+  (( ${#files[@]} > 30 )) || { echo "drill: only ${#files[@]} tools test files found for lane b" >&2; return 1; }
+  local rc=0
+  run_tool_tests "${files[@]}" || rc=1
+  # outside tools/: the compute worker SDK and its engines (pure Python), and the AWS connectors' tool scripts (botocore's Stubber and
+  # an in-memory S3, no AWS account)
+  timeout --kill-after=30 600 uv run -q --with pytest python -m pytest -q -p no:cacheprovider drishti-compute/src/test/python || rc=1
+  timeout --kill-after=30 600 uv run -q --with pytest --with boto3 --with pyarrow --with deltalake python -m pytest -q -p no:cacheprovider deploy/aws/s3-tables deploy/aws/delta-s3 || rc=1
+  return $rc
 }
 
 # A console lane: its files longest first (the planner's list), then the failed tests once more.
@@ -351,8 +358,9 @@ drill_cleanup() {
   stop_jobs 2>/dev/null || true
   python3 "$PLAN" merge --durations "$DURATIONS" "$LOGS"/timings-*.json 2>/dev/null || true
   local tmp="${TMPDIR:-/tmp}"
-  find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
-  find "$tmp/pytest-of-$(id -un)" -mindepth 1 -maxdepth 1 -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
+  # || true: a folder already gone (or none made) is not a failure; under set -e it would turn a green drill's exit into 1
+  find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
+  find "$tmp/pytest-of-$(id -un)" -mindepth 1 -maxdepth 1 -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
   rm -f "$DRILL_MARK"
   find "$DRILL_TMP" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
   rm -rf "$COPY_BASE"/*."$$".* 2>/dev/null; rmdir "$COPY_BASE" 2>/dev/null || true   # a copy whose job was stopped
@@ -428,9 +436,10 @@ t=$SECONDS
 if [[ "$MODE" == docs ]]; then
   # the docs console tests the gate did not run (the help page's browser test, the guides' images, the examples)
   docs_rest=(drishti-console/tests/test_help*_browser.py drishti-console/tests/test_guide_images.py drishti-console/tests/test_examples.py)
-  start_job tools python_tool_tests
+  start_job tools-a tools_lane_a
+  start_job tools-b tools_lane_b
   start_job console-docs console_files docs "$other_workers" 1 "${docs_rest[@]}"
-  rc=0; watch_jobs console-docs tools || rc=1
+  rc=0; watch_jobs console-docs tools-a tools-b || rc=1
   config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (docs mode; logs in $LOGS/)" >&2; exit 1; }
   stage_done "docs console tests | tool tests" $t
@@ -438,17 +447,18 @@ else
   python3 "$PLAN" lanes --durations "$DURATIONS" --out "$LOGS/lanes" --browser-workers "$browser_workers" --other-workers "$other_workers" \
     --exclude "${GATE_CONSOLE[@]}"
   mv "$LOGS/lanes/browser.txt" "$LOGS/lane-browser.txt"; mv "$LOGS/lanes/other.txt" "$LOGS/lane-other.txt"; rmdir "$LOGS/lanes"
-  stage2=(console-browser console-other tools java21)
+  stage2=(console-browser console-other tools-a tools-b java21)
   start_job console-browser console_lane browser "$browser_workers" "${DRILL_BROWSER_RERUNS:-1}"
   start_job console-other niced 5 console_lane other "$other_workers" 2
-  start_job tools niced 5 python_tool_tests
+  start_job tools-a niced 5 tools_lane_a
+  start_job tools-b niced 5 tools_lane_b
   start_job java21 niced 5 java21_verify
   if [[ -x "$JAVA25_HOME/bin/java" ]]; then start_job java25 niced 10 java25_verify; stage2+=(java25)
   else echo "drill: no JDK 25 at $JAVA25_HOME (set JAVA25_HOME): the forward-compatibility run is skipped" >&2; fi
   rc=0; watch_jobs "${stage2[@]}" || rc=1
   config_unchanged || rc=1; data_unchanged || rc=1
   (( rc == 0 )) || { echo "drill: FAILED (logs in $LOGS/)" >&2; exit 1; }
-  stage_done "console lanes | tools | Java 21 | Java 25" $t
+  stage_done "console lanes | tools (two lanes) | Java 21 | Java 25" $t
   for n in "${stage2[@]}"; do printf '  %-16s %5ss\n' "$n" "$(cat "$LOGS/$n.secs" 2>/dev/null || echo '?')"; done
 fi
 

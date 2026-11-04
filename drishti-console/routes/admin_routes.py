@@ -434,6 +434,26 @@ async def dataload_retry(request: Request):
         return _problem(e)
 
 
+@router.post("/api/dataload/undo")
+async def dataload_undo(request: Request):
+    """Undo a load by its id (DATA_LOAD_RULES.md section 6.3): without ``confirm`` what would be undone (nothing changes); with
+    ``confirm`` equal to the load id, the undo itself, as the server answers it."""
+    body = await json_body(request)
+    me = ident(request)
+    if not me.is_admin:
+        return _admins_only()
+    load_id = str(body.get("loadId") or "").strip() if isinstance(body, dict) else ""
+    if not load_id:
+        return JSONResponse({"code": "DRS-5001", "detail": "give the load's id"}, status_code=400)
+    data = {"loadId": load_id}
+    if isinstance(body, dict) and body.get("confirm"):
+        data["confirm"] = str(body["confirm"]).strip()
+    try:
+        return await request.app.state.backend.admin("POST", "/dataload/undo", me, data)
+    except BackendError as e:
+        return _problem(e)
+
+
 @router.get("/api/dataload/report")
 async def dataload_report(request: Request, path: str = ""):
     """A report the board links to (a file's .loaded.json or .failed.json, a loader's summary or rejects), as the server gives it."""

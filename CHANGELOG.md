@@ -206,6 +206,82 @@
   `FinanceFunctionsTest`, `MoreScalarsTest`, `ListMoreTest` (drishti-rachana), `MoreAggregatesTest`, `RachanaListAnalyticsTest`
   (drishti-bicompute), each on Excel's or MATLAB's documented examples, with empty, masked and wrong-typed arguments.
 
+- **The load rules: the table, pack, business date and mode of every load (DATA_LOAD_RULES.md, decided by the product owner on
+  2026-11-04; DATA_GUIDE.md section 2.8; DATALOAD_INBOX.md section 5.1; TOOLS.md sections 4 and 4.13; CLI_GUIDE.md `data ingest`).** A
+  file's name is `<table>[.<YYYY-MM-DD>].<extension>`; a plain file (`.jsonl`, `.gz`, `.zst`, `.zip`) is one table and one business date; a
+  tar (`.tar`, `.tgz`, `.tar.gz`, `.tar.zip`) holds `<table>/<YYYY-MM-DD>/` folders and is checked whole before anything is written. The
+  business date comes from outside the data only: `--as-of`, the `.ready` file's `business-date:`, the name's date, the business today; a
+  row's own date field is only counted when it differs. The `.ready` file pairs by full name or without the data extension and is read by
+  the command-line loaders too; its keys are checked. A table resolves to one pack (or is refused with the candidates). Append is the
+  default mode (the parallel loader appends to Delta and Iceberg; replace on request). Empty files are ignored. One rule per language,
+  `tools/lake/filedate.py` and `FileDates`, both tested against `tools/lake/testdata/file-dates/names.json`; the command line's and the
+  `.ready` file's routing in `tools/lake/feedroute.py` and drishti-dataload `Routes`/`ReadyNote`. `lake build --plan` shows the plan.
+- **Every row carries its load; appends read newest first; undo by load id.** Both loaders write `_load_id` (`<run>.<file>`, in time order;
+  one per data file, an archive's tables sharing it) and `_source_file` on every row, and list the run's loads in the summary. The Delta and
+  Iceberg connectors read an id two loads wrote on one date as the newest load's copy (the larger `_load_id`, then commit order) in fetches,
+  lists, columns and vector reads. `drishti.py lake undo LOAD_ID`, `POST /api/v1/admin/dataload/undo` and Admin → Data loads → Inbox →
+  Undo a load (a check first, then the load id typed again) remove a load's rows, one commit per table and date, and give a date a load
+  replaced back as it was. A table built before the load columns gains them on its first load, with no file rewritten (Delta: a
+  metadata commit; Iceberg: the columns added). Its rows read as the oldest load, and undoing a later load leaves them as they were.
+- **The data inbox loads tar archives table by table, all or nothing,** routes a table from a file's name, may create a table when asked
+  (`new-table: true`, `drishti.dataload.new-tables`), holds a file whose `.ready` says `hold: true`, pairs a short `.ready` name
+  (`trades.2026-11-03.ready`), and appends by default (`drishti.dataload.default-mode`).
+- **A wrong date in a file name is refused, never replaced.** A plain name whose date part is not a calendar date or is in the
+  future (`trades.2026-13-03.jsonl`, `trades.2999-01-04.jsonl`) is refused with the reason, also when the table is given (`--kind`) and
+  under `--as-of`: one check in `FileDates.decide` (Java, drishti-common) and `filedate.decide` (Python), so `lake build`, the parallel
+  loader, `data ingest`, the store loaders and `var` all refuse it.
+- **Store-loader retention counts back from the load's newest business date** (a plain file's date, a tar's newest folder), not
+  from the business today; `--as-of` means only a plain file's business date (LoadGuard).
+- **The load rules on the lake-file path.** A table of a lake file (`config/lakes/`) takes its partitions and settings from its entry,
+  and the entry's `load-mode` is the table's default mode: `--mode` > the `.ready` file's `mode:` > the lake file's entry > the inbox's
+  `default-mode` > append (DATA_LOAD_RULES.md section 3); the summary's `modeFrom` says which. `target.batch-id` is
+  optional: when given (the inbox always gives one), an append of the batch is committed once; without it each run's rows carry their
+  `_load_id`. The new-table route reads the pack's domain from `PackEntry` (drishti-lakeconfig).
+- **Schema to pack has its own guide**, `docs/guides/SCHEMA_TO_PACK_GUIDE.md` (help page *Schema to pack*), from DATA_GUIDE.md.
+- **Our own data follows the load rules (DATA_LOAD_RULES.md section 10; data/testdata/README.md; VAR_GUIDE.md section 30; the Windows
+  QA guide).** Every committed test-data file is named `<table>.<YYYY-MM-DD>.jsonl.gz` after the table it feeds (`trade_endur`,
+  `counterparty`, `risk-hierarchy` ...; 2,845 files renamed, their bytes unchanged), or is a plain tar of `<table>/<YYYY-MM-DD>/`
+  folders where a date is several files or one run writes many dates (the P&L vectors and scenario PVs one tar a date, the exposure
+  paths, the funds' holdings, the scenario sets and scenario FX with the stress set's files, the desks' 260-day P&L): 2,914 files
+  become 2,858, 181.8 MB become 182.1 MB. The generators write them (`tools/lake/feedfiles.py`: deterministic gzip and tar;
+  `make_testdata.py`, `make_var_data.py`, `make_ccr_data.py`, `make_sensitivity_data.py`, `capture_market.py`, the public-data packs'
+  `publicsnap.py`, `make_trades.py`, `bulk_trades.py`, `pvgen` morning and intraday, `vargen.py`), the public snapshots were rewritten
+  by their own writers from the committed documents. `lake demo` and `build_demo_lakes.py` load every day under its dated name by the
+  rules (no `--date` field, mode replace said); `--endur-dir`/`--source-dir` take `trade_<system>.<date>.jsonl[.gz|.zip]` or tars of
+  `trade_<system>/<date>/` folders and refuse the older `YYYY-MM-DD.jsonl` with the name to give; `var intraday --load`, `var_bench`,
+  `pivot_bench` and the AWS `load-day.sh` date their loads from outside (the name or `--as-of`). Checked: the same 983,924 rows in the
+  same 1,762 (table, business date) pairs, by count and checksum of every row, before and after; the demo lake built from the old
+  inputs by develop's tools and from the new ones the same (89 tables, 4,846 table and date pairs, 4,835,519 rows, every row's checksum
+  equal); the VaR tree of two servers on the two lakes the same (MGMT, LEGAL and LL, three dates, 1-day and 10-day: 786 nodes, VaR, ES
+  and trades, no difference); look-alike ENDUR files through `--endur-dir` the same table either way. The Java tests read the files
+  through drishti-testkit `FeedFiles`. No caller dates rows from a field any more: Admin → Data loads → Lakes says the business date
+  (the file name's, else the business today) and takes an optional other date (`--as-of`), never a field (a bound connector's layout no
+  longer lists the load's own `_load_id` and `_source_file`); `lake scan` reports the rows' date field as counted only; the tests,
+  examples, run configuration and `official_market_data.py` (one `<kind>.<AS_OF>.jsonl` a date) load by the name or `--as-of`.
+  DEMO_DATA.md says the test data's snapshot-plus-changes files are a generator format that `lake demo` replays, not feed files.
+  `data ingest` the same: a kind loads with no date field (each file under `--as-of`, its `.ready` file's date, its name's, or the
+  business today; the run says which, in `lake build`'s words), `--date`/the pack's ingest date only names the field whose differing
+  rows are counted; `pack_from_jsonl --lake` no longer needs `--date` (every kind in the dated store); a file's kind is its name's table
+  (`trade.2026-11-03.jsonl` is `trade`) in `sutra gen`, `pack make` and `data ingest` alike.
+  Lake rows the same (product owner, 2026-11-04): `load_rows.py` keeps each row as it is but stores it under its file's business date
+  by the rules (a tar's `<table>/<YYYY-MM-DD>/` folder; a plain file's `--as-of`, `.ready` date, name's or the business today), never
+  the row's `date`, which is counted when it differs; a plain file of several tables is refused (send a tar). The generators
+  (`make_data.py --lake`, `samplegen/lake.py`, the pack generators' `--lake`) write `<name>-history.tar` and `<name>-restated.tar`;
+  checked against develop's: the same 25,477 rows in the same 517 table-and-date groups, the same ten partition dates (2026-09-17 to
+  2026-09-30), and the two lakes the same (47 tables, 470 table-and-date pairs, 25,430 rows, every row equal).
+  The store loaders the same (product owner, 2026-11-04; the connector guides, DEMO_DATA.md, TOOLS.md section 6, CLI_GUIDE.md
+  `data load`, OPERATIONS.md): PostgreSQL, DuckDB, MongoDB, Redis, Cassandra, Aerospike, Iceberg and the files loader read through one
+  feed (drishti-common `RowFeed`, on `FileDates`, now in drishti-common) and file each row under a business date from outside it (a
+  tar's `<kind>/<YYYY-MM-DD>/` folder; a plain file's `--as-of`, `.ready` date, name's or the business today), never its `date`,
+  which is counted when it differs; a plain file of two kinds is refused (send a tar), and so is `--as-of` with a tar; a tar's layout
+  is checked whole before any row is read; a folder argument loads every tar and JSONL file in it; standard input takes a tar stream
+  too (lake build's Iceberg writer and the Delta-to-Iceberg copy send one); one note line per tar (its dates). `make_data.py --jsonl`
+  and `bulk_trades.py --jsonl` write tars of `<kind>/<YYYY-MM-DD>/` folders (`bulk_trades.py --jsonl -` or a plain file only with
+  `--days 1`); `tools/load-*.sh`, `load-cassandra.ps1`, `load-iceberg.ps1` and `bench/pinning.sh` write them under
+  `<data folder>/build/loader-rows/`, load them and remove them, and no longer pass `--as-of` (retention counts back from the
+  business today). Checked against develop's generators: the same 25,430 sample rows and 900 book rows, each in the folder of its own
+  date (0 rows elsewhere), and a DuckDB store loaded from the tars holds exactly develop's rows under the same dates.
+
 ### Under construction (lean)
 
 - **Nothing unbuilt looks built** ([UNDER_CONSTRUCTION.md](docs/admin/UNDER_CONSTRUCTION.md), product owner 2026-11-04): figures that are

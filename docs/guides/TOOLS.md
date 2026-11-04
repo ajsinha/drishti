@@ -22,7 +22,7 @@ on **synthetic** data, and, for the tools that run unattended, how to schedule t
 safe re-runs).
 
 The depth lives elsewhere and is linked from each section: every option of every command with its output is in
-[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema); running a site
+[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md); running a site
 (deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
 
 All the data on this page is invented, and every example runs on a fresh clone as it is: the files are the committed test data
@@ -137,7 +137,9 @@ file or a folder of them, or a `.zip`, `.tar.gz`, `.tgz` or `.tar` archive of th
 the Delta connector reads:
 
 * one row per document: `id` (`--key`, a dotted path), `doc` (the **whole** document as JSON: nested arrays such as `LEGS[]` and
-  `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (`--date FIELD`, or `--as-of DATE` for a snapshot);
+  `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (each file's: `--as-of`, else its `.ready` file's
+  `business-date:`, else its name's date, `trades.2026-11-03.jsonl.gz`, else the business today; a document's own `--date` field is only
+  counted when it differs: [DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file));
 * partitioned by `business_date` and then any number of **classifier** columns (`--partition-by PRODUCT_TYPE[,DESK...]`, up to
   four), as Hive folders `business_date=2026-10-16/PRODUCT_TYPE=ComSwap/`;
 * **promoted** columns (`--promote COUNTERPARTY,PORTFOLIO,QUANTITY`): real columns a reader filters on without parsing the
@@ -167,8 +169,8 @@ files, go in a folder beside the lake (never the system temp folder), removed wh
 ([DATA_GUIDE.md section 2.7](DATA_GUIDE.md#7-archives-zip-and-tarballs)): other members are skipped with a note; a build writes one
 table, so an archive's folders, if it has any, must all be that table's name (`--table`, else the kind), and any other folder is
 refused and named; unsafe names, links, nested archives and zip bombs are refused before a row is read. A reject names its member:
-`trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes one archive per business date the same way
-(`2026-10-28.zip`), and `tools/samplegen/load_rows.py --rows` an archive of lake rows, a folder per table.
+`trades.zip!/part-2.jsonl:14`. `tools/build_demo_lakes.py --endur-dir` takes the same feeds (`trade_endur.2026-10-28.jsonl.zip`, or a tar
+of `trade_endur/<date>/` folders), and `tools/samplegen/load_rows.py --rows` a tar of lake rows, a `<table>/<YYYY-MM-DD>/` folder per table and date.
 
 ### 4.1 Look first: lake scan
 
@@ -176,7 +178,7 @@ refused and named; unsafe names, links, nested archives and zip bombs are refuse
 often it is present, its types and most frequent values, then suggests an id, a business date and classifiers:
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake scan data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --limit 500 | tail -n 8
+$ drishti-console/.venv/bin/python tools/drishti.py lake scan data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --limit 500 | tail -n 8
 PRECIOUS_METAL_FLAG                    500         2  text  (456), Y(44)
 TT_GROUP                               500         1  text  (500)
 TT_BOOK                                500         1  text  (500)
@@ -184,18 +186,19 @@ LEASE_PERPETUITY_FLAG                  500         3  text  (477), N(12), Y(11)
 SETTLEMENT_DATE                        500         1  text  (500)
 LEGS                                   500         0  array
 EVENTS                                 500         0  array
-suggested --key TRADE_ID   --date START_DATE   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTFOLIO
+suggested --key TRADE_ID   --partition-by: PRODUCT_TYPE, PRODUCT_SUB_TYPE, PORTFOLIO   the rows' date field: START_DATE (counted only: the business date is the file name's or --as-of)
 ```
 
 `(456)` is a blank value counted 456 times. The id is a field present in (nearly) every document with every value different;
-the business date ranks names such as *business*, *cob*, *as of* and *snapshot* first; the classifiers are text fields rarely
-blank with 2 to 40 values, *product* and *type* first. This export is a snapshot of the book (its dates are trade and start
-dates, not the day of the extract), so the walk-through below uses `--as-of` for the day the file was taken, 2026-09-22.
+the rows' date field ranks names such as *business*, *cob*, *as of* and *snapshot* first, and is only reported: a load takes its
+business date from outside the rows ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)), the file's name
+(`trade_endur.2026-07-08`) or `--as-of`; the classifiers are text fields rarely blank with 2 to 40 values, *product* and *type* first.
+The walk-through below uses `--as-of` for another day, 2026-09-22.
 
 ### 4.2 The first load
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY \
     --lake lake --domain trading
 engine: drishti (Drishti's Java writer in drishti-server-2.9.11.b-exec.jar)
@@ -223,7 +226,7 @@ rollups it had read from a lake, so it never answers from the data before this b
 The next file of the book holds the day's changes (159 trades). Two bad lines added at its end show what a reject looks like:
 
 ```
-$ (zcat data/testdata/trades/endur/changes-2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
+$ (zcat data/testdata/trades/endur/trade_endur.2026-09-23.jsonl.gz; echo '{"PRODUCT_TYPE": "Cash"}'; echo 'not json') | gzip > day2.jsonl.gz
 $ drishti-console/.venv/bin/python tools/drishti.py lake build --from day2.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-23 --partition-by PRODUCT_TYPE \
     --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake --domain trading
 engine: drishti (Drishti's Java writer in drishti-server-2.9.11.b-exec.jar)
@@ -262,7 +265,7 @@ applies each day's changes to the previous day by key and writes the whole book 
 ### 4.4 Re-running a day replaces that day only
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz ... --lake lake --domain trading -q
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz ... --lake lake --domain trading -q
 2026-10-17T17:44:01-04:00 lake-build ok exit=0 run=20261017T174358-1340108 domain=trading kind=trade engine=drishti mode=overwrite-dates rows=4407 rejected=0 dates=1 partitions=5 seconds=3.14
 $ find lake -maxdepth 4 -type d | sort
 lake
@@ -293,7 +296,7 @@ lake/trading/trade/_delta_log
 A table keeps the partitioning it was created with; a run that asks for another fails before reading anything:
 
 ```
-$ ... lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PORTFOLIO --lake lake --domain trading
+$ ... lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --key TRADE_ID --as-of 2026-09-22 --partition-by PORTFOLIO --lake lake --domain trading
 lake build: lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)
 summary: lake/_drishti-lake/runs/20261017T174401-1340283.json
 2026-10-17T17:44:01-04:00 lake-build failed exit=1 run=20261017T174401-1340283 domain=trading kind=trade mode=overwrite-dates seconds=0.0 error="lake/trading/trade is partitioned by business_date, PRODUCT_TYPE; this run asks for business_date, PORTFOLIO (give --partition-by PRODUCT_TYPE or write a new table)"
@@ -336,7 +339,7 @@ The same day through `deltalake`, into a second lake; then the table Drishti's w
 the three runs above), read back with deltalake: the two engines write the same table.
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --key TRADE_ID \
+$ drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --key TRADE_ID \
     --as-of 2026-09-22 --partition-by PRODUCT_TYPE --promote COUNTERPARTY,PORTFOLIO,QUANTITY --lake lake2 --domain trading --engine deltalake
 engine: deltalake (the Python deltalake package)
 business date  PRODUCT_TYPE           rows
@@ -486,7 +489,7 @@ The pack has three Delta connectors for `trade`, so the run names one with `--co
 sixteen promoted columns); captured as a dry run:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --pack config/packs/trading \
+drishti-console/.venv/bin/python tools/drishti.py lake build --from data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --pack config/packs/trading \
     --kind trade --connector trade-endur --key TRADE_ID --as-of 2026-09-22 --partition-by PRODUCT_TYPE --lake lake3 --dry-run --json
 # "pack": "trading", "domain": "trading", "kind": "trade", "table": "lake3/trading/trade_endur", "promote": ["TRADE_ID", "SOURCE_SYSTEM",
 # "PRODUCT_TYPE", ... "TRADER_ID"] (16), "documents": 4407, "status": "dry-run", "exitCode": 0
@@ -702,8 +705,8 @@ the 2.3M sizing: [PARALLEL_LOADER.md](../architecture/PARALLEL_LOADER.md). `tool
 **Through lake build** (the lock, the run log, the summary, the signal as always):
 
 ```bash
-python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --pack config/packs/market-risk --kind scenario-pv \
-    --key SCENARIO_PV_ID --date BUSINESS_DATE --lake /var/lib/drishti/delta \
+python3 tools/drishti.py lake build --engine java --from /data/pv/2026-10-28/ --as-of 2026-10-28 --pack config/packs/market-risk --kind scenario-pv \
+    --key SCENARIO_PV_ID --mode overwrite-dates --lake /var/lib/drishti/delta \
     --loader-set memory.budget-mb=16384 --loader-set memory.spill-dir=/mnt/nvme/spill
 ```
 
@@ -753,7 +756,10 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.format` | `jsonl` | JSON Lines (the data standard); `.gz` and `.zst` decompressed as streams, multi-member gzip included |
 | `source.pack`, `source.connector` | none | a pack folder (as `--pack`): the connector's domain and table, `layout.<kind>.columns`, `vectors`, `flatten`, `ingest.<kind>.key` and `date`; the keys below win |
 | `source.id` | `id` (or the pack's) | the id field (`--key`), a dotted path |
-| `source.date` / `source.as-of` | (one of them) | the business-date field (ISO date or date-time, yyyymmdd) / one date for every row |
+| `source.as-of` | none | one business date for every file of the input; else each file's: its `.ready` file's `business-date:`, its name's date (`<table>.<YYYY-MM-DD>.jsonl.gz`), the business today; a tar's members their folders' ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file)) |
+| `source.date` | the pack's | a row's own date field: never the partition, only counted when it differs from its file's date (`fileDates`, `otherDateRows`, `dateNotes` in the summary) |
+| `--as-of`, `--table`, `--pack`, `--kind`, `--mode`, `--key`, `--date-from`, `--plan`, `--run-id` | | the command line's options over the file: `source.as-of`, `target.table`, `source.pack`, `target.kind`, `target.mode` (`append`, the default, or `replace`), `source.id`, `source.date-from`, a dry run; `--run-id` gives the run's id (its rows' `_load_id` is `<run-id>.<n>`; the data inbox passes one for every table of an archive) |
+| `source.date-from` | `auto` | `auto` as above; `name`: a file whose name carries no date (and no `as-of`, no `.ready` date) refuses the load |
 | `source.promote` | the pack's | fields kept as columns (`layout.<kind>.columns`) |
 | `source.vectors` (`vector`) | the pack's | list-of-numbers fields as `list<double>` columns, the document keeping a `{"$vector": …}` marker (VAR_GUIDE.md section 29.3) |
 | `source.flatten` | the pack's | `NAME: LEGS[0].NOTIONAL`: fields added to the document and promoted |
@@ -797,11 +803,12 @@ source:
   files: /data/pv/2026-10-28/*.jsonl.gz
   pack: config/packs/market-risk
   id: SCENARIO_PV_ID
-  date: BUSINESS_DATE
+  as-of: 2026-10-28                       # the day's folder: its business date, given (a row's own date is only counted)
 target:
   format: delta
   lake: s3://bank-lake/delta
   kind: scenario-pv                       # the table s3://bank-lake/delta/risk/scenario-pv (domain from the pack)
+  mode: replace                           # the date replaced on a re-run (append is the default)
   storage-options: {region: us-east-1}
   layout: {sort-by: [LEGAL_ENTITY, DESK, id], file-size-mb: 256, shard-aligned: true}
 parallel: {writers: 16}
@@ -816,7 +823,7 @@ source:
   files: s3://landing/pv/2026-10-28/*.jsonl.zst
   storage-options: {region: us-east-1, endpoint: '${MINIO_ENDPOINT}', path-style: true}
   id: POSITION_ID
-  date: BUSINESS_DATE
+  as-of: 2026-10-28
   promote: [LEGAL_ENTITY, DESK, TT_BOOK, CCY]
   vectors: [PV]
 target:
@@ -830,14 +837,14 @@ memory: {budget-mb: 8192, spill-dir: /scratch}
 **A REST catalog** (AWS Glue's Iceberg endpoint): add `target.iceberg: {catalog: rest, uri: 'https://glue.us-east-1.amazonaws.com/iceberg',
 warehouse: '<account id>', catalog.rest.signing-name: glue}` (the domain is the namespace).
 
-**An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/…jsonl.gz` and `position/…jsonl`; each folder its own table,
+**An archive with a folder per dataset** (`bundle.tar.gz` holding `trade/2026-10-28/…jsonl.gz` and `position/2026-10-28/…jsonl`: each
+table folder its own table, each date folder its business date ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md) section 2);
 every dataset read and checked before the first commit; a folder not listed under `datasets:` refuses the run):
 
 ```yaml
 source:
   files: /landing/2026-10-28/bundle.tar.gz
   id: id
-  date: BUSINESS_DATE
 target:
   lake: /var/lib/drishti/delta
   domain: trading
@@ -858,10 +865,9 @@ datasets: 2
 
 ```yaml
 source:
-  files: 'C:\drishti-private\pv\cob-2026-10-28.*.jsonl.gz'
+  files: 'C:\drishti-private\pv\scenario-pv.2026-10-28.jsonl.gz'      # dated by its name
   pack: 'C:\drishti\config\packs\market-risk'
   id: SCENARIO_PV_ID
-  date: BUSINESS_DATE
 target:
   format: delta
   lake: 'C:\drishti\data\delta'
@@ -931,7 +937,7 @@ Lines (for example one per `PRODUCT_TYPE`). The first five are the Java tool in 
 (`tools/sutragen.py`) and lints its result with the Java tool unless `--no-lint`.
 
 ```bash
-mkdir -p build/tools-walk && zcat data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz | head -n 300 > build/tools-walk/trade.jsonl
+mkdir -p build/tools-walk && zcat data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz | head -n 300 > build/tools-walk/trade.jsonl
 drishti-console/.venv/bin/python tools/drishti.py sutra gen build/tools-walk --key trade=TRADE_ID --match trade=PRODUCT_TYPE --out build/tools-walk/sutras
 drishti-console/.venv/bin/python tools/drishti.py sutra lint config/packs/trading --strict
 ```
@@ -979,7 +985,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack check build/tools-walk/sy
 --strict` on the drafted pack exits `1`: the default Sutra shows fields its About text does not explain yet (`DRS-2047`, a warning that
 `--strict` makes an error). Write the About text (`pack about-check`), then make CI strict.
 
-Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
+Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
 **Scheduling**: `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent
 (the same bundle twice changes nothing) and keeps the replaced version for `pack rollback`.
 
@@ -1013,15 +1019,15 @@ first as above (`lake scan` reads `.gz` directly).
 `data ingest` writes JSON Lines into a Delta lake (the pack's layout, `business_date` partitions only) or the File connector's
 folders (`--store files`); `--watch DIR` turns a drop folder into a feed. Use `lake build` instead for JSON arrays, gzip, large
 files, classifier partitions or a lock and a summary; use `data ingest --store files` for the File connector. A dry run on the
-300 trades, by start date:
+300 trades, under a business date given from outside (`--date`, optional, names the field the rows carry their own date in: it is only
+counted, never the date they are stored under):
 
 ```
-$ drishti-console/.venv/bin/python tools/drishti.py data ingest --from build/tools-walk --domain trading --key TRADE_ID --date START_DATE --store files --root build/tools-walk/files --dry-run | tail -n 5
-trade               2026-09-01             18
-trade               2026-10-01             13
-trade               2026-11-01              7
-trade               2026-12-01              3
+$ drishti-console/.venv/bin/python tools/drishti.py data ingest --from build/tools-walk --domain trading --key TRADE_ID --date START_DATE --as-of 2026-09-22 --store files --root build/tools-walk/files --dry-run | tail -n 4
+trade               2026-09-22            300
 total rows: 300
+trade.jsonl: business date 2026-09-22 from the command line
+300 rows of trade.jsonl carried another date in START_DATE; loaded under 2026-09-22
 ```
 
 `data load --store delta|files|postgres|duckdb|mongodb|redis|aerospike|cassandra|iceberg` runs the store's demo loader (section 6);
@@ -1512,7 +1518,7 @@ drishti-console/.venv/bin/python tools/drishti.py pivot explain --source trade -
 ## 6. Store loaders: `tools/load-*.sh`
 
 Each loader writes the banking packs' demo data (1,791 sample documents x 10 business days, and with `--trades N --days D` a
-generated trade book streamed in) into one store, **in the layout that store's connector reads at scale**. `drishti.py data load
+generated trade book) into one store, **in the layout that store's connector reads at scale**. `drishti.py data load
 --store S` runs them with the same options. Keep local runs small (`--trades 10000`).
 
 | Script | Store and layout | Retention |
@@ -1532,7 +1538,12 @@ tools/load-duckdb.sh /tmp/demo.duckdb --trades 10000 --days 3
 drishti-console/.venv/bin/python tools/drishti.py data load --store files --trades 1000 --days 1 -- /tmp/demo-files
 ```
 
-**Scheduling.** The loaders guard dates (a row dated after tomorrow is not loaded and the run fails naming it), replace each day
+**Dates.** The scripts' generators write loader rows as tars of `<kind>/<YYYY-MM-DD>/` folders under `<data folder>/build/loader-rows/`
+(removed after the load), and every loader files each row under its folder's date, or a plain file's (`--as-of`, its `.ready` file,
+its name, the business today), never the row's own `date`, which it only counts when it differs: the load rules of
+[DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md), the same as `lake build`'s.
+
+**Scheduling.** The loaders guard dates (a tar folder dated in the future refuses the archive; a business date after tomorrow is not loaded and the run fails naming it), replace each day
 they reach in one step, and refuse to drop more than half a table (`--max-drop-share`, `--force-drop`), so a nightly cron entry
 that re-runs is safe; the details are at the top of each script and in [DEMO_DATA.md](../connectors/DEMO_DATA.md). The connectors.
 guides are listed in [CONNECTORS.md](../connectors/CONNECTORS.md).
@@ -1617,16 +1628,16 @@ ExecStart=/opt/drishti/drishti-console/.venv/bin/python tools/drishti.py lake ma
 | `tools/packgen/climate/make.py`, `liquidity/make.py`, `oprisk/make.py`, `retail/make.py` | the climate-risk, liquidity-risk, operational-risk and retail-banking packs, built on the banking data |
 | `tools/packgen/genomics/make.py` | the genomics pack (public reference facts, synthetic samples) |
 | `tools/packgen/world/make.py` (the halves `economics/make.py`, `politics/make.py`) with `tools/realdata/realdata.py` | the world-economy pack from real public data (World Bank, IMF; internal demos only) |
-| `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trades-<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
+| `tools/packgen/trades/make_trades.py` | **The trading pack's trades of three source systems** in the common schema (upper-snake, `LEGS` → `CASH_FLOWS` → `RESETS`, `EVENTS`): `--trades N` per system (ENDUR, CALYPSO, MUREX), `--days D` business days with about 6% amended each day, one `<out>/<system>/trade_<system>.<date>.jsonl.gz` a day; with `--lake <root>` each goes through `lake build --connector trade-<system>` into that system's table (`trade_endur`, `trade_calypso`, `trade_murex`). Deterministic; 10,000 trades or fewer on a laptop. `drishti-console/.venv/bin/python tools/packgen/trades/make_trades.py --trades 50 --days 2 --out data/build/trades` prints `ENDUR: 50 trades x 2 days -> data/build/trades/endur` and the same for CALYPSO and MUREX. |
 | `tools/packgen/var/make_var_data.py` | **The VaR engine's inputs** ([VAR_GUIDE.md Part II](VAR_GUIDE.md#14-the-contract-at-a-glance)) from the committed trades and desks, as an upstream risk batch delivers them: one 509-scenario P&L vector per live trade (every one: statuses NEW, VALIDATED, AMENDED, not matured; 9,572 trades) with the terms the server derives positions from (a synthetic `SECURITY_ID` shared by several trades for securities and listed products, by the market-risk pack's `positions:` rules), the scenario set, the MGMT and LEGAL hierarchies with limits, and 28 portfolio definitions (a desk's, a legal entity's, rules and baskets, overlapping), written to `data/testdata/market-risk/<kind>/` with their `testdata.yaml` entries, and the pack's samples and Sutra tests. No position, VaR or node history is written: the server derives and computes them. `--budget N` values at most N trades per book (default 0: every live trade), `--out` writes elsewhere, and `--check` fails when the committed files differ. The form is a choice per system: `--pv-systems ENDUR` (the default: Endur's trades as scenario PVs in their own currency, with the scenario FX), `--pnl-systems` (as P&L vectors), `--all-vectors` (every trade a P&L vector: the bank 112,035,906 / 160,132,107). `--position-systems MUREX` sends those systems per position (`GRAIN: POSITION`, naming their trades in `TRADE_IDS`); `--inputs-config` prints the `drishti.var.inputs` pins matching the data. Deterministic; `tools/packgen/var/test_var_data.py` checks the data. |
 | `tools/packgen/sensitivity/make_sensitivity_data.py` | **The demo position sensitivities and the factor dictionary** (the planned kinds `position-sensitivity` and `risk-factor`, [SENSITIVITIES_AND_FRTB_SA.md](../architecture/SENSITIVITIES_AND_FRTB_SA.md)) from the VaR factor model, into `data/testdata/market-risk/`; run by `tools/testdata/make_testdata.py` |
 | `tools/pvgen/morning.py`, `intraday.py`, `publish_kafka.py`, `check.py` (each with a `.sh` beside it and a PowerShell form: `pvgen-morning.ps1`, `pvgen-intraday.ps1`, `pvgen-publish-kafka.ps1`, `pvgen-check.ps1` in `tools/windows`) | **A stand-in pricing system** ([VAR_GUIDE.md section 15.12](VAR_GUIDE.md#1512-producing-pl-vectors-and-scenario-pvs)): JSONL only, every line one row of its kind's contract. Every record leads with what it is (`VALUE_TYPE`, `GRAIN`, its id, `CURRENCY`, `SOURCE_SYSTEM`); `--grain position` (or `--position-systems SYS`) sends per position instead of per trade. `morning.py` writes a full day's `scenario-pv`, `pnl-vector` and `fx-scenario` (per-system forms as above, `--date`, `--lake`, `--server`); `intraday.py` N small batches of amended, new and cancelled trades (`--batches 20 --trades-per-batch 15`, `--seed`, `--first` for a second run, `--lake`, `--server`, `--every 30s`); `publish_kafka.py` the same to the PV topic, each message JSONL text of `--per-message` records, a cancel a cancel line (`--rate`, `--seconds`; kafka-python); `check.py` recomputes the bank's and the desks' VaR and ES from the files and compares them with the server. Each has `--help` and `--dry-run`; `tools/pvgen/test_pvgen.py` checks them. `drishti-console/.venv/bin/python tools/pvgen/morning.py --dry-run` prints `morning run of 2026-09-30: 1,339 trades as scenario PVs (ENDUR), 8,233 as P&L vectors, scenario FX for 6 currencies; computed at 2026-09-30T06:00:00Z`. |
 | `tools/packgen/ccr/make_ccr_data.py` | **The exposure engine's inputs** ([EXPOSURE_GUIDE.md](EXPOSURE_GUIDE.md)) from the committed netting sets, as an upstream exposure simulator delivers them: a simulation run (`simulation-run`: 200 paths, 13 primary dates 1W .. 10Y and their 10-business-day look-back dates) and every live member trade's MtM on every path at every grid date up to its maturity (`exposure-path`) for eight netting sets, written to `data/testdata/counterparty-risk/<kind>/` with their `testdata.yaml` entries, the pack's samples and `drishti-compute`'s parity reference (`ccrmath.py`'s figures). No exposure figure is written. `--check` fails when the committed files differ, `--full --out DIR` writes every netting set that fits in 10,000 trades with 500 paths (local benchmarks), `--demo --out DIR` writes the demo lake's run (whole counterparties within 9,500 trades, 200 paths: 74 netting sets, 8,022 live trades on the data's date; what `lake demo --exposure demo` loads), `--reconcile I/N --stored DIR` compares stored profiles with the computed ones. Deterministic; `tools/packgen/ccr/test_ccr_data.py` checks the data. |
 | `tools/testdata/sample_docs.py` | **The data samples** ([docs/contracts/samples/README.md](../contracts/samples/README.md)): one page per data type of `data/testdata` (and per kind a bank or a public source produces that has only pack samples), each with a real record pretty-printed as JSON, long arrays folded, one record per sub-type (a trade's product type, a P&L or PV form, a curve type), every field explained from the kind's data contract, the fields only other rows have, and a checklist for the production query; the index groups them by what the bank produces and lists the kinds Drishti computes. Reads every row of the test data (four worker processes, about 25 s). `--check` fails when a page is stale; `audit` compares every contract with all its committed rows (fields missing from the contract, required fields null, types and enums that differ). `tools/test_sample_docs.py` runs both. |
-| `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`load-delta.sh --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE\|-` loader rows for the other stores) |
+| `tools/samplegen/bulk_trades.py` | a large trade book for scale tests, N trades over D business days: one JSONL file a day under `data/build/bulk/<system>/`, then each through `lake build` into the system's trade table (`load-delta.sh --trades`; `--no-lake` writes the JSONL only, `--jsonl FILE.tar` loader rows for the other stores: a tar of `trade/<YYYY-MM-DD>/` folders; a plain file or `-` only with `--days 1`) |
 | `tools/demonames.py` | the bank's own names in the demo data (`config/demo/names.yaml`): the mapping `lake demo --names` and `build_demo_lakes.py --names` apply as they load, and the pack generators as they write samples ([DEMO_DATA.md](../connectors/DEMO_DATA.md#your-banks-names)) |
 | `tools/convertcmd.py` (`drishti.py convert FILE`) | CSV (deprecated input), a JSON array or a folder of per-entity `.json` files into JSON Lines ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
-| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.jsonl`, `<name>-restated.jsonl`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
+| `tools/samplegen/lake.py`, `tools/samplegen/load_rows.py` | one pack's sample history as dated JSONL loader rows (`<name>-history.tar`, `<name>-restated.tar`), and the loader that puts such rows into Delta ([DATA_GUIDE.md](DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)) |
 
 The examples on this page read the committed test data (`data/testdata`, written by `tools/testdata/make_testdata.py`). It writes the
 same bytes on every Python version and machine: amounts that are sums (a netting set's `NET_MTM`, a counterparty's) are added with
@@ -1647,7 +1658,7 @@ of Parquet.
 
 | Tool | What it is for |
 |---|---|
-| `tools/drill.sh` | "Drill it" ([PACK_DEVELOPER_GUIDE.md §2.6](PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane and an other lane (files longest first), the Python tool tests, and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure. Once per release wave. |
+| `tools/drill.sh` | "Drill it" ([PACK_DEVELOPER_GUIDE.md §2.6](PACK_DEVELOPER_GUIDE.md#26-the-drill-toolsdrillsh)): first a gate of a few minutes (licence headers, the generated documents and data that must be current, the docs and help console tests, and one Java 21 build of the working tree with Javadoc, doclint and Spotless that runs only the rule tests), stopping at its first failure; then at once the console suite in a browser lane and an other lane (files longest first), the Python tool tests in two lanes (every `tools/**/test_*.py` and `tests/` folder, found rather than listed, one pytest process a file, a failed file listed after all have run), and the Java 21 verify and the Java 25 one, each in a copy of the committed tree; failed console tests run once more file by file (flakes logged, `tools/drill-known.txt` lists accepted failures); a check that the tests left no file under `config/` and wrote nothing to the data folder (a server running from the repository turns the data check into a listed warning); then push develop, merge into main, push main; nothing is pushed unless all pass. `--docs` for a docs-only change, `--no-push` to verify only, `--keep-going` to see every failure. Once per release wave. |
 | `tools/drillkit/drill_plan.py` | the drill's console planner: `lanes` (the browser lane holds every file that drives a browser or uses the scratch ports, the other lane the rest; each longest first from `data/drill/durations.json`), `merge` (a run's per-file seconds into the durations), `rerun` (each failed test once more, file by file, under a time limit of twice the file's recorded time and at least ten minutes; every outcome reported; known failures from `tools/drill-known.txt` accepted) |
 | `tools/drillkit/drill_timings.py` | the drill's pytest plugin (`-p drill_timings`): the seconds each test file took, written to the file `DRILL_TIMINGS_OUT` names when the session ends |
 | `tools/bicompute-unit.sh` | a light check of the pivot engine while a drill or a benchmark holds the machine: `javac` and the JUnit launcher at `-Xmx768m`, no Maven, against the jars of the last release installed in `~/.m2` (`DRISHTI_M2_VERSION`) and this checkout's `ErrorCode`; with test class names (`LivePivotTest ScaleSwitchesTest`) it runs them; `--server` also compiles the server's pivot package; its temporary folder is removed on exit. Never instead of the Maven build |
@@ -1732,7 +1743,7 @@ python3 tools/api_docs.py zip              # drishti-console/web/apidocs/drishti
 
 Bring schema files and JSON or JSON Lines data; the page profiles every file in the browser (arrays streamed), proposes kinds, ids,
 business dates and one Sutra per type, previews them, and builds a pack bundle to download or deploy. The command-line twin is
-`drishti.py pack make`. Guide: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
+`drishti.py pack make`. Guide: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
 
 ### 10.2 Admin → Data loads → Lakes (`/admin/lakes`)
 
@@ -1757,9 +1768,11 @@ from its Delta log alone (no data file is opened, so it opens at once on a table
 1. **The file.** Choose a `.json` (array), `.jsonl`, `.ndjson` or `.gz` file. It is streamed to the console's temporary folder as
    it uploads (a progress bar; never held in memory; up to `lakes.max_upload_mb`, 4,096 MB).
 2. **Id, business date and classifiers.** The console scans the file as a stream (the first `lakes.scan_docs`, 20,000, documents)
-   and lists every field with how often it is present, how many values it has and the most frequent ones. The suggested id, date
-   and first classifier are selected; *None: one date for the whole file* is the `--as-of` of a snapshot. Tick **Classifier** for
-   the partition columns and **Promote** for the real columns.
+   and lists every field with how often it is present, how many values it has and the most frequent ones. The suggested id and first
+   classifier are selected. **Business date** says the date the rows go under, by the load rules
+   ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)): the date in the file's name (`book.2026-10-16.json`), else the business
+   today; never a field of the rows. *Another business date for the whole file* gives one (the build's `--as-of`). Tick **Classifier**
+   for the partition columns and **Promote** for the real columns.
 3. **Where it goes.** A new lake (a root from `lakes.roots`, a domain, a kind) or an existing table (its partitioning is then
    kept and shown); what to do when a date is already there (the three modes of 4.4); and the pack whose Delta connector should
    read it. **Bind** writes the connector's file through the connector API (validated, written atomically, audited, the old text

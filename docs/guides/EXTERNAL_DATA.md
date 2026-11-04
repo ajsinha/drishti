@@ -135,8 +135,8 @@ internal only: imf: the IMF's terms allow reuse with attribution, but commercial
 
 ```console
 $ python3 tools/publicdata/news_and_markets.py status
-committed snapshot quote: snapshot-2026-10-18.jsonl.gz, 20 documents, 130.6 KB
-committed snapshot news: snapshot-2026-10-18.jsonl.gz, 71 documents, 141.4 KB
+committed snapshot quote: quote.2026-10-18.jsonl.gz, 20 documents, 130.6 KB
+committed snapshot news: news.2026-10-18.jsonl.gz, 71 documents, 141.4 KB
 SOURCE  LICENCE                                           USE            LAST REFRESHED  CACHED
 quote   Yahoo terms of service: personal use, no redistr  internal only  never           -
 news    Headlines and links belong to their publishers    internal only  never           -
@@ -156,7 +156,7 @@ us-treasury  Public domain (US Government work)            committable  never   
 sofr         NY Fed terms of use: reuse with attribution   committable  never           -
 estr         ECB: free reuse with the source acknowledged  committable  never           -
 
-pack market-data: writes <data>/publicdata/market-data (fx-spot.jsonl, ir-curve.jsonl, rate-fixing.jsonl)
+pack market-data: writes <data>/publicdata/market-data (fx-spot.<date>.jsonl, ir-curve.<date>.jsonl, rate-fixing.<date>.jsonl)
 cache ~/drishti/data/publicdata/cache/market-data
 manifest ~/drishti/data/publicdata/market-data/manifest.json
 ```
@@ -221,7 +221,7 @@ dry run: world-economy, sources worldbank, imf, undp, factbook, years 2015-2025
 ```console
 $ python3 tools/publicdata/official_market_data.py refresh --dry-run
 dry run: market-data -> ~/drishti/data/publicdata/market-data
-  ecb-fx (ECB: free reuse with the source acknowledged): fx-spot.jsonl from 2025-10-26; https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip
+  ecb-fx (ECB: free reuse with the source acknowledged): fx-spot.<date>.jsonl from 2025-10-26; https://www.ecb.europa.eu/stats/eurofxref/eurofxref-hist.zip
   us-treasury (Public domain (US Government work)): ir-curve.jsonl from 2025-10-26; https://home.treasury.gov/resource-center/data-chart-center/interest-rates/daily-treasury-rates.csv/2025/all?type=daily_treasury_yield_curve
   sofr (NY Fed terms of use: reuse with attribution): rate-fixing.jsonl from 2025-10-26; https://markets.newyorkfed.org/api/rates/secured/sofr/search.json?startDate=2025-10-26&endDate=2026-10-26
   estr (ECB: free reuse with the source acknowledged): rate-fixing.jsonl from 2025-10-26; https://data-api.ecb.europa.eu/service/data/EST/B.EU000A2X2A25.WT?startPeriod=2025-10-26&format=csvdata
@@ -321,7 +321,8 @@ them (`world_economy.py refresh --no-imf`) or get permission.
 ## How external data reaches the server
 
 1. **The refresh script** fetches into its download cache and writes the pack's data: for us-equities and gleif one gzipped JSON
-   Lines snapshot per kind, `data/testdata/<pack>/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`; for
+   Lines snapshot per kind named by the load rules, `data/testdata/<pack>/<kind>/<kind>.<date>.jsonl.gz` (a large kind a tar of
+   `<kind>/<date>/` parts), listed in `data/testdata/testdata.yaml`; for
    world-economy the normalised dataset (`tools/realdata/dataset/`) and the pack's samples; for news-and-markets the snapshot in
    `data/testdata/news-and-markets/`; for market-data JSON Lines files in the data folder.
 2. **The lake.** `python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`) reads `data/testdata/testdata.yaml`
@@ -711,15 +712,18 @@ python3 tools/publicdata/official_market_data.py refresh ecb-fx --years 5 --scop
 python3 tools/publicdata/official_market_data.py refresh us-treasury sofr --since 2020
 ```
 
-It writes one file a kind, in the pack's own shapes (UPPER_SNAKE): `fx-spot.jsonl` (`FX-EURUSD` and eleven more pairs, crosses
-through EUR, with daily `HISTORY`), `ir-curve.jsonl` (`CRV-USD-UST-PAR`: the latest par curve and the 2Y, 10Y and 30Y history)
-and `rate-fixing.jsonl` (`FIX-SOFR`, `FIX-ESTR`, newest fixing first). A rerun of one source keeps the other sources' documents
-in the same file. Every document carries `PROVENANCE` (source, URL, licence, retrieval time). Load them into the lake:
+It writes one file a kind and business date, named by the load rules ([DATA_LOAD_RULES.md](../architecture/DATA_LOAD_RULES.md)):
+the date is each document's `AS_OF`, the day of its newest observation, in the pack's own shapes (UPPER_SNAKE): `fx-spot.<date>.jsonl`
+(`FX-EURUSD` and eleven more pairs, crosses through EUR, with daily `HISTORY`), `ir-curve.<date>.jsonl` (`CRV-USD-UST-PAR`: the latest
+par curve and the 2Y, 10Y and 30Y history) and `rate-fixing.<date>.jsonl` (`FIX-SOFR`, `FIX-ESTR`, newest fixing first; two files when
+the two fixings are of different days). A rerun of one source keeps the other sources' documents. Every document carries `PROVENANCE` (source, URL, licence, retrieval time). Load them into the lake:
 
 ```bash
 uv run --with deltalake --with pyarrow --with pyyaml python tools/ingest_jsonl.py --from data/publicdata/market-data \
-    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --date AS_OF --lake data/delta
+    --domain market --key fx-spot=PAIR,ir-curve=CURVE_ID,rate-fixing=INDEX_ID --lake data/delta
 ```
+
+Each file goes under the date in its name (the load rules); no date field is needed.
 
 **Check it:** the script checks every document it wrote; after loading, `FIX FIX-SOFR <GO>` shows the fixing history. **Offline:**
 `refresh --offline` rebuilds the files from the cache.
@@ -745,7 +749,7 @@ User-Agent it asks for, `Drishti research ajsinha@gmail.com` (set `DRISHTI_SEC_U
 second (its limit is 10); GLEIF and Wikidata about one a second.
 
 **Where the refresh writes.** The documents follow the standard data pattern: one gzipped JSON Lines snapshot per kind,
-`data/testdata/us-equities/<kind>/snapshot-<date>.jsonl.gz`, listed in `data/testdata/testdata.yaml`; the pack's `samples/` folder keeps
+`data/testdata/us-equities/<kind>/<kind>.<date>.jsonl.gz` (the load rules' name), listed in `data/testdata/testdata.yaml`; the pack's `samples/` folder keeps
 only a few reference documents and its guide and README are rebuilt. The server reads the data from the demo lake through the pack's
 Delta connector `us-equities-store`, never through the demo connector, so after a refresh rebuild the lake:
 `python3 tools/drishti.py lake demo` (or `python3 tools/build_demo_lakes.py`).
@@ -780,7 +784,7 @@ python3 tools/publicdata/us_equities.py refresh prices --server http://localhost
 - **Prices are internal only.** The pack ships no prices; the `prices` source reads `price-history/PX-<ticker>` through the
   pack's `us-equities-prices` connector of a running server where you switched it on (`DRISHTI_US_EQUITIES_PRICES_ENABLED=true`,
   `--server`, `--token-file`, `--delay` at least 2 s, `--limit N`). It is never part of a default refresh and writes
-  `<data>/publicdata/us-equities/prices/price-history/snapshot-<date>.jsonl.gz`, each document stamped as a snapshot; into a
+  `<data>/publicdata/us-equities/prices/price-history/price-history.<date>.jsonl.gz`, each document stamped as a snapshot; into a
   committed folder only with `--internal-ok`. Each ticker is cached under `prices/` in the cache, so `--offline` rebuilds it.
 
 **Check it:** `make.py --check` (run by the refresh; without a cache it checks the committed snapshot); `USEQ AAPL <GO>` opens a
@@ -798,7 +802,7 @@ from an unchanged cache reproduces the committed data byte for byte. Everything 
 appreciated). GLEIF gets the User-Agent `Drishti research ajsinha@gmail.com` (set `DRISHTI_GLEIF_USER_AGENT` to your own) and at
 most one API call a second (GLEIF allows 60 a minute).
 
-**Where the refresh writes.** As for us-equities: one snapshot per kind, `data/testdata/gleif/<kind>/snapshot-<date>.jsonl.gz`,
+**Where the refresh writes.** As for us-equities: one snapshot per kind, `data/testdata/gleif/<kind>/<kind>.<date>.jsonl.gz`,
 listed in `data/testdata/testdata.yaml`, served from the demo lake by the pack's Delta connector `gleif-store` (never the demo
 connector); `samples/` keeps a few reference documents. Rebuild the lake after a refresh: `python3 tools/drishti.py lake demo`.
 
