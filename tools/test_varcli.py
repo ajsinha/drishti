@@ -384,3 +384,29 @@ class RegulatoryCli(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class Parametric(unittest.TestCase):
+    """PVAR on the command line (PARAMETRIC_VAR.md section 11): the parametric line under the historical one, --no-parametric, --matrix,
+    --measure parametric for the playground."""
+
+    def setUp(self):
+        FakeApi.calls = []
+
+    def test_the_line_the_flags_and_the_matrix(self):
+        lines = []
+        V.render_headline({**HEAD, "parametric": {"var": 70715472, "es": 71000000, "mu": 156350, "sigma": 30464843, "z": 2.3263, "gap": 3918208,
+                                                   "gapPct": 0.0554}}, lines.append)
+        assert any("parametric VaR" in x and "fat-tail gap +" in x and "not official" in x for x in lines), lines
+        run("show", "BANK", "--no-parametric")
+        assert dict(urllib.parse.parse_qsl(FakeApi.calls[-1][1].split("?")[1]))["parametric"] == "false"
+        run("parts", "BANK", "--matrix")
+        assert dict(urllib.parse.parse_qsl(FakeApi.calls[-1][1].split("?")[1]))["matrix"] == "true"
+        out = []
+        V.render_parts({"canonical": "BANK", "by": "node", "var": 1, "es": 2, "sumComponent": 1, "rows": [
+            {"label": "Rates", "standaloneVar": 5, "componentVar": 1, "pct": 1.0, "incrementalVar": 1, "componentEs": 2, "pComponentVar": 1, "rho": 0.8}],
+            "parametric": {"var": 1, "pSumComponent": 1, "addsUp": True, "pDiversification": 4,
+                           "matrix": {"engine": "java", "keys": ["a"], "labels": ["Rates"], "correlation": [[1.0]], "truncated": False}}}, 5, out.append)
+        assert any("the components add up to" in x for x in out) and any("correlations (java" in x for x in out), out
+        run("playground", "BANK", "--measure", "parametric", "--json")
+        assert dict(urllib.parse.parse_qsl(FakeApi.calls[-1][1].split("?")[1]))["measure"] == "parametric"
