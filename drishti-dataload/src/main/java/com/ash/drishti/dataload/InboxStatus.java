@@ -287,13 +287,21 @@ final class InboxStatus {
         StringBuilder d = new StringBuilder();
         t.path("versions").fields().forEachRemaining(v -> d.append(d.isEmpty() ? "" : ", ").append(v.getKey()).append(" → v").append(v.getValue().asLong()));
         String detail = switch (state) {
-            case "committed" -> d + " · " + count(t.path("rows").asLong()) + " rows · " + count(t.path("rejected").asLong()) + " rejects";
+            case "committed" -> d + " · " + count(t.path("rows").asLong()) + " rows · " + count(t.path("rejected").asLong()) + " rejects"
+                    + notes(t.path("dateNotes"));
             case "loading" -> "the loader is writing";
             case "waiting" -> "loads after the table before it";
             default -> t.path("reason").asText("");
         };
         m.put("detail", detail);
         return m;
+    }
+
+    /** The loader's notes on rows loaded under the date of their file's name, after " · " (none: nothing). */
+    private static String notes(JsonNode notes) {
+        StringBuilder b = new StringBuilder();
+        notes.forEach(n -> b.append(" · ").append(n.asText()));
+        return b.toString();
     }
 
     /** The last cycles of today (this server's), each in one line of words and numbers; the run loading now first. */
@@ -326,8 +334,12 @@ final class InboxStatus {
             long rows = 0;
             long rejects = 0;
             Set<String> counted = new java.util.HashSet<>();
+            List<String> dateNotes = new ArrayList<>();
             for (Cycle.FileOutcome f : c.files()) {
                 by.merge(f.outcome(), 1, Integer::sum);
+                if (f.dateNote() != null) {
+                    dateNotes.add(f.dateNote());
+                }
                 if (Ledger.LOADED.equals(f.outcome())) {
                     String t = f.pack() + "/" + f.kind();
                     tables.add(t);
@@ -368,6 +380,7 @@ final class InboxStatus {
                 } else if ("duplicate".equals(outcome)) {
                     parts.add("already loaded: moved to the outbox, not loaded again");
                 }
+                parts.addAll(dateNotes);
                 parts.add(took);
                 text = String.join(" · ", parts);
                 r.put("versionsText", String.join(" · ", versions));

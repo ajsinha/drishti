@@ -128,8 +128,9 @@ def config(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, e
             src["connector"] = p["connector"]
     if as_of:
         src["as-of"] = as_of.isoformat()
-    else:
+    elif p["date"]:
         src["date"] = p["date"]
+    src["date-from"] = p.get("date_from") or "auto"      # a date in a file's name: every row of the file under it (FileDates)
     target = {"format": "iceberg" if iceberg else "delta", "lake": lake, "domain": p["domain"], "kind": p["kind"]}
     if p.get("table"):
         target["table"] = p["table"]
@@ -185,7 +186,7 @@ def run(a, p: dict, as_of, lake: str, iceberg: bool, workdir: pathlib.Path, prog
 
 
 MERGED = ("rows", "partitions", "documents", "accepted", "rejected", "rejects", "duplicates", "duplicateExamples", "latestBy", "files", "sampleId", "sampleDate",
-          "commit", "columns", "throughput", "memory", "sortBy", "manifestFile", "peakMemoryMb")
+          "dateFrom", "fileDates", "otherDateRows", "dateNotes", "commit", "columns", "throughput", "memory", "sortBy", "manifestFile", "peakMemoryMb")
 
 
 def merge(summary: dict, loaded: dict) -> None:

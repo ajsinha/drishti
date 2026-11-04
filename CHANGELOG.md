@@ -15,6 +15,22 @@
 -->
 # Changelog
 
+## 2.9.11.c (unreleased)
+
+- **The business date from outside: a date in a file's name (DATA_GUIDE.md section 2.8; DATALOAD_INBOX.md section 5.1; TOOLS.md
+  sections 4 and 4.13; CLI_GUIDE.md `data ingest`).** The product owner (2026-11-04): a file named `abc 20261103.jsonl`,
+  `abc.20261103.jsonl.zip`, `abc 20261103.zip`, `.gz` or `.tar.gz` loads under 2026-11-03, enforced from outside even for automated loads,
+  since the business date is the Delta partition. The rule: the base name, its data and archive extensions stripped, ends with a space,
+  `.`, `_` or `-` and `YYYYMMDD` or `YYYY-MM-DD`, a real calendar date (1900 to 2999); an archive member's own name's date wins over the
+  archive's. The order: a date given for the load (`--as-of`, `source.as-of`, a `.ready` file's `business-date:`), then the name's date,
+  then each row's own date field. The name's date goes on every row of the file; rows whose own date field disagrees are loaded under it
+  and counted (summary `fileDates`, `otherDateRows`, `dateNotes`; the command output; the inbox's `.loaded.json`, ledger and Admin board).
+  One rule in each language, `FileDates` (drishti-lakeload) and `tools/lake/filedate.py`, both tested against one list of cases,
+  `tools/lake/testdata/file-dates/names.json`. Every loader: `lake build` and `data ingest` (`--date-from auto|field`; `data ingest`'s
+  `--as-of` now dates every kind and a kind taken from a dated stem drops the date), the parallel loader (`source.date-from: auto|field`,
+  per file, so one run can write one date per file; with no date field only dated files load), the data inbox (a rule's `date-from`:
+  `auto`, the new default, `name` or `field`; each waiting file's preview says the date and where it comes from). `field` turns it off.
+
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
 - **The VaR screen's layout (2.9.11.b, the product owner's approved mock-up A, `docs/lenses/mockups/var-layout/A.html` and

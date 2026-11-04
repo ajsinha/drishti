@@ -136,7 +136,9 @@ file or a folder of them, or a `.zip`, `.tar.gz`, `.tgz` or `.tar` archive of th
 the Delta connector reads:
 
 * one row per document: `id` (`--key`, a dotted path), `doc` (the **whole** document as JSON: nested arrays such as `LEGS[]` and
-  `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (`--date FIELD`, or `--as-of DATE` for a snapshot);
+  `LEGS[].CASH_FLOWS[]` stay inside it, as the Sutras expect), `business_date` (`--as-of DATE` for every document; else the date at the
+  end of a file's name, `trades 20261103.jsonl.gz`, for every document of that file; else `--date FIELD`; `--date-from field` ignores
+  names: [DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-the-business-date-in-a-files-name));
 * partitioned by `business_date` and then any number of **classifier** columns (`--partition-by PRODUCT_TYPE[,DESK...]`, up to
   four), as Hive folders `business_date=2026-10-16/PRODUCT_TYPE=ComSwap/`;
 * **promoted** columns (`--promote COUNTERPARTY,PORTFOLIO,QUANTITY`): real columns a reader filters on without parsing the
@@ -730,7 +732,8 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.format` | `jsonl` | JSON Lines (the data standard); `.gz` and `.zst` decompressed as streams, multi-member gzip included |
 | `source.pack`, `source.connector` | none | a pack folder (as `--pack`): the connector's domain and table, `layout.<kind>.columns`, `vectors`, `flatten`, `ingest.<kind>.key` and `date`; the keys below win |
 | `source.id` | `id` (or the pack's) | the id field (`--key`), a dotted path |
-| `source.date` / `source.as-of` | (one of them) | the business-date field (ISO date or date-time, yyyymmdd) / one date for every row |
+| `source.date` / `source.as-of` | (one of them, or dated file names) | the business-date field (ISO date or date-time, yyyymmdd) / one date for every row |
+| `source.date-from` | `auto` | `auto`: without `as-of`, a file whose name ends in a date (`abc 20261103.jsonl`, an archive member's own name first) loads every row under it, the rows whose own `date` disagrees counted in the summary (`fileDates`, `otherDateRows`, `dateNotes`); `field`: names ignored ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-the-business-date-in-a-files-name)) |
 | `source.promote` | the pack's | fields kept as columns (`layout.<kind>.columns`) |
 | `source.vectors` (`vector`) | the pack's | list-of-numbers fields as `list<double>` columns, the document keeping a `{"$vector": …}` marker (VAR_GUIDE.md section 29.3) |
 | `source.flatten` | the pack's | `NAME: LEGS[0].NOTIONAL`: fields added to the document and promoted |

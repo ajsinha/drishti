@@ -51,6 +51,7 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [5. What stays as it is, and the guard](#5-what-stays-as-it-is-and-the-guard)
     - [6. Arrow to the browser, where it pays](#6-arrow-to-the-browser-where-it-pays)
     - [7. Archives: zip and tarballs](#7-archives-zip-and-tarballs)
+    - [8. The business date in a file's name](#8-the-business-date-in-a-files-name)
 3. [Using Drishti with Databricks Delta Lake or Apache Iceberg](#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg)
     - [1. No code, only configuration](#1-no-code-only-configuration)
     - [2. Databricks Delta Lake: `plugin: delta`](#2-databricks-delta-lake-plugin-delta)
@@ -992,6 +993,49 @@ datasets:
     source: {id: POSITION_ID}             # a dataset's own keys over the file's
     rejects: {max-pct: 1}
 ```
+
+### 8. The business date in a file's name
+
+The business date is the partition of every table (`business_date`): it decides which date's rows a load replaces. It can be given
+from outside, so an automated load cannot put rows under a date nobody meant. Every loader applies the same rule: `drishti.py lake build`,
+`drishti.py data ingest`, the parallel lake loader (`LakeLoad`) and the data inbox ([section 7](#7-the-data-inbox-drop-files-and-they-load)).
+
+**The rule.** Take the file's name, drop its folder and its data and archive extensions (`.jsonl`, `.ndjson`, `.json`, `.gz`, `.zst`,
+`.zip`, `.tar`, `.tar.gz`, `.tgz`, in any case). If what is left **ends** with a space, `.`, `_` or `-` followed by `YYYYMMDD` or
+`YYYY-MM-DD`, and that is a real calendar date between 1900 and 2999, the file carries that business date.
+
+| File | Business date |
+|---|---|
+| `abc 20261103.jsonl` | 2026-11-03 |
+| `abc.20261103.jsonl.zip` | 2026-11-03 |
+| `abc 20261103.zip`, `abc 20261103.gz`, `abc 20261103.tar.gz` | 2026-11-03 |
+| `abc_20261103.jsonl.gz`, `trades-endur-2026-11-03.jsonl.gz` | 2026-11-03 |
+| `abc 20261340.jsonl` (no 13th month), `abc 20230229.jsonl` (not a leap year) | none |
+| `abc 20261103 v2.jsonl`, `abc20261103.jsonl`, `cob-2026-09-28.part-001.jsonl.gz` (the date is not at the end, or has no separator) | none |
+
+Inside an archive, a member whose own name carries a date uses it; any other member uses the archive's date.
+`deals 20261105.zip` holding `day 20261106.jsonl` and `rest.jsonl` loads the first under 2026-11-06 and the second under 2026-11-05.
+
+**Which date wins.**
+
+1. A date **given** for the load: `--as-of` (`lake build`, `data ingest`), `source.as-of` (the loader's configuration), `business-date:` in
+   the inbox file's `.ready` marker. Every row goes under it.
+2. Else the date in the **file's name**. Every row of that file goes under it, whatever its own date field says.
+3. Else each row's **own date field** (`--date`, `source.date`, the pack's `ingest.<kind>.date`).
+
+A row whose own date field holds another date is still loaded, under the file's date, and the load counts it and says so:
+`3 rows of deals 20261103.jsonl carried another date in TRADE_DATE; loaded under 2026-11-03 from the file name`. The words are in the
+command's output, in the summary JSON (`fileDates`: each file dated by its name, its date and `otherDateRows`; `otherDateRows` in all;
+`dateNotes`, the words) and, for the inbox, on the Admin board and in the file's `.loaded.json` report. The documents themselves are stored
+as they came.
+
+A load that gives no date field (no `--date`, no pack) loads only the files whose names carry a date; the rows of the others are rejected
+with *no business date (no date field, and the file name carries no date)*.
+
+**Turning it off for a load.** `--date-from field` (`lake build`, `data ingest`), `source.date-from: field` (the loader's
+configuration) or `date-from: field` on an inbox rule: names are ignored and each row's own date is used. `auto` is the default.
+
+The rule and its cases live in one list, `tools/lake/testdata/file-dates/names.json`, which the Python and the Java tests both read.
 
 ## 3. Using Drishti with Databricks Delta Lake or Apache Iceberg
 
@@ -2156,7 +2200,7 @@ The `.ready` file may stay empty, or say (YAML or JSON) how to load this one fil
 pack: trading               # the pack and kind (routing, section 3)
 kind: trade
 connector: trade-endur      # the pack's Delta connector whose table is written
-business-date: 2026-11-03   # every row's business date (else each row's date field)
+business-date: 2026-11-03   # every row's business date (else the date in the file's name, else each row's date field)
 date-field: COB_DATE        # the field holding each row's date
 sha256: 9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08   # checked before loading: a file cut short is refused
 rows: 48213                 # the documents the file holds: checked by the loader before anything is written
@@ -2176,19 +2220,31 @@ dataload:
       pack: trading
       kind: trade
       connector: trade-endur               # the table that connector reads (trading/trade_endur)
-      date-from: name                      # the YYYY-MM-DD in the name is every row's business date
+      date-from: name                      # the name must carry a date: trades-endur-2026-11-03.jsonl.gz
     - match: "scenario-pv-*.jsonl.gz"
       pack: market-risk
       kind: scenario-pv
-      date-field: BUSINESS_DATE            # date-from: field (the default): each row's date field
+      date-field: BUSINESS_DATE            # each row's date field when the name carries no date (date-from: auto, the default)
+    - match: "positions-*.jsonl.gz"
+      pack: trading
+      kind: position
+      date-from: field                     # names ignored: each row's own date
   unmatched: fail
 ```
+
+**The business date of a file** ([section 2.8](#8-the-business-date-in-a-files-name)): a `.ready` file's `business-date:` first; else
+the date at the end of the file's name (`trades 20261103.jsonl.gz`, an archive member's own name first); else each row's date field.
+The rule's `date-from` says how names count: `auto` (the default) uses a name's date when there is one; `name` requires one (a file
+whose name has none goes to `failed/`; a `YYYY-MM-DD` anywhere in the name also counts); `field` ignores names. A `.ready` file's
+`date-field:` means each row's own date too. The board shows, for each waiting file, the date it will load under and where it comes from
+(*2026-11-03 from the name*, *2026-11-05 from the .ready file*, *each row's date field*), and after the load the rows whose own date
+disagreed.
 
 A file of *lake rows* or *loader rows* ([section 2.2](#2-the-row-forms)) is refused with the reason: the parallel loader reads
 documents and has no reader for those forms. Load lake rows with `tools/samplegen/load_rows.py` and loader rows with the store's own loader,
 or drop the documents themselves.
 
-Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table`, `date-from` (`field` or `name`), `date-field`,
+Every key of a rule: `match`, `pack`, `kind`, and optionally `connector`, `table`, `date-from` (`auto`, `name` or `field`), `date-field`,
 `key` (the id field), `lake` (over `drishti.dataload.lake`), `format` (`delta` or `iceberg`). The shipped file lists them, with the
 examples above commented out.
 

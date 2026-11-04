@@ -41,7 +41,7 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
     c = javaload.config(a, p, None, "/lake", True, tmp_path, env)
     assert c["source"] == {"files": ["/data/pv"], "recursive": True, "id": "POSITION_ID", "date": "BUSINESS_DATE",
                            "promote": ["LEGAL_ENTITY", "DESK"], "vectors": ["SCENARIO_PV"], "flatten": {"NOTIONAL": "LEGS[0].NOTIONAL"},
-                           "partition-by": [], "latest-by": ""}   # Iceberg keeps the partition field as a column, as lake build's Iceberg path does
+                           "partition-by": [], "latest-by": "", "date-from": "auto"}   # Iceberg keeps the partition field as a column, as lake build's Iceberg path does
     assert javaload.config(a, {**p, "latest_by": "COMPUTED_AT"}, None, "/lake", True, tmp_path, {})["source"]["latest-by"] == "COMPUTED_AT"
     assert c["target"]["format"] == "iceberg" and c["target"]["lake"] == "/lake" and c["target"]["kind"] == "scenario-pv"
     assert c["target"]["iceberg"]["s3.region"] == "eu-west-2"
@@ -51,6 +51,7 @@ def test_the_options_become_the_loaders_configuration(tmp_path):
 
     d = javaload.config(args(src=["x.jsonl"]), {**p, "table": "pv_endur"}, date(2026, 10, 28), "/lake", False, tmp_path, {})
     assert d["source"]["as-of"] == "2026-10-28" and "date" not in d["source"]
+    assert javaload.config(args(src=["x.jsonl"]), {**p, "date_from": "field"}, None, "/lake", False, tmp_path, {})["source"]["date-from"] == "field"
     assert d["source"]["partition-by"] == ["LEGAL_ENTITY"] and d["target"]["table"] == "pv_endur"
 
 

@@ -78,6 +78,10 @@ final class LoadReport {
     static final int KEEP_DUPLICATE_EXAMPLES = 10;
     private final Map<Integer, java.util.Set<Long>> dropped = new TreeMap<>();
     final List<ObjectNode> files = new ArrayList<>();
+    /** The files whose names gave their rows' date, in input order: file, date, rows that carried another date in the date field. */
+    final List<ObjectNode> fileDates = new ArrayList<>();
+    long otherDateRows;
+    final List<String> dateNotes = new ArrayList<>();
     final Map<String, ObjectNode> commits = new TreeMap<>();
     final Map<String, List<WrittenFile>> written = new TreeMap<>();
     Map<String, String> columnTypes = Map.of();
@@ -159,6 +163,7 @@ final class LoadReport {
         for (ParseWorker.Reject r : first.subList(0, Math.min(cfg.rejects().keep(), first.size()))) {
             firstRejects.add(JSON.createObjectNode().put("where", where(r.where(), splits, lines)).put("reason", r.reason()));
         }
+        fileDates(workers, splits);
         resolveDuplicates(hashes, byDay, parts, splits, lines);
         for (List<ParseWorker.DateRows> ds : byDay.values()) {
             for (ParseWorker.DateRows d : ds) {
@@ -340,6 +345,31 @@ final class LoadReport {
         };
     }
 
+    /**
+     * The dates taken from file names (lake build's {@code Stats.date_report}, the same keys and words): each file whose name gave its rows'
+     * date, with how many rows carried another date in their own date field, and those rows in words.
+     */
+    private void fileDates(List<ParseWorker> workers, List<Split> splits) {
+        Map<String, long[]> all = new LinkedHashMap<>();
+        for (ParseWorker w : workers) {
+            w.fileDates.forEach((f, v) -> all.merge(f, v.clone(), (a, b) -> new long[] {a[0], a[1] + b[1]}));
+        }
+        java.util.Set<String> done = new java.util.HashSet<>();
+        for (Split sp : splits) {
+            String f = sp.file().name();
+            long[] v = all.get(f);
+            if (v == null || !done.add(f)) {
+                continue;
+            }
+            LocalDate day = LocalDate.ofEpochDay(v[0]);
+            fileDates.add(JSON.createObjectNode().put("file", f).put("date", day.toString()).put("otherDateRows", v[1]));
+            otherDateRows += v[1];
+            if (v[1] > 0) {
+                dateNotes.add(FileDates.otherDateNote(v[1], f, plan.date, day));
+            }
+        }
+    }
+
     /** The summary: lake build's keys, and {@code throughput} per stage. */
     ObjectNode summary(String error, double totalSeconds) {
         ObjectNode s = JSON.createObjectNode();
@@ -368,6 +398,10 @@ final class LoadReport {
         s.set("duplicateExamples", JSON.valueToTree(duplicateExamples));
         s.put("latestBy", plan.latestBy);
         s.set("files", JSON.valueToTree(files));
+        s.put("dateFrom", cfg.source().dateFrom());
+        s.set("fileDates", JSON.valueToTree(fileDates));
+        s.put("otherDateRows", otherDateRows);
+        s.set("dateNotes", JSON.valueToTree(dateNotes));
         s.put("sampleId", sampleId).put("sampleDate", sampleDate);
         ObjectNode timings = s.putObject("timings");
         timings.put("readSeconds", Meter.round(readSeconds)).put("writeSeconds", Meter.round(writeSeconds)).put("totalSeconds", Meter.round(totalSeconds));

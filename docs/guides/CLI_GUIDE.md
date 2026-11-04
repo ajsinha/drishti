@@ -1451,6 +1451,7 @@ usage: drishti.py data ingest [-h] --from SRC [-r] [--pack PACK]
                               [--date DATE] [--columns COLUMNS] [--lake LAKE]
                               [--store {delta,files}] [--root ROOT]
                               [--mode {overwrite-dates,append,replace}]
+                              [--as-of AS_OF] [--date-from {auto,field}]
                               [--dry-run] [--batch-rows BATCH_ROWS]
 
 data ingest: write JSON Lines documents into a Delta lake or the File connector's layout (tools/ingest_jsonl.py)
@@ -1472,6 +1473,14 @@ options:
                         delta (default) or the File connector's layout
   --root ROOT           the files root (DRISHTI_FILES_ROOT) for --store files
   --mode {overwrite-dates,append,replace}
+  --as-of AS_OF         YYYY-MM-DD: the business date of every document, over
+                        the file names and the rows' own dates; without it a
+                        snapshot kind is loaded under today
+  --date-from {auto,field}
+                        auto (default): a file whose name ends in a date (trade
+                        20261103.jsonl, trade_2026-11-03.jsonl.gz) loads every
+                        document under that date (the kind is the stem without
+                        it); field: each document's own date field
   --dry-run
   --batch-rows BATCH_ROWS
 
@@ -1482,6 +1491,12 @@ examples:
 
 `--mode overwrite-dates` (the default) replaces only the dates in your input, so re-running a day is safe; `append` adds;
 `replace` rebuilds the kind. Documents without a date or id are counted and left out, never silently dropped.
+
+**The business date from outside.** `--as-of` puts every document under one date. Without it, a file whose name ends in a date
+(`trade 20261103.jsonl`) puts every document of that file under that date; documents whose own date field says another date are still
+loaded and counted (*1 row of trade 20261103.jsonl carried another date in AS_OF; loaded under 2026-11-03 from the file name*).
+`--date-from field` uses each document's own date. `lake build` and the data inbox follow the same rule
+([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-the-business-date-in-a-files-name)).
 
 The curves of the test data into the files store of the `curves-demo` pack made [above](#pack-new-a-complete-pack-from-json-lines)
 (its `ingest:` block gives the key `CURVE_ID` and the date `AS_OF`; `--kind` because the file names are not kinds):

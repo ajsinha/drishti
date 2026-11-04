@@ -65,6 +65,7 @@ from datetime import date, datetime, timezone
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
+import filedate  # noqa: E402
 import jsonstream  # noqa: E402
 import stage  # noqa: E402
 import writers  # noqa: E402
@@ -231,7 +232,11 @@ def plan(a) -> dict:
         raise BuildError("give --kind (or a --pack with one kind)")
     if not p["domain"]:
         raise BuildError("give --domain (or --pack)")
-    if not a.as_of and not p["date"]:
+    date_from = getattr(a, "date_from", None) or "auto"
+    if date_from not in filedate.DATE_FROM:
+        raise BuildError(f"--date-from {date_from}: auto (a date in a file's name is every row's business date) or field (the rows' own)")
+    p["date_from"] = date_from
+    if not a.as_of and not p["date"] and date_from == "field":
         raise BuildError("give --date FIELD (the business date of each document) or --as-of YYYY-MM-DD (one date for all)")
     for col in p["partition_by"] + p["promote"]:
         if stage.column_name(col) in RESERVED:
@@ -345,6 +350,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         t0 = time.monotonic()
         for f in files:
             r = jsonstream.Reader(f)
+            st.file(r.label, filedate.of_input(f) if p["date_from"] == "auto" and not as_of else None)
             for doc, where in r:
                 st.add(doc, where)
                 if st.stats.read % 2000 == 0:
@@ -363,7 +369,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         summary.update(documents=st.stats.read, accepted=st.stats.accepted, rejected=st.stats.rejected,
                        rejects={"byReason": dict(st.stats.rejects.most_common()), "first": st.stats.reject_samples},
                        duplicates=dict(sorted(st.stats.duplicates.items())), duplicateExamples=st.stats.duplicate_examples,
-                       latestBy=p.get("latest_by"), files=st.stats.files,
+                       latestBy=p.get("latest_by"), files=st.stats.files, dateFrom=p["date_from"], **st.stats.date_report(p["date"]),
                        sampleId=st.stats.sample[0] if st.stats.sample else None, sampleDate=st.stats.sample[1] if st.stats.sample else None)
         timings = {"readSeconds": round(read_s, 3)}
         summary["timings"] = timings
@@ -595,6 +601,12 @@ def report(s: dict, say) -> None:
         say(f"  {n} duplicate cop{'y' if n == 1 else 'ies'} dropped on {d} ({rule})")
     for x in (s.get("duplicateExamples") or [])[:5]:
         say(f"    e.g. {x['date']}: kept {x['kept']}, dropped {x['dropped']}")
+    for x in (s.get("fileDates") or [])[:10]:
+        say(f"  business date {x['date']} from the name of {x['file']}")
+    if len(s.get("fileDates") or []) > 10:
+        say(f"  ... and {len(s['fileDates']) - 10} more files dated by their names")
+    for note in s.get("dateNotes") or []:
+        say(f"  {note}")
     for x in s.get("signal") or []:
         say(f"  signal {x.get('date', '')}: " + ("sent" + (f", {x['verified']}" if x.get("verified") else "") if x.get("ok") else f"FAILED {x.get('status', '')} {x.get('error', '')}"))
     if s.get("summaryFile"):
@@ -612,6 +624,10 @@ def add_arguments(p: argparse.ArgumentParser) -> argparse.ArgumentParser:
     g.add_argument("--key", help="the id field, a dotted path (default: the pack's ingest key, else id)")
     g.add_argument("--date", help="the business-date field, a dotted path (ISO date or date-time, or yyyymmdd)")
     g.add_argument("--as-of", metavar="YYYY-MM-DD", help="one business date for every document (a snapshot) instead of --date")
+    g.add_argument("--date-from", choices=("auto", "field"), default="auto",
+                   help="auto (default): a file whose name ends in a date (abc 20261103.jsonl, abc_2026-11-03.jsonl.gz; an archive member's "
+                        "own name first) loads every row under that date, its rows' own dates only counted; --as-of wins over it. "
+                        "field: ignore names, each row's --date field (DATA_GUIDE.md section 2.8)")
     g.add_argument("--latest-by", metavar="FIELD",
                    help="when an id appears more than once on one business date, keep the copy with the latest FIELD (an ISO timestamp); "
                         "default: the pack's ingest latest-by, else COMPUTED_AT; give '' for the last one read (TOOLS.md section 4.13)")

@@ -241,6 +241,15 @@ public final class LakeLoad {
             out.println("    e.g. " + r.path("where").asText() + ": " + r.path("reason").asText());
         }
         s.path("duplicates").fields().forEachRemaining(e -> out.printf("  %,d id(s) appear more than once on %s%n", e.getValue().asLong(), e.getKey()));
+        int dated = 0;
+        for (var f : s.path("fileDates")) {
+            if (dated++ == 10) {
+                out.println("  ... and " + (s.path("fileDates").size() - 10) + " more files dated by their names");
+                break;
+            }
+            out.println("  business date " + f.path("date").asText() + " from the name of " + f.path("file").asText());
+        }
+        s.path("dateNotes").forEach(n -> out.println("  " + n.asText()));
         var tp = s.path("throughput");
         tp.fields().forEachRemaining(e -> {
             if (e.getValue().isObject()) {

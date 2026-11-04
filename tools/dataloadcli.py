@@ -56,8 +56,11 @@ def render(st: dict) -> list[str]:
         out.append("  ready.all is in the inbox: every file there loads at the next cycle")
     waiting = st.get("waiting") or []
     out.append(f"waiting ({len(waiting)}):" if waiting else "waiting: none")
+    dates = {b.get("file"): (b.get("rule") or {}).get("date") for b in ((st.get("board") or {}).get("waiting") or [])}
     for w in waiting:
         out.append(f"  {w.get('file', ''):<44}{_size(w.get('size')):>10}  {w.get('state', '')}")
+        if dates.get(w.get("file")):
+            out.append(f"  {'':<44}{'':>10}  business date: {dates[w.get('file')]}")
     for m in st.get("markersWithoutFile") or []:
         out.append(f"  {m:<44}{'':>10}  a marker without its file")
     failed = st.get("failed") or []
@@ -73,6 +76,9 @@ def render(st: dict) -> list[str]:
             counts[f.get("outcome", "")] = counts.get(f.get("outcome", ""), 0) + 1
         what = ", ".join(f"{n} {k}" for k, n in sorted(counts.items())) or (c.get("why") or "")
         out.append(f"  {str(c.get('started', ''))[:19].replace('T', ' ')}  {c.get('run', ''):<34} {c.get('state', ''):<9}{what}")
+        for f in files:
+            if f.get("dateNote"):
+                out.append(f"    {f['dateNote']}")
         for n in c.get("notices") or []:
             out.append(f"    notice: {n}")
     if st.get("error"):

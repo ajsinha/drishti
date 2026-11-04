@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.dataload;
 
+import com.ash.drishti.lakeload.FileDates;
 import com.ash.drishti.lakeload.LakeLoad;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -25,6 +26,7 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -49,7 +51,14 @@ public final class Cycle {
     private static final DateTimeFormatter RUN = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'").withZone(java.time.ZoneOffset.UTC);
 
     /** What became of one file. */
-    public record FileOutcome(String file, String outcome, String reason, String pack, String kind, Map<String, Long> versions, long rows, long rejected) {}
+    public record FileOutcome(String file, String outcome, String reason, String pack, String kind, Map<String, Long> versions, long rows, long rejected,
+            String dateNote) {
+
+        /** An outcome without a note on dates taken from the file's name. */
+        public FileOutcome(String file, String outcome, String reason, String pack, String kind, Map<String, Long> versions, long rows, long rejected) {
+            this(file, outcome, reason, pack, kind, versions, rows, rejected, null);
+        }
+    }
 
     /**
      * One cycle: its run id, what started it, when, its state ({@code done}, {@code skipped}, {@code failed}), why it was skipped or failed,
@@ -331,7 +340,7 @@ public final class Cycle {
             outbox.done(run, c.file(), c.marker(), rep);
             files.add(new FileOutcome(c.name(), Ledger.LOADED, code == LakeLoad.PARTIAL ? "loaded with rejects" : null, c.route().pack(),
                     c.route().kind(), versions(l.summary()), l.summary() == null ? 0 : l.summary().path("accepted").asLong(),
-                    l.summary() == null ? 0 : l.summary().path("rejected").asLong()));
+                    l.summary() == null ? 0 : l.summary().path("rejected").asLong(), dateNote(l.summary(), c.name())));
         }
         faults.at("moved");
     }
@@ -398,8 +407,29 @@ public final class Cycle {
     private static ObjectNode routeNode(Routes.Route r, String batch) {
         ObjectNode n = JSON.createObjectNode().put("pack", r.pack()).put("kind", r.kind()).put("lake", r.lake()).put("format", r.format()).put("by", r.by())
                 .put("batch", batch);
-        n.put("connector", r.connector()).put("table", r.table()).put("dateField", r.dateField()).put("asOf", r.asOf() == null ? null : r.asOf().toString());
+        n.put("connector", r.connector()).put("table", r.table()).put("dateField", r.dateField()).put("asOf", r.asOf() == null ? null : r.asOf().toString())
+                .put("dateFrom", r.dateFrom()).put("dateBy", r.dateBy());
         return n;
+    }
+
+    /**
+     * The loader's words for the rows of {@code name} (or of its archive's members) whose own date field said another date than the one
+     * taken from the name ({@code fileDates} of its summary); null when there were none.
+     */
+    static String dateNote(JsonNode summary, String name) {
+        if (summary == null) {
+            return null;
+        }
+        List<String> notes = new ArrayList<>();
+        String field = summary.path("date").asText(null);
+        for (JsonNode f : summary.path("fileDates")) {
+            String file = f.path("file").asText();
+            long n = f.path("otherDateRows").asLong();
+            if (n > 0 && (file.equals(name) || file.startsWith(name + "!/"))) {
+                notes.add(FileDates.otherDateNote(n, file, field, LocalDate.parse(f.path("date").asText())));
+            }
+        }
+        return notes.isEmpty() ? null : String.join("; ", notes);
     }
 
     /** The ledger's {@code loaded} line: the file's checksum and size, the route, the table, each date's version and rows. */
@@ -411,6 +441,9 @@ public final class Cycle {
                     .put("accepted", summary.path("accepted").asLong()).put("rejected", summary.path("rejected").asLong())
                     .put("loaderRun", summary.path("run").asText());
             n.set("dates", summary.path("commit").path("dates"));
+            if (summary.path("fileDates").size() > 0) {
+                n.set("fileDates", summary.path("fileDates"));
+            }
         }
         return n;
     }
@@ -484,12 +517,16 @@ public final class Cycle {
             long rejected = 0;
             Map<String, Long> versions = new java.util.TreeMap<>();
             String reason = null;
+            List<String> dateNotes = new ArrayList<>();
             for (FileOutcome o : outcomes) {
                 if (!mine.contains(o.file())) {
                     continue;
                 }
                 if (Ledger.LOADED.equals(o.outcome())) {
                     loaded++;
+                    if (o.dateNote() != null) {
+                        dateNotes.add(o.dateNote());
+                    }
                     versions.putAll(o.versions());
                     rows = Math.max(rows, o.rows());                        // the files of one load share its summary: its rows, once
                     rejected = Math.max(rejected, o.rejected());
@@ -503,6 +540,7 @@ public final class Cycle {
             t.put("state", loaded > 0 ? "committed" : failed > 0 ? "failed" : "returned").put("finishedAt", clock.instant().toString())
                     .put("loadedFiles", loaded).put("failedFiles", failed).put("rows", rows).put("rejected", rejected).put("reason", reason);
             t.set("versions", JSON.valueToTree(versions));
+            t.set("dateNotes", JSON.valueToTree(dateNotes));
             save();
         }
 

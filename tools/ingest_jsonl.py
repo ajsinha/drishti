@@ -49,6 +49,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 sys.path.insert(0, str(HERE / "samplegen"))
 import sutragen as SG  # noqa: E402  (reading, dotted paths, scalar option parsing)
+sys.path.insert(0, str(HERE / "lake"))
+import filedate  # noqa: E402  (the business date in a file's name, the Java loader's FileDates)
 
 MODES = ("overwrite-dates", "append", "replace")
 
@@ -73,12 +75,42 @@ class Report:
         self.no_key: dict[str, int] = {}
         self.bad: list[str] = []
         self.untracked: dict[str, int] = {}             # kinds without a date field
+        self.file_dates: dict[str, date] = {}           # file -> the business date its name carries (every row of it loaded under it)
+        self.other_dates: dict[str, int] = {}           # file -> rows whose own date field said another date
+        self.date_fields: dict[str, str] = {}           # file -> the date field those rows carried
 
 
 def read_lines(inputs, recursive: bool, kind: str | None, report: Report):
-    """Yields (kind, doc) from the JSONL files; bad lines go to the report with file:line."""
-    for k, doc, _ in SG.read_records(SG.input_files(inputs, recursive), report.bad.append):
-        yield kind or k, doc
+    """Yields (kind, doc, file) from the JSONL files; bad lines go to the report with file:line. A kind taken from a file's stem leaves
+    out the date at its end (``trade 20261103.jsonl`` is kind ``trade``)."""
+    for k, doc, where in SG.read_records(SG.input_files(inputs, recursive), report.bad.append):
+        f = _file_of(where)
+        if not kind and filedate.of(f) is not None and k == _stem(f):
+            k = filedate.base_name(f)[: -len(filedate.find_text(f))].rstrip(" ._-") or k
+        yield kind or k, doc, f
+
+
+def _day(text) -> date | None:
+    """A row's own date as this loader reads it (an ISO date, or YYYYMMDD), None when it is none."""
+    if not text:
+        return None
+    s = str(text).strip()
+    try:
+        return date(int(s[:4]), int(s[4:6]), int(s[6:8])) if len(s) == 8 and s.isdigit() else date.fromisoformat(s[:10])
+    except ValueError:
+        return None
+
+
+def _file_of(where: str) -> str:
+    """The file of a ``file:line`` or ``file[n]`` place."""
+    if where.endswith("]") and "[" in where:
+        return where[: where.rindex("[")]
+    return where.rsplit(":", 1)[0]
+
+
+def _stem(f: str) -> str:
+    p = pathlib.Path(f)
+    return pathlib.Path(p.stem).stem if p.suffix.lower() == ".gz" else p.stem
 
 
 def pack_settings(pack: pathlib.Path) -> tuple[str, dict, dict, dict]:
@@ -112,13 +144,27 @@ def business_today() -> date:
 def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
     """kind -> business date -> [(id, doc json, doc)] for the kinds that have a date field."""
     out: dict[str, dict[date, list]] = {}
-    for kind, doc in read_lines(args.src, args.recursive, args.kind, report):
+    as_of = getattr(args, "as_of", None)
+    by_name = (getattr(args, "date_from", None) or "auto") == "auto" and not as_of
+    for kind, doc, f in read_lines(args.src, args.recursive, args.kind, report):
         dfield = dates.get(kind)
         if not dfield:
             report.untracked[kind] = report.untracked.get(kind, 0) + 1
             continue
         kv = SG.get(doc, keys.get(kind, "id"))
-        ds = (getattr(args, "as_of", None) or business_today().isoformat()) if dfield == SNAPSHOT else SG.doc_date(doc, dfield)
+        # the business date: --as-of (given) > the date at the end of the file's name (filedate.py) > the row's own (a snapshot: today)
+        named = filedate.of(f) if by_name else None
+        if as_of:
+            ds = as_of
+        elif named is not None:
+            ds = named.isoformat()
+            report.file_dates[f] = named
+            own = _day(SG.doc_date(doc, dfield)) if dfield != SNAPSHOT else None
+            if own is not None and own != named:
+                report.other_dates[f] = report.other_dates.get(f, 0) + 1
+                report.date_fields[f] = dfield
+        else:
+            ds = business_today().isoformat() if dfield == SNAPSHOT else SG.doc_date(doc, dfield)
         try:
             day = date.fromisoformat(ds) if ds else None
         except ValueError:
@@ -191,6 +237,10 @@ def summary(report: Report, dry: bool, say=print) -> None:
                      ("of a kind with no date field (not loaded)", report.untracked)):
         if d:
             say(f"{sum(d.values())} document(s) {label}: " + ", ".join(f"{k}={n}" for k, n in sorted(d.items())))
+    for f, d in sorted(report.file_dates.items()):
+        say(f"business date {d.isoformat()} from the name of {pathlib.Path(f).name}")
+    for f, n in sorted(report.other_dates.items()):
+        say(filedate.other_date_note(n, pathlib.Path(f).name, report.date_fields.get(f), report.file_dates[f]))
     for b in report.bad[:20]:
         say("bad line " + b)
     if len(report.bad) > 20:
@@ -259,7 +309,11 @@ def build_parser(add_help: bool = True) -> argparse.ArgumentParser:
     p.add_argument("--store", choices=("delta", "files"), default="delta", help="delta (default) or the File connector's layout")
     p.add_argument("--root", type=pathlib.Path, help="the files root (DRISHTI_FILES_ROOT) for --store files")
     p.add_argument("--mode", choices=MODES, help="overwrite-dates (default), append or replace; a --watch run defaults to append")
-    p.add_argument("--as-of", help="YYYY-MM-DD: the business date of a snapshot kind (pack.yaml ingest: {snapshot: true}); default today")
+    p.add_argument("--as-of", help="YYYY-MM-DD: the business date of every document, over the file names and the rows' own dates; without it "
+                                   "a snapshot kind (pack.yaml ingest: {snapshot: true}) is loaded under today")
+    p.add_argument("--date-from", choices=("auto", "field"), default="auto",
+                   help="auto (default): a file whose name ends in a date (trade 20261103.jsonl, trade_2026-11-03.jsonl.gz) loads every document "
+                        "under that date (the kind is the stem without it); field: each document's own date field (DATA_GUIDE.md section 2.8)")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--batch-rows", type=int, default=250_000)
     w = p.add_argument_group("watch a drop folder (see tools/ingest_watch.py)")

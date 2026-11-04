@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -40,7 +41,10 @@ class RoutesTest {
         Routes.Route r = routes(f).route("trades-endur-2026-11-03.jsonl.gz", ReadyNote.EMPTY);
         assertThat(r.pack()).isEqualTo("demo-pack");
         assertThat(r.kind()).isEqualTo("trade");
-        assertThat(r.asOf()).as("date-from: field (the default): the pack's date field").isNull();
+        assertThat(r.asOf()).as("date-from: auto (the default): the loader applies the name's date per file").isNull();
+        assertThat(r.dateFrom()).isEqualTo("auto");
+        assertThat(r.nameDate()).isEqualTo(LocalDate.parse("2026-11-03"));
+        assertThat(r.dateBy()).isEqualTo("2026-11-03 from the name");
         assertThat(r.lake()).isEqualTo(f.lake.toString());
         assertThat(r.format()).isEqualTo("delta");
         assertThat(r.packDir()).isEqualTo(f.pack);
@@ -55,6 +59,52 @@ class RoutesTest {
                 .hasMessageContaining("holds no YYYY-MM-DD");
         ReadyNote dated = new ReadyNote(null, null, null, null, LocalDate.parse("2026-10-29"), null, null, null, null);
         assertThat(routes(f).route("named-latest.jsonl", dated).asOf()).as("the .ready file's business-date wins").isEqualTo(LocalDate.parse("2026-10-29"));
+    }
+
+    @Test
+    void autoTakesTheNamesDateWhenThereIsOneAndFieldIgnoresIt() throws Exception {
+        Fixture f = new Fixture(tmp);
+        Files.writeString(f.rules, """
+                dataload:
+                  rules:
+                    - match: "auto-*"
+                      pack: demo-pack
+                      kind: trade
+                    - match: "field-*"
+                      pack: demo-pack
+                      kind: trade
+                      date-from: field
+                    - match: "named-*"
+                      pack: demo-pack
+                      kind: trade
+                      date-from: name
+                """);
+        Routes.Route plain = routes(f).route("auto-trades.jsonl", ReadyNote.EMPTY);
+        assertThat(List.of(plain.dateFrom(), plain.dateBy())).containsExactly("auto", "each row's date field (the pack's)");
+        assertThat(plain.nameDate()).isNull();
+        Routes.Route dated = routes(f).route("auto-trades 20261103.jsonl.gz", ReadyNote.EMPTY);
+        assertThat(dated.asOf()).as("the loader enforces it per file (an archive member's own date first)").isNull();
+        assertThat(dated.nameDate()).isEqualTo(LocalDate.parse("2026-11-03"));
+        assertThat(dated.group()).isEqualTo(plain.group());
+        Routes.Route field = routes(f).route("field-trades 20261103.jsonl", ReadyNote.EMPTY);
+        assertThat(List.of(field.dateFrom(), field.dateBy())).containsExactly("field", "each row's date field (the pack's)");
+        assertThat(field.group()).isNotEqualTo(plain.group());
+        assertThat(routes(f).route("named-trades_20261103.jsonl", ReadyNote.EMPTY).asOf()).isEqualTo(LocalDate.parse("2026-11-03"));
+        ReadyNote dateField = new ReadyNote(null, null, null, null, null, "COB", null, null, null);
+        assertThat(routes(f).route("auto-trades 20261103.jsonl", dateField).dateFrom()).as("a .ready date-field: the rows' own").isEqualTo("field");
+        ReadyNote given = new ReadyNote(null, null, null, null, LocalDate.parse("2026-11-01"), null, null, null, null);
+        Routes.Route r = routes(f).route("auto-trades 20261103.jsonl", given);
+        assertThat(List.of(String.valueOf(r.asOf()), r.dateBy())).containsExactly("2026-11-01", "2026-11-01 from the .ready file");
+        Path load = tmp.resolve("load.yaml");
+        LoaderProcess.writeConfig(load, field, List.of(tmp.resolve("x.jsonl")), tmp.resolve("s.json"), tmp.resolve("r.jsonl"), 0, tmp.resolve("spill"));
+        assertThat(Files.readString(load)).containsPattern("date-from: \"?field\"?");
+        assertThatThrownBy(() -> Routes.read(writeRule(f, "date-from: rows"), "lake", f.packs())).isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("auto (the date at the end of the file's name");
+    }
+
+    private static Path writeRule(Fixture f, String extra) throws IOException {
+        Files.writeString(f.rules, "dataload:\n  rules:\n    - match: \"x-*\"\n      pack: demo-pack\n      kind: trade\n      " + extra + "\n");
+        return f.rules;
     }
 
     @Test

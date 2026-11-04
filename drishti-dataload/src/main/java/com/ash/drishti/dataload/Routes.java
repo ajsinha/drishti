@@ -15,6 +15,7 @@
  */
 package com.ash.drishti.dataload;
 
+import com.ash.drishti.lakeload.FileDates;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
@@ -32,6 +33,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Routing a file to a table (DATALOAD_INBOX.md section 5): the {@code .ready} file's keys first, then the first rule of
@@ -53,15 +56,18 @@ public final class Routes {
     /**
      * Where a file goes: the pack and kind, the pack's connector (null: the one serving the kind), the table (null: the connector's), the
      * date field (null: the pack's) or one business date for every row ({@code asOf}), the id field (null: the pack's), the lake and the
-     * table format; {@code by} says which rule (or the {@code .ready} file) decided.
+     * table format; {@code by} says which rule (or the {@code .ready} file) decided. {@code dateFrom} is the loader's {@code source.date-from}:
+     * {@code auto}, a date at the end of a file's name (an archive member's own first: {@code FileDates}) is every row's business date, or
+     * {@code field}, the rows' own; {@code nameDate} the date the file's name carries (what the Admin screen shows), {@code dateBy} where the
+     * date comes from in words.
      */
     public record Route(String pack, String kind, String connector, String table, String dateField, LocalDate asOf, String key, String lake,
-            String format, String by, Path packDir) {
+            String format, String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy) {
 
         /** The files of one table and one way of reading them go to one load. */
         public String group() {
             return String.join("|", pack, kind, String.valueOf(connector), String.valueOf(table), String.valueOf(dateField), String.valueOf(asOf),
-                    String.valueOf(key), lake, format);
+                    String.valueOf(key), lake, format, dateFrom);
         }
     }
 
@@ -77,6 +83,7 @@ public final class Routes {
             String lake, String format) {}
 
     private static final Set<String> RULE_KEYS = Set.of("match", "pack", "kind", "connector", "table", "date-from", "date-field", "key", "lake", "format");
+    private static final Logger LOG = LoggerFactory.getLogger(Routes.class);
     private static final Pattern DATE_IN_NAME = Pattern.compile("(?<!\\d)(\\d{4})-(\\d{2})-(\\d{2})(?!\\d)");
 
     private final List<Rule> rules;
@@ -128,10 +135,10 @@ public final class Routes {
                 throw new IllegalArgumentException(at + ": a rule needs match (a glob on the file name), pack and kind");
             }
             String dateFrom = text(r, "date-from");
-            dateFrom = dateFrom == null ? "field" : dateFrom.toLowerCase(Locale.ROOT);
-            if (!dateFrom.equals("field") && !dateFrom.equals("name")) {
-                throw new IllegalArgumentException(at + ".date-from " + dateFrom + ": field (the pack's date field, or date-field) or name "
-                        + "(YYYY-MM-DD in the file's name)");
+            dateFrom = dateFrom == null ? "auto" : dateFrom.toLowerCase(Locale.ROOT);
+            if (!dateFrom.equals("auto") && !dateFrom.equals("field") && !dateFrom.equals("name")) {
+                throw new IllegalArgumentException(at + ".date-from " + dateFrom + ": auto (the date at the end of the file's name when it has one, "
+                        + "else each row's date field; the default), name (the name must carry a date) or field (each row's date field, the name ignored)");
             }
             String format = text(r, "format");
             format = format == null ? "delta" : format.toLowerCase(Locale.ROOT);
@@ -175,7 +182,12 @@ public final class Routes {
             m.put("kind", r.kind());
             m.put("connector", r.connector());
             m.put("table", tableText(r.connector(), r.table()));
-            m.put("date", r.dateFrom().equals("name") ? "from the name" : "each row's " + (r.dateField() == null ? "date field (the pack's)" : r.dateField()));
+            String field = "each row's " + (r.dateField() == null ? "date field (the pack's)" : r.dateField());
+            m.put("date", switch (r.dateFrom()) {
+                case "name" -> "from the name";
+                case "field" -> field;
+                default -> "from the name when it ends in a date, else " + field;
+            });
             m.put("format", r.format());
             m.put("lake", r.lake() == null ? defaultLake : r.lake());
             out.add(m);
@@ -209,8 +221,8 @@ public final class Routes {
             m.put("pack", r.pack());
             m.put("kind", r.kind());
             m.put("table", tableText(r.connector(), r.table()));
-            m.put("date", r.asOf() != null ? r.asOf() + (note != null && note.businessDate() != null ? " from the .ready file" : " from the name")
-                    : "each row's " + (r.dateField() == null ? "date field (the pack's)" : r.dateField()));
+            m.put("date", r.dateBy());
+            m.put("nameDate", r.nameDate() == null ? null : r.nameDate().toString());
             m.put("text", (byNote ? "the .ready file" : "rule " + n) + " → " + r.pack() + " / " + r.kind() + " · " + m.get("table") + " · " + m.get("date"));
         } catch (Unrouted e) {
             m.put("error", e.getMessage());
@@ -252,26 +264,47 @@ public final class Routes {
         if (!info.kinds().contains(kind)) {
             throw new Unrouted("the pack " + pack + " has no kind " + kind + "; its kinds are " + info.kinds());
         }
+        // the business date: the .ready file's business-date (given by a person or a system) > the date in the name > each row's own
         LocalDate asOf = n.businessDate();
         String dateField = n.dateField() != null ? n.dateField() : rule == null ? null : rule.dateField();
-        if (asOf == null && rule != null && rule.dateFrom().equals("name") && n.dateField() == null) {
-            Matcher m = DATE_IN_NAME.matcher(fileName);
-            if (!m.find()) {
-                throw new Unrouted("the rule " + rule.match() + " takes the business date from the name (date-from: name), but " + fileName
-                        + " holds no YYYY-MM-DD: rename it, or give business-date: in its .ready file");
+        String dateFrom = n.dateField() != null ? "field" : rule == null ? "auto" : rule.dateFrom();   // a .ready date-field: the rows' own
+        FileDates.Found found = FileDates.find(fileName);
+        LocalDate nameDate = found.date();
+        String dateBy;
+        if (asOf != null) {
+            dateBy = asOf + " from the .ready file";
+        } else if (dateFrom.equals("name")) {
+            asOf = nameDate != null ? nameDate : legacyNameDate(fileName, rule);
+            dateBy = asOf + " from the name";
+        } else if (dateFrom.equals("auto") && nameDate != null) {
+            dateBy = nameDate + " from the name" + (FileDates.isArchive(fileName) ? " (a member's own name's date first)" : "");
+        } else {
+            if (dateFrom.equals("auto") && LOG.isDebugEnabled()) {
+                LOG.debug("data inbox: {}: no business date from the name ({}): each row's date field", fileName, found.why());
             }
-            try {
-                asOf = LocalDate.parse(m.group());
-            } catch (DateTimeParseException e) {
-                throw new Unrouted(fileName + ": " + m.group() + " is not a date");
-            }
+            dateBy = "each row's " + (dateField == null ? "date field (the pack's)" : dateField)
+                    + (dateFrom.equals("auto") && FileDates.isArchive(fileName) ? " (or a member's own name's date)" : "");
         }
         String by = n.pack() != null || n.kind() != null ? "the .ready file" + (rule == null ? "" : " over the rule " + rule.match())
                 : "the rule " + rule.match();
         return new Route(pack, kind, n.connector() != null ? n.connector() : rule == null ? null : rule.connector(),
                 n.table() != null ? n.table() : rule == null ? null : rule.table(), asOf != null ? null : dateField, asOf,
                 rule == null ? null : rule.key(), rule == null || rule.lake() == null ? defaultLake : rule.lake(), rule == null ? "delta" : rule.format(),
-                by, info.dir());
+                by, info.dir(), dateFrom.equals("field") ? "field" : "auto", nameDate, dateBy);
+    }
+
+    /** {@code date-from: name} on a name whose date is not at its end: a YYYY-MM-DD anywhere in it, else the file is refused. */
+    private static LocalDate legacyNameDate(String fileName, Rule rule) throws Unrouted {
+        Matcher m = DATE_IN_NAME.matcher(fileName);
+        if (!m.find()) {
+            throw new Unrouted("the rule " + rule.match() + " takes the business date from the name (date-from: name), but " + fileName
+                    + " holds no YYYY-MM-DD or YYYYMMDD: rename it, or give business-date: in its .ready file");
+        }
+        try {
+            return LocalDate.parse(m.group());
+        } catch (DateTimeParseException e) {
+            throw new Unrouted(fileName + ": " + m.group() + " is not a date");
+        }
     }
 
     private static String text(JsonNode n, String key) {

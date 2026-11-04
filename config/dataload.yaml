@@ -26,7 +26,7 @@ dataload:
 #     pack: trading
 #     kind: trade
 #     connector: trade-endur                 # the table that connector reads (trading/trade_endur)
-#     date-from: name                        # the business date is the YYYY-MM-DD in the name (trades-endur-2026-11-03.jsonl.gz)
+#     date-from: name                        # the name must carry the business date (trades-endur-2026-11-03.jsonl.gz)
 #   - match: "trades-calypso-*.jsonl.gz"
 #     pack: trading
 #     kind: trade
@@ -35,7 +35,7 @@ dataload:
 #   - match: "scenario-pv-*.jsonl.gz"        # the market-risk pack's scenario PVs (its risk-store connector)
 #     pack: market-risk
 #     kind: scenario-pv
-#     date-field: BUSINESS_DATE              # date-from: field (the default): the pack's ingest date field, or this field of each row
+#     date-field: BUSINESS_DATE              # each row's date when the name carries none (date-from: auto, the default)
 #   - match: "*.zip"                         # an archive: one dataset named after it, or a folder per table (DATA_GUIDE.md section 2.7)
 #     pack: trading
 #     kind: trade
@@ -48,7 +48,11 @@ dataload:
 #   kind        one of the pack's kinds
 #   connector   the pack's Delta or Iceberg connector whose table is written (default: the first that serves the kind)
 #   table       the table's folder, over the connector's (rare)
-#   date-from   field (default): each row's date field (date-field, else the pack's ingest.<kind>.date); name: YYYY-MM-DD in the file's name
+#   date-from   the business date (DATA_GUIDE.md section 2.8; a .ready file's business-date: wins over it):
+#               auto (default): the date at the end of the file's name (trades 20261103.jsonl.gz, trades_2026-11-03.zip; an archive
+#               member's own name first) for every row of the file, else each row's date field; name: the name's date for every row
+#               (a YYYY-MM-DD anywhere in it counts too), a name without one refused into failed/; field: each row's date field
+#               (date-field, else the pack's ingest.<kind>.date), names ignored
 #   date-field  the field that holds each row's business date
 #   key         the field that holds each row's id (default: the pack's ingest.<kind>.key)
 #   lake        the lake root, over drishti.dataload.lake

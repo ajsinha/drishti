@@ -94,6 +94,11 @@ final class ParseWorker implements Callable<Void> {
     private final int keep;
 
     final Map<Integer, DateRows> dates = new TreeMap<>();
+    /** Per file whose name gave its rows' date (its label): {the date (epoch day), rows whose own date field said another}. */
+    final Map<String, long[]> fileDates = new HashMap<>();
+    private final boolean datesFromNames;
+    private Inputs.InputFile lastFile;
+    private long[] lastFileDate;
     final Map<String, Long> rejectsByReason = new LinkedHashMap<>();
     final List<Reject> firstRejects = new ArrayList<>();
     long documents;
@@ -110,6 +115,7 @@ final class ParseWorker implements Callable<Void> {
             Meter spill, LineCounts lines, AtomicLong documentsSeen, AtomicLong rejectedSeen, int keep) {
         this.number = number;
         this.parser = new RowParser(plan);
+        this.datesFromNames = plan.datesFromNames;
         this.view = new RowView(plan);
         this.queue = queue;
         this.budgetKb = budgetKb;
@@ -155,8 +161,23 @@ final class ParseWorker implements Callable<Void> {
         return null;
     }
 
+    /** The date the chunk's file name carries ({@link FileDates}: an archive member's own name first, else its archive's), for every row. */
+    private void fileDay(Chunk c) {
+        if (!datesFromNames) {
+            return;
+        }
+        Inputs.InputFile f = c.split().file();
+        if (f != lastFile) {                               // a file's chunks mostly come one after another
+            lastFile = f;
+            java.time.LocalDate d = f.member() != null ? FileDates.of(f.member().archiveName(), f.member().name()) : FileDates.of(f.name());
+            lastFileDate = d == null ? null : fileDates.computeIfAbsent(f.name(), k -> new long[] {d.toEpochDay(), 0});
+        }
+        parser.fileDay = lastFileDate == null ? RowParser.NO_FILE_DAY : (int) lastFileDate[0];
+    }
+
     private void chunk(Chunk c) throws IOException {
         long t0 = System.nanoTime();
+        fileDay(c);
         byte[] a = c.data();
         int len = c.len();
         int line = 0;
@@ -183,6 +204,9 @@ final class ParseWorker implements Callable<Void> {
                 String reason = parser.parse(a, s, e - s);
                 if (reason == null) {
                     rows++;
+                    if (parser.otherDate) {
+                        lastFileDate[1]++;
+                    }
                     accept(c, line);
                 } else {
                     reject(c, line, reason, a, s, e - s);

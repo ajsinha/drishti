@@ -89,6 +89,7 @@ public final class LoaderProcess implements LoadRunner {
         put(s, "connector", r.connector());
         put(s, "date", r.dateField());
         put(s, "as-of", r.asOf() == null ? null : r.asOf().toString());
+        put(s, "date-from", r.asOf() == null ? r.dateFrom() : null);
         put(s, "id", r.key());
         ObjectNode t = root.putObject("target");
         t.put("format", r.format());

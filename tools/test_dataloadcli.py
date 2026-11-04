@@ -35,10 +35,13 @@ STATUS = {"on": True, "owner": True, "node": "drishti-main", "dir": "/srv/data/d
           "failed": [{"file": "mystery.jsonl", "day": "2026-11-03", "run": "20261103T140000Z-drishti-main",
                       "reason": "no routing rule matches mystery.jsonl"}],
           "cycles": [{"run": "20261103T150000Z-drishti-main", "trigger": "schedule", "started": "2026-11-03T15:00:00Z", "state": "done",
-                      "files": [{"file": "a.jsonl", "outcome": "loaded"}, {"file": "b.jsonl", "outcome": "loaded"},
+                      "files": [{"file": "a.jsonl", "outcome": "loaded",
+                                 "dateNote": "2 rows of a.jsonl carried another date in BUSINESS_DATE; loaded under 2026-11-03 from the file name"},
+                                {"file": "b.jsonl", "outcome": "loaded"},
                                 {"file": "c.jsonl", "outcome": "duplicate"}], "notices": []},
                      {"run": "-", "trigger": "by a.sinha", "started": "2026-11-03T14:55:00Z", "state": "skipped",
-                      "why": "run 20261103T144000Z-drishti-main still loading (15 min)", "files": [], "notices": []}]}
+                      "why": "run 20261103T144000Z-drishti-main still loading (15 min)", "files": [], "notices": []}],
+          "board": {"waiting": [{"file": "trades-endur-2026-11-03.jsonl.gz", "rule": {"date": "2026-11-03 from the name"}}]}}
 
 
 class Dataload(unittest.TestCase):
@@ -70,6 +73,8 @@ class Dataload(unittest.TestCase):
         self.assertRegex(out, r"mystery\.jsonl\s+2026-11-03\s+no routing rule matches mystery\.jsonl")
         self.assertRegex(out, r"20261103T150000Z-drishti-main\s+done\s+1 duplicate, 2 loaded")
         self.assertRegex(out, r"-\s+skipped\s+run 20261103T144000Z-drishti-main still loading \(15 min\)")
+        self.assertIn("business date: 2026-11-03 from the name", out)
+        self.assertIn("2 rows of a.jsonl carried another date in BUSINESS_DATE; loaded under 2026-11-03 from the file name", out)
 
     def test_status_json_is_the_servers_answer(self):
         code, out, _ = self.go("dataload", "status", "--json")

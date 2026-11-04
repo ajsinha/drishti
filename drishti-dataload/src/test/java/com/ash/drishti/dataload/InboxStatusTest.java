@@ -67,11 +67,21 @@ class InboxStatusTest {
         Files.setLastModifiedTime(fresh, FileTime.from(f.clock.instant().minusSeconds(5)));
         f.drop("mystery.jsonl", Fixture.rows("2026-11-03", "5"), "");
         f.drop("notes.txt", "x", "");
+        f.drop("trades-b 20261104.jsonl", Fixture.rows("2026-11-02", "6"), "");
+        f.drop("trades-c_20261105.zip", "x", "");
+        f.drop("trades-d 20261104.jsonl", Fixture.rows("2026-11-02", "7"), "business-date: 2026-11-06\n");
 
         Map<String, Object> st = inbox(f, f.fakeLoader()).status();
         Map<String, Object> board = map(st.get("board"));
         List<Map<String, Object>> waiting = list(board.get("waiting"));
-        assertThat(board.get("waitingCount")).isEqualTo(waiting.size()).isEqualTo(6);
+        assertThat(board.get("waitingCount")).isEqualTo(waiting.size()).isEqualTo(9);
+        // the business date each file will load under, and where it comes from (DATALOAD_INBOX.md section 5.1)
+        assertThat(map(byFile(waiting, "trades-b 20261104.jsonl").get("rule"))).containsEntry("date", "2026-11-04 from the name")
+                .containsEntry("nameDate", "2026-11-04");
+        assertThat((String) map(byFile(waiting, "trades-b 20261104.jsonl").get("rule")).get("text")).endsWith("· 2026-11-04 from the name");
+        assertThat(map(byFile(waiting, "trades-c_20261105.zip").get("rule"))).containsEntry("date", "2026-11-05 from the name (a member's own name's date first)");
+        assertThat(map(byFile(waiting, "trades-d 20261104.jsonl").get("rule"))).containsEntry("date", "2026-11-06 from the .ready file");
+        assertThat(map(byFile(waiting, "trades-a.jsonl").get("rule"))).containsEntry("date", "each row's date field (the pack's)");
 
         Map<String, Object> a = byFile(waiting, "trades-a.jsonl");
         assertThat(a).containsEntry("code", "ready").containsEntry("label", "ready");
@@ -206,7 +216,7 @@ class InboxStatusTest {
         Map<String, Object> st = inbox(f, f.fakeLoader()).status();
         Map<String, Object> rules = map(st.get("rules"));
         assertThat(list(rules.get("rules"))).extracting(m -> m.get("match"), m -> m.get("date")).containsExactly(
-                org.assertj.core.groups.Tuple.tuple("trades-*", "each row's date field (the pack's)"),
+                org.assertj.core.groups.Tuple.tuple("trades-*", "from the name when it ends in a date, else each row's date field (the pack's)"),
                 org.assertj.core.groups.Tuple.tuple("named-*", "from the name"));
         assertThat(rules).containsEntry("unmatched", "fail");
         assertThat((String) map(st.get("settings")).get("text")).isEqualTo("interval 10m · stable-seconds 30 · loader-heap 256m · load-timeout 5m · "

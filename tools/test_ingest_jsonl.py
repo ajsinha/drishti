@@ -95,6 +95,22 @@ class IngestTest(unittest.TestCase):
         got = sorted((str(r["business_date"]), r["id"]) for r in rows)
         self.assertEqual(got, [("2026-09-01", "X"), ("2026-09-02", "C")])
 
+    def test_the_date_in_a_file_name_is_every_rows_business_date(self):
+        """DATA_GUIDE.md section 2.8: the name's date over the rows' own (counted), --as-of over the name, --date-from field ignores it;
+        the kind from the stem leaves the date out."""
+        drop = self.t / "drop"
+        drop.mkdir()
+        (drop / "trade 20261103.jsonl").write_text(lines({"id": "A", "bd": "2026-11-03"}, {"id": "B", "bd": "20261102"}, {"id": "C"}))
+        said = []
+        r = IJ.ingest(args(drop, store="files", root=self.root), said.append)
+        self.assertEqual(self.ids("2026-11-03"), ["A", "B", "C"])
+        self.assertEqual(r.other_dates, {str(drop / "trade 20261103.jsonl"): 1})
+        self.assertIn("1 row of trade 20261103.jsonl carried another date in bd; loaded under 2026-11-03 from the file name", said)
+        IJ.ingest(args(drop, store="files", root=self.root, as_of="2026-12-01"), QUIET)
+        self.assertEqual(self.ids("2026-12-01"), ["A", "B", "C"])
+        IJ.ingest(args(drop, store="files", root=self.root, date_from="field"), QUIET)
+        self.assertEqual((self.ids("2026-11-02"), self.ids("2026-11-03")), (["B"], ["A"]))
+
 
 if __name__ == "__main__":
     unittest.main()

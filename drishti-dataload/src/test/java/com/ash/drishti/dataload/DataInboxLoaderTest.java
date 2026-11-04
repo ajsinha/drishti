@@ -127,6 +127,51 @@ class DataInboxLoaderTest {
         assertThat(inbox.status()).containsEntry("on", false).containsKey("cycles");
     }
 
+    /**
+     * The business date from outside (DATALOAD_INBOX.md section 5.1): a file whose name ends in a date loads every row under it, the rows
+     * that said another date counted in the outcome, the report and the board; a .ready business-date wins over the name; a rule's
+     * {@code date-from: field} keeps each row's own date. Three loader runs (one per way of dating).
+     */
+    @Test
+    void aDateInTheNameIsEnforcedTheReadyFileWinsAndFieldKeepsTheRows() throws IOException {
+        Fixture f = new Fixture(tmp);
+        Files.writeString(f.rules, """
+                dataload:
+                  rules:
+                    - match: "trades-*"
+                      pack: demo-pack
+                      kind: trade
+                    - match: "rows-*"
+                      pack: demo-pack
+                      kind: trade
+                      date-from: field
+                """);
+        f.drop("trades-d 20261104.jsonl", Fixture.rows("2026-11-02", "D1", "D2") + Fixture.rows("2026-11-04", "D3"), "");
+        f.drop("trades-e 20261104.jsonl", Fixture.rows("2026-11-02", "E1"), "business-date: 2026-11-05\n");
+        f.drop("rows-f 20261104.jsonl", Fixture.rows("2026-11-01", "F1"), "");
+        DataInbox inbox = new DataInbox(f.settings, "node-a", f.clock, Fixture.ZONE, f.packs(), new LoaderProcess(f.settings), f.signal(), null);
+
+        Cycle.Report r = inbox.cycle("test");
+        assertThat(r.files()).as(r.toString()).hasSize(3).allMatch(o -> o.outcome().equals("loaded"));
+        Cycle.FileOutcome d = r.files().stream().filter(o -> o.file().startsWith("trades-d")).findFirst().orElseThrow();
+        assertThat(d.versions()).containsOnlyKeys("2026-11-04");
+        assertThat(d.dateNote()).isEqualTo("2 rows of trades-d 20261104.jsonl carried another date in BUSINESS_DATE; loaded under 2026-11-04 from the file name");
+        Cycle.FileOutcome e = r.files().stream().filter(o -> o.file().startsWith("trades-e")).findFirst().orElseThrow();
+        assertThat(e.versions()).containsOnlyKeys("2026-11-05");
+        assertThat(e.dateNote()).isNull();
+        Cycle.FileOutcome rows = r.files().stream().filter(o -> o.file().startsWith("rows-f")).findFirst().orElseThrow();
+        assertThat(rows.versions()).containsOnlyKeys("2026-11-01");
+        assertThat(f.signals).extracting(Signal.Landed::date).containsExactlyInAnyOrder(LocalDate.parse("2026-11-01"), LocalDate.parse("2026-11-04"),
+                LocalDate.parse("2026-11-05"));
+
+        JsonNode report = Fixture.JSON.readTree(f.root.resolve("outbox/2026-11-03").toFile().listFiles()[0].toPath()
+                .resolve("trades-d 20261104.jsonl.loaded.json").toFile());
+        assertThat(report.path("load").path("otherDateRows").asLong()).isEqualTo(2);
+        assertThat(report.path("load").path("fileDates").get(0).path("date").asText()).isEqualTo("2026-11-04");
+        assertThat(report.path("route").path("dateBy").asText()).isEqualTo("2026-11-04 from the name");
+        assertThat(inbox.status().toString()).contains("2 rows of trades-d 20261104.jsonl carried another date in BUSINESS_DATE");
+    }
+
     @Test
     void theLaunchIsTheExecutableJarsOwnLauncherOrThePlainClassPath(@TempDir Path dir) throws IOException {
         assertThat(LoaderProcess.launch("/a/x.jar" + java.io.File.pathSeparator + "/a/y.jar"))

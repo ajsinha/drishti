@@ -183,6 +183,17 @@ class Stats:
     files: list = field(default_factory=list)                         # [{file, bytes}]
     doc_bytes: int = 0                                                # characters of the accepted documents (compact JSON)
     sample: tuple | None = None                                       # (id, date) of the first accepted document, to open one
+    file_dates: dict = field(default_factory=dict)                    # file label -> the date its name carries (enforced on its rows)
+    other_dates: Counter = field(default_factory=Counter)            # file label -> rows whose own date field said another date
+
+    def date_report(self, date_field: str | None) -> dict:
+        """The summary's keys for dates taken from file names (the Java loader's LoadReport gives the same): ``fileDates`` (each file
+        whose name gave the date of its rows, with the rows that carried another date in their own field), ``otherDateRows`` and
+        ``dateNotes`` (those rows in words)."""
+        import filedate
+        files = [{"file": f, "date": d.isoformat(), "otherDateRows": self.other_dates.get(f, 0)} for f, d in self.file_dates.items()]
+        notes = [filedate.other_date_note(n, f, date_field, self.file_dates[f]) for f, n in self.other_dates.items() if n]
+        return {"fileDates": files, "otherDateRows": sum(self.other_dates.values()), "dateNotes": notes}
 
     def reject(self, where: str, reason: str) -> None:
         self.rejects[reason] += 1
@@ -214,8 +225,17 @@ class Stager:
         self.stats = Stats(numeric={column_name(p): True for p in self.promote})
         self._open: OrderedDict[tuple, object] = OrderedDict()
         self._seen: dict[date, set] = {}
+        self.file_day: date | None = None                                       # the date in the current file's name (file()), else None
+        self.file_label: str = ""
         if folder:
             folder.mkdir(parents=True, exist_ok=True)
+
+    def file(self, label: str, day: date | None) -> None:
+        """The next documents come from the file ``label``, whose name carries ``day`` (None: none, or --date-from field): with no
+        --as-of, every one of them goes under ``day``; a row whose own date field says another date is counted (Stats.other_dates)."""
+        self.file_label, self.file_day = label, day
+        if day is not None and not self.as_of:
+            self.stats.file_dates[label] = day
 
     # ----------------------------------------------------------------------------------------------- one document
 
@@ -235,8 +255,15 @@ class Stager:
         ident = id_text(kv)
         if _number(kv) and isinstance(doc, dict) and self.key in doc:       # the document carries its id as text too
             doc = {**doc, self.key: ident}
+        own = None
         if self.as_of:
             day = self.as_of
+        elif self.file_day is not None:                 # the date in the file's name, enforced (filedate.py): the row's own date is only counted
+            day = self.file_day
+            own = parse_day(get(doc, self.date_field)) if self.date_field else None
+        elif not self.date_field:
+            st.reject(where, "no business date (no date field, and the file name carries no date)")
+            return
         else:
             raw = get(doc, self.date_field)
             day = parse_day(raw)
@@ -278,6 +305,8 @@ class Stager:
         elif st.accepted < DUPLICATE_WATCH:
             seen.add(h)
         st.accepted += 1
+        if own is not None and own != day:
+            st.other_dates[self.file_label] += 1
         if st.sample is None:
             st.sample = (ident, day.isoformat())
         part = self.parts.get((day, values))

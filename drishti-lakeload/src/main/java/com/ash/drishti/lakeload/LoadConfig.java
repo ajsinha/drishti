@@ -55,7 +55,13 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
 
     /** The input files and what a row is. */
     record Source(List<String> files, boolean recursive, Map<String, String> storage, String id, String date, LocalDate asOf,
-            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy) {}
+            List<String> promote, List<String> vectors, Map<String, String> flatten, List<String> partitionBy, String latestBy, String dateFrom) {
+
+        /** {@code date-from: auto} (the default) and no {@code as-of}: a date in a file's name ({@link FileDates}) is its rows' business date. */
+        boolean datesFromNames() {
+            return asOf == null && "auto".equals(dateFrom);
+        }
+    }
 
     /** The table and its layout. */
     record Target(String format, String path, String lake, String domain, String kind, String table, Map<String, String> storage,
@@ -97,7 +103,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             "s3.session-token", "credential", "token");
     private static final Map<String, Set<String>> KEYS = Map.of(
             "", Set.of("source", "target", "parallel", "memory", "rejects", "report", "lock", "datasets"),
-            "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "promote", "vectors", "vector", "flatten",
+            "source", Set.of("files", "recursive", "storage-options", "format", "id", "date", "as-of", "date-from", "promote", "vectors", "vector", "flatten",
                     "partition-by", "pack", "connector", "latest-by", "dataset", "archive"),
             "source.archive", Set.of("max-mb", "max-ratio", "max-members", "validate"),
             "target", Set.of("format", "path", "lake", "domain", "kind", "table", "storage-options", "mode", "properties", "iceberg", "layout"),
@@ -289,6 +295,11 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
             throw new IllegalArgumentException("source.as-of " + asOfText + ": give YYYY-MM-DD");
         }
         String date = r.text(s, "date", null);
+        String dateFrom = r.text(s, "date-from", "auto").toLowerCase(Locale.ROOT);
+        if (!dateFrom.equals("auto") && !dateFrom.equals("field")) {
+            throw new IllegalArgumentException("source.date-from " + dateFrom + ": auto (a date at the end of a file's name is the business date of "
+                    + "every row of that file; the default) or field (each row's source.date field)");
+        }
         // a pack (as lake build --pack): its connector's domain, table, layout columns, vectors and flattened fields, its ingest key and date
         String packDir = r.text(s, "pack", null);
         PackLayout pack = null;
@@ -306,7 +317,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
                 date = pack.date();
             }
         }
-        if (asOf == null && date == null) {
+        if (asOf == null && date == null && dateFrom.equals("field")) {
             throw new IllegalArgumentException("source.date: name the business-date field (or give source.as-of YYYY-MM-DD for every row)");
         }
         List<String> vectors = new ArrayList<>(r.list(s, "vectors"));
@@ -325,7 +336,7 @@ record LoadConfig(Source source, Target target, Parallel parallel, Memory memory
         flatten.putAll(r.map(s.path("flatten"), "source.flatten"));
         Map<String, String> sourceStorage = storage(r, s.path("storage-options"), "source.storage-options");
         Source src = new Source(files, r.bool(s, "recursive", false), sourceStorage, id == null ? "id" : id, date, asOf, promote, vectors, flatten,
-                r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip());
+                r.list(s, "partition-by"), latestBy == null ? DEFAULT_LATEST_BY : latestBy.strip(), dateFrom);
 
         String tf = r.text(t, "format", "delta").toLowerCase(Locale.ROOT);
         if (!tf.equals("delta") && !tf.equals("iceberg")) {
