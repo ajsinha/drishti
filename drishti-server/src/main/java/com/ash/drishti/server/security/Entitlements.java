@@ -133,6 +133,16 @@ public final class Entitlements {
     }
 
     /**
+     * True when the principal holds the raw power (a role with {@code raw}, not through an embedded app), whatever
+     * {@code drishti.security.redact} names. What a column a BI dataset declares masked ({@code security.masked}) is decided by: such a
+     * column is masked for everyone without the raw power, even in an installation that masks no field of its own (a declared mask never
+     * silently stops applying).
+     */
+    public boolean rawPower(Principal p) {
+        return p.embedApp() == null && has(p, com.ash.drishti.identity.RoleDefinition::raw);
+    }
+
+    /**
      * The values of the document's masked fields that must not be typed into free text: the {@code mask-copies} rules,
      * whatever {@code mask-copies} says (collaboration always scrubs). Empty when nothing is masked.
      */
