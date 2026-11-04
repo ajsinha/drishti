@@ -137,7 +137,7 @@ test. Rachana's statistical functions (FUNCTION_CATALOGUE.md) call it through `d
 
 ## 6. QuantLib (parked)
 
-*Product owner, 2026-11-04: "Let us keep QuantLib out for now. We will revisit this later."* Not part of 2.9.12. The decisions made
+*Product owner, 2026-11-04: "Let us keep QuantLib out for now. We will revisit this later."* Not part of 2.9.12: it gets a release of its own, not yet scheduled (product owner, 2026-11-04). The decisions made
 before parking hold for when it is revisited: QuantLib in the Java server as the one pricing engine (QLRisk's other models through the
 Python worker), a pure-Java core as its fallback (calendars, day counts, schedules, curves, Black and Bachelier, vanilla swaps, FX
 forwards), sessions for thread safety, input guards, in-process by default with a worker mode, the latest stable version pinned. Open
