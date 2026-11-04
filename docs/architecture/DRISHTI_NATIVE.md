@@ -202,3 +202,23 @@ Two drills (a large release); the benchmark with `drishti.native.mode` `off` aga
 | N2 | QuantLib version | the latest stable at build time, pinned (for when QuantLib is revisited) |
 | N3 | Out-of-process QuantLib by default? | in-process by default, `worker` mode available (for when QuantLib is revisited) |
 | N4 | The disk store's Java fallback | **a pure-Java store on disk, H2's MVStore** (product owner: memory for a disk cache can be a problem). Pure Java, file-backed, ordered keys (the sorted store's scans), compression, concurrent readers; H2 is already a dependency (the JDBC plugin's tests), so the same library family, one pinned version. A cache written by RocksDB is not read by MVStore: each keeps its own folder, and a switch starts the other's cache empty (it is a cache) |
+
+## 13. Phase 2: native capabilities for every industry (decided 2026-11-04, a later release)
+
+*Product owner, 2026-11-04: Drishti serves more than banking, so any native library worth having is chosen by capability, not by
+industry.* Each follows the contract of section 4 (an interface, a Java fallback or an "unavailable" answer in words, bundled for Linux
+and Windows, one version), and reaches users through Rachana functions and engines, never as a new domain. Built after 2.9.11.i (the
+lean platform), with "Performance II" (2.9.11.n) or a release of its own.
+
+| # | Capability | Native | Java side | Serves | Decision |
+|---|---|---|---|---|---|
+| P1 | Machine-learning inference (forecasting, anomaly detection, classification) of models trained anywhere | ONNX Runtime (MIT, official Java API with bundled natives) | Tribuo (pure Java) for simple models; else "unavailable" in words | every industry: fraud and early warning, load forecasting, predictive maintenance, demand, risk scores | **adopt** |
+| P2 | Optimisation: linear and mixed-integer programming, routing, scheduling | Google OR-Tools (Apache 2, Java bindings with natives) | Hipparchus simplex (linear) and Timefold (pure-Java planning) | logistics, energy dispatch, manufacturing schedules, portfolio, collateral and hedge optimisation | **adopt** |
+| P3 | Signal processing, FFT | (FFTW not needed) | JTransforms (pure Java) | energy, manufacturing (vibration), telecoms, IoT | **pure Java only** |
+| P4 | Faster JSON parsing | (simdjson not needed) | simdjson-java (pure Java SIMD) beside Jackson | every load | **pure Java only** |
+| P5 | Geospatial formats and coordinate transforms | GDAL, PROJ | GeoTools, proj4j | logistics, energy grids, agriculture, insurance, telecoms | candidate: when a client asks |
+| P6 | Hexagonal geo indexing | H3 (h3-java) | lat/long binning | insurance, logistics, retail, telecoms | candidate: when a client asks |
+| P7 | Faster gzip | libdeflate / ISA-L | java.util.zip | every load and export | only if a benchmark shows gzip as the bottleneck |
+
+Not taken: FAISS (Lucene's HNSW and hnswlib in pure Java suffice), CUDA/GPU (heavy, rarely present), a second SQL engine (DuckDB only),
+QuantLib (parked, a release of its own).
