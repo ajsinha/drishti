@@ -204,7 +204,17 @@ The plan: the whole browser lane run three times on the redesign, each compared 
 same workers: the same tests pass and fail (each difference listed with its cause), no new flaky test, and the wall time, the
 worker-time per file and the memory peaks recorded here and in [BENCHMARK.md section 18](../admin/BENCHMARK.md#18-the-browser-test-lane).
 
-RESULTS
+Measured so far, on the release machine while other jobs shared it (load average about 25 on 24 threads):
+
+| Check | Before | After |
+|---|---|---|
+| the 32 parity tests of the edge cases and captured views (128 pages), one process | 168.7 s | 59.0 s (181.9 s one page at a time) |
+| one parity page, one at a time | 1.43 s | 1.16 to 1.24 s |
+| one console render page, one at a time (the pack parse fixed) | 2.65 s | 1.14 s, before the signal and the reused contexts |
+| both render suites (485 tests), 4 workers, the pack views bound by one server | 2,704 s of work on one worker each | 353 s wall (469 passed, 16 skipped: Sutras the preview does not bind, a stand-in without layout mode) |
+| the edge-case and behaviour tests of both render suites | | 56 passed, as on develop |
+
+The three full lane runs and their comparison with develop's lane are to be measured.
 
 ## 6. Rules for browser tests
 

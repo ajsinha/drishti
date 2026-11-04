@@ -1625,6 +1625,10 @@ loop against 1.3 ms; ten sets added 6.5 ms loop against 48.7 ms with `daxpy`, th
 ## 18. The browser test lane
 
 The console's browser tests as the release drill runs them (the design, its rules and how each number is taken:
-[TEST_HARNESS.md](../architecture/TEST_HARNESS.md)). Machine: section 3's (Ryzen AI 9 HX 370, 12 cores / 24 threads, 61 GB).
+[TEST_HARNESS.md](../architecture/TEST_HARNESS.md)). Machine: Ryzen AI 9 HX 370, 12 cores / 24 threads, 61 GB.
 
-BROWSER-LANE-RESULTS
+| Run | Workers | Wall | Work (the files' seconds together) | Peak memory |
+|---|---:|---:|---:|---|
+| the drill's browser lane, by file (`--dist loadfile`), measured | 3 | 58 min 42 s | 10,535 s | 17 server JVMs and 16 GB at once (beside the Java verify) |
+| the browser lane by test (`--dist loadgroup`), the redesigned harness | to be measured | to be measured | to be measured | to be measured |
+| both render suites alone, by test, measured on a shared machine | 4 | 353 s | | |
