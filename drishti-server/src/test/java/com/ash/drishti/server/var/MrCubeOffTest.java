@@ -96,7 +96,7 @@ class MrCubeOffTest {
                 .content("{\"view\":{\"source\":\"var\",\"values\":[\"var()\"]}}")).andReturn(), 404);
         JsonNode cat = answer(mvc.perform(get("/api/v1/pivot/catalogue").param("source", "var").header("Authorization", auth)).andReturn(), 200);
         assertThat(cat.path("fields").findValuesAsText("name")).contains("DESK").doesNotContain("MGMT.DESK", "RISK_CLASS", "TRADE");
-        assertThat(cat.path("measures").findValuesAsText("name")).containsExactly("var", "es", "pv", "trades");
+        assertThat(cat.path("measures").findValuesAsText("name")).containsExactly("var", "es", "pv", "trades", "pvar");   // pvar(): parametric VaR, on as shipped
         JsonNode ok = answer(query(auth, Map.of("source", "var", "rows", List.of("DESK"), "values", List.of(Map.of("measure", "var()", "as", "VaR")))), 200);
         assertThat(ok.get("cellCount").asInt()).isGreaterThanOrEqualTo(3);
         JsonNode comp = answer(query(auth, Map.of("source", "var", "rows", List.of("DESK"), "values", List.of(Map.of("measure", "comp_var()")))), 400);
