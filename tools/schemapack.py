@@ -395,17 +395,20 @@ def make(a, cli) -> int:
 
 
 def stage_and_ingest(a, cli, plan, dated, pack_dir, data_dir, SG) -> None:
-    """Writes the real documents of the dated kinds into the dated store, one <kind>.jsonl per kind staged in a temp folder (the file names the kind)."""
+    """Writes the real documents of the dated kinds into the dated store. This tool is the feed's producer: a kind with a date field is
+    staged one file per business date (<kind>.<date>.jsonl.gz, tools/lake/feedfiles.py, the shared feed writer), a snapshot kind as
+    <kind>.<as-of>.jsonl.gz (--as-of) or <kind>.jsonl.gz (the business today); the load then follows the rules and never reads a row's date."""
     IJ = cli.load_module("ingest_jsonl", "ingest_jsonl.py")
+    feedfiles = cli.load_module("feedfiles", "lake/feedfiles.py")
+    as_of = getattr(a, "as_of", None)
     with tempfile.TemporaryDirectory(prefix="schemapack-stage-") as tmp:
         for k in dated:
             real = (getattr(a, "_real", None) or {}).get(k.orig or k.kind) or (getattr(a, "_real", None) or {}).get(k.kind) or k.samples
-            with open(pathlib.Path(tmp) / f"{k.kind}.jsonl", "w", encoding="utf-8") as f:
-                for d in real:                    # the data as it is: only the pack's samples were anonymised
-                    f.write(json.dumps(d, ensure_ascii=False) + "\n")
+            date_of = (lambda d, f=k.date: SG.doc_date(d, f)) if k.date else (lambda d: as_of) if as_of else None
+            feedfiles.write_documents(pathlib.Path(tmp), k.kind, real, date_of)   # the data as it is: only the pack's samples were anonymised
         ia = argparse.Namespace(src=[pathlib.Path(tmp)], recursive=False, pack=pack_dir, domain=None, kind=None, key=None, date=None, columns=None,
                                 lake=data_dir if a.store == "delta" else None, store=a.store, root=data_dir if a.store == "files" else None,
-                                mode="replace", dry_run=False, batch_rows=250_000, as_of=getattr(a, "as_of", None))
+                                mode="replace", dry_run=False, batch_rows=250_000)
         IJ.ingest(ia, print)
 
 

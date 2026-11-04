@@ -264,10 +264,21 @@ python_tool_tests() {
   if command -v uv >/dev/null; then                  # the lake writers and maintenance need deltalake; uv provides it without installing
     # a hung test fails the drill (timeout exits 124) instead of blocking it: these take seconds, 10 minutes is a hang
     timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/samplegen/test_layout.py
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_maintain.py tools/lake/test_maintain_admin.py 2>&1 | grep -v '^{"at"'
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_demo.py
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_names.py   # the bank's names
-    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml python -m unittest -q tools/lake/test_publish.py
+    # EVERY lake test (tools/lake/test_*.py), found, not listed: a test file nobody named never ran. pytest runs both kinds (unittest
+    # classes and pytest functions with tmp_path). The S3 simulators run below with moto. Two invocations: the slower half (the
+    # demo lakes, the maintenance) and the rest. The gate built the exec jar: the tests that start the Java loader run, not skip.
+    local lake_tests=() slow=() rest=() f
+    mapfile -t lake_tests < <(compgen -G 'tools/lake/test_*.py' | sort)
+    for f in "${lake_tests[@]}"; do
+      case "$f" in
+        tools/lake/test_s3_simulators.py) ;;
+        tools/lake/test_demo.py|tools/lake/test_maintain*.py) slow+=("$f") ;;
+        *) rest+=("$f") ;;
+      esac
+    done
+    (( ${#rest[@]} > 10 )) || { echo "drill: only ${#rest[@]} lake test files found under tools/lake" >&2; return 1; }
+    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest -q -p no:cacheprovider "${slow[@]}" 2>&1 | grep -v '^{"at"'
+    timeout --kill-after=30 600 uv run -q --with deltalake --with pyarrow --with pyyaml --with pytest python -m pytest -q -p no:cacheprovider "${rest[@]}" 2>&1 | grep -v '^{"at"'
     # the lake tools on S3 simulators (Delta on S3, lake publish's conditional-PUT commit): moto, and the MinIO server binary
     # on Linux (DRISHTI_MINIO_BIN or tools/cache/minio; it skips, printing why, when no binary can be had). Each prints which
     # conditional writes its simulator covered. The Java S3Mock and MinIO suites run in the Java verify.
@@ -351,8 +362,9 @@ drill_cleanup() {
   stop_jobs 2>/dev/null || true
   python3 "$PLAN" merge --durations "$DURATIONS" "$LOGS"/timings-*.json 2>/dev/null || true
   local tmp="${TMPDIR:-/tmp}"
-  find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
-  find "$tmp/pytest-of-$(id -un)" -mindepth 1 -maxdepth 1 -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null
+  # || true: a folder already gone (or none made) is not a failure; under set -e it would turn a green drill's exit into 1
+  find "$tmp" -maxdepth 1 -name 'drishti-*' ! -name 'drishti-console-static' -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
+  find "$tmp/pytest-of-$(id -un)" -mindepth 1 -maxdepth 1 -newer "$DRILL_MARK" -exec rm -rf {} + 2>/dev/null || true
   rm -f "$DRILL_MARK"
   find "$DRILL_TMP" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null || true
   rm -rf "$COPY_BASE"/*."$$".* 2>/dev/null; rmdir "$COPY_BASE" 2>/dev/null || true   # a copy whose job was stopped
