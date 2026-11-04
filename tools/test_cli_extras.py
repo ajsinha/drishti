@@ -210,10 +210,10 @@ class Watch(unittest.TestCase):
         return sorted(json.loads(x)["id"] for x in f.read_text().splitlines()) if f.exists() else []
 
     def test_ingests_once_and_is_idempotent(self):
-        self.put("trade.jsonl", {"id": "A", "bd": "2026-09-01"})
+        self.put("trade.2026-09-01.jsonl", {"id": "A", "bd": "2026-09-01"})
         code, out, _ = self.watch()
         self.assertEqual((0, ["A"]), (code, self.rows()))
-        self.assertIn("new file trade.jsonl", out)
+        self.assertIn("new file trade.2026-09-01.jsonl", out)
         state = json.loads((self.root / W.STATE_NAME).read_text())["files"]
         (entry,) = state.values()
         self.assertEqual({"size", "mtime", "sha256", "at", "rows", "bad"}, set(entry) - {"movedTo"})
@@ -222,20 +222,20 @@ class Watch(unittest.TestCase):
         self.assertEqual(["A"], self.rows())                              # not appended twice
 
     def test_changed_file_is_ingested_again_and_touch_is_not(self):
-        self.put("trade.jsonl", {"id": "A", "bd": "2026-09-01"})
+        self.put("trade.2026-09-01.jsonl", {"id": "A", "bd": "2026-09-01"})
         self.watch("--mode", "overwrite-dates")
-        p = self.drop / "trade.jsonl"
+        p = self.drop / "trade.2026-09-01.jsonl"
         os.utime(p, ns=(1, 1))                                            # touched, same content
         self.assertNotIn("ingesting", self.watch("--mode", "overwrite-dates")[1])
-        self.put("trade.jsonl", {"id": "A", "bd": "2026-09-01"}, {"id": "B", "bd": "2026-09-01"})
+        self.put("trade.2026-09-01.jsonl", {"id": "A", "bd": "2026-09-01"}, {"id": "B", "bd": "2026-09-01"})
         self.assertIn("changed file", self.watch("--mode", "overwrite-dates")[1])
         self.assertEqual(["A", "B"], self.rows())
 
     def test_done_dir_moves_files_and_new_files_append(self):
-        self.put("trade.jsonl", {"id": "A", "bd": "2026-09-01"})
+        self.put("trade.2026-09-01.jsonl", {"id": "A", "bd": "2026-09-01"})
         self.watch("--done-dir", str(self.done))
-        self.assertEqual((False, True), ((self.drop / "trade.jsonl").exists(), (self.done / "trade.jsonl").exists()))
-        self.put("trade.jsonl", {"id": "B", "bd": "2026-09-01"})           # a new batch with the same name
+        self.assertEqual((False, True), ((self.drop / "trade.2026-09-01.jsonl").exists(), (self.done / "trade.2026-09-01.jsonl").exists()))
+        self.put("trade.2026-09-01.jsonl", {"id": "B", "bd": "2026-09-01"})           # a new batch with the same name
         self.watch("--done-dir", str(self.done))
         self.assertEqual(["A", "B"], self.rows())
         self.assertEqual(2, len(list(self.done.glob("*.jsonl"))))

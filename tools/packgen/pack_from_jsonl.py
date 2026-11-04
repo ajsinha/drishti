@@ -205,7 +205,7 @@ def run(opts) -> int:
         import ingest_jsonl as IJ
         ia = argparse.Namespace(src=opts.inputs, recursive=opts.recursive, pack=out, domain=None, kind=opts.kind, key=None, date=None,
                                 columns=None, lake=opts.lake, store=opts.store, root=opts.files_root, mode="replace", dry_run=False,
-                                batch_rows=250_000)
+                                batch_rows=250_000, date_from="row")      # samples, not a feed: each document's own date (--date)
         rep = IJ.ingest(ia, say)
         skipped = sum(rep.no_date.values()) + sum(rep.no_key.values())
         undated = [k for k in kinds if k not in dates]

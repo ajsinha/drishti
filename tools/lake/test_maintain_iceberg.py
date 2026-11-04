@@ -168,9 +168,11 @@ class RealTableTest(unittest.TestCase):
             root = Path(tmp) / "ice"
             os.environ["DRISHTI_BI_STORE"] = str(Path(tmp) / "bi")
             try:
-                src = Path(tmp) / "t.jsonl"
-                src.write_text("\n".join(json.dumps({"TRADE_ID": f"T-{d}-{i}", "TRADE_DATE": d, "QUANTITY": i})
-                                         for d in ("2026-10-14", "2026-10-15", "2026-10-16") for i in range(10)))
+                src = Path(tmp) / "drop"                      # one file a business date, the date in its name (DATA_LOAD_RULES.md)
+                src.mkdir()
+                for d in ("2026-10-14", "2026-10-15", "2026-10-16"):
+                    (src / f"trade.{d}.jsonl").write_text("\n".join(json.dumps({"TRADE_ID": f"T-{d}-{i}", "TRADE_DATE": d, "QUANTITY": i})
+                                                                   for i in range(10)))
                 code = quiet(build.main, ["--from", str(src), "--lake", str(root), "--domain", "trading", "--kind", "trade", "--key", "TRADE_ID",
                                           "--date", "TRADE_DATE", "--format", "iceberg", "--pack-name", "trading", "-q", "--no-stamp"])
                 self.assertEqual(code, 0)

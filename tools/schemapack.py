@@ -405,7 +405,8 @@ def stage_and_ingest(a, cli, plan, dated, pack_dir, data_dir, SG) -> None:
                     f.write(json.dumps(d, ensure_ascii=False) + "\n")
         ia = argparse.Namespace(src=[pathlib.Path(tmp)], recursive=False, pack=pack_dir, domain=None, kind=None, key=None, date=None, columns=None,
                                 lake=data_dir if a.store == "delta" else None, store=a.store, root=data_dir if a.store == "files" else None,
-                                mode="replace", dry_run=False, batch_rows=250_000, as_of=getattr(a, "as_of", None))
+                                mode="replace", dry_run=False, batch_rows=250_000, as_of=getattr(a, "as_of", None),
+                                date_from="row")          # samples, not a feed: each document's own date (ingest_jsonl.collect)
         IJ.ingest(ia, print)
 
 

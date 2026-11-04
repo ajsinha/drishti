@@ -92,8 +92,14 @@ class S3Suite:
 
     def scratch(self, run: str, days: dict) -> Path:
         """lake build into a fresh scratch lake on local disk (the deltalake engine), as load-day.sh does."""
-        src = self.root / f"in-{run}.jsonl"
-        src.write_text("".join(json.dumps(d) + "\n" for docs in days.values() for d in docs), encoding="utf-8")
+        src = self.root / f"in-{run}"                     # one file a business date, the date in its name (DATA_LOAD_RULES.md)
+        src.mkdir()
+        by_date: dict = {}
+        for docs in days.values():
+            for d in docs:
+                by_date.setdefault(d["TRADE_DATE"], []).append(d)
+        for day, docs in by_date.items():
+            (src / f"trade.{day}.jsonl").write_text("".join(json.dumps(d) + "\n" for d in docs), encoding="utf-8")
         a = build.build_parser().parse_args(["--from", str(src), "--kind", "trade", "--key", "TRADE_ID", "--date", "TRADE_DATE",
                                              "--partition-by", "PRODUCT_TYPE", "--promote", "NOTIONAL", "--lake", str(self.root / f"build-{run}"),
                                              "--domain", "trading", "--table", "trade_endur", "--engine", "deltalake", "--no-stamp", "-q"])

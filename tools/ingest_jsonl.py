@@ -145,7 +145,8 @@ def business_today() -> date:
 def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
     """kind -> business date -> [(id, doc json, doc)] for the kinds the pack knows. Each file's business date (DATA_LOAD_RULES.md): --as-of,
     else its .ready file's business-date, else its name's date, else the business today; a row's own date field never decides (rows
-    that say another date are counted)."""
+    that say another date are counted). One exception, not a feed: pack make's samples (packgen/pack_from_jsonl.py, date_from "row",
+    not a command-line choice) are split by each document's own date field, as the pack's Sutras read them."""
     out: dict[str, dict[date, list]] = {}
     as_of = date.fromisoformat(args.as_of) if getattr(args, "as_of", None) else None
     date_from = getattr(args, "date_from", None) or "auto"
@@ -154,6 +155,17 @@ def collect(args, keys, dates, report: Report) -> dict[str, dict[date, list]]:
         dfield = dates.get(kind)
         if not dfield:
             report.untracked[kind] = report.untracked.get(kind, 0) + 1
+            continue
+        if date_from == "row":                                    # pack make's samples: the document's own date
+            day = _day(SG.doc_date(doc, dfield)) if dfield != SNAPSHOT else (as_of or business_today())
+            if day is None:
+                report.no_date[kind] = report.no_date.get(kind, 0) + 1
+                continue
+            kv = SG.get(doc, keys.get(kind, "id"))
+            if kv is SG.MISSING or kv is None:
+                report.no_key[kind] = report.no_key.get(kind, 0) + 1
+                continue
+            out.setdefault(kind, {}).setdefault(day, []).append((str(kv), json.dumps(doc), doc))
             continue
         d = decided.get(f)
         if d is None:
