@@ -102,7 +102,6 @@ During the day the same scenario-PV and P&L-vector records may also arrive on Ka
 | [`margin-call`](counterparty-risk/margin-call.md) | `MC` | `counterparty-risk/margin-call/`, a snapshot, then daily changes | 152 | — | A variation or initial margin call and its settlement status. |
 | [`credit-limit`](counterparty-risk/credit-limit.md) | `LIM` | `counterparty-risk/credit-limit/`, a snapshot, then daily changes | 1,440 | — | PFE limit by tenor bucket for a counterparty, with utilisation. |
 | [`cva`](counterparty-risk/cva.md) | `CVA` | `counterparty-risk/cva/`, a snapshot, then daily changes | 4,373 | — | Credit, debit and funding valuation adjustments with sensitivities. |
-| [`sa-ccr`](counterparty-risk/sa-ccr.md) | `SACCR` | `counterparty-risk/sa-ccr/`, a snapshot, then daily changes | 76 | — | Regulatory EAD: replacement cost, PFE add-ons by asset class, multiplier. |
 | [`simm`](counterparty-risk/simm.md) | `SIMM` | `counterparty-risk/simm/`, a snapshot, then daily changes | 24 | — | Initial margin by risk class and product class. |
 | [`bond`](market-data/bond.md) | `BND` | `market-data/bond/`, a snapshot, then daily changes | 1,920 | — | A listed bond: terms, price, yield, spreads and analytics. |
 | [`cap-vol-surface`](market-data/cap-vol-surface.md) | `CPV` | `market-data/cap-vol-surface/`, a snapshot, then daily changes | 7 | — | Cap vols by maturity and strike. |
@@ -125,12 +124,13 @@ During the day the same scenario-PV and P&L-vector records may also arrive on Ka
 | [`rate-fixing`](market-data/rate-fixing.md) | `FIX` | `market-data/rate-fixing/`, a snapshot, then daily changes | 418 | — | Published overnight and term rate fixings (SOFR, €STR, SONIA…). |
 | [`repo-curve`](market-data/repo-curve.md) | `REPO` | `market-data/repo-curve/`, a snapshot, then daily changes | 420 | — | General-collateral or specials repo rates by term. |
 
-## Market data
+## Counterparty-risk inputs (SA-CCR)
 
 **You produce this.** Test data under `data/testdata/`, or the pack's samples.
 
 | Kind | Command | Test data | Rows | Needed for | What one record is |
 |---|---|---|---|---|---|
+| [`saccr-trade`](counterparty-risk/saccr-trade.md) | `SACT` | `counterparty-risk/saccr-trade/`, one full file set per date | 6,527 | — | One derivative's SA-CCR classification and terms per business date and risk driver (asset class, hedging set, transaction type, direction, notional, dates, option and tranche terms); the SA-CCR engine computes every supervisory figure and EAD from it. A row that carries a computed figure is refused. |
 | [`quote`](news-and-markets/quote.md) | `QUOTE` | `news-and-markets/quote/`, one snapshot | 20 | — | A quote and recent price history for a ticker, as the yfinance connector computed them. |
 | [`news`](news-and-markets/news.md) | `NEWS` | `news-and-markets/news/`, one snapshot | 71 | — | The headlines for one name, as the news connector computed them: newest first, filtered for relevance, duplicates removed. |
 | [`us-company`](us-equities/us-company.md) | `USEQ` | `us-equities/us-company/`, one snapshot | 586 | — | A US listed company: key facts, ten years of annual financials, recent SEC filings and index memberships, from public data. |
@@ -159,9 +159,9 @@ During the day the same scenario-PV and P&L-vector records may also arrive on Ka
 | [`region`](world-economy/region.md) | `REGN` | none: the pack's samples | 7 | — | A World Bank region: its countries, population, life expectancy, women in parliament, Internet use and the government types found in it. |
 | [`social-indicator`](world-economy/social-indicator.md) | `SOCI` | none: the pack's samples | 4,297 | — | A social or governance statistic of one country over time, with the regional comparison: health, education, inequality, rights and rule of law. |
 
-## Public data (refreshed by Drishti's scripts)
+## Market data
 
-**Public source.** Test data under `data/testdata/`, or the pack's samples.
+**You produce this.** Test data under `data/testdata/`, or the pack's samples.
 
 | Kind | Command | Test data | Rows | Needed for | What one record is |
 |---|---|---|---|---|---|
@@ -177,9 +177,11 @@ These kinds have a contract but no page: Drishti computes or derives them from t
 | compute-demo | `path-sum` | `PSUM` | Drishti computes this | Book path (Python) (the path-sum kind of the compute-demo pack) |
 | compute-demo | `path-sum-java` | `PSUMJ` | Drishti computes this | Book path (Java) (the path-sum-java kind of the compute-demo pack) |
 | counterparty-risk | `exposure-result` | `EXP` | Drishti computes this | The exposure profile (EE, ENE, EEE, PFE at 95% and 99%, EE without collateral) and the figures (CE, EPE, EEPE, peak EE and PFE, EAD under the internal model) of any counterparty scope (the scope grammar of EXPOSURE_GUIDE.md section 4), computed when asked by the server's exposure engine from the simulated paths, as the person asking; never stored. |
+| counterparty-risk | `fva-result` | `FVAR` | Drishti computes this | The funding valuation adjustment of a netting set, counterparty, group, legal entity or the bank (FCA on the expected exposure, FBA on the expected negative exposure, discounted, by the funding spread), computed when asked by the server's FVA engine from the exposure engine's profile after the CSA, as the person asking; never stored. |
 | counterparty-risk | `exposure-official-cpty` | `XOFC` | Drishti computes this | The official end-of-day exposure (current exposure, EPE, effective EPE, peak EE, peak PFE at 95% and 99%) of every netting set, counterparty and connected group, as the server captured and published it (one row per scope, business date and result version); read only, for BI and other readers, never an engine's input. |
 | counterparty-risk | `nset-mtm` | `NSMTM` | Drishti computes this | A netting set's MtM totals derived from the trade valuations of its live trades, once per business date, shown beside the netting set's stored figures (quick win Q1 of docs/architecture/COMPUTED_ATTRIBUTES.md, until the netting-set engine computes them). |
 | counterparty-risk | `cpty-mtm` | `CPMTM` | Drishti computes this | A counterparty's MtM totals derived from the trade valuations of its live trades in netting sets, once per business date, shown beside the counterparty's stored NET_MTM (quick win Q2 of docs/architecture/COMPUTED_ATTRIBUTES.md). |
+| counterparty-risk | `saccr-result` | `SACCR` | Drishti computes this | SA-CCR exposure at default (Basel CRE52) of a netting set, counterparty, legal entity or the bank, computed when asked by the server's SA-CCR engine from the classification rows (saccr-trade), the live members' MTM, the CSAs and the collateral, as the person asking; never stored. |
 | gleif | `lei-group` | `LEIG` | Drishti computes this | An ownership group, computed from the entities when asked: the ultimate parent with its whole tree, every member, and counts by country and legal form. |
 | gleif | `lei-country` | `LEIC` | Drishti computes this | A country's legal entities in the pack, computed from the entities when asked: the entities, the groups present, legal forms and cities. |
 | market-data | `correlation-result` | `CORRC` | Drishti computes this | The pairwise correlations of a correlation set's factors, computed when asked from their daily closes in the lake (log returns over a window, Pearson or Ledoit-Wolf) by the server's Java engine, as the person asking; never stored. |

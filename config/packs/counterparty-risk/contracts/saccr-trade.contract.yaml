@@ -239,10 +239,13 @@ fields:
   presence: optional
   example: IG
   enum:
+  - AAA
+  - AA
   - A
-  - B
-  - BB
   - BBB
+  - BB
+  - B
+  - CCC
   - IG
   - SG
 - name: ATTACHMENT

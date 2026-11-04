@@ -146,7 +146,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 |---|---|---|---|---|---|
 | `AGR` | `agreement` | fundamental | `AGREEMENT_ID` | One row per master agreement per business date, keyed by AGREEMENT_ID. | 15 |
 | `CSA` | `csa` | fundamental | `CSA_ID` | One row per credit support annex per business date, keyed by CSA_ID. | 20 |
-| `NSET` | `netting-set` | fundamental | `NETTING_SET_ID` | One row per netting set per business date, keyed by NETTING_SET_ID. | 30 |
+| `NSET` | `netting-set` | fundamental | `NETTING_SET_ID` | One row per netting set per business date, keyed by NETTING_SET_ID. | 31 |
 | `LIM` | `credit-limit` | fundamental | `LIMIT_ID` | One row per credit limit per business date, keyed by LIMIT_ID. | 15 |
 | `CVA` | `cva` | fundamental | `RESULT_ID` | One row per cva / xva per business date, keyed by RESULT_ID. | 15 |
 | `COLL` | `collateral-balance` | fundamental | `BALANCE_ID` | One row per collateral balance per business date, keyed by BALANCE_ID. | 13 |
@@ -262,6 +262,7 @@ Trades that net on close-out under one agreement and CSA, with exposure and coll
 | `CSA` | id |  | required |  | `CSA-ALDERSHOT-FRA` (pattern `^CSA-`) | `csa` | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9); absent for an unmargined set. |
 | `CREDIT_LIMIT` | id |  | required |  | `LIM-ALDERSHOT` (pattern `^LIM-`) | `credit-limit` | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). |
 | `CVA_RESULT` | id |  | required |  | `CVA-ALDERSHOT-FRA` (pattern `^CVA-`) | `cva` | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). |
+| `SACCR` | id |  | optional |  | `SACCR-ALDERSHOT-FRA` (pattern `^SACCR-`) |  | The id the set's stored SA-CCR calculation had (SACCR-…). The stored kind is retired: SA-CCR is computed when asked (saccr-result), and SACCR with this id opens the set's computed SA-CCR (SACCR NSET:<id>). |
 | `SIMM` | id |  | required |  | `SIMM-ALDERSHOT` (pattern `^SIMM-`) | `simm` | The counterparty's SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…). |
 | `COLLATERAL_BALANCE` | id |  | required |  | `COLL-ALDERSHOT-FRA` (pattern `^COLL-`) | `collateral-balance` | The set's collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…). |
 | `LEGAL_ENTITY` | id |  | required |  | `LE-FRA` (pattern `^LE-`) | `legal-entity` | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). |

@@ -135,7 +135,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `CSA` | string | required | The CSA margining the set: a CSA_ID of the csa kind (CSA-…), one per agreement and bank legal entity (decision 9); absent for an unmargined set. | pattern `^CSA-`; links to `csa` | `"CSA-ALDERSHOT-LDN"` |
 | `CREDIT_LIMIT` | string | required | The counterparty's credit limit: a LIMIT_ID of the credit-limit kind (LIM-…). | pattern `^LIM-`; links to `credit-limit` | `"LIM-ALDERSHOT"` |
 | `CVA_RESULT` | string | required | The set's valuation adjustments: a RESULT_ID of the cva kind (CVA-<counterparty>-<legal entity>). | pattern `^CVA-`; links to `cva` | `"CVA-ALDERSHOT-LDN"` |
-| `SACCR` | string | required | The set's SA-CCR exposure calculation: a CALC_ID of the sa-ccr kind (SACCR-…). | pattern `^SACCR-`; links to `sa-ccr` | `"SACCR-ALDERSHOT-LDN"` |
+| `SACCR` | string | optional (filled in every row) | The id the set's stored SA-CCR calculation had (SACCR-…). The stored kind is retired: SA-CCR is computed when asked (saccr-result), and SACCR with this id opens the set's computed SA-CCR (SACCR NSET:<id>). | pattern `^SACCR-` | `"SACCR-ALDERSHOT-LDN"` |
 | `SIMM` | string | required | The counterparty's SIMM initial-margin calculation: a CALC_ID of the simm kind (SIMM-…). | pattern `^SIMM-`; links to `simm` | `"SIMM-ALDERSHOT"` |
 | `COLLATERAL_BALANCE` | string | required | The set's collateral balance: a BALANCE_ID of the collateral-balance kind (COLL-…). | pattern `^COLL-`; links to `collateral-balance` | `"COLL-ALDERSHOT-LDN"` |
 | `LEGAL_ENTITY` | string | required | The bank's legal entity on the bank's side of the set: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-LDN"` |
@@ -149,7 +149,7 @@ None: all 4,560 rows were read, and every field any of them has is in the record
 ## For the production query
 
 - **Identity:** one record per `NETTING_SET_ID` per `business_date`; the key is text, unique within the date.
-- **Never null:** `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SACCR`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE` (the contract's required fields).
+- **Never null:** `NETTING_SET_ID`, `TRADE_COUNT`, `NET_MTM`, `COLLATERAL`, `LIMIT`, `CVA`, `TRADES`, `BY_ASSET`, `COUNTERPARTY`, `AGREEMENT`, `CSA`, `CREDIT_LIMIT`, `CVA_RESULT`, `SIMM`, `COLLATERAL_BALANCE`, `LEGAL_ENTITY`, `NETTING_ENFORCEABLE` (the contract's required fields); every row of the test data also fills `SACCR`.
 - **Format:** JSON Lines, UTF-8, one object a line, gzip; field names exactly as shown (UPPER_SNAKE); dates `YYYY-MM-DD`; numbers as JSON numbers, never strings; a missing value is `null` or absent (an empty string is read as empty).
 - **Arrays:** keep the order shown (vectors in the scenario set's or the run's order); nested objects as JSON, never flattened.
 - Each day: the records new or changed that day (or all of them); Drishti keeps the rest from the day before.

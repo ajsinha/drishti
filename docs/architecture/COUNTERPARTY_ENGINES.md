@@ -455,8 +455,8 @@ All planned; the names follow the VaR and exposure APIs and are fixed at build.
 | Incremental EAD | `POST /api/v1/saccr/what-if` | in the pre-deal tab (C) | `drishti.py saccr what-if` |
 | FVA of a scope | `GET /api/v1/fva/scope?scope=…` | `FVA NSET:…`, `FVA CPTY:…`, `FVA BANK` | `drishti.py fva show` |
 | The playgrounds | `/api/v1/saccr/playground`, `/api/v1/exposure/playground`, `/api/v1/fva/playground` (and `.xlsx`, `/estimate`, `/template`) | `PLAY SACCR <netting set>`, `PLAY EXP <netting set>`, `PLAY FVA <netting set>` | `drishti.py play saccr`, `play exp`, `play fva` |
-| The CCR cube | section 6.2 | `CCUBE BANK`, `CCUBE GROUP:…`, `CCUBE NSET:…` | `drishti.py cube ccr` |
-| Official captures | `saccr-official`, `saccr-official-cpty` (SACCR.md section 9.5); `fva-official` per set and counterparty | — | `drishti.py saccr capture` |
+| The CCR cube | section 6.5 (`/api/v1/pivot/query` on source `ccr`, `/api/v1/pivot/ccr/...`) | `CCUBE`, `CCUBE GROUP:…`, `CCUBE NSET:…` | `drishti.py pivot ccr` |
+| Official captures | `saccr-official`, `saccr-official-cpty` (SACCR.md section 9.5); `fva-official` per set and counterparty | — | planned (a `saccr` capture command) |
 
 **Computed kinds:** `saccr-result` (SACCR.md section 9.1), `fva-result` (section 5.4; fields `SCOPE`, `BUSINESS_DATE`, `RUN_ID`, `FCA`,
 `FBA`, `FVA`, `FUNDING_SPREAD`, `EE_POINT`, `FUNDING_SURVIVAL`, `NETTING_SETS`, `BY_NETTING_SET[]`, `TERMS[]` per date, `FLAGS`,
