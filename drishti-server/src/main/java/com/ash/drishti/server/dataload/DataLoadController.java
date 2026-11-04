@@ -23,7 +23,6 @@ import com.ash.drishti.server.security.Entitlements;
 import com.ash.drishti.server.security.Principal;
 import java.io.IOException;
 import java.nio.file.NoSuchFileException;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

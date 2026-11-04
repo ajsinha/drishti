@@ -21,8 +21,6 @@ import com.ash.drishti.testkit.DatedSourceContract;
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import java.io.BufferedReader;
-import java.io.StringReader;
 import java.net.InetSocketAddress;
 import java.time.Duration;
 import java.util.ArrayList;

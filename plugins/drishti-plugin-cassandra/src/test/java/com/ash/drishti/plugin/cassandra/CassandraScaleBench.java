@@ -25,7 +25,6 @@ import com.ash.drishti.api.LoadGuard;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;

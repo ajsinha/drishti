@@ -24,7 +24,6 @@ import com.ash.drishti.api.EntityRef;
 import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.testkit.DatedSourceContract;
 import com.fasterxml.jackson.core.io.JsonStringEncoder;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.sql.Connection;

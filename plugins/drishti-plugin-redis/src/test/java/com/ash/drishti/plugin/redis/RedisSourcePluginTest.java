@@ -26,8 +26,6 @@ import com.ash.drishti.api.SourcePlugin;
 import com.ash.drishti.api.Subscription;
 import com.ash.drishti.common.JsonCodec;
 import com.ash.drishti.testkit.DatedSourceContract;
-import java.io.BufferedReader;
-import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;

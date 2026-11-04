@@ -25,8 +25,6 @@ import com.ash.drishti.api.SourceContext;
 import com.ash.drishti.common.JsonCodec;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
