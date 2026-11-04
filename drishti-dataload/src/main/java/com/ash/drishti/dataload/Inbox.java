@@ -42,6 +42,15 @@ public final class Inbox {
     static final List<String> DATA_EXTENSIONS = List.of(".tar.gz", ".tar.zip", ".jsonl.gz", ".jsonl.zip", ".jsonl.zst", ".ndjson.gz", ".ndjson.zst",
             ".json.gz", ".tgz", ".tar", ".jsonl", ".ndjson", ".json", ".gz", ".zip", ".zst");
 
+    /** Whether the marker holds its file ({@code hold: true}); a marker that cannot be read holds nothing (the cycle refuses it with the reason). */
+    private static boolean held(Path marker) {
+        try {
+            return ReadyNote.read(marker).hold();
+        } catch (IOException | RuntimeException e) {
+            return false;
+        }
+    }
+
     /** A data file's name without its data extension: {@code trades.2026-11-03.jsonl.gz} → {@code trades.2026-11-03}. */
     static String shortName(String name) {
         String low = name.toLowerCase(java.util.Locale.ROOT);
@@ -92,6 +101,8 @@ public final class Inbox {
     public static final String NO_MARKER = "no-marker";
     public static final String NOT_STABLE = "not-stable";
     public static final String NEXT_CYCLE = "next-cycle";
+    /** A file whose {@code .ready} file says {@code hold: true}: it waits until the key is removed (DATA_LOAD_RULES.md section 5). */
+    public static final String HELD = "held";
 
     /** A file that waits ({@code code}: {@link #NO_MARKER}, {@link #NOT_STABLE}, {@link #NEXT_CYCLE}) and why, in words. */
     public record Waiting(String name, long size, Instant modified, String why, String code) {}
@@ -167,6 +178,10 @@ public final class Inbox {
             if (!LakeLoad.reads(name)) {
                 refused.add(new Refused(p, m, "the loader does not read " + name + ": JSON Lines (.jsonl, .ndjson, .json; plain, .gz or .zst) "
                         + "or an archive of them (.zip, .tar, .tar.gz, .tgz)"));
+                continue;
+            }
+            if (m != null && held(m)) {
+                waiting.add(new Waiting(name, a.size(), modified, "held: its .ready file says hold: true (remove the key to release it)", HELD));
                 continue;
             }
             Instant markerTime = m == null ? modified : Files.getLastModifiedTime(m, LinkOption.NOFOLLOW_LINKS).toInstant();

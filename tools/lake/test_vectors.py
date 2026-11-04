@@ -60,7 +60,7 @@ class VectorStageTest(unittest.TestCase):
         st.add({**vector_doc(3), "PNL": None}, "a:3")                # no vector: kept, counted by the reader as failed
         self.assertEqual(st.stats.accepted, 2)
         self.assertEqual(list(st.stats.rejects), ["the vector field 'PNL' is not a list of numbers"])
-        self.assertEqual(st.types(), {"DESK": "string", "PNL": "vector"})
+        self.assertEqual(st.types(), {"DESK": "string", "PNL": "vector", "_load_id": "string", "_source_file": "string"})
 
 
 @unittest.skipUnless(writers.deltalake_available(), "needs deltalake and pyarrow (uv run --with deltalake --with pyarrow ...)")

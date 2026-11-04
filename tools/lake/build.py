@@ -410,7 +410,7 @@ def run(a, say=print) -> tuple[int, dict]:
     started = time.monotonic()
     remote = bool(a.lake) and "://" in str(a.lake) and not str(a.lake).startswith("file:")
     lake = pathlib.Path(a.lake) if a.lake and not remote else None
-    run_id = datetime.now().strftime("%Y%m%dT%H%M%S") + f"-{os.getpid()}"
+    run_id = datetime.now().strftime("%Y%m%dT%H%M%S.%f")[:-3] + f"-{os.getpid()}"     # time order: the newest load's rows sort last
     summary: dict = {"run": run_id, "startedAt": now_iso(), "status": "failed", "dryRun": bool(a.dry_run), "mode": a.mode}
     prog = Progress(a.progress, a.verbose)
     try:
@@ -472,6 +472,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
     st = stage.Stager(staging, p["key"], p["date"], as_of, p["partition_by"], p["promote"], p.get("flatten"), p.get("vectors"),
                       p.get("latest_by"))
     st.date_from = p["date_from"]
+    st.run = summary["run"]
     try:
         if table and not iceberg:                                          # a table of another partitioning fails before anything is read
             writers.check_layout(writers.Table(table, [stage.column_name(c) for c in p["partition_by"]], {}, a.mode, a.batch_rows, []))
@@ -484,7 +485,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         for f in files:
             r = jsonstream.Reader(f)
             given = (getattr(a, "_markers", {}).get(str(getattr(f, "archive", f))) or {}).get("business-date")
-            st.file(r.label, filedate.of_input(f), getattr(f, "date", None), given)
+            st.file(r.label, filedate.of_input(f), getattr(f, "date", None), given, str(getattr(f, "archive", f)))
             for doc, where in r:
                 st.add(doc, where)
                 if st.stats.read % 2000 == 0:
@@ -506,7 +507,7 @@ def _go(a, p, as_of, lake, table, summary, prog, started, say, remote_root: str 
         summary.update(documents=st.stats.read, accepted=st.stats.accepted, rejected=st.stats.rejected,
                        rejects={"byReason": dict(st.stats.rejects.most_common()), "first": st.stats.reject_samples},
                        duplicates=dict(sorted(st.stats.duplicates.items())), duplicateExamples=st.stats.duplicate_examples,
-                       latestBy=p.get("latest_by"), files=st.stats.files, dateFrom=p["date_from"], **st.date_report(),
+                       latestBy=p.get("latest_by"), files=st.stats.files, dateFrom=p["date_from"], loads=st.loads(), **st.date_report(),
                        sampleId=st.stats.sample[0] if st.stats.sample else None, sampleDate=st.stats.sample[1] if st.stats.sample else None)
         timings = {"readSeconds": round(read_s, 3)}
         summary["timings"] = timings

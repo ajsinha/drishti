@@ -70,6 +70,18 @@ class InboxTest {
     }
 
     @Test
+    void aHeldFileWaitsUntilItsReadyFileNoLongerSaysHold() throws IOException {
+        Fixture f = new Fixture(tmp);
+        f.drop("trades.2026-11-02.jsonl", Fixture.rows("2026-11-02", "1"), "hold: true\n");
+        Inbox.Found found = look(f);
+        assertThat(found.ready()).isEmpty();
+        assertThat(found.waiting()).extracting(Inbox.Waiting::code).containsExactly(Inbox.HELD);
+        Files.writeString(f.inbox().resolve("trades.2026-11-02.jsonl.ready"), "");
+        f.age(f.inbox().resolve("trades.2026-11-02.jsonl.ready"));
+        assertThat(look(f).ready()).extracting(Inbox.Ready::name).containsExactly("trades.2026-11-02.jsonl");
+    }
+
+    @Test
     void readyAllMakesEveryDataFileReadyWithOrWithoutItsMarker() throws IOException {
         Fixture f = new Fixture(tmp);
         f.drop("trades-a.jsonl", Fixture.rows("2026-11-02", "1"), "");

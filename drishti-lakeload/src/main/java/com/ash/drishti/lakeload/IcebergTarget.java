@@ -88,6 +88,8 @@ final class IcebergTarget implements TableTarget {
             // a number column when every value seen is a number; a column never seen with a value is text (as the Iceberg loader types it)
             want.put(c.promoted().get(i), c.numeric()[i] && c.seen()[i] ? Type.Primitive.DOUBLE : Type.Primitive.STRING);
         }
+        want.put(RowPlan.LOAD_ID, Type.Primitive.STRING);               // every row: the load that wrote it, and its file
+        want.put(RowPlan.SOURCE_FILE, Type.Primitive.STRING);
         List<String> vectors = plan.vectors.stream().map(RowPlan.Vector::column).toList();
         table = catalog.load(name).orElse(null);
         if (table == null) {
@@ -211,7 +213,12 @@ final class IcebergTarget implements TableTarget {
     public long commit(LocalDate date, List<WrittenFile> files) {
         List<DataFile> add = new ArrayList<>();
         files.forEach(f -> add.add((DataFile) f.handle()));
-        Map<String, String> summary = Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel");
+        java.util.TreeSet<String> ids = new java.util.TreeSet<>();
+        for (byte[] b : plan.loadIds) {
+            ids.add(new String(b, java.nio.charset.StandardCharsets.UTF_8));
+        }
+        Map<String, String> summary = Map.of("drishti.business-dates", date.toString(), "drishti.loader", "parallel", "drishti.load-ids",
+                String.join(",", ids));                         // an undo finds the commit of a load (and whether it replaced the date)
         Snapshot s = (cfg.target().appends() ? Operations.append(table, add, summary)
                 : Operations.replacePartitions(table, f -> date.equals(dateOf(f)), add, summary))
                 .orElseThrow(() -> new IllegalStateException("the commit of " + date + " made no snapshot"));

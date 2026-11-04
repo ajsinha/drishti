@@ -97,6 +97,49 @@
     }
   });
 
+  // Undo a load (DATA_LOAD_RULES.md section 6.3): Check is a dry run; Undo asks for the load id again, then the server undoes it
+  var undo = root.querySelector('[data-undo]');
+  if (undo) {
+    var idIn = undo.querySelector('[data-undo-id]');
+    var go = undo.querySelector('[data-undo-go]');
+    var lines = undo.querySelector('[data-undo-lines]');
+    var checked = null;
+    var show = function (b) {
+      lines.innerHTML = '';
+      (b.lines || []).forEach(function (l) {
+        var li = document.createElement('li');
+        li.textContent = l.table + ' ' + l.date + ': ' + l.removed + ' rows removed' + (l.replaced ? ', ' + l.restored + ' rows of the date before restored' : '');
+        lines.appendChild(li);
+      });
+    };
+    idIn.addEventListener('input', function () { checked = null; go.disabled = true; });
+    undo.addEventListener('click', function (e) {
+      var id = idIn.value.trim();
+      if (e.target.closest('[data-undo-check]')) {
+        if (!id) { say('Undo: give the load id', true); return; }
+        say('Undo ' + id + ': checking (nothing changes)...');
+        post('/admin/api/dataload/undo', { loadId: id }).then(function (res) {
+          if (!res.ok) { say('Undo: ' + problem(res.body), true); return; }
+          show(res.body);
+          say(res.body.text);
+          checked = (res.body.lines || []).length ? id : null;
+          go.disabled = !checked;
+        });
+      } else if (e.target.closest('[data-undo-go]') && checked) {
+        var typed = window.prompt('Type the load id to undo it (' + checked + '):');
+        if ((typed || '').trim() !== checked) { say('Undo: not confirmed; nothing changed', true); return; }
+        go.disabled = true;
+        post('/admin/api/dataload/undo', { loadId: checked, confirm: typed.trim() }).then(function (res) {
+          if (!res.ok) { say('Undo: ' + problem(res.body), true); go.disabled = false; return; }
+          show(res.body);
+          say(res.body.text);
+          checked = null;
+          refresh();
+        });
+      }
+    });
+  }
+
   columns();
   schedule();
   document.addEventListener('visibilitychange', function () { if (!document.hidden) { refresh(); } });

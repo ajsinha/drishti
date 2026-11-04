@@ -50,7 +50,8 @@ outcome (`tools/lake/testdata/file-dates/names.json`), so the two cannot drift.
 
 - **Table**: letters, digits, `_` and `-`; never a `.`. Stored lowercase (Windows paths do not tell `Trades` from `trades`).
 - **Date**, when present, is the second dot-separated part: `YYYY-MM-DD` or `YYYYMMDD`, a real calendar date, not in the future.
-- **Extension**: `.jsonl`, `.jsonl.gz`, `.jsonl.zip`, `.tar`, `.tgz`, `.tar.gz`, `.tar.zip`; case does not matter.
+- **Extension**: `.jsonl`, `.jsonl.gz`, `.jsonl.zip`, `.tar`, `.tgz`, `.tar.gz`, `.tar.zip`; also `.ndjson`, `.json` and `.zst` (`.ndjson.gz`,
+  `.jsonl.zst`, ...) and a bare `.gz` or `.zip` (`trades.2026-11-03.gz`); case does not matter.
 - Anything else in the second part (neither a date nor an extension) is refused: `trades.final.jsonl` says *"final" is neither a
   date (YYYY-MM-DD) nor an extension*.
 
@@ -72,12 +73,15 @@ Friday before.
 
 First match wins.
 
-| Value | 1 | 2 | 3 | 4 |
-|---|---|---|---|---|
-| **Business date** | command line `--as-of` | `.ready` `business-date:` | the name's date | business today |
-| **Table** | `--table` | `.ready` `table:` | the name's table | (no table: refused) |
-| **Pack** (its lake, domain and layout) | `--pack` | `.ready` `pack:` | the pack that already has a table of that name | a pack of that name with a single table |
-| **Mode** | `--mode` | `.ready` `mode:` | the inbox's `default-mode` | **append** |
+| Value | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|
+| **Business date** | command line `--as-of` | `.ready` `business-date:` | | the name's date | business today |
+| **Table** | `--table` | `.ready` `table:` | an inbox rule's `table:` | the name's table | (no table: refused) |
+| **Pack** (its lake, domain and layout) | `--pack` | `.ready` `pack:` | an inbox rule's `pack:` and `kind:` | the pack that already has a table of that name | a pack of that name with a single table |
+| **Mode** | `--mode` | `.ready` `mode:` | | the inbox's `default-mode` | **append** |
+
+An inbox rule (`config/dataload.yaml`: a glob on the file name to a pack, kind and table) applies when no `.ready` or command-line
+value is given, before the name's table is looked up.
 
 - A table found in **two** packs is refused unless the pack is given; the refusal lists the candidates.
 - An **unknown** table is refused, listing the known ones, unless creating it is allowed (section 7).
