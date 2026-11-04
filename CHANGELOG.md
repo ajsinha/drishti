@@ -15,6 +15,28 @@
 -->
 # Changelog
 
+## 2.9.11.c — BLAS on Java 21: many VaR scopes at once (unreleased)
+
+- **One linear-algebra seam** (`compute.linalg.LinearAlgebra`: `dgemm`, `dgemv`, `ddot`, `daxpy`) with a pure-Java implementation and
+  **OpenBLAS 0.3.26 bundled** through JavaCPP (`org.bytedeco:openblas`, the `linux-x86_64` and `windows-x86_64` builds only, about
+  44 MB); nothing to install on a server, nothing added to the Docker images. Unpacked under `drishti.native.cache-dir`
+  (`<data>/native-cache`); one OpenBLAS thread per call. Only `NativeBlas` names the binding (an ArchUnit rule).
+- **`drishti.native.blas.mode`**: `auto` (default: OpenBLAS where it fits, else Java) or `java` (chosen, quiet). Nothing about BLAS
+  stops the server: a 32-bit JVM, ARM, macOS or a failed load runs on Java with a **WARN banner** in the log, Admin → Health
+  **DEGRADED** (never down) with each member's binding, a notice on Admin → Health and Admin → Engines, the platform alert
+  **`native-blas-fallback`** and the metric `drishti_native_blas{path,reason}`; `drishti.py server health` prints the line.
+- **Resilience**: a start-up self-test of awkward shapes against Java, argument checks in Java before every native call, a per-call
+  size bound (`drishti.native.blas.max-call-mb`), any failure or NaN from finite inputs redone on Java with a circuit breaker for the run,
+  the self-test repeated every `drishti.native.blas.canary-interval` (6 h), JavaCPP's own memory bounded (`drishti.native.max-bytes-mb`).
+- **Many scopes in one pass** (`MultiSums`, behind `VarBook.vectors`: a cube's cells, ad-hoc baskets, many portfolios): on Java the
+  same bits as one set at a time, the rows read once per cache-sized tile for every set; on OpenBLAS dense tiles of many sets are one
+  `dgemm`. At 1M positions x 509 scenarios: 100 overlapping portfolios 3.1x faster, 100 cube cells 2.4x, 100 desks 3.2x
+  ([BENCHMARK.md section 17](docs/admin/BENCHMARK.md#17-many-var-scopes-at-once-blas)). FRTB's bucket sums and exposure's means were
+  measured on BLAS and stay on Java (faster there).
+- Docs: [OPERATIONS.md section 2.1](docs/admin/OPERATIONS.md#21-server-requirements-native-libraries-blas) (server requirements, platforms,
+  verification, the fallback and the warning), [HIGH_PERFORMANCE_NATIVE.md section 6](docs/architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)
+  as built, TROUBLESHOOTING, CONFIGURATION.md regenerated, THIRD-PARTY-NOTICES.
+
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
 - **The MR cube on the pivot engine (2.9.11.b, moved from 2.9.11.a by the product owner on 2026-11-03; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot

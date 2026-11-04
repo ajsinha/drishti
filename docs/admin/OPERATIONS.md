@@ -27,7 +27,7 @@ handbook stays the reference for one server and its console.
 ## Contents
 
 1. [What you are running](#1-what-you-are-running)
-2. [Prerequisites](#2-prerequisites)
+2. [Prerequisites](#2-prerequisites) · [Native libraries (BLAS)](#21-server-requirements-native-libraries-blas)
 3. [Install from a build (one machine)](#3-install-from-a-build-one-machine)
 4. [Install with Docker Compose](#4-install-with-docker-compose)
 5. [Data stores, sample data and feeds](#5-data-stores-sample-data-and-feeds)
@@ -120,7 +120,7 @@ Things worth knowing before you plan an installation:
 
 | Need | Version | Why |
 |---|---|---|
-| OpenJDK | 21 (the build enforces it) | runs the server and builds it |
+| OpenJDK | 21, **64-bit** (the build enforces 21) | runs the server and builds it; the bundled OpenBLAS needs a 64-bit Java on Linux or Windows x86-64 (section 2.1) |
 | Python | 3.13 (the console image uses `python:3.13-slim`; the minimum: [GETTING_STARTED.md](../guides/GETTING_STARTED.md#step-1--install-the-prerequisites)) | runs the console |
 | `uv` (recommended) | any recent | creates the console's virtual environment and runs the data tools with their libraries |
 | Docker and Docker Compose | any recent | only for the container installation and the sample databases |
@@ -135,6 +135,62 @@ $JAVA_HOME/bin/java -version
 ```
 
 You should see a line starting `openjdk version "25.`.
+
+### 2.1 Server requirements: native libraries (BLAS)
+
+Drishti multiplies matrices with **OpenBLAS 0.3.26, bundled** in the server (JavaCPP's `org.bytedeco:openblas`, the `linux-x86_64`
+and `windows-x86_64` builds, about 44 MB of jars). **Nothing is installed on a server**, the Docker images need nothing added, and no
+package manager is involved. Where the bundled build does not fit, the server runs the same sums in **pure Java**: the results are the
+same (within a relative 1e-12; many-scope sums are exact on Java), only the many-scope sums are slower
+([HIGH_PERFORMANCE_NATIVE.md section 6](../architecture/HIGH_PERFORMANCE_NATIVE.md#6-blas)). Nothing about BLAS can stop the server.
+
+| Platform | BLAS |
+|---|---|
+| Linux x86-64, 64-bit Java 21 | **native** (bundled OpenBLAS) |
+| Windows x86-64, 64-bit Java 21 | **native** (bundled OpenBLAS; Java unpacks its DLLs into the native cache, allowed on the QA machine) |
+| macOS (Apple silicon or Intel), Linux or Windows on ARM, any other system | Java (no bundled build; a `macosx-arm64` build can be added later) |
+| a 32-bit Java on any system | Java (Drishti needs a **64-bit Java 21**) |
+| Linux with musl (Alpine images) | Java (the bundled build needs glibc; the shipped images, `eclipse-temurin:21-jre`, have it) |
+
+**Settings** (`application.yaml`, all listed in [CONFIGURATION.md](CONFIGURATION.md)):
+
+| Setting | Default | Meaning |
+|---|---|---|
+| `drishti.native.blas.mode` (`DRISHTI_NATIVE_BLAS_MODE`) | `auto` | `auto`: the bundled OpenBLAS where it fits, else Java **with a loud warning**; `java`: Java, chosen, no warning |
+| `drishti.native.cache-dir` (`DRISHTI_NATIVE_CACHE_DIR`) | `<data folder>/native-cache` | where the bundled libraries are unpacked (never a hidden folder in a home directory); must be writable |
+| `drishti.native.max-bytes-mb` | 1024 | the off-heap memory the native layer may allocate itself |
+| `drishti.native.blas.max-call-mb` | 256 | a call whose operands pass this runs on Java |
+| `drishti.native.blas.canary-interval` | `6h` | the self-test against Java, run again this often (0: at start only) |
+
+OpenBLAS runs **one thread per call** (Drishti sets it when it loads; its own pools share the cores), so no `OPENBLAS_NUM_THREADS` is
+needed.
+
+**How to verify**
+
+- the start-up log has one line: `BLAS: mode auto, native (bundled OpenBLAS 0.3.26), 1 thread per call` (or
+  `BLAS: mode java, java (drishti.native.blas.mode is java)`);
+- **Admin → Health**, line *Native libraries*, with every cluster member's binding; `GET /api/v1/admin/health` → `native.blas`
+  (`status`, `mode`, `implementation`, `version`, `reason`, `members`);
+- `python3 tools/drishti.py server health` prints the same line;
+- the metric `drishti_native_blas{path="native"|"java",reason="..."}` is 1 for the path in use.
+
+**When `auto` falls back to Java** (no bundled build for the platform, the cache folder not writable, the library failed to load, its
+self-test disagreed with Java, or a native call failed during the run):
+
+1. the log has a **WARN banner** (`NATIVE BLAS NOT LOADED`): what failed, the reason, *running on the pure-Java path: results identical,
+   slower*, how to fix it, how to silence it;
+2. Admin → Health is **DEGRADED** (never down) with the reason; each member on the Java path is named;
+3. a notice stays on **Admin → Health** and **Admin → Engines** for administrators until it is fixed;
+4. the platform alert **`native-blas-fallback`** opens once (the administrators are told in their inbox; Admin → Health, Alerts), and
+   `drishti_native_blas_fallback` is 1 for a site's Prometheus (`deploy/prometheus/drishti-alerts.yaml`).
+
+To fix it: run a 64-bit Java on Linux or Windows x86-64, make `drishti.native.cache-dir` writable, and keep the `openblas` and `javacpp`
+jars in the server's library folder. To run on Java deliberately (and silence the warning): `drishti.native.blas.mode: java`.
+
+**Resilience.** The native library never runs unguarded ([HIGH_PERFORMANCE_NATIVE.md section 6.5](../architecture/HIGH_PERFORMANCE_NATIVE.md#65-resilience-as-built)):
+a start-up self-test of awkward shapes against Java, argument checks in Java before every native call (a bad argument never reaches
+native code), a per-call size bound, any failure or NaN from finite inputs redone on Java with the native path switched off for the rest
+of the run (the breaker: the banner, the alert and DEGRADED follow), and the self-test repeated every `canary-interval`.
 
 ## 3. Install from a build (one machine)
 
