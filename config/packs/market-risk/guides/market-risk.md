@@ -130,7 +130,7 @@ Every kind of the pack has a data contract: a YAML file beside the pack (`config
 | `PNLH` | `pnl-history` | input | `HISTORY_ID` | One row per hierarchy node per BUSINESS_DATE (the positions date), keyed by HISTORY_ID (PNLH-<NODE_ID>). | 16 |
 | `SENS` | `position-sensitivity` | input | `SENSITIVITY_ID` | One record per position (GRAIN POSITION) or trade (GRAIN TRADE), business date and batch, keyed by SENSITIVITY_ID (SENS-<POSITION_ID or TRADE_ID>-<BATCH_ID>); its sensitivities a sparse list, one element per risk factor and measure. | 38 |
 | `RFAC` | `risk-factor` | fundamental | `RISK_FACTOR` | One row per risk factor and business date (a slowly changing table; a date without a delivery keeps the last), keyed by RISK_FACTOR. | 27 |
-| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 29 |
+| `VRES` | `var-result` | computed | — | One answer per question (the scope asked for and the business date), computed when asked. | 44 |
 | `VOFF` | `var-official` | computed | `NODE_ID`, `RESULT_VERSION` | One row per hierarchy node per BUSINESS_DATE and RESULT_VERSION, keyed by NODE_ID and RESULT_VERSION; the latest version of a date is the date's figure. | 31 |
 | `SSPNL` | `stress-scenario-pnl` | computed | `SCENARIO_ID` | One record per SCENARIO_ID of the stress-result records, computed when asked. | 17 |
 
@@ -839,6 +839,21 @@ The VaR, ES, decomposition, worst scenarios and P&L vector of any scope (the sco
 | `CHILDREN_NOTE` | text |  | optional |  |  |  | When CHILDREN is limited: "5,000 of 18,567 positions shown (the largest by gross size); totals are over all 18,567". |
 | `WORST` | record list |  | required |  |  |  | The 25 worst scenarios (RANK, INDEX, DATE, PNL). |
 | `PNL` | vector |  | required | CURRENCY |  |  | The scope's P&L under each scenario day, oldest first (unrounded). |
+| `PARAMETRIC_VAR` | amount |  | optional | CURRENCY |  |  | Parametric VaR, a cross-check beside historical (PARAMETRIC_VAR.md): z·σ − μ at CONFIDENCE, positive for a loss; never official, never a limit's measure. |
+| `PARAMETRIC_ES` | amount |  | optional | CURRENCY |  |  | Parametric ES: σ·φ(z_ES)/(1 − ES_CONFIDENCE) − μ. |
+| `PARAMETRIC_MU` | amount |  | optional | CURRENCY |  |  | μ of the lens's vector (the normal's mean). |
+| `PARAMETRIC_SIGMA` | amount |  | optional | CURRENCY |  |  | σ of the lens's vector (sample, N − 1, or EWMA-weighted). |
+| `PARAMETRIC_Z` | amount |  | optional |  |  |  | Φ⁻¹(CONFIDENCE). |
+| `PARAMETRIC_N` | integer |  | optional |  |  |  | Scenarios (or 10-day windows) the fit used. |
+| `PARAMETRIC_WEIGHTING` | text |  | optional |  |  |  | equal or ewma. |
+| `PARAMETRIC_LAMBDA` | amount |  | optional |  |  |  | EWMA's decay; null with equal weights. |
+| `PARAMETRIC_HORIZON_RULE` | text |  | optional |  |  |  | lens or square-root-of-time. |
+| `PARAMETRIC_SKEW` | amount |  | optional |  |  |  | The vector's skewness (a normal: 0). |
+| `PARAMETRIC_EXCESS_KURTOSIS` | amount |  | optional |  |  |  | The vector's excess kurtosis (a normal: 0). |
+| `FAT_TAIL_GAP` | amount |  | optional | CURRENCY |  |  | VAR minus PARAMETRIC_VAR: positive when the scenario tail is heavier than the normal's. |
+| `FAT_TAIL_GAP_PCT` | rate |  | optional |  |  |  | FAT_TAIL_GAP over PARAMETRIC_VAR. |
+| `FAT_TAIL_ES_GAP` | amount |  | optional | CURRENCY |  |  | ES minus PARAMETRIC_ES. |
+| `PARAMETRIC_OFFICIAL` | boolean |  | optional |  |  |  | Always false: parametric VaR is a cross-check, never official. |
 | `PROVENANCE` | record |  | required |  |  |  | The headline's provenance in UPPER_SNAKE (VAR_GUIDE.md section 11.2), with TIER saying where the vector came from. |
 
 - No stored key: an answer's id is the scope asked (the id in the request); VAR <scope> <GO> opens the same answer in the explorer.

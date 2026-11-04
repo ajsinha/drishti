@@ -65,7 +65,8 @@ public final class LoaderRows {
                 } catch (IOException e) {
                     n = null;
                 }
-                if (n == null || !n.isObject() || !n.path("kind").isTextual() || !n.path("date").isTextual()) {
+                if (n == null || !n.isObject() || !n.path("kind").isTextual() || !n.path("date").isTextual()
+                        || !n.path("date").asText().matches("\\d{4}-\\d{2}-\\d{2}.*")) {      // a bad row as it is: the loader names it
                     Path f = dir.resolve("rows.jsonl");
                     Files.writeString(f, String.join("\n", lines) + "\n");
                     return f;

@@ -175,7 +175,7 @@ class MongoSourcePluginTest extends DatedSourceContract {
         assertThatThrownBy(() -> loadMain("share", lines, "--keep-days", "1", "--as-of", "2026-09-30")).hasMessageContaining("would drop 2 of 3 business days");
         try (MongoClient c = MongoClients.create(uri())) {
             var share = c.getDatabase("share").getCollection("share");
-            assertThat(share.countDocuments()).isEqualTo(2);
+            assertThat(share.countDocuments()).as("the day is written; only the retention after it is refused").isEqualTo(3);
             loadMain("share", lines, "--keep-days", "1", "--as-of", "2026-09-30", "--force-drop");
             assertThat(share.countDocuments()).isEqualTo(1);
         }

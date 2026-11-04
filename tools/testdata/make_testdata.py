@@ -73,10 +73,18 @@ def delta_connectors(packs_dir: Path) -> dict[str, tuple[str, str]]:
 
 
 def table_of(packs_dir: Path, pack: str, connector: str, kind: str) -> str:
-    """The lake table a pack's Delta connector writes a kind into (its settings.table.<kind>, else the kind): a feed file's name."""
+    """The lake table a pack's Delta connector writes a kind into: its lake entry (settings.lake-tables, <domain>.<table>, of the kind:
+    the pack's lake: block, LAKE_GUIDE.md), else its settings.table.<kind> (the older connector form), else the kind: a feed file's name."""
     import yaml
     spec = yaml.safe_load((packs_dir / pack / "pack.yaml").read_text(encoding="utf-8"))
     st = ((spec.get("connectors") or {}).get(connector) or {}).get("settings") or {}
+    entries = st.get("lake-tables") or []
+    entries = [x.strip() for x in entries.split(",")] if isinstance(entries, str) else [str(x).strip() for x in entries]
+    tables = ((spec.get("lake") or {}).get("tables") or {})
+    for name in entries:
+        folder = name.split(".", 1)[1] if "." in name else name
+        if (tables.get(name) or {}).get("kind", folder) == kind:
+            return folder
     return str((st.get("table") or {}).get(kind) or kind) if isinstance(st.get("table"), dict) else str(st.get(f"table.{kind}") or kind)
 
 
