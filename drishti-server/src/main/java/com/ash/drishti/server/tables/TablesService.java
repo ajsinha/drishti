@@ -305,7 +305,7 @@ public final class TablesService {
                 out.add(d.key());
             }
             out.add(DataViewService.DOCUMENT);
-            java.util.function.UnaryOperator<DataNode> redactor = who.raw() ? null : who.redact();
+            java.util.function.UnaryOperator<DataNode> redactor = who.redact() == java.util.function.UnaryOperator.<DataNode>identity() ? null : who.redact();
             String day = date == null ? null : date.toString();
             try {
                 data.walk(d, date, DataSelection.parse(List.of(), List.of()), out, redactor, false, 0, row -> {

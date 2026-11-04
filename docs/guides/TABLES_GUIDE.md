@@ -197,7 +197,7 @@ states per date. The store's folder is a setting of the layer (planned: `drishti
 | Layer | Applies to | Notes |
 |---|---|---|
 | the table's `rules` | every reader of the table: BI, the pivot, Flight | a reader with several roles sees the rows any of their rules allows; a role no rule names sees none |
-| the table's masked columns | readers without the raw power | they see `•••`; a filter, sort or grouping on a masked column is refused |
+| the table's masked columns | readers without the raw power (a role with `raw`) | they see `•••`, whatever the installation's own field masks (`drishti.security.redact`) are, even none; a filter, sort or grouping on a masked column is refused |
 | the model's `security` | readers through the model | only tightens; `may-see-all` stops a fact's rule reaching a dimension |
 
 `$.DESK in user.desks` is strict: a desk-head with no desks sees no trades.

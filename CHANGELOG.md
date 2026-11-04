@@ -340,6 +340,16 @@
   explain in place of the masks-and-kinds pair, never kept shared. `TablesService` reads for a `ViewerContext` (the viewer's masks and kinds,
   so an embedded app's masks hold too). `SutraTableSourceTest`: two people with different row rules and masks on the same page, in turn and
   sixteen at once, each get their own rows and masks.
+- **A declared mask always holds (a leak fixed).** A column a virtual table declares `masked: true`, and a column a BI dataset lists under
+  `security.masked`, was masked only when the installation masked some field of its own (`drishti.security.redact` not empty): "raw" was
+  read as "nothing masked for this person". It is now the raw power itself (`Entitlements.rawPower`: a role with `raw`, never through an
+  embedded app), so a declared mask holds for every reader without it, whatever `redact` names. The `ViewerContext`'s `raw`, the tables'
+  reads and BI's `DatasetService.masks` use it; BI's per-reader result key names it. **For the parity test:** in an installation with an
+  empty `redact` (the shipped one is not empty, so the shipped demo's figures do not change), readers without the raw power now see masked:
+  `trading-risk-counterparties` and `counterparty-exposure-counterparties` NAME and RATING, `trading-risk-trades` COUNTERPARTY,
+  `counterparty-exposure-official` NODE_NAME, `live-trading` and `live-trading-trade` TRADER_ID (and through them the models
+  trading-risk, counterparty-exposure, live-trading and desk-pnl-vs-exposure-py). `DeclaredMasksTest` (empty `redact`: masked without the raw
+  power, shown with it, for a table and a BI dataset).
 - **The large-join threshold (V10, decided).** `drishti.tables.scan-warn-rows` for the installation, and `scan-warn-rows:` in a
   `.model.yaml` for that model (checked: a whole number above zero); CONFIGURATION.md regenerated.
 - **The pivot keeps what it staged.** `TablesService.version` names a read without making it (the definitions, the table, the date, the

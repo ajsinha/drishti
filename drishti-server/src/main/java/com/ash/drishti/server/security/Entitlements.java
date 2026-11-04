@@ -133,6 +133,16 @@ public final class Entitlements {
     }
 
     /**
+     * True when the principal holds the raw power (a role with {@code raw}, not through an embedded app), whatever
+     * {@code drishti.security.redact} names. What a column a table or a dataset declares {@code masked} is decided by: such a column is
+     * masked for everyone without the raw power, even in an installation that masks no field of its own (a declared mask never silently
+     * stops applying).
+     */
+    public boolean rawPower(Principal p) {
+        return p.embedApp() == null && has(p, com.ash.drishti.identity.RoleDefinition::raw);
+    }
+
+    /**
      * The values of the document's masked fields that must not be typed into free text: the {@code mask-copies} rules,
      * whatever {@code mask-copies} says (collaboration always scrubs). Empty when nothing is masked.
      */
@@ -267,7 +277,7 @@ public final class Entitlements {
      * id, roles, attributes, whether nothing is masked for them, their masks and the kinds they may open.
      */
     public com.ash.drishti.engine.ViewerContext viewer(Principal p) {
-        return new com.ash.drishti.engine.ViewerContext(p.user(), java.util.Set.copyOf(p.roles()), attributes.apply(p), raw(p), redactor(p),
+        return new com.ash.drishti.engine.ViewerContext(p.user(), java.util.Set.copyOf(p.roles()), attributes.apply(p), rawPower(p), redactor(p),
                 k -> mayOpen(p, k));
     }
 

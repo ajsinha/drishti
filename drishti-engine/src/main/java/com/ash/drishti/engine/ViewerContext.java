@@ -30,7 +30,8 @@ import java.util.function.UnaryOperator;
  * @param roles the person's roles
  * @param attributes what a row rule may know of them ({@code user.name}, {@code user.roles}, {@code user.desk}, {@code user.desks},
  *     {@code user.email}), each a list
- * @param raw true when nothing is masked for them
+ * @param raw true when they hold the raw power (a column a table declares {@code masked} is then shown); without it such a column is
+ *     masked, whatever the installation's own field masks are
  * @param redact their masks on a document (the identity when nothing is masked)
  * @param mayOpen the kinds they may open
  */
