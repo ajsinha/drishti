@@ -47,7 +47,8 @@ def _files():
 
 
 def test_every_test_data_folder_has_its_page():
-    folders = sorted(str(d.relative_to(S.TESTDATA)) for d in S.TESTDATA.glob("*/*/") if any(d.glob("*.jsonl.gz")))
+    folders = sorted(str(d.relative_to(S.TESTDATA)) for d in S.TESTDATA.glob("*/*/")          # its feed files: dated .jsonl.gz, or tars
+                     if any(d.glob("*.jsonl.gz")) or any(d.glob("*.tar")))
     assert len(folders) >= 69
     missing = [f for f in folders if not (S.OUT / f"{f}.md").is_file()]
     assert not missing, f"no data-sample page for {missing}: run python3 tools/testdata/sample_docs.py"

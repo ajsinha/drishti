@@ -4553,16 +4553,16 @@ failure that no re-run can change the drill stops the rest, unless `--keep-going
   `*` matching any text, then a `|` and the reason) is printed with its reason as known and accepted and is not run again; a test
   that fails twice, a file that hits its limit, a file that could not be collected, or a run that failed without a failed test to
   re-run fails the lane. Each re-run's output is in `rerun-<file>.log`.
-- **The Python tool tests** (`tools.log`, at lower priority): the `unittest` suites of `tools/` (`samplegen`, `packreg`,
-  `test_sutragen`, `test_ingest_jsonl`, `test_convert`, `test_drishti_cli`, `test_pack_bundle`, `test_no_hidden_names`,
-  `test_packmake`, `test_pack_authoring`, `test_cli_extras`, `test_pack_deploy`, `test_deploy_aws`, the `test_cli_*` suites,
-  `test_pack_form`, `test_schemapack`, `test_contracts`, `test_api_docs`, `tools/testdata/test_testdata.py`, `test_sizing_planner`,
-  `test_capacitycli`), `tools/testdata/make_testdata.py --check` (the committed test data is what its generator writes),
-  `tools/api_docs.py check-java` (every public Java type and member of the Javadoc the gate built has a comment) and, if `uv` is
-  installed, the lake, real-data, compute-SDK and AWS tool tests with their libraries supplied by `uv run --with`, each under a
-  10-minute `timeout`. (Tools that start worker processes after pyarrow or deltalake have started threads must spawn them, never
-  fork: `bulk_trades.py` uses a `spawn` pool.) `tools/lake/test_build.py` is not in the list: run it by hand
-  (`cd tools/lake && ../../drishti-console/.venv/bin/python -m unittest test_build`).
+- **The Python tool tests**, two lanes side by side at lower priority (`tools-a.log`, `tools-b.log`): **every** test file under
+  `tools/` (`tools/**/test_*.py`, and the `tests/` folders as folders), found rather than listed, so a new test file runs without
+  anyone naming it. Each file runs in a pytest process of its own, all in one `uv run --with` environment (deltalake, pyarrow,
+  PyYAML, pytest, moto), each under a 15-minute `timeout`; every file runs even after one fails, and each prints its seconds.
+  Lane a has the tools' command tests, `tools/testdata/make_testdata.py --check` (the committed test data is what its generator
+  writes) and `tools/api_docs.py check-java` (every public Java type and member of the Javadoc the gate built has a comment).
+  Lane b has the tools' folders (lake, generators, public data, benchmarks, real data), `test_schemapack`, and the compute-SDK and
+  AWS tool tests. Each lane takes about 15 minutes. The tests that start the Java loader use the exec jar the gate built. (Tools
+  that start worker processes after pyarrow or deltalake have started threads must spawn them, never fork: `bulk_trades.py` uses a
+  `spawn` pool.)
 - **Java 21** (`java21.log`, at lower priority, `nice 5`), the production runtime: `./mvnw -q -o clean verify -P api-docs`, every test and every rule, containers
   included, in a **copy of the committed tree** (a `git archive` of `HEAD` beside the repository, in `<repository>-drill-copies`,
   `DRISHTI_DRILL_COPY_DIR`, removed afterwards), so it can neither clean nor replace the jar the console runs from the working tree.

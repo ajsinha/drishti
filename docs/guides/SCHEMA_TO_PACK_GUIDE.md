@@ -178,6 +178,11 @@ and every load is stored under the business date of the day it is loaded, so yes
 (or `--date kind=FIELD`) to file each document under its own date instead; `--as-of 2026-10-16` loads a snapshot under another day. Schemas
 alone with no date: no dated store, the pack serves its samples.
 
+The tool is the feed's producer here. With a date field it writes the kind's documents one file per business date
+(`<kind>.<YYYY-MM-DD>.jsonl.gz`), and those files load by the [load rules](../architecture/DATA_LOAD_RULES.md), like any other feed. The
+loader takes each file's date from its name and never reads a row's date. Documents without the field go into `<kind>.jsonl.gz`, which
+loads under `--as-of` or the business today.
+
 ### Mnemonic, connectors and the pack
 
 The **mnemonic** (`TRD <GO>`) is the initials of a multi-word kind or its first three letters, made unique within the batch and **against the packs already on
