@@ -99,3 +99,16 @@
   .pg-gridcard, .pg-fbar, .pg-actions, .pg-estimate, .pg-note { display: none; }
   .pg-input { min-width: 0; width: 100%; }
 }
+/* PLAY PVAR (PARAMETRIC_VAR.md section 10): the Parametric panel under the grid */
+.pg-param { margin-top: 12px; border-top: 1px solid var(--d-border); padding-top: 8px; }
+.pg-param h2 { font-size: 15px; margin: 0 0 6px; }
+.pg-param h3 { font-size: 13px; margin: 10px 0 4px; }
+.pg-param-note { font-size: 11px; color: var(--d-muted); font-weight: normal; }
+.pg-param-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 12px; }
+.pg-param-steps { margin: 0; padding-left: 18px; font-size: 12px; }
+.pg-param-table { border-collapse: collapse; font-size: 12px; }
+.pg-param-table th, .pg-param-table td { padding: 2px 8px; border-bottom: 1px solid var(--d-border); text-align: left; }
+.pg-param-table td.num { text-align: right; font-family: var(--d-font-mono); }
+.pg-param-scroll { max-height: 320px; overflow: auto; }
+.pg-param-scroll.short { max-height: 220px; }
+@media (max-width: 600px) { .pg-param-grid { grid-template-columns: minmax(0, 1fr); } }

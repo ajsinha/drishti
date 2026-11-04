@@ -18,16 +18,16 @@
    the selected cell on the right, the VaR page's pickers above, and Export to Excel with the count chosen and its estimate stated before
    the download. A shell: var-playground.js fills it from /api/play/grid. On a phone the glance form: the headline and the explanation. #}
 {% extends "base.html" %}
-{% block title %}VaR Playground · {{ target or 'PLAY VAR' }} · {{ PRODUCT }}{% endblock %}
+{% block title %}{{ 'Parametric ' if measure == 'parametric' }}VaR Playground · {{ target or 'PLAY VAR' }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}play{% endblock %}
 {% block body_class %}terminal{% endblock %}
 {% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 <div class="pg" data-play data-scope="{{ scope }}" data-ids="{{ ids }}" data-ccy="{{ ccy }}" data-h="{{ lens.h }}" data-m="{{ lens.m }}"
-     data-q="{{ lens.q }}" data-esq="{{ lens.esq }}" data-set="{{ lens.set }}">
+     data-q="{{ lens.q }}" data-esq="{{ lens.esq }}" data-set="{{ lens.set }}" data-measure="{{ measure }}">
   <div class="pg-head">
-    <h1 class="pg-title"><span class="pg-word mono" title="Type PLAY VAR, a VaR scope or ids, then &lt;GO&gt;">PLAY VAR</span> VaR Playground</h1>
+    <h1 class="pg-title"><span class="pg-word mono" title="Type PLAY VAR (or PLAY PVAR), a VaR scope or ids, then &lt;GO&gt;">{{ 'PLAY PVAR' if measure == 'parametric' else 'PLAY VAR' }}</span> {{ 'Parametric ' if measure == 'parametric' }}VaR Playground</h1>
     <nav class="pg-path mono" data-pg-path aria-label="The scope">{{ target }}</nav>
     <span class="pg-meta" data-pg-meta aria-live="polite">{% if target %}loading…{% endif %}</span>
     <a class="pg-help" href="/help/context/play" title="Help: the VaR Playground (VAR_GUIDE.md section 3.10)" aria-label="Help: the VaR Playground"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
@@ -80,6 +80,20 @@
     </section>
     <aside class="pg-explain" data-pg-explain aria-label="The explanation of the selected cell" aria-live="polite"></aside>
   </div>
+  {% if measure == 'parametric' %}
+  {# PLAY PVAR (PARAMETRIC_VAR.md section 10): the Parametric tab, every figure from the server; the workbook's Parametric tab has them as formulas #}
+  <section class="pg-param" data-pg-param aria-label="Parametric VaR, worked">
+    <h2>Parametric <span class="pg-param-note">a cross-check, not the official VaR · the workbook's Parametric tab has every figure as a formula</span></h2>
+    <div class="pg-param-grid">
+      <div data-pg-param-figures></div>
+      <ol class="pg-param-steps" data-pg-param-steps></ol>
+    </div>
+    <h3>Each position: μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the components that add up to the parametric VaR</h3>
+    <div class="pg-param-scroll"><table class="pg-param-table" data-pg-param-positions></table></div>
+    <h3>Each scenario: the weight, the deviation from μ and its square</h3>
+    <div class="pg-param-scroll short"><table class="pg-param-table" data-pg-param-scenarios></table></div>
+  </section>
+  {% endif %}
   <p class="pg-note">Positions are columns and scenarios rows, as in the workbook. Tinted cells are inputs (typed or pasted in the workbook); every
     other figure is a formula. Selecting a cell shows its formula above the grid and moves the explanation to the step that produced it. A
     scope larger than {{ 500 }} positions keeps the largest by |component VaR| as their own columns and combines the rest in one Rest of scope column,
