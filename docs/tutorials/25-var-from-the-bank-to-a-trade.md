@@ -255,7 +255,8 @@ As you go, the sheet goes to the server, which checks every cell (green found; r
 in the Trade column, *TRD:10000000 is not a live trade on 2026-09-30 (no P&L vector)*; amber when a minus takes nothing away) and
 computes the basket's VaR and ES, the sum of the parts, the diversification and its trades under the sheet. **Remove the not found**
 drops the red cells. **Open without saving** moves the explorer to it: *unsaved basket*, its contributions are its parts. The basket
-lives on the VaR page: **◫ Construct your basket** (or **Alt+B**) opens it; what it holds stays in your browser.
+lives on the VaR page: **+ New basket** in the toolbar above the figures (or **Alt+B**) opens it, collapsed until then; what it holds stays
+in your browser.
 
 ![Construct your basket: the rates desk from its row in the tree, the USD rates portfolio from the hints, a book taken away on a − row; every cell checked and the basket's VaR, ES, sum of the parts and diversification under the sheet](img/t25/06-basket.jpg)
 
@@ -347,11 +348,12 @@ its own (`POS-<book>~<trade>`, the *otc* rule).
 
 **In the UI.** In the basket's sheet of step 5, name it (`rates-mix`) and **Save basket and open VaR** (tick nothing more: it is
 private; name users or roles in *Share read-only with* to share it). The basket keeps the sheet's columns as lists. The explorer opens
-`VAR SCOPE BASKET:<you>/rates-mix`, the sheet reads *saved basket · \<you>/rates-mix*, and the basket is listed under *Ad-hoc scopes* as
-★ rates-mix with **Edit** and **Delete**. **Edit** (or opening it from the list, a link, `VAR SCOPE rates-mix <GO>`, then **◫ Construct
-your basket**) loads it back into the sheet, column by column; change a cell and **Save as version 2** keeps its name as a new version.
-A portfolio in the list has **Edit a copy** instead: it is the bank's, so its parts open as your own unsaved basket. Then the **Captured
-results** tab, a note, **Capture VaR**, and **Compare with now**:
+`VAR SCOPE BASKET:<you>/rates-mix`, the sheet collapses, and the basket is listed in the toolbar's **My baskets** drop-down (press **M**,
+or click it; type `mix` to find it) under *Mine*, with **Edit** and **Delete**; its button now reads *rates-mix*. **Edit** (or choosing
+it in My baskets, a link, `VAR SCOPE rates-mix <GO>`, then **+ New basket**) loads it back into the sheet, column by column; the sheet
+reads *saved basket · \<you>/rates-mix*; change a cell and **Save as version 2** keeps its name as a new version. The bank's portfolios
+are in **System baskets** (press **B**; type `usd` for *USD rates*): each has **Edit a copy** instead, as it is the bank's, so its parts
+open as your own unsaved basket. Then the **Captured results** tab, a note, **Capture VaR**, and **Compare with now**:
 
 ![A capture of the FX desk compared with now](img/t25/07-capture.jpg)
 
@@ -374,7 +376,12 @@ $ drishti.py var compare CAP-20260930-89
 
 **CSV** on the capture downloads its vector by scenario date (or, with `?part=components`, its components). Your capture id differs
 (the content store numbers them). The basket opens anywhere as `BASKET:rita/rates-short`, or `VAR SCOPE
-rates-short <GO>`.
+rates-short <GO>`. `drishti.py var baskets` lists what *My baskets* shows (yours and those shared with you).
+
+**In YAML.** The two drop-downs have no setting of their own. *System baskets* are the bank's portfolios: the market-risk pack's
+`portfolio` feed (`data/testdata/market-risk/portfolio/cob-<date>.jsonl.gz` in the demo, one record a portfolio: `PORTFOLIO_ID`, `NAME`,
+`OWNER`, `TYPE`, `DEFINITION`), loaded into the lake and read through its connector like every VaR input; *My baskets* are the content
+store's `var/baskets/<owner>/<name>.json`.
 
 **You should see** the shorts alone with a VaR of 282.4 million, nearly four times the desk's 74.6 million: the desk's longs hedge them.
 A capture never changes: restate the batch and it still reopens with these numbers.
@@ -412,7 +419,8 @@ exceptions are too many or too few, a Christoffersen p-value below 0.05 that the
 
 ## Step 9 · How the date sits in memory and on disk
 
-**In the UI.** *How this number was built*, on the right: **Tier** says where the vector came from. A node is its float64 aggregate; any
+**In the UI.** **How calculated ›** in the toolbar (or the key **H**) slides *How this number was built* in from the right (**Esc**
+closes it; `&how=1` in the link opens the page with it): **Tier** says where the vector came from. A node is its float64 aggregate; any
 other scope sums the date's float32 position rows in float64:
 
 ![How this number was built: the rates desk without a book, from the hot file](img/t25/10-provenance.jpg)
@@ -521,7 +529,8 @@ The hedge alone has a VaR of 34,296,045; its incremental VaR is the change; its 
 hedge's is. A trade priced elsewhere goes in a file (`--trades new-swap.json`: `[{"LABEL": "new swap", "PNL": [509 numbers],
 "FACTOR": 1}]`).
 
-**In the UI.** Open `VAR DESK RATES <GO>`, click **What-if…** in the right column (the desk goes into the basket's sheet), then
+**In the UI.** Open `VAR DESK RATES <GO>`, **How calculated ›** (or **H**), then **What-if…** in the drawer (the drawer closes and the desk
+goes into the basket's sheet), then
 **+ What-if trade**: a trade id and a factor (−1: its unwind); the sheet shows VaR and ES before → after and each trade's figures.
 
 **In YAML.** Nothing: the what-if has no connector or setting of its own; it uses the VaR engine's confidence, rank rule and component

@@ -13,7 +13,7 @@
 # See the LICENSE file in the root of this repository for the full terms.
 
 """Deleting a saved VaR basket in Chromium (docs/guides/VAR_GUIDE.md section 3.5), the console in-process against a stand-in server that
-keeps two baskets (the test console signs in as ash, an administrator): on the VaR explorer's Ad-hoc scopes list, Delete (reached from the keyboard) opens the confirm dialog naming the basket
+keeps two baskets (the test console signs in as ash, an administrator): on the VaR explorer's My baskets drop-down, Delete (reached from the keyboard) opens the confirm dialog naming the basket
 and whom it is shared with, Escape keeps it, Delete removes it, the list refreshes and the page says it was deleted; on Admin -> Ad-hoc
 scopes an administrator deletes someone else's with a reason, sent with the version the dialog showed. Skipped without Playwright or
 Chromium."""
@@ -101,9 +101,10 @@ def test_delete_on_the_var_explorer_confirms_then_refreshes_the_list(served, bro
     pg = browser.new_page()
     try:
         pg.goto(url + "/var?scope=BASKET:ash/unwind")
-        pg.wait_for_selector('[data-vx-adhoc] [data-vx-delete="ash/unwind"]', state="attached")
+        pg.wait_for_selector('[data-vx-baskets-mine] [data-vx-delete="ash/unwind"]', state="attached")
         # an administrator: Delete on someone else's basket too
-        assert pg.locator('[data-vx-adhoc] [data-vx-delete="rita/hedges"]').count() == 1
+        assert pg.locator('[data-vx-baskets-mine] [data-vx-delete="rita/hedges"]').count() == 1
+        pg.click('[data-vx-pick="mine"] [data-vx-pick-btn]')                  # My baskets (2.9.11.b: the toolbar's drop-down)
         btn = pg.locator('[data-vx-delete="ash/unwind"]')
         btn.focus()
         pg.keyboard.press("Enter")                                        # from the keyboard

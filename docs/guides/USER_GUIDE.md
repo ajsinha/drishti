@@ -324,7 +324,13 @@ column, so its VaR is still the VaR page's. **Export to Excel** downloads the sa
 says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
 ([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 25, step 18](../tutorials/25-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
 
-**Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket's sheet across its top, one
+**The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
+the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's portfolios) and **My baskets** (key **M**: the
+baskets you saved and those shared with you), where you type to search by name or description, move with ↑ ↓ and open with Enter;
+**How calculated ›** (key **H**) slides *How this number was built* in from the right, **Esc** closes it, and the link keeps it open
+(`&how=1`) ([VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)).
+
+**Construct your basket.** On the VaR page, **+ New basket** in the toolbar (or `Alt+B`) opens the basket's sheet across its top, one
 sheet like Excel: the VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, a column per kind
 and the Op column (+ adds, − takes away). Type in a cell, pick a hint (it lands in its kind's column), use **+ basket** on any row, or
 paste whole columns from Excel; **Start from the whole bank** makes the basket the bank and the rows refine it. The server checks every
@@ -332,11 +338,11 @@ cell (a red cell says why it is not found) and computes the basket's VaR, ES, su
 a pre-deal what-if, **Save basket and open VaR** and **Download as .xlsx**. It is on the VaR page only; what it holds stays in your
 browser, so it is there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 
-**Editing your baskets.** Under *Ad-hoc scopes* each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
+**Editing your baskets.** In the toolbar's *My baskets* drop-down (key **M**; *System baskets*, key **B**, lists the bank's portfolios) each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
 keeps its name as a new version. A portfolio (the bank's) and a basket shared with you have **Edit a copy**: it opens as your own basket,
 to save under your own name. An administrator may edit anyone's basket; you get a notice in your inbox saying who.
 
-**Deleting your ad-hoc scopes.** The baskets you saved are listed under *Ad-hoc scopes* on the VaR page as `★ name`. Point at one (or
+**Deleting your ad-hoc scopes.** The baskets you saved are listed in *My baskets* on the VaR page. Open it and point at one (or
 Tab to it) and press **Delete**: a dialog names the basket and whom you shared it with (they lose it too) and asks first; **Keep it** or
 **Esc** keeps it. The list refreshes at once; a view of the basket that was open says it was deleted. Captures you took of it are kept and
 still open, saying the basket no longer exists. You can delete only your own; an administrator may delete anyone's (you get a notice in

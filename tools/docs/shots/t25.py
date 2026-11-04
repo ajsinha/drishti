@@ -139,7 +139,7 @@ def position(c: Ctx):
 
 @shot("10-provenance.jpg")
 def provenance(c: Ctx):
-    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1")
+    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1&how=1")    # How calculated open: the drawer (how=1)
     painted(c, "DESK:DESK-RATES - BOOK:BOOK-RATES-1")
     c.save("10-provenance.jpg", locator=".vx-prov")
 

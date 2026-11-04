@@ -346,21 +346,36 @@ set says so in place of the figures.
 
 ### 3.2 The screen
 
-Three columns, as the approved mock-up:
+Two columns and a toolbar, as the approved mock-up (`docs/lenses/mockups/var-layout/A.html`, and `A-drawer.html` with the drawer open):
 
+- **The toolbar** (under the status line): two searchable drop-downs for the baskets, **+ New basket** and **How calculated ›**.
+  - **System baskets** (key **B**): the baskets the system provides, the bank's **portfolios** (the market-risk pack's `portfolio` feed;
+    [section 5.7](#57-stored-portfolios)), each with its name, its id, its owner and its type.
+  - **My baskets** (key **M**): the baskets you saved, under *Mine*, then those shared with you, under *Shared with me*
+    ([section 5.8](#58-baskets)), each with its name, its description and its id.
+  - Each opens a search box over its list: type to search the name and the description (and the id, the type, the owner; several words
+    each match), **↑ ↓** move, **Enter** opens the scope, **Esc** closes. The scope on the page is named on its drop-down's button. Each
+    row keeps its actions: **+ basket** (into the sheet), **Edit** (a basket you own; an administrator's on everyone's), **Edit a copy**
+    (a portfolio, a basket shared with you read-only) and **Delete** (a basket you own), as described in
+    [section 3.5](#35-construct-your-basket). Renaming and sharing a basket are done in its sheet (**Edit**, then a new name or *Share
+    read-only with*, then Save). At the foot of My baskets, **+ New basket** opens the basket's sheet.
+  - **+ New basket** (also **Alt+B**; the count of the parts your sheet holds beside it) opens **Construct your basket**, the sheet,
+    across the top of the page ([section 3.5](#35-construct-your-basket)). The sheet is collapsed when the page opens; once you save, the
+    new basket is in My baskets and the sheet collapses again.
+  - **How calculated ›** (key **H**) opens **How this number was built** as a drawer over the right of the screen
+    ([section 3.6](#36-how-this-number-was-built)).
 - **Scopes** (left): the hierarchy chosen in the selector above it (Management: bank, division, desk, book; Legal entities: bank, legal
   entity, desk, book; and every configured hierarchy by its title, such as *Limit letters*: letter, desk; the choice kept
   in the link as `hierarchy=LL`; a hierarchy skipped on the date because its column is not in the data is listed *(not available)*,
   disabled, its reason on hover: [section 15.14](#1514-hierarchies-from-the-rows-or-from-the-trades-columns)) with each
-  node's VaR, ES and a bar of its limit use (green, amber at 75%, red at 90%; *no limit* where the node has none). A book opens to its positions (a LONG or SHORT chip, the
-  quantity, VaR, ES, the component VaR in the book); a position opens to its trades. Below: *Ad-hoc scopes*, the stored portfolios and
-  your baskets, and **◫ Construct your basket**. Every row has **+ basket** (shown as you point at it).
-- **Construct your basket** (a strip across the top, [section 3.5](#35-construct-your-basket)): shown whenever the explorer is on an
-  ad-hoc scope or a basket, or your basket holds parts; **Close** hides it, **◫ Construct your basket** (or Alt+B) brings it back.
-- **The scope** (middle): the breadcrumb, six tiles (VaR 99% 1-day, ES 97.5%, the sum of the children's standalone VaR, the
+  node's VaR, ES and a bar of its limit use (green, amber at 75%, red at 90%; *no limit* where the node has none). Click **▸** to open
+  a node, click its name to see its VaR. A book opens to its positions (a LONG or SHORT chip, the
+  quantity, VaR, ES, the component VaR in the book); a position opens to its trades. Every row has **+ basket** (shown as you point at it).
+- **The scope** (the rest of the width): the breadcrumb, six tiles (VaR 99% 1-day, ES 97.5%, the sum of the children's standalone VaR, the
   diversification, the limit use, the backtest exceptions over 250 days with the Basel light), and the tabs.
-- **How this number was built** (right, [section 3.6](#36-how-this-number-was-built)), **Export CSV** (the scope's path) and **Capture
-  VaR**. The **?** in the status line opens this guide.
+- The **?** in the status line opens this guide.
+
+The keys **B**, **M** and **H** work anywhere on the page except while you type in a box or in the basket's sheet.
 - **Reporting currency** (the status line's right end): USD, EUR, CAD, JPY, GBP (the configured ones) and **More…** (every
   other currency with scenario FX on the date). Every panel follows it, the tiles say it (`VaR 99% · 1 day · EUR`), the choice stays
   for the session and goes into the link; [section 15.11](#1511-reporting-currencies-built-ahead-per-trade-currency-totals-and-the-picker).
@@ -442,11 +457,12 @@ ranked path also list each trade's or position's **Trade currency**.
 ### 3.5 Construct your basket
 
 *VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, built in one sheet like Excel.* Ad-hoc
-scopes and baskets are one thing, built one way: the basket's sheet, across the top of the explorer, opened by **◫ Construct your basket**
-(with the count of its parts) or **Alt+B**. It lives on the VaR page only (the top bar has no Basket button, and Alt+B does nothing
-elsewhere); what you put in it stays in this browser, so a basket built earlier is there when the explorer opens, waiting behind the
-link's count: the sheet opens only when asked (the link, Alt+B, **+ basket** on a row, **Edit**), never by itself, not even when the
-explorer opens a saved basket.
+scopes and baskets are one thing, built one way: the basket's sheet, across the top of the explorer, opened by **+ New basket** in the
+toolbar or at the foot of *My baskets* (with the count of its parts) or **Alt+B**. It lives on the VaR page only (the top bar has no
+Basket button, and Alt+B does nothing elsewhere); what you put in it stays in this browser, so a basket built earlier is there when the
+explorer opens, waiting behind the link's count: the sheet is collapsed when the page opens and opens only when asked (+ New basket,
+Alt+B, **+ basket** on a row, **Edit**), never by itself, not even when the explorer opens a saved basket. Once saved, the basket is
+listed in *My baskets* and the sheet collapses.
 
 **The sheet.** A column per kind of part: **Trade** (`TRD`), **Position** (`POS`), **Portfolio** (`PORT`), **Book** (`BOOK`), **Desk**
 (`DESK`), one column per configured hierarchy's word (the demo's **Limit letter**, `LL`) and **Counterparty** (`CPTY`), and the **Op**
@@ -499,11 +515,11 @@ without saving** opens the ad-hoc scope (a basket too large for a link is saved 
 gives the sheet back to Excel: a *Basket* sheet with the Op column and each kind's column under its heading (paste it back to open the
 basket again) and a *Checks* sheet with every cell that needs a word.
 
-The state reads **unsaved basket** until you save, then **saved basket · \<owner>/\<name>**. **Opening a saved basket** (from the tree,
+The state reads **unsaved basket** until you save, then **saved basket · \<owner>/\<name>**. **Opening a saved basket** (from *My baskets*,
 `VAR SCOPE <name>`, a link, **Open a saved basket ▾**) loads it back into the sheet, column by column. While the explorer shows the
 sheet's unsaved scope, it follows every change you make.
 
-**Edit, amend and delete.** In the explorer's *Ad-hoc scopes* list:
+**Edit, amend and delete.** In the toolbar's drop-downs (*System baskets* for the portfolios, *My baskets* for the saved baskets):
 
 - a basket you own has **Edit**: it opens in the sheet, and **Save as version *n*** keeps its name as a new version (every version is
   kept); a changed name saves a new basket. Someone else's change since you opened it is not overwritten unseen: the save is refused
@@ -532,6 +548,11 @@ owner's inbox; [OPERATIONS.md](../admin/OPERATIONS.md#9b-2-deleting-peoples-var-
 ![VAR TRD 10000000: not a live trade on the date, said in words; the tiles say no trades instead of a VaR of 0](img/var/13-not-live.jpg)
 
 ### 3.6 How this number was built
+
+**How calculated ›** in the toolbar (or the key **H**) slides a drawer over the right of the screen; **Esc** or **✕** closes it and
+the focus goes back to the link. The drawer's state is in the page's link (`&how=1`), so a link can open the page with it open. Its
+content is the server's, as sent with the scope's answer (the browser computes nothing), with **Export CSV** (the scope's path),
+**Capture VaR** and **What-if…** (which closes the drawer and opens the basket's sheet). On a phone it rises from the bottom.
 
 The scope as resolved, the positions and trades included, those without a vector, those outside your entitlement, unknown ids, the
 vector batch and data version, the scenario set and its window, the method and rank rule, the ES rule, how components are allocated,
@@ -586,7 +607,8 @@ Opening a trade page never waits for the engines to load a date: until they have
 
 ### 3.8 On a phone
 
-The three columns stack, with no sideways scrolling:
+The panels stack, with no sideways scrolling; the two basket drop-downs are full width, and *How this number was built* is a sheet that
+rises from the bottom (How calculated, or *More on this page*):
 
 ![The explorer on a 390 px phone](img/var/11-phone.jpg)
 
@@ -1145,7 +1167,7 @@ standalone VaR is the part alone inside the basket, its component VaR the part's
 add up to the basket's VaR and a trade in two parts counts once. It is a RULE when it is a single rule (the scope starts with `WHERE:` and
 has no ` + `), else a BASKET; private unless you share it read-only with users or roles (*Share read-only with*: each reader sees it
 through their own entitlements). Baskets are stored in the **content store** ([DATA_ARCHITECTURE.md](../architecture/DATA_ARCHITECTURE.md#5-the-content-store-user-content-every-node-reaches)) at `var/baskets/<owner>/<name>.json`, so
-they follow their owner across the servers of a cluster and every version is kept; they are listed under *Ad-hoc scopes* as `★ name`
+they follow their owner across the servers of a cluster and every version is kept; they are listed in the explorer's *My baskets* drop-down (yours, then those shared with you)
 and opened as `BASKET:<owner>/<name>` or `VAR SCOPE <name> <GO>`. A basket of nodes and rules is **dynamic** (what matches on the date
 you look at); one of ids is **static** (a later date may not hold them: *unknown*). Every save, edit and delete is audited.
 
@@ -1183,7 +1205,7 @@ more than 20,000 rows are refused in words (`400`, `413`); a role that may not n
 
 ## 6. Captures and compare
 
-**Capture VaR** (the right column, or the *Captured results* tab with a note) stores an immutable record of the answer as it is now:
+**Capture VaR** (in the *How calculated* drawer, or the *Captured results* tab with a note) stores an immutable record of the answer as it is now:
 
 - the numbers: VaR, ES, the rank rule, each part's component VaR, the 25 worst scenarios, and the full vector (whole dollars);
 - the members: the trades the scope resolved to;

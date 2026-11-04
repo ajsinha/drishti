@@ -17,6 +17,19 @@
 
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
+- **The VaR screen's layout (2.9.11.b, the product owner's approved mock-up A, `docs/lenses/mockups/var-layout/A.html` and
+  `A-drawer.html`; VAR_GUIDE.md sections 3.2, 3.5, 3.6; tutorial 25 steps 5, 7, 9).** Two changes, everything else as it was. The
+  baskets left the left-hand column (the hierarchy tree stays there as before) for two searchable drop-downs in a toolbar above the
+  figures: **System baskets** (key B: the bank's portfolios, the `portfolio` feed the tree's answer already carries) and **My baskets**
+  (key M: the saved baskets `GET /api/var/baskets` lists, *Mine* then *Shared with me*). Each is a combobox over a listbox (type to search
+  the name and the description, ↑↓, Enter, Esc); each row keeps + basket, Edit, Edit a copy and Delete. The basket's sheet is unchanged
+  and collapsed on load; **+ New basket** (the toolbar, the foot of My baskets, Alt+B) opens it, and it collapses once a basket is saved,
+  which then appears in My baskets. The right-hand *How this number was built* column became a drawer, **How calculated ›** (key H), with
+  the same server-sent lines and its Export CSV, Capture VaR and What-if…; Esc or ✕ closes it and gives the focus back; `&how=1` in the
+  link opens it; a bottom sheet on a phone. No server change: the console's `var-layout.js` and `var-layout.css`. The guard
+  `tests/test_var_layout_keeps_everything.py` inventories every tile, panel, chart, table, tab, control, key, ES figure and explanation
+  line of the screen as it was, and checks them in the served page and in Chromium (dark and light, 1500 px and 390 px).
+
 - **The MR cube on the pivot engine (2.9.11.b, moved from 2.9.11.a by the product owner on 2026-11-03; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot
   engine's VaR source becomes the market-risk cube when engine `mr-cube` runs (`config/engines/mr-cube.yaml`, installed and on; needs
   `var` and `pivot`, uses `sensitivities` and `frtb-sa`). Dimensions: every hierarchy level (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`,
