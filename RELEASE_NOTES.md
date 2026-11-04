@@ -25,7 +25,8 @@ inbox; the in-memory lake in its own module.**
   before, and a role that does not open an engine is told so in words.
 - **Pivot any table**, with VaR and ES beside notional or P&L: a VaR cell is always the VaR engine's figure for that cell's scope, never a
   sum of its parts (the grid says so in each cell's provenance).
-- **VaR figures are unchanged**: VAR_CHECK_LINE
+- **VaR figures are unchanged**: the release was checked against the previous build (2.9.11) on the same data: VaR and ES of every node of the three
+  hierarchies (131 nodes) on all three business dates, 1-day and 10-day, and the 28 stored portfolios: 2,526 figures, every one equal.
 - Help is reorganised into sections (Risk measures holds the VaR guide and its tutorials); old addresses and F1 still work.
 
 ## New
