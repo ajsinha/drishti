@@ -160,22 +160,28 @@ The deeper design and the questions Q1 to Q30 it settled (2026-11-03) are in
 
 ## 11. Screens: decided (product owner, 2026-11-04)
 
-The editors move from BI (the dataset editor, the Model view) to the layer, reachable from Admin and from BI. Of the three table-editor
-mock-ups ([A](../lenses/mockups/virtual-tables/A.html), [B](../lenses/mockups/virtual-tables/B.html),
-[C](../lenses/mockups/virtual-tables/C.html)), the product owner chose **B and C with a switch**:
+The editors move from BI (the dataset editor, the Model view) to the layer, reachable from Admin and from BI. Not built yet: the backend
+steps come first.
+
+**Tables.** Of the mock-ups [A](../lenses/mockups/virtual-tables/A.html), [B](../lenses/mockups/virtual-tables/B.html) and
+[C](../lenses/mockups/virtual-tables/C.html), the product owner chose **B and C with a switch**:
 [virtual-tables/BC.html](../lenses/mockups/virtual-tables/BC.html).
 
-| Point | Decided |
-|---|---|
-| Default | **Visual (B)**: a sample document as a tree (click a field to add a column, a list to set the grain), the columns, and the rows as a chosen role reads them, side by side; for everyday users |
-| Expert | **YAML (C)**: the definition as text with Rachana completion and checks as you type; preview, checks, lineage, versions and the diff as tabs |
-| One definition | one switch on the same table flips between them; both edit the one draft, so an edit in either shows in the other |
-| Text that does not parse | unsaved YAML that does not parse cannot switch back to Visual until it is fixed; the error is shown and the text is kept as typed |
-| Memory | the switch remembers each person's last choice |
-| New data | the offer for a table a data load created (V8) opens the same editor, prefilled |
+**Models.** Of [model-A](../lenses/mockups/virtual-tables/model-A.html), [model-B](../lenses/mockups/virtual-tables/model-B.html) and
+[model-C](../lenses/mockups/virtual-tables/model-C.html), the product owner chose **B (the diagram with a live answer) and C (the
+measures-first sheet) behind one switch**, with a YAML view: [virtual-tables/model-BC.html](../lenses/mockups/virtual-tables/model-BC.html).
+A and the single-option mock-ups stay for the record.
 
-**The model editor** follows the same idea: a visual editor by default and the same YAML switch. Its three mock-ups, for the product
-owner to choose from: [model-A](../lenses/mockups/virtual-tables/model-A.html) (tables, relationships and measures as lists),
-[model-B](../lenses/mockups/virtual-tables/model-B.html) (the tables as a diagram with their relationships, the measures, and an answer
-read as a chosen role; recommended) and [model-C](../lenses/mockups/virtual-tables/model-C.html) (measures first, as a sheet by a chosen
-field). Nothing is built until the backend steps are done; the screenshots are taken in the next heavy run.
+| Point | Decided (tables and models alike) |
+|---|---|
+| Visual views | tables: Visual (B: a sample document as a tree, the columns, the rows as a chosen role reads them), the default for everyday users; models: Diagram (B) and Measures (C) |
+| YAML view | the definition as text, full screen, with Rachana completion and checks as you type; preview, checks, lineage, versions and the diff as tabs; for experts |
+| One definition | one switch flips between the views on the same table or model; all edit the one draft, so an edit in one shows in the others |
+| Live YAML panel | below every visual view, a panel shows the definition as YAML, updated at once by every visual edit; collapsible, its open or closed state remembered per person |
+| Editing the YAML | anyone with the edit right (an administrator or a BI author) edits it in the panel or full screen; a valid edit updates the visual part at once |
+| Invalid YAML | the error is shown at its line, the text kept as typed; the visual part keeps the last valid version until it is fixed, and the switch back to a visual view waits until then |
+| Without the edit right | the YAML is read-only (panel and full screen) |
+| Memory | each person's last view and the panel's state are remembered |
+| New data | the offer for a table a data load created (V8) opens the table editor, prefilled |
+
+The screenshots are taken in the next heavy run.

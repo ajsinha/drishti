@@ -21,7 +21,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Virtual tables editor, B and C: Visual (B) by default, YAML (C) one switch away</title>
+<title>Virtual tables editor, B and C: Visual (B) with the live YAML below, YAML (C) one switch away</title>
 <script>if(location.hash==='#light')document.documentElement.classList.add('light');</script>
 <style>
 :root{
@@ -119,13 +119,13 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
 </head>
 <body>
 <div class="page">
-<div class="intro"><h1>Virtual tables editor, B and C: Visual (B) by default, YAML (C) one switch away <span class="rec">decided</span></h1>
-<p>The product owner's choice (2026-11-04): B for everyday users, C for experts, one switch on the same table. Both edit the one definition: an edit in either shows in the other. Unsaved text that does not parse cannot switch back to Visual until it is fixed, with the error shown. The switch remembers each person's last choice. Shown below in its three states.</p></div>
+<div class="intro"><h1>Virtual tables editor, B and C: Visual (B) with the live YAML below, YAML (C) one switch away <span class="rec">decided</span></h1>
+<p>The product owner's choice (2026-11-04): B for everyday users, C for experts, one switch on the same table, both editing the one definition. Below the Visual view a YAML panel shows the definition live (every visual edit updates it at once); it is collapsible and its state is remembered per person. Anyone with the edit right (an administrator or a BI author) may edit it in place or full screen: a valid edit updates the visual part at once; invalid text shows its error at the line and the visual part keeps the last valid version until it is fixed. Without the edit right the YAML is read-only.</p></div>
 <div class="bar"><span class="brand">DRISHTI<i>Admin</i></span><span class="cmd">TABLES trading.trade_legs</span>
 <span class="menus"><span>Data</span><span class="on">Tables</span><span>BI</span><span>Engines</span><span>Help</span></span></div>
 <div class="banner"><span class="pill g">New data</span><span>The load of <b class="mono">2026-09-30</b> created the lake table <b class="mono">bank.accounts</b> (2,140 rows). Offer it as a virtual table?</span>
 <span class="btn p">Make a table (suggested columns)</span><span class="btn">Not now</span><span class="note">Nothing is defined until you accept (V8).</span></div>
-<div class="state">1. Visual (the default for everyone)</div><div class="row"><span class="toggle"><span class="on">Visual</span><span>YAML</span></span><span class="pick"><b>Table</b>trading.trade_legs</span><span class="pick"><b>From</b>kind trade</span><span class="pick"><b>Grain</b>$.LEGS[*]</span><span class="pick"><b>Date</b>2026-09-30 (latest)</span><span style="margin-left:auto" class="btn">Discard</span><span class="btn p">Save draft</span><span class="btn">Publish</span></div><div class="grid3"><div class="card"><h3>Source document <span>T-10021 · 1 of 1,000 sampled</span></h3><div class="tree">
+<div class="state">1. Visual with the live YAML below (open)</div><div class="row"><span class="toggle"><span class="on">Visual</span><span>YAML</span></span><span class="pick"><b>Table</b>trading.trade_legs</span><span class="pick"><b>From</b>kind trade</span><span class="pick"><b>Grain</b>$.LEGS[*]</span><span class="pick"><b>Date</b>2026-09-30 (latest)</span><span style="margin-left:auto" class="btn">Discard</span><span class="btn p">Save draft</span><span class="btn">Publish</span></div><div class="grid3"><div class="card"><h3>Source document <span>T-10021 · 1 of 1,000 sampled</span></h3><div class="tree">
 <div>$ <span class="t">trade</span></div>
 <div class="d1"><span class="add">+</span>TRADE_ID <span class="t">string · 100%</span></div>
 <div class="d1"><span class="add">+</span>TRADE_STATUS <span class="t">string · 100%</span></div>
@@ -156,7 +156,58 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
 <tr><td class="l">T-10021</td><td class="l">2026-09-30</td><td>1</td><td class="l">T-10021</td><td class="l">L2</td><td class="l">USD</td><td>25,000,000</td><td class="l muted">(empty)</td></tr>
 <tr><td class="l">T-10022</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10022</td><td class="l">L1</td><td class="l">EUR</td><td>12,500,000</td><td class="l">ESTR</td></tr>
 <tr><td class="l">T-10023</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10023</td><td class="l">L1</td><td class="l">JPY</td><td>3,000,000,000</td><td class="l">TONA</td></tr></table>
-<div class="note" style="margin-top:8px">Read as: <span class="seg"><span class="on">me (risk)</span><span>desk-head D2</span><span>analyst</span></span> &nbsp; see what a role sees before publishing.</div></div></div><div class="state">2. YAML (for experts): the same draft, one switch away</div><div class="row"><span class="toggle"><span>Visual</span><span class="on">YAML</span></span><span class="pick"><b>Table</b>trading.trade_legs</span><span class="pick"><b>From</b>kind trade</span><span class="pick"><b>Grain</b>$.LEGS[*]</span><span class="pick"><b>Date</b>2026-09-30 (latest)</span><span style="margin-left:auto" class="btn">Discard</span><span class="btn p">Save draft</span><span class="btn">Publish</span></div><div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><h3>config/tables/trading/trade_legs.table.yaml <span>the one definition: edits here show in Visual, and the other way round</span></h3><div class="code"><span class="k">rachana</span>: 3
+<div class="note" style="margin-top:8px">Read as: <span class="seg"><span class="on">me (risk)</span><span>desk-head D2</span><span>analyst</span></span> &nbsp; see what a role sees before publishing.</div></div></div><div class="card"><div class="row"><b style="font-size:13.5px">YAML</b><span class="note">live: every visual edit shows here at once</span><span class="pill g">you may edit</span><span style="margin-left:auto" class="btn">Full screen</span><span class="btn">&#9662; Collapse</span></div><div class="code" style="min-height:0;margin-top:8px"><span class="k">rachana</span>: 3
+<span class="k">table</span>: trading.trade_legs
+<span class="k">from</span>: { <span class="k">kind</span>: trade }
+<span class="k">grain</span>: $.LEGS[*]
+<span class="k">filter</span>: <span class="s">"$.TRADE_STATUS != 'CANCELLED'"</span>
+<span class="k">keys</span>: [TRADE_ID, LEG_ID]
+<span class="k">columns</span>:
+  <span class="k">TRADE_ID</span>:     $.TRADE_ID
+  <span class="k">LEG_ID</span>:       <span class="s">"@.LEG_ID"</span>
+  <span class="k">CURRENCY</span>:     <span class="s">"@.CURRENCY"</span>
+  <span class="k">NOTIONAL</span>:     { <span class="k">path</span>: <span class="s">"@.NOTIONAL"</span>, <span class="k">type</span>: decimal, <span class="k">hidden-for</span>: [intern] }
+  <span class="k">NOTIONAL_USD</span>: { <span class="k">expr</span>: <span class="s">"@.NOTIONAL * fx(@.CURRENCY, 'USD')"</span>, <span class="k">type</span>: decimal }
+  <span class="k">FLOAT_INDEX</span>:  <span class="s">"@.INDEX.NAME"</span>
+<span class="k">rules</span>:
+  - { <span class="k">role</span>: desk-head, <span class="k">where</span>: <span class="s">"$.BOOK in user.desks"</span> }
+  - { <span class="k">role</span>: [risk, analyst], <span class="k">where</span>: <span class="s">"true"</span> }
+<span class="k">materialize</span>: none
+</div></div><div class="state">2. The same, YAML collapsed (each person's choice is remembered)</div><div class="row"><span class="toggle"><span class="on">Visual</span><span>YAML</span></span><span class="pick"><b>Table</b>trading.trade_legs</span><span class="pick"><b>From</b>kind trade</span><span class="pick"><b>Grain</b>$.LEGS[*]</span><span style="margin-left:auto" class="btn">Discard</span><span class="btn p">Save draft</span><span class="btn">Publish</span></div><div class="note">(the three panes as above)</div><div class="card" style="padding:8px 12px"><div class="row"><b style="font-size:13.5px">YAML</b><span class="note">live: every visual edit shows here at once</span><span class="pill g">you may edit</span><span style="margin-left:auto" class="btn">Full screen</span><span class="btn">&#9656; Show YAML</span></div><div class="note">Collapsed (remembered for you). 18 lines, valid.</div></div><div class="state">3. A power user edits the YAML in place: invalid text shows its error at the line; the visual part keeps the last valid version</div><div class="card"><div class="row"><b style="font-size:13.5px">YAML</b><span class="note">live: every visual edit shows here at once</span><span class="pill g">you may edit</span><span style="margin-left:auto" class="btn">Full screen</span><span class="btn">&#9662; Collapse</span></div><div class="err" style="margin-top:8px">Line 10: the quote is not closed. The visual part above keeps the last valid version until this is fixed.</div><div class="code" style="min-height:0;margin-top:8px"><span class="k">rachana</span>: 3
+<span class="k">table</span>: trading.trade_legs
+<span class="k">from</span>: { <span class="k">kind</span>: trade }
+<span class="k">grain</span>: $.LEGS[*]
+<span class="k">filter</span>: <span class="s">"$.TRADE_STATUS != 'CANCELLED'"</span>
+<span class="k">keys</span>: [TRADE_ID, LEG_ID]
+<span class="k">columns</span>:
+  <span class="k">TRADE_ID</span>:     $.TRADE_ID
+  <span class="k">LEG_ID</span>:       <span class="s">"@.LEG_ID"</span>
+  <span class="k">CURRENCY</span>:     <span class="s e">"@.CURRENCY</span>   <span class="c" style="color:var(--bad)"># line 10: the quote is not closed</span>
+  <span class="k">NOTIONAL</span>:     { <span class="k">path</span>: <span class="s">"@.NOTIONAL"</span>, <span class="k">type</span>: decimal, <span class="k">hidden-for</span>: [intern] }
+  <span class="k">NOTIONAL_USD</span>: { <span class="k">expr</span>: <span class="s">"@.NOTIONAL * fx(@.CURRENCY, 'USD')"</span>, <span class="k">type</span>: decimal }
+  <span class="k">FLOAT_INDEX</span>:  <span class="s">"@.INDEX.NAME"</span>
+<span class="k">rules</span>:
+  - { <span class="k">role</span>: desk-head, <span class="k">where</span>: <span class="s">"$.BOOK in user.desks"</span> }
+  - { <span class="k">role</span>: [risk, analyst], <span class="k">where</span>: <span class="s">"true"</span> }
+<span class="k">materialize</span>: none
+</div></div><div class="state">4. Without the edit right: the YAML is read-only</div><div class="card"><div class="row"><b style="font-size:13.5px">YAML</b><span class="note">live: every visual edit shows here at once</span><span class="pill n">read-only (no edit right)</span><span style="margin-left:auto" class="btn">Full screen</span><span class="btn">&#9662; Collapse</span></div><div class="code" style="min-height:0;margin-top:8px"><span class="k">rachana</span>: 3
+<span class="k">table</span>: trading.trade_legs
+<span class="k">from</span>: { <span class="k">kind</span>: trade }
+<span class="k">grain</span>: $.LEGS[*]
+<span class="k">filter</span>: <span class="s">"$.TRADE_STATUS != 'CANCELLED'"</span>
+<span class="k">keys</span>: [TRADE_ID, LEG_ID]
+<span class="k">columns</span>:
+  <span class="k">TRADE_ID</span>:     $.TRADE_ID
+  <span class="k">LEG_ID</span>:       <span class="s">"@.LEG_ID"</span>
+  <span class="k">CURRENCY</span>:     <span class="s">"@.CURRENCY"</span>
+  <span class="k">NOTIONAL</span>:     { <span class="k">path</span>: <span class="s">"@.NOTIONAL"</span>, <span class="k">type</span>: decimal, <span class="k">hidden-for</span>: [intern] }
+  <span class="k">NOTIONAL_USD</span>: { <span class="k">expr</span>: <span class="s">"@.NOTIONAL * fx(@.CURRENCY, 'USD')"</span>, <span class="k">type</span>: decimal }
+  <span class="k">FLOAT_INDEX</span>:  <span class="s">"@.INDEX.NAME"</span>
+<span class="k">rules</span>:
+  - { <span class="k">role</span>: desk-head, <span class="k">where</span>: <span class="s">"$.BOOK in user.desks"</span> }
+  - { <span class="k">role</span>: [risk, analyst], <span class="k">where</span>: <span class="s">"true"</span> }
+<span class="k">materialize</span>: none
+</div></div><div class="state">5. YAML (C) full screen, for experts: the same draft, one switch away</div><div class="row"><span class="toggle"><span>Visual</span><span class="on">YAML</span></span><span class="pick"><b>Table</b>trading.trade_legs</span><span class="pick"><b>From</b>kind trade</span><span class="pick"><b>Grain</b>$.LEGS[*]</span><span class="pick"><b>Date</b>2026-09-30 (latest)</span><span style="margin-left:auto" class="btn">Discard</span><span class="btn p">Save draft</span><span class="btn">Publish</span></div><div class="grid2" style="grid-template-columns:1fr 1fr"><div class="card"><h3>config/tables/trading/trade_legs.table.yaml <span>the one definition: edits here show in Visual, and the other way round</span></h3><div class="code"><span class="k">rachana</span>: 3
 <span class="k">table</span>: trading.trade_legs
 <span class="k">from</span>: { <span class="k">kind</span>: trade }
 <span class="k">grain</span>: $.LEGS[*]
@@ -181,7 +232,7 @@ footer{font-size:12px;color:var(--muted);line-height:1.5;border-top:1px solid va
 <tr><td class="l">T-10023</td><td class="l">2026-09-30</td><td>0</td><td class="l">T-10023</td><td class="l">L1</td><td class="l">JPY</td><td>3,000,000,000</td><td class="l">TONA</td></tr></table>
 <div class="lab" style="margin-top:14px">Checks</div><div class="note"><span class="ok">&#10003;</span> 6 columns check in their scopes &nbsp; <span class="ok">&#10003;</span> keys [TRADE_ID, LEG_ID] unique on 2026-09-30<br>
 <span class="warn">&#9888;</span> FLOAT_INDEX empty in 41% of rows (fixed legs) &nbsp; <span class="ok">&#10003;</span> name free (no stored table trading.trade_legs)<br>
-<span class="muted">Used by: model trading.positions-and-legs (as legs), pivot view "Legs by currency", Flight token risk-batch</span></div></div></div><div class="state">3. Text that does not parse: Visual waits until it is fixed</div><div class="err">Line 13: a mapping value is not allowed here (an unclosed quote after <span class="mono">"@.INDEX.NAME</span>). Fix the text to switch back to Visual; your text is kept as typed.</div><div class="row"><span class="toggle"><span style="opacity:.45">Visual</span><span class="on">YAML</span></span><span class="note">The switch remembers your last choice (per person, on every table).</span></div>
+<span class="muted">Used by: model trading.positions-and-legs (as legs), pivot view "Legs by currency", Flight token risk-batch</span></div></div></div>
 <footer>Mock-up for discussion: figures are illustrative. Who edits: administrators and BI authors; reading is always as the source (row rules and masks), then the table's own rules. Every save is checked
 (<span class="mono">tables check</span>), versioned and audited like a BI item. DuckDB is not called by this screen: preview reads the source through the layer.</footer>
 </div>

@@ -340,7 +340,11 @@
   the product owner chose B and C with a switch (`BC.html`): Visual (B: the document, the columns, the rows) by default, YAML (C: the
   definition as text with checks) for experts, both editing the one draft; unsaved text that does not parse cannot switch back until
   fixed; each person's last choice remembered. The model editor's mock-ups `model-A.html` (lists), `model-B.html` (diagram, measures,
-  answer; recommended) and `model-C.html` (measures first) follow the same Visual-and-YAML idea. Not built yet.
+  answer; recommended) and `model-C.html` (measures first) follow the same Visual-and-YAML idea. Refined the same day: a live YAML panel
+  below every visual view (updated by each visual edit, collapsible, its state remembered per person), editable in place or full screen
+  with the edit right (a valid edit updates the visual part at once; invalid text shows its error at the line while the visual part keeps
+  the last valid version), read-only without it; models get B (diagram) and C (measures) behind one switch (`model-BC.html`); `BC.html`
+  shows the panel open, collapsed, with an error and read-only. A and the single-option mock-ups kept for the record. Not built yet.
 - **Build fixes on the branch.** Error Prone's `ReturnValueIgnored` (`lang.Compiler`) and `JavaTimeDefaultTimeZone` (`lang.SqlLowering`,
   the preview's evaluator) and `NullTernary` (`ModelAnswersTest`), which stopped `drishti-bicompute` and `drishti-tables` compiling.
 - **Tests.** `TableReadsTest` (shared reads, rules, masks, hidden columns, conditions, a table over a table, dates, the limit),
