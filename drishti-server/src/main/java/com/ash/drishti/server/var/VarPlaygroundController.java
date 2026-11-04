@@ -80,7 +80,7 @@ public class VarPlaygroundController {
         VarPlayground.Ask a = ask(scope, ids, asOf, ccy, horizon, method, confidence, esConfidence, set);
         VarPlayground.Built b = playground.build(p, a, playground.settings().maxPositions());
         Map<String, Object> out = VarPlaygroundAnswer.grid(b, playground, view);
-        if (parametric(measure)) {                                       // PLAY PVAR: the Parametric tab's figures, steps and columns
+        if (parametric(measure)) {                                       // the Parametric tab's figures, steps and columns
             out = new LinkedHashMap<>(out);
             List<String> shownIds = b.model().positions.stream().map(VarPlaygroundModel.Pos::id).toList();
             out.put("parametric", VarPlaygroundParametric.answer(playground.parametric(b), b.scope(), shownIds, playground.describer()));
@@ -140,7 +140,7 @@ public class VarPlaygroundController {
                 .body(body);
     }
 
-    /** {@code measure=parametric} (PLAY PVAR); anything else but blank or {@code historical} is refused. */
+    /** {@code measure=parametric} (the Parametric tab); anything else but blank or {@code historical} is refused. */
     static boolean parametric(String measure) {
         if (measure == null || measure.isBlank() || measure.equalsIgnoreCase("historical")) {
             return false;

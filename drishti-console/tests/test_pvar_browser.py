@@ -12,16 +12,16 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""PVAR in a real browser (docs/architecture/PARAMETRIC_VAR.md section 15; VAR_GUIDE.md section 3.12), over the market-risk pack's committed
-VaR data built into a scratch lake:
+"""Parametric VaR in a real browser (docs/architecture/PARAMETRIC_VAR.md section 15; VAR_GUIDE.md section 3.12), over the market-risk
+pack's committed VaR data built into a scratch lake:
 
-- ``PVAR BANK`` opens the explorer in parametric mode, view A: the three tiles (parametric VaR, parametric ES, the fat-tail gap), the
-  tree's Parametric and Gap columns, the normal curve on the P&L path's histogram with the parametric marker and the gap bracket;
+- ``PVAR BANK`` (an alias) opens the explorer with the Parametric toggle on: the three tiles (parametric VaR, parametric ES, the fat-tail
+  gap), the tree's Parametric and Gap columns, the normal curve on the P&L path's histogram with the parametric marker and the gap bracket;
 - every ? shows the server's lines: the tile's popover carries the answer's own numbers (its VaR in the formula line), no number formed in
   the page; Escape closes it;
 - N hides the curve and the choice is remembered in the link (nc=0) and on the next visit;
-- view B draws the tail table, view C the components adding up to the parametric VaR and the correlation heat map;
-- VAR BANK stays historical, with the "Compare with parametric" link to PVAR;
+- VAR BANK is historical with the toggle off; ticking it turns the parametric figures on, unticking turns them off;
+- the VaR Playground's Parametric tab shows the worked figures (the components adding up to the parametric VaR);
 - at 390 px the ? is a bottom sheet and nothing scrolls sideways; no page error.
 
 Skipped when Playwright, Chromium, the built server jar or a JDK is missing."""
@@ -66,25 +66,27 @@ def test_pvar_view_a_the_tooltips_and_the_curve(browser, stack):
     assert not pg.errors, pg.errors
 
 
-def test_views_b_and_c(browser, stack):
-    pg = page(browser, stack, "/var?scope=BANK&pm=1&pv=b")
-    wait(pg, "document.querySelectorAll(\"[data-vp-pane='b'] .vp-tail-table tbody tr\").length > 0", seconds=60)
-    pg.click("[data-vp-view='c']")
-    wait(pg, "!!document.querySelector(\"[data-vp-pane='c'] .vp-heat\")", seconds=60)
-    total = pg.inner_text("[data-vp-pane='c'] .vp-total")
-    head = pg.inner_text("[data-vp-pane='c'] h3")
-    assert "exactly" in head
-    assert "pv=c" in pg.url
-    assert total.split()[1].replace(",", "") in head.replace(",", "")                   # Σ components = the parametric VaR
+def test_the_playground_parametric_tab(browser, stack):
+    pg = page(browser, stack, "/play?scope=BANK")
+    pg.click("[data-pg-tab-parametric]")
+    wait(pg, "document.querySelectorAll('[data-pg-param-positions] tbody tr').length > 0", seconds=90)
+    assert "measure=parametric" in pg.url
+    assert "Parametric VaR = z·σ − μ" in pg.inner_text("[data-pg-param-figures]")
+    assert pg.is_hidden(".pg-body")                                                     # the tab, in place of the grid
     assert not pg.errors, pg.errors
 
 
-def test_var_stays_historical_with_the_link(browser, stack):
+def test_var_is_historical_until_the_toggle_is_ticked(browser, stack):
     pg = page(browser, stack, "/go?q=VAR%20BANK%20%3CGO%3E")
     wait(pg, "document.querySelectorAll('.vx-tile').length >= 6", seconds=60)
-    assert pg.locator("[data-vp-tiles]").count() == 0
-    href = pg.get_attribute("[data-vx-pvar]", "href")
-    assert "PVAR%20BANK" in href or "PVAR+BANK" in href
+    assert pg.locator("[data-vp-tiles]").count() == 0 and not pg.is_checked("[data-vp-on]")
+    pg.check("[data-vp-on]")
+    wait(pg, "document.querySelectorAll('[data-vp-tiles] .vp-tile').length === 3", seconds=60)
+    assert "pm=1" in pg.url
+    pg.uncheck("[data-vp-on]")
+    wait(pg, "!document.querySelector('[data-vp-tiles]') && document.querySelectorAll('.vx-tile').length >= 6", seconds=60)
+    assert "pm=1" not in pg.url
+    assert not pg.errors, pg.errors
 
 
 def test_the_phone_sheet(browser, stack):

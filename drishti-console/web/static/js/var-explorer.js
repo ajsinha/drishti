@@ -95,7 +95,8 @@
     return o;
   }
 
-  /** PVAR (pm=1): the parametric blocks come with the answers; VAR asks them away (parametric=false: lean answers, historical only). */
+  /** The Parametric toggle on (pm=1; the PVAR command): the parametric blocks come with the answers; off, they are asked away
+   *  (parametric=false: lean answers, historical only). */
   var PM = root.dataset.pm === "1", PARAMETRIC_PATHS = { scope: 1, "scope/path": 1, "scope/contributions": 1, tree: 1 };
   function api(path, q, fresh) {
     var p = new URLSearchParams();
@@ -238,7 +239,7 @@
       lensLink(u);
       history.pushState({ scope: scope, ccy: S.ccy, lens: lensState() }, "", u.toString());
     }
-    $("[data-vx-cmd]").textContent = (PM ? "P" : "") + words(scope);
+    $("[data-vx-cmd]").textContent = words(scope);
     var topIn = document.querySelector("#cmd, input[name=q]");
     if (topIn && document.activeElement !== topIn) topIn.value = words(scope) + " <GO>";
     markTree();
@@ -350,9 +351,7 @@
     renderIntraday(d.intraday);
     renderProv(d.provenance, d);
     if (PM && window.VarParametric) window.VarParametric.headline(d);   // the parametric tiles, each with its ? (var-parametric.js)
-    var cmp = $("[data-vx-pvar]");
-    if (cmp) cmp.href = "/go?q=" + encodeURIComponent("P" + words(S.scope));
-    document.title = (PM ? "PVAR · " : "VaR · ") + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
+    document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
   function ordinal(k) { return k + (k % 100 >= 11 && k % 100 <= 13 ? "th" : k % 10 === 1 ? "st" : k % 10 === 2 ? "nd" : k % 10 === 3 ? "rd" : "th"); }
@@ -1068,7 +1067,7 @@
     var t = $("[data-vx-tree]");
     t.textContent = "";
     var hd = h("div", "vx-row hdr");
-    var pcols = PM && window.VarParametric && window.VarParametric.view() === "a";
+    var pcols = PM && !!window.VarParametric;
     ["Scope", "VaR " + S.ccy, "ES", "Limit"].concat(pcols ? ["Parametric", "Gap"] : []).forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
     t.classList.toggle("vp-cols", !!pcols);
     t.appendChild(hd);
@@ -1352,5 +1351,5 @@
   window.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,
     lensWords: lensWords, renderTree: function () { if (S.tree) renderTree(); },
     redrawPath: function () { if (S.path && S.path.series && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); } };
-  if (PM && window.VarParametric) window.VarParametric.start(window.VarExplorer);
+  if (window.VarParametric) window.VarParametric.start(window.VarExplorer);
 })();

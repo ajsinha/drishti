@@ -3833,7 +3833,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.var.parametric.enabled` | boolean | `true` | `DRISHTI_VAR_PARAMETRIC_ENABLED` | server (each node its own) | the parametric block on the VaR answers, PVAR, PLAY PVAR and pvar(); off: none of them (asked: refused in words) | restart |  |
+| `drishti.var.parametric.enabled` | boolean | `true` | `DRISHTI_VAR_PARAMETRIC_ENABLED` | server (each node its own) | the parametric block on the VaR answers, the PVAR alias, the playground's Parametric tab and pvar(); off: none of them (asked: refused in words) | restart |  |
 | `drishti.var.parametric.weighting` | string | `equal` |  | server (each node its own) | equal (1/N, sigma with N - 1) or ewma (RiskMetrics, lambda below) | restart |  |
 | `drishti.var.parametric.lambda` | number | `0.94` |  | server (each node its own) | EWMA's decay, in (0.5, 1); read only with ewma | restart |  |
 | `drishti.var.parametric.horizon-rule` | string | `lens` |  | server (each node its own) | lens (the lens's own vector: sqrt10 scales mu and sigma by root 10, sum reads the 10-day windows) or square-root-of-time (mu x h, sigma x root h from the 1-day vector) | restart |  |
@@ -6389,7 +6389,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_VAR_OFFICIAL` | `drishti.var.official.enabled` (engine) | `true` | engine | capture every node of every hierarchy when a date's inputs are complete (after the data-load signal) |
 | `DRISHTI_VAR_OFFICIAL_FORMAT` | `drishti.var.official.format` (engine) | `delta` | engine | delta or iceberg; BI's var-results connector follows it (generated as plugin iceberg) |
 | `DRISHTI_VAR_OPEN_HEAP_MB` | `drishti.var.open-heap-mb` (engine) | `0` | engine | the byte safety net over every open book's heap (0: automatic, 0.4 x heap - 512 MB - load-threads x 1.6 GB, at least a tenth of the heap); over it the least recently used dates' currency, then stress books, then whole dates leave |
-| `DRISHTI_VAR_PARAMETRIC_ENABLED` | `drishti.var.parametric.enabled` (engine) | `true` | engine | the parametric block on the VaR answers, PVAR, PLAY PVAR and pvar(); off: none of them (asked: refused in words) |
+| `DRISHTI_VAR_PARAMETRIC_ENABLED` | `drishti.var.parametric.enabled` (engine) | `true` | engine | the parametric block on the VaR answers, the PVAR alias, the playground's Parametric tab and pvar(); off: none of them (asked: refused in words) |
 | `DRISHTI_VAR_PLAYGROUND_ENABLED` | `drishti.var.playground.enabled` (engine) | `true` | engine | the screen, the command and the export |
 | `DRISHTI_VAR_PLAYGROUND_EXPORT_MAX_CELLS` | `drishti.var.playground.export-max-cells` (engine) | `20000000` | engine | the most cells one export may hold (about 19,000 positions at 509 scenarios, some 160 MB of server memory while it is written); larger is refused in words |
 | `DRISHTI_VAR_PV_STREAM` | pv-updates enabled | `false` | packs | Turn on the market-risk pack's pv-updates connector: the pricing systems' PV topic, windowed into intraday batches |

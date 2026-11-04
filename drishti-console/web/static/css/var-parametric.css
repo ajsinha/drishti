@@ -13,15 +13,14 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* Parametric VaR on the VaR explorer (PVAR; docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): the views' bar, the three
-   tiles, the tree's Parametric and Gap columns, the normal curve and its marker (blue), the fat-tail gap (warning colour), the ? popover
-   (a bottom sheet on a phone), the tail table, the components, the build-up bar and the correlation heat map. Theme tokens only. */
+/* Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): the toggle's bar, the three tiles,
+   the tree's Parametric and Gap columns, the normal curve and its marker (blue), the fat-tail gap (warning colour) and the ? popover (a
+   bottom sheet on a phone). Theme tokens only. */
 .vp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 6px 0; }
 .vp-badge { font-size: 11px; color: var(--d-muted); border: 1px solid var(--d-border); border-radius: 3px; padding: 2px 6px; }
 .vp-toggle { font-size: 12px; color: var(--d-ink); display: inline-flex; align-items: center; gap: 4px; }
 .vp-toggle kbd { font: 10px var(--d-font-mono); border: 1px solid var(--d-border); border-radius: 2px; padding: 0 3px; }
-.vp-compare { margin: 4px 0; font-size: 12px; }
-.vp-compare a { color: var(--d-link); }
+.vp-link { font-size: 12px; color: var(--d-link); }
 .vp-tiles { margin-top: 6px; grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .vp-blue { color: var(--d-link); }
 .vp-warn { color: var(--d-warn); }
@@ -46,20 +45,7 @@
 .vx-svg .vp-tail.param { fill: var(--d-link); opacity: 0.08; }
 .vx-svg .vp-gap { stroke: var(--d-warn); stroke-width: 1.5; }
 .vx-svg .vp-gap-label { fill: var(--d-warn); font-size: 10px; }
-.vp-pane { padding: 8px 10px; }
-.vp-pane h3 { font-size: 13px; margin: 10px 0 6px; }
-.vp-big { min-height: 300px; }
-.vp-total td { border-top: 1px solid var(--d-border); font-weight: 600; }
-.vp-build { display: flex; height: 22px; border-radius: 3px; overflow: hidden; border: 1px solid var(--d-border); }
-.vp-seg { font-size: 10px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding: 0 4px; color: var(--d-on-fill); }
-.vp-seg-0 { background: var(--d-link); } .vp-seg-1 { background: var(--d-accent); } .vp-seg-2 { background: var(--d-ok); }
-.vp-seg-3 { background: var(--d-warn); } .vp-seg-4 { background: var(--d-muted); } .vp-seg-5 { background: var(--d-bad); }
-.vp-heat td { min-width: 44px; }
-.vp-c4, .vp-c3 { background: var(--d-bad); color: var(--d-on-fill); } .vp-c2 { background: var(--d-warn); color: var(--d-on-fill); }
-.vp-c1 { background: var(--d-accent-tint); } .vp-c0 { background: var(--d-surface); } .vp-c-1, .vp-c-2 { background: var(--d-highlight); }
-.vp-c-3, .vp-c-4 { background: var(--d-link); color: var(--d-on-fill); }
 @media (max-width: 600px) {
   .vx-tree.vp-cols .vx-row { grid-template-columns: minmax(0, 1fr) 62px 62px; }
   .vx-tree.vp-cols .vx-row > :nth-child(3), .vx-tree.vp-cols .vx-row > :nth-child(4), .vx-tree.vp-cols .vx-row > :nth-child(6) { display: none; }
-  .vp-comp, .vp-heat { display: block; overflow-x: auto; }
 }

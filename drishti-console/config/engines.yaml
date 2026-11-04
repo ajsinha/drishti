@@ -41,7 +41,7 @@ engines:
     uses: []
     api: [/api/v1/var]
     console: [/var, /api/var/, /smat, /api/smat/, "=/play", /api/play/, /admin/scopes]
-    words: [VAR, "VAR EXPLAIN", PVAR, SMAT, "PLAY VAR", "PLAY PVAR", SWIN]
+    words: [VAR, "VAR EXPLAIN", PVAR, SMAT, "PLAY VAR", SWIN]
     menus: [var-explorer, var-parametric, smat, play-var, play-pvar, backtesting, stress-window]
     help: [docs-guides-var-guide, docs-tutorials-25-var-from-the-bank-to-a-trade, docs-tutorials-43-parametric-var-beside-historical, docs-guides-regulatory-var-reporting]
     landings: []

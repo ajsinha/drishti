@@ -2191,7 +2191,7 @@ drishti.py var show DESK:DESK-RATES                                prints the pa
 drishti.py var show BANK --no-parametric                           leaves it out (parametric=false)
 drishti.py var parts DESK:DESK-RATES --matrix                      the parametric components (they add up to the parametric VaR) and the parts' correlations
 drishti.py var parts DESK:DESK-RATES --no-parametric               the historical columns only
-drishti.py var playground DESK:DESK-RATES --measure parametric     PLAY PVAR: the parametric steps; with --xlsx FILE the workbook gains its Parametric tab
+drishti.py var playground DESK:DESK-RATES --measure parametric     the Parametric tab: the parametric steps; with --xlsx FILE the workbook gains its Parametric tab
 ```
 
 While parametric VaR is on (`drishti.var.parametric.enabled`), `show` prints `parametric VaR 58,409,229 USD = z·σ − μ = 2.3263 ×

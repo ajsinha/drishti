@@ -303,7 +303,7 @@ def explain_view(request: Request, view: str) -> str:
 
 @router.get("/var")
 async def page(request: Request, scope: str = "", capture: str = "", hierarchy: str = "MGMT", ccy: str = "", h: str = "", m: str = "",
-               q: str = "", esq: str = "", set: str = "", tab: str = "", view: str = "", pm: str = "", pv: str = ""):  # noqa: A002 (the link's word)
+               q: str = "", esq: str = "", set: str = "", tab: str = "", view: str = "", pm: str = ""):  # noqa: A002 (the link's word)
     """The explorer's shell; its panels load in place (no full-page reload when drilling). ``ccy`` is the page's reporting currency
     (none: the one chosen earlier in the session, else USD); ``hierarchy`` the tree shown (MGMT, LEGAL, LL: any configured one); ``h``,
     ``m``, ``q``, ``esq``, ``set`` the lens (horizon, 10-day method, confidences, Normal or Stressed; none: the person's last choice, else
@@ -312,7 +312,7 @@ async def page(request: Request, scope: str = "", capture: str = "", hierarchy: 
     return render(request, "terminal/var.html", scope=scope or "BANK", capture=capture, hierarchy=hierarchy_of(hierarchy),
                   user=(me.user if me else "") or "", admin=bool(me and me.is_admin), screen="var", ccy=ccy.upper() if CCY.match(ccy or "") else "",
                   lens=lens_of(request, h, m, q, esq, set), tab=tab if tab in TABS else "path", explain_view=explain_view(request, view),
-                  parametric_mode=pm == "1", pview=pv if pv in ("a", "b", "c") else "a")
+                  parametric_mode=pm == "1")
 
 
 #: GET endpoints of the engine the page may ask for, and the parameters each passes on
@@ -428,8 +428,8 @@ async def api_delete_basket(request: Request, owner: str, name: str):
 
 def pvar_command(words: list[str], user: str) -> str | None:
     """Where ``PVAR <scope> [lens]`` goes (docs/architecture/PARAMETRIC_VAR.md, VAR_GUIDE.md section 3.12): the VaR explorer in parametric
-    mode (``pm=1``: historical and parametric side by side, view A), the scope and the lens read as ``VAR`` reads them; ``PVAR`` alone: the
-    bank. None when the words are not a PVAR command."""
+    toggle on (``pm=1``: the parametric tiles, the tree's Parametric and Gap columns, the normal curve), the scope and the lens read as
+    ``VAR`` reads them; ``PVAR`` alone: the bank. An alias of ``VAR``: no screen of its own. None when the words are not a PVAR command."""
     w = [x for x in words if x.upper() != "<GO>"]
     if not w or w[0].upper() != "PVAR":
         return None

@@ -49,7 +49,7 @@
     ["ccy", "h", "m", "q", "esq", "set"].forEach(function (k) { if (d[k]) { q.set(k, d[k]); } });
     var asOf = new URLSearchParams(window.location.search).get("asOf");
     if (asOf) { q.set("asOf", asOf); }
-    if (d.measure) { q.set("measure", d.measure); }                 // PLAY PVAR: the parametric figures, and the workbook's Parametric tab
+    if (d.measure) { q.set("measure", d.measure); }                 // the Parametric tab: the parametric figures, and the workbook's Parametric tab
     return q;
   }
   function load() {
@@ -320,7 +320,7 @@
       : "✗ " + d.checks.filter(function (x) { return !x.ok; }).map(function (x) { return x.name; }).join(" · ")) + "</div>";
     explain.innerHTML = h;
   }
-  /** PLAY PVAR's panel: the server's figures, steps, positions and scenario columns placed as they come (nothing computed here). */
+  /** The Parametric tab's panel: the server's figures, steps, positions and scenario columns placed as they come (nothing computed here). */
   function parametric(d) {
     var p = d.parametric, f = $("[data-pg-param-figures]");
     if (!f) { return; }

@@ -227,7 +227,7 @@ def render_playground(g: dict, say) -> None:
     """The VaR Playground (VAR_GUIDE.md section 3.10) in a few lines: the headline, the checks and the largest positions' figures."""
     f, ln = g.get("figures") or {}, g.get("lens") or {}
     pm = g.get("parametric")
-    if pm:                                                              # PLAY PVAR: the server's steps, as the page shows them
+    if pm:                                                              # the Parametric tab: the server's steps, as the page shows them
         for s in pm.get("steps") or []:
             say(s)
     say(f"{g.get('label')} on {g.get('businessDate')} in {g.get('currency')}: {g.get('shown')} of {g.get('total')} positions, "
@@ -575,7 +575,7 @@ def register(groups, srv, ctx: dict) -> None:
                 render_matrix(res, a.top, print)
         elif c == "playground":
             q = {"ids": a.ids} if a.ids else {"scope": a.scope}
-            if a.measure == "parametric":                             # PLAY PVAR: the Parametric figures, and the workbook's Parametric tab
+            if a.measure == "parametric":                             # the Parametric figures, and the workbook's Parametric tab
                 q["measure"] = "parametric"
             if a.estimate:
                 res = api.json("GET", "/api/v1/var/playground/estimate?" + enc(lensed(a, dated(a, q))))
@@ -776,7 +776,7 @@ def register(groups, srv, ctx: dict) -> None:
     pg.add_argument("--count", default="500", help="positions in the workbook: 100, 500 (default), 1000, 10000 or all; the rest in Rest of scope")
     pg.add_argument("--estimate", action="store_true", help="each export size's estimated file size, recalculation time and the applications that open it")
     pg.add_argument("--measure", choices=["historical", "parametric"], default="historical",
-                    help="parametric: PLAY PVAR, the parametric figures and the workbook's Parametric tab (PARAMETRIC_VAR.md section 10)")
+                    help="parametric: the playground's Parametric tab, the parametric figures and the workbook's Parametric tab (PARAMETRIC_VAR.md section 10)")
     ex = sub.add_parser("explain", help="why VaR moved (VAR EXPLAIN, VAR_GUIDE.md section 3.11): the change between two business dates in "
                         "causes that add up exactly (restatement, hierarchy, trades out, the window, the market, trades in), with who drove each",
                         parents=[srv])

@@ -945,27 +945,30 @@ entitlements as the scope's VaR (a scope is resolved as you on each date).
 
 ### 3.12 Parametric VaR beside historical (PVAR)
 
-**PVAR `<scope>`** opens this explorer in **parametric mode**: historical VaR, as always, and beside it **parametric VaR**, the normal
+The explorer's **Parametric** toggle (beside the tiles) adds, beside historical VaR as always, **parametric VaR**: the normal
 distribution fitted to the scope's own scenario P&L vector (z·σ − μ; [section 18.15](#1815-parametric-var-and-es-a-cross-check)). It is a
 **cross-check, never the official VaR**: limits, limit use, backtesting, official records and regulatory reports stay historical, and
-every parametric figure says so. `VAR` stays historical only and offers **Compare with parametric** under the tiles, which opens PVAR on
-the same scope and lens. The scope and lens words are VAR's: `PVAR DESK DESK-RATES 10D SUM 95`, `PVAR BANK IN EUR`.
+every parametric figure says so. The toggle is kept in the link (`pm=1`); the command **PVAR `<scope>`** is an alias that opens the
+explorer with it on, reading the scope and lens words as VAR does: `PVAR DESK DESK-RATES 10D SUM 95`, `PVAR BANK IN EUR`. Off, the
+explorer is historical only.
 
-Three views on the same screen (the bar under the tiles; `pv=a|b|c` in the link):
+With the toggle on:
 
-| View | What it shows |
+| Where | What it shows |
 |---|---|
-| **A · Beside historical** (the default) | three tiles (parametric VaR, parametric ES, the **fat-tail gap** = historical − parametric, with skew and excess kurtosis); the tree's **Parametric** and **Gap** columns; on the P&L path the **normal curve** over the histogram with the historical marker (solid) and the parametric one (dashed), both tails lightly shaded and the gap bracket between the markers |
-| **B · Distribution** | the histogram large with the curve; the loss tail bin by bin, scenario days against the days the normal expects; the gap of each child of the scope |
-| **C · Components & correlations** | the Euler components z·cov(Pᵢ, P)/σ − μᵢ (with z·cov/σ, −μᵢ, the share, the change for +1% of the part, the standalone VaR and the historical component beside), adding up to the parametric VaR exactly; the build-up bar; the parts' correlation heat map |
+| **Tiles** | parametric VaR, parametric ES and the **fat-tail gap** = historical − parametric, with skew and excess kurtosis |
+| **The tree** | the **Parametric** and **Gap** columns beside each node's VaR, ES and limit |
+| **The P&L path** | the **normal curve** over the histogram, the historical marker (solid) and the parametric one (dashed), both tails lightly shaded and the gap bracket between the markers |
 
-**The ? on every parametric figure** (a tile, a tree cell, a component, the curve) opens the server's own lines: the method, the window,
-the weighting, the confidence and z, the horizon, n, μ and σ, the formula with the scope's numbers, ES, historical VaR beside it and the
-gap with its reading. Every number comes from the answer (the browser computes nothing); on a phone it is a bottom sheet.
+**The ? on every parametric figure** (a tile, a tree cell, the curve) opens the server's own lines: the method, the window, the
+weighting, the confidence and z, the horizon, n, μ and σ, the formula with the scope's numbers, ES, historical VaR beside it and the gap
+with its reading. Every number comes from the answer (the browser computes nothing); on a phone it is a bottom sheet.
 
 **The Normal curve toggle** (key **N**) hides the curve, the parametric marker, its tail and the gap bracket; the choice is remembered
-for you and in the link (`nc=0`). **PLAY PVAR** (the bar's button) opens the playground with the parametric measure
-([section 3.10](#310-the-var-playground-play-var)); the MR cube and the pivot offer `pvar()` beside `var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
+for you and in the link (`nc=0`). **Worked in the playground** (and the ? popovers' foot) opens the VaR Playground's **Parametric tab**
+on the scope ([section 3.10](#310-the-var-playground-play-var)): the figures, the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the
+Euler components that add up to the parametric VaR, and the workbook's Parametric tab. The MR cube and the pivot offer `pvar()` beside
+`var()` and `comp_var()`. [Tutorial 43](../tutorials/43-parametric-var-beside-historical.md) walks through it on the demo data.
 
 ## 4. Positions: derived, never delivered
 
@@ -3583,17 +3586,17 @@ no new input.
 overlapping windows' (about 50 independent periods, said in the notes). `square-root-of-time` (μ × 10, σ × √10 from the 1-day vector) is
 the setting's other value. The stressed set, the window and the reporting currency apply as for historical VaR.
 
-**Where it shows:** PVAR ([section 3.12](#312-parametric-var-beside-historical-pvar)); the answers' `parametric` block
+**Where it shows:** the explorer's Parametric toggle, which `PVAR` opens on ([section 3.12](#312-parametric-var-beside-historical-pvar)); the answers' `parametric` block
 ([section 11](#11-the-api)): `/scope`, `/tree` (each node), `/scope/path` (the curve, the expected counts per bin, both markers),
 `/scope/contributions` (`pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pMarginalPer1m`, `pPct`, `rho`, `sigma`,
 `mu`, the totals; `matrix=true` adds the correlation matrix), `parametric=false` leaving it out; `/status`'s `parametric`; VRES 1.3's optional
 `PARAMETRIC_*` and `FAT_TAIL_GAP*` fields; `pvar()` in the pivot and the MR cube; `drishti.py var show` (`--no-parametric`),
-`var parts --matrix`, `var playground --measure parametric`; **PLAY PVAR** (the playground's Parametric panel and the workbook's
+`var parts --matrix`, `var playground --measure parametric`; the VaR Playground's **Parametric tab** (its figures and the workbook's
 Parametric tab: named `PMu`, `PSigma`, `PZ` = `NORM.S.INV(PConfidence)`, `PEsFactor`, `PVaR`, `PES` beside the engine's with checks, a row
 a scenario, a row a position; recalculated by LibreOffice it equals the engine to the cent).
 
 **Settings** (`drishti.var.parametric.*` in `config/engines/var.yaml`; [CONFIGURATION.md](../admin/CONFIGURATION.md)): `enabled` (true; off:
-no block, PVAR shows a notice, PLAY PVAR and `parametric=true` are refused in words), `weighting` (`equal` or `ewma`), `lambda` (0.94),
+no block, the toggle shows a notice, the playground's Parametric tab and `parametric=true` are refused in words), `weighting` (`equal` or `ewma`), `lambda` (0.94),
 `horizon-rule` (`lens` or `square-root-of-time`), `curve-points` (121), `matrix-max-parts` (60), `show-curve` (true). Not in the official
 end-of-day records (a capture keeps it on demand).
 

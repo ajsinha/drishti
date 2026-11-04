@@ -18,9 +18,10 @@
 Historical VaR ranks a scope's own 509 scenario P&Ls and reads the 6th worst. **Parametric VaR** fits a normal distribution to the same
 509 numbers and reads its 1% tail: z·σ − μ. It is a **cross-check, never the official VaR**: limits, limit use, the backtest, official
 records and regulatory reports stay historical. Where the two differ, the difference is the **fat-tail gap**: positive when the scope's
-real tail is heavier than a normal with the same σ predicts. In this tutorial you open `PVAR` on the bank, read a desk's **?** line by
-line, see the normal curve over the P&L histogram, compare the tail bin by bin, check that the Euler components add up to the cent, read
-the correlation heat map, put `pvar()` in the MR cube, and work every figure out in `PLAY PVAR` and its workbook. Each step shows the UI,
+real tail is heavier than a normal with the same σ predicts. In this tutorial you turn on the VaR explorer's **Parametric** toggle on the
+bank (`PVAR BANK` opens it that way), read a desk's **?** line by line, see the normal curve over the P&L histogram, compare the tail bin
+by bin, check that the Euler components add up to the cent, read the correlation matrix, put `pvar()` in the MR cube, and work every
+figure out in the VaR Playground's **Parametric** tab and its workbook. Each step shows the UI,
 the command line and the JSON or YAML behind it, with real output from the committed test data. The reference is
 [VAR_GUIDE.md sections 3.12 and 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check); the design and its reasons are
 in [PARAMETRIC_VAR.md](../architecture/PARAMETRIC_VAR.md).
@@ -43,17 +44,17 @@ About 25 minutes.
 - how to read the fat-tail gap, the skew, the excess kurtosis and the days beyond the parametric VaR;
 - the **?** on every parametric figure: the server's own lines, the formula with the scope's numbers;
 - the normal curve over the P&L histogram, the **N** toggle, and the tail bin by bin against the days the normal expects;
-- the Euler components z·cov(Pᵢ, P)/σ − μᵢ, which add up to the parametric VaR exactly, and the parts' correlation heat map;
+- the Euler components z·cov(Pᵢ, P)/σ − μᵢ, which add up to the parametric VaR exactly, and the parts' correlation matrix;
 - `pvar()` beside `var()` in the MR cube and the pivot;
-- `PLAY PVAR`: every parametric figure worked out in a grid, and the workbook's **Parametric** tab of real formulas.
+- the VaR Playground's **Parametric** tab: every parametric figure worked out, and the workbook's **Parametric** tab of real formulas.
 
-## Step 1 · Open PVAR on the bank
+## Step 1 · Turn on Parametric on the bank
 
-**The UI.** Type `PVAR BANK <GO>` (or the VaR menu → Parametric VaR). The VaR explorer opens in parametric mode on view **A · Beside
-historical**: the historical tiles as always, and three more: **Parametric VaR**, **Parametric ES** and the **Fat-tail gap**. The tree
-gains the **Parametric** and **Gap** columns. `VAR BANK` stays historical only and offers *Compare with parametric* under the tiles.
+**The UI.** Type `VAR BANK <GO>` and tick **Parametric** beside the tiles (or type `PVAR BANK <GO>`: the same explorer with the toggle
+on; `&pm=1` in the link). Beside the historical tiles come three more: **Parametric VaR**, **Parametric ES** and the **Fat-tail gap**;
+the tree gains the **Parametric** and **Gap** columns. Untick it and the explorer is historical only again.
 
-*(screenshot filled in the heavy run: PVAR BANK, view A: the historical and parametric tiles, the tree's Parametric and Gap columns)*
+*(screenshot filled in the heavy run: VAR BANK with Parametric on: the historical and parametric tiles, the tree's Parametric and Gap columns)*
 
 **The command line.**
 
@@ -74,7 +75,7 @@ VAR BANK  ·  Drishti Bank  ·  node  ·  2026-09-30
 drishti:
   var:
     parametric:
-      enabled: ${DRISHTI_VAR_PARAMETRIC_ENABLED:true}   # off: no block, no PVAR, no PLAY PVAR, no pvar() (asked: refused in words)
+      enabled: ${DRISHTI_VAR_PARAMETRIC_ENABLED:true}   # off: no block, no toggle, no playground Parametric tab, no pvar() (asked: refused in words)
       weighting: equal               # equal (1/N, sigma with N - 1) or ewma (lambda below)
       lambda: 0.94
       horizon-rule: lens             # the lens's own vector, or square-root-of-time
@@ -122,7 +123,7 @@ days lie beyond the parametric VaR where the normal expects 5.09: the tail is fa
 
 ## Step 3 · The normal curve over the P&L histogram
 
-**The UI.** On view A the P&L path's histogram carries the **fitted normal**: a smooth blue line, the historical VaR marker (solid, at
+**The UI.** With Parametric on, the P&L path's histogram carries the **fitted normal**: a smooth blue line, the historical VaR marker (solid, at
 −74.6m) and the parametric one (dashed, at −58.4m), both tails lightly shaded and the gap bracket between them. Hover the curve for its
 formula. Press **N** (the *Normal curve* toggle) to hide the curve, the parametric marker, its tail and the bracket; the choice is
 remembered for you and in the link (`&nc=0`).
@@ -143,12 +144,10 @@ browser draws them.
 **You should see** the curve sit on the bars' scale (expected days per bin of 4,545,796) and the dashed parametric marker to the right of
 the solid historical one: a positive gap.
 
-## Step 4 · The tail bin by bin (view B)
+## Step 4 · The tail bin by bin
 
-**The UI.** Choose **B · Distribution** on the bar under the tiles (`pv=b` in the link): the histogram large with the curve, and the loss
-tail bin by bin, scenario days against the days the normal expects; below it, the gap of each child of the scope.
-
-*(screenshot filled in the heavy run: view B: the loss tail bin by bin and the gap of each book)*
+**The UI.** The histogram of step 3 shows it: the bars beyond the solid marker against the curve under them. Each book's gap is its
+**Gap** cell in the tree (expand the rates desk).
 
 **The JSON.** The same path answer: `histogram.counts` (the days) beside `parametric.expected` (the normal's days). The worst bins of the
 rates desk:
@@ -165,12 +164,11 @@ rates desk:
 **You should see** six days below −69.5m where the normal expects about 1.3: the tail the normal misses. The books' gaps differ in sign
 (`BOOK-RATES-1` +2,098,588, `BOOK-RATES-2` −2,183,557, `BOOK-RATES-3` +7,054,283 on the tree).
 
-## Step 5 · The components add up, and the correlations (view C)
+## Step 5 · The components add up, and the correlations
 
-**The UI.** Choose **C · Components & correlations** (`pv=c`): each part's Euler component z·cov(Pᵢ, P)/σ − μᵢ with z·cov/σ, −μᵢ, the
-share, the standalone VaR and the historical component beside it; the build-up bar; and the parts' correlation heat map.
-
-*(screenshot filled in the heavy run: view C: the books' parametric components, the build-up bar and the 3 × 3 heat map)*
+**The UI.** Open **Worked in the playground** on the rates desk (step 7): its **Parametric** tab lists each position's Euler component
+z·cov(Pᵢ, P)/σ − μᵢ with μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and the standalone VaR, and Σ components beside the parametric VaR. The parts' correlation
+matrix is on the command line and in the API below.
 
 **The command line.**
 
@@ -231,14 +229,15 @@ Grand total                                      112,041,646               122,1
 **You should see** every row and the grand total equal to the tree's figures of step 1 and 2. The gap changes sign from desk to desk:
 the commodities desk's parametric VaR (41.8m) is more than twice its historical one (17.5m), the rates desk's 22% below.
 
-## Step 7 · Work it out by hand: PLAY PVAR and its workbook
+## Step 7 · Work it out by hand: the playground's Parametric tab and its workbook
 
-**The UI.** On PVAR press **PLAY PVAR** (or type `PLAY PVAR DESK DESK-RATES`): the VaR Playground with the **Parametric** panel: the
-server's steps, each position's μ, σ, cov, ρ and component, each scenario's weight, deviation and square. **Export** writes the
+**The UI.** With Parametric on, press **Worked in the playground** (or the foot of any **?**), or type `PLAY VAR DESK DESK-RATES <GO>`
+and choose the **Parametric** tab (`&measure=parametric` in the link): the server's figures and steps, each position's μ, σ, cov, ρ and
+component, each scenario's weight, deviation and square. **Export** writes the
 workbook; its **Parametric** tab holds the named cells and checks in formulas (`NORM.S.INV`), recalculated by Excel or LibreOffice equal
 to the engine to the cent.
 
-*(screenshot filled in the heavy run: PLAY PVAR on the rates desk: the Parametric panel and its steps)*
+*(screenshot filled in the heavy run: the VaR Playground's Parametric tab on the rates desk: the figures and their steps)*
 
 **The command line.**
 

@@ -73,7 +73,7 @@ final class VarPlaygroundBook {
     private final SeriesLayout pnl;
     private final List<String> fxCols;
     private final Map<String, String> names = new LinkedHashMap<>();
-    /** PLAY PVAR: the engine's parametric figures, and the Parametric tab written after PnL (null: the historical playground). */
+    /** The Parametric tab: the engine's parametric figures, and the Parametric tab written after PnL (null: the historical playground). */
     private VarPlaygroundParametric.Engine parametric;
 
     VarPlaygroundBook parametric(VarPlaygroundParametric.Engine p) {

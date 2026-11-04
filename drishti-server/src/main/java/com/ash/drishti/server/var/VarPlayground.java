@@ -410,14 +410,14 @@ final class VarPlayground {
     }
 
     /**
-     * PLAY PVAR (PARAMETRIC_VAR.md section 10): the parametric figures of what was built, the 1-day portfolio and its positions (Rest of
+     * The playground's Parametric tab (PARAMETRIC_VAR.md section 10): the parametric figures of what was built, the 1-day portfolio and its positions (Rest of
      * scope included), with the server's parametric settings; refused in words while the measure is off.
      */
     VarPlaygroundParametric.Engine parametric(Built b) {
         VarParametric par = views.parametric();
         if (par == null || !par.enabled()) {
             throw new com.ash.drishti.common.DrishtiException(com.ash.drishti.common.ErrorCode.FORBIDDEN,
-                    "parametric VaR is switched off on this server (drishti.var.parametric.enabled): PLAY PVAR is not offered");
+                    "parametric VaR is switched off on this server (drishti.var.parametric.enabled): the playground's Parametric tab is not offered");
         }
         return VarPlaygroundParametric.engine(b.scope(), b.parts(), b.model().set.confidence(), b.model().set.esConfidence(), par.props().settings());
     }

@@ -12,9 +12,12 @@
 #
 # See the LICENSE file in the root of this repository for the full terms.
 
-"""PVAR (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): the command opens the VaR explorer in parametric mode (pm=1) on
-the scope and lens VAR would read; the page carries the views A, B and C, the Normal curve toggle and var-parametric.js; VAR stays
-historical with the "Compare with parametric" link; the console passes parametric= and matrix= to the engine and nothing else."""
+"""Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): a Parametric toggle on the
+explorer (pm=1) and, when on, the tiles, the tree's columns and the Normal curve toggle; PVAR is only an alias that opens the explorer with
+the toggle on, on the scope and lens VAR would read: no screen, view or menu item of its own; the console passes parametric= and matrix= to
+the engine and nothing else."""
+import pathlib
+
 from routes.var_routes import pvar_command, var_command, var_suggestions
 
 
@@ -32,19 +35,23 @@ def test_the_go_line_takes_pvar(client):
     assert r.status_code == 303 and r.headers["location"] == "/var?scope=BANK&pm=1"
 
 
-def test_the_parametric_page_carries_its_views_and_script(client):
-    page = client.get("/var?scope=BANK&pm=1&pv=c").text
-    assert 'data-pm="1"' in page and 'data-pv="c"' in page
-    for v in ("a", "b", "c"):
-        assert f'data-vp-view="{v}"' in page
+def test_the_explorer_has_a_parametric_toggle_and_no_views_of_its_own(client):
+    page = client.get("/var?scope=BANK&pm=1").text
+    assert 'data-pm="1"' in page and "data-vp-on checked" in page
     assert "data-vp-curve" in page and "<kbd>N</kbd>" in page and "data-vp-tiles" in page
     assert "/static/js/var-parametric.js" in page and "/static/css/var-parametric.css" in page
-    assert "cross-check, not official" in page
-    assert "PVAR BANK" in page                                                     # the command line says PVAR
+    assert "cross-check, not official" in page and "Worked in the playground" in page
+    assert "data-vp-view" not in page and "data-vp-pane" not in page and "PLAY PVAR" not in page   # no views B and C, no PLAY PVAR
+    assert "VAR BANK &lt;GO&gt;" in page or "VAR BANK <GO>" in page              # the command line says VAR: PVAR is an alias
     plain = client.get("/var?scope=BANK").text
-    assert "data-vx-pvar" in plain and "Compare with parametric" in plain
-    assert "/static/js/var-parametric.js" not in plain and "data-vp-bar" not in plain
-    assert 'data-pv="a"' in client.get("/var?scope=BANK&pm=1&pv=zzz").text       # an unknown view: A
+    assert "data-vp-on" in plain and "data-vp-on checked" not in plain            # the toggle, off
+    assert "data-vp-curve" not in plain and "data-vp-tiles" not in plain and "data-vx-pvar" not in plain
+    assert "/static/js/var-parametric.js" in plain                                 # the toggle's script
+
+
+def test_no_menu_item_names_parametric_var(client):
+    menus = (pathlib.Path(__file__).resolve().parents[1] / "config" / "menus.yaml").read_text()
+    assert "PVAR" not in menus and "Parametric VaR" not in menus
 
 
 def test_the_proxy_passes_parametric_and_matrix_on(client, backend, monkeypatch):

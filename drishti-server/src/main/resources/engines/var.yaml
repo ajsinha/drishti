@@ -89,7 +89,7 @@ drishti:
       cache-mb: 32                   # most memory the kept answers take (weighed in bytes)
       matrix-max: 60                 # most child nodes the Matrix view explains
     parametric:                      # parametric VaR and ES, a cross-check beside historical (PVAR, VAR_GUIDE.md section 18.15): the normal fitted to the scope's own scenario P&L vector; never official
-      enabled: ${DRISHTI_VAR_PARAMETRIC_ENABLED:true}   # the parametric block on the VaR answers, PVAR, PLAY PVAR and pvar(); off: none of them (asked: refused in words)
+      enabled: ${DRISHTI_VAR_PARAMETRIC_ENABLED:true}   # the parametric block on the VaR answers, the PVAR alias, the playground's Parametric tab and pvar(); off: none of them (asked: refused in words)
       weighting: equal               # equal (1/N, sigma with N - 1) or ewma (RiskMetrics, lambda below)
       lambda: 0.94                   # EWMA's decay, in (0.5, 1); read only with ewma
       horizon-rule: lens             # lens (the lens's own vector: sqrt10 scales mu and sigma by root 10, sum reads the 10-day windows) or square-root-of-time (mu x h, sigma x root h from the 1-day vector)

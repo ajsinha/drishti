@@ -7,10 +7,13 @@
 # Parametric VaR and ES: the normal cross-check from the scenario P&L vectors
 
 **Status: built in 2.9.11.c** (as built: [VAR_GUIDE.md sections 3.12 and 18.15](../guides/VAR_GUIDE.md#1815-parametric-var-and-es-a-cross-check);
-tutorial 43). The product owner's decisions at the build: the command **PVAR** opens the VaR explorer in parametric mode with the views
-A (the default), B and C on the same screen; `VAR` stays historical with *Compare with parametric*; `pvar()` in the pivot and the MR cube;
-PLAY PVAR's named cells and checks live on the workbook's own **Parametric** tab with its own band (Main is unchanged); the eleven
-recommendations of section 16 stand. The product owner decided the measure on 2026-11-03: parametric
+tutorial 43). **Decided at the product review of 2026-11-04 (the cut-down design, as built):** the parametric figures are a
+**Parametric toggle** and **columns** on the existing VaR explorer (the three tiles, the tree's *Parametric* and *Gap* columns), the
+**normal curve** over the P&L path's histogram, and a **?** on every parametric figure; the VaR Playground gains a **Parametric tab**.
+`PVAR` is only a command **alias** that opens the explorer with the toggle on: no screen, view or menu item of its own; there is no
+`PLAY PVAR` command and no new menu entry. Kept: the `parametric` block on the existing VaR endpoints, `pvar()` in the pivot and the MR
+cube, the command-line flags; the workbook's named cells and checks live on its own **Parametric** tab with its own band (Main is
+unchanged). Options B and C of section 14 are not built. The product owner decided the measure on 2026-11-03: parametric
 (variance–covariance) VaR and ES computed from the scenario P&L vectors Drishti already holds, shown beside historical VaR with a
 **?** tooltip that says how it was calculated, and the normal curve drawn over the VaR screens' P&L histogram. Every name below
 (settings, fields, words) is a proposal until the build; the mock-ups to choose from are in [section 14](#14-mock-ups-and-the-build-checklist).
@@ -18,7 +21,7 @@ recommendations of section 16 stand. The product owner decided the measure on 20
 Related: [VAR_GUIDE.md section 18](../guides/VAR_GUIDE.md#18-the-computation) (historical VaR, ES, the decomposition and the lens this
 design reuses), [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-day-methods-and-the-confidence-chosen) (horizons),
 [section 11](../guides/VAR_GUIDE.md#11-the-api) and [API_GUIDE.md](../guides/API_GUIDE.md#var-engine-apiv1var) (the VaR API it extends),
-[VAR_PLAYGROUND.md](VAR_PLAYGROUND.md) (the playground frame `PLAY PVAR` is built on), [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md)
+[VAR_PLAYGROUND.md](VAR_PLAYGROUND.md) (the playground the Parametric tab is part of), [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md)
 (the `LinearAlgebra` seam the covariance matrix uses, branch `wip/blas`), [COMPUTED_ATTRIBUTES.md](COMPUTED_ATTRIBUTES.md) (computed, never stored).
 
 ## Contents
@@ -32,7 +35,7 @@ design reuses), [section 18.6](../guides/VAR_GUIDE.md#186-horizons-the-two-10-da
 7. [The computed contract](#7-the-computed-contract)
 8. [The P&L histogram with the normal curve](#8-the-pl-histogram-with-the-normal-curve)
 9. [The ? tooltip: what it says](#9-the--tooltip-what-it-says)
-10. [The playground: PLAY PVAR](#10-the-playground-play-pvar)
+10. [The playground's Parametric tab](#10-the-playgrounds-parametric-tab)
 11. [Commands, the command line and the screens](#11-commands-the-command-line-and-the-screens)
 12. [Where it runs, cost and precision](#12-where-it-runs-cost-and-precision)
 13. [Documentation plan](#13-documentation-plan)
@@ -56,7 +59,7 @@ gap**) says how far the scope's real tail is from a normal one with the same spr
 - **Smooth decomposition.** Euler components from covariances (section 3) are stable from day to day, where historical components
   depend on the handful of scenarios around the VaR rank.
 - **Correlations between desks** (and any children): the desk × desk matrix behind the diversification.
-- A teaching device: the tooltip and `PLAY PVAR` show the textbook formula with the scope's own numbers.
+- A teaching device: the tooltip and the playground's Parametric tab show the textbook formula with the scope's own numbers.
 
 **What it is not.** It is **not the official VaR**: limits, limit use, backtesting, official records and regulatory reports stay on
 historical VaR. Every place it appears says *cross-check, not the official VaR*. It is **not factor-level parametric VaR** (sensitivities ×
@@ -209,7 +212,7 @@ hierarchy, exactly as historical VaR reads them.
 
 | Setting | Default | Meaning |
 |---|---|---|
-| `drishti.var.parametric.enabled` | `${DRISHTI_VAR_PARAMETRIC_ENABLED:true}` | the measure: off, no answer carries a `parametric` block, the screens show no parametric column, curve or toggle, `PLAY PVAR` answers `DRS-4023` |
+| `drishti.var.parametric.enabled` | `${DRISHTI_VAR_PARAMETRIC_ENABLED:true}` | the measure: off, no answer carries a `parametric` block, the screens show no parametric column, curve or toggle, the playground's Parametric tab answers `DRS-4023` |
 | `drishti.var.parametric.weighting` | `equal` | `equal` or `ewma` (section 2.1); anything else refused at start |
 | `drishti.var.parametric.lambda` | `0.94` | EWMA's decay, refused outside (0.5, 1); read only with `ewma` |
 | `drishti.var.parametric.confidences` | blank | VaR confidences offered; blank: `drishti.var.confidences` |
@@ -237,7 +240,7 @@ on any of these requests leaves the block out (a lean client); `matrix=true` on 
 | `GET /scope/contributions` | per row `pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pMarginalPer1m`, `pPct`, `rho`, `sigma`, `mu`; totals `pSumComponent`, `pSumStandalone`, `pDiversification`; with `matrix=true`: `matrix {keys, labels, correlation[k][k], covariance[k][k], truncated, sigmaCheck, engine}`; Arrow: the same as columns |
 | `POST /captures`, `GET /captures/{id}` | the capture keeps its `parametric` block (a capture's figures as computed); `/compare` shows both |
 | `GET /status` | `parametric {enabled, weighting, lambda, confidences, esConfidences, horizonRule, curvePoints}` |
-| `GET /var/playground…` | `PLAY PVAR`'s data (section 10): `measure=parametric` on the existing playground endpoints, not new ones |
+| `GET /var/playground…` | the Parametric tab's data (section 10): `measure=parametric` on the existing playground endpoints, not new ones |
 
 The **`parametric` block** of a headline:
 
@@ -299,7 +302,7 @@ rule): the chart library draws a supplied polyline, so points are sent rather th
 |---|---|
 | `mu`, `sigma`, `n`, `var`, `es`, `z`, `zSigma`, `gap`, `gapPct` | as the headline's block |
 | `curve {x: number[P], y: number[P]}` | P = `curve-points` (121) points evenly from `edges[0]` to `edges[bins]`; `y = n × binWidth × φ((x − μ)/σ)/σ`: the expected days per bin, so the curve sits on the bars' scale |
-| `expected: number[bins]` | days the normal expects in each bin, `n·(Φ((b − μ)/σ) − Φ((a − μ)/σ))` for bin [a, b) (option B's tail table) |
+| `expected: number[bins]` | days the normal expects in each bin, `n·(Φ((b − μ)/σ) − Φ((a − μ)/σ))` for bin [a, b) (sent with the curve; option B's tail table was not built) |
 | `markers {historical, parametric}` | the x of each VaR line: `−var` (historical) and `μ − z·σ` (parametric) |
 | `binWidth` | `edges[1] − edges[0]` |
 
@@ -341,18 +344,20 @@ answer** (`parametric` block, `describe` lines): the console places text, never 
 | Component (on a component) | *z·cov(Pᵢ, P)/σ_P − μᵢ = z·ρ·σᵢ − μᵢ; cov = 1.3639·10¹⁵ USD², σ_P = 54,240,760, ρ = 0.8254 → 58,341,667 (46.2% of the bank); the five components add up to the bank's 126,394,284 exactly* | the row's `rho`, `sigma`, `mu`, `pComponentVar` |
 | Historical beside it | *Historical VaR (6th worst of 509): 84,051,284* | headline `var`, `k` |
 | The gap | *Fat-tail gap = historical − parametric = +13,335,812 (+18.9%). Positive: the scope's real tail is heavier than a normal with the same σ (skew −1.00, excess kurtosis +5.78), so the normal understates the loss. Negative: the worst days were milder than a normal predicts.* | `gap`, `gapPct`, `skew`, `excessKurtosis` |
-| Foot | *Computed in the server (VaR engine), never in the browser · provenance: the vectors' batch · Open PLAY PVAR · Guide* | provenance |
+| Foot | *Computed in the server (VaR engine), never in the browser · provenance: the vectors' batch · Worked in the playground (its Parametric tab) · Guide* | provenance |
 
 The mock-ups show it in full: on a tree cell (A), on the bank's tile (B), on a component (C) and as the phone's sheet.
 
-## 10. The playground: PLAY PVAR
+## 10. The playground's Parametric tab
 
-The rule (every metric ships with its playground, same release) applies. `PLAY PVAR` is the **VaR Playground with the parametric
-measure**, on the same frame, template loader, `SeriesLayout`, check cells and LibreOffice test (VAR_PLAYGROUND.md section 13); one more
-word in `play_routes.py`'s `METRICS`, no second playground machinery.
+The rule (every metric ships with its playground, same release) applies. The VaR Playground has a **Parametric tab** beside its grid
+(*VaR*): the same page and link with `measure=parametric`, on the same frame, template loader, `SeriesLayout`, check cells and
+LibreOffice test (VAR_PLAYGROUND.md section 13); no second playground machinery and no command of its own. The explorer's **?** popovers
+and its *Worked in the playground* link open it on the scope shown.
 
-**The screen.** The VaR Playground's grid (positions across, scenarios down, Portfolio at the right) with three more columns at the
-right (`w`, `v − μ`, `(v − μ)²`) and the explanation panel's steps: the vector → μ → σ → z → VaR, ES → the selected position's
+**The tab.** In place of the grid: the figures (n, weighting, μ, σ, z, the ES factor, parametric VaR = z·σ − μ, parametric ES, Σ
+components), the steps, each position's μᵢ, σᵢ, cov(Pᵢ, P), ρᵢ and components, and each scenario's `w`, `v − μ` and `(v − μ)²`: the
+explanation's steps: the vector → μ → σ → z → VaR, ES → the selected position's
 covariance → its component → the check that the components add up.
 
 **The workbook** (the VaR Playground's tabs; Main, Config, Data, FX, PnL, Explain and Provenance unchanged, plus one tab):
@@ -392,14 +397,14 @@ scope** column (more than 500 positions) takes part as one more position, so the
 ## 11. Commands, the command line and the screens
 
 **Words** (Rachana's VaR words, extended, no new dialect): `VAR BANK PARAM` (the explorer with *Historical + parametric*),
-`VAR DESK RATES PARAM 10D SUM 95`, `VAR BANK PARAM BY DESK` (contributions with the components and the matrix), `PLAY PVAR BANK`;
+`VAR DESK RATES PARAM 10D SUM 95`, `VAR BANK PARAM BY DESK` (contributions with the components and the matrix);
 VRES: `VRES BANK~parametric=true`. The type-ahead offers `PARAM` once a scope is typed.
 
-**The explorer.** A **Model** picker in the VaR page's header beside Horizon and Confidence: *Historical* or *Historical + parametric*
-(the default while enabled), kept in the link (`&pm=1`) and in `varView`. With it on: the tree's *Parametric* and *Gap* columns, the
-three tiles (parametric VaR, parametric ES, fat-tail gap), the curve on the P&L path, the parametric columns in Contributions with
-**Correlation** (the heat map) beside *By position* and *By trade*, and the provenance's *Parametric* line. Option B adds a *Parametric*
-tab (section 14).
+**The explorer.** A **Parametric** toggle on the VaR explorer (the link's `&pm=1`; the command `PVAR <scope> [lens]` is an alias that
+opens the explorer with it on, as `VAR <scope> [lens]` would read the scope and lens). With it on: the three tiles (parametric VaR,
+parametric ES, fat-tail gap), the tree's *Parametric* and *Gap* columns, the normal curve on the P&L path's histogram (key **N**), a
+**?** on every figure, and *Worked in the playground* (the playground's Parametric tab). Off: the explorer is historical only and its
+answers are asked without the block (`parametric=false`). No views, tabs, screens or menu items of its own.
 
 **Command line:** `drishti.py var show BANK` prints the parametric line under the historical one while enabled (`--no-parametric` to
 leave it out); `drishti.py var parts BANK --matrix` prints the components and the correlation matrix; `--json` carries the
@@ -429,13 +434,13 @@ The two-docs rule (one complete guide incl. the contract + one tutorial; two hel
 | Document | What changes |
 |---|---|
 | VAR_GUIDE.md | **18.15 Parametric VaR and ES (a cross-check)**: sections 2–3 of this design as built; **3.12 Parametric beside historical** (the screen, the curve, the tooltip, pictures); 11 (the fields), 12 (the settings), 10 (CLI), Part II (VRES 1.3 fields) |
-| docs/tutorials/43-parametric-var-beside-historical.md | **new tutorial**: the bank's gap, a desk's tooltip read line by line, the curve and the toggle, the components adding up, the correlation heat map, `PLAY PVAR` and its workbook's checks; every step UI + CLI + YAML, with pictures |
+| docs/tutorials/43-parametric-var-beside-historical.md | **new tutorial**: the bank's gap, a desk's tooltip read line by line, the curve and the toggle, the toggle, the playground's Parametric tab with the components adding up, and its workbook's checks; every step UI + CLI + YAML, with pictures |
 | Help | two entries: *Parametric VaR* (the guide section) and *Tutorial: parametric VaR beside historical* |
 | API_GUIDE.md, CLI_GUIDE.md | the `parametric` block, `parametric=false`, `matrix=true`, `measure=parametric`; `--no-parametric`, `--matrix`, `--measure` |
 | CONFIGURATION.md (generated, checked) | the `drishti.var.parametric.*` settings |
 | var-result.contract.yaml → docs/contracts/packs/market-risk.md | version 1.3 fields (generated) |
 | VAR_PLAYGROUND.md | the playground family row *Parametric VaR*, the Parametric tab and formulas |
-| USER_GUIDE.md | the explorer's Model picker; a line under `parametric_var` that the server's figure follows the lens (section 2.4) |
+| USER_GUIDE.md | the explorer's Parametric toggle; a line under `parametric_var` that the server's figure follows the lens (section 2.4) |
 | Knowledge, CHANGELOG, RELEASE_NOTES, the VaR deck | an entry; the change; a slide *historical and parametric side by side* |
 | this document | *as built* at the end of the release |
 
@@ -450,17 +455,18 @@ Mock-ups (self-contained HTML, dark by default, `#light` for the light theme; sy
 | [mockups/parametric-var/C.html](../lenses/mockups/parametric-var/C.html) | **C: Euler components and correlations.** The contribution table with z·cov/σ, −μ, component, share, marginal per +1%, standalone and historical component; the build-up bar; the desk correlation heat map; the curve; the **?** open on the Rates component |
 | [mockups/parametric-var/phone.html](../lenses/mockups/parametric-var/phone.html) | **Phone (390 px):** tiles, the chart with the curve, the desks list, the tooltip as a bottom sheet |
 
-A, B and C are not exclusive: the recommendation is **A as the default view, C's columns and heat map as the Contributions tab's
-parametric mode, B later if asked** (open question 1).
+**Decided (product review, 2026-11-04):** A's toggle, tiles, tree columns, curve and **?** on the existing explorer, with the
+components and the worked figures in the VaR Playground's Parametric tab; B (a dedicated tab) and C (components and the heat map on the
+explorer) are not built. The mock-ups stay as the record of the options.
 
 **Build checklist** (2.9.11.c, after the product owner picks):
 
 1. `ParametricVar` in `drishti-compute` (μ, σ, z, VaR, ES, shape, curve, expected, components, incremental, matrix through `LinearAlgebra`); unit tests (section 15).
 2. `VarProperties.parametric` and `config/engines/var.yaml`; status.
 3. The `parametric` block on `/scope`, `/tree`, `/scope/path`, `/scope/contributions` (+ `matrix=true`, Arrow columns), captures, VRES 1.3; `describe` lines.
-4. The console: Model picker, tree columns, tiles, the curve and markers and toggle on the P&L path's chart, the **?** popover and phone sheet, the Contributions parametric columns and the heat map.
-5. `PLAY PVAR`: the Parametric tab, Main's cells, the explanation steps, `NORM.S.INV`/`PI` in the common set, `measure=parametric`.
-6. Words (`PARAM`, `PLAY PVAR`), CLI flags.
+4. The console: the Parametric toggle, tree columns, tiles, the curve and markers and the N toggle on the P&L path's chart, the **?** popover and phone sheet.
+5. The playground's Parametric tab: the workbook's Parametric tab, Main's cells, the explanation steps, `NORM.S.INV`/`PI` in the common set, `measure=parametric`.
+6. Words (`PARAM`; `PVAR` an alias of the explorer with the toggle on), CLI flags.
 7. Tests (section 15) green in the pre-merge gate; the documents of section 13; screenshots from the demo.
 
 ## 15. Test plan
@@ -475,13 +481,13 @@ parametric mode, B later if asked** (open question 1).
 | `ParametricCurveTest` | the curve's area: Σ over bins of `expected` = n·(Φ(max) − Φ(min)); `curve.y` at x = μ equals n·bw/(σ√(2π)); the markers' x |
 | `VarParametricApiTest` | the blocks on every endpoint; `parametric=false`; switched off: absent, and `403` when asked; entitlements (aggregate-only viewer); historical fields byte-identical with and without the block |
 | `PvarPlaygroundWorkbookTest` (drill, LibreOffice) | the workbook written without cached values, recalculated headless: `PMu`, `PSigma`, `PVaR`, `PES` and every component equal to the engine **to the cent**, Σ components = PVaR, at 1, 50 and 500 positions with Rest of scope, equal and EWMA, USD and EUR; the formula scan |
-| Browser (Playwright, the pre-merge gate) | the Model picker, the tree columns, the **?** shows the server's numbers (no number formed in the page), the curve toggles and is remembered, the phone sheet at 390 px without sideways scroll |
+| Browser (Playwright, the pre-merge gate) | the Parametric toggle on and off, the tree columns, the **?** shows the server's numbers (no number formed in the page), the curve toggles and is remembered, the playground's Parametric tab, the phone sheet at 390 px without sideways scroll |
 | Demo figures | `VarTestDataPrecisionTest` gains the bank's parametric VaR, ES, μ, σ and gap on 2026-09-30 for the guide's worked table |
 
 ## 16. Open questions, each with a recommendation
 
-1. **Which screen option?** *Recommendation:* A as the default (the least new surface: the explorer the desks already use), with C's
-   component columns and heat map as the Contributions tab's parametric mode; B only if risk managers ask for a separate tab.
+1. **Which screen option?** *Decided (product review, 2026-11-04):* A, cut down: a toggle and columns on the existing explorer, the
+   curve and the **?**; the components and the worked figures in the playground's Parametric tab; B and C not built.
 2. **Horizon rule.** The lens (μ and σ × √10 under `sqrt10`; the windows under `sum`) or the textbook square-root-of-time (μ·10, σ·√10)?
    *Recommendation:* the lens, so historical and parametric always read the same vector and the gap compares like with like; offer
    `square-root-of-time` as a setting and say which in the tooltip.
@@ -500,7 +506,7 @@ parametric mode, B later if asked** (open question 1).
    *Recommendation:* the next release; it is the strongest evidence of the fat-tail gap and reuses `Backtest.of` unchanged.
 9. **Factor-level parametric VaR** (sensitivities × factor covariance, usable pre-deal). *Recommendation:* out of scope as decided;
    design it with the parked delta-gamma-vega inputs (VAR_GUIDE 18.12), which supply the same sensitivities and factor moves.
-10. **A `PVAR` mnemonic** (opening option B's tab directly)? *Recommendation:* no new mnemonic with option A: `VAR … PARAM` is a word of
-    the VaR command (one grammar); add `PVAR` only if B is chosen.
+10. **A `PVAR` mnemonic?** *Decided (product review, 2026-11-04):* `PVAR` is only an alias that opens the explorer with the Parametric
+    toggle on; no screen or menu item of its own, and no `PLAY PVAR`.
 11. **Cornish–Fisher (skew- and kurtosis-adjusted) VaR** as a third figure? *Recommendation:* not now; the tooltip already shows skew and
     kurtosis, and a third number beside two would blur the cross-check.

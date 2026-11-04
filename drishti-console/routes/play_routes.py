@@ -41,7 +41,7 @@ router = APIRouter(include_in_schema=False)
 WORD = "PLAY"
 #: the metric after PLAY: each metric's playground adds its word here (VAR_PLAYGROUND.md section 13); FRTB: routes/frtb_routes.py; SIMM:
 #: routes/simm_routes.py
-METRICS = ("VAR", "PVAR", "FRTB", "SIMM")
+METRICS = ("VAR", "FRTB", "SIMM")
 #: the link's lens words and the engine's names for them
 LENS = {"h": "horizon", "m": "method", "q": "confidence", "esq": "esConfidence", "set": "set"}
 
@@ -62,9 +62,6 @@ def play_command(words: list[str], user: str) -> str | None:
     if words[1].upper() == "SIMM":                            # PLAY SIMM <netting set>, PLAY SIMM RUN <id>: the SIMM Playground
         from routes.simm_routes import play_simm_command
         return play_simm_command(rest)
-    if words[1].upper() == "PVAR":                            # PLAY PVAR <scope|ids>: the VaR Playground with the parametric measure
-        where = play_command([words[0], "VAR"] + (rest or ["BANK"]), user) or "/play"
-        return where + ("&" if "?" in where else "?") + "measure=parametric"
     if not rest:
         return "/play"
     where = var_routes.var_command(["VAR"] + rest, user)
@@ -101,10 +98,14 @@ async def page(request: Request, scope: str = "", ids: str = "", ccy: str = "", 
     """The playground's shell; the grid, the explanation and the export load in place (web/static/js/var-playground.js)."""
     lens = var_routes.lens_of(request, h, m, q, esq, set)
     target = scope.strip() or ids.strip()
+    # the page's tabs (PARAMETRIC_VAR.md section 10): the grid (VaR), and Parametric (measure=parametric): the same link otherwise
+    plain = request.url.remove_query_params("measure")
+    tabs = {"var": plain.path + ("?" + plain.query if plain.query else ""),
+            "parametric": plain.path + "?" + plain.include_query_params(measure="parametric").query}
     return render(request, "terminal/play.html", scope=scope.strip(), ids=ids.strip(), target=target, screen="play",
                   ccy=ccy.upper() if var_routes.CCY.match(ccy or "") else "", lens=lens,
-                  measure="parametric" if measure == "parametric" else "",
-                  command_text=f"{WORD} {'PVAR' if measure == 'parametric' else 'VAR'} {target}".strip())
+                  measure="parametric" if measure == "parametric" else "", tabs=tabs,
+                  command_text=f"{WORD} VAR {target}".strip())
 
 
 def _params(request: Request) -> dict:

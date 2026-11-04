@@ -24,7 +24,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * Parametric VaR, a cross-check beside historical (docs/architecture/PARAMETRIC_VAR.md section 5; VAR_GUIDE.md section 18.15).
  *
- * @param enabled the measure (off: no parametric block, no PVAR, no PLAY PVAR, no pvar(); asked: refused in words)
+ * @param enabled the measure (off: no parametric block, no PVAR alias, no playground Parametric tab, no pvar(); asked: refused in words)
  * @param weighting {@code equal} or {@code ewma}; anything else refuses the start
  * @param lambda EWMA's decay, in (0.5, 1)
  * @param horizonRule {@code lens} (the lens's own vector) or {@code square-root-of-time} (μ·h, σ·√h from the 1-day vector)

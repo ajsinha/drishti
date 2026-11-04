@@ -3128,7 +3128,7 @@ are unchanged ([VAR_GUIDE.md section 18.15](VAR_GUIDE.md#1815-parametric-var-and
 | `GET /scope/path` | the headline's figures plus `curve {x, y}` (`curve-points` points; y in expected days per bin), `expected` (the normal's days per histogram bin), `markers {historical, parametric}`, `binWidth`, `curveDescribe`, `showCurve` |
 | `GET /scope/contributions` | per row `pComponentVar`, `pComponentEs`, `pStandaloneVar`, `pIncrementalVar`, `pPct`, `pMarginalPer1m`, `pMarginalPer1pct`, `rho`, `sigma`, `mu`, `zCovOverSigma`; totals `pSumComponent`, `pSumStandalone`, `pDiversification`, `addsUp`; with `matrix=true` also `matrix {keys, labels, correlation, covariance, truncated, sigmaCheck, engine}` (at most `matrix-max-parts` parts, the largest by component; `engine` `openblas` or `java`). `matrix=true` with `parametric=false` is `400` |
 | `GET /status` | `parametric {enabled, weighting, lambda, horizonRule, curvePoints, matrixMaxParts, showCurve, official}` |
-| `GET /playground`, `/playground.xlsx` | `measure=parametric` (PLAY PVAR): the Parametric panel's figures and `steps`; the workbook gains its Parametric tab |
+| `GET /playground`, `/playground.xlsx` | `measure=parametric` (the playground's Parametric tab): its figures and `steps`; the workbook gains its Parametric tab |
 
 For example `GET /api/v1/var/scope?scope=DESK:DESK-RATES&asOf=2026-09-30` answers historical `var` 74,633,680 and `parametric.var`
 58,409,229 (`mu` −732,297, `sigma` 24,792,909, `gap` 16,224,451, `beyond` 12 of an expected 5.09) on the demo data; the computed kind

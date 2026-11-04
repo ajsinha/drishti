@@ -69,10 +69,8 @@ menus:
         opens: [role:market-risk, pack:market-risk]
         items:
           - { id: var-explorer, href: /var, cmd: VAR BANK, icon: shield-check, label: VaR explorer, desc: "The bank's VaR, then any desk, book or set of trades", match: /var, requires: [word:VAR] }
-          - { id: var-parametric, cmd: PVAR BANK, icon: bar-chart-line, label: Parametric VaR, desc: "Historical and parametric side by side: the fat-tail gap, the normal curve, components that add up", requires: [word:VAR, word:PVAR] }
           - { id: var-explain, cmd: VAR BANK EXPLAIN, icon: arrow-left-right, label: Why it moved, desc: "Day on day: the trades, factors and scenarios that moved it", requires: [word:VAR] }
           - { id: play-var, cmd: PLAY VAR, icon: calculator, label: VaR Playground, desc: "Every figure worked in a grid and a workbook of formulas", match: /play, requires: [word:VAR, word:PLAY, route:/play] }
-          - { id: play-pvar, cmd: PLAY PVAR, icon: calculator, label: Parametric VaR Playground, desc: "μ, σ, z·σ − μ and the Euler components worked in a grid and a workbook of formulas", requires: [word:VAR, word:PLAY, route:/play] }
           - { id: smat, cmd: SMAT, href: /smat, icon: grid-3x3, label: Scenario matrix, desc: "Each scenario's P&L of a trade, position or scope", match: /smat, requires: [word:SMAT] }
           - { id: var-reports, href: /var/reports, icon: bank, label: Regulatory reports, desc: "Canada and the US, to the cell, signed runs", match: /var/reports, requires: [word:VAR, route:/var/reports] }
           - { id: backtesting, cmd: VAR BANK BACKTEST, icon: activity, label: Backtesting, desc: "VaR against the P&L, with the traffic light", match: /var/backtesting, requires: [word:VAR, route:/var/backtesting] }
