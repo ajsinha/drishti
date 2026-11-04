@@ -5073,7 +5073,7 @@ Delta stays the default lake format everywhere; Iceberg is chosen only by config
   call fails with `DRS-5003`, a banner ("Server not reachable - retrying...", Retry now) polls the console with a 2 s to 30 s backoff and, when
   the server is back, says "Connected again" and reloads the page (never one with unsaved edits: it offers Reload). The sign-in page says so too.
 - **One large file of deep trading documents, from Build -> New pack to a deployed pack with its data, all in the browser**
-  ([Schema to pack, A deep trading JSON](docs/guides/DATA_GUIDE.md#appendix-a-deep-trading-json)). *Reading:* a JSON array of any size
+  ([Schema to pack, A deep trading JSON](docs/guides/SCHEMA_TO_PACK_GUIDE.md#appendix-a-deep-trading-json)). *Reading:* a JSON array of any size
   is streamed like JSON Lines (one document in memory at a time); **every row is counted** for the columns that could tell record types apart
   (rare types are found, with their true row count), up to `builder.pack_profile_rows_per_type` (10,000) rows of each type are **profiled**
   (how often each field has a value, digits written as text, every array's size at every depth) and `builder.pack_design_samples_per_type` (50)
