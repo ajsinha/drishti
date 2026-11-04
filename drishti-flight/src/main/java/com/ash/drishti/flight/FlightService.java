@@ -63,7 +63,7 @@ public final class FlightService implements AutoCloseable {
     }
 
     /** Opens the port. TLS is always on: without a certificate and its key the service does not start, and says why. */
-    public synchronized void start() throws IOException {
+    public synchronized void start() throws IOException {   // pinning-ok: once at the engine's start (and Admin), never on a request's thread
         if (server != null) {
             return;
         }
