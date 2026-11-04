@@ -26,6 +26,50 @@ final class Canary {
 
     private Canary() {}
 
+    /**
+     * The start-up and scheduled self-test: {@link #compare} plus products of awkward shapes (1 x 1, tall and thin, wide, sizes that are
+     * not multiples of 8, both transposes, medium sizes), each against Java. Null when all agree; else the first difference.
+     */
+    static String selfTest(LinearAlgebra n, LinearAlgebra j) {
+        String r = compare(n, j);
+        int[][] shapes = {{1, 1, 1}, {1, 7, 1}, {7, 1, 3}, {1000, 2, 3}, {3, 2, 1000}, {2, 900, 5}, {9, 13, 17}, {31, 33, 7}, {130, 97, 65},
+            {257, 64, 129}};
+        int seed = 10;
+        for (int[] sh : shapes) {
+            if (r != null) {
+                return r;
+            }
+            int m = sh[0];
+            int c = sh[1];
+            int k = sh[2];
+            double[] a = fill(m * k, seed++);
+            double[] b = fill(k * c, seed++);
+            String what = m + " x " + k + " x " + c;
+            r = check("dgemm " + what, run(n, a, b, m, k, c, false), run(j, a, b, m, k, c, false));
+            r = r != null ? r : check("dgemm' " + what, run(n, a, b, m, k, c, true), run(j, a, b, m, k, c, true));
+            if (r == null) {
+                double[] x = fill(k, seed++);
+                double[] yn = fill(m, seed);
+                double[] yj = yn.clone();
+                n.dgemv(false, m, k, 0.75, a, 0, m, x, 0, 0.5, yn, 0);
+                j.dgemv(false, m, k, 0.75, a, 0, m, x, 0, 0.5, yj, 0);
+                r = check("dgemv " + what, yn, yj);
+                double[] x2 = fill(m, seed++);
+                double[] zn = new double[k];
+                double[] zj = new double[k];
+                n.dgemv(true, m, k, 1.0, a, 0, m, x2, 0, 0.0, zn, 0);
+                j.dgemv(true, m, k, 1.0, a, 0, m, x2, 0, 0.0, zj, 0);
+                r = r != null ? r : check("dgemv' " + what, zn, zj);
+                double[] pn = x.clone();
+                double[] pj = x.clone();
+                n.daxpy(k, -1.25, b, 0, pn, 0);
+                j.daxpy(k, -1.25, b, 0, pj, 0);
+                r = r != null ? r : check("daxpy " + k, pn, pj);
+            }
+        }
+        return r;
+    }
+
     /** Null when {@code n} agrees with {@code j}; else what differed. */
     static String compare(LinearAlgebra n, LinearAlgebra j) {
         int m = 67;
@@ -63,7 +107,7 @@ final class Canary {
     }
 
     /** Fixed, varied numbers of both signs and several magnitudes (no randomness: the same check everywhere). */
-    private static double[] fill(int n, int seed) {
+    static double[] fill(int n, int seed) {
         double[] v = new double[n];
         long s = 0x9E3779B97F4A7C15L * seed;
         for (int i = 0; i < n; i++) {

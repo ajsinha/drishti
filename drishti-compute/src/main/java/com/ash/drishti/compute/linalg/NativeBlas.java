@@ -32,7 +32,8 @@ import org.bytedeco.openblas.global.openblas_nolapack;
  * <p>Loaded once per process. JavaCPP unpacks the library into its cache, which Drishti puts under the data folder
  * ({@code drishti.native.cache-dir}, default {@code <data>/native-cache}; the property {@code org.bytedeco.javacpp.cachedir}), never a
  * hidden folder in the user's home. Once loaded, OpenBLAS runs <b>one thread per call</b> ({@code openblas_set_num_threads(1)}): Drishti's
- * own pools parallelise. Before it is used a small product must agree with {@link JavaBlas} to a relative 1e-12 (the canary). Other
+ * own pools parallelise. Before it is used {@link GuardedBlas#selfTest()} must agree with {@link JavaBlas} to a relative 1e-12, and it is only
+ * ever called through {@link GuardedBlas}. Other
  * platforms (macOS, ARM) have no bundled build here: {@code auto} serves Java there.
  *
  * <p>JavaCPP passes {@code double[]} without offsets, so an operand at an offset other than 0 is copied (Drishti's callers pass 0).
@@ -164,6 +165,28 @@ public final class NativeBlas implements LinearAlgebra {
      * @throws BlasUnavailableException with the reason, when it cannot be used
      */
     static synchronized NativeBlas load(Path cacheDir) {
+        return load(cacheDir, 0);
+    }
+
+    /**
+     * {@link #load(Path)}, bounding JavaCPP's own off-heap allocations ({@code org.bytedeco.javacpp.maxBytes}) to {@code maxNativeBytes}
+     * (0: JavaCPP's default) and turning off its resident-memory check ({@code maxPhysicalBytes}: the server's heap and caches are counted
+     * there and would refuse allocations for the wrong reason). Drishti hands JavaCPP Java arrays, bounded per call by
+     * {@link GuardedBlas}.
+     */
+    static synchronized NativeBlas load(Path cacheDir, long maxNativeBytes) {
+        if (loaded == null && failed == null) {
+            if (maxNativeBytes > 0 && System.getProperty("org.bytedeco.javacpp.maxBytes") == null) {
+                System.setProperty("org.bytedeco.javacpp.maxBytes", Long.toString(maxNativeBytes));
+            }
+            if (System.getProperty("org.bytedeco.javacpp.maxPhysicalBytes") == null) {
+                System.setProperty("org.bytedeco.javacpp.maxPhysicalBytes", "0");
+            }
+        }
+        return loadOnce(cacheDir);
+    }
+
+    private static synchronized NativeBlas loadOnce(Path cacheDir) {
         if (loaded != null) {
             return loaded;
         }
@@ -181,11 +204,7 @@ public final class NativeBlas implements LinearAlgebra {
             }
             String lib = Loader.load(openblas_nolapack.class);
             openblas_nolapack.blas_set_num_threads(1);                    // openblas_set_num_threads(1): Drishti's pools own parallelism
-            NativeBlas nb = new NativeBlas(lib, bundledVersion());
-            String canary = Canary.compare(nb, JavaBlas.INSTANCE);
-            if (canary != null) {
-                throw new BlasUnavailableException("its check against Java failed: " + canary, null);
-            }
+            NativeBlas nb = new NativeBlas(lib, bundledVersion());       // checked against Java by Blas (GuardedBlas.selfTest) before use
             loaded = nb;
             return nb;
         } catch (BlasUnavailableException e) {

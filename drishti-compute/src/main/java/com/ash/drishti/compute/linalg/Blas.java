@@ -16,10 +16,16 @@
 package com.ash.drishti.compute.linalg;
 
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * The process's one {@link LinearAlgebra}, chosen once at start from {@code drishti.native.blas.mode} (HIGH_PERFORMANCE_NATIVE.md
@@ -132,9 +138,48 @@ public final class Blas {
         }
     }
 
-    record Binding(LinearAlgebra la, Status status) {}
+    /**
+     * The settings of a binding.
+     *
+     * @param mode {@code drishti.native.blas.mode}
+     * @param cacheDir where the bundled library is unpacked ({@code drishti.native.cache-dir}, under the data folder)
+     * @param maxCallBytes the most operand bytes one native call may take, larger calls run on Java ({@code drishti.native.blas.max-call-mb})
+     * @param maxNativeBytes JavaCPP's off-heap bound ({@code drishti.native.max-bytes-mb}; 0: its default)
+     */
+    public record Settings(Mode mode, Path cacheDir, long maxCallBytes, long maxNativeBytes) {
+
+        /** From the system properties and the environment, with the defaults (a tool, a test, anything before the server binds). */
+        public static Settings fromSystem() {
+            return new Settings(Mode.of(setting("drishti.native.blas.mode", "DRISHTI_NATIVE_BLAS_MODE")), defaultCacheDir(),
+                    mb(setting("drishti.native.blas.max-call-mb", "DRISHTI_NATIVE_BLAS_MAX_CALL_MB"), 256),
+                    mb(setting("drishti.native.max-bytes-mb", "DRISHTI_NATIVE_MAX_BYTES_MB"), 1024));
+        }
+
+        private static long mb(String v, long dflt) {
+            try {
+                return (v == null || v.isBlank() ? dflt : Long.parseLong(v.trim())) << 20;
+            } catch (NumberFormatException e) {
+                return dflt << 20;
+            }
+        }
+    }
+
+    /** What was bound: the implementation, the status at binding, and the guard (null on Java). */
+    record Binding(LinearAlgebra la, Status status, GuardedBlas guard) {
+
+        Binding(LinearAlgebra la, Status status) {
+            this(la, status, null);
+        }
+
+        /** The status now: a tripped breaker turns a native binding into Java with the reason. */
+        Status now() {
+            String t = guard == null ? null : guard.tripped();
+            return t == null ? status : new Status(status.mode(), "java", null, status.version(), 0, "OpenBLAS switched off for this run: " + t);
+        }
+    }
 
     private static volatile Binding bound;
+    private static ScheduledExecutorService canaries;
 
     private Blas() {}
 
@@ -144,36 +189,63 @@ public final class Blas {
         return b != null ? b.la() : bindDefault().la();
     }
 
-    /** What is bound (binding from the system properties if nothing bound yet). */
+    /** What is bound now (binding from the system properties if nothing bound yet); a tripped breaker shows here at once. */
     public static Status status() {
         Binding b = bound;
-        return b != null ? b.status() : bindDefault().status();
+        return (b != null ? b : bindDefault()).now();
     }
 
     /**
      * Binds once for the process. A second call with the same mode returns the same status; with another it keeps the first binding (said
-     * in the returned status's reason), because a JNI library cannot be swapped and every sum must use one path.
-     *
-     * @param cacheDir where the bundled library is unpacked ({@code drishti.native.cache-dir}, under the data folder)
-     * Never throws: whatever fails, Java serves.
+     * in the returned status's reason), because a JNI library cannot be swapped and every sum must use one path. Never throws: whatever
+     * fails, Java serves (and the status says why).
      */
-    public static synchronized Status bind(Mode mode, Path cacheDir) {
+    public static synchronized Status bind(Settings settings) {
         if (bound != null) {
-            Status s = bound.status();
-            if (s.mode() == mode) {
+            Status s = bound.now();
+            if (s.mode() == settings.mode()) {
                 return s;
             }
             return new Status(s.mode(), s.implementation(), s.library(), s.version(), s.threads(),
-                    "already bound in mode " + s.mode().text() + " before " + mode.text() + " was asked; restart to change it");
+                    "already bound in mode " + s.mode().text() + " before " + settings.mode().text() + " was asked; restart to change it");
         }
-        Binding b = select(mode, cacheDir);
+        Binding b = select(settings);
         bound = b;
-        return b.status();
+        return b.now();
+    }
+
+    /**
+     * Told once, with the reason, if the native path is switched off during the run (a failed call, a divergence, a failed scheduled
+     * self-test): the server logs the banner, raises the alert and marks health DEGRADED. Nothing happens on a Java binding.
+     */
+    public static void onTrip(Consumer<String> listener) {
+        Binding b = bound;
+        if (b != null && b.guard() != null) {
+            b.guard().onTrip(listener);
+        }
+    }
+
+    /**
+     * Re-runs the self-test every {@code interval} on a daemon thread ({@code drishti.native.blas.canary-interval}; zero or negative: never).
+     * A failure trips the breaker. Once per process.
+     */
+    public static synchronized void scheduleCanary(Duration interval) {
+        Binding b = bound;
+        if (b == null || b.guard() == null || interval == null || interval.isZero() || interval.isNegative() || canaries != null) {
+            return;
+        }
+        canaries = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "drishti-blas-canary");
+            t.setDaemon(true);
+            return t;
+        });
+        long ms = interval.toMillis();
+        canaries.scheduleWithFixedDelay(() -> b.guard().selfTest(), ms, ms, TimeUnit.MILLISECONDS);
     }
 
     private static synchronized Binding bindDefault() {
         if (bound == null) {
-            bound = select(Mode.of(setting("drishti.native.blas.mode", "DRISHTI_NATIVE_BLAS_MODE")), defaultCacheDir());
+            bound = select(Settings.fromSystem());
         }
         return bound;
     }
@@ -194,7 +266,13 @@ public final class Blas {
     }
 
     /** The choice of {@link #bind}, without binding (tests ask it for each mode). */
-    static Binding select(Mode mode, Path cacheDir) {
+    static Binding select(Settings st) {
+        return select(st, () -> NativeBlas.load(st.cacheDir(), st.maxNativeBytes()));
+    }
+
+    /** {@link #select(Settings)} with the native implementation from {@code loader} (tests hand in one that fails or lies). */
+    static Binding select(Settings st, Supplier<LinearAlgebra> loader) {
+        Mode mode = st.mode();
         if (mode == Mode.JAVA) {
             return new Binding(JavaBlas.INSTANCE, new Status(mode, "java", null, null, 0, "drishti.native.blas.mode is java"));
         }
@@ -203,13 +281,30 @@ public final class Blas {
         if (platform != null) {                                           // 32-bit, ARM, macOS...: nothing bundled, nothing tried
             return new Binding(JavaBlas.INSTANCE, new Status(mode, "java", null, null, 0, platform));
         }
+        LinearAlgebra nb;
         try {
-            NativeBlas nb = NativeBlas.load(cacheDir);
-            return new Binding(nb, new Status(mode, "openblas", nb.library(), nb.version(), NativeBlas.threads(), null));
+            nb = loader.get();
         } catch (BlasUnavailableException e) {
             return new Binding(JavaBlas.INSTANCE, new Status(mode, "java", null, null, 0, e.reason()));
         } catch (RuntimeException | LinkageError e) {                    // never stops the server
             return new Binding(JavaBlas.INSTANCE, new Status(mode, "java", null, null, 0, "the bundled OpenBLAS did not load: " + e));
+        }
+        GuardedBlas g = new GuardedBlas(nb, JavaBlas.INSTANCE, st.maxCallBytes());
+        String test = g.selfTest();                                      // odd shapes, both transposes, against Java at 1e-12
+        String lib = nb instanceof NativeBlas n ? n.library() : nb.name();
+        String version = nb instanceof NativeBlas n ? n.version() : null;
+        if (test != null) {
+            return new Binding(JavaBlas.INSTANCE, new Status(mode, "java", null, version, 0, "self-test failed: " + test));
+        }
+        int threads = nb instanceof NativeBlas ? safeThreads() : 1;
+        return new Binding(g, new Status(mode, "openblas", lib, version, threads, null), g);
+    }
+
+    private static int safeThreads() {
+        try {
+            return NativeBlas.threads();
+        } catch (RuntimeException | LinkageError e) {
+            return 0;
         }
     }
 

@@ -133,7 +133,7 @@ class LinearAlgebraTest {
         try {
             System.setProperty("os.name", "Mac OS X");
             System.setProperty("os.arch", "aarch64");                      // Apple silicon: not tried, Java with the reason
-            Blas.Status s = Blas.select(Blas.Mode.AUTO, null).status();
+            Blas.Status s = Blas.select(new Blas.Settings(Blas.Mode.AUTO, null, 0, 0)).status();
             assertThat(s.implementation()).isEqualTo("java");
             assertThat(s.degraded()).isTrue();
             assertThat(s.health()).isEqualTo("DEGRADED");
@@ -143,12 +143,12 @@ class LinearAlgebraTest {
             System.setProperty("os.name", "Linux");
             System.setProperty("os.arch", "amd64");
             System.setProperty("sun.arch.data.model", "32");                // a 32-bit JVM on x86-64
-            assertThat(Blas.select(Blas.Mode.AUTO, null).status().reason()).isEqualTo(
+            assertThat(Blas.select(new Blas.Settings(Blas.Mode.AUTO, null, 0, 0)).status().reason()).isEqualTo(
                     "no bundled OpenBLAS for linux-amd64; 32-bit JVM (Drishti needs a 64-bit Java 21)");
             System.setProperty("sun.arch.data.model", "64");
             System.setProperty("os.name", "Windows 11");
             System.setProperty("os.arch", "aarch64");                      // Windows on ARM
-            assertThat(Blas.select(Blas.Mode.AUTO, null).status().reason()).contains("windows-aarch64");
+            assertThat(Blas.select(new Blas.Settings(Blas.Mode.AUTO, null, 0, 0)).status().reason()).contains("windows-aarch64");
         } finally {
             System.setProperty("os.name", os);
             System.setProperty("os.arch", arch);
@@ -156,7 +156,7 @@ class LinearAlgebraTest {
                 System.setProperty("sun.arch.data.model", model);
             }
         }
-        Blas.Status j = Blas.select(Blas.Mode.JAVA, null).status();       // chosen: no warning
+        Blas.Status j = Blas.select(new Blas.Settings(Blas.Mode.JAVA, null, 0, 0)).status();       // chosen: no warning
         assertThat(j.degraded()).isFalse();
         assertThat(j.banner()).isEmpty();
         assertThat(j.health()).isEqualTo("OK");
