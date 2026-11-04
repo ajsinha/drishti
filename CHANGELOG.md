@@ -46,6 +46,14 @@
   Python in the image) and the IDE run configurations add it to `-XX:MaxDirectMemorySize` (the later flag wins) and pass it as Arrow's own
   cap, `-Ddrishti.arrow.max-bytes`; the run configurations also carry `--add-opens=java.base/java.nio=ALL-UNNAMED` (they start from
   classes). Tested by `tools/lake/test_memory_caps.py` (OPERATIONS.md 12.1a, FLIGHT_GUIDE.md section 10, CONFIGURATION.md).
+- **Flight SQL (Q10), the second step: SQL over the BI models from JDBC and ODBC tools (FLIGHT_GUIDE.md section 12, FLIGHT_REFERENCE.md
+  section 6).** On the same port, read only: a statement, written in DSQL, becomes a `form: model` read `{"model", "sql"}` answered by the
+  server's own SQL path (`SqlService`), never a second engine, and goes through the same token, scope (`data:read` or `data:read:bi`), BI
+  power, row rules, masks, busy protection, limits, Data out and audit. The model is named by a first line `-- model: <model>` or the
+  header `model` (a JDBC URL's `model=`). Catalog calls list one catalog, a schema per model the person may read and a table per alias of
+  the model; prepared statements are read only and stateless; updates, ingestion, transactions, Substrait and parameters are refused. A
+  client that sends its token on every call (the JDBC driver) keeps one session. `DrishtiSqlProducer`, `FlightSqlCatalog`,
+  `CallHeadersMiddleware`, `ServerFlightSqlCatalog`; `FlightSqlServiceTest`.
 - New module `drishti-flight` (plain Java: `FlightService`, `DrishtiFlightProducer`, `TokenAuthenticator`, `FlightRequest`,
   `FlightBackend`, `FlightActivity`, `FlightLimits`); the server's wiring is `server.flight` (`FlightConfiguration`, `ServerFlightBackend`,
   the forms, `DataOutController`). Tests: `FlightServiceTest`, `FlightServerTest`, `ArrowIpcTest`, the console's `test_flight_client.py`.

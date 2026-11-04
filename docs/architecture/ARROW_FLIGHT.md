@@ -16,8 +16,8 @@
 # Arrow Flight: Drishti's data to any client (design questions)
 
 *Release 2.9.11.c (product owner, 2026-11-03), picked up after 2.9.11.b is released. Status: **built on branch wip/flight, not yet released** (section 5, As built): every question of section 2
-decided as recommended by the product owner (2026-11-03: "I am aligned with all of them, but good documentation is the key"); Flight SQL
-(Q10) not built yet.*
+decided as recommended by the product owner (2026-11-03: "I am aligned with all of them, but good documentation is the key"); Flight SQL (Q10)
+built as its second step: read-only DSQL over the BI models.*
 
 **Read with:** [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) (2.9.11.c and 2.9.11.d), [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (requests are
 written in Rachana), [IN_MEMORY_LAKE.md](IN_MEMORY_LAKE.md) (section 10, the console's Python), [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md).
@@ -96,4 +96,4 @@ audit, the Python client and its tests. Flight SQL is a second, medium item if i
 | Limits (Q8) | `FlightLimits` per role, Arrow memory per read and per node (`ArrowMemory`, Health's `arrow-flight`), busy protection `Work.FLIGHT` |
 | Audit (Q9, Q11) | `data.flight` per read; `FlightActivity`; Admin → Data out, mock-ups A (the page) and B (the map) as two views of one screen over `GET /api/v1/admin/data-out` |
 | Q12 | `Add-Opens: java.base/java.nio` in the server jar's manifest; the test forks pass the option |
-
+| Flight SQL (Q10) | `DrishtiSqlProducer` on the same port: each statement a `form: model` request with its SQL, answered by `SqlService` (DSQL) and read through the same producer; one catalog, the models as schemas, their aliases as tables (`ServerFlightSqlCatalog`); the model by a first-line comment or the header `model` |

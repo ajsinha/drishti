@@ -70,7 +70,8 @@ line and the Data view's `data.flight` on the kind. One part; any member may ans
 {"form": "model", "request": {"model": "risk-summary", "query": {"fields": ["DESK"], "measures": ["MTM"]}}}
 ```
 
-`query` is an MQ query ([BI_GUIDE.md](BI_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it. Needs the BI power.
+`query` is an MQ query ([BI_GUIDE.md](BI_GUIDE.md)); the request may also be the MQ text or JSON with `model` in it, or
+`{"model": …, "sql": "<a DSQL statement>"}` (what Flight SQL sends, section 6). Needs the BI power.
 Schema: the answer's columns (text utf8, integers int64, decimals float64); metadata `drishti.model`, `drishti.masked`. Scope:
 `data:read` or `data:read:bi`. Snapshot only.
 
@@ -132,5 +133,24 @@ Per read, from the person's roles (`drishti.engines.flight.limits`): rows, bytes
 
 ## 6. Flight SQL
 
-Flight SQL (read-only SQL over models, for JDBC and ODBC tools) is the second step of this release and is not served yet; the
-[JDBC](flight/JDBC.md) and [ODBC](flight/ODBC.md) pages say what will be needed.
+Read-only SQL over the BI models (DSQL, [BI_LANGUAGE_REFERENCE.md](BI_LANGUAGE_REFERENCE.md)) on the same port; how to use it:
+[FLIGHT_GUIDE.md](FLIGHT_GUIDE.md#12-flight-sql-sql-over-the-bi-models-from-jdbc-and-odbc-tools), section 12.
+
+| Flight SQL call | Answers |
+|---|---|
+| `CommandStatementQuery` (GetFlightInfo, GetSchema) | the statement as a `form: model` request `{"model": <model>, "sql": <statement>}`: its schema and one endpoint per part, the ticket a `TicketStatementQuery` whose handle is that request |
+| `TicketStatementQuery` (DoGet) | the rows, read as any Flight read (limits, Data out, audit `data.flight`, form `model`) |
+| `ActionCreatePreparedStatement` | the handle (the request itself: stateless), the result's schema, an empty parameter schema |
+| `CommandPreparedStatementQuery` (GetFlightInfo, GetSchema, DoGet) | as a statement |
+| `ActionClosePreparedStatement` | nothing to close |
+| `CommandGetCatalogs` | one row: the product's name |
+| `CommandGetDbSchemas` | `catalog_name`, `db_schema_name`: a row per BI model the person may read (its id, `trading-risk@1`); the filter is a LIKE pattern |
+| `CommandGetTables` | `catalog_name`, `db_schema_name`, `table_name`, `table_type` (`TABLE`), and with `include_schema` the `table_schema`: a row per alias of each model, its columns as the model describes them for the person (integers int64, numbers float64, the rest utf8) |
+| `CommandGetTableTypes` | `TABLE` |
+| `CommandGetSqlInfo` | the server's name and version, read only, SQL yes, Substrait no, transactions none, the identifier quote `"`, the schema term `model` |
+| updates, ingestion, Substrait, transactions, savepoints, statement parameters | refused: `UNIMPLEMENTED`, read only |
+
+**The model of a statement**: its first line `-- model: <model>` or `/* model: <model> */`, else the call's header `model` (a JDBC URL's
+`model=`); neither: `DRS-5603`. `EXPLAIN` is refused (`DRS-5603`; the BI SQL console answers it). The statement's own refusals are the
+BI SQL codes (`DRS-9150` to `DRS-9178`, [API_GUIDE.md](API_GUIDE.md#error-code-table)), carried in a `DRS-5603` or `DRS-5602` message.
+Scope: `data:read` or `data:read:bi`, and the BI power.

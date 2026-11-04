@@ -13,32 +13,59 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Arrow Flight SQL from JDBC tools (DBeaver, DataGrip, Excel through a bridge)
+# Arrow Flight SQL from JDBC tools (DBeaver, DataGrip, any JDBC program)
 
-The guide: [FLIGHT_GUIDE.md](../FLIGHT_GUIDE.md); every request: [FLIGHT_REFERENCE.md](../FLIGHT_REFERENCE.md).
-
-**Status:** Flight SQL (read-only SQL over BI models) is the second step of this release and is not served yet. This page says what
-the tool will need; its examples are filled in when the service answers Flight SQL.
+The guide: [FLIGHT_GUIDE.md](../FLIGHT_GUIDE.md) (section 12, Flight SQL); every call: [FLIGHT_REFERENCE.md](../FLIGHT_REFERENCE.md) (section 6).
+SQL here is read-only SQL over the BI models (DSQL, [BI_LANGUAGE_REFERENCE.md](../BI_LANGUAGE_REFERENCE.md)), answered by the same path
+as the BI SQL console.
 
 ## Install
 
-The Apache Arrow Flight SQL JDBC driver: one jar (`org.apache.arrow:flight-sql-jdbc-driver`, version 19.0.0 or newer), no installer, so
-it also runs where no program may be installed.
+The Apache Arrow Flight SQL JDBC driver: one jar, `org.apache.arrow:flight-sql-jdbc-driver`, version 19.0.0 or newer (the server's own
+Arrow version). No installer, so it runs on machines where no program may be installed (the Windows QA machine included). On Java 17 or
+later start the tool's JVM with `--add-opens=java.base/java.nio=ALL-UNNAMED` (DBeaver: `dbeaver.ini`, a line under `-vmargs`).
 
 ## Connect
 
 ```text
-jdbc:arrow-flight-sql://drishti-1.bank.example:18815/?useEncryption=true&token=<API token with data:read>&trustStore=bank-ca.jks&trustStorePassword=…
+jdbc:arrow-flight-sql://drishti-1.bank.example:18815/?useEncryption=true&token=<API token with data:read>&model=trading-risk@1
 ```
 
-In DBeaver: Database → New connection → *Arrow Flight SQL* (or a generic JDBC connection with the jar), the URL above.
+| Property | Means |
+|---|---|
+| `useEncryption=true` | TLS (always on at Drishti's Flight port) |
+| `token=` | a personal API token with `data:read` (or `data:read:bi`); the driver sends it on every call, the service keeps one session for it |
+| `trustStore=`, `trustStorePassword=` | the bank's CA as a Java trust store, when the JVM's own does not hold it (or `disableCertificateVerification=true` on a test machine only) |
+| `model=` | the BI model statements read, unless a statement names its own with a first line `-- model: <model>` (the driver sends this property as the header `model`) |
+
+In DBeaver: Database → New connection → **Arrow Flight SQL** (or a generic JDBC connection with the jar), the URL above. The navigator
+shows one catalog, a schema per BI model you may read, and a table per alias of the model with its columns.
 
 ## Read
 
-`SELECT DESK, SUM(MTM) FROM "risk-summary" GROUP BY DESK`: SQL over a model, read only, compiled to the same plan as an MQ query.
+```sql
+SELECT trades.DESK AS desk, MEASURE('Notional') AS notional, COUNT(*) AS n
+FROM trades
+GROUP BY trades.DESK
+```
+
+From Java:
+
+```java
+try (Connection c = DriverManager.getConnection("jdbc:arrow-flight-sql://drishti-1.bank.example:18815/?useEncryption=true&token="
+        + System.getenv("DRISHTI_TOKEN") + "&model=trading-risk@1");
+     ResultSet rs = c.createStatement().executeQuery("SELECT trades.DESK, MEASURE('Notional') FROM trades GROUP BY trades.DESK")) {
+    while (rs.next()) {
+        System.out.println(rs.getString(1) + " " + rs.getDouble(2));
+    }
+}
+```
 
 (output from the demo lake: to be filled in the heavy run)
 
+A prepared statement works the same way (read only, no parameters). Updates, DDL and transactions are refused: Flight SQL is read only here.
+
 ## Errors
 
-The driver shows the service's message, starting with the code (`DRS-5602: …`).
+The driver shows the service's message, starting with its code: `DRS-5603` (no model named, a statement DSQL refuses, with the BI SQL
+code in the words), `DRS-5602` (the token or the person may not read the model), `DRS-5604` (the rows limit of your role).
