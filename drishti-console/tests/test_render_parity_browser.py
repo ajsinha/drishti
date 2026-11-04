@@ -70,7 +70,6 @@ def normalised(r: dict) -> dict:
 async def draw(browsers, site, url, width, library):
     ph = Phases("parity-library" if library else "parity-console")
     async with browsers.page(width) as page:
-        await page.route(lambda u: not u.startswith(H.ORIGIN + "/"), lambda route: route.abort())   # nothing leaves the origin
         ph.mark("page")
         await page.goto(url)
         ph.mark("load")

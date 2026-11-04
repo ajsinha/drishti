@@ -84,9 +84,12 @@ class Browsers:
         async def go():
             from playwright.async_api import async_playwright
             self.pw = await async_playwright().start()
-            # render.test, the render harness's made-up origin, is its SiteServer on this worker's port (render_harness.SITE_PORT)
+            # render.test, the render harness's made-up origin, is its SiteServer on this worker's port (render_harness.SITE_PORT); every
+            # other name fails to resolve, so nothing leaves the machine without a request interceptor (one would put every request
+            # of every page through Python); the tests' own servers are addressed as 127.0.0.1 and localhost
             from render_harness import SITE_PORT
-            self.browser = await self.pw.chromium.launch(args=[f"--host-resolver-rules=MAP render.test 127.0.0.1:{SITE_PORT}"])
+            rules = f"MAP render.test 127.0.0.1:{SITE_PORT}, MAP * ~NOTFOUND, EXCLUDE 127.0.0.1, EXCLUDE localhost"
+            self.browser = await self.pw.chromium.launch(args=[f"--host-resolver-rules={rules}"])
             self.gate = asyncio.Semaphore(PAGES_AT_ONCE)
         self.run(go())
         return self
