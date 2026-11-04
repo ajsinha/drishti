@@ -226,6 +226,8 @@ moved:
   capacity: operations#124-admin--capacity-today-against-the-plan               # Admin -> Capacity (2.9.11): its F1 and the page's link
   engines: operations#21-compute-engines-on-or-off                             # Admin -> Engines (2.9.11 row 14): compute engines on or off per server
   compute-engines: operations#21-compute-engines-on-or-off                     # the compute engines by their name
+  native-libraries: operations#21-server-requirements-native-libraries-blas    # the native libraries (BLAS): platforms, the Java fallback and its warning (2.9.11.c)
+  blas: operations#21-server-requirements-native-libraries-blas                # BLAS by its name
   net: operations#18-drishtinet-running-several-servers-as-one                 # Admin -> Net's help link (docs/admin/OPERATIONS.md, the Drishti*net operator's guide, in the reference)
   drishti-net: operations#18-drishtinet-running-several-servers-as-one          # Drishti*net by its name
   bi-studio: bi-guide#26-bi-studio-authoring-as-one-product   # BI Studio (2.4.0)

@@ -140,6 +140,16 @@ A Delta connector is running on Hadoop's engine, which needs Hadoop's `winutils.
 engine: unset `DRISHTI_DELTA_ENGINE` (it defaults to `native`) or set it to `native`, and remove any `engine: hadoop`
 from the connector's settings. Admin → Health then shows `UP (engine: native)`. See [GETTING_STARTED.md (Windows)](GETTING_STARTED.md#drishti-on-windows).
 
+### The log says `NATIVE BLAS NOT LOADED`, Health is DEGRADED with "BLAS runs on the pure-Java path"
+
+`drishti.native.blas.mode` is `auto` and the bundled OpenBLAS is not in use; the server runs the same sums in Java (identical results,
+many-scope VaR/ES slower). The banner's *Reason* says why: `no bundled OpenBLAS for macosx-aarch64` (or another platform: only 64-bit
+Linux and Windows on x86-64 have the bundled build), `32-bit JVM` (install a 64-bit Java 21), `did not load` (the native cache
+`drishti.native.cache-dir` is not writable, or the `openblas`/`javacpp` jars are missing from the server's library folder),
+`self-test failed` or `OpenBLAS switched off for this run` (a native result disagreed with Java or a call failed: restart; if it
+returns, keep Java and report it). To run on Java on purpose and silence the warning, set `drishti.native.blas.mode: java`. See
+[OPERATIONS.md section 2.1](../admin/OPERATIONS.md#21-server-requirements-native-libraries-blas).
+
 ### "Web server failed to start. Port 18480 was already in use."
 
 - **Check:** who holds the port: `ss -ltnp | grep 18480` (or `lsof -i :18480`). Often it is an earlier Drishti

@@ -93,10 +93,10 @@ Java code fails with an exception; native code can fail by killing the process. 
 
 | Platform | Status | How native code arrives |
 |---|---|---|
-| linux-x86_64 | primary | inside dependency jars (as today); system libraries (OpenBLAS) found by name or by a configured path |
-| linux-aarch64 | supported (Graviton on AWS) | the same; every candidate below is checked for an aarch64 build before it is chosen |
-| macOS (aarch64) | developer machines | inside jars; Apple Accelerate for BLAS is part of the operating system |
-| Windows x86_64 | QA and some users | inside jars only; no dropped DLL; a system BLAS only if the product owner allows it (section 11) |
+| linux-x86_64 | primary | inside dependency jars (as today), OpenBLAS included (bundled, section 6.3) |
+| linux-aarch64 | supported (Graviton on AWS) | the same; every candidate below is checked for an aarch64 build before it is chosen; BLAS: Java (no bundled build yet) |
+| macOS (aarch64) | developer machines | inside jars; BLAS: Java (a `macosx-arm64` build of the preset can be added later) |
+| Windows x86_64 | QA and some users | inside jars only, unpacked by Java (allowed, section 11.1), OpenBLAS included |
 
 **Checksums and licences.** Every native artefact Drishti loads itself (not one unpacked by a dependency's jar) is listed in a manifest
 with its platform, version, SHA-256 and licence, checked before it is loaded; the same rules the compute environments use for jars with
@@ -364,7 +364,7 @@ is expected, to be measured.
 | **RoaringBitmap** (pure Java) | compressed bitsets | scope membership (`OrdinalSet`, bitsets of scopes and views; +87 MB of `long[]` at two dates) | memory, bandwidth | smaller sets for sparse scopes, fast unions; plain bitsets stay for dense runs | M | low | Apache-2.0 | all | `long[]` bitsets | BENCHMARK 4.6 heap histogram |
 | **FFM `MemorySegment` reads** (JDK) | memory access | `MappedMatrix`, `FileMaps`, `VarHotFile`, `ExposureHotFile` | bandwidth | no per-row copy into scratch; one mapping per matrix | S–M | low | JDK | all | the `ByteBuffer` path until removed | BENCHMARK 5.2 "whole bank from its rows"; 4.5 basket |
 | **Vector API** (JDK incubator) | SIMD | `drishti-simd` kernels (section 2.3) | compute | 2 to 4 times on compute-bound loops (exposure, the heap tier); small on bandwidth-bound sums | M | medium (incubator) | JDK | all (x86 AVX2/AVX-512, aarch64 NEON/SVE) | the scalar twin | BENCHMARK 5.3, 6 |
-| **BLAS** (OpenBLAS; MKL later) through FFM | dense linear algebra | many scopes at once (GEMM), exposure means and aggregation (GEMV), what-if batches | bandwidth (amortised) and compute | reading a date's rows once for K scopes instead of K times (section 6) | M–L | medium | OpenBLAS BSD-3-Clause; MKL Intel Simplified Software Licence (to verify for redistribution); Accelerate part of macOS | linux-x86_64, linux-aarch64, macOS; Windows only if a system BLAS is allowed | the Java kernels | a batch benchmark: K scopes, one pass against K passes |
+| **BLAS** (OpenBLAS, bundled through JavaCPP: section 6.3) | dense linear algebra | many scopes at once (GEMM), exposure means and aggregation (GEMV), what-if batches | bandwidth (amortised) and compute | reading a date's rows once for K scopes instead of K times (section 6) | M–L | medium | OpenBLAS BSD-3-Clause; MKL Intel Simplified Software Licence (to verify for redistribution); Accelerate part of macOS | linux-x86_64 and windows-x86_64 (built) | the Java kernels | a batch benchmark: K scopes, one pass against K passes |
 | **libdeflate** or **zlib-ng** | gzip | `GzipMembers`, `Archives` (the loaders' `.gz` input) | compute | 2 to 3 times decompression per thread; the loader's decompress stage is about a fifth of its CPU | M | medium (a JNI or FFM binding to keep) | libdeflate MIT; zlib-ng zlib licence | Linux, macOS; Windows only inside a jar | the JDK `Inflater` | BENCHMARK 7.2 "decompress" row |
 | **zstd** (zstd-jni) | compression | Parquet pages (`NativeCodecs`), RocksDB | compute | already native | none | low | BSD-3-Clause | all, inside the jar | the pure-Java decoder (aircompressor) if a jar is refused | BENCHMARK 5.4 |
 | **lz4** native | compression | `Lz4Pages` (`drishti.lz4.decoder: fast` exists) | compute | already chooseable | none | low | Apache-2.0 / BSD-2 | all | the safe Java decoder (default) | BENCHMARK 5.4 on LZ4 files |
@@ -412,7 +412,7 @@ Standard BLAS has no "float32 inputs, float64 accumulation" GEMM: `sgemm` accumu
 - converts a **tile** of rows (for example 4,096 positions) from float32 to float64 into a reused off-heap buffer and calls `dgemm` per
   tile, accumulating tiles in a fixed order; the conversion is cheap beside the read, and the rows are still read once for all K scopes;
 - accepts that BLAS's internal summation order differs from Java's, and bounds the difference by the parity rule below (not "to the
-  cent"); a sharded cluster stays bit-equal across members only if every member runs the same path, so `drishti.native.blas.enabled` is
+  cent"); a sharded cluster stays bit-equal across members only if every member runs the same path, so the BLAS binding is
   part of the cluster's capability digest and members with different settings refuse to combine partial sums;
 - keeps the heap tier's float64 vectors as direct `dgemm` input with no conversion.
 
@@ -439,27 +439,86 @@ checked against the rows (VAR_GUIDE section 26).
 |---|---|
 | Baseline (today's code) | unchanged and bit-exact run to run |
 | Vector API (SIMD) | **bit-exact** against its scalar twin: the twin uses the same tile and lane order, so both give identical bits; the baseline itself moves to that order once, measured and recorded |
-| BLAS | each scenario total within a **relative 1e-12** of the baseline's (twelve significant digits; on a total of 100 million, a ten-thousandth of a cent), with tiles combined by compensated summation in Java; the **selected scenario** (the k-th worst, hence VaR's date and every component VaR) **identical**, a near tie (within the tolerance) broken by the lower scenario index on both paths; ES, VaR and components within the same relative bound |
+| BLAS | each scenario total within a **relative 1e-12** of the baseline's (twelve significant digits; on a total of 100 million, a ten-thousandth of a cent), tiles folded in a fixed order; the **selected scenario** (the k-th worst, hence VaR's date and every component VaR) **identical**: built as the **near-tie rule** of `VarMath.order` (`NEAR_TIE` = 1e-12): scenario P&Ls within 1e-12 of the vector's largest absolute P&L of each other (chained) are ordered by scenario date, the older first (the lower index: the scenario set's dates ascend), on every path; ES, VaR and components within the same relative bound (`NearTieTest`: the exact order flips between the two paths, the selected scenario does not) |
 | Any breach | the start-up canary or the parity suite drops the path back to the baseline, logs it and shows it in Admin → Health → Native |
 
 The selected scenario matters more than the digits: VaR as a value moves by at most the difference of the totals, but if two scenarios
 are nearly tied and the order flips, the *date* of VaR and every position's component VaR would follow the other scenario. The tie rule
 and the identical-scenario check prevent that.
 
-### 6.3 How it is bound and shipped
+### 6.3 How it is bound and shipped (as built)
 
-- **FFM downcalls** to the CBLAS interface (`cblas_dgemm`, `cblas_dgemv`), found by `SymbolLookup.libraryLookup` from
-  `drishti.native.blas.library` (a path or a name: `libopenblas.so.0`, `libmkl_rt.so`, `/System/Library/Frameworks/Accelerate.framework/Accelerate`).
-  No binding library is shipped; the signatures are a few lines of `FunctionDescriptor`.
-- **Threads**: BLAS's own threads are set to one per call (`openblas_set_num_threads(1)`), and Drishti's sum pool
-  parallelises over tiles, so BLAS never oversubscribes the cores next to the request threads.
-- **Not on Windows QA** unless the product owner allows a system BLAS there (section 11). The Java kernel runs instead.
+- **One interface**, `com.ash.drishti.compute.linalg.LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy` on `double[]`, column-major as in
+  Fortran BLAS), with two implementations: `JavaBlas` (pure Java, the reference loop orders, so a loop written the same way gives the same
+  bits) and `NativeBlas` (OpenBLAS). Callers see only the interface; the binding is chosen once at start (`Blas`), and an ArchUnit rule
+  keeps every class but `NativeBlas` away from the binding library.
+- **Bundled, on Java 21**: JavaCPP's OpenBLAS preset (`org.bytedeco:openblas` 0.3.26-1.5.10 and `org.bytedeco:javacpp` 1.5.10, the
+  `linux-x86_64` and `windows-x86_64` builds only, never `openblas-platform`), about 44 MB of jars. No system package, no Foreign Function
+  API (that waits for a Java 25 decision). JavaCPP unpacks the library into `drishti.native.cache-dir` (default `<data>/native-cache`, set
+  as `org.bytedeco.javacpp.cachedir`), never a hidden folder in a home directory.
+- **Platforms**: the architecture is checked before anything is loaded: a 32-bit JVM, ARM (Linux, Windows or Apple silicon) and any
+  system other than Linux and Windows on x86-64 go to Java at once, the reason naming the platform (`no bundled OpenBLAS for macosx-aarch64`).
+- **Threads**: `openblas_set_num_threads(1)` once loaded; Drishti's sum pool parallelises over chunks of rows, so BLAS never
+  oversubscribes the cores beside the request threads.
+- **Modes** (`drishti.native.blas.mode`): `auto` (default: OpenBLAS where it fits, else Java with the warning of OPERATIONS.md section
+  2.1: a WARN banner, Health DEGRADED, a notice for administrators, the alert `native-blas-fallback`, the metric
+  `drishti_native_blas{path,reason}`); `java` (chosen: nothing native is loaded, nothing warns). There is no mode that refuses to start:
+  nothing about BLAS can stop the server (the product owner, 2026-11-03).
+- **Where it is used**: many VaR scopes at once (`MultiSums`, behind `VarBook.vectors`: a cube's cells, ad-hoc baskets, many portfolios).
+  The sets no aggregate helps are summed in one pass: on Java, cache-sized tiles added into every set, **the same bits** as summing each set
+  alone (`ParallelSums`' fixed order: blocks aligned to the ordinal, folded in block order); on OpenBLAS a 1,024-row tile feeding at least
+  32 sets at a density of at least a quarter is one `dgemm` (rows times the sets' 0/1 indicator). Sets the hierarchy's aggregates answer
+  keep their plan.
 
-### 6.4 Measured by
+### 6.4 Measured (2026-11-03)
 
-A batch benchmark (proposed, beside `VarTierBenchmark`): K = 1, 10, 100, 1,000 scopes over the same date, 200,000 and 1M positions,
-Java one pass per scope against the Java tiled multi-scope kernel against BLAS. **Go** if BLAS beats the Java multi-scope kernel by 1.5
-times or more at K ≥ 100; otherwise the Java multi-scope kernel alone ships (it already captures the bandwidth gain).
+`ManyScopeBenchmark` (drishti-benchmarks; [BENCHMARK.md section 17](../admin/BENCHMARK.md#17-many-var-scopes-at-once-blas)): float32
+hot-file rows, memory-mapped, 509 scenarios, 8 threads, best of 2. At **1M positions**:
+
+| Shape | K sets | One set at a time | MultiSums, Java | MultiSums, OpenBLAS |
+|---|---|---|---|---|
+| cube cells (each row in one cell) | 100 | 291 ms | 125 ms (2.3x) | 121 ms (2.4x) |
+| overlapping portfolios (each row in half the sets) | 100 | 3,210 ms | 2,645 ms (1.2x) | **1,028 ms (3.1x)** |
+| desks (contiguous) | 100 | 110 ms | 33 ms (3.3x) | 35 ms (3.2x) |
+| cube cells | 1,000 | 325 ms | 313 ms | 324 ms |
+
+Parity: the Java path equals one set at a time **to the bit** (checked in the benchmark and in `MultiSumsTest`, `ManyScopeVectorsTest`
+on heap, mapped float32 and grouped rows); OpenBLAS differs by at most 4.5e-16 relative to a vector's largest figure (bound 1e-12), with
+the same VaR scenario. The `dgemm` thresholds (32 sets a tile, density a quarter) were **tuned on one machine** and are settings:
+`drishti.native.blas.gemm-min-sets` and `drishti.native.blas.gemm-min-density`.
+
+**Not kept** (measured, slower than the Java loops): the FRTB bucket sum K_b as a matrix-vector product (a bucket of 1,000 to 3,000
+factors: 2 to 4 times slower, because building the scenario's correlation matrix costs what the fused loop costs), and exposure's means
+and set additions (G x P up to 200 x 10,000: the same or slower; bandwidth-bound, and a native call copies its arrays). They stay on
+the Java kernels. FRTB for many portfolios at once (correlations times K portfolios' sensitivities, a GEMM) would pay, but nothing
+asks for it yet.
+
+### 6.5 Resilience (as built)
+
+The native library never runs unguarded (`GuardedBlas`, what `Blas.get()` hands out on OpenBLAS):
+
+| Guard | What it does |
+|---|---|
+| Platform check | 32-bit, ARM, other systems: Java before anything is loaded |
+| Start-up self-test | products of awkward shapes (1 x 1, tall and thin, wide, sizes not multiples of 8, both transposes, medium) against Java at 1e-12; a failure: Java with the warning |
+| Argument checks | dimensions, leading dimensions, offsets and array lengths checked in Java, in `long` (no overflow), before every native call: a bad argument is an `IllegalArgumentException` and never reaches native code, where a fault would end the JVM |
+| Size bound | a call whose operands pass `drishti.native.blas.max-call-mb` runs on Java; JavaCPP's own allocations bounded by `drishti.native.max-bytes-mb` |
+| Per-call fallback | any throwable from a native call (a link error, an exception, an out-of-memory) is redone on Java from the caller's original output |
+| Divergence check | NaN or infinity in a native result from finite inputs: redone on Java |
+| Circuit breaker | either of the two above switches OpenBLAS off for the rest of the run: the banner, the alert, Health DEGRADED |
+| Canary | the self-test again every `drishti.native.blas.canary-interval` (6 h); a failure trips the breaker |
+
+A fault inside the native code itself (a crash, not an exception) cannot be caught by any JVM; the argument checks are there so that
+Drishti never hands OpenBLAS an argument that could cause one.
+
+### 6.6 One path for the cluster (as built)
+
+Members never refuse each other over BLAS. Each publishes its path in its capability digest (service `native-blas`: `native 0.3.26`,
+`java-fallback <reason>`, `java <reason>`). When **any** member runs on Java (or is an older server without the service, which sums in
+Java), every member sums many scopes (`MultiSums`, through `Blas.forClusterSums()`) on Java, so the figures members combine or compare
+are the same bits; the log says it in a WARN banner naming the members, Admin → Health shows each member's path and the cluster's
+(`clusterPath`), and the agreement lifts by itself when every member is native again. Shard sums (`VAR_SHARDING.md`) never use BLAS:
+they are `ParallelSums`' fixed-order Java sums on every member.
 
 ---
 
@@ -565,7 +624,7 @@ pure-Java half always runs. On Windows QA the native halves skip.
 
 ### 9.3 Settings
 
-Proposed; none exists yet. The native libraries default to off; the pure-Java accelerations follow `drishti.native.mode`.
+The BLAS settings are built (section 6.3; [CONFIGURATION.md](../admin/CONFIGURATION.md)); the others are proposed. The pure-Java accelerations follow `drishti.native.mode`.
 
 | Setting | Default | Meaning |
 |---|---|---|
@@ -573,9 +632,11 @@ Proposed; none exists yet. The native libraries default to off; the pure-Java ac
 | `drishti.native.enabled` | `false` | the native libraries (BLAS, libdeflate, zstd) as a group; `auto` still uses the pure-Java accelerations (`MemorySegment`, Vector API) when this is off |
 | `drishti.native.threads` | 0 (the cores) | the platform threads that run native calls (section 2.6) |
 | `drishti.native.vector.enabled` | `false` | the Vector API kernels (also needs `--add-modules jdk.incubator.vector`) |
-| `drishti.native.blas.enabled` | `false` | BLAS for multi-scope sums and exposure |
-| `drishti.native.blas.library` | empty | the library to load: a name or a path (OpenBLAS; Accelerate on macOS to evaluate) |
-| `drishti.native.blas.tile-rows` | 4096 | the rows converted to float64 per `dgemm` call |
+| `drishti.native.blas.mode` | `auto` | **built** (section 6.3): `auto` the bundled OpenBLAS where it fits, else Java with the warning; `java` Java, chosen |
+| `drishti.native.cache-dir` | `<data>/native-cache` | **built**: where the bundled libraries are unpacked |
+| `drishti.native.max-bytes-mb` | 1024 | **built**: JavaCPP's own off-heap allocations |
+| `drishti.native.blas.max-call-mb` | 256 | **built**: a larger call runs on Java (section 6.5) |
+| `drishti.native.blas.canary-interval` | `6h` | **built**: the self-test repeated (section 6.5) |
 | `drishti.native.gzip` | `jdk` | `jdk`, `libdeflate` or `zlib-ng` |
 | `drishti.native.json` | `jackson` | `jackson` or `simdjson` |
 | `drishti.native.madvise.enabled` | `false` | read-ahead advice on hot files (Linux) |
@@ -592,7 +653,7 @@ Every setting is listed in [CONFIGURATION.md](../admin/CONFIGURATION.md) when bu
 | Column | Example |
 |---|---|
 | Library | OpenBLAS |
-| Requested | on (`drishti.native.blas.enabled`) |
+| Requested | `auto` (`drishti.native.blas.mode`) |
 | Loaded | yes: `/usr/lib/x86_64-linux-gnu/libopenblas.so.0`, version 0.3.26, SHA-256 `9f2…` |
 | Canary | passed (difference 0.0000 against Java on the 64-position check) |
 | In use | 1,204 calls in the last hour, 3.1 s total |
@@ -643,3 +704,12 @@ Next in line: libdeflate for `.gz` input (P4), simdjson-java for parsing (P4), c
 3. **Parity.** Not "to the cent": the rule of section 6.2 (bit-exact for SIMD; a relative 1e-12 and the identical scenario for BLAS).
 4. **Java 21.** To be retired by **2026-12-25** at the latest, possibly as early as about 2026-11-11 (not final). Until then a Java 21
    build runs today's code and a Java 25 build the accelerated paths (section 2.8), which is how each step's gain is measured.
+
+### 11.1 Decisions of the product owner (2026-11-03)
+
+1. **BLAS on Java 21 now**, bundled: JavaCPP's `org.bytedeco:openblas` 0.3.26-1.5.10, `linux-x86_64` and `windows-x86_64` only (the
+   Windows QA machine accepts DLLs Java unpacks). Not the Foreign Function API yet; not a system OpenBLAS.
+2. **Never fail to start** because of BLAS: `auto` falls back to Java loudly (banner, DEGRADED, notice, alert, metric); `java` is the
+   chosen, quiet Java path; no refusing mode.
+3. **Resilience**: self-test, argument checks before native calls, per-call fallback, divergence check, circuit breaker, scheduled
+   canary, bounded native memory (section 6.5).

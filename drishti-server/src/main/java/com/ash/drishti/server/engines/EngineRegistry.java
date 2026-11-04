@@ -450,6 +450,9 @@ public final class EngineRegistry implements AutoCloseable {
             outcome = "written";
             detail = "written to " + files.file(e) + ", but " + sw.source() + " still decides until it is removed";
         } else {
+            if (eng != null) {
+                eng.changing(actor, at, reason);
+            }
             String[] r = effect(id, e, eng, on, at, actor);
             outcome = r[0];
             detail = r[1];

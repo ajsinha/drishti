@@ -126,6 +126,10 @@
          readers (no hand-written Arrow), and Arrow Flight (drishti-flight). Arrow Java 19 runs on Java 11+, so on Java 21; it needs
          add-opens java.base/java.nio for its memory module (see drishti-flight and the server launch flags) -->
     <arrow.version>19.0.0</arrow.version>
+    <!-- BLAS (HIGH_PERFORMANCE_NATIVE.md section 6): JavaCPP's OpenBLAS preset, the library bundled per platform; only the linux-x86_64 and
+         windows-x86_64 classifiers (never openblas-platform, which brings every platform); only compute.linalg.NativeBlas names it -->
+    <javacpp.version>1.5.10</javacpp.version>
+    <openblas.version>0.3.26-${javacpp.version}</openblas.version>
     <!-- test classes run in this many parallel JVM forks per module (each fork reused for many classes); -Ddrishti.test.forks=1
          runs them serially. Fixed scratch paths in a module's surefire configuration carry ${surefire.forkNumber} -->
     <drishti.test.forks>4</drishti.test.forks>
@@ -168,6 +172,12 @@
       <!-- Redis: Lettuce on Netty 4.1 (the line Spring Boot 3.5 manages); zstd for compressed documents and columns -->
       <dependency><groupId>io.lettuce</groupId><artifactId>lettuce-core</artifactId><version>${lettuce.version}</version></dependency>
       <dependency><groupId>com.github.luben</groupId><artifactId>zstd-jni</artifactId><version>${zstd-jni.version}</version></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version><classifier>linux-x86_64</classifier></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>javacpp</artifactId><version>${javacpp.version}</version><classifier>windows-x86_64</classifier></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><version>${openblas.version}</version></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><version>${openblas.version}</version><classifier>linux-x86_64</classifier></dependency>
+      <dependency><groupId>org.bytedeco</groupId><artifactId>openblas</artifactId><version>${openblas.version}</version><classifier>windows-x86_64</classifier></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-mongodb</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg</artifactId><version>${project.version}</version></dependency>
       <dependency><groupId>com.ash.drishti</groupId><artifactId>drishti-plugin-iceberg-external</artifactId><version>${project.version}</version></dependency>
