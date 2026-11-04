@@ -157,8 +157,10 @@ def test_versions_tab_diffs_against_the_base_and_an_earlier_version_and_restores
     rev = state(page, "rev")
     page.evaluate("window.drishtiWorkbench.store.send([{op: 'text', yaml: window.drishtiWorkbench.store.state.yaml + '# second edit\\n'}])")
     settle(page, rev)
-    wait(page, "document.querySelectorAll('#wbCompareWith option').length >= 3")
-    wait(page, "document.querySelector('[data-versions] .wb-diff').textContent.includes('first edit')")
+    # the list after the second save (base, version 0, version 1) and the comparison that list asked for has landed: until then the
+    # diff on screen may be the one asked for after the first save (marked aria-busy while the newer one loads)
+    wait(page, "document.querySelectorAll('#wbCompareWith option').length >= 3 && !document.querySelector('[data-versions] .wb-diff').hasAttribute('aria-busy') && document.querySelector('[data-versions] .wb-sum').textContent.includes('against')")
+    assert "first edit" in page.locator("[data-versions] .wb-diff").inner_text()
     diff = page.locator("[data-versions] .wb-diff")
     assert "second edit" in diff.inner_text() and diff.locator(".d-add").count() >= 2
     page.evaluate("(() => { const s = document.getElementById('wbCompareWith'); s.value = '1'; s.dispatchEvent(new Event('change')); })()")

@@ -32,7 +32,7 @@
     var bar = WB.el('div', 'bs-bar');
     bar.appendChild(label); bar.appendChild(pick); bar.appendChild(restore);
     box.appendChild(bar); box.appendChild(head); box.appendChild(out);
-    var list = [], seq = 0;
+    var list = [], seq = 0, asked = 0;   // seq: the latest comparison asked for; asked: the latest version list asked for (late answers lose)
 
     function when(at) { return at ? new Date(at).toLocaleTimeString() : ''; }
     function fill() {
@@ -49,10 +49,12 @@
     function compare(against) {
       var mine = ++seq;
       restore.disabled = true;
-      if (against === undefined || against === '') { out.textContent = ''; head.textContent = pick.value === '' ? 'Nothing earlier to compare with yet: make a change first.' : ''; return Promise.resolve(); }
+      if (against === undefined || against === '') { out.textContent = ''; out.removeAttribute('aria-busy'); head.textContent = pick.value === '' ? 'Nothing earlier to compare with yet: make a change first.' : ''; return Promise.resolve(); }
       head.textContent = 'Comparing...';
+      out.setAttribute('aria-busy', 'true');  // the diff on screen is the previous one until this answer lands: say so (and dim it)
       return WB.call('GET', url + '/diff?against=' + encodeURIComponent(against)).then(function (r) {
         if (mine !== seq) { return; }
+        out.removeAttribute('aria-busy');
         if (!r.ok) { out.textContent = ''; head.textContent = WB.why(r); head.className = 'wb-sum bad'; return; }
         out.innerHTML = r.body.html;          // the console's own template output: every value is escaped there
         head.className = 'wb-sum';
@@ -62,7 +64,9 @@
       });
     }
     function refresh() {
+      var mine = ++asked;
       return WB.call('GET', url + '/versions').then(function (r) {
+        if (mine !== asked) { return; }   // a newer refresh was asked for after this one: its list (not this older one) is the design's
         if (!r.ok) { head.textContent = WB.why(r); return; }
         list = r.body.versions || []; base = r.body.base || base; fill(); return compare(pick.value);
       });

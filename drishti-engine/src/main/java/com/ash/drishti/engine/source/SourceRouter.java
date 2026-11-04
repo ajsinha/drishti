@@ -156,6 +156,11 @@ public final class SourceRouter implements com.ash.drishti.common.LiveSettings {
         return fetch(ref, props.fetchTimeout(), AsOf.LATEST);
     }
 
+    /** The longest a single read of a document may take ({@code drishti.sources.fetch-timeout}): what a page's own record is read within. */
+    public Duration fetchTimeout() {
+        return props.fetchTimeout();
+    }
+
     public CompletableFuture<EntityDocument> fetch(EntityRef ref, AsOf asOf) {
         return fetch(ref, props.fetchTimeout(), asOf);
     }

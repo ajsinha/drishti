@@ -152,7 +152,9 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         this.formats = formats;
         this.mnemonics = mnemonics;
         this.bindPool = bindPool;
-        this.wire = new ScreenWire(router, binder, el, graph.linkBudget(), this::augmented);
+        // a panel's own source is that panel's data, read as the page's record is (within the sources' fetch timeout), not a linked entity's
+        // label (the link budget, 40 ms): past that budget it drew its empty text as if the source held nothing
+        this.wire = new ScreenWire(router, binder, el, router.fetchTimeout(), this::augmented);
         this.layouts = Caffeine.newBuilder().maximumSize(props.layoutCacheSize()).recordStats().build();
         this.fingerprints = Caffeine.newBuilder().maximumSize(props.fingerprintCacheSize()).build();
         registry.onChange(changed -> layouts.invalidateAll());
