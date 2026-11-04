@@ -95,11 +95,24 @@ public final class ScreenWire {
 
     /**
      * What a source read: as the viewer sees it and as stored (for following a click), or why the viewer may not have it; {@code from}
-     * the document's provenance when it read one entity (its panel's own freshness, RACHANA_REFERENCE.md 9), else null.
+     * the document's provenance when it read one entity (its panel's own freshness, RACHANA_REFERENCE.md 9), else null; {@code failed}
+     * when the source could not be read (it failed or did not answer in time), so the panel says so instead of drawing its empty text.
      */
-    public record Pair(Object seen, Object raw, String denied, com.ash.drishti.api.Provenance from) {
+    public record Pair(Object seen, Object raw, String denied, com.ash.drishti.api.Provenance from, ViewModel.PanelCompute failed) {
         public Pair(Object seen, Object raw, String denied) {
-            this(seen, raw, denied, null);
+            this(seen, raw, denied, null, null);
+        }
+
+        public Pair(Object seen, Object raw, String denied, com.ash.drishti.api.Provenance from) {
+            this(seen, raw, denied, from, null);
+        }
+
+        /** A source that could not be read: nothing to draw, and why (the panel's failed state, never "no data"). */
+        static Pair unread(Wiring.Source src, String what, SourceFailures failures) {
+            Map.Entry<String, String> first = failures.asMap().entrySet().iterator().next();
+            return new Pair(DataNode.missing(), DataNode.missing(), null, null, new ViewModel.PanelCompute("failed", "", first.getKey(),
+                    "reading " + src.kind() + (what == null ? "" : " " + what) + " failed: " + first.getValue() + " (reload the page to try again)",
+                    null, false, null));
         }
     }
 
@@ -363,7 +376,7 @@ public final class ScreenWire {
             return new Ctx(s.ctx().withEval(seenEval), rawEval, got.denied());
         }
         return new Ctx(s.ctx().withEval(seenEval.withScope(seenScope.withSrc(got.seen()))), rawEval.withScope(rawScope.withSrc(got.raw())), null,
-                provenance(router, src.kind(), got.from()), computeOf(got.raw()));   // the panel's own freshness (RACHANA_REFERENCE.md 9) and computed state
+                provenance(router, src.kind(), got.from()), got.failed() != null ? got.failed() : computeOf(got.raw()));   // the panel's own freshness (RACHANA_REFERENCE.md 9) and computed state
     }
 
     /** What a panel says when its source follows a value masked for the reader (RACHANA_REFERENCE.md 15: a followed masked id shows nothing). */
@@ -446,24 +459,32 @@ public final class ScreenWire {
             String asked = id;
             return s.cache().computeIfAbsent(src.kind() + "|" + asked + "|" + at, k -> {
                 EntityRef ref = EntityRef.of(src.kind(), asked);
-                EntityDocument fetched = router.fetchAll(Set.of(ref), budget, at).get(ref);
+                SourceFailures failures = new SourceFailures();
+                EntityDocument fetched = router.fetchAll(Set.of(ref), budget, at, failures).get(ref);
+                if (fetched == null && !failures.isEmpty()) {
+                    return Pair.unread(src, asked, failures);           // failed or timed out: not the same as "no such entity"
+                }
                 EntityDocument d = fetched == null ? null : augment.apply(fetched, at);
                 return d == null ? new Pair(DataNode.missing(), DataNode.missing(), null) : new Pair(s.redact().apply(d.data()), d.data(), null, d.provenance());
             });
         }
         List<EntityRef> refs;
+        SourceFailures failures = new SourceFailures();
         if (src.search() != null) {
             String text = Values.text(soft(() -> Values.simplify(el.compile(src.search()).eval(lookup))));
             if (text == null || text.isBlank() || Values.masked(text)) {
                 return new Pair(new DataNode.Arr(List.of()), new DataNode.Arr(List.of()), null);
             }
-            refs = router.search(src.kind(), text, src.limit(), budget, at).stream().map(EntityHit::ref).toList();
+            refs = router.list(src.kind(), text, src.limit(), budget, at, failures).hits().stream().map(EntityHit::ref).toList();
         } else {
-            refs = router.listAcross(src.kind(), WHERE_SCAN, budget, at, new SourceFailures()).hits().stream().map(EntityHit::ref).toList();
+            refs = router.listAcross(src.kind(), WHERE_SCAN, budget, at, failures).hits().stream().map(EntityHit::ref).toList();
         }
         String key = src.kind() + "|" + (src.where() != null ? "w:" + src.where() : "s:" + src.search()) + "|" + at + "|" + lookup.scope().events();
         return s.cache().computeIfAbsent(key, k -> {
-            Map<EntityRef, EntityDocument> docs = refs.isEmpty() ? Map.of() : router.fetchAll(new LinkedHashSet<>(refs), budget, at);
+            Map<EntityRef, EntityDocument> docs = refs.isEmpty() ? Map.of() : router.fetchAll(new LinkedHashSet<>(refs), budget, at, failures);
+            if (docs.isEmpty() && !failures.isEmpty()) {
+                return Pair.unread(src, null, failures);             // nothing read because a source failed: not an empty list
+            }
             List<DataNode> seen = new ArrayList<>();
             List<DataNode> raw = new ArrayList<>();
             var cond = src.where() == null ? null : el.compile(src.where());

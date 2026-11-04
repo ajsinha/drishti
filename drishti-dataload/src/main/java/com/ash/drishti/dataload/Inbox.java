@@ -52,8 +52,13 @@ public final class Inbox {
     /** A file marked ready that cannot be loaded, and why. */
     public record Refused(Path file, Path marker, String reason) {}
 
-    /** A file that waits: no marker yet, or not stable yet. */
-    public record Waiting(String name, long size, Instant modified, String why) {}
+    /** Why a file waits, as a code the Admin screen keys on: no marker yet, not stable yet, or past this run's caps. */
+    public static final String NO_MARKER = "no-marker";
+    public static final String NOT_STABLE = "not-stable";
+    public static final String NEXT_CYCLE = "next-cycle";
+
+    /** A file that waits ({@code code}: {@link #NO_MARKER}, {@link #NOT_STABLE}, {@link #NEXT_CYCLE}) and why, in words. */
+    public record Waiting(String name, long size, Instant modified, String why, String code) {}
 
     /**
      * What one look at the inbox found: the files to take now (oldest first, within the cycle's caps), the refused, the waiting, the
@@ -106,7 +111,7 @@ public final class Inbox {
             BasicFileAttributes a = Files.readAttributes(p, BasicFileAttributes.class, LinkOption.NOFOLLOW_LINKS);
             Instant modified = a.lastModifiedTime().toInstant();
             if (!marked && !readyAll) {
-                waiting.add(new Waiting(name, a.size(), modified, "no " + name + READY + " yet"));
+                waiting.add(new Waiting(name, a.size(), modified, "no " + name + READY + " yet", NO_MARKER));
                 continue;
             }
             Path m = marked ? marker : null;
@@ -126,7 +131,7 @@ public final class Inbox {
             Instant markerTime = m == null ? modified : Files.getLastModifiedTime(m, LinkOption.NOFOLLOW_LINKS).toInstant();
             Instant newest = markerTime.isAfter(modified) ? markerTime : modified;
             if (Duration.between(newest, now).compareTo(stable) < 0) {
-                waiting.add(new Waiting(name, a.size(), modified, "not stable yet: changed less than " + stable.toSeconds() + " s ago"));
+                waiting.add(new Waiting(name, a.size(), modified, "not stable yet: changed less than " + stable.toSeconds() + " s ago", NOT_STABLE));
                 continue;
             }
             ready.add(new Ready(p, m, a.size(), modified));
@@ -136,7 +141,7 @@ public final class Inbox {
         long bytes = 0;
         for (Ready r : ready) {
             if ((maxFiles > 0 && taken.size() >= maxFiles) || (!taken.isEmpty() && bytes + r.size() > maxBytes)) {
-                waiting.add(new Waiting(r.name(), r.size(), r.modified(), "the next cycle: this run took its most files or bytes (max-files, max-gb)"));
+                waiting.add(new Waiting(r.name(), r.size(), r.modified(), "the next cycle: this run took its most files or bytes (max-files, max-gb)", NEXT_CYCLE));
                 continue;
             }
             taken.add(r);

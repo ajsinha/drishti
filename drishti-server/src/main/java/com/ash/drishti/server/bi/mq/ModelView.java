@@ -21,7 +21,6 @@ import com.ash.drishti.server.bi.layer.DatasetDef;
 import com.ash.drishti.server.bi.layer.Flattener;
 import com.ash.drishti.server.bi.layer.ModelDef;
 import com.ash.drishti.server.bi.layer.ResolvedDataset;
-import com.ash.drishti.server.bi.report.Totals;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -110,7 +109,7 @@ public record ModelView(String id, String key, String hash, ModelDef def, Datase
                 }
             }
             if (additive == null) {
-                additive = Totals.adds(ds, measure) ? "true" : "false";
+                additive = com.ash.drishti.server.bi.pivot.BiMeasures.additive(ds, measure) ? "true" : "false";   // as the pivot engine finds it
             }
         }
         return new MeasureInfo(additive == null ? "false" : additive, currency, format, id, python);

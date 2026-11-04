@@ -1081,14 +1081,15 @@ state that should start empty each day.
 
 ### Timeouts
 
-`drishti.sources.fetch-timeout` (5 s) bounds the **whole** read, across every connector tried in turn, not each one.
+`drishti.sources.fetch-timeout` (10 s) bounds the **whole** read, across every connector tried in turn, not each one.
 If a slow store sits in front of others (a REST service, a remote database), either raise it or move the slow store
-later in the order (a route to the fast one):
+later in the order (a route to the fast one). Raising it past 15 s also needs the console's `backend.timeout_seconds`
+raised above it:
 
 ```yaml
 drishti:
   sources:
-    fetch-timeout: 10s
+    fetch-timeout: 20s
 ```
 
 A read that runs over ends with `DRS-1004 timed out reading <kind>/<id>`; the connector's own timeouts

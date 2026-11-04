@@ -19,7 +19,8 @@
    counterparty), blotter (today's trades), risk (VaR, limits, positions), limits (limit use by book over the last business dates),
    pnl-var (the desk's P&L against VaR) and traders (by trader); the new-trade check posts to /api/home/trading/check. Each panel is painted
    when its answer arrives; one refused or empty says so in place and the others carry on. Nothing is invented: a figure the data cannot
-   give is left out (DV01) or says why. The chart is SVG built through the DOM (the page's policy allows no inline style). */
+   give is left out (DV01) or says why. Every total (MtM, P&L, DV01, by book and trader, the counterparty share) is the server's pivot
+   engine's, shown as it comes: nothing here adds up a figure (ONE_GRAMMAR.md section 5). The chart is SVG built through the DOM (the page's policy allows no inline style). */
 (function () {
   "use strict";
   var root = document.querySelector("[data-trading-landing]");
@@ -128,7 +129,8 @@
       $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
       $("[data-tl-count]").textContent = v.liveTrades.toLocaleString("en-US") + " live trades in my books" + (v.partial ? " (partial: " +
         v.trades.toLocaleString("en-US") + " of " + v.matched.toLocaleString("en-US") + " read)" : "");
-      if (v.pnl === null) tile("pnl", "—", v.mtmMasked ? "MtM is masked for your role" : "no valuations on " + v.previousDate + ": no change to show");
+      if (v.pnl === null) tile("pnl", "—", v.mtmMasked ? "MtM is masked for your role" : v.figuresProblem ? v.figuresProblem :
+        "no valuations on " + v.previousDate + ": no change to show");
       else tile("pnl", tone(el("span", "", money(v.pnl, true)), v.pnl), "MtM change since " + v.previousDate + " · " +
         v.valuedBoth.toLocaleString("en-US") + " trades valued both days", v.pnl > 0 ? "good" : v.pnl < 0 ? "bad" : null);
       if (v.dv01 !== null) {
@@ -264,9 +266,11 @@
       if (!v.available) throw new Error(v.reason);
       $$("[data-tl-date]").forEach(function (e) { e.textContent = v.businessDate + (v.dataDate && v.dataDate !== v.businessDate ? " (the latest valuations are of " + v.dataDate + ")" : ""); });
       $("[data-tl-mtm]").textContent = money(v.mtm, true);
+      if (v.figuresProblem) $("[data-tl-mtm]").title = v.figuresProblem;
       $("[data-tl-desk-count]").textContent = (s.books || []).length + " books · " + v.liveTrades.toLocaleString("en-US") + " live trades" +
         (v.partial ? " (partial)" : "");
-      if (v.pnl === null) tile("pnl", "—", v.mtmMasked ? "MtM is masked for your role" : "no valuations on " + v.previousDate + ": no change to show");
+      if (v.pnl === null) tile("pnl", "—", v.mtmMasked ? "MtM is masked for your role" : v.figuresProblem ? v.figuresProblem :
+        "no valuations on " + v.previousDate + ": no change to show");
       else {
         var best = (v.byBook || []).filter(function (b) { return b.pnl !== null; }).sort(function (a, b) { return b.pnl - a.pnl; })[0];
         tile("pnl", tone(el("span", "", money(v.pnl, true)), v.pnl), "MtM change since " + v.previousDate + (best ? " · best " + best.book + " " + money(best.pnl, true) : ""),

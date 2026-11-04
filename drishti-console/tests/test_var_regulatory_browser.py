@@ -79,7 +79,9 @@ def stack(tmp_path_factory):
     assert (lake / "risk" / "desk-pnl").is_dir(), "the lake has no desk-pnl table: " + ", ".join(sorted(p.name for p in (lake / "risk").iterdir()))
     for st in _stack(tmp_path_factory, {"DRISHTI_DELTA_ROOT": str(lake), "DRISHTI_DEMO_ENABLED": "false", "DRISHTI_OFFLINE": "true",
                                         "DRISHTI_SECURITY_ENABLED": "true", "DRISHTI_TOKEN_SECRET": TOKEN_SECRET,
-                                        "DRISHTI_REGULATORY_SYNTHETICHISTORY": "true"}, auth=True):
+                                        "DRISHTI_REGULATORY_SYNTHETICHISTORY": "true"}, auth=True, heap="1536m"):
+        # 1.5 GB: a year of official VaR history, its backtests by desk and three report runs held 89-97% of a 768 MB heap after G1's own
+        # full compactions, so busy protection rightly kept new sign-ins waiting 45 s (DRS-9501) and a sign-in here timed out (Drill A)
         # the engine answers once the Delta connector is up; the official record of the newest date is captured at start, in the
         # background; the synthetic history is seeded before it (refused with 404 until that record exists)
         deadline = time.monotonic() + 600

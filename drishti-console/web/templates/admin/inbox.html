@@ -1,0 +1,39 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# Admin → Data loads → Inbox (docs/architecture/DATALOAD_INBOX.md section 10, mock-up A, the status board). The board is _inbox_body.html,
+   drawn here and redrawn by admin-inbox.js from /admin/loads/inbox?partial=1 (every 5 s while a run loads, 30 s when quiet); the answers of
+   Load now and Retry stay in the line above the board. #}
+{% extends "base.html" %}
+{% block title %}Data inbox · Data loads · {{ PRODUCT }}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/admin-packs.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-loads.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/admin-inbox.css?v={{ ASSET_V }}">{% endblock %}
+{% block screen %}admin{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block nav %}{% include "terminal/_topbar.html" %}{% endblock %}
+{% block content %}
+<div class="adm ib" data-inbox>
+  {% with tab='loads' %}{% include "admin/_nav.html" %}{% endwith %}
+  <h1 class="ws-h">Data loads</h1>
+  {% with sub='inbox' %}{% include "admin/_loads_tabs.html" %}{% endwith %}
+  <p class="text-muted-d ib-intro">Files dropped in the inbox folder with a <span class="mono">.ready</span> marker are loaded into the lake by {{ PRODUCT }}
+    every interval. The columns follow a file's way through the folders: waiting in <span class="mono">inbox/</span>, loading in
+    <span class="mono">inprocess/&lt;run&gt;/</span>, done in <span class="mono">outbox/</span>. Times are the server's.
+    See the <a href="/help/data-guide#7-the-data-inbox-drop-files-and-they-load">Data guide</a>.</p>
+  <p class="ib-said" data-inbox-said role="status" aria-live="polite"></p>
+  <div data-inbox-body>{% include "admin/_inbox_body.html" %}</div>
+</div>
+{% endblock %}
+{% block footer %}{% include "_footer.html" %}{% endblock %}
+{% block scripts %}<script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/admin-inbox.js?v={{ ASSET_V }}"></script>{% endblock %}

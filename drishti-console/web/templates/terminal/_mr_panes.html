@@ -1,0 +1,39 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The MR lens's panels (MR_CUBE_LENS.md section 6.7): tab A's rail under the pivot (A6 tail, A7 explain, sparklines of the visible cells),
+   tab B (B1 components, B2 waterfall, B3 histogram, B4 heat map) and tab C (C2 ladder with its grid chip C1, C3 what-if, C4 explain).
+   Tab A's grid is the pivot above; B and C replace it while they are shown. #}
+<div class="mr-rail" data-mr-pane="pivot">
+  <section class="pv-card"><h2 data-mr-tail-title>Tail <span class="pv-sub">click a cell</span></h2><div data-mr-tail class="mr-hist"><p class="pv-sub">Click a cell of the pivot: its scenario P&amp;Ls, V and E marked.</p></div></section>
+  <section class="pv-card"><h2>Explain the move <span class="pv-sub" data-mr-explain-dates></span></h2><div data-mr-explain><p class="pv-sub">Click a cell: why its VaR moved since the date before (or the compare date).</p></div></section>
+  <section class="pv-card"><h2>Sparklines <span class="pv-sub" data-mr-spark-sub></span></h2><div data-mr-sparks class="mr-sparks"><p class="pv-sub">The view on the open dates up to its own.</p></div></section>
+</div>
+<div class="mr-panes" data-mr-pane="tail" hidden>
+  <section class="pv-card"><h2>Components <span class="pv-sub">Euler: they add up to the total exactly</span></h2><div data-mr-comp></div></section>
+  <section class="pv-card"><h2>VaR attribution waterfall</h2><div data-mr-waterfall></div></section>
+  <section class="pv-card"><h2>Scenario P&amp;L histogram <span class="pv-sub" data-mr-hist-title></span></h2><div data-mr-hist class="mr-hist"></div></section>
+  <section class="pv-card"><h2>Factor heat map <span class="pv-sub">GIRR delta (DV01) by currency × tenor</span></h2><div data-mr-heat></div></section>
+</div>
+<div class="mr-panes" data-mr-pane="sensitivities" hidden>
+  <section class="pv-card"><h2>Sensitivity ladder <label class="pv-chip">Grid <select data-mr-grid-pick aria-label="The ladder's bucket grid"></select></label></h2><div data-mr-ladder></div></section>
+  <section class="pv-card"><h2>What-if, side by side</h2>
+    <form class="mr-tray" data-mr-tray><label>Copy trade <input class="mr-input mono" name="trade" placeholder="a booked trade id" required></label>
+      <label>× <input class="mr-input mono" name="factor" value="-1" size="5"></label><button type="submit" class="pv-btn primary">+ What-if trade</button>
+      <span class="mr-tray-items mono" data-mr-tray-items></span></form>
+    <div data-mr-whatif><p class="pv-sub">Add a hypothetical trade (W): a booked trade's vector copied and scaled; each row of the pivot before, after and the change.</p></div>
+  </section>
+  <section class="pv-card"><h2>Explain the move <span class="pv-sub" data-mr-explain2-dates></span></h2><div data-mr-explain2><p class="pv-sub">The view's scope, or the cell last clicked.</p></div></section>
+</div>

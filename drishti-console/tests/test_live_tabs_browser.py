@@ -67,6 +67,9 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
+_APPS: list = []                       # the console started here (its open channels are per app)
+
+
 @pytest.fixture(scope="module")
 def console_url():
     """The console under test: a real one when DRISHTI_LIVE_E2E_URL is set, else one started here on a free port."""
@@ -81,6 +84,7 @@ def console_url():
 
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = TickingBackend()
+    _APPS.append(app)
     port = _free_port()
     server = uvicorn.Server(uvicorn.Config(app, host="127.0.0.1", port=port, log_level="warning", timeout_graceful_shutdown=2))
     thread = threading.Thread(target=server.run, daemon=True)
@@ -147,7 +151,7 @@ def _open_channels(console_url) -> set | None:
     if os.environ.get("DRISHTI_LIVE_E2E_URL"):
         return None
     from routes import api_routes
-    return set(api_routes.CHANNELS)
+    return set(api_routes.channels(_APPS[-1]))
 
 
 def _all_tick(targets, waiter) -> list[str]:

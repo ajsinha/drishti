@@ -26,7 +26,9 @@ import com.ash.drishti.server.admission.AdmissionGate;
 import com.ash.drishti.server.admission.Work;
 import com.ash.drishti.server.data.DataViewService;
 import com.ash.drishti.server.edition.EditionCommands;
+import com.ash.drishti.server.frtb.FrtbService;
 import com.ash.drishti.server.security.Entitlements;
+import com.ash.drishti.server.var.MrCubeProperties;
 import com.ash.drishti.server.var.VarPivotProvider;
 import com.ash.drishti.server.var.VarService;
 import com.github.benmanes.caffeine.cache.Cache;
@@ -40,7 +42,7 @@ import org.springframework.context.annotation.Configuration;
 
 /**
  * The pivot engine's beans (PIVOT_GUIDE.md): the node's DuckDB executor, the tabular provider over the Data view's tables, the VaR provider
- * when the VaR engine runs here, the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
+ * when the VaR engine runs here (the MR cube when engine {@code mr-cube} runs too, MR_CUBE_GUIDE.md), the partial-state cache in the one memory budget ({@code pivot.states}), busy protection, and saved views.
  * The engine itself is the {@code drishti-bicompute} module's {@link PivotCore}; nothing here aggregates.
  */
 @Configuration
@@ -137,15 +139,16 @@ public class PivotConfiguration {
 
     @Bean
     public PivotCore pivotCore(PivotProperties props, DuckDbExecutor exec, KindSources kinds, PanelSources panels, States states,
-            ObjectProvider<VarService> var,
+            ObjectProvider<VarService> var, ObjectProvider<MrCubeProperties> mr, ObjectProvider<FrtbService> frtb,
+            org.springframework.core.env.Environment env,
             ObjectProvider<AdmissionGate> gate, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
         List<PivotProvider> providers = new ArrayList<>();
         VarService v = var.getIfAvailable();
         if (v != null) {
-            providers.add(new VarPivotProvider(v, () -> {
-                com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
-                return r == null || !r.known("var") || r.running("var");
-            }));
+            boolean mrSwitch = env.getProperty("drishti.engines.mr-cube.enabled", Boolean.class, false);
+            providers.add(new VarPivotProvider(v, () -> running(engines, "var", true), () -> running(engines, "mr-cube", mrSwitch),
+                    mr.getIfAvailable(MrCubeProperties::defaults), () -> running(engines, "frtb-sa", true)
+                            ? com.ash.drishti.server.var.MrCubeExtras.running(frtb.getIfAvailable()) : null));
         }
         providers.add(new TabularProvider(exec, both(kinds, panels)));
         PivotCore core = new PivotCore(providers, states, props.core());
@@ -156,14 +159,25 @@ public class PivotConfiguration {
         return core;
     }
 
+    /** True when an engine runs here ({@code dflt} without the registry: tests and tools that start no engines). */
+    static boolean running(ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines, String id, boolean dflt) {
+        com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
+        return r == null ? dflt : !r.known(id) || r.running(id);
+    }
+
     /**
      * The pivot engine as a compute engine (docs/architecture/COMPUTE_ENGINES.md, {@code config/engines/pivot.yaml}): off, its API answers
      * 404 DRS-1020, the PIVOT word, the menu entry, Help pages and the CLI's pivot commands are gone, and its partial states and staged
      * tables are released.
      */
     @Bean
-    public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, PanelSources panels, DuckDbExecutor exec) {
+    public com.ash.drishti.server.engines.BasicEngine pivotComputeEngine(States states, KindSources kinds, PanelSources panels, DuckDbExecutor exec,
+            ObjectProvider<PivotLiveConfiguration.Live> live) {
         return new com.ash.drishti.server.engines.BasicEngine("pivot").onStop(() -> {
+            PivotLiveConfiguration.Live l = live.getIfAvailable();
+            if (l != null) {
+                l.pivots().clear();                            // every live view ended, its stream told why
+            }
             states.clear();
             kinds.release(exec);
             panels.release(exec);
@@ -173,5 +187,25 @@ public class PivotConfiguration {
     @Bean
     public PivotViews pivotViews(ContentStore store) {
         return new PivotViews(store);
+    }
+
+    /** Cell comments, kept with a saved view's versions. */
+    @Bean
+    public PivotCellComments pivotCellComments(PivotViews views) {
+        return new PivotCellComments(views, java.time.Clock.systemUTC());
+    }
+
+    /**
+     * Rachana's {@code measure(...)} and {@code cell(...)} answered by this server's pivot engine (ONE_GRAMMAR.md part 3); while the
+     * pivot engine is switched off they are refused with the reason.
+     */
+    @Bean
+    public RachanaFigures rachanaFigures(PivotCore core, PivotViews views, ObjectProvider<com.ash.drishti.server.engines.EngineRegistry> engines) {
+        RachanaFigures figures = new RachanaFigures(core, views, () -> {
+            com.ash.drishti.server.engines.EngineRegistry r = engines.getIfAvailable();
+            return r == null || !r.known("pivot") || r.running("pivot");
+        });
+        com.ash.drishti.bicompute.rachana.EngineFunctions.figures(figures);
+        return figures;
     }
 }

@@ -88,6 +88,7 @@ Each section keeps its own numbering (section 1's "section 4" is *4. The API ref
     - [5. Where to look](#5-where-to-look)
     - [6. Failures, Retry and duplicates](#6-failures-retry-and-duplicates)
     - [7. Settings and the API](#7-settings-and-the-api)
+    - [8. The Inbox screen: Admin → Data loads → Inbox](#8-the-inbox-screen-admin--data-loads--inbox)
 
 ## 1. Telling Drishti new data has landed
 
@@ -2113,7 +2114,8 @@ Every setting is also in [CONFIGURATION.md](../admin/CONFIGURATION.md).
 Put JSON Lines files (or archives of them) in one folder, add a `.ready` file beside each when it is complete, and the server loads them
 into the lake by itself, every ten minutes: the parallel lake loader writes them (one commit per business date), the files move to an
 outbox with a report, and the pack's connectors, checks, alerts and notices run as for any [data-load signal](#1-telling-drishti-new-data-has-landed).
-The design, with every decision, is [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md).
+The design, with every decision, is [DATALOAD_INBOX.md](../architecture/DATALOAD_INBOX.md); the hands-on walk-through, every step in
+the UI, on the command line and in YAML, is [tutorial 36](../tutorials/36-load-files-with-the-data-inbox.md).
 
 ### 1. Turning it on
 
@@ -2224,6 +2226,7 @@ drishti.py dataload run           # Load now (or: skipped, a run still loads)
 - The loader's own output: `outbox/<day>/<run>/loads/load-<n>.log` and `.summary.json`.
 - Every step of every file: `ledger/ledger-<yyyy-MM>.jsonl`.
 - The data loads it made: Admin → Data loads.
+- All of it at a glance: Admin → Data loads → Inbox ([section 7.8](#8-the-inbox-screen-admin--data-loads--inbox)).
 
 ### 6. Failures, Retry and duplicates
 
@@ -2245,4 +2248,30 @@ The inbox's settings are in `config/engines/dataload.yaml` (`drishti.dataload.*`
 `max-files`, `max-gb`, `loader-heap`, `load-timeout`, `reject-max-percent`, `reload-duplicates`, `keep-outbox-days`, `lake`,
 `rules-file`, `nice`), the rules in `config/dataload.yaml`; every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md). The API is
 for administrators ([API_GUIDE.md](API_GUIDE.md)): `GET /api/v1/admin/dataload` (status), `POST /api/v1/admin/dataload/run` (Load now),
-`POST /api/v1/admin/dataload/retry` with `{"file": "<name>"}`; a personal token needs `loads:write` for the last two.
+`POST /api/v1/admin/dataload/retry` with `{"file": "<name>"}`; a personal token needs `loads:write` for those two. `GET /api/v1/admin/dataload/report?path=<path>` returns a
+report the status names (a `.loaded.json`, `.failed.json`, a loader's summary or rejects, under `outbox/` or `failed/` only).
+
+### 8. The Inbox screen: Admin → Data loads → Inbox
+
+**Admin → Data loads → Inbox** (`/admin/loads/inbox`; the tab is there while the inbox's engine runs on some server, with the number of
+failed files on it) is the inbox's status board. Its columns follow a file's way through the folders, so the hand-shake is learnt by
+looking: is anything stuck, what is next, did it load. Every count, size, time and duration on it is written by the server
+(`GET /api/v1/admin/dataload`, built by `InboxStatus` in `drishti-dataload`); the page only places them, and redraws itself from the
+server every 5 seconds while a run loads and every 30 seconds when quiet (not while the browser tab is hidden). Times are the server's,
+in its zone.
+
+| Part | What it shows | Where it comes from |
+|---|---|---|
+| The top line | the inbox on or off on this server, the owner node, the lock (free, or held by a node and run, with its heartbeat's age), the next cycle and how long until it | the schedule, `drishti.dataload.owner`, `inbox.lock` |
+| **Load now** | starts a cycle; while a run loads the answer is *Load now: skipped: run … still loading (23 min). Nothing was started; the waiting files stay in the inbox for the next cycle.* | `POST /api/v1/admin/dataload/run` |
+| **Waiting** (`inbox/`) | each file with its size and state: *ready* (its marker, stable), *ready via ready.all*, *not yet stable* (changed n s ago), *no marker* (never taken without one), *ready, next run* (past `max-files`/`max-gb`), *refused* (a link, a folder, a name the loader does not read); the rule that will route it (*rule 1 → trading / trade · trade-endur · 2026-11-03 from the name*) or, before it fails, *no rule matches this name*; `ready.all` and since when | a look at `inbox/` as a cycle makes it, and the rules read as a cycle reads them (nothing is moved) |
+| **Loading** (`inprocess/<run>/`) | the run (its id, start, running time, files and size, when `load-timeout` stops a load), then its tables one after another: *committed 1 of 2 · trading / trade* with its time, files, each date's version, rows and rejects, *loading 2 of 2* while the loader writes, *waiting* for a table not yet started; the loader's heap | the lock and the run's plan `inprocess/<run>/load-plan.json`, rewritten at each table's start and end (also kept in `outbox/<day>/<run>/loads/`) |
+| **Last cycles** (`outbox/`) | today's cycles of this server, newest first: *loaded* (files, tables, dates, rows, rejects, time, versions), *nothing ready*, *duplicate*, *n failed*, *skipped* (with the run still loading), the run *loading* now; the count of skipped cycles | the cycles this server ran (the full history is the ledger and the Loads tab) |
+| **Failures** | each failed file with its run, time, pack and kind, the reason in words, the rejected rows, a link to its `.failed.json`, and **Retry** | `failed/<day>/<run>/<file>.failed.json`; Retry is `POST /api/v1/admin/dataload/retry` |
+| **Duplicates today** | each file dropped again, the run that skipped it and the run that loaded it before | the ledger's `duplicate` lines of today |
+| **Routing rules in effect** (read-only) | each rule's number, glob, pack and kind, table and business date, then *unmatched: fail* | `config/dataload.yaml`, read again every cycle |
+| **Settings** | every setting in one line, and the folders of today's outbox, failed files and the ledger | `config/engines/dataload.yaml` |
+
+On a phone the columns stack and each is a row that opens (Loading open while a run loads); controls are 44 px. The page is gone with
+the engine: while the inbox runs on no server, `/admin/loads/inbox` answers 404 and the tab is not shown. The command line shows the same
+status: `drishti.py dataload status`.

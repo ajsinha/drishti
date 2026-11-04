@@ -29,7 +29,7 @@
   var ta = $('[data-calc-code]'), out = $('[data-calc-out]'), hist = $('[data-calc-history]'), statusEl = $('[data-calc-status]');
   var runBtn = $('[data-calc-run]'), stopBtn = $('[data-calc-stop]'), pick = $('[data-calc-snippets]'), msg = $('[data-calc-msg]');
   var delBtn = $('[data-calc-delete]');
-  var HKEY = 'drishti.calc.history', DKEY = 'drishti.calc.draft.' + kind;
+  var HKEY = (window.drishtiKey ? window.drishtiKey('drishti.calc.history') : 'drishti.calc.history'), DKEY = (window.drishtiKey ? window.drishtiKey('drishti.calc.draft.' + kind) : 'drishti.calc.draft.' + kind);
   var editor = null, worker = null, ready = null, runSeq = 0, running = null, charts = [], snippets = { pack: [], mine: [] };
   var mine = null, errLine = null, stats = null;
 

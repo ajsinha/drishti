@@ -45,7 +45,7 @@ def _render_modules() -> list[str]:
 
     skip = {"drishti-elements.js", "m/elements.js"}
     return [f"/static/render/{rd.VERSION}/{rel}" for rel in rd.files() if rel.endswith(".js") and rel not in skip]
-ASSET_VERSION = "2.9.11.a"
+ASSET_VERSION = "2.9.11.b"
 
 
 def _bounded(value, low: int, high: int, default: int) -> int:
@@ -114,6 +114,7 @@ WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
 
 
 from core import edition_gate as _edition_gate   # noqa: E402  (route gating by edition, lens and feature switch)
+from core.user_cache import LRU  # noqa: E402  (the bounded per-person and per-pack-set stores)
 
 
 def protected(path: str) -> bool:
@@ -250,6 +251,25 @@ def worker_csp(host: str) -> str:
     return WORKER_CSP.format(connect=f"{host}/static/ {host}{PYODIDE}")
 
 
+class AppEngines:
+    """Each request, websocket and the lifespan (and the tasks it starts: the backend watch) of this app read this app's engines
+    (core/engines.py State), never another app's of the same process: a module global here let a real stack's console, polling its
+    server every few seconds, hide an engine's pages in a stand-in console of another browser test file in the same worker. Outermost."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        from core import engines
+
+        editions = getattr(getattr(scope.get("app"), "state", None), "editions", None)
+        token = engines.use(getattr(editions, "engines", None))
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            engines.reset_use(token)
+
+
 class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
@@ -259,6 +279,9 @@ class SecurityHeaders(BaseHTTPMiddleware):
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
+        if not path.startswith(("/static/", PYODIDE)) and path not in ("/favicon.ico", "/manifest.webmanifest"):
+            # a person's page or answer is theirs: never kept by a shared proxy, never shown again from the browser's cache after sign-out
+            response.headers.setdefault("Cache-Control", "private, no-store")
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
@@ -278,7 +301,7 @@ def create_app(settings: Settings) -> FastAPI:
 
     catalogue = Servers(settings)
     from routes import (admin_routes, alert_routes, api_routes, asof_routes, auth_routes, build_routes, pack_routes, calc_routes, export_routes, help_routes, home_routes,
-                        designer_routes, designer_grid_routes, dist_routes, layout_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
+                        designer_routes, designer_grid_routes, dist_routes, layout_routes, mcube_routes, monitor_routes, pivot_routes, report_routes, review_routes, server_routes, ship_routes, studio_routes, terminal_routes,
                         workspace_routes, collab_routes, thread_routes, collab_admin_routes, embed_admin_routes, connector_routes, form_routes,
                         ai_routes)
 
@@ -298,7 +321,7 @@ def create_app(settings: Settings) -> FastAPI:
     async def lifespan(app: FastAPI):
         pool = getattr(app.state, "cluster", None)
         if getattr(app.state, "backend", None) is None:      # one pooled client per server (tests bring their own)
-            app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 5)),
+            app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 15)),
                                                             int(settings.get("backend.pool_size", 64)),
                                                             servers=pool if s.id == catalogue.default else None) for s in catalogue.all()},
                                        catalogue.default)
@@ -337,7 +360,7 @@ def create_app(settings: Settings) -> FastAPI:
 
         await channel_relay.start(app)                      # several workers: live-channel calls reach the worker holding the stream
         yield
-        await channel_relay.stop()
+        await channel_relay.stop(app)
         if warm_task is not None and not warm_task.done():
             warm_task.cancel()
         if maint_task is not None:
@@ -516,7 +539,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["designer_on"] = lambda: bool(settings.get("ui.designer", False))   # the Sutra designer: Build -> New screen offers Describe
     templates.env.globals["TUTORIALS_WORD"] = tutorial_count_word(app.state.docs_dir)       # "Eighteen": the Tutorials card counts the written tutorials, it is never typed
-    app.state.libraries = {}
+    app.state.libraries = LRU(8)                      # help libraries by pack set (routes/common.py library)
+    app.state.library_builds = {}                     # a pack set's library being built (one at a time)
     from core.knowledge import Glossary
 
     app.state.glossary = Glossary(app.state.docs_dir)          # WHAT <term>: docs/knowledge/glossary.yaml (routes/help_routes.py)
@@ -549,6 +573,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(AuthGate)
     app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
+    app.add_middleware(AppEngines)                       # outermost: every request reads its own app's engines
     app.add_exception_handler(BodyError, problem)
     app.add_exception_handler(ClientDisconnect, gone)
     from core.notfound import not_found
@@ -563,7 +588,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.mount("/static", static, name="static")
     from core.calc import Calc
 
-    app.state.calc = Calc(settings, WEB)
+    app.state.calc = Calc(settings, WEB, stamps=stamps)
     from core.pyrunner import PyRunner
 
     app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/BI_GUIDE.md)
@@ -610,6 +635,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.include_router(layout_routes.router)
     app.include_router(designer_routes.router)          # the Sutra designer (ui.designer, off by default)
     app.include_router(designer_grid_routes.router)     # its Grid mode
+    app.include_router(mcube_routes.router)            # the MR cube: MCUBE [scope BY ... | @owner/name], the pivot screen with the MR lens, /api/pivot/mr/...
     app.include_router(pivot_routes.router)            # the pivot screen: PIVOT [table | @owner/name | panel], /api/pivot/... (PIVOT_GUIDE.md)
     app.include_router(collab_routes.router)
     app.include_router(thread_routes.router)

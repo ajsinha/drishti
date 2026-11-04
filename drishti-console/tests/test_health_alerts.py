@@ -58,9 +58,10 @@ def test_no_rules_file_is_said_and_a_server_without_alerts_shows_no_section(clie
 def test_the_relay_of_the_worker_is_shown(client, backend, monkeypatch):
     from core import channel_relay
 
-    monkeypatch.setitem(channel_relay._state, "port", 17490)
-    monkeypatch.setitem(channel_relay._state, "host", "10.0.4.11")
+    relay = channel_relay.of(client.app)
+    monkeypatch.setattr(relay, "port", 17490)
+    monkeypatch.setattr(relay, "host", "10.0.4.11")
     flat = _flat(_health(client, backend, monkeypatch, None))
     assert "relay 10.0.4.11:17490 (across hosts) ·" in flat and "passed on" in flat and "refused" in flat
-    monkeypatch.setitem(channel_relay._state, "port", 0)
+    monkeypatch.setattr(relay, "port", 0)
     assert "data-console-relay" not in _health(client, backend, monkeypatch, None)

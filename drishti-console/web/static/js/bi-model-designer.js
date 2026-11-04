@@ -27,7 +27,7 @@
   const itemId = canvas.getAttribute('data-item');
   const shell = canvas.closest('.bi-shell');
   if (shell) { shell.classList.add('bi-shell-design'); }
-  const KEEP = 'drishti.bi.model.draft.' + itemId;
+  const KEEP = (window.drishtiKey ? window.drishtiKey('drishti.bi.model.draft.' + itemId) : 'drishti.bi.model.draft.' + itemId);
 
   const M = (window.drishtiModel = { doc: null, infos: {}, check: null, suggestions: [], yaml: '', item: null, etag: null, readOnly: false, dirty: false, selected: null, tabs: [], listeners: {} });
   M.on = (ev, fn) => { (M.listeners[ev] = M.listeners[ev] || []).push(fn); };

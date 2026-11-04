@@ -247,9 +247,10 @@ drishti:
     drain:                           # the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Net "Drain for a stop", the stop hooks
       settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip)
   sources:
-    # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
-    # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
-    fetch-timeout: 5s
+    # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004), and a panel's own source
+    # (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large
+    # table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing.
+    fetch-timeout: 10s
     # Optional directory of extra plugin jars; each gets its own class loader.
     plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.
@@ -343,6 +344,14 @@ drishti:
       - /api/v1/pivot/rows
       - /api/v1/pivot/export
       - /api/v1/pivot/inline             # rows the caller already holds (a chart of a table's shown rows), aggregated by the engine
+      - /api/v1/pivot/live               # a live pivot: the same answer kept current for the caller (ended by DELETE, or when no stream reads it)
+      - /api/v1/pivot/explain            # the difference between two cells in steps, computed as the caller, stored nowhere
+      - /api/v1/pivot/whatif             # a view with an overlay beside the original, computed as the caller, stored nowhere
+      - /api/v1/pivot/functions/test     # the custom-function playground: the harness on a sample, nothing saved
+      - /api/v1/pivot/mr/headline        # the MR cube's lens (MR_CUBE_GUIDE.md): a view's headline, a cell's detail and history and the
+      - /api/v1/pivot/mr/detail          # what-if side by side, each computed by the VaR engine as the caller, written nowhere
+      - /api/v1/pivot/mr/history
+      - /api/v1/pivot/mr/what-if
       - /api/v1/var/basket/sheet        # the basket sheet's checks and figures, computed as the caller, saved nowhere
       - /api/v1/var/basket/sheet.xlsx   # the sheet as a workbook, written nowhere on the server
       - /api/v1/command
@@ -476,6 +485,30 @@ drishti:
           - POST /api/v1/bi/admin/runs/*/cancel
           - POST /api/v1/bi/admin/runs/suggestions/*/accept
           - POST /api/v1/bi/admin/runs/suggestions/*/dismiss
+      "[pivot:write]":
+        description: "Pivot: end your live pivots, save a custom function as a new version and submit it for approval (the harness must pass)."
+        allow:
+          - DELETE /api/v1/pivot/live/*
+          - POST /api/v1/pivot/functions
+          - POST /api/v1/pivot/functions/*/*/submit
+      "[pivot:comment]":
+        description: "Pivot: comment on a cell of a saved view you may open, and resolve, reopen or delete your comments (the view's owner: any of its comments)."
+        allow:
+          - POST /api/v1/pivot/views/*/*/comments
+          - POST /api/v1/pivot/views/*/*/comments/*/resolve
+          - POST /api/v1/pivot/views/*/*/comments/*/reopen
+          - DELETE /api/v1/pivot/views/*/*/comments/*
+      "[pivot:approve]":
+        description: "Pivot: approve or revoke a custom function someone else wrote (the pivot-approver role or an administrator at call time; never your own)."
+        allow:
+          - POST /api/v1/pivot/functions/*/*/approve
+          - POST /api/v1/pivot/functions/*/*/revoke
+      "[pivot:admin]":
+        description: "Pivot: define, remove and refresh rollups of partial states (Admin -> Pivot rollups). Needs the admin role at call time."
+        allow:
+          - POST /api/v1/pivot/rollups
+          - DELETE /api/v1/pivot/rollups/*
+          - POST /api/v1/pivot/rollups/*/refresh
       "[packs:admin]":
         description: "Load, unload, switch on and off, deploy archives, install and roll back packs, and create, change, test and delete connectors (Admin -> Connectors), and Retry now for packs, connectors, AI providers and MCP servers. Needs the admin role."
         allow:
@@ -518,6 +551,7 @@ drishti:
       - POST /api/v1/pivot/views         # a saved pivot view: a person's, in the console
       - DELETE /api/v1/pivot/views/*
       - POST /api/v1/pivot/promote       # a panel's pivot promoted to its Sutra: an author, in the console
+      - POST /api/v1/pivot/views/*/restore   # an old version of a saved view saved again: a person's, in the console
       - POST /api/v1/bi/migrate/models/convert   # migration: an administrator in the console, never a token
       - POST /api/v1/bi/migrate/models
       - POST /api/v1/bi/migrate/expressions

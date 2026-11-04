@@ -213,10 +213,15 @@ def test_value_types_are_detected_from_the_cells(page):
 
 
 def test_number_conditions(page):
-    r = page.evaluate("""() => { const c = window.drishtiModules.colFilter, col = ['1,000', '250k', '5m', '−12,000', '', '•••', 'n/a'];
+    r = page.evaluate("""async () => { const c = window.drishtiModules.colFilter, col = ['1,000', '250k', '5m', '−12,000', '', '•••', 'n/a'];
         const ok = (op, a, b) => { const cond = {op, a, b}, x = c.context(cond, col); return col.map(t => c.test('number', cond, t, x)); };
+        // the average is the server's: asked of the pivot engine (POST /api/pivot/inline); while it is asked nothing is hidden
+        const avg = async (op) => { const cond = {op}; let x = c.context(cond, col); const waiting = col.map(t => c.test('number', cond, t, x));
+            if (x.ready) { await x.ready; } x = c.context(cond, col); return { waiting, done: col.map(t => c.test('number', cond, t, x)), avg: x.avg }; };
+        const avga = await avg('avga'), avgb = await avg('avgb');
         return { eq: ok('eq', '250000'), ne: ok('ne', '250k'), gt: ok('gt', '1000'), ge: ok('ge', '1000'), lt: ok('lt', '0'), le: ok('le', '1000'),
-                 bt: ok('bt', '0', '300k'), top: ok('top', '2'), bot: ok('bot', '1'), avga: ok('avga'), avgb: ok('avgb') }; }""")
+                 bt: ok('bt', '0', '300k'), top: ok('top', '2'), bot: ok('bot', '1'), avga: avga.done, avgb: avgb.done, avgaWaiting: avga.waiting,
+                 avg: avga.avg }; }""")
     assert r["eq"] == [False, True, False, False, False, False, False]
     assert r["ne"] == [True, False, True, True, True, False, True]                  # a blank or a word is "not equal", as in Excel; a masked value never matches
     assert r["gt"] == [False, True, True, False, False, False, False]
@@ -228,6 +233,8 @@ def test_number_conditions(page):
     assert r["bot"] == [False, False, False, True, False, False, False]
     assert r["avga"][2] and not r["avga"][3]                                         # the average of 1000, 250000, 5m, -12000 is 1.31m
     assert r["avgb"][0] and not r["avgb"][2]
+    assert r["avg"] == 1_309_750                                                     # the engine's avg(V) of the four numbers, as before
+    assert r["avgaWaiting"][:4] == [True, True, True, True]                          # asked, not answered yet: no row hidden
 
 
 def test_top_n_takes_the_n_largest_and_bottom_n_the_n_smallest(page):
@@ -338,6 +345,10 @@ def test_number_conditions_in_the_menu(page):
     condition(page, "Notional", "Bottom N", "2")
     assert ids(page) == ["T05", "T08"]
     condition(page, "Notional", "Above average")
+    for _ in range(100):                          # the average is the engine's (POST /api/pivot/inline): the rows redraw once it answers
+        if ids(page) == ["T03", "T04", "T11"]:
+            break
+        page.wait_for_timeout(100)
     assert ids(page) == ["T03", "T04", "T11"]
     b = page.locator("#p-tbl th", has_text="Notional").locator(".cf-btn")
     assert b.get_attribute("title").startswith("Filtered: Above average")
@@ -510,18 +521,20 @@ def test_the_remember_switch_is_off_unless_the_page_asks_for_it(browser, url):
     pg.goto(url + VIEW, wait_until="load")
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     tick(pg, ["Rates"], "Desk")
-    assert pg.evaluate("localStorage.getItem('drishti.columnFilters')") is None            # off by default: nothing is kept
+    mem = pg.evaluate("window.drishtiKey('drishti.columnFilters')")                     # named per person (theme-init.js)
+    assert mem.startswith("drishti.columnFilters@")
+    assert pg.evaluate("k => localStorage.getItem(k)", mem) is None                          # off by default: nothing is kept
     pg.goto(url + VIEW, wait_until="load")
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     assert len(ids(pg)) == 12                                                               # and a fresh visit starts unfiltered
-    pg.evaluate("localStorage.setItem('drishti.rememberFilters', 'on')")                  # the per-user switch, on
+    pg.evaluate("localStorage.setItem(window.drishtiKey('drishti.rememberFilters'), 'on')")   # the per-user switch, on
     tick(pg, ["FX"], "Desk")
-    assert "FX" in pg.evaluate("localStorage.getItem('drishti.columnFilters')")
+    assert "FX" in pg.evaluate("k => localStorage.getItem(k)", mem)
     pg.goto(url + VIEW, wait_until="load")                                                  # no filter in the address: the remembered one returns
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     assert ids(pg) == ["T03", "T04", "T08"] and "f.tbl.Desk" in pg.evaluate("location.search")
     pg.locator("#p-tbl .tbl-clear").click()
-    assert pg.evaluate("localStorage.getItem('drishti.columnFilters')") in (None, "{}")
+    assert pg.evaluate("k => localStorage.getItem(k)", mem) in (None, "{}")
     ctx.close()
 
 

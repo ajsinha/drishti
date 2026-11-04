@@ -116,6 +116,9 @@ public final class Values {
         if (s instanceof Double d && d == Math.rint(d) && Math.abs(d) < 1e15) {
             return Long.toString(d.longValue());
         }
+        if (s instanceof java.math.BigDecimal b) {
+            return b.toPlainString();                             // a decimal as written, never 1E+3
+        }
         if (s instanceof Link l) {
             return l.display();
         }

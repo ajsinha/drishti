@@ -56,10 +56,9 @@ panels:
     rows: $.POSITIONS
     fmt: compact
     tone: sign
-    by: BOOK
-    across: CURRENCY
-    value: MTM
-    agg: sum
+    by: "@.BOOK"
+    across: "@.CURRENCY"
+    value: sum(@.MTM)
     heat: true
   - id: tradeCount
     kind: pivot

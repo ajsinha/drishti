@@ -202,6 +202,10 @@ that job (the table in section 1); see "Personal API tokens" in [CLI_GUIDE.md](C
 | `bi:write` | create, edit, propose, publish and delete BI items; restore versions ([BI_GUIDE.md](BI_GUIDE.md)) | the `bi-author` power and a workspace role |
 | `bi:approve` | approve or reject proposed BI items, endorse, import a bundle | the approve power or `bi-steward` |
 | `bi:admin` | change a workspace and the BI settings | the workspace admin role or `bi-admin` |
+| `pivot:write` | end your live pivots; save a custom function's new version and submit it ([PIVOT_GUIDE.md](PIVOT_GUIDE.md)) | any user of the pivot engine |
+| `pivot:comment` | comment on cells of saved views you may open; resolve, reopen and delete your comments | the view's owner for others' comments |
+| `pivot:approve` | approve or revoke someone else's custom function | the `pivot-approver` role or admin |
+| `pivot:admin` | define, remove and refresh pivot rollups | the admin role |
 | `ai:use`, `ai:admin` | call the configured models and MCP tools; send a test call to a model | the admin role for `ai:admin` |
 | `node:drain` | drain a server before it stops and take it back (the stop hooks and the rolling upgrade runner) | the admin role |
 
@@ -1693,7 +1697,8 @@ as an administrator's announcement.
 
 | Method | Path | Notes |
 |---|---|---|
-| `GET` | `/admin/dataload` | `{on, owner, node, dir, interval, nextCycleAt, running: {startedAt, trigger}, lock: {run, node, pid, since, heartbeat}, waiting: [{file, size, modified, state}], markersWithoutFile, readyAll, failed: [{file, day, run, reason}], ledger: [the newest 20 lines], cycles: [{run, trigger, started, finished, state: done\|skipped\|failed, why, files: [{file, outcome, reason, pack, kind, versions, rows, rejected}], notices, signals}], settings}` |
+| `GET` | `/admin/dataload` | `{on, owner, node, dir, interval, nextCycleAt, running: {startedAt, trigger}, lock: {run, node, pid, since, heartbeat}, waiting: [{file, size, modified, state}], markersWithoutFile, readyAll, failed: [{file, day, run, reason}], ledger: [the newest 20 lines], cycles: [{run, trigger, started, finished, state: done\|skipped\|failed, why, files: [{file, outcome, reason, pack, kind, versions, rows, rejected}], notices, signals}], settings}`. The keys Admin → Data loads → Inbox draws (every figure in words, so the page computes nothing): `zone`, `nextCycleText`, `ownerText`, `lockText`; `running` gains `{run, node, folder, elapsedText, files: [{file, size, sizeText}], fileCount, bytes, sizeText, timeoutText, heap, nice, tables: [{n, state: waiting\|loading\|committed\|failed\|returned, position, name, label, timeText, files, detail}], tableCount, tableText, summaryText, note}` (from the lock and `inprocess/<run>/load-plan.json`); `board: {waiting: [{file, size, sizeText, modified, code: ready\|ready-all\|not-stable\|no-marker\|next-cycle\|refused, label, detail, next, rule: {n, by, pack, kind, table, date, text} or {error, text}}], waitingCount, readyAll: {since, sinceText, text}, failures: [{file, day, run, reason, report, atText, pack, kind, rejectsText, rejects, retryText}], failedTotal, failedText, duplicates: [{file, run, at, alreadyRun, text, reason}], duplicatesCount}`; `lastCycles: [{time, run, trigger, outcome: loaded\|nothing\|duplicate\|failed-files\|returned\|skipped\|failed\|loading, label, text, versionsText, tookText, notices}]` (today's, newest first; the first also carries `todayCount` and `skippedToday`); `rules: {source, rules: [{n, match, pack, kind, connector, table, date, format, lake}], unmatched, unmatchedText, note}` (`rulesError` when the file cannot be read); `settings` (each key, and `text`); `folders: {outbox, failed, ledger}` |
+| `GET` | `/admin/dataload/report?path=` | A report the status links to, by its path under the inbox's folder: a file's `.loaded.json` or `.failed.json`, a loader's `load-<n>.summary.json` or `load-plan.json` (JSON), or `load-<n>.rejects.jsonl` (the first 500 lines, an array). Only under `outbox/` and `failed/`; anything else `400 DRS-5001`, a report no longer kept `404` |
 | `POST` | `/admin/dataload/run` | Load now: `{started: true, by}`; while a run still loads none starts: `{started: false, skipped: "skipped: run 20261103T150000Z-drishti-main still loading (12 min)"}` (recorded as a skipped cycle). `400 DRS-5001` the inbox is off here. Audited `dataload.run` |
 | `POST` | `/admin/dataload/retry` | body `{file}` (or `?file=`): a failed file and its `.ready` back into the inbox: `{file, from, to, next}`. `404 DRS-1001` no failed file of that name, `400 DRS-5001` a bad name or one in the inbox already. Audited `dataload.retry` |
 
@@ -1942,7 +1947,7 @@ and the fix for the codes that need more than the meaning.
 | DRS-1001 | 404 | entity not found | no source holds that entity. When the kind's routed connector is off and others serve the kind, the message names the ones asked and the one that is off (`… (asked trading-store; trade-endur, which kind 'trade' is routed to, is disabled)`): the id may live in the connector that is off |
 | DRS-1002 | 404 | no source for kind | no source serves that kind. "connector news is disabled (kind 'news' is routed to it)": nothing else serves the kind on this server. For the news-and-markets pack, build the snapshot store (`drishti.py lake demo --only news-and-markets`): a switched-off internet connector's kinds are then read from `news-store` (Admin → Connectors: *off (served from the snapshot)*), and what it lacks is `DRS-1001` naming it. Or switch the live connector on (`DRISHTI_NEWS_ENABLED=true`) |
 | DRS-1003 | 502 | source failed | the source answered with an error, could not be reached, or holds the data but cannot read it; `detail` names the connector (`DRS-1003 trade-murex failed reading trade/MX-20000001`) and, when the connector says what to do, why (`…: trade 2026-09-30 cannot be read: the native Delta engine does not decompress BROTLI Parquet pages …`). The next connector is not asked: another store's data is never shown in place of a failing store's |
-| DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 5 s) |
+| DRS-1004 | 504 | source timeout | the source took longer than `drishti.sources.fetch-timeout` (default 10 s) |
 | DRS-1005 | 422 | invalid json | a document (e.g. sample JSON pasted into Studio) is not valid JSON or not an object |
 | DRS-1006 | 500 | plugin load failed | a connector plugin could not be loaded (see `/sources` → `failures`) |
 | DRS-1007 | 400 | no time travel | `knownAt` asked of a dated store that keeps no earlier versions (only Delta Lake and Iceberg do); `detail` names the connector (`DRS-1007 recent-files keeps no earlier versions, so a read 'as known at' an instant cannot be answered from it …`). Today's data is never shown in its place; a structured search names it in `failed` and is `partial` |
@@ -2060,6 +2065,16 @@ and the fix for the codes that need more than the meaning.
 | DRS-5703 | 404 | pivot off | the pivot engine is switched off on this server (`drishti.pivot.enabled`) or the edition has no `PIVOT` |
 | DRS-5704 | 404 | pivot: not found | a saved pivot view, a provenance id, a cell reference's view or a source that is not there, or not shared with the caller |
 | DRS-5705 | 403 | pivot: masked | a field masked for the caller asked as a dimension, a measure's input or a filter (masks apply before aggregation) |
+| DRS-5710 | 400 | pivot: function invalid | a custom function refused as written: its definition, code, inputs, kind or name ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)) |
+| DRS-5711 | 422 | pivot: harness failed | a custom function whose harness did not pass (split-and-merge differs from one pass, not deterministic, too slow, too large): not saved, with the first failure |
+| DRS-5712 | 403 | pivot: approval | the author approving their own function, someone who is not an approver, a function not approved for the caller, a plug-in jar changed since its approval |
+| DRS-5713 | 404 | pivot: function language off | the function's language is switched off on this server (Python and Java plug-ins as shipped), or Python asked to read memory-only data |
+| DRS-5714 | 422 | pivot: function limit | a custom function past a limit: a state over its bound, a call over its time (its worker stopped), every worker busy |
+| DRS-5715 | 403 | pivot: official | a custom function in an official run, report or sign-off, or named as an official measure |
+| DRS-5716 | 400 | pivot: explain | an explanation or a what-if the engine cannot make as asked (no `by`, a cell that already fixes it, an empty overlay, a what-if on VaR) |
+| DRS-5720 | 504 | pivot: a node's share missing | a view computed across the cluster where a node's share had no answer by `drishti.pivot.cluster.deadline-seconds` and no other node could answer it: no figure is shown, never one from the other nodes alone |
+| DRS-5721 | 422 | pivot: live | a live pivot refused or ended: live pivots off (`drishti.pivot.live.enabled`), the caller's or the server's live views at their most (`drishti.pivot.live.max-per-person`, `drishti.pivot.live.max-total`), over `drishti.pivot.live.max-cells`, an exact live view estimated over `drishti.pivot.live.max-rows`, a view pinned to a past version (`asOf`) |
+| DRS-5722 | 400 | pivot: comment | a cell comment refused: empty or over 2,000 characters, a dimension or measure not of the view, an Others cell, a change by someone who is neither its author nor the view's owner, a view at 1,000 comments |
 | DRS-5321 | 422 | sensitivity factor unknown | an element of `position-sensitivity` names a risk factor that is not in the factor dictionary, by its standard name or a source name: the element is refused and counted ([FRTB_SA_GUIDE.md section 11](FRTB_SA_GUIDE.md#11-refusals-and-error-codes)) |
 | DRS-5322 | 422 | factor dictionary refused | the factor dictionary names a source name under two factors (or one factor twice); the dictionary is refused with every conflict listed, and FRTB-SA is not computed from it until it is corrected |
 | DRS-5323 | 422 | sensitivity not a number | an element's VALUE is null, NaN or infinite: the element is refused and counted |
@@ -3305,6 +3320,23 @@ made from its own members; masks apply before aggregation. Every view run and ex
 | `GET /api/v1/pivot/provenance/{id}?cell=rowKey|colKey` | an answer's provenance, and a cell's |
 | `GET /api/v1/pivot/views`, `POST /api/v1/pivot/views`, `GET /api/v1/pivot/views/{owner}/{name}`, `DELETE /api/v1/pivot/views/{name}` | saved views (`{name, view, sharedWith}`; each save a new version) |
 | `POST /api/v1/pivot/export` | `{view, what: pivot\|rows\|definition, format: xlsx\|csv\|jsonl\|arrow, shape: cells\|grid, delimiter, bom, coords}`: streamed as a download |
+| `POST /api/v1/pivot/query` with `"exact": true` or `false` beside the view | `distinct`, `median` and `percentile` exact on request at any size, or by their sketches (≈) at any size (by default ≈ above `sketches.approximate-above-rows`; never VaR); a sketched measure carries `kind: sketch`, an id ending in `≈`, `error` (`±1.6% (HyperLogLog, 4,096 registers, one standard error)`) and `exact: false` |
+| `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample: each cell `approximate: true`, `intervals` per measure, "computing" notes for what a sample cannot state; never for VaR or a holistic measure; only when the estimate is over `progressive.after-ms`), then `exact`; `error` with `{error, code}` |
+| `GET /api/v1/pivot/rollups` | `{definitions, built: [{id, source, grain, functions, date, version, refreshedAt, lastRefresh, rows, bytes, partitions}], advice: [{source, grain, functions, asked, averageMs, words}]}` |
+| `POST /api/v1/pivot/rollups`, `DELETE /api/v1/pivot/rollups/{id}`, `POST /api/v1/pivot/rollups/{id}/refresh?date=` | administrators: define `{id, source, grain, functions, dates: latest\|all, title}` (refreshed at once in the background), remove, refresh now (`{words}`: what the incremental refresh did); audited |
+| `POST /api/v1/pivot/query` with `"rollups": false`, `"progressive": false` | the screen's switches as options: no rollup answers (the table is read), no ≈ first answer. Every answer carries `computedAs`: `{asked: {exact: exact\|auto\|approximate, progressive, rollups}, sketches: [{measure, error}], topChosen: [words], routes: [words], sampled, exact, words}` (`words`: `exact`, `≈ from a sketch (D)`, `from rollup desk-month`, `rollups off`, ...) |
+| `POST /api/v1/pivot/live` | `{view, exact, rollups}`: a live pivot → `{id, node, answer, options, limits, words}` (exact unless `"exact": false`; never sampled); `422 DRS-5721` past a limit; audited `pivot.live.start` |
+| `GET /api/v1/pivot/live` | the caller's live pivots: `{live: [{id, source, date, since, options, seq, recomputes, unchanged, streaming}], limits}` |
+| `GET /api/v1/pivot/live/{id}/events` | server-sent events on the node named by `node`: `answer` `{id, seq, answer}` first; `patch` `{kind, cells: {rowKey\|colKey: cell}, removed: [keys], changed, seq, causes, provenance, computedAs, ...}`; `reshape` `{answer}`; `status` (nothing moved, and the heartbeat); `error`; `ended` `{why}`; another person's id: `404 DRS-5704` |
+| `DELETE /api/v1/pivot/live/{id}` | ends the caller's live pivot (`204`); audited `pivot.live.end` |
+| `GET /api/v1/pivot/views/{owner}/{name}/comments?cell=&open=` | a saved view's cell comments, oldest first: `{id, version, open, comments: [{id, cell, cellId, coords, label, measure, text, by, at, version, resolved: {by, at} \| null, older}]}`; `cell` is the coordinates' text (`DESK=RATES`, `*`) or the answer's cell key |
+| `POST /api/v1/pivot/views/{owner}/{name}/comments` | `{coords: {DIM: V}, measure, text}`: a comment by anyone who may open the view; `400 DRS-5722` when refused; audited `pivot.comment.add` (never the text) |
+| `POST /api/v1/pivot/views/{owner}/{name}/comments/{id}/resolve`, `POST /api/v1/pivot/views/{owner}/{name}/comments/{id}/reopen`, `DELETE /api/v1/pivot/views/{owner}/{name}/comments/{id}` | the author or the view's owner; audited |
+| `POST /api/v1/net/pivot/partials` | the cluster's nodes only (signed, on behalf of the person): `{plan, parts}` or a plan with its shard; the node's partial states per cell set and key (`{sets: [[{key, members, states: [base64], scope, notes}]], stats}`) |
+
+The estimate also answers `range` (half to twice its seconds), `nodes`, `rollup` (the rollup that covers the view, or null) and `options`
+(`run`, `narrow`, `rollup`, `background`, `cancel`, each with `words` and `seconds`); its seconds come from this node's measured scan rate
+once it has one.
 
 ```bash
 curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
@@ -3313,7 +3345,66 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
   -d '{"view":"asha/desk-risk","format":"xlsx"}' -o desk-risk.xlsx
 ```
 
-Refusals: `DRS-5701` to `DRS-5705` and `DRS-9507` ([the error code table](#error-code-table)).
+Refusals: `DRS-5701` to `DRS-5705`, `DRS-5720` to `DRS-5722` and `DRS-9507` ([the error code table](#error-code-table)). A personal
+token reads, queries, starts and streams live pivots with any scope; ending a live pivot needs `pivot:write`, changing comments
+`pivot:comment`, rollups `pivot:admin`, approving functions `pivot:approve`; saving and restoring a view are console-only.
+
+### Pivot: custom functions, explain and what-if
+
+Custom aggregation functions ([PIVOT_GUIDE.md section 19](PIVOT_GUIDE.md#19-custom-functions)), the difference between two cells in steps
+that add up (section 20) and what-if overlays (section 21). A view uses a function as a value `fn:owner/name@version(FIELD, ...)`.
+
+| Call | Does |
+|---|---|
+| `GET /api/v1/pivot/functions` | `{functions: [{id, ref, owner, name, version, language, kind, inputs, status, approvals, withdrawn, harness, versions, mine, label}], languages: {formula, sql, python, java}, requireApproval}`: yours and those approved for you |
+| `GET /api/v1/pivot/functions/{owner}/{name}?version=` | one version, its code included |
+| `POST /api/v1/pivot/functions/test` | a read (`token-read-posts`): `{name, language: formula\|sql\|python\|java, code, entry, inputs: [name \| {name, type: number\|text}], kind, params, tolerance, stateBytes, sketchError, description, sample: [{...}] \| {columns, rows}, group, parts, projectRows, nodes}` → `{definition, harness: {passed, firstFailure, checks, runs, worst, onePass, nsPerRow, stateBytes}, playground: {steps, onePass, final, same, cost, pivot}}`; nothing saved; audited |
+| `POST /api/v1/pivot/functions` | token scope `pivot:write`; the same body: a new version after the harness passes (`DRS-5711` with the first failure otherwise, `DRS-5710` a definition refused, `DRS-5713` a language off, `DRS-5715` an official measure's name); private |
+| `POST /api/v1/pivot/functions/{owner}/{ref}/submit` | token scope `pivot:write`; `{ref}` is `name@version` (`wret@1`); `{note}`: the author asks for sharing (`DRS-5712` when the caller is not the author, `DRS-5704` no such version) |
+| `POST /api/v1/pivot/functions/{owner}/{ref}/approve` | token scope `pivot:approve`; `{scope: everyone\|group:<name>, reason}`: an approver who is not the author (a Java plug-in: an administrator, its jar's SHA-256 pinned); `DRS-5712` the author, someone who is not an approver, no reason or a jar changed; `DRS-5711` no passed harness report |
+| `POST /api/v1/pivot/functions/{owner}/{ref}/revoke` | token scope `pivot:approve`; `{reason}`: withdrawn by an approver, an administrator or the author; its cells say so (`DRS-5712` anyone else) |
+| `POST /api/v1/pivot/explain` | a read (`token-read-posts`); `DRS-5716` what cannot be explained as asked: `{view, measure, from: {DIM: V}, to: {DIM: V}, fromDate, toDate, by, order: member\|size, price, quantity}` → `{measure, kind, by, from, to, difference, method, order, steps: [{member, cause: new\|gone\|changed\|residual\|price\|quantity\|cross, from, to, step, cumulative}], residual: {value, name}, addsUp, words}` |
+| `POST /api/v1/pivot/whatif` | a read (`token-read-posts`; nothing is written); `DRS-5716` an empty overlay, a field that is not a number, a VaR source: `{view, whatIf: {exclude: {FIELD: [values]}, changes: [{field, scale \| set, where: {FIELD: [values]}}], add: [{FIELD: value}]}}` → `{whatIf, original, diff, overlay, note}` (per cell of `diff`: `delta` per measure, what-if minus original, or `status`) |
+| `GET /api/v1/pivot/views/{owner}/{name}/versions`, `GET /api/v1/pivot/views/{owner}/{name}/versions/{n}` | a saved view's versions (newest first), one version (`DRS-5704` a view not shared with the caller or a version that is not there) |
+| `GET /api/v1/pivot/views/{owner}/{name}/diff?from=&to=` | the definition's changes between two versions: `{id, from, to, changes: [{key, from, to}], words}` (`DRS-5704` as above) |
+| `POST /api/v1/pivot/views/{name}/restore` | never a token (`token-never`: a person's saved view, in the console); `{version}`: the caller's old version saved again as the next version; audited `pivot.view.restore` |
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/functions/test \
+  -d '{"name":"wret","language":"formula","code":"sum(r * w) / sum(w)","inputs":["r","w"],"sample":[{"r":0.01,"w":2},{"r":-0.02,"w":1}]}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/explain \
+  -d '{"view":{"source":"trade","rows":["productType"],"values":["sum(notional)"]},"from":{"productType":"IRS"},"to":{"productType":"FXFWD"},"by":"counterparty"}'
+```
+
+Refusals: `DRS-5710` to `DRS-5716` ([the error code table](#error-code-table)).
+
+### The MR cube: `/api/v1/pivot/mr`
+
+The market-risk cube ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)) is the pivot engine on `source: var` with engine `mr-cube` running: the
+source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`, `TRADE`, the measures `comp_var()`, `comp_es()`,
+`incr_var()`, `limit()`, `limit_use()`, `svar()`, `dv01()`, `cs01()`, `sbm()`, and the view's `options` (`scope`, `horizon`, `method`,
+`confidence`, `esConfidence`, `set`, `ccy`). Its lens adds, as the caller (a `view` is the view or a saved view's id):
+
+| Call | Does |
+|---|---|
+| `POST /api/v1/pivot/mr/headline` | `{view}`: the view's scope's `var`, `es`, `k`, `esCount`, `lens`, `limit`, `limitUse`, `stressedVar`, `dataVersion`, `batches`, `trades`, `positions`, `provenance` |
+| `POST /api/v1/pivot/mr/detail` | `{view, coords}`: one cell's tail: `edges`, `counts`, `var`, `es`, `k`, `varDate`, `tail`, `trades`, `positions`, `scope` |
+| `POST /api/v1/pivot/mr/history` | `{view}`: the sparklines: `dates`, `series` by cell key of the first measure |
+| `GET /api/v1/pivot/mr/versions` | the time-travel slider's stops: dates and their batches |
+| `GET /api/v1/pivot/mr/explain?scope=&from=&to=&confidence=` | why a scope's VaR moved: the engine's exact steps |
+| `GET /api/v1/pivot/mr/sensitivities?scope=&grid=&by=&class=&measure=&ccy=&asOf=` | the DV01 ladder by a grid, or the heat map by two factor parts |
+| `POST /api/v1/pivot/mr/what-if` | `{view, items: [{copyOf, factor}]}`: each row of the view's first row dimension and the total, before, after, incremental |
+
+A token calls the four `POST`s of the MR lens with any scope: each is a read (`token-read-posts`), computed by the VaR engine as the caller and written nowhere.
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
+  -d '{"source":"var","rows":["MGMT.DESK"],"columns":["RISK_CLASS"],"values":[{"measure":"var()"},{"measure":"comp_var()"}],"options":{"horizon":"10d"}}'
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/mr/detail \
+  -d '{"view":{"source":"var","rows":["MGMT.DESK"],"values":["var()"]},"coords":{"MGMT.DESK":"DESK-RATES"}}'
+```
+
+Off, every `/api/v1/pivot/mr` call answers `404 DRS-1020`, and an MR measure, level or option on `source: var` is refused (`DRS-5701`).
 
 ## Embedding views in another web application
 
@@ -3540,6 +3631,10 @@ patterns, and the server decides in one filter (`TokenScopes`):
 | `packs:admin` | `POST /admin/packs/{name}/load` and `/unload`, `PUT /admin/packs/{name}`, `POST /admin/registry/**` (install and roll back), `POST /admin/connectors/**`, deploy an archive (`POST /admin/packs/deploy`, `POST` and `DELETE /admin/packs/deploy/{id}`), `POST /admin/packs/{name}/rollback`, **Load data** (`POST /admin/packs/{name}/data`), the create-connectors step of a deploy (`POST /admin/packs/deploy/{id}/connectors`), and every write under `/admin/connectors` (`PUT`, `DELETE`, `.../enabled`, `.../reset`, `.../test`, `.../restore/{id}`), and **Retry now** (`POST /admin/retry/{area}`) | `admin` |
 | `ai:use` | `POST /ai/chat`, `POST /ai/mcp/{server}/tools/{tool}` ([AI](#ai-and-mcp-apiv1ai-and-apiv1adminai)) and the BI hooks `POST /bi/ai/draft`, `/bi/ai/ask`, `/bi/ai/explain`, `/bi/ai/suggest`, `/bi/ai/explain-checks`, `/bi/ai/dataset-helper` ([BI with AI](#bi-with-ai-apiv1biai)) | any signed-in user, under the AI policy (and the BI power each hook needs) |
 | `ai:admin` | `POST /admin/ai/test` | `admin` |
+| `pivot:write` | `DELETE /pivot/live/{id}`, `POST /pivot/functions` and `POST /pivot/functions/{owner}/{ref}/submit` ([custom functions](#pivot-custom-functions-explain-and-what-if)) | the author to save and submit; any user of the pivot engine to end their live pivot |
+| `pivot:comment` | `POST /pivot/views/{owner}/{name}/comments`, `POST /pivot/views/{owner}/{name}/comments/{id}/resolve` and `/reopen`, `DELETE /pivot/views/{owner}/{name}/comments/{id}` | anyone who may open the view; the author or the view's owner to resolve, reopen and delete |
+| `pivot:approve` | `POST /pivot/functions/{owner}/{ref}/approve` and `/revoke` | an approver who is not the author (`pivot-approver` or admin) |
+| `pivot:admin` | `POST /pivot/rollups`, `DELETE /pivot/rollups/{id}`, `POST /pivot/rollups/{id}/refresh` | `admin` |
 | `node:drain` | `POST /admin/node/drain` (the drain before a stop, [node readiness and drain](#administration-node-readiness-and-the-drain-before-a-stop)); give the stop hooks' token this scope alone | `admin` |
 | `edit` | Write-back ([changes](#write-back-changes)): `POST /changes`, `POST /changes/{id}/approve`, `/reject` and `/withdraw`. No token has it unless chosen; another write scope never implies it; Admin → Edits' switches are never open to a token | the `edit` power (and, to approve, an approver role, never your own change), the field's roles; editing must be on |
 

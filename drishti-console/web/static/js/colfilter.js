@@ -15,7 +15,8 @@
  */
 /* Excel-style column filters (BI_DESIGN.md 8.1). Every column heading of a table, matrix (tree rows) or pivot grows a funnel
    button; its menu sorts, lists the column's distinct values with counts (search, Select all, Blanks) or filters by a
-   condition for the column's detected type (numbers, dates, text). Filters combine across columns (AND).
+   condition for the column's detected type (numbers, dates, text). Filters combine across columns (AND). "Above / below average"
+   compares with the server's average of the column (the pivot engine's avg, POST /api/pivot/inline): this file computes no figure.
    Two halves: pure functions (value, kindOf, detect, test, matches, summarise, encode, decode: testable on their own) and
    attach(options), which draws the buttons and the menu for one table. tables.js and tree-rows.js call attach; the
    filter state lives in the caller's own state object (options.state.f: column index -> filter), so it survives a live
@@ -76,14 +77,47 @@
   function opInfo(type, op) { var l = OPS[type] || OPS.text; for (var i = 0; i < l.length; i++) { if (l[i][0] === op) { return l[i]; } } return null; }
   function num(s) { return s == null ? NaN : (function (v) { return v.n == null ? NaN : v.n; })(value(norm(s))); }
 
+  /* "Above / below average": the average is the server's (ONE_GRAMMAR.md section 5: the browser computes no figure). The column's
+     numbers go to the pivot engine (POST /api/pivot/inline, avg(V)); its answer is kept per list of numbers (the last AVG_KEEP lists), so
+     a redraw asks nothing. Until it answers no row is hidden; refused, no row matches and the reason is kept (api.averageProblem). */
+  var AVG = {}, AVG_ORDER = [], AVG_KEEP = 50;
+  /** The engine's average of numbers: a promise of the figure (null when it has none). Replaceable (an element's own fetch, tests). */
+  api.ask = function (numbers) {
+    var body = { fields: [{ name: 'V', type: 'number' }], rows: numbers.map(function (n) { return [n]; }),
+      view: { rows: [], columns: [], values: [{ measure: 'avg(V)', as: 'avg' }], expandTo: { rows: 1, columns: 1 } } };
+    return fetch('/api/pivot/inline', { method: 'POST', credentials: 'same-origin',
+      headers: { 'Accept': 'application/json', 'Content-Type': 'application/json' }, body: JSON.stringify(body) }).then(function (r) {
+      return r.json().catch(function () { return {}; }).then(function (a) {
+        var g = a && a.cells && a.cells['*|*'];
+        if (!r.ok || !g) { throw new Error((a && a.detail) || 'the pivot engine gave no average'); }
+        return g.values && typeof g.values.avg === 'number' ? g.values.avg : null;
+      });
+    });
+  };
+  api.averageProblem = null;
+  /** The average of a column's numbers as far as the engine has answered: {avg, pending, ready (a promise while pending), key}. */
+  function average(ns) {
+    var key = ns.join(',');
+    var e = AVG[key];
+    if (!e) {
+      e = AVG[key] = { avg: null, pending: true };
+      AVG_ORDER.push(key);
+      if (AVG_ORDER.length > AVG_KEEP) { delete AVG[AVG_ORDER.shift()]; }
+      e.ready = api.ask(ns).then(function (v) { e.avg = v; }, function (err) { e.avg = null; api.averageProblem = String((err && err.message) || err); })
+        .then(function () { e.pending = false; e.ready = null; });
+    }
+    return { avg: e.avg, pending: e.pending, ready: e.ready, key: key };
+  }
   /** What a condition needs from the whole column (an average, the top-N cut-off, today) before rows are tested. */
   function context(c, texts) {
     var x = { t0: api.today() };
     if (c && (c.op === 'avga' || c.op === 'avgb' || c.op === 'top' || c.op === 'bot')) {
       var ns = [];
       texts.forEach(function (t) { if (kindOf(t) === 'num') { ns.push(value(norm(t)).n); } });
-      if (c.op === 'avga' || c.op === 'avgb') { x.avg = ns.length ? ns.reduce(function (a, b) { return a + b; }, 0) / ns.length : 0; }
-      else {
+      if (c.op === 'avga' || c.op === 'avgb') {
+        var a = ns.length ? average(ns) : { avg: null, pending: false, ready: null, key: '' };
+        x.avg = a.avg; x.pending = a.pending; x.ready = a.ready; x.key = a.key;
+      } else {
         var n = Math.max(1, parseInt(c.a, 10) || 10);
         ns.sort(function (a, b) { return c.op === 'top' ? b - a : a - b; });
         x.cut = ns.length ? ns[Math.min(n, ns.length) - 1] : null;
@@ -120,8 +154,8 @@
         case 'bt': return v >= Math.min(w, w2) && v <= Math.max(w, w2);
         case 'top': return x.cut != null && v >= x.cut;
         case 'bot': return x.cut != null && v <= x.cut;
-        case 'avga': return v > x.avg;
-        case 'avgb': return v < x.avg;
+        case 'avga': return x.avg == null ? !!x.pending : v > x.avg;          // asking the server: nothing hidden yet
+        case 'avgb': return x.avg == null ? !!x.pending : v < x.avg;
         default: return false;
       }
     }
@@ -210,10 +244,10 @@
     if (f) { u.searchParams.set(key, encode(f)); } else { u.searchParams.delete(key); }
     history.replaceState(history.state, '', u.pathname + u.search + u.hash);
   }
-  var MEM = 'drishti.columnFilters';
+  var MEM = (window.drishtiKey ? window.drishtiKey('drishti.columnFilters') : 'drishti.columnFilters');
   /** Off unless the page says <body data-remember-filters="on"> (a per-user setting) or this browser has drishti.rememberFilters = on. */
   function remembering() {
-    try { if (localStorage.getItem('drishti.rememberFilters') === 'on') { return true; } } catch (e) { /* private window */ }
+    try { if (localStorage.getItem((window.drishtiKey ? window.drishtiKey('drishti.rememberFilters') : 'drishti.rememberFilters')) === 'on') { return true; } } catch (e) { /* private window */ }
     return !!document.body && document.body.getAttribute('data-remember-filters') === 'on';
   }
   function memGet(k) { try { return (JSON.parse(localStorage.getItem(MEM) || '{}'))[k] || null; } catch (e) { return null; } }
@@ -257,18 +291,28 @@
       Object.keys(f).forEach(function (c) { enc[name(+c)] = encode(f[c]); });
       o.table.dispatchEvent(new CustomEvent('drishti:column-filter', { bubbles: true, composed: true, detail: { panel: o.key, filters: enc } }));
     }
+    var waiting = {};
+    /** A column's context; an average still asked of the server filters the table again when it arrives (once per column of numbers). */
+    function contextOf(i) {
+      var x = context(f[i].c, texts(i));
+      if (x.ready && !waiting[x.key]) {
+        waiting[x.key] = true;
+        x.ready.then(function () { delete waiting[x.key]; if (registry[o.id] === self) { self.prepare(); o.onChange(); } });
+      }
+      return x;
+    }
     var self = {
       active: function () { return Object.keys(f).length > 0; },
       /** Recompute what the conditions need from the whole column (call before testing rows). */
       prepare: function () {
         types = {}; ctx = {};
-        Object.keys(f).forEach(function (i) { ctx[i] = context(f[i].c, texts(+i)); });
+        Object.keys(f).forEach(function (i) { ctx[i] = contextOf(+i); });
       },
       /** Does the row pass every column filter (except column `skip`)? */
       pass: function (r, skip) {
         for (var k in f) {
           if (+k === skip || !r.cells[+k]) { continue; }
-          if (!matches(typeOf(+k), f[k], o.text(r, +k), ctx[k] || (ctx[k] = context(f[k].c, texts(+k))))) { return false; }
+          if (!matches(typeOf(+k), f[k], o.text(r, +k), ctx[k] || (ctx[k] = contextOf(+k)))) { return false; }
         }
         return true;
       },

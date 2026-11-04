@@ -521,8 +521,8 @@ section; where another plan row builds the engine, the RL row is only the lens's
 
 ## 11. Mock-ups: the screens to build
 
-Three of the product owner's mock-ups belong to this lens. Each is copied into the repository, self-contained (system fonts, nothing from
-a CDN), with a screenshot beside it, under [`docs/lenses/mockups/risk/`](mockups/risk/). **The checklists below are the source of truth
+The product owner's mock-ups that belong to this lens are copied into the repository, self-contained (system fonts, nothing from
+a CDN), with a screenshot beside it, under [`docs/lenses/mockups/risk/`](mockups/risk/) (the VaR layout's under [`mockups/var-layout/`](mockups/var-layout/)). **The checklists below are the source of truth
 at build time** ([README.md](README.md#mock-ups)): every panel of a mock-up is a row, and its status was checked against the code on
 2026-10-31 (`wip/drill-a`). **Built** cites the code or the guide section that shows it; **partly built** says what is missing; **not built**
 names the candidate row that would build it. The gaps (on a mock-up, not in the product) close each subsection and are rows of the plan's
@@ -534,7 +534,8 @@ names the candidate row that would build it. The gaps (on a mock-up, not in the 
 | [Scenario matrix](#112-the-scenario-matrix-scenario-matrix-bhtml) | option B (matrix with a chart of the selected scenario), 2026-10-31 | 14 | 0 | 0 |
 | [VaR horizon picker](#113-the-var-horizon-picker-var-horizon-pickerhtml) | the one design shown (its alternatives for small spaces considered), 2026-10-30 | 11 | 2 | 1 |
 | [Lens menus (LX1)](#114-the-lens-menus-lx1-menusahtml) (A subject menus in the bar, B a subject strip, C one lens menu) | A recommended, 2026-10-31 (chosen on the recommendation, product owner to review) | 3 | 0 | 0 |
-| **Total** | | **42** | **8** | **2** |
+| [VaR screen layout](#115-the-var-screens-layout-var-layoutahtml-var-layouta-drawerhtml) (A, and A with How calculated open) | A, 2026-11-03 | 8 | 0 | 0 |
+| **Total** | | **50** | **8** | **2** |
 
 ### 11.1 The Risk landings (`risk-landing.html`)
 
@@ -693,6 +694,32 @@ four built lenses (Risk, Trading, Market, World), each lens with one menu open. 
 
 On a phone (below 640 px) the Engines menu opens as a drawer: a row per running engine with its command word, the first open, a tap on another opens it and closes the first; each item 44 px high with its command beside it. The items marked *new* on the mock-up: the Stress window
 (`SWIN BANK`, [VAR_GUIDE section 18.9](../guides/VAR_GUIDE.md#189-choosing-the-stress-window)) is in the menu; the VaR Playground and Backtesting items show once their screens are on the server. Each item runs its command (shown beside its name) as if typed; an item that needs an id (*A counterparty*, *A country*) puts its words in the command line for the person to finish. With more than six menus in the bar they show as icons up to 1750 px wide, so the command line keeps its room. The configuration: [EDITIONS.md section 5.4](../admin/EDITIONS.md).
+
+### 11.5 The VaR screen's layout (`var-layout/A.html`, `var-layout/A-drawer.html`)
+
+![The VaR layout mock-up A: the hierarchy tree kept on the left, the baskets in two searchable drop-downs, How calculated as a link](mockups/var-layout/A.png)
+
+![The same screen with How calculated open: the drawer over the right of the screen](mockups/var-layout/A-drawer.png)
+
+[Open the mock-up](mockups/var-layout/A.html) and [its second state](mockups/var-layout/A-drawer.html). **Chosen:** option A (the product
+owner: "cleaner and better"); the earlier alternatives of the idea were not kept. Two changes to the VaR explorer and nothing else: the
+baskets leave the left-hand column for two drop-downs, and the right-hand explanation column becomes a drawer. The mock-up's figures are
+made up; the panels under the toolbar are the explorer's own, unchanged. **Code:** [`var.html`](../../drishti-console/web/templates/terminal/var.html)
+(the toolbar, the drawer), [`var-layout.js`](../../drishti-console/web/static/js/var-layout.js) (the drop-downs, the keys, the drawer),
+[`var-explorer.js`](../../drishti-console/web/static/js/var-explorer.js) (the rows and their actions), [`var-layout.css`](../../drishti-console/web/static/css/var-layout.css).
+**Guide:** [VAR_GUIDE section 3.2](../guides/VAR_GUIDE.md#32-the-screen) and [section 3.6](../guides/VAR_GUIDE.md#36-how-this-number-was-built).
+**Guard:** `drishti-console/tests/test_var_layout_keeps_everything.py` (every part of the screen as it was, still there).
+
+| # | Panel | Contents on the mock-up | Data, API or contract | Interaction | Status |
+|---|---|---|---|---|---|
+| L1 | System baskets | a drop-down *System baskets · choose… ▾*; open: a search (*em*), the count, *Provided by the system*, each basket with a chip and a figure | the tree's `portfolios` (the market-risk pack's `portfolio` feed: id, name, type, owner) | **B**; type, ↑↓, Enter, Esc | **Built**, without a figure per row (a VaR per basket would be one computation each; the row shows its id, owner and type) |
+| L2 | My baskets | a drop-down *My baskets · choose… ▾* | `GET /api/var/baskets` (mine, then shared with me) | **M**; the same keys; + basket, Edit, Edit a copy, Delete per row | **Built** |
+| L3 | + New basket | (the brief: in the toolbar and at the foot of My baskets) | the basket's sheet (`var-basket.js`), collapsed on load | click, Alt+B; Save adds the basket to My baskets and collapses the sheet | **Built** |
+| L4 | The hierarchy tree | *Hierarchy MGMT*, BANK, ▾ ▸ nodes with their VaR, unchanged | `/api/var/tree` | ▸ opens, a click shows the node's VaR | **Built** (as before) |
+| L5 | Keys strip | **B** system baskets **M** my baskets **H** how | — | the keys | **Built** |
+| L6 | How calculated › | a link at the toolbar's right | — | **H**, click | **Built** |
+| L7 | The drawer | *How BANK's VaR was calculated*, *Esc ✕*, over the right of the screen | the scope's `provenance`, as before (the server's text) | Esc, ✕; the focus back on the link; `&how=1` in the link | **Built** (its title and lines are the column's: *How this number was built*) |
+| L8 | Phone (`@media (max-width:700px)`) | the drop-downs full width, the drawer full width | — | tap | **Built** (390 px: full-width drop-downs, the drawer a bottom sheet, no sideways scroll) |
 
 ---
 

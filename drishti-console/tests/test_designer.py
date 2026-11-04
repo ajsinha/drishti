@@ -334,9 +334,9 @@ def on(client, backend, monkeypatch):
     for k, v in {"view": view, "designs": designs, "sutra_source": sutra_source, "raw": raw, "ui_kit": ui_kit, "packs": packs,
                  "pack_overview": overview, "_send": send}.items():
         monkeypatch.setattr(backend, k, v, raising=False)
-    from routes import designer_routes
-    monkeypatch.setitem(designer_routes._ALIASES, "at", 0.0)
-    designer_routes._MIGRATED.clear()
+    for name in ("designer_aliases", "designer_migrated"):                 # the app's own, per server and person (core/user_cache.py)
+        if getattr(client.app.state, name, None) is not None:
+            getattr(client.app.state, name).clear()
     yield seen
 
 
@@ -458,9 +458,8 @@ def test_the_page_is_a_flag_renaming_keeps_it_and_old_pages_are_migrated(client,
 
 
 def test_a_page_kept_by_name_in_2_7_becomes_a_flag_once(client, on, backend):
-    from routes import designer_routes
     draft = client.post("/designer/customize", json={"kind": "trade", "id": "IRS-47102"}).json()["draft"]
     client.post(f"/designer/describe/save/{draft}", json={"name": "My page · trade"})          # how 2.7 kept a page
-    designer_routes._MIGRATED.clear()
+    client.app.state.designer_migrated.clear()
     client.get("/v/trade/IRS-47102")
     assert on["pages"] == {"trade": draft} and on["views"][-1] == draft

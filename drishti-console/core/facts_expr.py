@@ -16,7 +16,8 @@
 
 An expression is Python's expression syntax cut down to reading data: names bound by the fact's steps, ``a.b`` and ``a['b']`` (a key
 of an answer; a missing key is ``None``), ``a[0]``, numbers, strings, ``and or not``, comparisons, ``+ - * / // %``, ``x if c else y``,
-lists and one-``for`` comprehensions (``[n for n in tree.nodes if n.limitUse > 1]``), and the functions in :data:`FUNCTIONS`. Nothing
+lists and one-``for`` comprehensions (``[n for n in tree.nodes if n.limitUse > 1]``), and the functions in :data:`FUNCTIONS`
+(``sum`` and ``overlap`` are the server's engine's, in a fact's ``let`` step only: the console adds up no figure). Nothing
 else parses: no attribute of a Python object, no imports, no lambdas, no keyword arguments, no ``**``. ``None`` is forgiving: arithmetic
 with it is ``None``, a comparison with it is false, a division by zero is ``None``. So a fact whose data is missing simply does not hold.
 
@@ -69,9 +70,10 @@ def f_pluck(xs: Any, key: str) -> list:
     return [_path(x, key) for x in _items(xs)]
 
 
-def f_sum(xs: Any) -> Any:
-    vals = [x for x in _items(xs) if _num(x)]
-    return sum(vals) if vals else (0 if isinstance(xs, (list, tuple)) else None)
+def f_engine(*_args: Any) -> Any:
+    """``sum`` and ``overlap`` are the server's (ONE_GRAMMAR.md section 5): :meth:`Expr.eval_async` asks the engine for each call and
+    the evaluator reads its answer; nothing here adds up a figure. Evaluated without the engine's answer, a call is None."""
+    return None
 
 
 def f_min(*xs: Any) -> Any:
@@ -111,19 +113,17 @@ def f_ratio(a: Any, b: Any) -> Any:
     return a / b if _num(a) and _num(b) and b != 0 else None
 
 
-def f_overlap(a: Any, b: Any, key: str, weight: str) -> Any:
-    """Fund overlap: for each ``key`` both lists hold, the smaller of its two ``weight`` totals (a key's lines added up), summed."""
-    def totals(xs):
-        out: dict = {}
-        for x in _items(xs):
-            k, w = _path(x, key), _path(x, weight)
-            if k not in (None, "") and _num(w):
-                out[k] = out.get(k, 0) + w
-        return out
-    ta, tb = totals(a), totals(b)
-    if not ta or not tb:
+def overlap_rows(a: Any, b: Any, key: str, weight: str) -> list[list] | None:
+    """The rows the engine adds up for fund overlap (``overlap(a, b, key, weight)``): ``[KEY, A, B]`` for every line of either list whose
+    key both lists hold (a line of ``a`` weighs in A, of ``b`` in B); None when either list has no weighted line. The engine's
+    ``least(sum(A), sum(B))`` by key and their sum make the overlap: for each key both hold, the smaller of its two totals, added up."""
+    def lines(xs):
+        return [(_path(x, key), _path(x, weight)) for x in _items(xs) if _path(x, key) not in (None, "") and _num(_path(x, weight))]
+    la, lb = lines(a), lines(b)
+    if not la or not lb:
         return None
-    return sum(min(w, tb[k]) for k, w in ta.items() if k in tb)
+    both = {k for k, _w in la} & {k for k, _w in lb}
+    return [[str(k), w, None] for k, w in la if k in both] + [[str(k), None, w] for k, w in lb if k in both]
 
 
 def f_common(a: Any, b: Any, key: str) -> int:
@@ -162,9 +162,11 @@ def f_upper(x: Any) -> Any:
     return x.upper() if isinstance(x, str) else x
 
 
-FUNCTIONS = {"len": f_len, "sum": f_sum, "min": f_min, "max": f_max, "abs": f_abs, "round": f_round, "first": f_first,
-             "find": f_find, "pluck": f_pluck, "top": f_top, "ratio": f_ratio, "overlap": f_overlap, "common": f_common,
+FUNCTIONS = {"len": f_len, "sum": f_engine, "min": f_min, "max": f_max, "abs": f_abs, "round": f_round, "first": f_first,
+             "find": f_find, "pluck": f_pluck, "top": f_top, "ratio": f_ratio, "overlap": f_engine, "common": f_common,
              "pairs": f_pairs, "flat": f_flat, "index": f_index, "upper": f_upper}
+#: the functions the server's engine computes: allowed in a ``let`` step only (``Expr(text, engine=True)``), asked by eval_async
+ENGINE = ("sum", "overlap")
 
 _BIN = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, ast.Div: operator.truediv,
         ast.FloorDiv: operator.floordiv, ast.Mod: operator.mod}
@@ -176,9 +178,10 @@ _ALLOWED = (ast.Expression, ast.BoolOp, ast.And, ast.Or, ast.BinOp, ast.UnaryOp,
 
 
 class Expr:
-    """One compiled expression. ``Expr(text).eval(names)``."""
+    """One compiled expression. ``Expr(text).eval(names)``; with ``engine=True`` (a fact's ``let`` step) it may call ``sum`` and
+    ``overlap``, which ``await eval_async(names, ask)`` asks of the server's engine; anywhere else they are refused."""
 
-    def __init__(self, text: str):
+    def __init__(self, text: str, engine: bool = False):
         self.text = str(text).strip()
         if not self.text:
             raise ExprError("an empty expression")
@@ -204,6 +207,18 @@ class Expr:
             if isinstance(node, ast.Attribute) and node.attr.startswith("_"):
                 raise ExprError(f"{self.text!r}: a key cannot start with '_'")
         self.tree = tree.body
+        self.engine_calls: list[ast.Call] = []          # innermost first, so an argument's own call is answered before it is read
+
+        def walk(node: ast.AST, in_comp: bool) -> None:
+            for child in ast.iter_child_nodes(node):
+                walk(child, in_comp or isinstance(node, ast.ListComp))
+            if isinstance(node, ast.Call) and node.func.id in ENGINE:
+                if not engine:
+                    raise ExprError(f"{self.text!r}: {node.func.id} is the server's engine's: compute it in a let step")
+                if in_comp:
+                    raise ExprError(f"{self.text!r}: {node.func.id} is asked of the server once per step, not inside a comprehension")
+                self.engine_calls.append(node)
+        walk(self.tree, False)
 
     def names(self) -> set[str]:
         """The free names the expression reads (for the config check: each must be bound by an earlier step)."""
@@ -214,8 +229,22 @@ class Expr:
     def eval(self, names: dict) -> Any:
         return _eval(self.tree, names)
 
+    async def eval_async(self, names: dict, ask) -> Any:
+        """The value with each ``sum`` and ``overlap`` the engine's: ``await ask(function, arguments)`` once per call (its arguments
+        read here, as data), then the expression read with those answers in place."""
+        env = dict(names)
+        for node in self.engine_calls:
+            args = [_eval(a, env) for a in node.args]
+            env[_slot(node)] = await ask(node.func.id, args)
+        return _eval(self.tree, env)
+
     def __repr__(self) -> str:
         return f"Expr({self.text!r})"
+
+
+def _slot(node: ast.Call) -> str:
+    """Where an engine call's answer is kept in the names (a name no expression can write: it starts with NUL)."""
+    return f"\x00{id(node)}"
 
 
 def _eval(node: ast.AST, env: dict) -> Any:  # noqa: C901 - one small interpreter
@@ -279,6 +308,8 @@ def _eval(node: ast.AST, env: dict) -> Any:  # noqa: C901 - one small interprete
     if isinstance(node, ast.IfExp):
         return _eval(node.body, env) if _eval(node.test, env) else _eval(node.orelse, env)
     if isinstance(node, ast.Call):
+        if node.func.id in ENGINE:
+            return env.get(_slot(node))                     # the engine's answer (eval_async), else None
         args = [_eval(a, env) for a in node.args]
         try:
             return FUNCTIONS[node.func.id](*args)

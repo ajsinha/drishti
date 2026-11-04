@@ -27,8 +27,8 @@
   const shell = root.closest('.bi-shell');
   if (shell) { shell.classList.add('bi-shell-design'); }                     // the Studio uses the whole width: the BI rail steps aside
   const S = (B.studio = B.studio || {});
-  const KEY = 'drishti.bi.studio.tabs';
-  const RAIL = 'drishti.bi.studio.rail';
+  const KEY = (window.drishtiKey ? window.drishtiKey('drishti.bi.studio.tabs') : 'drishti.bi.studio.tabs');
+  const RAIL = (window.drishtiKey ? window.drishtiKey('drishti.bi.studio.rail') : 'drishti.bi.studio.rail');
   const KINDS = [['report', 'Reports', 'file-earmark-bar-graph'], ['board', 'Boards', 'easel'], ['model', 'Models', 'boxes'], ['dataset', 'Datasets', 'hdd-stack'],
     ['theme', 'Themes', 'palette2'], ['python', 'Python', 'code-slash']];
   const read = (k, d) => { try { const v = window.sessionStorage.getItem(k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };

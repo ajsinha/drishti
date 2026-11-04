@@ -374,7 +374,7 @@ def test_a_job_call_reaching_another_worker_is_answered_by_the_worker_holding_th
     held = jobs.jobs.pop(jid)                                   # now held by "another worker"
     calls = []
 
-    async def forward(cid, op, payload, **kw):
+    async def forward(app, cid, op, payload, **kw):
         calls.append((cid, op, payload["op"], payload["me"]["user"]))
         jobs.jobs[cid] = held                                   # the owner's side of the relay
         try:
@@ -394,10 +394,12 @@ def test_a_job_call_reaching_another_worker_is_answered_by_the_worker_holding_th
 
 
 def test_a_job_id_names_its_worker_when_the_console_has_several(monkeypatch):
+    from types import SimpleNamespace
     from core import channel_relay
-    monkeypatch.setitem(channel_relay._state, "port", 40123)
-    assert channel_relay.suffix() == ".40123"
-    assert channel_relay.owner_port("abc" + channel_relay.suffix()) == 40123
+    app = SimpleNamespace(state=SimpleNamespace())
+    channel_relay.of(app).port = 40123
+    assert channel_relay.suffix(app) == ".40123"
+    assert channel_relay.owner_port("abc" + channel_relay.suffix(app)) == 40123
 
 
 def test_admin_packs_takes_a_bundle_hand_off_whose_job_id_names_its_worker():

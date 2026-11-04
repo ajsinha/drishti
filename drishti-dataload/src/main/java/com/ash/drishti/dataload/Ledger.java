@@ -165,7 +165,18 @@ public final class Ledger {
 
     /** The newest {@code limit} lines, newest first (Admin and {@code drishti.py dataload status}). */
     public List<JsonNode> recent(int limit) throws IOException {
+        return tail(dir, limit);
+    }
+
+    /**
+     * The newest {@code limit} lines of the ledger in {@code dir}, newest first, read without opening the ledger (no index, nothing written:
+     * the status reads it while a cycle appends); none when the folder is not there yet.
+     */
+    static List<JsonNode> tail(Path dir, int limit) throws IOException {
         List<Path> files = new ArrayList<>();
+        if (!Files.isDirectory(dir)) {
+            return new ArrayList<>();
+        }
         try (DirectoryStream<Path> ds = Files.newDirectoryStream(dir, "ledger-*.jsonl")) {
             ds.forEach(files::add);
         }

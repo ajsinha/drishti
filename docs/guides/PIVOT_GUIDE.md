@@ -18,7 +18,8 @@
 The pivot engine turns any table of any pack, or the VaR engine's trades, into a pivot: these measures, broken down by these fields on
 rows and columns, under these filters, on this business date. Every figure is computed by the server; every total is made from its own
 members, never from the figures on the screen. The design behind it is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md); the hands-on
-walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md).
+walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom functions, explain and what-if are walked through in
+[tutorial 37](../tutorials/37-custom-functions-and-explain.md).
 
 ## Contents
 
@@ -40,6 +41,14 @@ walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md).
 - [16. Settings](#16-settings)
 - [17. Refusals and their codes](#17-refusals-and-their-codes)
 - [18. How it is built](#18-how-it-is-built)
+- [19. Custom functions](#19-custom-functions)
+- [20. Why did it move: explain the difference](#20-why-did-it-move-explain-the-difference)
+- [21. What-if](#21-what-if)
+- [22. BI on the pivot engine](#22-bi-on-the-pivot-engine)
+- [23. Scale: sketches, rollups, progressive answers and the cluster](#23-scale-sketches-rollups-progressive-answers-and-the-cluster)
+- [24. The screen's switches: exact or ≈, progressive, rollups](#24-the-screens-switches-exact-or--progressive-rollups)
+- [25. Live pivots](#25-live-pivots)
+- [26. Cell comments](#26-cell-comments)
 
 ## 1. Open it
 
@@ -306,14 +315,15 @@ as two views.*
 | `min(x)`, `max(x)` | mergeable | the extreme of its own rows | value |
 | `wavg(x, w)` | mergeable | Σwx / Σw of its own rows | value |
 | `var_samp(x)`, `var_pop(x)`, `stddev_samp(x)`, `stddev_pop(x)` | mergeable | Welford's state of its own rows | value |
-| `median(x)`, `percentile(x, q)` | holistic, exact | the quantile of its own values (linear interpolation, as DuckDB's `quantile_cont`) | value |
-| `count_distinct(x)` | holistic, exact | the distinct values of its own rows | value |
+| `median(x)`, `percentile(x, q)` | holistic, exact; ≈ by its sketch (KLL, ±1.65% of rank) when asked or large | exact: the quantile of its own values (linear interpolation, as DuckDB's `quantile_cont`); ≈: the merge of its cells' KLL summaries | value |
+| `distinct(x)` (also written `count_distinct(x)`) | holistic, exact; ≈ by its sketch (HyperLogLog, ±1.6%) when asked or large | exact: the distinct values of its own rows; ≈: the merge of its cells' registers | value |
 | `var()`, `es()` (source `var`) | holistic | the VaR engine's answer for the cell's own scope, from its trades' summed scenario vector | value |
 | `pv()`, `trades()` (source `var`) | holistic (adds up) | the engine's answer for the cell's scope | value |
 
 So the desks' VaRs add up to more than the bank's: the grand total is the bank's own VaR, and the gap (Σ children − total) is shown beside
-every open node's total as **Σ−total**, the diversification. The sketch functions (≈ distinct counts and percentiles, exact on request) come
-with phase P3; custom functions (DEL, SQL macros, Python, Java) with phase P2.
+every open node's total as **Σ−total**, the diversification. A function has one name ([FUNCTION_CATALOGUE.md](../architecture/FUNCTION_CATALOGUE.md));
+its sketch is how it is computed when ≈ is accepted, with a stated error, never a second name, and never for VaR
+([section 23](#23-scale-sketches-rollups-progressive-answers-and-the-cluster)); custom functions are in [section 19](#19-custom-functions).
 
 Show values as: a value may carry `showAs` (`pct-grand`, `pct-row`, `pct-column`, `pct-parent-row`, `rank`); it is computed from the
 finished figures, so a total is never broken.
@@ -335,6 +345,15 @@ A level may show its top N members by a measure and one **Others** member: "Othe
 members** (the rows of the members not shown), for every measure: a median of Others is the median of those rows, never total minus the
 top N. Others is not opened further (its rows can be exported).
 
+**Top N when you ask ≈.** With the screen's **≈** switch on (or `"exact": false`), a level whose top N is ranked by a count of rows
+(`count()`, or `count(x)` of the level's own field) and whose field is plain text is chosen **before** the level is read: one Space-Saving
+summary of the field (10·n counters) is made for the parent's cell, the members it ranks first are the level, and only their cells are
+read. The figures shown are exact, each from its own rows; only the choice of members is ≈, within a stated bound: every count the summary
+keeps is over by at most its floor, and a member holding more than 1/(10·n) of the rows is always listed. Others then reads "Others (≈: the
+rest after a top N chosen by a summary)" and its figures are still its own members' exactly. A top N ranked by anything else (a sum, an
+average, a VaR), a grouped date or number bins, and every view not asking ≈ rank every member exactly; the answer's notes say which.
+Use it for a level with very many members (counterparties, instruments) where reading every member's cell would be the cost.
+
 Each level sorts on its own: by label in the field's type order (numbers by value, dates by time, text alphabetically, `(blank)` last),
 or by a measure, ascending or descending. A sort never moves a child out of its parent.
 
@@ -347,7 +366,9 @@ version, filters, statements run, cache hits, time) is kept for the last `drisht
 
 A **cell reference** names a cell of a saved view by its coordinates, not its position: `pivot://asha/desk-risk@4/Notional[DESK=RATES-NY,
 CCY=USD]`. It survives re-sorting, new columns and a new date; a coordinate that is gone says "not in the view", never 0. Copy it from the
-popover; resolve it with `GET /api/v1/pivot/cells?ref=...`.
+popover; resolve it with `GET /api/v1/pivot/cells?ref=...`. In a Sutra, Rachana reads the same cell: `cell('asha/desk-risk', 'DESK',
+'RATES-NY', 'CCY', 'USD')`, and a compute engine's measure for one scope: `measure('VAR', 'DESK:RATES-NY')`, both answered by this
+engine for the person viewing ([RACHANA_REFERENCE.md](RACHANA_REFERENCE.md#functions)).
 
 ## 8. The scan estimate, budgets and busy protection
 
@@ -363,7 +384,9 @@ Before a view runs, the screen shows what it will read. Over `drishti.pivot.esti
 
 Select cells (click, Shift+click or Shift+arrows) and press `G`. With nothing selected the chart shows the top level. A measure that adds up
 (sum, count) is drawn as bars that sum to the total. **A measure that does not add up is never stacked**: VaR by desk is drawn as the desks'
-bars beside the bank's, with the diversification as its own bar, and the chart says so in words. A bar's click opens that member in the
+bars beside the bank's, with the diversification as its own bar, and the chart says so in words. The diversification is the engine's
+own gap of the charted column (each open row's `diversificationByColumn` in the answer, Σ parts − total; drawn as total − Σ parts): the
+browser adds up nothing. A bar's click opens that member in the
 grid. ECharts is vendored; nothing comes from a CDN.
 
 ## 10. Export
@@ -392,12 +415,17 @@ grouped date, a median, a filter that leaves values out) is refused in words and
 **Compare** picks another date: each cell shows its change (▲/▼) and new or gone cells are marked; the API answers both sides and the
 differences.
 
+**Versions.** Every save of a view is kept: `GET /api/v1/pivot/views/{owner}/{name}/versions` lists them, `/diff?from=1&to=2` says what
+changed in the definition (rows, columns, values, filters, open nodes, sorts, top N, date) and `POST /api/v1/pivot/views/{name}/restore`
+with `{"version": 1}` saves an old one again as the next version (the versions between stay). A view keeps its definition, never numbers.
+Comments on its cells are kept beside its versions ([section 26](#26-cell-comments)).
+
 ## 12. Who sees what
 
 - A table is read through the Data view's own read for you: a table you may not open is not offered; a **masked column is not read at
   all**, so it cannot be a dimension, a measure's input or a filter (`403 DRS-5705`).
 - The VaR source applies the VaR engine's own entitlements: trades you may not see are left out of every cell; a role that sees the bank only
-  in aggregate is offered no dimension (hierarchy levels come with the MR cube).
+  in aggregate is offered no dimension unless the MR cube runs, which offers it the hierarchy levels ([MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)).
 - `drishti.pivot.aggregate-only.min-members-per-cell` (1 as shipped) hides the figures of a cell with fewer members.
 - Every view run, rows read and export is audited without values.
 
@@ -435,6 +463,19 @@ The answer has `rows` and `columns` in display order (each with `key`, `kind` no
 | `GET, POST /api/v1/pivot/views`, `GET /views/{owner}/{name}`, `DELETE /views/{name}` | saved views |
 | `POST /api/v1/pivot/promote` | a page table's view as its Sutra's `pivot:` arrangement (an author; `preview: true` shows the next version) |
 | `POST /api/v1/pivot/export` | `{view, what: pivot|rows|definition, format: xlsx|csv|jsonl|arrow, shape: cells|grid, delimiter, bom, coords}`, streamed |
+| `GET /api/v1/pivot/functions`, `GET /functions/{owner}/{name}?version=` | custom functions you may use (section 19) |
+| `POST /api/v1/pivot/functions/test` | a definition and sample rows: the harness and the playground; nothing saved |
+| `POST /api/v1/pivot/functions` | save a new version after its harness passes |
+| `POST /api/v1/pivot/functions/{owner}/{name}@{v}/submit`, `/approve`, `/revoke` | sharing: approval by someone who is not the author, withdrawal |
+| `POST /api/v1/pivot/explain` | `{view, from, to, fromDate, toDate, by, order, price, quantity}`: the difference in steps that add up (section 20) |
+| `POST /api/v1/pivot/whatif` | `{view, whatIf: {exclude, changes, add}}`: the view with the overlay beside the original (section 21) |
+| `GET /api/v1/pivot/views/{owner}/{name}/versions`, `/versions/{n}`, `/diff?from=&to=`; `POST /views/{name}/restore` `{version}` | a saved view's versions (every save kept), one version, what changed between two, an old one restored as the next version |
+| `POST /api/v1/pivot/query` with `"exact": true` or `false` | exact on request, or ≈ by the sketches at any size ([section 23.1](#231-sketches-with-a-stated-error-and-exact-on-request)) |
+| `POST /api/v1/pivot/query?progressive=true` | server-sent events: `approximate` (from a sample, with intervals) then `exact` |
+| `GET, POST /api/v1/pivot/rollups`, `DELETE /rollups/{id}`, `POST /rollups/{id}/refresh` | rollups: list with advice; define, remove, refresh (administrators) |
+| `POST /api/v1/pivot/query` with `"rollups": false`, `"progressive": false` | the screen's switches as options: no rollup answers, no ≈ first answer; every answer's `computedAs` says what was asked and what answered ([section 24](#24-the-screens-switches-exact-or--progressive-rollups)) |
+| `POST /api/v1/pivot/live`, `GET /live`, `GET /live/{id}/events`, `DELETE /live/{id}` | a live pivot: started (its first answer, id and node), listed, streamed (`answer`, `patch`, `reshape`, `status`), ended ([section 25](#25-live-pivots)) |
+| `GET, POST /api/v1/pivot/views/{owner}/{name}/comments`, `POST /comments/{id}/resolve`, `/reopen`, `DELETE /comments/{id}` | a saved view's cell comments ([section 26](#26-cell-comments)) |
 
 Details and the error codes: [API_GUIDE.md, Pivot engine](API_GUIDE.md#pivot-engine-apiv1pivot).
 
@@ -450,6 +491,11 @@ drishti.py pivot estimate --view asha/desk-risk
 drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
 drishti.py pivot save desk-risk --source var --rows DESK --values "var()" --share role:risk
 drishti.py pivot views
+drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
+drishti.py pivot functions save wret.yaml --sample rows.csv
+drishti.py pivot functions approve asha/wret@1 --reason "reviewed" --scope group:rates
+drishti.py pivot explain --view asha/desk-risk --cell DESK=EMEA --from 2026-09-30 --to 2026-10-30 --by BOOK
+drishti.py pivot whatif --view asha/desk-risk --scale PRICE=1.1@DESK=RATES --exclude BOOK=B-17
 ```
 
 More in [TOOLS.md](TOOLS.md#516-pivot).
@@ -460,7 +506,10 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 `max-holistic-cells`, `busy-cells`, `cache-mb` (the partial-state cache `pivot.states`, in the one memory budget), `provenance-kept`,
 `local-shards`, `stage-max-rows`, `stage-keep`, `duckdb.connections`, `duckdb.threads`, `duckdb.memory-limit-mb`, `duckdb.temp-directory`,
 `estimate.confirm-above-seconds`, `estimate.confirm-above-rows`, `aggregate-only.min-members-per-cell`, `export.xlsx-max-rows`,
-`export.rows-max`; and `drishti.admission.retry-after.pivot-view`.
+`export.rows-max`; custom functions under `functions` (`formula`, `sql-macros`, `require-approval`, `approver-role`,
+`holistic-max-rows`, `holistic-max-mb`, `harness.tolerance`, `harness.seeds`, `harness.max-ns-per-row`, `python.enabled`,
+`python.interpreter`, `python.workers`, `python.timeout-seconds`, `python.memory-mb`, `python.batch-rows`, `java.enabled`, `java.dir`);
+the scale keys of [section 23.6](#236-settings); and `drishti.admission.retry-after.pivot-view`.
 
 ## 17. Refusals and their codes
 
@@ -471,7 +520,17 @@ All under `drishti.pivot` in `config/engines/pivot.yaml` (the switch `drishti.en
 | DRS-1020 | 404 | the engine is switched off here (DRS-5703 when an edition has no PIVOT) |
 | DRS-5704 | 404 | a saved view, provenance id or source that is not there (or not shared with you) |
 | DRS-5705 | 403 | a masked field asked as a dimension, input or filter |
+| DRS-5720 | 504 | a view computed across the cluster where a node's share had no answer by the deadline (no other node could answer it) |
 | DRS-9507 | 503 | busy protection: a large view did not start; `Retry-After` |
+| DRS-5710 | 400 | a custom function refused as written (its code, inputs, kind or name) |
+| DRS-5711 | 422 | a custom function whose harness did not pass: not saved, with the first failure |
+| DRS-5712 | 403 | approval: the author approving, someone who is not an approver, a function not approved for you, a plug-in jar changed since approval |
+| DRS-5713 | 404 | a custom function's language is off here (Python and Java plug-ins as shipped) |
+| DRS-5714 | 422 | a custom function past a limit: a state over its bound, a call over its time, every worker busy |
+| DRS-5715 | 403 | a custom function in an official run, or an official measure's name |
+| DRS-5716 | 400 | an explanation or a what-if it cannot make as asked |
+| DRS-5721 | 422 | a live pivot refused or ended: live pivots off, your or the server's live views at their most, over the live cell budget, an exact live view over `drishti.pivot.live.max-rows`, a view pinned to a past version |
+| DRS-5722 | 400 | a cell comment refused: empty or over 2,000 characters, a cell or measure not of the view, an Others cell, not the author's or the owner's to change |
 
 ## 18. How it is built
 
@@ -483,3 +542,347 @@ same states by the functions' own `add`), partial states merged in a fixed order
 partial-state cache, the split-and-merge harness and the exports. The server wires it: the Data view's tables as sources, the VaR provider,
 REST, busy protection, saved views and audit. The console only draws: `pivot-engine.js` asks the engine and lays its answer out,
 `pivot-grid.js` is the one grid (the Pivot screen and the nested `pivot` panel), and nothing in the browser adds up a figure.
+
+The engine is also Rachana's only source of aggregates ([ONE_GRAMMAR.md](../architecture/ONE_GRAMMAR.md)): it registers every built-in
+into Rachana's function table (`sum`, `count`, `avg`, `min`, `max`, `median`, `percentile`, `distinct`, `wavg`, `variance`, `stddev`,
+the `_once` forms), the grouping behind `group(...)`, and `measure(...)` and `cell(...)`, so a sum in a Sutra and a sum in a pivot cell
+are the same `AggFunction`. A Sutra's `pivot` panel writes its groupings as Rachana paths and its value as one of these
+(`by: "@.BOOK"`, `across: "@.CURRENCY"`, `value: sum(@.MTM)`). Every function, once, is listed in [FUNCTIONS.md](FUNCTIONS.md).
+
+## 19. Custom functions
+
+When the built-ins are not enough, write your own aggregation function. Every function, built-in or yours, is the same four steps:
+`start` (an empty state), `add` (a columnar batch of a cell's rows: only the inputs you declare, already ruled and masked for the reader),
+`merge` (two partial states of the same cell as one) and `finish` (the figure). A function's **kind** says how its totals are made:
+**mergeable** (a small state, an exact merge: totals are merged states, never figures added up), **sketch** (a bounded state with a stated
+error) or **holistic** (no merge: every cell gets all of its rows in one call, up to `holistic-max-rows`).
+
+| Language | Write | Runs | Kind | On as shipped |
+|---|---|---|---|---|
+| **Formula** (DEL) | `sum(r * w) / sum(w)`, `sum(PNL, where=PNL < 0) / sum(abs(PNL))`, `percentile(x, 0.99) - percentile(x, 0.01)`, `count(where=PNL < 0) / count()` | in the same `GROUPING SETS` statement as the built-ins | the kind of its parts (a ratio of sums is mergeable; a formula with a median is holistic) | yes |
+| **SQL macro** (DuckDB) | `CREATE MACRO wret(r, w) AS sum(r * w) / sum(w)`; `CREATE MACRO slope(y, x) AS regr_slope(y, x)` | a macro that is a formula of the built-ins is rewritten into their states (mergeable, exact); any other runs in DuckDB per grouping set (holistic) | as found | yes |
+| **Python** | a class with `start`, `add`, `merge`, `finish`, decorated `@function(name=..., kind=Mergeable, inputs={...})` | the node's sandboxed `pivot-fn` worker pool, fed Arrow batches over a pipe (never a file) | as declared, proven by the harness | no (`functions.python.enabled`) |
+| **Java plug-in** | a class implementing `AggFunction` in a jar in `functions.java.dir` | in the server; the jar pinned by its SHA-256 when an administrator approves it | any | no (`functions.java.enabled`) |
+
+A view uses a function as `fn:owner/name@version(FIELD, FIELD)`: the fields are bound in order to the function's declared inputs. Without
+`@version` the latest version you may use is taken, and the column header says which (`fn:asha/wret@2 by asha`). A formula can also be
+written straight into a view's values, unnamed: `sum(PNL) / sum(abs(PNL))`.
+
+**The harness.** A function is saved, shared or used only after its harness passes on sample rows: one pass; batches of 1, 7, 1,000 and
+65,536 rows; the rows split into 2, 3 and 16 random parts merged left-deep and balanced under five seeds, every state serialised and read
+back as the cluster does; an empty cell, a part of nulls, a single row, 100 equal rows, infinities and NaN; a state read back finishes to
+the same figure; the same rows give the same bits twice; the cost a row (judged on 1,000 rows or more); the state within its declared
+bytes. A mergeable function whose split-and-merge answer differs from one pass by more than its tolerance (1e-12 relative) fails, with the
+run that differed and by how much.
+
+**The playground.** On the pivot screen, **Functions** (`U`): write the function, paste sample rows (CSV with a header), **Check**. You
+see the harness's checks, the state after each part and after each merge beside the one-pass figure, the cost (nanoseconds a row, the
+state's bytes, and the projection on a real table) and the function tried in a little pivot of the sample (by a column you pick), its
+total made from the groups' states. **Save version** keeps it private to you.
+
+**Versions, approval, audit, labels.** Every save is a new version; a saved view names the version it uses, so a new version never changes
+its figures. A function is private to its author until an approver (an administrator, or a member of `functions.approver-role`,
+`pivot-approver` as shipped) **who is not its author** approves it for everyone or a group (`group:rates`), with a reason; a Java plug-in
+is approved by an administrator. Withdrawing a version makes every cell of its column say "function withdrawn by … on …: reason", with no
+figure. Saves, tests, submissions, approvals, withdrawals and every use in a view are audited (who, which version). Custom functions never
+run in an official run, report or sign-off, and never take an official measure's name (`var`, `es`, `frtb_sa`, `simm`, `saccr`, ...):
+the official measures stay the Java engines.
+
+**Python's sandbox.** Each worker is `python -I` in an empty environment and serves one function version only (a function's rows never meet another function's code): no network, no processes, no writes at all, no reads outside the
+Python installation and the SDK, imports from an allow-list (numpy, pyarrow, scipy, pandas, polars and safe standard modules), `open`,
+`exec`, `eval` and `compile` not given to your code, memory limited per worker and each call's time limited (the worker is stopped past
+it). `batch["r"]` is a pyarrow array (or numpy, or a list when those are not installed); `batch.numpy("r")` and `batch.list("r")` give the
+others. Vectorise over the batch: a loop row by row shows in the playground's cost line.
+
+```python
+from drishti_pivot import function, Mergeable
+import pyarrow.compute as pc
+
+@function(name="wavg_return", kind=Mergeable, inputs={"r": "float64", "w": "float64"})
+class WeightedReturn:
+    def start(self, params):          return {"swr": 0.0, "sw": 0.0}
+    def add(self, s, batch):
+        swr = pc.sum(pc.multiply(batch["r"], batch["w"])).as_py() or 0.0
+        sw = pc.sum(batch["w"]).as_py() or 0.0
+        return {"swr": s["swr"] + swr, "sw": s["sw"] + sw}
+    def merge(self, a, b):            return {"swr": a["swr"] + b["swr"], "sw": a["sw"] + b["sw"]}
+    def finish(self, s):              return None if s["sw"] == 0 else s["swr"] / s["sw"]
+```
+
+Functions without an SQL form (Python, Java plug-ins) are fed by the tabular provider: the rows the view reads are scanned once, each row
+dealt to the cells of every level it belongs to, each cell's inputs fed in batches of `functions.python.batch-rows`.
+
+## 20. Why did it move: explain the difference
+
+Pick a cell (or two) and press **Why** (`W`): the difference between two cells, or one cell on two dates, split by the members of a
+dimension you choose, in steps that **add up** to the difference, drawn as a waterfall with its words ("Notional moved from 1.2bn to
+1.5bn (+300m); the largest steps: RATES +210m, FX +95m (new)").
+
+| The measure | Each step |
+|---|---|
+| a sum or a count | the member's own change (new, gone or changed), whatever the order |
+| a ratio, an average, a variance, a formula (mergeable) | the change in the total when that member's rows move from the first cell to the second, the others as the steps before left them; the steps telescope, so they add up exactly; a different order (by member, or largest first) splits the same difference differently, and the order is shown |
+| a median, a percentile, VaR (holistic: figures computed by DuckDB or the VaR engine, never merged) | each member's own change, then one step for what they do not explain (for VaR: diversification) |
+| price × quantity (`--price PRICE --quantity QUANTITY`) | the price effect Σ(p₁−p₀)·q₀, the quantity effect Σp₀·(q₁−q₀), the cross term, new members, members gone, in that order |
+
+What remains after the steps is shown as the residual and named (rounding, or rows whose member is blank); it is zero to the last digits
+for a mergeable measure.
+
+## 21. What-if
+
+**What-if** (`I`) shows the view with an overlay beside the view as it is, cell by cell, the differences being what-if minus original:
+leave members out (`BOOK=B-17`), scale or set a number field where a condition holds (`PRICE*1.1 where DESK=RATES`,
+`NOTIONAL=0 where TRADE_ID=T-1`), add hypothetical rows. The overlay is joined into the source's relation after your row rules, its values
+bound as parameters; the original's states come from the cache and only the overlay's cells are new. Nothing is written to the lake. On
+the VaR source, use the VaR engine's own what-if.
+
+## 22. BI on the pivot engine
+
+BI's totals and subtotals are the pivot engine's. Every total row and column of a **matrix**, the total row of a **table** with
+`format.totals`, and a model query's `totals` (grand, subtotals or explicit levels) are made in **one** `GROUP BY GROUPING SETS` statement
+of the engine's function states over the model's rows as the reader may see them: BI's compiler writes those rows (row rules, masks,
+joins, layers, dates) as the statement's FROM item and the statement runs in BI's engine, where the model's layers are, so no row leaves
+it. Each level is computed from its own rows: an average, a ratio, a distinct count and a percentile are right at every level, and a
+sum's total is the engine's too (the console adds nothing up). Measures of two facts get one statement per fact.
+
+A model's measure is a pivot function when its DEL is an expression of aggregates of one fact's rows: `sum`, `avg`, `min`, `max`, `count`,
+`distinct`, `percentile`, `ratio`, `where=` conditions, arithmetic, row functions and other measures by `measure('Name')`. Whether a
+measure adds up is the engine's answer (its `plainSum`), not a guess from its text. Measures that read beyond the rows of their group
+(time intelligence, running and analytic functions, filter contexts, balances, Python measures) are the model's own query's: they get no
+total, and the answer says why ("no total for YTD: ytd(...) is not an aggregate of its group's rows"). A dataset read directly from its
+source (`mode: direct`) gets no engine totals either (they would read every row back).
+
+## 23. Scale: sketches, rollups, progressive answers and the cluster
+
+Large tables (a billion rows and more) are answered by four things that work together, each of them inside the engine and each saying in
+the answer what it did. The design and its reasons are [PIVOT_ENGINE.md section 9](../architecture/PIVOT_ENGINE.md#9-scale-extremely-large-data).
+
+### 23.1 Sketches, with a stated error and exact on request
+
+A sketch is the ≈ form of a function that has one name: the view writes `distinct(x)`, `median(x)` or `percentile(x, q)`, and the engine
+computes it from the values (exact) or by its sketch (≈), as the request and the size decide. The answer's measure says which
+(`kind: sketch`, `exact: false`, `error`), and a sketched call's id ends in `≈` (`distinct(COUNTERPARTY) ≈`), so the cache and the rollups
+keep the two forms apart.
+
+| Function | Sketch (its ≈ form) | State | Stated error |
+|---|---|---|---|
+| `distinct(x)` | HyperLogLog | 2^p registers (p = 12: 4,096 bytes) | ±1.04/√m: **±1.6%** at p = 12, ±0.8% at p = 14 (one standard error) |
+| `median(x)`, `percentile(x, q)` | KLL | about 3k values (k = 200) | **±1.65% of rank** at k = 200; ±1.8% when made from DuckDB's quantile points |
+| `top_n` of a level | Space-Saving | 10·n counters | each count over by at most the summary's floor, never under; a member over 1/(10·n) of the rows always listed (a level's top N by a count, when ≈ is asked: [section 6](#6-top-n-others-and-sorting)) |
+
+**Never approximate:** VaR, ES and every provider's own measure, the once-per-parent forms, custom functions: they have no sketch.
+
+A sketch merges like a sum: the distinct count of a desk-month total is the merge of its cells' registers (exact for the sketch, the same
+registers in any order), never the sum of the cells' counts. Every ≈ measure carries its error in the answer (`measures[].error`) and in
+the provenance popover.
+
+**Exact or ≈ is chosen by size, and you may always ask.** A view that reads more than `sketches.approximate-above-rows` rows (10 million)
+answers `distinct`, `median` and `percentile` by their sketches, with a note saying so; under it they are exact (cheap there). Ask
+for exact with `"exact": true` beside the view, or for ≈ at any size with `"exact": false` (on the screen: the Exact / Auto / ≈ switch,
+[section 24](#24-the-screens-switches-exact-or--progressive-rollups)):
+
+```json
+{ "view": { "source": "trade", "rows": ["DESK"], "values": [{"measure": "distinct(COUNTERPARTY)", "as": "Counterparties"}] },
+  "exact": true }
+```
+
+```
+drishti.py pivot run --source trade --rows DESK --values "distinct(COUNTERPARTY)" --approximate    # ≈, ±1.6%, at any size
+drishti.py pivot run --source trade --rows DESK --values "distinct(COUNTERPARTY)" --exact          # exact on request, at any size
+```
+
+How a sketch is made on the tabular provider: HyperLogLog's (register, rank) pairs come from DuckDB's 64-bit `hash()` in the same
+`GROUP BY GROUPING SETS` statement as every other state; KLL is built in Java from the cell's quantile points (`quantile_disc` at 2k + 1
+fractions) and its count; Space-Saving from the cell's value counts, kept to its counters. KLL is written in the module (Apache
+DataSketches, allowed by decision 2, is not resolvable in the offline build); its error is measured by `SketchErrorTest`. Up to about 10,000 distinct values (2.5 × the 4,096 registers) a distinct count is linear counting over the registers, which is closer there than the harmonic mean. A document
+source ([PIVOT_ENGINE.md section 6.7](../architecture/PIVOT_ENGINE.md#67-documents-paths-arrays-and-grains)) is sketched the same way at
+its view's grain: `distinct($.LEGS[*].CURRENCY)` counts the legs' currencies.
+
+### 23.2 Rollups of partial states, chosen automatically
+
+A rollup keeps the **partial states** (sums, counts, Welford parts, HyperLogLog registers, KLL summaries, Space-Saving counters) of a source
+at a grain. A view whose dimensions, filters and measures the rollup covers is answered from it, merged in key order, equal to reading the
+table; the answer says "answered from the rollup …". A date kept by day answers week, month, quarter and year too.
+
+```yaml
+# config/engines/pivot.yaml (or POST /api/v1/pivot/rollups, administrators)
+drishti:
+  pivot:
+    rollups:
+      definitions:
+        - id: trades-desk-month
+          source: trade
+          grain: [DESK, CURRENCY, TRADE_DATE:month]
+          functions: ["sum(NOTIONAL_USD)", "count()", "distinct(COUNTERPARTY) ≈"]   # ≈: the distinct count's sketch is kept
+          dates: latest            # the latest date, refreshed as it moves (all: keep every date built)
+```
+
+A function marked `≈` keeps its sketch (the registers or the KLL summary), so it answers views that accept ≈ for it (by request or by
+size); the exact distinct count and quantiles keep every value and are never rollup material. On a document source the grain and the
+functions are written as paths (`grain: [$.LEGS[*].CURRENCY, DESK]`, `functions: ["sum($.LEGS[*].NOTIONAL)"]`): the rollup is kept at
+that grain, and a view at the same grain is answered from it.
+
+- **Refreshed on load, incrementally.** Every `rollups.refresh-seconds` (60) each rollup's source version is checked. On a direct lake
+  route the files of the version are the rollup's parts: files a load added are read alone and merged in; a partition that lost a file
+  (a restatement, a delete) is rebuilt from its own files; other partitions are untouched. A source read another way (staged, or a
+  document grain, which reads the documents whole) is rebuilt whole when its version moves. A stale rollup never answers.
+- **Smallest first.** Of the rollups that cover a view, the one with the fewest rows answers.
+- **Not for everyone.** A rollup answers only a person who reads every row and field of the source (row rules and masks apply before
+  aggregation, and a rollup has aggregated already); never a view with `asOf`; never money that is guarded per cell or converted (the
+  table answers those). Holistic functions (an exact median, the once-per-parent forms, VaR) are never rollup material.
+- **Advice.** Grains that scanned the table `rollups.advise-after-scans` times (10) are proposed, with how often and how long:
+  `GET /api/v1/pivot/rollups` lists the definitions, the rollups built (rows, bytes, version, last refresh) and the advice.
+- Kept on disk under `<data dir>/pivot/rollups/<id>/<date>.rollup`, read back at start.
+
+### 23.3 Progressive answers: ≈ first, then exact
+
+A view estimated over `progressive.after-ms` (2 s) answers twice when the caller asks for the pair
+(`POST /api/v1/pivot/query?progressive=true`, server-sent events `approximate` then `exact`): first from a
+sample of `progressive.sample-fraction` (2%) of the rows, then exact. The first answer is honest or silent:
+
+| Measure | First answer |
+|---|---|
+| `sum`, `count` | the sample's figure scaled up, with its 95% interval (`intervals`) |
+| `avg` | the sample's average, ±1.96·s/√n |
+| `median`, `percentile` | the sample's quantile by its sketch, with its rank interval |
+| everything else (min, max, variance, distinct counts, the once-per-parent forms, custom functions) | "computing" until exact: never a guessed figure |
+
+Every cell of the first answer is marked `approximate`; it is never cached. **Never for VaR**, nor for a view with a holistic measure that
+has no sketch or that is asked exact: those wait for exact (decision 7). On a document source the sample is of the view's rows at its
+grain (legs of a leg-grain view).
+
+### 23.4 The cluster: partial states from every node, merged in order
+
+On a Drishti\*net cluster, a mergeable view estimated over `cluster.min-rows` (5 million) is computed by every live node running the
+engine: on a direct lake route each node reads its share of the files (assigned by rendezvous hashing of the path, so each node's caches
+stay warm for the same files), otherwise one row shard each; each answers **partial states per cell key** (`POST
+/api/v1/net/pivot/partials`, for the cluster's nodes only, as the same person, so masks and row rules apply there before aggregation);
+the coordinator merges them in node order, then cell-key order. The figures equal one node's (counts and registers exactly, sums to the
+last digits) and repeat on every run. A node late past `cluster.hedge-after-seconds` (20) has its share asked of the next node too (the
+first answer wins); a share with no answer by `cluster.deadline-seconds` (300) refuses the view in words (DRS-5720), never a figure from
+the other nodes alone. VaR keeps its own sharding; a view with a custom function or a holistic measure is computed on the node asked;
+a document view (its lists read from the documents) is shared by row shards, never by files.
+
+### 23.5 The scan estimate, refined
+
+The estimate (`POST /api/v1/pivot/estimate`) counts rows and bytes from metadata before anything is read; once this node has measured
+scans, its seconds come from the **measured** rate (the median of its last 20 scans over 200 ms), divided by the nodes that will share
+the scan, always as a range (`range`: half to twice) with how it was made. It lists the options: run, narrow, **use the rollup** (when one
+covers the view, and whether it may answer you), run in the background, not now.
+
+### 23.6 Settings
+
+Under `drishti.pivot` in `config/engines/pivot.yaml`, in [CONFIGURATION.md](../admin/CONFIGURATION.md): `sketches.hll-precision` (12),
+`sketches.kll-k` (200), `sketches.top-capacity-factor` (10), `sketches.approximate-above-rows` (10,000,000), `progressive.enabled`,
+`progressive.after-ms` (2000), `progressive.sample-fraction` (0.02), `rollups.enabled`, `rollups.refresh-seconds` (60),
+`rollups.advise-after-scans` (10), `rollups.dir`, `rollups.definitions`, `cluster.enabled`, `cluster.hedge-after-seconds` (20),
+`cluster.deadline-seconds` (300), `cluster.min-rows` (5,000,000); live pivots ([section 25](#25-live-pivots)): `drishti.pivot.live.enabled`,
+`drishti.pivot.live.max-per-person` (5), `drishti.pivot.live.max-total` (200), `drishti.pivot.live.min-interval-ms` (1000), `drishti.pivot.live.max-cells` (5,000), `drishti.pivot.live.max-rows` (50,000,000),
+`drishti.pivot.live.idle-seconds` (60), `drishti.pivot.live.heartbeat-seconds` (15).
+
+The benchmark of these at 5, 25 and 75 GB, one node and three, cold and warm, with and without a rollup, is
+[BENCHMARK.md section 16](../admin/BENCHMARK.md#16-the-pivot-engine-at-scale).
+
+## 24. The screen's switches: exact or ≈, progressive, rollups
+
+Under the toolbar, four switches say how the figures are computed. Each is an option of the request (never part of the saved view: a
+view says what is shown, these say how it is computed), and the line beside them says how the answer **was** computed, from the answer's
+`computedAs`:
+
+```
+ [ Exact | Auto | ≈ ]  [x] Progressive  [x] Use rollups  [ ] Live L     from rollup desk-month; ≈ from a sketch (Counterparties)
+```
+
+| Switch | On the request | What it does |
+|---|---|---|
+| **Exact** | `"exact": true` | every figure from its values at any size: distinct counts and percentiles exact, every top N ranked over every member |
+| **Auto** (the default) | `"exact": "auto"` | distinct counts and percentiles exact on small data and ≈ by their sketches above `sketches.approximate-above-rows` (the note says so) |
+| **≈** | `"exact": false` | distinct counts and percentiles by their sketches with their stated error at any size, and a level's top N by a count chosen by a summary ([section 6](#6-top-n-others-and-sorting)) |
+| **Progressive** | `"progressive": true` | a view estimated over `progressive.after-ms` shows ≈ from a sample first, then the exact answer replaces it ([section 23.3](#233-progressive-answers--first-then-exact)) |
+| **Use rollups** | `"rollups": false` when off | on: a covering rollup may answer (the same figures, faster); off: the table is read, for a check against the rollup |
+| **Live** | `POST /api/v1/pivot/live` | the view kept current ([section 25](#25-live-pivots)) |
+
+Changing a switch asks again. The line reads, joined by `;`: `exact`; `≈ from a 2% sample` (a progressive first answer);
+`≈ from a sketch (<measures>)`; `top N ≈ by a summary, figures exact`; `from rollup <id>` (or the node route, on a cluster);
+`rollups off`; `live · checked 10:31:02`. Its tooltip lists each sketch's error and each route in full; the provenance popover of a cell
+repeats it ("Answered"). VaR, ES and every provider's own measure are exact whatever the switch says.
+
+Keyboard: the switches are ordinary radio buttons and check boxes in the tab order; `L` turns Live on and off. On a phone they wrap
+under the toolbar and grow to a comfortable tap size; the line moves to its own row. The browser computes nothing: every figure, ≈ or
+exact, is the server's.
+
+The same as JSON and on the command line:
+
+```json
+{ "view": "asha/desk-risk", "exact": false, "progressive": false, "rollups": false }
+```
+
+```
+drishti.py pivot run --view asha/desk-risk --approximate          # ≈
+drishti.py pivot run --view asha/desk-risk --exact                # exact on request
+```
+
+## 25. Live pivots
+
+**Live** keeps a view current. When the data under it moves, the engine computes the view again and sends only the cells that changed;
+the screen puts them in place and flashes them. Nothing else is redrawn unless members came or went.
+
+**What moves it.** A **data load** of the view's table for the view's business date (the same signal the packs' loads give BI: a view
+on the latest date moves with a load of any date), and a **live table's update**: a page panel's rows (`panel/<kind>/<panel>/<id>`) are
+followed through the same live channel the page's own live view streams from. A load of another table or another date computes nothing.
+
+**What is computed again.** The view, through the one engine and its partial-state cache: the sets of dates and data versions that did not
+move come from the cache, so only the touched date's sets (or, when a rollup answers, the rollup refreshed with the load's new files'
+states first) are read again. A live recompute is **exact**, never a sample and never progressive, unless the view asked ≈: a live
+figure is never an estimate you did not ask for.
+
+**What is sent** (server-sent events on `GET /api/v1/pivot/live/{id}/events`):
+
+| Event | Carries |
+|---|---|
+| `answer` | first: the current answer |
+| `patch` | the cells whose figures, members or notes moved (whole, by `rowKey|colKey`), the cells gone (`removed`), the new provenance id and `computedAs`, `seq`, `causes` ("a load of trade for 2026-10-30") |
+| `reshape` | the whole answer, when the rows, columns or measures changed (a member came or went, the latest date moved on) |
+| `status` | nothing moved after a check, and the heartbeat every `drishti.pivot.live.heartbeat-seconds` |
+| `error`, `ended` | a recompute that failed (the view stays live), the view ended (stopped, idle, over the live cell budget, the engine stopped) |
+
+A patch applied to the last answer equals a fresh query of the view, cell by cell (`LivePivotTest`).
+
+**Limits, refused in words** (`422 DRS-5721`): live pivots switched off (`drishti.pivot.live.enabled`); `drishti.pivot.live.max-per-person` (5) live views per
+person and `drishti.pivot.live.max-total` (200) per server; `drishti.pivot.live.max-cells` (5,000) visible cells; an exact live view estimated over `drishti.pivot.live.max-rows`
+(50 million rows: ask ≈ for a live view of its sketches, or narrow it); a view pinned to a past version (`asOf`), which never changes.
+Changes are coalesced: at most one recompute per view every `drishti.pivot.live.min-interval-ms` (1 s), the latest data wins. A live view nobody
+streams ends after `drishti.pivot.live.idle-seconds` (60). A live view is its person's: only they stream or end it.
+
+```
+POST /api/v1/pivot/live            {"view": "asha/desk-risk", "exact": true}
+  → {"id": "lp-3f2a…", "node": "10.0.4.17:18480", "answer": {…}, "options": {"exact": true, "progressive": false, "rollups": true}}
+GET  /api/v1/pivot/live/lp-3f2a…/events           (on that node; the console follows it on the browser's one live channel, `pivotlive:<id>@<node>`)
+DELETE /api/v1/pivot/live/lp-3f2a…
+```
+
+A personal API token may start and stream a live pivot (it reads only); ending one needs the `pivot:write` scope. Starting and ending
+are audited (`pivot.live.start`, `pivot.live.end`).
+
+## 26. Cell comments
+
+On a **saved** view, anyone who may open the view may comment on a cell: click the cell, and the provenance popover lists the cell's
+comments and has a box to add one (`M` puts the cursor there), about the whole cell or one measure. A commented cell shows a marker in
+its corner (dimmed when every comment on it is resolved).
+
+- **What is kept:** who, when, the text (1 to 2,000 characters), the measure if one, the cell by its **coordinates**
+  (`productType=IRS`; the grand total `*`), resolved or open (by whom, when), and the view's **version** it was written on. A cell is
+  named by its coordinates, not its place on the screen, so the comment stays on its cell when the view is rearranged.
+- **Kept with the view's versions** (`pivot/view-versions/<owner>/<name>/comments.json`, beside the numbered versions): saving the view
+  again keeps every comment; one written on an earlier version says so ("on an older version").
+- **Who changes one:** its author or the view's owner resolves, reopens and deletes it (`400 DRS-5722` for anyone else). Others' cells
+  take no comments (their members move with the top N). A view keeps at most 1,000 comments.
+- **Audited** (`pivot.comment.add`, `resolve`, `reopen`, `delete`) with the view, the cell and the comment's id, never its text.
+- A personal API token reads comments with any scope and changes them with the `pivot:comment` scope.
+
+```
+GET    /api/v1/pivot/views/asha/desk-risk/comments?open=true            the open comments ({cell}: one cell's)
+POST   /api/v1/pivot/views/asha/desk-risk/comments   {"coords": {"DESK": "RATES"}, "measure": "Notional", "text": "checked with the desk"}
+POST   /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…/resolve      (and /reopen)
+DELETE /api/v1/pivot/views/asha/desk-risk/comments/c-91d0…
+```

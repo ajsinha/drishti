@@ -59,7 +59,7 @@ Drishti has two programs and each has its own configuration:
 | Program | Bundled file | Local override (git-ignored) | Env-var form | Argument form |
 |---|---|---|---|---|
 | Server (Java, port 18480) | `drishti-server/src/main/resources/application.yaml` (inside the jar) | `./application.local.yaml` in the server's **working directory** | `DRISHTI_SOURCES_FETCHTIMEOUT=3s` | `--drishti.sources.fetch-timeout=3s` |
-| Console (Python, port 17480) | `drishti-console/config/application.yaml` | `drishti-console/config/application.local.yaml` | `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=10` | `--backend.timeout_seconds=10` |
+| Console (Python, port 17480) | `drishti-console/config/application.yaml` | `drishti-console/config/application.local.yaml` | `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=30` | `--backend.timeout_seconds=30` |
 
 Secrets never go in a tracked file. Put them in environment variables (or in the git-ignored local file on a
 developer machine).
@@ -84,10 +84,10 @@ pack.yaml contributions  <  application.yaml  <  application.local.yaml  <  envi
 
 ### Worked example: four layers, one key
 
-The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in the bundled file (2s before 2026-10-18: the first read of a date on a large table loads its id index first).
+The longest a source read may take is `drishti.sources.fetch-timeout`, `10s` in the bundled file: the first read of a date on a large table loads its id index first, and a panel's own source (another pack's data) is read within the same limit.
 
 1. Create `application.local.yaml` in the directory you start the server from (the repository root when
-   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar`):
+   you run `java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar`):
 
    ```yaml
    drishti:
@@ -100,7 +100,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 2. Start the server with an environment variable as well:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
    ```
 
    The effective value is `4s`: the environment beats the local file.
@@ -108,7 +108,7 @@ The longest a source read may take is `drishti.sources.fetch-timeout`, `5s` in t
 3. Add an argument:
 
    ```bash
-   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar \
+   DRISHTI_SOURCES_FETCHTIMEOUT=4s java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar \
        --drishti.sources.fetch-timeout=5s
    ```
 
@@ -264,7 +264,7 @@ Setting `java.io.tmpdir` inside a running JVM does not move `Files.createTempFil
 
 ```bash
 mkdir -p data/tmp/server        # once: the server makes it too, but the JVM warns on a first start when it does not exist yet
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 or, where editing the command is awkward (a service manager, a container, a wrapper script), through the environment: `JAVA_TOOL_OPTIONS=-Djava.io.tmpdir=/opt/drishti/data/tmp/server` (Java prints `Picked up JAVA_TOOL_OPTIONS` once). With another data folder or `DRISHTI_TMP_DIR`, use that base: `<data dir>/tmp/server`. Everything Drishti ships passes it already: `tools/windows/start-server.ps1`, the IntelliJ run configurations, `deploy/docker/server.Dockerfile` (in `JAVA_TOOL_OPTIONS`), the `run-server.sh`/`.ps1` that `tools/packmake.py` writes, the loaders `tools/load-*.sh`, and every java the tests and tools start (`tools/javacmd.py`; a guard test fails on one that does not). `./mvnw` gives Maven's own JVM `<repository>/data/tmp/maven` (`DRISHTI_MAVEN_TMP` names another), and the test JVMs get `<module>/target/tmp`, which `mvn clean` removes.
@@ -749,7 +749,7 @@ and [AI.md](AI.md#2-the-mcp-client-other-servers-tools-behind-drishtis-policy).
 ### Change the port
 
 ```bash
-DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+DRISHTI_PORT=18490 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 You should see `Tomcat started on port 18490` in the log. Point the console at it with
@@ -758,7 +758,7 @@ You should see `Tomcat started on port 18490` in the log. Point the console at i
 ### Load more packs
 
 ```bash
-DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+DRISHTI_PACKS=market-risk,world-economy java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 Packs a listed pack `extends:` (or the older `requires:`) are loaded too, dependencies first. Then
@@ -771,7 +771,7 @@ set `DRISHTI_PACKS_DIR` to an absolute path so both programs find the same folde
 export DRISHTI_SECURITY_ENABLED=true
 export DRISHTI_TOKEN_SECRET="$(openssl rand -base64 48)"   # at least 32 bytes; give the console the same value
 export DRISHTI_SEED_ADMIN=false
-java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 The console needs `DRISHTI_AUTH_ENABLED=true`, the same `DRISHTI_TOKEN_SECRET`, and its own
@@ -815,7 +815,7 @@ Admin → Connectors. Defining the connector under `drishti.sources.connectors` 
 ### Use a different holiday calendar
 
 ```bash
-DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+DRISHTI_CALENDAR=USNY+GBLO java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/business-date` then shows `"calendar":"USNY+GBLO"`.
@@ -832,7 +832,7 @@ and what it does. "From packs" means the bundled file leaves it empty and the en
 ```yaml
 drishti:
   sources:
-    fetch-timeout: 5s
+    fetch-timeout: 10s
     plugin-dir: /opt/drishti/plugins
     default-route: demo
     routes: { trade: trade-endur }
@@ -849,7 +849,7 @@ drishti:
 
 | Key | Default | Meaning |
 |---|---|---|
-| `fetch-timeout` | `5s` | The longest a single source read may take (`DRS-1004`). Slower reads show the entity as unavailable instead of holding the view. |
+| `fetch-timeout` | `10s` | The longest a single source read may take (`DRS-1004`). Slower reads show the entity as unavailable instead of holding the view; a panel's own `source:` read past it, or failing, shows the panel's failed state (connector and why), never its empty text. Keep the console's `backend.timeout_seconds` (15) longer. |
 | `plugin-dir` | empty (`DRISHTI_PLUGIN_DIR`) | A directory of extra plugin jars. Each jar gets its own class loader. Plugins on the class path are always found. |
 | `default-route` | `demo` | The plugin or connector tried first for a kind that has no route. |
 | `routes.<kind>` | `{}` plus from packs | Which plugin or connector serves a kind. Packs route their kinds to their connectors (`trade: trade-endur`). |
@@ -2444,7 +2444,7 @@ Example: the trading pack with its live Kafka stream.
 
 ```bash
 DRISHTI_PACKS=trading DRISHTI_STREAM_TRADING=true DRISHTI_KAFKA_BOOTSTRAP=kafka:9092 \
-  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 `curl -s localhost:18480/api/v1/sources` should then list `trading-stream`.
@@ -2470,7 +2470,7 @@ the lake. The packs still decide kinds, routes and modes.
 
 ```bash
 SPRING_PROFILES_ACTIVE=postgres DRISHTI_PG_URL=jdbc:postgresql://db:5432/drishti \
-  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  DRISHTI_PG_PASSWORD="$PG_PASSWORD" java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 ---
@@ -2522,7 +2522,7 @@ You should see uvicorn report `Uvicorn running on http://127.0.0.1:17481`.
 | `server.workers` | `4` (`DRISHTI_CONSOLE_WORKERS`) | Worker processes on that port (`run_drishti_web.py`). Each keeps short-lived copies of what the server says about a user (settings, packs, view layouts, saved pivots, BI powers, the session check); a change made through one worker writes the user's stamp under the console's data folder (`<console data>/user-stamps`, one small file per user) and every worker reads its copy again at its next page, in every browser of the user. A change to a role (its BI powers in Admin, BI settings; anything in Admin, Roles; a role deleted) writes the stamp for everyone, so every holder's copies are read again at once. Consoles behind one address that share no data folder see each other's changes within `ui.user_cache_seconds` (10 s), sessions within `auth.recheck_seconds`. |
 | `server.shutdown_seconds` | `5` (`DRISHTI_CONSOLE_SHUTDOWN_SECONDS`) | On a stop, the longest an open stream keeps a worker; then it is closed and the worker ends. |
 | `backend.url` | `http://127.0.0.1:18480` (`DRISHTI_BACKEND_URL`) | The Drishti server. |
-| `backend.timeout_seconds` | `5` | Per call to the server. |
+| `backend.timeout_seconds` | `15` | Per call to the server. Longer than the server's own read limit (`drishti.sources.fetch-timeout`, 10 s), so the server's answer, including a timed-out read's `DRS-1004`, comes through. |
 | `backend.name` | the product name (`ui.product`) | The name of the single server when `servers` is not set; the picker and the top bar show it. |
 | `backend.check_seconds` | `5` (`DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS`) | How often the console's background watch asks each server (the default and every one of `servers`) whether it is reachable, with a 2 s timeout. It keeps reachable / since / last error / version, logs each change once, and answers `GET /healthz/backend`, which every page's banner polls. Shown on Admin > Health (Console watch). `0` turns the watch off. |
 | `backend.urls` | empty (`DRISHTI_BACKEND_URLS`) | Several servers of one Drishti*net cluster ([The console and several servers](#the-console-and-several-servers-drishtinet)). |
@@ -2741,12 +2741,12 @@ compose files in `deploy/` show these variables in use; see [OPERATIONS.md](OPER
 
 ## Every setting
 
-Every key of every kind: 2,069 settings in 18 areas, and 326 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
+Every key of every kind: 2,118 settings in 18 areas, and 326 environment variables. Each row has the same shape: the key, its type, its default (*none*: no default, the setting is off or unset until given; *empty*: an empty value), the environment variable that sets it, what it applies to, its meaning, whether a change needs a restart or is picked up live, and the release that added it (blank: before 2.6). Generated by `tools/settings_catalogue.py` from the files themselves, each meaning the file's own comment; `--check` fails the drill when a key has no meaning or the page is out of date. The console shows this page searchable at Help → Configuration (`/help/configuration`), with the values in effect for an administrator.
 
 | Area | Settings |
 |---|---|
 | [The server: `application.yaml`](#the-server-applicationyaml) | 537 |
-| [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 254 |
+| [Compute engines: `config/engines/*.yaml`](#compute-engines-configenginesyaml) | 303 |
 | [The console: `application.yaml`](#the-console-applicationyaml) | 210 |
 | [The console's other files](#the-consoles-other-files) | 93 |
 | [Connectors: every plugin's settings](#connectors-every-plugins-settings) | 517 |
@@ -2967,7 +2967,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.sources.fetch-timeout` | duration | `5s` |  | server | Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read of a business date on a large table loads that date's id index first (300K trades: a few seconds). | restart |  |
+| `drishti.sources.fetch-timeout` | duration | `10s` |  | server | Longest a single source read may take before the view shows the entity as unavailable (DRS-1004), and a panel's own source (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing. | restart |  |
 | `drishti.sources.plugin-dir` | string | empty | `DRISHTI_PLUGIN_DIR` | server | Optional directory of extra plugin jars; each gets its own class loader. | restart |  |
 | `drishti.sources.default-route` | string | `demo` |  | server | kind -&gt; plugin. Kinds without a route try default-route first, then any plugin that serves them. | restart |  |
 | `drishti.sources.routes` | map | `{}` |  | server | kind -&gt; plugin or connector that serves it (packs add theirs: trade: trade-endur) | restart |  |
@@ -4037,8 +4037,21 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
-| `drishti.engines.mr-cube.enabled` | boolean | `false` | `DRISHTI_MR_CUBE_ENABLED` | server (each node its own) | run the market-risk cube on this node once it is installed (its settings will live under drishti.cube.mr.\*) | restart |  |
+| `drishti.engines.mr-cube.enabled` | boolean | `true` | `DRISHTI_MR_CUBE_ENABLED` | server (each node its own) | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot | restart |  |
 | `drishti.engines.mr-cube.changed` | map | `{ by: "", at: "", reason: "" }` |  | server (each node its own) | the last change made from Admin -&gt; Engines or drishti.py (written by the server) | restart |  |
+
+#### `drishti.cube`
+
+| Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
+|---|---|---|---|---|---|---|---|
+| `drishti.cube.mr.sbm-max-cells` | integer | `60` |  | server (each node its own) | the most cells whose FRTB-SA SBM one view computes (a run of the FRTB-SA engine per cell scope) | restart |  |
+| `drishti.cube.mr.stressed-max-cells` | integer | `100` |  | server (each node its own) | the most cells whose stressed VaR one view computes, scope by scope | restart |  |
+| `drishti.cube.mr.sparkline-dates` | integer | `20` |  | server (each node its own) | the open business dates a sparkline reads (a date not open here is not opened for one) | restart |  |
+| `drishti.cube.mr.sparkline-max-cells` | integer | `600` |  | server (each node its own) | the most cells of a view that get a sparkline | restart |  |
+| `drishti.cube.mr.what-if-rows` | integer | `40` |  | server (each node its own) | the most rows the what-if side by side computes (the total always added) | restart |  |
+| `drishti.cube.mr.risk-classes` | map | `{}` |  | server (each node its own) | RISK\_CLASS: a class to its product groups, in column order; empty: IR, CR, FX, EQ, CM of the demo's groups (MR\_CUBE\_GUIDE.md section 3) | restart |  |
+| `drishti.cube.mr.grids` | map | `{}` |  | server (each node its own) | the ladders' bucket grids, each bucket label: from-to in years ({ BANK-IR-TENOR: { 0-2Y: "0-2", 10Y+: "10-" } }); empty: BANK-IR-TENOR and FRTB-GIRR | restart |  |
+| `drishti.cube.mr.ladder-limits` | map | `{}` |  | server (each node its own) | two-sided DV01 limits per currency and bucket ({ "USD 2-5Y": 1500000 }); empty: no limit bars | restart |  |
 
 #### `drishti.engines.ccr-cube`
 
@@ -4123,8 +4136,49 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.pivot.estimate.confirm-above-seconds` | integer | `60` |  | server (each node its own) | an estimate over this asks the person first | restart |  |
 | `drishti.pivot.estimate.confirm-above-rows` | integer | `500000000` |  | server (each node its own) | an estimate over this many rows asks the person first | restart |  |
 | `drishti.pivot.aggregate-only.min-members-per-cell` | integer | `1` |  | server (each node its own) | a cell with fewer members shows no figures (1: no limit; a site may set 5) | restart |  |
+| `drishti.pivot.functions.formula` | boolean | `true` |  | server (each node its own) | DEL formulas of the built-ins as custom functions | restart |  |
+| `drishti.pivot.functions.sql-macros` | boolean | `true` |  | server (each node its own) | DuckDB SQL macros as custom functions (a formula of built-ins is rewritten into states; any other is holistic) | restart |  |
+| `drishti.pivot.functions.require-approval` | boolean | `true` |  | server (each node its own) | sharing a function needs an approver who is not its author (audited) | restart |  |
+| `drishti.pivot.functions.approver-role` | string | `pivot-approver` |  | server (each node its own) | members of this role approve functions; administrators always may | restart |  |
+| `drishti.pivot.functions.holistic-max-rows` | integer | `5000000` |  | server (each node its own) | the most rows of one cell a holistic custom function receives (over it: refused for that cell, never cut) | restart |  |
+| `drishti.pivot.functions.holistic-max-mb` | integer | `512` |  | server (each node its own) | the most megabytes of one cell's rows for a holistic custom function | restart |  |
+| `drishti.pivot.functions.harness.tolerance` | string | `1.0e-12` |  | server (each node its own) | the relative difference split-and-merge may show against one pass (a function's own tolerance wins) | restart |  |
+| `drishti.pivot.functions.harness.seeds` | integer | `5` |  | server (each node its own) | seeds of the random splits into 2, 3 and 16 parts | restart |  |
+| `drishti.pivot.functions.harness.max-ns-per-row` | integer | `2000` |  | server (each node its own) | the cost limit a row (judged on samples of 1,000 rows or more) | restart |  |
+| `drishti.pivot.functions.python.enabled` | boolean | `false` |  | server (each node its own) | Python custom functions on this node (the pivot-fn pool); off as shipped | restart |  |
+| `drishti.pivot.functions.python.interpreter` | string | `""` |  | server (each node its own) | the Python to run (blank: python3, python on Windows) | restart |  |
+| `drishti.pivot.functions.python.workers` | integer | `2` |  | server (each node its own) | sandboxed worker processes in the pivot-fn pool | restart |  |
+| `drishti.pivot.functions.python.timeout-seconds` | integer | `30` |  | server (each node its own) | the longest one call (a batch, a merge) may take; its worker is stopped past it | restart |  |
+| `drishti.pivot.functions.python.memory-mb` | integer | `1024` |  | server (each node its own) | memory a worker may use | restart |  |
+| `drishti.pivot.functions.python.batch-rows` | integer | `65536` |  | server (each node its own) | rows in each batch a function is fed (Python and Java plug-ins without an SQL form) | restart |  |
+| `drishti.pivot.functions.java.enabled` | boolean | `false` |  | server (each node its own) | Java plug-in functions (a jar approved by an administrator, pinned by its SHA-256); off as shipped | restart |  |
+| `drishti.pivot.functions.java.dir` | string | `./plugins/pivot-functions` |  | server (each node its own) | the plug-in folder | restart |  |
 | `drishti.pivot.export.xlsx-max-rows` | integer | `1000000` |  | server (each node its own) | the most rows of an xlsx export (Excel holds 1,048,576 a sheet): over it, CSV or Arrow is offered | restart |  |
 | `drishti.pivot.export.rows-max` | integer | `1000000` |  | server (each node its own) | the most member rows an export of the underlying rows writes | restart |  |
+| `drishti.pivot.sketches.hll-precision` | integer | `12` |  | server (each node its own) | HyperLogLog: 2^p registers (11 to 16); 12: 4,096 registers, ±1.6% (1.04/√m) | restart |  |
+| `drishti.pivot.sketches.kll-k` | integer | `200` |  | server (each node its own) | KLL's k: ±1.65% of rank at 200 (with SQL's quantile points ±1.8%) | restart |  |
+| `drishti.pivot.sketches.top-capacity-factor` | integer | `10` |  | server (each node its own) | Space-Saving keeps this many counters per value shown by top(x, n) | restart |  |
+| `drishti.pivot.sketches.approximate-above-rows` | integer | `10000000` |  | server (each node its own) | a view reading more rows answers count\_distinct, median and percentile by their sketches (≈; exact on request); 0: never by size | restart |  |
+| `drishti.pivot.progressive.enabled` | boolean | `true` |  | server (each node its own) | false: one exact answer only | restart |  |
+| `drishti.pivot.progressive.after-ms` | integer | `2000` |  | server (each node its own) | a view estimated over this answers ≈ from a sample first | restart |  |
+| `drishti.pivot.progressive.sample-fraction` | number | `0.02` |  | server (each node its own) | the share of rows the first answer reads | restart |  |
+| `drishti.pivot.rollups.enabled` | boolean | `true` |  | server (each node its own) | rollups answer views and are refreshed | restart |  |
+| `drishti.pivot.rollups.refresh-seconds` | integer | `60` |  | server (each node its own) | how often each rollup's source version is checked: a load is merged in within this | restart |  |
+| `drishti.pivot.rollups.advise-after-scans` | integer | `10` |  | server (each node its own) | a grain scanned this many times is proposed as a rollup (GET /api/v1/pivot/rollups, advice) | restart |  |
+| `drishti.pivot.rollups.dir` | string | `""` |  | server (each node its own) | where rollups are kept (blank: &lt;data dir&gt;/pivot/rollups) | restart |  |
+| `drishti.pivot.rollups.definitions` | list | `[]` |  | server (each node its own) | rollups: {id, source, grain: \[DESK, TRADE\_DATE:month], functions: \[sum(NOTIONAL\_USD), count()], dates: latest\|all} | restart |  |
+| `drishti.pivot.live.enabled` | boolean | `true` |  | server (each node its own) | false: no Live switch, POST /api/v1/pivot/live refused (DRS-5721) | restart |  |
+| `drishti.pivot.live.max-per-person` | integer | `5` |  | server (each node its own) | live views one person may hold | restart |  |
+| `drishti.pivot.live.max-total` | integer | `200` |  | server (each node its own) | live views this node holds | restart |  |
+| `drishti.pivot.live.min-interval-ms` | integer | `1000` |  | server (each node its own) | the least time between two recomputes of one view; changes in between are coalesced (the latest wins) | restart |  |
+| `drishti.pivot.live.max-cells` | integer | `5000` |  | server (each node its own) | the most visible cells a live view keeps current | restart |  |
+| `drishti.pivot.live.max-rows` | integer | `50000000` |  | server (each node its own) | the most rows an exact live recompute may read (estimated); a larger view is live only when it asks ≈ (0: no limit) | restart |  |
+| `drishti.pivot.live.idle-seconds` | integer | `60` |  | server (each node its own) | a live view no stream reads is ended after this | restart |  |
+| `drishti.pivot.live.heartbeat-seconds` | integer | `15` |  | server (each node its own) | a status event to every live stream this often (also when idle views are ended) | restart |  |
+| `drishti.pivot.cluster.enabled` | boolean | `true` |  | server (each node its own) | false: this node computes its views alone | restart |  |
+| `drishti.pivot.cluster.hedge-after-seconds` | integer | `20` |  | server (each node its own) | a node's share not answered by then is asked of the next node too; the first answer wins | restart |  |
+| `drishti.pivot.cluster.deadline-seconds` | integer | `300` |  | server (each node its own) | a share with no answer by then refuses the view in words (DRS-5720), never a partial figure | restart |  |
+| `drishti.pivot.cluster.min-rows` | integer | `5000000` |  | server (each node its own) | views estimated under this many rows stay on this node | restart |  |
 
 #### Old names (still accepted)
 
@@ -4159,7 +4213,7 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | Key | Type | Default | Env var | Applies to | Meaning | Restart or live | Since |
 |---|---|---|---|---|---|---|---|
 | `backend.url` | string | `http://127.0.0.1:18480` | `DRISHTI_BACKEND_URL` | console | where the server is (one server; backend.urls for several) | restart |  |
-| `backend.timeout_seconds` | integer | `5` |  | console | per call to the server | restart |  |
+| `backend.timeout_seconds` | integer | `15` |  | console | per call to the server; longer than the server's own read limit (drishti.sources.fetch-timeout, 10 s), so its answer comes through | restart |  |
 | `backend.pool_size` | integer | `64` |  | console | pooled HTTP connections to the server (per server, when there are several) | restart |  |
 | `backend.check_seconds` | integer | `5` | `DRISHTI_CONSOLE_BACKEND_CHECK_SECONDS` | console | how often the console asks each server if it is there (0 = never); pages show a banner and recover when it returns | restart |  |
 | `backend.urls` | string | empty | `DRISHTI_BACKEND_URLS` | console | Several servers of one Drishti\*net cluster (docs/admin/OPERATIONS.md, "The console and several servers"): one is enough, the console learns the rest. Empty: backend.url, as before. Each session keeps to one server while it answers and falls over to the next when it does not. e.g. https://drishti-a:8480,https://drishti-b:8480 | restart |  |
@@ -6181,7 +6235,7 @@ Every environment variable a source names (`${NAME:default}`) or the code reads,
 | `DRISHTI_MINIO_URL` | S3 simulator tests | none | tools | Where that binary is downloaded from |
 | `DRISHTI_MONGODB_DATABASE` | mongodb profile | `drishti` | profile | Its database |
 | `DRISHTI_MONGODB_URI` | mongodb profile | `mongodb://localhost:27017` | profile | The mongodb profile's server |
-| `DRISHTI_MR_CUBE_ENABLED` | `drishti.engines.mr-cube.enabled` (engine) | `false` | engine | run the market-risk cube on this node once it is installed (its settings will live under drishti.cube.mr.\*) |
+| `DRISHTI_MR_CUBE_ENABLED` | `drishti.engines.mr-cube.enabled` (engine) | `true` | engine | run the MR cube on this node: MCUBE, /api/v1/pivot/mr, the VaR source's hierarchy levels and MR measures; needs var and pivot |
 | `DRISHTI_MR_DERIVED_ENABLED` | market-risk's derived connector | `true` | packs | The market-risk pack's derived kinds on or off |
 | `DRISHTI_NET_DIR` | `drishti.net.dir` | `./config/net` | server | created on first write; ready-made files in config/net.examples/ |
 | `DRISHTI_NET_SECRET` | `secret` (net) | none | net | the cluster key: an environment reference only, at least 32 bytes, the same on every node |

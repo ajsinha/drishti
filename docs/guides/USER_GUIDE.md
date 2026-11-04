@@ -324,7 +324,13 @@ column, so its VaR is still the VaR page's. **Export to Excel** downloads the sa
 says it equals the engine to the cent. On a phone: the headline and the explanation. Part of Drishti Risk and Drishti Trading
 ([VAR_GUIDE.md section 3.10](VAR_GUIDE.md#310-the-var-playground-play-var); [tutorial 25, step 18](../tutorials/25-var-from-the-bank-to-a-trade.md#step-18--work-the-var-out-by-hand-the-var-playground)).
 
-**Construct your basket.** On the VaR page, **◫ Construct your basket** (or `Alt+B`) opens the basket's sheet across its top, one
+**The VaR page's layout.** The hierarchy tree is on the left (click **▸** to open a node, its name to see its VaR); the toolbar above
+the figures has two searchable drop-downs, **System baskets** (key **B**: the bank's portfolios) and **My baskets** (key **M**: the
+baskets you saved and those shared with you), where you type to search by name or description, move with ↑ ↓ and open with Enter;
+**How calculated ›** (key **H**) slides *How this number was built* in from the right, **Esc** closes it, and the link keeps it open
+(`&how=1`) ([VAR_GUIDE.md section 3.2](VAR_GUIDE.md#32-the-screen)).
+
+**Construct your basket.** On the VaR page, **+ New basket** in the toolbar (or `Alt+B`) opens the basket's sheet across its top, one
 sheet like Excel: the VaR of any mix of trades, positions, portfolios, books, desks, limit letters and counterparties, a column per kind
 and the Op column (+ adds, − takes away). Type in a cell, pick a hint (it lands in its kind's column), use **+ basket** on any row, or
 paste whole columns from Excel; **Start from the whole bank** makes the basket the bank and the rows refine it. The server checks every
@@ -332,11 +338,11 @@ cell (a red cell says why it is not found) and computes the basket's VaR, ES, su
 a pre-deal what-if, **Save basket and open VaR** and **Download as .xlsx**. It is on the VaR page only; what it holds stays in your
 browser, so it is there when you come back ([VAR_GUIDE.md section 3.5](VAR_GUIDE.md#35-construct-your-basket)).
 
-**Editing your baskets.** Under *Ad-hoc scopes* each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
+**Editing your baskets.** In the toolbar's *My baskets* drop-down (key **M**; *System baskets*, key **B**, lists the bank's portfolios) each basket of yours has **Edit**: it opens in the sheet and **Save as version *n***
 keeps its name as a new version. A portfolio (the bank's) and a basket shared with you have **Edit a copy**: it opens as your own basket,
 to save under your own name. An administrator may edit anyone's basket; you get a notice in your inbox saying who.
 
-**Deleting your ad-hoc scopes.** The baskets you saved are listed under *Ad-hoc scopes* on the VaR page as `★ name`. Point at one (or
+**Deleting your ad-hoc scopes.** The baskets you saved are listed in *My baskets* on the VaR page. Open it and point at one (or
 Tab to it) and press **Delete**: a dialog names the basket and whom you shared it with (they lose it too) and asks first; **Keep it** or
 **Esc** keeps it. The list refreshes at once; a view of the basket that was open says it was deleted. Captures you took of it are kept and
 still open, saying the basket no longer exists. You can delete only your own; an administrator may delete anyone's (you get a notice in
@@ -729,7 +735,7 @@ and press `Enter` or `Space`. The menu has, from the top:
 
   | Type | Conditions |
   |---|---|
-  | Numbers | equals, does not equal, greater than, greater than or equal to, less than, less than or equal to, between, **top N** and **bottom N** (N is a box, 10 to begin with), above average, below average. A value may be written `1m`, `250k`, `12%` |
+  | Numbers | equals, does not equal, greater than, greater than or equal to, less than, less than or equal to, between, **top N** and **bottom N** (N is a box, 10 to begin with), above average, below average (the average is the server's, its pivot engine's average of the column; no row is hidden while it is asked). A value may be written `1m`, `250k`, `12%` |
   | Dates | today, yesterday, this week (Monday to Sunday), last week, this month, last month, last 7 days, last 30 days, between, before, after. They count from today in your browser's calendar |
   | Text | equals, does not equal, contains, does not contain, begins with, ends with (any case) |
 
@@ -2368,7 +2374,7 @@ between them without the menu.
 | Tokens | `/admin/tokens` | Every personal API token (never its secret): its owner, its scopes (*read only* or what it may write), when it was last used (in the console's time zone, named), and revoking any of them ([API_GUIDE.md (clients)](API_GUIDE.md#clients-scripts-notebooks-and-excel)) |
 | Access | `/admin/access` | Who read which entity, filtered by user, action, kind, id and dates ([USER_MANAGEMENT.md](../admin/USER_MANAGEMENT.md)) |
 | AI | `/admin/ai` | The AI layer: off by default; providers, models, MCP servers and a test call ([AI.md](../admin/AI.md#1-model-providers)) |
-| Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)) |
+| Data loads | `/admin/loads` | What your ETL announced, what is due and what is late ([DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed)); its **Inbox** tab (`/admin/loads/inbox`, while the data inbox runs) is the inbox's status board: files waiting, the run loading table by table, the last cycles, failures with **Retry**, and **Load now** ([DATA_GUIDE.md section 7.8](DATA_GUIDE.md#8-the-inbox-screen-admin--data-loads--inbox)) |
 | Collaboration | `/admin/collab` | Moderation of shares and threads, legal holds, export, the mail outbox and chat bridges ([COLLABORATION.md](../architecture/COLLABORATION.md)) |
 | Embedding | `/admin/embedding` | Host applications that show Drishti views in their own pages ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)) |
 | BI | `/admin/bi` | Powers per role and who creates workspaces (needs `bi-admin`; [BI_GUIDE.md](BI_GUIDE.md)) |

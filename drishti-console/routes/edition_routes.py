@@ -38,6 +38,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from core import asof, market_landing, trading_landing
 from core.backend import BackendError
 from core.edition import Edition
+from core.user_cache import cache_key
 from routes.common import ident, render
 
 router = APIRouter(include_in_schema=False)
@@ -145,7 +146,7 @@ async def market_figures(request: Request, part: str):
         return JSONResponse({"code": "DRS-4023", "detail": f"market data is not part of {ed.title if ed.active else 'a landing'}"},
                             status_code=404)
     me = ident(request)
-    key = (me.user if me else "", ed.name, asof.current(), str(asof.headers()))
+    key = cache_key(request, "market", asof.current())             # server, user, roles, as-of and known-at, lens
     backend = request.app.state.backend
     if part == "desk":
         out = await market_landing.desk(backend, me, key)
@@ -156,7 +157,29 @@ async def market_figures(request: Request, part: str):
     return JSONResponse(out, headers={"Cache-Control": "no-store"})
 
 
+def _confirm(request: Request, action: str, title: str, text: str):
+    """A change a link asks for answers a GET with its form: only a POST changes anything (theme-init.js posts the links directly)."""
+    return render(request, "confirm_post.html", action=action, title=title, text=text)
+
+
 @router.get("/home/landing/{name}")
+async def choose_landing_form(request: Request, name: str):
+    return _confirm(request, f"/home/landing/{quote(name)}", "Open this landing", f"Home will open with the {name} landing from now on.")
+
+
+@router.get("/lens/leave")
+async def leave_lens_form(request: Request):
+    return _confirm(request, "/lens/leave", "Leave the lens", "Back to the full product.")
+
+
+@router.get("/lens/{name}")
+async def open_lens_form(request: Request, name: str):
+    if getattr(request.state, "identity", None) is None:
+        return RedirectResponse(f"/login?next={quote('/lens/' + name)}", status_code=303)
+    return _confirm(request, f"/lens/{quote(name)}", "Open the lens", f"See the product through the {name} lens.")
+
+
+@router.post("/home/landing/{name}")
 async def choose_landing(request: Request, name: str):
     """Remembers the person's landing (their settings, ``homeLanding``) and opens Home with it."""
     me = getattr(request.state, "identity", None)
@@ -165,7 +188,7 @@ async def choose_landing(request: Request, name: str):
     return RedirectResponse("/", status_code=303)
 
 
-@router.get("/lens/leave")
+@router.post("/lens/leave")
 async def leave_lens(request: Request):
     """Back to the full product: the person's lens is forgotten (their settings)."""
     if getattr(request.state, "identity", None) is not None:
@@ -173,7 +196,7 @@ async def leave_lens(request: Request):
     return RedirectResponse("/", status_code=303)
 
 
-@router.get("/lens/{name}")
+@router.post("/lens/{name}")
 async def open_lens(request: Request, name: str):
     """Opens an edition as a lens for this person: only one the server offers (drishti.lenses), only on a full instance."""
     editions = request.app.state.editions

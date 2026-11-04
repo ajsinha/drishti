@@ -57,17 +57,18 @@ def _settings(**values):
 
 
 def test_an_id_names_its_host_and_worker(monkeypatch):
-    monkeypatch.setitem(channel_relay._state, "port", 17490)
-    monkeypatch.setitem(channel_relay._state, "host", "10.0.4.11")
-    assert channel_relay.suffix() == "~10.0.4.11.17490"
-    assert channel_relay.owner("abc~10.0.4.11.17490") == ("10.0.4.11", 17490)
-    assert channel_relay.owner("abc~console-b.bank.example.17491") == ("console-b.bank.example", 17491)
+    app = SimpleNamespace(state=SimpleNamespace())
+    relay = channel_relay.of(app)
+    relay.port, relay.host = 47490, "10.0.4.11"   # a number, never bound: outside the scratch-port range (test_scratch_ports)
+    assert channel_relay.suffix(app) == "~10.0.4.11.47490"
+    assert channel_relay.owner("abc~10.0.4.11.47490") == ("10.0.4.11", 47490)
+    assert channel_relay.owner("abc~console-b.bank.example.47491") == ("console-b.bank.example", 47491)
     assert channel_relay.owner("abc.40123") == ("127.0.0.1", 40123)              # a worker of this host
-    assert channel_relay.owner_port("abc~10.0.4.11.17490") == 17490
-    for bad in ("abc", "abc~.17490", "abc~host.0", "abc~host.70000", "abc~ho st.17490", "abc~host"):
+    assert channel_relay.owner_port("abc~10.0.4.11.47490") == 47490
+    for bad in ("abc", "abc~.47490", "abc~host.0", "abc~host.70000", "abc~ho st.47490", "abc~host"):
         assert channel_relay.owner(bad) is None, bad
-    assert channel_relay._mine(("10.0.4.11", 17490)) and channel_relay._mine(("127.0.0.1", 17490))
-    assert not channel_relay._mine(("10.0.4.12", 17490))
+    assert relay.mine(("10.0.4.11", 47490)) and relay.mine(("127.0.0.1", 47490))
+    assert not relay.mine(("10.0.4.12", 47490))
 
 
 def test_a_key_the_launcher_made_keeps_the_relay_on_this_host(monkeypatch):
@@ -75,11 +76,12 @@ def test_a_key_the_launcher_made_keeps_the_relay_on_this_host(monkeypatch):
     monkeypatch.setenv(channel_relay.MADE_ENV, "1")
 
     async def go():
-        await channel_relay.start(_settings(across_hosts=True, port=_free_port()))
+        app = _settings(across_hosts=True, port=_free_port())
+        await channel_relay.start(app)
         try:
-            return channel_relay.suffix(), channel_relay.stats()
+            return channel_relay.suffix(app), channel_relay.stats(app)
         finally:
-            await channel_relay.stop()
+            await channel_relay.stop(app)
 
     suffix, stats = run(go())
     assert suffix.startswith(".") and "~" not in suffix and stats["acrossHosts"] is False
@@ -107,14 +109,16 @@ def test_only_a_fresh_message_signed_with_the_key_is_answered_and_only_once(monk
         return got
 
     def signed(n, at=None, key="relay-test-key"):
-        body = json.dumps({"at": time.time() if at is None else at, "op": "echo", "cid": "x.1", "payload": {"n": n}}, separators=(",", ":"))
+        body = json.dumps({"at": time.time() if at is None else at, "op": "echo", "cid": "x.1", "payload": {"n": n},
+                           "scope": {"server": "default"}}, separators=(",", ":"))
         import hashlib
         import hmac
         return hmac.new(key.encode(), ("ask\n" + body).encode(), hashlib.sha256).hexdigest() + " " + body
 
     async def go():
-        await channel_relay.start(None)
-        port = channel_relay._state["port"]
+        app = SimpleNamespace(state=SimpleNamespace())
+        await channel_relay.start(app)
+        port = channel_relay.of(app).port
         try:
             fresh = signed(1)
             first = await send(port, fresh)
@@ -123,7 +127,7 @@ def test_only_a_fresh_message_signed_with_the_key_is_answered_and_only_once(monk
             other = await send(port, signed(3, key="another-key"))             # another key
             return first, again, old, other
         finally:
-            await channel_relay.stop()
+            await channel_relay.stop(app)
 
     first, again, old, other = run(go())
     assert first.split(" ", 1)[1].strip() == '{"ok":true}' and len(first.split(" ", 1)[0]) == 64
@@ -143,7 +147,7 @@ def test_an_answer_not_signed_with_the_key_is_not_believed(monkeypatch):
         server = await asyncio.start_server(liar, "127.0.0.1", 0)
         port = server.sockets[0].getsockname()[1]
         try:
-            return await channel_relay.forward(f"abc.{port}", "console-change", {})
+            return await channel_relay.forward(SimpleNamespace(state=SimpleNamespace()), f"abc.{port}", "console-change", {})
         finally:
             server.close()
 

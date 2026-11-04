@@ -108,7 +108,7 @@ final class Lexer {
                     case ',' -> Type.COMMA;
                     case '?' -> Type.QUESTION;
                     case ':' -> Type.COLON;
-                    case '+', '-', '*', '/', '%', '<', '>', '!' -> Type.OP;
+                    case '+', '-', '*', '/', '%', '<', '>', '!', '=' -> Type.OP;   // a lone '=' only names a value in let(...)
                     default -> throw new ElException("unexpected character '" + c + "'", i);
                 };
                 out.add(new Token(t, String.valueOf(c), i));

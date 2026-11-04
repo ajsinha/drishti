@@ -15,6 +15,241 @@
 -->
 # Changelog
 
+## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (2026-11-04)
+
+- **The VaR screen's layout (2.9.11.b, the product owner's approved mock-up A, `docs/lenses/mockups/var-layout/A.html` and
+  `A-drawer.html`; VAR_GUIDE.md sections 3.2, 3.5, 3.6; tutorial 25 steps 5, 7, 9).** Two changes, everything else as it was. The
+  baskets left the left-hand column (the hierarchy tree stays there as before) for two searchable drop-downs in a toolbar above the
+  figures: **System baskets** (key B: the bank's portfolios, the `portfolio` feed the tree's answer already carries) and **My baskets**
+  (key M: the saved baskets `GET /api/var/baskets` lists, *Mine* then *Shared with me*). Each is a combobox over a listbox (type to search
+  the name and the description, ↑↓, Enter, Esc); each row keeps + basket, Edit, Edit a copy and Delete. The basket's sheet is unchanged
+  and collapsed on load; **+ New basket** (the toolbar, the foot of My baskets, Alt+B) opens it, and it collapses once a basket is saved,
+  which then appears in My baskets. The right-hand *How this number was built* column became a drawer, **How calculated ›** (key H), with
+  the same server-sent lines and its Export CSV, Capture VaR and What-if…; Esc or ✕ closes it and gives the focus back; `&how=1` in the
+  link opens it; a bottom sheet on a phone. No server change: the console's `var-layout.js` and `var-layout.css`. The guard
+  `tests/test_var_layout_keeps_everything.py` inventories every tile, panel, chart, table, tab, control, key, ES figure and explanation
+  line of the screen as it was, and checks them in the served page and in Chromium (dark and light, 1500 px and 390 px).
+
+- **The MR cube on the pivot engine (2.9.11.b, moved from 2.9.11.a by the product owner on 2026-11-03; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot
+  engine's VaR source becomes the market-risk cube when engine `mr-cube` runs (`config/engines/mr-cube.yaml`, installed and on; needs
+  `var` and `pivot`, uses `sensitivities` and `frtb-sa`). Dimensions: every hierarchy level (`MGMT.DESK`, `LEGAL.LEGAL-ENTITY`,
+  `LL.LIMIT_LETTER`), the positions' and trades' columns, `RISK_CLASS` (from the product group, `drishti.cube.mr.risk-classes`),
+  `POSITION` and `TRADE`; measures `var()`, `es()`, `pv()`, `trades()`, `comp_var()`, `comp_es()`, `incr_var()`, `limit()`,
+  `limit_use()`, `svar()`, `dv01()`, `cs01()`, `sbm()`; the scope and the lens (horizon, method, confidences, stress set, currency) as
+  the view's `options` (a new part of every pivot view and plan, in the cache key). Every cell's vector of a plan is summed in one batch
+  (`VarBook.vectors`, `ShardedVectors.sumSets`: one call per remote shard for all the cells), every figure the VaR engine's for the
+  cell's scope to the cent. The MR lens's endpoints `/api/v1/pivot/mr/headline|detail|history|versions|explain|sensitivities|what-if`;
+  `MCUBE` opens the pivot screen with the MR lens (landing A: headline, lens controls, slider, sparklines in the cells, a cell's tail and
+  explain; tab B: components, waterfall, histogram, heat map; tab C: the DV01 ladder, the what-if side by side); the catalogue's
+  `defaultView` opens any source on its landing; `drishti.py pivot --option` and `pivot mr ...`. The paused `wip/mr-cube` branch's cube
+  core (`/api/v1/cube`, codes DRS-5601 to DRS-5604, DRS-9506) is not brought back: the pivot engine's codes and busy protection apply.
+- **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 37).** Custom aggregation functions in four
+  languages with the four steps start, add, merge and finish: a formula of the built-ins (DEL's syntax: `sum(PNL, where=PNL < 0) /
+  sum(abs(PNL))`, mergeable when its parts are, computed in the same `GROUPING SETS` statement), a DuckDB SQL macro (rewritten into the
+  built-ins' states when it is a formula, else holistic), Python (the node's sandboxed `pivot-fn` workers from the compute SDK: no
+  network, processes or writes, imports from an allow-list, Arrow batches over a pipe; off as shipped; never on memory-only data) and Java
+  plug-ins (a jar pinned by its SHA-256; off as shipped). The harness (one pass, batches, 2, 3 and 16 random parts merged two ways under
+  five seeds with every state read back, empty, nulls, one row, equal rows, infinities, determinism, cost, state size) gates every save;
+  the playground shows the states part by part, the cost and a pivot of the sample; versions; sharing needs an approver who is not the
+  author; a withdrawn function says so in its cells; everything audited; never in an official run. Explain the difference between two cells
+  or a cell on two dates in steps that add up (a waterfall; price and quantity effects); what-if overlays (members left out, fields scaled
+  or set, rows added) beside the original. Saved views keep every version, with a diff of definitions and restore. `/api/v1/pivot/functions`, `/explain`, `/whatif`; `drishti.py pivot functions|explain|whatif`;
+  the pivot screen's Why (`W`), What-if (`I`) and Functions (`U`); settings under `drishti.pivot.functions`; codes DRS-5710 to DRS-5716.
+- **BI on the pivot engine (PB).** Every total and subtotal of a matrix, a table's total row and a model query's `totals` come from one
+  grouping-sets statement of the pivot engine over the model's rows as the reader sees them, run in BI's engine where the layers are
+  (one statement instead of one query per level); a model's measures are pivot functions and whether a measure adds up is the engine's
+  answer. The console no longer adds totals up: a sum's total is the engine's too, and a matrix without `subtotals` gets its totals from the
+  engine. A measure that reads beyond its group's rows (time intelligence, running, context, Python) has no total; the answer says why.
+  Parity is proved by `BiParityTest` against figures recorded from the code before the switch (`BiParityRecorder`, one grouped query per
+  level; five cases, every level and measure of the test lake), and BI's old total planning (`Totals.java`, the per-level queries of
+  reports and model queries, the console's adding up) is deleted in the same release; measures of two facts get one statement per fact.
+- **Custom functions follow the function catalogue's one names** (FUNCTION_CATALOGUE.md): `distinct`, `variance`, `stddev` (`_pop`
+  for population), `wavg`, `percentile`, `ratio`, `ceiling`, `ln`, `power`, `sum_once`, `count_once`, `avg_once`; `round` rounds half away
+  from zero. Formulas and custom functions over entity documents take Rachana paths (`sum($.LEGS[*].NOTIONAL) / count()`), each turned
+  into its field; a formula that would count a coarser figure many times is refused with the once-per-parent functions named.
+- **The pivot engine, phase P3: scale (2.9.11.b; PIVOT_GUIDE.md section 23, PIVOT_ENGINE.md section 9, BENCHMARK.md section 16).**
+  Sketches as the ≈ forms of functions with one name (FUNCTION_CATALOGUE.md), each with a stated error and exact on request: `distinct`
+  by HyperLogLog (written in the module, made in SQL from DuckDB's hash, ±1.6% at 4,096 registers), `median` and `percentile` by KLL
+  (written in the module, as Apache DataSketches is not resolvable offline; ±1.65% of rank at k = 200); the Space-Saving state for a
+  level's ≈ Top N. They answer by their sketch when the view reads more than
+  `sketches.approximate-above-rows` (10 million rows) or `"exact": false` is asked, with a note; exact with `"exact": true` (`drishti.py
+  pivot run --exact` / `--approximate`); never VaR, a provider's own measure, a once-per-parent form or a custom function. Rollups of
+  partial states per partition (`distinct(COUNTERPARTY) ≈` keeps the sketch; document sources by path at their grain), refreshed on load by
+  version checks reading only the files a load added (a restated partition rebuilt), kept on disk, chosen automatically for a person who
+  reads every row (aggregate awareness, a day grain answering week to year), with advice; `/api/v1/pivot/rollups`, `drishti.py pivot
+  rollups`. Progressive answers: ≈ first from a sample with 95% intervals ("computing" where a sample cannot say), then exact
+  (`?progressive=true`, server-sent events; never for VaR). The cluster: a large mergeable view's partial states computed on every node
+  (files assigned by rendezvous hashing on a direct lake route, else row shards; `/api/v1/net/pivot/partials`) and merged in node order,
+  hedged after 20 s, refused in words past the deadline (DRS-5720). Estimates from measured scan rates, as a range, with options (run,
+  narrow, use the rollup, background). The benchmark harness `tools/bench/pivot_bench.py` (5, 25 and 75 GB measured, at most 25 GB a node,
+  on the data disk with 150 GB free, the data deleted afterwards; 100 GB to 3 TB extrapolated). Settings `drishti.pivot.sketches.*`,
+  `progressive.*`, `rollups.*`, `cluster.*`.
+- **Live pivots (PIVOT_GUIDE.md section 25; PIVOT_ENGINE.md section 10.1).** A pivot view kept current: `POST /api/v1/pivot/live`
+  answers its first answer, its id and the node that holds it; `GET /api/v1/pivot/live/{id}/events` streams `answer`, then `patch` (only
+  the cells that moved), `reshape` (the whole answer when members came or went), `status` and `ended`; `DELETE` ends it. A data load of the
+  view's table for its date (`LoadService.onReady`) or a live panel's update (the `TopicHub` channel the Sutra live views use) computes the
+  touched views again through the one engine: the cache keeps every untouched date's sets and the source's rollups are refreshed first, so
+  only what moved is read; the patch applied to the last answer equals a fresh query (`LivePivotTest`). Exact unless ≈ was asked, never a
+  sample; coalesced per view; refused in words past its limits (DRS-5721: the switch, 5 per person, 200 per node, 5,000 cells, 50 million
+  rows for an exact live view, a view pinned with `asOf`); ended when nobody streams it for a minute. Settings `drishti.pivot.live.*`;
+  `drishti.py pivot live start|list|stop`; audited `pivot.live.start|end`.
+- **The pivot screen's switches (PIVOT_GUIDE.md section 24).** Exact / Auto / ≈, Progressive, Use rollups and Live under the toolbar,
+  each a request option (`exact`, `progressive`, `rollups`), with how the answer was computed beside them from the answer's new
+  `computedAs` ("exact", "≈ from a sketch (D)", "from rollup desk-month", "top N ≈ by a summary, figures exact", "rollups off", "live ·
+  checked …"); also in the provenance popover. `rollups: false` reads the table; progressive draws the ≈ answer and then the exact one
+  (the console relays the server's stream). Keyboard (`L` live) and phone-safe; the browser computes nothing. `drishti.py pivot run
+  --no-rollups` prints the same line.
+- **A level's top N by Space-Saving when ≈ is asked (PIVOT_GUIDE.md section 6).** A level ranked by a count of rows on a text field is
+  chosen before it is read: one Space-Saving summary (10·n counters) of the parent's cell picks the members, only their cells are read,
+  their figures exact; the bound is in the answer's notes and `computedAs.topChosen`; Others says "≈". Exact ranks every member as before.
+- **Cell comments on saved pivot views (PIVOT_GUIDE.md section 26).** A comment on a cell by its coordinates (who, when, the text, the
+  measure, resolved), kept beside the view's versions and marked when written on an older one; a marker on the cell and the comments in
+  the provenance popover (`M` to write); readers comment, the author or the owner resolves, reopens and deletes; audited without the text;
+  `/api/v1/pivot/views/{owner}/{name}/comments`, `drishti.py pivot comments`; DRS-5722.
+- **Token scopes for the pivot engine.** `pivot:write` (end a live pivot, save and submit a custom function), `pivot:comment`,
+  `pivot:approve`, `pivot:admin` (rollups); a token reads, queries, explains, runs a what-if, tests a function in the playground and
+  starts a live pivot with any scope; restoring a saved view's version is console-only.
+- **`tools/bicompute-unit.sh`**: a light javac and JUnit check of `drishti-bicompute` (and `--server`, the server's pivot package) against
+  the installed release's jars, for when a drill holds the machine.
+- **One grammar, one engine: parts 1 to 3 and 5 (2.9.11.b; ONE_GRAMMAR.md section 8, RACHANA_REFERENCE.md › Functions, FUNCTIONS.md).**
+  Rachana's function table is open to providers found once by ServiceLoader (`rachana.el.FunctionProvider`), and the pivot engine
+  registers every aggregate into it: `sum`, `count`, `avg`, `min` and `max` over a list, `median`, `percentile`, `distinct`, `wavg`,
+  `variance`, `stddev`, `variance_pop`, `stddev_pop`, `sum_once`, `count_once`, `avg_once`, run by the same `AggFunction` a pivot cell
+  runs. Rachana's own list aggregates are deleted; `sum`, `min`, `max` and `group` keep their names and results, shown by a test over every
+  aggregate call in every shipped Sutra on every test case (39 calls, 153,888 comparisons, no figure different; a fractional total is now
+  compensated, so it may differ in the last binary digit only). Where the engine is not on the class path an aggregate is refused with the
+  reason. `group(list, key, aggregate)` also takes expressions over `@` with any engine aggregate (`group($.LEGS, @.CURRENCY,
+  percentile(@.NOTIONAL, 0.95))`); `measure('VAR', 'DESK:DESK-COMM')` reads a compute engine's measure for one scope exactly, and
+  `cell('ann/desk-pnl', 'DESK', 'DESK-COMM')` a saved pivot view's cell, both answered by the server's pivot engine for the person viewing
+  (`FigureSource`, `RachanaFigures`). The Sutra `pivot` panel takes Rachana paths and an engine aggregate (`by: "@.BOOK"`, `value:
+  sum(@.MTM)`; the `desk` Sutra's MTM grid). Guards: ArchUnit rules (only the engine implements an aggregate or adds functions to
+  Rachana; Rachana never depends on the engine; only Rachana parses expressions, DEL and its kin listed until 2.9.11.e) and a console
+  check that lists every aggregation in console code with its reason (layout, the console's own data, or a debt to move to the server).
+  The function catalogue page is generated from the registries (Help → Functions) and checked against FUNCTION_CATALOGUE.md.
+- **The browser computes nothing (plan row SC; ONE_GRAMMAR.md section 5).** Every figure the console
+  used to add up itself is now the server's pivot engine's: the console sends the rows it read, as the person, to `POST
+  /api/v1/pivot/inline` (`drishti-console/core/engine_figures.py`) and shows the engine's cells. Drishti Trading's landings: MtM, P&L
+  today, DV01 and its trades, by book, by trader and the largest counterparty's share of positive MtM (the engine's top 1 shown as a
+  percent of the grand total). Drishti Market's landing: the CDS 5Y median, its move over the day (`median(TO) - median(FROM)`), each
+  biggest move's sigma (`abs(sum(LAST)) / stddev_pop(H)` per item, one ask for all) and the Explorer's group totals. Home's facts:
+  `sum` and fund `overlap` are asked of the engine (in a `let` step only; a condition, template or comprehension that calls them is
+  refused when the file is checked). A column filter's "above / below average" compares with the engine's `avg` of the column (no row is
+  hidden while it is asked). The pivot chart's diversification bar is the engine's gap, now sent for every column
+  (`diversificationByColumn` beside `diversification` on each open row; `PivotAnswer`). With the pivot engine switched off a figure is
+  not made up: it is left empty and the reason is said. No new endpoint and no second aggregation in Java: `ConsoleFiguresTest`
+  (drishti-bicompute) runs the endpoint's own path on the console tests' fixtures and gets the figures the console showed before (MtM 0,
+  P&L 480,000, DV01 −48,000, the counterparty share 16/24, the median 70 and its move 1, the average 1,309,750, the overlap 2). The
+  console check is strict: a reason is layout or the console's own data, never a debt; it reads code only (a measure's text sent to the
+  engine is not a sum). Two entries became the console's own data: a pack draft's sample documents for a related page (the pack maker's
+  fixtures) and the stand-in pricer a person's own Python cell calls (QLRisk replaces it).
+- **Rachana's tier-1 functions (FUNCTION_CATALOGUE.md sections 1, 2, 3 and 6; RACHANA_REFERENCE.md "Functions").** Math:
+  `round_up`, `round_down`, `mround`, `ceiling`, `floor`, `mod`, `power`, `sqrt`, `exp`, `ln`, `log10`, `sign`, `clamp`, `least`,
+  `greatest`, worked in decimal (`round_up(2.671, 2)` is `2.68`, `power(1.1, 2)` is `1.21`). Logic: `if`, `ifs`, `switch`, `iferror`,
+  `let(name = expr, ..., result)`, evaluating only the branch taken. Text: `concat`, `left`, `right`, `mid`, `replace`, `split`, `trim`,
+  `pad`, `regex_extract`, `ends_with`. Dates: `days_between`, `eomonth`, `edate`, `yearfrac` (`ACT/360`, `ACT/365F`, `30/360`,
+  `30E/360`, `ACT/ACT` ISDA; tested against Excel's YEARFRAC and ISDA's examples), `intck`, `is_business_day`, on the platform's own
+  `BusinessCalendar` (`USNY` by default). Lists: `sort`, `unique`, `take`, `drop`, `sequence`, `map`, `reduce` (with `@acc`; a sum
+  written with `+` is refused in favour of `sum`). One name each: `starts_with`, `days_between`, `matches_case`, `one_of`, `least`,
+  `greatest`; the old spellings `startsWith`, `days`, `matchesCase`, `oneOf` and `min`/`max` with several arguments are read with the
+  results they always gave. The new functions raise `DRS-2102` naming the function and the value for a value of the wrong type
+  (`round_up: 'abc' is not a number`); a bad basis, interval, calendar, pattern or fill written in the expression is a `DRS-2101` at
+  load. `Functions` is now the one table the families (`LogicFunctions`, `MathFunctions`, `TextFunctions`, `DateFunctions`,
+  `ListFunctions`) register into; `EvalContext` carries the names `let` and `reduce` bind. `SafeRegex` (drishti-common) gains
+  `extract(text, group)` and `groups()`: capture groups and lazy repeats in the same linear-time engine, which `regex_extract` uses.
+  The editor schema (`x-rachana-functions`) marks an old spelling `oldSpellingOf`; the Sutra editor checks it but offers only the one
+  names, with help for the new functions.
+- **Tutorial 36, Load files automatically with the data inbox** (the inbox's second document, beside DATA_GUIDE.md section 7): the
+  engine switched on, a routing rule, a day of trades dropped with its `.ready`, the Inbox screen from waiting to loaded, `ready.all`,
+  a failed file fixed and retried, a duplicate, the outbox and the ledger; UI, `drishti.py dataload status|run|retry` and YAML at every
+  step (outputs and screenshots filled in the heavy run). Its Help entry is paired with the data guide.
+- **Admin → Data loads → Inbox: the data inbox's status board (mock-up A; DATA_GUIDE.md section 7.8; DATALOAD_INBOX.md sections 10 and
+  14; API_GUIDE.md, Data loads).** Three columns that follow the folders: *Waiting* (`inbox/`: each file's state, ready, ready via
+  `ready.all`, not yet stable, no marker, refused, and the rule that will route it, or *no rule matches* before it fails), *Loading*
+  (`inprocess/<run>/`: the run and its tables one after another, committed with versions, rows and rejects, or loading) and *Last cycles*
+  (`outbox/`: loaded, nothing ready, duplicate, failed, skipped while a run loads); failures with the reason, the report and **Retry**;
+  today's duplicates; the routing rules (read-only) and the settings; on top the switch, owner node, lock, next cycle and **Load now**,
+  whose *skipped: run … still loading (n min)* answer is said in words. The page redraws itself from the server (5 s while a run loads,
+  30 s when quiet), stacks the columns on a phone with 44 px controls, and is gone with the engine. Every figure is the server's:
+  `GET /api/v1/admin/dataload` gains the board (`InboxStatus`: `board`, `lastCycles`, `rules`, `folders`, `nextCycleText`, `lockText`,
+  `ownerText`, and the run's files and tables under `running`), from the run's plan `inprocess/<run>/load-plan.json` that each cycle now
+  writes (kept in `outbox/<day>/<run>/loads/`); new `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/`.
+  The status reads the ledger's newest lines without opening (indexing) the whole ledger on every call.
+- **Each console app reads its own server's engines (fixes the Drill A flake of `test_dataload_inbox_browser.py`).** What runs where
+  (`core/engines.py`) was a module global that every console app of a process wrote: in the browser lane the session's live console,
+  whose server runs the data inbox off as shipped, re-learned it every 5 s through its backend watch and hid Admin → Data loads → Inbox
+  in another file's stand-in console mid-file (7 of 8 tests failed after a file on the live console; alone they passed). Now each app's
+  editions hold their own `engines.State`, a pure ASGI middleware (`AppEngines`, outermost) makes every request, websocket and the
+  lifespan's tasks read their own app's, and code outside a request reads the newest app's (one app per process in production: as
+  before). `tests/test_engines_per_app.py` keeps it so; reproduced and passing in that order (`test_workbench_metric_browser.py` then the
+  inbox file) and alone.
+- **Busy protection reads the heap after the old generation's clean-up, and the VaR regulatory browser test gets the heap its server needs
+  (the Drill A flake of `test_var_regulatory_browser.py`; OPERATIONS.md "Busy protection").** The test's sign-in timed out at 45 s because
+  its server refused new sign-ins for 45 s (`DRS-9501`, "94% in use after clean-up"). The collector's own log of that server shows why:
+  a year of official VaR history, its backtests by desk and three report runs kept 89-97% of the test stack's 768 MB heap live after G1's
+  own full compactions, so the refusal was right; the file's stack now runs its server with 1.5 GB (`wb_live._stack(heap=...)`), and the
+  file passes alone and after a live-console file. Two things the investigation found in busy protection are fixed: the reading was taken
+  after any collection, young-only ones included (they leave the old generation's garbage counted, so a heap mostly garbage could read as
+  full); it is now taken only after a collection that cleans the old generation (a full one, a G1 mixed collection, the end of a concurrent
+  cycle that freed old regions), and a fresh server with none refuses nothing for memory. Over a refusal level the server asks for a
+  concurrent cycle only where `System.gc()` starts one (`-XX:+ExplicitGCInvokesConcurrent`), at most once every 10 s, and never forces a
+  stop-the-world full collection (`Signals.HeapAfterGc`, `AdmissionGate`). `AdmissionGateTest`: young-only readings never refuse, a heap of
+  garbage is let in, a truly full one refused. What the gate reads is a bean of its own (`admissionSignals`), so a server test that needs a
+  refusal gives it a confirmed reading (`VarBusyProtectionTest`'s `@TestConfiguration` with a `@Primary` `Signals`) instead of waiting for
+  the collector: a fresh test JVM has no such reading and, by the rule above, refuses nothing for memory.
+- **Nothing the console keeps for one person is served to another (security review F2, F3, F5 to F8, F10, F12; USER_MANAGEMENT.md
+  section 6, "What the console keeps of each person").** Describe's mnemonic table was one process-wide copy of the first person's packs:
+  now per server, pack set and roles on the app (and the "My page" migration per server). Drishti Trading's and Market's caches are keyed
+  by one helper, `core/user_cache.py` (server, user, sorted roles, as-of and known-at, lens) and bounded by an LRU instead of clearing
+  everyone's past a size; a cancelled request no longer fails the others waiting for the same read. The help library is kept per pack set
+  (eight at most) and built off the event loop; SQL over extracts lets one person hold two of the four slots at most. What pages keep in the
+  browser is named per person (`window.drishtiKey`) and **Sign out** sends `Clear-Site-Data: "storage"`. Opening or leaving a lens and
+  choosing Home's landing are POSTs (a GET shows a form). The shared server client keeps no cookies; Calc's permission follows the person's
+  change stamp; every non-static response is `Cache-Control: private, no-store`. Guards: `tests/test_two_people_share_nothing.py` (two
+  people with different packs and roles, and one person on two servers, at the same time: each answer equals the one they get alone; all
+  four failed before) and `tests/test_no_shared_user_state.py` (module-level state is a constant or listed with its reason).
+
+### Fixes
+
+- **Tests: the console's renderer parity test loads a page once more when Docker changed the network under it.** The drill's Java
+  tests start and stop containers beside the browser tests; Chromium then cancels the requests in flight (`net::ERR_NETWORK_CHANGED`) and
+  a page came out without its scripts, or not at all. `test_render_console_browser.py` applies the suite's one-reload rule
+  (`wb_live.should_reload`: once, and only for that cause), with the page drawn as on its first load; a page that failed to open is closed.
+- **A panel's own source that failed or timed out drew its empty text ("no data"); the Versions tab could show the diff of an older save.** A Sutra Next panel's `source:` was read within the link budget (`drishti.graph.link-budget`, 40 ms, meant for a linked entity's label) and a read that timed out or failed was dropped, so under load USEQ AAPL's "Held by funds" said "No fund of the funds pack holds this company". Now a panel's source is read within the sources' fetch timeout (`drishti.sources.fetch-timeout`, now 10 s, was 5 s), as the page's record is, and the console's per-call timeout to the server (`backend.timeout_seconds`) is 15 s (was 5 s), longer than the server's, so the server's answer comes through; and a read that still fails draws the panel's failed state with the connector and why (`compute.state: failed`), never its empty text (`PanelSourceBudgetTest`). The workbench's Versions tab marks the diff `aria-busy` (dimmed) while a newer comparison loads and drops a version list answered after a newer one was asked for.
+- **Security: a console with several servers opened live streams on its first server (release blocker; ADR-016 › As built).** A live
+  channel ran each subscription in a fresh context holding only the business date, so the server switch read its default: a person
+  signed in on server `desk` had their alerts, views, BI live tables, live pivots and computed panels opened on the console's first
+  server, with `desk`'s token, and saw that server's data under `desk`'s roles. Relayed calls lost the same scope (they ran in the relay
+  listener's context: a pack job's preview and design went to the first server), and so did the lens (`X-Drishti-Lens`), the share id
+  and a pool session's pin (every channel shared one pin). Now `core/request_context.py` captures every request-scoped context variable
+  (server, pool pin, lens, share, business date, "known at", the app's engines) and `run_in` starts a task in it; a live channel takes
+  it when it opens and pins its server's backend client, a pack job's task runs in it, and a relayed call carries it and is handled in
+  it (a relayed call naming no known server is refused). Ownership is (server, user) everywhere a person owns something in the console:
+  live channels (console and embed), relayed changes, pack jobs, lake uploads and builds, AI call limits. A test lists every
+  `ContextVar` in `core/` and fails when one is not carried.
+- **A console live channel re-checks its session.** It captured the identity once and served (and took new subscriptions) for as long
+  as it was open. Now the embed stream's guard watches it with the session as its check, every `auth.recheck_seconds`: a signed-out,
+  disabled or deleted user's channel ends with `gone` `DRS-5010`, a valid one carries on with the identity re-minted (current roles, a
+  fresh token); signing out ends that session's channels on this console at once.
+- **Console state per app, not per process.** The open channels, the worker relay (its port, replay cache and counters: a second app
+  in one process used to get the first's), the AI "Test connection" pacing and the explorer's SQL slots now belong to each app
+  (`app.state`), as the engines do. `tests/test_console_context.py` fails on the old code (9 of 9) and passes.
+
+- **Fixed: a panel swapped in after the page loaded keeps its comment badge and its share button.** A computed panel whose result
+  landed, a control's or a live tick's new panel, a refreshed panel and a phone's More row came without the Discussion's badge and the
+  Share button (only the page's first panels had them); `discussion.js` and `share.js` now place them on every panel that has none, at
+  load and on each panel the page's scripts swap in (`window.drishti.enhance`). The console-or-library parity test reads a page only
+  once the Discussion has answered: the first page of a freshly started console (the compute demo's path book at 390 px, first in the
+  sorted list) was read before `/api/collab` answered, without its badges.
+- **The console tests' session console forgets its server's answers after each test (the flakes of `test_packs` and `test_pack_routes`).**
+  The stand-in server is put back after every test, but the session's console kept, for `ui.user_cache_seconds`, the packs a test had made
+  it answer: after a Describe test's three packs, the next file on that worker saw them as installed (`test_pack_routes`: kinds `{book:
+  core, trade: trading}`; `test_packs`: no finance example). `conftest.forget_backend_answers` empties the session console's per-person
+  copies (packs, settings, BI powers, Calc, business dates, Describe's mnemonics, the landings) after each test, without touching the
+  shared stamp file other workers read. Reproduced in one process (that Describe test, then both files: 3 failed), now passing; the
+  console lane twice green with -n 8. Also: `test_no_shared_user_state.py` follows the merged context branch (the relay per app,
+  `core/request_context.py` the one place that makes a fresh `contextvars.Context()`), and `test_channel_relay_hosts.py` writes a number
+  outside the scratch-port range.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox

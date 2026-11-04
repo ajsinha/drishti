@@ -3333,20 +3333,24 @@ A `vega-lite` visual draws a [Vega-Lite](https://vega.github.io/vega-lite/) spec
 
 #### 3.2 True totals
 
-A total of a measure that adds up (a `sum` or a `count`) is the sum of the figures shown. A total of one that does not (a ratio, an average, a distinct count, a percentile, a minimum, a maximum, a time-intelligence measure) is **not** the sum or the average of
-the figures shown: the average of the desks' averages is not the average of the trades. So a matrix with `format: { subtotals: true }` and a table with `format: { totals: true }` ask the engine for those totals: **one more query per level**, as the reader, under the same filters, over the rows of the whole group.
+A total of a ratio, an average, a distinct count, a percentile, a minimum or a maximum is **not** the sum or the average of the figures
+shown: the average of the desks' averages is not the average of the trades. Every total and subtotal of a matrix, and the total row of a
+table with `format: { totals: true }`, is computed by the **pivot engine** ([PIVOT_GUIDE.md section 22](PIVOT_GUIDE.md#22-bi-on-the-pivot-engine)):
+every level, for every measure that is a pivot function, in **one** grouping-sets statement over the model's rows as the reader may see
+them, under the same filters, each level from the rows of its own group; a sum's total is the engine's too (the page adds nothing up). A
+measure that reads beyond its group's rows (time intelligence, running, context, Python) has no total.
 The answer carries them as `totals`:
 
 ```
 POST /api/v1/bi/reports/file:report:nv-demo/query   {"page": "main", "visual": "matrix", "state": {"dates": {"from": "2026-10-07", "to": "2026-10-08"}}}      (the matrix: rows trade.desk, columns trade.currency)
 {"columns": ["trade.desk", "trade.currency", "Notional", "Avg MTM", "MTM per notional", "Largest notional"], "rows": [["DESK-EQD", "GBP", 154000000.0, 21250.0, 5519.48, 7000000.0], ...],
- "totals": [{"by": [],                 "columns": ["Avg MTM", "MTM per notional", "Largest notional"], "masked": [], "rows": [[-3750.0, -961.5384615384615, 7000000.0]]},
-            {"by": ["trade.currency"], "columns": ["trade.currency", "Avg MTM", ...], "rows": [["EUR", -3750.0, -961.54, 7000000.0], ["GBP", 21250.0, 5519.48, 7000000.0], ["USD", -28750.0, -7278.48, 7000000.0]]},
+ "totals": [{"by": [],                 "columns": ["Notional", "Avg MTM", "MTM per notional", "Largest notional"], "masked": [], "rows": [[..., -3750.0, -961.5384615384615, 7000000.0]]},
+            {"by": ["trade.currency"], "columns": ["trade.currency", "Notional", "Avg MTM", ...], "rows": [["EUR", ..., -3750.0, -961.54, 7000000.0], ...]},
             {"by": ["trade.desk"],     "columns": ["trade.desk", "Avg MTM", ...], "rows": [...]}]}
 ```
 
-Each entry is a level: `by` the fields it groups by, the measures that do not add up (the ones that do are summed by the page), and its rows. A matrix asks for the grand total, each value of the first row field (with several row fields), each column, and each row across the columns;
-a table asks for one level, the grand total. A level the engine refuses, or a measure masked for the reader, stays `–` with its reason in the cell's title. The caps are `drishti.bi.report.totals-max-rows` (2,000 rows a level).
+Each entry is a level: `by` the fields it groups by, every measure that is a pivot function, and its rows. A matrix's levels are the grand total, each group of the first row fields at every depth (with `subtotals`), each column, and each row across the columns;
+a table has one level, the grand total. A level the engine refuses, or a measure masked for the reader, stays `–` with its reason in the cell's title. The cap is `drishti.bi.report.totals-max-rows` (2,000 rows a level).
 
 ![A matrix with true totals](img/bi-visuals/report-matrix.png)
 ![A table with a total row](img/bi-visuals/report-table.png)

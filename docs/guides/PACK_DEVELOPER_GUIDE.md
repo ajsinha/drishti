@@ -147,7 +147,7 @@ ports of their own, so that nothing of yours is touched: the seven shipped packs
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 DRISHTI_PORT=18996 DRISHTI_PACKS=core,market-data,trading,counterparty-risk,market-risk,world-economy,news-and-markets,helpdesk \
-  java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 DRISHTI_BACKEND_URL=http://127.0.0.1:18996 DRISHTI_CONSOLE_PORT=17996 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
 ```
 
@@ -553,7 +553,7 @@ nonEmpty: [history]       # these panels must render with data on every sample
 ```
 
 ```bash
-java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
+java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar sutra test config/packs/helpdesk --junit target/sutra-tests.xml
 ```
 
 ```text
@@ -2049,8 +2049,10 @@ items:
 
 **Expressions** are Python's expression syntax cut down to reading data: names bound by earlier steps (and `asOf`), `a.b` and
 `a['$.X']` (a missing key is `None`), `a[0]`, arithmetic, comparisons, `and or not`, `x if c else y`, lists and one-`for`
-comprehensions, and the functions `len sum min max abs round first find pluck flat top ratio overlap common pairs index upper`. `None`
-is forgiving: arithmetic with it is `None`, a comparison false, a division by zero `None`, so missing data hides the fact instead of
+comprehensions, and the functions `len sum min max abs round first find pluck flat top ratio overlap common pairs index upper`. `sum`
+(of a list's numbers) and `overlap(a, b, key, weight)` (for each key both lists hold, the smaller of its two weight totals, added up) are
+computed by the server's pivot engine as the user (`POST /api/v1/pivot/inline`; the console adds up no figure), so they belong in a
+`let` step, outside a comprehension; elsewhere the file check refuses them. `None` is forgiving: arithmetic with it is `None`, a comparison false, a division by zero `None`, so missing data hides the fact instead of
 failing. Nothing else parses (no Python attributes, imports, lambdas, dictionaries, `**`). **Templates** fill `{expression}` or
 `{expression|format}`: `money` (3.5m, 1,043.7bn), `int`, `num1`, `num2`, `pct`/`pct1`/`pct2` (a ratio: 2.23 is 223%),
 `pctv`/`pctv1`/`pctv2` (a value already in percent), `signpct` (+452%), `times` (13.6×); a field that is empty hides the sentence.
@@ -2597,7 +2599,7 @@ Four layers, from the cheapest. The first three need no server.
 | The pack's tests in the build | `./mvnw verify` | the manifest loads, every `config/packs/*/sutras/` validates, every Sutra survives imperfect data, `sutra test` runs over every pack that has tests, every shipped example loads |
 | A scratch server | the [checklist](#verifying-a-pack) | links resolve, connectors are up, commands open, the guide renders |
 
-`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar sutra …`);
+`sutra lint` and `sutra test` are commands of the server's exec jar (`java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar sutra …`);
 `pack check` finds the jar itself (`--jar`, `DRISHTI_JAR`). Both read the overlay of the checkout they run in (`<data>/packs/added.yaml`), so
 run them where that overlay names only packs that exist (or set `DRISHTI_DATA_DIR` to an empty folder).
 
@@ -3673,7 +3675,7 @@ server in), then in the folders of `drishti.packs.extra-dirs` (`DRISHTI_PACKS_EX
 
    ```bash
    export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
-   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+   DRISHTI_PACKS=market-risk,world-economy java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
    ```
 
    (or, from the IDE, the run configuration **Drishti server** with `DRISHTI_PACKS` changed; [GETTING_STARTED.md (IDE)](GETTING_STARTED.md#running-from-intellij-idea-and-pycharm)).
@@ -4452,7 +4454,7 @@ directory):
 ```bash
 ./mvnw -q package -DskipTests -pl drishti-server -am
 DRISHTI_DEMO_ENABLED=false DRISHTI_STUDIO_SAVE=true \
-  java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 Server settings follow the same precedence as the console: `drishti-server/src/main/resources/application.yaml`, then
@@ -4887,7 +4889,7 @@ and its live push.
 `ViewPipeline` (`drishti-engine`) documents itself as "command → fetch → classify → fingerprint → layout → link → bind". In code:
 
 1. **Fetch.** `SourceRouter.fetch(ref, asOf)` picks the plugins that serve the kind (the kind's route, the union it belongs to, named
-   connectors, `default-route`), tries dated sources first for a picked date, and gives up after `drishti.sources.fetch-timeout` (5s).
+   connectors, `default-route`), tries dated sources first for a picked date, and gives up after `drishti.sources.fetch-timeout` (10s).
    No source holding it is `404 DRS-1001`.
 2. **Match a Sutra.** `SutraMatcher.match(kind, data)` asks `SutraRegistry` for the highest-priority Sutra of the kind whose
    `match.where` expression holds for this document (for a trade: `SOURCE_SYSTEM` and `PRODUCT_TYPE`; `MX-20000001` matches the MUREX
@@ -5762,7 +5764,7 @@ while it was stopped (`The lake was rebuilt while the server was stopped …`), 
 level for Drishti's packages with Spring's usual environment form:
 
 ```bash
-LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG java -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
 ```
 
 The console runs Uvicorn with access logs off (`access_log=False` in `run_drishti_web.py`). The run configuration **Drishti server

@@ -150,7 +150,7 @@ export JAVA_HOME=/usr/lib/jvm/java-21-openjdk-amd64
 ls drishti-server/target/*-exec.jar
 ```
 
-You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.11.a-exec.jar`.
+You should see exactly one file, for example `drishti-server/target/drishti-server-2.9.11.b-exec.jar`.
 
 > Use `clean`. Without it, `target/` keeps the jars of earlier versions, and both `java -jar
 > drishti-server-*-exec.jar` and the server Dockerfile's `COPY drishti-server/target/drishti-server-*-exec.jar`
@@ -161,7 +161,7 @@ You should see exactly one file, for example `drishti-server/target/drishti-serv
 ```bash
 sudo useradd --system --home /opt/drishti drishti
 sudo mkdir -p /opt/drishti/data /opt/drishti/sutras
-sudo cp drishti-server/target/drishti-server-2.9.11.a-exec.jar /opt/drishti/drishti-server.jar
+sudo cp drishti-server/target/drishti-server-2.9.11.b-exec.jar /opt/drishti/drishti-server.jar
 sudo cp -r config drishti-console docs /opt/drishti/
 sudo cp LICENSE CHANGELOG.md RELEASE_NOTES.md THIRD-PARTY-NOTICES.md /opt/drishti/   # the help centre shows them
 sudo chown -R drishti:drishti /opt/drishti
@@ -692,8 +692,8 @@ LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG           # log level for Drishti's own clas
 ```
 
 Or pass `--drishti.live.max-streams=40000` on the command line. Console settings follow
-`DRISHTI_CONSOLE__<SECTION>__<KEY>`, for example `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=10`, or
-`--backend.timeout_seconds=10`. The order of precedence and every setting are in
+`DRISHTI_CONSOLE__<SECTION>__<KEY>`, for example `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=30`, or
+`--backend.timeout_seconds=30`. The order of precedence and every setting are in
 [CONFIGURATION.md](CONFIGURATION.md).
 
 ## 7. Running as services (systemd)
@@ -1214,7 +1214,7 @@ at any time:
 - **Admin → Ad-hoc scopes** (`/admin/scopes`, a page of the Risk and Trading editions, page id `scopes` in `admin.pages`, shown where the
   `VAR` word is on) lists every person's baskets: owner, name, scope, whom it is shared with, created, updated and stored size; **Filter
   by owner** keeps the owners that contain the text. **Delete** opens a confirm dialog naming the basket, its owner and whom it is
-  shared with, with an optional **reason**. The VaR explorer's *Ad-hoc scopes* list offers **Delete** on every basket to an administrator
+  shared with, with an optional **reason**. The VaR explorer's *My baskets* drop-down offers **Delete** on every basket it lists to an administrator
   as well.
 - The command line: `drishti.py var baskets --all [--owner <text>]` lists them; `drishti.py var basket-delete <name> --owner <user>
   --reason <text>` deletes one. The API: `GET /api/v1/var/admin/baskets?owner=` and `DELETE /api/v1/var/baskets/<owner>/<name>?reason=`
@@ -1224,7 +1224,7 @@ at any time:
   was given (Admin → Audit log, filter by `<owner>/<name>`).
 - **The owner is told.** When an administrator deletes someone's basket, its owner gets an inbox row (and the bell): *Your VaR basket
   "…" (BASKET:…) was deleted by administrator … : reason*, opening the VaR explorer. Nothing is sent when owners delete their own.
-- **Editing someone's basket.** An administrator may also **Edit** anyone's basket at any time (the VaR explorer's *Ad-hoc scopes*
+- **Editing someone's basket.** An administrator may also **Edit** anyone's basket at any time (the VaR explorer's *My baskets*
   list: it opens in the basket's sheet; the API: `POST /api/v1/var/baskets` with `owner`). The edit is saved under its owner as the next
   version (`editedBy` names the administrator), is one audit entry, action `var-basket-edit`, detail *edited by administrator `<user>`
   for `<owner>`* with the version, the number of parts and whom it is shared with, and the owner gets an inbox row: *Your VaR basket "…"
@@ -1451,7 +1451,9 @@ shipped (`config/engines/dataload.yaml`, Admin → Engines). Its folder, `drisht
   the next one; it never doubles the work.
 - **Stopping the server** in the middle is safe: the next cycle puts claimed files back, completes a load that committed, moves what
   was not moved and sends the signals not sent.
-- `drishti.py dataload status` (or `GET /api/v1/admin/dataload`) shows what waits, what failed and why, and the last cycles.
+- `drishti.py dataload status` (or `GET /api/v1/admin/dataload`) shows what waits, what failed and why, and the last cycles; Admin → Data
+  loads → Inbox draws the same as a board (waiting, loading table by table, last cycles, failures with Retry, Load now: [DATA_GUIDE.md
+  section 7.8](../guides/DATA_GUIDE.md#8-the-inbox-screen-admin--data-loads--inbox)).
 
 ## 12. Memory and caches
 
@@ -1838,8 +1840,13 @@ never gated, so a busy server slows nobody who is already working.
 
 **What it reads.** Each reading has a warn level (Health turns amber) and a wait level (new work waits):
 
-- **Memory in use after clean-up**: the heap the last garbage collection left, as a share of `-Xmx` (every collector's own report, read
-  at no cost). The heap in use at any moment includes garbage; the heap after a collection is what is really held.
+- **Memory in use after clean-up**: the heap left by the last collection that cleaned the old generation, as a share of `-Xmx` (every
+  collector's own report, read at no cost): a full collection, a G1 mixed collection or the end of a concurrent cycle that freed old
+  regions (the old generation's pool smaller after it than before); with a single-generation collector (ZGC, Shenandoah) every cycle.
+  A young-only collection is never read: it leaves the old generation's garbage in place, so a heap mostly garbage would read as nearly
+  full. A fresh server with no such collection yet refuses nothing for memory. When a reading is over a refusal level the server asks for
+  a concurrent cycle, without waiting and at most once every 10 s, only where `System.gc()` starts one (`-XX:+ExplicitGCInvokesConcurrent`);
+  it never forces a stop-the-world full collection (on a large heap that pauses the server for seconds, just when it is under pressure).
 - **Loads running**: per engine (VaR, exposure), the date loads running and waiting against `load-threads`; a load the server starts by
   itself (a pinned date, a date prefetched) takes a slot but never waits for one.
 - **The open dates' heap** against their safety net (the open-heap limit of [VAR_GUIDE.md section 27.1](../guides/VAR_GUIDE.md)): the net
@@ -2043,7 +2050,7 @@ curl -s localhost:18480/api/v1/admin/health | python3 -m json.tool | head -40
 {
     "status": "OK",
     "summary": { "packsWithProblems": 0, "failedToStart": 0, "sourcesDown": 0, "sourcesDegraded": 0, "sources": 18, "packs": 12 },
-    "server": { "version": "2.9.11.a", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
+    "server": { "version": "2.9.11.b", "uptimeSeconds": 6916, "java": "21.0.12.1", "heapUsedMb": 121,
                 "heapMaxMb": 15640, "threads": 75, "cpus": 24,
                 "directUsedBytes": 9437184, "directCapacityBytes": 9437184, "directBuffers": 71,
                 "mappedUsedBytes": 46137344, "mappedCapacityBytes": 46137344, "mappedBuffers": 12,

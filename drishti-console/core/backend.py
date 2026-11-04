@@ -21,6 +21,8 @@ from typing import Any
 
 from urllib.parse import quote
 
+from http.cookiejar import CookieJar, DefaultCookiePolicy
+
 import httpx
 
 from core import asof, collab, edition
@@ -114,8 +116,10 @@ class BackendClient:
     def __init__(self, base_url: str, timeout: float = 5.0, pool: int = 64, servers=None):
         """``servers``: a :class:`core.cluster.ServerPool` when ``backend.urls`` names several servers (Drishti*net): every call then goes
         to the server the session uses, and a read that fails there is tried once on another; None for the one ``base_url``."""
+        # one client for every person: it keeps no cookie a server sets (a jar whose policy accepts none), so a cookie one person's answer
+        # carried never rides on the next person's call; who calls is said by each call's own headers
         self._client = httpx.AsyncClient(
-            base_url=base_url.rstrip("/"), timeout=timeout,
+            base_url=base_url.rstrip("/"), timeout=timeout, cookies=CookieJar(policy=DefaultCookiePolicy(allowed_domains=[])),
             limits=httpx.Limits(max_connections=pool, max_keepalive_connections=pool))
         self._servers = servers
 
@@ -738,7 +742,15 @@ class BackendClient:
         async for pair in self._events("/api/v1" + path, None, headers, opened, node=node):
             yield pair
 
-    async def _events(self, path: str, params: dict | None, headers: dict, opened: list | None, node: str | None = None):
+    async def sse_post(self, path: str, ident, body: dict, node: str | None = None):
+        """Yields ``(event, data)`` from a server SSE endpoint under /api/v1 that is asked with a POST body (a progressive pivot answer:
+        ``/pivot/query?progressive=true``, docs/guides/PIVOT_GUIDE.md); ``node`` as for ``sse``."""
+        headers = {"Accept": "text/event-stream", **(ident.headers() if ident is not None else {}), **asof.headers()}
+        async for pair in self._events("/api/v1" + path, None, headers, None, node=node, method="POST", body=body):
+            yield pair
+
+    async def _events(self, path: str, params: dict | None, headers: dict, opened: list | None, node: str | None = None,
+                      method: str = "GET", body: dict | None = None):
         """An SSE stream's ``(event, data)`` pairs. Through the server pool a stream that cannot open counts against its server, so the
         browser's reconnect (it reconnects by itself) opens the stream on the next server once that one is set aside. A stream that opened and
         then broke (a restart, an idle or proxy timeout) does not count: the pool checks the server's health instead. A refusal is raised
@@ -747,7 +759,8 @@ class BackendClient:
         base = pinned or self._base()
         started = False
         try:
-            async with self._client.stream("GET", base + path, params=params, timeout=None, headers=headers) as r:
+            async with self._client.stream(method, base + path, params=params, timeout=None, headers=headers,
+                                           **({"json": body} if body is not None else {})) as r:
                 started = True
                 if opened is not None:
                     opened.append(r)

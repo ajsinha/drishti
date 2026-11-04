@@ -265,6 +265,46 @@ class ShardReadAheadTest {
         assertThat(ahead.batchCalls()).isEqualTo(expected);
     }
 
+    /**
+     * A cube view's cells (MR_CUBE_LENS.md section 4.11): many sets at once through {@link VarBook#vectors}, each equal to the bit to the
+     * same set's {@link VarBook#vector} (the planner's aggregates, then the rows it adds and takes away), with each remote shard asked once
+     * for all of them instead of once per set.
+     */
+    @Test
+    void aCubesSetsAreSummedWithOneCallPerRemoteShardAndEachIsTheSingleSetsVectorToTheBit() {
+        List<OrdinalSet> sets = new ArrayList<>();
+        for (VarBook.Node n : whole.nodes().values()) {
+            if (n.level().equalsIgnoreCase("DESK")) {
+                sets.add(n.members());
+                sets.add(n.members().and(partly()));                   // a desk without every third trade: a plan of aggregates minus rows
+            }
+        }
+        sets.add(whole.all());
+        sets.add(partly());
+        sets.add(OrdinalSet.empty());
+        Owner one = new Owner();
+        VarBook single = member(i -> i % 3 == 0, one);
+        List<double[]> each = new ArrayList<>();
+        for (OrdinalSet s : sets) {
+            each.add(single.vector(s, sums));
+        }
+        int perSet = one.single.get();
+        Owner batched = new Owner();
+        List<double[]> all = member(i -> i % 3 == 0, batched).vectors(sets, sums);
+        assertThat(all).hasSize(sets.size());
+        for (int i = 0; i < sets.size(); i++) {
+            double[] a = each.get(i);
+            double[] b = all.get(i);
+            for (int j = 0; j < a.length; j++) {
+                assertThat(Double.doubleToRawLongBits(b[j] + 0.0)).as("set " + i + "[" + j + "]").isEqualTo(Double.doubleToRawLongBits(a[j] + 0.0));
+            }
+        }
+        assertThat(perSet).as("one set at a time: a call per set and remote shard it touches").isGreaterThan(batched.batchCalls());
+        assertThat(batched.single.get()).as("batched: nothing asked one set at a time").isZero();
+        assertThat(batched.batches.keySet()).containsExactlyInAnyOrder(1, 2, 4, 5);
+        batched.batches.forEach((shard, n) -> assertThat(n.get()).as("calls to S" + shard).isEqualTo(1));
+    }
+
     @Test
     void aShardNobodyAnswersFailsTheWholeTable() {
         ShardedVectors.Remote none = (shard, set, ctx) -> {

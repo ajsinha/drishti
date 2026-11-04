@@ -269,7 +269,7 @@ def paste(pg, text):
 
 def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(stack, browser):
     pg = open_var(browser, str(stack), "/var?scope=BOOK:BOOK-RATES-1")
-    pg.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
+    pg.evaluate("localStorage.removeItem(window.drishtiKey('drishti.varBasket2'))")
     pg.reload()
     painted(pg, "BOOK:BOOK-RATES-1")
     assert pg.locator("[data-vx-basket]").is_hidden()                       # a node, an empty sheet: no strip
@@ -345,11 +345,15 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     assert "saved basket · " + basket in pg.locator("[data-vb-state]").inner_text()
     kept = pg.evaluate("(id) => fetch('/api/var/baskets/' + id).then(r => r.json())", basket)
     assert kept["sheet"]["TRD"][:2] == trades[:2] and kept["version"] == 1
-    wait(pg, "document.querySelectorAll('[data-vx-adhoc] [data-vx-edit=\"BASKET:%s\"]').length > 0" % basket)
-    # the saved basket's row shows its name; its buttons sit after the name, shown on hover (never drawn over it)
-    row = pg.locator(".vx-adhoc-row", has=pg.locator(f'[data-vx-edit="BASKET:{basket}"]'))
+    wait(pg, "document.querySelectorAll('[data-vx-baskets-mine] [data-vx-edit=\"BASKET:%s\"]').length > 0" % basket)
+    wait(pg, "document.querySelector('[data-vx-basket]').hidden")            # 2.9.11.b: saved, the sheet collapses
+    # the saved basket is in My baskets (the toolbar's drop-down), its name with its buttons after it, the scope on the page chosen
+    pg.locator('[data-vx-pick="mine"] [data-vx-pick-btn]').click()
+    row = pg.locator("[data-vx-baskets-mine] .vx-opt", has=pg.locator(f'[data-vx-edit="BASKET:{basket}"]'))
     assert row.locator(".lbl").is_visible() and "rates-mix" in row.locator(".lbl").inner_text()
+    assert row.get_attribute("aria-selected") == "true"
     shot(pg, "basket-saved")
+    pg.keyboard.press("Escape")
     # captured, and the capture reopened with its numbers
     pg.locator('.vx-tab[data-tab="captures"]').click()
     pg.locator("[data-vx-cap-note]").fill("before the unwind")
@@ -388,16 +392,16 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
     wait(pg, "window.VarExplorer && window.VarExplorer.state.head && window.VarBasket.parts() === 5", 60)
     assert pg.locator("[data-vx-basket]").is_hidden()                       # kept, not opened: only the link opens it
     # a portfolio is the bank's: Edit a copy opens its parts as your own unsaved basket
-    pg.locator(".vx-adhoc-row", has=pg.locator('[data-vx-edit="PORT:PF-USD-RATES"]')).hover()   # its buttons show on hover
-    pg.locator('[data-vx-adhoc] [data-vx-edit="PORT:PF-USD-RATES"]').click()
+    pg.locator('[data-vx-pick="system"] [data-vx-pick-btn]').click()           # System baskets: the bank's portfolios
+    pg.locator('[data-vx-baskets-system] [data-vx-edit="PORT:PF-USD-RATES"]').click()
     wait(pg, "window.VarBasket.state.copyOf === 'PF-USD-RATES' && !document.querySelector('[data-vx-basket]').hidden")
     assert "your own basket" in pg.locator("[data-vb-save]").inner_text()
     # Delete, through the confirm dialog
     # the sheet's cell gives up its focus first (its edit is committed and the explorer follows), then the row's Delete
     pg.locator("[data-vb-name]").focus()
     pg.wait_for_timeout(800)
-    pg.locator(".vx-adhoc-row", has=pg.locator(f'[data-vx-delete="{basket}"]')).hover()
-    pg.locator(f'[data-vx-adhoc] [data-vx-delete="{basket}"]').click()
+    pg.locator('[data-vx-pick="mine"] [data-vx-pick-btn]').click()
+    pg.locator(f'[data-vx-baskets-mine] [data-vx-delete="{basket}"]').click()
     pg.locator("[data-sd-dialog]").wait_for(state="visible")
     pg.locator("[data-sd-yes]").click()
     pg.locator(f'[data-vx-delete="{basket}"]').wait_for(state="detached")
@@ -421,11 +425,12 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
 def test_the_pre_deal_what_if_under_the_sheet(stack, browser):
     """A copy of a booked trade, unwound (factor -1), added to the basket: VaR and ES before and after by the server's VaR engine."""
     pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX")
-    pg.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
+    pg.evaluate("localStorage.removeItem(window.drishtiKey('drishti.varBasket2'))")
     pg.reload()
     painted(pg, "DESK:DESK-FX")
     trd = pg.evaluate("fetch('/api/var/scope/contributions?scope=DESK:DESK-FX&by=trade').then(r => r.json()).then(d => d.rows[0].key)")
-    pg.locator("[data-vx-whatif]").click()                                   # the provenance column's What-if…: the desk into the sheet
+    pg.locator("[data-vx-how]").click()                                      # How calculated (2.9.11.b: the provenance drawer)
+    pg.locator("[data-vx-whatif]").click()                                   # its What-if…: the desk into the sheet
     wait(pg, "!document.querySelector('[data-vx-basket]').hidden && window.VarBasket.parts() === 1")
     pg.locator("[data-vb-whatif-trade]").fill(trd)
     pg.locator("[data-vb-whatif-factor]").fill("-1")

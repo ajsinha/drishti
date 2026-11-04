@@ -92,20 +92,20 @@ def test_a_lens_draws_its_own_subject_menus_for_that_person_only(backend, monkey
                 "market": ["Views", "Curves", "Volatility", "FX", "Credit", "Admin", "Help"],
                 "trading": ["Views", "Engines", "Blotter", "Positions", "Risk", "Counterparties", "Admin", "Help"]}
     for lens, menus in expected.items():
-        alice.get(f"/lens/{lens}")
+        alice.post(f"/lens/{lens}")
         page = alice.get("/t").text
         assert _drawn(page) == menus, lens
         assert _drawn(bob.get("/t").text) == ["Views", "Engines", "Admin", "Help"]
-    alice.get("/lens/market")
+    alice.post("/lens/market")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Curves")) == ["CRV", "REPO", "FIX", "INF"]
     assert _commands(_panel(page, "Volatility")) == ["IRV", "CPV", "FXV", "EQV", "CMDV"]
     assert _commands(_panel(page, "FX")) == ["FX", "FXF", "FXV"] and _commands(_panel(page, "Credit")) == ["CDS", "BND"]
-    alice.get("/lens/world")
+    alice.post("/lens/world")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Economies")) == ["ECON …", "MACRO", "FCST", "REGE"]
     assert _commands(_panel(page, "Companies")) == ["USEQ", "EDGAR", "LEIC", "FUND"]
-    alice.get("/lens/trading")
+    alice.post("/lens/trading")
     page = alice.get("/t").text
     assert _commands(_panel(page, "Blotter")) == ["TRD", "CTRD", "PTRD", "LTRD"]
     assert _commands(_panel(page, "Risk")) == ["VAR", "VLIM", "TVAL", "PNLV"]

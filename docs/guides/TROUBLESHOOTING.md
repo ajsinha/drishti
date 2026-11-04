@@ -147,7 +147,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 - **Fix:** stop the other process, or start this one on another port and tell the console where it is:
 
   ```bash
-  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  DRISHTI_PORT=18481 java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
   DRISHTI_BACKEND_URL=http://127.0.0.1:18481 drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
 
@@ -165,7 +165,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
 
   ```bash
   DRISHTI_PACKS=trading,counterparty-risk DRISHTI_PACKS_DIR=$PWD/packs \
-    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+    java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
   ```
 
   A pack's parents load by themselves: enabling `trading` also loads `core` and `market-data`. Other
@@ -187,7 +187,7 @@ from the connector's settings. Admin → Health then shows `UP (engine: native)`
   expands to all of them; Java runs the **first** (the oldest, alphabetically) and ignores the rest.
 - **Check:** `curl -s http://localhost:18480/api/v1/about | python3 -c "import json,sys; print(json.load(sys.stdin)['version'])"`
   and `ls drishti-server/target/*-exec.jar`.
-- **Fix:** name the jar exactly (`drishti-server-2.9.11.a-exec.jar`), or delete the old ones.
+- **Fix:** name the jar exactly (`drishti-server-2.9.11.b-exec.jar`), or delete the old ones.
 
 ### The console will not start: `ModuleNotFoundError: No module named 'fastapi'`
 
@@ -293,7 +293,7 @@ The log gets the first failure and failures number 2, 4, 8, ... of each thing, n
 
   ```bash
   export DRISHTI_TOKEN_SECRET='at-least-32-characters-shared-secret!!'   # same value for both
-  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.a-exec.jar
+  DRISHTI_SECURITY_ENABLED=true java -Djava.io.tmpdir=data/tmp/server -jar drishti-server/target/drishti-server-2.9.11.b-exec.jar
   DRISHTI_AUTH_ENABLED=true DRISHTI_SESSION_SECRET='another-secret-of-32-characters-or-more' \
     drishti-console/.venv/bin/python drishti-console/run_drishti_web.py
   ```
@@ -634,9 +634,9 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### "DRS-1004 … timed out" opening a trade
 
-- **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (5 s). On a large lake the first read of a date reads that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
+- **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (10 s). On a large lake the first read of a date reads that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
 - **Check:** Admin → Health, the connector's `p99Ms`; Admin → Health → Pages for the kind's p95; the server log for `… loaded, N ids in F files (T ms)`.
-- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start); load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise `drishti.sources.fetch-timeout` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start); load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise `drishti.sources.fetch-timeout`, keeping the console's `backend.timeout_seconds` (15) longer than it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 ### A counterparty, portfolio, legal entity or index page (`CTRD`, `PTRD`, `LTRD`, `ITRD`) is slow or times out
 

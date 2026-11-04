@@ -298,7 +298,8 @@ class Editions:
         self.lenses: dict[str, Edition] = {}
         self.on_change = on_change
         self._server_brand: dict = {}
-        _engines.reset()                                         # what runs is learned from this process's server, as the edition is
+        self.engines = _engines.new_state()                      # what runs, learned from this app's server as the edition is: its own,
+                                                                 # never another app's of the same process (core/engines.py State)
 
     def default_packs(self) -> list[str]:
         """The one default pack list (config/editions/default-packs.yaml), as the server reads it from its jar."""
@@ -337,7 +338,7 @@ class Editions:
         name = str((about.get("edition") or {}).get("name") or "")
         lenses = [str(n) for n in about.get("lenses") or []] if not name else []
         brand = {k: about.get(k) for k in ("product", "tagline") if about.get(k)}
-        engines_changed = _engines.learn(about.get("engines"))  # the compute engines running in the cluster (COMPUTE_ENGINES.md 5.2)
+        engines_changed = _engines.learn(about.get("engines"), self.engines)   # the engines running in the cluster (COMPUTE_ENGINES.md 5.2)
         changed = name != self.instance.name or sorted(lenses) != sorted(self.lenses) or brand != self._server_brand
         if not changed:
             if engines_changed and self.on_change is not None:

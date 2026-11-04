@@ -15,6 +15,7 @@
 """Shared helpers for page routes."""
 from __future__ import annotations
 
+import asyncio
 import hashlib
 from pathlib import Path
 from typing import Any
@@ -23,6 +24,18 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 from core.nextpath import login_url
+from core.user_cache import fingerprint
+
+
+def store_who(request: Request) -> str:
+    """The person's mark on what pages keep in the browser (theme-init.js, ``window.drishtiKey``): a fingerprint of the server and user,
+    the same across sign-ins, so the next person on the same browser never reads the last one's basket, drafts or filters."""
+    from core import servers
+
+    me = getattr(request.state, "identity", None)
+    server = getattr(request.state, "server", None)
+    parts = (server.id if server is not None else servers.current(), me.user if me else "")
+    return hashlib.sha256("\x1f".join(parts).encode()).hexdigest()[:16]
 
 
 def live_who(request: Request) -> str:
@@ -39,6 +52,7 @@ def live_who(request: Request) -> str:
 
 def render(request: Request, template: str, status_code: int = 200, **context: Any):
     context.setdefault("LIVE_WHO", live_who(request))
+    context.setdefault("STORE_WHO", store_who(request))
     templates = request.app.state.templates
     context.setdefault("me", getattr(request.state, "identity", None))
     context.setdefault("pack_switcher", getattr(request.state, "pack_switcher", []))
@@ -72,8 +86,9 @@ async def packs(request: Request) -> list:
 
 
 async def library(request: Request):
-    """The help library for the enabled packs, built once per set of packs and per version of the catalogue file: a pack that is loaded,
-    unloaded or upgraded, or an edit of ``config/help.yaml``, gives a new library on the next request (no restart)."""
+    """The help library for the person's packs, built once per set of packs and per version of the catalogue file (a pack that is loaded,
+    unloaded or upgraded, or an edit of ``config/help.yaml``, gives a new library on the next request, no restart); built in a worker
+    thread, the eight most recently used pack sets kept."""
     from core.guides import Library
 
     current = await packs(request)
@@ -83,13 +98,19 @@ async def library(request: Request):
         stamp = catalogue.stat().st_mtime_ns
     except OSError:
         stamp = 0
-    key = (tuple((p["name"], str(p.get("version", ""))) for p in current), stamp)
-    libs = request.app.state.libraries
-    if key not in libs:
-        for old in [k for k in libs if k != key]:
-            del libs[old]                                  # only the current library is kept
-        libs[key] = Library(console_dir, catalogue, request.app.state.docs_dir, current)
-    return libs[key]
+    key = (fingerprint(f"{p['name']}@{p.get('version', '')}" for p in current), stamp)
+    libs = request.app.state.libraries                     # an LRU: a few pack sets kept, so people with different packs do not rebuild
+    hit = libs.get(key)
+    if hit is not None:
+        return hit
+    building = request.app.state.library_builds            # one build per pack set at a time, off the event loop
+    task = building.get(key)
+    if task is None:
+        task = asyncio.ensure_future(asyncio.to_thread(Library, console_dir, catalogue, request.app.state.docs_dir, current))
+        building[key] = task
+        task.add_done_callback(lambda t: building.pop(key, None) if building.get(key) is t else None)
+    lib = await asyncio.shield(task)
+    return libs.put(key, lib)
 
 
 def local_zone(request: Request) -> tuple[str, str]:

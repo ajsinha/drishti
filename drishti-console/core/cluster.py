@@ -122,7 +122,7 @@ class ServerPool:
         self.discover_every = _seconds(settings.get("backend.discover_every"), 60)
         self.check_every = _seconds(settings.get("backend.check_every"), 5)
         self.fail_after = max(1, int(settings.get("backend.fail_after", 2) or 2))
-        self.timeout = float(settings.get("backend.timeout_seconds", 5) or 5)
+        self.timeout = float(settings.get("backend.timeout_seconds", 15) or 15)
         self.file = Path(data_dir) / "net" / "servers.json"
         self.entries: dict[str, Entry] = {u: Entry(u, "configured") for u in urls}
         self.pins: dict[str, str] = {}
@@ -242,7 +242,7 @@ class ServerPool:
         e.stream_breaks += 1
         LOG.info("live stream from %s ended: %s (not counted against it; checking its health)", url, why)
         try:
-            task = asyncio.get_running_loop().create_task(self.check(e))
+            task = asyncio.get_running_loop().create_task(self.check(e))   # service work: a health check, no user's scope
             self._checks.add(task)
             task.add_done_callback(self._checks.discard)
         except RuntimeError:                              # no running loop: the periodic check looks at it

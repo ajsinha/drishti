@@ -34,7 +34,8 @@ from urllib.parse import quote
 
 import yaml
 
-from core.facts_expr import FORMATS, Expr, ExprError, Template, fmt
+from core import engine_figures as engine
+from core.facts_expr import FORMATS, Expr, ExprError, Template, fmt, overlap_rows
 
 log = logging.getLogger(__name__)
 
@@ -113,7 +114,7 @@ def _step(raw: Any, where: str) -> Step:
             raise ExprError(f"{where}: raw takes {{kind, id}}")
         s.target = (_template(r["kind"], where), _template(str(r["id"]), where))
     else:
-        s.target = Expr(raw[kind])
+        s.target = Expr(raw[kind], engine=kind == "let")       # sum and overlap: a let step's, asked of the server's engine
     params = raw.get("params") or {}
     if not isinstance(params, dict):
         raise ExprError(f"{where}: params is a mapping")
@@ -280,10 +281,46 @@ class Fetcher:
             return await self.backend.raw(target[0], target[1], self.ident)
         raise ValueError(kind)
 
+    async def figure(self, fn: str, args: list) -> Any:
+        """A ``let`` step's ``sum(list)`` or ``overlap(a, b, key, weight)``, computed by the server's pivot engine as the user
+        (``POST /api/v1/pivot/inline``, core/engine_figures.py): the list's numbers summed; for overlap, each key's two totals and the
+        smaller of them (``least(sum(A), sum(B))`` by key), then those added up. A list that is not one: None; an empty list sums to 0."""
+        if fn == "sum":
+            xs = args[0] if args else None
+            if not isinstance(xs, (list, tuple)):
+                return None
+            vals = [[v] for v in xs if engine.num(v) is not None]
+            if not vals:
+                return 0
+            f = await engine.ask(self.backend, self.ident, [("V", "number")], vals, [{"measure": "sum(V)", "as": "v"}])
+            return f.get("v")
+        if fn == "overlap" and len(args) == 4:
+            rows = overlap_rows(*args)
+            if rows is None:
+                return None
+            if not rows:
+                return 0
+            fields = [("KEY", "string"), ("A", "number"), ("B", "number")]
+            per_key = await engine.ask(self.backend, self.ident, fields, rows, [{"measure": "least(sum(A), sum(B))", "as": "m"}], by="KEY")
+            smaller = [[per_key.get("m", k)] for k in per_key.members()]
+            f = await engine.ask(self.backend, self.ident, [("V", "number")], smaller, [{"measure": "sum(V)", "as": "v"}])
+            return f.get("v")
+        raise ValueError(f"{fn} is not one of the engine's functions here")
+
 
 async def _run_step(s: Step, env: dict, fetcher, gate: asyncio.Semaphore) -> Any:
     if s.kind == "let":
-        return s.target.eval(env)
+        if not s.target.engine_calls:
+            return s.target.eval(env)
+
+        async def ask(fn: str, args: list) -> Any:
+            async with gate:
+                try:
+                    return await fetcher.figure(fn, args)
+                except Exception as e:  # noqa: BLE001 - the engine refused: no figure, the fact may not hold
+                    log.debug("fact step %s: %s", s.name, e)
+                    return None
+        return await s.target.eval_async(env, ask)
     if s.kind == "pick":
         rows = s.target.eval(env)
         rows = rows if isinstance(rows, list) else ([] if rows is None else [rows])
@@ -428,6 +465,8 @@ class FactsService:
             return hit[1]
         task = self._running.get(key)
         if task is None:
+            # copies the request's context (core/request_context.py: its server, lens, date); shared only by asks of the same
+            # (server, user, date, packs) key
             task = asyncio.ensure_future(self._compute_all(facts, fetcher, as_of))
             self._running[key] = task
             task.add_done_callback(lambda t, k=key: self._finish(k, t))

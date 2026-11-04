@@ -2097,7 +2097,7 @@ measures:
   windows), with `table` meaning a dataset alias.
 * `currency:` names the column (or ISO code) the measure's amounts are in when the column's `unit` is per row; the
   currency guard reads it (5.6). `additive:` defaults from the column (1.4); a measure of measures is non-additive
-  unless it says so. These feed **true totals** (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.2) instead of today's guess from the aggregate.
+  unless it says so. Without a declaration, whether a measure adds up is the pivot engine's answer for its function (sums and counts added and subtracted); totals themselves are the engine's (BI_GUIDE.md › Reports: the YAML, the visuals and how they behave, section 3.2).
 * **Default measures.** A model gets, without writing them, one measure per fact column whose `aggregate` is set
   (`Sum of notional`, `Count of trades`), marked `implicit: true`, hidden from the contract unless promoted. The
   designer writes them out when the author renames or formats one.
@@ -4308,7 +4308,7 @@ References: [BI_GUIDE.md](../guides/BI_GUIDE.md#30-datasets-the-yaml-the-express
 * **Visuals** (8). `map` (countries shaded by an ISO country code, or points at a latitude and longitude; the country file is **vendored**, Natural Earth 1:110m, countries only, 177 features, 176 KB: no tiles, no CDN, no outside request; served to `<drishti-report>` at `/embed/v1/world-countries.json`), `funnel`, `histogram`, `box`, `bubble`. The histogram and box plot ask the engine for the measure of **every member** of the axis
   (`drishti.bi.report.distribution-rows`) and the server bins or summarises it (equal-width bands; quartiles by linear interpolation, whiskers at 1.5 interquartile ranges, outliers), so the screen, the export (PDF, PNG, Excel, CSV: bars for a funnel, a histogram and a map by country, tables for the rest) and a subscription show one set of numbers. In the visual catalogue (`GET /bi/reports/catalogue`), the designer
   (Charts group, Build wells, Format **Bars**), the viewer and the element; masks apply (a masked measure is blank). A value the map does not hold is named under it.
-* **True totals** (8: "true subtotals for measures that do not add up"). A matrix with `subtotals: true` and a table with `totals: true` get, with the answer, the engine's totals for the measures that do not add up (`totals`: one entry per level, as the reader, under the same filters); the page sums only the measures that add up.
+* **True totals** (8: "true subtotals for measures that do not add up"). Every total and subtotal of a matrix and a table with `totals: true` comes with the answer (`totals`: one entry per level, as the reader, under the same filters), computed by the pivot engine in one grouping-sets statement over the model's rows for every measure that is a pivot function ([PIVOT_ENGINE.md section 12](PIVOT_ENGINE.md#12-bi-on-the-pivot-engine)); the page adds nothing up.
 * **The sample.** *Counterparty risk* gains a map of the exposure by country, a year-to-date MTM card (`MTM ytd` in `trading-risk`) and a histogram of the trades' MTM.
 
 **Not built, and not faked.** Regions below the country, a tile map or a map service, a choropleth by anything but a country code or name; a histogram with bands of your own; a refresh of an earlier date than the current business date by schedule. (The window functions, the refresh state across a restart and the Refresh now button are built: 20.11.)

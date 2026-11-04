@@ -91,6 +91,17 @@ public final class PeerCalls {
         return out;
     }
 
+    /** {@code method pathAndQuery} with {@code body} to one member for {@code p} (the pivot engine's partial states, a share of a view). */
+    public Answer call(String node, String method, String pathAndQuery, byte[] body, Principal p, Duration timeout) {
+        return one(net.get(), node, method, pathAndQuery, body, p, timeout);
+    }
+
+    /** This member's id (blank when not a member). */
+    public String self() {
+        NetService n = net.get();
+        return n == null ? "" : n.nodeId();
+    }
+
     private static Answer one(NetService n, String node, String method, String pathAndQuery, byte[] body, Principal p, Duration timeout) {
         try {
             String url = n.node().flatMap(x -> x.table().known(node)).map(k -> k.member().url()).orElseThrow();

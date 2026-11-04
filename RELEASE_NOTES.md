@@ -13,6 +13,55 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
+# Drishti 2.9.11.b — release notes
+
+*Released 2026-11-04.* **The MR cube and BI on the pivot engine; live pivots and pivots at scale; one grammar, one engine; the VaR
+screen's baskets in two searchable lists; a console that keeps every person's session to themselves.**
+
+## What changes for VaR users
+
+- **The VaR screen's baskets** moved from the left-hand column into two searchable drop-downs above the figures: **System baskets**
+  (key B, the bank's portfolios) and **My baskets** (key M, the baskets you saved and those shared with you). The basket sheet opens only
+  from **+ New basket** (Alt+B). **How calculated ›** (key H) opens the explanation as a drawer. The hierarchy tree stays on the left and
+  fills the column; every figure, Expected Shortfall included, every chart, tab and key is where it was (VAR_GUIDE.md sections 3.2, 3.5,
+  3.6; tutorial 25).
+- **The MR cube** (`MCUBE`, MR_CUBE_GUIDE.md, tutorial 38): VaR, ES and sensitivities pivoted by any dimension on the pivot engine; a
+  VaR cell is always the VaR engine's figure for its scope, never a sum.
+- **VaR figures are unchanged**: the release was checked against the previous build (2.9.11.a) on the same data: VaR and ES of every node of the three hierarchies (131 nodes) on all three business dates, 1-day and 10-day, and the 28 stored portfolios: 2,526 figures, every one equal.
+
+## New
+
+- **The pivot engine, phases 2 and 3** (PIVOT_GUIDE.md sections 19 to 26): live pivots that tick, the pivot screen's switches, top N by
+  Space-Saving when asked, cell comments on saved views, and pivots over large tables (BENCHMARK.md section 16).
+- **BI on the pivot engine**: BI's visuals are computed by the same engine as the pivot screen.
+- **One grammar, one engine** (ONE_GRAMMAR.md): Rachana's tier-1 functions (FUNCTION_CATALOGUE.md, RACHANA_REFERENCE.md › Functions);
+  custom functions take the catalogue's names; the browser computes nothing: every figure on screen is the server's.
+- **Tutorial 36**: load files automatically with the data inbox.
+
+## Fixed
+
+- **Security (release blocker): a console with several servers kept one person's session to themselves only partly.** Live streams
+  opened on the console's first server; a few caches and the browser's storage were shared beyond the person. Every live channel now
+  runs as its person on their server and re-checks its session; caches are per person; the browser's storage is per person; sign-out
+  clears it.
+- **A panel reading another pack's data said "no data" when the read was slow.** It now waits as long as the page's own record, and a
+  read that fails shows the panel's failed state with the connector and why, never its empty text.
+- **Busy protection** reads memory only after the collector has cleaned the old generation and never forces a full collection.
+- The workbench's Versions tab no longer shows the diff of an older save; a panel swapped in later keeps its comment and share buttons.
+
+## Upgrade
+
+- Rebuild and restart as usual; the server jar is `drishti-server-2.9.11.b-exec.jar`.
+- **Upgrade every console worker together**: a live channel's messages now carry the person's scope, and a worker of the previous
+  release refuses them.
+- **Source reads wait up to 10 s** (`drishti.sources.fetch-timeout`, was 5 s) and the console waits 15 s per call to the server
+  (`backend.timeout_seconds`, was 5 s). A setting of your own in `application.local.yaml` keeps its value; keep the console's above the
+  server's (CONFIGURATION.md).
+
+## Known open
+
+- Java 25 runs in the release checks; Java 21 is the production runtime.
+
 # Drishti 2.9.11.a — release notes
 
 *Released 2026-11-03.* **The pivot engine, with pivots over trade documents in Rachana paths; one Engines menu and the Help hub; the data

@@ -23,7 +23,6 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
-import contextvars
 import json
 import re
 import secrets
@@ -31,7 +30,7 @@ import time
 from typing import AsyncIterator, Awaitable, Callable
 from urllib.parse import quote
 
-from core import asof, channel_relay, controls
+from core import controls, request_context, servers
 from core.backend import BackendError
 
 Render = Callable[[str, str], str]      # (event, data) -> data as the caller wants it (panel patches as HTML)
@@ -53,6 +52,12 @@ def raw_view(event: str, data: str) -> str:
     return data
 
 
+async def _renamed(stream, names: dict[str, str]):
+    """An upstream stream with some of its event names changed."""
+    async for event, data in stream:
+        yield names.get(event, event), data
+
+
 def holder(ids: str) -> str | None:
     """The cluster node that holds a standing query, from its id (``sq-<node>-<16 hex>``, as a BI run's ``r-<node>-...``); None for an id
     that names none (one server, or a server older than 2.6.7)."""
@@ -64,11 +69,15 @@ class ChannelSession:
     """The subscriptions of one open channel and the SSE text they produce, built for ``identity``."""
 
     def __init__(self, backend, identity, render: Render, *, limit: int, who: str = "", app: str = "",
-                 registry: dict | None = None, queue_size: int = 2000, watchdog_seconds: float = 5.0):
+                 registry: dict | None = None, queue_size: int = 2000, watchdog_seconds: float = 5.0, cid_suffix: str = ""):
+        self.scope = request_context.snapshot()                    # the opening request's server, pin, lens, share, date: every task runs in it
+        self.server = self.scope[servers.CURRENT]
+        if isinstance(backend, servers.Switch):
+            backend = backend._target()                            # this server's client, whatever context later calls run in
         self.backend, self.me, self.render = backend, identity, render
         self.limit, self.who, self.app = limit, who, app
         self.registry = registry if registry is not None else {}
-        self.cid = secrets.token_urlsafe(12) + channel_relay.suffix()      # names the worker that holds it (core/channel_relay.py)
+        self.cid = secrets.token_urlsafe(12) + cid_suffix          # names the worker that holds it (core/channel_relay.suffix)
         self.user = identity.user if identity is not None else ""
         self.queue: asyncio.Queue = asyncio.Queue(maxsize=queue_size)
         self.tasks: dict[str, asyncio.Task] = {}
@@ -79,8 +88,9 @@ class ChannelSession:
         self.watchdog_seconds = watchdog_seconds
 
     # -- who may change it ------------------------------------------------------------------------------------------
-    def owned_by(self, user: str, app: str = "") -> bool:
-        return self.user == user and self.app == app
+    def owned_by(self, user: str, app: str = "", server: str | None = None) -> bool:
+        """The caller's user and host application, on the caller's server (the current request's when not named)."""
+        return self.user == user and self.app == app and self.server == (servers.current() if server is None else server)
 
     def change(self, add=(), remove=()) -> None:
         """Adds and removes subscriptions ({"add": [...], "remove": [...]} of a POST), within the limit."""
@@ -130,7 +140,11 @@ class ChannelSession:
             return self.backend.sse("/bi/runs/events", self.me, opened=responses), False
         if sub.startswith("monitor:"):
             return self.backend.sse(f"/me/monitors/{quote(sub[8:])}/stream", self.me, opened=responses), False
-        if sub.startswith("compute:") and len(sub) > 8:         # a computed panel's request (DATA_ARCHITECTURE.md): progress, state, done,
+        if sub.startswith("pivotlive:") and len(sub) > 10:     # a live pivot (PIVOT_GUIDE.md 25): answer, patch, reshape, status, ended, on
+            lid, _, node = sub[10:].partition("@")              # the node that holds it (pivotlive:<id>@<node>)
+            stream = self.backend.sse(f"/pivot/live/{quote(lid, safe='')}/events", self.me, opened=responses, **({"node": node} if node else {}))
+            return _renamed(stream, {"error": "failed"}), False       # an EventSource's own "error" is its connection's: the stream's is "failed"
+        if sub.startswith("compute:") and len(sub) > 8:        # a computed panel's request (DATA_ARCHITECTURE.md): progress, state, done,
             return self.backend.sse(f"/compute/requests/{quote(sub[8:], safe='')}/stream", self.me, opened=responses), False   # failed, updated
         return None, False
 
@@ -199,17 +213,13 @@ class ChannelSession:
         self.registry.pop(self.cid, None)
         await asyncio.gather(*(self._close_sub(s, t) for s, t in list(self.tasks.items())), return_exceptions=True)
 
-    @staticmethod
-    def _detached(coro):
-        # Upstream work runs in tasks with a fresh context holding only the business date and "known at". Anything
-        # started from the request's context inherits Starlette's (anyio's) cancel scope, which, once the request has
-        # ended, cancels every await in it for good: the streams' clean-up never completed and their connections to the
-        # server stayed open (the console ran out of connections, and the UI froze). Ending a channel therefore closes
-        # the responses from a detached task too.
-        ctx = contextvars.Context()
-        ctx.run(asof.set_current, asof.current())
-        ctx.run(asof.set_known, asof.known_at())
-        return asyncio.get_running_loop().create_task(coro, context=ctx)
+    def _detached(self, coro):
+        # Upstream work runs in tasks with a fresh context holding the opening request's scope (core/request_context.py) and
+        # nothing else. Anything started from the request's own context inherits Starlette's (anyio's) cancel scope, which,
+        # once the request has ended, cancels every await in it for good: the streams' clean-up never completed and their
+        # connections to the server stayed open (the console ran out of connections, and the UI froze). Ending a channel
+        # therefore closes the responses from a detached task too.
+        return request_context.run_in(self.scope, coro)
 
     async def _watchdog(self) -> None:
         # Starlette may stop reading this stream when the browser goes away without closing it. A live channel is read
@@ -224,7 +234,7 @@ class ChannelSession:
         """The SSE text of the channel: a ``channel`` event first, then every subscription's events, a comment every ~15 s."""
         for x in asked:
             self.add(x)
-        self.registry[self.cid] = {"user": self.user, "app": self.app, "add": self.add, "remove": self.remove, "session": self}
+        self.registry[self.cid] = {"server": self.server, "user": self.user, "app": self.app, "add": self.add, "remove": self.remove, "session": self}
         self._detached(self._watchdog())
         try:
             yield f"event: channel\ndata: {json.dumps({'ch': '', 'd': {'id': self.cid, 'subs': asked, 'who': self.who}})}\n\n"

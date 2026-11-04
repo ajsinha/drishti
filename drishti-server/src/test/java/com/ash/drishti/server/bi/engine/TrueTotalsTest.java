@@ -22,7 +22,8 @@ import com.ash.drishti.server.bi.dataset.DatasetParser;
 import com.ash.drishti.server.bi.dataset.UserAttributes;
 import com.ash.drishti.server.bi.report.Report;
 import com.ash.drishti.server.bi.report.ReportParser;
-import com.ash.drishti.server.bi.report.Totals;
+import com.ash.drishti.server.bi.pivot.BiAggregate;
+import com.ash.drishti.server.bi.pivot.BiMeasures;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.util.ArrayList;
@@ -38,9 +39,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 /**
- * True totals: the matrix and table totals of measures that do not add up (ratio, average, distinct count, percentile) are worked out by the engine over
- * the rows of the whole group, and checked here against a brute-force computation over the same trades. The shown figures could not give them: the average
- * of averages is not the average.
+ * True totals on the pivot engine (BI_DESIGN.md, totals; PIVOT_ENGINE.md section 12): every level of a matrix and a table, for every measure that is a
+ * pivot function, in one grouping-sets statement over the model's rows as the reader sees them, checked here against a brute-force computation over the
+ * same trades. The shown figures could not give them: the average of averages is not the average.
  */
 class TrueTotalsTest {
 
@@ -99,45 +100,64 @@ class TrueTotalsTest {
         return i + 1 < v.length ? v[i] + (pos - i) * (v[i + 1] - v[i]) : v[i];
     }
 
+    BiAggregate.Totals totals(List<List<String>> levels, List<String> measures, QueryService.Caller who) {
+        return BiAggregate.totals(dataset, levels, measures, base(null, List.of(), List.of()), 2000, q -> service.query(ds, q, who, false));
+    }
+
     @Test
-    void theMeasuresThatAddUpAreNotAskedForAndTheOthersAre() {
-        assertThat(Totals.adds(dataset, "Notional")).isTrue();
-        assertThat(Totals.adds(dataset, "Trades")).isTrue();
+    void theEngineSaysWhichMeasuresAddUpAndWhichAreItsFunctions() {
+        assertThat(BiMeasures.additive(dataset, "Notional")).isTrue();
+        assertThat(BiMeasures.additive(dataset, "Trades")).isTrue();
         for (String m : List.of("AvgMTM", "MTMperM", "Names", "P50", "Biggest", "Share")) {
-            assertThat(Totals.adds(dataset, m)).as(m).isFalse();
+            assertThat(BiMeasures.additive(dataset, m)).as(m).isFalse();
+            assertThat(BiMeasures.of(dataset, m)).as(m + " is a pivot function").isPresent();
         }
-        List<Totals.Level> levels = Totals.matrix(dataset, visual("m"), base(visual("m"), List.of(), List.of()), 2000);
-        assertThat(levels).extracting(Totals.Level::by).containsExactly(List.of(), List.of("trades.desk"), List.of("trades.cpty"), List.of("trades.desk", "trades.cpty"),
-                List.of("trades.desk", "trades.currency"));
-        assertThat(levels.get(0).query().measures()).containsExactly("AvgMTM", "MTMperM", "Names", "P50", "Biggest");
-        assertThat(Totals.matrix(dataset, visual("plain"), base(visual("plain"), List.of(), List.of()), 2000)).as("no subtotals asked for").isEmpty();
+        Report.Visual m = visual("m");
+        assertThat(BiAggregate.matrixLevels(m.well("rows"), m.well("columns"))).containsExactly(List.of(), List.of("trades.desk"),
+                List.of("trades.cpty"), List.of("trades.desk", "trades.cpty"), List.of("trades.desk", "trades.currency"));
+    }
+
+    @Test
+    void theSameTotalsAskedAgainAreTheSameNotACachedAnswerWithoutItsPlan() {
+        Report.Visual m = visual("m");
+        List<List<String>> levels = BiAggregate.matrixLevels(m.well("rows"), m.well("columns"));
+        BiAggregate.Totals first = totals(levels, m.well("values"), risk());
+        BiAggregate.Totals again = totals(levels, m.well("values"), risk());      // a report asked twice: the statement is made again
+        assertThat(again.levels()).hasSize(first.levels().size());
+        for (int i = 0; i < first.levels().size(); i++) {
+            assertThat(again.levels().get(i).rows()).isEqualTo(first.levels().get(i).rows());
+        }
     }
 
     @Test
     void everyLevelOfTheMatrixIsTheMeasureOverTheRowsOfItsGroup() {
         List<TestLake.Trade> all = lake.trades.get(TestLake.DAY2);
-        for (Totals.Level level : Totals.matrix(dataset, visual("m"), base(visual("m"), List.of(), List.of()), 2000)) {
-            QueryService.Result r = service.query(ds, level.query(), risk(), false);
+        Report.Visual m = visual("m");
+        BiAggregate.Totals t = totals(BiAggregate.matrixLevels(m.well("rows"), m.well("columns")), m.well("values"), risk());
+        assertThat(t.notTotalled()).isEmpty();
+        assertThat(t.levels()).hasSize(5);
+        for (BiAggregate.Level level : t.levels()) {
             List<String> by = level.by();
-            Function<TestLake.Trade, List<String>> key = t -> by.stream().map(f -> switch (f) {
-                case "trades.desk" -> t.desk();
-                case "trades.currency" -> t.ccy();
-                default -> t.cpty();
+            Function<TestLake.Trade, List<String>> key = tr -> by.stream().map(f -> switch (f) {
+                case "trades.desk" -> tr.desk();
+                case "trades.currency" -> tr.ccy();
+                default -> tr.cpty();
             }).toList();
             Map<List<String>, List<TestLake.Trade>> groups = all.stream().collect(Collectors.groupingBy(key));
-            assertThat(r.rows()).as(by.toString()).isEqualTo(groups.size());
-            List<String> names = r.columns().stream().map(ArrowIpcWriter.Column::name).toList();
-            for (int i = 0; i < r.rows(); i++) {
-                final int row = i;
+            assertThat(level.rows()).as(by.toString()).hasSize(groups.size());
+            List<String> names = new ArrayList<>(by);
+            names.addAll(level.measures());
+            for (List<Object> row : level.rows()) {
                 List<String> k = new ArrayList<>();
                 for (int c = 0; c < by.size(); c++) {
-                    k.add(String.valueOf(r.columns().get(c).values()[row]));
+                    k.add(String.valueOf(row.get(c)));
                 }
                 List<TestLake.Trade> g = groups.get(k);
                 assertThat(g).as(k.toString()).isNotNull();
                 double notional = g.stream().mapToDouble(TestLake.Trade::notional).sum();
                 double mtm = g.stream().mapToDouble(TestLake.Trade::mtm).sum();
-                java.util.function.Function<String, Double> val = n -> ((Number) r.columns().get(names.indexOf(n)).values()[row]).doubleValue();
+                java.util.function.Function<String, Double> val = n -> ((Number) row.get(names.indexOf(n))).doubleValue();
+                assertThat(val.apply("Notional")).isEqualTo(notional, org.assertj.core.data.Offset.offset(1e-6));
                 assertThat(val.apply("AvgMTM")).isEqualTo(mean(g), org.assertj.core.data.Offset.offset(1e-9));
                 assertThat(val.apply("MTMperM")).isEqualTo(mtm / notional * 1_000_000, org.assertj.core.data.Offset.offset(1e-6));
                 assertThat(val.apply("Names")).isEqualTo((double) g.stream().map(TestLake.Trade::cpty).distinct().count());
@@ -160,14 +180,12 @@ class TrueTotalsTest {
 
     @Test
     void aTableTotalsEveryMeasureOverAllTheRowsNotJustTheOnesShown() {
-        List<Totals.Level> levels = Totals.table(dataset, visual("t"), base(visual("t"), List.of(), List.of()), 2000);
-        assertThat(levels).hasSize(1);
-        assertThat(levels.get(0).query().measures()).containsExactly("Trades", "AvgMTM", "MTMperM");
-        QueryService.Result r = service.query(ds, levels.get(0).query(), risk(), false);
+        BiAggregate.Totals t = totals(List.of(List.of()), List.of("Trades", "AvgMTM", "MTMperM"), risk());
+        assertThat(t.levels()).hasSize(1);
+        List<Object> row = t.levels().get(0).rows().get(0);
         List<TestLake.Trade> all = lake.trades.get(TestLake.DAY2);
-        assertThat(((Number) r.columns().get(0).values()[0]).longValue()).isEqualTo(all.size());
-        assertThat(((Number) r.columns().get(1).values()[0]).doubleValue()).isEqualTo(mean(all), org.assertj.core.data.Offset.offset(1e-9));
-        assertThat(Totals.table(dataset, visual("plain"), base(visual("plain"), List.of(), List.of()), 2000)).isEmpty();
+        assertThat(((Number) row.get(0)).longValue()).isEqualTo(all.size());
+        assertThat(((Number) row.get(1)).doubleValue()).isEqualTo(mean(all), org.assertj.core.data.Offset.offset(1e-9));
     }
 
     @Test
@@ -176,5 +194,9 @@ class TrueTotalsTest {
         QueryService.Result r = service.query(ds, base(null, List.of(), List.of("AvgMTM")), analyst, false);
         assertThat(r.meta().masked()).contains("AvgMTM");
         assertThat(r.columns().get(0).values()[0]).isNull();
+        BiAggregate.Totals t = totals(List.of(List.of(), List.of("trades.desk")), List.of("AvgMTM", "Notional"), analyst);
+        assertThat(t.levels().get(0).masked()).containsExactly("AvgMTM");
+        assertThat(t.levels().get(0).rows().get(0).get(0)).isNull();
+        assertThat(t.levels().get(0).rows().get(0).get(1)).isNotNull();
     }
 }

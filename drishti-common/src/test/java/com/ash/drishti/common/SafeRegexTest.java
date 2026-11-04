@@ -88,4 +88,37 @@ class SafeRegexTest {
         }
         assertThatThrownBy(() -> SafeRegex.compile("a".repeat(201), false)).hasMessageContaining("limit is 200");
     }
+
+    /** extract picks the match and the groups Java's own engine picks: leftmost, then greedy longest or lazy shortest. */
+    @Test
+    void extractAgreesWithJavasEngineOnTheSafeSubset() {
+        String[][] cases = {
+            {"20[0-9]{2}-[0-9]{2}", "USD 2026-10 swap 2027-01"}, {"(\\d+)-(\\d+)", "id 12-345 and 6-7"}, {"a+", "baaab"},
+            {"a+?", "baaab"}, {"(a|ab)(c|bcd)", "abcd"}, {"^(\\w+)@(\\w+)\\.com$", "me@site.com"}, {"(x)?y", "y"},
+            {"(?:USD|EUR)-([A-Z]{2})", "pair EUR-GB, USD-JP"}, {"colou?r", "the colour red"}, {"(a*)(a*)", "aaa"},
+            {"(a*?)(a*)", "aaa"}, {"[0-9]+$", "abc123"}, {"nothing", "here"}, {".*,", "a,b,c"}, {".*?,", "a,b,c"},
+        };
+        for (String[] c : cases) {
+            java.util.regex.Matcher m = java.util.regex.Pattern.compile(c[0]).matcher(c[1]);
+            boolean found = m.find();
+            SafeRegex re = SafeRegex.compile(c[0], false);
+            assertThat(re.groups()).as(c[0]).isEqualTo(m.groupCount());
+            for (int g = 0; g <= re.groups(); g++) {
+                assertThat(re.extract(c[1], g)).as("%s on %s, group %d", c[0], c[1], g).isEqualTo(found ? m.group(g) : null);
+            }
+        }
+        assertThat(SafeRegex.compile("(?i)usd", false).extract("in Usd terms", 0)).isEqualTo("Usd");
+        assertThat(SafeRegex.compile("(?:a)(b)", false).groups()).isEqualTo(1);
+        assertThat(find("(a+?)b", "aaab")).isTrue();                          // a lazy repeat answers yes/no as before
+        assertThatThrownBy(() -> SafeRegex.compile("(a)", false).extract("a", 2)).isInstanceOfSatisfying(DrishtiException.class,
+                e -> assertThat(e.errorCode()).isEqualTo(ErrorCode.REGEX_REFUSED));
+    }
+
+    @Test
+    @Timeout(5)
+    void extractStaysLinearOnCatastrophicPatterns() {
+        String text = "a".repeat(8000) + "!";
+        assertThat(SafeRegex.compile("^(a+)+$", false).extract(text, 1)).isNull();
+        assertThat(SafeRegex.compile("(a|aa)+!", false).extract(text, 0)).hasSize(8001);
+    }
 }

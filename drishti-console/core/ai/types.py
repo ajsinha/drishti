@@ -125,6 +125,7 @@ class CallContext:
     roles: frozenset = frozenset()
     feature: str = "other"
     ident: Any = None            # the console identity, for the ``server`` provider
+    server: str = ""             # the console server the user signed in to: limits count per (server, user), one name on two servers is two people
 
 
 @dataclass(frozen=True)

@@ -176,7 +176,7 @@ settings:
   header.X-Client: drishti
 ```
 
-and the server settings that bear on it, in `application.yaml`: `drishti.sources.fetch-timeout: 3s` (the whole read, every connector tried; default 5s) and
+and the server settings that bear on it, in `application.yaml`: `drishti.sources.fetch-timeout: 3s` (the whole read, every connector tried; default 10s) and
 `drishti.sources.routes.counterparty: crm-api` (Live reads ask the service first, section 6). A header name is written as it is in a file, with any characters
 (`header.X_Client`); no bracketing is needed.
 
@@ -292,8 +292,8 @@ the service holds the same ids as the samples.
 ## 7. Scale and limits
 
 - **Throughput is the service's.** Every view open, and every linked entity of the kind, is a request. Drishti adds
-  the request time to the view: a service answering in 30 ms adds 30 ms to the view; one answering in 3 s exceeds
-  the default `fetch-timeout` (5 s). Size the service for the views users open, not for the size of the book.
+  the request time to the view: a service answering in 30 ms adds 30 ms to the view; one answering in 12 s exceeds
+  the default `fetch-timeout` (10 s). Size the service for the views users open, not for the size of the book.
 - **No bulk path.** There is no listing, no batch request and no column read. A million entities a day can be
   *opened* one at a time through this connector, but never searched, typed ahead, listed, aggregated or traced for
   impact through it. For those, load the same data into a dated store ([DELTA_CONNECTOR.md](DELTA_CONNECTOR.md),
@@ -317,19 +317,23 @@ Two timeouts apply to every read, and the shorter wins:
 | Timeout | Default | Bounds |
 |---|---|---|
 | `timeout-ms` (this connector) | `2000` | the connection set-up, and the time until the response arrives; past it the client throws and the read fails with `DRS-1003` |
-| `drishti.sources.fetch-timeout` (the server) | `5s` | the **whole** read, across every connector tried in turn; past it the view ends with `DRS-1004 timed out reading <kind>/<id>` |
+| `drishti.sources.fetch-timeout` (the server) | `10s` | the **whole** read, across every connector tried in turn; past it the view ends with `DRS-1004 timed out reading <kind>/<id>` |
 
 Keep `timeout-ms` below `fetch-timeout`, with room for the connectors tried before this one: the user then sees which
-connector failed (`DRS-1003 crm-api failed reading …`) instead of a bare timeout. To allow a service 8 s, raise both:
+connector failed (`DRS-1003 crm-api failed reading …`) instead of a bare timeout. A service may take up to about 8 s
+with `timeout-ms: 8000` alone. To allow it 15 s, raise both:
 
 ```yaml
 drishti:
   sources:
-    fetch-timeout: 10s
+    fetch-timeout: 20s
     connectors:
       crm-api:
-        settings: { timeout-ms: 8000 }
+        settings: { timeout-ms: 15000 }
 ```
+
+and raise the console's `backend.timeout_seconds` (15) above the new `fetch-timeout` (`25`), so the server's answer
+reaches the console.
 
 When `fetch-timeout` ends a read first, the HTTP request itself is not cancelled; it finishes or reaches `timeout-ms`
 in the background.
@@ -508,7 +512,7 @@ Read beside them, and not in that table:
 |---|---|---|
 | `header.<Name>` | none | a request header `<Name>` sent with every request |
 
-Server settings that bear on it: `drishti.sources.fetch-timeout` (5 s), `drishti.sources.routes.<kind>`,
+Server settings that bear on it: `drishti.sources.fetch-timeout` (10 s), `drishti.sources.routes.<kind>`,
 `drishti.graph.link-budget` (40 ms). Shipped environment variables for the plugin as itself: `DRISHTI_REST_ENABLED`
 (`false`), `DRISHTI_REST_URL` (`http://localhost:9000/api`).
 

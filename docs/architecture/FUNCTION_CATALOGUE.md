@@ -19,7 +19,8 @@
 should have a document with examples". This is the catalogue to review **before** the functions are built: every function Drishti has
 or will have, under its **one** name, with what it means, an example on the demo data's names, its Excel and SAS equivalents, where it
 runs and its status. The design is [ONE_GRAMMAR.md](ONE_GRAMMAR.md) (section 7); when the functions are built this becomes the user's
-guide (Help → Functions, `FUNC`), each example then shown with its real result on the demo lake.*
+guide, each example then shown with its real result on the demo lake. Every function registered today, generated from the registries
+and checked against this page's names, is [FUNCTIONS.md](../guides/FUNCTIONS.md) (Help → Functions).*
 
 **How to read the tables.**
 
@@ -39,7 +40,11 @@ or that it is holistic, so pivot totals and the cluster stay right.
 **One name where two exist today.** Rachana and DEL overlap; the catalogue keeps one: `starts_with` (DEL `startswith`, Rachana
 `startsWith`), `ends_with`, `days_between` (Rachana `days`), `min`/`max` as aggregates over a list or a group and `least`/`greatest`
 for several arguments (Rachana's `min(a, b, ...)`), `cumulative` folded into `running`. The old spellings are read for existing Sutras
-and models and rewritten by the migration tool.
+and models and rewritten by the migration tool. Rachana has the one names (`starts_with`, `ends_with`, `days_between`, `least`,
+`greatest`, `matches_case`, `one_of`); its old spellings `startsWith`, `days`, `matchesCase`, `oneOf` and `min`/`max` with several
+arguments are read with the results they always gave. Rachana's tier-1 functions, their rules and an example of each on the demo trade
+are in [RACHANA_REFERENCE.md](../guides/RACHANA_REFERENCE.md#functions). Rachana has no list literals, so an example here that writes a
+list (`['DESK-COMM', 'DESK-RATES']`) reads it from the document or a control there.
 
 ## 1. Math and logic (scalars)
 
@@ -47,21 +52,21 @@ and models and rewritten by the migration tool.
 |---|---|---|---|---|---|
 | `abs(x)` | absolute value | `abs(trades.MTM)` | `ABS` / `ABS` | R | built (DEL, Rachana) |
 | `round(x, [n])` | round half away from zero to n places | `round(trades.NOTIONAL / 1e6, 1)` | `ROUND` / `ROUND` | R | built (DEL) |
-| `round_up(x, [n])`, `round_down(x, [n])` | away from or towards zero | `round_up(trades.QUANTITY / 100)` | `ROUNDUP`, `ROUNDDOWN` | R | T1 |
-| `mround(x, m)` | to the nearest multiple of m | `mround(trades.PRICE, 0.25)` | `MROUND` | R | T1 |
-| `ceiling(x, [m])`, `floor(x, [m])` | up or down to a multiple | `ceiling(size($.LEGS), 2)` | `CEILING.MATH`, `FLOOR.MATH` / `CEIL`, `FLOOR` | R | T1 |
-| `mod(x, y)` | remainder | `mod(day($.TRADE_DATE), 7)` | `MOD` / `MOD` | R | T1 |
-| `power(x, y)`, `sqrt(x)`, `exp(x)`, `ln(x)`, `log10(x)` | powers and logarithms | `sqrt(10) * measure('VAR')` (the 10-day lens is the VaR engine's own; this only shows the function) | `POWER`, `SQRT`, `EXP`, `LN`, `LOG10` | R | T1 |
-| `sign(x)` | -1, 0 or 1 | `sign(trades.QUANTITY)` | `SIGN` / `SIGN` | R | T1 |
-| `clamp(x, lo, hi)` | x held between lo and hi | `clamp(trades.LIMIT_USE, 0, 1)` | `MAX(lo, MIN(hi, x))` | R | T1 |
-| `least(a, b, ...)`, `greatest(a, b, ...)` | smallest or largest of the arguments | `greatest(trades.MATURITY_DATE, asof())` | `MIN`, `MAX` of arguments / `MIN`, `MAX` | R | built (Rachana `min`, `max`) |
+| `round_up(x, [n])`, `round_down(x, [n])` | away from or towards zero | `round_up(trades.QUANTITY / 100)` | `ROUNDUP`, `ROUNDDOWN` | R | built (Rachana) |
+| `mround(x, m)` | to the nearest multiple of m | `mround(trades.PRICE, 0.25)` | `MROUND` | R | built (Rachana) |
+| `ceiling(x, [m])`, `floor(x, [m])` | up or down to a multiple | `ceiling(size($.LEGS), 2)` | `CEILING.MATH`, `FLOOR.MATH` / `CEIL`, `FLOOR` | R | built (Rachana) |
+| `mod(x, y)` | remainder | `mod(day($.TRADE_DATE), 7)` | `MOD` / `MOD` | R | built (Rachana) |
+| `power(x, y)`, `sqrt(x)`, `exp(x)`, `ln(x)`, `log10(x)` | powers and logarithms | `sqrt(10) * measure('VAR')` (the 10-day lens is the VaR engine's own; this only shows the function) | `POWER`, `SQRT`, `EXP`, `LN`, `LOG10` | R | built (Rachana) |
+| `sign(x)` | -1, 0 or 1 | `sign(trades.QUANTITY)` | `SIGN` / `SIGN` | R | built (Rachana) |
+| `clamp(x, lo, hi)` | x held between lo and hi | `clamp(trades.LIMIT_USE, 0, 1)` | `MAX(lo, MIN(hi, x))` | R | built (Rachana) |
+| `least(a, b, ...)`, `greatest(a, b, ...)` | smallest or largest of the arguments | `greatest(trades.MATURITY_DATE, asof())` | `MIN`, `MAX` of arguments / `MIN`, `MAX` | R | built (Rachana; old spelling `min`, `max` with several arguments) |
 | `coalesce(a, b, ...)` | first not null | `coalesce($.STRATEGY, 'NONE')` | `IFNA` chains / `COALESCE` | R | built (DEL, Rachana) |
 | `nonblank(a, b, ...)` | first not null and not blank | `nonblank($.TT_BOOK, $.PORTFOLIO)` | `IF(LEN(...)...)` | R | built (Rachana) |
-| `if(c, a, b)` | a when c, else b | `if($.DIRECTION == 'SHORT', -1, 1)` | `IF` / `IFN`, `IFC` | R | T1 (the conditional expression exists in both languages) |
-| `ifs(c1, a1, c2, a2, ..., [else])` | first true condition | `ifs($.QUANTITY > 1e6, 'large', $.QUANTITY > 1e5, 'medium', 'small')` | `IFS` / `SELECT` | R | T1 |
-| `switch(x, v1, a1, v2, a2, ..., [else])` | value match | `switch($.LEG_TYPE, 'FIXED', 'F', 'FLOAT', 'V', '?')` | `SWITCH` / `SELECT` | R | T1 |
-| `iferror(x, y)` | y when x fails (a division by zero, a bad date) | `iferror(trades.PNL / trades.NOTIONAL, 0)` | `IFERROR` | R | T1 |
-| `let(name = expr, ..., result)` | names a part to reuse | `let(n = $.LEGS[0].NOTIONAL, q = $.QUANTITY, n * q)` | `LET` | R | T1 |
+| `if(c, a, b)` | a when c, else b | `if($.DIRECTION == 'SHORT', -1, 1)` | `IF` / `IFN`, `IFC` | R | built (Rachana) |
+| `ifs(c1, a1, c2, a2, ..., [else])` | first true condition | `ifs($.QUANTITY > 1e6, 'large', $.QUANTITY > 1e5, 'medium', 'small')` | `IFS` / `SELECT` | R | built (Rachana) |
+| `switch(x, v1, a1, v2, a2, ..., [else])` | value match | `switch($.LEG_TYPE, 'FIXED', 'F', 'FLOAT', 'V', '?')` | `SWITCH` / `SELECT` | R | built (Rachana) |
+| `iferror(x, y)` | y when x fails (a division by zero, a bad date) | `iferror(trades.PNL / trades.NOTIONAL, 0)` | `IFERROR` | R | built (Rachana) |
+| `let(name = expr, ..., result)` | names a part to reuse | `let(n = $.LEGS[0].NOTIONAL, q = $.QUANTITY, n * q)` | `LET` | R | built (Rachana) |
 
 ## 2. Text (scalars)
 
@@ -69,15 +74,15 @@ and models and rewritten by the migration tool.
 |---|---|---|---|---|---|
 | `upper(s)`, `lower(s)` | case | `upper($.COUNTERPARTY)` | `UPPER`, `LOWER` / `UPCASE`, `LOWCASE` | R | built |
 | `len(s)` | characters | `len($.TRADE_ID)` | `LEN` / `LENGTH` | R | built (DEL) |
-| `contains(s, part)`, `starts_with(s, p)`, `ends_with(s, p)` | ignore case | `starts_with($.PRODUCT_TYPE, 'Com')` | `SEARCH`, `LEFT(...)=` / `FIND`, `INDEX` | R | built |
-| `matches(s, regex)`, `matches_case(s, regex)` | regular expression | `matches($.INSTRUMENT, 'USD 20[0-9]{2}')` | `REGEXTEST` / `PRXMATCH` | R | built (Rachana) |
-| `within(x, range)`, `one_of(x, list)` | in a range, in a list | `one_of($.DESK, ['DESK-COMM', 'DESK-RATES'])` | `OR(x=...)` / `IN` | R | built (Rachana) |
-| `concat(a, b, ...)` | joined | `concat($.DESK, ' / ', $.TT_BOOK)` | `CONCAT` / `CATS` | R | T1 |
-| `left(s, n)`, `right(s, n)`, `mid(s, start, n)` | parts | `left($.TRADE_ID, 3)` | `LEFT`, `RIGHT`, `MID` / `SUBSTR` | R | T1 |
-| `replace(s, old, new)` | substitution | `replace($.INSTRUMENT, ' ', '-')` | `SUBSTITUTE` / `TRANWRD` | R | T1 |
-| `split(s, sep)` | a list of parts | `split($.TAGS, ',')` | `TEXTSPLIT` / `SCAN` | R | T1 |
-| `trim(s)`, `pad(s, n, [char], [side])` | spaces, width | `pad($.LEG_ID, 3, '0')` | `TRIM`, `TEXT` / `STRIP`, `PUT` | R | T1 |
-| `regex_extract(s, regex, [group])` | the matching part | `regex_extract($.INSTRUMENT, '20[0-9]{2}-[0-9]{2}')` | `REGEXEXTRACT` / `PRXCHANGE` | R | T1 |
+| `contains(s, part)`, `starts_with(s, p)`, `ends_with(s, p)` | ignore case | `starts_with($.PRODUCT_TYPE, 'Com')` | `SEARCH`, `LEFT(...)=` / `FIND`, `INDEX` | R | built (Rachana; old spelling `startsWith`) |
+| `matches(s, regex)`, `matches_case(s, regex)` | regular expression | `matches($.INSTRUMENT, 'USD 20[0-9]{2}')` | `REGEXTEST` / `PRXMATCH` | R | built (Rachana; old spelling `matchesCase`) |
+| `within(x, range)`, `one_of(x, list)` | in a range, in a list | `one_of($.DESK, ['DESK-COMM', 'DESK-RATES'])` | `OR(x=...)` / `IN` | R | built (Rachana; old spelling `oneOf`) |
+| `concat(a, b, ...)` | joined | `concat($.DESK, ' / ', $.TT_BOOK)` | `CONCAT` / `CATS` | R | built (Rachana) |
+| `left(s, n)`, `right(s, n)`, `mid(s, start, n)` | parts | `left($.TRADE_ID, 3)` | `LEFT`, `RIGHT`, `MID` / `SUBSTR` | R | built (Rachana) |
+| `replace(s, old, new)` | substitution | `replace($.INSTRUMENT, ' ', '-')` | `SUBSTITUTE` / `TRANWRD` | R | built (Rachana) |
+| `split(s, sep)` | a list of parts | `split($.TAGS, ',')` | `TEXTSPLIT` / `SCAN` | R | built (Rachana) |
+| `trim(s)`, `pad(s, n, [char], [side])` | spaces, width | `pad($.LEG_ID, 3, '0')` | `TRIM`, `TEXT` / `STRIP`, `PUT` | R | built (Rachana) |
+| `regex_extract(s, regex, [group])` | the matching part | `regex_extract($.INSTRUMENT, '20[0-9]{2}-[0-9]{2}')` | `REGEXEXTRACT` / `PRXCHANGE` | R | built (Rachana) |
 | `fmt(x, format)` | a pack's display format | `fmt(trades.NOTIONAL, 'amount0')` | `TEXT` / `PUT` | R | built (Rachana) |
 | `string_agg(x, sep, [distinct])` | the group's texts joined | `string_agg($.LEGS[*].CURRENCY, ', ', true)` | `TEXTJOIN` / `CATX` over a group | E | T1 |
 
@@ -87,13 +92,13 @@ and models and rewritten by the migration tool.
 |---|---|---|---|---|---|
 | `date(text)`, `timestamp(text)`, `today()`, `asof()` | constants and the query's date | `asof()` | `DATEVALUE`, `TODAY` / `MDY`, `TODAY` | R | built |
 | `year(d)`, `quarter(d)`, `month(d)`, `week(d)`, `day(d)` | parts | `quarter($.TRADE_DATE)` | `YEAR`, `MONTH`, `WEEKNUM` / `YEAR`, `QTR` | R | built (DEL) |
-| `days_between(a, b)` | calendar days | `days_between($.TRADE_DATE, $.MATURITY_DATE)` | `DAYS` / `INTCK('day', ...)` | R | built (DEL; Rachana `days`) |
+| `days_between(a, b)` | calendar days | `days_between($.TRADE_DATE, $.MATURITY_DATE)` | `DAYS` / `INTCK('day', ...)` | R | built (DEL, Rachana; old spelling `days`) |
 | `business_days_between(a, b, [calendar])` | business days | `business_days_between($.TRADE_DATE, asof(), 'USNY')` | `NETWORKDAYS.INTL` / `INTCK('weekday', ...)` | R | built (DEL) |
 | `shift_date(d, n, [unit], [calendar])` | moved by business days, weeks, months | `shift_date(asof(), -1)` | `WORKDAY.INTL`, `EDATE` / `INTNX` | R | built (DEL) |
-| `eomonth(d, [n])`, `edate(d, n)` | month end, months later | `eomonth($.TRADE_DATE)` | `EOMONTH`, `EDATE` / `INTNX('month', d, n, 'end')` | R | T1 |
-| `yearfrac(a, b, basis)` | year fraction: `ACT/360`, `ACT/365F`, `30/360`, `30E/360`, `ACT/ACT` | `yearfrac($.START_DATE, $.MATURITY_DATE, 'ACT/360')` | `YEARFRAC` / `YRDIF` | R | T1 |
-| `intck(interval, a, b, [calendar])` | how many interval boundaries are crossed | `intck('month', $.TRADE_DATE, asof())` | `DATEDIF` / `INTCK` | R | T1 |
-| `is_business_day(d, [calendar])` | a business day? | `is_business_day($.MATURITY_DATE, 'USNY')` | `NETWORKDAYS(d, d)=1` | R | T1 |
+| `eomonth(d, [n])`, `edate(d, n)` | month end, months later | `eomonth($.TRADE_DATE)` | `EOMONTH`, `EDATE` / `INTNX('month', d, n, 'end')` | R | built (Rachana) |
+| `yearfrac(a, b, basis)` | year fraction: `ACT/360`, `ACT/365F`, `30/360`, `30E/360`, `ACT/ACT` | `yearfrac($.START_DATE, $.MATURITY_DATE, 'ACT/360')` | `YEARFRAC` / `YRDIF` | R | built (Rachana) |
+| `intck(interval, a, b, [calendar])` | how many interval boundaries are crossed | `intck('month', $.TRADE_DATE, asof())` | `DATEDIF` / `INTCK` | R | built (Rachana) |
+| `is_business_day(d, [calendar])` | a business day? | `is_business_day($.MATURITY_DATE, 'USNY')` | `NETWORKDAYS(d, d)=1` | R | built (Rachana) |
 
 ## 4. Aggregates (many rows or list elements to one value)
 
@@ -113,7 +118,7 @@ values (bounded by the engine's holistic limits, exact on request, or a sketch w
 | `median(x)`, `percentile(x, p)` | middle, p-quantile (continuous) | `percentile(trades.NOTIONAL, 0.95)` | `MEDIAN`, `PERCENTILE.INC` / `MEDIAN`, `P95` | holistic (sketch: KLL) | built |
 | `mode(x)` | most frequent | `mode($.LEGS[*].CURRENCY)` | `MODE.SNGL` / `MODE` | holistic | T1 |
 | `iqr(x)` | p75 − p25 | `iqr(trades.PRICE)` | `QUARTILE(3)-QUARTILE(1)` / `QRANGE` | holistic | T1 |
-| `variance(x)`, `stddev(x)` (sample; `_pop` for population) | spread | `stddev(trades.PNL)` | `VAR.S`, `STDEV.S` / `VAR`, `STD` | mergeable (moments) | built (engine) |
+| `variance(x)`, `stddev(x)` (sample), `variance_pop(x)`, `stddev_pop(x)` (population) | spread | `stddev(trades.PNL)` | `VAR.S`, `STDEV.S` / `VAR`, `STD` | mergeable (moments) | built (engine) |
 | `stderr(x)`, `cv(x)` | standard error, coefficient of variation | `cv(trades.PNL)` | `STDEV/SQRT(n)` / `STDERR`, `CV` | mergeable | T1 |
 | `skewness(x)`, `kurtosis(x)` | shape | `skewness(trades.PNL)` | `SKEW`, `KURT` / `SKEWNESS`, `KURTOSIS` | mergeable (moments to 4) | T1 |
 | `geomean(x)`, `harmean(x)` | means for rates | `geomean(1 + trades.RETURN) - 1` | `GEOMEAN`, `HARMEAN` / `GEOMEAN`, `HARMEAN` | mergeable (log sum, reciprocal sum) | T1 |
@@ -122,7 +127,7 @@ values (bounded by the engine's holistic limits, exact on request, or a sketch w
 | `slope(y, x)`, `intercept(y, x)`, `rsq(y, x)` | least-squares line | `slope(trades.PNL, trades.QUANTITY)` | `SLOPE`, `INTERCEPT`, `RSQ` / PROC REG | mergeable | T1 |
 | `ratio(num, den)` | num / den, null on 0 | `ratio(sum(trades.PNL), sum(trades.NOTIONAL))` | `IFERROR(a/b, "")` | of its parts | built (DEL) |
 | `sum_once(x)`, `count_once(x)`, `avg_once(x)` | a coarser figure counted once per parent (a trade's in a per-leg view) | `sum_once($.QUANTITY)` beside `count($.LEGS[*])` | none | mergeable by parent id | built (engine) |
-| `group(list, key, [agg])` | grouping inside one document | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` | `GROUPBY` / PROC MEANS `CLASS` | the engine's grouping | built (Rachana, moves to E) |
+| `group(list, key, [agg])` | grouping inside one document | `group($.LEGS[*], @.CURRENCY, sum(@.NOTIONAL))` | `GROUPBY` / PROC MEANS `CLASS` | the engine's grouping | built (engine: Rachana reads the key and the inputs, the engine groups) |
 
 ## 5. Shares, ranks and windows (over the cells of an answer)
 
@@ -152,11 +157,11 @@ values (bounded by the engine's holistic limits, exact on request, or a sketch w
 | `size(list)` | how many elements | `size($.LEGS)` | `ROWS`, `COUNTA` / `DIM` | R | built (Rachana) |
 | `first(list)`, `last(list)` | ends | `last($.EVENTS)` | `TAKE(x, 1)`, `TAKE(x, -1)` | R | built (Rachana) |
 | `flatten(list)` | a list of lists as one | `flatten($.LEGS[*].CASH_FLOWS)` | `TOCOL` | R | built (Rachana) |
-| `sort(list, [key], [desc])`, `unique(list)` | order, distinct | `unique($.LEGS[*].CURRENCY)` | `SORT`, `SORTBY`, `UNIQUE` | R | T1 |
-| `take(list, n)`, `drop(list, n)` | the first or last n | `take(sort($.EVENTS, @.EVENT_DATE, true), 3)` | `TAKE`, `DROP` | R | T1 |
-| `sequence(n, [start], [step])` | a list of numbers | `sequence(12)` | `SEQUENCE` / `DO` loop | R | T1 |
-| `map(list, expr)` | each element transformed (`@` the element) | `map($.LEGS, @.NOTIONAL * $.QUANTITY)` | `MAP`, `LAMBDA` | R | T1 |
-| `reduce(list, init, expr)` | folded (`@acc`, `@`) | `reduce($.EVENTS, '', concat(@acc, @.EVENT_TYPE))` | `REDUCE`, `LAMBDA` / `RETAIN` | R | T1 (a plain sum with `reduce` is refused: use `sum`) |
+| `sort(list, [key], [desc])`, `unique(list)` | order, distinct | `unique($.LEGS[*].CURRENCY)` | `SORT`, `SORTBY`, `UNIQUE` | R | built (Rachana) |
+| `take(list, n)`, `drop(list, n)` | the first or last n | `take(sort($.EVENTS, @.EVENT_DATE, true), 3)` | `TAKE`, `DROP` | R | built (Rachana) |
+| `sequence(n, [start], [step])` | a list of numbers | `sequence(12)` | `SEQUENCE` / `DO` loop | R | built (Rachana) |
+| `map(list, expr)` | each element transformed (`@` the element) | `map($.LEGS, @.NOTIONAL * $.QUANTITY)` | `MAP`, `LAMBDA` | R | built (Rachana) |
+| `reduce(list, init, expr)` | folded (`@acc`, `@`) | `reduce($.EVENTS, '', concat(@acc, @.EVENT_TYPE))` | `REDUCE`, `LAMBDA` / `RETAIN` | R | built (Rachana; a sum with `+` or `-` on `@acc` is refused: use `sum`) |
 | `link(id, kind, [label])` | a link to an entity | `link($.LEGS[0].DISCOUNT_INDEX, 'ir-curve')` | `HYPERLINK` | R | built (Rachana) |
 
 ## 7. Conversion, lookup and measures
@@ -166,8 +171,8 @@ values (bounded by the engine's holistic limits, exact on request, or a sketch w
 | `fx(ccy, to, [at])` | an FX rate | `fx('EUR', 'USD')` | none | R | built (DEL) |
 | `convert(agg, [to], [at])` | an aggregate of many currencies in one | `convert(sum(trades.NOTIONAL), 'USD')` | none | E | built (DEL) |
 | `related(alias.column)` | a column of the row a reference points at | `related(counterparties.RATING)` | `XLOOKUP` / a `MERGE` | E | built (DEL) |
-| `measure(name, [scope], [options])` | a model measure, or a computed measure from its own engine, exactly | `measure('VAR', 'DESK:DESK-COMM')` | none | M | built for model measures (DEL); for engine measures planned (ONE_GRAMMAR part 3) |
-| `cell(view, coordinates)` | a cell of a saved pivot, linked back | `cell('desk-pnl', DESK: 'DESK-COMM', month: '2026-09')` | `GETPIVOTDATA` | E | planned (ONE_GRAMMAR part 3) |
+| `measure(name, [scope], [options])` | a compute engine's measure for one scope, exactly from its engine (never summed); model measures through it with DEL's fold (part 4) | `measure('VAR', 'DESK:DESK-COMM')` | none | M | built (engine, answered by the server's pivot engine for the person; model measures: DEL) |
+| `cell(view, field, member, ...)` | a cell of a saved pivot view, as the view computes it for the person | `cell('owner/desk-pnl', 'DESK', 'DESK-COMM', 'month', '2026-09')` | `GETPIVOTDATA` | E | built (engine, answered by the server's pivot engine) |
 
 ## 8. Finance on given flows (tier 2)
 

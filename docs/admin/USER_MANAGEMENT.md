@@ -35,7 +35,11 @@ Where the links are, when sign-in is **on** (`DRISHTI_AUTH_ENABLED=true`, see [O
   were on. Any protected page (the terminal, Search, Admin) sends you to the sign-in page first.
 - Signed in: your initial and name at the right of the top bar, or of the landing page's navigation, open a menu with
   **My account** and **Sign out**. Signing out ends the session on the server and lands on the landing page with a
-  "Signed out" notice. It is a POST from the console's own pages only.
+  "Signed out" notice. It is a POST from the console's own pages only. The live views and alerts of that session stop
+  at once on that console; on another console, or after an administrator disables or deletes the user, they stop
+  within `auth.recheck_seconds` (10 s by default), when the console asks the server again whether the session stands.
+- With several servers on one console, each server's session is its own: live views, pack jobs and AI limits
+  belong to the person on that server, never to the same name on another server.
 - The sign-in page has a link back to the home page.
 
 When sign-in is **off** (the local default), everyone who reaches the console acts as the development user, so there is
@@ -217,7 +221,7 @@ tokens** ([API_GUIDE.md (clients)](../guides/API_GUIDE.md#clients-scripts-notebo
   made with a **write scope**, **only reads**: every `GET`, and the `POST`s that carry a query and change nothing, listed in
   `drishti.security.token-read-posts` (the search pivot, `/api/v1/command`, the search-form compile, and the BI query, validate and format calls). Any other `POST`, `PUT`, `PATCH` or
   `DELETE` is refused with `403 DRS-5002 API tokens only read`; add a path to the list only if it writes nothing.
-- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin`, `bi:write`, `bi:approve`, `bi:admin`, `ai:use`, `ai:admin`, `loads:write` or `risk:write` (VaR baskets and captures, what-if sandboxes) (an ETL job announcing that a batch landed: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#10-permissions)) when making a
+- **Write scopes (for tools, CI and GitOps).** A person may tick `design:write`, `design:approve`, `packs:admin`, `bi:write`, `bi:approve`, `bi:admin`, `ai:use`, `ai:admin`, `loads:write`, `risk:write` (VaR baskets and captures, what-if sandboxes), `pivot:write` (end live pivots, save and submit custom functions), `pivot:comment` (cell comments on saved pivot views), `pivot:approve` or `pivot:admin` (pivot rollups) (an ETL job announcing that a batch landed: [DATA_GUIDE.md](../guides/DATA_GUIDE.md#10-permissions)) when making a
   token (`drishti.security.token-scopes`; the account page lists them in words). What a token may do is the scope **and** the
   roles its user holds at the time of each call (`design:approve` is useless to someone who is not an approver, `packs:admin` to
   someone who is not an admin; `packs:admin` covers loading and deploying packs, the registry, Retry now and writes to `/api/v1/admin/connectors/**`; the `bi:*` scopes cover the write calls of [business intelligence](#bi-powers-rupaka) and still need the BI power and the workspace role each call needs; `ai:use` opens `POST /api/v1/ai/chat` and the MCP tool calls), so demoting or disabling a user cuts their tokens at once. A token with a write scope must
@@ -599,6 +603,29 @@ Admins also have:
 - **Capacity** (`/admin/capacity`): this server today against the single-node plan (heap, RAM, disk and cores, what breaks first, growth)
   and the planner behind **Edit the plan**; **Download the working (.xlsx)** is audited (`capacity-workbook-downloaded`). See
   [OPERATIONS.md 12.4](OPERATIONS.md#124-admin--capacity-today-against-the-plan).
+
+### What the console keeps of each person
+
+The console keeps a few answers for a moment so pages draw quickly. Nothing it keeps for one person is served to another:
+
+- **One key for everything read as a person** (`core/user_cache.py`): the server of the request, the user, their roles (sorted), the as-of
+  date and its known-at, and the lens the page is seen through. The same person on two servers, or with a role changed, is someone else to
+  every cache. Drishti Trading's and Drishti Market's landing figures, the Describe mode's mnemonic table (per server, pack set and roles)
+  and the help library (per pack set) are kept this way; each store is bounded and drops the least recently used entry, never everyone's.
+- **Calc's permission, BI's powers and the sign-in check** follow the person's change stamp, so a role change made through one worker
+  process is seen at once by the others.
+- **Responses**: every page and answer is sent `Cache-Control: private, no-store` (the static files excepted), so neither a shared proxy nor
+  the browser's back button shows a person's page after they sign out.
+- **The browser**: what pages keep in this browser (the VaR basket, Calc's drafts and history, column filters, table sizes, the capacity
+  plan, BI Studio's tabs and drafts, the controls' choices) is named per person (`window.drishtiKey`), and **Sign out** clears it
+  (`Clear-Site-Data: "storage"`).
+- **Links that change something** (open or leave a lens, choose Home's landing) are posted; opening their address shows a form, so a
+  crawler, a prefetch or another site's link changes nothing.
+- **The server connection** keeps no cookie a server sets: who calls is said by each call's own headers.
+- **SQL over a BI extract** runs in four shared worker threads, at most two of them one person's at a time.
+
+A new module-level dict, list or set in the console fails `tests/test_no_shared_user_state.py` until it is keyed this way or listed with
+the reason it holds nothing of a person's.
 
 ---
 

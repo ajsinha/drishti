@@ -135,7 +135,7 @@ table it holds cannot be read, a store it has not reached yet so it cannot tell 
 `DRS-1003 <connector> failed reading <kind>/<id>`: Drishti does not silently show you another store's data instead.
 When the connector says what to do (a Delta date in a codec its engine does not read), the error says so too
 (`…: trade 2026-09-30 cannot be read: …; rewrite the date with Snappy or ZSTD …`). The whole read must finish
-within `drishti.sources.fetch-timeout` (5 s) or it ends with `DRS-1004`. If nobody holds the entity the answer is
+within `drishti.sources.fetch-timeout` (10 s) or it ends with `DRS-1004`. If nobody holds the entity the answer is
 `DRS-1001`; if no connector serves the kind at all, `DRS-1002` (rare, because `demo` and `file` serve every kind).
 A read *as known at* an instant (`knownAt`) is only put to connectors that keep earlier versions (Delta Lake,
 Iceberg). A dated connector without them that may hold the date stops the read with `DRS-1007` (400) naming it

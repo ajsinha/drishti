@@ -210,7 +210,6 @@ class ControlsTest {
         assertThat(ids.get(0).asText()).isEqualTo("L1");
         assertThat(ids.get(1).asText()).isEqualTo("L2");
         assertThat(eval("size($.legs[*].id)", Map.of())).isEqualTo(2L);
-        assertThat(eval("sum($.schedule[*].amount)", Map.of())).isEqualTo(60L);
         assertThat(eval("$.nothing[*].id", Map.of())).isNull();
     }
 

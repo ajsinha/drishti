@@ -44,11 +44,20 @@ public class AdmissionConfiguration {
         return r;
     }
 
+    /**
+     * What the gate reads: the JVM's own (the heap after the old generation's last clean-up, the requests in flight, the data disk). A
+     * bean of its own so a test that needs a refusal gives the gate a confirmed reading ({@code @TestConfiguration}, {@code @Primary})
+     * instead of waiting for the collector: a fresh JVM has no such reading and refuses nothing for memory.
+     */
     @Bean
-    public AdmissionGate admissionGate(AdmissionProperties props, RequestsInFlight inFlight, ObjectProvider<AuditLog> audit) {
+    public Signals admissionSignals(RequestsInFlight inFlight) {
         Path data = Path.of(com.ash.drishti.api.DataDir.root()).toAbsolutePath().normalize();
-        return new AdmissionGate(props, Signals.live(inFlight.counter(), data), System::currentTimeMillis, audit.getIfAvailable(),
-                AdmissionConfiguration::requester);
+        return Signals.live(inFlight.counter(), data);
+    }
+
+    @Bean
+    public AdmissionGate admissionGate(AdmissionProperties props, Signals signals, ObjectProvider<AuditLog> audit) {
+        return new AdmissionGate(props, signals, System::currentTimeMillis, audit.getIfAvailable(), AdmissionConfiguration::requester);
     }
 
     /** The signed-in user of the request being answered on this thread; null for work the server starts itself. */

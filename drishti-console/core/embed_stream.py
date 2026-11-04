@@ -21,23 +21,37 @@ A live stream outlives the token it was opened with, but not unchecked. ``Stream
 * with no fresh token within ``embed.token_grace_seconds`` the stream ends with ``gone`` ``DRS-8001``: expiry is enforced;
 * every ``embed.recheck_seconds`` it asks the server whether the token still passes every check (user, application, scopes) and
   ends the stream with the server's own code when it does not.
+
+The console's own channel (``/api/channel``) is watched by the same guard with no token expiry and its own ``check``: every
+``auth.recheck_seconds`` the session is asked again (core/auth.py ``current``); a signed-out, disabled or deleted user's channel ends
+with ``gone`` DRS-5010, a still valid one carries on with the identity re-minted (current roles, a fresh token).
 """
 from __future__ import annotations
 
 import asyncio
 import contextlib
 import json
+import math
 import time
+from typing import Awaitable, Callable
 
 from core.backend import BackendError
 from core.embed import EmbedError
 
 
+Check = Callable[[], Awaitable["tuple[str, str] | None"]]     # None: still valid; (code, detail): end the stream with it
+
+
 class StreamGuard:
-    def __init__(self, session, claims: dict, *, grace: float = 30.0, recheck: float = 60.0, clock=time.time):
-        self.session, self.app, self.user = session, str(claims["azp"]), str(claims["sub"])
-        self.exp = float(claims["exp"])
+    def __init__(self, session, claims: dict | None = None, *, grace: float = 30.0, recheck: float = 60.0, clock=time.time,
+                 check: Check | None = None):
+        """``claims``: the embed token's (its expiry is enforced); None for a console channel, which has no token to expire.
+        ``check``: what a re-check asks (the default asks the server about the embed token)."""
+        self.session = session
+        self.app, self.user = (str(claims["azp"]), str(claims["sub"])) if claims else (session.app, session.user)
+        self.exp = float(claims["exp"]) if claims else math.inf
         self.grace, self.recheck, self._clock = grace, recheck, clock
+        self._check = check or self._embed_check
         self._refreshed = asyncio.Event()
         self.task: asyncio.Task | None = None
 
@@ -90,15 +104,21 @@ class StreamGuard:
 
     async def _still_valid(self) -> bool:
         try:
-            await self.session.backend._get("/embed/check", self.session.me)
+            ended = await self._check()
+        except Exception:                                 # noqa: BLE001 - a failing check is no answer: the next re-check decides
             return True
+        if ended is not None:
+            await self._end(*ended)
+            return False
+        return True
+
+    async def _embed_check(self):
+        try:
+            await self.session.backend._get("/embed/check", self.session.me)
         except BackendError as e:
             if e.status in (401, 403, 404, 410) or e.code.startswith("DRS-800"):
-                await self._end(e.code, e.detail)
-                return False
-            return True                                   # the server is busy or away: the next re-check decides
-        except Exception:                                 # noqa: BLE001
-            return True
+                return e.code, e.detail
+        return None                                       # valid, or the server is busy or away: the next re-check decides
 
     async def _end(self, code: str, detail: str) -> None:
         self._say("gone", {"code": code, "detail": detail})

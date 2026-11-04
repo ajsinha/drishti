@@ -717,7 +717,7 @@ the ids themselves or a cryptographic digest of them (SHA-256, as the hot files 
 | Pool or limit | Size and setting | Where |
 |---|---|---|
 | requests | virtual, one per request | `application.yaml` (lines 20-22) |
-| fetches | virtual, one per fetch, with a deadline (`drishti.sources.fetch-timeout`, 5 s) | `EngineConfiguration.java:71` |
+| fetches | virtual, one per fetch, with a deadline (`drishti.sources.fetch-timeout`, 10 s) | `EngineConfiguration.java:71` |
 | binding (CPU) | `ForkJoinPool`, `drishti.engine.bind-parallelism` (0: one per core) | `EngineConfiguration.java:77` |
 | live frames | 2 platform threads (`drishti-frame-*`) | `EngineConfiguration.java:169` |
 | plugins' scheduler | 16 virtual workers | `SourceRegistry.java:180` |

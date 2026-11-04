@@ -118,6 +118,10 @@ final class DocView {
 
     /** {@code fn(arg, arg)} with each path argument as its id (commas inside brackets, parentheses and quotes are the path's own). */
     private String measure(String text) {
+        if (text != null && (text.strip().startsWith("fn:") || com.ash.drishti.bicompute.formula.FormulaParser.isFormula(paths(text))
+                && !simpleCall(text))) {
+            return paths(text);                     // a custom function's call or a formula: every path in it as its id
+        }
         Matcher m = CALL.matcher(text == null ? "" : text);
         if (!m.matches()) {
             return text;
@@ -128,6 +132,83 @@ final class DocView {
             out.add(DocPath.looksLikePath(a) || paths.containsKey(a) ? id(a) : a);
         }
         return m.group(1) + "(" + String.join(", ", out) + ")";
+    }
+
+    /** True for {@code fn(arg, ...)} whose arguments are fields, paths or numbers (no arithmetic around the call). */
+    private static boolean simpleCall(String text) {
+        Matcher m = CALL.matcher(text);
+        if (!m.matches()) {
+            return false;
+        }
+        int depth = 0;
+        boolean quote = false;
+        String body = m.group(2);
+        for (char c : body.toCharArray()) {
+            if (c == '\'' || c == '"') {
+                quote = !quote;
+            } else if (!quote && (c == '(' || c == '[')) {
+                depth++;
+            } else if (!quote && (c == ')' || c == ']')) {
+                if (--depth < 0) {
+                    return false;                       // the call closes before the end: a formula such as sum(x) / sum(y)
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Every Rachana path in a formula or a custom function's call as its field id ({@code sum($.LEGS[*].NOTIONAL) / count()} becomes
+     * {@code sum(LEGS.NOTIONAL) / count()}): a path runs from {@code $} to the first space, comma, operator or closing parenthesis outside
+     * its brackets and quotes.
+     */
+    String paths(String text) {
+        if (text == null || text.indexOf('$') < 0) {
+            return text;
+        }
+        StringBuilder out = new StringBuilder();
+        int i = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i);
+            if (c != '$' || i + 1 >= text.length() || text.charAt(i + 1) != '.' && text.charAt(i + 1) != '[') {
+                out.append(c);
+                i++;
+                continue;
+            }
+            int j = i;
+            int depth = 0;
+            boolean quote = false;
+            while (j < text.length()) {
+                char d = text.charAt(j);
+                if (d == '\'' || d == '"') {
+                    quote = !quote;
+                } else if (!quote && d == '[') {
+                    depth++;
+                } else if (!quote && d == ']') {
+                    depth--;
+                } else if (!quote && depth == 0 && (Character.isWhitespace(d) || ",)+-*/<>=!".indexOf(d) >= 0)) {
+                    break;
+                }
+                j++;
+            }
+            out.append(id(text.substring(i, j)));
+            i = j;
+        }
+        return out.toString();
+    }
+
+    /** The fields a formula or a custom function's call reads (its arguments), as ids. */
+    private static List<String> fieldsOf(String measure) {
+        String t = measure == null ? "" : measure.strip();
+        if (t.startsWith("fn:")) {
+            int open = t.indexOf('(');
+            return open < 0 || !t.endsWith(")") ? List.of() : split(t.substring(open + 1, t.length() - 1));
+        }
+        try {
+            return com.ash.drishti.bicompute.formula.FormulaFunction.of(t).fields();
+        } catch (RuntimeException e) {
+            return args(t);
+        }
     }
 
     static List<String> split(String args) {
@@ -176,7 +257,8 @@ final class DocView {
         rows.forEach(d -> used.put(d.field(), grain(d.field())));
         cols.forEach(d -> used.put(d.field(), grain(d.field())));
         for (PivotView.Value x : values) {
-            args(x.measure()).stream().filter(a -> a.matches("[A-Za-z_][A-Za-z0-9_.~]*")).forEach(a -> used.put(a, grain(a)));
+            (simpleCall(x.measure()) ? args(x.measure()) : fieldsOf(x.measure())).stream().filter(a -> a.matches("[A-Za-z_][A-Za-z0-9_.~]*"))
+                    .forEach(a -> used.put(a, grain(a)));
         }
         String grain = "";
         for (String g : used.values()) {
@@ -197,6 +279,18 @@ final class DocView {
         final int viewDepth = depth(grain);
         List<PivotView.Value> once = new ArrayList<>();
         for (PivotView.Value x : values) {
+            if (!simpleCall(x.measure())) {
+                String coarse = fieldsOf(x.measure()).stream().filter(f -> depth(grain(f)) < viewDepth && (promoted.contains(f) || paths.containsKey(f)))
+                        .findFirst().orElse(null);
+                if (coarse != null) {
+                    throw PivotView.bad(x.label() + ": a formula or custom function reading " + coarse + " (one value per "
+                            + words(grain(coarse)) + ") in a view of one row per " + words(grain) + " would count each " + words(grain(coarse))
+                            + " many times; use the once-per-parent functions (sum_once, count_once, avg_once) or a view at the "
+                            + words(grain(coarse)) + " grain");
+                }
+                once.add(x);
+                continue;
+            }
             Matcher m = CALL.matcher(x.measure());
             List<String> a = args(x.measure());
             String fn = m.matches() ? m.group(1).toLowerCase(Locale.ROOT) : "";
@@ -226,7 +320,7 @@ final class DocView {
             filters.put(GRAIN, new AggregationPlan.Filter(List.of(), List.of("\u0000" + grain)));
         }
         return new PivotView(v.source(), v.date(), v.asOf(), rows, cols, once, filters, exp, v.expandRows(), v.expandColumns(), sort, top,
-                v.subtotals(), v.currency(), slicers, v.formats());
+                v.subtotals(), v.currency(), slicers, v.formats(), v.options());
     }
 
     private static List<String> prepend(String a, List<String> rest) {

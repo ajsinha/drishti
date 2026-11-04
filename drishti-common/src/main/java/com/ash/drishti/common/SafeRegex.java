@@ -60,6 +60,7 @@ public final class SafeRegex {
     private static final int BOL = 5;
     private static final int EOL = 6;
     private static final int MATCH = 7;
+    private static final int SAVE = 8;                                   // records the position in capture slot x (no input consumed)
     private static final int MAX_REPEAT = 100;
 
     private final int[] op;
@@ -69,6 +70,7 @@ public final class SafeRegex {
     private final boolean fold;
     private final Limits limits;
     private final String source;
+    private final int groups;
 
     private SafeRegex(Parser p, Limits limits, String source) {
         this.op = p.op.stream().mapToInt(Integer::intValue).toArray();
@@ -78,6 +80,7 @@ public final class SafeRegex {
         this.fold = p.fold;
         this.limits = limits;
         this.source = source;
+        this.groups = p.groups;
     }
 
     /** Compiles with the default {@link Limits}. */
@@ -100,6 +103,11 @@ public final class SafeRegex {
 
     public String pattern() {
         return source;
+    }
+
+    /** How many capturing groups {@code ( )} the pattern has ({@code (?: )} does not count). */
+    public int groups() {
+        return groups;
     }
 
     /** True when the pattern matches anywhere in the text (use {@code ^} and {@code $} to anchor). */
@@ -192,7 +200,121 @@ public final class SafeRegex {
                         stack[sp++] = pc + 1;
                     }
                 }
+                case SAVE -> stack[sp++] = pc + 1;
                 default -> list[n++] = pc;
+            }
+        }
+        return n;
+    }
+
+    /**
+     * The leftmost match's text, or that of capturing group {@code group} (1 the first {@code (}; 0 the whole match), as
+     * Java's own engine would choose it (leftmost, then the preferred alternative: greedy repeats take most, lazy ones
+     * least); null when the pattern does not match or the group took no part. Linear time like {@link #find}: a Pike
+     * simulation whose threads carry their capture positions, cut to the threads of higher priority once one matches.
+     *
+     * @throws DrishtiException {@link ErrorCode#REGEX_REFUSED} for a group the pattern does not have,
+     *     {@link ErrorCode#REGEX_TIMEOUT} past the time budget
+     */
+    public String extract(CharSequence text, int group) {
+        if (group < 0 || group > groups) {
+            throw refused("the pattern '" + source + "' has " + groups + " group(s); group " + group + " was asked for");
+        }
+        int n = Math.min(text.length(), limits.maxInput());
+        int m = op.length;
+        int slots = 2 * (groups + 1);
+        int[] cur = new int[m];
+        int[][] curCaps = new int[m][];
+        int[] next = new int[m];
+        int[][] nextCaps = new int[m][];
+        int[] mark = new int[m];
+        Arrays.fill(mark, -1);
+        int[] stackPc = new int[m * 2 + 2];
+        int[][] stackCaps = new int[m * 2 + 2][];
+        int curN = 0;
+        int[] matched = null;
+        long deadline = System.nanoTime() + limits.timeoutNanos();
+        for (int i = 0; i <= n; i++) {
+            if ((i & 255) == 0 && System.nanoTime() > deadline) {
+                throw new DrishtiException(ErrorCode.REGEX_TIMEOUT, "the pattern '" + source + "' took longer than "
+                        + limits.timeoutNanos() / 1_000_000 + " ms on a value");
+            }
+            if (matched == null) {                                     // a later start has the lowest priority, so it comes last
+                int[] fresh = new int[slots];
+                Arrays.fill(fresh, -1);
+                fresh[0] = i;
+                curN = addCapturing(cur, curCaps, curN, 0, fresh, i, n, mark, stackPc, stackCaps);
+            }
+            int nextN = 0;
+            char c = i < n ? text.charAt(i) : 0;
+            for (int k = 0; k < curN; k++) {
+                int pc = cur[k];
+                if (op[pc] == MATCH) {
+                    matched = curCaps[k].clone();
+                    matched[1] = i;
+                    break;                                             // the threads after this one have lower priority
+                }
+                if (i < n && step(pc, c)) {
+                    nextN = addCapturing(next, nextCaps, nextN, pc + 1, curCaps[k], i + 1, n, mark, stackPc, stackCaps);
+                }
+            }
+            if (i == n || (nextN == 0 && matched != null)) {
+                break;
+            }
+            int[] t = cur;
+            cur = next;
+            next = t;
+            int[][] tc = curCaps;
+            curCaps = nextCaps;
+            nextCaps = tc;
+            curN = nextN;
+        }
+        if (matched == null || matched[2 * group] < 0 || matched[2 * group + 1] < 0) {
+            return null;
+        }
+        return text.subSequence(matched[2 * group], matched[2 * group + 1]).toString();
+    }
+
+    /** {@link #add}, with each thread carrying its capture positions (a {@code SAVE} step gives the thread its own copy). */
+    private int addCapturing(int[] list, int[][] caps, int n, int start, int[] startCaps, int pos, int len, int[] mark,
+            int[] stackPc, int[][] stackCaps) {
+        int sp = 0;
+        stackPc[sp] = start;
+        stackCaps[sp++] = startCaps;
+        while (sp > 0) {
+            int pc = stackPc[--sp];
+            int[] c = stackCaps[sp];
+            if (mark[pc] == pos) {
+                continue;
+            }
+            mark[pc] = pos;
+            switch (op[pc]) {
+                case JMP -> {
+                    stackPc[sp] = x[pc];
+                    stackCaps[sp++] = c;
+                }
+                case SPLIT -> {
+                    stackPc[sp] = y[pc];
+                    stackCaps[sp++] = c;
+                    stackPc[sp] = x[pc];
+                    stackCaps[sp++] = c;
+                }
+                case BOL, EOL -> {
+                    if (op[pc] == BOL ? pos == 0 : pos == len) {
+                        stackPc[sp] = pc + 1;
+                        stackCaps[sp++] = c;
+                    }
+                }
+                case SAVE -> {
+                    int[] copy = c.clone();
+                    copy[x[pc]] = pos;
+                    stackPc[sp] = pc + 1;
+                    stackCaps[sp++] = copy;
+                }
+                default -> {
+                    list[n] = pc;
+                    caps[n++] = c;
+                }
             }
         }
         return n;
@@ -213,6 +335,7 @@ public final class SafeRegex {
         final List<Integer> y = new ArrayList<>();
         final List<int[][]> classes = new ArrayList<>();
         int groupDepth;
+        int groups;
 
         Parser(String s, boolean fold, Limits limits) {
             this.s = s;
@@ -236,7 +359,7 @@ public final class SafeRegex {
             emit(MATCH, 0, 0);
         }
 
-        sealed interface Node permits Atom, Seq, Alt, Rep {}
+        sealed interface Node permits Atom, Seq, Alt, Rep, Group {}
 
         record Atom(int op, int x, int y) implements Node {}
 
@@ -244,7 +367,9 @@ public final class SafeRegex {
 
         record Alt(List<Node> options) implements Node {}
 
-        record Rep(Node body, int min, int max) implements Node {}      // max -1: unbounded
+        record Rep(Node body, int min, int max, boolean lazy) implements Node {}      // max -1: unbounded
+
+        record Group(int index, Node body) implements Node {}             // a capturing group, numbered by its '('
 
         Node alternation() {
             List<Node> options = new ArrayList<>();
@@ -294,12 +419,14 @@ public final class SafeRegex {
                 } else {
                     break;
                 }
+                boolean lazy = false;
                 if (pos < s.length() && s.charAt(pos) == '?') {
-                    pos++;                                           // lazy: the same yes/no answer
+                    pos++;                                           // lazy: the same yes/no answer; the shortest text for extract
+                    lazy = true;
                 } else if (pos < s.length() && s.charAt(pos) == '+') {
                     throw refused("possessive quantifiers are not offered");
                 }
-                out = new Rep(out, min, max);
+                out = new Rep(out, min, max, lazy);
             }
             return out;
         }
@@ -315,10 +442,13 @@ public final class SafeRegex {
             char c = s.charAt(pos++);
             switch (c) {
                 case '(' -> {
+                    int index = 0;
                     if (s.startsWith("?:", pos)) {
                         pos += 2;
                     } else if (s.startsWith("?", pos)) {
                         throw refused("look-around, atomic and named groups and inline flags ('(?...') are not offered");
+                    } else {
+                        index = ++groups;
                     }
                     if (++groupDepth > 20) {
                         throw refused("groups nest more than 20 deep");
@@ -329,7 +459,7 @@ public final class SafeRegex {
                     }
                     pos++;
                     groupDepth--;
-                    return inner;
+                    return index == 0 ? inner : new Group(index, inner);
                 }
                 case '[' -> {
                     return charClass();
@@ -473,9 +603,23 @@ public final class SafeRegex {
             return op.size() - 1;
         }
 
+        /** A lazy repeat prefers to stop: its split tries the way out ({@code y}) before another round ({@code x}). */
+        void prefer(int split, boolean lazy) {
+            if (lazy) {
+                int body = x.get(split);
+                x.set(split, y.get(split));
+                y.set(split, body);
+            }
+        }
+
         void emit(Node n) {
             switch (n) {
                 case Atom a -> emit(a.op(), a.x(), a.y());
+                case Group g -> {
+                    emit(SAVE, 2 * g.index(), 0);
+                    emit(g.body());
+                    emit(SAVE, 2 * g.index() + 1, 0);
+                }
                 case Seq q -> q.parts().forEach(this::emit);
                 case Alt a -> {
                     List<Integer> jumps = new ArrayList<>();
@@ -502,6 +646,7 @@ public final class SafeRegex {
                         emit(r.body());
                         emit(JMP, split, 0);
                         y.set(split, op.size());
+                        prefer(split, r.lazy());
                     } else {
                         List<Integer> splits = new ArrayList<>();
                         for (int i = r.min(); i < r.max(); i++) {
@@ -510,7 +655,10 @@ public final class SafeRegex {
                             splits.add(split);
                             emit(r.body());
                         }
-                        splits.forEach(sp -> y.set(sp, op.size()));
+                        splits.forEach(sp -> {
+                            y.set(sp, op.size());
+                            prefer(sp, r.lazy());
+                        });
                     }
                 }
             }

@@ -221,6 +221,36 @@ public enum ErrorCode {
     PIVOT_NOT_FOUND("DRS-5704", 404),
     /** A masked field asked as a pivot dimension, measure input or filter: masks apply before aggregation, so it cannot be used. */
     PIVOT_MASKED("DRS-5705", 403),
+    /**
+     * A pivot computed across the cluster's nodes where a node gave no answer within {@code drishti.pivot.cluster.deadline-seconds} (and no
+     * other node could answer its share): its rows are missing, so no figure is shown, never a figure from the other nodes alone.
+     */
+    PIVOT_NODE_MISSING("DRS-5720", 504),
+    /** A custom pivot function refused as written: its definition, code, inputs, kind or name (an official measure's name is never taken). */
+    PIVOT_FUNCTION_INVALID("DRS-5710", 400),
+    /** A custom pivot function whose harness did not pass (split-and-merge differs from one pass, non-deterministic, too slow, too large). */
+    PIVOT_FUNCTION_HARNESS("DRS-5711", 422),
+    /**
+     * Approval of a custom pivot function: its author approving it, someone who is not an approver, or a function not approved for the
+     * caller (private to its author) or withdrawn.
+     */
+    PIVOT_FUNCTION_APPROVAL("DRS-5712", 403),
+    /** A custom function's language switched off on this server ({@code drishti.pivot.functions.python.enabled}, {@code java.enabled}, ...). */
+    PIVOT_FUNCTION_OFF("DRS-5713", 404),
+    /** A custom function past a limit: a holistic cell over its rows or megabytes, a state over its bound, a call over its time. */
+    PIVOT_FUNCTION_LIMIT("DRS-5714", 422),
+    /** A custom function in an official run, report or sign-off: official measures stay the Java engines (PIVOT_ENGINE.md decision 14). */
+    PIVOT_FUNCTION_OFFICIAL("DRS-5715", 403),
+    /** An explanation or a what-if the engine cannot make as asked (two cells of different measures, a holistic measure without its provider's steps). */
+    PIVOT_EXPLAIN("DRS-5716", 400),
+    /**
+     * A live pivot refused or ended (PIVOT_GUIDE.md, live pivots): live pivots switched off, a person's or the server's live views at their
+     * most, a view over the live cell budget, an exact live view that reads more rows than {@code drishti.pivot.live.max-rows}, a view
+     * pinned to a past version.
+     */
+    PIVOT_LIVE("DRS-5721", 422),
+    /** A cell comment refused (PIVOT_GUIDE.md, cell comments): empty or too long, a view not saved, a cell not of the view, not the author's. */
+    PIVOT_COMMENT("DRS-5722", 400),
     /** Exposure: a bad scope word or parameter ({@code q}, {@code collateral}, {@code date} not a grid date, {@code by}, {@code run}). */
     EXPOSURE_BAD_PARAMETER("DRS-5440", 400),
     /**

@@ -83,20 +83,20 @@ class DefaultPolicy:
         with self._lock:
             per_min = self.s.feature_per_user_per_minute.get(ctx.feature, self.s.per_user_per_minute)
             if per_min > 0:
-                q = self._minute[(ctx.user, ctx.feature)]
+                q = self._minute[(ctx.server, ctx.user, ctx.feature)]
                 while q and now - q[0] >= 60:
                     q.popleft()
                 if len(q) >= per_min:
                     raise LlmError("rate_limited", f"too many calls; try again in {max(1, int(60 - (now - q[0])))} seconds")
                 q.append(now)
             if self.s.per_user_per_day > 0:
-                d, n = self._day.get(ctx.user, (today, 0))
+                d, n = self._day.get((ctx.server, ctx.user), (today, 0))
                 n = n + 1 if d == today else 1
-                self._day[ctx.user] = (today, n)
+                self._day[(ctx.server, ctx.user)] = (today, n)
                 if n > self.s.per_user_per_day:
                     raise LlmError("rate_limited", f"the daily limit of {self.s.per_user_per_day} calls is used up")
             if self.s.cost_per_user_per_day > 0:
-                d, c = self._spend.get(ctx.user, (today, 0.0))
+                d, c = self._spend.get((ctx.server, ctx.user), (today, 0.0))
                 if d == today and c >= self.s.cost_per_user_per_day:
                     raise LlmError("rate_limited", "the daily cost limit is used up")
         return self.masker.mask_request(request)
@@ -106,8 +106,8 @@ class DefaultPolicy:
         if cost > 0:
             today = int(self._clock() // 86400)
             with self._lock:
-                d, c = self._spend.get(ctx.user, (today, 0.0))
-                self._spend[ctx.user] = (today, (c if d == today else 0.0) + cost)
+                d, c = self._spend.get((ctx.server, ctx.user), (today, 0.0))
+                self._spend[(ctx.server, ctx.user)] = (today, (c if d == today else 0.0) + cost)
         if self.s.audit and self._audit:
             u = response.usage if response else None
             try:

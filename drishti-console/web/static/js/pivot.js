@@ -50,7 +50,14 @@
   var esc = window.PivotCore.esc;
   var fmt = window.PivotCore.fmt;
   var API = "/api/pivot";
-  var state = {view: null, catalogue: null, answer: null, diff: null, grid: null, selection: [], focusField: null, chart: null};
+  var state = {view: null, catalogue: null, answer: null, diff: null, grid: null, selection: [], focusField: null, chart: null, savedView: null};
+  // the screen's switches (pivot-switches.js): exact / auto / ≈, progressive, use rollups, live; each is a request option the server answers
+  var sw = function () { return window.PivotSwitches || null; };
+  function asked(b) {
+    var o = sw() ? sw().options() : {};
+    Object.keys(o).forEach(function (k) { b[k] = o[k]; });
+    return b;
+  }
 
   function notice(msg) {
     var n = $("[data-pv-notice]");
@@ -229,13 +236,18 @@
     estimate().then(function (e) {
       if (e && e.confirm && !force) { $("[data-pv-meta]").textContent = "large: press Run to compute it"; return; }
       var cmp = $("[data-pv-compare]").value;
-      var p = cmp ? call("POST", "/compare", {view: viewBody(), otherDate: cmp}).then(function (c) { state.diff = c.diff; return c.answer; })
-        : call("POST", "/query", {view: viewBody()}).then(function (a) { state.diff = null; return a; });
+      if (!cmp && sw() && sw().progressiveOn()) {
+        state.diff = null;
+        return sw().progressive(asked({view: viewBody()}), show);   // ≈ first (when the view is large), then exact, each drawn as it comes
+      }
+      var p = cmp ? call("POST", "/compare", asked({view: viewBody(), otherDate: cmp})).then(function (c) { state.diff = c.diff; return c.answer; })
+        : call("POST", "/query", asked({view: viewBody()})).then(function (a) { state.diff = null; return a; });
       return p.then(show);
     }).catch(function (err) { $("[data-pv-meta]").textContent = ""; notice(err.message); });
   }
 
-  function show(a) {
+  function show(a, how) {
+    a.savedView = a.savedView || state.savedView;
     state.answer = a;
     state.view = a.view;
     // the engine's own filters (a document view's grain) are the server's to add again; the person's zones never show them
@@ -247,9 +259,12 @@
     $("[data-pv-grid-sub]").textContent = "rows " + ((a.rowDimensions || []).join(" › ") || "—") + (a.columnDimensions && a.columnDimensions.length ? " · columns " + a.columnDimensions.join(" › ") : "")
       + " · subtotals " + (a.view.subtotals || "below") + " · lazy: closed nodes are not computed · " + a.exactness;
     state.grid = window.PivotCore.render($("[data-pv-grid]"), a, {diff: state.diff, onToggle: toggle, onCell: provenance, onSelect: function (s) { state.selection = s; }, onRows: rows});
+    if (sw()) { sw().shown(a, how || {}); }      // the computed-as line, the live stream, the comment markers
+    if (how && how.patched) { return; }          // a live patch: the cells moved, nothing else did
     drawZones();
     drawFields();
     drawSlicers();
+    root.dispatchEvent(new CustomEvent("pivot:answer", {detail: {answer: a, view: viewBody()}}));
   }
 
   // ---- slicers: a field's members as buttons, each a filter of the view (the members are the engine's, as the person may see them) ------
@@ -321,6 +336,8 @@
   }
 
   function provenance(key, m, td) {
+    var entry = state.answer && state.answer.cells ? state.answer.cells[key] : null;
+    root.dispatchEvent(new CustomEvent("pivot:cell", {detail: {key: key, measure: m, cell: entry, coords: coordsOf(key)}}));
     var pop = $("[data-pv-pop]");
     call("GET", "/provenance/" + encodeURIComponent(state.answer.provenance) + "?cell=" + encodeURIComponent(key)).then(function (p) {
       var cell = p.cell || {};
@@ -342,6 +359,7 @@
         + '</dl><div class="pv-pop-b"><button type="button" class="pv-btn" data-pop-rows>Rows (' + esc(cell.members) + ')</button>'
         + (cell.scope && p.provider === "var" ? ' <a class="pv-btn" href="/var?scope=' + encodeURIComponent(cell.scope) + '">Ask the VaR engine</a>' : "")
         + (ref ? ' <button type="button" class="pv-btn" data-pop-copy>Copy reference</button>' : "") + '</div><div data-pop-rowsbox></div>';
+      if (sw()) { sw().popover(pop, key, m, cell); }   // the cell's comments, and how the answer was computed
       pop.hidden = false;
       var r = td.getBoundingClientRect();
       var host = $(".pv-gridcard").getBoundingClientRect();
@@ -384,17 +402,19 @@
       var v = c && c.values ? c.values[m.label] : null;
       if (v != null) { names.push(r.kind === "total" ? r.label.replace(/ total$/, "") : r.label); values.push(v); }
     });
-    var grand = a.cells[a.rows[a.rows.length - 1].key + "|" + colKey];
+    var grandRow = a.rows.filter(function (r) { return r.kind === "grand"; })[0] || a.rows[a.rows.length - 1];
+    var grand = a.cells[grandRow.key + "|" + colKey];
     var total = grand && grand.values ? grand.values[m.label] : null;
+    // the engine's own gap of this column (Σ parts − total, PivotAnswer.diversification): drawn as total − Σ parts, never added up here
+    var gap = ((grandRow.diversificationByColumn || {})[colKey] || {})[m.label];
     var note;
     var series;
     var colors = [];
-    if (holistic && total != null && sel.length <= 1) {
-      var sum = values.reduce(function (s, x) { return s + x; }, 0);
+    if (holistic && total != null && gap != null && sel.length <= 1) {
       names = names.concat(["Diversification", "Total"]);
-      values = values.concat([total - sum, total]);
+      values = values.concat([-gap, total]);
       note = m.label + " does not add up: the total is its own figure from its own members, so the parts stand beside it and the "
-        + "diversification (total − Σ parts = " + fmt(total - sum, m) + ") is drawn as its own bar, never stacked.";
+        + "diversification (total − Σ parts = " + fmt(-gap, m) + ", the engine's) is drawn as its own bar, never stacked.";
       colors = values.map(function (x, i) { return i === values.length - 1 ? "#d9a441" : i === values.length - 2 ? "#c87a52" : "#6f9fd8"; });
     } else {
       note = m.label + (m.plainSum ? " adds up: the bars sum to the total." : " by member; each figure is the cell's own.");
@@ -454,7 +474,9 @@
     var with_ = share ? window.prompt("Share with (people or role:<role>, comma-separated)", "") : "";
     call("POST", "/views", {name: name, view: viewBody(), sharedWith: (with_ || "").split(",").map(function (s) { return s.trim(); }).filter(Boolean)})
       .then(function (v) {
+        state.savedView = v.id;
         state.answer.savedView = v.id;
+        if (sw()) { sw().shown(state.answer, {saved: true}); }
         $("[data-pv-title]").textContent = v.id + " @" + v.version;
         notice("saved as " + v.id + " (version " + v.version + ")" + (v.sharedWith && v.sharedWith.length ? ", shared with " + v.sharedWith.join(", ") : "") + ": PIVOT @" + v.id);
       }).catch(function (e) { notice(e.message); });
@@ -468,7 +490,20 @@
       var ds = $("[data-pv-date]");
       ds.innerHTML = (c.dates || []).slice().reverse().map(function (d) { return '<option' + (d === c.date ? " selected" : "") + '>' + esc(d) + '</option>'; }).join("") || '<option value="">current</option>';
       $("[data-pv-compare]").innerHTML = '<option value="">off</option>' + (c.dates || []).slice().reverse().filter(function (d) { return d !== c.date; }).map(function (d) { return "<option>" + esc(d) + "</option>"; }).join("");
+      var preset = presetView();
+      if (!view && (c.defaultView || preset)) {
+        view = JSON.parse(JSON.stringify(c.defaultView || {source: source, rows: [], columns: [], values: [{measure: "var()", as: "VaR"}]}));
+        if (preset) {
+          var opts = Object.assign({}, view.options || {}, preset.options || {});
+          Object.keys(preset).forEach(function (k) { if (preset[k] != null && k !== "options") { view[k] = preset[k]; } });
+          view.options = opts;
+        }
+        view.date = view.date || c.date;
+      }
       if (view) {
+        // a saved view, a preset or the source's default: the zones the screen draws are always there
+        ["rows", "columns", "values", "expanded"].forEach(function (k) { view[k] = view[k] || []; });
+        view.filters = view.filters || {};
         state.view = view;
       } else {
         var firstText = (c.fields || []).filter(function (f) { return f.type === "string"; })[0];
@@ -482,6 +517,14 @@
     });
   }
 
+  /** A partial view the page was opened with (MCUBE <scope> BY ... : its rows, columns, values and options), laid over the landing view. */
+  function presetView() {
+    var t = root.getAttribute("data-preset");
+    if (!t) { return null; }
+    root.removeAttribute("data-preset");
+    try { return JSON.parse(t); } catch (e) { return null; }
+  }
+
   function boot() {
     call("GET", "/sources").then(function (s) {
       var sel = $("[data-pv-source]");
@@ -492,6 +535,7 @@
       if (id) {
         return call("GET", "/views/" + id).then(function (v) {
           $("[data-pv-title]").textContent = v.id + " @" + v.version;
+          state.savedView = v.id;
           return open(v.view.source, v.view.date, v.view).then(function () { if (state.answer) { state.answer.savedView = v.id; } });
         });
       }
@@ -599,5 +643,27 @@
       if (by) { expandBy(row, by.trim()); }
     }
   });
+  // The screen's one face for the code around it, which reads the view and the answer and never computes: a lens (the MR cube,
+  // mr-lens.js) changes the view's options; the custom functions, explain and what-if cards (pivot-functions.js) read the view, its
+  // answer and the selection; the switches, live pivots and comments (pivot-switches.js) send the request body as asked, redraw, run again.
+  window.PivotScreen = {
+    root: root,
+    view: function () { return state.view ? viewBody() : null; },
+    answer: function () { return state.answer; },
+    catalogue: function () { return state.catalogue; },
+    selection: function () { return state.selection; },
+    notice: notice,
+    body: function () { return asked({view: viewBody()}); },
+    call: call,
+    show: show,
+    // run(change): change the view (a lens's options), then ask again; run(): ask again as it is, past the estimate's confirmation
+    run: function (change) {
+      if (!state.view) { return; }
+      if (typeof change === "function") { change(state.view); run(); } else { run(true); }
+    },
+    reopen: function (date) { if (state.view) { state.view.date = date; open(state.view.source, date, state.view); } },
+    savedView: function () { return state.savedView; },
+    grid: function () { return $("[data-pv-grid]"); }
+  };
   boot();
 })();

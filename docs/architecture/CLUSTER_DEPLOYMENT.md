@@ -4189,8 +4189,9 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 - **Read slots**: single-entity reads take one of `max-concurrent-reads` (16) per connector. Background work now reads
   in one pass on its own thread and takes none (done for grouped pages). Phase 1 gives the rest of the background work
   (warm-up, BI refresh) its own slots.
-- **Single read time limit**: `drishti.sources.fetch-timeout` **5 s** (done; was 2 s): the first read of a date waits
-  for that date's id map.
+- **Single read time limit**: `drishti.sources.fetch-timeout` **10 s** (done): the first read of a date waits
+  for that date's id map, and a panel's own source is read within the same limit. The console's
+  `backend.timeout_seconds` is 15 s, longer, so the server's answer comes through.
 - **Search and columns budget**: 20 s (`drishti.search.budget`, `columns-budget`).
 
 ### 12. Phases and status
@@ -4205,7 +4206,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | | an out-of-memory build fails cleanly (no reader waits forever) | **done** |
 | | `max-stream` bounds the grouped pages (default 100,000) | **done** |
 | | 1 MB Parquet row groups in the lake writer | **done** (new loads; compaction rewrites old files) |
-| | single-read time limit 5 s | **done** |
+| | single-read time limit 10 s | **done** |
 | | quiet startup log (library INFO at WARN; one line per large table and date; progress every 100,000) | **done** |
 | | temp files under `<data dir>/tmp` | **done** |
 | | **grouped pages on disk** (section 10): complete at any number of trades, heap per group only | **done** |
@@ -4261,7 +4262,7 @@ list (a counterparty with 20,000 trades shows them a page at a time) comes with 
 | `refresh` | `derived` connector | 30s (trading pack: 60s) | rebuild age, used only when a source cannot say its version |
 | `max-scan` | `derived` connector | 50000 | members read one at a time, for sources that cannot read a day in one pass |
 | `<kind>.max-members` | `derived` connector | 1000 | members listed on a page; the count and totals cover every member |
-| `drishti.sources.fetch-timeout` | server | **5s** | longest single read (`DRS-1004`) |
+| `drishti.sources.fetch-timeout` | server | **10s** | longest single read (`DRS-1004`); also a panel's own source |
 | `DRISHTI_LAKE_ROW_GROUP_KB`, `DRISHTI_LAKE_PAGE_KB` | `lake build` (Java writer) | **256**, **64** | Parquet row group and page size ([DELTA_CONNECTOR.md, Row-group size](../connectors/DELTA_CONNECTOR.md#row-group-size)) |
 | `ingest.<kind>.flatten`, `ingest.<kind>.key` | pack (read by `lake build`) | none | flattened fields written as plain fields and promoted columns; the id field, so `--key` is optional |
 | `drishti.tmp-dir` / `DRISHTI_TMP_DIR` | server | **`<data dir>/tmp/server`** | temporary files (the console's: `<data dir>/tmp/console`) |
