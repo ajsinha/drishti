@@ -121,7 +121,7 @@ public final class FrameService implements DatasetRefresher.FramedHooks {
 
     /** Who the kept result is for: the user and what decides their rows and masks (roles, the raw power). */
     private String readerKey(Principal p) {
-        return p.user() + "|" + new TreeSet<>(p.roles()) + "|raw=" + entitlements.raw(p);
+        return p.user() + "|" + new TreeSet<>(p.roles()) + "|raw=" + entitlements.raw(p) + "|power=" + entitlements.rawPower(p);
     }
 
     private static String hash(String text) {

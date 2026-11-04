@@ -17,6 +17,17 @@
 
 ## 2.9.11.c (unreleased)
 
+### Security
+
+- **A BI dataset's declared mask always holds (a leak fixed).** A column a dataset lists under `security.masked` was masked only when the
+  installation masked some field of its own (`drishti.security.redact` not empty): "raw" was read as "nothing masked for this person". It
+  is now the raw power itself (`Entitlements.rawPower`: a role with `raw`, never through an embedded app), so the column is masked for
+  every reader without it, whatever `redact` names (`DatasetService.masks`; BI's per-reader kept results now name it in their key). With
+  the shipped `redact` list nothing changes. In an installation with an empty `redact`, readers without the raw power now see masked:
+  `trading-risk-counterparties` and `counterparty-exposure-counterparties` NAME and RATING, `trading-risk-trades` COUNTERPARTY,
+  `counterparty-exposure-official` NODE_NAME, `live-trading` and `live-trading-trade` TRADER_ID (and so the models trading-risk,
+  counterparty-exposure, live-trading and desk-pnl-vs-exposure-py). `DeclaredMasksTest`.
+
 - **Client examples (examples/clients/README.md), read only, through Arrow Flight.** Nine Python notebooks, each cell explained and no
   outputs stored: connect with a token and list what it may read; a kind into pandas and polars; a BI model query (`trades-basic`); a
   pivot view with Rachana paths over trade legs (`sum($.LEGS[*].NOTIONAL)` by desk, a desk-by-year grid, trades with a JPY leg); a desk's
