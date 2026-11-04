@@ -321,7 +321,7 @@ def create_app(settings: Settings) -> FastAPI:
     async def lifespan(app: FastAPI):
         pool = getattr(app.state, "cluster", None)
         if getattr(app.state, "backend", None) is None:      # one pooled client per server (tests bring their own)
-            app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 5)),
+            app.state.backend = Switch({s.id: BackendClient(s.url, float(settings.get("backend.timeout_seconds", 15)),
                                                             int(settings.get("backend.pool_size", 64)),
                                                             servers=pool if s.id == catalogue.default else None) for s in catalogue.all()},
                                        catalogue.default)

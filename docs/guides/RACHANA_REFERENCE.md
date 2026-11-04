@@ -4792,7 +4792,7 @@ is today's option, unchanged (the panel reads that linked entity as `$`).
   `where` condition over a masked field never holds (a hidden value never selects a record).
 - **Once per request.** Panels naming the same source share one read (per kind, id or condition, date).
 - **Read as the page's record is.** A panel's source is that panel's data: it is read within the sources' fetch timeout
-  (`drishti.sources.fetch-timeout`), not the link budget a linked entity's label waits for. A source that fails or does not answer in
+  (`drishti.sources.fetch-timeout`, 10 s), not the link budget a linked entity's label waits for. A source that fails or does not answer in
   time draws the panel's failed state (the connector and why, `compute.state: failed` in the view model), never its `empty` text: "no
   data" is said only when the source answered that it holds nothing.
 - A **group of children** may name the source its panels read (section 8); a panel's own `source:` wins over its group's.

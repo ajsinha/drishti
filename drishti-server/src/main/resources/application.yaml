@@ -247,9 +247,10 @@ drishti:
     drain:                           # the drain before a stop: POST /api/v1/admin/node/drain, Admin -> Net "Drain for a stop", the stop hooks
       settle-seconds: 5              # after the drain, how long until no peer forwards work here (the flag reaches every peer by gossip)
   sources:
-    # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004). 5 s: the first read
-    # of a business date on a large table loads that date's id index first (300K trades: a few seconds).
-    fetch-timeout: 5s
+    # Longest a single source read may take before the view shows the entity as unavailable (DRS-1004), and a panel's own source
+    # (another pack's data, for example) before the panel shows that it failed. 10 s: the first read of a business date on a large
+    # table loads that date's id index first (300K trades: a few seconds), and a slow source is not reported as missing.
+    fetch-timeout: 10s
     # Optional directory of extra plugin jars; each gets its own class loader.
     plugin-dir: ${DRISHTI_PLUGIN_DIR:}
     # kind -> plugin. Kinds without a route try default-route first, then any plugin that serves them.

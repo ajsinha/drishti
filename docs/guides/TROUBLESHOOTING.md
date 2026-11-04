@@ -634,9 +634,9 @@ The message names up to six of the mnemonics the server has loaded (from its pac
 
 ### "DRS-1004 … timed out" opening a trade
 
-- **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (5 s). On a large lake the first read of a date reads that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
+- **Cause:** a single read took longer than `drishti.sources.fetch-timeout` (10 s). On a large lake the first read of a date reads that date's ids first; files written with large row groups, a lake on a network share or far object storage, or an antivirus scanning every file read (Windows) make it slower. In the console the same code comes with "the server did not answer in time".
 - **Check:** Admin → Health, the connector's `p99Ms`; Admin → Health → Pages for the kind's p95; the server log for `… loaded, N ids in F files (T ms)`.
-- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start); load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise `drishti.sources.fetch-timeout` ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
+- **Fix:** open it again (the id map is then in memory, and with `id-map-disk.enabled`, the default, on disk for the next start); load the lake with `lake build` (256 KB row groups); keep the data folder on a local SSD, excluded from real-time scanning; or raise `drishti.sources.fetch-timeout`, keeping the console's `backend.timeout_seconds` (15) longer than it ([CONFIGURATION.md](../admin/CONFIGURATION.md)).
 
 ### A counterparty, portfolio, legal entity or index page (`CTRD`, `PTRD`, `LTRD`, `ITRD`) is slow or times out
 

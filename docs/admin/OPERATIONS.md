@@ -692,8 +692,8 @@ LOGGING_LEVEL_COM_ASH_DRISHTI=DEBUG           # log level for Drishti's own clas
 ```
 
 Or pass `--drishti.live.max-streams=40000` on the command line. Console settings follow
-`DRISHTI_CONSOLE__<SECTION>__<KEY>`, for example `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=10`, or
-`--backend.timeout_seconds=10`. The order of precedence and every setting are in
+`DRISHTI_CONSOLE__<SECTION>__<KEY>`, for example `DRISHTI_CONSOLE__BACKEND__TIMEOUT_SECONDS=30`, or
+`--backend.timeout_seconds=30`. The order of precedence and every setting are in
 [CONFIGURATION.md](CONFIGURATION.md).
 
 ## 7. Running as services (systemd)

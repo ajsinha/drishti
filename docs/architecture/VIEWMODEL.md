@@ -269,7 +269,7 @@ These belong to Sutra Next features; a basic renderer may ignore them and still 
 | `refresh` | `RefreshView` | `{every, userCanPause}`: fetch the panel again every `every` seconds. |
 | `form` | object | The panel's edit form for write-back (fields the viewer may edit, rules, lookups). |
 | `provenance` | `PanelProvenance` | Freshness of a panel with its own `source:`: `{source, kind, fetchedAt, updatedAt, staleAfter, stale}`. |
-| `compute` | `PanelCompute` | A computed panel's state: `{state: ready\|computing\|stale\|failed\|refused, requestId, connector, message, progress, hasResult, stamp}`. Draw the state in words, over the last result when `hasResult`. A panel's own `source:` that could not be read (the connector failed or did not answer within the fetch timeout) comes as `failed` with an empty `requestId`, the connector and why: never as an empty panel. |
+| `compute` | `PanelCompute` | A computed panel's state: `{state: ready\|computing\|stale\|failed\|refused, requestId, connector, message, progress, hasResult, stamp}`. Draw the state in words, over the last result when `hasResult`. A panel's own `source:` that could not be read (the connector failed or did not answer within the fetch timeout, `drishti.sources.fetch-timeout`, 10 s) comes as `failed` with an empty `requestId`, the connector and why: never as an empty panel. |
 | `inferred`, `explanation` | | Whether inference built or completed the panel, and why (shown as a tag). |
 | `code` | | A short header tag (`REFS`). |
 | `key` | | The function key that jumps to it (`F3`). |

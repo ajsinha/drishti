@@ -532,7 +532,7 @@ measure again with the methods above.
 
 | Key | Default | Raise it when | Lower it when |
 |---|---|---|---|
-| `drishti.sources.fetch-timeout` | `5s` | A healthy but slow source makes views fail with `DRS-1004`. | You prefer a fast failure to a slow view. |
+| `drishti.sources.fetch-timeout` | `10s` | A healthy but slow source makes views fail with `DRS-1004`. Keep the console's `backend.timeout_seconds` (15) longer. | You prefer a fast failure to a slow view. |
 | `drishti.graph.link-budget` | `40ms` | Linked entities often show *pending* although their source is fine. Each step adds that much to a view's worst case. | Views must appear faster even if more links are pending. |
 | `drishti.engine.layout-cache-size` | `10000` | `timings.layout` is high on warm views (many data shapes or many Sutra versions). | Memory is tight and you have few shapes. |
 | `drishti.engine.fingerprint-cache-size` | `100000` | Many live entities tick at once (one entry per entity and generation). | Memory is tight. |
@@ -552,11 +552,12 @@ Views of `trade` sometimes fail with `DRS-1004 … timed out` and counterparty l
 # application.local.yaml
 drishti:
   sources:
-    fetch-timeout: 10s
+    fetch-timeout: 20s
   graph:
     link-budget: 100ms
 ```
 
+and, in the console's `application.local.yaml`, `backend: { timeout_seconds: 25 }`, longer than the new timeout.
 Restart the server and check that `timings.fetch` is below the new timeout and the pending links are gone.
 
 ### Example 2: many fast-ticking entities on a small server
