@@ -67,8 +67,12 @@ public final class ScanEstimate {
         return out;
     }
 
-    /** The warnings: each relationship across connectors with a large unfiltered side. */
+    /**
+     * The warnings: each relationship across connectors with a side larger than the model's own {@code scan-warn-rows} when it has one,
+     * else {@code large} (the installation's {@code drishti.tables.scan-warn-rows}), and unfiltered.
+     */
     public static List<Problem> warnings(ModelDef m, Catalogue catalogue, SourceRows source, LocalDate date, long large) {
+        long limit = m.scanWarnRows() != null ? m.scanWarnRows() : large <= 0 ? DEFAULT_LARGE : large;
         Map<String, Side> sides = sides(m, catalogue, source, date);
         List<Problem> out = new ArrayList<>();
         for (ModelDef.Relationship r : m.relationships()) {
@@ -78,7 +82,7 @@ public final class ScanEstimate {
                 continue;
             }
             for (Side s : List.of(a, b)) {
-                if (!s.filtered() && s.rows() > (large <= 0 ? DEFAULT_LARGE : large)) {
+                if (!s.filtered() && s.rows() > limit) {
                     out.add(Problem.warning(TableCodes.READ, "relationships." + (r.id() == null ? r.from() + "->" + r.to() : r.id()),
                             s.alias() + " (" + s.table() + ", " + s.rows() + " rows on " + date + " from " + s.connector() + ") is joined across "
                                     + "connectors to " + (s == a ? b : a).alias() + " (" + (s == a ? b : a).connector() + ") with no filter: it is "

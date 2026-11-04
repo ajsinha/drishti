@@ -37,13 +37,24 @@ import java.util.Set;
  * @param hierarchies name to its levels (model fields: {@code trades.TRADE_DATE.month} is a field name)
  * @param security the model's row rules per alias, masks and exceptions
  * @param extras the keys the layer keeps as written for their consumers: {@code calc-groups}, {@code parameters}, {@code calendars},
- *     {@code fx}, {@code tests}, {@code rollups}, {@code history}
+ *     {@code fx}, {@code tests}, {@code rollups}, {@code history}, {@code scan-warn-rows} (this model's own threshold for the scan
+ *     estimate's warning on a join across connectors, over the installation's {@code drishti.tables.scan-warn-rows})
  */
 public record ModelDef(String name, String version, Map<String, Object> about, Map<String, Use> tables, List<Relationship> relationships,
         Map<String, Measure> measures, Map<String, List<String>> hierarchies, Security security, Map<String, Object> extras) {
 
     /** The keys {@link #extras} holds. */
-    public static final Set<String> EXTRA_KEYS = Set.of("calc-groups", "parameters", "calendars", "fx", "tests", "rollups", "history");
+    public static final Set<String> EXTRA_KEYS = Set.of("calc-groups", "parameters", "calendars", "fx", "tests", "rollups", "history",
+            "scan-warn-rows");
+
+    /** The model's own {@code scan-warn-rows} (a whole number above zero), or null when it has none or it is not one. */
+    public Long scanWarnRows() {
+        Object v = extras.get("scan-warn-rows");
+        if (v instanceof Number n && n.longValue() > 0 && n.doubleValue() == n.longValue()) {
+            return n.longValue();
+        }
+        return null;
+    }
 
     public ModelDef {
         about = about == null ? Map.of() : Collections.unmodifiableMap(new LinkedHashMap<>(about));

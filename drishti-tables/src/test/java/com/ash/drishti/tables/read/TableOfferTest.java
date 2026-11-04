@@ -140,5 +140,13 @@ class TableOfferTest {
             assertThat(p.level()).isEqualTo(Problem.WARNING);
             assertThat(p.message()).contains("trades").contains("5000000 rows").contains("across connectors");
         });
+        // the model's own scan-warn-rows over the installation's: higher, no warning; lower, the small side too
+        ModelDef high = ModelYaml.read(ModelYaml.write(m, List.of()).replace("rachana: 3", "rachana: 3\nscan-warn-rows: 10000000")).model();
+        assertThat(high.scanWarnRows()).isEqualTo(10_000_000L);
+        assertThat(ScanEstimate.warnings(high, c, rows, LocalDate.of(2026, 9, 30), 0)).isEmpty();
+        ModelDef low = ModelYaml.read(ModelYaml.write(m, List.of()).replace("rachana: 3", "rachana: 3\nscan-warn-rows: 50")).model();
+        assertThat(ScanEstimate.warnings(low, c, rows, LocalDate.of(2026, 9, 30), 0)).hasSize(2);
+        ModelDef bad = ModelYaml.read(ModelYaml.write(m, List.of()).replace("rachana: 3", "rachana: 3\nscan-warn-rows: lots")).model();
+        assertThat(Catalogue.of(List.of(trades, cpty), List.of(bad)).check()).anyMatch(p -> p.isError() && p.path().contains("scan-warn-rows"));
     }
 }

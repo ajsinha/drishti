@@ -65,6 +65,10 @@ public final class ModelChecks {
         if (m.tables().isEmpty()) {
             out.add(Problem.error(TableCodes.UNREADABLE, "tables", "a model reads at least one table"));
         }
+        if (m.extras().containsKey("scan-warn-rows") && m.scanWarnRows() == null) {
+            out.add(Problem.error(TableCodes.UNREADABLE, "scan-warn-rows", "scan-warn-rows is a whole number of rows above zero (the model's own"
+                    + " threshold for the warning on a join across connectors; drishti.tables.scan-warn-rows when not given)"));
+        }
         Map<String, TableDef> byAlias = new LinkedHashMap<>();
         Set<String> columns = new LinkedHashSet<>();
         Map<String, String> types = new LinkedHashMap<>();

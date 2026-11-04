@@ -933,7 +933,7 @@ drishti:
   tables:                            # virtual tables and models (TABLES_GUIDE.md): the pivot, Sutras and Flight read them as the reader may see the source
     root: ${DRISHTI_TABLES_ROOT:./config/tables}   # the definitions' folder: config/tables/<domain>/<name>.table.yaml and .model.yaml
     read-max-rows: 2000000           # the most rows one read of a virtual table stages; more is refused, never cut short
-    scan-warn-rows: 1000000          # rows above which an unfiltered side of a model's join across connectors is warned about
+    scan-warn-rows: 1000000          # rows above which an unfiltered side of a model's join across connectors is warned about; a model's own scan-warn-rows wins
   identity:
     # Users, roles defined in Admin → Roles, saved workspaces/monitors/settings and the audit trail live in one database
     # (JPA). SQLite by default: a single file, nothing to install. For PostgreSQL:

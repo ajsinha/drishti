@@ -332,6 +332,16 @@
 - **The pivot reads virtual tables.** Source `table:<domain>.<name>` (PIVOT_GUIDE.md section 3): listed with the kinds a person may open,
   its columns as fields (masked ones left out), staged in the pivot engine's executor. `StagedRows` is the one staging of rows in hand
   (moved out of `PanelSources`, which uses it too).
+- **Sutras read virtual tables (V13, in 2.9.11.e).** `source: { table: <domain>.<name>, where, limit, as-of }` on any panel that reads
+  data (RACHANA_REFERENCE.md, TABLES_GUIDE.md section 7a; the Sutra schema): the rows, read for the page's viewer through the table layer
+  (`TableRows`, the engine's one port to it), are `$src`; `where` keeps rows with the page's context; a page built for nobody in particular
+  reads no table. **The viewer through the view pipeline** (its own commit, mechanical): one `ViewerContext` (user, roles, attributes, raw
+  power, masks, kinds) per request, made by `Entitlements.viewer`, passed with every call of `ViewPipeline`, the screen, live streams and
+  explain in place of the masks-and-kinds pair, never kept shared. `TablesService` reads for a `ViewerContext` (the viewer's masks and kinds,
+  so an embedded app's masks hold too). `SutraTableSourceTest`: two people with different row rules and masks on the same page, in turn and
+  sixteen at once, each get their own rows and masks.
+- **The large-join threshold (V10, decided).** `drishti.tables.scan-warn-rows` for the installation, and `scan-warn-rows:` in a
+  `.model.yaml` for that model (checked: a whole number above zero); CONFIGURATION.md regenerated.
 - **The pivot keeps what it staged.** `TablesService.version` names a read without making it (the definitions, the table, the date, the
   source kind's data version, who reads); `TableSources` keeps each open's fields and staging by that version, so a view opened again on
   unchanged data reads nothing, and reads its rows only if the staged table was dropped (`StagedRows` takes the rows lazily). A source

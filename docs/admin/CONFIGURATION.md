@@ -3475,7 +3475,7 @@ Sutras' own configuration keys (the server's `drishti.rachana.*`, `drishti.gover
 |---|---|---|---|---|---|---|---|
 | `drishti.tables.root` | string | `./config/tables` | `DRISHTI_TABLES_ROOT` | server | the definitions' folder: config/tables/&lt;domain&gt;/&lt;name&gt;.table.yaml and .model.yaml | restart |  |
 | `drishti.tables.read-max-rows` | integer | `2000000` |  | server | the most rows one read of a virtual table stages; more is refused, never cut short | restart |  |
-| `drishti.tables.scan-warn-rows` | integer | `1000000` |  | server | rows above which an unfiltered side of a model's join across connectors is warned about | restart |  |
+| `drishti.tables.scan-warn-rows` | integer | `1000000` |  | server | rows above which an unfiltered side of a model's join across connectors is warned about; a model's own scan-warn-rows wins | restart |  |
 
 #### `drishti.identity`
 
