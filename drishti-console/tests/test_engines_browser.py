@@ -77,7 +77,6 @@ def test_the_engines_page_stages_reviews_and_applies(browser, stack):
     shot(pg, "list", full=True)
     assert pg.get_attribute(".adm-tabs a[href='/admin/engines']", "aria-current") == "page"
     assert "running" in row(pg, "var").inner_text() and "shipped copy" in row(pg, "var").inner_text()
-    assert "not installed" in row(pg, "sa-ccr").inner_text()
     assert "var, sensitivities" in row(pg, "frtb-sa").inner_text()
     assert pg.is_hidden("[data-eng-panel]")
 

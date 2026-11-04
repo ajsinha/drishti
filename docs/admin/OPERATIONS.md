@@ -3809,7 +3809,8 @@ config/engines/                 DRISHTI_ENGINES_DIR (default ./config/engines), 
 ├── sensitivities.yaml          drishti.engines.sensitivities.enabled, drishti.sensitivities.*
 ├── frtb-sa.yaml                drishti.engines.frtb-sa.enabled, drishti.frtb.*
 ├── simm.yaml                   drishti.engines.simm.enabled, drishti.simm.*
-├── sa-ccr.yaml, fva.yaml, mr-cube.yaml, ccr-cube.yaml   (not installed yet: their switch only, off)
+├── mr-cube.yaml                drishti.engines.mr-cube.enabled, drishti.cube.mr.*
+├── pivot.yaml, dataload.yaml, flight.yaml   each engine's switch and settings
 └── memory-lake.yaml            drishti.engines.memory-lake.enabled (off as shipped), drishti.lake.memory.*
 ```
 
@@ -3818,7 +3819,8 @@ shipped one, and `application.local.yaml`, the environment and `--key=value` win
 that predates the folder, gets the shipped values. The keys keep the names they always had (`drishti.var.hot-dates` is still
 `drishti.var.hot-dates`); only the switches are new, and each keeps its environment variable (`DRISHTI_VAR_ENABLED`,
 `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_FRTB_ENABLED`, `DRISHTI_SIMM_ENABLED`; new: `DRISHTI_SENSITIVITIES_ENABLED`,
-`DRISHTI_MEMORY_LAKE_ENABLED`, `DRISHTI_SACCR_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_MR_CUBE_ENABLED`, `DRISHTI_CCR_CUBE_ENABLED`).
+`DRISHTI_MEMORY_LAKE_ENABLED`, `DRISHTI_MR_CUBE_ENABLED`). An engine is listed only once it is built: SA-CCR, FVA and the CCR cube get their
+files when their engines arrive.
 
 **The old switch names still work.** `drishti.var.enabled`, `drishti.ccr.exposure.enabled`, `drishti.frtb.enabled` and
 `drishti.simm.enabled`, set anywhere above the shipped files (most often `application.local.yaml`), decide as before, and the server
@@ -3857,9 +3859,7 @@ reports on them, and its `drishti.py` commands (exit code 3 with the same words)
 |---|---|---|
 | FRTB-SA | VaR (its scopes, hierarchies and limit letters) and the sensitivities | |
 | SIMM | the sensitivities | exposure |
-| FVA (not installed) | exposure | |
-| MR cube (not installed) | VaR | the sensitivities, FRTB-SA |
-| CCR cube (not installed) | exposure | SA-CCR, FVA |
+| MR cube | VaR, the pivot engine | the sensitivities, FRTB-SA |
 
 Turning on an engine whose need is off, or off an engine another running one needs, is refused with words (`409 DRS-1021`): "FRTB-SA
 needs VaR on this server: its scopes (desks, books, limit letters) are VaR's ... Turn on VaR first, or both together." Admin → Engines
