@@ -16,7 +16,7 @@
 
 # drishti-native: native libraries behind Drishti's own abstractions, with Java fallbacks
 
-**Status: design for 2.9.12 (product owner, 2026-11-04).** One module holds every native integration of the server, each behind a
+**Status: design for 2.9.12 (product owner, 2026-11-04); QuantLib parked (section 6).** One module holds every native integration of the server, each behind a
 Drishti interface with a pure-Java implementation that always works, so **Drishti runs on any environment**. It realises the seam of
 [HIGH_PERFORMANCE_NATIVE.md](HIGH_PERFORMANCE_NATIVE.md) section 2.8 on Java 21 (JNI through JavaCPP) and keeps room for the Java 25
 paths of that design (FFM, the Vector API) as further implementations of the same interfaces.
@@ -28,8 +28,7 @@ paths of that design (FFM, the Vector API) as further implementations of the sam
 1. **Every native capability sits behind a Drishti interface.** Callers see only the interface; only `drishti-native` imports a native
    binding (an architecture test enforces it).
 2. **Every interface has a pure-Java implementation that always works.** Native code is an optimisation chosen at run time, never a
-   requirement. Where a capability is too large to write twice (QuantLib's full model library), the Java side covers a named core and
-   anything beyond it answers *needs QuantLib* in words (section 6.5).
+   requirement.
 3. **Automatic fallback.** A native library that is missing, built for another platform, fails its self-test, or misbehaves later is
    replaced by the Java implementation: a loud warning in the log, **DEGRADED** in Health, a banner in Admin; the server always starts.
 4. **The person decides.** `drishti.native.mode` (`auto`, `off`, `on`) for everything, and a switch per capability, in configuration and
@@ -47,7 +46,6 @@ paths of that design (FFM, the Vector API) as further implementations of the sam
 | **Linear algebra, level 1–3** | `LinearAlgebra` (`dgemm`, `dgemv`, `ddot`, `daxpy`) | OpenBLAS (bytedeco) | Drishti's kernels (`JavaBlas`, `MultiSums`) | built in 2.9.11.c in `drishti-compute` (`compute.linalg`) and `drishti-server` (`server.nativelib`); **moved** here |
 | **Decompositions and solvers** | `Lapack` (Cholesky, LU, QR, symmetric eigen, SVD, least squares, solve) | LAPACK from the **same** OpenBLAS jar | Hipparchus | new |
 | **Statistics and optimisation** | `Stats`, `Optimise`, `Interpolate`, `Distributions` | none needed | Hipparchus (pure Java; SciPy's role) | new |
-| **Quant finance** | `Calendars`, `DayCounts`, `Schedules`, `Curves`, `Pricers` | QuantLib (our SWIG/JNI build) | a Java core (section 6.5) | new |
 | **Compression** | `Codecs` (zstd, Snappy, LZ4, gzip/deflate) | zstd-jni, snappy-java, lz4-java | aircompressor (pure Java, same formats) | natives used in five modules without a fallback |
 | **Key-value disk store** | `DiskStore` (the disk cache) | RocksDB | a pure-Java store, or memory only with a warning | RocksDB in `drishti-diskcache`, no fallback |
 | **Embedded SQL engine** | registered for status only | DuckDB | the pivot engine's Java path where it answers; else the feature says it is unavailable | DuckDB in `plugin-duckdb`, `drishti-bicompute`, the server |
@@ -62,7 +60,6 @@ drishti-native/
   com.ash.drishti.nativ.core      Capability, Registry, Guard (input checks, breaker), Canary, NativeMode, the status record
   com.ash.drishti.nativ.linalg    LinearAlgebra, Lapack; JavaBlas, MultiSums, HipparchusLapack; OpenBlas, OpenLapack (JavaCPP)
   com.ash.drishti.nativ.maths     Stats, Optimise, Interpolate, Distributions (Hipparchus)
-  com.ash.drishti.nativ.quant     Calendars, DayCounts, Schedules, Curves, Pricers; the Java core; QuantLibBinding (JNI)
   com.ash.drishti.nativ.codec     Codecs; Zstd/Snappy/Lz4 natives; aircompressor
   com.ash.drishti.nativ.store     DiskStore; RocksDbStore; JavaDiskStore
 ```
@@ -124,56 +121,13 @@ Student-t, chi-squared, with quantiles), descriptive statistics, fitting, root f
 hand-written special function where one exists (for example the parametric VaR's normal quantile), each replacement proved equal in a
 test. Rachana's statistical functions (FUNCTION_CATALOGUE.md) call it through `drishti-native`, never directly.
 
-## 6. QuantLib
+## 6. QuantLib (parked)
 
-### 6.1 Why
-
-The product owner's decision (2026-11-04): **QuantLib in the Java server is the one pricing engine**. Calendars, day counts, schedules,
-curves and pricers are written once, by QuantLib, and the counterparty engines (2.9.14) and any pricing build on them. QLRisk's models
-that QuantLib lacks come later through the Python worker (section 9).
-
-### 6.2 The binding
-
-- **QuantLib-SWIG's Java bindings**, built by us: `QuantLib.jar` (the Java classes SWIG generates) and the native library per platform:
-  `libQuantLibJNI.so` (Linux x86-64), `QuantLibJNI.dll` (Windows x86-64; a DLL is allowed on the Windows QA machine, an exe is not).
-- **One pinned QuantLib version** (and its Boost), recorded in the parent POM and in `NATIVE_DEPENDENCIES.md`; upgraded deliberately,
-  with the parity suite.
-- **Packaged like OpenBLAS:** a jar per platform with the library inside, unpacked at first use into `drishti.native.cache-dir`
-  (default `<data>/native-cache`). Nothing is downloaded at run time.
-- **Built by a script** (`tools/native/build_quantlib.sh` and `.ps1`, planned) from the pinned sources, reproducible; the built jars go
-  to the repository's vendored library folder with their checksums (VENDOR.md), not to Maven Central.
-
-### 6.3 Threads
-
-QuantLib keeps global state: the evaluation date (`Settings`) and observers. A server pricing for many people at once must not share
-it. The build enables **sessions** (`QL_ENABLE_SESSIONS`, one `Settings` per thread, the thread-id function supplied by the binding),
-and each pricing call runs on a thread that sets its own evaluation date first. A test prices on 16 threads at once with different
-dates and compares with the single-threaded answers.
-
-### 6.4 Crashes
-
-A fault inside native code ends the JVM, which a Java exception would not. So: the guard (section 4) checks every input QuantLib would
-assert on (dates in range, positive tenors, sorted pillars, finite rates); a QuantLib error is caught as its Java exception, never a
-crash; the canary prices a fixed book. And an **out-of-process mode** (`drishti.native.quant.process: in | worker`): pricing runs in a
-separate JVM (`drishti-quant-worker`, the same jar) that the server starts and talks to over a local socket with Arrow batches; if it
-dies, the server restarts it and the request fails in words, the server keeps running. `in` is the default for speed; `worker` for heavy
-or untrusted models.
-
-### 6.5 The Java core
-
-The fallback covers the building blocks the roadmap uses first, each proved equal to QuantLib in tests (dates exact; values within
-1e-10 relative):
-
-| Area | Java core |
-|---|---|
-| Calendars | TARGET, the UK, the US (settlement, government bond), Canada, Japan, joint calendars; business-day adjustments |
-| Day counts | Actual/360, Actual/365 Fixed, Actual/Actual (ISDA), 30/360 (bond basis, European) |
-| Schedules | regular and stub schedules, end-of-month, forwards and backwards generation |
-| Curves | discount curves from deposits, FRAs and swaps (bootstrap, log-linear discount interpolation); zero and forward rates |
-| Pricers | Black and Bachelier (caplets, swaptions, FX and equity options: price and Greeks), vanilla interest-rate swaps, FX forwards |
-
-Anything beyond the core (for example short-rate models, exotics, credit models) on a machine without QuantLib answers: *this needs
-QuantLib, which is not available on this server (see Admin → Engines)*.
+*Product owner, 2026-11-04: "Let us keep QuantLib out for now. We will revisit this later."* Not part of 2.9.12. The decisions made
+before parking hold for when it is revisited: QuantLib in the Java server as the one pricing engine (QLRisk's other models through the
+Python worker), a pure-Java core as its fallback (calendars, day counts, schedules, curves, Black and Bachelier, vanilla swaps, FX
+forwards), sessions for thread safety, input guards, in-process by default with a worker mode, the latest stable version pinned. Open
+when revisited: how its Windows library is built (a MinGW cross-compile on Linux, or Linux native only with Windows on the Java core).
 
 ## 7. One version of everything
 
@@ -181,7 +135,7 @@ QuantLib, which is not available on this server (see Admin → Engines)*.
 |---|---|
 | One version per library | Maven Enforcer `dependencyConvergence` and `requireUpperBoundDeps` in the parent POM |
 | No duplicate classes | Enforcer `banDuplicateClasses` (extra-enforcer-rules) |
-| Natives only where allowed | an ArchUnit rule: `org.bytedeco`, `com.github.luben.zstd`, `org.xerial.snappy`, `net.jpountz`, `org.rocksdb`, `org.quantlib` are imported only in `drishti-native` (DuckDB only in its listed modules) |
+| Natives only where allowed | an ArchUnit rule: `org.bytedeco`, `com.github.luben.zstd`, `org.xerial.snappy`, `net.jpountz`, `org.rocksdb` are imported only in `drishti-native` (DuckDB only in its listed modules) |
 | Platforms | only the `linux-x86_64` and `windows-x86_64` classifiers, never the `-platform` artifacts (which pull every OS) |
 | One list | `docs/admin/NATIVE_DEPENDENCIES.md`, generated from the POMs by a tool and checked by a test: each native library, its version, licence, platforms, the capability it serves and its Java fallback |
 
@@ -191,7 +145,6 @@ QuantLib, which is not available on this server (see Admin → Engines)*.
 |---|---|
 | BLAS sums | the near-tie rule makes VaR's order identical; sums within 1e-12 relative (summation order) |
 | LAPACK | decompositions within 1e-10 relative on reconstruction; eigenvalues sorted and compared |
-| QuantLib core | dates and schedules exact; values within 1e-10 relative |
 | Codecs | byte-identical output after a round trip; files written by either are read by both |
 | Disk store | the same answers for every key; a store written natively is never read by the Java store (each keeps its own files) |
 
@@ -210,10 +163,9 @@ models are designed in 2.9.12 and built later, with QLRisk.
 | Setting | Default | Meaning |
 |---|---|---|
 | `drishti.native.mode` | `auto` | `auto` uses each native capability that loads; `off` uses Java everywhere; `on` refuses to start if one cannot load |
-| `drishti.native.<capability>.mode` | `auto` | per capability: `auto`, `java`, `native` (`blas`, `lapack`, `quant`, `codec`, `store`) |
+| `drishti.native.<capability>.mode` | `auto` | per capability: `auto`, `java`, `native` (`blas`, `lapack`, `codec`, `store`) |
 | `drishti.native.cache-dir` | `<data>/native-cache` | where native libraries are unpacked |
 | `drishti.native.canary-hours` | `6` | the canary's period |
-| `drishti.native.quant.process` | `in` | `in` the server, or `worker` (a separate JVM) |
 
 Admin → Engines shows each capability (native or Java, why, version, calls, last canary) with its switch; Health shows `native.*`; the
 console shows the DEGRADED banner when any capability fell back.
@@ -224,16 +176,15 @@ console shows the DEGRADED banner when any capability fell back.
 2. Dependency checks (section 7) and `NATIVE_DEPENDENCIES.md`.
 3. Codecs with aircompressor; the disk store's Java fallback; DuckDB registered.
 4. Hipparchus, then LAPACK with parity.
-5. QuantLib: the build scripts, the binding, sessions, the guard, the worker mode; the Java core with parity.
-6. The drill's pure-Java lane; docs (OPERATIONS.md server requirements, CONFIGURATION.md, a native guide); the Python worker design.
+5. The drill's pure-Java lane; docs (OPERATIONS.md server requirements, CONFIGURATION.md, a native guide); the Python worker design.
 
 Two drills (a large release); the benchmark with `drishti.native.mode` `off` against `auto` between them.
 
-## 12. Questions
+## 12. Decisions
 
-| # | Question | Recommendation |
+| # | Question | Decision (product owner, 2026-11-04) |
 |---|---|---|
-| N1 | Building QuantLib's Windows DLL needs a Windows build (MSVC) or a cross-compiler (MinGW) | **MinGW cross-compile on Linux** in the build script, tested on the Windows QA machine; MSVC only if MinGW's DLL misbehaves |
-| N2 | QuantLib version | the latest stable at build time, pinned; upgrades only with the parity suite |
-| N3 | Out-of-process QuantLib by default? | **In-process by default**, with the guard and canary; `worker` for heavy models and as the switch if a crash is ever seen |
-| N4 | The disk store's Java fallback: a pure-Java store or memory only? | **Memory only with a warning** first (the cache is a cache); a pure-Java store later if measured as needed |
+| N1 | QuantLib's Windows build | parked with QuantLib (section 6) |
+| N2 | QuantLib version | the latest stable at build time, pinned (for when QuantLib is revisited) |
+| N3 | Out-of-process QuantLib by default? | in-process by default, `worker` mode available (for when QuantLib is revisited) |
+| N4 | The disk store's Java fallback | **memory only with a warning** first; a pure-Java store later if measured as needed |
