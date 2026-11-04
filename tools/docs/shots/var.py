@@ -17,9 +17,9 @@ Run it on its own (it builds its own lake and starts its own scratch server and 
 
     drishti-console/.venv/bin/python tools/docs/screenshots.py --guide var
 
-The pictures, in the guide's order: the explorer on a desk (the three columns), a scenario's contributors, the history with its
+The pictures, in the guide's order: the explorer on a desk (the tree, the toolbar, the scope), a scenario's contributors, the history with its
 backtest, a desk's contributions, a book's positions, Construct your basket (its sheet), a capture compared with now, the provenance
-column, the portfolio and position pages, the explorer on a phone, var-result read as an ordinary kind, and an id that is not a live trade."""
+drawer (How calculated), the portfolio and position pages, the explorer on a phone, var-result read as an ordinary kind, and an id that is not a live trade."""
 from __future__ import annotations
 
 from _var import WIDE, open_var, painted, start_servers, tab  # noqa: F401 - start_servers is the driver's hook
@@ -157,9 +157,12 @@ def capture(c: Ctx):
 
 @shot("08-provenance.jpg")
 def provenance(c: Ctx):
-    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1")
+    open_var(c, "/var?scope=DESK:DESK-RATES%20-%20BOOK:BOOK-RATES-1&how=1")    # How calculated open: the drawer (how=1)
     painted(c, "DESK:DESK-RATES - BOOK:BOOK-RATES-1")
+    c.page.set_viewport_size({"width": WIDE, "height": 1900})          # the drawer is the window's height: tall enough for every line
+    c.page.wait_for_timeout(300)
     c.save("08-provenance.jpg", locator=".vx-prov")
+    c.page.set_viewport_size({"width": WIDE, "height": 1000})
 
 
 @shot("09-portfolio-page.jpg")
@@ -231,3 +234,27 @@ def other_currencies(c: Ctx):
     c.until("document.querySelectorAll('[data-vx-ccytable] tbody tr[data-ccy]').length >= 5", 60)
     c.save("16-other-currencies.jpg", locator=".vx-main")
     back_to_usd(c)
+
+
+@shot("17-baskets.jpg")
+def baskets(c: Ctx):
+    """The toolbar's System baskets open (key B) on the bank, a search typed: the bank's portfolios, each with its actions."""
+    open_var(c, "/var?scope=BANK")
+    painted(c, "BANK")
+    c.until("document.querySelectorAll('[data-vx-baskets-system] [role=option]').length > 0", 60)
+    c.page.locator("body").click(position={"x": 5, "y": 400})
+    c.page.keyboard.press("b")
+    c.page.locator('[data-vx-pick="system"] [data-vx-pick-q]').type("rates")
+    c.page.keyboard.press("ArrowDown")
+    c.page.wait_for_timeout(400)
+    c.save("17-baskets.jpg")
+    c.page.keyboard.press("Escape")
+
+
+@shot("18-how-calculated.jpg")
+def how_calculated(c: Ctx):
+    """How calculated open on the bank: the drawer under the top bar, over the right of the screen."""
+    open_var(c, "/var?scope=BANK&how=1")
+    painted(c, "BANK")
+    c.page.wait_for_timeout(400)
+    c.save("18-how-calculated.jpg")

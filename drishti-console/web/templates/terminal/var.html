@@ -16,7 +16,11 @@
 {# The VaR explorer (VAR_GUIDE.md section 3; the approved mock-up var-drilldown): the scope tree with VaR, ES and limit use; the
    breadcrumb; six tiles; tabs for the P&L path, the VaR/ES history, the contributions, the captures and the scope in other currencies
    (loaded only when opened); Why it moved (2.9.10, VAR_GUIDE.md section 3.11: the change between two business dates in causes that add
-   up exactly, Waterfall · Matrix · Sentences, drawn by var-explain.js with the standard panel kinds); the provenance box. The header strip's Reporting currency (the product owner's mock-up A, 2.9.4) moves
+   up exactly, Waterfall · Matrix · Sentences, drawn by var-explain.js with the standard panel kinds); the provenance box. The layout (2.9.11.b, the approved mock-up
+   docs/lenses/mockups/var-layout/A.html): the hierarchy tree on the left; the baskets in two searchable drop-downs in the toolbar
+   (System baskets: the bank's portfolios; My baskets: saved, mine and shared with me; keys B and M; var-layout.js), "+ New basket" opens
+   the basket's sheet (collapsed on load); the provenance box is a drawer over the right of the screen, How calculated (H), its state in
+   the link (how=1); a bottom sheet on a phone. The header strip's Reporting currency (the product owner's mock-up A, 2.9.4) moves
    every panel to that currency; the choice stays for the session and goes into the page's link (ccy=EUR). Beside it (2.9.7, the
    approved mock-up var-horizon-picker) the Horizon (1-day, 10-day √10, 10-day sum), the VaR confidence and the ES confidence: each
    redraws every panel, goes into the link (h=10d&m=sum&q=0.99&esq=0.975) and is kept in the person's settings (varView); the method
@@ -26,7 +30,7 @@
 {% block title %}VaR · {{ scope }} · {{ PRODUCT }}{% endblock %}
 {% block screen %}var{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}">{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-basket.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/var-layout.css?v={{ ASSET_V }}">{% endblock %}
 {% block nav %}{% with command_text='VAR ' ~ (scope | replace(':', ' ')) ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
 {% from "_macros/phone.html" import part, foot, back %}{% set PP = phone_parts(request, 'var') %}{# the phone display (MOBILE_DISPLAY.md 8) #}
@@ -77,6 +81,27 @@
       </select>
     </label>
   </div>
+  {% set HOW = request.query_params.get('how') == '1' %}{# the drawer's state is in the link (how=1): served open #}
+  <div class="vx-bar" role="group" aria-label="Baskets and how the number was calculated">
+    {% for key, word, label, why in [('system', 'B', 'System baskets', "The baskets the system provides: the bank's portfolios, from the market-risk pack's portfolio feed."),
+                                    ('mine', 'M', 'My baskets', 'The baskets you saved, and those shared with you.')] %}
+    <div class="vx-pick" data-vx-pick="{{ key }}">
+      <button type="button" class="vx-pick-btn" id="vxPick-{{ key }}" data-vx-pick-btn aria-haspopup="listbox" aria-expanded="false" aria-controls="vxPop-{{ key }}" aria-keyshortcuts="{{ word }}" title="{{ label }} ({{ word }})">
+        <span class="k">{{ label }}</span><b data-vx-pick-cur>choose…</b><span class="car" aria-hidden="true">▾</span></button>
+      <div class="vx-drop" id="vxPop-{{ key }}" data-vx-pick-pop hidden>
+        <div class="vx-pick-search"><i class="bi bi-search" aria-hidden="true"></i>
+          <input type="text" class="vx-pick-q" data-vx-pick-q role="combobox" aria-expanded="false" aria-autocomplete="list" aria-controls="vxList-{{ key }}" aria-label="Search {{ label | lower }} by name or description" placeholder="Type to search…" autocomplete="off" spellcheck="false">
+          <span class="vx-pick-n" data-vx-pick-n aria-live="polite"></span></div>
+        <ul class="vx-opts" role="listbox" id="vxList-{{ key }}" aria-label="{{ label }}" data-vx-baskets-{{ key }}></ul>
+        <p class="vx-pick-why">{{ why }} Type to search by name or description · ↑↓ choose · Enter open · Esc close</p>
+        {% if key == 'mine' %}<button type="button" class="vx-link vx-pick-new" data-vx-basket-new{{ part(PP, 'basket') }}>+ New basket</button>{% endif %}
+      </div>
+    </div>
+    {% endfor %}
+    <button type="button" class="vx-link vx-newb" data-vx-basket-open{{ part(PP, 'basket') }} title="Construct your basket: the sheet (Alt+B)" aria-keyshortcuts="Alt+B">+ New basket <span class="tool-count" data-basket-count hidden>0</span></button>
+    <span class="vx-keys" aria-hidden="true"><b>B</b> system <b>M</b> mine <b>H</b> how</span>
+    <button type="button" class="vx-how{{ ' on' if HOW }}" data-vx-how aria-expanded="{{ 'true' if HOW else 'false' }}" aria-controls="vxHow" aria-keyshortcuts="H" title="How this number was built (H)">How calculated ›</button>
+  </div>
   <p class="vx-notice" data-vx-notice role="status" hidden></p>
   <ul class="vx-notices" data-vx-notices role="status" hidden></ul>
   <div class="vx-basket" data-vx-basket hidden></div>
@@ -86,8 +111,6 @@
         <select class="vx-select" data-vx-hierarchy aria-label="Hierarchy"><option value="{{ hierarchy or 'MGMT' }}">{{ hierarchy or 'MGMT' }}</option></select>
         <span class="vx-fresh" data-vx-fresh="tree">loading…</span></div>
       <div class="vx-tree" role="tree" data-vx-tree></div>
-      <div class="vx-sec">Ad-hoc scopes <button type="button" class="btn btn-sm vx-btn" data-vx-basket-open{{ part(PP, 'basket') }} title="Construct your basket (Alt+B)" aria-keyshortcuts="Alt+B">◫ Construct your basket <span class="tool-count" data-basket-count hidden>0</span></button></div>
-      <div class="vx-tree vx-adhoc" role="tree" data-vx-adhoc></div>
     </aside>
 
     <section class="vx-main">
@@ -168,8 +191,8 @@
       </div>
     </section>
 
-    <aside class="vx-panel vx-prov" aria-label="How this number was built"{{ part(PP, 'prov') }}>
-      <div class="vx-ph"><h2>How this number was built</h2></div>
+    <aside class="vx-panel vx-prov vx-drawer{{ ' vx-open' if HOW }}" id="vxHow" role="dialog" aria-modal="false" aria-labelledby="vxHowH" tabindex="-1" data-vx-drawer{{ '' if HOW else ' hidden' }}{{ part(PP, 'prov') }}>
+      <div class="vx-ph"><h2 id="vxHowH">How this number was built</h2><button type="button" class="vx-x" data-vx-how-close aria-label="Close: how this number was built (Esc)" title="Close (Esc)">Esc ✕</button></div>
       <div class="vx-pb">
         <dl data-vx-prov></dl>
         <p class="vx-note">Every figure on this page is reproducible from the vector batch, the scenario set and the engine above.</p>
@@ -182,4 +205,4 @@
   {{ foot(PP, request.url | string) }}
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explain.js?v={{ ASSET_V }}"></script>{% endblock %}
+{% block scripts %}<script src="/static/vendor/apache-arrow/21.1.0/Arrow.es2015.min.js?v={{ ASSET_V }}"></script><script src="/static/js/drishti-table.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket-sheet.js?v={{ ASSET_V }}"></script><script src="/static/js/var-basket.js?v={{ ASSET_V }}"></script><script src="/static/js/scope-delete.js?v={{ ASSET_V }}"></script><script src="/static/js/var-charts.js?v={{ ASSET_V }}"></script><script src="/static/js/var-layout.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explorer.js?v={{ ASSET_V }}"></script><script src="/static/js/var-explain.js?v={{ ASSET_V }}"></script>{% endblock %}

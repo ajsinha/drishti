@@ -1214,7 +1214,7 @@ at any time:
 - **Admin → Ad-hoc scopes** (`/admin/scopes`, a page of the Risk and Trading editions, page id `scopes` in `admin.pages`, shown where the
   `VAR` word is on) lists every person's baskets: owner, name, scope, whom it is shared with, created, updated and stored size; **Filter
   by owner** keeps the owners that contain the text. **Delete** opens a confirm dialog naming the basket, its owner and whom it is
-  shared with, with an optional **reason**. The VaR explorer's *Ad-hoc scopes* list offers **Delete** on every basket to an administrator
+  shared with, with an optional **reason**. The VaR explorer's *My baskets* drop-down offers **Delete** on every basket it lists to an administrator
   as well.
 - The command line: `drishti.py var baskets --all [--owner <text>]` lists them; `drishti.py var basket-delete <name> --owner <user>
   --reason <text>` deletes one. The API: `GET /api/v1/var/admin/baskets?owner=` and `DELETE /api/v1/var/baskets/<owner>/<name>?reason=`
@@ -1224,7 +1224,7 @@ at any time:
   was given (Admin → Audit log, filter by `<owner>/<name>`).
 - **The owner is told.** When an administrator deletes someone's basket, its owner gets an inbox row (and the bell): *Your VaR basket
   "…" (BASKET:…) was deleted by administrator … : reason*, opening the VaR explorer. Nothing is sent when owners delete their own.
-- **Editing someone's basket.** An administrator may also **Edit** anyone's basket at any time (the VaR explorer's *Ad-hoc scopes*
+- **Editing someone's basket.** An administrator may also **Edit** anyone's basket at any time (the VaR explorer's *My baskets*
   list: it opens in the basket's sheet; the API: `POST /api/v1/var/baskets` with `owner`). The edit is saved under its owner as the next
   version (`editedBy` names the administrator), is one audit entry, action `var-basket-edit`, detail *edited by administrator `<user>`
   for `<owner>`* with the version, the number of parts and whom it is shared with, and the owner gets an inbox row: *Your VaR basket "…"

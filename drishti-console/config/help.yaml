@@ -239,6 +239,8 @@ moved:
   playground: docs-guides-var-guide#310-the-var-playground-play-var
   var-explain: docs-guides-var-guide#311-why-it-moved-the-var-change-explained   # VAR EXPLAIN: why VaR moved, in causes that add up exactly (2.9.10)
   why-it-moved: docs-guides-var-guide#311-why-it-moved-the-var-change-explained
+  var-baskets: docs-guides-var-guide#32-the-screen                        # the VaR screen's System baskets and My baskets drop-downs
+  how-calculated: docs-guides-var-guide#36-how-this-number-was-built     # the VaR screen's How calculated drawer (H)
   stress-window: docs-guides-var-guide#189-choosing-the-stress-window   # SWIN: which 12-month period is worst for today's portfolio
   swin: docs-guides-var-guide#189-choosing-the-stress-window
   databricks: data-guide#3-using-drishti-with-databricks-delta-lake-or-apache-iceberg                                              # Databricks Delta Lake or Apache Iceberg

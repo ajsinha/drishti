@@ -13,8 +13,8 @@
  *
  * See the LICENSE file in the root of this repository for the full terms.
  */
-/* The VaR explorer (terminal/var.html, var-explorer.js, var-charts.js), after the approved mock-up var-drilldown: three columns
-   (scopes, the scope, how it was built), dense tables, tabular figures, the theme's tokens for every colour (tokens.css), so every
+/* The VaR explorer (terminal/var.html, var-explorer.js, var-charts.js), after the approved mock-up var-drilldown: two columns (the
+   scopes, the scope; how it was built a drawer since 2.9.11.b: var-layout.css), dense tables, tabular figures, the theme's tokens (tokens.css), so every
    theme reads. The charts are SVG coloured here by class. */
 .vx { padding: 10px 14px 18px; color: var(--d-ink); font-size: 13px; }
 .vx .mono, .vx .num, .vx td.n, .vx th.n { font-family: var(--d-font-mono); font-variant-numeric: tabular-nums; }
@@ -52,7 +52,7 @@
 .vx-ccytable tr.shown td:first-child { box-shadow: inset 2px 0 0 var(--d-accent); color: var(--d-accent); font-weight: 600; }
 .vx-ccytable td .vx-link { font-weight: 600; text-decoration: none; }
 .vx-ccytable td .vx-link:hover, .vx-ccytable td .vx-link:focus-visible { text-decoration: underline; }
-.vx-layout { display: grid; grid-template-columns: 330px minmax(0, 1fr) 270px; gap: 10px; align-items: start; }
+.vx-layout { display: grid; grid-template-columns: 330px minmax(0, 1fr); gap: 10px; align-items: start; }
 .vx-panel { background: var(--d-surface); border: 1px solid var(--d-border); border-radius: 4px; min-width: 0; display: flex; flex-direction: column; }
 .vx-ph { display: flex; align-items: center; gap: 10px; padding: 7px 10px; border-bottom: 1px solid var(--d-border); background: var(--d-surface-2);
   border-radius: 4px 4px 0 0; flex-wrap: wrap; }
@@ -78,8 +78,6 @@
 .vx-row .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .vx-row .num { text-align: right; }
 .vx-row .tw { display: inline-block; width: 14px; padding: 0; border: 0; background: none; color: var(--d-faint); cursor: pointer; font-size: 11px; }
-.vx-sec { padding: 8px 8px 4px; color: var(--d-accent); font: 600 10.5px var(--d-font-sans); letter-spacing: .08em; text-transform: uppercase;
-  display: flex; justify-content: space-between; align-items: center; }
 .vx-ubar { display: inline-block; width: 46px; height: 6px; background: var(--d-bg-2); border-radius: 3px; vertical-align: middle; overflow: hidden; }
 .vx-ubar.wide { width: 110px; }
 .vx-ubar i { display: block; height: 100%; border-radius: 3px; width: 0; }
@@ -204,11 +202,9 @@
 .vx-row .vx-add { opacity: 0; position: absolute; right: 0; top: 50%; transform: translateY(-50%); }
 .vx-row:hover .vx-add, .vx-row:focus-within .vx-add, .vx-row[aria-current="true"] .vx-add { opacity: 1; }
 @media (hover: none) { .vx-row .vx-add { opacity: 1; } }
-.vx-row .vx-del { right: 62px; color: var(--d-bad); }                    /* Delete on a saved basket, left of its "+ basket" */
-.vx-row .vx-del:hover, .vx-row .vx-del:focus { border-color: var(--d-bad); }
 .vx-gone { margin: 4px 0 8px; padding: 4px 8px; border-left: 3px solid var(--d-warn); }    /* a capture of a basket deleted since */
 
-@media (max-width: 1250px) { .vx-layout { grid-template-columns: 310px minmax(0, 1fr); } .vx-prov { grid-column: 1 / -1; } }
+@media (max-width: 1250px) { .vx-layout { grid-template-columns: 310px minmax(0, 1fr); } }
 @media (max-width: 1100px) { .vx-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 800px) { .vx-layout { grid-template-columns: minmax(0, 1fr); } .vx-charts, .vx-hist2 { grid-template-columns: minmax(0, 1fr); }
   .vx-tree-panel .vx-tree { max-height: 280px; overflow: auto; } }
@@ -226,12 +222,4 @@
   .vw-bar .vx-seg { display: none; }                  /* a phone draws the answer and the steps whatever the view */
   .vw-dates { width: 100%; }
 }
-/* An ad-hoc row (portfolios, saved baskets): the name shortens, its buttons sit after it and show on hover or for the open scope */
-.vx-adhoc-row .nm { display: flex; flex-wrap: nowrap; align-items: center; min-width: 0; }   /* one line always: showing the buttons
-   never changes a row's height, so the rows below never move under the pointer (a wrapped line did, and a click landed beside its button) */
-.vx-adhoc-row .nm .lbl { flex: 1 1 4em; min-width: 4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.vx-adhoc-row .vx-acts { flex: none; display: none; gap: 3px; margin-left: 4px; }
-.vx-adhoc-row:hover .vx-acts, .vx-adhoc-row:focus-within .vx-acts, .vx-adhoc-row[aria-current="true"] .vx-acts { display: inline-flex; }
-@media (hover: none) { .vx-adhoc-row .vx-acts { display: inline-flex; } }
-.vx-adhoc-row .vx-acts .vx-add { position: static; transform: none; opacity: 1; margin-left: 0; }
 

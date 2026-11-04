@@ -22,9 +22,12 @@
    Ad-hoc scopes and baskets are one thing: "Construct your basket" (var-basket.js and var-basket-sheet.js), one sheet like Excel at the
    top of this page, opened when asked: a column per kind of part, the type-ahead, "+ basket" on every row of the tree and the
    contributions, pasted columns, "Start from the whole bank", the server's check of every cell and the basket's VaR live, a pre-deal
-   what-if, Save (a basket, private or shared read-only) and Open. Opening a basket loads it back into the sheet; in Ad-hoc scopes a saved
+   what-if, Save (a basket, private or shared read-only) and Open. Opening a basket loads it back into the sheet. The baskets are listed
+   in the toolbar's two drop-downs (2.9.11.b, var-layout.js): System baskets (the bank's portfolios) and My baskets (saved: mine, then
+   shared with me); the sheet is collapsed until "+ New basket" (or Alt+B, + basket, Edit) and collapses again once saved. A saved
    basket of yours has "Edit" (an administrator's on everyone's; a basket shared with you and a portfolio, the bank's, have "Edit a copy")
-   and "Delete", which asks in a dialog (scope-delete.js), then refreshes the list and says so. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
+   and "Delete", which asks in a dialog (scope-delete.js), then refreshes the list and says so. How this number was built is a drawer
+   (How calculated, H; var-layout.js) drawn by renderProv as before. "Capture VaR" stores an immutable snapshot that reopens exactly, compares with
    another capture or with now, and exports as CSV.
 
    The reporting currency (2.9.4, the product owner's mock-up A): a select in the header strip lists the configured currencies and
@@ -1101,46 +1104,34 @@
 
   function markTree() {
     root.querySelectorAll(".vx-row[data-scope]").forEach(function (r) { r.setAttribute("aria-current", r.dataset.scope === S.scope ? "true" : "false"); });
+    if (window.VarLayout) window.VarLayout.mark(S.scope);          // the basket drop-downs name the scope when it is one of theirs
   }
 
+  /** The baskets in the toolbar's two drop-downs (2.9.11.b, var-layout.js): System baskets are the bank's portfolios (the tree's
+      answer: the market-risk pack's portfolio feed), My baskets the saved baskets the engine lists for me (mine, then those shared with
+      me). Each row keeps the actions the column had: + basket, Edit a copy (a portfolio, a basket shared read-only), Edit and Delete. */
   function renderAdhoc() {
-    var t = $("[data-vx-adhoc]");
-    t.textContent = "";
-    ((S.tree && S.tree.portfolios) || []).forEach(function (p) {
-      var pr = treeRow(p.name + " · " + p.type.toLowerCase(), p.scope, 0, null, null, null, { adhoc: true });
-      pr.querySelector(".nm").appendChild(editButton(p.scope, p.name, true));      // the bank's portfolio: never edited, a copy is
-      adhocActions(pr, p.name);
-      t.appendChild(pr);
-    });
+    var L = window.VarLayout;
+    if (!L) return;
+    L.setItems("system", ((S.tree && S.tree.portfolios) || []).map(function (p) {
+      var type = String(p.type || "").toLowerCase();
+      return { scope: p.scope, label: p.name, desc: p.description || "", meta: [p.id, p.owner].filter(Boolean).join(" · "), chip: type,
+               acts: [addButton(p.scope, { type: "PORT", id: p.scope.replace(/^[A-Z]+:/, ""), name: p.name }),
+                      editButton(p.scope, p.name, true)] };            // the bank's portfolio: never edited, a copy is
+    }));
     api("baskets", {}, true).then(function (bs) {
       S.baskets = bs;
-      bs.forEach(function (b) {
-        var row = treeRow("★ " + b.name + (b.owner !== S.user ? " (" + b.owner + ")" : ""), "BASKET:" + b.id, 0, null, null, null, { adhoc: true });
-        var mine = b.owner === S.user || S.admin;
-        row.querySelector(".nm").appendChild(editButton("BASKET:" + b.id, b.name, !mine));
-        if (mine) row.querySelector(".nm").appendChild(deleteButton(b));
-        adhocActions(row, b.name);
-        t.appendChild(row);
-      });
+      var own = bs.filter(function (b) { return b.owner === S.user; }), shared = bs.filter(function (b) { return b.owner !== S.user; });
+      L.setItems("mine", own.concat(shared).map(function (b) {
+        var scope = "BASKET:" + b.id, mine = b.owner === S.user || S.admin, acts = [addButton(scope, { type: "BASKET", id: b.id, name: b.name }),
+          editButton(scope, b.name, !mine)];
+        if (mine) acts.push(deleteButton(b));
+        return { scope: scope, label: b.name, desc: b.description || "", meta: b.id + (b.sharedWith && b.sharedWith.length && b.owner === S.user
+          ? " · shared with " + b.sharedWith.join(", ") : ""), group: b.owner === S.user ? "Mine" : "Shared with me", acts: acts };
+      }));
       markTree();
-    }).catch(function () { /* no baskets listed */ });
+    }).catch(function () { L.setItems("mine", []); });
     markTree();
-  }
-
-  /** An ad-hoc row: its name in a span that shortens with an ellipsis and its buttons after it, never drawn over the name (the list is
-      narrow: Edit, Delete and + basket would cover a short name); the full name is the row's tooltip. */
-  function adhocActions(row, name) {
-    var nm = row.querySelector(".nm");
-    var acts = h("span", "vx-acts");
-    nm.querySelectorAll(".vx-add").forEach(function (b) { acts.appendChild(b); });
-    var lbl = h("span", "lbl");
-    Array.prototype.slice.call(nm.childNodes).forEach(function (n) {
-      if (n.nodeType === 3) lbl.appendChild(n);                   // the label's text node(s)
-    });
-    nm.appendChild(lbl);
-    nm.appendChild(acts);
-    row.classList.add("vx-adhoc-row");
-    row.title = name;
   }
 
   /** "Edit" (a basket the viewer owns, or anyone's for an administrator) or "Edit a copy" (a portfolio, a basket shared read-only): the sheet. */
@@ -1204,11 +1195,13 @@
       }
     });
     // the sheet opens only when asked (Construct your basket, Alt+B, + basket, Edit): a basket kept in this browser waits behind the link's count
-    document.addEventListener("vb:saved", function (ev) { root.dataset.saved = ev.detail.id; });
+    // saved: the basket joins My baskets (onOpen lists them again) and the sheet collapses (2.9.11.b)
+    document.addEventListener("vb:saved", function (ev) { root.dataset.saved = ev.detail.id; B.hide(); });
   }
   $("[data-vx-basket-open]").addEventListener("click", function () { if (B) { B.show(); var f = root.querySelector("[data-vb-find]"); if (f) f.focus(); } });
   $("[data-vx-whatif]").addEventListener("click", function () {
     if (!B) return;
+    if (window.VarLayout && window.VarLayout.isOpen()) window.VarLayout.closeHow();   // the drawer gives way to the sheet it opens
     if (B.isEmpty() && S.head) B.add(S.head.kind === "basket" ? S.head.canonical : S.scope, { name: S.head.label });
     B.openWhatIf();
   });
