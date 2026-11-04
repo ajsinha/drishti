@@ -32,7 +32,6 @@ kinds:
 - simulation-run
 - exposure-path
 - exposure-result
-- exposure-whatif
 - fva-result
 - exposure-official-cpty
 - nset-mtm
@@ -51,7 +50,6 @@ commands:
   XRUN: simulation-run
   XPATH: exposure-path
   EXP: exposure-result
-  XWIF: exposure-whatif
   FVAR: fva-result
   XOFC: exposure-official-cpty
   NSMTM: nset-mtm
@@ -69,7 +67,6 @@ depends-on:
   - exposure-engine
   - exposure-results
   - exposure-store
-  - exposure-whatif
   - fva-engine
   - legal-store
   - saccr-engine
@@ -486,16 +483,6 @@ No samples ship: documents are read live from its connector `exposure-engine` (p
 
 Links: `RUN_ID` → `simulation-run`.
 
-### `exposure-whatif`
-
-**Exposure what-if before dealing (computed, Python)** · mnemonic `XWIF` · read through connector `exposure-whatif`.
-
-About: Exposure what-if before dealing.
-
-**Id:** set by its connector (no samples ship).
-
-No samples ship: documents are read live from its connector `exposure-whatif` (plugin `reactive`).
-
 ### `fva-result`
 
 **FVA of a scope (computed)** · mnemonic `FVAR` · read through connector `fva-engine`.
@@ -635,7 +622,6 @@ No samples ship: documents are read live from its connector `saccr-engine` (plug
 | `XRUN` | `simulation-run` | Exposure simulation run |
 | `XPATH` | `exposure-path` | Exposure path (a trade's MtM on every path at a grid date) |
 | `EXP` | `exposure-result` | Exposure profile of a scope (computed) |
-| `XWIF` | `exposure-whatif` | Exposure what-if before dealing (computed, Python) |
 | `FVAR` | `fva-result` | FVA of a scope (computed) |
 | `XOFC` | `exposure-official-cpty` | Exposure official results by netting set and counterparty (published) |
 | `NSMTM` | `nset-mtm` | Netting-set MtM totals (derived from the trade valuations) |
@@ -696,7 +682,6 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 | `exposure-store` | `delta` | `simulation-run`, `exposure-path`, `saccr-trade` | `${DRISHTI_LAKE_ENABLED:true}` |
 | `exposure-engine` | `reactive` | `exposure-result` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `fva-engine` | `reactive` | `fva-result` | `${DRISHTI_FVA_ENABLED:true}` |
-| `exposure-whatif` | `reactive` | `exposure-whatif` | `${DRISHTI_EXPOSURE_ENABLED:true}` |
 | `saccr-engine` | `reactive` | `saccr-result` | `${DRISHTI_SACCR_ENABLED:true}` |
 
 Settings (environment variables) its connectors read: `DRISHTI_CCR_DERIVED_ENABLED`, `DRISHTI_DELTA_ROOT`, `DRISHTI_EXPOSURE_ENABLED`, `DRISHTI_FVA_ENABLED`, `DRISHTI_LAKE_ENABLED`, `DRISHTI_SACCR_ENABLED`.
