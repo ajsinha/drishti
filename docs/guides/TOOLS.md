@@ -22,7 +22,7 @@ on **synthetic** data, and, for the tools that run unattended, how to schedule t
 safe re-runs).
 
 The depth lives elsewhere and is linked from each section: every option of every command with its output is in
-[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema); running a site
+[CLI_GUIDE.md](CLI_GUIDE.md); turning schema files and JSON into a pack is [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md); running a site
 (deploys, monitoring, capacity, runbooks) is [OPERATIONS.md](../admin/OPERATIONS.md); announcing loads is [DATA_GUIDE.md](DATA_GUIDE.md#1-telling-drishti-new-data-has-landed).
 
 All the data on this page is invented, and every example runs on a fresh clone as it is: the files are the committed test data
@@ -734,6 +734,7 @@ Options: `--config FILE`, `--set key.path=value` (repeatable; overrides the file
 | `source.id` | `id` (or the pack's) | the id field (`--key`), a dotted path |
 | `source.as-of` | none | one business date for every file of the input; else each file's: its `.ready` file's `business-date:`, its name's date (`<table>.<YYYY-MM-DD>.jsonl.gz`), the business today; a tar's members their folders' ([DATA_GUIDE.md section 2.8](DATA_GUIDE.md#8-feeds-the-table-and-business-date-of-a-file)) |
 | `source.date` | the pack's | a row's own date field: never the partition, only counted when it differs from its file's date (`fileDates`, `otherDateRows`, `dateNotes` in the summary) |
+| `--as-of`, `--table`, `--pack`, `--kind`, `--mode`, `--key`, `--date-from`, `--plan`, `--run-id` | | the command line's options over the file: `source.as-of`, `target.table`, `source.pack`, `target.kind`, `target.mode` (`append`, the default, or `replace`), `source.id`, `source.date-from`, a dry run; `--run-id` gives the run's id (its rows' `_load_id` is `<run-id>.<n>`; the data inbox passes one for every table of an archive) |
 | `source.date-from` | `auto` | `auto` as above; `name`: a file whose name carries no date (and no `as-of`, no `.ready` date) refuses the load |
 | `source.promote` | the pack's | fields kept as columns (`layout.<kind>.columns`) |
 | `source.vectors` (`vector`) | the pack's | list-of-numbers fields as `list<double>` columns, the document keeping a `{"$vector": …}` marker (VAR_GUIDE.md section 29.3) |
@@ -960,7 +961,7 @@ drishti-console/.venv/bin/python tools/drishti.py pack check build/tools-walk/sy
 --strict` on the drafted pack exits `1`: the default Sutra shows fields its About text does not explain yet (`DRS-2047`, a warning that
 `--strict` makes an error). Write the About text (`pack about-check`), then make CI strict.
 
-Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
+Real output: [CLI_GUIDE.md section 5](CLI_GUIDE.md); schema files to a pack: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
 **Scheduling**: `pack check` belongs in CI (exit `1` fails the build; `--junit DIR` for the report); `pack deploy` is idempotent
 (the same bundle twice changes nothing) and keeps the replaced version for `pack rollback`.
 
@@ -1712,7 +1713,7 @@ python3 tools/api_docs.py zip              # drishti-console/web/apidocs/drishti
 
 Bring schema files and JSON or JSON Lines data; the page profiles every file in the browser (arrays streamed), proposes kinds, ids,
 business dates and one Sutra per type, previews them, and builds a pack bundle to download or deploy. The command-line twin is
-`drishti.py pack make`. Guide: [DATA_GUIDE.md](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema).
+`drishti.py pack make`. Guide: [DATA_GUIDE.md](SCHEMA_TO_PACK_GUIDE.md).
 
 ### 10.2 Admin → Data loads → Lakes (`/admin/lakes`)
 

@@ -686,11 +686,11 @@ guard.
 
 ### `sutra design --schema` and `pack make --schema`
 
-Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](DATA_GUIDE.md#5-schema-to-pack-generate-a-pack-from-json-schema): kind, key, links, labels, formats, match column, strip, About text,
+Both take **JSON Schema** (draft 2020-12 or 07, JSON or YAML) and run the rules of [Schema to pack](SCHEMA_TO_PACK_GUIDE.md): kind, key, links, labels, formats, match column, strip, About text,
 tests. `sutra design --schema FILE... [--kind K] [--out DIR]` prints the Sutras (or writes `<out>/<kind>/<name>.v1.sutra.yaml` and `<out>/tests/`); `pack make --schema FILE|DIR... [DATA] --name N`
 writes the same folder as `pack make` below, for many kinds, with synthetic samples (named `sample-synthetic-N.json`) where no real documents are given. A JSON Lines file or folder after `--schema` is data.
 Flags: `--key`, `--date`, `--match` (as `kind=FIELD`; `--match none`), `--mnemonic`, `--strip N`, `--count N` (design) / `--samples N` (make), `--code`, `--description`, `--connector`, `--yes` (never ask which
-field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](DATA_GUIDE.md#the-command-line).
+field is the key). The example schemas are in `docs/guides/examples/schemas/`; real output is in [Schema to pack](SCHEMA_TO_PACK_GUIDE.md#the-command-line).
 
 ### `pack make`: everything in one folder
 
