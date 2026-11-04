@@ -169,6 +169,12 @@
   lifespan's tasks read their own app's, and code outside a request reads the newest app's (one app per process in production: as
   before). `tests/test_engines_per_app.py` keeps it so; reproduced and passing in that order (`test_workbench_metric_browser.py` then the
   inbox file) and alone.
+- **Busy protection refuses for memory only after a real clean-up (fixes the Drill A flake of `test_var_regulatory_browser.py`).** The
+  reading "after clean-up" was the heap after the last collection of any kind; after a young collection the old generation's garbage still
+  counts, so a 768 MB server holding 462 MB of live data read 94% and refused sign-ins for 45 s (`DRS-9501`; the test's sign-in timed out
+  at 45 s, alone 3 runs of 3). A reading over a refusal level is now confirmed by a full collection (at most once every 10 s; in between
+  the last one's result) before sign-ins or heavy work wait (`Signals.heapAfterCleanupBytes`, `AdmissionGate`); a server really that full
+  is refused as before. `AdmissionGateTest` covers both; the file passes alone and after a live-console file.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

@@ -37,6 +37,20 @@ public interface Signals {
     /** The heap in use after the last collection, in bytes (before the first collection: the heap in use now). */
     long heapAfterGcBytes();
 
+    /**
+     * The heap in use after a real clean-up, read before a refusal for memory (OPERATIONS.md, "Busy protection": the levels are "after
+     * clean-up"). The reading after the last collection of any kind counts what a young collection leaves in the old generation, garbage
+     * included, so a heap mostly garbage reads as nearly full; this collects the whole heap first (the live JVM's at most once every
+     * {@link #CLEANUP_EVERY_MS}, the last clean-up's result in between) and reads what is left. By default (a test's readings) the last
+     * reading.
+     */
+    default long heapAfterCleanupBytes() {
+        return heapAfterGcBytes();
+    }
+
+    /** At most one forced clean-up this often (only while a reading is over a refusal level); a decision in between reads its result. */
+    long CLEANUP_EVERY_MS = 10_000L;
+
     /** {@code -Xmx}. */
     long heapMaxBytes();
 
@@ -60,6 +74,10 @@ public interface Signals {
         return new Signals() {
             public long heapAfterGcBytes() {
                 return heap.bytes();
+            }
+
+            public long heapAfterCleanupBytes() {
+                return heap.cleanedUp();
             }
 
             public long heapMaxBytes() {
@@ -96,6 +114,44 @@ public interface Signals {
             }
             Runtime r = Runtime.getRuntime();
             return r.totalMemory() - r.freeMemory();
+        }
+
+        private long cleanedAt = Long.MIN_VALUE / 2;
+        private long cleaned = -1;
+
+        /**
+         * What a full collection leaves (what is live): one now, or the last one's when it is under {@link Signals#CLEANUP_EVERY_MS} old
+         * (never the readings after young collections in between: those count the old generation's garbage again). A JVM that ignores
+         * {@code System.gc()} gives the last reading.
+         */
+        synchronized long cleanedUp() {
+            long now = System.currentTimeMillis();
+            if (cleaned >= 0 && now - cleanedAt < CLEANUP_EVERY_MS) {
+                return cleaned;
+            }
+            long before = collections();
+            System.gc();                                                 // G1: a full collection (unless the JVM is told to ignore it)
+            if (collections() <= before) {
+                return bytes();
+            }
+            long used = 0;
+            for (MemoryPoolMXBean p : ManagementFactory.getMemoryPoolMXBeans()) {
+                if (p.getType() == MemoryType.HEAP) {
+                    used += p.getUsage().getUsed();
+                }
+            }
+            cleaned = used;
+            cleanedAt = now;
+            after.set(used);
+            return used;
+        }
+
+        private static long collections() {
+            long n = 0;
+            for (GarbageCollectorMXBean gc : ManagementFactory.getGarbageCollectorMXBeans()) {
+                n += Math.max(0, gc.getCollectionCount());
+            }
+            return n;
         }
 
         void listen() {
