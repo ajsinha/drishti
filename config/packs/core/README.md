@@ -50,7 +50,6 @@ depends-on:
   plugins:
   - delta
   settings:
-  - DRISHTI_DELTA_ROOT
   - DRISHTI_LAKE_ENABLED
 sources:
 - name: Synthetic sample data (tools/packgen/banking)
@@ -404,7 +403,7 @@ The connectors it brings (written once to `config/connectors/<name>.yaml`, then 
 |---|---|---|---|
 | `reference-store` | `delta` | `counterparty`, `counterparty-group`, `issuer`, `ccp`, `legal-entity`, `book`, `desk`, `trader`, `calendar`, `clearing-account` | `${DRISHTI_LAKE_ENABLED:true}` |
 
-Settings (environment variables) its connectors read: `DRISHTI_DELTA_ROOT`, `DRISHTI_LAKE_ENABLED`.
+Settings (environment variables) its connectors read: `DRISHTI_LAKE_ENABLED`.
 
 ## Refreshing the data
 
