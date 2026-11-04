@@ -78,6 +78,14 @@ public class EngineAdminController {
         this.audit = audit;
     }
 
+    /** The BLAS binding (Admin -> Engines shows its banner when auto fell back to Java); absent in a test that makes the controller itself. */
+    private com.ash.drishti.server.nativelib.NativeLibraries nativeLibraries;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void nativeLibraries(com.ash.drishti.server.nativelib.NativeLibraries n) {
+        this.nativeLibraries = n;
+    }
+
     @GetMapping("/api/v1/admin/engines")
     public Map<String, Object> list(@RequestAttribute(Principal.ATTRIBUTE) Principal p) {
         entitlements.requireAdmin(p);
@@ -178,6 +186,9 @@ public class EngineAdminController {
         Map<String, Object> m = new LinkedHashMap<>();
         m.put("node", registry.node());
         m.put("dir", registry.files().dir().toAbsolutePath().normalize().toString());
+        if (nativeLibraries != null) {
+            m.put("native", Map.of("blas", nativeLibraries.describe()));   // the BLAS path of this node and of each member
+        }
         long total = 0;
         List<Map<String, Object>> rows = new ArrayList<>();
         for (EngineCatalogue.Entry e : registry.entries()) {

@@ -167,8 +167,10 @@ FRTB's liquidity horizons or stressed calibration). Age-weighted and filtered me
 
 ## 2. The measures, with worked numbers
 
-In words, with the scope's vector `v` (N values, gains positive) and its scenarios sorted worst first (equal P&Ls: the older scenario
-first). The exact formulas are in [section 18](#18-the-computation).
+In words, with the scope's vector `v` (N values, gains positive) and its scenarios sorted worst first (equal P&Ls, and **near-equal**
+ones within a relative 1e-12 of the vector's largest P&L: the older scenario first, so the VaR date never depends on the last bits of a
+sum, whichever path summed it: [HIGH_PERFORMANCE_NATIVE.md section 6.2](../architecture/HIGH_PERFORMANCE_NATIVE.md#62-precision-and-parity)).
+The exact formulas are in [section 18](#18-the-computation).
 
 | Measure | Definition | At N = 509 |
 |---|---|---|

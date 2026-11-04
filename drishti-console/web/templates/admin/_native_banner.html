@@ -1,0 +1,39 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The administrators' notice while drishti.native.blas.mode is auto and BLAS runs on the pure-Java path (docs/admin/OPERATIONS.md section
+   2.1): shown on Admin -> Health and Admin -> Engines until fixed; the platform alert native-blas-fallback tells the inbox. `blas` is the
+   server's native.blas (GET /api/v1/admin/health or /api/v1/admin/engines); members on the Java path are named too. #}
+{% set nb = blas or {} %}
+{% set slow = [] %}
+{% for node, w in (nb.get('members') or {}).items() %}{% if w.startswith('java-fallback') %}{% set _ = slow.append(node ~ ': ' ~ w[14:]) %}{% endif %}{% endfor %}
+{% if nb.get('status') != 'DEGRADED' and not slow and (nb.get('reason') or '').startswith('chosen by admin') %}
+<p class="asof-banner" role="status" data-native-chosen>
+  <i class="bi bi-info-circle" aria-hidden="true"></i>
+  <span><b>Linear algebra runs on the pure-Java path, as chosen.</b> <span class="mono" data-native-reason>{{ nb.get('reason') }}</span>.
+  The figures are the same; many-scope sums are slower. Turn <i>Linear algebra: OpenBLAS</i> on in Admin → Engines (or
+  <span class="mono">drishti.py server blas native</span>) to use OpenBLAS again after its self-test.</span>
+</p>
+{% elif nb.get('status') == 'DEGRADED' or slow %}
+<p class="asof-banner" role="alert" data-native-banner>
+  <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
+  <span><b>BLAS runs on the pure-Java path.</b>
+  {% if nb.get('status') == 'DEGRADED' %}This server: <span class="mono" data-native-reason>{{ nb.get('reason') }}</span>.{% endif %}
+  {% if slow %}Members: <span class="mono" data-native-members>{{ slow | join('; ') }}</span>.{% endif %}
+  Results are identical (within 1e-12); many-scope VaR/ES sums are slower. Fix: a 64-bit Java on Linux or Windows x86-64 with the native
+  cache writable (<span class="mono">drishti.native.cache-dir</span>); or choose Java with <span class="mono">drishti.native.blas.mode: java</span>
+  to silence this (Help → Configuration; OPERATIONS.md section 2.1).</span>
+</p>
+{% endif %}

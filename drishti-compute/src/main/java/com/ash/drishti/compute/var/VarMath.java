@@ -44,8 +44,49 @@ public final class VarMath {
         return Math.max(1, Math.min(n, (int) Math.ceil(n * (1.0 - alpha) - EPS)));
     }
 
-    /** Scenario indices from the worst value to the best (ties: the lower index first). No boxing: a merge sort over an int[]. */
+    /**
+     * Two scenario P&amp;Ls closer than this, relative to the vector's largest absolute value, are a <b>near tie</b> (HIGH_PERFORMANCE_NATIVE.md
+     * section 6.2): the sums of the Java and the BLAS paths may differ in their last bits, and a near tie must not flip the VaR scenario.
+     */
+    public static final double NEAR_TIE = 1e-12;
+
+    /**
+     * Scenario indices from the worst value to the best. Ties and <b>near ties</b> (values within {@link #NEAR_TIE} of the vector's largest
+     * absolute value of each other, chained) are ordered by scenario date, the older first, which is the lower index (the scenario set's
+     * dates ascend), so the order, the VaR scenario and every component VaR are the same whichever path summed the vector. No boxing: a
+     * merge sort over an int[], then one pass over the near-tie groups.
+     */
     public static int[] order(double[] v) {
+        int[] idx = exactOrder(v);
+        double tol = tolerance(v);
+        if (tol > 0) {
+            for (int i = 0; i < idx.length;) {
+                int j = i + 1;
+                while (j < idx.length && v[idx[j]] - v[idx[j - 1]] <= tol) {
+                    j++;
+                }
+                if (j - i > 1) {
+                    java.util.Arrays.sort(idx, i, j);                // the group by scenario date (index)
+                }
+                i = j;
+            }
+        }
+        return idx;
+    }
+
+    /** The near-tie distance of {@code v}: {@link #NEAR_TIE} times its largest absolute finite value (0 for a vector of zeros). */
+    static double tolerance(double[] v) {
+        double m = 0;
+        for (double x : v) {
+            if (Double.isFinite(x)) {
+                m = Math.max(m, Math.abs(x));
+            }
+        }
+        return NEAR_TIE * m;
+    }
+
+    /** Scenario indices from the worst value to the best, exact ties by index (the order before near ties). */
+    static int[] exactOrder(double[] v) {
         int n = v.length;
         int[] idx = new int[n];
         for (int i = 0; i < n; i++) {
@@ -109,10 +150,25 @@ public final class VarMath {
             hi = lo;
         }
         double[] worst = worst(v, hi);
+        if (worst != null && (nearTie(v, worst[lo - 1]) || nearTie(v, worst[hi - 1]))) {
+            worst = null;                                        // the value at the rank has a near tie: the order decides which
+        }
         if (worst == null) {
             return var(v, order(v), alpha, rule);
         }
         return rule == RankRule.INTERPOLATED ? -((1 - w) * worst[lo - 1] + w * worst[hi - 1]) : -worst[lo - 1];
+    }
+
+    /** True when another value of {@code v} lies within the near-tie distance of {@code x} (a value equal to {@code x} included). */
+    static boolean nearTie(double[] v, double x) {
+        double tol = tolerance(v);
+        int close = 0;
+        for (double y : v) {
+            if (Math.abs(y - x) <= tol && ++close > 1) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

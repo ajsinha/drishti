@@ -33,6 +33,10 @@ public interface ComputeEngine {
     default void start() {
     }
 
+    /** Told who changes the engine's switch, when and why, just before the change takes effect (an engine that records it in its own state). */
+    default void changing(String actor, String at, String reason) {
+    }
+
     /** Releases what it holds: open dates, caches and buffers, threads, its connectors and computed kinds. Requests have drained. */
     default void stop() {
     }

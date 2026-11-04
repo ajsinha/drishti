@@ -17,6 +17,7 @@ package com.ash.drishti.compute.var;
 
 import com.ash.drishti.compute.vector.MappedMatrix;
 import com.ash.drishti.compute.vector.OrdinalSet;
+import com.ash.drishti.compute.vector.MultiSums;
 import com.ash.drishti.compute.vector.ParallelSums;
 import com.ash.drishti.compute.vector.PermutedVectors;
 import com.ash.drishti.compute.vector.RowSpill;
@@ -917,11 +918,7 @@ public final class VarBook {
      */
     public List<double[]> vectors(List<OrdinalSet> sets, ParallelSums sums) {
         if (!(store instanceof com.ash.drishti.compute.vector.ShardedVectors sv) || sets.size() < 2) {
-            List<double[]> out = new ArrayList<>(sets.size());
-            for (OrdinalSet s : sets) {
-                out.add(vector(s, sums));
-            }
-            return out;
+            return sets.size() < 2 || sharded() ? oneByOne(sets, sums) : batched(sets, sums);
         }
         ShardPlan[] plans = new ShardPlan[sets.size()];
         List<OrdinalSet> ask = new ArrayList<>();
@@ -955,6 +952,42 @@ public final class VarBook {
             out.add(plans[i].finish(plus, at[i][1] >= 0 ? got.get(at[i][1]) : null));
         }
         return out;
+    }
+
+    private List<double[]> oneByOne(List<OrdinalSet> sets, ParallelSums sums) {
+        return new ArrayList<>(sets.stream().map(s -> vector(s, sums)).toList());
+    }
+
+    /**
+     * Many sets on a date held here (HIGH_PERFORMANCE_NATIVE.md section 6.1): the sets no aggregate helps (scattered cells of a cube, ad-hoc
+     * trade sets: {@link #plannedVector} would sum them as they are) are summed together in one pass by {@link MultiSums} (on Java the
+     * same bits as one at a time; on OpenBLAS within a relative 1e-12); the others take their plan as {@link #vector} does.
+     */
+    private List<double[]> batched(List<OrdinalSet> sets, ParallelSums sums) {
+        double[][] out = new double[sets.size()][];
+        List<OrdinalSet> direct = new ArrayList<>();
+        List<Integer> at = new ArrayList<>();
+        Node root = primaryRoot();
+        for (int i = 0; i < sets.size(); i++) {
+            OrdinalSet s = sets.get(i);
+            boolean added = layer != null && layer.added() > 0 && s.intersects(layer.addedOrdinals());
+            if (!added && !s.isEmpty() && (root == null || !anyWhole(s))) {
+                direct.add(s);
+                at.add(i);
+            } else {
+                out[i] = vector(s, sums);
+            }
+        }
+        List<double[]> got = direct.isEmpty() ? List.of() : MultiSums.sums(store, direct, sums);
+        for (int i = 0; i < got.size(); i++) {
+            out[at.get(i)] = got.get(i);
+        }
+        return java.util.Arrays.asList(out);
+    }
+
+    /** True when {@code set} holds some book of the hierarchy whole (then {@link #plannedVector} uses the aggregates). */
+    private boolean anyWhole(OrdinalSet set) {
+        return bookRange.values().stream().anyMatch(r -> r[1] > r[0] && set.countIn(r[0], r[1]) == r[1] - r[0]);
     }
 
     /** True when this date's rows are sharded across Drishti*net members (VAR_SHARDING.md): a set is summed by the shards' owners. */

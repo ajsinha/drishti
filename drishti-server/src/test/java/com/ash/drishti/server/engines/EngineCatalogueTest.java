@@ -36,10 +36,10 @@ class EngineCatalogueTest {
     static final Path REPO = Path.of("..").toAbsolutePath().normalize();
 
     @Test
-    void theProductsCatalogueHoldsTheThirteenEnginesInOrderWithTheirLinks() {
+    void theProductsCatalogueHoldsTheFourteenEnginesInOrderWithTheirLinks() {
         EngineCatalogue c = EngineCatalogue.load();
         assertThat(c.all()).extracting(EngineCatalogue.Entry::id).containsExactly("var", "exposure", "sensitivities", "frtb-sa", "simm", "sa-ccr",
-                "fva", "mr-cube", "ccr-cube", "memory-lake", "dataload", "pivot", "flight");
+                "fva", "mr-cube", "ccr-cube", "memory-lake", "dataload", "pivot", "flight", "openblas");
         assertThat(c.neededBy("pivot")).containsExactly("mr-cube");
         assertThat(c.get("pivot").orElseThrow().liveOn()).isTrue();
         assertThat(c.get("frtb-sa").orElseThrow().needs()).containsExactly("var", "sensitivities");

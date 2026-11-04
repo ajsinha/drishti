@@ -45,6 +45,7 @@ work is in the [VaR guide](../guides/VAR_GUIDE.md) and the [exposure guide](../g
 14. [Reading the numbers, and their limits](#14-reading-the-numbers-and-their-limits)
 15. [Raw results](#15-raw-results)
 16. [The pivot engine at scale](#16-the-pivot-engine-at-scale)
+17. [Many VaR scopes at once (BLAS)](#17-many-var-scopes-at-once-blas)
 
 ## 1. What is measured, and why
 
@@ -1568,3 +1569,54 @@ JSON line:
 Read the extrapolations as section 14 says: straight lines through three points, orders of magnitude. Past what one node's disk and
 memory hold, other effects (spill, object-store bandwidth, more files than the disk cache) bend the line; the decision on a distributed
 SQL backend (PIVOT_ENGINE.md decision 8) waits for measured common views over 5 minutes on three nodes, not for an extrapolation.
+
+## 17. Many VaR scopes at once (BLAS)
+
+**Measured 2026-11-03** on the developer machine (24 cores, 61 GB; a release drill running beside it, so absolute times are pessimistic
+and the ratios are the result). `ManyScopeBenchmark` (drishti-benchmarks): P positions x 509 scenarios of float32 rows in a memory-mapped
+file (the hot file's shape), K scope sets, summed (a) one set at a time as before (`ParallelSums.sum`), (b) by `MultiSums` on Java and
+(c) by `MultiSums` on the bundled OpenBLAS 0.3.26 (one thread per call). 8 sum threads, `-Xmx2g`, best of the repeats.
+
+```bash
+java -Xmx2g -cp <compute, benchmarks and their jars> com.ash.drishti.benchmarks.ManyScopeBenchmark <folder> 1000000 8 2
+```
+
+Shapes: **cube** (each row in one of K cells at random: a cube view's cells), **dense** (each row in each set with probability 1/2:
+overlapping portfolios and ad-hoc baskets), **desks** (K contiguous ranges).
+
+**1,000,000 positions** (2 repeats):
+
+| Shape | K | One at a time | MultiSums, Java | MultiSums, OpenBLAS | Java speed-up | OpenBLAS speed-up | Largest relative difference |
+|---|---|---|---|---|---|---|---|
+| cube | 10 | 62.2 ms | 67.3 ms | 55.8 ms | 0.92x | 1.11x | 0 |
+| cube | 100 | 291.1 ms | 124.7 ms | 121.2 ms | 2.34x | 2.40x | 0 |
+| cube | 1,000 | 324.7 ms | 313.4 ms | 324.1 ms | 1.04x | 1.00x | 0 |
+| dense | 10 | 318.6 ms | 272.5 ms | 256.2 ms | 1.17x | 1.24x | 0 |
+| dense | 100 | 3,209.8 ms | 2,645.4 ms | 1,028.4 ms | 1.21x | **3.12x** | 4.5e-16 |
+| desks | 10 | 35.4 ms | 34.8 ms | 36.3 ms | 1.02x | 0.97x | 0 |
+| desks | 100 | 110.3 ms | 33.0 ms | 34.5 ms | 3.34x | 3.20x | 0 |
+| desks | 1,000 | 107.2 ms | 104.6 ms | 104.3 ms | 1.02x | 1.03x | 0 |
+
+**200,000 positions** (3 repeats): cube 100 cells 2.0x (Java and OpenBLAS alike), dense 100 sets 1.9x on Java and 2.4x on OpenBLAS,
+desks 100 2.2x on Java.
+
+Reading it: the Java path reads each tile of rows once for all the sets and gives **the same bits** as one set at a time (the benchmark
+checks every vector); OpenBLAS adds the most where many sets overlap (each row in many sets: portfolios, baskets, what-if batches), where
+`dgemm` replaces many additions of the same row; a cube's cells (each row in one cell) and desks are bandwidth-bound and gain from the
+single pass, not from BLAS. At K = 1,000 cube cells every set is under 1,024 rows and is summed alone (plain row order), as before.
+OpenBLAS is used for a 1,024-row tile only when at least 32 sets share it at a density of at least a quarter (below that the conversion
+of the rows to float64 costs more than it saves: dense K = 10 was 3x slower on `dgemm` in the first measurement).
+
+The `dgemm` thresholds were **tuned on this one machine** and are settings (`drishti.native.blas.gemm-min-sets`, 32;
+`drishti.native.blas.gemm-min-density`, 0.25): measure again on the bank's hardware before changing them.
+
+**The VaR regression check of a release** runs the release twice against the previous release's figures on the same inputs:
+
+| Run | Must hold |
+|---|---|
+| `drishti.native.blas.mode=java` | **bit-exact** against the previous release: every VaR, ES, component and vector figure equal to the bit (the Java path keeps the sums' fixed order, and near ties are ordered as before) |
+| `drishti.native.blas.mode=auto` (OpenBLAS loaded) | every figure within a **relative 1e-12** of the Java run, and the **same VaR scenario date** for every scope (the near-tie rule) |
+
+Measured and **not kept** (slower than the Java loops, so they stay on Java): the FRTB bucket sum as `dgemv` (1,000 factors 1.9 ms loop
+against 8.2 ms; 3,000 factors 20.6 ms against 48.0 ms) and exposure's means and set additions (200 dates x 10,000 paths: means 1.2 ms
+loop against 1.3 ms; ten sets added 6.5 ms loop against 48.7 ms with `daxpy`, the native call copying its arrays).
