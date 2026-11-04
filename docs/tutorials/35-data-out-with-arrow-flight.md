@@ -161,3 +161,4 @@ numbers, computed when asked; a stream resumes where it stopped; every read is l
 - [FLIGHT_GUIDE.md](../guides/FLIGHT_GUIDE.md): turning Flight on, tokens and scopes, what can be read, the cluster, limits and troubleshooting.
 - [FLIGHT_REFERENCE.md](../guides/FLIGHT_REFERENCE.md): every ticket form, its schema, its errors and the scopes it needs.
 - The client pages: [Python](../guides/flight/PYTHON.md), [Java](../guides/flight/JAVA.md), [JDBC](../guides/flight/JDBC.md) and [ODBC](../guides/flight/ODBC.md).
+- The [client examples](../../examples/clients/README.md), notebooks and programs to start your own from (a pivot over trade legs, the VaR scenario and ES tail plotted, a join in DuckDB, the in-memory lake, Excel through Python).

@@ -37,6 +37,11 @@ Power BI the same through its ODBC connector.
 
 (output from the demo lake: to be filled in the heavy run)
 
+## Without an installer
+
+Where the ODBC driver may not be installed, Excel gets a workbook from a Flight read through Python instead (no add-in):
+[examples/clients/excel](../../../examples/clients/excel/README.md).
+
 ## Errors
 
 The tool shows the service's message, starting with its code (`DRS-5603` no model named or a statement refused, `DRS-5602` not allowed,

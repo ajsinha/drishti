@@ -59,6 +59,14 @@ for seq, batch in f.stream(req):                # a pyarrow.RecordBatch after ea
 
 Keep the last `seq`; `f.stream(req, resume=seq)` continues after it.
 
+## Examples
+
+Nine notebooks, each cell explained, read only: connect and the catalogue, a kind into pandas and polars, a BI model, a pivot
+view over trade legs, a desk's VaR scenario P&L with the VaR scenario and ES tail marked, a live stream with resume, a join in DuckDB,
+an in-memory lake table, and a direct lake read for users who already hold lake access:
+[examples/clients/python](../../../examples/clients/README.md#python-notebooks-python). Excel from Python (no add-in):
+[examples/clients/excel](../../../examples/clients/excel/README.md).
+
 ## Errors
 
 A refusal raises `FlightRefused` with `.code` (`DRS-5604` …) and the words; the codes are in the guide's troubleshooting table.

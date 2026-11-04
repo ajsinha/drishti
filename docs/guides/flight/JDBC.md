@@ -65,6 +65,11 @@ try (Connection c = DriverManager.getConnection("jdbc:arrow-flight-sql://drishti
 
 A prepared statement works the same way (read only, no parameters). Updates, DDL and transactions are refused: Flight SQL is read only here.
 
+## Example
+
+`JdbcFlightSql.java`, plain JDBC with the driver jar: without arguments it lists the models you may read and their tables; with a model
+and a statement it runs the statement: [examples/clients/java](../../../examples/clients/java/README.md#jdbc-through-flight-sql).
+
 ## Errors
 
 The driver shows the service's message, starting with its code: `DRS-5603` (no model named, a statement DSQL refuses, with the BI SQL
