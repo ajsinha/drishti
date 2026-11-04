@@ -35,18 +35,18 @@ def fake(calls):
 
 
 def test_plan_reads_the_java_answer(tmp_path, monkeypatch):
-    monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["java", main])
+    monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["fake-jvm", main])
     calls = []
     got = undo.plan(str(tmp_path), "R.1", True, runner=fake(calls))
     assert got == [{**LINE, "format": "delta"}]
-    assert calls[0][:2] == ["java", undo.UNDO] and "--dry-run" in calls[0] and calls[0][calls[0].index("--load-id") + 1] == "R.1"
+    assert calls[0][:2] == ["fake-jvm", undo.UNDO] and "--dry-run" in calls[0] and calls[0][calls[0].index("--load-id") + 1] == "R.1"
     assert undo.words(got, "R.1", True) == ["would undo risk/scenario-pv 2026-10-27: 2 rows of load R.1 removed"]
     assert undo.words([{**LINE, "replaced": True, "restored": 5}], "R.1", False)[0].endswith("5 rows of the date before it restored")
     assert undo.words([], "R.1", False) == ["no row of load R.1 in the lake"]
 
 
 def test_the_undo_is_confirmed_by_the_load_id(tmp_path, monkeypatch):
-    monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["java", main])
+    monkeypatch.setattr(stores, "loader_command", lambda data, jar, java, main: ["fake-jvm", main])
     done = []
     monkeypatch.setattr(undo, "plan", lambda lake, load_id, dry, jar=None, java=None: done.append(dry) or [LINE])
     a = types.SimpleNamespace(lake=str(tmp_path), load_id="R.1", dry_run=False, yes=False, json=False, jar=None, java=None)
