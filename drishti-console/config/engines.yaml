@@ -351,7 +351,7 @@ engines:
     console: [/pivot, /api/pivot/]
     words: [PIVOT]
     menus: [pivot]
-    help: [docs-guides-pivot-guide, docs-tutorials-33-the-pivot-engine, docs-tutorials-36-custom-functions-and-explain]
+    help: [docs-guides-pivot-guide, docs-tutorials-33-the-pivot-engine, docs-tutorials-37-custom-functions-and-explain]
     landings: []
     tiles: []
     lenses: []

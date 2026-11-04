@@ -19,7 +19,7 @@ The pivot engine turns any table of any pack, or the VaR engine's trades, into a
 rows and columns, under these filters, on this business date. Every figure is computed by the server; every total is made from its own
 members, never from the figures on the screen. The design behind it is [PIVOT_ENGINE.md](../architecture/PIVOT_ENGINE.md); the hands-on
 walk-through is [tutorial 33](../tutorials/33-the-pivot-engine.md); custom functions, explain and what-if are walked through in
-[tutorial 36](../tutorials/36-custom-functions-and-explain.md).
+[tutorial 37](../tutorials/37-custom-functions-and-explain.md).
 
 ## Contents
 

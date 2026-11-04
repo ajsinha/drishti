@@ -30,7 +30,7 @@
   explain; tab B: components, waterfall, histogram, heat map; tab C: the DV01 ladder, the what-if side by side); the catalogue's
   `defaultView` opens any source on its landing; `drishti.py pivot --option` and `pivot mr ...`. The paused `wip/mr-cube` branch's cube
   core (`/api/v1/cube`, codes DRS-5601 to DRS-5604, DRS-9506) is not brought back: the pivot engine's codes and busy protection apply.
-- **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 36).** Custom aggregation functions in four
+- **The pivot engine, phase P2 (2.9.11.b; PIVOT_GUIDE.md sections 19 to 21, tutorial 37).** Custom aggregation functions in four
   languages with the four steps start, add, merge and finish: a formula of the built-ins (DEL's syntax: `sum(PNL, where=PNL < 0) /
   sum(abs(PNL))`, mergeable when its parts are, computed in the same `GROUPING SETS` statement), a DuckDB SQL macro (rewritten into the
   built-ins' states when it is a formula, else holistic), Python (the node's sandboxed `pivot-fn` workers from the compute SDK: no

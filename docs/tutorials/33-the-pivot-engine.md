@@ -264,7 +264,7 @@ it means; a live view sends only what moved; a comment belongs to a cell's coord
 ## Next steps
 
 - [PIVOT_GUIDE.md](../guides/PIVOT_GUIDE.md) sections 24 to 26: the switches, live pivots and cell comments in full.
-- [Tutorial 36](36-custom-functions-and-explain.md): custom functions, explain the difference and what-if.
+- [Tutorial 37](37-custom-functions-and-explain.md): custom functions, explain the difference and what-if.
 
 - The worked examples over documents, each with its figures, picture, command and saved view:
   [PIVOT_GUIDE.md, Documents](../guides/PIVOT_GUIDE.md#documents-paths-lists-and-grains).

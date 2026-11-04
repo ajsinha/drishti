@@ -13,7 +13,7 @@
 
   See the LICENSE file in the root of this repository for the full terms.
 -->
-# Tutorial 36 · Custom functions, "why did it move" and what-if
+# Tutorial 37 · Custom functions, "why did it move" and what-if
 
 The built-in measures cover most questions; the rest you write yourself. In this tutorial you put a formula straight into a pivot, write a
 weighted-return function in the playground and watch the harness prove that its split-and-merge answer equals one pass, save it, have
