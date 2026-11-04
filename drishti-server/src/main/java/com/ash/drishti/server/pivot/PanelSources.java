@@ -92,7 +92,7 @@ public final class PanelSources implements TabularSource.Resolver {
             }
         }
         PivotBinder.Records r = pipeline.records(EntityRef.of(kind, entity), day == null ? AsOf.LATEST : AsOf.of(day), panel,
-                entitlements.redactor(p), k -> entitlements.mayOpen(p, k));
+                entitlements.viewer(p));
         if (r.truncated()) {
             throw new DrishtiException(ErrorCode.PIVOT_TOO_MANY_CELLS, "the panel " + panel + " of " + entity + " has " + r.total() + " rows, more "
                     + "than a panel's pivot reads (drishti.pivot.max-records, " + r.limit() + "): pivot the table itself (PIVOT " + kind

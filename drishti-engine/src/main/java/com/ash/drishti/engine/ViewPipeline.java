@@ -169,49 +169,48 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** A view of a stored entity with an unsaved Sutra, as the caller may see it. */
     public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact) {
-        return preview(sutra, ref, asOf, redact, ANY);
+        return preview(sutra, ref, asOf, ViewerContext.of(redact, ANY));
     }
 
     /** As above, and a panel whose {@code source} is of a kind {@code mayOpen} refuses shows "no access" instead of that entity's data. */
-    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, ViewerContext who) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return assemble(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact, mayOpen).view();
+        return assemble(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, who).view();
     }
 
     /** A view with the control values of the request ({@code ctl.leg=L2}); see {@link ControlValues}. */
-    public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values) {
+    public ViewModel view(EntityRef ref, AsOf asOf, ViewerContext who, ControlValues values) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen, values).view();
+        return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, who, values).view();
     }
 
     /**
      * A view drawn with a Sutra of the entity's kind the reader names ({@code /v/portfolio-trades/BOOK-1?sutra=book-desk}) instead of the
      * matched one; empty {@code chosen} is the matched one. The layout is cached as for a matched Sutra.
      */
-    public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values,
+    public ViewModel view(EntityRef ref, AsOf asOf, ViewerContext who, ControlValues values,
             Optional<Sutra> chosen) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
         return assemble(doc, t0, System.nanoTime(), chosen.isPresent() ? chosen : matcher.match(doc.ref().kind(), doc.data()), true, asOf,
-                redact, mayOpen, values).view();
+                who, values).view();
     }
 
     /** A stored entity with an unsaved Sutra and the control values of the request. */
-    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+    public ViewModel preview(Sutra sutra, EntityRef ref, AsOf asOf, ViewerContext who,
             ControlValues values) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return assemble(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, redact, mayOpen, values).view();
+        return assemble(doc, t0, System.nanoTime(), Optional.of(sutra), false, asOf, who, values).view();
     }
 
     /** A supplied document and Sutra (a Design's sample) built with the control values of the request. */
-    public Built builtPreview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+    public Built builtPreview(Optional<Sutra> sutra, EntityDocument doc, ViewerContext who,
             ControlValues values) {
         long t0 = System.nanoTime();
-        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact,
-                mayOpen, values);
+        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, who, values);
     }
 
     /** A view of a document supplied by the caller (Studio sample JSON), with a given or matched Sutra. */
@@ -221,14 +220,13 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** A view of a supplied document; linked entities read from the sources are masked for the caller. */
     public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact) {
-        return preview(sutra, doc, redact, ANY);
+        return preview(sutra, doc, ViewerContext.of(redact, ANY));
     }
 
     /** A supplied document, as the caller may see it; sourced panels of kinds {@code mayOpen} refuses show "no access". */
-    public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+    public ViewModel preview(Optional<Sutra> sutra, EntityDocument doc, ViewerContext who) {
         long t0 = System.nanoTime();
-        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact,
-                mayOpen).view();
+        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, who).view();
     }
 
     /** The layout inference alone would give {@code ref}, in Sutra form (Studio "start from inference"). */
@@ -257,14 +255,14 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** The view of {@code ref} as the caller may see it: {@code redact} masks what the caller's role may not see. */
     public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact) {
-        return view(ref, asOf, redact, ANY);
+        return view(ref, asOf, ViewerContext.of(redact, ANY));
     }
 
     /** The view as the caller may see it: linked and sourced entities of kinds {@code mayOpen} refuses are never fetched or bound. */
-    public ViewModel view(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+    public ViewModel view(EntityRef ref, AsOf asOf, ViewerContext who) {
         long t0 = System.nanoTime();
         EntityDocument doc = fetch(ref, asOf);
-        return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen).view();
+        return assemble(doc, t0, System.nanoTime(), matcher.match(doc.ref().kind(), doc.data()), true, asOf, who).view();
     }
 
     /**
@@ -287,11 +285,11 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /**
      * The view of a document supplied by the caller (a Design's sample) with a given Sutra, with what explaining it needs; as
-     * {@link #preview(Optional, EntityDocument, UnaryOperator, Predicate)}: nothing is cached, because the Sutra is a draft.
+     * {@link #preview(Optional, EntityDocument, ViewerContext)}: nothing is cached, because the Sutra is a draft.
      */
-    public Built builtPreview(Optional<Sutra> sutra, EntityDocument doc, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+    public Built builtPreview(Optional<Sutra> sutra, EntityDocument doc, ViewerContext who) {
         long t0 = System.nanoTime();
-        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, redact, mayOpen);
+        return assemble(doc, t0, t0, sutra.isPresent() ? sutra : matcher.match(doc.ref().kind(), doc.data()), false, AsOf.LATEST, who);
     }
 
     /** The stored document of {@code ref} as of {@code asOf} (the source's cache serves repeats). */
@@ -299,10 +297,10 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         return stored(ref, asOf);
     }
 
-    /** The view of an already fetched document, with what explaining it needs; as {@link #view(EntityRef, AsOf, UnaryOperator, Predicate)}. */
-    public Built built(EntityDocument doc, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
+    /** The view of an already fetched document, with what explaining it needs; as {@link #view(EntityRef, AsOf, ViewerContext)}. */
+    public Built built(EntityDocument doc, AsOf asOf, ViewerContext who) {
         long t0 = System.nanoTime();
-        return assemble(doc, t0, t0, matcher.match(doc.ref().kind(), doc.data()), true, asOf, redact, mayOpen);
+        return assemble(doc, t0, t0, matcher.match(doc.ref().kind(), doc.data()), true, asOf, who);
     }
 
 
@@ -318,7 +316,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** A panel's rows as the caller may see them: masked fields read {@link DataNode#MASK}. */
     public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, UnaryOperator<DataNode> redact) {
-        return records(ref, asOf, panelId, redact, ANY);
+        return records(ref, asOf, panelId, ViewerContext.of(redact, ANY));
     }
 
     /**
@@ -326,8 +324,9 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
      *
      * @throws DrishtiException {@code DRS-5002} when the panel's source is of a kind the caller may not open
      */
-    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, UnaryOperator<DataNode> redact,
-            Predicate<String> mayOpen) {
+    public com.ash.drishti.engine.bind.PivotBinder.Records records(EntityRef ref, AsOf asOf, String panelId, ViewerContext who) {
+        UnaryOperator<DataNode> redact = who.redact();
+        Predicate<String> mayOpen = who.mayOpen();
         EntityDocument doc = fetch(ref, asOf);
         Optional<Sutra> sutra = matcher.match(ref.kind(), doc.data());
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate(), router.partition()),
@@ -356,20 +355,22 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
      * that read the event rebound, the clicked panel's children filled (8). {@code fired} are the events fired before (the server's,
      * resolved for this caller); the same document, Sutra, business date, masks and controls as the view.
      */
-    public ScreenWire.Result event(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values,
+    public ScreenWire.Result event(EntityRef ref, AsOf asOf, ViewerContext who, ControlValues values,
             Optional<Sutra> chosen, List<ScreenWire.Selection> fired, String panel, String event, int row) {
-        return wire.event(screen(ref, asOf, redact, mayOpen, values, chosen, fired), panel, event, row);
+        return wire.event(screen(ref, asOf, who, values, chosen, fired), panel, event, row);
     }
 
     /** The children of one panel of a Sutra Next screen, given the events fired (lazy: asked for when they show, RACHANA_REFERENCE.md 8). */
-    public List<ScreenWire.ChildrenView> children(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+    public List<ScreenWire.ChildrenView> children(EntityRef ref, AsOf asOf, ViewerContext who,
             ControlValues values, Optional<Sutra> chosen, List<ScreenWire.Selection> fired, String panel) {
-        return wire.children(screen(ref, asOf, redact, mayOpen, values, chosen, fired), panel);
+        return wire.children(screen(ref, asOf, who, values, chosen, fired), panel);
     }
 
     /** {@code chosen}: a Sutra of the kind the reader asked for by name ({@code ?sutra=}), else the matched one. */
-    private ScreenWire.Screen screen(EntityRef ref, AsOf asOf, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values,
+    private ScreenWire.Screen screen(EntityRef ref, AsOf asOf, ViewerContext who, ControlValues values,
             Optional<Sutra> chosen, List<ScreenWire.Selection> fired) {
+        UnaryOperator<DataNode> redact = who.redact();
+        Predicate<String> mayOpen = who.mayOpen();
         EntityDocument doc = fetch(ref, asOf);
         Optional<Sutra> sutra = chosen.isPresent() ? chosen : matcher.match(ref.kind(), doc.data());
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate(), router.partition()),
@@ -392,7 +393,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
         }
         BindContext ctx = new BindContext(seen, layout, fp, eval, List.of(), Map.of(), Set.of());
         return new ScreenWire.Screen(layout.sutra(), nodes, ctx, eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf,
-                redact, mayOpen, byPanel, null);
+                who, byPanel, null);
     }
 
     /** Builds a view from a document already in hand (live updates re-enter here; live is always current). */
@@ -402,18 +403,18 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
 
     /** Builds a view from a document already in hand, as the caller may see it. */
     public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact) {
-        return build(doc, t0, tFetched, redact, ANY);
+        return build(doc, t0, tFetched, ViewerContext.of(redact, ANY));
     }
 
     /** Builds a view from a document already in hand (live rebuilds), for a caller who may open only what {@code mayOpen} accepts. */
-    public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
-        return assemble(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact, mayOpen).view();
+    public ViewModel build(EntityDocument doc, long t0, long tFetched, ViewerContext who) {
+        return assemble(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, who).view();
     }
 
     /** Builds a view from a document already in hand with the control values a live stream was opened with. */
-    public ViewModel build(EntityDocument doc, long t0, long tFetched, UnaryOperator<DataNode> redact, Predicate<String> mayOpen,
+    public ViewModel build(EntityDocument doc, long t0, long tFetched, ViewerContext who,
             ControlValues values) {
-        return assemble(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, redact, mayOpen, values).view();
+        return assemble(doc, t0, tFetched, matcher.match(doc.ref().kind(), doc.data()), true, AsOf.LATEST, who, values).view();
     }
 
     /**
@@ -437,12 +438,14 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
     }
 
     private Built assemble(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
-            UnaryOperator<DataNode> redact, Predicate<String> mayOpen) {
-        return assemble(doc, t0, tFetched, sutra, cached, asOf, redact, mayOpen, ControlValues.NONE);
+            ViewerContext who) {
+        return assemble(doc, t0, tFetched, sutra, cached, asOf, who, ControlValues.NONE);
     }
 
     private Built assemble(EntityDocument doc, long t0, long tFetched, Optional<Sutra> sutra, boolean cached, AsOf asOf,
-            UnaryOperator<DataNode> redact, Predicate<String> mayOpen, ControlValues values) {
+            ViewerContext who, ControlValues values) {
+        UnaryOperator<DataNode> redact = who.redact();
+        Predicate<String> mayOpen = who.mayOpen();
         EntityRef ref = doc.ref();
         boolean current = dates.isCurrent(asOf);
         Fingerprint fp = fingerprints.get(new GenKey(ref, doc.provenance().generation(), doc.provenance().businessDate(), router.partition()),
@@ -494,7 +497,7 @@ public final class ViewPipeline implements com.ash.drishti.common.LiveSettings {
                 asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen);   // what a map's link and shade read across a kind
         BindContext ctx = new BindContext(seen, layout, fp, eval, links, linked, pending, denied, maps);
         ScreenWire.Screen screen = new ScreenWire.Screen(layout.sutra(), com.ash.drishti.rachana.SutraWiring.nodes(layout.sutra()), ctx,
-                eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, redact, mayOpen, Map.of(), null);
+                eval.withRoot(doc.data()), asOf.businessDate() == null ? dates.resolve(asOf) : asOf, who, Map.of(), null);
         List<CompletableFuture<PanelView>> futures = new ArrayList<>();
         for (Panel p : layout.sutra().panels()) {
             boolean wired = ScreenWire.wired(p);            // Sutra Next: its own source, events, children (RACHANA_REFERENCE.md 6 to 8)

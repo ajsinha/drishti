@@ -148,7 +148,15 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    public Entitlements entitlements(SecurityProperties props, PackAccess packAccess, RoleCatalog roles) {
-        return new Entitlements(props, packAccess, roles);
+    public Entitlements entitlements(SecurityProperties props, PackAccess packAccess, RoleCatalog roles,
+            org.springframework.beans.factory.ObjectProvider<com.ash.drishti.identity.UserService> users) {
+        Entitlements e = new Entitlements(props, packAccess, roles);
+        e.attributes(p -> {                                   // as BI's dataset rules know the reader (the profile's desk and email)
+            com.ash.drishti.identity.UserService u = props.enabled() ? users.getIfAvailable() : null;
+            java.util.Optional<com.ash.drishti.identity.User> user = u == null ? java.util.Optional.empty() : u.find(p.user());
+            return com.ash.drishti.server.bi.dataset.UserAttributes.of(p.user(), p.roles(), user.map(com.ash.drishti.identity.User::desk).orElse(""),
+                    user.map(com.ash.drishti.identity.User::email).orElse(""));
+        });
+        return e;
     }
 }

@@ -75,16 +75,26 @@ public final class ScreenWire {
      * evaluation context, the business date, the viewer's masks and kinds, and the events fired so far.
      */
     public record Screen(Sutra sutra, Map<String, SutraWiring.Node> nodes, BindContext ctx, EvalContext rawEval, AsOf asOf,
-            UnaryOperator<DataNode> redact, Predicate<String> mayOpen, Map<String, Map<String, Selection>> fired,
-            Map<String, Pair> cache) {
+            com.ash.drishti.engine.ViewerContext viewer, Map<String, Map<String, Selection>> fired, Map<String, Pair> cache) {
 
         public Screen {
+            viewer = viewer == null ? com.ash.drishti.engine.ViewerContext.SYSTEM : viewer;
             fired = fired == null ? Map.of() : fired;
             cache = cache == null ? new ConcurrentHashMap<>() : cache;
         }
 
+        /** The viewer's masks. */
+        public UnaryOperator<DataNode> redact() {
+            return viewer.redact();
+        }
+
+        /** The kinds the viewer may open. */
+        public Predicate<String> mayOpen() {
+            return viewer.mayOpen();
+        }
+
         Screen withFired(Map<String, Map<String, Selection>> next) {
-            return new Screen(sutra, nodes, ctx, rawEval, asOf, redact, mayOpen, next, cache);
+            return new Screen(sutra, nodes, ctx, rawEval, asOf, viewer, next, cache);
         }
 
         boolean fired(String panel, String event) {

@@ -72,7 +72,7 @@ class MapPanelTest {
     private ViewModel.PanelView panel(String panel, UnaryOperator<DataNode> redact, java.util.function.Predicate<String> may) {
         EntityDocument doc = new EntityDocument(EntityRef.of("jurisdiction", "JUR-AUS"), codec.read("{\"jurisdictionId\":\"JUR-AUS\",\"iso3\":\"AUS\",\"name\":\"Australia\"}"),
                 new Provenance("test", 1, Instant.now(), false));
-        return pipeline.preview(Optional.of(sutra(panel)), doc, redact, may).panels().get(0);
+        return pipeline.preview(Optional.of(sutra(panel)), doc, com.ash.drishti.engine.ViewerContext.of(redact, may)).panels().get(0);
     }
 
     private static PanelData.GeoMap map(ViewModel.PanelView p) {

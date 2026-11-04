@@ -53,7 +53,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
@@ -104,7 +103,7 @@ public final class ExplainService {
     }
 
     /** The caller: who they are (the cache is per user) and what they may see. */
-    public record Caller(String user, UnaryOperator<DataNode> redact, Predicate<String> mayOpen, UnaryOperator<ViewModel> restrict) {}
+    public record Caller(String user, com.ash.drishti.engine.ViewerContext viewer, UnaryOperator<ViewModel> restrict) {}
 
     /**
      * Explains the page of {@code ref}.
@@ -161,7 +160,7 @@ public final class ExplainService {
     }
 
     private Entry derive(EntityDocument doc, AsOf asOf, Caller caller, String locale) {
-        ViewPipeline.Built built = pipeline.built(doc, asOf, caller.redact(), caller.mayOpen());
+        ViewPipeline.Built built = pipeline.built(doc, asOf, caller.viewer());
         ViewModel view = caller.restrict().apply(built.view());
         ViewModel.Provenance pv = view.provenance();
         Set<String> ids = new LinkedHashSet<>();
