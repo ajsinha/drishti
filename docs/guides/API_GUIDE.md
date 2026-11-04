@@ -3459,6 +3459,30 @@ curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localh
 
 Off, every `/api/v1/pivot/mr` call answers `404 DRS-1020`, and an MR measure, level or option on `source: var` is refused (`DRS-5701`).
 
+
+### The CCR cube: `/api/v1/pivot/ccr`
+
+The counterparty cube ([EXPOSURE_GUIDE.md section 30](EXPOSURE_GUIDE.md#30-the-ccr-cube-ccube)) is the pivot engine on `source: ccr`, served
+while engine `ccr-cube` runs (it needs `exposure` and `pivot`): dimensions `GROUP`, `COUNTERPARTY`, `LEGAL_ENTITY`, `NETTING_SET` and
+`TENOR_BUCKET`; measures `pfe()`, `ee()`, `epe()`, `eepe()`, `ce()`, `limit()`, `limit_use()`, `headroom()`, `nettingSets()`, and
+`ead()` (SA-CCR) and `fva()` (FVA) while those engines run; the view's `options` `q` and `collateral`. Every cell is its own netting sets'
+paths summed by the exposure engine, the statistics last (a total is never a sum of peaks). Its lens adds, as the caller:
+
+| Call | Does |
+|---|---|
+| `POST /api/v1/pivot/ccr/headline` | `{view}`: the bank's `peakPfe`, `peakTenor`, `pfe99`, `epe`, `eepe`, `ce`, `run`, `runNote`; `overCount`, `over`, `nearCount`, `near` (each `counterparty`, `bucket`, `use`, `limit`); `warningAt`, `limitConfidence`, `buckets`, `flags` |
+| `GET /api/v1/pivot/ccr/fan?scope=&q=&collateral=&asOf=` | a scope's `points` (`tenor`, `t`, `ee`, `pfe`, `ene`, `bucket`, `limit`, `headroom`), `peakPfe`, `peakTenor`, `epe`, `limit`, `limitId`, `bindingTenor`, `minHeadroom`, `limitNote` |
+| `POST /api/v1/pivot/ccr/pre-deal` | the exposure what-if's request and answer (`POST /api/v1/exposure/what-if`) plus `limit`, `useBefore`, `useAfter`, `headroomBefore`, `headroomAfter`, `limitNote` |
+
+A token calls the two `POST`s with any scope: each is a read (`token-read-posts`), computed by the exposure engine as the caller and
+written nowhere. Off, `404 DRS-1020`; an unknown option `400 DRS-5701`; a dimension asked by a viewer of the sets in aggregate `403 DRS-5705`.
+
+```bash
+curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
+  -d '{"source":"ccr","rows":["COUNTERPARTY"],"columns":["TENOR_BUCKET"],"values":[{"measure":"pfe()"},{"measure":"limit_use()"}],"options":{"q":"0.95"}}'
+curl -s -H "Authorization: Bearer $T" 'localhost:8080/api/v1/pivot/ccr/fan?scope=CPTY:CP-ALDERSHOT&q=0.99'
+```
+
 ## Embedding views in another web application
 
 For `<drishti-view>` ([CLIENT_RENDERER.md](../architecture/CLIENT_RENDERER.md#20-drishti-elements-the-design)): a host application shows live Drishti views in its own pages, and Drishti decides who may see what. Off by default; switch it on with `drishti.embed.enabled` (needs `drishti.security.enabled`; settings in [CONFIGURATION.md](../admin/CONFIGURATION.md#drishtiembed--embedded-views-for-other-web-applications)).

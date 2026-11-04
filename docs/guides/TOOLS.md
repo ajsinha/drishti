@@ -1504,6 +1504,9 @@ The pivot engine as the token's user sees it (`tools/pivotcli.py`; [PIVOT_GUIDE.
 - `pivot mr headline|cell|versions|explain|ladder|heat|whatif`: the MR cube's lens (`/api/v1/pivot/mr`): the view's headline, a cell's
   tail (`--cell DIM=V,...`), the slider's dates, why a scope moved (`--scope`, `--from`, `--to`), the DV01 ladder (`--grid`), the heat
   map (`--by QUALIFIER,TENOR`), the what-if side by side (`--copy TRADE --factor -1`).
+- `pivot ccr board|headline|fan|predeal`: the CCR cube on source `ccr` ([EXPOSURE_GUIDE.md section 30](EXPOSURE_GUIDE.md#30-the-ccr-cube-ccube)):
+  landing A's board (counterparties by tenor bucket, peak PFE and use; the view flags override it), the headline, a scope's fan with the
+  limit and headroom (`--scope`, `--q`, `--collateral`), a pre-deal check (`--scope CPTY:… --copy TRADE --into NS-… --factor 1`).
 - `pivot functions list`; `pivot functions test FILE --sample ROWS.csv [--group COL]` (the harness's checks and the states part by part;
   exit 1 when it fails); `pivot functions save FILE --sample ROWS.csv`; `pivot functions submit|approve|revoke owner/name@v [--reason]
   [--scope everyone|group:NAME]` (`tools/pivotfncli.py`; a function file is YAML or JSON: `name, language, code, entry, inputs, kind`).
@@ -1522,6 +1525,8 @@ drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows 
 drishti-console/.venv/bin/python tools/drishti.py pivot export --view asha/desk-risk --format xlsx -o desk-risk.xlsx
 drishti-console/.venv/bin/python tools/drishti.py pivot run --source var --rows MGMT.DESK --cols RISK_CLASS --values "comp_var()" --option horizon=10d
 drishti-console/.venv/bin/python tools/drishti.py pivot mr ladder --scope DESK:RATES --grid FRTB-GIRR
+drishti-console/.venv/bin/python tools/drishti.py pivot ccr board --option q=0.99
+drishti-console/.venv/bin/python tools/drishti.py pivot ccr fan --scope CPTY:CP-ALDERSHOT
 drishti-console/.venv/bin/python tools/drishti.py pivot functions test wret.yaml --sample rows.csv --group DESK
 drishti-console/.venv/bin/python tools/drishti.py pivot live start --view asha/desk-risk
 drishti-console/.venv/bin/python tools/drishti.py pivot comments asha/desk-risk --cell DESK=RATES --add "checked with the desk" --measure Notional

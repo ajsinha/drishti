@@ -1,0 +1,40 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The CCR cube's panes (CCR_CUBE_LENS.md section 6.7): view A's rail beside the pivot (A6 the fan with the limit step line, A4 the treemap),
+   view B (B1 tiles, B2 the collateral effect, B5 the profile, B3 the trades) and view C (C1 pre-deal tiles, C2 the overlay, C3 the group
+   roll-up, the counterparty's EAD and FVA; CVA and wrong-way risk planned). A's grid is the pivot above; B and C replace it while shown. #}
+<div class="mr-rail" data-ccr-pane="A">
+  <section class="pv-card"><h2 data-ccr-fan-title>PFE and EE fan <span class="pv-sub">click a counterparty</span></h2><div data-ccr-fan class="ccr-chart"><p class="pv-sub">Click a row of the board: its EE and PFE by date with the limit as a step line.</p></div></section>
+  <section class="pv-card"><h2>Counterparties <span class="pv-sub">area: EPE · edge: amber near the limit, red over</span></h2><div data-ccr-tree class="ccr-tree"></div></section>
+</div>
+<div class="mr-panes" data-ccr-pane="B" hidden>
+  <form class="ccr-pick" data-ccr-nset-form><label class="pv-chip">Netting set <input class="mr-input mono" data-ccr-nset placeholder="NS-…" size="22" aria-label="The netting set"></label><button type="submit" class="pv-btn">Open</button></form>
+  <section class="mr-tiles" data-ccr-b-tiles aria-live="polite"></section>
+  <section class="pv-card"><h2>Collateral effect <span class="pv-sub" data-ccr-b-at></span></h2><div data-ccr-b-effect></div></section>
+  <section class="pv-card"><h2>Profile by tenor <span class="pv-sub">EE, PFE, EE without collateral, the effect</span></h2><div data-ccr-b-profile class="ccr-scroll"></div></section>
+  <section class="pv-card"><h2>Trades <span class="pv-sub">contribution to the peak PFE (negative: a hedge)</span></h2><div data-ccr-b-trades class="ccr-scroll"></div></section>
+</div>
+<div class="mr-panes" data-ccr-pane="C" hidden>
+  <form class="mr-tray" data-ccr-tray><label>Counterparty <input class="mr-input mono" name="scope" placeholder="CPTY:…" size="18" required aria-label="The scope"></label>
+    <label>Copy trade <input class="mr-input mono" name="trade" placeholder="a booked trade id" required aria-label="A booked trade to copy"></label>
+    <label>into <input class="mr-input mono" name="nset" placeholder="NS-… (blank: its own)" size="16" aria-label="The netting set"></label>
+    <label>× <input class="mr-input mono" name="factor" value="1" size="4" aria-label="Factor"></label>
+    <button type="submit" class="pv-btn primary">Pre-deal <kbd>W</kbd></button></form>
+  <section class="mr-tiles" data-ccr-c-tiles aria-live="polite"></section>
+  <section class="pv-card"><h2>Before and after <span class="pv-sub">PFE before (red), after (gold), EE (blue), the limit</span></h2><div data-ccr-c-overlay class="ccr-chart"><p class="pv-sub">Copy a booked trade into a netting set (exact: its paths on the run added path by path).</p></div></section>
+  <section class="pv-card"><h2>Group roll-up <span class="pv-sub">each node its members' paths summed, then the quantile</span></h2><div data-ccr-c-group class="ccr-scroll"></div></section>
+  <section class="pv-card ccr-planned"><h2>CVA term structure · wrong-way risk <span class="pv-sub">planned</span></h2><p class="pv-sub">CVA and wrong-way risk join the CCR cube with the CVA family; FVA and SA-CCR EAD are live above.</p></section>
+</div>

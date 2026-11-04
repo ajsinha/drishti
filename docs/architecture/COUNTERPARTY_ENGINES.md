@@ -15,8 +15,9 @@
 -->
 # Counterparty engines: SA-CCR, the Exposure playground, FVA and the CCR cube core
 
-Status: SA-CCR is **built** (2.9.12, [section 15](#15-as-built-sa-ccr)); FVA is **built** (2.9.12, section 5.5, as built); the Exposure playground and the CCR cube core below are the
-design still to build. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
+Status: SA-CCR is **built** (2.9.12, [section 15](#15-as-built-sa-ccr)); FVA is **built** (2.9.12, section 5.5, as built); the Exposure
+playground is **built** (2.9.12); the CCR cube is **built** on the pivot engine (2.9.12, section 6.5, as built); allocation by desk, the
+legal tree and the demo limits by bucket remain design. The product owner decided every open point on 2026-11-02 ([section 14](#14-decisions)). The plan's rows are in [the implementation plan](IMPLEMENTATION_PLAN.md#2912-counterparty-engines-proposed).
 Companion to [SACCR.md](../contracts/SACCR.md) (the SA-CCR contract this document narrows to a build), [NSET.md](../contracts/NSET.md)
 (netting sets and CSAs), [COLL.md](../contracts/COLL.md) (collateral values), [CVA.md](../contracts/CVA.md) (the xVA formulas, FVA among
 them), [LIM.md](../contracts/LIM.md) (limits), [EXPOSURE_GUIDE.md](../guides/EXPOSURE_GUIDE.md) (the exposure engine, built),
@@ -429,6 +430,18 @@ read as the asker, no sandbox, no compute pool, no Python ([EXPOSURE_GUIDE.md se
 The request and the answer are unchanged; reference answers on four netting sets under the three collateral models and both rank rules
 are given to the cent (`ExposureWhatIfMathTest`). The pre-deal check is the word `EXP`'s (the explorer's Pre-deal tab, the Trading
 landing's check, C's pre-deal tab); there is no separate what-if kind or command.
+
+### 6.5 As built: the CCR cube on the pivot engine
+
+The shared cube core of MR_CUBE_LENS.md section 4 is the pivot engine (2.9.11.b), so the CCR cube is its source `ccr`
+(`CcrPivotProvider`, `com.ash.drishti.server.exposure`; engine `ccr-cube`, needing `exposure` and `pivot`): members are the netting sets
+the person sees; dimensions `GROUP`, `COUNTERPARTY`, `LEGAL_ENTITY`, `NETTING_SET`, `TENOR_BUCKET`; each cell asks the exposure engine for
+exactly its sets (`ExposureService.scoped` on `NSET:<ids>`), so the totals rule of section 6.2 holds by construction; `ead()` and `fva()`
+sum the SA-CCR and FVA engines' per-set figures. The endpoints are `/api/v1/pivot/query` on source `ccr` and `/api/v1/pivot/ccr/headline`,
+`/fan` and `/pre-deal` (in place of the `/api/v1/cube/ccr/...` of section 6.2); the limit is the stored credit limit, one amount per
+counterparty, on every bucket. Not built yet: the allocation by desk at date load (CC2), the group tree over a legal tree (CC3; the group is
+`counterparty-group`), the collateral waterfall's split (B2 shows EE with and without collateral), CVA and wrong-way risk.
+[EXPOSURE_GUIDE.md section 30](../guides/EXPOSURE_GUIDE.md#30-the-ccr-cube-ccube) is the reference.
 
 ## 7. API, command line and screens
 

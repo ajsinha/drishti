@@ -16,7 +16,8 @@
 sees it: a view's answer (pivot run), its scan estimate (pivot estimate), an export (pivot export), the sources and a source's fields (pivot
 sources, pivot fields) and saved views (pivot views, pivot save); custom functions, explain and what-if are tools/pivotfncli.py's;
 the MR cube's lens on source var is pivot mr headline|cell|versions|explain|ladder|heat|whatif (docs/guides/MR_CUBE_GUIDE.md,
-/api/v1/pivot/mr). Every figure is the server's. Exit codes: 0, 1 (the server said no),
+/api/v1/pivot/mr); the CCR cube's on source ccr is pivot ccr board|headline|fan|predeal (docs/guides/EXPOSURE_GUIDE.md section 30,
+/api/v1/pivot/ccr). Every figure is the server's. Exit codes: 0, 1 (the server said no),
 2 (usage)."""
 from __future__ import annotations
 
@@ -40,7 +41,12 @@ EPILOG = ("examples:\n  drishti.py pivot sources\n  drishti.py pivot fields trad
           "  drishti.py pivot mr cell --source var --rows MGMT.DESK --cell MGMT.DESK=DESK-RATES\n"
           "  drishti.py pivot mr explain --scope DESK:RATES --from 2026-09-29\n"
           "  drishti.py pivot mr ladder --scope BANK --grid BANK-IR-TENOR\n"
-          "  drishti.py pivot mr whatif --source var --rows MGMT.DESK --copy MX-20000001 --factor -1")
+          "  drishti.py pivot mr whatif --source var --rows MGMT.DESK --copy MX-20000001 --factor -1\n"
+          "  drishti.py pivot ccr board\n"
+          "  drishti.py pivot ccr board --rows GROUP,COUNTERPARTY --values \"pfe()\" --values \"epe()\" --option q=0.99\n"
+          "  drishti.py pivot ccr headline\n"
+          "  drishti.py pivot ccr fan --scope CPTY:CP-ALDERSHOT\n"
+          "  drishti.py pivot ccr predeal --scope CPTY:CP-ALDERSHOT --copy SW-1001 --into NS-ALDERSHOT-LDN --factor 1")
 
 
 def fmt(v) -> str:
@@ -182,6 +188,8 @@ def register(groups, srv, ctx: dict) -> None:
                     print(f"{v['id']:<32} @{v.get('version')} {v['view']['source']}  (shared with: {', '.join(v.get('sharedWith') or []) or 'nobody'})")
         elif c == "mr":
             return mr(api, a)
+        elif c == "ccr":
+            return ccr(api, a)
         elif c == "save":
             v = build_view(a)
             res = api.json("POST", "/api/v1/pivot/views", {"name": a.name, "view": v, "sharedWith": a.share or []})
@@ -308,6 +316,63 @@ def register(groups, srv, ctx: dict) -> None:
                 print(f"{r['label'][:32]:<34}" + (r.get("note") or f"{fmt(r.get('before')):>18}{fmt(r.get('after')):>18}{fmt(r.get('incremental')):>18}"))
         return 0
 
+    def ccr_view(a) -> dict:
+        """The CCR cube's view: the flags over the source ccr; with no rows, landing A's board (counterparties by tenor bucket)."""
+        if not a.source and not a.view and not a.json_view:
+            a.source = "ccr"
+            if not a.rows:
+                a.rows, a.cols = "COUNTERPARTY", a.cols or "TENOR_BUCKET"
+            a.values = a.values or ["pfe()", "limit_use()"]
+        return body(a)
+
+    def ccr(api, a) -> int:
+        w = a.what
+        q = {k: v for k, v in (("q", a.q), ("collateral", a.collateral), ("asOf", a.date)) if v}
+        if w == "board":
+            res = api.json("POST", "/api/v1/pivot/query", ccr_view(a))
+            if a.json:
+                say_json(res)
+            else:
+                render(res, print)
+            return 0
+        if w == "headline":
+            res = api.json("POST", "/api/v1/pivot/ccr/headline", ccr_view(a))
+        elif w == "fan":
+            res = api.json("GET", "/api/v1/pivot/ccr/fan?" + urllib.parse.urlencode({"scope": a.scope or "BANK", **q}))
+        else:
+            if not a.scope or not a.copy:
+                raise SystemExit("pivot ccr predeal: name the --scope (CPTY:...) and a booked trade to --copy (and --into a netting set)")
+            cand = {"tradeId": "CAND-1", "paths": {"copyOf": a.copy, "factor": a.factor}}
+            if a.into:
+                cand["nettingSet"] = a.into
+            b = {"scope": a.scope, "method": "paths", "candidates": [cand]}
+            if a.q:
+                b["q"] = float(a.q)
+            path = "/api/v1/pivot/ccr/pre-deal" + ("?" + urllib.parse.urlencode({"asOf": a.date}) if a.date else "")
+            res = api.json("POST", path, b)
+        if a.json:
+            say_json(res)
+        elif w == "headline":
+            print(f"BANK · {res['date']} · PFE {res['confidence']:.0%} peak {fmt(res['peakPfe'])} at {res.get('peakTenor')}  EPE {fmt(res['epe'])}"
+                  f"  EEPE {fmt(res['eepe'])}  · run {res['run']}")
+            print(f"over the limit: {res['overCount']}" + "".join(f"  {r['counterparty']} {r['bucket']} {r['use']:.0%}" for r in res["over"]))
+            print(f"near the limit (>= {res['warningAt']:.0%}): {res['nearCount']}" + "".join(f"  {r['counterparty']} {r['bucket']} {r['use']:.0%}" for r in res["near"]))
+        elif w == "fan":
+            print(f"{res['scope']} · {res['date']} · PFE {res['confidence']:.0%} peak {fmt(res['peakPfe'])} at {res.get('peakTenor')}")
+            print(f"{'tenor':<8}{'bucket':<8}{'EE':>18}{'PFE':>18}{'limit':>18}{'headroom':>18}")
+            for pt in res["points"]:
+                print(f"{pt['tenor'] or '':<8}{pt.get('bucket') or '':<8}{fmt(pt['ee']):>18}{fmt(pt['pfe']):>18}{fmt(pt.get('limit')):>18}{fmt(pt.get('headroom')):>18}")
+            print(res["limitNote"] + (f" · binding tenor {res['bindingTenor']}, headroom {fmt(res['minHeadroom'])}" if res.get("bindingTenor") else ""))
+        else:
+            inc, base, after = res.get("incremental", {}), res.get("base", {}), res.get("with", {})
+            print(f"{res['scope']} · {res.get('method')} · peak PFE {fmt(base.get('peakPfe'))} -> {fmt(after.get('peakPfe'))} "
+                  f"(incremental {fmt(inc.get('peakPfe'))})")
+            if res.get("limit") is not None:
+                print(f"limit {fmt(res['limit'])}: use {res['useBefore']:.1%} -> {res['useAfter']:.1%}, headroom after {fmt(res['headroomAfter'])}")
+            else:
+                print(res.get("limitNote", ""))
+        return 0
+
     pv = groups.add_parser("pivot", help="pivot: any table or VaR as a pivot computed by the server: run, estimate, export, saved views",
                            epilog=EPILOG, formatter_class=argparse.RawDescriptionHelpFormatter)
     ps = pv.add_subparsers(dest="pivot_sub", required=True)
@@ -364,6 +429,17 @@ def register(groups, srv, ctx: dict) -> None:
     m.add_argument("--copy", help="mr whatif: a booked trade whose vector is copied")
     m.add_argument("--factor", type=float, default=-1.0, help="mr whatif: the copy's scale (default -1: unwind)")
     m.set_defaults(func=cmd, pivot_cmd="mr")
+    cc = ps.add_parser("ccr", help="the CCR cube on source ccr: the limit board, the headline, a scope's fan with the limit, a pre-deal check",
+                       parents=[srv])
+    cc.add_argument("what", choices=["board", "headline", "fan", "predeal"])
+    view_args(cc)
+    cc.add_argument("--scope", help="ccr fan, predeal: a scope (BANK, GROUP:..., CPTY:..., NSET:...)")
+    cc.add_argument("--q", help="ccr fan, predeal: the PFE confidence (default: the limit's, 0.95)")
+    cc.add_argument("--collateral", choices=["lagged", "current", "none"], help="ccr fan: the collateral model")
+    cc.add_argument("--copy", help="ccr predeal: a booked trade whose paths are copied")
+    cc.add_argument("--into", help="ccr predeal: the netting set the copy joins (none: a set of its own)")
+    cc.add_argument("--factor", type=float, default=1.0, help="ccr predeal: the copy's scale (default 1; -1 is its unwind)")
+    cc.set_defaults(func=cmd, pivot_cmd="ccr")
     vs = ps.add_parser("views", help="your saved views and those shared with you", parents=[srv])
     vs.set_defaults(func=cmd, pivot_cmd="views")
     sv = ps.add_parser("save", help="save a view under a name (private, or shared with --share)", parents=[srv])

@@ -84,6 +84,10 @@ heap). [Section 23](#23-test-data-and-generators) says how the data is made.
 
 29. [The Exposure Playground (PLAY EXP)](#29-the-exposure-playground-play-exp)
 
+**Part V · The CCR cube**
+
+30. [The CCR cube (CCUBE)](#30-the-ccr-cube-ccube)
+
 ## Part I · Using exposure
 
 ## 1. The question exposure answers
@@ -1705,6 +1709,125 @@ All four are reads (`GET`), so a personal API token calls them with its `read` s
   contributions add up, the workbook downloads and recalculates, refusals answer in words, and the entitlements apply.
 - `tests/test_exposure_play.py` (console) and `tools/test_expplaycli.py` (command line) cover the command words, the page, the
   pass-through of the choices and the downloads.
+
+## Part V · The CCR cube
+
+## 30. The CCR cube (CCUBE)
+
+The CCR cube is counterparty risk as a pivot: groups, counterparties, legal entities and netting sets by the limit board's tenor buckets,
+each cell its peak PFE, EE, EPE, EEPE, CE, limit use and headroom, and SA-CCR's EAD and FVA beside them. It is not a second engine: it is
+the pivot engine's source `ccr` over the exposure engine, with the CCR lens around the pivot screen (the MR cube is the same idea for VaR,
+[MR_CUBE_GUIDE.md](MR_CUBE_GUIDE.md)). The tutorial is [tutorial 42](../tutorials/42-the-ccr-cube-on-the-pivot-engine.md); the design is
+[COUNTERPARTY_ENGINES.md section 6](../architecture/COUNTERPARTY_ENGINES.md#6-the-ccr-cube-core-data-flow) and
+[CCR_CUBE_LENS.md section 6.7](../lenses/CCR_CUBE_LENS.md#67-mock-ups-the-screens-to-build).
+
+### 30.1 Every cell is its own netting sets' paths, statistics last
+
+A cell's members are the netting sets the person sees that fall in it. The cube asks the exposure engine for exactly those sets (the same
+code as `EXP`: each set's collateral on every path, then the sets' exposures summed path by path) and reads the statistics last. So:
+
+- **PFE, peak EE, EEPE and limit use never add up.** A counterparty's peak PFE is the quantile of its sets' summed paths; a group's is the
+  quantile of its counterparties' summed paths; the bank's is the bank's. Case X2 of COUNTERPARTY_ENGINES.md section 9: two sets with
+  exposures 4, 0, 1, 0 and 0, 3, 1, 0 on four paths have PFE 75% of 1 each; together 4, 3, 2, 0, PFE 75% **3**, not 2.
+- **EE, EPE, CE, EAD and FVA add up** over netting sets; the cube still reads them from the engine, never sums them in the browser.
+- A cell of the bank equals `EXP BANK`, a counterparty's cell equals `EXP CPTY:<id>`, a netting set's equals `EXP NSET:<id>`, to the unit.
+
+### 30.2 Dimensions and measures
+
+| Dimension | Values |
+|---|---|
+| `GROUP` | the connected group of the counterparty (`counterparty-group`); a counterparty in none is blank |
+| `COUNTERPARTY` | the netting set's counterparty |
+| `LEGAL_ENTITY` | the netting set's legal entity |
+| `NETTING_SET` | the netting set |
+| `TENOR_BUCKET` | the limit board's buckets (`drishti.cube.ccr.buckets`; as shipped 0–1Y, 1–5Y, 5Y+): a bucket holds the primary dates with from < t ≤ to |
+
+| Measure | What |
+|---|---|
+| `pfe()` | the peak PFE at the view's confidence (inside the cell's bucket when it has one) |
+| `ee()` | the peak expected exposure (inside the bucket) |
+| `epe()`, `eepe()`, `ce()` | EPE and effective EPE over the first year, the current exposure after collateral (whole-life: empty in a bucket's cell) |
+| `limit()` | the counterparty's stored credit limit (`credit-limit`); a cell of several counterparties has none |
+| `limit_use()` | the peak PFE at the limit's confidence (`drishti.ccr.exposure.limit-confidence`) over the limit, in the bucket when the cell has one |
+| `headroom()` | the limit less that PFE (negative: over the limit); a row's headroom is its least over the buckets |
+| `nettingSets()` | the netting sets in the cell |
+| `ead()` | SA-CCR's EAD of the cell's sets (the SA-CCR engine's, [SACCR_GUIDE.md](SACCR_GUIDE.md)); offered only while `sa-ccr` runs |
+| `fva()` | FVA of the cell's sets (the FVA engine's, [FVA_GUIDE.md](FVA_GUIDE.md)); offered only while `fva` runs |
+
+The view's options are `q` (the PFE confidence; the limit's, 0.95, by default) and `collateral` (`lagged`, `current`, `none`); any other
+option is refused in words (`400 DRS-5701`). The stored credit limit is one amount per counterparty, applied to every tenor bucket. A cell
+whose sets have no paths on the date is empty with the reason in its provenance, never an old figure. A person who sees some netting sets
+only in aggregate gets the bank's figures and no dimension (`403 DRS-5705` for a dimension asked).
+
+### 30.3 The screen: views A, B and C
+
+`CCUBE <GO>` opens the pivot screen on source `ccr` with the CCR lens; the three decided mock-ups are views of the one screen, A the
+default ([mock-ups](../lenses/mockups/ccr-cube/)):
+
+- **A · Limit board** (the landing): the headline strip (the bank's peak PFE with its tenor and PFE 99%, EPE and EEPE, the counterparties
+  over and near their limits, each named with its worst bucket, the run), the lens controls (q 95% · 99%, the collateral model, the
+  measure: PFE, EE, EPE, EAD SA-CCR, FVA; CVA and stressed planned and greyed), the board (groups, counterparties and netting sets by
+  tenor bucket, peak PFE and use), the fan of the row clicked (EE and PFE by date, the limit as a dashed step line, the headroom shaded,
+  the binding tenor) and the counterparties as a treemap (area EPE; edge amber near the limit, red over). Clicking **Over limit** or
+  **Near limit** filters the board to those counterparties.
+- **B · Netting set**: the set's tiles (peak PFE, EPE and EEPE, CE after collateral, the run), the collateral effect at the peak's date (EE
+  without and with collateral), the profile by tenor and the trades by contribution to the peak PFE.
+- **C · Pre-deal and XVA**: copy a booked trade into a netting set (the exposure engine's exact what-if, section 19.5): the incremental
+  peak PFE, the headroom after with the use of the limit, the PFE after over the PFE before with the limit; the counterparty's SA-CCR EAD
+  and FVA; the group roll-up (each node its members' paths summed). CVA and wrong-way risk are shown as planned.
+
+Keys: `Q` 95/99, `K` the collateral model, `B` view B, `W` the pre-deal form; the grid's own keys as on the pivot screen. On a phone (390 px)
+the tiles stack two by two, the board scrolls inside its card and the page never scrolls sideways; dark and light. The browser computes
+nothing: every figure, every use and every headroom is the server's.
+
+| Command | Opens |
+|---|---|
+| `CCUBE` | view A on the bank |
+| `CCUBE GROUP:<g>` · `CCUBE CPTY:<c>` · `CCUBE LE:<e>` | the board filtered to it (and its fan) |
+| `CCUBE NSET:<n>` | view B on the netting set |
+| `CCUBE ... BY rows[,columns] MEASURE m,... Q 0.99 COLLATERAL current DATE d VIEW A\|B\|C` | the view laid over the landing |
+| `CCUBE @owner/name` | a saved pivot view |
+
+### 30.4 The command line
+
+```
+drishti.py pivot ccr board                                   landing A's board (counterparties by tenor bucket, PFE and use)
+drishti.py pivot ccr board --rows GROUP,COUNTERPARTY --values "pfe()" --values "epe()" --option q=0.99
+drishti.py pivot ccr headline                                the headline strip
+drishti.py pivot ccr fan --scope CPTY:CP-ALDERSHOT            a scope's EE and PFE by date with the limit and headroom
+drishti.py pivot ccr predeal --scope CPTY:CP-ALDERSHOT --copy <trade> --into NS-ALDERSHOT-LDN --factor 1
+drishti.py pivot run --source ccr --rows COUNTERPARTY --values "ead()" --values "fva()"
+```
+
+### 30.5 The API
+
+The grid is the pivot engine's `POST /api/v1/pivot/query` on source `ccr` (and every other pivot endpoint: catalogue, estimate, export,
+saved views). The lens adds, under `/api/v1/pivot/ccr` (each a read for tokens, computed as the caller, stored nowhere):
+
+| Endpoint | What |
+|---|---|
+| `POST /api/v1/pivot/ccr/headline` | `{view}`: `peakPfe`, `peakTenor`, `pfe99`, `epe`, `eepe`, `ce`, `run`, `runNote`, `overCount`, `over` and `nearCount`, `near` (each `counterparty`, `bucket`, `use`, `limit`), `warningAt`, `limitConfidence`, `buckets`, `flags` |
+| `GET /api/v1/pivot/ccr/fan?scope=&q=&collateral=&asOf=` | `points` (each `tenor`, `t`, `ee`, `pfe`, `ene`, `bucket`, `limit`, `headroom`), `peakPfe`, `peakTenor`, `epe`, `limit`, `limitId`, `bindingTenor`, `minHeadroom`, `limitNote` |
+| `POST /api/v1/pivot/ccr/pre-deal` | the exposure engine's what-if request ([section 18.7](#187-pre-deal-incremental-exposure)) and its answer, plus `limit`, `useBefore`, `useAfter`, `headroomBefore`, `headroomAfter`, `limitNote` |
+
+Off (`ccr-cube` off, or `exposure` or `pivot` off), the paths answer `404 DRS-1020` and the source `ccr` is gone from the pivot engine.
+
+### 30.6 Settings
+
+`config/engines/ccr-cube.yaml` holds the switch `drishti.engines.ccr-cube.enabled` (on as shipped; `DRISHTI_CCR_CUBE_ENABLED`) and
+`drishti.cube.ccr.*`: `buckets` (the board's tenor buckets, `label: from-to` in years), `warning-at` (0.8: near the limit from here),
+`max-cells` (2,000: the most cells one view computes) and `headline-names` (5). The engine needs `exposure` and `pivot` and uses `sa-ccr`
+and `fva` ([COMPUTE_ENGINES.md](../architecture/COMPUTE_ENGINES.md)); every key is in [CONFIGURATION.md](../admin/CONFIGURATION.md).
+
+### 30.7 How it is tested
+
+- `CcrCubeApiTest` (drishti-server) over the exposure test lake, worked by hand: CP-1's two sets summed path by path give a peak PFE 75% of
+  3m, more than NS-X's 2m plus NS-Y's 0; EPE 1.25m = 0.95m + 0.30m; by bucket 1m and 3m against a 2.2m limit (use 45.5% and 136.4%,
+  headroom −0.8m); the headline names the breach; the fan carries the limit; FVA equals the FVA engine's; a viewer of the sets in
+  aggregate gets the bank only.
+- `CcrPivotProviderTest` (drishti-server): the buckets, a profile's peak in a bucket, the scope of a cell, case X2.
+- `tests/test_ccube.py` (console) and `tools/test_pivotccrcli.py` (command line): the command's forms, the page, the proxies.
+- `tests/test_ccr_cube_browser.py` (console, browser): the three views, the phone at 390 px without sideways scroll, dark and light.
 
 ---
 

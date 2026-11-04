@@ -20,21 +20,24 @@
    pivot-grid.js (the grid) and pivot.js (the screen) fill it from /api/pivot/...; every figure is the server's. With lens "mr" (MCUBE, the
    MR cube: MR_CUBE_GUIDE.md) the same screen on source var carries the MR lens: the headline strip, the lens controls, the time-travel
    slider and tabs A (the pivot with sparklines and a right rail of tail, explain and provenance), B (components, waterfall, histogram, heat
-   map) and C (ladder, what-if, explain), drawn by mr-lens.js from /api/pivot/mr/...; one pivot engine, no second grid. #}
+   map) and C (ladder, what-if, explain), drawn by mr-lens.js from /api/pivot/mr/...; with lens "ccr" (CCUBE, the CCR cube: EXPOSURE_GUIDE.md
+   section 30) the same screen on source ccr carries the CCR lens: views A (the limit board and the fan), B (a netting set) and C (pre-deal
+   and XVA) drawn by ccr-lens.js from /api/pivot/ccr/... and the engines' own APIs; one pivot engine, no second grid. #}
 {% extends "base.html" %}
-{% block title %}{% if lens == 'mr' %}MR cube{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
+{% block title %}{% if lens == 'mr' %}MR cube{% elif lens == 'ccr' %}CCR cube{% else %}Pivot{% if source %} · {{ source }}{% endif %}{% endif %} · {{ PRODUCT }}{% endblock %}
 {% block screen %}pivot{% endblock %}
 {% block body_class %}terminal{% endblock %}
-{% block head %}<link rel="stylesheet" href="/static/css/pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/mr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/pivot-screen.css?v={{ ASSET_V }}">{% if lens == 'mr' %}<link rel="stylesheet" href="/static/css/mr-lens.css?v={{ ASSET_V }}">{% endif %}{% if lens == 'ccr' %}<link rel="stylesheet" href="/static/css/mr-lens.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/ccr-lens.css?v={{ ASSET_V }}">{% endif %}{% endblock %}
 {% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
 {% block content %}
-<div class="pv{% if lens == 'mr' %} mr{% endif %}" data-pivot-screen data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}>
+<div class="pv{% if lens == 'mr' %} mr{% elif lens == 'ccr' %} ccr{% endif %}" data-pivot-screen data-source="{{ source }}" data-view-id="{{ view_id }}" data-date="{{ date }}"{% if lens %} data-lens="{{ lens }}"{% endif %}{% if preset %} data-preset="{{ preset }}"{% endif %}{% if lens == 'ccr' %} data-lens-view="{{ lens_view or 'A' }}" data-lens-scope="{{ lens_scope }}"{% endif %}>
   <div class="pv-head">
     {% if lens == 'mr' %}<h1 class="pv-title"><span class="pv-word mono" title="Type MCUBE, a scope, BY rows,columns, MEASURE …, then &lt;GO&gt;">MCUBE</span>
-      <span data-pv-title>MR cube</span></h1>{% else %}<h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
+      <span data-pv-title>MR cube</span></h1>{% elif lens == 'ccr' %}<h1 class="pv-title"><span class="pv-word mono" title="Type CCUBE, a scope (GROUP:, CPTY:, NSET:), BY rows,columns, MEASURE …, VIEW A|B|C, then &lt;GO&gt;">CCUBE</span>
+      <span data-pv-title>CCR cube</span></h1>{% else %}<h1 class="pv-title"><span class="pv-word mono" title="Type PIVOT, a table (or var) or @owner/name, then &lt;GO&gt;">PIVOT</span>
       <span data-pv-title>{{ view_id or source or 'choose a table' }}</span></h1>{% endif %}
     <span class="pv-meta" data-pv-meta aria-live="polite"></span>
-    {% if lens == 'mr' %}<a class="pv-help" href="/help/context/mcube" title="Help: the MR cube (MR_CUBE_GUIDE.md)" aria-label="Help: the MR cube"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% else %}<a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (PIVOT_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% endif %}
+    {% if lens == 'ccr' %}<a class="pv-help" href="/help/context/ccube" title="Help: the CCR cube (EXPOSURE_GUIDE.md section 30)" aria-label="Help: the CCR cube"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% elif lens == 'mr' %}<a class="pv-help" href="/help/context/mcube" title="Help: the MR cube (MR_CUBE_GUIDE.md)" aria-label="Help: the MR cube"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% else %}<a class="pv-help" href="/help/context/pivot" title="Help: the pivot screen (PIVOT_GUIDE.md)" aria-label="Help: the pivot screen"><i class="bi bi-question-circle" aria-hidden="true"></i></a>{% endif %}
   </div>
   <div class="pv-bar" role="toolbar" aria-label="Pivot controls">
     <label class="pv-chip">Source <select data-pv-source aria-label="Source"></select></label>
@@ -61,6 +64,7 @@
     <span class="pv-computed" data-pv-computed aria-live="polite" title="How the answer was computed"></span>
   </div>
   {% if lens == 'mr' %}{% include "terminal/_mr_lens.html" %}{% endif %}
+  {% if lens == 'ccr' %}{% include "terminal/_ccr_lens.html" %}{% endif %}
   <div class="pv-slicers" data-pv-slicers role="group" aria-label="Slicers" hidden></div>
   <div class="pv-estimate" data-pv-estimate role="status" hidden></div>
   <p class="pv-notice" data-pv-notice role="alert" hidden></p>
@@ -104,6 +108,7 @@
     </aside>
   </div>
   {% if lens == 'mr' %}{% include "terminal/_mr_panes.html" %}{% endif %}
+  {% if lens == 'ccr' %}{% include "terminal/_ccr_panes.html" %}{% endif %}
   <section class="pv-card pf-card" data-pf-card="explain" hidden aria-labelledby="pfExplainTitle">
     <h2 id="pfExplainTitle">Why did it move? <span class="pv-sub">the difference in steps that add up</span></h2>
     <div class="pf-form">
@@ -157,4 +162,4 @@
   </section>
 </div>
 {% endblock %}
-{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/js/mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}
+{% block scripts %}<script src="/static/vendor/echarts/echarts.min.js?v={{ ASSET_V }}"></script><script src="/static/js/command.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-grid.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-switches.js?v={{ ASSET_V }}"></script><script src="/static/js/pivot-functions.js?v={{ ASSET_V }}"></script>{% if lens == 'mr' %}<script src="/static/js/mr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% if lens == 'ccr' %}<script src="/static/js/ccr-lens.js?v={{ ASSET_V }}"></script>{% endif %}{% endblock %}

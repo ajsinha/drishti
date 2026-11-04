@@ -276,6 +276,15 @@ instead of a bar; **error** (the `DRS` code and its sentence, *Retry*; `400 DRS-
 not cover whole); **refused** (a counterparty the person sees only in aggregate: no trades, no drill, said so); **proxy** (the add-on method flagged on
 every number it touched).
 
+**As built (2.9.12; [EXPOSURE_GUIDE.md section 30](../guides/EXPOSURE_GUIDE.md#30-the-ccr-cube-ccube)).** A, B and C are views of the pivot
+screen on source `ccr` (`CCUBE`), A the default. Built: A1 (`CCUBE` with `GROUP:`, `CPTY:`, `NSET:`, `BY`, `MEASURE`, `Q`, `COLLATERAL`,
+`VIEW`; keys Q, K, B, W), A2, A3 (CVA and Stressed greyed as planned), A4 (area EPE, edge by limit use; the rating fill waits for ratings on
+the counterparty kind), A5 (the pivot grid: peak PFE and use by bucket against the stored limit, one amount per counterparty; the 20-day
+sparkline later), A6 (EE, PFE, the limit's step line, headroom shaded, the binding tenor; the 5–95% band later), A7 (the pivot screen's
+provenance popover); B1, B2 (EE with and without collateral at the peak's date; the split into VM, posted, IM and TH/MTA later), B3, B5;
+C1 (incremental peak PFE and headroom after; the counterparty's SA-CCR EAD and FVA beside them; incremental EAD, CVA and IM later), C2, C3
+(on `counterparty-group`; the GLEIF legal tree later). Not built: B4, B6, C4, C5. The *Done?* column stays for the panels' full contents.
+
 #### A: the landing (limit board)
 
 ![CCR Cube, layout A: the landing, limit board](mockups/ccr-cube/A.png)

@@ -65,13 +65,12 @@ class EngineApiTest {
         String admin = as("drishti-dev-admin", "admin");
         mvc.perform(get("/public/about")).andExpect(status().isOk())
                 .andExpect(jsonPath("$.engines[?(@.id == 'frtb-sa')].here").value(true))
-                .andExpect(jsonPath("$.engines[?(@.id == 'sa-ccr')].here").value(true))
-                .andExpect(jsonPath("$.engines[?(@.id == 'fva')].here").value(false));
+                .andExpect(jsonPath("$.engines[?(@.id == 'sa-ccr')].here").value(true));
         mvc.perform(get("/api/v1/admin/engines").header("Authorization", as("tina", "trader"))).andExpect(status().isForbidden());
         mvc.perform(get("/api/v1/admin/engines").header("Authorization", admin)).andExpect(status().isOk())
                 .andExpect(jsonPath("$.engines[?(@.id == 'var')].state").value("running"))
                 .andExpect(jsonPath("$.engines[?(@.id == 'var')].source").value("shipped copy"))
-                .andExpect(jsonPath("$.engines[?(@.id == 'fva')].state").value("not installed"))
+                .andExpect(jsonPath("$.engines[?(@.id == 'ccr-cube')].needs[1]").value("pivot"))     // every engine is installed since 2.9.12
                 .andExpect(jsonPath("$.engines[?(@.id == 'frtb-sa')].needs[0]").value("var"));
 
         change(admin, "{\"reason\":\"moved\",\"changes\":[{\"engine\":\"var\",\"on\":false}]}").andExpect(status().isConflict())

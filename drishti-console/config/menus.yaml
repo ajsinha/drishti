@@ -88,6 +88,7 @@ menus:
           - { id: exp-cpty, fill: EXP CPTY, icon: building, label: A counterparty, desc: "Type the counterparty's id after the words", requires: [word:EXP] }
           - { id: exp-nset, fill: EXP NSET, icon: diagram-2, label: A netting set, desc: "Type the netting set's id after the words", requires: [word:EXP] }
           - { id: play-exp, cmd: PLAY EXP EXAMPLE, icon: calculator, label: Exposure Playground, desc: "EE, PFE and EPE of a netting set worked from its paths in formulas", match: /play/exp, requires: [word:EXP, word:PLAY, route:/play/exp] }
+          - { id: ccube, cmd: CCUBE, href: /ccube, icon: grid-3x3-gap, label: CCR cube, desc: "Counterparty risk on the pivot engine: the limit board by tenor bucket, a netting set, pre-deal, EAD and FVA · also CCUBE <GO>", match: /ccube, requires: [word:EXP, word:PIVOT, word:CCUBE, route:/ccube] }
       - engine: frtb-sa
         title: FRTB-SA
         word: FRSA

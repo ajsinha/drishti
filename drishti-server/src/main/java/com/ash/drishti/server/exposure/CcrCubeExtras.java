@@ -149,6 +149,39 @@ final class CcrCubeExtras {
     }
 
     /**
+     * View C's pre-deal check (C1, C2): the exposure engine's what-if ({@code POST /api/v1/exposure/what-if}, the same request and answer)
+     * with the scope's counterparty limit beside it: the use and headroom before and after, on the peak PFE at the asked confidence.
+     */
+    @SuppressWarnings("unchecked")
+    Map<String, Object> preDeal(Principal p, Map<String, Object> body, java.time.LocalDate date) {
+        Map<String, Object> w = new LinkedHashMap<>(new ExposureWhatIf(svc()).whatIf(p, body, date));
+        Map<String, String> opts = new LinkedHashMap<>();
+        if (body.get("q") != null) {
+            opts.put("q", String.valueOf(body.get("q")));
+        }
+        if (body.get("collateral") != null) {
+            opts.put("collateral", String.valueOf(body.get("collateral")));
+        }
+        ExposureService.Scoped s = svc().scoped(p, ExposureService.scopeText(String.valueOf(body.get("scope"))), date, provider.ask(opts));
+        Set<String> sets = new LinkedHashSet<>();
+        s.result().pieces.forEach(pc -> sets.add(s.date().book().set(pc.set).id()));
+        ExposureDate.Limit lim = CcrPivotProvider.limitOf(s.date(), sets);
+        if (lim == null) {
+            w.put("limitNote", "no single counterparty's stored credit limit applies to this scope");
+            return w;
+        }
+        double before = ((Number) ((Map<String, Object>) w.get("base")).get("peakPfe")).doubleValue();
+        double after = ((Number) ((Map<String, Object>) w.get("with")).get("peakPfe")).doubleValue();
+        w.put("limit", lim.amount());
+        w.put("useBefore", before / lim.amount());
+        w.put("useAfter", after / lim.amount());
+        w.put("headroomBefore", lim.amount() - before);
+        w.put("headroomAfter", lim.amount() - after);
+        w.put("limitNote", "the stored credit limit (credit-limit " + lim.id() + "), against the peak PFE at " + Math.round(s.ask().q() * 100) + "%");
+        return w;
+    }
+
+    /**
      * The fan of a scope (A6): EE and PFE at the confidence by primary date, the 5% to 95% band where computed, the counterparty's limit as a
      * step line by bucket, the headroom at each date, the binding tenor (the least headroom) and the peak.
      */

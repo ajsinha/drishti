@@ -35,8 +35,9 @@ import org.springframework.web.bind.annotation.RestController;
  * <pre>
  *   POST /api/v1/pivot/ccr/headline  {view}                              landing A's headline: peak PFE, EPE, EEPE, over and near limit, the run
  *   GET  /api/v1/pivot/ccr/fan?scope=&amp;q=&amp;collateral=&amp;asOf=   a scope's EE and PFE by date with the limit's step line and headroom
+ *   POST /api/v1/pivot/ccr/pre-deal  {scope, method, q, candidates}   the exposure engine's what-if with the limit's use and headroom before and after
  * </pre>
- * Tab B (a netting set) and tab C (pre-deal, SA-CCR, FVA, the group) read the engines' own APIs ({@code /api/v1/exposure},
+ * View B (a netting set) and view C's SA-CCR, FVA and group read the engines' own APIs ({@code /api/v1/exposure},
  * {@code /api/v1/saccr}, {@code /api/v1/fva}); a {@code view} is the view itself or a saved pivot view's id ({@code owner/name}).
  */
 @RestController
@@ -66,6 +67,11 @@ public class CcrCubeController {
     @PostMapping("/headline")
     public Map<String, Object> headline(@RequestAttribute(Principal.ATTRIBUTE) Principal p, @RequestBody Map<String, Object> body) {
         return extras.headline(p, view(p, body));
+    }
+
+    @PostMapping("/pre-deal")
+    public Map<String, Object> preDeal(@RequestBody Map<String, Object> body, AsOf asOf, @RequestAttribute(Principal.ATTRIBUTE) Principal p) {
+        return extras.preDeal(p, body, asOf == null ? null : asOf.businessDate());
     }
 
     @GetMapping("/fan")

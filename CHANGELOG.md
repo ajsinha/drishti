@@ -147,6 +147,31 @@
   rounding, an IA and IM), `ExposurePlaygroundApiTest` (the exposure test lake), `tests/test_exposure_play.py`,
   `tools/test_expplaycli.py`.
 
+### The CCR cube on the pivot engine
+
+- **Counterparty risk as a pivot (EXPOSURE_GUIDE.md section 30, tutorial 42; COUNTERPARTY_ENGINES.md section 6; the decided mock-ups A, B
+  and C as views of one screen, A the default).** No second cube core: the pivot engine's source `ccr` over the exposure engine
+  (`CcrPivotProvider`, in the exposure package), engine `ccr-cube` (`config/engines/ccr-cube.yaml`, installed and on; needs `exposure` and
+  `pivot`, uses `sa-ccr` and `fva`). Dimensions `GROUP`, `COUNTERPARTY`, `LEGAL_ENTITY`, `NETTING_SET` and `TENOR_BUCKET` (the limit board's
+  buckets, 0–1Y, 1–5Y, 5Y+ as decided, `drishti.cube.ccr.buckets`); measures `pfe()`, `ee()`, `epe()`, `eepe()`, `ce()`, `limit()`,
+  `limit_use()`, `headroom()`, `nettingSets()`, and `ead()` (SA-CCR's) and `fva()` (FVA's, through the FVA engine's answer) offered only
+  while their engines run; options `q` and `collateral`. Every cell is its own netting sets' paths summed by the exposure engine
+  (`ExposureService.scoped`, the code of `EXP`), the statistics last: a counterparty's, a group's and the bank's peak PFE are the quantiles
+  of their summed paths, never a sum of peaks (case X2). The stored credit limit (one amount per counterparty) applies to every bucket.
+- **`/api/v1/pivot/ccr`:** `POST headline` (the bank's peak PFE, EPE, EEPE, the counterparties over and near their limits by bucket, the
+  run), `GET fan` (a scope's EE and PFE by date with the limit's step line, the headroom and the binding tenor), `POST pre-deal` (the
+  exposure engine's what-if with the use and headroom before and after); both `POST`s reads for tokens.
+- **`CCUBE`** opens the pivot screen on source `ccr` with the CCR lens: view A (the headline, the lens controls, the limit board, the fan of
+  the row clicked with the limit line and the headroom shaded, the counterparties as a treemap), view B (a netting set: tiles, the collateral
+  effect, the profile, the trades), view C (a pre-deal copy with the headroom after and the overlay, the counterparty's SA-CCR EAD and FVA,
+  the group roll-up; CVA and wrong-way risk planned); `CCUBE GROUP:|CPTY:|LE:|NSET:`, `BY`, `MEASURE`, `Q`, `COLLATERAL`, `VIEW A|B|C`,
+  `@owner/name`; keys `Q`, `K`, `B`, `W`; the phone at 390 px without sideways scroll; dark and light; the browser computes nothing. The
+  Engines menu's Exposure column lists it; Help: tutorial 42 and the context `ccube`.
+- **`drishti.py pivot ccr board|headline|fan|predeal`** (TOOLS.md).
+- **Tests:** `CcrCubeApiTest` (the exposure test lake by hand: CP-1's peak PFE 75% 3m against 2m + 0 of its sets, EPE 1.25m, the buckets'
+  use against a 2.2m limit, the headline's breach, the fan's limit line, FVA, the aggregate viewer), `CcrPivotProviderTest`,
+  `tests/test_ccube.py`, `tools/test_pivotccrcli.py`, `tests/test_ccr_cube_browser.py` (written; run in the heavy run).
+
 ## 2.9.11.b — Custom functions, explain and what-if; BI on the pivot engine; scale; the MR cube; one grammar, one engine; the browser computes nothing (unreleased)
 
 - **The MR cube on the pivot engine (2.9.11.b, moved from 2.9.11.a by the product owner on 2026-11-03; MR_CUBE_GUIDE.md, tutorial 38).** One pivot engine, no second cube core: the pivot

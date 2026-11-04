@@ -1,0 +1,31 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The CCR lens's strip above the pivot (CCR_CUBE_LENS.md section 6.7, the decided layout A: A2 headline, A3 lens controls) and the views
+   A, B and C of the same screen (A the landing). ccr-lens.js fills it from /api/pivot/ccr/... and the engines' own APIs; the lens controls
+   change the view's options (q, collateral) or its first value, and the pivot engine answers again. #}
+<section class="mr-tiles" data-ccr-tiles aria-label="The bank's headline" aria-live="polite"></section>
+<div class="mr-lens" role="toolbar" aria-label="The CCR lens: confidence, collateral, measure">
+  <span class="mr-seg" data-ccr-seg="q" aria-label="PFE confidence (Q)"><button type="button" data-v="0.95">q 95%</button><button type="button" data-v="0.99">99%</button></span>
+  <span class="mr-seg" data-ccr-seg="collateral" aria-label="Collateral model (K)"><button type="button" data-v="lagged">lagged</button><button type="button" data-v="current">current</button><button type="button" data-v="none">none</button></span>
+  <span class="mr-seg" data-ccr-seg="measure" aria-label="Measure"><button type="button" data-v="pfe">PFE</button><button type="button" data-v="ee">EE</button><button type="button" data-v="epe">EPE</button><button type="button" data-v="ead">EAD SA-CCR</button><button type="button" data-v="fva">FVA</button><button type="button" data-v="cva" disabled title="CVA: planned (the CVA family joins later)">CVA</button></span>
+  <span class="mr-seg" aria-label="Scenario set"><button type="button" aria-pressed="true" disabled>Normal</button><button type="button" disabled title="Stressed exposure: planned">Stressed</button></span>
+  <span class="mr-keys mono" aria-label="Keys"><kbd>Q</kbd> 95/99 <kbd>K</kbd> collateral <kbd>B</kbd> netting set <kbd>W</kbd> pre-deal</span>
+</div>
+<div class="mr-tabs" role="tablist" aria-label="The CCR cube's views">
+  <button type="button" role="tab" class="mr-tab" data-ccr-tab="A" aria-selected="true">A · Limit board</button>
+  <button type="button" role="tab" class="mr-tab" data-ccr-tab="B" aria-selected="false">B · Netting set</button>
+  <button type="button" role="tab" class="mr-tab" data-ccr-tab="C" aria-selected="false">C · Pre-deal and XVA</button>
+</div>

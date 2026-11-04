@@ -1,0 +1,70 @@
+/*
+ * Project Drishti · Any data. Any domain. One grammar.
+ *
+ * Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+ * All rights reserved.
+ *
+ * PROPRIETARY AND CONFIDENTIAL.
+ *
+ * This file is the confidential and proprietary property of Ashutosh Sinha.
+ * Unauthorised copying, use, modification, distribution or disclosure of this
+ * file, via any medium, is strictly prohibited except with the express prior
+ * written permission of the copyright holder.
+ *
+ * See the LICENSE file in the root of this repository for the full terms.
+ */
+/* The CCR lens of the pivot screen (CCUBE; _ccr_lens.html, _ccr_panes.html, ccr-lens.js): views A, B and C of the decided mock-ups
+   (docs/lenses/mockups/ccr-cube/) around the pivot engine's own grid. The lens's tiles, segments, tabs and tables are the MR lens's
+   (mr-lens.css, loaded with this file); here only what the CCR cube adds: the fan, the treemap, the collateral bars. The theme's tokens
+   only (dark and light); over and near a limit carry a word as well as a colour. */
+.ccr { --ccr-blue: var(--d-link); --ccr-amber: var(--d-warn); --ccr-red: var(--d-bad); --ccr-green: var(--d-ok); --ccr-gold: var(--d-warn); position: relative; }
+.ccr .up { color: var(--ccr-red); }
+.ccr .down { color: var(--ccr-green); }
+.ccr .pv-main[hidden], .ccr [data-ccr-pane][hidden] { display: none; }
+.ccr .mr-tiles { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+@media (max-width: 1100px) { .ccr .mr-tiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.ccr-hit { text-align: left; cursor: pointer; font: inherit; color: inherit; }
+.ccr-hit.bad { border-color: var(--ccr-red); }
+.ccr-hit.bad .mr-tv { color: var(--ccr-red); }
+.ccr-hit.warn { border-color: var(--ccr-amber); }
+.ccr-hit.warn .mr-tv { color: var(--ccr-amber); }
+.ccr-chart { min-height: 120px; }
+.ccr-fan { display: block; max-width: 100%; }
+.ccr-fan .ee { stroke: var(--ccr-blue); stroke-width: 1.6; }
+.ccr-fan .pfe { stroke: var(--ccr-red); stroke-width: 1.8; }
+.ccr-fan .after { stroke: var(--ccr-gold); stroke-width: 1.8; stroke-dasharray: 5 3; }
+.ccr-fan .lim { stroke: var(--d-ink); stroke-width: 1.2; stroke-dasharray: 4 3; }
+.ccr-fan .head { fill: color-mix(in srgb, var(--ccr-green) 14%, transparent); }
+.ccr-fan .pk { fill: var(--ccr-red); }
+.ccr-fan text { font-size: 9.5px; fill: var(--d-muted); font-family: var(--d-font-mono); }
+.ccr-fan .pkl { fill: var(--ccr-red); }
+.ccr-legend { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; font-size: 11px; color: var(--d-muted); margin: 4px 0 0; }
+.ccr-legend .k { display: inline-block; width: 14px; height: 0; border-top: 2px solid; margin-right: 3px; vertical-align: middle; }
+.ccr-legend .k.ee { border-color: var(--ccr-blue); }
+.ccr-legend .k.pfe { border-color: var(--ccr-red); }
+.ccr-legend .k.after { border-color: var(--ccr-gold); border-top-style: dashed; }
+.ccr-legend .k.lim { border-color: var(--d-ink); border-top-style: dashed; }
+.ccr-tree { display: flex; flex-wrap: wrap; gap: 3px; min-height: 120px; }
+.ccr-cell { flex-basis: 90px; min-width: 0; min-height: 54px; display: flex; flex-direction: column; justify-content: space-between; gap: 2px; padding: 5px 6px;
+  border: 2px solid var(--d-border); border-radius: 4px; background: var(--d-surface-2); color: var(--d-ink); text-align: left; font-size: 11px; cursor: pointer; }
+.ccr-cell b { overflow-wrap: anywhere; font-size: 11.5px; }
+.ccr-cell span { color: var(--d-muted); overflow-wrap: anywhere; }
+.ccr-cell.warn { border-color: var(--ccr-amber); }
+.ccr-cell.bad { border-color: var(--ccr-red); }
+.ccr-hbar { display: grid; grid-template-columns: 150px minmax(0, 1fr) 70px; gap: 8px; align-items: center; font-size: 12px; margin: 4px 0; }
+.ccr-hbar .t { display: block; height: 10px; background: var(--d-surface-2); border-radius: 2px; position: relative; }
+.ccr-hbar .f { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 2px; }
+.ccr-hbar .f.unc { background: var(--ccr-blue); }
+.ccr-hbar .f.col { background: var(--ccr-amber); }
+.ccr-hbar .v { text-align: right; }
+.ccr-scroll { max-width: 100%; overflow-x: auto; }
+.ccr-pick { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; grid-column: 1 / -1; }
+.ccr .mr-panes > .mr-tiles, .ccr .mr-panes > .mr-tray { grid-column: 1 / -1; }
+.ccr-planned { opacity: .6; }
+/* the phone (MOBILE_DISPLAY.md tiers; 390 px, no sideways scroll): the headline and the board first, the charts full width */
+@media (max-width: 640px) {
+  .ccr .mr-tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .ccr-hbar { grid-template-columns: 96px minmax(0, 1fr) 56px; }
+  .ccr-cell { flex-basis: 70px; }
+  .ccr .mr-tray label, .ccr .mr-tray input { max-width: 100%; }
+}
