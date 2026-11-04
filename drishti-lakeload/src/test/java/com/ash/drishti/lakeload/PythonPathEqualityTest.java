@@ -87,8 +87,8 @@ class PythonPathEqualityTest {
     void syntheticPositionsGiveTheSameTablesOnBothPathsAndBothFormats() throws Exception {
         assumeTrue(python(), "python3 with PyYAML is not available");
         List<String> lines = new ArrayList<>(PvData.lines(1500, 80, 2, 11));
-        lines.add(17, "{\"POSITION_ID\":\"BAD\",\"BUSINESS_DATE\":\"2026-13-45\"}");
-        Path in = PvData.gzip(tmp.resolve("in/pv.jsonl.gz"), lines, 3);
+        lines.add(17, "{\"BUSINESS_DATE\":\"2026-10-27\"}");                     // a reject: no id
+        Path in = PvData.byDate(tmp.resolve("in"), lines);                       // one file a date, dated by its name
         List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID", "--date",
                 "BUSINESS_DATE", "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
         compare(common, "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "SCENARIO_PV", "P-1000003",
@@ -100,8 +100,12 @@ class PythonPathEqualityTest {
         assumeTrue(python(), "python3 with PyYAML is not available");
         Path data = REPO.resolve("data/testdata/market-risk/scenario-pv");
         assumeTrue(Files.isDirectory(data), "no market-risk scenario PVs in data/testdata");
-        List<String> common = List.of("--from", data.toString(), "--pack", REPO.resolve("config/packs/market-risk").toString(), "--kind",
-                "scenario-pv", "--key", "SCENARIO_PV_ID", "--date", "BUSINESS_DATE");
+        List<String> common = new ArrayList<>();
+        try (var files = Files.list(data)) {                                    // the last date's files, dated from outside (--as-of)
+            files.filter(f -> f.getFileName().toString().contains("2026-09-30")).sorted().forEach(f -> common.addAll(List.of("--from", f.toString())));
+        }
+        common.addAll(List.of("--as-of", "2026-09-30", "--pack", REPO.resolve("config/packs/market-risk").toString(), "--kind",
+                "scenario-pv", "--key", "SCENARIO_PV_ID", "--date", "BUSINESS_DATE"));
         compare(common, null, "SCENARIO_PV", null, LocalDate.parse("2026-09-30"));
     }
 
@@ -134,7 +138,7 @@ class PythonPathEqualityTest {
             List<String> common = List.of("--from", in.toString(), "--domain", "risk", "--kind", "scenario-pv", "--key", "POSITION_ID", "--date",
                     "BUSINESS_DATE", "--promote", "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY", "--vector", "SCENARIO_PV");
             JsonNode s = compare("dups-" + stamped + "-", common, "LEGAL_ENTITY,DESK,TT_BOOK,TRADE_ID,QUANTITY,BASE_PV,CCY,POSITION_ID,TINY",
-                    "SCENARIO_PV", "P-1000030", LocalDate.parse("2026-10-27"));
+                    "SCENARIO_PV", "P-1000030", FileDates.businessToday());           // names without a date: the business today
             long dropped = 0;
             for (JsonNode n : s.path("duplicates")) {
                 dropped += n.asLong();

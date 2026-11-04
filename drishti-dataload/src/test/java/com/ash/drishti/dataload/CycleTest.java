@@ -166,11 +166,12 @@ class CycleTest {
         Fixture f = new Fixture(tmp);
         f.drop("mystery.jsonl", Fixture.rows("2026-11-02", "1"), "");
         f.drop("trades.csv", "a,b\n", "");
-        f.drop("trades-x.jsonl", Fixture.rows("2026-11-02", "1"), "mode: append\n");
+        f.drop("trades-x.jsonl", Fixture.rows("2026-11-02", "1"), "date-field: COB\n");
         Cycle.Report r = f.run();
         assertThat(r.files()).extracting(Cycle.FileOutcome::outcome).containsOnly("failed");
-        assertThat(r.files()).extracting(Cycle.FileOutcome::reason).anyMatch(s -> s.contains("no routing rule matches mystery.jsonl"))
-                .anyMatch(s -> s.contains("the loader does not read trades.csv")).anyMatch(s -> s.contains("appending is not offered"));
+        assertThat(r.files()).extracting(Cycle.FileOutcome::reason)
+                .anyMatch(s -> s.contains("mystery: no pack, kind or table of that name (known: demo-pack/position, demo-pack/trade)"))
+                .anyMatch(s -> s.contains("the loader does not read trades.csv")).anyMatch(s -> s.contains("key date-field"));
         assertThat(f.loads).isEmpty();
         assertThat(f.tree("failed")).contains("failed/2026-11-03/RUN/mystery.jsonl.failed.json", "failed/2026-11-03/RUN/trades.csv.ready");
     }

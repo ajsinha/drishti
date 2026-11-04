@@ -132,7 +132,8 @@ class CodecsTest {
     void theConfigurationNamesAMistakeAndTheBudgetHoldsItsShares() throws IOException {
         assertThatThrownBy(() -> LoadConfig.read(null, List.of("source.files=x.jsonl", "source.date=D", "target.path=/t", "target.layuot.x=1")))
                 .hasMessageContaining("layuot is not a key");
-        assertThatThrownBy(() -> LoadConfig.read(null, List.of("source.files=x.jsonl", "target.path=/t"))).hasMessageContaining("source.date");
+        assertThatThrownBy(() -> LoadConfig.read(null, List.of("source.files=x.jsonl", "source.date-from=field", "target.path=/t")))
+                .hasMessageContaining("source.date-from field: auto");
         assertThatThrownBy(() -> LoadConfig.read(null, List.of("source.files=x.jsonl", "source.date=D", "target.path=/t",
                 "source.storage-options.secret-key=abc"))).hasMessageContaining("never put in the file");
         LoadConfig c = LoadConfig.read(null, List.of("source.files=x.jsonl", "source.date=D", "target.path=/l/risk/pv", "memory.budget-mb=100",

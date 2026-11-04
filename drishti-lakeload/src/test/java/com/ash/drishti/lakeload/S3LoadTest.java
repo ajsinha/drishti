@@ -116,7 +116,7 @@ class S3LoadTest {
             for (int i = 0; i < n; i++) {
                 byte[] data = Files.readAllBytes(dir.resolve("pv-" + i + ".jsonl.gz"));
                 byte[] h = new byte[512];
-                put(h, 0, "pv-" + i + ".jsonl.gz");
+                put(h, 0, "scenario-pv/" + FileDates.businessToday() + "/pv-" + i + ".jsonl.gz");   // a feed tar: <table>/<date>/
                 put(h, 100, "0000644");
                 put(h, 108, "0000000");
                 put(h, 116, "0000000");

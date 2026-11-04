@@ -84,6 +84,25 @@ final class PvData {
         return out;
     }
 
+    /**
+     * {@code lines} as one file a business date in {@code folder}, {@code scenario-pv.<date>.jsonl} (docs/architecture/DATA_LOAD_RULES.md:
+     * the date is the file's, from its name); returns the folder.
+     */
+    static Path byDate(Path folder, List<String> lines) throws IOException {
+        java.util.Map<String, List<String>> days = new java.util.TreeMap<>();
+        for (String l : lines) {
+            for (String d : DATES) {
+                if (l.contains("\"BUSINESS_DATE\":\"" + d + "\"")) {
+                    days.computeIfAbsent(d, k -> new java.util.ArrayList<>()).add(l);
+                }
+            }
+        }
+        for (java.util.Map.Entry<String, List<String>> e : days.entrySet()) {
+            write(folder.resolve("scenario-pv." + e.getKey() + ".jsonl"), e.getValue());
+        }
+        return folder;
+    }
+
     static Path write(Path file, List<String> lines) throws IOException {
         Files.createDirectories(file.getParent());
         Files.write(file, lines, StandardCharsets.UTF_8);
