@@ -38,19 +38,27 @@ from core.promote_report import add_to_report, sql_to_slice, visual_for
 from core.pyrunner import PyError
 from core.quant import get_engine
 from routes.bi_routes import QUERY_WAIT_SECONDS, _page
+from core import servers
+from core.user_cache import LRU
 from routes.common import ident
 
 router = APIRouter(include_in_schema=False)
 CONSOLE = Path(__file__).resolve().parent.parent
-SQL_SLOTS = 4                       # SQL statements of this app at once (each runs in a thread)
+SQL_SLOTS = 4                                     # the console's worker threads for SQL over extracts, shared by everyone
+SQL_SLOTS_PER_PERSON = 2                          # at most this many of them one person's: a person with many tabs never starves the rest
 
 
-def _sql_slots(app) -> asyncio.Semaphore:
-    """The app's own SQL slots (a process-wide semaphore was shared by every app and bound to the first event loop that waited on it)."""
-    st = app.state
+def _sql_slots(request: Request) -> tuple[asyncio.Semaphore, asyncio.Semaphore]:
+    """The app's SQL slots and the person's share of them (per server and user, kept for the people seen lately)."""
+    st = request.app.state
     if getattr(st, "explore_sql_slots", None) is None:
         st.explore_sql_slots = asyncio.Semaphore(SQL_SLOTS)
-    return st.explore_sql_slots
+        st.explore_sql_people = LRU(512)
+    key = (servers.current(), getattr(ident(request), "user", ""))
+    mine = st.explore_sql_people.get(key)
+    if mine is None:
+        mine = st.explore_sql_people.put(key, asyncio.Semaphore(SQL_SLOTS_PER_PERSON))
+    return mine, st.explore_sql_slots
 
 
 def _limits(request: Request) -> Limits:
@@ -148,7 +156,8 @@ async def sql(request: Request):
     try:
         extras = await extras_for(request, body.get("extracts"))
         ex = await primary_for(request, body.get("extract"), extras)
-        async with _sql_slots(request.app):
+        mine, everyone = _sql_slots(request)
+        async with mine, everyone:
             out = await asyncio.to_thread(run_sql, ex, str(body.get("sql", "")), limits, {s["name"]: e for s, e in extras})
     except (BackendError, ExploreError) as e:
         return _fail(e)

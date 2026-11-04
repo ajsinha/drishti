@@ -22,7 +22,7 @@
   var page = document.querySelector('[data-capacity]');
   if (!page || !window.drishtiCapacity) { return; }
   var C = window.drishtiCapacity;
-  var KEY = 'drishti.capacity.inputs';
+  var KEY = (window.drishtiKey ? window.drishtiKey('drishti.capacity.inputs') : 'drishti.capacity.inputs');
   var st = { plan: null, live: null, inputs: {}, factor: 1.5, grow: {}, ev: null, timer: null };
   var $ = function (sel) { return page.querySelector(sel); };
   var phone = window.matchMedia ? window.matchMedia('(max-width: 639.98px)') : { matches: false };

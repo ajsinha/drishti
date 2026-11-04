@@ -244,10 +244,10 @@
     if (f) { u.searchParams.set(key, encode(f)); } else { u.searchParams.delete(key); }
     history.replaceState(history.state, '', u.pathname + u.search + u.hash);
   }
-  var MEM = 'drishti.columnFilters';
+  var MEM = (window.drishtiKey ? window.drishtiKey('drishti.columnFilters') : 'drishti.columnFilters');
   /** Off unless the page says <body data-remember-filters="on"> (a per-user setting) or this browser has drishti.rememberFilters = on. */
   function remembering() {
-    try { if (localStorage.getItem('drishti.rememberFilters') === 'on') { return true; } } catch (e) { /* private window */ }
+    try { if (localStorage.getItem((window.drishtiKey ? window.drishtiKey('drishti.rememberFilters') : 'drishti.rememberFilters')) === 'on') { return true; } } catch (e) { /* private window */ }
     return !!document.body && document.body.getAttribute('data-remember-filters') === 'on';
   }
   function memGet(k) { try { return (JSON.parse(localStorage.getItem(MEM) || '{}'))[k] || null; } catch (e) { return null; } }

@@ -169,6 +169,23 @@
   lifespan's tasks read their own app's, and code outside a request reads the newest app's (one app per process in production: as
   before). `tests/test_engines_per_app.py` keeps it so; reproduced and passing in that order (`test_workbench_metric_browser.py` then the
   inbox file) and alone.
+- **Busy protection refuses for memory only after a real clean-up (fixes the Drill A flake of `test_var_regulatory_browser.py`).** The
+  reading "after clean-up" was the heap after the last collection of any kind; after a young collection the old generation's garbage still
+  counts, so a 768 MB server holding 462 MB of live data read 94% and refused sign-ins for 45 s (`DRS-9501`; the test's sign-in timed out
+  at 45 s, alone 3 runs of 3). A reading over a refusal level is now confirmed by a full collection (at most once every 10 s; in between
+  the last one's result) before sign-ins or heavy work wait (`Signals.heapAfterCleanupBytes`, `AdmissionGate`); a server really that full
+  is refused as before. `AdmissionGateTest` covers both; the file passes alone and after a live-console file.
+- **Nothing the console keeps for one person is served to another (security review F2, F3, F5 to F8, F10, F12; USER_MANAGEMENT.md
+  section 6, "What the console keeps of each person").** Describe's mnemonic table was one process-wide copy of the first person's packs:
+  now per server, pack set and roles on the app (and the "My page" migration per server). Drishti Trading's and Market's caches are keyed
+  by one helper, `core/user_cache.py` (server, user, sorted roles, as-of and known-at, lens) and bounded by an LRU instead of clearing
+  everyone's past a size; a cancelled request no longer fails the others waiting for the same read. The help library is kept per pack set
+  (eight at most) and built off the event loop; SQL over extracts lets one person hold two of the four slots at most. What pages keep in the
+  browser is named per person (`window.drishtiKey`) and **Sign out** sends `Clear-Site-Data: "storage"`. Opening or leaving a lens and
+  choosing Home's landing are POSTs (a GET shows a form). The shared server client keeps no cookies; Calc's permission follows the person's
+  change stamp; every non-static response is `Cache-Control: private, no-store`. Guards: `tests/test_two_people_share_nothing.py` (two
+  people with different packs and roles, and one person on two servers, at the same time: each answer equals the one they get alone; all
+  four failed before) and `tests/test_no_shared_user_state.py` (module-level state is a constant or listed with its reason).
 
 ### Fixes
 

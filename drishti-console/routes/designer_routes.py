@@ -20,21 +20,20 @@ from __future__ import annotations
 
 import asyncio
 import re
-import time
 from urllib.parse import quote
 
 from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, RedirectResponse
 
 from core import describe, designer, designer_forms, designer_links, designer_outline, designer_settings, screen_grid
+from core import servers
 from core.backend import BackendError
+from core.user_cache import LRU, fingerprint
 from core.csrf import BodyError, json_body
 from routes.common import ident, render
 
 router = APIRouter(prefix="/designer", include_in_schema=False)
 MODES = [("customize", "Customize", True), ("describe", "Describe", True), ("outline", "Outline", True), ("grid", "Grid", True)]
-_ALIASES: dict = {"at": 0.0, "table": {}, "cat": {}}
-_MIGRATED: set = set()                                # users whose "My page · <kind>" Designs were turned into flags
 _LOCKS: dict = {}                                     # one step at a time per draft: two quick clicks never read the same draft
 
 
@@ -73,8 +72,10 @@ async def my_pages(request: Request) -> dict:
         return {}
     pages = dict(pages) if isinstance(pages, dict) else {}
     user = getattr(me, "user", "")
-    if user and user not in _MIGRATED:
-        _MIGRATED.add(user)
+    migrated = _app_set(request, "designer_migrated")           # (server, user) whose "My page · <kind>" Designs became flags
+    done = (servers.current(), user)
+    if user and done not in migrated:
+        migrated.add(done)
         try:
             got = await backend.designs("GET", "", me)
             for d in got.get("designs") or []:
@@ -84,7 +85,7 @@ async def my_pages(request: Request) -> dict:
                     if re.fullmatch(r"[a-z0-9-]{1,40}", kind) and kind not in pages:
                         pages = await backend._send("PUT", f"/me/pages/{quote(kind)}", me, json={"design": d["id"]}) or pages
         except BackendError:
-            _MIGRATED.discard(user)                    # try again next time
+            migrated.discard(done)                     # try again next time
     return pages
 
 
@@ -159,32 +160,51 @@ async def _kit(request: Request) -> list:
     return got.get("fragments") or []
 
 
-async def _packs(request: Request) -> None:
-    """The enabled packs' overviews and links, asked of the server once a minute: the command line's mnemonics and the linked records."""
-    if time.monotonic() - _ALIASES["at"] < 60 and _ALIASES["table"]:
-        return
-    backend, me, overviews = request.app.state.backend, ident(request), {}
+def _app_set(request: Request, name: str) -> set:
+    got = getattr(request.app.state, name, None)
+    if got is None:
+        got = set()
+        setattr(request.app.state, name, got)
+    return got
+
+
+def _alias_store(request: Request) -> LRU:
+    got = getattr(request.app.state, "designer_aliases", None)
+    if got is None:
+        got = request.app.state.designer_aliases = LRU(64, 60.0)
+    return got
+
+
+async def _packs(request: Request) -> dict:
+    """The person's packs' overviews and links, asked of the server once a minute per server, pack set and roles (never one person's for
+    another: the overviews are read as the person): the command line's mnemonics and the linked records."""
+    backend, me = request.app.state.backend, ident(request)
+    empty = {"table": {}, "cat": {}}
     try:
         listed = [p for p in await backend.packs(me) if p.get("active", True)]
-        for p in listed:
-            try:
-                overviews[p["name"]] = await backend.pack_overview(p["name"], me)
-            except BackendError:
-                continue
     except BackendError:
-        return
-    _ALIASES.update(at=time.monotonic(), table=describe.aliases_of(list(overviews.values())), cat=designer_links.catalog(listed, overviews))
+        return empty
+    key = (servers.current(), fingerprint(p.get("name") for p in listed), tuple(sorted(str(r) for r in getattr(me, "roles", ()) or ())))
+    store = _alias_store(request)
+    hit = store.get(key)
+    if hit is not None:
+        return hit
+    overviews = {}
+    for p in listed:
+        try:
+            overviews[p["name"]] = await backend.pack_overview(p["name"], me)
+        except BackendError:
+            continue
+    return store.put(key, {"table": describe.aliases_of(list(overviews.values())), "cat": designer_links.catalog(listed, overviews)})
 
 
 async def aliases(request: Request) -> dict:
-    """The command line's mnemonic table of the enabled packs (TRD, CPTY, PTRD...)."""
-    await _packs(request)
-    return _ALIASES["table"]
+    """The command line's mnemonic table of the person's packs (TRD, CPTY, PTRD...)."""
+    return (await _packs(request))["table"]
 
 
 async def link_catalog(request: Request) -> dict:
-    await _packs(request)
-    return _ALIASES["cat"] or {"links": {}, "pack_of": {}, "labels": {}, "columns": {}}
+    return (await _packs(request))["cat"] or {"links": {}, "pack_of": {}, "labels": {}, "columns": {}}
 
 
 async def _shows(request: Request, record, rows: str, cat: dict) -> list:

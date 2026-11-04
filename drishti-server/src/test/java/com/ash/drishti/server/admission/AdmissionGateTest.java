@@ -48,6 +48,15 @@ class AdmissionGateTest {
             return heap.get();
         }
 
+        /** What a real clean-up would leave (-1: the same as the last reading); counts the clean-ups asked for. */
+        final AtomicLong cleaned = new AtomicLong(-1);
+        final AtomicInteger cleanups = new AtomicInteger();
+
+        public long heapAfterCleanupBytes() {
+            cleanups.incrementAndGet();
+            return cleaned.get() < 0 ? heap.get() : cleaned.get();
+        }
+
         long max = 4 * GB;                                                // a 4 GB heap: at 85% about 600 MB is left, under memory-free-min-mb
 
         public long heapMaxBytes() {
@@ -114,6 +123,26 @@ class AdmissionGateTest {
         assertThat(s.retryAfterSeconds()).isEqualTo(45);
         assertThat(s.title()).isEqualTo("The server is very busy right now");
         assertThat(s.getMessage()).contains("Sign-ins are paused for a moment");
+    }
+
+    @Test
+    void aHeapFullOfGarbageIsNotRefusedTheRefusalIsConfirmedAfterACleanUp() {
+        // after a young collection the old generation's garbage still counts: 95% read, 60% live (the 2.9.11.b Drill A refusal of a sign-in
+        // on a 768 MB server whose live data was 462 MB)
+        sig.memory(0.95);
+        sig.cleaned.set((long) (0.60 * sig.max));
+        assertThatCode(() -> gate.admit(Work.SIGN_IN, "k.mehta", "Sign in")).doesNotThrowAnyException();
+        assertThatCode(() -> gate.admit(Work.DOWNLOAD, "Download trade-valuation")).doesNotThrowAnyException();
+        assertThat(sig.cleanups.get()).isEqualTo(2);
+        sig.cleaned.set((long) (0.94 * sig.max));                                     // live data really that high: refused, in the same words
+        BusyRefusal s = refused(() -> gate.admit(Work.SIGN_IN, "k.mehta", "Sign in"));
+        assertThat(s.errorCode()).isEqualTo(ErrorCode.BUSY_SIGN_IN);
+        assertThat(s.getMessage()).contains("94% in use after clean-up");
+        sig.memory(0.50);
+        sig.cleaned.set(-1);
+        int before = sig.cleanups.get();
+        assertThatCode(() -> gate.admit(Work.DOWNLOAD, "Download trade-valuation")).doesNotThrowAnyException();
+        assertThat(sig.cleanups.get()).as("no clean-up while the reading is under the levels").isEqualTo(before);
     }
 
     @Test

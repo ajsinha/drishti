@@ -257,6 +257,9 @@ public final class AdmissionGate {
         double mem = memoryShare();
         double memLevel = work == Work.SIGN_IN ? props.memoryRefuseSignIn() : props.memoryRefuseHeavy();
         if (mem >= memLevel && memoryFreeBytes() < props.memoryFreeMinMb() * MB) {
+            mem = cleanedUpShare();                                     // confirmed after a real clean-up: never refused for garbage
+        }
+        if (mem >= memLevel && memoryFreeBytes() < props.memoryFreeMinMb() * MB) {
             return new Why(Cause.MEMORY, String.format(Locale.ROOT, "the server is short of memory: %.0f%% in use after clean-up (new %s waits over %.0f%%)",
                     mem * 100, work == Work.SIGN_IN ? "sign-ins" : "heavy work", memLevel * 100));
         }
@@ -425,6 +428,12 @@ public final class AdmissionGate {
     long memoryFreeBytes() {
         long max = signals.heapMaxBytes();
         return max <= 0 ? Long.MAX_VALUE : Math.max(0, max - signals.heapAfterGcBytes());
+    }
+
+    /** The heap's share in use after a real clean-up ({@link Signals#heapAfterCleanupBytes()}); the readings follow it. */
+    double cleanedUpShare() {
+        long max = signals.heapMaxBytes();
+        return max <= 0 ? 0 : (double) signals.heapAfterCleanupBytes() / max;
     }
 
     double memoryShare() {

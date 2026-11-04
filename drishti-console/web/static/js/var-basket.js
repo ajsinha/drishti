@@ -28,7 +28,7 @@
    Alt+B, and survives a reload (this browser). */
 (function () {
   "use strict";
-  var KEY = "drishti.varBasket2", OLD = "drishti.varBasket";
+  var KEY = (window.drishtiKey ? window.drishtiKey("drishti.varBasket2") : "drishti.varBasket2");   // per person: never the last one's
   var DEFAULT_COLS = [{ key: "TRD", title: "Trade" }, { key: "POS", title: "Position" }, { key: "PORT", title: "Portfolio" },
                       { key: "BOOK", title: "Book" }, { key: "DESK", title: "Desk" }, { key: "CPTY", title: "Counterparty" }];
   var OPEN_MAX = 4000;          // the longest scope text a link carries ("Open without saving"); a longer basket is saved first
@@ -39,17 +39,10 @@
   try {
     var kept = JSON.parse(localStorage.getItem(KEY) || "null");
     if (kept && Array.isArray(kept.rows)) T = Object.assign(T, kept);
-    else migrate(JSON.parse(localStorage.getItem(OLD) || "null"));
+    localStorage.removeItem("drishti.varBasket2"); localStorage.removeItem("drishti.varBasket");   // kept before baskets were per person: whose?
   } catch (e) { /* none kept */ }
   function persist() { try { localStorage.setItem(KEY, JSON.stringify(T)); } catch (e) { /* a private window, or too large: kept until the page closes */ } }
 
-  /** The chip tray's basket kept before the sheet: its parts laid into the sheet's columns. */
-  function migrate(old) {
-    if (!old || !Array.isArray(old.items) || !old.items.length) return;
-    old.items.forEach(function (i) { place(i.scope, i.op === "-" ? "-" : "+", true); });
-    T.name = old.name || ""; T.share = old.share || "";
-    try { localStorage.removeItem(OLD); } catch (e) { /* kept */ }
-  }
 
   // ---------------------------------------------------------------------------------------------------------------- helpers
   function h(tag, cls, text) {

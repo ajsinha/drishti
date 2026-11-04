@@ -269,7 +269,7 @@ def paste(pg, text):
 
 def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(stack, browser):
     pg = open_var(browser, str(stack), "/var?scope=BOOK:BOOK-RATES-1")
-    pg.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
+    pg.evaluate("localStorage.removeItem(window.drishtiKey('drishti.varBasket2'))")
     pg.reload()
     painted(pg, "BOOK:BOOK-RATES-1")
     assert pg.locator("[data-vx-basket]").is_hidden()                       # a node, an empty sheet: no strip
@@ -421,7 +421,7 @@ def test_construct_your_basket_sheet_paste_checks_save_reopen_edit_and_delete(st
 def test_the_pre_deal_what_if_under_the_sheet(stack, browser):
     """A copy of a booked trade, unwound (factor -1), added to the basket: VaR and ES before and after by the server's VaR engine."""
     pg = open_var(browser, str(stack), "/var?scope=DESK:DESK-FX")
-    pg.evaluate("localStorage.removeItem('drishti.varBasket2'); localStorage.removeItem('drishti.varBasket')")
+    pg.evaluate("localStorage.removeItem(window.drishtiKey('drishti.varBasket2'))")
     pg.reload()
     painted(pg, "DESK:DESK-FX")
     trd = pg.evaluate("fetch('/api/var/scope/contributions?scope=DESK:DESK-FX&by=trade').then(r => r.json()).then(d => d.rows[0].key)")

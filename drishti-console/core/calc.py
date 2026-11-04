@@ -68,10 +68,13 @@ class Calc:
 
     TTL = 60.0
 
-    def __init__(self, settings, web: Path):
+    def __init__(self, settings, web: Path, stamps=None):
+        from core.user_stamps import NONE
+
         self.enabled = bool(settings.get("calc.enabled", True))
         self.runtime = Runtime(web / "static" / "vendor" / "pyodide")
-        self._allowed: dict[str, tuple[float, dict]] = {}
+        self.stamps = stamps or NONE    # core/user_stamps.py: a role or Calc change through another worker is seen at once
+        self._allowed: dict[str, tuple[float, dict, float]] = {}
 
     async def settings(self, backend, ident) -> dict:
         """The server's answer for this user: ``allowed`` (a role with calc, and Calc switched on) and its limits."""
@@ -79,13 +82,16 @@ class Calc:
             return {"allowed": False}
         key = scoped(ident.user)
         hit = self._allowed.get(key)
-        if hit and time.monotonic() - hit[0] < self.TTL:
+        if hit and time.monotonic() - hit[0] < self.TTL and self.stamps.fresh(key, hit[2]):
             return hit[1]
+        began = time.time()
         try:
             data = await backend.calc_settings(ident)
         except Exception:  # noqa: BLE001 - an older server, or one away for a moment: Calc is not offered
             return {"allowed": False}
-        self._allowed[key] = (time.monotonic(), data)
+        if len(self._allowed) > 2000:
+            self._allowed.pop(next(iter(self._allowed)))      # the oldest person seen goes
+        self._allowed[key] = (time.monotonic(), data, began)
         return data
 
     @staticmethod

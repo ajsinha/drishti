@@ -114,6 +114,7 @@ WHILE_MUST_CHANGE = ("/account", "/account/password", "/logout")
 
 
 from core import edition_gate as _edition_gate   # noqa: E402  (route gating by edition, lens and feature switch)
+from core.user_cache import LRU  # noqa: E402  (the bounded per-person and per-pack-set stores)
 
 
 def protected(path: str) -> bool:
@@ -278,6 +279,9 @@ class SecurityHeaders(BaseHTTPMiddleware):
         response.headers.setdefault("Content-Security-Policy", policy)
         if path.startswith(PYODIDE) and response.status_code == 200:
             response.headers["Cache-Control"] = "public, max-age=31536000, immutable"   # the URL names the version
+        if not path.startswith(("/static/", PYODIDE)) and path not in ("/favicon.ico", "/manifest.webmanifest"):
+            # a person's page or answer is theirs: never kept by a shared proxy, never shown again from the browser's cache after sign-out
+            response.headers.setdefault("Cache-Control", "private, no-store")
         response.headers.setdefault("X-Content-Type-Options", "nosniff")
         response.headers.setdefault("Referrer-Policy", "same-origin")
         response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
@@ -535,7 +539,8 @@ def create_app(settings: Settings) -> FastAPI:
 
     templates.env.globals["designer_on"] = lambda: bool(settings.get("ui.designer", False))   # the Sutra designer: Build -> New screen offers Describe
     templates.env.globals["TUTORIALS_WORD"] = tutorial_count_word(app.state.docs_dir)       # "Eighteen": the Tutorials card counts the written tutorials, it is never typed
-    app.state.libraries = {}
+    app.state.libraries = LRU(8)                      # help libraries by pack set (routes/common.py library)
+    app.state.library_builds = {}                     # a pack set's library being built (one at a time)
     from core.knowledge import Glossary
 
     app.state.glossary = Glossary(app.state.docs_dir)          # WHAT <term>: docs/knowledge/glossary.yaml (routes/help_routes.py)
@@ -583,7 +588,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.mount("/static", static, name="static")
     from core.calc import Calc
 
-    app.state.calc = Calc(settings, WEB)
+    app.state.calc = Calc(settings, WEB, stamps=stamps)
     from core.pyrunner import PyRunner
 
     app.state.pyrunner = PyRunner(settings)          # the BI Python runner: nothing starts until a python visual runs (docs/guides/BI_GUIDE.md)
