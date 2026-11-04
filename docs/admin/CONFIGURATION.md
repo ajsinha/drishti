@@ -1051,7 +1051,7 @@ The console's side: `editions.dir` (`DRISHTI_EDITIONS_DIR`, default `../config/e
 role-based access to the lens link (read, not wired). Its own feature switches, each on by default and preset by an edition through
 `config/editions/features.yaml`: `features.build` (Build: new screens, packs, designs, reviews, changes), `features.forms` (`FORM`, `/forms`),
 `features.datamap`, `features.data` (the Data view, `DATA`), `features.workspaces`, `features.monitors`, `features.alerts`, `features.lakes` (Admin → Lakes), `features.reports`,
-`features.collaboration` (Admin → Collaboration); `studio.enabled` (`/studio`). A page whose switch is off answers 404.
+`features.collaboration` (Admin → Collaboration). `/studio` (the Build workbench's entry) follows `features.build`. A page whose switch is off answers 404.
 
 Branding keys of the console beside `ui.product`: `ui.placeholder` (the command line's placeholder; blank: `config/menus.yaml`'s),
 `ui.logo` (an image under `/static/`, or a `data:` URL, drawn instead of the eye mark), `ui.favicon` and `ui.apple_touch_icon` (the
@@ -1289,10 +1289,7 @@ comes from the environment only, and the model gets no tools. See [the privacy n
 |---|---|---|
 | `enabled` | `false` (`DRISHTI_ASK_ENABLED`) | The global switch. While `false` no network call is ever attempted and `POST …/ask` answers `404 DRS-4007`. |
 | `packs` | `[]` | The packs where the box is drawn (per-pack opt-in); empty means none. `DRISHTI_EXPLAIN_ASK_PACKS=market-risk,counterparty-risk`. |
-| `endpoint` | empty (`DRISHTI_ASK_ENDPOINT`) | The model's URL: an OpenAI-compatible chat completions URL, or an Anthropic Messages URL. |
-| `api` | `openai` | `openai` or `anthropic`: the request and response shape. |
-| `model` | empty (`DRISHTI_ASK_MODEL`) | The model name sent to the endpoint. |
-| `api-key` | empty (`DRISHTI_ASK_KEY`) | Sent as `Authorization: Bearer` (`openai`) or `x-api-key` (`anthropic`). Environment only; never logged or returned. |
+| `model` | empty (`DRISHTI_ASK_MODEL`) | The model Ask uses: a logical model of the AI layer, `<provider>/<model>` (a provider file in `drishti.ai.dir` with its `type`, `base-url` and `api-key: ${ENV}`; [AI.md](AI.md)). |
 | `values` | `labels-only` | `labels-only` sends labels, definitions and structure, never a rendered value of the page. `shown` also sends the page's rendered sentence (its figures, as the asking user may see them). A value masked for the user is never sent in either mode. |
 | `max-question-chars` | `500` | Longer questions are refused (`400`). |
 | `max-prompt-kb` | `24` | The whole prompt; the pack guide text is cut first, then glossary entries. |
@@ -2664,8 +2661,7 @@ read by both programs, so one set of variables configures both halves.
 and `blank`, what a new workspace starts as (*New workspace* on `/w`): a `layout` (`2col`, `3col`, `2x2`, `1+2`) and one
 to four empty `panes`.
 
-The file also holds `studio.enabled: true`, which the current console does not read; whether Studio can save
-is decided by the server (`drishti.rachana.studio-save`).
+Whether a design can save Sutra files is decided by the server (`drishti.rachana.studio-save`).
 
 ### `calc`
 
