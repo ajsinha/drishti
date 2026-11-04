@@ -80,6 +80,10 @@ heap). [Section 23](#23-test-data-and-generators) says how the data is made.
 27. [Sizes, performance and retention](#27-sizes-performance-and-retention)
 28. [Open items](#28-open-items)
 
+**Part IV · The Exposure Playground**
+
+29. [The Exposure Playground (PLAY EXP)](#29-the-exposure-playground-play-exp)
+
 ## Part I · Using exposure
 
 ## 1. The question exposure answers
@@ -1562,6 +1566,145 @@ command, every figure and what limits a large bank: [BENCHMARK.md section 6](../
 | Pruning trade-path reads by `NETTING_SET` statistics | planned (§26.2) |
 | Limits (LIM) and CVA | parked; still built on the stored profile's figures |
 | Capture privacy | comparing with, or opening, another user's capture answers 404 "no exposure capture … you may read", not 403: as VaR's captures, Drishti does not say whether a capture it will not show you exists |
+
+## Part IV · The Exposure Playground
+
+## 29. The Exposure Playground (PLAY EXP)
+
+The playground shows how the engine computes exposure for **one netting set**. The simulated paths are the data, and every step after
+them is a formula. On screen it shows the netting set's profile and headline figures, the paths at one date with every collateral step,
+and each trade's share of EE. In Excel the same figures come as a workbook of live formulas, and each one is checked against the engine to
+the cent. The playground uses the frame of the VaR Playground ([VAR_PLAYGROUND.md section 16](../architecture/VAR_PLAYGROUND.md#16-mock-ups-the-screens-to-build)):
+the grid with a tall explanation beside it, the formula bar, and Export to Excel from a template kept in the repository. The design is
+[COUNTERPARTY_ENGINES.md sections 4, 8.2 and 9](../architecture/COUNTERPARTY_ENGINES.md#4-the-exposure-playground-ee-epe-eepe-and-pfe-for-one-netting-set).
+Tutorial 40 ([from case X1 to a netting set](../tutorials/40-exposure-playground-from-case-x1-to-a-netting-set.md)) works through it step
+by step.
+
+### 29.1 Opening it
+
+| Where | How |
+|---|---|
+| Command | `PLAY EXP NS-ALDERSHOT-FRA <GO>` (also `PLAY EXP NSET NS-ALDERSHOT-FRA`, `PLAY EXP NSET:NS-ALDERSHOT-FRA`); `PLAY EXP EXAMPLE <GO>` opens the hand-built case X1 |
+| Menu | **Engines → Exposure → Exposure Playground** (`PLAY EXP EXAMPLE`); the netting-set box at the top opens any set |
+| Command line | `drishti.py play exp NS-ALDERSHOT-FRA` ([TOOLS.md section 5.15a](TOOLS.md#515a-play-exp)) |
+| API | `GET /api/v1/exposure/playground?nettingSet=…` ([API_GUIDE.md](API_GUIDE.md), section 29.7 below) |
+
+The playground computes as you, with the exposure engine's rules on which sets you see (section 9). It shows the netting set trade by
+trade, so a role that sees the counterparty only in aggregate is refused (`403`). A scope that is not one netting set is refused with
+`DRS-5440`, and so is a set the run does not cover (`404`).
+
+### 29.2 What it computes, and on which paths
+
+The playground takes the **first N paths** of the date's run. N is every path, up to `max-paths` (5,000 by default); `paths=` asks for
+fewer. It reads the trades' paths from the lake (as contributions by trade do) and computes every step with the engine's own code
+(`ExposureMath`, `CsaTerms`) on exactly those paths:
+
+1. **V** per path and grid date, the sum of the trades' values; **L** is V at the look-back point.
+2. **Collateral** for the model chosen. *Lagged*: the CSA's call at L, `max(L − TH_them, 0) − max(−L − TH_us, 0) + IA`, rounded as a
+   change from today's collateral (deliveries up, returns down), then the counterparty's MTA taken off what is held. *Current*: today's
+   collateral. *None*: nothing. A set with no CSA holds nothing; a CSA that calls no variation margin holds its IA on every path.
+3. **E** = max(V − C − IM, 0), **N** = min(V − C, 0), and the uncollateralised max(V, 0).
+4. **EE** and **ENE** are the averages over the paths. **PFE** at each confidence uses the engine's rank rule, **EEE** is the running
+   maximum from CE, and **EPE** and **EEPE** are averaged over T = min(1 year, the longest maturity). The peaks take the earliest date
+   on a tie, and **EAD_IMM** = alpha × EEPE.
+5. **Contributions** at one primary date (the peak EE date by default): on each path with exposure, a trade keeps its value times
+   `1 − (C + IM) / V`; the shares, averaged over the paths, add up to EE (Euler, section 18).
+
+When N is smaller than the run's paths, the run's own figures over every path are shown beside the playground's figures for comparison.
+They are not checked, because the playground answers for its N paths.
+
+### 29.3 The screen
+
+The decided option A of the VaR Playground's mock-ups:
+
+- **Choices**: the confidences (one to four, default the engine's `confidence`), the rank rule (`kth`, `interpolated`), the collateral
+  model (`lagged`, `current`, `none`) and the contribution date (the peak EE date, or any primary date). A change asks the server
+  again. The browser computes nothing.
+- **Profile**: the headline tiles (CE, EPE, EEPE, the peak EE and each peak PFE with its date, EAD_IMM), then one row per primary date
+  with t, Δt, EE, ENE, PFE at each confidence, EEE, EE uncollateralised, the collateral effect and the EPE weight.
+- **Paths at a date**: the first 200 paths (`browser-paths`) at the date you pick, with V, L, the CSA's target, the rounded call, C, E,
+  N and max(V, 0). The figures always use every path taken.
+- **Contributions**: the 50 largest shares (`browser-trades`) with today's MTM and their percentage of EE. A negative share marks a
+  hedge.
+- **Formula bar**: click a column head or a tile to see the workbook formula behind it. **Explain**: the 23 steps and the terms, from
+  `playground/exposure/template/explain.txt`.
+- **Export to Excel**: choose the trade columns (50, 500, 2,000 or All; `export-choices`). Each choice shows its cells, file size,
+  recalculation time and the applications that open it before you download. A choice that no application could open, or that is over
+  `export-max-cells`, is disabled and its reason shown. **Template workbook** downloads case X1's workbook.
+
+### 29.4 The workbook
+
+| Tab | What it holds | Typed or formula |
+|---|---|---|
+| **Main** | The check band at the top. The choices are cells the formulas read: `Confidence1`…, `RankRule`, `CollateralModel` and `ContributionDate`, each a drop-down. Below them are the headline figures, each with Workbook, Engine and Check columns: P (the path count), CE, T, EPE, EEPE, peak EE and its date, each peak PFE and its date, and EAD_IMM. Three add-up checks follow: the contributions add up to EE, every Data cell is a number, and the trades shown plus Rest of set make up the set. Last is the profile per primary date (workbook beside engine, one check per date), with the run's own figures when N is smaller | choices typed; results formulas |
+| **Config** | The CSA in USD: whether it is present and margined, `THRESHOLD_THEM`, `THRESHOLD_US`, `MTA_THEM`, `MTA_US`, `INDEPENDENT_AMOUNT`, `ROUNDING`, `MPOR_DAYS`, `MARGIN_FREQUENCY_DAYS`, the run's `LOOKBACK_DAYS`, `MPOR_MISMATCH`, C0 and IM held. The run: alpha, the horizon cap and the longest maturity. The trades: one row per Data column with today's MTM, maturity and how many trades it counts, plus V0. The grid: every grid date with its role, look-back pointer, tenor and t | typed |
+| **Data** | The simulated values as delivered: one row per path, one column per grid date and trade, the dates side by side and Rest of set last in each date | values |
+| **Netting** | V (and L at a look-back point): `SUM` of a date's trade columns | formulas only |
+| **Collateral** | Per primary date, target, rounded and C. A date with no look-back point has no target, and its C is C0 | formulas only |
+| **Exposure** | Per primary date, E, N and max(V, 0) | formulas only |
+| **Stats** | Each confidence's rank (the kth rank, and lo, hi and w for interpolation). Per primary date: t (from Config), Δt, EE (`AVERAGE`), ENE, PFE (`SMALL`), EEE (`MAX` of the previous EEE and EE), EE uncollateralised, the collateral effect and the EPE weight `MAX(0, MIN(t, T) − t_prev)` | formulas only |
+| **Contributions** | At the contribution date (`MATCH` of Main's tenor, then `INDEX` into Data, Netting, Collateral and Exposure): V, C, E and `1 − (C + IM) / V` per path, and each trade's a; per trade, its EE share (`AVERAGE`) beside the engine's, with a check | formulas only |
+| **Explain**, **Provenance** | The steps and the terms. Provenance holds the run (id, model and version, seed, calibration, value basis, precision), the input versions, failed and proxied trades, the set's flags, the paths and trade columns, the choices exported, the template, and who exported it and when | text |
+
+Every formula uses the functions Excel, LibreOffice Calc and Google Sheets share (`SUM`, `AVERAGE`, `SMALL`, `ROUNDUP`, `ROUNDDOWN`,
+`INDEX`, `MATCH`, `SUMPRODUCT`, `MAX`, `MIN`, `IF`, `AND`, `OR`, `COUNT`, `ABS`). The formula scanner refuses any other function. If
+you change a choice, a Config cell or a Data value, the workbook recalculates. The Engine columns keep the engine's answer to the
+question as exported, so their checks turn red by design while the add-up checks stay green.
+
+### 29.5 PFE in Excel: the rank rule exactly
+
+The engine's kth rule takes the ⌈P·q − 10⁻⁹⌉-th smallest exposure, within 1..P. The workbook writes
+`SMALL(E, MAX(1, MIN(P, ROUNDUP(P*q - 1E-9, 0))))`, which is the same rule and needs no approximation. The workbook does not use
+`PERCENTILE`, `PERCENTILE.INC` or `PERCENTILE.EXC`, because each interpolates between ranks with its own convention: `PERCENTILE.INC` of
+five values at 95 % is 2.4 at case X1's third date, where the engine's 95 % PFE is the largest, 2.5. The interpolated rule is written as
+`(1 − w)·SMALL(E, lo) + w·SMALL(E, hi)` with `lo = MAX(1, MIN(P, ROUNDDOWN(P*q, 0)))`, `hi = MIN(P, lo + 1)` and
+`w = MIN(1, MAX(0, P*q − lo))`, again the engine's own formula. There is one limit, the same for the CSA's rounding. `ROUNDUP` in Excel
+works on the value rounded to 15 significant digits. When P·q − 10⁻⁹, or a call divided by the rounding unit, is a whole number plus a
+few units in the 16th digit, Excel can take the lower whole number where Java takes the higher one. The demo data and the hand-built
+cases never come near this, and the check cells would show it if it happened.
+
+### 29.6 Sizes and settings
+
+A netting set's Data tab has P rows and G × (trades shown + 1) columns. Above `export-max-cells`, or above Excel's 16,384 columns, the
+export is refused before a byte is sent, with the size in words (`400`, `BAD_REQUEST`). Choose fewer trades and the rest go to Rest of
+set, so V, and every figure after it, is still the whole set's. The trades shown are the largest by |EE contribution| at the peak EE
+date. The settings are under `drishti.ccr.exposure.playground` in `config/engines/exposure.yaml` ([CONFIGURATION.md](../admin/CONFIGURATION.md)):
+
+| Key | Default | Meaning |
+|---|---|---|
+| `max-paths` | 5000 | the most paths one playground takes from the run (the first ones) |
+| `browser-paths` | 200 | the paths the screen lists |
+| `browser-trades` | 50 | the contributions the screen lists |
+| `export-choices` | 50, 500, 2000, All | the trade columns the export offers |
+| `export-default` | 500 | the export's trade columns when none is asked |
+| `export-max-cells` | 20,000,000 | the most cells one workbook may hold |
+| `contribution-date` | peak | the date the contributions split EE at (`peak` or a tenor) |
+| `template` | blank | a bank's own workbook template folder (its look and words); blank: the built-in one |
+
+### 29.7 The API
+
+| Endpoint | Answers |
+|---|---|
+| `GET /api/v1/exposure/playground?nettingSet=&q=&rule=&collateral=&date=&paths=&at=&asOf=` | The set, run, CSA, choices, headline figures, profile, the path table at `at` (a tenor), contributions, the run's own figures when N is smaller, each column's formula, the Explain steps, and the export's choices with their estimates |
+| `GET /api/v1/exposure/playground/estimate?nettingSet=&paths=` | Each export choice's cells, size, recalculation time and applications, or why it is refused (no path is read) |
+| `GET /api/v1/exposure/playground.xlsx?nettingSet=&trades=&…` | The workbook of live formulas |
+| `GET /api/v1/exposure/playground/template` | Case X1's workbook |
+
+All four are reads (`GET`), so a personal API token calls them with its `read` scope. In the console they are behind `/play/exp` and
+`/api/exposure-play/…`, and the exposure engine's switch turns them off with the engine.
+
+### 29.8 The tests that prove it
+
+- `ExposurePlaygroundWorkbookTest` (drishti-server) works case X1 by hand: EE 0.8, 1.6, 1.1, 1.3; EPE 1.2; EEPE 1.4; peak PFE 95 % 2.5
+  at 9M; the contributions 1.133333 and 0.466667. The workbook is then written **without cached values** and recalculated by headless
+  LibreOffice, and every figure read back must equal the engine's to the cent with the band at ALL CHECKS PASS. This is run for case X1
+  under each collateral model and both rank rules, and for a synthetic set: seven trades plus Rest of set, 240 paths, a margined CSA with
+  rounding, an IA and IM, and a primary date with no look-back point. Without LibreOffice the recalculation tests are skipped and the
+  rest still run.
+- `ExposurePlaygroundApiTest` (drishti-server) runs the API over the exposure test lake: the figures equal the explorer's, the
+  contributions add up, the workbook downloads and recalculates, refusals answer in words, and the entitlements apply.
+- `tests/test_exposure_play.py` (console) and `tools/test_expplaycli.py` (command line) cover the command words, the page, the
+  pass-through of the choices and the downloads.
 
 ---
 

@@ -3951,6 +3951,14 @@ One file per compute engine (VaR, exposure, sensitivities, FRTB-SA, SIMM, SA-CCR
 | `drishti.ccr.exposure.official.retention-years` | integer | `7` |  | server (each node its own) | the published tables keep their log and removed files (time travel) this long | restart |  |
 | `drishti.ccr.exposure.official.on-start` | boolean | `true` |  | server (each node its own) | at start, capture the newest date when it has no official record yet | restart |  |
 | `drishti.ccr.exposure.official.jsonl` | boolean | `true` |  | server (each node its own) | also write each published date as JSON Lines: &lt;root&gt;/risk-results/jsonl/&lt;table&gt;/&lt;date&gt;/ | restart |  |
+| `drishti.ccr.exposure.playground.max-paths` | integer | `5000` |  | server (each node its own) | the most paths one playground (screen or workbook) takes from the run, the first ones; more asked is refused | restart |  |
+| `drishti.ccr.exposure.playground.browser-paths` | integer | `200` |  | server (each node its own) | the paths the screen lists (its figures are always of every path taken) | restart |  |
+| `drishti.ccr.exposure.playground.browser-trades` | integer | `50` |  | server (each node its own) | the trade contributions the screen lists | restart |  |
+| `drishti.ccr.exposure.playground.export-choices` | list | `["50", "500", "2000", "All"]` |  | server (each node its own) | the trade columns the export offers; the other trades are summed into Rest of set | restart |  |
+| `drishti.ccr.exposure.playground.export-default` | integer | `"500"` |  | server (each node its own) | the export's trade columns when none is asked | restart |  |
+| `drishti.ccr.exposure.playground.export-max-cells` | integer | `20000000` |  | server (each node its own) | the most cells one workbook may hold on this server; more is refused with the size | restart |  |
+| `drishti.ccr.exposure.playground.contribution-date` | string | `peak` |  | server (each node its own) | the primary date the contributions split EE at: peak (the peak EE date) or a tenor (1Y) | restart |  |
+| `drishti.ccr.exposure.playground.template` | string | `""` |  | server (each node its own) | a bank's workbook template folder (its look and words); blank: the built-in playground/exposure/template/ | restart |  |
 | `drishti.ccr.exposure.retention.trade-paths-days` | integer | `20` |  | server (each node its own) | full trade paths: the last 20 business dates ... | restart |  |
 | `drishti.ccr.exposure.retention.trade-paths-month-end-years` | integer | `1` |  | server (each node its own) | ... and each month-end for a year (the lake's owner applies it; GET /api/v1/exposure/retention lists the dates beyond) | restart |  |
 | `drishti.ccr.exposure.retention.set-matrices-years` | integer | `1` |  | server (each node its own) | netting-set matrices (the hot files): every date for a year ... | restart |  |

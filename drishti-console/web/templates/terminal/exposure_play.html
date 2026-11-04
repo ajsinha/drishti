@@ -1,0 +1,70 @@
+{#
+  Project Drishti · Any data. Any domain. One grammar.
+
+  Copyright (c) 2026 Ashutosh Sinha <ajsinha@gmail.com>.
+  All rights reserved.
+
+  PROPRIETARY AND CONFIDENTIAL.
+
+  This file is the confidential and proprietary property of Ashutosh Sinha.
+  Unauthorised copying, use, modification, distribution or disclosure of this
+  file, via any medium, is strictly prohibited except with the express prior
+  written permission of the copyright holder.
+
+  See the LICENSE file in the root of this repository for the full terms.
+#}
+{# The Exposure Playground (docs/guides/EXPOSURE_GUIDE.md section 29), PLAY EXP <netting set>: on the VaR Playground's frame (the decided
+   option A: the grid with a tall explanation beside it and the formula bar), the choices (confidences, rank rule, collateral model,
+   contribution date), three tabs (the profile beside the engine with the headline figures, the paths at a date with every collateral step,
+   the contributions), the explanation and Export to Excel with its size estimate. A shell: exposure-play.js fills it from the server. #}
+{% extends "base.html" %}
+{% block title %}Exposure Playground · {{ netting_set or 'a netting set' }} · {{ PRODUCT }}{% endblock %}
+{% block screen %}{{ screen }}{% endblock %}
+{% block body_class %}terminal{% endblock %}
+{% block head %}<link rel="stylesheet" href="/static/css/var-playground.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/frtb-sa.css?v={{ ASSET_V }}"><link rel="stylesheet" href="/static/css/exposure-play.css?v={{ ASSET_V }}">{% endblock %}
+{% block nav %}{% with command_text=command_text ~ ' <GO>' %}{% include "terminal/_topbar.html" %}{% endwith %}{% endblock %}
+{% block content %}
+<div class="pg fr xp" data-exp-play data-ns="{{ netting_set }}">
+  <div class="pg-head">
+    <h1 class="pg-title"><span class="pg-word mono">PLAY EXP</span> Exposure Playground</h1>
+    <nav class="pg-path mono" aria-label="The netting set">{{ netting_set }}</nav>
+    <span class="pg-meta" data-xp-meta aria-live="polite">{{ 'loading…' if netting_set else 'type a netting set, or EXAMPLE for the hand-built case X1' }}</span>
+    <a class="pg-help" href="/help/context/play-exp" title="Help: the Exposure Playground (the exposure guide)" aria-label="Help: the Exposure Playground"><i class="bi bi-question-circle" aria-hidden="true"></i></a>
+    {% if netting_set and netting_set != 'EXAMPLE' %}<a class="pg-link" href="/exposure?scope={{ ('NSET:' ~ netting_set)|urlencode }}">Exposure explorer</a>{% endif %}
+  </div>
+  <form class="pg-ask" method="get" action="/play/exp">
+    <label>Netting set <input class="pg-input mono" name="nettingSet" value="{{ netting_set }}" placeholder="NS-ALDERSHOT-FRA, or EXAMPLE" autocomplete="off"></label>
+    <button type="submit" class="pg-btn primary">Open</button>
+    <a class="pg-link" href="/api/exposure-play/template.xlsx" download title="The workbook of the hand-built case X1: two trades, five paths, every figure a formula">Template workbook</a>
+  </form>
+  <p class="pg-notice" data-xp-notice role="status" hidden></p>
+  {% if netting_set %}
+  <div class="pg-ctrls" role="toolbar" aria-label="Choices">
+    <label class="pg-chip">Confidences <input class="pg-input mono" data-xp-q size="10" aria-label="PFE confidences, comma separated" placeholder="0.95,0.99"></label>
+    <label class="pg-chip">Rank rule <select data-xp-rule aria-label="Rank rule"><option>kth</option><option>interpolated</option></select></label>
+    <label class="pg-chip">Collateral <select data-xp-collateral aria-label="Collateral model"><option>lagged</option><option>current</option><option>none</option></select></label>
+    <label class="pg-chip">Contribution date <select data-xp-date aria-label="Contribution date"><option value="peak">peak EE</option></select></label>
+    <span class="pg-actions">
+      <label class="pg-chip">Trades <select data-xp-trades aria-label="Trade columns in the workbook; the rest go to Rest of set"></select></label>
+      <span class="muted" data-xp-estimate aria-live="polite"></span>
+      <button type="button" class="pg-btn primary" data-xp-export title="The workbook of live formulas: the simulated values as data, every step after them a formula, each figure checked against the engine">Export to Excel</button>
+    </span>
+  </div>
+  <div class="fr-tabs" role="tablist">
+    <button type="button" role="tab" class="fr-tab" data-xp-tab="profile" aria-selected="true">Profile</button>
+    <button type="button" role="tab" class="fr-tab" data-xp-tab="paths" aria-selected="false">Paths at a date</button>
+    <button type="button" role="tab" class="fr-tab" data-xp-tab="contributions" aria-selected="false">Contributions</button>
+  </div>
+  <div class="pg-fbar" aria-label="Formula bar"><span class="pg-ref mono" data-xp-ref>—</span><span class="pg-fx mono">fx</span><code class="pg-formula" data-xp-formula>Select a column</code></div>
+  <div class="pg-body">
+    <section class="pg-gridcard">
+      <div data-xp-pane="profile"><div class="xp-figures" data-xp-figures aria-live="polite"></div><div class="pg-scroll" tabindex="0"><table class="fr-grid" data-xp-profile aria-label="The profile per primary date"></table></div></div>
+      <div data-xp-pane="paths" hidden><p class="pg-ctrls"><label class="pg-chip">Date <select data-xp-at aria-label="The date of the path table"></select></label> <span class="muted" data-xp-paths-note></span></p><div class="pg-scroll" tabindex="0"><table class="fr-grid" data-xp-paths aria-label="The paths at the date: V, L, the collateral steps, E, N"></table></div></div>
+      <div data-xp-pane="contributions" hidden><p class="muted" data-xp-contrib-note></p><div class="pg-scroll" tabindex="0"><table class="fr-grid" data-xp-contrib aria-label="Each trade's share of EE at the contribution date"></table></div></div>
+    </section>
+    <aside class="pg-explain" data-xp-explain aria-live="polite"></aside>
+  </div>
+  {% endif %}
+</div>
+<script src="/static/js/exposure-play.js?v={{ ASSET_V }}"></script>
+{% endblock %}

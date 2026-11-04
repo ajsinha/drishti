@@ -147,6 +147,12 @@ async def go(request: Request, q: str = ""):
     me = getattr(request.state, "identity", None)
     if ed.word_on("VAR") and (to_var := var_redirect(typed, (me.user if me else "") or "")) is not None:   # VAR DESK RATES: the VaR explorer (var_routes.py)
         return to_var
+    play_metric = typed.split()[1].upper() if len(typed.split()) > 1 and head == "PLAY" else ""
+    if play_metric == "EXP":                                        # PLAY EXP <netting set>: the Exposure Playground, by the exposure engine's rules
+        # (the engine on and the role's opens: already checked above by core/engines.typed_engine and core/menus.engine_refused; here the words)
+        if ed.word_on("PLAY") and ed.word_on("EXP"):
+            return play_redirect(typed, (me.user if me else "") or "")
+        return RedirectResponse(f"/t?error={quote(f'DRS-4023 PLAY EXP is not part of {ed.title}: FUNC lists what you can use')}", status_code=303)
     if ed.word_on("PLAY") and ed.word_on("VAR") and (to_play := play_redirect(typed, (me.user if me else "") or "")) is not None:   # PLAY VAR <scope|ids>: the VaR Playground (play_routes.py)
         return to_play
     if ed.word_on("VAR") and ed.word_on("FRSA") and (to_frsa := frsa_redirect(typed)) is not None:   # FRSA <scope>: FRTB-SA capital (frtb_routes.py)

@@ -40,8 +40,8 @@ router = APIRouter(include_in_schema=False)
 
 WORD = "PLAY"
 #: the metric after PLAY: each metric's playground adds its word here (VAR_PLAYGROUND.md section 13); FRTB: routes/frtb_routes.py; SIMM:
-#: routes/simm_routes.py; SACCR: routes/saccr_routes.py; FVA: routes/fva_routes.py
-METRICS = ("VAR", "FRTB", "SIMM", "SACCR", "FVA")
+#: routes/simm_routes.py; EXP: routes/exposure_play_routes.py; SACCR: routes/saccr_routes.py; FVA: routes/fva_routes.py
+METRICS = ("VAR", "FRTB", "SIMM", "EXP", "SACCR", "FVA")
 #: the link's lens words and the engine's names for them
 LENS = {"h": "horizon", "m": "method", "q": "confidence", "esq": "esConfidence", "set": "set"}
 
@@ -68,6 +68,9 @@ def play_command(words: list[str], user: str) -> str | None:
     if words[1].upper() == "FVA":                             # PLAY FVA <netting set | counterparty>: the FVA Playground
         from routes.fva_routes import play_fva_command
         return play_fva_command(rest)
+    if words[1].upper() == "EXP":                             # PLAY EXP <netting set>, PLAY EXP EXAMPLE: the Exposure Playground
+        from routes.exposure_play_routes import play_exp_command
+        return play_exp_command(rest)
     if not rest:
         return "/play"
     where = var_routes.var_command(["VAR"] + rest, user)
