@@ -246,15 +246,23 @@
   config().then(function (c) {
     if (!usable(c)) { return; }
     main.setAttribute('aria-haspopup', 'dialog');
-    document.querySelectorAll('.pnl[data-panel] .pnl-code').forEach(function (code) {
-      var id = code.closest('.pnl').getAttribute('data-panel'), name = (code.closest('.pnl').querySelector('h3') || {}).textContent || id;
-      var b = el('button', 'pnl-help'); b.type = 'button';
-      b.setAttribute('data-share-panel', id);
-      b.title = 'Share this panel'; b.setAttribute('aria-label', 'Share ' + name.trim());
-      var i = el('i', 'bi bi-send'); i.setAttribute('aria-hidden', 'true'); b.appendChild(i);
-      b.addEventListener('click', function () { open(b); });
-      code.appendChild(b);
-    });
+    function shareButtons(r) {                       // every panel under r (r itself when it is one) that has none yet
+      r.querySelectorAll('.pnl[data-panel] .pnl-code').forEach(function (code) {
+        if (code.querySelector(':scope > [data-share-panel]')) { return; }
+        var id = code.closest('.pnl').getAttribute('data-panel'), name = (code.closest('.pnl').querySelector('h3') || {}).textContent || id;
+        var b = el('button', 'pnl-help'); b.type = 'button';
+        b.setAttribute('data-share-panel', id);
+        b.title = 'Share this panel'; b.setAttribute('aria-label', 'Share ' + name.trim());
+        var i = el('i', 'bi bi-send'); i.setAttribute('aria-hidden', 'true'); b.appendChild(i);
+        b.addEventListener('click', function () { open(b); });
+        code.appendChild(b);
+      });
+    }
+    shareButtons(document);
+    if (window.drishti && window.drishti.enhance) {  // a panel swapped in later keeps its share button
+      var enhance = window.drishti.enhance;
+      window.drishti.enhance = function (node) { var r = enhance.apply(this, arguments); if (node && node.querySelectorAll) { shareButtons(node); } return r; };
+    }
   });
 
   document.addEventListener('keydown', function (e) {

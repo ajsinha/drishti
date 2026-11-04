@@ -191,6 +191,13 @@
   in one process used to get the first's), the AI "Test connection" pacing and the explorer's SQL slots now belong to each app
   (`app.state`), as the engines do. `tests/test_console_context.py` fails on the old code (9 of 9) and passes.
 
+- **Fixed: a panel swapped in after the page loaded keeps its comment badge and its share button.** A computed panel whose result
+  landed, a control's or a live tick's new panel, a refreshed panel and a phone's More row came without the Discussion's badge and the
+  Share button (only the page's first panels had them); `discussion.js` and `share.js` now place them on every panel that has none, at
+  load and on each panel the page's scripts swap in (`window.drishti.enhance`). The console-or-library parity test reads a page only
+  once the Discussion has answered: the first page of a freshly started console (the compute demo's path book at 390 px, first in the
+  sorted list) was read before `/api/collab` answered, without its badges.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox
