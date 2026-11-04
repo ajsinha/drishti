@@ -23,10 +23,10 @@ Futures settlement prices by delivery month. One row per commodity forward curve
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/commodity-curve/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/commodity-curve/` + `commodity-curve.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `CURVE_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -40,18 +40,18 @@ A real record, the most complete of the 475 (the one with the most non-empty fie
 {
   "CURVE_ID": "CMDC-BRENT",
   "COMMODITY": "Brent crude oil",
-  "FRONT": 78.65,
+  "FRONT": 79.99,
   "SHAPE": "backwardation",
   "ROLL": -0.4,
   "POINTS": [
     {
       "MONTH": "X6",
-      "PRICE": 78.65,
+      "PRICE": 79.99,
       "OPEN_INTEREST": 200000
     },
     {
       "MONTH": "Z6",
-      "PRICE": 78.336,
+      "PRICE": 79.67,
       "OPEN_INTEREST": 143306
     },
     "… 10 more elements of the same shape"
@@ -69,12 +69,12 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `CURVE_ID` | string | required | The record's id (the business key) | pattern `^CMDC-` | `"CMDC-BRENT"` |
 | `COMMODITY` | string | required | The commodity's name (Brent crude oil …). | one of `Brent crude oil`, `Copper`, `Corn`, `Gold`, `Henry Hub natural gas`, `Silver`, `Soybeans`, `WTI crude oil` | `"Brent crude oil"` |
-| `FRONT` | number | required | The front contract month's futures price, in the curve's UNIT. | unit: UNIT | `78.65` |
+| `FRONT` | number | required | The front contract month's futures price, in the curve's UNIT. | unit: UNIT | `79.99` |
 | `SHAPE` | string | required | backwardation when later months are cheaper than the front, contango when dearer. | one of `backwardation`, `contango` | `"backwardation"` |
 | `ROLL` | number | required | The second contract month's price over the front month's, minus one, in percent (-0.4 is -0.4%). | unit: percent | `-0.4` |
 | `POINTS` | array of objects | required | The futures curve: one object per contract month, front month first (twelve months). | — | [12 objects] |
 | `POINTS[].MONTH` | string | required | The contract month as a futures code: the month letter (F Jan … Z Dec) and the year's last digit (X6 is November 2026). | — | `"X6"` |
-| `POINTS[].PRICE` | number | required | The futures price of the contract month, in the curve's UNIT. | unit: UNIT | `78.65` |
+| `POINTS[].PRICE` | number | required | The futures price of the contract month, in the curve's UNIT. | unit: UNIT | `79.99` |
 | `POINTS[].OPEN_INTEREST` | integer | required | The contract month's open interest, in contracts. | unit: contracts | `200000` |
 | `COMMODITY_REF` | string | required | The commodity: a COMMODITY_ID of the market-data pack's commodity kind (CMD-…). | pattern `^CMD-`; links to `commodity` | `"CMD-BRENT"` |
 | `UNIT` | string | required | The price unit of the curve's points (e.g. USD/bbl, USD/MMBtu, USD/oz, USD/lb, USc/bu). | one of `USD/MMBtu`, `USD/bbl`, `USD/lb`, `USD/oz`, `USc/bu` | `"USD/bbl"` |

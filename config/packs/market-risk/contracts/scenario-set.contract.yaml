@@ -138,7 +138,7 @@ validation:
   - STRESS
 notes: []
 review:
-- 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/market-risk/scenario-set/cob-2026-09-30.jsonl.gz)):
+- 'required inferred from 100% coverage in 2 documents (1 samples and 1 test-data documents (data/testdata/market-risk/scenario-set/scenario-set.tar)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

@@ -2700,7 +2700,7 @@ JSON object per line, UTF-8, a file `.jsonl` (or `.jsonl.gz`), each line exactly
 
 The files go under `<data folder>/pvgen/` by default (`morning-<date>/`, `intraday-<date>/`). The morning run of the test data's date is
 the engine's to the unit (`check.py` on it: VaR 112,041,646, ES 160,143,809; with `--all-vectors` 112,035,906 and 160,132,107).
-The committed intraday sample (`config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl`: three amended Endur trades,
+The committed intraday sample (`config/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl`: three amended Endur trades,
 one new, one cancelled) loads with `drishti.py var intraday --load <file> --date <the lake's date>`. `make_var_data.py` takes the same
 `--pv-systems`, `--pnl-systems` and `--all-vectors`: the P&L-vector generation is whole, for any system.
 

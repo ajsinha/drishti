@@ -23,7 +23,7 @@ Today's portfolio at one hierarchy node revalued over every business day of a lo
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/pnl-history/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/pnl-history/` + `pnl-history.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `HISTORY_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

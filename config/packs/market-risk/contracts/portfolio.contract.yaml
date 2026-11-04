@@ -179,7 +179,7 @@ notes:
 - The portfolio definitions are an engine input (IMPLEMENTATION_PLAN.md); the figures of the retired stored record (VaR, ES, positions, contributions,
   P&L) are computed as the page opens (VAR_ENGINE), never stored.
 review:
-- 'required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/cob-2026-09-30.jsonl.gz)):
+- 'required inferred from 100% coverage in 31 documents (3 samples and 28 test-data documents (data/testdata/market-risk/portfolio/portfolio.2026-09-30.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source is the pack''s first listed source (its README): confirm.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

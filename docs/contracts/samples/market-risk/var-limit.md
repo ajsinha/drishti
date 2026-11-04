@@ -23,7 +23,7 @@ The VaR limit of one node of a hierarchy, keyed by the hierarchy and the node's 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/var-limit/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/var-limit/` + `var-limit.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `LIMIT_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

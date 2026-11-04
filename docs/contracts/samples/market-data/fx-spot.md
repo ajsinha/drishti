@@ -23,10 +23,10 @@ Spot rate for a currency pair with bid/ask. One row per fx spot rate per busines
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/fx-spot/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/fx-spot/` + `fx-spot.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `PAIR` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -40,19 +40,19 @@ A real record, the most complete of the 720 (the one with the most non-empty fie
 {
   "PAIR": "FX-AUDUSD",
   "PAIR_NAME": "AUD/USD",
-  "MID": 0.68395,
-  "BID": 0.68392,
-  "ASK": 0.68398,
-  "CHANGE_1D": -0.00034,
-  "SPOT_DATE": "2026-07-13",
+  "MID": 0.68418,
+  "BID": 0.68415,
+  "ASK": 0.68421,
+  "CHANGE_1D": -0.01049,
+  "SPOT_DATE": "2026-07-10",
   "HISTORY": [
+    {
+      "DATE": "2026-05-26",
+      "MID": 0.74924
+    },
     {
       "DATE": "2026-05-27",
       "MID": 0.74797
-    },
-    {
-      "DATE": "2026-05-28",
-      "MID": 0.75071
     },
     "… 28 more elements of the same shape"
   ],
@@ -77,14 +77,14 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `PAIR` | string | required | The record's id: FX- and the pair, base then quote currency (FX-AUDUSD). | pattern `^FX-` | `"FX-AUDUSD"` |
 | `PAIR_NAME` | string | required | The pair as people write it, BASE/QUOTE (EUR/USD). | — | `"AUD/USD"` |
-| `MID` | number | required | The mid spot rate: units of the quote currency per one unit of the base (the last HISTORY point). | unit: quote currency per base | `0.68395` |
-| `BID` | number | required | The bid spot rate, in quote currency per one unit of the base. | unit: quote currency per base | `0.68392` |
-| `ASK` | number | required | The ask (offer) spot rate, in quote currency per one unit of the base. | unit: quote currency per base | `0.68398` |
-| `CHANGE_1D` | number | required | The day's move of MID, as a fraction (-0.01092 is -1.092%). | unit: fraction | `-0.00034` |
-| `SPOT_DATE` | date (YYYY-MM-DD) | required | The spot value date: two business days after the data's date (T+2). | — | `"2026-07-13"` |
+| `MID` | number | required | The mid spot rate: units of the quote currency per one unit of the base (the last HISTORY point). | unit: quote currency per base | `0.68418` |
+| `BID` | number | required | The bid spot rate, in quote currency per one unit of the base. | unit: quote currency per base | `0.68415` |
+| `ASK` | number | required | The ask (offer) spot rate, in quote currency per one unit of the base. | unit: quote currency per base | `0.68421` |
+| `CHANGE_1D` | number | required | The day's move of MID, as a fraction (-0.01092 is -1.092%). | unit: fraction | `-0.01049` |
+| `SPOT_DATE` | date (YYYY-MM-DD) | required | The spot value date: two business days after the data's date (T+2). | — | `"2026-07-10"` |
 | `HISTORY` | array of objects | required | The daily mids, oldest first: one object per business day. | — | [30 objects] |
-| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the mid-rate history, oldest first, ending at the record's date. | — | `"2026-05-27"` |
-| `HISTORY[].MID` | number | required | The mid rate that day: units of the quote currency per one unit of the base currency. | unit: quote currency per base | `0.74797` |
+| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the mid-rate history, oldest first, ending at the record's date. | — | `"2026-05-26"` |
+| `HISTORY[].MID` | number | required | The mid rate that day: units of the quote currency per one unit of the base currency. | unit: quote currency per base | `0.74924` |
 | `CONVENTIONS` | object | required | The pair's market conventions: base and quote currency, pip factor, spot lag, settlement calendars, NDF or not. | — | {…} |
 | `CONVENTIONS.BASE` | string | required | The base currency (the one quoted per unit), ISO 4217. | one of `AUD`, `EUR`, `GBP`, `USD` | `"AUD"` |
 | `CONVENTIONS.QUOTE` | string | required | The quote (price) currency, ISO 4217. | — | `"USD"` |

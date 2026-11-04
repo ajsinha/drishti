@@ -23,10 +23,10 @@ An account at a CCP holding cleared trades and margin. One row per clearing acco
 
 |  |  |
 |---|---|
-| Path | `data/testdata/core/clearing-account/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/core/clearing-account/` + `clearing-account.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `ACCOUNT_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -54,7 +54,7 @@ A real record, the most complete of the 123 (the one with the most non-empty fie
       "NOTIONAL": 221100000.0,
       "MATURITY": "2027-05-21",
       "MATURITY_BUCKET": "0-1Y",
-      "MTM": 252935
+      "MTM": 250883
     },
     {
       "TRADE_ID": "MX-20000068",
@@ -66,7 +66,7 @@ A real record, the most complete of the 123 (the one with the most non-empty fie
       "NOTIONAL": 15000000.0,
       "MATURITY": "2027-01-14",
       "MATURITY_BUCKET": "0-1Y",
-      "MTM": -107856
+      "MTM": -109626
     },
     "… 28 more elements of the same shape"
   ],
@@ -95,7 +95,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `TRADES[].NOTIONAL` | number | required | The trade's notional, in the trade's own currency. | unit: trade currency | `221100000.0` |
 | `TRADES[].MATURITY` | date (YYYY-MM-DD) | required | The trade's maturity date. | — | `"2027-05-21"` |
 | `TRADES[].MATURITY_BUCKET` | string | required | The remaining maturity bucket of the trade: 0-1Y, 1-2Y, 2-5Y, 5-10Y or 10Y+. | one of `0-1Y`, `1-2Y`, `10Y+`, `2-5Y`, `5-10Y` | `"0-1Y"` |
-| `TRADES[].MTM` | integer | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `252935` |
+| `TRADES[].MTM` | integer | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `250883` |
 | `CCP` | string | required | The CCP the account is held at: a CCP_ID of the core pack's ccp kind (CCP-…). | pattern `^CCP-`; links to `ccp` | `"CCP-CME"` |
 
 ## Fields in other rows

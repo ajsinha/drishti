@@ -101,7 +101,7 @@ while read -r table kind pack connector landing datefield partition; do
     build=("$PY" "$REPO_DIR/tools/drishti.py" lake build --format iceberg --from "$in" -r --kind "$kind" --pack "$REPO_DIR/$pack"
            --connector "$connector" --lake "$(iceberg_root)" --domain "$domain" --table "$folder" --no-stamp
            --summary "$SCRATCH/build-${folder}.json" -q "${SETS[@]}")
-    if [[ "$datefield" == - ]]; then build+=(--as-of "$DAY"); else build+=(--date "$datefield"); fi
+    build+=(--as-of "$DAY")                  # the landing folder's date, from outside the rows (DATA_LOAD_RULES.md); a row's own date only counted
     [[ "$partition" == - ]] || build+=(--partition-by "$partition")
     rc=0; TMPDIR="$SCRATCH" run "${build[@]}" || rc=$?
     if (( rc == 1 || rc == 3 )); then say "$table: lake build failed (exit $rc): nothing committed"; exit "$rc"; fi

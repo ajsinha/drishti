@@ -129,8 +129,8 @@ class CommittedData(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.cob = S.cob_of(TD)
-        cls.recs = lines(TD / "market-risk" / "position-sensitivity" / f"cob-{cls.cob}.jsonl.gz")
-        cls.dic = {r["RISK_FACTOR"]: r for r in lines(TD / "market-risk" / "risk-factor" / f"cob-{cls.cob}.jsonl.gz")}
+        cls.recs = lines(TD / "market-risk" / "position-sensitivity" / f"position-sensitivity.{cls.cob}.jsonl.gz")
+        cls.dic = {r["RISK_FACTOR"]: r for r in lines(TD / "market-risk" / "risk-factor" / f"risk-factor.{cls.cob}.jsonl.gz")}
 
     def test_the_committed_files_are_what_the_generator_writes(self):
         for rel, data in S.files(TD).items():

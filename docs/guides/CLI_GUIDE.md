@@ -49,7 +49,7 @@ Sutras, the data in a Delta lake partitioned by business date, a checksummed bun
 `README.txt` with your real values filled in.
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
+drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
     --kind trade --match PRODUCT_TYPE --name my-bank
 ```
 
@@ -636,7 +636,7 @@ splits JSON Lines files into groups by the values of the `--match` fields, write
 `tests/<sutra>/cases.jsonl` (cases `sample-1` ...), and runs `sutra lint`. On 400 Endur trades of the committed test data:
 
 ```bash
-mkdir -p /tmp/gen && zcat data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
+mkdir -p /tmp/gen && zcat data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz | head -400 > /tmp/gen/trade.jsonl
 drishti-console/.venv/bin/python tools/drishti.py sutra gen /tmp/gen --kind trade --key TRADE_ID \
     --match SOURCE_SYSTEM,PRODUCT_TYPE --date TRADE_DATE --fallback --out /tmp/genout
 ```
@@ -700,7 +700,7 @@ those tools (`tools/packmake.py` only chooses the key and the date, lays the fol
 `config/drishti-site.yaml`, `run-server.sh`, `run-server.ps1` and `MANIFEST.json`).
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
+$ drishti-console/.venv/bin/python tools/drishti.py pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank
 read 4407 trade document(s)
 key:   TRADE_ID  (named <kind>_id, present and unique in all 4407 documents)
 date:  START_DATE  (the date-valued field with the fewest distinct dates (24); pass --date to choose another)
@@ -830,7 +830,7 @@ On the MUREX snapshot of the test data (it has no business-date field, so no `--
 is written), with `--out` outside `config/packs` so nothing of the server's changes:
 
 ```bash
-drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --name murex-book \
+drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --name murex-book \
     --title "MUREX book" --kind trade --key TRADE_ID --match PRODUCT_TYPE --out data/build/murex-book
 ```
 
@@ -1086,12 +1086,12 @@ A worked run on the test data: a pack made from the ENDUR snapshot (five product
 priority set to 15, the About sentence of the kind written), then the data grows: the CALYPSO snapshot joins it.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --name mb \
+$ drishti-console/.venv/bin/python tools/drishti.py pack new data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --name mb \
     --kind trade --match PRODUCT_TYPE --key TRADE_ID --out data/build/mb
 4407 documents, 1 kind(s), 5 group(s)
 ...
-$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
-    data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz --dry-run
+$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+    data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz --dry-run
 pack regenerate --dry-run: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
   add         sutras/trade/trade-amort-bond.v1.sutra.yaml
@@ -1115,8 +1115,8 @@ The priority edit is kept, the About edit is merged with the regenerated skeleto
 conflict, here the generator now writes `priority: 20` on the line you changed to 15:
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz \
-    data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz --priority 20
+$ drishti-console/.venv/bin/python tools/drishti.py pack regenerate data/build/mb data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz \
+    data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz --priority 20
 pack regenerate: data/build/mb
   add         sutras/trade/trade-abs.v1.sutra.yaml
   ...
@@ -1389,7 +1389,7 @@ needs. Memory is bounded: `--max-distinct` (default 10,000) values are tracked p
 `>=10000` and the field cannot be a key or a match column.
 
 ```text
-$ drishti-console/.venv/bin/python tools/drishti.py data profile data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --kind trade
+$ drishti-console/.venv/bin/python tools/drishti.py data profile data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --kind trade
 data profile: 1 file(s), 4198 document(s), 1 kind(s)
 
 == trade: 4198 document(s), 107 field(s)
@@ -1421,7 +1421,7 @@ data profile: 1 file(s), 4198 document(s), 1 kind(s)
     PORTFOLIO                    0.963  coverage 100%, 15 values over 4198 documents (average 279.9 per value, evenness 0.93; largest group BOOK-RATES-3 = 526)
     TT_BOOK                      0.963  coverage 100%, 15 values over 4198 documents (average 279.9 per value, evenness 0.93; largest group BOOK-RATES-3 = 526)
   suggested:
-    python3 tools/drishti.py pack make data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --key TRADE_ID --date SOURCE_UPDATE_TIME --name trade-pack
+    python3 tools/drishti.py pack make data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --key TRADE_ID --date SOURCE_UPDATE_TIME --name trade-pack
 ```
 
 Here `SOURCE_UPDATE_TIME` (the extract's time stamp: one date in the file, the snapshot's business day) is the right business date, and
@@ -3314,10 +3314,10 @@ Click the folder icon next to **Environment variables** to edit them as a table 
 
 | Name | **Parameters** |
 |---|---|
-| `drishti pack make` | `pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
-| `drishti data profile` | `data profile data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz` |
-| `drishti pack regenerate` | `pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/changes-2026-09-23.jsonl.gz --dry-run` |
-| `drishti sutra gen` | `sutra gen data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --out data/build/sutras` |
+| `drishti pack make` | `pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force` |
+| `drishti data profile` | `data profile data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz` |
+| `drishti pack regenerate` | `pack regenerate data/build/my-bank/pack/my-bank data/testdata/trades/endur/trade_endur.2026-09-23.jsonl.gz --dry-run` |
+| `drishti sutra gen` | `sutra gen data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --out data/build/sutras` |
 | `drishti data ingest` | `data ingest --from your-new-days/ --pack data/build/my-bank/pack/my-bank --lake data/build/my-bank/data/delta --dry-run` (remove `--dry-run` to write) |
 | `drishti pack check` | `pack check data/build/my-bank/pack/my-bank --strict --junit data/build/reports` |
 | `drishti server packs load` | `server packs load my-bank --server http://localhost:18480` with `DRISHTI_TOKEN` set |
@@ -3367,7 +3367,7 @@ The format is one `<configuration>` element in a `ProjectRunConfigurationManager
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/.." />
     <option name="IS_MODULE_SDK" value="false" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/../tools/drishti.py" />
-    <option name="PARAMETERS" value="pack make data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
+    <option name="PARAMETERS" value="pack make data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz --kind trade --match PRODUCT_TYPE --name my-bank --out data/build/my-bank --force" />
     <method v="2" />
   </configuration>
 </component>

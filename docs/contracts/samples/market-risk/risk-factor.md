@@ -23,7 +23,7 @@ Every risk factor the bank's sensitivities use, named by the factor naming stand
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/risk-factor/` + `cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/risk-factor/` + `risk-factor.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `RISK_FACTOR` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

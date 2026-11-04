@@ -23,10 +23,10 @@ A trading desk: books, limits and risk results. One row per desk per business da
 
 |  |  |
 |---|---|
-| Path | `data/testdata/core/desk/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/core/desk/` + `desk.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `DESK_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -45,20 +45,20 @@ A real record, the most complete of the 600 (the one with the most non-empty fie
     {
       "ID": "BOOK-COMM-1",
       "TRADES": 1000,
-      "MTM": -142877731
+      "MTM": -141181988
     },
     {
       "ID": "BOOK-COMM-2",
       "TRADES": 980,
-      "MTM": 121488777
+      "MTM": 124230133
     },
     {
       "ID": "BOOK-COMM-3",
       "TRADES": 988,
-      "MTM": -297089136
+      "MTM": -299667424
     }
   ],
-  "MTM": -357043877,
+  "MTM": -360908138,
   "LEGAL_ENTITY": "LE-NY",
   "ASSET_CLASSES": [
     "Commodity"
@@ -69,14 +69,14 @@ A real record, the most complete of the 600 (the one with the most non-empty fie
       "BOOK": "BOOK-COMM-1",
       "CURRENCY": "USD",
       "FAMILY": "swap",
-      "MTM": -4715603
+      "MTM": -4808984
     },
     {
       "TRADE_ID": "1000019",
       "BOOK": "BOOK-COMM-1",
       "CURRENCY": "USD",
       "FAMILY": "linear",
-      "MTM": -52483
+      "MTM": -50931
     },
     "… 2966 more elements of the same shape"
   ]
@@ -95,8 +95,8 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `BOOKS` | array of objects | required | The desk's books: one object per book. | — | [3 objects] |
 | `BOOKS[].ID` | string | required | The book: a BOOK_ID of the core pack's book kind (BOOK-…). | — | `"BOOK-COMM-1"` |
 | `BOOKS[].TRADES` | integer | required | How many trades the book holds. | — | `1000` |
-| `BOOKS[].MTM` | integer | required | The sum of the book's trades' MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-142877731` |
-| `MTM` | integer | required | The sum of the MTM of the desk's trades, in the bank's reporting currency (USD in the demo). | unit: USD | `-357043877` |
+| `BOOKS[].MTM` | integer | required | The sum of the book's trades' MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-141181988` |
+| `MTM` | integer | required | The sum of the MTM of the desk's trades, in the bank's reporting currency (USD in the demo). | unit: USD | `-360908138` |
 | `LEGAL_ENTITY` | string | required | The bank's legal entity the desk books in: an ENTITY_ID of the core pack's legal-entity kind (LE-…). | pattern `^LE-`; links to `legal-entity` | `"LE-NY"` |
 | `ASSET_CLASSES` | array of strings | required | The asset classes the desk trades (Rates, FX, Credit, Equity, Commodity, Inflation, Fixed income, Money market,...). | — | [1 values] |
 | `POSITIONS` | array of objects | required | Every trade of the desk's books, by book then trade id: one object per trade. | — | [2968 objects] |
@@ -104,7 +104,7 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 | `POSITIONS[].BOOK` | string | required | The trade's book: a BOOK_ID of the core pack's book kind (BOOK-…). | pattern `^BOOK-`; links to `book` | `"BOOK-COMM-1"` |
 | `POSITIONS[].CURRENCY` | string | required | The trade's currency, ISO 4217. | one of `AUD`, `CAD`, `CHF`, `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
 | `POSITIONS[].FAMILY` | string | required | The trade's product family (swap, option, future, bond, linear, exotic, sft, money …). | — | `"swap"` |
-| `POSITIONS[].MTM` | number | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-4715603` |
+| `POSITIONS[].MTM` | number | required | The trade's MTM, in the bank's reporting currency (USD in the demo). | unit: USD | `-4808984` |
 
 ## Fields in other rows
 

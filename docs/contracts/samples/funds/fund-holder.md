@@ -23,7 +23,7 @@ The reverse look-through: every fund of the pack that holds one us-equities comp
 
 |  |  |
 |---|---|
-| Path | `data/testdata/funds/fund-holder/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/funds/fund-holder/` + `fund-holder.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `TICKER` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

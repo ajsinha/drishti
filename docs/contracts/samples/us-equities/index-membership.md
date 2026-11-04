@@ -23,7 +23,7 @@ An equity index's members (Dow 30, Nasdaq-100, S&P 500) as their tracking ETF re
 
 |  |  |
 |---|---|
-| Path | `data/testdata/us-equities/index-membership/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/us-equities/index-membership/` + `index-membership.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `INDEX` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

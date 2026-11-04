@@ -23,7 +23,7 @@ A currency's rate against USD today and under each historical scenario, as the r
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-risk/fx-scenario/` + `cob-YYYY-MM-DD.jsonl.gz`, `stress-cob-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-risk/fx-scenario/` + `fx-scenario.tar!/fx-scenario/YYYY-MM-DD/cob.jsonl.gz`, `fx-scenario.tar!/fx-scenario/YYYY-MM-DD/stress-cob.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `FX_SCENARIO_ID` |
 | Date field | `BUSINESS_DATE` (in every record: the business date it belongs to; the lake's partition `business_date`) |

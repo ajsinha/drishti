@@ -23,7 +23,7 @@ An ISIN, BIC or MIC and the legal entity GLEIF's mapping files give it. One row 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/gleif/lei-mapping/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/gleif/lei-mapping/` + `lei-mapping.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `IDENTIFIER` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |

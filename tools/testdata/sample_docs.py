@@ -96,7 +96,7 @@ SUBTYPES = {
 EXTRA_SOURCES = {
     "market-risk/pnl-vector": ["config/packs/market-risk/samples/pnl-vector.jsonl"],
     "market-risk/scenario-pv": ["config/packs/market-risk/samples/scenario-pv.jsonl",
-                                "config/packs/market-risk/samples/intraday/I-2026-09-30-001.scenario-pv.jsonl"],
+                                "config/packs/market-risk/samples/intraday/scenario-pv.2026-09-30.jsonl"],
 }
 
 #: what a folded array holds, by field name

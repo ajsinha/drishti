@@ -932,8 +932,8 @@ notes:
   layout; the storage above is the first one''s.'
 - '1.1: TRADE_VERSION is any version number (the enum inferred from a sample is gone); LEGS[].FLOAT_SPREAD, LEGS[].CASH_FLOWS[].RATE, LEGS[].CASH_FLOWS[].FLOAT_SPREAD and LEGS[].CASH_FLOWS[].RESETS[].RATE are numbers (rate); some extracts write them as numeric text.'
 review:
-- 'required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz,
-  data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz)): confirm each required
+- 'required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz,
+  data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz, data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz)): confirm each required
   field is mandatory upstream, and each optional one may be empty.'
 - 'source ''murex, calypso'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

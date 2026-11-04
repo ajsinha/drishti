@@ -20,7 +20,6 @@ point after the day ...), and the fields next to a moving price move too. Stdlib
 """
 from __future__ import annotations
 
-import gzip
 import json
 import sys
 import unittest
@@ -36,14 +35,15 @@ import marketdays as MK  # noqa: E402
 
 def days_of(kind: str, key: str, dates: list[str]):
     """Each day's documents of market-data/<kind> as {id: doc}: the snapshot, then each day's changes."""
+    sys.path.insert(0, str(ROOT / "tools" / "lake"))
+    import feedfiles                                         # <table>.<YYYY-MM-DD>.jsonl.gz: the first day's snapshot, then the changes
     state: dict[str, dict] = {}
-    for i, day in enumerate(dates):
-        for f in sorted((TD / "market-data" / kind).glob(f"{'snapshot' if i == 0 else 'changes'}-{day}*.jsonl.gz")):
-            with gzip.open(f, "rt", encoding="utf-8") as fh:
-                for line in fh:
-                    if line.strip():
-                        d = json.loads(line)
-                        state[str(d[key])] = d
+    parts = feedfiles.read_table(TD / "market-data" / kind)
+    for day in dates:
+        for p in parts.get(day, []):
+            for line in p.lines():
+                d = json.loads(line)
+                state[str(d[key])] = d
         yield day, dict(state)
 
 

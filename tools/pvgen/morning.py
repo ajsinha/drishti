@@ -23,8 +23,8 @@ Every live trade of the test data (data/testdata: Endur, Calypso and Murex) is v
 own currency with their base PV (``scenario-pv``), the others as P&L vectors in USD (``pnl-vector``), and every currency's scenario FX
 (``fx-scenario``). ``--all-vectors`` sends every trade as a P&L vector, exactly as before 2.9.4. The rows are the contract a pricing
 system sends: one JSON object per line, exactly the contract's fields, ``RUN_KIND: FULL``; ``--date`` moves them to another business date
-(the demo lake's, today's). Files: ``<out>/scenario-pv.jsonl``, ``pnl-vector.jsonl``, ``fx-scenario.jsonl`` (``.jsonl.gz`` with
-``--gzip``). ``--lake`` writes them into the lake (``drishti.py lake build``, replacing the date), ``--server`` then raises the data-load
+(the demo lake's, today's). Files, named by the load rules (docs/architecture/DATA_LOAD_RULES.md): ``<out>/morning-<date>/
+scenario-pv.<date>.jsonl``, ``pnl-vector.<date>.jsonl``, ``fx-scenario.<date>.jsonl`` (``.jsonl.gz`` with ``--gzip``). ``--lake`` writes them into the lake (``drishti.py lake build``, replacing the date), ``--server`` then raises the data-load
 signal. Guide: docs/guides/VAR_GUIDE.md section 15.12."""
 from __future__ import annotations
 
@@ -67,7 +67,7 @@ def main(argv=None) -> int:
     for kind in ("fx-scenario", "scenario-pv", "pnl-vector"):
         if not m.rows[kind]:
             continue
-        f = C.write_jsonl(folder / f"{kind}.jsonl", m.rows[kind], a.gzip)
+        f = C.write_jsonl(folder / f"{kind}.{m.day}.jsonl", m.rows[kind], a.gzip)     # <table>.<YYYY-MM-DD>: the load rules' name
         print(f"  {f}  {len(m.rows[kind]):,} rows")
         if a.lake:
             rc = rc or C.lake_build(f, kind, a.lake, "overwrite-dates", a.server if kind == "pnl-vector" or not m.rows["pnl-vector"] else None,

@@ -186,7 +186,7 @@ def differences(testdata: Path, pack: str, docs: dict[str, dict[str, dict]]) -> 
                 continue
             w = Path(tmp) / rel.replace("/", "_")
             w.write_bytes(data)
-            if FF.contents(f) != FF.contents(w):                   # compared uncompressed: zlib versions may differ
+            if list(FF.contents(f).values()) != list(FF.contents(w).values()):   # compared uncompressed: zlib versions may differ
                 bad.append(f"data/testdata/{rel}")
     for kind in PACKS[pack]["keys"]:
         for f in FF.files(testdata / pack / kind) if (testdata / pack / kind).is_dir() else []:

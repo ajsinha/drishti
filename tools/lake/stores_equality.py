@@ -29,7 +29,6 @@ Exit status 0 when every answer is the same. ``--keep`` leaves ``<work>`` in pla
 from __future__ import annotations
 
 import argparse
-import gzip
 import json
 import os
 import pathlib
@@ -54,24 +53,22 @@ VOLATILE = {"elapsedMs", "millis", "cached", "generation", "plan", "signature", 
 def sources(work: pathlib.Path, n: int) -> None:
     for system in MIXED:
         folder = ROOT / "data" / "testdata" / "trades" / system
-        files = sorted(folder.glob("*.jsonl.gz"))
-        snap = next(f for f in files if f.name.startswith("snapshot-"))
-        changes = sorted(f for f in files if f.name.startswith("changes-"))[:len(DATES) - 1]
+        import feedfiles                                     # trade_<system>.<YYYY-MM-DD>.jsonl.gz: the first day's snapshot, then the changes
+        files = [f for parts in feedfiles.read_table(folder).values() for f in parts]
+        snap, changes = files[0], files[1:len(DATES)]
         state: dict[str, str] = {}
-        with gzip.open(snap, "rt", encoding="utf-8") as fh:
-            for line in fh:
-                if line.strip() and len(state) < n:
-                    state[str(json.loads(line)["TRADE_ID"])] = line.strip()
+        for line in snap.lines():
+            if len(state) < n:
+                state[str(json.loads(line)["TRADE_ID"])] = line.strip()
         dest = work / "src" / system
         dest.mkdir(parents=True, exist_ok=True)
         for i, day in enumerate(DATES):
             if i:
-                with gzip.open(changes[i - 1], "rt", encoding="utf-8") as fh:
-                    for line in fh:
-                        tid = str(json.loads(line)["TRADE_ID"]) if line.strip() else None
-                        if tid in state:
-                            state[tid] = line.strip()
-            (dest / f"{day}.jsonl").write_text("\n".join(state.values()) + "\n", encoding="utf-8")
+                for line in changes[i - 1].lines():
+                    tid = str(json.loads(line)["TRADE_ID"])
+                    if tid in state:
+                        state[tid] = line.strip()
+            (dest / f"trade_{system}.{day}.jsonl").write_text("\n".join(state.values()) + "\n", encoding="utf-8")   # the load rules' name
 
 
 def build(work: pathlib.Path, name: str, stores: dict[str, str]) -> None:

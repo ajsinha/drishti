@@ -23,10 +23,10 @@ Index level with its largest constituents. One row per equity index per business
 
 |  |  |
 |---|---|
-| Path | `data/testdata/market-data/equity-index/` + `changes-YYYY-MM-DD.jsonl.gz`, `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/market-data/equity-index/` + `equity-index.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `INDEX_ID` |
-| Date field | none in the record: the business date is the file's date (`snapshot-` or `changes-YYYY-MM-DD`), which becomes the lake's partition `business_date` |
+| Date field | none in the record: the business date is the file's date (`<table>.YYYY-MM-DD.jsonl.gz`), which becomes the lake's partition `business_date` |
 | Promoted columns | none (the whole record is kept as `doc`) |
 | Vector fields | none |
 | Partitioned by | `business_date` |
@@ -40,8 +40,8 @@ A real record, the most complete of the 300 (the one with the most non-empty fie
 {
   "INDEX_ID": "EQX-NDX",
   "NAME": "Nasdaq-100",
-  "LEVEL": 25438.51,
-  "CHANGE_1D": -0.00513,
+  "LEVEL": 25569.56,
+  "CHANGE_1D": 0.00101,
   "CONSTITUENT_COUNT": 101,
   "CURRENCY": "USD",
   "CONSTITUENTS": [
@@ -52,12 +52,12 @@ A real record, the most complete of the 300 (the one with the most non-empty fie
   ],
   "HISTORY": [
     {
-      "DATE": "2026-05-27",
-      "CLOSE": 25446.39
+      "DATE": "2026-05-26",
+      "CLOSE": 25263.42
     },
     {
-      "DATE": "2026-05-28",
-      "CLOSE": 25359.87
+      "DATE": "2026-05-27",
+      "CLOSE": 25446.39
     },
     "… 28 more elements of the same shape"
   ],
@@ -74,16 +74,16 @@ Every field of the record above, nested ones as dotted paths (`[]` marks an arra
 |---|---|---|---|---|---|
 | `INDEX_ID` | string | required | The record's id (the business key) | pattern `^EQX-` | `"EQX-NDX"` |
 | `NAME` | string | required | The index's name (Nasdaq-100, S&P 500 …). | one of `EURO STOXX 50`, `FTSE 100`, `Nasdaq-100`, `Nikkei 225`, `S&P 500` | `"Nasdaq-100"` |
-| `LEVEL` | number | required | The index level (the last HISTORY close), in index points. | unit: index points | `25438.51` |
-| `CHANGE_1D` | number | required | The day's move of LEVEL, as a fraction (0.00986 is +0.986%). | unit: fraction | `-0.00513` |
+| `LEVEL` | number | required | The index level (the last HISTORY close), in index points. | unit: index points | `25569.56` |
+| `CHANGE_1D` | number | required | The day's move of LEVEL, as a fraction (0.00986 is +0.986%). | unit: fraction | `0.00101` |
 | `CONSTITUENT_COUNT` | integer | required | How many members the index has officially (not the length of CONSTITUENTS, which lists only the demo's equities). | seen: `100`, `101`, `225`, `50`, `503` | `101` |
 | `CURRENCY` | string | required | The index currency, ISO 4217. | one of `EUR`, `GBP`, `JPY`, `USD` | `"USD"` |
 | `CONSTITUENTS` | array of objects | required | The demo equities that are members of the index: one object per equity. | — | [1 objects] |
 | `CONSTITUENTS[].EQUITY` | string | required | The member: a TICKER of the market-data pack's equity kind (EQ-…). | pattern `^EQ-`; links to `equity` | `"EQ-NVTK"` |
 | `CONSTITUENTS[].WEIGHT` | number | required | The member's weight in the index, as a fraction (0.02 is 2%). | unit: fraction | `0.02` |
 | `HISTORY` | array of objects | required | The index's daily closes, oldest first: one object per business day. | — | [30 objects] |
-| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the close history, oldest first, ending at the record's date. | — | `"2026-05-27"` |
-| `HISTORY[].CLOSE` | number | required | The index's closing level that day. | unit: index points | `25446.39` |
+| `HISTORY[].DATE` | date (YYYY-MM-DD) | required | A business day of the close history, oldest first, ending at the record's date. | — | `"2026-05-26"` |
+| `HISTORY[].CLOSE` | number | required | The index's closing level that day. | unit: index points | `25263.42` |
 | `EQUITY_VOL_SURFACE` | string | required | Its volatility surface: a SURFACE_ID of the market-data pack's equity-vol-surface kind (EQV-…). | pattern `^EQV-`; links to `equity-vol-surface` | `"EQV-NDX"` |
 | `DIVIDEND_CURVE` | string | required | Its dividend curve: a CURVE_ID of the market-data pack's dividend-curve kind (DIV-…). | pattern `^DIV-`; links to `dividend-curve` | `"DIV-NDX"` |
 

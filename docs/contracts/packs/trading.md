@@ -228,7 +228,7 @@ A booked trade as its source system (ENDUR, CALYPSO or MUREX) extracts it in the
 
 **To review (7)**
 
-- required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/calypso/snapshot-2026-07-08.jsonl.gz, data/testdata/trades/murex/snapshot-2026-07-08.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 2763 documents (765 samples and 1998 test-data documents (data/testdata/trades/endur/trade_endur.2026-07-08.jsonl.gz, data/testdata/trades/calypso/trade_calypso.2026-07-08.jsonl.gz, data/testdata/trades/murex/trade_murex.2026-07-08.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'murex, calypso' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - the id pattern ^(MX|CLY)-\d+$ does not match every TRADE_ID in the data (for example 1000001): widen the pattern or state the id rule.

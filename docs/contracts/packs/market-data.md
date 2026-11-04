@@ -121,7 +121,7 @@ Discounting (OIS), projection (IBOR/term RFR), government or basis curve for a c
 
 **To review (7)**
 
-- required inferred from 100% coverage in 84 documents (28 samples and 56 test-data documents (data/testdata/market-data/ir-curve/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/ir-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 84 documents (28 samples and 56 test-data documents (data/testdata/market-data/ir-curve/ir-curve.2026-07-08.jsonl.gz, data/testdata/market-data/ir-curve/ir-curve.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors' for this kind (rate-fixing, fx-spot and ir-curve when the feed connectors are on): state when each source applies.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
@@ -180,7 +180,7 @@ General-collateral or specials repo rates by term.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 21 documents (7 samples and 14 test-data documents (data/testdata/market-data/repo-curve/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/repo-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 21 documents (7 samples and 14 test-data documents (data/testdata/market-data/repo-curve/repo-curve.2026-07-08.jsonl.gz, data/testdata/market-data/repo-curve/repo-curve.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: CURRENCY, POINTS[].TENOR: confirm they are closed lists.
@@ -258,7 +258,7 @@ Spot rate for a currency pair with bid/ask.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-spot/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/fx-spot/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-spot/fx-spot.2026-07-08.jsonl.gz, data/testdata/market-data/fx-spot/fx-spot.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors' for this kind (rate-fixing, fx-spot and ir-curve when the feed connectors are on): state when each source applies.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
@@ -319,7 +319,7 @@ Forward points by tenor for a pair.
 
 **To review (4)**
 
-- required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-forward-curve/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/fx-forward-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 36 documents (12 samples and 24 test-data documents (data/testdata/market-data/fx-forward-curve/fx-forward-curve.2026-07-08.jsonl.gz, data/testdata/market-data/fx-forward-curve/fx-forward-curve.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - no unit stated for the amounts SPOT, POINTS_3M, POINTS_1Y, POINTS[].PIPS, POINTS[].OUTRIGHT (docs/contracts/README.md section 7: USD unless stated): confirm the currency.
@@ -385,7 +385,7 @@ Implied vols by expiry and delta (ATM, 25D RR/BF).
 
 **To review (5)**
 
-- required inferred from 100% coverage in 24 documents (12 samples and 12 test-data documents (data/testdata/market-data/fx-vol-surface/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/fx-vol-surface/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 24 documents (12 samples and 12 test-data documents (data/testdata/market-data/fx-vol-surface/fx-vol-surface.2026-07-08.jsonl.gz, data/testdata/market-data/fx-vol-surface/fx-vol-surface.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.
@@ -445,7 +445,7 @@ Normal (bp) swaption vols by expiry × tenor.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 14 documents (7 samples and 7 test-data documents (data/testdata/market-data/ir-vol-cube/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/ir-vol-cube/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 14 documents (7 samples and 7 test-data documents (data/testdata/market-data/ir-vol-cube/ir-vol-cube.2026-07-08.jsonl.gz, data/testdata/market-data/ir-vol-cube/ir-vol-cube.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.
@@ -504,7 +504,7 @@ Cap vols by maturity and strike.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 14 documents (7 samples and 7 test-data documents (data/testdata/market-data/cap-vol-surface/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/cap-vol-surface/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 14 documents (7 samples and 7 test-data documents (data/testdata/market-data/cap-vol-surface/cap-vol-surface.2026-07-08.jsonl.gz, data/testdata/market-data/cap-vol-surface/cap-vol-surface.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: GRID[].MATURITY: confirm they are closed lists.
@@ -597,7 +597,7 @@ A listed stock: price, dividends, sector and identifiers.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/market-data/equity/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/equity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 30 documents (10 samples and 20 test-data documents (data/testdata/market-data/equity/equity.2026-07-08.jsonl.gz, data/testdata/market-data/equity/equity.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: EXCHANGE, CURRENCY: confirm they are closed lists.
@@ -671,7 +671,7 @@ Index level with its largest constituents.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 15 documents (5 samples and 10 test-data documents (data/testdata/market-data/equity-index/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/equity-index/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 15 documents (5 samples and 10 test-data documents (data/testdata/market-data/equity-index/equity-index.2026-07-08.jsonl.gz, data/testdata/market-data/equity-index/equity-index.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: NAME, CURRENCY: confirm they are closed lists.
@@ -732,7 +732,7 @@ Expected dividends by year (implied from dividend futures and forwards).
 
 **To review (6)**
 
-- required inferred from 100% coverage in 30 documents (15 samples and 15 test-data documents (data/testdata/market-data/dividend-curve/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/dividend-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 30 documents (15 samples and 15 test-data documents (data/testdata/market-data/dividend-curve/dividend-curve.2026-07-08.jsonl.gz, data/testdata/market-data/dividend-curve/dividend-curve.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: POINTS[].YEAR: confirm they are closed lists.
@@ -794,7 +794,7 @@ Implied vols by expiry and moneyness.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 30 documents (15 samples and 15 test-data documents (data/testdata/market-data/equity-vol-surface/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/equity-vol-surface/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 30 documents (15 samples and 15 test-data documents (data/testdata/market-data/equity-vol-surface/equity-vol-surface.2026-07-08.jsonl.gz, data/testdata/market-data/equity-vol-surface/equity-vol-surface.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: GRID[].EXPIRY: confirm they are closed lists.
@@ -861,7 +861,7 @@ CDS par spreads by tenor, recovery and implied default probabilities.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 32 documents (16 samples and 16 test-data documents (data/testdata/market-data/credit-curve/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/credit-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 32 documents (16 samples and 16 test-data documents (data/testdata/market-data/credit-curve/credit-curve.2026-07-08.jsonl.gz, data/testdata/market-data/credit-curve/credit-curve.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: DOC_CLAUSE, CURRENCY, POINTS[].TENOR: confirm they are closed lists.
@@ -923,7 +923,7 @@ Published CPI fixings (US CPI-U NSA, HICPxT, UK RPI…).
 
 **To review (5)**
 
-- required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-index/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/inflation-index/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-index/inflation-index.2026-07-08.jsonl.gz, data/testdata/market-data/inflation-index/inflation-index.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - number types decided by the field's name: FIXINGS[].VALUE amount: confirm amount, rate or integer.
@@ -990,7 +990,7 @@ Zero-coupon breakevens by tenor, with monthly seasonality.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-curve/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/inflation-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 8 documents (4 samples and 4 test-data documents (data/testdata/market-data/inflation-curve/inflation-curve.2026-07-08.jsonl.gz, data/testdata/market-data/inflation-curve/inflation-curve.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: POINTS[].TENOR: confirm they are closed lists.
@@ -1077,7 +1077,7 @@ A traded commodity with its benchmark, unit and venue.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 24 documents (8 samples and 16 test-data documents (data/testdata/market-data/commodity/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/commodity/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 24 documents (8 samples and 16 test-data documents (data/testdata/market-data/commodity/commodity.2026-07-08.jsonl.gz, data/testdata/market-data/commodity/commodity.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: NAME, UNIT, EXCHANGE, SECTOR, SPEC.CONTRACT, SPEC.UNIT, SPEC.EXCHANGE, SPEC.SETTLEMENT: confirm they are closed lists.
@@ -1141,7 +1141,7 @@ Futures settlement prices by delivery month.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 24 documents (8 samples and 16 test-data documents (data/testdata/market-data/commodity-curve/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/commodity-curve/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 24 documents (8 samples and 16 test-data documents (data/testdata/market-data/commodity-curve/commodity-curve.2026-07-08.jsonl.gz, data/testdata/market-data/commodity-curve/commodity-curve.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: COMMODITY, SHAPE, UNIT: confirm they are closed lists.
@@ -1198,7 +1198,7 @@ Implied vols by delivery month and moneyness.
 
 **To review (5)**
 
-- required inferred from 100% coverage in 16 documents (8 samples and 8 test-data documents (data/testdata/market-data/commodity-vol-surface/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/commodity-vol-surface/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 16 documents (8 samples and 8 test-data documents (data/testdata/market-data/commodity-vol-surface/commodity-vol-surface.2026-07-08.jsonl.gz, data/testdata/market-data/commodity-vol-surface/commodity-vol-surface.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: GRID[].MONTH: confirm they are closed lists.
@@ -1259,7 +1259,7 @@ Published overnight and term rate fixings (SOFR, €STR, SONIA…).
 
 **To review (7)**
 
-- required inferred from 100% coverage in 21 documents (7 samples and 14 test-data documents (data/testdata/market-data/rate-fixing/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/rate-fixing/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 21 documents (7 samples and 14 test-data documents (data/testdata/market-data/rate-fixing/rate-fixing.2026-07-08.jsonl.gz, data/testdata/market-data/rate-fixing/rate-fixing.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - the pack also names 'Official public data (ECB, US Treasury, New York Fed, FRED) through the feed connectors' for this kind (rate-fixing, fx-spot and ir-curve when the feed connectors are on): state when each source applies.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
@@ -1352,7 +1352,7 @@ A listed bond: terms, price, yield, spreads and analytics.
 
 **To review (6)**
 
-- required inferred from 100% coverage in 96 documents (32 samples and 64 test-data documents (data/testdata/market-data/bond/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/bond/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 96 documents (32 samples and 64 test-data documents (data/testdata/market-data/bond/bond.2026-07-08.jsonl.gz, data/testdata/market-data/bond/bond.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - enum values inferred from the data, not from a glossary: TERMS.CURRENCY, TERMS.COUPON_FREQUENCY, TERMS.SENIORITY: confirm they are closed lists.
@@ -1403,7 +1403,7 @@ A correlation set: the factors whose pairwise correlations basket, quanto and sp
 
 **To review (4)**
 
-- required inferred from 100% coverage in 6 documents (3 samples and 3 test-data documents (data/testdata/market-data/correlation-matrix/snapshot-2026-07-08.jsonl.gz, data/testdata/market-data/correlation-matrix/changes-2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
+- required inferred from 100% coverage in 6 documents (3 samples and 3 test-data documents (data/testdata/market-data/correlation-matrix/correlation-matrix.2026-07-08.jsonl.gz, data/testdata/market-data/correlation-matrix/correlation-matrix.2026-09-30.jsonl.gz)): confirm each required field is mandatory upstream, and each optional one may be empty.
 - source 'md-hub' is the test data's _meta.source (synthetic): name the production system that delivers it.
 - due time of each business date is not known: state it (for example, by 06:00 New York the next business day).
 - number types decided by the field's name: AVERAGE rate, PAIRS[].RHO rate: confirm amount, rate or integer.

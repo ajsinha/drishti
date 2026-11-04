@@ -243,7 +243,7 @@ def test_news_snapshot_check(tmp_path):
     folder = tmp_path / NM.PACK / "quote"
     folder.mkdir(parents=True)
     docs = [{"QUOTE_ID": "QUOTE-B", "SNAPSHOT": True}, {"QUOTE_ID": "QUOTE-A"}]
-    with gzip.open(folder / "snapshot-2026-10-24.jsonl.gz", "wt", encoding="utf-8") as fh:
+    with gzip.open(folder / "quote.2026-10-24.jsonl.gz", "wt", encoding="utf-8") as fh:
         fh.write("".join(json.dumps(d) + "\n" for d in docs))
     f, n, problems = NM.snapshot_counts(tmp_path)["quote"]
     assert n == 2 and "ids not unique and sorted" in problems and any("stamped" in p for p in problems)

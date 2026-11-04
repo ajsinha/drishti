@@ -294,7 +294,7 @@ notes:
 - 'Several source systems: the connector yfinance and news-store each serve this kind from a table of their own with the same layout; the storage
   above is the first one''s.'
 review:
-- 'required inferred from 100% coverage in 20 documents (0 samples and 20 test-data documents (data/testdata/news-and-markets/quote/snapshot-2026-10-18.jsonl.gz)):
+- 'required inferred from 100% coverage in 20 documents (0 samples and 20 test-data documents (data/testdata/news-and-markets/quote/quote.2026-10-18.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'read live through the yfinance connector when it is on: confirm the cadence (intraday, on demand).'
 - 'enum values inferred from the data, not from a glossary: EXCHANGE: confirm they are closed lists.'

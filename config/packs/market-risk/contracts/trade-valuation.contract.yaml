@@ -303,7 +303,7 @@ notes:
 - 'The boundary (IMPLEMENTATION_PLAN.md): a trade''s MtM stays an input from the upstream engines; what TVAL computes is the valuation totals
   over any scope, so no field of this per-trade record is marked derived.'
 review:
-- 'required inferred from 100% coverage in 2765 documents (765 samples and 2000 test-data documents (data/testdata/market-risk/trade-valuation/snapshot-2026-07-08.jsonl.gz)):
+- 'required inferred from 100% coverage in 2765 documents (765 samples and 2000 test-data documents (data/testdata/market-risk/trade-valuation/trade-valuation.2026-07-08.jsonl.gz)):
   confirm each required field is mandatory upstream, and each optional one may be empty.'
 - 'source ''risk-engine'' is the test data''s _meta.source (synthetic): name the production system that delivers it.'
 - 'due time of each business date is not known: state it (for example, by 06:00 New York the next business day).'

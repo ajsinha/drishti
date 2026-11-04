@@ -23,7 +23,7 @@ The funds and ETFs of the pack that track one us-equities index, by net assets, 
 
 |  |  |
 |---|---|
-| Path | `data/testdata/funds/index-funds/` + `snapshot-YYYY-MM-DD.jsonl.gz` |
+| Path | `data/testdata/funds/index-funds/` + `index-funds.YYYY-MM-DD.jsonl.gz` |
 | Format | JSON Lines: UTF-8, one JSON object a line, gzip-compressed (`.jsonl.gz`) |
 | Key field | `INDEX` |
 | Date field | none in the record: a snapshot of public data, its file named by the capture date; the demo lake serves the same records on every business date (partition `business_date`) |
