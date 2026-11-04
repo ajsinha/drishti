@@ -527,8 +527,8 @@ drishti-console/.venv/bin/python tools/drishti.py sutra gen data/testdata/trades
 Two things decide whether it does what you expect:
 
 1. **The kind comes from the file name** unless you say otherwise. `trade.jsonl` is kind `trade`; the test data's
-   `snapshot-2026-07-08.jsonl.gz` would be kind `snapshot-2026-07-08`, and the per-kind form `--key trade=TRADE_ID` would not
-   apply to it. When every line is a trade, pass **`--kind trade`**; then the plain forms `--key TRADE_ID` and
+   `trade_endur.2026-07-08.jsonl.gz` is kind `trade_endur` (the name's first part, the load rules' table), and the per-kind form
+   `--key trade=TRADE_ID` would not apply to it. When every line is a trade, pass **`--kind trade`**; then the plain forms `--key TRADE_ID` and
    `--match PRODUCT_TYPE` are enough. (Loader envelope lines carry their own `kind` and need no `--kind`.)
 2. **Use the field name exactly as it is in the data** (`PRODUCT_TYPE`, `product_type` and `productType` are three different fields). A
    misspelt match field puts every trade in one group without the field, so you would get a single Sutra; add
@@ -1652,7 +1652,7 @@ Exit `0`, `1` when the server refuses (an internal-only dataset where it is refu
 On a machine with internet, captures the news-and-markets pack's real quotes (the twenty companies, a year of daily bars) and
 headlines (the companies and the fifteen topics) through Drishti's own `yfinance` and `news` connectors, on a scratch server it starts
 from the built jar (`--server URL` uses yours), two seconds apart with backoff on 429, into
-`data/testdata/news-and-markets/{quote,news}/snapshot-<date>.jsonl.gz`; `lake demo` then builds them into the tables `news-store`
+`data/testdata/news-and-markets/{quote,news}/<kind>.<date>.jsonl.gz` (`quote.2026-10-18.jsonl.gz`); `lake demo` then builds them into the tables `news-store`
 serves offline (`DRISHTI_OFFLINE=true`). `--dry-run` lists the 91 ids without fetching. Everything else:
 [data/testdata/README.md](../../data/testdata/README.md#the-market-snapshot-news-and-markets-offline).
 

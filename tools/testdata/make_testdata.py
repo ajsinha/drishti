@@ -23,7 +23,7 @@ One folder per dataset: trades/endur, trades/calypso, trades/murex (5,000 trades
 then <pack>/<kind> for every kind of core, market-data, counterparty-risk and market-risk (universe.py). Each folder holds one file per
 business date named by the lake table it feeds, <table>.<YYYY-MM-DD>.jsonl.gz (docs/architecture/DATA_LOAD_RULES.md section 10): the
 first day's the whole snapshot, each later day's what changed (history.py); the market-risk pack's VaR data (positions, P&L vectors, hierarchies, the
-nodes' 250-day history, portfolios) is dated by its documents instead (``dated-by``, tools/packgen/var/make_var_data.py). world-economy and news-and-markets are static reference data already in the
+nodes' 250-day history, portfolios) is dated by its files instead (``dated-by``: every row's date its file's; tools/packgen/var/make_var_data.py). world-economy and news-and-markets are static reference data already in the
 repository (their packs' samples), so the manifest points at them instead of copying them. The news-and-markets pack's quotes and
 headlines are a real snapshot captured by capture_market.py (data/testdata/news-and-markets/, kept here and listed as they are), and
 so are the us-equities and gleif packs' public data (data/testdata/us-equities/, data/testdata/gleif/: written by their generators,
@@ -136,12 +136,12 @@ def main(argv=None) -> int:
         hist = H.DatasetHistory(out / folder, key, days, table_of(ROOT / "config" / "packs", pack, connector, kind)).write(H.doc_states(kind, docs, days, since, members, market, versions))
         datasets.append({"folder": folder, "pack": pack, "kind": kind, "connector": connector, "key": key, **hist})
     # the VaR engine's data (positions netting the trades just written, a P&L vector per trade, hierarchies, the nodes' history,
-    # portfolios): tools/packgen/var/make_var_data.py, dated by its documents
+    # portfolios): tools/packgen/var/make_var_data.py, dated by its files
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "var"))
     import make_var_data as VD  # noqa: E402
     datasets += VD.write(out, VD.demos(out, days.dates), with_samples=out.resolve() == (ROOT / "data" / "testdata").resolve())
     # the exposure engine's data (a simulation run of the last date and every member trade's paths over its grid, for the committed
-    # netting sets just written): tools/packgen/ccr/make_ccr_data.py, dated by its documents
+    # netting sets just written): tools/packgen/ccr/make_ccr_data.py, dated by its files
     sys.path.insert(0, str(ROOT / "tools" / "packgen" / "ccr"))
     import make_ccr_data as XD  # noqa: E402
     datasets += XD.write_testdata(out, days.dates, side_files=out.resolve() == (ROOT / "data" / "testdata").resolve())

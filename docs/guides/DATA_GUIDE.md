@@ -712,7 +712,7 @@ page says what that means for data coming in, data going out, and the files Dris
   A document may be as deep as it likes, as long as it stays on its line.
 - **UTF-8**, with or without gzip (`.jsonl.gz`).
 - **Generating and loading are separate steps.** A generator writes JSONL; a loader puts it into a store. `tools/packgen/trades/make_trades.py`
-  is the model: it writes `trades-<date>.jsonl.gz`, then `lake build` loads them. Running a loader never rewrites a pack's samples,
+  is the model: it writes `trade_<system>.<date>.jsonl.gz` (the load rules' name), then `lake build` loads them, each under its name's date. Running a loader never rewrites a pack's samples,
   its Sutra tests or the sample feed.
 
 ### 2. The row forms
@@ -735,8 +735,8 @@ Where the generators put their output:
 | Generator | Output |
 |---|---|
 | `tools/packgen/banking/make_data.py` | `config/packs/<pack>/samples/<kind>.jsonl`; `--lake ROOT`: `<ROOT>/../build/lake-rows/banking-history.jsonl` and `banking-restated.jsonl`, then loaded (`--no-load` stops there); `--jsonl FILE`: loader rows |
-| `tools/samplegen/bulk_trades.py` | `<data>/build/bulk/<system>/trades-<date>.jsonl.gz`, then `lake build` (`--no-lake` stops there) |
-| `tools/packgen/trades/make_trades.py` | `<data>/build/trades/<system>/trades-<date>.jsonl.gz`, then `lake build` with `--lake` |
+| `tools/samplegen/bulk_trades.py` | `<data>/build/bulk/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` (`--no-lake` stops there) |
+| `tools/packgen/trades/make_trades.py` | `<data>/build/trades/<system>/trade_<system>.<date>.jsonl.gz`, then `lake build` with `--lake` |
 | `tools/realdata/normalise.py` | `tools/realdata/dataset/*.jsonl` (a country, group, series or Factbook profile a line) and the `meta.json` manifest |
 | the sample feed | `<data>/feeds/fixing.jsonl` (one fixing series a line: `FIX SOFR-HISTORY`) |
 
@@ -891,7 +891,7 @@ folder, or matched by a glob (`/landing/2026-10-28/*.zip`) beside plain `.jsonl`
 |---|---|
 | `drishti.py lake build` (both engines), the parallel lake loader (`LakeLoad`, [TOOLS.md section 4.13](TOOLS.md#413-the-parallel-lake-loader)), the data inbox | a feed ([section 2.8](#8-feeds-the-table-and-business-date-of-a-file)): a `.zip` is one table and one date, its JSON Lines files loose; a tar holds `<table>/<YYYY-MM-DD>/` folders, each table loaded with each folder's date |
 | `tools/samplegen/load_rows.py` | lake rows; each folder is a table and its rows must name it |
-| `tools/build_demo_lakes.py --endur-dir` / `--source-dir` | one archive per business date, `YYYY-MM-DD.zip` (or `.tar.gz`, `.tgz`, `.tar`), without folders |
+| `tools/build_demo_lakes.py --endur-dir` / `--source-dir` | a feed, as `lake build`: `trade_endur.YYYY-MM-DD.jsonl.zip` (one date's files), or a tar of `trade_endur/YYYY-MM-DD/` folders |
 | `drishti.py convert` | one `.jsonl` file, or one per folder ([CLI_GUIDE.md](CLI_GUIDE.md#convert-csv-a-json-array-or-a-folder-of-json-files-into-json-lines)) |
 
 **One rule for every loader.** The Python loaders (`tools/lake/archives.py`) and the Java loader (`Archives` in `drishti-lakeload`)

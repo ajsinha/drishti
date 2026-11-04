@@ -451,7 +451,7 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
   then: tools/packgen/funds/make.py -> config/packs/funds and data/testdata; then make.py --check
 ```
 
-**In YAML.** The snapshot the refresh writes, listed in `data/testdata/testdata.yaml` (the fund kind in parts):
+**In YAML.** The snapshot the refresh writes, listed in `data/testdata/testdata.yaml` (the fund kind in parts, one tar):
 
 ```yaml
 - folder: funds/fund
@@ -459,11 +459,10 @@ dry run: funds, sources tickers, nasdaq, nport, ncen, rr, gleif
   kind: fund
   connector: funds-store
   key: TICKER
-  snapshot: snapshot-2026-10-26.part-01.jsonl.gz
-  parts:
-  - snapshot-2026-10-26.part-01.jsonl.gz
-  - snapshot-2026-10-26.part-02.jsonl.gz
-  - ...
+  snapshot: true
+  captured: '2026-10-26'
+  files:
+  - fund.tar                # fund/2026-10-26/snapshot.part-01.jsonl.gz ... part-05: a tar of date folders (the load rules)
 ```
 
 You should see the dry run name every file it would fetch and write nothing; a refresh prints each download, then *wrote

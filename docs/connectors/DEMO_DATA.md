@@ -147,7 +147,7 @@ tools/load-delta.sh /tmp/lake --trades 20000     # somewhere else
 It generates, then loads, in separate steps ([DATA_GUIDE.md](../guides/DATA_GUIDE.md#2-data-formats-json-lines-is-the-standard)): `make_data.py --lake --no-load` writes the
 history as JSON Lines rows (`<data>/build/lake-rows/banking-history.jsonl` and `banking-restated.jsonl`), `tools/samplegen/load_rows.py`
 loads them (rewriting the whole lake the packs read, in the layout each declares; the restatement as a second commit); then
-`tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trades-<date>.jsonl.gz`) and loads each
+`tools/samplegen/bulk_trades.py` writes the book as one JSONL file a day (`<data>/build/bulk/murex/trade_murex.<date>.jsonl.gz`, the load rules' name) and loads each
 with `lake build`, replacing **one source system's** trade table (`trade_murex`, or `--system CALYPSO`) and leaving every other table as
 it is (`--no-lake` stops after the JSONL). Neither step rewrites the packs' samples, the Sutra tests or the feed. The server reads `data/delta` (or `DRISHTI_DELTA_ROOT`) and
 picks a new load up within a minute; no restart is needed. The layout: [DELTA_CONNECTOR.md](DELTA_CONNECTOR.md).

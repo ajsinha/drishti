@@ -658,9 +658,11 @@ repository's git-ignored `data/`), each recorded in `cache-index.json` with its 
 
 ## 16. The gzipped snapshot and offline use
 
-The committed data is small and gzipped, so a clone (and a Windows checkout) stays light: `data/testdata/funds/fund/` holds five parts
-of about 1 MB (`snapshot-2026-10-26.part-01.jsonl.gz` to `part-05`), `fund-holder/` and `index-funds/` one file each, **5.6 MB in
-all**. `tools/testdata/test_testdata.py` fails if any data file under `data/testdata` is not gzipped or is over 5 MB. The downloads
+The committed data is small and gzipped, so a clone (and a Windows checkout) stays light: `data/testdata/funds/fund/fund.tar` holds five
+parts of about 1 MB (`fund/2026-10-26/snapshot.part-01.jsonl.gz` to `part-05`: a tar of date folders, the load rules' form for a date in
+several files), `fund-holder/` and `index-funds/` one file each (`fund-holder.2026-10-26.jsonl.gz`), **5.6 MB in all**.
+`tools/testdata/test_testdata.py` fails if any data file under `data/testdata` is not gzipped JSON Lines (alone or in a tar) or a file of
+rows is over 5 MB. The downloads
 (about 700 MB) never enter git.
 
 Offline, nothing is fetched: `python3 tools/drishti.py lake demo` builds the three tables from the committed snapshot (85 tables in the whole demo lake), and the server reads them with offline mode on. `refresh --offline` rebuilds the pack from the downloads already in
