@@ -59,16 +59,16 @@ def _settings(**values):
 def test_an_id_names_its_host_and_worker(monkeypatch):
     app = SimpleNamespace(state=SimpleNamespace())
     relay = channel_relay.of(app)
-    relay.port, relay.host = 17490, "10.0.4.11"
-    assert channel_relay.suffix(app) == "~10.0.4.11.17490"
-    assert channel_relay.owner("abc~10.0.4.11.17490") == ("10.0.4.11", 17490)
-    assert channel_relay.owner("abc~console-b.bank.example.17491") == ("console-b.bank.example", 17491)
+    relay.port, relay.host = 47490, "10.0.4.11"   # a number, never bound: outside the scratch-port range (test_scratch_ports)
+    assert channel_relay.suffix(app) == "~10.0.4.11.47490"
+    assert channel_relay.owner("abc~10.0.4.11.47490") == ("10.0.4.11", 47490)
+    assert channel_relay.owner("abc~console-b.bank.example.47491") == ("console-b.bank.example", 47491)
     assert channel_relay.owner("abc.40123") == ("127.0.0.1", 40123)              # a worker of this host
-    assert channel_relay.owner_port("abc~10.0.4.11.17490") == 17490
-    for bad in ("abc", "abc~.17490", "abc~host.0", "abc~host.70000", "abc~ho st.17490", "abc~host"):
+    assert channel_relay.owner_port("abc~10.0.4.11.47490") == 47490
+    for bad in ("abc", "abc~.47490", "abc~host.0", "abc~host.70000", "abc~ho st.47490", "abc~host"):
         assert channel_relay.owner(bad) is None, bad
-    assert relay.mine(("10.0.4.11", 17490)) and relay.mine(("127.0.0.1", 17490))
-    assert not relay.mine(("10.0.4.12", 17490))
+    assert relay.mine(("10.0.4.11", 47490)) and relay.mine(("127.0.0.1", 47490))
+    assert not relay.mine(("10.0.4.12", 47490))
 
 
 def test_a_key_the_launcher_made_keeps_the_relay_on_this_host(monkeypatch):

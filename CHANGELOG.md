@@ -214,6 +214,15 @@
   load and on each panel the page's scripts swap in (`window.drishti.enhance`). The console-or-library parity test reads a page only
   once the Discussion has answered: the first page of a freshly started console (the compute demo's path book at 390 px, first in the
   sorted list) was read before `/api/collab` answered, without its badges.
+- **The console tests' session console forgets its server's answers after each test (the flakes of `test_packs` and `test_pack_routes`).**
+  The stand-in server is put back after every test, but the session's console kept, for `ui.user_cache_seconds`, the packs a test had made
+  it answer: after a Describe test's three packs, the next file on that worker saw them as installed (`test_pack_routes`: kinds `{book:
+  core, trade: trading}`; `test_packs`: no finance example). `conftest.forget_backend_answers` empties the session console's per-person
+  copies (packs, settings, BI powers, Calc, business dates, Describe's mnemonics, the landings) after each test, without touching the
+  shared stamp file other workers read. Reproduced in one process (that Describe test, then both files: 3 failed), now passing; the
+  console lane twice green with -n 8. Also: `test_no_shared_user_state.py` follows the merged context branch (the relay per app,
+  `core/request_context.py` the one place that makes a fresh `contextvars.Context()`), and `test_channel_relay_hosts.py` writes a number
+  outside the scratch-port range.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

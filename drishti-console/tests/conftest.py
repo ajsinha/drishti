@@ -1083,12 +1083,40 @@ def _backend_state_is_per_test(request):
     yield
     be.__dict__.clear()
     be.__dict__.update(saved)
+    for app in _SESSION_APPS:            # what the session's console kept of the stand-in server's answers goes with them (below)
+        forget_backend_answers(app)
+
+
+#: the session's console (the ``client`` fixture's app): one app for the whole session, beside the one stand-in server
+_SESSION_APPS: list = []
+
+
+def forget_backend_answers(app) -> None:
+    """Drops every answer the console keeps of its server, per person, for a few seconds (packs, settings, BI powers, Calc's permission,
+    business dates, Describe's mnemonics, the landings' figures). The stand-in server is put back after each test (above); without this
+    the session's console kept, for ``ui.user_cache_seconds``, the packs a test had made it answer: a designer test's three packs became
+    the next file's installed packs (test_pack_routes saw {book: core, trade: trading}; test_packs saw no finance example)."""
+    st = app.state
+    # each cache's own copy only: forget_all() would also touch the console's stamp for everyone, a file every xdist worker of the run
+    # reads, and make another worker's session check ask its server again (test_sessions counts those asks)
+    st.packs._cache.clear()
+    st.bi_me._cache.clear()
+    st.user_settings._cache.clear()
+    st.calc._allowed.clear()
+    st.business_dates._cache.clear()
+    for name in ("designer_aliases", "designer_migrated"):
+        if getattr(st, name, None) is not None:
+            getattr(st, name).clear()
+    from core import market_landing, trading_landing
+    trading_landing.forget()
+    market_landing.forget()
 
 
 @pytest.fixture(scope="session")
 def client(backend):
     app = create_app(load_settings(CONSOLE / "config"))
     app.state.backend = backend
+    _SESSION_APPS.append(app)
     return TestClient(app)
 
 

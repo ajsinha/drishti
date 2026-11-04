@@ -15,7 +15,7 @@
 list or set in core/ or routes/ is either a constant table (an UPPERCASE name the module never changes after import: no item set, no
 append, add, update, pop, clear...) or listed below with the reason it holds nothing of a person's, or is keyed by the person, server, roles
 and as-of (core/user_cache.py). A new one fails here until it is moved to the app's state, keyed by core.user_cache, or listed with its
-reason. ``contextvars.Context()`` is made only through the snapshot helper (listed while fix/console-context is not merged)."""
+reason. ``contextvars.Context()`` is made only by the snapshot helper, core/request_context.py."""
 from __future__ import annotations
 
 import ast
@@ -32,10 +32,8 @@ CHANGES = {"append", "add", "update", "pop", "popitem", "clear", "setdefault", "
 ALLOWED = {
     "core/menus.py:_cache": "the parsed menus.yaml by file stamp: configuration, the same for everyone",
     "core/external_lib.py:_paths": "folders added to sys.path for the console's own libraries: configuration",
-    "core/channel_relay.py:_state": "the live channel relay's frames by channel id, each channel already per person (core/channel.py); "
-                                    "under review on fix/console-context (F1/F4/F9/F13)",
-    "core/channel_relay.py:_seen": "the same relay's delivery marks per channel; under review on fix/console-context",
-    "core/channel_relay.py:_stats": "the relay's counters (numbers, no content)",
+    "core/channel_relay.py:HANDLERS": "relay operation to its handler function, registered at import by the routes (code, not data); "
+                                      "what a relay holds is per app (app.state.relay)",
     "routes/embed_routes.py:_cache": "the embed loader's script text by version: static assets, the same for everyone",
     "routes/designer_routes.py:_LOCKS": "one asyncio.Lock per draft id (a person's own draft; a lock holds no data)",
     "core/trading_landing.py:_FLIGHT": "reads running now, by core.user_cache.user_key (server, user, roles, as-of): never served across people",
@@ -43,7 +41,6 @@ ALLOWED = {
     "core/market_landing.py:_CACHE": "an LRU keyed by core.user_cache.cache_key (made by routes/edition_routes.py) or user_key",
     "core/ai/llm/registry.py:_PROVIDERS": "the provider classes registered at import (code, not data)",
     "core/ai/providers/__init__.py:FACTORIES": "the provider factories registered at import (code, not data)",
-    "routes/ai_routes.py:_TESTED": "when each AI provider was last tested by an administrator (provider name to a time; nothing of a person's)",
 }
 
 
@@ -109,7 +106,8 @@ def test_every_listed_entry_still_exists():
 
 #: the places that make a fresh contextvars.Context() (a context with nothing of the request's), each with its reason
 FRESH_CONTEXTS = {
-    "core/channel.py": "the live channel's per-subscription snapshot helper (fix/console-context, F1/F4/F9/F13, makes it the one helper)",
+    "core/request_context.py": "the one snapshot helper (context(snap)): a fresh context holding only a request's snapshot, for the live "
+                               "channel's subscriptions and work handed to another worker",
 }
 
 
