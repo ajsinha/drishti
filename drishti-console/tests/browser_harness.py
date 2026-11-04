@@ -117,6 +117,8 @@ class Browsers:
         ctx = await self.browser.new_context(viewport={"width": width, "height": height})
         await ctx.add_init_script(CSP_JS)
         await ctx.add_init_script(path=str(SETTLED_JS))   # the settled signal on every page, the made-up origin's too (init scripts pass the CSP)
+        if show_everything:
+            await ctx.add_cookies(SHOW_EVERYTHING)
         self.made += 1
         return key, ctx
 
@@ -135,8 +137,7 @@ class Browsers:
         """A page on a reused context of this width (at most PAGES_AT_ONCE at a time); the context is reset when the page is done.
         ``route``: a request handler for every request of the page (the made-up origin of the render harness)."""
         async with self.gate:
-            key, ctx = await self._context(width, height, show_everything)
-            await self._reset(ctx, show_everything)
+            key, ctx = await self._context(width, height, show_everything)   # new, or reset when it was handed back
             page = await ctx.new_page()
             page.errors, page.reqs, page.network = [], [], []
             page.on("pageerror", lambda e: page.errors.append(str(e)))
