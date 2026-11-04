@@ -521,18 +521,20 @@ def test_the_remember_switch_is_off_unless_the_page_asks_for_it(browser, url):
     pg.goto(url + VIEW, wait_until="load")
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     tick(pg, ["Rates"], "Desk")
-    assert pg.evaluate("localStorage.getItem('drishti.columnFilters')") is None            # off by default: nothing is kept
+    mem = pg.evaluate("window.drishtiKey('drishti.columnFilters')")                     # named per person (theme-init.js)
+    assert mem.startswith("drishti.columnFilters@")
+    assert pg.evaluate("k => localStorage.getItem(k)", mem) is None                          # off by default: nothing is kept
     pg.goto(url + VIEW, wait_until="load")
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     assert len(ids(pg)) == 12                                                               # and a fresh visit starts unfiltered
-    pg.evaluate("localStorage.setItem('drishti.rememberFilters', 'on')")                  # the per-user switch, on
+    pg.evaluate("localStorage.setItem(window.drishtiKey('drishti.rememberFilters'), 'on')")   # the per-user switch, on
     tick(pg, ["FX"], "Desk")
-    assert "FX" in pg.evaluate("localStorage.getItem('drishti.columnFilters')")
+    assert "FX" in pg.evaluate("k => localStorage.getItem(k)", mem)
     pg.goto(url + VIEW, wait_until="load")                                                  # no filter in the address: the remembered one returns
     pg.wait_for_selector("#p-tbl .cf-btn", state="attached")
     assert ids(pg) == ["T03", "T04", "T08"] and "f.tbl.Desk" in pg.evaluate("location.search")
     pg.locator("#p-tbl .tbl-clear").click()
-    assert pg.evaluate("localStorage.getItem('drishti.columnFilters')") in (None, "{}")
+    assert pg.evaluate("k => localStorage.getItem(k)", mem) in (None, "{}")
     ctx.close()
 
 
