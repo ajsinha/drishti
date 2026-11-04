@@ -171,13 +171,20 @@ class ConnectorUpgradeTest {
 
     @Test
     @Order(2)
-    void anEditedFileKeepsItsEditsAndGainsEveryKeyTheTemplateHas() throws Exception {
-        // risk-store: the administrator's refresh-seconds kept, every other setting the template's
+    void anEditedFileKeepsItsEditsAndGainsEveryKeyTheTemplateHasButTheLakeKeys() throws Exception {
+        // risk-store: the administrator's refresh-seconds kept, every other setting the template's. The template names a lake (lake:,
+        // lake-tables:, 2.9.11.c) and this older file describes its lake itself (root, domain, layout.*): the lake keys are never merged
+        // into it (beside root and layout the connector would be refused); it keeps its own until drishti.py lake migrate-config moves them
         ConnectorFiles.Definition risk = files.read("risk-store");
         ConnectorFiles.Definition riskT = files.parse("risk-store", template("risk-store"));
         Map<String, String> want = new LinkedHashMap<>(riskT.settings());
+        want.remove(com.ash.drishti.lakeconfig.ConnectorLake.LAKE);
+        want.remove(com.ash.drishti.lakeconfig.ConnectorLake.TABLES);
         want.put("refresh-seconds", "45");
-        assertThat(risk.settings()).containsOnlyKeys(want.keySet());
+        assertThat(risk.settings()).containsKeys(want.keySet().toArray(String[]::new))
+                .doesNotContainKeys(com.ash.drishti.lakeconfig.ConnectorLake.LAKE, com.ash.drishti.lakeconfig.ConnectorLake.TABLES)
+                .containsKeys("root", "domain", "layout.pnl-vector.columns");
+        assertThat(com.ash.drishti.lakeconfig.ConnectorLake.legacy(risk.settings())).as("still the older form").isTrue();
         want.forEach((k, v) -> {
             if (TemplateUpdates.layoutList(k)) {
                 // a layout list keeps the file's columns in their order and gains the template's new ones after them (LIMIT_LETTER in 2.9.5)
