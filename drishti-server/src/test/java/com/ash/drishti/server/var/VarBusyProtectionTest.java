@@ -24,6 +24,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.ash.drishti.server.PinnedBusinessDate;
 import com.ash.drishti.server.admission.AdmissionGate;
+import com.ash.drishti.server.admission.RequestsInFlight;
+import com.ash.drishti.server.admission.Signals;
 import com.ash.drishti.server.security.TokenVerifier;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,7 +38,10 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -71,9 +76,39 @@ import org.springframework.test.web.servlet.MockMvc;
         "drishti.admission.retry-after.load=20",
         "drishti.identity.database-url=jdbc:sqlite:target/identity-${random.uuid}/identity.db"})
 @AutoConfigureMockMvc
-@Import(PinnedBusinessDate.class)
+@Import({PinnedBusinessDate.class, VarBusyProtectionTest.ConfirmedReading.class})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class VarBusyProtectionTest {
+
+    /**
+     * A confirmed reading of the heap after the old generation's clean-up (half of it in use), as a server that has run a while has: a
+     * fresh test JVM has none and busy protection refuses nothing for memory without one. The levels above make half the heap too much.
+     */
+    @TestConfiguration
+    static class ConfirmedReading {
+        @Bean
+        @Primary
+        Signals confirmedHalfHeap(RequestsInFlight inFlight) {
+            Signals live = Signals.live(inFlight.counter(), Path.of("target"));
+            return new Signals() {
+                public long heapAfterGcBytes() {
+                    return live.heapMaxBytes() / 2;
+                }
+
+                public long heapMaxBytes() {
+                    return live.heapMaxBytes();
+                }
+
+                public int requestsInFlight() {
+                    return live.requestsInFlight();
+                }
+
+                public long freeDiskBytes() {
+                    return live.freeDiskBytes();
+                }
+            };
+        }
+    }
 
     static Path lake;
 

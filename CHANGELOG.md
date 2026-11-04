@@ -193,7 +193,9 @@
   cycle that freed old regions), and a fresh server with none refuses nothing for memory. Over a refusal level the server asks for a
   concurrent cycle only where `System.gc()` starts one (`-XX:+ExplicitGCInvokesConcurrent`), at most once every 10 s, and never forces a
   stop-the-world full collection (`Signals.HeapAfterGc`, `AdmissionGate`). `AdmissionGateTest`: young-only readings never refuse, a heap of
-  garbage is let in, a truly full one refused.
+  garbage is let in, a truly full one refused. What the gate reads is a bean of its own (`admissionSignals`), so a server test that needs a
+  refusal gives it a confirmed reading (`VarBusyProtectionTest`'s `@TestConfiguration` with a `@Primary` `Signals`) instead of waiting for
+  the collector: a fresh test JVM has no such reading and, by the rule above, refuses nothing for memory.
 - **Nothing the console keeps for one person is served to another (security review F2, F3, F5 to F8, F10, F12; USER_MANAGEMENT.md
   section 6, "What the console keeps of each person").** Describe's mnemonic table was one process-wide copy of the first person's packs:
   now per server, pack set and roles on the app (and the "My page" migration per server). Drishti Trading's and Market's caches are keyed
