@@ -24,7 +24,7 @@ from fastapi import APIRouter, Query, Request
 
 from fastapi.responses import JSONResponse, StreamingResponse
 
-from core import channel_relay, controls
+from core import channel_relay, controls, servers
 from core.csrf import json_body
 from core.backend import BackendError
 from core.channel import ChannelSession
@@ -382,7 +382,52 @@ async def stream(request: Request, kind: str, id_: str):
 
 
 MAX_CHANNEL_SUBSCRIPTIONS = 32    # default of live.max_subscriptions: what one browser's channel carries at most
-CHANNELS: dict[str, dict] = {}     # open channels by id: the browser adds and removes subscriptions without reconnecting
+
+
+def channels(app) -> dict[str, dict]:
+    """The open channels of ``app`` by id (the browser adds and removes subscriptions without reconnecting): per app, never per process."""
+    st = app.state
+    reg = getattr(st, "channels", None)
+    if reg is None:
+        reg = st.channels = {}
+    return reg
+
+
+def _guard(request: Request, session: ChannelSession):
+    """The console channel's session re-check (the embed's StreamGuard, with the session as its check): every ``auth.recheck_seconds``
+    the server is asked whether the session still stands; a signed-out, disabled or deleted user's channel ends (DRS-5010), a valid one
+    carries on with the identity re-minted (current roles, a fresh token). None when auth is off."""
+    from core.embed_stream import StreamGuard
+
+    auth = request.app.state.auth
+    if isinstance(auth, servers.Switch):
+        auth = auth._target()                                    # the channel's server's Auth (its cookie, its token secret)
+    if not auth.enabled or session.me is None:
+        return None
+    cookie = request.cookies.get(auth.cookie)
+    first = session.me
+
+    async def check():
+        me = await auth.current(cookie, session.backend)
+        if me is None or me.user != first.user or me.session != first.session:
+            return "DRS-5010", "signed out: sign in again"
+        session.me = me
+        return None
+    return StreamGuard(session, None, recheck=max(1.0, float(getattr(auth, "recheck", 10.0) or 0.0)), check=check)
+
+
+def end_channels(app, server: str, user: str, session_id: str | None = None) -> int:
+    """Ends the console channels of ``user`` on ``server`` (of one sign-in session when named): at sign-out. Returns how many."""
+    n = 0
+    for ch in list(channels(app).values()):
+        s = ch.get("session")
+        if s is None or ch.get("app", "") or ch.get("server") != server or ch.get("user") != user:
+            continue
+        if session_id is not None and getattr(s.me, "session", None) != session_id:
+            continue
+        s.end()
+        n += 1
+    return n
 
 
 def max_subscriptions(request: Request) -> int:
@@ -414,25 +459,36 @@ async def channel(request: Request, s: list[str] = Query(default=[])):
     limit = max_subscriptions(request)
     asked = list(dict.fromkeys(x for x in s if x))[:limit * 2]
     session = ChannelSession(request.app.state.backend, ident(request), lambda event, data: _view_event(request, event, data),
-                             limit=limit, who=live_who(request), registry=CHANNELS)
-    return StreamingResponse(session.events(asked, request.is_disconnected), media_type="text/event-stream",
-                             headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
+                             limit=limit, who=live_who(request), registry=channels(request.app), cid_suffix=channel_relay.suffix(request.app))
+    guard = _guard(request, session)
+
+    async def stream():
+        if guard is not None:
+            guard.start()
+        try:
+            async for chunk in session.events(asked, request.is_disconnected):
+                yield chunk
+        finally:
+            if guard is not None:
+                guard.stop()
+
+    return StreamingResponse(stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
 @router.post("/channel/{cid}")
 async def channel_change(request: Request, cid: str):
     """Adds or removes subscriptions on an open channel ({"add": [...], "remove": [...]}): a workspace's panes arrive one
     by one, and reconnecting for each would make every view on the page think it had lost its connection."""
-    ch = CHANNELS.get(cid)
+    ch = channels(request.app).get(cid)
     me = ident(request)
     user = me.user if me is not None else ""
     gone = JSONResponse({"code": "DRS-5001", "detail": "no such channel: open a new one"}, status_code=404)
     if ch is None and channel_relay.owner_port(cid) is not None:          # held by another worker of this console: passed on to it
-        body = await json_body(request)
-        got = await channel_relay.forward(cid, "console-change", {"user": user, "add": body.get("add") or [], "remove": body.get("remove") or [],
-                                                                  "limit": max_subscriptions(request)})
+        body = await json_body(request)                                   # (with this request's scope: its server, core/channel_relay.py)
+        got = await channel_relay.forward(request.app, cid, "console-change", {"user": user, "add": body.get("add") or [],
+                                                                               "remove": body.get("remove") or [], "limit": max_subscriptions(request)})
         return JSONResponse({"ok": True}) if got and got.get("ok") else gone
-    if ch is None or ch["user"] != user or ch.get("app", ""):
+    if not _owns(ch, user):
         return gone
     _change(ch, await json_body(request), max_subscriptions(request))
     return JSONResponse({"ok": True})
@@ -445,10 +501,16 @@ def _change(ch: dict, body: dict, limit: int) -> None:
         ch["add"](str(sub))
 
 
+def _owns(ch: dict | None, user: str) -> bool:
+    """A console channel (no host application) of ``user`` on the current request's server: the same name on two servers is two people."""
+    return ch is not None and not ch.get("app", "") and ch.get("user") == user and ch.get("server", servers.DEFAULT) == servers.current()
+
+
 def _relayed_change(app, cid: str, payload: dict) -> dict:
-    """A change another worker received for a channel this one holds (core/channel_relay.py); that worker checked the caller."""
-    ch = CHANNELS.get(cid)
-    if ch is None or ch["user"] != str(payload.get("user", "")) or ch.get("app", ""):
+    """A change another worker received for a channel this one holds (core/channel_relay.py); that worker checked the caller, and the call
+    runs in its scope (its server)."""
+    ch = channels(app).get(cid)
+    if not _owns(ch, str(payload.get("user", ""))):
         return {"ok": False}
     _change(ch, payload, int(payload.get("limit") or MAX_CHANNEL_SUBSCRIPTIONS))
     return {"ok": True}

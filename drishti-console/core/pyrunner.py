@@ -188,7 +188,7 @@ class ForkServer:
         if not line or not json.loads(line).get("ready"):
             raise OSError("the Python fork-server did not start")
         self.started += 1
-        self._reader = asyncio.ensure_future(self._read())
+        self._reader = asyncio.ensure_future(self._read())          # service work: the worker pool's pipe, no user's scope
 
     async def _read(self) -> None:
         proc = self.proc

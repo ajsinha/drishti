@@ -31,6 +31,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse, Response
 
 from core import channel_relay, packwizard as W
+from core.servers import scoped
 from core.auth import Identity
 from core.backend import BackendError
 from core.csrf import BodyError, json_body
@@ -115,7 +116,7 @@ async def start_job(request: Request):
             return _problem(400, "choose the key field of " + ", ".join(nokey) + " (step 2)")
         if plan_obj.sutra_count > lim.max_sutras:
             return _problem(413, f"{plan_obj.sutra_count} Sutras; at most {lim.max_sutras} per pack (builder.pack_max_sutras)")
-        job = jobs.start(me.user, plan_obj, request.app.state.backend, me)
+        job = jobs.start(scoped(me.user), plan_obj, request.app.state.backend, me, suffix=channel_relay.suffix(request.app))
     except W.WizardError as e:
         return _problem(e.status, e.detail, e.code)
     LOG.info("new-pack job %s started: %d Sutra(s)", job.id, job.total)
@@ -154,7 +155,7 @@ async def _job_call(request: Request, job_id: str, op: str, args: dict | None = 
     _, jobs = _wiz(request)
     me = ident(request)
     if job_id not in jobs.jobs and channel_relay.owner_port(job_id) is not None:
-        got = await channel_relay.forward(job_id, RELAY_OP, {"op": op, "args": args or {}, "me": dataclasses.asdict(me)},
+        got = await channel_relay.forward(request.app, job_id, RELAY_OP, {"op": op, "args": args or {}, "me": dataclasses.asdict(me)},
                                           limit=RELAY_REPLY_LIMIT, timeout=RELAY_TIMEOUT)
         if got and "status" in got:
             return _back(got)
@@ -162,7 +163,8 @@ async def _job_call(request: Request, job_id: str, op: str, args: dict | None = 
 
 
 async def _relayed_job(app, job_id: str, payload: dict) -> dict:
-    """A job call another worker of this console received (core/channel_relay.py); that worker signed the caller in."""
+    """A job call another worker of this console received (core/channel_relay.py); that worker signed the caller in, and the call runs in its
+    scope (its server: the preview and the design go to the caller's server, the job's owner is checked on (server, user))."""
     me = Identity(**{**payload.get("me", {}), "roles": tuple(payload.get("me", {}).get("roles") or ())})
     jobs = getattr(app.state, "pack_jobs", None)
     if jobs is None or job_id not in jobs.jobs:
@@ -180,7 +182,7 @@ def _json(data, status: int = 200) -> Response:
 async def _job_op(app, op: str, job_id: str, me, args: dict) -> Response:
     jobs = app.state.pack_jobs
     try:
-        job = jobs.get(job_id, me.user)
+        job = jobs.get(job_id, scoped(me.user))               # (server, user): one name on two servers is two people
     except W.WizardError as e:
         return _problem(e.status, e.detail, e.code)
     if op == "status":

@@ -31,6 +31,10 @@ with the relay key (``DRISHTI_CONSOLE_RELAY_KEY``: HMAC-SHA256 over the message 
 question's signature, so nothing else on the network is listened to or believed; a message older than ``live.relay.window_seconds`` or seen
 before is refused. The launcher makes a key for the workers of one host; across hosts every console is given the same key. A console of one
 process without a key has no relay: ids carry no port.
+
+Every message carries the caller's request scope (core/request_context.py: its server above all) and the handler acts in it, never in the
+listener's own context (the lifespan's, whose server is the console's first); a message naming no known server is refused. The relay is
+per app (``app.state.relay``), never per process.
 """
 from __future__ import annotations
 
@@ -57,20 +61,46 @@ _HOST = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$")
 LOG = logging.getLogger("drishti.console.relay")
 
 HANDLERS: dict[str, Callable[[Any, str, dict], Any]] = {}   # op -> fn(app, cid, payload) -> dict (or an awaitable of one)
-_state: dict[str, Any] = {"port": 0, "server": None, "host": "", "timeout": TIMEOUT, "window": WINDOW}
-_seen: dict[str, float] = {}             # signatures accepted within the window: a replayed message is refused
-_stats: dict[str, int] = {"forwarded": 0, "answered": 0, "refused": 0, "failed": 0}
+
+
+class Relay:
+    """One app's relay (``app.state.relay``): its port, the replayed messages it refuses and what it did. Per app, never per process, so
+    a handler always gets the app whose worker holds the channel (two apps in one process, as tests have, each answer for their own)."""
+
+    def __init__(self) -> None:
+        self.port, self.server, self.host = 0, None, ""
+        self.timeout, self.window = TIMEOUT, WINDOW
+        self.seen: dict[str, float] = {}             # signatures accepted within the window: a replayed message is refused
+        self.counts: dict[str, int] = {"forwarded": 0, "answered": 0, "refused": 0, "failed": 0}
+
+    def suffix(self) -> str:
+        if not self.port:
+            return ""
+        return f"~{self.host}.{self.port}" if self.host else f".{self.port}"
+
+    def mine(self, o: tuple[str, int]) -> bool:
+        host, port = o
+        return port == self.port and (host == LOOPBACK or host == self.host)
+
+
+def of(app) -> Relay:
+    """The relay of ``app`` (made on first use)."""
+    st = getattr(app, "state", None)
+    relay = getattr(st, "relay", None) if st is not None else None
+    if not isinstance(relay, Relay):
+        relay = Relay()
+        if st is not None:
+            st.relay = relay
+    return relay
 
 
 def key() -> str:
     return os.environ.get(KEY_ENV, "")
 
 
-def suffix() -> str:
-    """What this worker's channel ids end with: ``.<port>`` (this host) or ``~<host>.<port>`` (across hosts) while the relay listens."""
-    if not _state["port"]:
-        return ""
-    return f"~{_state['host']}.{_state['port']}" if _state["host"] else f".{_state['port']}"
+def suffix(app) -> str:
+    """What the channel ids of ``app``'s worker end with: ``.<port>`` (this host) or ``~<host>.<port>`` (across hosts) while its relay listens."""
+    return of(app).suffix()
 
 
 def owner(cid: str) -> tuple[str, int] | None:
@@ -90,18 +120,14 @@ def owner_port(cid: str) -> int | None:
     return o[1] if o else None
 
 
-def stats() -> dict:
+def stats(app) -> dict:
     """What this worker's relay did: calls passed on, calls answered for others, messages refused, calls that found no worker."""
-    return {**_stats, "port": _state["port"], "host": _state["host"] or None, "acrossHosts": bool(_state["host"])}
+    r = of(app)
+    return {**r.counts, "port": r.port, "host": r.host or None, "acrossHosts": bool(r.host)}
 
 
 def _port(text: str) -> bool:
     return text.isdigit() and 0 < int(text) < 65536
-
-
-def _mine(o: tuple[str, int]) -> bool:
-    host, port = o
-    return port == _state["port"] and (host == LOOPBACK or host == _state["host"])
 
 
 def _flag(v: Any) -> bool:
@@ -153,10 +179,11 @@ def _advertised(asked: str) -> str | None:
 
 async def start(app) -> None:
     """Listens for the other workers (several workers) and, with ``live.relay.across_hosts``, for the other consoles."""
-    if not key() or _state["server"] is not None:
+    relay = of(app)
+    if not key() or relay.server is not None:
         return
     cfg = _settings(app)
-    _state.update(timeout=max(0.5, cfg["timeout"]), window=max(1.0, cfg["window"]))
+    relay.timeout, relay.window = max(0.5, cfg["timeout"]), max(1.0, cfg["window"])
     host = None
     if cfg["across"]:
         if os.environ.get(MADE_ENV):
@@ -179,13 +206,14 @@ async def start(app) -> None:
             host = None
     if server is None:
         server = await asyncio.start_server(lambda r, w: _serve(app, r, w), LOOPBACK, 0, limit=LINE_LIMIT)
-    _state.update(port=server.sockets[0].getsockname()[1], server=server, host=host or "")
+    relay.port, relay.server, relay.host = server.sockets[0].getsockname()[1], server, host or ""
     if host:
-        LOG.info("live-channel relay across hosts: %s:%s (bound to %s)", host, _state["port"], cfg["bind"])
+        LOG.info("live-channel relay across hosts: %s:%s (bound to %s)", host, relay.port, cfg["bind"])
 
 
-async def stop() -> None:
-    server, _state["server"], _state["port"], _state["host"] = _state["server"], None, 0, ""
+async def stop(app) -> None:
+    relay = of(app)
+    server, relay.server, relay.port, relay.host = relay.server, None, 0, ""
     if server is not None:
         server.close()
         with contextlib.suppress(Exception):
@@ -202,32 +230,36 @@ def _split(line: bytes) -> tuple[str, str] | None:
     return (sig, body) if space and len(sig) == 64 else None
 
 
-async def forward(cid: str, op: str, payload: dict, limit: int = LINE_LIMIT, timeout: float | None = None) -> dict | None:
+async def forward(app, cid: str, op: str, payload: dict, limit: int = LINE_LIMIT, timeout: float | None = None) -> dict | None:
     """The answer of the worker that holds channel ``cid`` (or another object named so: a pack job), on this host or another; None when no
     other worker holds it (or none answers, or its answer is not signed with the relay key). ``limit`` bounds the answer's line, ``timeout``
     the wait for it."""
+    relay = of(app)
     o = owner(cid)
-    if not key() or o is None or _mine(o):
+    if not key() or o is None or relay.mine(o):
         return None
     try:
-        reader, writer = await asyncio.wait_for(asyncio.open_connection(o[0], o[1], limit=limit), _state["timeout"])
+        reader, writer = await asyncio.wait_for(asyncio.open_connection(o[0], o[1], limit=limit), relay.timeout)
     except (OSError, asyncio.TimeoutError):
-        _stats["failed"] += 1
+        relay.counts["failed"] += 1
         return None
     try:
-        body = json.dumps({"at": time.time(), "op": op, "cid": cid, "payload": payload}, separators=(",", ":"))
+        from core import request_context
+
+        # the caller's scope (its server above all) travels with the call: the handler acts in it (_serve), never in the relay's own context
+        body = json.dumps({"at": time.time(), "op": op, "cid": cid, "payload": payload, "scope": request_context.to_wire()}, separators=(",", ":"))
         sig = _sign("ask", body)
         writer.write(f"{sig} {body}\n".encode())
         await writer.drain()
-        parts = _split(await asyncio.wait_for(reader.readline(), timeout if timeout is not None else _state["timeout"]))
+        parts = _split(await asyncio.wait_for(reader.readline(), timeout if timeout is not None else relay.timeout))
         if parts is None or not hmac.compare_digest(parts[0], _sign("answer", sig, parts[1])):
-            _stats["failed"] += 1
+            relay.counts["failed"] += 1
             return None
         got = json.loads(parts[1])
-        _stats["forwarded"] += 1
+        relay.counts["forwarded"] += 1
         return got if isinstance(got, dict) else None
     except (OSError, asyncio.TimeoutError, ValueError):
-        _stats["failed"] += 1
+        relay.counts["failed"] += 1
         return None
     finally:
         writer.close()
@@ -235,35 +267,50 @@ async def forward(cid: str, op: str, payload: dict, limit: int = LINE_LIMIT, tim
             await writer.wait_closed()
 
 
-def _accepted(sig: str, body: str) -> dict | None:
+def _accepted(relay: Relay, sig: str, body: str) -> dict | None:
     """The message when it is signed with the relay key, recent, and not seen before; else None."""
     if not hmac.compare_digest(sig, _sign("ask", body)):
         return None
     msg = json.loads(body)
     now = time.time()
-    if not isinstance(msg, dict) or abs(now - _number(msg.get("at"), 0)) > _state["window"] or sig in _seen:
+    if not isinstance(msg, dict) or abs(now - _number(msg.get("at"), 0)) > relay.window or sig in relay.seen:
         return None
-    for old in [s for s, t in _seen.items() if t < now - 2 * _state["window"]]:
-        _seen.pop(old, None)
-    _seen[sig] = now
+    for old in [s for s, t in relay.seen.items() if t < now - 2 * relay.window]:
+        relay.seen.pop(old, None)
+    relay.seen[sig] = now
     return msg
 
 
-async def _serve(app, reader, writer) -> None:
+async def _handle(app, fn, msg: dict) -> Any:
+    """Runs a handler acting for the caller: in the scope the message carries (core/request_context.py), never in this listener's own
+    (the lifespan's, whose server is the console's first). A message naming no known server is refused."""
+    from core import request_context
+
     try:
-        parts = _split(await asyncio.wait_for(reader.readline(), _state["timeout"]))
-        msg = _accepted(*parts) if parts is not None else None
+        scope = request_context.from_wire(msg.get("scope"), app)
+    except ValueError:
+        return {"ok": False}
+
+    async def call():
+        out = fn(app, str(msg.get("cid", "")), msg.get("payload") or {})
+        return await out if inspect.isawaitable(out) else out
+    return await request_context.acting(scope, call())
+
+
+async def _serve(app, reader, writer) -> None:
+    relay = of(app)
+    try:
+        parts = _split(await asyncio.wait_for(reader.readline(), relay.timeout))
+        msg = _accepted(relay, *parts) if parts is not None else None
         if msg is None:
-            _stats["refused"] += 1
+            relay.counts["refused"] += 1
             writer.write(b'{"ok": false}\n')                  # unsigned: whoever sent it cannot take it for the relay's answer
         else:
             fn = HANDLERS.get(str(msg.get("op", "")))
-            out = {"ok": False} if fn is None else fn(app, str(msg.get("cid", "")), msg.get("payload") or {})
-            if inspect.isawaitable(out):
-                out = await out
+            out = {"ok": False} if fn is None else await _handle(app, fn, msg)
             body = json.dumps(out, separators=(",", ":"))
             writer.write(f"{_sign('answer', parts[0], body)} {body}\n".encode())
-            _stats["answered"] += 1
+            relay.counts["answered"] += 1
         await writer.drain()
     except Exception:  # noqa: BLE001 - a bad message is dropped; the caller answers "no such channel"
         pass

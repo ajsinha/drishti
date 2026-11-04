@@ -356,7 +356,7 @@ def test_admin_ai_test_connection_probes_one_provider_and_audits_it(client, tmp_
         write(tmp_path, "local.yaml", f"type: vllm\nbase-url: {stub.url}/v1\nmodels:\n  - {{name: base}}\n")
         write(tmp_path, "off.yaml", "type: groq\nenabled: false\n")
         client.app.state.ai = AiRuntime(Settings({"ai": {"enabled": True, "dir": str(tmp_path), "default_model": "mock/m"}}))
-        ai_routes._TESTED.clear()
+        ai_routes._tested(client.app).clear()
         page = client.get("/admin/ai").text
         assert 'data-ai-test="mock"' in page and 'data-ai-test="local"' in page and "admin-ai-test.js" in page
 
@@ -387,7 +387,7 @@ def test_admin_ai_test_connection_reports_a_provider_that_does_not_answer(client
 
     write(tmp_path, "gone.yaml", "type: vllm\nbase-url: http://127.0.0.1:1/v1\nmodels:\n  - {name: base}\n")
     client.app.state.ai = AiRuntime(Settings({"ai": {"enabled": True, "dir": str(tmp_path)}}))
-    ai_routes._TESTED.clear()
+    ai_routes._tested(client.app).clear()
     body = client.post("/admin/ai/api/test/gone", json={}).json()
     assert body["ok"] is False and body["models"] == [] and body["detail"]
     assert [a["outcome"] for a in client.app.state.ai.audit_log if a.get("feature") == "test-connection"] == ["failed"]

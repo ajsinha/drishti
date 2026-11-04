@@ -30,7 +30,7 @@ import importlib.util
 import pathlib
 import re
 import secrets
-from core import channel_relay, tmpdir
+from core import tmpdir
 import time
 from dataclasses import dataclass, field
 
@@ -327,7 +327,8 @@ class Jobs:
             raise WizardError(404, "no such job (it may have expired: start again)", "DRS-5006")
         return job
 
-    def start(self, owner: str, plan, backend, ident) -> Job:
+    def start(self, owner: str, plan, backend, ident, suffix: str = "") -> Job:
+        """A job for ``owner`` (``servers.scoped(user)``: the server and the user); ``suffix`` names this worker (core/channel_relay.suffix)."""
         self.sweep()
         mine = self.mine(owner)
         running = [j for j in mine if j.state in ("queued", "running")]
@@ -336,9 +337,11 @@ class Jobs:
         for old in sorted((j for j in mine if j.state not in ("queued", "running")), key=lambda j: j.started)[: max(0, len(mine) - self.lim.jobs_per_user + 1)]:
             self.jobs.pop(old.id, None)
         items = build.prepare(plan)
-        job = Job(secrets.token_urlsafe(9) + channel_relay.suffix(), owner, plan, items, plan.pack["name"], total=len(items))
+        job = Job(secrets.token_urlsafe(9) + suffix, owner, plan, items, plan.pack["name"], total=len(items))
         self.jobs[job.id] = job
-        job.task = asyncio.create_task(self._run(job, backend, ident))
+        from core import request_context
+
+        job.task = request_context.run_in(request_context.snapshot(), self._run(job, backend, ident))   # acts for the request: its server, lens
         return job
 
     def cancel(self, job: Job) -> None:

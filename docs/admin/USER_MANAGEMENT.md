@@ -35,7 +35,11 @@ Where the links are, when sign-in is **on** (`DRISHTI_AUTH_ENABLED=true`, see [O
   were on. Any protected page (the terminal, Search, Admin) sends you to the sign-in page first.
 - Signed in: your initial and name at the right of the top bar, or of the landing page's navigation, open a menu with
   **My account** and **Sign out**. Signing out ends the session on the server and lands on the landing page with a
-  "Signed out" notice. It is a POST from the console's own pages only.
+  "Signed out" notice. It is a POST from the console's own pages only. The live views and alerts of that session stop
+  at once on that console; on another console, or after an administrator disables or deletes the user, they stop
+  within `auth.recheck_seconds` (10 s by default), when the console asks the server again whether the session stands.
+- With several servers on one console, each server's session is its own: live views, pack jobs and AI limits
+  belong to the person on that server, never to the same name on another server.
 - The sign-in page has a link back to the home page.
 
 When sign-in is **off** (the local default), everyone who reaches the console acts as the development user, so there is

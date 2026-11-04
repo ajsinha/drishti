@@ -356,7 +356,7 @@ def create_app(settings: Settings) -> FastAPI:
 
         await channel_relay.start(app)                      # several workers: live-channel calls reach the worker holding the stream
         yield
-        await channel_relay.stop()
+        await channel_relay.stop(app)
         if warm_task is not None and not warm_task.done():
             warm_task.cancel()
         if maint_task is not None:

@@ -24,6 +24,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 
 from core.backend import BackendError
+from core.servers import scoped
 from core.csrf import BodyError, json_body
 from core.lakes import LakeError, Lakes, LakeSettings
 from routes.common import ident, render
@@ -181,7 +182,7 @@ async def upload(request: Request):
         if kind != "application/octet-stream":
             raise BodyError(415, "send the file as application/octet-stream")
         declared = request.headers.get("content-length")
-        u = await _lakes(request).receive(request.query_params.get("name", ""), me.user, request.stream(),
+        u = await _lakes(request).receive(request.query_params.get("name", ""), scoped(me.user), request.stream(),
                                           int(declared) if declared and declared.isdigit() else None)
     except LakeError as e:
         return _err(e)
@@ -194,7 +195,7 @@ async def scan(request: Request, uid: str):
     try:
         me = _admin(request)
         lakes = _lakes(request)
-        return await lakes.scan(lakes.upload(uid, me.user))
+        return await lakes.scan(lakes.upload(uid, scoped(me.user)))
     except LakeError as e:
         return _err(e)
     except (ValueError, OSError) as e:
@@ -218,7 +219,7 @@ async def job(request: Request, jid: str):
     try:
         me = _admin(request)
         j = _lakes(request).jobs.get(jid)
-        if j is None or j.owner != me.user:
+        if j is None or j.owner != scoped(me.user):           # (server, user): one name on two servers is two people
             raise LakeError(404, "no such build", "DRS-5033")
     except LakeError as e:
         return _err(e)

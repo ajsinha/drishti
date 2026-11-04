@@ -242,7 +242,7 @@ class ServerPool:
         e.stream_breaks += 1
         LOG.info("live stream from %s ended: %s (not counted against it; checking its health)", url, why)
         try:
-            task = asyncio.get_running_loop().create_task(self.check(e))
+            task = asyncio.get_running_loop().create_task(self.check(e))   # service work: a health check, no user's scope
             self._checks.add(task)
             task.add_done_callback(self._checks.discard)
         except RuntimeError:                              # no running loop: the periodic check looks at it
