@@ -79,6 +79,8 @@ its path, its partition columns, the number of promoted columns and its vectors)
 
 **The UI.** Admin → Lakes → **The lakes**: the demo lake, open, with its tables (kind, path, partitioned by, promoted, vectors, id, loads).
 
+*(screenshot filled in the heavy run: Admin → Lakes → The lakes: the demo lake and its tables, partitioned by business_date first)*
+
 **You should see** every table partitioned by `business_date` first; the three trade tables also by `PRODUCT_TYPE`.
 
 ## Step 2 · A connector names the lake
@@ -101,6 +103,8 @@ The pack recommends the entry in its own `lake:` block; it is copied into a lake
 
 **The UI.** Admin → Connectors → `trade-endur`: the file as above, health green.
 
+*(screenshot filled in the heavy run: Admin → Connectors → trade-endur: lake: demo and lake-tables, health green)*
+
 **You should see** `TRADE ENDUR` trades open as before: the connector's root, table folder and promoted columns now come from the lake file.
 
 ## Step 3 · Check the lake files against the tables
@@ -116,6 +120,8 @@ python3 tools/drishti.py lake check
 ```
 
 **The UI.** Admin → Lakes → The lakes; the same comparison is `GET /api/v1/admin/lakes/files?check=true`.
+
+*(screenshot filled in the heavy run: Admin → Lakes with the check: every table matches its lake file, no error)*
 
 **You should see** no error: the tables `lake demo` built are partitioned as the file says.
 
@@ -143,6 +149,10 @@ python3 tools/drishti.py lake build --from data/testdata/trades/endur/snapshot-2
 (filled in the heavy run: refused, "--partition-by ['DESK'] differs from ['PRODUCT_TYPE'], the --partition-by of table trading.trade_endur
 in lake demo (config/lakes/demo.yaml): the lake file decides")
 ```
+
+**The UI.** Admin → Lakes → The lakes: `trading.trade_endur` partitioned by `business_date`, `PRODUCT_TYPE`, the layout the load followed (the scratch copy under `$SCRATCH` is not one of the server's lakes, so it is not listed).
+
+*(screenshot filled in the heavy run: Admin → Lakes: trading.trade_endur and its partitioning)*
 
 **You should see** the first load written partitioned by `business_date` and `PRODUCT_TYPE`, and the second refused with both values named.
 
@@ -179,6 +189,10 @@ python3 tools/drishti.py lake build --engine java --from data/testdata/market-ri
 (filled in the heavy run: the first run commits one append per business date; the second skips every date, "batch intraday-0915 was
 appended already", and the table's row count is unchanged)
 ```
+**The UI.** Admin → Lakes lists the lake files the server reads (`config/lakes/`, or the server's own `DRISHTI_LAKES_DIR`); a table whose file says `load-mode: append` shows it in its row. The scratch lake of this step is read by the command line only.
+
+*(screenshot filled in the heavy run: Admin → Lakes: a table's load mode in its row)*
+
 
 **You should see** the same batch never appended twice; a new `--batch-id` adds its rows, the earlier ones kept.
 
@@ -209,6 +223,10 @@ python3 tools/drishti.py lake migrate-config --connectors-dir $SCRATCH/connector
 (filled in the heavy run: the lake file $SCRATCH/lakes/lake.yaml with root $SCRATCH/lake and the table risk.pnl-vector, and the
 connector rewritten to "lake: lake")
 ```
+**The UI.** Admin → Lakes shows the same lake once the server reads the written lake file (`config/lakes/`); on a real installation the dry run is the place to read what `--write` will do.
+
+*(screenshot filled in the heavy run: Admin → Lakes: a lake written by the migration)*
+
 
 **You should see** the connector file keep only `lake:` (and its own reading settings); nothing in the lake's folder changed.
 
@@ -219,7 +237,7 @@ unset DRISHTI_LAKES_DIR
 rm -rf "$SCRATCH"
 ```
 
-## What next
+## Next steps
 
 - [LAKE_GUIDE.md](../guides/LAKE_GUIDE.md): every key, a Delta lake in S3, an Iceberg lake over REST, an in-memory store.
 - [Tutorial 31](31-news-in-memory-only.md): a lake held in memory only.

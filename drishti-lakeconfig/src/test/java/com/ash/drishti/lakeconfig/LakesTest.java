@@ -114,11 +114,24 @@ class LakesTest {
 
     @Test
     void referencesNestAndADottedNameIsReadAsTheServerReadsIt() {
-        Function<String, String> env = Map.of("DRISHTI_DATA_DIR", "/srv/drishti")::get;
-        Lake l = Lakes.parse("lake: main\nroot: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n", "main", env);
-        assertEquals("/srv/drishti/delta", l.root());
-        assertEquals("./data/delta", Lakes.parse("lake: main\nroot: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n", "main",
-                k -> null).root());
+        // the build's surefire sets drishti.data.dir (target/test-data), and a system property comes before the environment's form
+        String before = System.clearProperty("drishti.data.dir");
+        try {
+            Function<String, String> env = Map.of("DRISHTI_DATA_DIR", "/srv/drishti")::get;
+            Lake l = Lakes.parse("lake: main\nroot: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n", "main", env);
+            assertEquals("/srv/drishti/delta", l.root());
+            assertEquals("./data/delta", Lakes.parse("lake: main\nroot: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n", "main",
+                    k -> null).root());
+            System.setProperty("drishti.data.dir", "/opt/drishti");
+            assertEquals("/opt/drishti/delta", Lakes.parse("lake: main\nroot: ${DRISHTI_DELTA_ROOT:${drishti.data.dir:./data}/delta}\n",
+                    "main", env).root());
+        } finally {
+            if (before == null) {
+                System.clearProperty("drishti.data.dir");
+            } else {
+                System.setProperty("drishti.data.dir", before);
+            }
+        }
     }
 
     @Test
