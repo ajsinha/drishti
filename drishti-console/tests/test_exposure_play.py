@@ -76,3 +76,22 @@ def test_the_page_and_the_api_are_read_as_the_person(backend, monkeypatch):
     assert sent[-1][0] == "STREAM" and sent[-1][1].startswith("/exposure/playground.xlsx?") and "trades=All" in sent[-1][1] and "collateral=none" in sent[-1][1]
     t = c.get("/api/exposure-play/template.xlsx")
     assert t.status_code == 200 and sent[-1][1] == "/exposure/playground/template"
+
+
+def test_play_exp_follows_the_exposure_engines_rules_not_vars(backend, monkeypatch):
+    """PLAY EXP is gated on the PLAY and EXP words and on the Exposure column's opens: (core/menus.py), never on VAR's."""
+    app, c = _app(backend, monkeypatch, RISK_ABOUT, roles=("credit-risk",))              # opens Exposure, not VaR
+    r = c.get("/go", params={"q": "PLAY EXP EXAMPLE <GO>"}, follow_redirects=False)
+    assert r.status_code == 303 and r.headers["location"] == "/play/exp?nettingSet=EXAMPLE"
+    words = app.state.editions.instance.spec["commands"]["words"]
+    words["VAR"] = False                                                                # VaR off: PLAY EXP still opens
+    r = c.get("/go", params={"q": "PLAY EXP EXAMPLE <GO>"}, follow_redirects=False)
+    assert r.headers["location"] == "/play/exp?nettingSet=EXAMPLE"
+    words["VAR"] = True
+    words["EXP"] = False                                                                # EXP off: refused in words
+    r = c.get("/go", params={"q": "PLAY EXP EXAMPLE <GO>"}, follow_redirects=False)
+    assert r.status_code == 303 and "DRS-4023" in r.headers["location"]
+    words["EXP"] = True
+    _, mr = _app(backend, monkeypatch, RISK_ABOUT, roles=("market-risk",))               # opens VaR but not Exposure: refused for the role
+    r = mr.get("/go", params={"q": "PLAY EXP EXAMPLE <GO>"}, follow_redirects=False)
+    assert r.status_code == 303 and "not%20opened%20for%20your%20role" in r.headers["location"]
