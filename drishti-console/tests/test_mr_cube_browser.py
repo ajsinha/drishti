@@ -67,6 +67,7 @@ def fetch(pg, method, path, body=None):
 
 
 def scope_var(pg, scope):
+    """The VaR explorer's figure for a scope: money in whole units (the cube's cells are to the cent, so they agree within half a unit)."""
     r = fetch(pg, "GET", "/api/var/scope?scope=" + urllib.parse.quote(scope))
     assert r["status"] == 200, (scope, r)
     return r["body"]["var"]
@@ -109,11 +110,11 @@ def test_mcube_opens_the_pivot_screen_with_the_mr_lens_and_every_cell_is_the_eng
     for c in a["cells"].values():
         val = c["values"].get("VaR")
         if c.get("scope") and val is not None and checked < 10:
-            assert abs(val - scope_var(pg, c["scope"])) < 0.01, c["scope"]
+            assert abs(val - scope_var(pg, c["scope"])) <= 0.5, c["scope"]
             checked += 1
     assert checked >= 4
     row, total, col = grand(a)
-    assert abs(total["values"]["VaR"] - scope_var(pg, "BANK")) < 0.01
+    assert abs(total["values"]["VaR"] - scope_var(pg, "BANK")) <= 0.5
     desks = sum(a["cells"][r["key"] + "|" + col["key"]]["values"]["VaR"] for r in a["rows"] if r["kind"] == "node")
     assert desks > total["values"]["VaR"], "a total is the union's VaR, never the sum of its rows"
     assert abs(row["diversification"]["VaR"] - (desks - total["values"]["VaR"])) < 0.05
@@ -148,7 +149,7 @@ def test_a_cell_fills_the_rail_lists_its_trades_and_a_desk_opens_by_its_books(st
     gcol = b["columns"][-1]["key"]
     for r in books[:4]:
         c = b["cells"][r["key"] + "|" + gcol]
-        assert abs(c["values"]["VaR"] - scope_var(pg, c["scope"])) < 0.01, c["scope"]
+        assert abs(c["values"]["VaR"] - scope_var(pg, c["scope"])) <= 0.5, c["scope"]
     shot(pg, "mr-cube-cell")
     assert not pg.errors, pg.errors
     pg.close()
@@ -167,12 +168,12 @@ def test_tab_b_components_add_up_and_the_10_day_lens_asks_again(stack, browser):
     assert abs(parts - total["values"]["VaR"]) < 0.05, "component VaR adds up to the total"
     shot(pg, "mr-cube-tab-b")
     pg.click('[data-mr-tab="pivot"]')
-    one_day = scope_var(pg, "BANK")
+    one_day = fetch(pg, "POST", "/api/pivot/mr/headline", {"view": view(pg)})["body"]["var"]      # the lens's own 1-day figure, to the cent
     pg.click('[data-mr-seg="horizon"] button[data-v="10d"]')
     wait(pg, "(window.PivotScreen.view().options || {}).horizon === '10d'", 60)
     wait(pg, "!!document.querySelector('[data-mr-tiles] .mr-tile .mr-tv')", 60)
     ten = fetch(pg, "POST", "/api/pivot/mr/headline", {"view": view(pg)})["body"]
-    assert abs(ten["var"] - one_day * 10 ** 0.5) < 0.05
+    assert abs(ten["var"] - one_day * 10 ** 0.5) <= 1e-9 * abs(ten["var"]), (ten["var"], one_day)          # √10 of the same 1-day figure
     assert not pg.errors, pg.errors
     pg.close()
 

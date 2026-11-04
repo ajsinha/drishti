@@ -345,6 +345,10 @@ def test_number_conditions_in_the_menu(page):
     condition(page, "Notional", "Bottom N", "2")
     assert ids(page) == ["T05", "T08"]
     condition(page, "Notional", "Above average")
+    for _ in range(100):                          # the average is the engine's (POST /api/pivot/inline): the rows redraw once it answers
+        if ids(page) == ["T03", "T04", "T11"]:
+            break
+        page.wait_for_timeout(100)
     assert ids(page) == ["T03", "T04", "T11"]
     b = page.locator("#p-tbl th", has_text="Notional").locator(".cf-btn")
     assert b.get_attribute("title").startswith("Filtered: Above average")

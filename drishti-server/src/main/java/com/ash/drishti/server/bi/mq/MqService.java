@@ -280,7 +280,7 @@ public final class MqService {
         LogicalPlan plan = prepared.plan();
         String signature = b.signature();
         QueryRequest main = prepared.main();
-        ResultCache.Key key = cache.enabled() && b.generation() != null && !explain
+        ResultCache.Key key = cache.enabled() && b.generation() != null && !explain && QueryService.cacheableAggregation()
                 ? new ResultCache.Key(plan.hash() + (engineLimit ? "|engine-limit" : "") + "|top:" + tops(compiled)
                         + (QueryService.aggregation() == null ? "" : "|pivot:" + QueryService.aggregation().signature()), signature, b.generationFor(plan, q),
                         plan.immutable()) : null;

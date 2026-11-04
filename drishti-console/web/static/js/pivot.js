@@ -499,10 +499,11 @@
           view.options = opts;
         }
         view.date = view.date || c.date;
-        view.filters = view.filters || {};
-        view.expanded = view.expanded || [];
       }
       if (view) {
+        // a saved view, a preset or the source's default: the zones the screen draws are always there
+        ["rows", "columns", "values", "expanded"].forEach(function (k) { view[k] = view[k] || []; });
+        view.filters = view.filters || {};
         state.view = view;
       } else {
         var firstText = (c.fields || []).filter(function (f) { return f.type === "string"; })[0];
@@ -523,18 +524,6 @@
     root.removeAttribute("data-preset");
     try { return JSON.parse(t); } catch (e) { return null; }
   }
-
-  /* A lens of the screen (the MR cube, mr-lens.js) reads the view and the answer and changes the view's options; it never computes. */
-  window.PivotScreen = {
-    root: root,
-    view: function () { return state.view ? viewBody() : null; },
-    answer: function () { return state.answer; },
-    catalogue: function () { return state.catalogue; },
-    call: call,
-    notice: notice,
-    run: function (change) { if (state.view) { if (change) { change(state.view); } run(); } },
-    reopen: function (date) { if (state.view) { state.view.date = date; open(state.view.source, date, state.view); } }
-  };
 
   function boot() {
     call("GET", "/sources").then(function (s) {
@@ -654,17 +643,25 @@
       if (by) { expandBy(row, by.trim()); }
     }
   });
-  // the custom functions, explain and what-if cards (pivot-functions.js) read the view, its answer and the selection; they never aggregate
+  // The screen's one face for the code around it, which reads the view and the answer and never computes: a lens (the MR cube,
+  // mr-lens.js) changes the view's options; the custom functions, explain and what-if cards (pivot-functions.js) read the view, its
+  // answer and the selection; the switches, live pivots and comments (pivot-switches.js) send the request body as asked, redraw, run again.
   window.PivotScreen = {
-    view: function () { return state.view; },
+    root: root,
+    view: function () { return state.view ? viewBody() : null; },
     answer: function () { return state.answer; },
+    catalogue: function () { return state.catalogue; },
     selection: function () { return state.selection; },
     notice: notice,
-    // for the switches, live pivots and comments (pivot-switches.js): the request body as asked, the server, a redraw, a fresh run
     body: function () { return asked({view: viewBody()}); },
     call: call,
     show: show,
-    run: function () { run(true); },
+    // run(change): change the view (a lens's options), then ask again; run(): ask again as it is, past the estimate's confirmation
+    run: function (change) {
+      if (!state.view) { return; }
+      if (typeof change === "function") { change(state.view); run(); } else { run(true); }
+    },
+    reopen: function (date) { if (state.view) { state.view.date = date; open(state.view.source, date, state.view); } },
     savedView: function () { return state.savedView; },
     grid: function () { return $("[data-pv-grid]"); }
   };

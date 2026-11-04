@@ -27,8 +27,9 @@
 .mr-tile { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border: 1px solid var(--d-border); border-radius: 6px; background: var(--d-surface); min-height: 72px; min-width: 0; }
 .mr-tile.skel { background: linear-gradient(90deg, var(--d-surface-2), transparent, var(--d-surface-2)); background-size: 200% 100%; animation: mr-sk 1.2s linear infinite; }
 .mr-tl { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--d-muted); overflow-wrap: anywhere; }
-.mr-tv { font-size: 18px; font-weight: 700; }
-.mr-ts { font-size: 11px; color: var(--d-muted); }
+.mr-tv { font-size: 18px; font-weight: 700; overflow-wrap: anywhere; }
+.mr-ts { font-size: 11px; color: var(--d-muted); overflow-wrap: anywhere; }
+@media (max-width: 640px) { .mr-tv { font-size: 15px; } }               /* a phone: a figure of nine digits fits its half-width tile */
 .mr-lens { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .mr-scope { display: inline-flex; }
 .mr-seg { display: inline-flex; border: 1px solid var(--d-border); border-radius: 6px; overflow: hidden; }

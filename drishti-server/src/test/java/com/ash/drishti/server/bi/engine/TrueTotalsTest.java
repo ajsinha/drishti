@@ -118,6 +118,18 @@ class TrueTotalsTest {
     }
 
     @Test
+    void theSameTotalsAskedAgainAreTheSameNotACachedAnswerWithoutItsPlan() {
+        Report.Visual m = visual("m");
+        List<List<String>> levels = BiAggregate.matrixLevels(m.well("rows"), m.well("columns"));
+        BiAggregate.Totals first = totals(levels, m.well("values"), risk());
+        BiAggregate.Totals again = totals(levels, m.well("values"), risk());      // a report asked twice: the statement is made again
+        assertThat(again.levels()).hasSize(first.levels().size());
+        for (int i = 0; i < first.levels().size(); i++) {
+            assertThat(again.levels().get(i).rows()).isEqualTo(first.levels().get(i).rows());
+        }
+    }
+
+    @Test
     void everyLevelOfTheMatrixIsTheMeasureOverTheRowsOfItsGroup() {
         List<TestLake.Trade> all = lake.trades.get(TestLake.DAY2);
         Report.Visual m = visual("m");

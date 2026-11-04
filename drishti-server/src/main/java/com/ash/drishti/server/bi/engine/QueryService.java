@@ -311,6 +311,20 @@ public final class QueryService implements AutoCloseable {
 
         /** The most rows (groups) the statement may answer. */
         int maxRows();
+
+        /**
+         * Whether an answer may come from a result cache. False for a statement that reads its answer with the plan {@link #wrap} made
+         * (an answer served again would skip the wrap): its answers are computed every time, and no cache keeps them.
+         */
+        default boolean cacheable() {
+            return true;
+        }
+    }
+
+    /** True when this thread asks no statement, or one whose answers may be cached (see {@link Outer#cacheable()}). */
+    public static boolean cacheableAggregation() {
+        Outer o = OUTER.get();
+        return o == null || o.cacheable();
     }
 
     private static final ThreadLocal<Outer> OUTER = new ThreadLocal<>();
@@ -388,7 +402,7 @@ public final class QueryService implements AutoCloseable {
         if (staged != null && (explain || cache == null || cache.getIfPresent(cacheKey(ds, q, who) + stagedKey) == null)) {
             inner = innerAnswers(ds.dataset(), q, who, staged);               // likewise asked before this query takes its place
         }
-        String key = cache == null ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey
+        String key = cache == null || (outer != null && !outer.cacheable()) ? null : cacheKey(ds, q, who) + (frames == null ? "" : "|frames:" + frames.fingerprint()) + stagedKey
                 + (outer == null ? "" : "|pivot:" + outer.signature());
         if (key != null && !explain) {
             Result hit = cache.getIfPresent(key);

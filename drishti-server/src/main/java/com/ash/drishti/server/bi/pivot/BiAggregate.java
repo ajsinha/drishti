@@ -200,6 +200,12 @@ public final class BiAggregate {
             return maxGroups;
         }
 
+        /** Never from a cache: {@link #read} needs the plan this statement's {@link #wrap} makes (an answer served again skips it). */
+        @Override
+        public boolean cacheable() {
+            return false;
+        }
+
         @Override
         public SqlCompiler.Compiled wrap(SqlCompiler.Compiled detail) {
             Map<String, String> types = new LinkedHashMap<>();
@@ -248,6 +254,9 @@ public final class BiAggregate {
 
         /** The answer's rows dealt to their levels, each state finished. */
         List<Level> read(QueryService.Result r) {
+            if (calls.isEmpty() && !measures.isEmpty()) {
+                throw new IllegalStateException("the totals' statement was not made for this answer (a cached answer has no plan)");
+            }
             int nd = dims.size();
             Map<Long, CellSet> byMask = new LinkedHashMap<>();
             for (CellSet s : sets) {

@@ -69,9 +69,15 @@ def test_the_switches_are_sent_as_asked_and_the_line_says_how_the_answer_was_com
     assert [b for k, b in backend.asked if k == "query"][-1]["rollups"] is False
     # progressive on: ≈ first from the stream, then the exact answer replaces it
     pg.check('input[name="pvExact"][value="exact"]')
-    pg.check("[data-pv-progressive]")
     pg.wait_for_function("() => document.querySelector('[data-pv-computed]').textContent.startsWith('exact')")
+    pg.check("[data-pv-progressive]")
+    # Exact's own run already says "exact": wait for the progressive ask itself, not for the line
+    for _ in range(100):
+        if any(k == "progressive" for k, _ in backend.asked):
+            break
+        pg.wait_for_timeout(100)
     assert any(k == "progressive" for k, _ in backend.asked)
+    pg.wait_for_function("() => document.querySelector('[data-pv-computed]').textContent.startsWith('exact')")
     assert not pg.errors, pg.errors
 
 
