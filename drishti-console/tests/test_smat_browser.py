@@ -89,7 +89,7 @@ MATRIX = _matrix()
 
 
 class SmatBackend(FakeBackend):
-    """The stand-in server with a VaR engine that answers the scenario matrix (JSON; the console writes Arrow when asked)."""
+    """The stand-in server with a VaR engine that answers the scenario matrix: JSON, or the Arrow stream when asked (as the server)."""
 
     async def var(self, method, path, ident, body=None, raw=False, accept="", **params):
         import json
@@ -107,6 +107,11 @@ class SmatBackend(FakeBackend):
                    "rows": [{"scenario": r["scenario"], MATRIX["dates"][-1]["date"]: r[MATRIX["dates"][-1]["date"]]} for r in MATRIX["rows"]]}
         else:
             ans = MATRIX
+        if raw and "arrow" in (accept or ""):            # asked as Arrow: the stream the server's ArrowAnswers writes (the console passes it on)
+            from arrow_server_stream import server_stream
+            content = server_stream(ans, "records", "rows")
+            if content is not None:
+                return content, {"content-type": "application/vnd.apache.arrow.stream"}
         return (json.dumps(ans).encode(), {"content-type": "application/json"}) if raw else ans
 
 
