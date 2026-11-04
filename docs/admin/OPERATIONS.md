@@ -193,6 +193,22 @@ self-test disagreed with Java, or a native call failed during the run):
 To fix it: run a 64-bit Java on Linux or Windows x86-64, make `drishti.native.cache-dir` writable, and keep the `openblas` and `javacpp`
 jars in the server's library folder. To run on Java deliberately (and silence the warning): `drishti.native.blas.mode: java`.
 
+**Switching live (Admin → Engines).** The row **Linear algebra: OpenBLAS** (engine `openblas`, file `config/engines/openblas.yaml`) is an
+engine switch like the others: an administrator turns it off or on with a reason, live, no restart; the change is written to the engine's
+file, audited, kept in History, and can be made for another member from the Cluster tab.
+
+- **Off**: every call runs on the pure-Java path from that moment (the library stays loaded and is not called). The status reads
+  `java (chosen by admin: switched off by <who> at <when> (<reason>))`: a **notice** on Admin → Health and Admin → Engines, not the
+  DEGRADED fallback warning, and no alert. A server started with the switch off does not even load OpenBLAS.
+- **On**: the self-test against Java runs first; it passes and OpenBLAS serves again, or the switch is **refused in words** (the row says
+  why, the Java path stays).
+- **The cluster follows**: a member switched to Java counts as a member on Java in the cluster agreement above, so every member sums many
+  scopes on Java until it is back on.
+- From the command line: `python3 tools/drishti.py server blas status`, `server blas java --reason "..."`, `server blas native --reason "..."`
+  (`--node <id>` for another member); the same API as Admin → Engines (`POST /api/v1/admin/engines` with the engine `openblas`;
+  `GET /api/v1/admin/engines` → `native.blas`).
+- `drishti.native.blas.mode: java` in the configuration wins: the switch cannot turn OpenBLAS on then, and says so.
+
 **Resilience.** The native library never runs unguarded ([HIGH_PERFORMANCE_NATIVE.md section 6.5](../architecture/HIGH_PERFORMANCE_NATIVE.md#65-resilience-as-built)):
 a start-up self-test of awkward shapes against Java, argument checks in Java before every native call (a bad argument never reaches
 native code), a per-call size bound, any failure or NaN from finite inputs redone on Java with the native path switched off for the rest

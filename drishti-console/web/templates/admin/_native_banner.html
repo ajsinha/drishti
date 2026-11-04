@@ -19,7 +19,14 @@
 {% set nb = blas or {} %}
 {% set slow = [] %}
 {% for node, w in (nb.get('members') or {}).items() %}{% if w.startswith('java-fallback') %}{% set _ = slow.append(node ~ ': ' ~ w[14:]) %}{% endif %}{% endfor %}
-{% if nb.get('status') == 'DEGRADED' or slow %}
+{% if nb.get('status') != 'DEGRADED' and not slow and (nb.get('reason') or '').startswith('chosen by admin') %}
+<p class="asof-banner" role="status" data-native-chosen>
+  <i class="bi bi-info-circle" aria-hidden="true"></i>
+  <span><b>Linear algebra runs on the pure-Java path, as chosen.</b> <span class="mono" data-native-reason>{{ nb.get('reason') }}</span>.
+  The figures are the same; many-scope sums are slower. Turn <i>Linear algebra: OpenBLAS</i> on in Admin → Engines (or
+  <span class="mono">drishti.py server blas native</span>) to use OpenBLAS again after its self-test.</span>
+</p>
+{% elif nb.get('status') == 'DEGRADED' or slow %}
 <p class="asof-banner" role="alert" data-native-banner>
   <i class="bi bi-exclamation-triangle" aria-hidden="true"></i>
   <span><b>BLAS runs on the pure-Java path.</b>

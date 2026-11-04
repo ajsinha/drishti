@@ -33,6 +33,11 @@
   `dgemm`. At 1M positions x 509 scenarios: 100 overlapping portfolios 3.1x faster, 100 cube cells 2.4x, 100 desks 3.2x
   ([BENCHMARK.md section 17](docs/admin/BENCHMARK.md#17-many-var-scopes-at-once-blas)). FRTB's bucket sums and exposure's means were
   measured on BLAS and stay on Java (faster there).
+- **Linear algebra switch, live**: Admin → Engines has a row **Linear algebra: OpenBLAS** (engine `openblas`,
+  `config/engines/openblas.yaml`): off chooses the pure-Java path at once (`java (chosen by admin: ...)`, a notice, never the DEGRADED
+  warning; a server started with it off does not load OpenBLAS); on runs the self-test first and is refused in words if it fails. Written,
+  audited and kept in History like every engine switch, for any member from the Cluster tab; a member switched to Java takes the cluster's
+  many-scope sums to Java. `drishti.py server blas java|native|status`.
 - **The near-tie rule**: scenario P&Ls within a relative 1e-12 of the vector's largest are ordered by scenario date (the older first), so
   the VaR scenario, its date and every component VaR are the same on the Java and the OpenBLAS paths; VaR and ES agree within 1e-12.
 - **One path for the cluster**: each member publishes its BLAS path in its digest; when any member runs on Java, every member sums many

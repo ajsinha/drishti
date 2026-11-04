@@ -52,6 +52,14 @@ def test_openblas_or_java_chosen_show_the_line_and_no_notice(client, backend, mo
         assert blas["line"] in page
 
 
+def test_an_administrators_choice_is_a_notice_not_the_warning(client, backend, monkeypatch):
+    blas = {"status": "OK", "line": "BLAS: mode java, java (chosen by admin: switched off by alice at 2026-11-04T00:10:00Z (bench))",
+            "reason": "chosen by admin: switched off by alice at 2026-11-04T00:10:00Z (bench)", "members": {}}
+    page = _health(client, backend, monkeypatch, blas)
+    assert "data-native-chosen" in page and "as chosen" in page and "switched off by alice" in page
+    assert "data-native-banner" not in page and "drishti.py server blas native" in page
+
+
 def test_a_member_on_the_java_path_is_named(client, backend, monkeypatch):
     blas = {"status": "OK", "line": "BLAS: mode auto, native (bundled OpenBLAS 0.3.26), 1 thread per call",
             "members": {"node-b": "java-fallback self-test failed: dgemm", "node-c": "native 0.3.26"}}

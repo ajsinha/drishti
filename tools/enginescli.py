@@ -165,3 +165,58 @@ def register(server_sub, admin_sub, srv, ctx: dict) -> None:
     add(server_sub, "server")
     if admin_sub is not None:
         add(admin_sub, "admin")
+
+    def blas(a, extra) -> int:
+        """server blas java|native|status: the Linear algebra switch of Admin -> Engines (engine openblas), with its reason and audit."""
+        api = Api.from_args(a)
+        if a.blas_cmd in ("java", "native"):
+            if not (a.reason or "").strip():
+                raise CliError("give --reason: it is kept in the audit log and History", 2)
+            body = {"reason": a.reason, "node": a.node or "", "changes": [{"engine": "openblas", "on": a.blas_cmd == "native"}]}
+            try:
+                res = api.json("POST", "/api/v1/admin/engines", body)
+            except ApiError as e:
+                if e.drs in ("DRS-1021", "DRS-1023") or e.status in (400, 409):
+                    raise CliError(f"refused ({e.drs}): {str(e).split(': ', 1)[-1]}", 2) from None
+                raise
+            if a.json:
+                say_json(res)
+                return 0
+            row = next((x for x in res.get("engines") or [] if x.get("id") == "openblas"), {})
+            o = next((x for x in res.get("outcomes") or [] if x.get("engine") == "openblas"), {})
+            if a.blas_cmd == "native" and row.get("state") not in (None, "running"):
+                print(f"refused: {row.get('reason') or o.get('detail') or row.get('state')}")    # the self-test failed: Java stays
+                return 1
+            print(f"linear algebra: {'OpenBLAS (native)' if a.blas_cmd == 'native' else 'pure Java (chosen)'}: {o.get('outcome', 'done')}"
+                  + (f" on {res['forwardedTo']}" if res.get("forwardedTo") else ""))
+            blas_line = ((res.get("native") or {}).get("blas") or {}).get("line")
+            if blas_line:
+                print(blas_line)
+            return 0
+        view = api.json("GET", "/api/v1/admin/engines")
+        b = (view.get("native") or {}).get("blas") or {}
+        if a.json:
+            say_json(b)
+            return 0
+        print(b.get("line") or "BLAS: no status (an older server)")
+        if b.get("clusterPath"):
+            print(f"  cluster sums: {b['clusterPath']}")
+        for node, w in (b.get("members") or {}).items():
+            print(f"  member {node}: {w}")
+        return 0
+
+    for sub in (server_sub, admin_sub):
+        if sub is None:
+            continue
+        p = sub.add_parser("blas", help="blas java|native|status: linear algebra on the pure-Java path or the bundled OpenBLAS, live",
+                           description="The Linear algebra switch of Admin -> Engines (engine openblas): java chooses the pure-Java path (a notice, "
+                                       "the same figures); native runs the self-test against Java first and refuses in words if it fails. "
+                                       "docs/admin/OPERATIONS.md section 2.1.")
+        acts = p.add_subparsers(dest="blas_cmd", metavar="ACTION", required=True)
+        for act, what in (("status", "this server's path, the cluster's and each member's"), ("java", "switch to the pure-Java path (with a reason)"),
+                          ("native", "switch back to OpenBLAS after its self-test (with a reason)")):
+            c = acts.add_parser(act, parents=[srv], help=what, description=what)
+            c.set_defaults(func=blas)
+            if act != "status":
+                c.add_argument("--reason", help="why (required; kept in the audit log and History)")
+                c.add_argument("--node", help="another node of the cluster (its id); default this server")

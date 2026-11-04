@@ -85,4 +85,29 @@ class NativeLibrariesTest {
             Blas.clusterOnJava(null);
         }
     }
+
+    @Test
+    void theEngineSwitchChoosesJavaLiveAndOnRunsTheSelfTestOrRefusesInWords() {
+        StandardEnvironment env = new StandardEnvironment();
+        env.getPropertySources().addFirst(new MapPropertySource("t", Map.of("drishti.native.blas.canary-interval", "0s")));
+        NativeLibraries n = new NativeLibraries(env, new DefaultListableBeanFactory().getBeanProvider(io.micrometer.core.instrument.MeterRegistry.class));
+        OpenBlasEngine e = new OpenBlasEngine(n);
+        assertThat(e.id()).isEqualTo("openblas");
+        e.changing("alice", "2026-11-04T00:10:00Z", "benchmark on Java");
+        e.stop();
+        Blas.Status s = Blas.status();
+        assertThat(s.summary()).isEqualTo("java (chosen by admin: switched off by alice at 2026-11-04T00:10:00Z (benchmark on Java))");
+        assertThat(s.degraded()).isFalse();
+        assertThat(n.describe().get("status")).isEqualTo("OK");                         // a notice, never DEGRADED
+        assertThat(NativeLibraries.wire(s)).startsWith("java chosen by admin");           // the members count it as Java
+        assertThat(Blas.get()).isSameAs(com.ash.drishti.compute.linalg.JavaBlas.INSTANCE);
+        try {
+            e.start();                                                                    // the self-test, then OpenBLAS
+            assertThat(Blas.status().isNative()).isTrue();
+            assertThat(Blas.adminJava()).isNull();
+        } catch (IllegalStateException refused) {                                         // no OpenBLAS here: refused in words
+            assertThat(refused.getMessage()).contains("the pure-Java path stays");
+            assertThat(Blas.status().summary()).startsWith("java (chosen by admin");
+        }
+    }
 }

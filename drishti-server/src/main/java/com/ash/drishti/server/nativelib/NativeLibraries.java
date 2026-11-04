@@ -71,6 +71,12 @@ public class NativeLibraries {
         this.canary = durationOr(env.getProperty("drishti.native.blas.canary-interval", "6h"), Duration.ofHours(6));
         Blas.Settings settings = new Blas.Settings(Blas.Mode.of(mode), cache.isBlank() ? Path.of(dataDir, "native-cache") : Path.of(cache),
                 env.getProperty("drishti.native.blas.max-call-mb", Long.class, 256L) << 20, env.getProperty("drishti.native.max-bytes-mb", Long.class, 1024L) << 20);
+        if (!env.getProperty("drishti.engines.openblas.enabled", Boolean.class, true)) {   // Admin -> Engines left it off: not even loaded
+            String by = env.getProperty("drishti.engines.openblas.changed.by", "");
+            String at = env.getProperty("drishti.engines.openblas.changed.at", "");
+            Blas.switchToJava("switched off in Admin -> Engines" + (by.isBlank() ? "" : " by " + by) + (at.isBlank() ? "" : " at " + at)
+                    + " (config/engines/openblas.yaml)");
+        }
         Blas.Status s;
         try {
             s = Blas.bind(settings);
@@ -114,6 +120,17 @@ public class NativeLibraries {
         }
     }
 
+    /** An administrator switched the path live (OpenBlasEngine): the log line, the meters and the digest follow. */
+    void switched() {
+        Blas.Status s = Blas.status();
+        LOG.info("{}", s.line());
+        gauges();
+        DigestService d = digests;
+        if (d != null) {
+            d.announce();
+        }
+    }
+
     private void gauges() {
         if (path == null) {
             return;
@@ -133,6 +150,7 @@ public class NativeLibraries {
     /** This node's binding as the digest carries it: {@code native 0.3.26} or {@code java <reason>}. */
     static String wire(Blas.Status s) {
         return s.isNative() ? "native " + (s.version() == null ? "" : s.version()) : (s.degraded() ? "java-fallback " : "java ") + reasonTag(s);
+        // an administrator's choice reads "java chosen by admin: switched off by ..." (the cluster agreement counts it as Java)
     }
 
     /** When the server is ready: the digest carries this node's binding, so Admin shows every member's. */

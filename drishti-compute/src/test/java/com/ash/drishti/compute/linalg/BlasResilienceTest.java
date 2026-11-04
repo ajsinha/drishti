@@ -209,6 +209,45 @@ class BlasResilienceTest {
     }
 
     @Test
+    void anAdministratorSwitchesToJavaAndBackLiveAfterTheSelfTest() {
+        Blas.Settings st = new Blas.Settings(Blas.Mode.AUTO, null, 0, 0);
+        Spoiled s = new Spoiled(Spoiled.How.WRONG, 1_000_000);              // right until told otherwise
+        Blas.Binding before = Blas.swapForTest(Blas.select(st, () -> s), st);
+        try {
+            assertThat(Blas.get().isNative()).isTrue();
+            Blas.switchToJava("switched off by alice at 2026-11-04T00:10:00Z");
+            assertThat(Blas.get()).isSameAs(JavaBlas.INSTANCE);
+            assertThat(Blas.forClusterSums()).isSameAs(JavaBlas.INSTANCE);
+            Blas.Status chosen = Blas.status();
+            assertThat(chosen.summary()).isEqualTo("java (chosen by admin: switched off by alice at 2026-11-04T00:10:00Z)");
+            assertThat(chosen.degraded()).isFalse();                         // a notice, not the fallback warning
+            assertThat(chosen.banner()).isEmpty();
+            assertThat(Blas.switchToNative()).isNull();                      // the self-test passes: native again
+            assertThat(Blas.get().isNative()).isTrue();
+            assertThat(Blas.status().isNative()).isTrue();
+            Blas.switchToJava("switched off by bob");
+            s.calls.set(1_000_000);                                          // the library goes wrong meanwhile
+            assertThat(Blas.switchToNative()).startsWith("OpenBLAS failed its self-test against Java (dgemm");
+            assertThat(Blas.get()).isSameAs(JavaBlas.INSTANCE);              // refused in words: Java stays
+            assertThat(Blas.adminJava()).isEqualTo("switched off by bob");
+        } finally {
+            Blas.swapForTest(before, null);
+        }
+    }
+
+    @Test
+    void configuredJavaRefusesTheSwitchToNativeInWords() {
+        Blas.Settings st = new Blas.Settings(Blas.Mode.JAVA, null, 0, 0);
+        Blas.Binding before = Blas.swapForTest(Blas.select(st), st);
+        try {
+            assertThat(Blas.switchToNative()).contains("drishti.native.blas.mode is java");
+            assertThat(Blas.get()).isSameAs(JavaBlas.INSTANCE);
+        } finally {
+            Blas.swapForTest(before, null);
+        }
+    }
+
+    @Test
     void theRealOpenBlasPassesTheSelfTest() {
         LinearAlgebra nb = Blas.nativeOrNull();
         org.junit.jupiter.api.Assumptions.assumeTrue(nb != null, "the bundled OpenBLAS does not load here");

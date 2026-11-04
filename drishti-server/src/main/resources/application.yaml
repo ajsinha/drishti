@@ -63,6 +63,8 @@ spring:
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/memory-lake.yaml
       - classpath:engines/dataload.yaml
       - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/dataload.yaml
+      - classpath:engines/openblas.yaml
+      - optional:file:${DRISHTI_ENGINES_DIR:./config/engines}/openblas.yaml
       - optional:file:./application.local.yaml
       # packs an administrator loaded from Admin → Packs (drishti.packs.added); written by the server, not by hand
       - optional:file:${DRISHTI_PACKS_OVERLAY:${drishti.data.dir:./data}/packs/added.yaml}

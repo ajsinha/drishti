@@ -103,6 +103,23 @@ public final class GuardedBlas implements LinearAlgebra {
         return r;
     }
 
+    /**
+     * The self-test again, whatever the breaker says (an administrator switching back to OpenBLAS): null when it passes, and the breaker is
+     * closed again; else why not, and the breaker stays as it was.
+     */
+    public synchronized String retest() {
+        String r;
+        try {
+            r = Canary.selfTest(primary, fallback);
+        } catch (Throwable t) {
+            r = "the self-test threw " + t;
+        }
+        if (r == null) {
+            tripped = null;
+        }
+        return r;
+    }
+
     @Override
     public String name() {
         return tripped == null ? primary.name() : fallback.name();

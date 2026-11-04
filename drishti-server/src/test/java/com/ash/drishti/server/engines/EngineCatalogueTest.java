@@ -39,7 +39,7 @@ class EngineCatalogueTest {
     void theProductsCatalogueHoldsTheTwelveEnginesInOrderWithTheirLinks() {
         EngineCatalogue c = EngineCatalogue.load();
         assertThat(c.all()).extracting(EngineCatalogue.Entry::id).containsExactly("var", "exposure", "sensitivities", "frtb-sa", "simm", "sa-ccr",
-                "fva", "mr-cube", "ccr-cube", "memory-lake", "dataload", "pivot");
+                "fva", "mr-cube", "ccr-cube", "memory-lake", "dataload", "pivot", "openblas");
         assertThat(c.neededBy("pivot")).containsExactly("mr-cube");
         assertThat(c.get("pivot").orElseThrow().liveOn()).isTrue();
         assertThat(c.get("frtb-sa").orElseThrow().needs()).containsExactly("var", "sensitivities");

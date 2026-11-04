@@ -171,14 +171,24 @@ public final class Blas {
             this(la, status, null);
         }
 
-        /** The status now: a tripped breaker turns a native binding into Java with the reason. */
+        /**
+         * The status now: an administrator's choice of Java shows as {@code java (chosen by admin: ...)} (a notice, not degraded); a tripped
+         * breaker turns a native binding into Java with the reason (degraded).
+         */
         Status now() {
+            String a = adminJava;
+            if (a != null) {
+                return new Status(Mode.JAVA, "java", null, status.version(), 0, "chosen by admin: " + a);
+            }
             String t = guard == null ? null : guard.tripped();
             return t == null ? status : new Status(status.mode(), "java", null, status.version(), 0, "OpenBLAS switched off for this run: " + t);
         }
     }
 
     private static volatile Binding bound;
+    private static volatile Settings settings;
+    private static volatile String adminJava;
+    private static final List<Consumer<String>> TRIP_LISTENERS = new java.util.concurrent.CopyOnWriteArrayList<>();
     private static ScheduledExecutorService canaries;
 
     private Blas() {}
@@ -207,7 +217,59 @@ public final class Blas {
     /** The bound implementation (binding from the system properties if nothing bound yet). */
     public static LinearAlgebra get() {
         Binding b = bound;
-        return b != null ? b.la() : bindDefault().la();
+        LinearAlgebra la = b != null ? b.la() : bindDefault().la();
+        return adminJava != null ? JavaBlas.INSTANCE : la;
+    }
+
+    /**
+     * An administrator switches to the pure-Java path, live (Admin -> Engines, Linear algebra: OpenBLAS off; {@code drishti.py server blas
+     * java}): every call from now on runs on Java; the status says {@code java (chosen by admin: <reason>)}, a notice, not a fallback. The
+     * library stays loaded (a JNI library cannot be unloaded) and is simply not called.
+     */
+    public static synchronized void switchToJava(String reason) {
+        adminJava = reason == null || reason.isBlank() ? "switched off" : reason;
+    }
+
+    /**
+     * An administrator switches back to OpenBLAS, live: the self-test runs first against Java (on a binding that never loaded it, it is loaded
+     * now); null when OpenBLAS serves again, else why not, in words (the Java path stays).
+     */
+    public static synchronized String switchToNative() {
+        Settings st = settings != null ? settings : Settings.fromSystem();
+        if (st.mode() == Mode.JAVA) {
+            return "drishti.native.blas.mode is java in the configuration: set it to auto (and restart) to use OpenBLAS";
+        }
+        Binding b = bound;
+        if (b != null && b.guard() != null) {
+            String r = b.guard().retest();
+            if (r != null) {
+                return "OpenBLAS failed its self-test against Java (" + r + "); the pure-Java path stays";
+            }
+            adminJava = null;
+            return null;
+        }
+        Binding n = select(new Settings(Mode.AUTO, st.cacheDir(), st.maxCallBytes(), st.maxNativeBytes()));
+        if (n.guard() == null) {
+            return "OpenBLAS cannot be used here (" + n.status().reason() + "); the pure-Java path stays";
+        }
+        TRIP_LISTENERS.forEach(n.guard()::onTrip);
+        bound = n;
+        adminJava = null;
+        return null;
+    }
+
+    /** Replaces the binding and clears an administrator's choice; the binding before (tests only, restored after). */
+    static synchronized Binding swapForTest(Binding b, Settings st) {
+        Binding old = bound;
+        bound = b;
+        settings = st;
+        adminJava = null;
+        return old;
+    }
+
+    /** The administrator's reason for the Java path, or null. */
+    public static String adminJava() {
+        return adminJava;
     }
 
     /** What is bound now (binding from the system properties if nothing bound yet); a tripped breaker shows here at once. */
@@ -230,7 +292,10 @@ public final class Blas {
             return new Status(s.mode(), s.implementation(), s.library(), s.version(), s.threads(),
                     "already bound in mode " + s.mode().text() + " before " + settings.mode().text() + " was asked; restart to change it");
         }
-        Binding b = select(settings);
+        Blas.settings = settings;
+        Binding b = adminJava != null && settings.mode() == Mode.AUTO                // switched off by an administrator: not even loaded
+                ? new Binding(JavaBlas.INSTANCE, new Status(settings.mode(), "java", null, null, 0, "not loaded: switched off by an administrator"))
+                : select(settings);
         bound = b;
         return b.now();
     }
@@ -240,6 +305,7 @@ public final class Blas {
      * self-test): the server logs the banner, raises the alert and marks health DEGRADED. Nothing happens on a Java binding.
      */
     public static void onTrip(Consumer<String> listener) {
+        TRIP_LISTENERS.add(listener);
         Binding b = bound;
         if (b != null && b.guard() != null) {
             b.guard().onTrip(listener);
@@ -251,8 +317,7 @@ public final class Blas {
      * A failure trips the breaker. Once per process.
      */
     public static synchronized void scheduleCanary(Duration interval) {
-        Binding b = bound;
-        if (b == null || b.guard() == null || interval == null || interval.isZero() || interval.isNegative() || canaries != null) {
+        if (interval == null || interval.isZero() || interval.isNegative() || canaries != null) {
             return;
         }
         canaries = Executors.newSingleThreadScheduledExecutor(r -> {
@@ -261,7 +326,12 @@ public final class Blas {
             return t;
         });
         long ms = interval.toMillis();
-        canaries.scheduleWithFixedDelay(() -> b.guard().selfTest(), ms, ms, TimeUnit.MILLISECONDS);
+        canaries.scheduleWithFixedDelay(() -> {
+            Binding now = bound;                                          // the binding of the moment (an administrator may have switched)
+            if (now != null && now.guard() != null && adminJava == null) {
+                now.guard().selfTest();
+            }
+        }, ms, ms, TimeUnit.MILLISECONDS);
     }
 
     private static synchronized Binding bindDefault() {
