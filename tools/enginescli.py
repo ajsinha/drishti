@@ -66,6 +66,19 @@ def matrix(view: dict) -> list[str]:
     return out
 
 
+def health_lines(h: dict) -> list[str]:
+    """``drishti.py server health``'s lines after the summary: the linear algebra in use (engine openblas; its banner and each member's
+    path when they differ), then each source with its status."""
+    out = []
+    blas = (h.get("native") or {}).get("blas")
+    if blas:
+        out.append(blas.get("line", ""))
+        out += [f"  {line}" for line in blas.get("banner") or []]
+        out += [f"  member {node}: {w}" for node, w in (blas.get("members") or {}).items()]
+    out += [f"  {src['name']:<28}{src['status']:<10}{src.get('health', '')}" for src in h.get("sources", [])]
+    return out
+
+
 def register(server_sub, admin_sub, srv, ctx: dict) -> None:
     """Adds ``server engines`` and ``admin engines`` (the product owner's words, accepted as the same command)."""
     import argparse

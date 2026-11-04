@@ -150,7 +150,7 @@ public final class NativeBlas implements LinearAlgebra {
         String platform = family + "-" + a;
         boolean x64 = a.equals("amd64") || a.equals("x86_64");
         if ("32".equals(dataModel)) {
-            return "no bundled OpenBLAS for " + platform + "; 32-bit JVM (Drishti needs a 64-bit Java 21)";
+            return "no bundled OpenBLAS for " + platform + "; a 32-bit JVM (a 64-bit Java 21 is needed)";
         }
         if (!x64 || !(family.equals("linux") || family.equals("windows"))) {
             return "no bundled OpenBLAS for " + platform + " (bundled: linux-x86_64 and windows-x86_64)";
@@ -186,7 +186,7 @@ public final class NativeBlas implements LinearAlgebra {
         return loadOnce(cacheDir);
     }
 
-    private static synchronized NativeBlas loadOnce(Path cacheDir) {
+    private static synchronized NativeBlas loadOnce(Path cacheDir) {   // pinning-ok: once per JVM, at the first use, never per request
         if (loaded != null) {
             return loaded;
         }

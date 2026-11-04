@@ -144,7 +144,7 @@ class LinearAlgebraTest {
             System.setProperty("os.arch", "amd64");
             System.setProperty("sun.arch.data.model", "32");                // a 32-bit JVM on x86-64
             assertThat(Blas.select(new Blas.Settings(Blas.Mode.AUTO, null, 0, 0)).status().reason()).isEqualTo(
-                    "no bundled OpenBLAS for linux-amd64; 32-bit JVM (Drishti needs a 64-bit Java 21)");
+                    "no bundled OpenBLAS for linux-amd64; a 32-bit JVM (a 64-bit Java 21 is needed)");
             System.setProperty("sun.arch.data.model", "64");
             System.setProperty("os.name", "Windows 11");
             System.setProperty("os.arch", "aarch64");                      // Windows on ARM

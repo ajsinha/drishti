@@ -795,15 +795,7 @@ def cmd_server_health(a, extra) -> int:
         print(f"status {h.get('status')}  version {v.get('version')}  java {v.get('java')}  uptime {v.get('uptimeSeconds')}s")
         print(f"packs {s.get('packs')}  sources {s.get('sources')} (degraded {s.get('sourcesDegraded')}, down {s.get('sourcesDown')})  "
               f"packs with problems {s.get('packsWithProblems')}  failed to start {s.get('failedToStart')}")
-        blas = (h.get("native") or {}).get("blas")
-        if blas:
-            print(blas.get("line", ""))
-            for line in blas.get("banner") or []:
-                print(f"  {line}")
-            for node, w in (blas.get("members") or {}).items():
-                print(f"  member {node}: {w}")
-        for src in h.get("sources", []):
-            print(f"  {src['name']:<28}{src['status']:<10}{src.get('health', '')}")
+        sys.stdout.write("".join(x + "\n" for x in load_module("enginescli", "enginescli.py").health_lines(h)))   # linear algebra (engine openblas), then each source
     return 0 if h.get("status") == "OK" else 1
 
 
