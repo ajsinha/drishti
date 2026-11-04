@@ -40,11 +40,18 @@ final class StagedRows {
 
     /** The relation of {@code rows} (the columns at {@code cols}, as {@code fields}) staged as {@code table}, staged now if it is not. */
     TabularSource.Relation relation(DuckDbExecutor e, String table, List<PivotProvider.Field> fields, List<Integer> cols, List<List<Object>> rows) {
+        return relation(e, table, fields, cols, () -> rows);
+    }
+
+    /** As above, the rows asked for only when the table must be staged (what was staged under this name is still there otherwise). */
+    TabularSource.Relation relation(DuckDbExecutor e, String table, List<PivotProvider.Field> fields, List<Integer> cols,
+            java.util.function.Supplier<List<List<Object>>> read) {
         Object lock = locks.computeIfAbsent(table, k -> new Object());
         synchronized (lock) {
             if (!staged.containsKey(table) || !e.exists(table)) {
                 List<DuckDbExecutor.Column> dc = fields.stream().map(f -> new DuckDbExecutor.Column(f.name(), "number".equals(f.type()) ? "number"
                         : "text")).toList();
+                List<List<Object>> rows = read.get();
                 long n = e.stage(table, dc, sink -> {
                     for (List<Object> row : rows) {
                         Object[] vals = new Object[cols.size()];

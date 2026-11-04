@@ -41,7 +41,8 @@ import org.springframework.core.env.Environment;
 public class TablesConfiguration {
 
     @Bean
-    public TablesService tablesService(Environment env, DataViewService data, Entitlements entitlements, EditionCommands edition,
+    public TablesService tablesService(Environment env, DataViewService data, com.ash.drishti.engine.source.SourceRouter router,
+            Entitlements entitlements, EditionCommands edition,
             SecurityProperties security, ObjectProvider<UserService> users) {
         Path root = Path.of(env.getProperty("drishti.tables.root", "./config/tables")).toAbsolutePath().normalize();
         long maxRows = env.getProperty("drishti.tables.read-max-rows", Long.class, 2_000_000L);
@@ -60,6 +61,6 @@ public class TablesConfiguration {
                 return security.enabled();
             }
         };
-        return new TablesService(root, data, entitlements, edition, readers, maxRows, warn, java.time.Clock.systemUTC());
+        return new TablesService(root, data, router, entitlements, edition, readers, maxRows, warn, java.time.Clock.systemUTC());
     }
 }

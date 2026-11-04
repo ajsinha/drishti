@@ -147,6 +147,28 @@ class PivotTablesApiTest {
         assertThat(reads.sourceReads()).isEqualTo(1);
     }
 
+    @Autowired TableSources tableSources;
+
+    @Test
+    void aViewOpenedAgainOnUnchangedDataReadsNothingWhenTheSourceHasADataVersion() throws Exception {
+        Principal p = new Principal("u-trades-only", List.of("trades-only"));
+        String version = tables.version(p, "trading.trade_summary", null);
+        Map<String, Object> view = Map.of("source", "table:trading.trade_summary", "rows", List.of("PRODUCT"),
+                "values", List.of(Map.of("measure", "count()", "as", "N")));
+        JsonNode first = ok("trades-only", post("/api/v1/pivot/query"), view);
+        long before = tableSources.hits();
+        JsonNode again = ok("trades-only", post("/api/v1/pivot/query"), view);
+        assertThat(again.path("cells")).isEqualTo(first.path("cells"));
+        // a query opens its source more than once (catalogue, plan, answer): with a data version every open of the second query is kept,
+        // without one (a source that cannot say) every open reads and nothing is kept
+        if (version == null) {
+            assertThat(tableSources.hits()).isEqualTo(before);
+        } else {
+            assertThat(tableSources.hits() - before).isPositive();
+        }
+        assertThat(tables.version(p, "trading.no_such_table", null)).isNull();
+    }
+
     @Test
     void aTableNamedLikeAStoredTableIsNotServed() throws Exception {
         assertThat(tables.storedNames()).contains("trade");

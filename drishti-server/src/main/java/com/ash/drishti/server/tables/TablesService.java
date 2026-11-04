@@ -70,6 +70,7 @@ public final class TablesService {
 
     private final Path root;
     private final DataViewService data;
+    private final com.ash.drishti.engine.source.SourceRouter router;
     private final Entitlements entitlements;
     private final EditionCommands edition;
     private final Readers readers;
@@ -81,10 +82,11 @@ public final class TablesService {
     /** The catalogue as last read, with the stamp of the files it was read from and the names refused. */
     private record Loaded(String stamp, Catalogue catalogue, List<Problem> problems, Set<String> refused) {}
 
-    public TablesService(Path root, DataViewService data, Entitlements entitlements, EditionCommands edition, Readers readers, long maxRows,
-            long scanWarnRows, Clock clock) {
+    public TablesService(Path root, DataViewService data, com.ash.drishti.engine.source.SourceRouter router, Entitlements entitlements,
+            EditionCommands edition, Readers readers, long maxRows, long scanWarnRows, Clock clock) {
         this.root = root;
         this.data = data;
+        this.router = router;
         this.entitlements = entitlements;
         this.edition = edition;
         this.readers = readers;
@@ -142,6 +144,40 @@ public final class TablesService {
         Loaded l = current();
         TableReads r = new TableReads(l.catalogue(), new KindRows(p), null, maxRows, clock);
         return readers.enforce() ? r : r.rulesOff();
+    }
+
+    /**
+     * The version of what a read of {@code table} for {@code p} on {@code date} would give, without reading it: the catalogue's files, the
+     * table, the business date, the source kind's data version, and who reads (user, roles, attributes, raw, rules on or off). Null when it
+     * cannot be known without reading (a source that keeps no data version, a source that is not a kind): the caller then reads. Two reads
+     * with one version give the same rows, so a consumer may keep what it staged (the pivot's per-view cache).
+     */
+    public String version(Principal p, String table, String date) {
+        Loaded l = current();
+        String name = l.catalogue().renamed(table) != null ? l.catalogue().renamed(table) : table;
+        TableDef t = l.catalogue().table(name).orElse(null);
+        String kind = t == null || l.refused().contains(name) || router == null ? null : rootKind(l.catalogue(), t);
+        if (kind == null) {
+            return null;
+        }
+        LocalDate day;
+        try {
+            day = reads(p).day(name, date);
+        } catch (ModelAnswers.Refused e) {
+            return null;
+        }
+        java.util.Optional<String> dv;
+        try {
+            dv = router.dataVersion(kind, data.dataset(kind).dated() ? com.ash.drishti.api.AsOf.of(day) : com.ash.drishti.api.AsOf.LATEST);
+        } catch (RuntimeException e) {
+            return null;
+        }
+        if (dv.isEmpty()) {
+            return null;
+        }
+        ModelAnswers.Reader who = readers.reader(p);
+        return l.stamp() + "|" + name + "|" + day + "|" + dv.get() + "|" + p.user() + "|" + new java.util.TreeSet<>(who.roles()) + "|"
+                + who.attributes() + "|" + who.raw() + "|" + readers.enforce();
     }
 
     /** Reads {@code table} for {@code p} through {@code reads}; the layer's refusals become the server's codes. */

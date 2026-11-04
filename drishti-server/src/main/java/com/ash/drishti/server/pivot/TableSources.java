@@ -43,10 +43,21 @@ public final class TableSources implements TabularSource.Resolver {
 
     private final TablesService tables;
     private final StagedRows staged;
+    /** What an open found, by the read's version ({@link TablesService#version}): a view opened again on unchanged data reads nothing. */
+    private final Map<String, Opened> opened;
 
     public TableSources(TablesService tables, int keep) {
         this.tables = tables;
         this.staged = new StagedRows(keep);
+        int most = Math.max(16, keep * 4);
+        this.opened = java.util.Collections.synchronizedMap(new LinkedHashMap<>(16, 0.75f, true) {
+            private static final long serialVersionUID = 1L;
+
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, Opened> eldest) {
+                return size() > most;
+            }
+        });
     }
 
     @Override
@@ -62,10 +73,23 @@ public final class TableSources implements TabularSource.Resolver {
         return source != null && source.startsWith(PREFIX);
     }
 
+    /** How many opens were answered from the per-view cache without reading the source (the cache's measure). */
+    private final java.util.concurrent.atomic.AtomicLong hits = new java.util.concurrent.atomic.AtomicLong();
+
+    long hits() {
+        return hits.get();
+    }
+
     @Override
     public TabularSource open(Viewer v, String source, String date) {
         Principal p = KindSources.principal(v);
         String name = source.substring(PREFIX.length());
+        String known = tables.version(p, name, date);
+        Opened o = known == null ? null : opened.get(known);
+        if (o != null) {
+            hits.incrementAndGet();
+            return new Table(o, () -> tables.read(tables.reads(p), p, name, date, null, null).rows());
+        }
         TableReads reads = tables.reads(p);
         TableReads.Read r = tables.read(reads, p, name, date, null, null);
         List<PivotProvider.Field> fields = new ArrayList<>();
@@ -81,11 +105,18 @@ public final class TableSources implements TabularSource.Resolver {
             fields.add(new PivotProvider.Field(c, type(r.types().get(i)), c.toLowerCase(Locale.ROOT).replace('_', ' '), about, unit(def)));
             cols.add(i);
         }
-        String version = r.date() + "|" + r.rows().size() + "|" + Integer.toHexString(r.rows().hashCode()) + "|" + String.join(",", r.masked());
+        String version = known != null ? known
+                : r.date() + "|" + r.rows().size() + "|" + Integer.toHexString(r.rows().hashCode()) + "|" + String.join(",", r.masked());
         String table = "vt_" + Integer.toHexString((source + "|" + version).hashCode()).replace('-', 'n');
         List<String> dates = reads.dates(name).stream().map(Object::toString).toList();
         Object title = r.table().about().get("title");
-        return new Table(source, title == null ? name : String.valueOf(title), fields, cols, r, version, table, dates);
+        o = new Opened(source, title == null ? name : String.valueOf(title), List.copyOf(fields), List.copyOf(cols), r.table(), r.date().toString(), dates,
+                r.masked().size(), r.rows().size(), r.problems().stream().map(com.ash.drishti.tables.Problem::line).toList(), version, table);
+        if (known != null) {
+            opened.put(known, o);
+        }
+        List<List<Object>> rows = r.rows();
+        return new Table(o, () -> rows);
     }
 
     /** The pivot's type of a table's column type. */
@@ -105,90 +136,81 @@ public final class TableSources implements TabularSource.Resolver {
         return u.equals("pct") || u.equals("percent") ? "pct" : u.length() == 3 || u.equals("money") ? "money" : "";
     }
 
-    /** One virtual table opened for one person on one date. */
-    private final class Table implements TabularSource {
-        final String id;
-        final String title;
-        final List<PivotProvider.Field> fields;
-        final List<Integer> cols;
-        final TableReads.Read read;
-        final String version;
-        final String table;
-        final List<String> dates;
+    /** What one open of a table found, kept by version: everything but the rows, which are staged. */
+    private record Opened(String id, String title, List<PivotProvider.Field> fields, List<Integer> cols, com.ash.drishti.tables.def.TableDef def,
+            String date, List<String> dates, int masked, long rows, List<String> problems, String version, String table) {}
 
-        Table(String id, String title, List<PivotProvider.Field> fields, List<Integer> cols, TableReads.Read read, String version, String table,
-                List<String> dates) {
-            this.id = id;
-            this.title = title;
-            this.fields = fields;
-            this.cols = cols;
-            this.read = read;
-            this.version = version;
-            this.table = table;
-            this.dates = dates;
+    /** One virtual table opened for one person on one date; its rows read only when they must be staged. */
+    private final class Table implements TabularSource {
+        final Opened o;
+        final java.util.function.Supplier<List<List<Object>>> rows;
+
+        Table(Opened o, java.util.function.Supplier<List<List<Object>>> rows) {
+            this.o = o;
+            this.rows = rows;
         }
 
         @Override
         public String id() {
-            return id;
+            return o.id();
         }
 
         @Override
         public String title() {
-            return title;
+            return o.title();
         }
 
         @Override
         public List<PivotProvider.Field> fields() {
-            return fields;
+            return o.fields();
         }
 
         @Override
         public int masked() {
-            return read.masked().size();
+            return o.masked();
         }
 
         @Override
         public String date() {
-            return read.date().toString();
+            return o.date();
         }
 
         @Override
         public List<String> dates() {
-            return dates;
+            return o.dates();
         }
 
         @Override
         public String version() {
-            return version;
+            return o.version();
         }
 
         @Override
         public long rows() {
-            return read.rows().size();
+            return o.rows();
         }
 
         @Override
         public long bytes() {
-            return (long) read.rows().size() * Math.max(1, fields.size()) * 12L;
+            return o.rows() * Math.max(1, o.fields().size()) * 12L;
         }
 
         @Override
         public Map<String, Object> notes() {
             Map<String, Object> m = new LinkedHashMap<>();
-            m.put("route", "the virtual table " + read.table().name() + " read from its source as you may see it, on " + read.date()
-                    + ", staged in memory");
-            m.put("grain", read.table().grain() == null ? "one row per entity" : "one row per element of " + read.table().grain());
-            m.put("masks", read.masked().isEmpty() ? "none" : read.masked().size() + " column(s) masked for you: not read, not usable");
-            if (!read.problems().isEmpty()) {
-                m.put("problems", read.problems().stream().map(com.ash.drishti.tables.Problem::line).toList());
+            m.put("route", "the virtual table " + o.def().name() + " read from its source as you may see it, on " + o.date()
+                    + ", staged in memory (kept while its source's data version is unchanged)");
+            m.put("grain", o.def().grain() == null ? "one row per entity" : "one row per element of " + o.def().grain());
+            m.put("masks", o.masked() == 0 ? "none" : o.masked() + " column(s) masked for you: not read, not usable");
+            if (!o.problems().isEmpty()) {
+                m.put("problems", o.problems());
             }
             return m;
         }
 
         @Override
         public Relation relation(DuckDbExecutor e) {
-            return staged.relation(e, table, fields, cols, read.rows());
+            return staged.relation(e, o.table(), o.fields(), o.cols(), rows);
         }
     }
 

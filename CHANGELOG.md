@@ -332,6 +332,10 @@
 - **The pivot reads virtual tables.** Source `table:<domain>.<name>` (PIVOT_GUIDE.md section 3): listed with the kinds a person may open,
   its columns as fields (masked ones left out), staged in the pivot engine's executor. `StagedRows` is the one staging of rows in hand
   (moved out of `PanelSources`, which uses it too).
+- **The pivot keeps what it staged.** `TablesService.version` names a read without making it (the definitions, the table, the date, the
+  source kind's data version, who reads); `TableSources` keeps each open's fields and staging by that version, so a view opened again on
+  unchanged data reads nothing, and reads its rows only if the staged table was dropped (`StagedRows` takes the rows lazily). A source
+  without a data version is read on every open.
 - **Screens: decided (VIRTUAL_TABLES.md section 11).** Of the table editor's mock-ups A, B and C (`docs/lenses/mockups/virtual-tables/`),
   the product owner chose B and C with a switch (`BC.html`): Visual (B: the document, the columns, the rows) by default, YAML (C: the
   definition as text with checks) for experts, both editing the one draft; unsaved text that does not parse cannot switch back until

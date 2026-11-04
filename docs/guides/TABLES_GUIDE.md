@@ -217,8 +217,9 @@ items.
 | a table over a table | reads its base's source with the base's grain and filter, its own filter added, the base's columns and its own |
 | a condition | a reader's condition (a Sutra's `where:`, Flight's `filter`) is Rachana over the table's columns, bare or as `@.X`; a masked column cannot filter (`DRS-9615`) |
 | size | a read of more rows than `drishti.tables.read-max-rows` (2,000,000) is refused in words, never cut short |
+| reading again | a read's version is the definitions, the table, the date, the source kind's data version and who reads; a consumer keeps what it staged while the version holds (the pivot does), and a source without a data version is read every time |
 | sources read here | a kind and a lake table; a SQL, Python or model source is computed by its runner |
-| models across connectors | a model may relate tables from different connectors; the engine joins them, and the scan estimate warns when a side is large and unfiltered |
+| models across connectors | a model may relate tables from different connectors; the engine joins them, and the scan estimate warns when a side is larger than `drishti.tables.scan-warn-rows` (1,000,000, one setting for the installation) and unfiltered |
 
 ## 8. Checks, preview and lineage
 
