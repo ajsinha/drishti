@@ -161,6 +161,14 @@
   `ownerText`, and the run's files and tables under `running`), from the run's plan `inprocess/<run>/load-plan.json` that each cycle now
   writes (kept in `outbox/<day>/<run>/loads/`); new `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/`.
   The status reads the ledger's newest lines without opening (indexing) the whole ledger on every call.
+- **Each console app reads its own server's engines (fixes the Drill A flake of `test_dataload_inbox_browser.py`).** What runs where
+  (`core/engines.py`) was a module global that every console app of a process wrote: in the browser lane the session's live console,
+  whose server runs the data inbox off as shipped, re-learned it every 5 s through its backend watch and hid Admin → Data loads → Inbox
+  in another file's stand-in console mid-file (7 of 8 tests failed after a file on the live console; alone they passed). Now each app's
+  editions hold their own `engines.State`, a pure ASGI middleware (`AppEngines`, outermost) makes every request, websocket and the
+  lifespan's tasks read their own app's, and code outside a request reads the newest app's (one app per process in production: as
+  before). `tests/test_engines_per_app.py` keeps it so; reproduced and passing in that order (`test_workbench_metric_browser.py` then the
+  inbox file) and alone.
 
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 

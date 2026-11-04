@@ -250,6 +250,25 @@ def worker_csp(host: str) -> str:
     return WORKER_CSP.format(connect=f"{host}/static/ {host}{PYODIDE}")
 
 
+class AppEngines:
+    """Each request, websocket and the lifespan (and the tasks it starts: the backend watch) of this app read this app's engines
+    (core/engines.py State), never another app's of the same process: a module global here let a real stack's console, polling its
+    server every few seconds, hide an engine's pages in a stand-in console of another browser test file in the same worker. Outermost."""
+
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        from core import engines
+
+        editions = getattr(getattr(scope.get("app"), "state", None), "editions", None)
+        token = engines.use(getattr(editions, "engines", None))
+        try:
+            await self.app(scope, receive, send)
+        finally:
+            engines.reset_use(token)
+
+
 class SecurityHeaders(BaseHTTPMiddleware):
     async def dispatch(self, request, call_next):
         response = await call_next(request)
@@ -549,6 +568,7 @@ def create_app(settings: Settings) -> FastAPI:
     app.add_middleware(AuthGate)
     app.add_middleware(SameOrigin, allowed=settings.get("auth.allowed_origins") or ())    # before any session work
     app.add_middleware(SecurityHeaders)
+    app.add_middleware(AppEngines)                       # outermost: every request reads its own app's engines
     app.add_exception_handler(BodyError, problem)
     app.add_exception_handler(ClientDisconnect, gone)
     from core.notfound import not_found
