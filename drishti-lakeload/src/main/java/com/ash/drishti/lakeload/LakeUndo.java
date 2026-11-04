@@ -109,6 +109,40 @@ public final class LakeUndo {
         }
     }
 
+    /**
+     * Undoes load {@code id} in every table of the lake at {@code root}, Delta here and Iceberg by the Iceberg maintenance when it is on the
+     * class path (the server's): a line per table and date ({@code table}, {@code format}, {@code date}, {@code removed}, {@code restored},
+     * {@code replaced}). {@code only}: these {@code domain/table}s (Delta); empty: every one.
+     */
+    public static List<Map<String, Object>> undoAll(String root, String id, List<String> only, boolean dryRun) throws Exception {
+        List<Map<String, Object>> out = new ArrayList<>();
+        for (Done d : undo(root, id, only, dryRun)) {
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("table", d.table());
+            m.put("format", "delta");
+            m.put("date", d.date());
+            m.put("removed", d.removed());
+            m.put("restored", d.restored());
+            m.put("replaced", d.replaced());
+            out.add(m);
+        }
+        Class<?> ice;
+        try {
+            ice = Class.forName("com.ash.drishti.plugin.iceberg.IcebergMaintenance");
+        } catch (ClassNotFoundException e) {
+            return out;                                         // no Iceberg here: Delta tables only
+        }
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> lines = (List<Map<String, Object>>) ice.getMethod("undoLake", String.class, String.class, boolean.class, Path.class)
+                .invoke(null, root, id, dryRun, Path.of(System.getProperty("java.io.tmpdir")));
+        for (Map<String, Object> u : lines) {
+            Map<String, Object> m = new LinkedHashMap<>(u);
+            m.put("format", "iceberg");
+            out.add(m);
+        }
+        return out;
+    }
+
     /** Undoes load {@code id} in the Delta tables under {@code root} ({@code only}: these {@code domain/table}s; empty: every one). */
     public static List<Done> undo(String root, String id, List<String> only, boolean dryRun) throws IOException {
         List<Done> out = new ArrayList<>();

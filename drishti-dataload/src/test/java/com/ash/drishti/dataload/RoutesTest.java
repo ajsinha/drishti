@@ -50,7 +50,7 @@ class RoutesTest {
         assertThat(r.format()).isEqualTo("delta");
         assertThat(r.packDir()).isEqualTo(f.pack);
         assertThat(r.by()).isEqualTo("the rule trades-*");
-        assertThat(r.mode()).isEqualTo("replace");
+        assertThat(r.mode()).as("the inbox's default-mode: append").isEqualTo("append");
         Routes.Route today = routes(f).route("trades-endur.jsonl.gz", ReadyNote.EMPTY);
         assertThat(today.dateBy()).isEqualTo(FileDates.businessToday() + " (today: no date in the name)");
         assertThat(today.group()).as("dated and undated names go to one load: the loader dates each file").isEqualTo(r.group());
@@ -67,7 +67,7 @@ class RoutesTest {
         assertThat(List.of(String.valueOf(r.asOf()), r.dateBy())).containsExactly("2026-10-29", "2026-10-29 from the .ready file");
         Path load = tmp.resolve("load.yaml");
         LoaderProcess.writeConfig(load, r, List.of(tmp.resolve("x.jsonl")), tmp.resolve("s.json"), tmp.resolve("r.jsonl"), 0, tmp.resolve("spill"));
-        assertThat(Files.readString(load)).containsPattern("as-of: \"?2026-10-29\"?").containsPattern("mode: \"?replace-date\"?");
+        assertThat(Files.readString(load)).containsPattern("as-of: \"?2026-10-29\"?").containsPattern("mode: \"?append\"?");
         assertThatThrownBy(() -> Routes.read(writeRule(f, "date-from: field"), "lake", f.packs())).isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("auto (the .ready file's business-date");
     }
@@ -93,6 +93,23 @@ class RoutesTest {
         assertThat(routes(f).route("trades-1.jsonl", note).by()).isEqualTo("the .ready file over the rule trades-*");
         assertThatThrownBy(() -> routes(f).route("feed.tar.gz", ReadyNote.of(null, null, null, null, LocalDate.parse("2026-11-01"))))
                 .hasMessageContaining("a .tar archive names its own tables and dates");
+    }
+
+    @Test
+    void aNewTableIsMadeOnlyWhenAskedForAndAllowed() throws Exception {
+        Fixture f = new Fixture(tmp);
+        ReadyNote asked = new ReadyNote("demo-pack", null, null, null, null, null, null, null, true, "DEAL_ID", java.util.Map.of(), false);
+        assertThatThrownBy(() -> routes(f).route("deals.2026-11-02.jsonl", asked)).hasMessageContaining("deals: no pack, kind or table")
+                .hasMessageContaining("does not allow new tables");
+        Routes.Route r = routes(f).with("append", true).route("deals.2026-11-02.jsonl", asked);
+        assertThat(List.of(r.kind(), r.table(), r.newDomain(), r.key(), r.dateBy())).containsExactly("deals", "deals", "demo", "DEAL_ID",
+                "2026-11-02 from the name");
+        assertThatThrownBy(() -> routes(f).with("append", true).route("deals.jsonl",
+                new ReadyNote(null, null, null, null, null, null, null, null, true, null, java.util.Map.of(), false)))
+                .hasMessageContaining("a new table needs its pack");
+        Path load = tmp.resolve("new.yaml");
+        LoaderProcess.writeConfig(load, r, List.of(tmp.resolve("x.jsonl")), tmp.resolve("s.json"), tmp.resolve("r.jsonl"), 0, tmp.resolve("spill"));
+        assertThat(Files.readString(load)).doesNotContain("pack:").containsPattern("domain: \"?demo\"?").containsPattern("table: \"?deals\"?");
     }
 
     @Test

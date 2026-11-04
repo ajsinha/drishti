@@ -17,8 +17,10 @@ package com.ash.drishti.dataload;
 
 import com.ash.drishti.lakeload.FileDates;
 import com.ash.drishti.lakeload.LakeLoad;
+import com.ash.drishti.lakeload.LakeUndo;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -76,7 +78,17 @@ public final class Cycle {
     }
 
     /** One file claimed for this run. */
-    private record Claimed(String name, Path file, Path marker, String sha, long size, ReadyNote note, Routes.Route route) {}
+    private record Claimed(String name, Path file, Path marker, String sha, long size, ReadyNote note, Routes.Route route, List<Routes.Route> tables) {
+
+        Claimed(String name, Path file, Path marker, String sha, long size, ReadyNote note, Routes.Route route) {
+            this(name, file, marker, sha, size, note, route, null);
+        }
+
+        /** This file under another route (one table folder of a tar). */
+        Claimed as(Routes.Route r) {
+            return new Claimed(name, file, marker, sha, size, note, r, null);
+        }
+    }
 
     private final DataLoadSettings settings;
     private final Path root;
@@ -171,7 +183,7 @@ public final class Cycle {
             files.addAll(recovery.run());
             Routes routes;
             try {
-                routes = Routes.read(Path.of(settings.rulesFile()), settings.lake(), packs);
+                routes = Routes.read(Path.of(settings.rulesFile()), settings.lake(), packs).with(settings.defaultMode(), settings.newTables());
             } catch (IOException | IllegalArgumentException e) {
                 return new Report(run, trigger, t0, clock.instant(), "skipped", "the routing rules cannot be read: " + e.getMessage(), files, notices, 0);
             }
@@ -189,10 +201,13 @@ public final class Cycle {
                 claimed.add(claims.claim(r, run));
             }
             Map<String, List<Claimed>> groups = new LinkedHashMap<>();
+            List<Claimed> tars = new ArrayList<>();
             for (int i = 0; i < claimed.size(); i++) {
                 Inbox.Ready r = found.ready().get(i);
                 Claimed cl = examine(run, r.name(), claimed.get(i)[0], claimed.get(i)[1], r.size(), ledger, outbox, routes, files);
-                if (cl != null) {
+                if (cl != null && cl.tables() != null) {
+                    tars.add(cl);
+                } else if (cl != null) {
                     groups.computeIfAbsent(cl.route().group(), k -> new ArrayList<>()).add(cl);
                 }
             }
@@ -211,6 +226,13 @@ public final class Cycle {
                 plan.loading(t);
                 load(run, g, ledger, outbox, files, notices);
                 plan.ended(t, files);
+            }
+            for (Claimed tar : tars) {
+                if (lock.held()) {
+                    loadTar(run, tar, ledger, outbox, files);
+                } else {
+                    giveBack(run, tar, Ledger.RETURNED, "the folder lock was lost (another runner took it): back in the inbox", ledger, outbox, files);
+                }
             }
             sent = recovery.finish(run);
             outbox.readyAll(run, found.readyAll());
@@ -255,6 +277,18 @@ public final class Cycle {
             }
             if (note.sha256() != null && !note.sha256().equals(sha)) {
                 throw new Routes.Unrouted("the SHA-256 in its .ready file is not the file's (" + sha + "): it may have been cut short or changed");
+            }
+            if (FileDates.isTar(name)) {
+                List<String> tables = new ArrayList<>(LakeLoad.tarTables(file.toString()).keySet());
+                if (tables.isEmpty()) {                          // an empty archive: ignored, nothing touched (DATA_LOAD_RULES.md section 4.3)
+                    String why = "empty: ignored (no file in <table>/<YYYY-MM-DD>/); nothing was written";
+                    ledger.write(run, name, Ledger.IGNORED, JSON.createObjectNode().put("sha256", sha).put("size", size).put("reason", why));
+                    outbox.done(run, file, marker, report(name, run, Ledger.IGNORED).put("sha256", sha).put("reason", why));
+                    files.add(new FileOutcome(name, Ledger.IGNORED, why, null, null, Map.of(), 0, 0));
+                    return null;
+                }
+                List<Routes.Route> each = routes.routeTar(name, tables, note);
+                return new Claimed(name, file, marker, sha, size, note, each.get(0), each);
             }
             route = routes.route(name, note);
         } catch (Routes.Unrouted | IllegalArgumentException e) {
@@ -344,6 +378,80 @@ public final class Cycle {
                     l.summary() == null ? 0 : l.summary().path("rejected").asLong(), dateNote(l.summary(), c.name())));
         }
         faults.at("moved");
+    }
+
+    /**
+     * A tar archive (DATA_LOAD_RULES.md sections 3.1 and 4): each table folder loaded in turn (table order), every load with one run id so
+     * the archive's rows share one load id; if a table's load fails, the tables already committed are undone (all or nothing) and the
+     * archive goes to {@code failed/} saying what failed and what was rolled back; else one data-load signal per table and date.
+     */
+    private void loadTar(String run, Claimed tar, Ledger ledger, Outbox outbox, List<FileOutcome> files) throws IOException {
+        String runId = run + "-" + Math.abs(tar.sha().hashCode() % 100000);
+        String loadId = runId + ".1";
+        List<String> committed = new ArrayList<>();
+        ArrayNode tables = JSON.createArrayNode();
+        List<Signal.Landed> landed = new ArrayList<>();
+        long rows = 0;
+        long rejected = 0;
+        Map<String, Long> versions = new LinkedHashMap<>();
+        Loaded last = null;
+        for (Routes.Route r : tar.tables()) {
+            Loaded l = runLoader(run, List.of(tar.as(r)), List.of("--run-id", runId), "tar-" + r.dataset());
+            last = l;
+            int code = l.result().code();
+            boolean wrote = l.summary() != null && l.summary().path("commit").path("dates").size() > 0;
+            if (wrote) {
+                committed.add(l.summary().path("table").asText());
+            }
+            if (code == LakeLoad.FAILED || code == LakeLoad.LOCKED || l.result().timedOut()) {
+                String undone = rollback(loadId, committed);
+                fail(run, tar.name(), tar.file(), tar.marker(), tar.sha(), tar.size(), "table " + r.dataset() + " (" + r.pack() + "/" + r.kind() + "): "
+                        + reason(l) + "; " + undone, l.summary(), ledger, outbox, files);
+                return;
+            }
+            if (wrote) {
+                landed.addAll(Recovery.landed(l.summary(), r.pack(), r.kind(), l.batch(), List.of(tar.name())));
+                versions.putAll(versions(l.summary()));
+            }
+            rows += l.summary() == null ? 0 : l.summary().path("accepted").asLong();
+            rejected += l.summary() == null ? 0 : l.summary().path("rejected").asLong();
+            ObjectNode t = tables.addObject().put("table", r.dataset()).put("pack", r.pack()).put("kind", r.kind());
+            if (l.summary() != null) {
+                t.set("load", l.summary());
+            }
+        }
+        ObjectNode routeNode = routeNode(tar.route(), "inbox:" + run).put("loadId", loadId);
+        ObjectNode fields = loadedFields(last == null ? null : last.summary(), routeNode, tar.sha(), tar.size());
+        fields.set("tables", tables);
+        ledger.write(run, tar.name(), Ledger.LOADED, fields);
+        if (last != null) {
+            Recovery.addPending(last.dir(), landed);
+        }
+        ObjectNode rep = report(tar.name(), run, Ledger.LOADED).put("sha256", tar.sha()).put("size", tar.size()).put("loadId", loadId);
+        rep.set("tables", tables);
+        rep.put("dateBy", "each table and date from the archive's folders");
+        outbox.done(run, tar.file(), tar.marker(), rep);
+        files.add(new FileOutcome(tar.name(), Ledger.LOADED, rejected > 0 ? "loaded with rejects" : null, tar.route().pack(), tar.route().kind(),
+                versions, rows, rejected));
+    }
+
+    /** Undoes load {@code loadId} in the tables an archive had committed; the words for the failure's reason. */
+    private String rollback(String loadId, List<String> committed) {
+        if (committed.isEmpty()) {
+            return "nothing had been committed";
+        }
+        try {
+            List<String> names = committed.stream().map(t -> {
+                String p = t.replace('\\', '/');
+                String[] parts = p.split("/");
+                return parts.length >= 2 ? parts[parts.length - 2] + "/" + parts[parts.length - 1] : p;
+            }).toList();
+            LakeUndo.undoAll(settings.lake(), loadId, names, false);
+            return "rolled back: " + String.join(", ", names) + " (load " + loadId + " undone)";
+        } catch (Exception e) {
+            LOG.warn("data inbox: the rollback of load {} failed: {}", loadId, e.toString());
+            return "the rollback of " + String.join(", ", committed) + " failed (" + e.getMessage() + "): undo load " + loadId + " by hand";
+        }
     }
 
     /** One loader run: its load file, its route beside it (for a restart), its summary when it wrote one. */

@@ -23,6 +23,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * The parallel lake loader's command line (docs/guides/TOOLS.md section 4.13):
@@ -60,6 +61,26 @@ public final class LakeLoad {
     }
 
     /** Runs a load as the command line would; returns the exit code. */
+    /** The lake domain of a pack's tables (its first Delta or Iceberg connector's {@code domain}, else the pack's name). */
+    public static String packDomain(java.nio.file.Path pack) throws java.io.IOException {
+        return PackLayout.domainOf(pack);
+    }
+
+    /**
+     * The tables and dates a tar feed holds ({@code <table>/<YYYY-MM-DD>/}; DATA_LOAD_RULES.md section 3.1), checked as the loader checks
+     * it (every problem refuses it, an {@link java.io.IOException} saying them all); a local file.
+     */
+    public static Map<String, java.util.SortedSet<java.time.LocalDate>> tarTables(String path) throws java.io.IOException {
+        Map<String, java.util.SortedSet<java.time.LocalDate>> out = new java.util.TreeMap<>();
+        try (com.ash.drishti.iceberg.io.FileAccess io = new com.ash.drishti.iceberg.io.FileAccess(com.ash.drishti.lakeio.S3Settings.from(Map.of()),
+                com.ash.drishti.iceberg.io.Relocation.none(), null)) {
+            Archives.Plan p = Archives.plan(io, path, java.nio.file.Files.size(java.nio.file.Path.of(path)), null,
+                    Archives.Limits.defaults(System::getenv));
+            p.datasets().forEach((table, members) -> members.forEach(m -> out.computeIfAbsent(table, k -> new java.util.TreeSet<>()).add(m.date())));
+        }
+        return out;
+    }
+
     /** The run of this thread's {@link #run}: one id for every dataset it loads, so an archive's commits share their load ids. */
     private static final ThreadLocal<String> RUN = new ThreadLocal<>();
     private static final java.util.concurrent.atomic.AtomicInteger RUNS = new java.util.concurrent.atomic.AtomicInteger();
@@ -80,7 +101,13 @@ public final class LakeLoad {
 
     public static int run(String[] args, PrintStream out) {
         RUN.set(null);
-        RUN.set(runId());
+        String given = null;
+        for (int i = 0; i + 1 < args.length; i++) {
+            if (args[i].equals("--run-id")) {
+                given = args[i + 1];                    // one id for every table of an archive the inbox loads table by table
+            }
+        }
+        RUN.set(given != null ? given : runId());
         try {
             return runOnce(args, out);
         } finally {
@@ -115,6 +142,7 @@ public final class LakeLoad {
                     case "--key" -> sets.add("source.id=" + next(args, ++i, a));
                     case "--date-from" -> sets.add("source.date-from=" + next(args, ++i, a));
                     case "--plan" -> sets.add("report.dry-run=true");
+                    case "--run-id" -> i++;                     // read by run(): the run's id (its rows' load ids are <run-id>.<file>)
                     case "--json" -> json = true;
                     case "-q", "--quiet" -> quiet = true;
                     case "-h", "--help" -> {

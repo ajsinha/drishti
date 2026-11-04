@@ -16,6 +16,7 @@
 package com.ash.drishti.dataload;
 
 import com.ash.drishti.lakeload.FileDates;
+import com.ash.drishti.lakeload.LakeLoad;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
@@ -62,12 +63,23 @@ public final class Routes {
      * date comes from in words.
      */
     public record Route(String pack, String kind, String connector, String table, String dateField, LocalDate asOf, String key, String lake,
-            String format, String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode) {
+            String format, String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode, String dataset, String newDomain) {
+
+        Route(String pack, String kind, String connector, String table, String dateField, LocalDate asOf, String key, String lake, String format,
+                String by, Path packDir, String dateFrom, LocalDate nameDate, String dateBy, String mode, String dataset) {
+            this(pack, kind, connector, table, dateField, asOf, key, lake, format, by, packDir, dateFrom, nameDate, dateBy, mode, dataset, null);
+        }
 
         /** The files of one table and one way of reading them go to one load. */
         public String group() {
             return String.join("|", pack, kind, String.valueOf(connector), String.valueOf(table), String.valueOf(dateField), String.valueOf(asOf),
-                    String.valueOf(key), lake, format, dateFrom, mode);
+                    String.valueOf(key), lake, format, dateFrom, mode, String.valueOf(dataset), String.valueOf(newDomain));
+        }
+
+        /** The same route for one table folder of a tar ({@code source.dataset}). */
+        Route forFolder(String folder, String pack2, String kind2, Path dir2, String by2) {
+            return new Route(pack2, kind2, null, null, dateField, null, key, lake, format, by2, dir2, dateFrom, null,
+                    "each table and date from the archive's folders", mode, folder);
         }
     }
 
@@ -85,6 +97,9 @@ public final class Routes {
     private static final Set<String> RULE_KEYS = Set.of("match", "pack", "kind", "connector", "table", "date-from", "date-field", "key", "lake", "format");
 
     private final List<Rule> rules;
+    /** The inbox's {@code default-mode} (append, else replace) and whether it may create a table ({@code new-tables}). */
+    private String defaultMode = "append";
+    private boolean newTables;
     private final String unmatched;
     private final String defaultLake;
     private final Packs packs;
@@ -153,6 +168,13 @@ public final class Routes {
                     text(r, "lake"), format));
         }
         return new Routes(List.copyOf(out), unmatched, defaultLake, packs, where);
+    }
+
+    /** These routes with the inbox's default mode and its new-tables switch (DataLoadSettings). */
+    public Routes with(String defaultMode, boolean newTables) {
+        this.defaultMode = defaultMode == null ? "append" : defaultMode;
+        this.newTables = newTables;
+        return this;
     }
 
     /** How many rules there are (status). */
@@ -242,6 +264,10 @@ public final class Routes {
      * {@code date-from: name} refuses a name without a date. A tar names its own tables and dates: a {@code .ready} date or table is refused.
      */
     public Route route(String fileName, ReadyNote note) throws Unrouted {
+        return route(fileName, note, false);
+    }
+
+    private Route route(String fileName, ReadyNote note, boolean anyPack) throws Unrouted {
         ReadyNote n = note == null ? ReadyNote.EMPTY : note;
         FileDates.Name name = FileDates.parse(fileName);
         if (name.tar() && (n.businessDate() != null || n.table() != null)) {
@@ -258,13 +284,30 @@ public final class Routes {
         String pack = n.pack() != null ? n.pack() : rule == null ? null : rule.pack();
         String kind = n.kind() != null ? n.kind() : rule == null ? null : rule.kind();
         String by;
-        if (pack == null || kind == null) {
+        if (anyPack && (pack == null || kind == null)) {         // a tar: each folder routed by routeTar; the rule's mode, lake and format kept
+            List<String> names = packs.names();
+            pack = names.isEmpty() ? null : names.get(0);
+            PackInfo any = pack == null ? null : packs.find(pack);
+            kind = any == null || any.kinds().isEmpty() ? null : any.kinds().get(0);
+            if (pack == null || kind == null) {
+                throw new Unrouted("no loaded pack to load " + fileName + " into");
+            }
+            by = "the archive";
+        } else if (pack == null || kind == null) {
             String table = n.table() != null ? n.table().toLowerCase(java.util.Locale.ROOT) : name.table();
             if (table == null) {
                 throw new Unrouted(name.error() != null ? name.error() : "no routing rule matches " + fileName + " (" + source + ", " + rules.size()
                         + " rule" + (rules.size() == 1 ? "" : "s") + ") and its .ready file names no pack and kind");
             }
-            String[] pk = byTable(table, pack, kind);
+            String[] pk;
+            try {
+                pk = byTable(table, pack, kind);
+            } catch (Unrouted e) {
+                if (!n.newTable() || !e.getMessage().contains("no pack, kind or table")) {
+                    throw e;
+                }
+                return newTable(fileName, table, pack, n, rule, name, e);
+            }
             pack = pk[0];
             kind = pk[1];
             by = (n.table() != null ? "the .ready file's table " : "the name's table ") + table;
@@ -294,11 +337,77 @@ public final class Routes {
         } else {
             dateBy = FileDates.businessToday() + " (today: no date in the name)";
         }
-        String mode = n.mode() != null ? n.mode() : "replace";              // append (the default of the rules) once the loader appends
+        String mode = n.mode() != null ? n.mode() : defaultMode;
         return new Route(pack, kind, n.connector() != null ? n.connector() : rule == null ? null : rule.connector(),
                 rule == null ? null : rule.table(), rule == null ? null : rule.dateField(), asOf,
                 n.key() != null ? n.key() : rule == null ? null : rule.key(), rule == null || rule.lake() == null ? defaultLake : rule.lake(),
-                rule == null ? "delta" : rule.format(), by, info.dir(), dateFrom, nameDate, dateBy, mode);
+                rule == null ? "delta" : rule.format(), by, info.dir(), dateFrom, nameDate, dateBy, mode, null);
+    }
+
+    /**
+     * A table no pack has, asked for ({@code new-table: true}; DATA_LOAD_RULES.md section 7): allowed only when the inbox allows new tables
+     * ({@code new-tables}); written in the pack's lake domain (the pack the {@code .ready} file or a rule names) with the generic layout,
+     * its id field {@code key:} else {@code id}.
+     */
+    private Route newTable(String fileName, String table, String pack, ReadyNote n, Rule rule, FileDates.Name name, Unrouted unknown) throws Unrouted {
+        if (!newTables) {
+            throw new Unrouted(unknown.getMessage() + "; new-table: true asks for a new table, and this inbox does not allow new tables "
+                    + "(drishti.dataload.new-tables)");
+        }
+        if (pack == null) {
+            throw new Unrouted(table + ": a new table needs its pack (its lake and domain): pack: in the .ready file");
+        }
+        PackInfo info = packs.find(pack);
+        if (info == null) {
+            throw new Unrouted("no loaded pack is named " + pack + " (the .ready file)");
+        }
+        String domain;
+        try {
+            domain = LakeLoad.packDomain(info.dir());
+        } catch (java.io.IOException e) {
+            throw new Unrouted(pack + ": its pack.yaml cannot be read (" + e.getMessage() + ")");
+        }
+        LocalDate nameDate = name.error() == null && !name.tar() ? name.date() : null;
+        LocalDate asOf = n.businessDate();
+        String dateBy = asOf != null ? asOf + " from the .ready file" : nameDate != null ? nameDate + " from the name"
+                : FileDates.businessToday() + " (today: no date in the name)";
+        return new Route(pack, table, null, table, null, asOf, n.key() != null ? n.key() : "id", rule == null || rule.lake() == null ? defaultLake : rule.lake(),
+                rule == null ? "delta" : rule.format(), "a new table " + table + " (new-table: true)", info.dir(), "auto", nameDate, dateBy,
+                n.mode() != null ? n.mode() : defaultMode, null, domain);
+    }
+
+    /**
+     * The routes of a tar archive (DATA_LOAD_RULES.md section 3.1), one per table folder: its pack from the {@code .ready} file's
+     * {@code folders:} (folder → pack), else the pack with a kind of that name, else a pack of that name with one kind; any folder that
+     * resolves to none (or to two) refuses the whole archive, every one listed. {@code tables}: the archive's folders.
+     */
+    public List<Route> routeTar(String fileName, List<String> tables, ReadyNote note) throws Unrouted {
+        ReadyNote n = note == null ? ReadyNote.EMPTY : note;
+        if (n.businessDate() != null || n.table() != null) {
+            throw new Unrouted(fileName + ": a .tar archive names its own tables and dates (its <table>/<YYYY-MM-DD>/ folders): its .ready file's "
+                    + "business-date: and table: are refused");
+        }
+        ReadyNote modeOnly = new ReadyNote(null, null, null, null, null, n.mode(), n.sha256(), n.rows(), n.newTable(), n.key(), n.folders(), n.hold());
+        Route base = route(fileName, modeOnly, true);           // the rule's (or the defaults') mode, lake, format and key
+        List<Route> out = new ArrayList<>();
+        List<String> problems = new ArrayList<>();
+        for (String t : tables) {
+            String pack = n.folders().getOrDefault(t.toLowerCase(Locale.ROOT), n.pack());
+            try {
+                String[] pk = byTable(t, pack, pack != null && n.kind() != null && tables.size() == 1 ? n.kind() : null);
+                PackInfo info = packs.find(pk[0]);
+                if (info == null) {
+                    throw new Unrouted("no loaded pack is named " + pk[0]);
+                }
+                out.add(base.forFolder(t, pk[0], pk[1], info.dir(), "the archive's folder " + t + (pack != null ? " (pack " + pack + ")" : "")));
+            } catch (Unrouted e) {
+                problems.add(e.getMessage());
+            }
+        }
+        if (!problems.isEmpty()) {
+            throw new Unrouted(fileName + ": refused, nothing was loaded: " + String.join("; ", problems));
+        }
+        return out;
     }
 
     /**

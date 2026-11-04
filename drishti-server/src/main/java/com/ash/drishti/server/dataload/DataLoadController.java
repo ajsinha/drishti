@@ -134,23 +134,7 @@ public class DataLoadController {
         boolean confirmed = id.equals(body.get("confirm") == null ? null : String.valueOf(body.get("confirm")).trim());
         String lake = inbox.settings().lake();
         try {
-            List<Map<String, Object>> lines = new ArrayList<>();
-            for (com.ash.drishti.lakeload.LakeUndo.Done d : com.ash.drishti.lakeload.LakeUndo.undo(lake, id, List.of(), !confirmed)) {
-                Map<String, Object> m = new LinkedHashMap<>();
-                m.put("table", d.table());
-                m.put("format", "delta");
-                m.put("date", d.date());
-                m.put("removed", d.removed());
-                m.put("restored", d.restored());
-                m.put("replaced", d.replaced());
-                lines.add(m);
-            }
-            for (Map<String, Object> u : com.ash.drishti.plugin.iceberg.IcebergMaintenance.undoLake(lake, id, !confirmed,
-                    java.nio.file.Path.of(System.getProperty("java.io.tmpdir")))) {
-                Map<String, Object> m = new LinkedHashMap<>(u);
-                m.put("format", "iceberg");
-                lines.add(m);
-            }
+            List<Map<String, Object>> lines = com.ash.drishti.lakeload.LakeUndo.undoAll(lake, id, List.of(), !confirmed);
             if (confirmed) {
                 record(p, "dataload.undo", "load/" + id, lines.size() + " table dates undone");
             }

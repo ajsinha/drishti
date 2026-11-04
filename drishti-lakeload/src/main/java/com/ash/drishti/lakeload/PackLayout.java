@@ -36,6 +36,21 @@ import java.util.Map;
 record PackLayout(String domain, String table, String key, String date, List<String> promote, List<String> vectors, Map<String, String> flatten,
         List<String> sortBy, String latestBy) {
 
+    /** The domain of the pack's tables: its first Delta or Iceberg connector's {@code settings.domain}, else the pack's name. */
+    static String domainOf(Path pack) throws IOException {
+        com.fasterxml.jackson.databind.JsonNode m = new com.fasterxml.jackson.dataformat.yaml.YAMLMapper().readTree(pack.resolve("pack.yaml").toFile());
+        String name = m.path("pack").asText(pack.getFileName().toString());
+        com.fasterxml.jackson.databind.JsonNode cs = m.has("connectors") ? m.path("connectors") : m.path("connector-templates");
+        for (java.util.Iterator<com.fasterxml.jackson.databind.JsonNode> it = cs.elements(); it.hasNext(); ) {
+            com.fasterxml.jackson.databind.JsonNode c = it.next();
+            String plugin = c.path("plugin").asText("");
+            if (plugin.equals("delta") || plugin.equals("iceberg")) {
+                return c.path("settings").path("domain").asText(name);
+            }
+        }
+        return name;
+    }
+
     static PackLayout read(Path pack, String kind, String connector) throws IOException {
         Path file = Files.isDirectory(pack) ? pack.resolve("pack.yaml") : pack;
         JsonNode m = new YAMLMapper().readTree(Files.readString(file));

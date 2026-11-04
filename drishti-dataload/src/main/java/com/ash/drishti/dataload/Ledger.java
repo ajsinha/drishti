@@ -56,6 +56,10 @@ public final class Ledger {
     public static final String FAILED = "failed";
     public static final String RETURNED = "returned";
     public static final String LOCKED = "locked";
+    /** An empty file or archive: nothing written, no business date touched (DATA_LOAD_RULES.md section 4.3). */
+    public static final String IGNORED = "ignored";
+    /** An archive whose load failed part-way: the tables it had committed undone (DATA_LOAD_RULES.md section 4.5). */
+    public static final String ROLLED_BACK = "rolled back";
 
     private final Path dir;
     private final Clock clock;

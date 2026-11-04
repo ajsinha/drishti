@@ -84,7 +84,7 @@ final class InboxStatus {
         out.put("lockText", lockText(holder, now));
         Routes routes = null;
         try {
-            routes = Routes.read(Path.of(settings.rulesFile()), settings.lake(), packs);
+            routes = Routes.read(Path.of(settings.rulesFile()), settings.lake(), packs).with(settings.defaultMode(), settings.newTables());
         } catch (IOException | IllegalArgumentException e) {
             out.put("rulesError", "the routing rules cannot be read: " + e.getMessage());
         }

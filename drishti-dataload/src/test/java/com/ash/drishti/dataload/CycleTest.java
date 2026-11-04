@@ -83,7 +83,7 @@ class CycleTest {
         assertThat(f.run().files()).singleElement().extracting(Cycle.FileOutcome::outcome).isEqualTo("loaded");
         assertThat(f.loads).hasSize(2);
         f.settings = new DataLoadSettings(true, f.root.toString(), null, null, null, null, "256m", null, null, true, null, f.lake.toString(),
-                f.rules.toString(), false);
+                f.rules.toString(), false, null, null);
         f.drop("trades-a.jsonl", Fixture.rows("2026-11-02", "1", "2"), "");
         assertThat(f.run().files()).as("reload-duplicates: true").singleElement().extracting(Cycle.FileOutcome::outcome).isEqualTo("loaded");
     }
@@ -182,7 +182,7 @@ class CycleTest {
         f.drop("trades-a.jsonl", Fixture.rows("2026-11-02", "1"), "");
         Cycle busy = new Cycle(f.settings, "node-a", f.clock, Fixture.ZONE, f.packs(), f.fakeLoader(), f.signal(), () -> "memory is short", null);
         assertThat(busy.run("t").why()).isEqualTo("busy protection: memory is short; the next cycle tries again");
-        DataLoadSettings notOwner = new DataLoadSettings(false, f.root.toString(), null, null, null, null, null, null, null, null, null, null, null, false);
+        DataLoadSettings notOwner = new DataLoadSettings(false, f.root.toString(), null, null, null, null, null, null, null, null, null, null, null, false, null, null);
         assertThat(new Cycle(notOwner, "node-b", f.clock, Fixture.ZONE, f.packs(), f.fakeLoader(), f.signal(), null, null).run("t").why())
                 .contains("not the inbox's owner");
         try (Claims.Lock held = new Claims(f.root, f.clock).lock("node-b", Duration.ofHours(1), Duration.ofMinutes(1))) {
