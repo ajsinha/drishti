@@ -3395,6 +3395,8 @@ source then offers the hierarchy levels (`MGMT.DESK`), `RISK_CLASS`, `POSITION`,
 | `GET /api/v1/pivot/mr/sensitivities?scope=&grid=&by=&class=&measure=&ccy=&asOf=` | the DV01 ladder by a grid, or the heat map by two factor parts |
 | `POST /api/v1/pivot/mr/what-if` | `{view, items: [{copyOf, factor}]}`: each row of the view's first row dimension and the total, before, after, incremental |
 
+A token calls the four `POST`s of the MR lens with any scope: each is a read (`token-read-posts`), computed by the VaR engine as the caller and written nowhere.
+
 ```bash
 curl -s -H "Authorization: Bearer $T" -H 'Content-Type: application/json' localhost:8080/api/v1/pivot/query \
   -d '{"source":"var","rows":["MGMT.DESK"],"columns":["RISK_CLASS"],"values":[{"measure":"var()"},{"measure":"comp_var()"}],"options":{"horizon":"10d"}}'

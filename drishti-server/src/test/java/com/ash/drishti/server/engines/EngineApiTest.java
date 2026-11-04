@@ -16,6 +16,7 @@
 package com.ash.drishti.server.engines;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -74,7 +75,7 @@ class EngineApiTest {
 
         change(admin, "{\"reason\":\"moved\",\"changes\":[{\"engine\":\"var\",\"on\":false}]}").andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("DRS-1021"))
-                .andExpect(jsonPath("$.detail").value(containsString("VaR is needed by FRTB-SA on this server. Turn it off first, or both together.")));
+                .andExpect(jsonPath("$.detail").value(containsString("VaR is needed by FRTB-SA and MR cube on this server. Turn them off first, or all three together.")));
         change(admin, "{\"reason\":\"\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":false}]}").andExpect(status().isBadRequest());
         try {
             change(admin, "{\"reason\":\"capital moves to node var-1\",\"changes\":[{\"engine\":\"frtb-sa\",\"on\":false}]}").andExpect(status().isOk())
@@ -108,15 +109,16 @@ class EngineApiTest {
         mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest").header("Authorization", admin)).andExpect(status().isOk());
         try {
             change(admin, "{\"reason\":\"a counterparty node\",\"withDependents\":true,\"changes\":[{\"engine\":\"var\",\"on\":false}]}")
-                    .andExpect(status().isOk()).andExpect(jsonPath("$.outcomes[0].engine").value("frtb-sa"))
-                    .andExpect(jsonPath("$.outcomes[1].engine").value("var"));
+                    .andExpect(status().isOk()).andExpect(jsonPath("$.outcomes[*].engine", containsInAnyOrder("frtb-sa", "mr-cube", "var")))
+                    .andExpect(jsonPath("$.outcomes[2].engine").value("var"));                // the dependents first, then var
             mvc.perform(get("/api/v1/var/status").header("Authorization", reader)).andExpect(status().isNotFound())
                     .andExpect(jsonPath("$.code").value("DRS-1020")).andExpect(jsonPath("$.engine").value("var"));
             mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest").header("Authorization", admin)).andExpect(status().isNotFound());
         } finally {
-            change(admin, "{\"reason\":\"back\",\"withNeeds\":true,\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true}]}").andExpect(status().isOk());
+            change(admin, "{\"reason\":\"back\",\"withNeeds\":true,\"changes\":[{\"engine\":\"frtb-sa\",\"on\":true},{\"engine\":\"mr-cube\",\"on\":true}]}")
+                    .andExpect(status().isOk());
         }
         mvc.perform(get("/api/v1/bi/items/file:dataset:market-risk-var-latest").header("Authorization", admin)).andExpect(status().isOk());
-        assertThat(registry.running()).contains("var", "frtb-sa");
+        assertThat(registry.running()).contains("var", "frtb-sa", "mr-cube");
     }
 }

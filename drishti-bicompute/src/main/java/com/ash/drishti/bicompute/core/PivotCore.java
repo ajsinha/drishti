@@ -374,6 +374,11 @@ public final class PivotCore {
 
         private void field(String name) {
             if (!types.containsKey(name)) {
+                Object aggregate = catalogue.notes() == null ? null : catalogue.notes().get("aggregate");
+                if (aggregate != null) {
+                    // the provider offers this person fewer fields because they see the source in aggregate only: refused, not a typo
+                    throw new DrishtiException(ErrorCode.FORBIDDEN, name + " is not offered to you: " + aggregate);
+                }
                 boolean masked = catalogue.masked() > 0;
                 throw new DrishtiException(masked ? ErrorCode.PIVOT_MASKED : ErrorCode.PIVOT_BAD_VIEW, name + " is not a field of "
                         + catalogue.source() + " you may use" + (masked ? " (it is not there, or it is masked for you: masks apply before any "

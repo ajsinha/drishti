@@ -426,7 +426,14 @@ public final class CustomFunctions {
             throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_OFFICIAL, text.strip() + ": custom functions never run in " + official
                     + "; official measures are the Java engines'");
         }
-        FunctionDef d = get(v, m.group(1), m.group(2), m.group(3) == null ? null : Integer.parseInt(m.group(3)));
+        Integer version = m.group(3) == null ? null : Integer.parseInt(m.group(3));
+        List<FunctionDef> asked = store.versions(m.group(1), m.group(2)).stream().filter(x -> version == null || x.version() == version).toList();
+        if (!asked.isEmpty() && asked.stream().noneMatch(x -> usable(v, x))) {
+            // it exists but is not approved for this reader (PIVOT_GUIDE.md, codes: DRS-5712 is 403, "a function not approved for you")
+            throw new DrishtiException(ErrorCode.PIVOT_FUNCTION_APPROVAL, "fn:" + m.group(1) + "/" + m.group(2) + (version == null ? "" : "@" + version)
+                    + " is not approved for you: a function is its author's until an approver who is not the author approves it");
+        }
+        FunctionDef d = get(v, m.group(1), m.group(2), version);
         List<String> fields = new ArrayList<>();
         for (String a : m.group(4).split(",")) {
             if (!a.isBlank()) {
