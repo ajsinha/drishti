@@ -112,11 +112,14 @@ def open_page(browser, url, width=1280):
 
 
 def settle(page):
-    """The page's charts and map shapes drawn, and no part of the page still busy (a control's query, a panel being fetched or swapped in: the
-    library and the page's scripts mark it aria-busy). A console page keeps its live channel open, so the network is never idle. Each wait is a
-    deadline (the suite's BROWSER_WAIT_MS: the drill runs this file beside the other workers), never a pause: it ends when the page is ready."""
+    """The page's charts and map shapes drawn, no part of the page still busy (a control's query, a panel being fetched or swapped in: the
+    library and the page's scripts mark it aria-busy) and the Discussion's badges placed. A console page keeps its live channel open, so the
+    network is never idle. Each wait is a deadline (the suite's BROWSER_WAIT_MS: the drill runs this file beside the other workers), never a pause: it ends when the page is ready."""
     page.wait_for_function("() => !document.querySelector('.chart:not(.pnl-empty), .xchart:not(.pnl-empty)') || [...document.querySelectorAll('.chart, .xchart')].every((el) => el.classList.contains('pnl-empty') || (window.echarts && window.echarts.getInstanceByDom(el)))", timeout=BROWSER_WAIT_MS)
     page.wait_for_function("() => document.readyState === 'complete' && !document.querySelector('.view[aria-busy=\"true\"], .view [aria-busy=\"true\"], [data-render-host][aria-busy=\"true\"]')", timeout=BROWSER_WAIT_MS)
+    # the Discussion's answer applied (discussion.js asks /api/collab, then badges every panel or hides itself): the first page of a fresh
+    # console answers it late, after the pause below, and was read without its badges
+    page.wait_for_function("() => { const open = document.querySelector('[data-discussion-open]'); if (!window.drishtiDiscussion || !open || open.hidden || document.querySelector('[data-view][data-embed]')) { return true; } return [...document.querySelectorAll('.pnl[data-panel] .pnl-code')].every((c) => c.querySelector('.disc-badge')); }", timeout=BROWSER_WAIT_MS)
     page.wait_for_timeout(400)
     page.evaluate("() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))")
 

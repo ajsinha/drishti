@@ -162,6 +162,13 @@
   writes (kept in `outbox/<day>/<run>/loads/`); new `GET /api/v1/admin/dataload/report?path=` serves a report under `outbox/` or `failed/`.
   The status reads the ledger's newest lines without opening (indexing) the whole ledger on every call.
 
+- **Fixed: a panel swapped in after the page loaded keeps its comment badge and its share button.** A computed panel whose result
+  landed, a control's or a live tick's new panel, a refreshed panel and a phone's More row came without the Discussion's badge and the
+  Share button (only the page's first panels had them); `discussion.js` and `share.js` now place them on every panel that has none, at
+  load and on each panel the page's scripts swap in (`window.drishti.enhance`). The console-or-library parity test reads a page only
+  once the Discussion has answered: the first page of a freshly started console (the compute demo's path book at 390 px, first in the
+  sorted list) was read before `/api/collab` answered, without its badges.
+
 ## 2.9.11.a — The pivot engine with pivots over documents in Rachana paths; one Engines menu and the Help hub; the data inbox; the in-memory lake in its own module (2026-11-03)
 
 ### The data inbox

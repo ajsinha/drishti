@@ -84,6 +84,20 @@
       view.querySelectorAll('[data-path="' + CSS.escape(p) + '"]').forEach(function (e) { e.classList.add('has-note'); e.setAttribute('data-note', counts.fields[p] + ' comment(s)'); e.title = counts.fields[p] + (counts.fields[p] === 1 ? ' comment' : ' comments') + ' on this field (Alt+N)'; });
     });
   }
+  /* a comment badge beside the ? of every panel under root (root itself when it is one) that has none yet; the number placed */
+  function panelBadges(root) {
+    var placed = 0;
+    root.querySelectorAll('.pnl[data-panel] .pnl-code').forEach(function (code) {   // the selector also matches inside a root that is a panel
+      if (code.querySelector(':scope > .disc-badge')) { return; }
+      var pnl = code.closest('.pnl'), pid = pnl.getAttribute('data-panel'), name = ((pnl.querySelector('h3') || {}).textContent || pid).trim();
+      var b = V.el('button', 'pnl-help disc-badge'); b.type = 'button'; b.setAttribute('data-disc-panel-open', pid); b.setAttribute('data-name', name);
+      var i = V.el('i', 'bi bi-chat-left-text'); i.setAttribute('aria-hidden', 'true'); b.appendChild(i); b.appendChild(V.el('span', 'disc-n'));
+      b.addEventListener('click', function () { open({ panel: pid }); });
+      code.insertBefore(b, code.querySelector('a.pnl-help[href^="/help/"]') || null);
+      placed++;
+    });
+    return placed;
+  }
   function loadCounts() { return api('GET', '/api/thread-counts/' + encodeURIComponent(kind) + '/' + encodeURIComponent(id)).then(function (r) { if (r.ok) { counts = { entity: (r.b || {}).entity || 0, panels: (r.b || {}).panels || {}, fields: (r.b || {}).fields || {} }; badges(); } }); }
 
   function draw() {
@@ -239,14 +253,12 @@
     if (!conf.collaborate) { say(msg, 'You can read this discussion; writing needs the collaborate right.', false); }
     box.maxLength = conf.maxText;
     window.DrishtiCompose.attach(box, form.querySelector('[data-disc-opts]'), { kind: kind, minQuery: function () { return conf.minQuery; }, fields: fields });
-    if (!embed) {                                                      // a comment badge beside the ? of every panel
-      document.querySelectorAll('.pnl[data-panel] .pnl-code').forEach(function (code) {
-        var pid = code.closest('.pnl').getAttribute('data-panel'), name = ((code.closest('.pnl').querySelector('h3') || {}).textContent || pid).trim();
-        var b = V.el('button', 'pnl-help disc-badge'); b.type = 'button'; b.setAttribute('data-disc-panel-open', pid); b.setAttribute('data-name', name);
-        var i = V.el('i', 'bi bi-chat-left-text'); i.setAttribute('aria-hidden', 'true'); b.appendChild(i); b.appendChild(V.el('span', 'disc-n'));
-        b.addEventListener('click', function () { open({ panel: pid }); });
-        code.insertBefore(b, code.querySelector('a.pnl-help[href^="/help/"]') || null);
-      });
+    if (!embed) {
+      panelBadges(document);
+      if (window.drishti && window.drishti.enhance) {                  // a panel swapped in later (a result landed, a control, a live patch,
+        var enhance = window.drishti.enhance;                          // a phone's More row) gets its badge too, with its count
+        window.drishti.enhance = function (node) { var r = enhance.apply(this, arguments); if (node && node.querySelectorAll && panelBadges(node)) { badges(); } return r; };
+      }
     }
     badges();
     loadCounts();
