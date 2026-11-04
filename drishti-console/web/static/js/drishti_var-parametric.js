@@ -5,18 +5,19 @@
    Parametric VaR on the VaR explorer (docs/architecture/PARAMETRIC_VAR.md; VAR_GUIDE.md section 3.12): a toggle (Parametric; the link's
    pm=1, which the PVAR command opens with) that adds, beside the historical figures, the tiles (parametric VaR, parametric ES, the
    fat-tail gap), the tree's Parametric and Gap columns, and the normal curve over the P&L path's histogram with both markers, shaded
-   tails and the gap bracket (var-charts.js). The Euler components and the worked figures are in the VaR Playground's Parametric tab.
+   tails and the gap bracket (drishti_var-charts.js). The Euler components and the worked figures are in the VaR Playground's Parametric tab.
 
    Every parametric figure has a ? that opens the server's own lines (describe): how it was computed, with the numbers; a bottom sheet on a
    phone. The browser computes nothing: every number, curve point and line comes from the answer (the server-computes-risk rule). The
    Normal curve toggle (key N) is remembered per person (localStorage) and in the link (nc=0). */
+(function (g) { g.Drishti = g.Drishti || {}; })(typeof window !== 'undefined' ? window : globalThis); /* one namespace for everything the console puts on window (tools/dev/asset_prefix.py) */
 (function () {
   "use strict";
   var root = document.querySelector("[data-var]");
   if (!root) return;
   var ON = root.dataset.pm === "1";
   var $ = function (sel) { return root.querySelector(sel); };
-  var C = window.VarCharts, X = null, NC_KEY = "drishti.var.pvar.curve";
+  var C = window.Drishti.VarCharts, X = null, NC_KEY = "drishti.var.pvar.curve";
   var params = new URLSearchParams(location.search);
   var curve = params.get("nc") === "0" ? false : (function () { try { return localStorage.getItem(NC_KEY) !== "0"; } catch (e) { return true; } })();
 
@@ -158,6 +159,6 @@
     });
   }
 
-  window.VarParametric = { start: start, headline: headline, treeCells: treeCells, on: function () { return ON; },
+  window.Drishti.VarParametric = { start: start, headline: headline, treeCells: treeCells, on: function () { return ON; },
     curveOn: function () { return curve; } };
 })();

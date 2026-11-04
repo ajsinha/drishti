@@ -39,14 +39,14 @@ def test_the_explorer_has_a_parametric_toggle_and_no_views_of_its_own(client):
     page = client.get("/var?scope=BANK&pm=1").text
     assert 'data-pm="1"' in page and "data-vp-on checked" in page
     assert "data-vp-curve" in page and "<kbd>N</kbd>" in page and "data-vp-tiles" in page
-    assert "/static/js/var-parametric.js" in page and "/static/css/var-parametric.css" in page
+    assert "/static/js/drishti_var-parametric.js" in page and "/static/css/drishti_var-parametric.css" in page
     assert "cross-check, not official" in page and "Worked in the playground" in page
     assert "data-vp-view" not in page and "data-vp-pane" not in page and "PLAY PVAR" not in page   # no views B and C, no PLAY PVAR
     assert "VAR BANK &lt;GO&gt;" in page or "VAR BANK <GO>" in page              # the command line says VAR: PVAR is an alias
     plain = client.get("/var?scope=BANK").text
     assert "data-vp-on" in plain and "data-vp-on checked" not in plain            # the toggle, off
     assert "data-vp-curve" not in plain and "data-vp-tiles" not in plain and "data-vx-pvar" not in plain
-    assert "/static/js/var-parametric.js" in plain                                 # the toggle's script
+    assert "/static/js/drishti_var-parametric.js" in plain                                 # the toggle's script
 
 
 def test_no_menu_item_names_parametric_var(client):

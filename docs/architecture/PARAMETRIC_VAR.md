@@ -129,7 +129,7 @@ recommended and the default):
 The textbook square-root-of-time rule scales μ by h and σ by √h (`μ·10`, `σ·√10`); the `sqrt10` lens scales μ by √10 because it
 scales the whole vector. The difference is `(10 − √10)·μ`, small next to z·σ√10 for a trading book (1.4 million, 0.4%, on the worked example of section 4), and the
 alternative is a setting (`horizon-rule: square-root-of-time`, open question 2). The console's calculator `parametric_var` (USER_GUIDE,
-`quant.py`) is the textbook form and stays so.
+`drishti_quant.py`) is the textbook form and stays so.
 
 **Confidences** are the lens's: VaR's from `drishti.var.parametric.confidences` (blank: `drishti.var.confidences`), ES's from
 `es-confidences` (blank: `drishti.var.es-confidences`). **Window** (`scenario-window`, `window=` override), **stressed set**

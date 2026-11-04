@@ -354,7 +354,7 @@
     renderCrumb(d);
     renderIntraday(d.intraday);
     renderProv(d.provenance, d);
-    if (PM && window.VarParametric) window.VarParametric.headline(d);   // the parametric tiles, each with its ? (var-parametric.js)
+    if (PM && window.Drishti.VarParametric) window.Drishti.VarParametric.headline(d);   // the parametric tiles, each with its ? (drishti_var-parametric.js)
     document.title = "VaR · " + d.label + (document.body.dataset.product ? " · " + document.body.dataset.product : "");
   }
 
@@ -482,7 +482,7 @@
 
   function drawPath(d) {
     C.histogram($("[data-vx-histo]"), { edges: d.histogram.edges, counts: d.histogram.counts, "var": d["var"], es: d.es,
-      parametric: PM && window.VarParametric && window.VarParametric.curveOn() ? d.parametric : null });
+      parametric: PM && window.Drishti.VarParametric && window.Drishti.VarParametric.curveOn() ? d.parametric : null });
     C.bars($("[data-vx-tail]"), d.worst.map(function (w, r) {
       return { k: "#" + w.rank, v: w.pnl, cls: r === d.k - 1 ? "var" : r < d.esCount ? "tail" : "",
                tip: "#" + w.rank + " · " + w.date + "\n" + C.signed(w.pnl) + (r === d.k - 1 ? "\nthe VaR scenario" : ""), date: w.date };
@@ -1071,7 +1071,7 @@
     var t = $("[data-vx-tree]");
     t.textContent = "";
     var hd = h("div", "vx-row hdr");
-    var pcols = PM && !!window.VarParametric;
+    var pcols = PM && !!window.Drishti.VarParametric;
     ["Scope", "VaR " + S.ccy, "ES", "Limit"].concat(pcols ? ["Parametric", "Gap"] : []).forEach(function (x, i) { hd.appendChild(h("span", i ? "num" : null, x)); });
     t.classList.toggle("vp-cols", !!pcols);
     t.appendChild(hd);
@@ -1082,7 +1082,7 @@
       shown[n.id] = true;
       var tr = treeRow(n.name, n.scope, n.depth, n["var"], n.es, n.limitUse, { expandable: n.expandable,
         noLimitText: n.limitComparable === false ? "n/c" : "no limit" });          // 2.9.7: a limit of another horizon or confidence
-      if (pcols) window.VarParametric.treeCells(tr, n);                         // the Parametric and Gap columns, each with its ?
+      if (pcols) window.Drishti.VarParametric.treeCells(tr, n);                         // the Parametric and Gap columns, each with its ?
       t.appendChild(tr);
       if (n.level === "book" && S.expanded[n.scope]) appendChildren(t, n.scope, n.depth + 1);
     });
@@ -1345,5 +1345,5 @@
   window.Drishti.VarExplorer = { select: select, switchTab: switchTab, setCcy: setCcy, setLens: setLens, state: S, api: api, words: words,
     lensWords: lensWords, renderTree: function () { if (S.tree) renderTree(); },
     redrawPath: function () { if (S.path && S.path.series && S.path.series.some(function (v) { return v !== 0; })) drawPath(S.path); } };
-  if (window.VarParametric) window.VarParametric.start(window.Drishti.VarExplorer);
+  if (window.Drishti.VarParametric) window.Drishti.VarParametric.start(window.Drishti.VarExplorer);
 })();
